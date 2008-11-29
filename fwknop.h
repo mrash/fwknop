@@ -107,13 +107,13 @@ typedef struct _spa_message {
 */
 char* spa_random_number(spa_message_t *sm);
 char* spa_user(spa_message_t *sm, char *spoof_user);
-char* spa_timestamp(spa_message_t *sm);
+unsigned int spa_timestamp(spa_message_t *sm, int offset);
 char* spa_version(spa_message_t *sm);
-char* spa_message_type(spa_message_t *sm);
+unsigned short spa_message_type(spa_message_t *sm);
 char* spa_message(spa_message_t *sm);
 char* spa_nat_access(spa_message_t *sm);
 char* spa_server_auth(spa_message_t *sm);
-char* spa_client_timeout(spa_message_t *sm);
+unsigned int spa_client_timeout(spa_message_t *sm);
 char* spa_digest(spa_message_t *sm);
 
 size_t strlcat(char *dst, const char *src, size_t siz);

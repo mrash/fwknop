@@ -38,16 +38,28 @@ int main(int argc, char **argv)
     * Get a random 16-byte string of hex values.
     */
     spa_random_number(&sm);
-    printf("    SPA_RAND_VAL: %s\n", sm.rand_val);
+    printf("        SPA_RAND_VAL: %s\n", sm.rand_val);
 
     /*********************************************************************
-     * Get the current user, then s spoofed user.
+     * Get the current user, then a spoofed user.
     */
     spa_user(&sm, NULL);
-    printf("        SPA_USER: %s\n", sm.user);
+    printf("            SPA_USER: %s\n", sm.user);
 
     spa_user(&sm, "bubba");
-    printf("SPA_USER (spoof): %s\n", sm.user);
+    printf("    SPA_USER (spoof): %s\n", sm.user);
+
+    /*********************************************************************
+     * Get the timestamp, then with an positive and negative offset.
+    */
+    spa_timestamp(&sm, 0);
+    printf("       SPA_TIMESTAMP: %u\n", sm.timestamp);
+    spa_timestamp(&sm, 300);
+    printf("SPA_TIMESTAMP (+300): %u\n", sm.timestamp);
+    spa_timestamp(&sm, -600);
+    printf("SPA_TIMESTAMP (-600): %u\n", sm.timestamp);
+
+
 
     return(0);
 } 

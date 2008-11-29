@@ -53,6 +53,7 @@ PROG    =	fko_test
 SRCS 	= 	fko_test.c \
 			spa_random_number.c \
 			spa_user.c \
+			spa_timestamp.c \
 			strlcat.c \
 			strlcpy.c
 
@@ -98,3 +99,4 @@ depend:
 fko_test.o: fwknop.h
 spa_random_number.o: fwknop.h
 spa_user.o: fwknop.h
+spa_timestamp.o: fwknop.h
