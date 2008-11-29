@@ -1,3 +1,30 @@
 This is the top-level directory for the C version of fwknop.
 
+libfwnop source files:
+======================
+
+spa_random_number.c
+    Usage: "char* spa_random_number(char* rand_val);"
+
+        Where 'rand_val' must be a char array of at least 17 bytes. 
+        Returns a pointer to the provided char array.
+
+spa_user.c
+
+spa_timestamp.c
+
+spa_version.c
+
+spa_message_type.c
+
+spa_message.c
+
+spa_nat_access.c
+
+spa_server_auth.c
+
+spa_client_timeout.c
+
+spa_digest.c
+
 Someday, I'll put something meaningful here...  --DSS
