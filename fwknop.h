@@ -26,6 +26,8 @@
 #ifndef _FWKNOP_H_
 #define _FWKNOP_H_
 
+#define _XOPEN_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,9 +51,9 @@
 #define RAND_FILE           "/dev/urandom"
 #define RAND_MASK           0xFFFF
 
-#define USER_SIZE           32
 #define TIMESTAMP_SIZE      10
 
+#define MAX_USER_SIZE           32
 #define MAX_MESSAGE_SIZE        128
 #define MAX_NAT_ACCESS_SIZE     128
 #define MAX_SERVER_AUTH_SIZE    128
@@ -79,6 +81,7 @@ enum {
 
 /* General Defaults
 */
+#define DEFAULT_USER    "root"
 #define DEFAULT_PORT    62201
 #define DEFAULT_DIGEST  SHA256_DIGEST
 #define KNOCK_INTERVAL  60
@@ -89,21 +92,21 @@ typedef struct _spa_message {
     unsigned short  digest_type;
     unsigned short  enc_pcap_port;
     char            rand_val[RAND_VAL_SIZE+1];
-    char            user[USER_SIZE+1];
+    char            user[MAX_USER_SIZE];
     unsigned int    timestamp;
     char            version[VERSION_LENGTH+1];
     unsigned short  message_type;
-    char            message[MAX_MESSAGE_SIZE+1];
-    char            nat_access[MAX_NAT_ACCESS_SIZE+1];
-    char            server_auth[MAX_SERVER_AUTH_SIZE+1];
+    char            message[MAX_MESSAGE_SIZE];
+    char            nat_access[MAX_NAT_ACCESS_SIZE];
+    char            server_auth[MAX_SERVER_AUTH_SIZE];
     unsigned int    client_timeout;
-    char            digest[MAX_DIGEST_SIZE+1];
+    char            digest[MAX_DIGEST_SIZE];
 } spa_message_t;
 
 /* Function prototypes
 */
 char* spa_random_number(spa_message_t *sm);
-char* spa_user(spa_message_t *sm);
+char* spa_user(spa_message_t *sm, char *spoof_user);
 char* spa_timestamp(spa_message_t *sm);
 char* spa_version(spa_message_t *sm);
 char* spa_message_type(spa_message_t *sm);
@@ -112,6 +115,9 @@ char* spa_nat_access(spa_message_t *sm);
 char* spa_server_auth(spa_message_t *sm);
 char* spa_client_timeout(spa_message_t *sm);
 char* spa_digest(spa_message_t *sm);
+
+size_t strlcat(char *dst, const char *src, size_t siz);
+size_t strlcpy(char *dst, const char *src, size_t siz);
 
 #endif /* _FWKNOP_H_ */
 

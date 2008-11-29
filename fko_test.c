@@ -25,7 +25,7 @@
 */
 #include "fwknop.h"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     spa_message_t    sm;
     //char             test_str[1024] = {0};
@@ -34,11 +34,20 @@ int main(int argc, char** argv)
     */
     memset(&sm, 0x0, sizeof(spa_message_t));
 
-    /* Get a random 16-byte string of hex values.
+    /*********************************************************************
+    * Get a random 16-byte string of hex values.
     */
     spa_random_number(&sm);
+    printf("    SPA_RAND_VAL: %s\n", sm.rand_val);
 
-    printf("SPA_RAND_VAL: %s\n", sm.rand_val);
+    /*********************************************************************
+     * Get the current user, then s spoofed user.
+    */
+    spa_user(&sm, NULL);
+    printf("        SPA_USER: %s\n", sm.user);
+
+    spa_user(&sm, "bubba");
+    printf("SPA_USER (spoof): %s\n", sm.user);
 
     return(0);
 } 

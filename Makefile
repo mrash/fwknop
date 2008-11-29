@@ -46,12 +46,15 @@ CFLAGS  =	-g -O0 $(BASE_CFLAGS)
 
 LDFLAGS =	
 
-LIBS    =	$(PCAP_LIB) -lm -lz
+LIBS    =	#$(PCAP_LIB) -lm -lz
 
 PROG    =	fko_test
 
 SRCS 	= 	fko_test.c \
 			spa_random_number.c \
+			spa_user.c \
+			strlcat.c \
+			strlcpy.c
 
 OBJS 	=	$(SRCS:.c=.o)
 
@@ -60,10 +63,6 @@ OBJS 	=	$(SRCS:.c=.o)
 # Targets
 #
 all: $(PROG)
-
-show:
-	@echo MY_ARCH=$(MY_ARCH)
-	@echo CFLAGS=$(CFLAGS)
 
 $(PROG): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
@@ -98,3 +97,4 @@ depend:
 
 fko_test.o: fwknop.h
 spa_random_number.o: fwknop.h
+spa_user.o: fwknop.h
