@@ -37,21 +37,21 @@
 
 /* General params
 */
-#define FWKNOP_VERSION      "1.9.10-pre1"   /* The fwknop client version # */
-#define VERSION_LENGTH      11              /* Length of the version string */
+#define FWKNOP_VERSION          "1.9.9"     /* The fwknop client version # */
+#define VERSION_LENGTH          11          /* Length of the version string */
 
-#define MIN_PORT            10000
-#define MAX_PORT            65535
+#define MIN_PORT                10000
+#define MAX_PORT                65535
 
-#define ENC_KEYSIZE         16              /* RIJNDAEL Key Size */
+#define ENC_KEYSIZE             16          /* RIJNDAEL Key Size */
 
 /* For random string generation.
 */
-#define RAND_VAL_SIZE       16
-#define RAND_FILE           "/dev/urandom"
-#define RAND_MASK           0xFFFF
+#define RAND_VAL_SIZE           16
+#define RAND_FILE               "/dev/urandom"
+#define RAND_MASK               0xFFFF
 
-#define TIMESTAMP_SIZE      10
+#define TIMESTAMP_SIZE          10
 
 #define MAX_USER_SIZE           32
 #define MAX_MESSAGE_SIZE        128
@@ -62,29 +62,32 @@
 /* SPA Message types...
 */
 enum {
-    SPA_COMMAND_MODE,
-    SPA_ACCESS_MODE,
-    SPA_NAT_ACCESS_MODE,
-    SPA_CLIENT_TIMEOUT_ACCESS_MODE,
-    SPA_CLIENT_TIMEOUT_NAT_ACCESS_MODE,
-    SPA_LOCAL_NAT_ACCESS_MODE,
-    SPA_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MODE
+    SPA_COMMAND_MSG = 0,
+    SPA_ACCESS_MSG,
+    SPA_NAT_ACCESS_MSG,
+    SPA_CLIENT_TIMEOUT_ACCESS_MSG,
+    SPA_CLIENT_TIMEOUT_NAT_ACCESS_MSG,
+    SPA_LOCAL_NAT_ACCESS_MSG,
+    SPA_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG,
+    LAST_MSG_TYPE /* Always leave this as the last one */
 };
 
 /* Digest types...
 */
 enum {
-    MD5_DIGEST,
+    MD5_DIGEST = 0,
     SHA1_DIGEST,
     SHA256_DIGEST
 };
 
 /* General Defaults
 */
-#define DEFAULT_USER    "root"
-#define DEFAULT_PORT    62201
-#define DEFAULT_DIGEST  SHA256_DIGEST
-#define KNOCK_INTERVAL  60
+#define DEFAULT_USER            "root"
+#define DEFAULT_PORT            62201
+#define DEFAULT_DIGEST          SHA256_DIGEST
+#define DEFAULT_MSG_TYPE        SPA_ACCESS_MSG
+#define DEFAULT_CLIENT_TIMEOUT  0
+#define KNOCK_INTERVAL          60
 
 /* The pieces we need to make a SPA packet.
 */
@@ -109,7 +112,7 @@ char* spa_random_number(spa_message_t *sm);
 char* spa_user(spa_message_t *sm, char *spoof_user);
 unsigned int spa_timestamp(spa_message_t *sm, int offset);
 char* spa_version(spa_message_t *sm);
-unsigned short spa_message_type(spa_message_t *sm);
+int spa_message_type(spa_message_t *sm, unsigned short msg_type);
 char* spa_message(spa_message_t *sm);
 char* spa_nat_access(spa_message_t *sm);
 char* spa_server_auth(spa_message_t *sm);

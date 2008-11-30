@@ -24,10 +24,7 @@
 ############################################################################
 #
 CC      =	gcc
-
-# Specify pcap library (typically pcap or pcap_ring).
-#
-PCAP_LIB = -lpcap
+AR		=	ar
 
 # Base CFLAGS
 # For Full debugging (for extreme verbose output at runtime), add
@@ -42,31 +39,53 @@ BASE_CFLAGS = -Wall -fno-strict-aliasing
 #CFLAGS  =	-O2 $(BASE_CFLAGS)
 #
 ## For debugging symbols if you plan to use a debugger
+#
 CFLAGS  =	-g -O0 $(BASE_CFLAGS)
 
 LDFLAGS =	
 
 LIBS    =	#$(PCAP_LIB) -lm -lz
 
-PROG    =	fko_test
+PROG    =	fwknop
+SRC 	= 	fwknop.c
 
-SRCS 	= 	fko_test.c \
-			spa_random_number.c \
+OBJ		=	$(SRC:.c=.o)
+
+TPROG   =	fko_test
+TSRC	=	fko_test.c
+
+TOBJ	=	$(TSRC:.c=.o)
+
+LIBFWK	=   libfwknop.a
+LIBSRCS	= 	spa_random_number.c \
 			spa_user.c \
 			spa_timestamp.c \
+			spa_version.c \
+			spa_message_type.c \
 			strlcat.c \
 			strlcpy.c
 
-OBJS 	=	$(SRCS:.c=.o)
+LIBOBJS	=	$(LIBSRCS:.c=.o)
 
+# Group all the source files for make depend.
+#
+ALLSRCS	=	$(LIBSRCS) $(SRC) $(TSRC)
 
 ###########################################################################
 # Targets
 #
-all: $(PROG)
+all: $(PROG) $(TPROG)
 
-$(PROG): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+$(PROG): $(OBJ) $(LIBFWK)
+	$(CC) $(LDFLAGS) -o $@ $(OBJ) $(LIBFWK) $(LIBS)
+
+$(TPROG): $(TOBJ) $(LIBFWK)
+	$(CC) $(LDFLAGS) -o $@ $(TOBJ) $(LIBFWK) $(LIBS)
+
+lib: $(LIBFWK)
+
+$(LIBFWK): $(LIBOBJS)
+	$(AR) rcs $@ $(LIBOBJS)
 
 # Force a normal rebuild.
 #
@@ -76,18 +95,18 @@ strip: $(PROG)
 	strip $(PROG)
 
 clean:
-	rm -f $(PROG) $(OBJS)
+	rm -f $(PROG) $(TPROG) *.o *.a *.so
 
-realclean:
-	rm -f $(PROG) $(OBJS) core *.bak *.tmp *[-~]
+realclean: clean
+	rm -f core *.bak *.tmp *[-~]
 
 # Generate the dependencies for the sources in this current directory
 # while ignoring warnings. Note: If you don't have makedepend in your PATH,
 # you will simple get a warning and noting will happen.
 #
 depend:
-	@`which makedepend 2>/dev/null` -Y -- $(CFLAGS) -- $(SRCS) 2> /dev/null \
-		&& echo "makedepend -Y -- $(CFLAGS) -- $(SRCS) 2> /dev/null" \
+	@`which makedepend 2>/dev/null` -Y -- $(CFLAGS) -- $(ALLSRCS) 2> /dev/null \
+		&& echo "makedepend -Y -- $(CFLAGS) -- $(ALLSRCS) 2> /dev/null" \
 		|| echo " - makedepend not found.  Aborting..."
 
 
@@ -96,7 +115,10 @@ depend:
 #
 # DO NOT DELETE
 
-fko_test.o: fwknop.h
 spa_random_number.o: fwknop.h
 spa_user.o: fwknop.h
 spa_timestamp.o: fwknop.h
+spa_version.o: fwknop.h
+spa_message_type.o: fwknop.h
+fwknop.o: fwknop.h
+fko_test.o: fwknop.h

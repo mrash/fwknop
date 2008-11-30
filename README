@@ -1,30 +1,37 @@
 This is the top-level directory for the C version of fwknop.
 
+Additionl information and details can be found on the fwknop-c site at
+http://devmetrix.org/trac/fwknop-c.
+
 libfwnop source files:
 ======================
+These will be compiled into libfwknop.a (static for now).
 
-spa_random_number.c
-    Usage: "char* spa_random_number(char* rand_val);"
+spa_random_number.c     - Generate a string of 16 random hex digits.
+spa_user.c              - Get or spoof the current user.
+spa_timestamp.c         - Get the current timestamp with optional offset.
+spa_version.c           - Get the fwknop-client version number.
+spa_message_type.c      -
+spa_message.c           -
+spa_nat_access.c        -
+spa_server_auth.c       -
+spa_client_timeout.c    -
+spa_digest.c            -
+ -more to come-
 
-        Where 'rand_val' must be a char array of at least 17 bytes. 
-        Returns a pointer to the provided char array.
+Executables:
+============
 
-spa_user.c
+fwknop                  - Soon to be the fwknop client.  At present, it just
+                          dumps some internal data for functional verification
+                          during development.
 
-spa_timestamp.c
+fko_test                - A temp program for testing libfwknop functions during
+                          during development.  This will go away once we have
+                          a fair amount of progress in developing the client
+                          (and maybe the server).
 
-spa_version.c
+ -more to come-
 
-spa_message_type.c
 
-spa_message.c
-
-spa_nat_access.c
-
-spa_server_auth.c
-
-spa_client_timeout.c
-
-spa_digest.c
-
-Someday, I'll put something meaningful here...  --DSS
+###EOF###

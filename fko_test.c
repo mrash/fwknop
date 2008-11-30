@@ -59,6 +59,23 @@ int main(int argc, char **argv)
     spa_timestamp(&sm, -600);
     printf("SPA_TIMESTAMP (-600): %u\n", sm.timestamp);
 
+    /*********************************************************************
+     * Get the version of fwknop.
+    */
+    printf("         SPA_Version: %s\n", spa_version(&sm));
+
+    /*********************************************************************
+     * Set and get the message type. set ACCESS, COMMAND, NAT, Then
+     * invalid
+    */
+    spa_message_type(&sm, SPA_ACCESS_MSG);
+    printf("    SPA Message Type: %u\n", sm.message_type);
+    spa_message_type(&sm, SPA_COMMAND_MSG);
+    printf("SPA CMD Message Type: %u\n", sm.message_type);
+    spa_message_type(&sm, SPA_LOCAL_NAT_ACCESS_MSG);
+    printf("SPA NAT Message Type: %u\n", sm.message_type);
+    spa_message_type(&sm, 100);
+    printf("SPA bad Message Type: %u\n", sm.message_type);
 
 
     return(0);

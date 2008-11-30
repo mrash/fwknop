@@ -55,7 +55,7 @@ char* spa_user(spa_message_t *sm, char *spoof_user)
         */
         if(res < 1)
             if((strlcpy(sm->user, getenv("LOGNAME"), MAX_USER_SIZE)) < 1)
-                if((strlcpy(sm->user, getenv("USER"), MAX_USER_SIZE)) < 1);
+                if((strlcpy(sm->user, getenv("USER"), MAX_USER_SIZE)) < 1)
                     strlcpy(sm->user, DEFAULT_USER, strlen(DEFAULT_USER) + 1);
     }
 
