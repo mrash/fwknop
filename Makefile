@@ -23,8 +23,8 @@
 #
 ############################################################################
 #
-CC      =	gcc
-AR		=	ar
+CC      = gcc
+AR      = ar
 
 # Base CFLAGS
 # For Full debugging (for extreme verbose output at runtime), add
@@ -36,40 +36,42 @@ BASE_CFLAGS = -Wall -fno-strict-aliasing
 # Uncomment one of these CFLAGS based on your needs
 #
 ## Prod Build
-#CFLAGS  =	-O2 $(BASE_CFLAGS)
+#CFLAGS  = -O2 $(BASE_CFLAGS)
 #
 ## For debugging symbols if you plan to use a debugger
 #
-CFLAGS  =	-g -O0 $(BASE_CFLAGS)
+CFLAGS  = -g -O0 $(BASE_CFLAGS)
 
-LDFLAGS =	
+LDFLAGS =
 
-LIBS    =	#$(PCAP_LIB) -lm -lz
+LIBS    = #$(PCAP_LIB) -lm -lz
 
-PROG    =	fwknop
-SRC 	= 	fwknop.c
+PROG    = fwknop
+SRC     = fwknop.c
 
-OBJ		=	$(SRC:.c=.o)
+OBJ     = $(SRC:.c=.o)
 
-TPROG   =	fko_test
-TSRC	=	fko_test.c
+TPROG   = fko_test
+TSRC    = fko_test.c
 
-TOBJ	=	$(TSRC:.c=.o)
+TOBJ    = $(TSRC:.c=.o)
 
-LIBFWK	=   libfwknop.a
-LIBSRCS	= 	spa_random_number.c \
-			spa_user.c \
-			spa_timestamp.c \
-			spa_version.c \
-			spa_message_type.c \
-			strlcat.c \
-			strlcpy.c
+LIBFWK  = libfwknop.a
+LIBSRCS = spa_random_number.c \
+          spa_user.c \
+          spa_timestamp.c \
+          spa_version.c \
+          spa_message_type.c \
+          md5.c \
+          base64.c \
+          strlcat.c \
+          strlcpy.c
 
-LIBOBJS	=	$(LIBSRCS:.c=.o)
+LIBOBJS = $(LIBSRCS:.c=.o)
 
 # Group all the source files for make depend.
 #
-ALLSRCS	=	$(LIBSRCS) $(SRC) $(TSRC)
+ALLSRCS = $(LIBSRCS) $(SRC) $(TSRC)
 
 ###########################################################################
 # Targets
@@ -115,10 +117,12 @@ depend:
 #
 # DO NOT DELETE
 
-spa_random_number.o: fwknop.h
-spa_user.o: fwknop.h
-spa_timestamp.o: fwknop.h
-spa_version.o: fwknop.h
-spa_message_type.o: fwknop.h
-fwknop.o: fwknop.h
-fko_test.o: fwknop.h
+spa_random_number.o: fwknop.h md5.h base64.h
+spa_user.o: fwknop.h md5.h base64.h
+spa_timestamp.o: fwknop.h md5.h base64.h
+spa_version.o: fwknop.h md5.h base64.h
+spa_message_type.o: fwknop.h md5.h base64.h
+md5.o: md5.h
+base64.o: base64.h
+fwknop.o: fwknop.h md5.h base64.h
+fko_test.o: fwknop.h md5.h base64.h

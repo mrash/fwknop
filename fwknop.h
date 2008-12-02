@@ -35,6 +35,9 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include "md5.h"
+#include "base64.h"
+
 /* General params
 */
 #define FWKNOP_VERSION          "1.9.9"     /* The fwknop client version # */
@@ -53,6 +56,7 @@
 
 #define TIMESTAMP_SIZE          10
 
+/* --DSS TODO: Do we need to adjust these? */
 #define MAX_USER_SIZE           32
 #define MAX_MESSAGE_SIZE        128
 #define MAX_NAT_ACCESS_SIZE     128
@@ -87,7 +91,6 @@ enum {
 #define DEFAULT_DIGEST          SHA256_DIGEST
 #define DEFAULT_MSG_TYPE        SPA_ACCESS_MSG
 #define DEFAULT_CLIENT_TIMEOUT  0
-#define KNOCK_INTERVAL          60
 
 /* The pieces we need to make a SPA packet.
 */
