@@ -33,9 +33,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
-#include <sys/types.h>
+
+#include "types.h"
 
 #include "md5.h"
+#include "sha256.h"
 #include "base64.h"
 
 /* General params

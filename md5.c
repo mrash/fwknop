@@ -59,7 +59,7 @@ void md5(char *in, char *digest, int in_len)
 {
     MD5Context ctx;
     int             i;
-    unsigned char   md[MD5_DIGEST_STR_LENGTH];
+    unsigned char   md[MD5_DIGESTSIZE];
 
 
     MD5Init(&ctx);
@@ -68,7 +68,7 @@ void md5(char *in, char *digest, int in_len)
 
     MD5Final(md, &ctx);
 
-    for(i=0; i<sizeof md; i++)
+    for(i=0; i<MD5_DIGESTSIZE; i++)
     {
         sprintf(digest, "%02x", md[i]);
         digest += 2;

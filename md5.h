@@ -32,9 +32,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sys/types.h>
 
-#define MD5_DIGEST_STR_LENGTH 16
+#include "types.h"
+
+#define MD5_DIGESTSIZE 16
 
 /* The following tests optimise behaviour on little-endian
  * machines, where there is no need to reverse the byte order
@@ -56,11 +57,6 @@
 #ifdef __i386__
 #undef HIGHFIRST
 #endif
-
-/* On machines where "long" is 64 bits, we need to declare
- * uint32 as something guaranteed to be 32 bits.
-*/
-typedef u_int32_t uint32;
 
 typedef struct _MD5Context {
         uint32 buf[4];

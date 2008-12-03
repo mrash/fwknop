@@ -137,21 +137,43 @@ int main(int argc, char **argv)
     printf("\n");
     
     /*********************************************************************
+     * DIGEST tests.
+     ********************************************************************/
+
+    char tst_string[] = "This is a test.";
+
+    /*********************************************************************
      * MD5 test.
     */
-    char digest[33]   = {0};
-    char tst_string[] = "This is a test.";
-    char tst_digest[] = "120ea8a25e5d487bf68b5f7096440019";
+    char md5_digest[33]   = {0};
+    char tst_md5_digest[] = "120ea8a25e5d487bf68b5f7096440019";
 
     /* Use our convenient md5 function.
     */
-    md5(tst_string, digest, strlen(tst_string));
+    md5(tst_string, md5_digest, strlen(tst_string));
 
     printf(
-        "MD5 of '%s':\n"
+        "\nMD5 of '%s':\n"
         "    Should be: %s\n"
         "  Computed as: %s\n",
-        tst_string, tst_digest, digest
+        tst_string, tst_md5_digest, md5_digest
+    );
+
+    /*********************************************************************
+     * SHA256 test.
+    */
+    char sha256_digest[65]   = {0};
+    char tst_sha256_digest[] = "a8a2f6ebe286697c527eb35a58b5539532e9b3ae3b64d4eb0a46fb657b41562c";
+
+    /* Use our convenient md5 function.
+    */
+    sha256(tst_string, sha256_digest, strlen(tst_string));
+
+    printf(
+        "\nSHA256 of '%s':\n"
+        "    Should be: %s\n"
+        "  Computed as: %s\n",
+        tst_string, tst_sha256_digest, sha256_digest
     );
 
 

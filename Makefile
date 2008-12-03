@@ -63,6 +63,7 @@ LIBSRCS = spa_random_number.c \
           spa_version.c \
           spa_message_type.c \
           md5.c \
+          sha256.c \
           base64.c \
           strlcat.c \
           strlcpy.c
@@ -117,12 +118,13 @@ depend:
 #
 # DO NOT DELETE
 
-spa_random_number.o: fwknop.h md5.h base64.h
-spa_user.o: fwknop.h md5.h base64.h
-spa_timestamp.o: fwknop.h md5.h base64.h
-spa_version.o: fwknop.h md5.h base64.h
-spa_message_type.o: fwknop.h md5.h base64.h
-md5.o: md5.h
+spa_random_number.o: fwknop.h types.h md5.h sha256.h base64.h
+spa_user.o: fwknop.h types.h md5.h sha256.h base64.h
+spa_timestamp.o: fwknop.h types.h md5.h sha256.h base64.h
+spa_version.o: fwknop.h types.h md5.h sha256.h base64.h
+spa_message_type.o: fwknop.h types.h md5.h sha256.h base64.h
+md5.o: md5.h types.h
+sha256.o: sha256.h types.h
 base64.o: base64.h
-fwknop.o: fwknop.h md5.h base64.h
-fko_test.o: fwknop.h md5.h base64.h
+fwknop.o: fwknop.h types.h md5.h sha256.h base64.h
+fko_test.o: fwknop.h types.h md5.h sha256.h base64.h
