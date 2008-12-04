@@ -53,29 +53,6 @@
     }
 #endif
 
-/* Compute MD5 hash on in and store the hex string result in out.
-*/
-void md5(char *in, char *digest, int in_len)
-{
-    MD5Context ctx;
-    int             i;
-    unsigned char   md[MD5_DIGESTSIZE];
-
-
-    MD5Init(&ctx);
-
-    MD5Update(&ctx, (unsigned char*)in, in_len);
-
-    MD5Final(md, &ctx);
-
-    for(i=0; i<MD5_DIGESTSIZE; i++)
-    {
-        sprintf(digest, "%02x", md[i]);
-        digest += 2;
-    }
-}
-
-
 /*
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.

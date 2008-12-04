@@ -3,10 +3,10 @@
  *
  * File:    sha256.h
  *
- * Purpose: Header for sha256.c
+ * Purpose: Header for sha.c
  *
- * sha - An implementation of the NIST SHA 256/384/512 Message Digest
- *       algorithm.
+ * sha - An implementation of the NIST SHA Message Digest
+ *       algorithm. This header covers SHA1 and SHA256
  *
  * Copyright (C) 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
  * This library is free software; you can redistribute it and/or
@@ -39,6 +39,7 @@
 #define BYTEORDER __BYTE_ORDER
 
 #define SHA_BLOCKSIZE       64
+#define SHA1_DIGESTSIZE     20
 #define SHA256_DIGESTSIZE   32
 
 typedef struct {
@@ -46,12 +47,19 @@ typedef struct {
     uint32  count_lo, count_hi;
     uint8   data[SHA_BLOCKSIZE];
     int     local;
-} SHA256_INFO;
+} SHA_INFO;
 
-void sha256(char *in, char *digest, int in_len);
-void sha256_init(SHA256_INFO *sha256_info);
-void sha256_update(SHA256_INFO *sha256_info, uint8 *buffer, int count);
-void sha256_final(SHA256_INFO *sha256_info);
-void sha256_unpackdigest(uint8 digest[32], SHA256_INFO *sha256_info);
+/* SHA1 prototypes.
+*/
+void sha1_init(SHA_INFO *sha_info);
+void sha1_update(SHA_INFO *sha_info, uint8 *buffer, int count);
+void sha1_final(uint8 digest[SHA1_DIGESTSIZE], SHA_INFO *sha_info);
+
+/* SHA256 prototypes.
+*/
+void sha256_init(SHA_INFO *sha_info);
+void sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count);
+void sha256_final(SHA_INFO *sha_info);
+void sha256_unpackdigest(uint8 digest[SHA256_DIGESTSIZE], SHA_INFO *sha_info);
 
 #endif /* _SHA256_H_ */

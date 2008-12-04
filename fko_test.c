@@ -160,6 +160,23 @@ int main(int argc, char **argv)
     );
 
     /*********************************************************************
+     * SHA1 test.
+    */
+    char sha1_digest[41]   = {0};
+    char tst_sha1_digest[] = "afa6c8b3a2fae95785dc7d9685a57835d703ac88";
+
+    /* Use our convenient md5 function.
+    */
+    sha1(tst_string, sha1_digest, strlen(tst_string));
+
+    printf(
+        "\nSHA1 of '%s':\n"
+        "    Should be: %s\n"
+        "  Computed as: %s\n",
+        tst_string, tst_sha1_digest, sha1_digest
+    );
+
+    /*********************************************************************
      * SHA256 test.
     */
     char sha256_digest[65]   = {0};

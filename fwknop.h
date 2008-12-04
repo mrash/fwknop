@@ -36,8 +36,7 @@
 
 #include "types.h"
 
-#include "md5.h"
-#include "sha256.h"
+#include "digest.h"
 #include "base64.h"
 
 /* General params

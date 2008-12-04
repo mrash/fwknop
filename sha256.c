@@ -1,16 +1,14 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    md5.c
+ * File:    sha256.c
  *
  * Purpose: Implementation of the SHA256 message-digest algorithm for
- *          libfwknop. This file also happens to include SHA 384 and 512
- *          though they are not currently used by fwknop.
+ *          libfwknop.
  *
- * sha - An implementation of the NIST SHA 256/384/512 Message Digest
- *       algorithm
  *
  * Copyright (C) 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -27,7 +25,7 @@
  *
  *****************************************************************************
 */
-#include "sha256.h"
+#include "sha.h"
 
 /* Truncate to 32 bits -- should be a null op on 32-bit machines
 */
@@ -71,33 +69,13 @@ static uint32 K[64] = {
     0x90befffaL, 0xa4506cebL, 0xbef9a3f7L, 0xc67178f2L
 };
 
-/* Convenience function fwknop.
-*/
-void sha256(char *in, char *digest, int in_len)
-{
-    int         i;
-    SHA256_INFO sha256_info;
-    uint8       md[SHA256_DIGESTSIZE];
-
-    sha256_init(&sha256_info);
-    sha256_update(&sha256_info, (uint8*)in, in_len);
-    sha256_final(&sha256_info);
-    sha256_unpackdigest(md, &sha256_info);
-
-    for(i=0; i<SHA256_DIGESTSIZE; i++)
-    {
-        sprintf(digest, "%02x", md[i]);
-        digest += 2;
-    }
-}
-
-static void sha256_transform(SHA256_INFO *sha256_info)
+static void sha256_transform(SHA_INFO *sha_info)
 {
     int i, j;
     uint8 *dp;
     uint32 T, T1, T2, A, B, C, D, E, F, G, H, W[64];
 
-    dp = sha256_info->data;
+    dp = sha_info->data;
 
 #undef SWAP_DONE
 
@@ -148,14 +126,14 @@ static void sha256_transform(SHA256_INFO *sha256_info)
 #ifndef SWAP_DONE
 #error Unknown byte order -- you need to add code here
 #endif /* SWAP_DONE */
-    A = sha256_info->digest[0];
-    B = sha256_info->digest[1];
-    C = sha256_info->digest[2];
-    D = sha256_info->digest[3];
-    E = sha256_info->digest[4];
-    F = sha256_info->digest[5];
-    G = sha256_info->digest[6];
-    H = sha256_info->digest[7];
+    A = sha_info->digest[0];
+    B = sha_info->digest[1];
+    C = sha_info->digest[2];
+    D = sha_info->digest[3];
+    E = sha_info->digest[4];
+    F = sha_info->digest[5];
+    G = sha_info->digest[6];
+    H = sha_info->digest[7];
 
     for (i=16; i<64; i++)
         W[i] = TRUNC32(LSIG1(W[i-2]) + W[i-7] + LSIG0(W[i-15]) + W[i-16]);
@@ -173,148 +151,135 @@ static void sha256_transform(SHA256_INFO *sha256_info)
         A = TRUNC32(T1 + T2);
     }
 
-    sha256_info->digest[0] = TRUNC32(sha256_info->digest[0] + A);
-    sha256_info->digest[1] = TRUNC32(sha256_info->digest[1] + B);
-    sha256_info->digest[2] = TRUNC32(sha256_info->digest[2] + C);
-    sha256_info->digest[3] = TRUNC32(sha256_info->digest[3] + D);
-    sha256_info->digest[4] = TRUNC32(sha256_info->digest[4] + E);
-    sha256_info->digest[5] = TRUNC32(sha256_info->digest[5] + F);
-    sha256_info->digest[6] = TRUNC32(sha256_info->digest[6] + G);
-    sha256_info->digest[7] = TRUNC32(sha256_info->digest[7] + H);
+    sha_info->digest[0] = TRUNC32(sha_info->digest[0] + A);
+    sha_info->digest[1] = TRUNC32(sha_info->digest[1] + B);
+    sha_info->digest[2] = TRUNC32(sha_info->digest[2] + C);
+    sha_info->digest[3] = TRUNC32(sha_info->digest[3] + D);
+    sha_info->digest[4] = TRUNC32(sha_info->digest[4] + E);
+    sha_info->digest[5] = TRUNC32(sha_info->digest[5] + F);
+    sha_info->digest[6] = TRUNC32(sha_info->digest[6] + G);
+    sha_info->digest[7] = TRUNC32(sha_info->digest[7] + H);
 }
 
-void sha256_init(SHA256_INFO *sha256_info)
+void sha256_init(SHA_INFO *sha_info)
 {
-    sha256_info->digest[0] = 0x6a09e667L;
-    sha256_info->digest[1] = 0xbb67ae85L;
-    sha256_info->digest[2] = 0x3c6ef372L;
-    sha256_info->digest[3] = 0xa54ff53aL;
-    sha256_info->digest[4] = 0x510e527fL;
-    sha256_info->digest[5] = 0x9b05688cL;
-    sha256_info->digest[6] = 0x1f83d9abL;
-    sha256_info->digest[7] = 0x5be0cd19L;
-    sha256_info->count_lo = 0L;
-    sha256_info->count_hi = 0L;
-    sha256_info->local = 0;
-    memset((uint8 *)sha256_info->data, 0, SHA_BLOCKSIZE);
+    sha_info->digest[0] = 0x6a09e667L;
+    sha_info->digest[1] = 0xbb67ae85L;
+    sha_info->digest[2] = 0x3c6ef372L;
+    sha_info->digest[3] = 0xa54ff53aL;
+    sha_info->digest[4] = 0x510e527fL;
+    sha_info->digest[5] = 0x9b05688cL;
+    sha_info->digest[6] = 0x1f83d9abL;
+    sha_info->digest[7] = 0x5be0cd19L;
+    sha_info->count_lo = 0L;
+    sha_info->count_hi = 0L;
+    sha_info->local = 0;
+    memset((uint8 *)sha_info->data, 0, SHA_BLOCKSIZE);
 }
 
 /* Update the SHA digest
 */
-void sha256_update(SHA256_INFO *sha256_info, uint8 *buffer, int count)
+void sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count)
 {
     int i;
     uint32 clo;
 
-    clo = TRUNC32(sha256_info->count_lo + ((uint8) count << 3));
-    if (clo < sha256_info->count_lo) {
-        sha256_info->count_hi++;
+    clo = TRUNC32(sha_info->count_lo + ((uint8) count << 3));
+    if (clo < sha_info->count_lo) {
+        sha_info->count_hi++;
     }
-    sha256_info->count_lo = clo;
-    sha256_info->count_hi += (uint8) count >> 29;
-    if (sha256_info->local) {
-        i = SHA_BLOCKSIZE - sha256_info->local;
+    sha_info->count_lo = clo;
+    sha_info->count_hi += (uint8) count >> 29;
+    if (sha_info->local) {
+        i = SHA_BLOCKSIZE - sha_info->local;
         if (i > count) {
             i = count;
         }
-        memcpy(((uint8 *) sha256_info->data) + sha256_info->local, buffer, i);
+        memcpy(((uint8 *) sha_info->data) + sha_info->local, buffer, i);
         count -= i;
         buffer += i;
-        sha256_info->local += i;
-        if (sha256_info->local == SHA_BLOCKSIZE) {
-            sha256_transform(sha256_info);
+        sha_info->local += i;
+        if (sha_info->local == SHA_BLOCKSIZE) {
+            sha256_transform(sha_info);
         } else {
             return;
         }
     }
     while (count >= SHA_BLOCKSIZE) {
-        memcpy(sha256_info->data, buffer, SHA_BLOCKSIZE);
+        memcpy(sha_info->data, buffer, SHA_BLOCKSIZE);
         buffer += SHA_BLOCKSIZE;
         count -= SHA_BLOCKSIZE;
-        sha256_transform(sha256_info);
+        sha256_transform(sha_info);
     }
-    memcpy(sha256_info->data, buffer, count);
-    sha256_info->local = count;
+    memcpy(sha_info->data, buffer, count);
+    sha_info->local = count;
 }
 
 /* Finish computing the SHA digest
 */
-void sha256_final(SHA256_INFO *sha256_info)
+void sha256_final(SHA_INFO *sha_info)
 {
     int count;
     uint32 lo_bit_count, hi_bit_count;
 
-    lo_bit_count = sha256_info->count_lo;
-    hi_bit_count = sha256_info->count_hi;
+    lo_bit_count = sha_info->count_lo;
+    hi_bit_count = sha_info->count_hi;
     count = (int) ((lo_bit_count >> 3) & 0x3f);
-    ((uint8 *) sha256_info->data)[count++] = 0x80;
+    ((uint8 *) sha_info->data)[count++] = 0x80;
     if (count > SHA_BLOCKSIZE - 8) {
-        memset(((uint8 *) sha256_info->data) + count, 0, SHA_BLOCKSIZE - count);
-        sha256_transform(sha256_info);
-        memset((uint8 *) sha256_info->data, 0, SHA_BLOCKSIZE - 8);
+        memset(((uint8 *) sha_info->data) + count, 0, SHA_BLOCKSIZE - count);
+        sha256_transform(sha_info);
+        memset((uint8 *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
     } else {
-        memset(((uint8 *) sha256_info->data) + count, 0,
+        memset(((uint8 *) sha_info->data) + count, 0,
                 SHA_BLOCKSIZE - 8 - count);
     }
-    sha256_info->data[56] = (hi_bit_count >> 24) & 0xff;
-    sha256_info->data[57] = (hi_bit_count >> 16) & 0xff;
-    sha256_info->data[58] = (hi_bit_count >>  8) & 0xff;
-    sha256_info->data[59] = (hi_bit_count >>  0) & 0xff;
-    sha256_info->data[60] = (lo_bit_count >> 24) & 0xff;
-    sha256_info->data[61] = (lo_bit_count >> 16) & 0xff;
-    sha256_info->data[62] = (lo_bit_count >>  8) & 0xff;
-    sha256_info->data[63] = (lo_bit_count >>  0) & 0xff;
-    sha256_transform(sha256_info);
+    sha_info->data[56] = (hi_bit_count >> 24) & 0xff;
+    sha_info->data[57] = (hi_bit_count >> 16) & 0xff;
+    sha_info->data[58] = (hi_bit_count >>  8) & 0xff;
+    sha_info->data[59] = (hi_bit_count >>  0) & 0xff;
+    sha_info->data[60] = (lo_bit_count >> 24) & 0xff;
+    sha_info->data[61] = (lo_bit_count >> 16) & 0xff;
+    sha_info->data[62] = (lo_bit_count >>  8) & 0xff;
+    sha_info->data[63] = (lo_bit_count >>  0) & 0xff;
+    sha256_transform(sha_info);
 }
 
-void sha256_unpackdigest(uint8 digest[32], SHA256_INFO *sha256_info)
+void sha256_unpackdigest(uint8 digest[32], SHA_INFO *sha_info)
 {
-    digest[ 0] = (unsigned char) ((sha256_info->digest[0] >> 24) & 0xff);
-    digest[ 1] = (unsigned char) ((sha256_info->digest[0] >> 16) & 0xff);
-    digest[ 2] = (unsigned char) ((sha256_info->digest[0] >>  8) & 0xff);
-    digest[ 3] = (unsigned char) ((sha256_info->digest[0]      ) & 0xff);
-    digest[ 4] = (unsigned char) ((sha256_info->digest[1] >> 24) & 0xff);
-    digest[ 5] = (unsigned char) ((sha256_info->digest[1] >> 16) & 0xff);
-    digest[ 6] = (unsigned char) ((sha256_info->digest[1] >>  8) & 0xff);
-    digest[ 7] = (unsigned char) ((sha256_info->digest[1]      ) & 0xff);
-    digest[ 8] = (unsigned char) ((sha256_info->digest[2] >> 24) & 0xff);
-    digest[ 9] = (unsigned char) ((sha256_info->digest[2] >> 16) & 0xff);
-    digest[10] = (unsigned char) ((sha256_info->digest[2] >>  8) & 0xff);
-    digest[11] = (unsigned char) ((sha256_info->digest[2]      ) & 0xff);
-    digest[12] = (unsigned char) ((sha256_info->digest[3] >> 24) & 0xff);
-    digest[13] = (unsigned char) ((sha256_info->digest[3] >> 16) & 0xff);
-    digest[14] = (unsigned char) ((sha256_info->digest[3] >>  8) & 0xff);
-    digest[15] = (unsigned char) ((sha256_info->digest[3]      ) & 0xff);
-    digest[16] = (unsigned char) ((sha256_info->digest[4] >> 24) & 0xff);
-    digest[17] = (unsigned char) ((sha256_info->digest[4] >> 16) & 0xff);
-    digest[18] = (unsigned char) ((sha256_info->digest[4] >>  8) & 0xff);
-    digest[19] = (unsigned char) ((sha256_info->digest[4]      ) & 0xff);
-    digest[20] = (unsigned char) ((sha256_info->digest[5] >> 24) & 0xff);
-    digest[21] = (unsigned char) ((sha256_info->digest[5] >> 16) & 0xff);
-    digest[22] = (unsigned char) ((sha256_info->digest[5] >>  8) & 0xff);
-    digest[23] = (unsigned char) ((sha256_info->digest[5]      ) & 0xff);
-    digest[24] = (unsigned char) ((sha256_info->digest[6] >> 24) & 0xff);
-    digest[25] = (unsigned char) ((sha256_info->digest[6] >> 16) & 0xff);
-    digest[26] = (unsigned char) ((sha256_info->digest[6] >>  8) & 0xff);
-    digest[27] = (unsigned char) ((sha256_info->digest[6]      ) & 0xff);
-    digest[28] = (unsigned char) ((sha256_info->digest[7] >> 24) & 0xff);
-    digest[29] = (unsigned char) ((sha256_info->digest[7] >> 16) & 0xff);
-    digest[30] = (unsigned char) ((sha256_info->digest[7] >>  8) & 0xff);
-    digest[31] = (unsigned char) ((sha256_info->digest[7]      ) & 0xff);
+    digest[ 0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
+    digest[ 1] = (unsigned char) ((sha_info->digest[0] >> 16) & 0xff);
+    digest[ 2] = (unsigned char) ((sha_info->digest[0] >>  8) & 0xff);
+    digest[ 3] = (unsigned char) ((sha_info->digest[0]      ) & 0xff);
+    digest[ 4] = (unsigned char) ((sha_info->digest[1] >> 24) & 0xff);
+    digest[ 5] = (unsigned char) ((sha_info->digest[1] >> 16) & 0xff);
+    digest[ 6] = (unsigned char) ((sha_info->digest[1] >>  8) & 0xff);
+    digest[ 7] = (unsigned char) ((sha_info->digest[1]      ) & 0xff);
+    digest[ 8] = (unsigned char) ((sha_info->digest[2] >> 24) & 0xff);
+    digest[ 9] = (unsigned char) ((sha_info->digest[2] >> 16) & 0xff);
+    digest[10] = (unsigned char) ((sha_info->digest[2] >>  8) & 0xff);
+    digest[11] = (unsigned char) ((sha_info->digest[2]      ) & 0xff);
+    digest[12] = (unsigned char) ((sha_info->digest[3] >> 24) & 0xff);
+    digest[13] = (unsigned char) ((sha_info->digest[3] >> 16) & 0xff);
+    digest[14] = (unsigned char) ((sha_info->digest[3] >>  8) & 0xff);
+    digest[15] = (unsigned char) ((sha_info->digest[3]      ) & 0xff);
+    digest[16] = (unsigned char) ((sha_info->digest[4] >> 24) & 0xff);
+    digest[17] = (unsigned char) ((sha_info->digest[4] >> 16) & 0xff);
+    digest[18] = (unsigned char) ((sha_info->digest[4] >>  8) & 0xff);
+    digest[19] = (unsigned char) ((sha_info->digest[4]      ) & 0xff);
+    digest[20] = (unsigned char) ((sha_info->digest[5] >> 24) & 0xff);
+    digest[21] = (unsigned char) ((sha_info->digest[5] >> 16) & 0xff);
+    digest[22] = (unsigned char) ((sha_info->digest[5] >>  8) & 0xff);
+    digest[23] = (unsigned char) ((sha_info->digest[5]      ) & 0xff);
+    digest[24] = (unsigned char) ((sha_info->digest[6] >> 24) & 0xff);
+    digest[25] = (unsigned char) ((sha_info->digest[6] >> 16) & 0xff);
+    digest[26] = (unsigned char) ((sha_info->digest[6] >>  8) & 0xff);
+    digest[27] = (unsigned char) ((sha_info->digest[6]      ) & 0xff);
+    digest[28] = (unsigned char) ((sha_info->digest[7] >> 24) & 0xff);
+    digest[29] = (unsigned char) ((sha_info->digest[7] >> 16) & 0xff);
+    digest[30] = (unsigned char) ((sha_info->digest[7] >>  8) & 0xff);
+    digest[31] = (unsigned char) ((sha_info->digest[7]      ) & 0xff);
 }
 
-#define BLOCK_SIZE  8192
-
-/*
-void sha256_print(SHA256_INFO *sha256_info)
-{
-    printf("%08lx %08lx %08lx %08lx %08lx %08lx %08lx %08lx\n",
-            sha256_info->digest[0], sha256_info->digest[1],
-            sha256_info->digest[2], sha256_info->digest[3],
-            sha256_info->digest[4], sha256_info->digest[5],
-            sha256_info->digest[6], sha256_info->digest[7]
-    );
-}
-*/
 
 /***EOF***/

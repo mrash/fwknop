@@ -64,7 +64,6 @@ typedef struct _MD5Context {
         unsigned char in[64];
 } MD5Context;
 
-void md5(char* in, char* out, int in_len);
 void MD5Init(MD5Context*);
 void MD5Update(MD5Context *ctx, unsigned char *buf, unsigned len);
 void MD5Final(unsigned char digest[16], MD5Context *ctx);
