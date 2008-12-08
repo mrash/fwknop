@@ -22,6 +22,7 @@
  *
  *****************************************************************************
 */
+#include "types.h"
 #include "base64.h"
 
 static unsigned char map2[] =
@@ -38,26 +39,30 @@ static unsigned char map2[] =
     0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33
 };
 
-void b64_decode(char *in, char *out, int out_len)
+int b64_decode(char *in, uchar *out, int out_len)
 {
     int i, v;
-    char *dst = out;
+    uchar *dst = out;
 
     v = 0;
     for (i = 0; in[i] && in[i] != '='; i++) {
         unsigned int index= in[i]-43;
 
         if (index>=(sizeof(map2)/sizeof(map2[0])) || map2[index] == 0xff)
-            return;
+            return(-1);
 
         v = (v << 6) + map2[index];
 
         if (i & 3) {
-            if (dst - out < out_len) {
+            //--DSS temp for test
+            //if (dst - out < out_len) {
                 *dst++ = v >> (6 - 2 * (i & 3));
-            }
+            //}
         }
     }
+    *dst = '\0';
+
+    return(dst - out);
 }
 
 /*****************************************************************************
@@ -66,8 +71,7 @@ void b64_decode(char *in, char *out, int out_len)
  * fixed edge cases and made it work from data (vs. strings) by ryan.
  *****************************************************************************
 */
-
-void b64_encode(char *in, char *out, int in_len)
+int b64_encode(uchar *in, char *out, int in_len)
 {
     static const char b64[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -92,6 +96,8 @@ void b64_encode(char *in, char *out, int in_len)
             *dst++ = '=';
     }
     *dst = '\0';
+
+    return(dst - out);
 }
 
 /***EOF***/

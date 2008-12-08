@@ -36,9 +36,15 @@
 #include "md5.h"
 #include "sha.h"
 
-void md5(char* in, char* out, int in_len);
-void sha1(char* in, char* out, int in_len);
-void sha256(char* in, char* out, int in_len);
+void md5(uchar* out, uchar* in, int size);
+void md5_hex(char* out, uchar* in, int size);
+void md5_base64(char* out, uchar* in, int size);
+void sha1(uchar* out, uchar* in, int size);
+void sha1_hex(char* out, uchar* in, int size);
+void sha1_base64(char* out, uchar* in, int size);
+void sha256(uchar* out, uchar* in, int size);
+void sha256_hex(char* out, uchar* in, int size);
+void sha256_base64(char* out, uchar* in, int size);
 
 #endif /* _DIGEST_H_ */
 

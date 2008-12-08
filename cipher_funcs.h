@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    base64.h
+ * File:    cipher_funcs.h
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Header for the fwknop base64.c
+ * Purpose: Header for the fwknop cipher_funcs.c.
  *
  *  License (GNU Public License):
  *
@@ -21,18 +21,22 @@
  *
  *****************************************************************************
 */
-#ifndef _BASE64_H_
-#define _BASE64_H_
+#ifndef _CIPHER_FUNCS_H_
+#define _CIPHER_FUNCS_H_
 
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "types.h"
+#include "rijndael.h"
 
-/* Prototypes
+/* Provide the predicted encrypted data size for given input data based
+ * on a 16-byte block size (for Rijndael implementation,this also accounts
+ * for the 16-byte salt as well).
 */
-int b64_encode(uchar *in, char *out, int in_len);
-int b64_decode(char *in, uchar *out, int out_len);
+#define PREDICT_ENCSIZE(x) (1+(x>>4)+(x&0xf?1:0))<<4
 
-#endif /* _BASE64_H_ */
+int fko_encrypt(uchar *in, int len, char *key, uchar *out);
+int fko_decrypt(uchar *in, int len, char *key, uchar *out);
+void hex_dump(uchar *data, int size);
+
+#endif /* _CIPHER_FUNCS_H_ */
 
 /***EOF***/

@@ -62,11 +62,15 @@ LIBSRCS = spa_random_number.c \
           spa_timestamp.c \
           spa_version.c \
           spa_message_type.c \
+          spa_message.c \
+          spa_digest.c \
           md5.c \
           sha1.c \
           sha256.c \
           digest.c \
           base64.c \
+          rijndael.c \
+          cipher_funcs.c \
           strlcat.c \
           strlcpy.c
 
@@ -120,15 +124,28 @@ depend:
 #
 # DO NOT DELETE
 
-spa_random_number.o: fwknop.h types.h digest.h md5.h sha.h base64.h
-spa_user.o: fwknop.h types.h digest.h md5.h sha.h base64.h
-spa_timestamp.o: fwknop.h types.h digest.h md5.h sha.h base64.h
-spa_version.o: fwknop.h types.h digest.h md5.h sha.h base64.h
-spa_message_type.o: fwknop.h types.h digest.h md5.h sha.h base64.h
+spa_random_number.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h
+spa_random_number.o: rijndael.h base64.h
+spa_user.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h rijndael.h
+spa_user.o: base64.h
+spa_timestamp.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h
+spa_timestamp.o: rijndael.h base64.h
+spa_version.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h
+spa_version.o: rijndael.h base64.h
+spa_message_type.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h
+spa_message_type.o: rijndael.h base64.h
+spa_message.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h
+spa_message.o: rijndael.h base64.h
+spa_digest.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h rijndael.h
+spa_digest.o: base64.h
 md5.o: md5.h types.h
 sha1.o: sha.h types.h
 sha256.o: sha.h types.h
-digest.o: digest.h types.h md5.h sha.h
-base64.o: base64.h
-fwknop.o: fwknop.h types.h digest.h md5.h sha.h base64.h
-fko_test.o: fwknop.h types.h digest.h md5.h sha.h base64.h
+digest.o: digest.h types.h md5.h sha.h base64.h
+base64.o: types.h base64.h
+rijndael.o: rijndael.h types.h
+cipher_funcs.o: cipher_funcs.h types.h rijndael.h digest.h md5.h sha.h
+fwknop.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h rijndael.h
+fwknop.o: base64.h
+fko_test.o: fwknop.h types.h digest.h md5.h sha.h cipher_funcs.h rijndael.h
+fko_test.o: base64.h

@@ -11,13 +11,30 @@ spa_random_number.c     - Generate a string of 16 random hex digits.
 spa_user.c              - Get or spoof the current user.
 spa_timestamp.c         - Get the current timestamp with optional offset.
 spa_version.c           - Get the fwknop-client version number.
-spa_message_type.c      -
-spa_message.c           -
-spa_nat_access.c        -
-spa_server_auth.c       -
-spa_client_timeout.c    -
-spa_digest.c            -
- -more to come-
+spa_message_type.c      - Set the message type.
+spa_message.c           - Construct the raw spa message based on the current
+                          spa data.
+spa_nat_access.c        - <not implemented yet>
+spa_server_auth.c       - <not implemented yet>
+spa_client_timeout.c    - <not implemented yet>
+spa_digest.c            - Constructs the message digest based on the current
+                          spa message data.
+
+md5.c                   - Generates md5.  Can return raw, hex, or base64.
+sha1.c                  - Generates md5.  Can return raw, hex, or base64.
+sha256.c                - Generates md5.  Can return raw, hex, or base64.
+digest.c                - Provide front-end hooks to the digest fuctions.
+
+rijndael.c              - The base Rihndael code.
+cipher_funcs.c          - Provides the code hooks to encrypt/decrypt using
+                          rijndael that is compatible with the Perl
+                          Crypt::CBC module (using Rijndael).
+
+fwknop.h                - The main common header file.  It contain default
+                          definitions, and protypes for the spa_xxx functions.
+
+--more to come--
+
 
 Executables:
 ============
@@ -31,7 +48,7 @@ fko_test                - A temp program for testing libfwknop functions during
                           a fair amount of progress in developing the client
                           (and maybe the server).
 
- -more to come-
+--more to come--
 
 
 ###EOF###

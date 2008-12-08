@@ -37,6 +37,7 @@
 #include "types.h"
 
 #include "digest.h"
+#include "cipher_funcs.h"
 #include "base64.h"
 
 /* General params
@@ -59,10 +60,12 @@
 
 /* --DSS TODO: Do we need to adjust these? */
 #define MAX_USER_SIZE           32
-#define MAX_MESSAGE_SIZE        128
+#define MAX_MESSAGE_SIZE        256
 #define MAX_NAT_ACCESS_SIZE     128
 #define MAX_SERVER_AUTH_SIZE    128
-#define MAX_DIGEST_SIZE         128
+#define MAX_DIGEST_SIZE         64
+#define MAX_ACCESS_STR_SIZE     64
+#define MAX_IP_ADDR_SIZE        16
 
 /* SPA Message types...
 */
@@ -92,6 +95,8 @@ enum {
 #define DEFAULT_DIGEST          SHA256_DIGEST
 #define DEFAULT_MSG_TYPE        SPA_ACCESS_MSG
 #define DEFAULT_CLIENT_TIMEOUT  0
+#define DEFAULT_ACCESS_STR      "none,0"
+#define DEFAULT_ALLOW_IP        "0.0.0.0"
 
 /* The pieces we need to make a SPA packet.
 */
@@ -107,7 +112,9 @@ typedef struct _spa_message {
     char            nat_access[MAX_NAT_ACCESS_SIZE];
     char            server_auth[MAX_SERVER_AUTH_SIZE];
     unsigned int    client_timeout;
-    char            digest[MAX_DIGEST_SIZE];
+    char            digest[MAX_DIGEST_SIZE+1];
+    char            access_str[MAX_ACCESS_STR_SIZE];
+    char            allow_ip[MAX_IP_ADDR_SIZE];
 } spa_message_t;
 
 /* Function prototypes
@@ -116,12 +123,14 @@ char* spa_random_number(spa_message_t *sm);
 char* spa_user(spa_message_t *sm, char *spoof_user);
 unsigned int spa_timestamp(spa_message_t *sm, int offset);
 char* spa_version(spa_message_t *sm);
-int spa_message_type(spa_message_t *sm, unsigned short msg_type);
+int spa_message_type(spa_message_t *sm, ushort msg_type);
 char* spa_message(spa_message_t *sm);
 char* spa_nat_access(spa_message_t *sm);
 char* spa_server_auth(spa_message_t *sm);
 unsigned int spa_client_timeout(spa_message_t *sm);
-char* spa_digest(spa_message_t *sm);
+
+//int spa_digest(char *digest, uchar *msg, int size, ushort digest_type);
+int spa_digest(spa_message_t *sm);
 
 size_t strlcat(char *dst, const char *src, size_t siz);
 size_t strlcpy(char *dst, const char *src, size_t siz);
