@@ -80,10 +80,12 @@ LIBOBJS = $(LIBSRCS:.c=.o)
 #
 ALLSRCS = $(LIBSRCS) $(SRC) $(TSRC)
 
+ALLPROG = $(PROG) $(TPROG)
+
 ###########################################################################
 # Targets
 #
-all: $(PROG) $(TPROG)
+all: $(ALLPROG)
 
 $(PROG): $(OBJ) $(LIBFWK)
 	$(CC) $(LDFLAGS) -o $@ $(OBJ) $(LIBFWK) $(LIBS)
@@ -98,13 +100,13 @@ $(LIBFWK): $(LIBOBJS)
 
 # Force a normal rebuild.
 #
-rebuild: clean $(PROG)
+rebuild: clean all
 
-strip: $(PROG)
-	strip $(PROG)
+strip: $(ALLPROG) 
+	strip $(ALLPROG)
 
 clean:
-	rm -f $(PROG) $(TPROG) *.o *.a *.so
+	rm -f $(ALLPROG) *.o *.a *.so
 
 realclean: clean
 	rm -f core *.bak *.tmp *[-~]
