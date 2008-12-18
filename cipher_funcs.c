@@ -69,13 +69,26 @@ void get_random_data(uint8 *data, int len)
 */
 void salt_and_iv(RIJNDAEL_context *ctx, char *pass, uint8 *data)
 {
-    uint8   tmp_buf[64]; //--DSS do we limit pw size (pwlen + 8(salt))? 
+    char    pw_buf[16];
+    uint8   tmp_buf[64];    /* How big does this need to be? */
     uint8   kiv_buf[48];    /* Key and IV buffer */
     uint8   md5_buf[16];    /* Buffer for computed md5 hash */
 
     int     kiv_len = 0;
     int     plen = strlen(pass);
 
+    /* First make pw 16 bytes (pad with "0" (ascii 0x30)) or truncate.
+     * Note: pw_buf was initialized with '0' chars (again, not the value
+     *       0, but the digit '0' character).
+    */
+    if(plen < 16)
+    {
+        memcpy(pw_buf, pass, plen);
+        memset(pw_buf+plen, '0', 16 - plen);
+    }
+    else
+        strncpy(pw_buf, pass, 16);
+          
     /* If we are decrypting, data will contain the salt. Otherwise,
      * for encryption, we generate a random salt.
     */
@@ -93,17 +106,18 @@ void salt_and_iv(RIJNDAEL_context *ctx, char *pass, uint8 *data)
     }
 
     /* Now generate the key and initialization vector.
-     * (again it is the perl Crypt::CBC way)
+     * (again it is the perl Crypt::CBC way, with a touch of
+     * fwknop).
     */ 
-    memcpy(tmp_buf+16, pass, plen);
-    memcpy(tmp_buf+16+plen, ctx->salt, 8);
+    memcpy(tmp_buf+16, pw_buf, 16);
+    memcpy(tmp_buf+32, ctx->salt, 8);
 
     while(kiv_len < sizeof(kiv_buf))
     {
         if(kiv_len == 0)
-            md5(md5_buf, tmp_buf+16, plen+8);
+            md5(md5_buf, tmp_buf+16, 24);
         else
-            md5(md5_buf, tmp_buf, 16+plen+8);
+            md5(md5_buf, tmp_buf, 40);
 
         memcpy(tmp_buf, md5_buf, 16);
 

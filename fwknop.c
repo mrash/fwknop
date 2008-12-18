@@ -38,6 +38,8 @@ int main(int argc, char **argv)
     uchar           spa_pkt_enc[1500] = {0}; // -DSS what is max size?
     char            spa_pkt_b64[1500] = {0}; // -DSS what is max size?
 
+    char           *spb64_p = spa_pkt_b64;
+
     char           *test_pw = "BubbaWasHere";
 
     /* Initialize - this sets random, user, and other defaults.
@@ -65,13 +67,25 @@ int main(int argc, char **argv)
      *       I do not think we will do it this way in the end.  :)
     */
     sprintf(spa_pkt_raw, "%s:%s", sm.message, sm.digest);
+
+    /* Encrypt it
+    */
     enc_size = fko_encrypt((uchar*)spa_pkt_raw, strlen(spa_pkt_raw), test_pw, spa_pkt_enc);
-    b64_encode(spa_pkt_enc, spa_pkt_b64, enc_size);
+
+    /* Base64 encode it and strip off trailing '='s
+    */
+    b64_encode(spa_pkt_enc, spb64_p, enc_size);
+    strip_b64_eq(spb64_p);
+
+    /* Remove the preceeding encoded "Salted__" string (if it is there).
+    */
+    if(strncmp(spb64_p, "U2FsdGVkX1", 10) == 0)
+        spb64_p += 10;
 
     printf("Hexdump of encrypted data: (%i bytes)\n", enc_size);
     hex_dump(spa_pkt_enc, enc_size);
 
-    printf("Base64 version:\n\n%s\n\n", spa_pkt_b64);
+    printf("Base64 version:\n\n%s\n\n", spb64_p);
 
     return(0);
 } 

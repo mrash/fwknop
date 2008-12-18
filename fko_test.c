@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     /* Zero our SPA message struct.
     */
     memset(&sm, 0x0, sizeof(spa_message_t));
-
+#if 0
     /*********************************************************************
     * Get a random 16-byte string of hex values.
     */
@@ -187,14 +187,16 @@ int main(int argc, char **argv)
         tst_string, tst_sha256_digest, sha256_digest
     );
 
-
+#endif
     /*********************************************************************
      * Rijndael test.
     */
-    char *pass = "bubba";
+    char *pass = "BubbaWasHere";
     char b64buf[1024] = {0};
     uchar encbuf[1024] = {0};
     uchar decbuf[1024] = {0};
+
+    char tst_string[] = "This is a test.";
 
     int len = strlen(tst_string);
     int enc_len, dec_len;
@@ -217,6 +219,15 @@ int main(int argc, char **argv)
     );
 
 
+    //char tst_dec[] = "U2FsdGVkX19GsvEbSbjzMs6uKLFBN8YsHiyqGn2hu26o7kDyT+74fq/rqd+c5SLZGEgZ3OrFX5ogEof2UOt3HcZG7IAO7YBLHDwfTb069O9rsN8uLYa/ABdDsRDd6X5Z1dwIlOBhqrpEQDHvThWWlqgXUOsg10zxXf0miy/4HmEDWJCEszq4WrZ2Jx2ymNCf";
+    char tst_dec[] = "U2FsdGVkX188TWDKS1fJShJQF6ZzQJlUjbi5Byv45JVyjklRltN3DhRODCwc5/iY/lIFExA30Zwv0dkA4WG685X7UavFmf7grEoaeyZJhVyz1ycSp3IBCsL1h2QU7pocCIMHppuwkXnqpfqBNkCFiB26yq4xscxgFwGm8GQXAgvuYxepWPK67FWsyxdTW1OT";
+
+    int blen = b64_decode(tst_dec, encbuf, strlen(tst_dec));
+printf("BLEN: %i\n", blen);
+hex_dump(encbuf, blen);
+    fko_decrypt(encbuf, blen, "BubbaWasHere", (uchar*)b64buf);
+
+printf("DSS TEST:\n%s\n", b64buf);
 
     return(0);
 } 

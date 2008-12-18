@@ -27,18 +27,18 @@
 
 char* spa_message(spa_message_t *sm)
 {
-    char    user_b64[1024]  = {0};
-    char    msg_text[1024]  = {0};
+    char    user_b64[64]    = {0};
+    char    msg_text[128]   = {0};
+    char    msg_b64[256]    = {0};
 
     b64_encode((uchar*)sm->user, user_b64, strlen(sm->user));
 
     switch(sm->message_type)
     {
         case SPA_ACCESS_MSG:
-            sprintf(msg_text, "%s,%s,%u",
+            sprintf(msg_text, "%s,%s",
                 sm->allow_ip,
-                sm->access_str,
-                sm->enc_pcap_port
+                sm->access_str
             );
             break;
 
@@ -53,13 +53,15 @@ char* spa_message(spa_message_t *sm)
 
     }
 
+    b64_encode((uchar*)msg_text, msg_b64, strlen(msg_text));
+
     sprintf(sm->message, "%s:%s:%u:%s:%u:%s",
         sm->rand_val,
         user_b64,
         sm->timestamp,
         sm->version,
         sm->message_type,
-        msg_text
+        msg_b64
     );
 
     // NOT DONE YET

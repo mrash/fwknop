@@ -30,6 +30,8 @@ char* spa_random_number(spa_message_t *sm)
     FILE           *rfd;
     struct timeval  tv;
     unsigned int    seed;
+    unsigned long   rnd;
+    char            tmp_buf[RAND_VAL_SIZE+1] = {0};
 
     /* Attempt to read seed data from /dev/urandom.  If that does not
      * work, then fall back to a time-based method (less secure, but
@@ -59,12 +61,13 @@ char* spa_random_number(spa_message_t *sm)
 
     srand(seed);
 
-    sprintf(sm->rand_val, "%04x%04x%04x%04x",
-        rand() % RAND_MASK,
-        rand() % RAND_MASK,
-        rand() % RAND_MASK,
-        rand() % RAND_MASK
-    );
+    sprintf(sm->rand_val, "%u", rand());
+    
+    while(strlen(sm->rand_val) < RAND_VAL_SIZE)
+    {
+        sprintf(tmp_buf, "%u", rand());
+        strlcat(sm->rand_val, tmp_buf, RAND_VAL_SIZE+1);
+    }
 
     return(sm->rand_val);
 } 

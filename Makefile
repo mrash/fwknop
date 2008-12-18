@@ -31,7 +31,7 @@ AR      = ar
 # "-DDEBUG to the BASE_CFLAGS arg.  This should not be used on a
 # production build.
 #
-BASE_CFLAGS = -Wall -fno-strict-aliasing 
+BASE_CFLAGS = -Wall #-fno-strict-aliasing 
 
 # Uncomment one of these CFLAGS based on your needs
 #
@@ -113,7 +113,7 @@ realclean: clean
 
 # Generate the dependencies for the sources in this current directory
 # while ignoring warnings. Note: If you don't have makedepend in your PATH,
-# you will simple get a warning and noting will happen.
+# you will simple get a warning and nothing will happen.
 #
 depend:
 	@`which makedepend 2>/dev/null` -Y -- $(CFLAGS) -- $(ALLSRCS) 2> /dev/null \

@@ -65,6 +65,8 @@ void md5_base64(char *out, uchar *in, int size)
 
     md5(md, in, size);
     b64_encode(md, out, MD5_DIGESTSIZE);
+
+    strip_b64_eq(out);
 }
 
 /* Compute SHA1 hash on in and store result in out.
@@ -96,6 +98,8 @@ void sha1_base64(char *out, uchar *in, int size)
 
     sha1(md, in, size);
     b64_encode(md, out, SHA1_DIGESTSIZE);
+
+    strip_b64_eq(out);
 }
 
 /* Compute SHA256 hash on in and store the hex string result in out.
@@ -128,6 +132,8 @@ void sha256_base64(char *out, uchar *in, int size)
 
     sha256(md, in, size);
     b64_encode(md, out, SHA256_DIGESTSIZE);
+
+    strip_b64_eq(out);
 }
 
 

@@ -100,4 +100,15 @@ int b64_encode(uchar *in, char *out, int in_len)
     return(dst - out);
 }
 
+/* Strip trailing equals ("=") charcters from a base64-encode
+ * message digest.
+*/
+void strip_b64_eq(char *data)
+{
+    char *ndx;
+
+    if((ndx = strchr(data, '=')) != NULL)
+        *ndx = '\0';
+}
+
 /***EOF***/
