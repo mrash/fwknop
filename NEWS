@@ -1,0 +1,21 @@
+Noteworthy changes in version 2.0.0-alpha (2008-12-21)
+-------------------------------------------------------
+
+ * Start of port form Perl to C
+
+ * Created initial libfko.a static lib
+
+ * fwknop client program can generate a simple access
+   request that can be parsed by the Perl fwknopd server.
+
+
+ Copyright 2008, Damien Stuart
+
+ This file is free software; as a special exception the author gives
+ unlimited permission to copy and/or distribute it, with or without
+ modifications, as long as this notice is preserved.
+
+ This file is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+

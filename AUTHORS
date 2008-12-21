@@ -1,0 +1,23 @@
+Package: fwknop
+Maintainer: Damien Stuart <dstuart@dstuart.org>
+Bug reports: bug-gpgme@gnupg.org
+
+
+Mike Rash <mbr@cipherdyne.org>
+ - Pretty much most of the original fwknop Perl implementation.
+
+Damien Stuart <dstuart@dstuart.org>
+ - The initial port to C
+ - libfko, fwknop (client), fwknopd (server)
+
+
+ Copyright 2008, Damien Stuart
+
+ This file is free software; as a special exception the author gives
+ unlimited permission to copy and/or distribute it, with or without
+ modifications, as long as this notice is preserved.
+
+ This file is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+ implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
