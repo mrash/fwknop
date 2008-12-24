@@ -7,6 +7,7 @@ m4_define(my_version, [2.0.0-alpha])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
+AC_CONFIG_AUX_DIR(config)
 AM_INIT_AUTOMAKE(my_package, my_version)
 
 dnl AM_MAINTAINER_MODE
@@ -47,9 +48,11 @@ AC_C_CONST
 
 # Checks for library functions.
 #
-AC_CHECK_FUNCS([gettimeofday memmove memset setlocale strchr])
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([bzero gettimeofday memmove memset setlocale strchr strdup])
 
+AC_CONFIG_FILES([Makefile
+                 fko/Makefile
+                 src/Makefile])
 
-# Generate the Makefiles
-#
-AC_OUTPUT(lib/Makefile src/Makefile Makefile)
+AC_OUTPUT

@@ -4,10 +4,10 @@
 #
 # Run this script to generate all the initial makefiles, etc.
 #
-aclocal
+aclocal -I config
 libtoolize --automake
 autoheader
-automake -a
+automake --add-missing --copy --foreign
 autoconf
 
 ###EOF###

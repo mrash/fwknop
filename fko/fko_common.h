@@ -26,9 +26,9 @@
 #ifndef FKO_COMMON_H
 #define FKO_COMMON_H 1
 
-//#if HAVE_CONFIG_H
+#if HAVE_CONFIG_H
   #include "config.h"
-//#endif
+#endif
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -44,6 +44,8 @@
   #include <unistd.h>
 #endif
 
+/* Convenient macros for wrapping sections in 'extern "C" {' constructs.
+*/
 #ifdef __cplusplus
   #define BEGIN_C_DECLS extern "C" {
   #define END_C_DECLS   }
@@ -53,8 +55,13 @@
 #endif /* __cplusplus */
 
 #include "fko_types.h"
-//#include "fko.h"
 #include "fko_util.h"
+
+/* Try to cover for those that do not have bzero.
+*/
+#if !HAVE_BZERO && HAVE_MEMSET
+# define bzero(buf, bytes)      ((void) memset (buf, 0, bytes))
+#endif
 
 #endif /* FKO_COMMON_H */
 

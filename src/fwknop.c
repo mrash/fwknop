@@ -106,9 +106,9 @@ void display_ctx(fko_ctx_t *ctx)
         "    Server Auth: %s\n"
         " Client Timeout: %u\n"
         "    Digest Type: %u\n"
-        "SPA Data Digest: %s\n"
-        "\n   Encoded Data:\n%s\n"
-        "\n Encrypted Data:\n%s\n"
+        "\n   Encoded Data: %s\n"
+        "\nSPA Data Digest: %s\n"
+        "\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n"
         ,
         fko_get_rand_value(ctx),
         (fko_get_username(ctx) == NULL) ? "<NULL>" : fko_get_username(ctx),
@@ -120,9 +120,9 @@ void display_ctx(fko_ctx_t *ctx)
         (fko_get_spa_server_auth(ctx) == NULL) ? "<NULL>" : fko_get_spa_server_auth(ctx),
         fko_get_spa_client_timeout(ctx),
         fko_get_spa_digest_type(ctx),
+        (ctx->encoded_msg == NULL) ? "<NULL>" : ctx->encoded_msg,
         (fko_get_spa_digest(ctx) == NULL) ? "<NULL>" : fko_get_spa_digest(ctx),
 
-        (ctx->encoded_msg == NULL) ? "<NULL>" : ctx->encoded_msg,
         (ctx->encrypted_msg == NULL) ? "<NULL>" : ctx->encrypted_msg
     );
 

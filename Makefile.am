@@ -1,1 +1,1 @@
-SUBDIRS = lib src
+SUBDIRS = fko src
