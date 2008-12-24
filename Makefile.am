@@ -1,1 +1,1 @@
-SUBDIRS = lib client server
+SUBDIRS = lib src

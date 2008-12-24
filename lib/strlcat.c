@@ -27,12 +27,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char *rcsid = "$OpenBSD: strlcat.c,v 1.9 2003/03/14 14:35:29 millert Exp $";
-#endif /* LIBC_SCCS and not lint */
-
-#include <sys/types.h>
-#include <string.h>
+#include "fko_common.h"
 
 /*
  * Appends src to string dst of size siz (unlike strncat, siz is the
@@ -41,8 +36,7 @@ static char *rcsid = "$OpenBSD: strlcat.c,v 1.9 2003/03/14 14:35:29 millert Exp 
  * Returns strlen(src) + MIN(siz, strlen(initial dst)).
  * If retval >= siz, truncation occurred.
  */
-size_t
-strlcat(char *dst, const char *src, size_t siz)
+size_t strlcat(char *dst, const char *src, size_t siz)
 {
 	register char *d = dst;
 	register const char *s = src;
@@ -68,3 +62,5 @@ strlcat(char *dst, const char *src, size_t siz)
 
 	return(dlen + (s - src));	/* count does not include NUL */
 }
+
+/***EOF***/

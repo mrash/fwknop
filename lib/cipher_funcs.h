@@ -21,10 +21,10 @@
  *
  *****************************************************************************
 */
-#ifndef _CIPHER_FUNCS_H_
-#define _CIPHER_FUNCS_H_
+#ifndef CIPHER_FUNCS_H
+#define CIPHER_FUNCS_H 1
 
-#include "types.h"
+#include "fko_common.h"
 #include "rijndael.h"
 
 /* Provide the predicted encrypted data size for given input data based
@@ -37,6 +37,6 @@ int fko_encrypt(uchar *in, int len, char *key, uchar *out);
 int fko_decrypt(uchar *in, int len, char *key, uchar *out);
 void hex_dump(uchar *data, int size);
 
-#endif /* _CIPHER_FUNCS_H_ */
+#endif /* CIPHER_FUNCS_H */
 
 /***EOF***/

@@ -1,13 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    spa_digest.c
+ * File:    fko_error.c
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Create the base64-encoded digest for the current spa data. The
- *          digest used is determined by the digest_type setting in the
- *          spa_message struct.
+ * Purpose: Error handling functions for libfko
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
@@ -25,32 +23,34 @@
  *
  *****************************************************************************
 */
-#include "fwknop.h"
+#include "fko_common.h"
+#include "fko.h"
 
-int spa_digest(spa_message_t *sm)
+/* Note: These messages must matchup with the ERROR_CODES enum
+*       defined in fko.h.
+*/
+static const char *fko_err_msgs[] = {
+    "Success",
+    "FKO Context is not initialized",
+    "Unable to allocate memory",
+    "Args contains invalid data",
+    "Value or Size of the data exceeded the max allowed",
+    "Unable to determine username",
+    "Missing or incomplete SPA data",
+    "There is no encoded data to process",
+    "Invalid digest type",
+    "Invalid encryption type",
+    "Unknown/Unclassified error",
+    0
+};
+
+const char* fko_errstr(int err_code)
 {
-    if(sm->message[0] == '\0')
-        return -1;
 
-    switch(sm->digest_type)
-    {
-        case MD5_DIGEST:
-            md5_base64(sm->digest, (uchar*)sm->message, strlen(sm->message));
-            break;    
+    if(err_code < 0 || err_code > FKO_ERROR_UNKNOWN)
+        return NULL;
 
-        case SHA1_DIGEST:
-            sha1_base64(sm->digest, (uchar*)sm->message, strlen(sm->message));
-            break;    
-
-        case SHA256_DIGEST:
-            sha256_base64(sm->digest, (uchar*)sm->message, strlen(sm->message));
-            break;    
-
-        default:
-            return(-2);
-    }
-
-    return(0);
-} 
+    return(fko_err_msgs[err_code]);
+}
 
 /***EOF***/

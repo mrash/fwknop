@@ -27,13 +27,10 @@
  *
  *****************************************************************************
 */
-#ifndef _MD5_H_
-#define _MD5_H_
+#ifndef MD5_H
+#define MD5_H 1
 
-#include <stdio.h>
-#include <string.h>
-
-#include "types.h"
+#include "fko_common.h"
 
 #define MD5_DIGESTSIZE 16
 
@@ -69,6 +66,6 @@ void MD5Update(MD5Context *ctx, unsigned char *buf, unsigned len);
 void MD5Final(unsigned char digest[16], MD5Context *ctx);
 void MD5Transform(uint32 buf[4], uint32 in[16]);
 
-#endif /* _MD5_H_ */
+#endif /* MD5_H */
 
 /***EOF***/

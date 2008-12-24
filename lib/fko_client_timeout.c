@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    spa_version.c
+ * File:    fko_spa_client_timeout.c
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Get the current fwknop version.
+ * Purpose: Set/Get the spa client timeout data
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,12 +23,38 @@
  *
  *****************************************************************************
 */
-#include "fwknop.h"
+#include "fko_common.h"
+#include "fko.h"
 
-char* spa_version(spa_message_t *sm)
+/* Set the SPA Client Timeout data
+*/
+int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout)
 {
-    strlcpy(sm->version, FWKNOP_VERSION, strlen(FWKNOP_VERSION) + 1);
-    return(sm->version);
+    /* Context must be initialized.
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return FKO_ERROR_CTX_NOT_INITIALIZED;
+
+    /* Gotta have a valid string.
+    */
+    if(timeout < 0)
+        return(FKO_ERROR_INVALID_DATA);
+
+    ctx->client_timeout = timeout;
+
+    return(FKO_SUCCESS);
 } 
+
+/* Return the SPA message data.
+*/
+int fko_get_spa_client_timeout(fko_ctx_t *ctx)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    return(ctx->client_timeout);
+}
 
 /***EOF***/

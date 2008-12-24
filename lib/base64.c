@@ -22,10 +22,9 @@
  *
  *****************************************************************************
 */
-#include "types.h"
 #include "base64.h"
 
-static unsigned char map2[] =
+static uchar map2[] =
 {
     0x3e, 0xff, 0xff, 0xff, 0x3f, 0x34, 0x35, 0x36,
     0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0xff,
@@ -53,13 +52,10 @@ int b64_decode(char *in, uchar *out, int out_len)
 
         v = (v << 6) + map2[index];
 
-        if (i & 3) {
-            //--DSS temp for test
-            //if (dst - out < out_len) {
-                *dst++ = v >> (6 - 2 * (i & 3));
-            //}
-        }
+        if (i & 3)
+            *dst++ = v >> (6 - 2 * (i & 3));
     }
+
     *dst = '\0';
 
     return(dst - out);

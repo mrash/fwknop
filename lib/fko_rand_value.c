@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    spa_random_number.c
+ * File:    fko_rand_value.c
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Generate a 16-byte random hex value.
+ * Purpose: Generate a 16-byte random numeric value.
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,15 +23,43 @@
  *
  *****************************************************************************
 */
-#include "fwknop.h"
+#include "fko_common.h"
+#include "fko.h"
 
-char* spa_random_number(spa_message_t *sm)
+#ifdef HAVE_SYS_TIME_H
+  #include <sys/time.h>
+  #ifdef TIME_WITH_SYS_TIME
+    #include <time.h>
+  #endif
+#endif
+
+#define RAND_FILE "/dev/urandom"
+
+/* Set/Generate the SPA data random value string.
+*/
+int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
 {
     FILE           *rfd;
     struct timeval  tv;
     unsigned int    seed;
-    unsigned long   rnd;
-    char            tmp_buf[RAND_VAL_SIZE+1] = {0};
+    char            tmp_buf[FKO_RAND_VAL_SIZE+1] = {0};
+
+    /* Context must be initialized.
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return FKO_ERROR_CTX_NOT_INITIALIZED;
+
+    /* If a valid value was given, use it and return happy.
+    */
+    if(new_val != NULL)
+    {
+        if(strlen(new_val) != 16)
+            return(FKO_ERROR_INVALID_DATA);
+
+        strcpy(ctx->rand_val, new_val);
+
+        return(FKO_SUCCESS);
+    }
 
     /* Attempt to read seed data from /dev/urandom.  If that does not
      * work, then fall back to a time-based method (less secure, but
@@ -43,9 +71,6 @@ char* spa_random_number(spa_message_t *sm)
         */
         fread(&seed, 4, 1, rfd);
         fclose(rfd);
-#ifdef DEBUG
-        fprintf(stderr, "Using /dev/urandom for seed: %u\n", seed);
-#endif
     }
     else
     {
@@ -54,22 +79,32 @@ char* spa_random_number(spa_message_t *sm)
         gettimeofday(&tv, NULL);
 
         seed = tv.tv_usec;
-#ifdef DEBUG
-        fprintf(stderr, "Using time and pids for seed: %u\n", seed);
-#endif
     }
 
     srand(seed);
 
-    sprintf(sm->rand_val, "%u", rand());
+    sprintf(ctx->rand_val, "%u", rand());
     
-    while(strlen(sm->rand_val) < RAND_VAL_SIZE)
+    while(strlen(ctx->rand_val) < FKO_RAND_VAL_SIZE)
     {
         sprintf(tmp_buf, "%u", rand());
-        strlcat(sm->rand_val, tmp_buf, RAND_VAL_SIZE+1);
+        strlcat(ctx->rand_val, tmp_buf, FKO_RAND_VAL_SIZE+1);
     }
 
-    return(sm->rand_val);
+    return(FKO_SUCCESS);
 } 
 
+/* Return the current rand value.
+*/
+char* fko_get_rand_value(fko_ctx_t *ctx)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return NULL;
+
+    return(ctx->rand_val);
+}
+
+    
 /***EOF***/

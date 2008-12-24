@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    spa_message_type.c
+ * File:    fko_util.h
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Set the current fwknop message type.
+ * Purpose: Header for utility functions used by libfko
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,19 +23,19 @@
  *
  *****************************************************************************
 */
-#include "fwknop.h"
+#ifndef FKO_UTIL_H
+#define FKO_UTIL_H 1
 
-int spa_message_type(spa_message_t *sm, unsigned short msg_type)
-{
-    if(msg_type >= LAST_MSG_TYPE)
-    {
-        fprintf(stderr, "*Invlaid fwknop message type: %u.\n", msg_type);
-        return(-1);
-    }
+#include "fko_common.h"
 
-    sm->message_type = msg_type;
+/* Function prototypes
+*/
+size_t strlcat(char *dst, const char *src, size_t siz);
+size_t strlcpy(char *dst, const char *src, size_t siz);
 
-    return(0);
-} 
+#endif /* FKO_UTIL_H */
+
+/***EOF***/
+
 
 /***EOF***/

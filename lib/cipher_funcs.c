@@ -34,7 +34,7 @@
 
 /* Get random data.
 */
-void get_random_data(uint8 *data, int len)
+void get_random_data(unsigned char *data, int len)
 {
     FILE           *rfd;
     struct timeval  tv;
@@ -67,15 +67,15 @@ void get_random_data(uint8 *data, int len)
  * This is is done to be compatible with the data produced via
  * the Perl Crypt::CBC module's use of Rijndael.
 */
-void salt_and_iv(RIJNDAEL_context *ctx, char *pass, uint8 *data)
+void salt_and_iv(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
 {
-    char    pw_buf[16];
-    uint8   tmp_buf[64];    /* How big does this need to be? */
-    uint8   kiv_buf[48];    /* Key and IV buffer */
-    uint8   md5_buf[16];    /* Buffer for computed md5 hash */
+    char            pw_buf[16];
+    unsigned char   tmp_buf[64];    /* How big does this need to be? */
+    unsigned char   kiv_buf[48];    /* Key and IV buffer */
+    unsigned char   md5_buf[16];    /* Buffer for computed md5 hash */
 
-    int     kiv_len = 0;
-    int     plen = strlen(pass);
+    int             kiv_len = 0;
+    int             plen = strlen(pass);
 
     /* First make pw 16 bytes (pad with "0" (ascii 0x30)) or truncate.
      * Note: pw_buf was initialized with '0' chars (again, not the value
@@ -132,7 +132,7 @@ void salt_and_iv(RIJNDAEL_context *ctx, char *pass, uint8 *data)
 
 /* Initialization entry point.
 */
-void rijndael_init(RIJNDAEL_context *ctx, char *pass, uchar *data)
+void rijndael_init(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
 {
 
     /* Use ECB mode to be compatible with the Crypt::CBC perl module.
@@ -151,15 +151,15 @@ void rijndael_init(RIJNDAEL_context *ctx, char *pass, uchar *data)
 /* Take a chunk of data, encrypt it in the same way the perl Crypt::CBC
  * module would.
 */
-int fko_encrypt(uchar *in, int in_len, char *pass, uchar *out)
+int fko_encrypt(unsigned char *in, int in_len, char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
-    uint8               plaintext[16];
-    uint8               mixtext[16];
-    uint8               ciphertext[16];
+    unsigned char       plaintext[16];
+    unsigned char       mixtext[16];
+    unsigned char       ciphertext[16];
     int                 i, pad_val;
 
-    uchar              *ondx = out;
+    unsigned char      *ondx = out;
 
     rijndael_init(&ctx, pass, NULL);
 
@@ -204,15 +204,15 @@ int fko_encrypt(uchar *in, int in_len, char *pass, uchar *out)
 
 /* Decrypt the given data.
 */
-int fko_decrypt(uchar *in, int in_len, char *pass, uchar *out)
+int fko_decrypt(unsigned char *in, int in_len, char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
-    uint8               plaintext[16];
-    uint8               mixtext[16];
-    uint8               ciphertext[16];
+    unsigned char       plaintext[16];
+    unsigned char       mixtext[16];
+    unsigned char       ciphertext[16];
     int                 i, pad_val, pad_err = 0;
-    uchar              *pad_s;
-    uchar              *ondx = out;
+    unsigned char      *pad_s;
+    unsigned char      *ondx = out;
 
     rijndael_init(&ctx, pass, in);
 
@@ -266,7 +266,8 @@ int fko_decrypt(uchar *in, int in_len, char *pass, uchar *out)
     return(ondx - out);
 }
 
-void hex_dump(uchar *data, int size)
+/*
+void hex_dump(unsigned char *data, int size)
 {
     int ln, i, j = 0;
     char ascii_str[17] = {0};
@@ -288,8 +289,7 @@ void hex_dump(uchar *data, int size)
             printf(" ");
     }
 
-    /* Remainder...
-    */
+    // Remainder...
     ln = strlen(ascii_str);
     if(ln > 0)
     {
@@ -299,6 +299,6 @@ void hex_dump(uchar *data, int size)
         printf(" %s\n\n", ascii_str);
     }
 }
-
+*/
 
 /***EOF***/

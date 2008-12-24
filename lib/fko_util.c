@@ -1,11 +1,13 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    base64.h
+ * File:    fko_util.c
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Header for the fwknop base64.c
+ * Purpose: General utility functions for libfko (some borrowed
+ *
+ * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *
@@ -21,17 +23,7 @@
  *
  *****************************************************************************
 */
-#ifndef BASE64_H
-#define BASE64_H 1
+#include "fko_util.h"
 
-#include "fko_common.h"
-
-/* Prototypes
-*/
-int b64_encode(uchar *in, char *out, int in_len);
-int b64_decode(char *in, uchar *out, int out_len);
-void strip_b64_eq(char *data);
-
-#endif /* BASE64_H */
 
 /***EOF***/

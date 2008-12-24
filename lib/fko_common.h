@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    spa_timestamp.c
+ * File:    fko_common.h
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Get the current timestamp with optional offset applied.
+ * Purpose: Common header for libfko source files.
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,13 +23,39 @@
  *
  *****************************************************************************
 */
-#include "fwknop.h"
-#include <time.h>
+#ifndef FKO_COMMON_H
+#define FKO_COMMON_H 1
 
-unsigned int spa_timestamp(spa_message_t *sm, int offset)
-{
-    sm->timestamp = time(NULL) + offset;
-    return(sm->timestamp);
-} 
+//#if HAVE_CONFIG_H
+  #include "config.h"
+//#endif
+
+#include <stdio.h>
+#include <sys/types.h>
+
+#if STDC_HEADERS
+  #include <stdlib.h>
+  #include <string.h>
+#elif HAVE_STRINGS_H
+  #include <strings.h>
+#endif /*STDC_HEADERS*/
+
+#if HAVE_UNISTD_H
+  #include <unistd.h>
+#endif
+
+#ifdef __cplusplus
+  #define BEGIN_C_DECLS extern "C" {
+  #define END_C_DECLS   }
+#else /* !__cplusplus */
+  #define BEGIN_C_DECLS
+  #define END_C_DECLS
+#endif /* __cplusplus */
+
+#include "fko_types.h"
+//#include "fko.h"
+#include "fko_util.h"
+
+#endif /* FKO_COMMON_H */
 
 /***EOF***/

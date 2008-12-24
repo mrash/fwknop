@@ -43,7 +43,7 @@ void md5(uchar *out, uchar *in, int size)
     MD5Context ctx;
 
     MD5Init(&ctx);
-    MD5Update(&ctx, (unsigned char*)in, size);
+    MD5Update(&ctx, (uchar*)in, size);
     MD5Final(out, &ctx);
 }
 

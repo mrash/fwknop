@@ -25,14 +25,11 @@
  *
  *****************************************************************************
 */
-#ifndef _SHA256_H_
-#define _SHA256_H_
+#ifndef SHA256_H
+#define SHA256_H 1
 
-#include <stdio.h>
-#include <string.h>         /* for memcpy */
 #include <endian.h>
-
-#include "types.h"
+#include "fko_common.h"
 
 /* This should be fine for most systems (hopefully).
 */
@@ -62,4 +59,4 @@ void sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count);
 void sha256_final(SHA_INFO *sha_info);
 void sha256_unpackdigest(uint8 digest[SHA256_DIGESTSIZE], SHA_INFO *sha_info);
 
-#endif /* _SHA256_H_ */
+#endif /* SHA256_H */

@@ -1,26 +1,12 @@
 lib_LIBRARIES = libfko.a
-libfko_a_SOURCES = base64.c \
-                   md5.c \
-                   spa_message.c \
-                   spa_version.c \
-                   cipher_funcs.c \
-                   rijndael.c \
-                   spa_message_type.c \
-                   strlcat.c \
-                   digest.c \
-                   sha1.c \
-                   spa_random_number.c \
-                   strlcpy.c \
-                   sha256.c \
-                   spa_timestamp.c \
-                   spa_digest.c \
-                   spa_user.c \
-                   base64.h \
-                   cipher_funcs.h \
-                   digest.h \
-                   fwknop.h \
-                   md5.h \
-                   rijndael.h \
-                   sha.h \
-                   types.h
 
+libfko_source_files = \
+    base64.c base64.h cipher_funcs.c cipher_funcs.h digest.c digest.h \
+    fko_client_timeout.c fko_common.h fko_digest.c fko_encode.c \
+    fko_encryption.c fko_error.c fko_funcs.c fko.h fko_message.c \
+    fko_nat_access.c fko_rand_value.c fko_server_auth.c \
+    fko_timestamp.c fko_types.h fko_user.c fko_util.c fko_util.h \
+    md5.c md5.h rijndael.c rijndael.h sha1.c sha256.c sha.h strlcat.c \
+    strlcpy.c
+
+libfko_a_SOURCES = $(libfko_source_files)

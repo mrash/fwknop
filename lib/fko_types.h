@@ -1,7 +1,7 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    types.h
+ * File:    fko_types.h
  *
  * Purpose: Typedefs for fwknop.
  * 
@@ -21,8 +21,8 @@
  *
  *****************************************************************************
 */
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef FKO_TYPES_H
+#define FKO_TYPES_H 1
 
 #include <sys/types.h>
 
@@ -39,6 +39,6 @@ typedef int64_t         int64;
 typedef unsigned char   uchar;
 typedef unsigned short  ushort;
 
-#endif /* _TYPES_H_ */
+#endif /* FKO_TYPES_H */
 
 /***EOF***/

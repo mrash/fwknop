@@ -24,11 +24,10 @@
  * http://www.esat.kuleuven.ac.be/~rijmen/rijndael/ for details.
  */
 
-#if !defined(RIJNDAEL_H)
-#define RIJNDAEL_H
+#ifndef RIJNDAEL_H
+#define RIJNDAEL_H 1
 
-#include <stdlib.h>
-#include "types.h"
+#include "fko_common.h"
 
 #ifdef _CRYPT_RIJNDAEL_H_TYPES
 	#undef _CRYPT_RIJNDAEL_H_TYPES
