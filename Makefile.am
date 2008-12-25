@@ -1,1 +1,1 @@
-SUBDIRS = fko src
+SUBDIRS = fko src doc

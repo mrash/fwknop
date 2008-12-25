@@ -56,6 +56,7 @@ AC_CHECK_FUNCS([bzero gettimeofday memmove memset setlocale strchr strdup])
 
 AC_CONFIG_FILES([Makefile
                  fko/Makefile
+                 doc/Makefile
                  src/Makefile])
 
 AC_OUTPUT

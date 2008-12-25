@@ -1,0 +1,31 @@
+\input texinfo   @c -*-texinfo-*-
+@c %**start of header
+@setfilename libfko.info
+@settitle Firewall Knock Operator Library - libfko
+@setchapternewpage odd
+@c %**end of header
+@headings             double
+
+@include version.texi
+
+@dircategory Network
+@direntry
+* libfko: (libfko).    The FireWall KNock OPerator (fwknop) Library - libfko
+@end direntry
+
+@ifinfo
+This file documents the Firewall Knock Operator library.
+
+@end ifinfo
+
+@titlepage
+@sp 10
+@title libfko
+@subtitle Edition @value{EDITION}, @value{UPDATED}
+@author Damien S. Stuart
+@author @email{dstuart@@dstuart.org}
+
+@page
+@vskip 0pt plus 1filll
+@end titlepage
+
