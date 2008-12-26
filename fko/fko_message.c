@@ -41,6 +41,8 @@ int fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type)
 
     ctx->message_type = msg_type;
 
+    ctx->state |= FKO_SPA_MSG_TYPE_MODIFIED;
+
     return(FKO_SUCCESS);
 }
 
@@ -90,6 +92,8 @@ int fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
         free(ctx->message);
 
     ctx->message = strdup(msg);
+
+    ctx->state |= FKO_SPA_MSG_MODIFIED;
 
     if(ctx->message == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);

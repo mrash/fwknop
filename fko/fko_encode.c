@@ -131,13 +131,15 @@ int fko_encode_spa_data(fko_ctx_t *ctx)
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    ctx->state |= FKO_SPA_ENCODE_MESSAGE_SET;
-
     /* At this point we can compute the digest for this SPA data.
     */
     if((res = fko_set_spa_digest(ctx)) != FKO_SUCCESS)
         return(res);
 
+    /* Here we can clear the modified flags on the SPA data fields.
+    */
+    FKO_CLEAR_SPA_DATA_MODIFIED(ctx);
+ 
     return(FKO_SUCCESS);
 }
 

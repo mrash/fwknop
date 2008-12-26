@@ -43,6 +43,8 @@ int fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type)
 
     ctx->digest_type = digest_type;
 
+    ctx->state |= FKO_DIGEST_TYPE_MODIFIED;
+
     return(FKO_SUCCESS);
 }
 

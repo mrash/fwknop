@@ -61,6 +61,8 @@ int fko_set_spa_server_auth(fko_ctx_t *ctx, const char *msg)
 
     ctx->server_auth = strdup(msg);
 
+    ctx->state |= FKO_SERVER_AUTH_MODIFIED;
+
     if(ctx->server_auth == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 

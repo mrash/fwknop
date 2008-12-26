@@ -51,6 +51,8 @@ int fko_set_timestamp(fko_ctx_t *ctx, int offset)
  
     ctx->timestamp = ts;
 
+    ctx->state |= FKO_TIMESTAMP_MODIFIED;
+
     return(FKO_SUCCESS);
 } 
 

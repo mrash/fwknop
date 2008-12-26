@@ -58,6 +58,8 @@ int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
 
         strcpy(ctx->rand_val, new_val);
 
+        ctx->state |= FKO_RAND_VAL_MODIFIED;
+
         return(FKO_SUCCESS);
     }
 
@@ -90,6 +92,8 @@ int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
         sprintf(tmp_buf, "%u", rand());
         strlcat(ctx->rand_val, tmp_buf, FKO_RAND_VAL_SIZE+1);
     }
+
+    ctx->state |= FKO_RAND_VAL_MODIFIED;
 
     return(FKO_SUCCESS);
 } 

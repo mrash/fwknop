@@ -61,24 +61,60 @@ enum {
 };
 
 /* General state flag bit values.
- * (--DSS not sure If I will keep these yet)
 */
 enum {
-    FKO_CTX_NEW                 = 1,
-    FKO_MESSAGE_DATA_SET        = 1 << 1,
-    FKO_SPA_ENCODE_MESSAGE_SET  = 1 << 2,
-    FKO_SPA_DIGEST_SET          = 1 << 3,
-    FKO_SPA_NAT_ACCESS_SET      = 1 << 4,
-    FKO_SPA_SERVER_AUTH_SET     = 1 << 5,
-    FKO_SPA_CLIENT_TIMEOUT_SET  = 1 << 6,
-    FKO_RESERVED                = 1 << 7
+    FKO_CTX_SET                 = 1,        /* Set when ctx is initialized */
+    FKO_RAND_VAL_MODIFIED       = 1 << 1,
+    FKO_USERNAME_MODIFIED       = 1 << 2,
+    FKO_TIMESTAMP_MODIFIED      = 1 << 3,
+    FKO_VERSION_MODIFIED        = 1 << 4,
+    FKO_SPA_MSG_TYPE_MODIFIED   = 1 << 6,
+    FKO_CTX_SET_2               = 1 << 7,   /* Set when ctx is initialized */
+    FKO_SPA_MSG_MODIFIED        = 1 << 8,
+    FKO_NAT_ACCESS_MODIFIED     = 1 << 9,
+    FKO_SERVER_AUTH_MODIFIED    = 1 << 10,
+    FKO_CLIENT_TIMEOUT_MODIFIED = 1 << 11,
+    FKO_DIGEST_TYPE_MODIFIED    = 1 << 12,
+    FKO_ENCRYPT_TYPE_MODIFIED   = 1 << 13,
+    FKO_GPG_SUPPORTED           = 1 << 14,
+    FKO_BACKWARD_COMPATIBLE     = 1 << 15
 };
 
-#define FKO_CTX_INITIALIZED  (FKO_CTX_NEW|FKO_RESERVED)
-#define FKO_READY_FOR_DIGEST (FKO_CTX_INITIALIZED|FKO_SPA_ENCODE_MESSAGE_SET)
-#define FKO_READY_FOR_ENCODE (FKO_READY_FOR_DIGEST|FKO_SPA_DIGEST_SET)
+/* This is used in conjunction with the ctx->initial value as a means to
+ * determine if the ctx has been properly initialized.  However, this
+ * may not work 100% of the time as it is possible (though not likely)
+ * an ctx may have values that match both the flags and the ctx->initial
+ * value.
+*/
+#define FKO_CTX_INITIALIZED  (FKO_CTX_SET|FKO_CTX_SET_2)
 
-#define CTX_INITIALIZED(x) (x->initval == FKO_CTX_INITIALIZED)
+#define FKO_SET_CTX_INITIALIZED(ctx) \
+    (ctx->state |= (FKO_CTX_INITIALIZED))
+
+#define FKO_CLEAR_CTX_INITIALIZED(ctx) \
+    (ctx->state &= (0xffff & ~FKO_CTX_INITIALIZED))
+
+/* This should return true if an SPA data field has been modifed since the
+ * last encode/encrypt.
+*/
+#define FKO_ANY_SPA_DATA_MODIFIED ( \
+    FKO_RAND_VAL_MODIFIED | FKO_USERNAME_MODIFIED | FKO_TIMESTAMP_MODIFIED \
+    | FKO_VERSION_MODIFIED | FKO_SPA_MSG_TYPE_MODIFIED | FKO_SPA_MSG_MODIFIED \
+    | FKO_NAT_ACCESS_MODIFIED | FKO_SERVER_AUTH_MODIFIED \
+    | FKO_CLIENT_TIMEOUT_MODIFIED | FKO_DIGEST_TYPE_MODIFIED \
+    | FKO_ENCRYPT_TYPE_MODIFIED )
+ 
+#define FKO_SPA_DATA_MODIFIED(ctx) (ctx->state & FKO_ANY_SPA_DATA_MODIFIED)
+
+/* Clear all SPA data modified flags.  This is normally called after a
+ * succesful encode/digest/encryption cycle.
+*/
+#define FKO_CLEAR_SPA_DATA_MODIFIED(ctx) \
+    (ctx->state &= (0xffff & ~FKO_ANY_SPA_DATA_MODIFIED))
+
+/* Macros used for determining ctx initialization state.
+*/
+#define CTX_INITIALIZED(ctx) (ctx->initval == FKO_CTX_INITIALIZED)
 
 /* FKO ERROR_CODES
  *
@@ -123,7 +159,6 @@ enum {
 */
 #define FKO_RAND_VAL_SIZE            16
 #define FKO_ENCODE_TMP_BUF_SIZE    1024
-#define FKO_ENCRPT_TMP_BUF_SIZE    1024
 
 /* The pieces we need to make a FKO packet.
 */
@@ -151,16 +186,16 @@ typedef struct _fko_ctx {
     //unsigned int    encrypted_msg_size;
 
     /* State info */
-    unsigned char   state;
+    unsigned short  state;
     unsigned char   initval;
 
-    //char            last_err_msg[MAX_FKO_ERR_MSG_SIZE]; 
 } fko_ctx_t;
 
 /* Function prototypes
 */
 int fko_new(fko_ctx_t *ctx);
 void fko_destroy(fko_ctx_t *ctx);
+
 char* fko_version(fko_ctx_t *ctx);
 const char* fko_errstr(int err_code);
 
@@ -174,7 +209,7 @@ int fko_set_spa_server_auth(fko_ctx_t *ctx, const char *server_auth);
 int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout);
 int fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type);
 int fko_set_spa_digest(fko_ctx_t *ctx);
-int fko_set_spa_encryption_type(fko_ctx_t *ctx, short encryp_type);
+int fko_set_spa_encryption_type(fko_ctx_t *ctx, short encrypt_type);
 
 char* fko_get_rand_value(fko_ctx_t *ctx);
 char* fko_get_username(fko_ctx_t *ctx);

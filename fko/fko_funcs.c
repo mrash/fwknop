@@ -107,7 +107,8 @@ int fko_new(fko_ctx_t *ctx)
     /* Now we mean it.
     */
     ctx->initval = FKO_CTX_INITIALIZED;
-    ctx->state   = FKO_CTX_NEW;
+
+    FKO_SET_CTX_INITIALIZED(ctx);
 
     return(FKO_SUCCESS);
 } 

@@ -42,6 +42,8 @@ int fko_set_spa_encryption_type(fko_ctx_t *ctx, short encrypt_type)
 
     ctx->encryption_type = encrypt_type;
 
+    ctx->state |= FKO_ENCRYPT_TYPE_MODIFIED;
+
     return(FKO_SUCCESS);
 }
 
@@ -64,15 +66,29 @@ int fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key)
     char           *plain;
     char           *b64cipher;
     unsigned char  *cipher;
-    int             cipher_len;
+    int             cipher_len, res;
 
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    if(ctx->encoded_msg == NULL
-      || strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
+    /* If there is no encoded data or the SPA data has been modified,
+     * go ahead and re-encode here.
+    */
+    if(ctx->encoded_msg == NULL || FKO_SPA_DATA_MODIFIED(ctx))
+    {
+        res = fko_encode_spa_data(ctx);
+
+        if(res != FKO_SUCCESS)
+            return(res);
+    }
+
+    /* Croak on invalid encoded message as well. At present this is a
+     * check for a somewhat arbitrary minimum length for the encoded
+     * data.
+    */
+    if(strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)

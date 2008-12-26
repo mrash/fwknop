@@ -42,6 +42,8 @@ int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout)
 
     ctx->client_timeout = timeout;
 
+    ctx->state |= FKO_CLIENT_TIMEOUT_MODIFIED;
+
     return(FKO_SUCCESS);
 } 
 
