@@ -41,34 +41,22 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error #%i from fko_new: %s\n", res, fko_errstr(res));
 
     /* Set a message string */
-    res = fko_set_spa_message(&ctx, "0.0.0.0,access.0");
+    res = fko_set_spa_message(&ctx, "192.168.1.5,tcp,22");
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_set_spa_message: %s\n", res, fko_errstr(res));
 
-    /* Set a nat_access string
-    res = fko_set_spa_nat_access(&ctx, "192.168.1.5,10616");
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_set_nat_access: %s\n", res, fko_errstr(res));
-    */
-
-    /* Set a server_auth string
-    res = fko_set_spa_server_auth(&ctx, "crypt,letmein");
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_set_spa_server_auth: %s\n", res, fko_errstr(res));
-    */
-
-    /* Set a client_timeout string
-    res = fko_set_spa_client_timeout(&ctx, 66);
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_set_spa_client_timeout: %s\n", res, fko_errstr(res));
-    */
-
     //fko_set_spa_digest_type(&ctx, FKO_DIGEST_SHA1);
+    fko_set_spa_client_timeout(&ctx, 300);
 
-    /* Encode the SPA data */
+    //res = fko_set_spa_server_auth(&ctx, "crypt,BubbaWasHere");
+    //if(res != FKO_SUCCESS)
+    //    fprintf(stderr, "Error #%i from fko_set_spa_server_auth: %s\n", res, fko_errstr(res));
+
+    /* Encode the SPA data
     res = fko_encode_spa_data(&ctx);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_encode_spa_data: %s\n", res, fko_errstr(res));
+    */
     
     /* Encrypt the SPA data */
     res = fko_encrypt_spa_data(&ctx, "BubbaWasHere");

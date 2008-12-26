@@ -134,7 +134,13 @@ enum {
     FKO_ERROR_INCOMPLETE_SPA_DATA,
     FKO_ERROR_MISSING_ENCODED_DATA,
     FKO_ERROR_INVALID_DIGEST_TYPE,
+    FKO_ERROR_INVALID_ALLOW_IP,
+    FKO_ERROR_INVALID_SPA_COMMAND_MSG,
+    FKO_ERROR_INVALID_SPA_ACCESS_MSG,
+    FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG,
+    FKO_ERROR_INVALID_ENCRYPTION_TYPE,
 /* Add more errors here */
+    FKO_ERROR_UNSUPPORTED_FEATURE,
     FKO_ERROR_UNKNOWN
 };
 
@@ -162,7 +168,7 @@ enum {
 #define FKO_RAND_VAL_SIZE            16
 #define FKO_ENCODE_TMP_BUF_SIZE    1024
 
-/* The pieces we need to make a FKO packet.
+/* The pieces we need to make an FKO  SPA data packet.
 */
 typedef struct _fko_ctx {
     /* FKO SPA message data (raw and un-encoded) */
@@ -185,7 +191,7 @@ typedef struct _fko_ctx {
     char           *encoded_msg;
 
     char           *encrypted_msg;
-    //unsigned int    encrypted_msg_size;
+    unsigned int    encrypted_msg_size;
 
     /* State info */
     unsigned short  state;

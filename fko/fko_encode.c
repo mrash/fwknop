@@ -104,6 +104,17 @@ int fko_encode_spa_data(fko_ctx_t *ctx)
     */
     strlcat(tbuf, ctx->version, FKO_ENCODE_TMP_BUF_SIZE);
 
+    /* Before we add the message type value, we will once again
+     * check for whether or not a client_timeout was specified
+     * since the message_type was set.  If this is the case, then
+     * we want to adjust the message_type first.  The easy way
+     * to do this is simply call fko_set_spa_client_timeout and set
+     * it to its current value.  This will force a re-check and
+     * possible reset of the message type.
+     *
+    */
+    fko_set_spa_client_timeout(ctx, ctx->client_timeout);
+
     /* Add the message type value.
     */
     offset = strlen(tbuf);
@@ -114,9 +125,34 @@ int fko_encode_spa_data(fko_ctx_t *ctx)
     if((res = append_b64(tbuf, ctx->message)) != FKO_SUCCESS)
         return(res);
     
-    /** --DSS TODO:  Need to address nat_access, server_auth
-    ***        XXX:  and client_timeout message types here
-    **/
+    /* If a nat_access message was given, add it to the SPA
+     * message.
+    */
+    if(ctx->nat_access != NULL)
+    {
+        strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
+        if((res = append_b64(tbuf, ctx->nat_access)) != FKO_SUCCESS)
+            return(res);
+    }
+ 
+    /* If we have a server_auth field set.  Add it here.
+     *
+    if(ctx->server_auth != NULL)
+    {
+        strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
+        if((res = append_b64(tbuf, ctx->server_auth)) != FKO_SUCCESS)
+            return(res);
+    }
+    */
+
+    /* If a client timeout is specified and we are not dealing with a
+     * SPA command message, add the timeout here.
+    */
+    if(ctx->client_timeout > 0 && ctx->message_type != FKO_COMMAND_MSG)
+    {
+        offset = strlen(tbuf);
+        sprintf(((char*)tbuf+offset), ":%i", ctx->client_timeout);
+    }
 
     /* If encoded_msg is not null, then we assume it needs to
      * be freed before re-assignment.

@@ -30,6 +30,8 @@
 */
 int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout)
 {
+    int     old_msg_type = ctx->message_type;
+
     /* Context must be initialized.
     */
     if(!CTX_INITIALIZED(ctx))
@@ -43,6 +45,47 @@ int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout)
     ctx->client_timeout = timeout;
 
     ctx->state |= FKO_CLIENT_TIMEOUT_MODIFIED;
+
+    /* If a timeout is set, then we may need to verify/change message
+     * type accordingly.
+    */
+    if(ctx->client_timeout > 0)
+    {
+        switch(ctx->message_type)
+        {
+            case FKO_ACCESS_MSG:
+                ctx->message_type = FKO_CLIENT_TIMEOUT_ACCESS_MSG;
+                break;
+            
+            case FKO_NAT_ACCESS_MSG:
+                ctx->message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
+                break;
+
+            case FKO_LOCAL_NAT_ACCESS_MSG:
+                ctx->message_type = FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG;
+                break;
+        }
+    }
+    else  /* Timeout is 0, which means no timeout. */
+    {
+        switch(ctx->message_type)
+        {
+            case FKO_CLIENT_TIMEOUT_ACCESS_MSG:
+                ctx->message_type = FKO_ACCESS_MSG;
+                break;
+
+            case FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG:
+                ctx->message_type = FKO_NAT_ACCESS_MSG;
+                break;
+
+            case FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG:
+                ctx->message_type = FKO_LOCAL_NAT_ACCESS_MSG;
+                break;
+        }
+    }
+
+    if(ctx->message_type != old_msg_type)
+        ctx->state |= FKO_SPA_MSG_TYPE_MODIFIED;
 
     return(FKO_SUCCESS);
 } 

@@ -31,7 +31,7 @@ AC_PROG_LIBTOOL
 # Checks for header files.
 #
 AC_HEADER_STDC
-AC_CHECK_HEADERS([locale.h stdlib.h string.h sys/time.h unistd.h])
+AC_CHECK_HEADERS([locale.h stdlib.h string.h sys/time.h unistd.h ctype.h])
 
 # Type checks.
 #

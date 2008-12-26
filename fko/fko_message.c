@@ -27,6 +27,14 @@
 #include "fko_common.h"
 #include "fko.h"
 
+/* SPA message format validation functions.
+ * (These called from the spa_message function here only).
+*/
+int validate_cmd_msg(const char *msg);
+int validate_access_msg(const char *msg);
+int validate_nat_access_msg(const char *msg);
+int got_allow_ip(const char *msg);
+
 /* Set the SPA message type.
 */
 int fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type)
@@ -62,6 +70,8 @@ short fko_get_spa_message_type(fko_ctx_t *ctx)
 */
 int fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
 {
+    int res = FKO_ERROR_UNKNOWN;
+
     /* Context must be initialized.
     */
     if(!CTX_INITIALIZED(ctx))
@@ -78,12 +88,29 @@ int fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
     if(strlen(msg) > MAX_SPA_MESSAGE_SIZE)
         return(FKO_ERROR_DATA_TOO_LARGE);
 
-    /* --DSS TODO: ???
-     * Do we want to add message type and format checking here
-     * or continue to leave it to the implementor?
+    /* Basic message type and format checking...
     */
+    switch(ctx->message_type)
+    {
+        case FKO_COMMAND_MSG:
+            res = validate_cmd_msg(msg);
+            break;
 
-    /**/
+        case FKO_ACCESS_MSG:
+        case FKO_CLIENT_TIMEOUT_ACCESS_MSG:
+            res = validate_access_msg(msg);
+            break;
+
+        case FKO_NAT_ACCESS_MSG:
+        case FKO_LOCAL_NAT_ACCESS_MSG:
+        case FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG:
+        case FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG:
+            res = validate_nat_access_msg(msg);
+            break;
+    }
+
+    if(res != FKO_SUCCESS)
+        return(res);
 
     /* Just in case this is a subsquent call to this function.  We
      * do not want to be leaking memory.
@@ -111,6 +138,111 @@ char* fko_get_spa_message(fko_ctx_t *ctx)
         return NULL;
 
     return(ctx->message);
+}
+
+/* Validate a command message format.
+*/
+int validate_cmd_msg(const char *msg)
+{
+    const char   *ndx;
+    int     res         = FKO_SUCCESS;
+    int     startlen    = strlen(msg);
+    
+
+    /* Should have a valid allow IP.
+    */
+    if((res = got_allow_ip(msg)) != FKO_SUCCESS)
+        return(res);
+
+    /* Commands are fairly free-form so all we can really verify is
+     * there is something at all. Get past the IP and comma, and make
+     * sure we have some string leftover...
+    */
+    ndx = strchr(msg, ',');
+    if(ndx == NULL || (1+(ndx - msg)) >= startlen)
+        return(FKO_ERROR_INVALID_SPA_COMMAND_MSG);
+    
+    return(FKO_SUCCESS);
+}
+
+int validate_access_msg(const char *msg)
+{
+    const char   *ndx;
+    int     res         = FKO_SUCCESS;
+    int     startlen    = strlen(msg);
+
+    /* Should have a valid allow IP.
+    */
+    if((res = got_allow_ip(msg)) != FKO_SUCCESS)
+        return(res);
+
+    /* Position ourselves beyond the allow IP and make sure we are
+     * still good.
+    */
+    ndx = strchr(msg, ',');
+    if(ndx == NULL || (1+(ndx - msg)) >= startlen)
+        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+ 
+    ndx++;
+
+    /* Now check for proto/port string.  Currenly we only allow protos
+     * 'tcp', 'udp', and 'icmp'.
+    */
+    if(strncmp(ndx, "tcp", 3)
+      && strncmp(ndx, "udp", 3)
+      && strncmp(ndx, "icmp", 4)
+      && strncmp(ndx, "none", 4))
+        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+
+    ndx = strchr(ndx, ',');
+    if(ndx == NULL || (1+(ndx - msg)) >= startlen)
+        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+
+    /* Skip over the ',' and make sure we only have digits.
+    */
+    ndx++;
+    while(*ndx != '\0')
+        if(isdigit(*(ndx++)) == 0)
+            return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+
+    return(FKO_SUCCESS);
+}
+
+int validate_nat_access_msg(const char *msg)
+{
+    int res = FKO_SUCCESS;
+
+    /* Should have a valid access message.
+    */
+    if((res = validate_access_msg(msg)) != FKO_SUCCESS)
+        return(res);
+
+    return(FKO_SUCCESS);
+}
+
+int got_allow_ip(const char *msg)
+{
+    const char *ndx     = msg;
+    int         dot_cnt = 0;
+    int         res     = FKO_SUCCESS;
+
+    while(*ndx != ',' && *ndx != '\0')
+    {
+        if(*ndx == '.')
+            dot_cnt++;
+        else if(isdigit(*ndx) == 0)
+        {
+            res = FKO_ERROR_INVALID_ALLOW_IP;
+            break;
+        }
+
+        ndx++;
+    }
+
+    if(dot_cnt != 3)
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+
+    return(res);
 }
 
 /***EOF***/

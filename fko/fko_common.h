@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <ctype.h>
 
 #if STDC_HEADERS
   #include <stdlib.h>

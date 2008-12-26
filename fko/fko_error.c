@@ -39,7 +39,12 @@ static const char *fko_err_msgs[] = {
     "Missing or incomplete SPA data",
     "There is no encoded data to process",
     "Invalid digest type",
+    "Invalid allow IP address in the SPA mesage data",
+    "Invalid SPA command mesage format",
+    "Invalid SPA access mesage format",
+    "Invalid SPA nat_access mesage format",
     "Invalid encryption type",
+    "Unsupported or unimplemented feature or function.",
     "Unknown/Unclassified error",
     0
 };
