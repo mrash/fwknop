@@ -1,31 +1,175 @@
 \input texinfo   @c -*-texinfo-*-
-@c %**start of header
 @setfilename libfko.info
 @settitle Firewall Knock Operator Library - libfko
-@setchapternewpage odd
-@c %**end of header
-@headings             double
 
-@include version.texi
+@c @setchapternewpage odd
 
 @dircategory Network
 @direntry
 * libfko: (libfko).    The FireWall KNock OPerator (fwknop) Library - libfko
 @end direntry
 
+@include version.texi
+
+@c Unify some of the indices.
+@syncodeindex tp fn
+@syncodeindex pg fn
+
 @ifinfo
-This file documents the Firewall Knock Operator library.
+This file documents the Firewall Knock Operator library - libfko.
+
+This is Edition @value{EDITION}, last updated @value{UPDATED}, of
+@cite{The `libfko' Reference Manual}, for Version
+@value{VERSION}.
+
+Copyright @copyright{} 2008 Damien Stuart.
+
+The libfko manual is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+The libfko manual is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 @end ifinfo
 
+@iftex
+@shorttitlepage Firewall Knock Operator Library - libfko
+@end iftex
 @titlepage
 @sp 10
-@title libfko
+@center @titlefont{Firewall Knock Operator Library - libfko}
+@sp 1
+@center @titlefont{Reference Manual}
+@sp 6
 @subtitle Edition @value{EDITION}, @value{UPDATED}
 @author Damien S. Stuart
 @author @email{dstuart@@dstuart.org}
-
 @page
 @vskip 0pt plus 1filll
-@end titlepage
+Copyright @copyright{} 2008 Damien Stuart.
 
+The libfko manual is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+The libfko manual is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+@end titlepage
+@page
+
+@ifnottex
+@node Top
+@top Main Menu
+This is Edition @value{EDITION}, last updated @value{UPDATED}, of
+@cite{The `libfko' Reference Manual}, for libfko Version
+@value{VERSION}.
+@end ifnottex
+
+@menu
+* Introduction::                  How to use this manual.
+* Preparation::                   What you should do before using the library.
+
+Appendices
+
+* Library Copying::               The GNU Lesser General Public License says
+                                  how you can copy and share
+Indices
+
+* Concept Index::                 Index of concepts and programs.
+* Function and Data Index::       Index of functions, variables and data types.
+
+@detailmenu
+ --- The Detailed Node Listing ---
+
+Introduction
+
+* Getting Started::               Purpose of the manual, and how to use it.
+* Features::                      Reasons to install and use libfko.
+* Overview::                      Basic architecture of the libfko library.
+
+Preparation
+
+* Header::                        What header file you need to include.
+
+@end detailmenu
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+TODO: Finish Me
+
+@menu
+* Getting Started::               Purpose of the manual, and how to use it.
+* Features::                      Reasons to install and use libfko.
+* Overview::                      Basic architecture of the libfko library.
+@end menu
+
+@node Getting Started
+@section Getting Started
+
+TODO: Finish Me
+
+@node Features
+@section Features
+
+TODO: Finish Me
+
+@node Overview
+@section Overview
+
+TODO: Finish Me
+
+@node Preparation
+@chapter Preparation
+
+TODO: Finish Me
+
+@menu
+* Header::                        What header file you need to include.
+@end menu
+
+@node Header
+@section Header
+@cindex header file
+@cindex include file
+
+TODO: Finish Me
+
+
+
+@include gpl-2.0.texi
+
+@node Concept Index
+@unnumbered Concept Index
+
+@printindex cp
+
+
+@node Function and Data Index
+@unnumbered Function and Data Index
+
+@printindex fn
+
+
+@c -DSS: This manual is too small to have a short contents
+@c @summarycontents
+@contents
+@bye
+
+@c ***EOF***

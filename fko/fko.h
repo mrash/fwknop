@@ -94,8 +94,7 @@ enum {
 #define FKO_CLEAR_CTX_INITIALIZED(ctx) \
     (ctx->state &= (0xffff & ~FKO_CTX_INITIALIZED))
 
-/* This should return true if an SPA data field has been modifed since the
- * last encode/encrypt.
+/* Consolidate all SPA data modified flags.
 */
 #define FKO_ANY_SPA_DATA_MODIFIED ( \
     FKO_RAND_VAL_MODIFIED | FKO_USERNAME_MODIFIED | FKO_TIMESTAMP_MODIFIED \
@@ -104,6 +103,9 @@ enum {
     | FKO_CLIENT_TIMEOUT_MODIFIED | FKO_DIGEST_TYPE_MODIFIED \
     | FKO_ENCRYPT_TYPE_MODIFIED )
  
+/* This should return true if any SPA data field has been modifed since the
+ * last encode/encrypt.
+*/
 #define FKO_SPA_DATA_MODIFIED(ctx) (ctx->state & FKO_ANY_SPA_DATA_MODIFIED)
 
 /* Clear all SPA data modified flags.  This is normally called after a
