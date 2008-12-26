@@ -32,7 +32,6 @@
 
 #include <stdio.h>
 #include <sys/types.h>
-#include <ctype.h>
 
 #if STDC_HEADERS
   #include <stdlib.h>
@@ -43,6 +42,13 @@
 
 #if HAVE_UNISTD_H
   #include <unistd.h>
+#endif
+
+#if HAVE_CTYPE_H
+  #include <ctype.h> /* Using this if isdigit() */
+#else
+  /* Fall-back does not account for locale */
+  #define isdigit(c) (c >= 48 && c <= 57)
 #endif
 
 /* Convenient macros for wrapping sections in 'extern "C" {' constructs.

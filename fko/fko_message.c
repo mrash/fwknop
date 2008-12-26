@@ -202,8 +202,11 @@ int validate_access_msg(const char *msg)
     */
     ndx++;
     while(*ndx != '\0')
-        if(isdigit(*(ndx++)) == 0)
+    {
+        if(isdigit(*ndx) == 0)
             return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+        ndx++;
+    }
 
     return(FKO_SUCCESS);
 }
