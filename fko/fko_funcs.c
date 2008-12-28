@@ -224,6 +224,12 @@ fko_get_spa_data(fko_ctx_t *ctx)
     if(!CTX_INITIALIZED(ctx))
         return NULL;
 
+    /* Notice we omit the first 10 bytes if Rijndael encryption is
+     * used (to eliminate the consistent 'Salted__' string).
+    */
+    if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
+        return(ctx->encrypted_msg+10);
+
     return(ctx->encrypted_msg); 
 }
 

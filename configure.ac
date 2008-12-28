@@ -23,9 +23,7 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-
-#--DSS
-#AC_PROG_RANLIB
+AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 
 # Checks for header files.
@@ -52,7 +50,8 @@ AC_C_CONST
 # Checks for library functions.
 #
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strrchr strspn])
+AC_FUNC_REALLOC
+AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strndup strrchr strspn])
 
 AC_CONFIG_FILES([Makefile
                  fko/Makefile
