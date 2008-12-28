@@ -253,7 +253,7 @@ UINT8 Alogtable[256] = {
         ((box)[(((x) >> 16) & 0xff)] << 16) | \
         ((box)[(((x) >> 24) & 0xff)] << 24))
 
-    static UINT8
+static UINT8
 xtime(UINT8 a)
 {
     UINT8 b;
@@ -264,14 +264,14 @@ xtime(UINT8 a)
     return(a);
 }
 
-    static UINT8
+static UINT8
 mul(UINT8 a, UINT8 b)
 {
     if (a && b) return Alogtable[(Logtable[a] + Logtable[b])%255];
     else return 0;
 }
 
-    static void
+static void
 inv_mix_column(UINT32 *a, UINT32 *b)
 {
     UINT8 c[4][4];
@@ -292,7 +292,7 @@ inv_mix_column(UINT32 *a, UINT32 *b)
     }
 }
 
-    void
+void
 rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const UINT8 *key)
 {
     int nk, nr, i, lastkey;
@@ -338,7 +338,7 @@ rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const UINT8 *key)
 }
 
 /* Key addition that also packs every byte in the key to a word rep. */
-    static void
+static void
 key_addition_8to32(const UINT8 *txt, UINT32 *keys, UINT32 *out)
 {
     const UINT8 *ptr;
@@ -354,7 +354,7 @@ key_addition_8to32(const UINT8 *txt, UINT32 *keys, UINT32 *out)
     }
 }
 
-    static void
+static void
 key_addition32(const UINT32 *txt, UINT32 *keys, UINT32 *out)
 {
     int i;
@@ -363,7 +363,7 @@ key_addition32(const UINT32 *txt, UINT32 *keys, UINT32 *out)
         out[i] = keys[i] ^ txt[i];
 }
 
-    static void
+static void
 key_addition32to8(const UINT32 *txt, UINT32 *keys, UINT8 *out)
 {
     UINT8 *ptr;
@@ -384,7 +384,7 @@ static int idx[4][4] = {
     { 2, 3, 0, 1 },
     { 3, 0, 1, 2 } };
 
-    void
+void
 rijndael_encrypt(RIJNDAEL_context *ctx,
         const UINT8 *plaintext,
         UINT8 *ciphertext)
@@ -423,7 +423,7 @@ static int iidx[4][4] = {
     { 2, 3, 0, 1 },
     { 1, 2, 3, 0 } };
 
-    void
+void
 rijndael_decrypt(RIJNDAEL_context *ctx,
         const UINT8 *ciphertext,
         UINT8 *plaintext)
@@ -456,7 +456,7 @@ rijndael_decrypt(RIJNDAEL_context *ctx,
     key_addition32to8(t, &(ctx->ikeys[0]), plaintext);
 }
 
-    void
+void
 block_encrypt(RIJNDAEL_context *ctx, UINT8 *input, int inputlen,
         UINT8 *output, UINT8 *iv)
 {
@@ -525,7 +525,7 @@ block_encrypt(RIJNDAEL_context *ctx, UINT8 *input, int inputlen,
     }
 }
 
-    void
+void
 block_decrypt(RIJNDAEL_context *ctx, UINT8 *input, int inputlen,
         UINT8 *output, UINT8 *iv)
 {
@@ -601,3 +601,4 @@ block_decrypt(RIJNDAEL_context *ctx, UINT8 *input, int inputlen,
     }
 }
 
+/***EOF***/

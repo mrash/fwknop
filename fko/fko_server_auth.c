@@ -28,7 +28,8 @@
 
 /* Set the SPA Server Auth data
 */
-int fko_set_spa_server_auth(fko_ctx_t *ctx, const char *msg)
+int
+fko_set_spa_server_auth(fko_ctx_t *ctx, const char *msg)
 {
     /****************************************
      *   --DSS This is not supported yet
@@ -78,7 +79,8 @@ int fko_set_spa_server_auth(fko_ctx_t *ctx, const char *msg)
 
 /* Return the SPA message data.
 */
-char* fko_get_spa_server_auth(fko_ctx_t *ctx)
+char*
+fko_get_spa_server_auth(fko_ctx_t *ctx)
 {
     /* Must be initialized
     */

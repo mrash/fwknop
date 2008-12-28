@@ -37,12 +37,13 @@
 
 /* Set/Generate the SPA data random value string.
 */
-int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
+int
+fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
 {
     FILE           *rfd;
     struct timeval  tv;
     unsigned int    seed;
-    char            tmp_buf[FKO_RAND_VAL_SIZE+1] = {0};
+    char           *tmp_buf;
 
     /* Context must be initialized.
     */
@@ -53,10 +54,12 @@ int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
     */
     if(new_val != NULL)
     {
-        if(strlen(new_val) != 16)
+        if(strlen(new_val) != FKO_RAND_VAL_SIZE)
             return(FKO_ERROR_INVALID_DATA);
 
-        strcpy(ctx->rand_val, new_val);
+        ctx->rand_val = strdup(new_val);
+        if(ctx->rand_val == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
 
         ctx->state |= FKO_RAND_VAL_MODIFIED;
 
@@ -85,6 +88,14 @@ int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
 
     srand(seed);
 
+    ctx->rand_val = malloc(FKO_RAND_VAL_SIZE+1);
+    if(ctx->rand_val == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    tmp_buf = malloc(FKO_RAND_VAL_SIZE+1);
+    if(tmp_buf == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
     sprintf(ctx->rand_val, "%u", rand());
     
     while(strlen(ctx->rand_val) < FKO_RAND_VAL_SIZE)
@@ -93,6 +104,8 @@ int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
         strlcat(ctx->rand_val, tmp_buf, FKO_RAND_VAL_SIZE+1);
     }
 
+    free(tmp_buf);
+
     ctx->state |= FKO_RAND_VAL_MODIFIED;
 
     return(FKO_SUCCESS);
@@ -100,7 +113,8 @@ int fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
 
 /* Return the current rand value.
 */
-char* fko_get_rand_value(fko_ctx_t *ctx)
+char*
+fko_get_rand_value(fko_ctx_t *ctx)
 {
     /* Must be initialized
     */

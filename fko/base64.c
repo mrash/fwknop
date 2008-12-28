@@ -38,7 +38,8 @@ static uchar map2[] =
     0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33
 };
 
-int b64_decode(char *in, uchar *out, int out_len)
+int
+b64_decode(char *in, uchar *out, int out_len)
 {
     int i, v;
     uchar *dst = out;
@@ -67,7 +68,8 @@ int b64_decode(char *in, uchar *out, int out_len)
  * fixed edge cases and made it work from data (vs. strings) by ryan.
  *****************************************************************************
 */
-int b64_encode(uchar *in, char *out, int in_len)
+int
+b64_encode(uchar *in, char *out, int in_len)
 {
     static const char b64[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -99,7 +101,8 @@ int b64_encode(uchar *in, char *out, int in_len)
 /* Strip trailing equals ("=") charcters from a base64-encode
  * message digest.
 */
-void strip_b64_eq(char *data)
+void
+strip_b64_eq(char *data)
 {
     char *ndx;
 

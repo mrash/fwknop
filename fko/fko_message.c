@@ -37,7 +37,8 @@ int got_allow_ip(const char *msg);
 
 /* Set the SPA message type.
 */
-int fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type)
+int
+fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type)
 {
     /* Must be initialized
     */
@@ -56,7 +57,8 @@ int fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type)
 
 /* Return the SPA message type.
 */
-short fko_get_spa_message_type(fko_ctx_t *ctx)
+short
+fko_get_spa_message_type(fko_ctx_t *ctx)
 {
     /* Must be initialized
     */
@@ -68,7 +70,8 @@ short fko_get_spa_message_type(fko_ctx_t *ctx)
 
 /* Set the SPA MESSAGE data
 */
-int fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
+int
+fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
 {
     int res = FKO_ERROR_UNKNOWN;
 
@@ -130,7 +133,8 @@ int fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
 
 /* Return the SPA message data.
 */
-char* fko_get_spa_message(fko_ctx_t *ctx)
+char*
+fko_get_spa_message(fko_ctx_t *ctx)
 {
     /* Must be initialized
     */
@@ -142,7 +146,8 @@ char* fko_get_spa_message(fko_ctx_t *ctx)
 
 /* Validate a command message format.
 */
-int validate_cmd_msg(const char *msg)
+int
+validate_cmd_msg(const char *msg)
 {
     const char   *ndx;
     int     res         = FKO_SUCCESS;
@@ -165,7 +170,8 @@ int validate_cmd_msg(const char *msg)
     return(FKO_SUCCESS);
 }
 
-int validate_access_msg(const char *msg)
+int
+validate_access_msg(const char *msg)
 {
     const char   *ndx;
     int     res         = FKO_SUCCESS;
@@ -211,7 +217,8 @@ int validate_access_msg(const char *msg)
     return(FKO_SUCCESS);
 }
 
-int validate_nat_access_msg(const char *msg)
+int
+validate_nat_access_msg(const char *msg)
 {
     int res = FKO_SUCCESS;
 
@@ -223,7 +230,8 @@ int validate_nat_access_msg(const char *msg)
     return(FKO_SUCCESS);
 }
 
-int got_allow_ip(const char *msg)
+int
+got_allow_ip(const char *msg)
 {
     const char *ndx     = msg;
     int         dot_cnt = 0;

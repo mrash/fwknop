@@ -28,7 +28,8 @@
 
 /* Set the SPA Client Timeout data
 */
-int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout)
+int
+fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout)
 {
     int     old_msg_type = ctx->message_type;
 
@@ -92,7 +93,8 @@ int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout)
 
 /* Return the SPA message data.
 */
-int fko_get_spa_client_timeout(fko_ctx_t *ctx)
+int
+fko_get_spa_client_timeout(fko_ctx_t *ctx)
 {
     /* Must be initialized
     */

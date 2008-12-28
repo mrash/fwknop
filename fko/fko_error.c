@@ -45,12 +45,14 @@ static const char *fko_err_msgs[] = {
     "Invalid SPA nat_access mesage format",
     "Invalid encryption type",
     "Unexpected or invalid size for decrypted data",
+    "The computed digest did not match the digest in the spa data",
     "Unsupported or unimplemented feature or function",
     "Unknown/Unclassified error",
     0
 };
 
-const char* fko_errstr(int err_code)
+const char*
+fko_errstr(int err_code)
 {
 
     if(err_code < 0 || err_code > FKO_ERROR_UNKNOWN)

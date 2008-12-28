@@ -30,67 +30,76 @@
 void display_ctx(fko_ctx_t *ctx);
 void hex_dump(unsigned char *data, int size);
 
-int main(int argc, char **argv)
+#define FKO_PW "BubbaWasHere"
+
+int
+main(int argc, char **argv)
 {
     fko_ctx_t   ctx, ctx2;
     int         res;
 
-    /* Intialize the context */
+    /* Intialize the context
+    */
     res = fko_new(&ctx);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_new: %s\n", res, fko_errstr(res));
 
+    /* Set message type
     res = fko_set_spa_message_type(&ctx, FKO_ACCESS_MSG);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_set_spa_message_type: %s\n", res, fko_errstr(res));
+    */
 
-    /* Set a message string */
+    /* Set a message string
+    */
     res = fko_set_spa_message(&ctx, "0.0.0.0,tcp/22");
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_set_spa_message: %s\n", res, fko_errstr(res));
 
-    //fko_set_spa_digest_type(&ctx, FKO_DIGEST_SHA1);
+    /* Set Digest type.
+    fko_set_spa_digest_type(&ctx, FKO_DIGEST_SHA1);
+    */
 
+    /* Set net access string.
     res = fko_set_spa_nat_access(&ctx, "192.168.1.2,22");
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_set_spa_nat_access: %s\n", res, fko_errstr(res));
+    */
 
+    /* Set client timeout value
     fko_set_spa_client_timeout(&ctx, 120);
+    */
 
-    res = fko_set_spa_server_auth(&ctx, "crypt,BubbaWasHere");
+    /* Set a serer auth string.
+    res = fko_set_spa_server_auth(&ctx, "crypt,SomePW");
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_set_spa_server_auth: %s\n", res, fko_errstr(res));
-
-    /* Encode the SPA data
-    res = fko_encode_spa_data(&ctx);
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_encode_spa_data: %s\n", res, fko_errstr(res));
     */
-    
-    /* Encrypt the SPA data */
-    res = fko_encrypt_spa_data(&ctx, "BubbaWasHere");
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_encrypt_spa_data: %s\n", res, fko_errstr(res));
-    
-    display_ctx(&ctx);
 
-    //printf("\nHex dump of fko_ctx:\n====================\n");
-    //hex_dump((unsigned char*)&ctx, sizeof(fko_ctx_t));
+    /* Finalize the context data (encrypt and encode the SPA data)
+    */
+    res = fko_spa_data_final(&ctx, FKO_PW);
+    if(res != FKO_SUCCESS)
+        fprintf(stderr, "Error #%i from fko_spa_data_final: %s\n", res, fko_errstr(res));
+    
+    /* Display the context data.
+    */
+    display_ctx(&ctx);
 
     /************** Decoding now *****************/
 
     /* Now we create a new context based on data from the first one.
     */
-    res = fko_new_with_data(&ctx2, ctx.encrypted_msg);
+    res = fko_new_with_data(&ctx2, ctx.encrypted_msg, FKO_PW);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_new_with_data: %s\n", res, fko_errstr(res));
 
     /* Simply call fko_decrypt_spa_data to do all decryption, decoding,
      * parsing, and populating the context.
-    */
-    res = fko_decrypt_spa_data(&ctx2, "BubbaWasHere");
+    res = fko_decrypt_spa_data(&ctx2, FKO_PW);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_decrypt_spa_data: %s\n", res, fko_errstr(res));
+    */
 
     printf("\nDump of the Decoded Data\n");
     display_ctx(&ctx2);
@@ -101,7 +110,8 @@ int main(int argc, char **argv)
     return(0);
 } 
 
-void display_ctx(fko_ctx_t *ctx)
+void
+display_ctx(fko_ctx_t *ctx)
 {
     printf("\nFKO Context Values:\n===================\n\n");
 
@@ -139,12 +149,13 @@ void display_ctx(fko_ctx_t *ctx)
         (ctx->encoded_msg == NULL) ? "<NULL>" : ctx->encoded_msg,
         (fko_get_spa_digest(ctx) == NULL) ? "<NULL>" : fko_get_spa_digest(ctx),
 
-        (ctx->encrypted_msg == NULL) ? "<NULL>" : ctx->encrypted_msg
+        (ctx->encrypted_msg == NULL) ? "<NULL>" : fko_get_spa_data(ctx)
     );
 
 }
 
-void hex_dump(unsigned char *data, int size)
+void
+hex_dump(unsigned char *data, int size)
 {
     int ln, i, j = 0;
     char ascii_str[17] = {0};

@@ -31,7 +31,8 @@
 
 /* Set the SPA digest type.
 */
-int fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type)
+int
+fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type)
 {
     /* Must be initialized
     */
@@ -50,7 +51,8 @@ int fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type)
 
 /* Return the SPA digest type.
 */
-short fko_get_spa_digest_type(fko_ctx_t *ctx)
+short
+fko_get_spa_digest_type(fko_ctx_t *ctx)
 {
     /* Must be initialized
     */
@@ -60,7 +62,8 @@ short fko_get_spa_digest_type(fko_ctx_t *ctx)
     return(ctx->digest_type);
 }
 
-int fko_set_spa_digest(fko_ctx_t *ctx)
+int
+fko_set_spa_digest(fko_ctx_t *ctx)
 {
     char    *md = NULL;
 
@@ -77,7 +80,8 @@ int fko_set_spa_digest(fko_ctx_t *ctx)
     switch(ctx->digest_type)
     {
         case FKO_DIGEST_MD5:
-            if((md = malloc(MD_HEX_SIZE(MD5_DIGESTSIZE)+1)) == NULL)
+            md = malloc(MD_HEX_SIZE(MD5_DIGESTSIZE)+1);
+            if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
             md5_base64(md,
@@ -85,7 +89,8 @@ int fko_set_spa_digest(fko_ctx_t *ctx)
             break;    
 
         case FKO_DIGEST_SHA1:
-            if((md = malloc(MD_HEX_SIZE(SHA1_DIGESTSIZE)+1)) == NULL)
+            md = malloc(MD_HEX_SIZE(SHA1_DIGESTSIZE)+1);
+            if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
             sha1_base64(md,
@@ -93,7 +98,8 @@ int fko_set_spa_digest(fko_ctx_t *ctx)
             break;    
 
         case FKO_DIGEST_SHA256:
-            if((md = malloc(MD_HEX_SIZE(SHA256_DIGESTSIZE)+1)) == NULL)
+            md = malloc(MD_HEX_SIZE(SHA256_DIGESTSIZE)+1);
+            if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
             sha256_base64(md,
@@ -115,7 +121,8 @@ int fko_set_spa_digest(fko_ctx_t *ctx)
     return(FKO_SUCCESS);
 } 
 
-char* fko_get_spa_digest(fko_ctx_t *ctx)
+char*
+fko_get_spa_digest(fko_ctx_t *ctx)
 {
     /* Must be initialized
     */

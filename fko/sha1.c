@@ -61,7 +61,8 @@
     A = T32(R32(B,5) + f##n(C,D,E) + T + *WP++ + CONST##n); C = R32(C,30)
 
 
-void sha1_transform(SHA_INFO *sha_info)
+void
+sha1_transform(SHA_INFO *sha_info)
 {
     int i;
     uint8 *dp;
@@ -169,7 +170,8 @@ void sha1_transform(SHA_INFO *sha_info)
 
 /* initialize the SHA digest */
 
-void sha1_init(SHA_INFO *sha_info)
+void
+sha1_init(SHA_INFO *sha_info)
 {
     sha_info->digest[0] = 0x67452301L;
     sha_info->digest[1] = 0xefcdab89L;
@@ -183,7 +185,8 @@ void sha1_init(SHA_INFO *sha_info)
 
 /* update the SHA digest */
 
-void sha1_update(SHA_INFO *sha_info, uint8 *buffer, int count)
+void
+sha1_update(SHA_INFO *sha_info, uint8 *buffer, int count)
 {
     int i;
     uint32 clo;
@@ -220,7 +223,8 @@ void sha1_update(SHA_INFO *sha_info, uint8 *buffer, int count)
 }
 
 
-void sha1_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
+void
+sha1_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
 {
     sha1_transform(sha_info);
     digest[ 0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
@@ -246,7 +250,8 @@ void sha1_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
 }
 
 /* finish computing the SHA digest */
-void sha1_final(uint8 digest[20], SHA_INFO *sha_info)
+void
+sha1_final(uint8 digest[20], SHA_INFO *sha_info)
 {
     int count;
     uint32 lo_bit_count, hi_bit_count;

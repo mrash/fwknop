@@ -33,7 +33,8 @@
 
 /* Initialize an fko context.
 */
-int fko_new(fko_ctx_t *ctx)
+int
+fko_new(fko_ctx_t *ctx)
 {
     int         res;
     char       *ver;
@@ -56,7 +57,7 @@ int fko_new(fko_ctx_t *ctx)
     ctx->initval = FKO_CTX_INITIALIZED;
     ver = strdup(FKO_PROTOCOL_VERSION);
     ctx->initval = 0;
-    if(!ver)
+    if(ver == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     
     ctx->version = ver;
@@ -122,7 +123,8 @@ int fko_new(fko_ctx_t *ctx)
  * This is used to create a context with the purpose of decoding
  * and parsing the provided data into the context data.
 */
-int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg)
+int
+fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, const char *dec_key)
 {
     /* Zero out the context...
     */
@@ -130,20 +132,28 @@ int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg)
 
     /* First, add the data to the context.
     */
-    if((ctx->encrypted_msg = strdup(enc_msg)) == NULL)
+    ctx->encrypted_msg = strdup(enc_msg);
+    if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     FKO_SET_CTX_INITIALIZED(ctx);
+
+    if(dec_key != NULL)
+        return(fko_decrypt_spa_data(ctx, dec_key));
 
     return(FKO_SUCCESS);
 }
 
 /* Destroy a context and free its resources
 */
-void fko_destroy(fko_ctx_t *ctx)
+void
+fko_destroy(fko_ctx_t *ctx)
 {
     if(CTX_INITIALIZED(ctx))
     {
+        if(ctx->rand_val != NULL)
+            free(ctx->rand_val);
+
         if(ctx->username != NULL)
             free(ctx->username);
 
@@ -174,14 +184,47 @@ void fko_destroy(fko_ctx_t *ctx)
 
 /* Return the fko version
 */
-char* fko_version(fko_ctx_t *ctx)
+char*
+fko_version(fko_ctx_t *ctx)
 {
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(NULL);
+
+    return(ctx->version);
+}
+
+/* Final update and encoding of data in the context.
+ * This does require all requisite fields be properly
+ * set.
+*/
+int
+fko_spa_data_final(fko_ctx_t *ctx, const char *enc_key)
+{
+    int res;
+
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    return(fko_encrypt_spa_data(ctx, enc_key));
+}
+
+/* Return the fko SPA encrypted data.
+*/
+char*
+fko_get_spa_data(fko_ctx_t *ctx)
+{
+    int res;
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return NULL;
 
-    return(ctx->version);
+    return(ctx->encrypted_msg); 
 }
 
 /***EOF***/

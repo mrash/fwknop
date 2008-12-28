@@ -26,7 +26,8 @@
 
 /* Convert a raw digest into its hex string representation.
 */
-void digest_to_hex(char *out, uchar *in, int size)
+void
+digest_to_hex(char *out, uchar *in, int size)
 {
     int i;
     for(i=0; i<size; i++)
@@ -38,7 +39,8 @@ void digest_to_hex(char *out, uchar *in, int size)
 
 /* Compute MD5 hash on in and store result in out.
 */
-void md5(uchar *out, uchar *in, int size)
+void
+md5(uchar *out, uchar *in, int size)
 {
     MD5Context ctx;
 
@@ -49,7 +51,8 @@ void md5(uchar *out, uchar *in, int size)
 
 /* Compute MD5 hash on in and store the hex string result in out.
 */
-void md5_hex(char *out, uchar *in, int size)
+void
+md5_hex(char *out, uchar *in, int size)
 {
     uint8      md[MD5_DIGESTSIZE];
 
@@ -59,7 +62,8 @@ void md5_hex(char *out, uchar *in, int size)
 
 /* Compute MD5 hash on in and store the base64 string result in out.
 */
-void md5_base64(char *out, uchar *in, int size)
+void
+md5_base64(char *out, uchar *in, int size)
 {
     uint8      md[MD5_DIGESTSIZE];
 
@@ -71,7 +75,8 @@ void md5_base64(char *out, uchar *in, int size)
 
 /* Compute SHA1 hash on in and store result in out.
 */
-void sha1(uchar *out, uchar *in, int size)
+void
+sha1(uchar *out, uchar *in, int size)
 {
     SHA_INFO    sha_info;
 
@@ -82,7 +87,8 @@ void sha1(uchar *out, uchar *in, int size)
 
 /* Compute SHA1 hash on in and store the hex string result in out.
 */
-void sha1_hex(char *out, uchar *in, int size)
+void
+sha1_hex(char *out, uchar *in, int size)
 {
     uint8       md[SHA1_DIGESTSIZE];
 
@@ -92,7 +98,8 @@ void sha1_hex(char *out, uchar *in, int size)
 
 /* Compute SHA1 hash on in and store the base64 string result in out.
 */
-void sha1_base64(char *out, uchar *in, int size)
+void
+sha1_base64(char *out, uchar *in, int size)
 {
     uint8       md[SHA1_DIGESTSIZE];
 
@@ -104,7 +111,8 @@ void sha1_base64(char *out, uchar *in, int size)
 
 /* Compute SHA256 hash on in and store the hex string result in out.
 */
-void sha256(uchar *out, uchar *in, int size)
+void
+sha256(uchar *out, uchar *in, int size)
 {
     SHA_INFO    sha_info;
 
@@ -116,7 +124,8 @@ void sha256(uchar *out, uchar *in, int size)
 
 /* Compute SHA256 hash on in and store the hex string result in out.
 */
-void sha256_hex(char *out, uchar *in, int size)
+void
+sha256_hex(char *out, uchar *in, int size)
 {
     uint8       md[SHA256_DIGESTSIZE];
 
@@ -126,7 +135,8 @@ void sha256_hex(char *out, uchar *in, int size)
 
 /* Compute SHA256 hash on in and store the base64 string result in out.
 */
-void sha256_base64(char *out, uchar *in, int size)
+void
+sha256_base64(char *out, uchar *in, int size)
 {
     uint8       md[SHA256_DIGESTSIZE];
 

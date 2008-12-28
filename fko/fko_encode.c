@@ -33,12 +33,14 @@
 /* A rough way to make enough space for a base64 encoded version of
  * the given string, encode it, and return it.
 */
-int append_b64(char* tbuf, char *str)
+int
+append_b64(char* tbuf, char *str)
 {
     int   len = strlen(str);
     char *bs;
 
-    if((bs = malloc(((len/3)*4)+8)) == NULL)
+    bs = malloc(((len/3)*4)+8);
+    if(bs == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     b64_encode((unsigned char*)str, bs, len);
@@ -57,7 +59,8 @@ int append_b64(char* tbuf, char *str)
 
 /* Set the SPA encryption type.
 */
-int fko_encode_spa_data(fko_ctx_t *ctx)
+int
+fko_encode_spa_data(fko_ctx_t *ctx)
 {
     int     res, offset = 0;
     char    tbuf[FKO_ENCODE_TMP_BUF_SIZE] = {0};
@@ -163,7 +166,6 @@ int fko_encode_spa_data(fko_ctx_t *ctx)
     /* Copy our encoded data into the context.
     */
     ctx->encoded_msg = strdup(tbuf);
-
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 

@@ -31,10 +31,10 @@
 
 /* Decrypt the encoded SPA data.
 */
-int fko_decode_spa_data(fko_ctx_t *ctx)
+int
+fko_decode_spa_data(fko_ctx_t *ctx)
 {
     char       *tbuf, *ndx;
-    //int         cipher_len, res;
     int         edata_size, t_size;
 
     /* Check for required data.
@@ -77,12 +77,47 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
      * at that point so the original digest is not part of the
      * encoded string.
     */
-    if((ctx->digest = strdup(ndx)) == NULL)
+    ctx->digest = strdup(ndx);
+    if(ctx->digest == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     
     /* Zero out the rest of the encoded_msg bucket...
     */
     bzero((ndx-1), t_size);
+
+    /* Make a tmp bucket for processing base64 encoded data and
+     * other general use.
+    */
+    tbuf = malloc(FKO_ENCODE_TMP_BUF_SIZE);
+    if(tbuf == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    /* Can now verify the digest.
+    */
+    switch(ctx->digest_type)
+    {
+        case FKO_DIGEST_MD5:
+            md5_base64(tbuf, ctx->encoded_msg, strlen(ctx->encoded_msg));
+            break;
+
+        case FKO_DIGEST_SHA1:
+            sha1_base64(tbuf, ctx->encoded_msg, strlen(ctx->encoded_msg));
+            break;
+
+        case FKO_DIGEST_SHA256:
+            sha256_base64(tbuf, ctx->encoded_msg, strlen(ctx->encoded_msg));
+            break;
+
+    } 
+
+    /* We give up here if the computed digest does not match the
+     * digest in the message data.
+    */
+    if(strcmp(ctx->digest, tbuf))
+    {
+        free(tbuf);
+        return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
+    }
 
     /* Now we will work through the encoded data and extract (and base64-
      * decode where necessary), the SPA data fields and populate the context.
@@ -93,11 +128,8 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
     if((t_size = strcspn(ndx, ":")) < FKO_RAND_VAL_SIZE)
         return(FKO_ERROR_INVALID_DATA);
 
-    strlcpy(ctx->rand_val, ndx, FKO_RAND_VAL_SIZE+1);
-
-    /* Make a tmp bucket for processinv base64 encoded data.
-    */
-    if((tbuf = malloc(FKO_ENCODE_TMP_BUF_SIZE)) == NULL)
+    ctx->rand_val = strndup(ndx, FKO_RAND_VAL_SIZE);
+    if(ctx->rand_val == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     /* Jump to the next field (username).  We need to use the temp buffer
@@ -112,7 +144,8 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
 
     strlcpy(tbuf, ndx, t_size+1);
     
-    if((ctx->username = malloc(t_size+1)) == NULL) /* Yes, more than we need */
+    ctx->username = malloc(t_size+1); /* Yes, more than we need */
+    if(ctx->username == NULL)
     {
         free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -142,7 +175,8 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
         return(FKO_ERROR_INVALID_DATA);
     }
  
-    if((ctx->version = malloc(t_size+1)) == NULL)
+    ctx->version = malloc(t_size+1);
+    if(ctx->version == NULL)
     {
         free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -174,7 +208,8 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
 
     strlcpy(tbuf, ndx, t_size+1);
     
-    if((ctx->message = malloc(t_size+1)) == NULL) /* Yes, more than we need */
+    ctx->message = malloc(t_size+1); /* Yes, more than we need */
+    if(ctx->message == NULL)
     {
         free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -198,7 +233,8 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
 
         strlcpy(tbuf, ndx, t_size+1);
     
-        if((ctx->nat_access = malloc(t_size+1)) == NULL) /* Yes, more than we need */
+        ctx->nat_access = malloc(t_size+1); /* Yes, more than we need */
+        if(ctx->nat_access == NULL)
         {
             free(tbuf);
             return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -222,7 +258,8 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
         {
             strlcpy(tbuf, ndx, t_size+1);
     
-            if((ctx->server_auth = malloc(t_size+1)) == NULL) /* Yes, more than we need */
+            ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
+            if(ctx->server_auth == NULL)
             {
                 free(tbuf);
                 return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -255,7 +292,8 @@ int fko_decode_spa_data(fko_ctx_t *ctx)
             */
             strlcpy(tbuf, ndx, t_size+1);
     
-            if((ctx->server_auth = malloc(t_size+1)) == NULL) /* Yes, more than we need */
+            ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
+            if(ctx->server_auth == NULL)
             {
                 free(tbuf);
                 return(FKO_ERROR_MEMORY_ALLOCATION);

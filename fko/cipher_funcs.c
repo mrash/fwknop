@@ -34,7 +34,8 @@
 
 /* Get random data.
 */
-void get_random_data(unsigned char *data, int len)
+void
+get_random_data(unsigned char *data, int len)
 {
     FILE           *rfd;
     struct timeval  tv;
@@ -67,7 +68,8 @@ void get_random_data(unsigned char *data, int len)
  * This is is done to be compatible with the data produced via
  * the Perl Crypt::CBC module's use of Rijndael.
 */
-void salt_and_iv(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
+void
+salt_and_iv(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 {
     char            pw_buf[16];
     unsigned char   tmp_buf[64];    /* How big does this need to be? */
@@ -132,7 +134,8 @@ void salt_and_iv(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 
 /* Initialization entry point.
 */
-void rijndael_init(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
+void
+rijndael_init(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 {
 
     /* Use ECB mode to be compatible with the Crypt::CBC perl module.
@@ -151,7 +154,8 @@ void rijndael_init(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 /* Take a chunk of data, encrypt it in the same way the perl Crypt::CBC
  * module would.
 */
-int fko_encrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
+int
+fko_encrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];
@@ -204,7 +208,8 @@ int fko_encrypt(unsigned char *in, int in_len, const char *pass, unsigned char *
 
 /* Decrypt the given data.
 */
-int fko_decrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
+int
+fko_decrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];
@@ -266,39 +271,5 @@ int fko_decrypt(unsigned char *in, int in_len, const char *pass, unsigned char *
     return(ondx - out);
 }
 
-/*
-void hex_dump(unsigned char *data, int size)
-{
-    int ln, i, j = 0;
-    char ascii_str[17] = {0};
-
-    for(i=0; i<size; i++)
-    {
-        if((i % 16) == 0)
-        {
-            printf(" %s\n  0x%.4x:  ", ascii_str, i);
-            memset(ascii_str, 0x0, 17);
-            j = 0;
-        }
-
-        printf("%.2x ", data[i]);
-
-        ascii_str[j++] = (data[i] < 0x20 || data[i] > 0x7e) ? '.' : data[i];
-
-        if(j == 8)
-            printf(" ");
-    }
-
-    // Remainder...
-    ln = strlen(ascii_str);
-    if(ln > 0)
-    {
-        for(i=0; i < 16-ln; i++)
-            printf("   ");
-
-        printf(" %s\n\n", ascii_str);
-    }
-}
-*/
 
 /***EOF***/

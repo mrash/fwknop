@@ -69,7 +69,8 @@ static uint32 K[64] = {
     0x90befffaL, 0xa4506cebL, 0xbef9a3f7L, 0xc67178f2L
 };
 
-static void sha256_transform(SHA_INFO *sha_info)
+static void
+sha256_transform(SHA_INFO *sha_info)
 {
     int i, j;
     uint8 *dp;
@@ -161,7 +162,8 @@ static void sha256_transform(SHA_INFO *sha_info)
     sha_info->digest[7] = TRUNC32(sha_info->digest[7] + H);
 }
 
-void sha256_init(SHA_INFO *sha_info)
+void
+sha256_init(SHA_INFO *sha_info)
 {
     sha_info->digest[0] = 0x6a09e667L;
     sha_info->digest[1] = 0xbb67ae85L;
@@ -179,7 +181,8 @@ void sha256_init(SHA_INFO *sha_info)
 
 /* Update the SHA digest
 */
-void sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count)
+void
+sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count)
 {
     int i;
     uint32 clo;
@@ -217,7 +220,8 @@ void sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count)
 
 /* Finish computing the SHA digest
 */
-void sha256_final(SHA_INFO *sha_info)
+void
+sha256_final(SHA_INFO *sha_info)
 {
     int count;
     uint32 lo_bit_count, hi_bit_count;
@@ -245,7 +249,8 @@ void sha256_final(SHA_INFO *sha_info)
     sha256_transform(sha_info);
 }
 
-void sha256_unpackdigest(uint8 digest[32], SHA_INFO *sha_info)
+void
+sha256_unpackdigest(uint8 digest[32], SHA_INFO *sha_info)
 {
     digest[ 0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
     digest[ 1] = (unsigned char) ((sha_info->digest[0] >> 16) & 0xff);

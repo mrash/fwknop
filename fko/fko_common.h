@@ -63,6 +63,7 @@
 
 #include "fko_types.h"
 #include "fko_util.h"
+#include "fko_limits.h"
 
 /* Try to cover for those that do not have bzero.
 */

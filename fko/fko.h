@@ -140,6 +140,7 @@ enum {
     FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG,
     FKO_ERROR_INVALID_ENCRYPTION_TYPE,
     FKO_ERROR_DECRYPTION_SIZE_ERROR,
+    FKO_ERROR_DIGEST_VERIFICATION_FAILED,
 /* Add more errors above this line */
     FKO_ERROR_UNSUPPORTED_FEATURE,
     FKO_ERROR_UNKNOWN
@@ -151,65 +152,50 @@ enum {
 #define FKO_DEFAULT_DIGEST      FKO_DIGEST_SHA256
 #define FKO_DEFAULT_ENCRYPTION  FKO_ENCRYPTION_RIJNDAEL
 
-/* How much space we allow for the fko context error message buffer.
-*/
-#define MAX_FKO_ERR_MSG_SIZE        128
-
-/* Define some limits (--DSS XXX: These sizes need to be reviewed)
-*/
-#define MAX_SPA_USERNAME_SIZE        64
-#define MAX_SPA_MESSAGE_SIZE        256
-#define MAX_SPA_NAT_ACCESS_SIZE     128
-#define MAX_SPA_SERVER_AUTH_SIZE     64
-
-#define MIN_SPA_ENCODED_MSG_SIZE     36 /* Somewhat arbitrary */
-#define MIN_GNUPG_MSG_SIZE          400
-
 /* Misc.
 */
-#define FKO_RAND_VAL_SIZE            16
-#define FKO_ENCODE_TMP_BUF_SIZE    1024
 
 /* The pieces we need to make an FKO  SPA data packet.
 */
 typedef struct _fko_ctx {
-    /* FKO SPA message data (raw and un-encoded) */
-    char            rand_val[FKO_RAND_VAL_SIZE+1];
+    /* FKO SPA user-definable message data */
+    char           *rand_val;
     char           *username;
     unsigned int    timestamp;
-    char           *version;
     short           message_type;
     char           *message;
     char           *nat_access;
     char           *server_auth;
     unsigned int    client_timeout;
-    char           *digest;
 
-    /* FKO SPA message encoding types */
+    /* FKO SPA user-settable message encoding types */
     short  digest_type;
     short  encryption_type;
 
-    /* Complete processed data (encodings, etc.) */
-    char           *encoded_msg;
+    /* Computed or predefined data */
+    char           *version;
+    char           *digest;
 
+    /* Computed processed data (encodings, etc.) */
+    char           *encoded_msg;
     char           *encrypted_msg;
-    unsigned int    encrypted_msg_size;
 
     /* State info */
     unsigned short  state;
     unsigned char   initval;
-
 } fko_ctx_t;
 
-/* Function prototypes
-*/
+/* Function prototypes */
+
+/* Most common api calls */
 int fko_new(fko_ctx_t *ctx);
-int fko_new_with_data(fko_ctx_t *ctx, char *enc_data);
-void fko_destroy(fko_ctx_t *ctx);
-
+int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, const char *dec_key);
 char* fko_version(fko_ctx_t *ctx);
-const char* fko_errstr(int err_code);
+void fko_destroy(fko_ctx_t *ctx);
+int fko_spa_data_final(fko_ctx_t *ctx, const char *enc_key);
+char* fko_get_spa_data(fko_ctx_t *ctx);
 
+/* Set context data functions */
 int fko_set_rand_value(fko_ctx_t *ctx, const char *val);
 int fko_set_username(fko_ctx_t *ctx, const char *spoof_user);
 int fko_set_timestamp(fko_ctx_t *ctx, int offset);
@@ -222,6 +208,16 @@ int fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type);
 int fko_set_spa_digest(fko_ctx_t *ctx);
 int fko_set_spa_encryption_type(fko_ctx_t *ctx, short encrypt_type);
 
+/* Data processing and misc utility functions */
+const char* fko_errstr(int err_code);
+
+int fko_encode_spa_data(fko_ctx_t *ctx);
+int fko_decode_spa_data(fko_ctx_t *ctx);
+int fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key);
+int fko_decrypt_spa_data(fko_ctx_t *ctx, const char *dec_key);
+
+/* Get context data functions */
+
 char* fko_get_rand_value(fko_ctx_t *ctx);
 char* fko_get_username(fko_ctx_t *ctx);
 unsigned int fko_get_timestamp(fko_ctx_t *ctx);
@@ -233,13 +229,6 @@ int fko_get_spa_client_timeout(fko_ctx_t *ctx);
 short fko_get_spa_digest_type(fko_ctx_t *ctx);
 char* fko_get_spa_digest(fko_ctx_t *ctx);
 short fko_get_spa_encryption_type(fko_ctx_t *ctx);
-
-int fko_encode_spa_data(fko_ctx_t *ctx);
-int fko_decode_spa_data(fko_ctx_t *ctx);
-
-int fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key);
-int fko_decrypt_spa_data(fko_ctx_t *ctx, const char *dec_key);
-
 
 #endif /* FKO_H */
 
