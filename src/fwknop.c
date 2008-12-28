@@ -77,16 +77,22 @@ int main(int argc, char **argv)
     //printf("\nHex dump of fko_ctx:\n====================\n");
     //hex_dump((unsigned char*)&ctx, sizeof(fko_ctx_t));
 
+    /************** Decoding now *****************/
+
     /* Now we create a new context based on data from the first one.
     */
     res = fko_new_with_data(&ctx2, ctx.encrypted_msg);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_new_with_data: %s\n", res, fko_errstr(res));
 
+    /* Simply call fko_decrypt_spa_data to do all decryption, decoding,
+     * parsing, and populating the context.
+    */
     res = fko_decrypt_spa_data(&ctx2, "BubbaWasHere");
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_decrypt_spa_data: %s\n", res, fko_errstr(res));
 
+    printf("\nDump of the Decoded Data\n");
     display_ctx(&ctx2);
 
     fko_destroy(&ctx);
