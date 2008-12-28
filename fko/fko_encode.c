@@ -137,13 +137,13 @@ int fko_encode_spa_data(fko_ctx_t *ctx)
  
     /* If we have a server_auth field set.  Add it here.
      *
+    */
     if(ctx->server_auth != NULL)
     {
         strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
         if((res = append_b64(tbuf, ctx->server_auth)) != FKO_SUCCESS)
             return(res);
     }
-    */
 
     /* If a client timeout is specified and we are not dealing with a
      * SPA command message, add the timeout here.
@@ -176,20 +176,6 @@ int fko_encode_spa_data(fko_ctx_t *ctx)
     */
     FKO_CLEAR_SPA_DATA_MODIFIED(ctx);
  
-    return(FKO_SUCCESS);
-}
-
-/* Return the SPA encryption type.
-*/
-int fko_decode_spa_data(fko_ctx_t *ctx)
-{
-    /* Must be initialized
-    */
-    if(!CTX_INITIALIZED(ctx))
-        return(FKO_ERROR_CTX_NOT_INITIALIZED);
-
-
-
     return(FKO_SUCCESS);
 }
 

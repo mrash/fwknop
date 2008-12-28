@@ -59,6 +59,20 @@ int fko_set_spa_nat_access(fko_ctx_t *ctx, const char *msg)
     if(ctx->nat_access == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
+    /* If we set the nat_access message Then we force the message_type
+     * as well. Technically, the message type should be set already.
+     * This will serve a half-protective measure.
+     * --DSS XXX: should do this better.
+    */
+    if(ctx->client_timeout > 0)
+    {
+        if(ctx->message_type != FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+            ctx->message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
+    }
+    else
+        if(ctx->message_type != FKO_LOCAL_NAT_ACCESS_MSG)
+            ctx->message_type = FKO_NAT_ACCESS_MSG;
+
     return(FKO_SUCCESS);
 } 
 

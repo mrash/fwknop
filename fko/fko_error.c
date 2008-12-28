@@ -33,7 +33,7 @@ static const char *fko_err_msgs[] = {
     "Success",
     "FKO Context is not initialized",
     "Unable to allocate memory",
-    "Args contains invalid data",
+    "Args contain invalid data",
     "Value or Size of the data exceeded the max allowed",
     "Unable to determine username",
     "Missing or incomplete SPA data",
@@ -44,7 +44,8 @@ static const char *fko_err_msgs[] = {
     "Invalid SPA access mesage format",
     "Invalid SPA nat_access mesage format",
     "Invalid encryption type",
-    "Unsupported or unimplemented feature or function.",
+    "Unexpected or invalid size for decrypted data",
+    "Unsupported or unimplemented feature or function",
     "Unknown/Unclassified error",
     0
 };

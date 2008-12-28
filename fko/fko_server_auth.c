@@ -34,7 +34,7 @@ int fko_set_spa_server_auth(fko_ctx_t *ctx, const char *msg)
      *   --DSS This is not supported yet
      ****************************************
     */
-    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+    //return(FKO_ERROR_UNSUPPORTED_FEATURE);
 
 
     /* Context must be initialized.

@@ -194,7 +194,7 @@ int validate_access_msg(const char *msg)
       && strncmp(ndx, "none", 4))
         return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
 
-    ndx = strchr(ndx, ',');
+    ndx = strchr(ndx, '/');
     if(ndx == NULL || (1+(ndx - msg)) >= startlen)
         return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
 

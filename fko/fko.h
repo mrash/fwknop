@@ -139,7 +139,8 @@ enum {
     FKO_ERROR_INVALID_SPA_ACCESS_MSG,
     FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG,
     FKO_ERROR_INVALID_ENCRYPTION_TYPE,
-/* Add more errors here */
+    FKO_ERROR_DECRYPTION_SIZE_ERROR,
+/* Add more errors above this line */
     FKO_ERROR_UNSUPPORTED_FEATURE,
     FKO_ERROR_UNKNOWN
 };
@@ -162,6 +163,7 @@ enum {
 #define MAX_SPA_SERVER_AUTH_SIZE     64
 
 #define MIN_SPA_ENCODED_MSG_SIZE     36 /* Somewhat arbitrary */
+#define MIN_GNUPG_MSG_SIZE          400
 
 /* Misc.
 */
@@ -202,6 +204,7 @@ typedef struct _fko_ctx {
 /* Function prototypes
 */
 int fko_new(fko_ctx_t *ctx);
+int fko_new_with_data(fko_ctx_t *ctx, char *enc_data);
 void fko_destroy(fko_ctx_t *ctx);
 
 char* fko_version(fko_ctx_t *ctx);
@@ -235,7 +238,7 @@ int fko_encode_spa_data(fko_ctx_t *ctx);
 int fko_decode_spa_data(fko_ctx_t *ctx);
 
 int fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key);
-int fko_decrypt_spa_data(fko_ctx_t *ctx, unsigned char *data, int size);
+int fko_decrypt_spa_data(fko_ctx_t *ctx, const char *dec_key);
 
 
 #endif /* FKO_H */

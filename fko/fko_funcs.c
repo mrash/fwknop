@@ -26,6 +26,11 @@
 #include "fko_common.h"
 #include "fko.h"
 
+/* The base64 encoded version of "Salted__" that may be found at the head
+ * of Rijndael encrypted data.
+*/
+#define B64_RIJNDAEL_SALT "U2FsdGVkX1"
+
 /* Initialize an fko context.
 */
 int fko_new(fko_ctx_t *ctx)
@@ -112,6 +117,26 @@ int fko_new(fko_ctx_t *ctx)
 
     return(FKO_SUCCESS);
 } 
+
+/* Initialize an fko context with external (encrypted/encoded) data.
+ * This is used to create a context with the purpose of decoding
+ * and parsing the provided data into the context data.
+*/
+int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg)
+{
+    /* Zero out the context...
+    */
+    bzero(ctx, sizeof(fko_ctx_t));
+
+    /* First, add the data to the context.
+    */
+    if((ctx->encrypted_msg = strdup(enc_msg)) == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    FKO_SET_CTX_INITIALIZED(ctx);
+
+    return(FKO_SUCCESS);
+}
 
 /* Destroy a context and free its resources
 */

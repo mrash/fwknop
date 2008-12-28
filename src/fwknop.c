@@ -32,7 +32,7 @@ void hex_dump(unsigned char *data, int size);
 
 int main(int argc, char **argv)
 {
-    fko_ctx_t   ctx;
+    fko_ctx_t   ctx, ctx2;
     int         res;
 
     /* Intialize the context */
@@ -40,17 +40,26 @@ int main(int argc, char **argv)
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_new: %s\n", res, fko_errstr(res));
 
+    res = fko_set_spa_message_type(&ctx, FKO_ACCESS_MSG);
+    if(res != FKO_SUCCESS)
+        fprintf(stderr, "Error #%i from fko_set_spa_message_type: %s\n", res, fko_errstr(res));
+
     /* Set a message string */
-    res = fko_set_spa_message(&ctx, "192.168.1.5,tcp,22");
+    res = fko_set_spa_message(&ctx, "0.0.0.0,tcp/22");
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_set_spa_message: %s\n", res, fko_errstr(res));
 
     //fko_set_spa_digest_type(&ctx, FKO_DIGEST_SHA1);
-    fko_set_spa_client_timeout(&ctx, 300);
 
-    //res = fko_set_spa_server_auth(&ctx, "crypt,BubbaWasHere");
-    //if(res != FKO_SUCCESS)
-    //    fprintf(stderr, "Error #%i from fko_set_spa_server_auth: %s\n", res, fko_errstr(res));
+    res = fko_set_spa_nat_access(&ctx, "192.168.1.2,22");
+    if(res != FKO_SUCCESS)
+        fprintf(stderr, "Error #%i from fko_set_spa_nat_access: %s\n", res, fko_errstr(res));
+
+    fko_set_spa_client_timeout(&ctx, 120);
+
+    res = fko_set_spa_server_auth(&ctx, "crypt,BubbaWasHere");
+    if(res != FKO_SUCCESS)
+        fprintf(stderr, "Error #%i from fko_set_spa_server_auth: %s\n", res, fko_errstr(res));
 
     /* Encode the SPA data
     res = fko_encode_spa_data(&ctx);
@@ -68,7 +77,20 @@ int main(int argc, char **argv)
     //printf("\nHex dump of fko_ctx:\n====================\n");
     //hex_dump((unsigned char*)&ctx, sizeof(fko_ctx_t));
 
+    /* Now we create a new context based on data from the first one.
+    */
+    res = fko_new_with_data(&ctx2, ctx.encrypted_msg);
+    if(res != FKO_SUCCESS)
+        fprintf(stderr, "Error #%i from fko_new_with_data: %s\n", res, fko_errstr(res));
+
+    res = fko_decrypt_spa_data(&ctx2, "BubbaWasHere");
+    if(res != FKO_SUCCESS)
+        fprintf(stderr, "Error #%i from fko_decrypt_spa_data: %s\n", res, fko_errstr(res));
+
+    display_ctx(&ctx2);
+
     fko_destroy(&ctx);
+    fko_destroy(&ctx2);
 
     return(0);
 } 

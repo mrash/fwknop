@@ -33,8 +33,8 @@
 */
 #define PREDICT_ENCSIZE(x) (1+(x>>4)+(x&0xf?1:0))<<4
 
-int fko_encrypt(uchar *in, int len, char *key, uchar *out);
-int fko_decrypt(uchar *in, int len, char *key, uchar *out);
+int fko_encrypt(uchar *in, int len, const char *key, uchar *out);
+int fko_decrypt(uchar *in, int len, const char *key, uchar *out);
 void hex_dump(uchar *data, int size);
 
 #endif /* CIPHER_FUNCS_H */

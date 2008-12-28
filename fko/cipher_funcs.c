@@ -67,7 +67,7 @@ void get_random_data(unsigned char *data, int len)
  * This is is done to be compatible with the data produced via
  * the Perl Crypt::CBC module's use of Rijndael.
 */
-void salt_and_iv(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
+void salt_and_iv(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 {
     char            pw_buf[16];
     unsigned char   tmp_buf[64];    /* How big does this need to be? */
@@ -132,7 +132,7 @@ void salt_and_iv(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
 
 /* Initialization entry point.
 */
-void rijndael_init(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
+void rijndael_init(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 {
 
     /* Use ECB mode to be compatible with the Crypt::CBC perl module.
@@ -151,7 +151,7 @@ void rijndael_init(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
 /* Take a chunk of data, encrypt it in the same way the perl Crypt::CBC
  * module would.
 */
-int fko_encrypt(unsigned char *in, int in_len, char *pass, unsigned char *out)
+int fko_encrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];
@@ -204,7 +204,7 @@ int fko_encrypt(unsigned char *in, int in_len, char *pass, unsigned char *out)
 
 /* Decrypt the given data.
 */
-int fko_decrypt(unsigned char *in, int in_len, char *pass, unsigned char *out)
+int fko_decrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];

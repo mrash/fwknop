@@ -28,6 +28,8 @@
 #include "cipher_funcs.h"
 #include "base64.h"
 
+#define B64_RIJNDAEL_SALT "U2FsdGVkX1"
+
 /* Set the SPA encryption type.
 */
 int fko_set_spa_encryption_type(fko_ctx_t *ctx, short encrypt_type)
@@ -128,6 +130,80 @@ int fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key)
     free(b64cipher);
 
     return(FKO_SUCCESS);
+}
+
+/* Decode, decrypt, and parse SPA data into the context.
+*/
+int fko_decrypt_spa_data(fko_ctx_t *ctx, const char *dec_key)
+{
+    char           *tbuf;
+    unsigned char  *cipher;
+    int             b64_len, cipher_len, pt_len;
+
+    /* First, make sure we have data to work with.
+    */
+    if(ctx->encrypted_msg == NULL
+      || strlen(ctx->encrypted_msg) <  MIN_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    /* Determine type of encryption used.  For know, we are using the
+     * size of the message.  However, we will want to come up with a
+     * more reliable method of identification.
+    */
+    b64_len = strlen(ctx->encrypted_msg);
+
+    if(b64_len > MIN_GNUPG_MSG_SIZE)
+    {
+        /* TODO: add GPG handling */
+        /* Since we do not support GPG yet, we will just fall through */
+    }
+
+    /* Assuming Rijndael */
+
+    /* Now see if we need to add the "Salted__" string to the front of the
+     * encrypted data.
+    */
+    if(strncmp(ctx->encrypted_msg, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT)))
+    {
+        /* We need to realloc space for the salt.
+        */
+        tbuf = realloc(ctx->encrypted_msg, b64_len + 12);
+        if(tbuf == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+        memmove(tbuf+10, tbuf, b64_len);
+        ctx->encrypted_msg = memcpy(tbuf, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT));
+    }
+
+    /* Create a bucket for the (base64) decoded encrypted data and get the
+     * raw cipher data.
+    */
+    if((cipher = malloc(strlen(ctx->encrypted_msg))) == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+ 
+    cipher_len = b64_decode(ctx->encrypted_msg, cipher, b64_len);
+
+    /* Create a bucket for the plaintext data and decrypt the message
+     * data into it.
+    */
+    if((ctx->encoded_msg = malloc(cipher_len)) == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    pt_len = fko_decrypt(cipher, cipher_len, dec_key, (unsigned char*)ctx->encoded_msg);
+ 
+    /* Done with cipher...
+    */
+    free(cipher);
+
+    /* The length of the decrypted data should be within 16 of the
+     * length of the encrypted version.
+    */
+    if(pt_len < (cipher_len - 32))
+        return(FKO_ERROR_DECRYPTION_SIZE_ERROR);
+
+    /* Call fko_decode and return the results.
+    */
+    return(fko_decode_spa_data(ctx));
 }
 
 /***EOF***/

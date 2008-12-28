@@ -52,7 +52,7 @@ AC_C_CONST
 # Checks for library functions.
 #
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([bzero gettimeofday memmove memset setlocale strchr strdup])
+AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strrchr strspn])
 
 AC_CONFIG_FILES([Makefile
                  fko/Makefile
