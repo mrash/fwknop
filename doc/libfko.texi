@@ -1,7 +1,10 @@
 \input texinfo   @c -*-texinfo-*-
+@c %**start of header
 @setfilename libfko.info
 @settitle Firewall Knock Operator Library - libfko
+@c %**end of header
 
+@c --DSS if this doc gets big enough, consider uncommenting the next line.
 @c @setchapternewpage odd
 
 @dircategory Network
@@ -71,6 +74,10 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 @end titlepage
 @page
+
+@c -DSS: For now, this manual is too small to have a short contents
+@c @summarycontents
+@contents
 
 @ifnottex
 @node Top
@@ -149,9 +156,21 @@ TODO: Finish Me
 @cindex header file
 @cindex include file
 
-TODO: Finish Me
+All interfaces (data types and functions) of the library are defined
+in the header file `fko.h'.  You must include this in all programs
+using the library, either directly or through some other header file,
+like this:
+
+@example
+#include <fko.h>
+@end example
+
+The name space of @acronym{FKO} is @code{fko_*} for function names and
+data types and @code{FKO_*} for other symbols. Other symbols internal to
+@acronym{FKO} may take the form @code{_fko_*} and @code{_FKO_*}.
 
 
+@c --End of main chapters.
 
 @include gpl-2.0.texi
 
@@ -167,9 +186,6 @@ TODO: Finish Me
 @printindex fn
 
 
-@c -DSS: This manual is too small to have a short contents
-@c @summarycontents
-@contents
 @bye
 
 @c ***EOF***

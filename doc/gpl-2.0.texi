@@ -1,5 +1,5 @@
 @node Library Copying
-@appendix GNU LESSER GENERAL PUBLIC LICENSE
+@appendix GNU GENERAL PUBLIC LICENSE
 
 @cindex GPL, General Public License
 
