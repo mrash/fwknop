@@ -1,100 +1,76 @@
 \input texinfo   @c -*-texinfo-*-
 @c %**start of header
 @setfilename libfko.info
+@include version.texi
 @settitle Firewall Knock Operator Library - libfko
+@c @setchapternewpage odd
+@ifnothtml
+@setcontentsaftertitlepage
+@end ifnothtml
+@finalout
+@c Unify some of the indices.
+@syncodeindex tp fn
+@syncodeindex pg fn
 @c %**end of header
 
-@c --DSS if this doc gets big enough, consider uncommenting the next line.
-@c @setchapternewpage odd
+@copying
 
-@dircategory Network
+This manual is for the Firewall Knock Operator library, libfko.
+(version @value{VERSION}, last updated @value{UPDATED}).
+
+Copyright @copyright{} 2008 Damien Stuart.
+
+@quotation
+The libfko manual is free; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+The libfko manual is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this manual; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+@end quotation
+@end copying
+
+
+@dircategory Network Security
 @direntry
 * libfko: (libfko).    The FireWall KNock OPerator (fwknop) Library - libfko
 @end direntry
 
-@include version.texi
 
-@c Unify some of the indices.
-@syncodeindex tp fn
-@syncodeindex pg fn
-
-@ifinfo
-This file documents the Firewall Knock Operator library - libfko.
-
-This is Edition @value{EDITION}, last updated @value{UPDATED}, of
-@cite{The `libfko' Reference Manual}, for Version
-@value{VERSION}.
-
-Copyright @copyright{} 2008 Damien Stuart.
-
-The libfko manual is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-The libfko manual is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
-
-@end ifinfo
-
-@iftex
-@shorttitlepage Firewall Knock Operator Library - libfko
-@end iftex
 @titlepage
-@sp 10
-@center @titlefont{Firewall Knock Operator Library - libfko}
-@sp 1
-@center @titlefont{Reference Manual}
-@sp 6
+@title libfko
+@subtitle The Firewall Knock Operator Library
 @subtitle Edition @value{EDITION}, @value{UPDATED}
 @author Damien S. Stuart
-@author @email{dstuart@@dstuart.org}
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2008 Damien Stuart.
-
-The libfko manual is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-The libfko manual is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+@insertcopying
 @end titlepage
-@page
 
-@c -DSS: For now, this manual is too small to have a short contents
-@c @summarycontents
 @contents
 
 @ifnottex
 @node Top
 @top Main Menu
-This is Edition @value{EDITION}, last updated @value{UPDATED}, of
-@cite{The `libfko' Reference Manual}, for libfko Version
-@value{VERSION}.
+@insertcopying
 @end ifnottex
 
 @menu
 * Introduction::                  How to use this manual.
-* Preparation::                   What you should do before using the library.
+* Using libfko::                  What you should do before using the library.
+* libfko Functions::              The libfko functions.
 
 Appendices
 
-* Library Copying::               The GNU Lesser General Public License says
-                                  how you can copy and share
+* Library Copying::               The GNU General Public License says
+                                  how you can copy and share.
 Indices
 
 * Concept Index::                 Index of concepts and programs.
@@ -107,11 +83,23 @@ Introduction
 
 * Getting Started::               Purpose of the manual, and how to use it.
 * Features::                      Reasons to install and use libfko.
-* Overview::                      Basic architecture of the libfko library.
+* Overview::                      Basic overview of @acronym{SPA} and
+                                  architecture of the libfko library.
 
-Preparation
+Using libfko
 
-* Header::                        What header file you need to include.
+* libfko Header::                 What header file you need to include.
+* Usage Overview::                Overview of how to utilized the library
+                                  to construct @acronym{SPA} data.
+* Error Handling::                Possible errors and their meaning.
+
+libfko Functions
+
+* Required Functions::            These functions are always required.
+* Setting SPA Data                Functions for setting specific @acronym{SPA}
+                                  data fields.
+* Retrieving SPA Data             Functions for getting the data for specific
+                                  @acronym{SPA} data fields.
 
 @end detailmenu
 @end menu
@@ -119,7 +107,28 @@ Preparation
 @node Introduction
 @chapter Introduction
 
-TODO: Finish Me
+The `Firewall Knock Operator Library' (libfko) is a C language library that
+implements the functions needed to create and/or parse 
+@i{Single Packet Authorization} (@acronym{SPA}) data.  It is designed to
+abstract the details of encoding, encryption, decoding, parsing, and verifying
+@acronym{SPA} messages such as those used by Michael Rash's @i{Firewall
+Knock Operator} (fwknop).
+
+@cite{fwknop} implements @acronym{SPA}; an authorization scheme that requires
+only a single encrypted packet to communicate various pieces of information
+including desired access through an iptables policy and/or specific commands
+to execute on the target system.  The main application for a program of this
+type is to protect services such as SSH with an additional layer of security
+in order to make the exploitation of vulnerabilities much more difficult.
+
+libfko is not an implementation of an fwknop client or server.  It simply
+provides the functions for managing the @acronym{SPA} data used by those
+programs. 
+
+@sp 1
+For more information on @cite{fwknop} and @acronym{SPA}, go to
+@uref{http://www.cipherdyn.org/fwknop}. 
+
 
 @menu
 * Getting Started::               Purpose of the manual, and how to use it.
@@ -130,29 +139,97 @@ TODO: Finish Me
 @node Getting Started
 @section Getting Started
 
-TODO: Finish Me
+This manual documents the `Firewall Knock Operator' library programming
+interface.  All functions and data types provided by the library are
+explained.
+
+This manual can be used in a couple of ways.  If read from the beginning
+to the end, it should give a good introduction into the library and how it
+can be used in an application.  Later on, the manual can be used as a
+reference manual to get just the information needed about any particular
+interface of the library.
 
 @node Features
 @section Features
 
-TODO: Finish Me
+The primary advantage of using libfko is it provides a single API for either
+creating, or parsing of existing @acronym{SPA} data that is fully compatible
+with the current fwknop implemetation (currently written in Perl).  Other
+advantages include:
+
+@table @asis
+@item It's free software
+Anybody can use, modify, and redistribute it under the terms of the GNU
+General Public License (@pxref{Library Copying}).
+
+@item It's lightweight
+The current Perl-based implementation requires several additional Perl
+modules and has a relatively large footprint in memory.  This C-based
+library eliminates those dependencies and has a much smaller footprint.
+
+@item It's easy
+libfko hides many of the gory details of fwkop's @acronym{SPA} message data
+format, encoding, encrypting, decrypting, decoding, and parsing.  In most
+cases, only a few function calls will be needed create or parse a @acronym{SPA}
+message.
+@end table
 
 @node Overview
 @section Overview
 
+libfko functionality can be divided into two roles.  One is the creation of
+an encrypted @acronym{SPA} message.  The other is the taking an encrypted
+@acronym{SPA} message to decode, parse, and extract the original data.
+
+The actual @acronym{SPA} data operations and handling are set within a
+context.  The context represents a single @acronym{SPA} message and provides
+configuration parameters and data settings for defining that message. All
+operations on the data occur within that context.
+
+Some operations on the context must occur before others.  Details of these
+dependencies will be covered in more detail in next chapter.
+
+@noindent
+The steps taken to create a @acronym{SPA} message are:
+
+@itemize @bullet
+@item
+Create a new context
+@item
+Set the required @acronym{SPA} data fields
+@item
+Finalize the @acronym{SPA} data
+@item
+Destroy the context
+@end itemize
+
+@noindent
+To process an incoming encrypted @acronym{SPA} message:
+
+@itemize @bullet
+@item
+Create a new context with data input
+@item
+Extract the @acronym{SPA} data fields
+@item
+Destroy the context
+@end itemize
+
+@node Using libfko
+@chapter Using libfko
+
 TODO: Finish Me
 
-@node Preparation
-@chapter Preparation
-
-TODO: Finish Me
 
 @menu
-* Header::                        What header file you need to include.
+* libfko Header::                 What header file you need to include.
+* Usage Overview::                Overview of how to utilized the library
+                                  to construct @acronym{SPA} data.
+* Error Handling::                Possible errors and their meaning.
 @end menu
 
-@node Header
-@section Header
+@node libfko Header
+@section libfko Header
 @cindex header file
 @cindex include file
 
@@ -168,6 +245,50 @@ like this:
 The name space of @acronym{FKO} is @code{fko_*} for function names and
 data types and @code{FKO_*} for other symbols. Other symbols internal to
 @acronym{FKO} may take the form @code{_fko_*} and @code{_FKO_*}.
+
+@node Usage Overview
+@section Usage Overview
+
+TODO: Finish Me
+
+
+@node Error Handling
+@section Error Handling
+
+TODO: Finish Me
+
+
+@node libfko Functions
+@chapter libfko Functions
+
+TODO: Finish Me
+
+@menu
+* Required Functions::            These functions are always required.
+* Setting SPA Data::              Functions for setting specific @acronym{SPA}
+                                  data fields.
+* Retrieving SPA Data::           Functions for getting the data for specific
+                                  @acronym{SPA} data fields.
+@end menu
+
+@node Required Functions
+@section Required Functions
+
+TODO: Finish Me
+
+
+@node Setting SPA Data
+@section Setting Spa Data
+
+TODO: Finish Me
+
+
+@node Retrieving SPA Data
+@section Retrieving SPA Data
+
+TODO: Finish Me
+
+
 
 
 @c --End of main chapters.
