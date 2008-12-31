@@ -65,7 +65,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 @menu
 * Introduction::                  How to use this manual
-* Using libfko::                  What you should do before using the library
+* Preparation::                   What you should do before using the library
+* Using libfko::                  How to use libfko in your program
 
 Appendices
 
@@ -91,25 +92,14 @@ Overview
 * SPA Data Format::               Description of the @acronym{SPA} data
                                   format.
 
-Using libfko
+Preparation
 
 * libfko Header::                 What header file you need to include
 * Compiling with libfko::         What you need to compile and link your
                                   program with libfko
 * SPA Parameter Types::           The available digests, message types and
                                   modes of encryption for @acronym{SPA} data
-* Usage Overview::                Overview of how to utilized the library
-                                  to construct @acronym{SPA} data
-* Error Handling::                Possible errors and their meaning
-
-SPA Parameter Types
-
-* Digests::                       The message digest hashes supported by libfko 
-* SPA Messages::                  The fko @acronym{SPA} message types
-                                  supported by libfko (and fwknop)
-* Encryption Algorithms::         Encryption schemes supported by libfko
-
-Usage Overview
+Using libfko
 
 * Creating Contexts::             Creating a new fko context
 * Destroying Contexts::           Releasing an fko context
@@ -119,6 +109,14 @@ Usage Overview
 * Retrieving SPA Data::           Retrieving @acronym{SPA} data
 * Utility Functions::             Other utility, miscellaneous, and seldom
                                   used functions
+* Error Handling::                Possible errors and their meaning
+
+SPA Parameter Types
+
+* Digests::                       The message digest hashes supported by libfko 
+* SPA Messages::                  The fko @acronym{SPA} message types
+                                  supported by libfko (and fwknop)
+* Encryption Algorithms::         Encryption schemes supported by libfko
 
 @end detailmenu
 @end menu
@@ -277,12 +275,11 @@ message, nat_access, and server_auth fields are not base64-encoded):
 crypt,mypw:120:xswj8V0zMR7/7MV9pQRarSKWG1l9Zfjv+kbXaKrJ+RA
 @end example
 
-@node Using libfko
-@chapter Using libfko
+@node Preparation
+@chapter Preparation
 
-This chapter provides the ``howto'' for using libfko, including preparation,
-required functions, and parameter choices along with some code sample to
-further illustrate usage.  
+This chapter provides information needed to prepare for using libfko
+in your programs.
 
 @menu
 * libfko Header::                 What header file you need to include
@@ -290,9 +287,6 @@ further illustrate usage.
                                   program with libfko
 * SPA Parameter Types::           The available digests, message types and
                                   modes of encryption for @acronym{SPA} data
-* Usage Overview::                Overview of how to utilized the library
-                                  to construct @acronym{SPA} data
-* Error Handling::                Possible errors and their meaning
 @end menu
 
 @node libfko Header
@@ -454,8 +448,12 @@ of encryption:
 At present, libfko only supports the default Rijndael encryption algorithm.
 Support for GnuPG will be added in a future release of libfko.
 
-@node Usage Overview
-@section Usage Overview
+@node Using libfko
+@chapter Using libfko
+
+This chapter provides the ``howto'' for using libfko, including required
+functions and parameter choices.  In some places, code samples are provided
+to further illustrate usage.  
 
 @menu
 * Creating Contexts::             Creating a new fko context
@@ -466,10 +464,11 @@ Support for GnuPG will be added in a future release of libfko.
 * Retrieving SPA Data::           Retrieving @acronym{SPA} data
 * Utility Functions::             Other utility, miscellaneous, and seldom
                                   used functions
+* Error Handling::                Possible errors and their meaning
 @end menu
 
 @node Creating Contexts
-@subsection Creating Contexts
+@section Creating Contexts
 @cindex context, creation
 
 Before doing anything with libfko, you need to create a context.  As stated
@@ -584,7 +583,7 @@ if(rc != FKO_SUCCESS)
 
 
 @node Destroying Contexts
-@subsection Destroying Contexts
+@section Destroying Contexts
 @cindex context, destruction
 
 When you are done with the context, you must destroy it in order to free up
@@ -598,7 +597,9 @@ The function @code{gpgme_release} destroys the context with the handle
 @end deftypefun
 
 @node Creating a SPA Message
-@subsection Creating a SPA Message
+@section Creating a SPA Message
+@cindex spa, message data creation
+@cindex spa, data creation code sample
 
 This section describes in detail the process for creating a new fko
 @acronym{SPA} message.  After creating a context, there are still some
@@ -694,7 +695,8 @@ main(int argc, char **argv)
 @end example
     
 @node Setting SPA Data
-@subsection Setting SPA Data
+@section Setting SPA Data
+@cindex spa data, setting values
 
 This section describes the functions used for setting the various
 @acronym{SPA} data fields and parameters.  All of these functions
@@ -790,7 +792,8 @@ processing (most notably @code{fko_spa_data_final}).
 
 
 @node Retrieving SPA Data
-@subsection Retrieving SPA Data
+@section Retrieving SPA Data
+@cindex spa data, retrieving values
 
 This section describes the functions used for retrieving the various
 @acronym{SPA} data fields and parameters settings.  They all return
@@ -884,7 +887,9 @@ source, the version string will be whatever the provided data was set to.
 @end deftypefun
 
 @node Utility Functions
-@subsection Utility Functions
+@section Utility Functions
+@cindex utility functions
+@cindex spa data, utility functions
 
 This section describes the functions not covered elsewhere in this
 manual.  These are utility functions that operate on the data in the fko
@@ -895,7 +900,6 @@ be, so they are listed here.
 All of these functions return an integer representing the return status of
 the function. When succesfull, they will return @code{FKO_SUCCESS}.
 Otherwise, an error code value is returned.
-
 
 @deftypefun int fko_spa_data_final (@w{fko_ctx_t @var{*ctx}, const char @var{*enc_key}});
 This function is the final step in creating a complete encrypted
@@ -1005,12 +1009,10 @@ Unknown/Unclassified error
 
 @printindex cp
 
-
 @node Function and Data Index
 @unnumbered Function and Data Index
 
 @printindex fn
-
 
 @bye
 
