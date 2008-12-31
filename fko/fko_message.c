@@ -227,6 +227,8 @@ validate_nat_access_msg(const char *msg)
     if((res = validate_access_msg(msg)) != FKO_SUCCESS)
         return(res);
 
+    // --DSS TODO: XXX: Put nat_access validation code here
+
     return(FKO_SUCCESS);
 }
 

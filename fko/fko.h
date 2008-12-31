@@ -187,10 +187,9 @@ typedef struct _fko_ctx {
 
 /* Function prototypes */
 
-/* Most common api calls */
+/* General api calls */
 int fko_new(fko_ctx_t *ctx);
 int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, const char *dec_key);
-char* fko_version(fko_ctx_t *ctx);
 void fko_destroy(fko_ctx_t *ctx);
 int fko_spa_data_final(fko_ctx_t *ctx, const char *enc_key);
 char* fko_get_spa_data(fko_ctx_t *ctx);
@@ -217,7 +216,6 @@ int fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key);
 int fko_decrypt_spa_data(fko_ctx_t *ctx, const char *dec_key);
 
 /* Get context data functions */
-
 char* fko_get_rand_value(fko_ctx_t *ctx);
 char* fko_get_username(fko_ctx_t *ctx);
 unsigned int fko_get_timestamp(fko_ctx_t *ctx);
@@ -229,6 +227,8 @@ int fko_get_spa_client_timeout(fko_ctx_t *ctx);
 short fko_get_spa_digest_type(fko_ctx_t *ctx);
 char* fko_get_spa_digest(fko_ctx_t *ctx);
 short fko_get_spa_encryption_type(fko_ctx_t *ctx);
+
+char* fko_version(fko_ctx_t *ctx);
 
 #endif /* FKO_H */
 

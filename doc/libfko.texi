@@ -11,6 +11,7 @@
 @c Unify some of the indices.
 @syncodeindex tp fn
 @syncodeindex pg fn
+@syncodeindex vr fn
 @c %**end of header
 
 @copying
@@ -63,58 +64,80 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 @end ifnottex
 
 @menu
-* Introduction::                  How to use this manual.
-* Using libfko::                  What you should do before using the library.
-* libfko Functions::              The libfko functions.
+* Introduction::                  How to use this manual
+* Using libfko::                  What you should do before using the library
 
 Appendices
 
 * Library Copying::               The GNU General Public License says
-                                  how you can copy and share.
+                                  how you can copy and share
 Indices
 
-* Concept Index::                 Index of concepts and programs.
-* Function and Data Index::       Index of functions, variables and data types.
+* Concept Index::                 Index of concepts and programs
+* Function and Data Index::       Index of functions, variables and data types
 
 @detailmenu
  --- The Detailed Node Listing ---
 
 Introduction
 
-* Getting Started::               Purpose of the manual, and how to use it.
-* Features::                      Reasons to install and use libfko.
+* Getting Started::               Purpose of the manual, and how to use it
+* Features::                      Reasons to install and use libfko
 * Overview::                      Basic overview of @acronym{SPA} and
-                                  architecture of the libfko library.
+                                  architecture of the libfko library
+
+Overview
+
+* SPA Data Format::               Description of the @acronym{SPA} data
+                                  format.
 
 Using libfko
 
-* libfko Header::                 What header file you need to include.
+* libfko Header::                 What header file you need to include
+* Compiling with libfko::         What you need to compile and link your
+                                  program with libfko
+* SPA Parameter Types::           The available digests, message types and
+                                  modes of encryption for @acronym{SPA} data
 * Usage Overview::                Overview of how to utilized the library
-                                  to construct @acronym{SPA} data.
-* Error Handling::                Possible errors and their meaning.
+                                  to construct @acronym{SPA} data
+* Error Handling::                Possible errors and their meaning
 
-libfko Functions
+SPA Parameter Types
 
-* Required Functions::            These functions are always required.
-* Setting SPA Data                Functions for setting specific @acronym{SPA}
-                                  data fields.
-* Retrieving SPA Data             Functions for getting the data for specific
-                                  @acronym{SPA} data fields.
+* Digests::                       The message digest hashes supported by libfko 
+* SPA Messages::                  The fko @acronym{SPA} message types
+                                  supported by libfko (and fwknop)
+* Encryption Algorithms::         Encryption schemes supported by libfko
+
+Usage Overview
+
+* Creating Contexts::             Creating a new fko context
+* Destroying Contexts::           Releasing an fko context
+* Creating a SPA Message::        What it takes to create a @acronym{SPA}
+                                  message
+* Setting SPA Data::              Setting @acronym{SPA} data
+* Retrieving SPA Data::           Retrieving @acronym{SPA} data
+* Utility Functions::             Other utility, miscellaneous, and seldom
+                                  used functions
 
 @end detailmenu
 @end menu
 
 @node Introduction
 @chapter Introduction
+@cindex fwknop
+@cindex Firewall Knock Operator, intro
+@cindex SPA, intro
+@cindex Single Packet Authorization, intro
 
 The `Firewall Knock Operator Library' (libfko) is a C language library that
 implements the functions needed to create and/or parse 
-@i{Single Packet Authorization} (@acronym{SPA}) data.  It is designed to
+@dfn{Single Packet Authorization} (@acronym{SPA}) data.  It is designed to
 abstract the details of encoding, encryption, decoding, parsing, and verifying
-@acronym{SPA} messages such as those used by Michael Rash's @i{Firewall
+@acronym{SPA} messages such as those used by Michael Rash's @dfn{Firewall
 Knock Operator} (fwknop).
 
-@cite{fwknop} implements @acronym{SPA}; an authorization scheme that requires
+@dfn{fwknop} implements @acronym{SPA}; an authorization scheme that requires
 only a single encrypted packet to communicate various pieces of information
 including desired access through an iptables policy and/or specific commands
 to execute on the target system.  The main application for a program of this
@@ -126,14 +149,14 @@ provides the functions for managing the @acronym{SPA} data used by those
 programs. 
 
 @sp 1
-For more information on @cite{fwknop} and @acronym{SPA}, go to
+For more information on fwknop and @acronym{SPA}, go to
 @uref{http://www.cipherdyn.org/fwknop}. 
 
 
 @menu
-* Getting Started::               Purpose of the manual, and how to use it.
-* Features::                      Reasons to install and use libfko.
-* Overview::                      Basic architecture of the libfko library.
+* Getting Started::               Purpose of the manual, and how to use it
+* Features::                      Reasons to install and use libfko
+* Overview::                      Basic architecture of the libfko library
 @end menu
 
 @node Getting Started
@@ -177,11 +200,16 @@ message.
 @node Overview
 @section Overview
 
+@menu
+* SPA Data Format::               Description of the @acronym{SPA} data
+                                  format.
+@end menu
+
 libfko functionality can be divided into two roles.  One is the creation of
 an encrypted @acronym{SPA} message.  The other is the taking an encrypted
 @acronym{SPA} message to decode, parse, and extract the original data.
 
-The actual @acronym{SPA} data operations and handling are set within a
+The actual @acronym{SPA} data handling and operations are set within a
 context.  The context represents a single @acronym{SPA} message and provides
 configuration parameters and data settings for defining that message. All
 operations on the data occur within that context.
@@ -190,42 +218,77 @@ Some operations on the context must occur before others.  Details of these
 dependencies will be covered in more detail in next chapter.
 
 @noindent
-The steps taken to create a @acronym{SPA} message are:
+With libfko, working with @acronym{SPA} message basically consists of the
+following steps in order:
 
 @itemize @bullet
 @item
 Create a new context
 @item
-Set the required @acronym{SPA} data fields
-@item
-Finalize the @acronym{SPA} data
+Work with (get/set) the @acronym{SPA} data fields
 @item
 Destroy the context
 @end itemize
 
-@noindent
-To process an incoming encrypted @acronym{SPA} message:
+@node SPA Data Format
+@subsection SPA Data Format
+@cindex SPA, data format
 
-@itemize @bullet
-@item
-Create a new context with data input
-@item
-Extract the @acronym{SPA} data fields
-@item
-Destroy the context
-@end itemize
+The format of the @acronym{SPA} message used by fwknop (before encryption)
+is a colon-delimited string containing the individual @acronym{SPA} data
+fields. Some of these fields are base64-encoded as well.
+
+@deftypevar data spa_message_fields
+Using the libfko names of the data fields, the list of fields (in order) are:
+@table @code
+@item @strong{rand_value} - @emph{Default: Random (created upon context creation)}
+A 16-byte random numeric string.
+@item @strong{username} - @emph{Default: Current login user or Value of @env{SPOOF_USER} env var}
+The base64-encoded username associated with this @acronym{SPA} data.
+@item @strong{timestamp} - @emph{Default: The Unix time at creation}
+The Unix timestamp value.
+@item @strong{timestamp} - @emph{Default: the current fwknop version}
+The current fwknop version that supports this format.  This field is not
+user settable.
+@item @strong{spa_message_type} - @emph{Default: SPA access message (@code{FKO_ACCESS_MSG})}
+The @acronym{SPA} message type value for this message.
+@item @strong{spa_message}
+The base64-encoded @acronym{SPA} message itself (typically an access request).
+@item @strong{spa_nat_access}
+An optional base64-encoded request for NAT access.
+@item @strong{spa_server_auth}
+An optional base64-encoded string that can  be used as an additional
+authorization mechanism at the fwknop server.
+@item @strong{spa_client_timeout}
+An optional client timeout value that can be supplied to the fwknop server.
+@item @strong{spa_digest} - @emph{Computed value}
+The digest of the previous fields (including the delimiters).
+@end table
+@end deftypevar
+
+With all fields defined a complete (unencoded) @acronym{SPA} message would
+look like this (Note: line is broken for readability and the username, message, nat_access, and server_auth fields are not base64-encoded):
+@example
+8307540982176539:juser:1230665172:1.1.10:0.0.0.0,tcp/22:192.168.1.2,22:
+crypt,mypw:120:xswj8V0zMR7/7MV9pQRarSKWG1l9Zfjv+kbXaKrJ+RA
+@end example
 
 @node Using libfko
 @chapter Using libfko
 
-TODO: Finish Me
+This chapter provides the `howto' for using libfko, required function call,
+as well as the order of these calls.
 
 
 @menu
-* libfko Header::                 What header file you need to include.
+* libfko Header::                 What header file you need to include
+* Compiling with libfko::         What you need to compile and link your
+                                  program with libfko
+* SPA Parameter Types::           The available digests, message types and
+                                  modes of encryption for @acronym{SPA} data
 * Usage Overview::                Overview of how to utilized the library
-                                  to construct @acronym{SPA} data.
-* Error Handling::                Possible errors and their meaning.
+                                  to construct @acronym{SPA} data
+* Error Handling::                Possible errors and their meaning
 @end menu
 
 @node libfko Header
@@ -246,50 +309,661 @@ The name space of @acronym{FKO} is @code{fko_*} for function names and
 data types and @code{FKO_*} for other symbols. Other symbols internal to
 @acronym{FKO} may take the form @code{_fko_*} and @code{_FKO_*}.
 
+@node Compiling with libfko
+@section Compiling with libfko
+@cindex compiling, with libfko
+@cindex linking, with libfko
+
+If you want to compile a source file including the `fko.h' header
+file, you must make sure that the compiler can find it in the
+directory hierarchy.  This is accomplished by adding the path to the
+directory in which the header file is located to the compilers include
+file search path (via the @option{-I} option).
+
+For example, if you installed libfko in @file{/opt/fko}, you may want to
+add @command{-I/opt/fko/include} to @env{CFLAGS}, or directly on the
+command-line.
+
+@example
+gcc -c foo.c -I/opt/fko/include ...
+@end example
+
+A similar problem occurs when linking the program with the library.
+Again, the compiler has to find the library files.  For this to work,
+the path to the library files has to be added to the library search
+path (via the @option{-L} option).
+
+Continuing with the example above you may want to add @command{-L/opt/fko/lib}
+to @env{LDFLAGS}, or directly on the command-line:
+
+@example
+gcc -o foo foo.c -I/opt/fko/include -L/opt/fko/lib -lfko
+@end example
+
+@node SPA Parameter Types
+@section SPA Parameter Types
+
+@menu
+* Digests::                       The message digest hashes supported by libfko 
+* SPA Messages::                  The fko @acronym{SPA} message types
+                                  supported by libfko (and fwknop)
+* Encryption Algorithms::         Encryption schemes supported by libfko
+@end menu
+
+@node Digests
+@subsection Digests
+@cindex digest types
+@cindex message digest types
+@cindex default message digest
+
+The fwknop system employs an message digest hash of the @acronym{SPA} 
+data as one of the data fields to act a signature which can be used
+at the receiving end to verify the data is valid.  This provide a means
+to ensure the data was not modified in-transit.  The selected digest
+is base64-encoded before it is added to the @acronym{SPA} data.
+
+Currently, libfko support the same three message digests as fwknop.  These
+are (in order of strength):
+
+@deftypevar int digest_type
+@table @code
+@item FKO_DIGEST_MD5
+@item FKO_DIGEST_SHA1
+@item FKO_DIGEST_SHA256  (libfko default)
+@end table
+@end deftypevar
+
+As indicated in the list above, SHA256 is the default.  This means the
+digest type does not need to be explicitly set unless you wish to use
+one of the other values.  This applies to all libfko @acronym{SPA} data
+fields that have a default value.
+
+@node SPA Messages
+@subsection SPA Messages
+@cindex spa, message types
+@cindex message types
+
+The fwknop system (and subsequently libfko), support a specific set of
+message types.  The message type value is used by the fwkop to help
+determine the correct message format and content.  These message types
+are:
+
+@deftypevar int spa_message_type
+@table @code
+@item FKO_COMMAND_MSG
+A request to have the fwknop server execute the given command.  The format
+for this type is: @samp{<ip of requestor>:<command text>}
+@example
+"192.168.1.2:uname -a"
+@end example
+
+@item FKO_ACCESS_MSG
+A basic access request.  This is the most common type in use. The format
+for this type is: @samp{<ip of requestor>:<protocol>/<port>}.
+@example
+"192.168.1.2:tcp/22"
+@end example
+
+@item FKO_NAT_ACCESS_MSG
+An access request that also provide information for the fwknop server
+to create a Network Address Translation (@acronym{NAT} to an internal
+address. The format for this string is: @samp{<internal ip>,<ext nat port>}.
+@example
+"10.10.1.2,9922"
+@end example
+
+@item FKO_CLIENT_TIMEOUT_ACCESS_MSG
+This is an FKO_ACCESS_REQUEST with a timeout parameter for the fwknop server.
+The timeout value is provided via the @code{client_timeout} data field.
+
+@item FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
+This is an FKO_NAT_ACCESS_REQUEST with a timeout parameter for the fwknop
+server.  The timeout value is provided via the @code{client_timeout} data
+field.
+
+@item FKO_LOCAL_NAT_ACCESS_MSG
+This is similar to the FKO_NAT_ACCESS request exept the @acronym{NAT} is
+to the local to the server (i.e. a service listening on 127.0.0.1).
+
+@item FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
+This is an FKO_LOCAL_NAT_ACCESS_REQUEST with a timeout parameter for the
+fwknop server.  The timeout value is provided via the @code{client_timeout}
+data field.
+@end table
+@end deftypevar
+
+@node Encryption Algorithms
+@subsection Encryption Algorithms
+@cindex encryption types
+@cindex default encryption
+
+One of the final steps in creating an fwknop @acronym{SPA} message is
+encrypting the entire message.  Currently, fwknop supports two methods
+of encryption:
+
+@deftypevar int encryption_type
+@table @code
+@item FKO_ENCRYPTION_RIJNDAEL (default)
+@item FKO_ENCRYPTION_GPG  (not yet suppported by libfko)
+@end table
+@end deftypevar
+
+At present, libfko only supported the default Rijndael encryption algorithm.
+Support for GnuPG will be added in the next release of libfko.
+
 @node Usage Overview
 @section Usage Overview
 
-TODO: Finish Me
-
-
-@node Error Handling
-@section Error Handling
-
-TODO: Finish Me
-
-
-@node libfko Functions
-@chapter libfko Functions
-
-TODO: Finish Me
-
 @menu
-* Required Functions::            These functions are always required.
-* Setting SPA Data::              Functions for setting specific @acronym{SPA}
-                                  data fields.
-* Retrieving SPA Data::           Functions for getting the data for specific
-                                  @acronym{SPA} data fields.
+* Creating Contexts::             Creating a new fko context
+* Destroying Contexts::           Releasing an fko context
+* Creating a SPA Message::        What it takes to create a @acronym{SPA}
+                                  message
+* Setting SPA Data::              Setting @acronym{SPA} data
+* Retrieving SPA Data::           Retrieving @acronym{SPA} data
+* Utility Functions::             Other utility, miscellaneous, and seldom
+                                  used functions
 @end menu
 
-@node Required Functions
-@section Required Functions
+@node Creating Contexts
+@subsection Creating Contexts
+@cindex context, creation
 
-TODO: Finish Me
+Before doing anything with libfko, you need to create a context.  As stated
+earlier, A context can created for one of two reasons.  One is for the
+purpose of building a new fko @acronym{SPA} message from scratch (typically
+to be packaged and sent to an fwknop server somewhere). The other would be
+a context for taking an existing @acronym{SPA} message for decoding,
+parsing, and data extraction.
+
+@noindent
+For building a new fko @acronym{SPA} message, you will use the @code{fko_new}
+function:
+ 
+@deftypefun int fko_new (@w{fko_ctx_t @var{*ctx}})
+The function @code{fko_new} sets up and initializes a new @code{fko_ctx_t}
+object, pre-populates default values and returns a handle for it in @var{ctx}.
+The function returns the error code @code{FKO_SUCCESS} if the context was
+successfully created.  Otherwise an another error code will be returned
+(@pxref{Error Handling} for details on the various error codes and their
+meanings).
+@end deftypefun
+
+@example
+fko_ctx_t   ctx;
+int         rc;
+
+rc = fko_new(&ctx);
+
+if(rc != FKO_SUCCESS)
+@{
+    fprintf(stderr, "Error %i from fko_new: %s\n", fko_errstr(rc));
+    exit(1);
+@}
+@end example
+
+@noindent
+For a context that will be used for receiving and parsing an existing
+@acronym{SPA} message, you will use the @code{fko_new_with_data} function:
+
+@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, char @var{*data}, const char @var{*key}})
+The function @code{fko_new_with_data} sets up and initializes a new
+@code{fko_ctx_t} context, but instead of initializing default values, it
+stores the encrypted message data and makes it ready for parsing.  This
+can be done in one of two ways.  One is to pass @code{NULL} for the third
+argument.  The context will be created and the data will be stored, but no
+decryption or decoding takes place.  In this case, you will need to call
+@code{fko_decrypt_spa_data} a some later time.  The other way to do it is
+to supply the @var{key} value; which would be the password or decryption
+key.  In this case, the context is created, the data is decrypted, decoded,
+parsed, and stored in the context ready for retrieval.
+
+The function returns the error code @code{FKO_SUCCESS} if the context was
+successfully created.  If any of the intermediate steps in parsing the data,
+validating the @acronym{SSPA} message digest, or any other internal action
+fails, then the appropriate error code is returned.
+@end deftypefun
+
+@noindent
+The most common case...
+
+@example
+fko_ctx_t   ctx;
+char       *spa_data;
+char       *key;
+int rc;
+
+/* Code that retrieves the data and key
+*/
+
+rc = fko_new_with_data(&ctx, spa_data, key);
+
+if(rc != FKO_SUCCESS)
+@{
+    fprintf(stderr, "Error %i from fko_new_with_data\n");
+    exit(1);
+@}
+@end example
+
+@noindent
+Or, perhaps you need to defer decryption and parsing to a later point
+in the program...
+
+@example
+fko_ctx_t   ctx;
+char       *spa_data;
+char       *key;
+int rc;
+
+/* Code that retrieves the data and key
+*/
+
+rc = fko_new_with_data(&ctx, spa_data, NULL);
+
+if(rc != FKO_SUCCESS)
+@{
+    fprintf(stderr, "Error %i from fko_new_with_data\n");
+    exit(1);
+@}
+
+/* Other code and functions...
+*/
+
+rc = fko_decrypt_spa_data(&ctx, key);
+
+if(rc != FKO_SUCCESS)
+@{
+    fprintf(stderr, "Error %i from fko_decrypt_spa_data\n");
+    exit(1);
+@}
+@end example
 
 
+@node Destroying Contexts
+@subsection Destroying Contexts
+@cindex context, destruction
+
+@deftypefun void fko_destroy (@w{fko_ctx_t @var{*ctx}})
+The function @code{gpgme_release} destroys the context with the handle
+@var{ctx} and releases all associated resources.
+@end deftypefun
+
+@node Creating a SPA Message
+@subsection Creating a SPA Message
+
+This section describes in detail the process for creating a new fko
+@acronym{SPA} message.  After creating a context, there are still some
+requisite @acronym{SPA} data fields and @acronym{SPA} parameters that need
+to be set before the final encrypted message is ready.
+
+The following list contains the minimum required fields for a complete fko
+@acronym{SPA} message.  You should also take note of the order of these
+parameters as well.  Setting the ''type'' parameters first is recommended
+(if you want a type other than the default).
+
+@itemize @bullet
+@item digest_type -- @emph{(default may suffice)}
+@item message_type -- @emph{(default may suffice)}
+@item encryption_type -- @emph{(default may suffice)}
+@item rand_val -- @emph{(default should suffice)}
+@item time_stamp -- @emph{(default should suffice)}
+@item username -- @emph{(default may suffice)}
+@item spa_message -- @emph{(must be explicitly set)}
+@end itemize
+
+When a context is initialized, some of the @acronym{SPA} data fields are
+pre-set with default values (@pxref{SPA Data Format}).  For fields such
+as @code{rand_val}, @code{username}, @code{timestamp}, @code{message_type},
+and @code{digest_type}, these defaults may be sufficient.
+
+The functions used to set the various @acronym{SPA} data fields and
+parameters are described in detail in @ref{Setting SPA Data}.
+
+@noindent
+@strong{Note}: Attempts to call any @code{fko_} function on a context that
+has not been initialized will return a status of
+@code{FKO_ERROR_CTX_NOT_INITIALIZED}.
+
+A common @acronym{SPA} message is a simple access request.  This request asks
+the fwknop server to create a temporary firewall rule to allow a particular
+IP address access to a particular port.  Assuming the defaults are fine
+for this then all we need to do is create the context, set the message data
+field, call the @code{fko_spa_data_final} function to encode and encrypt,
+process the message, and destroy the context.  Here is a contrived minimal
+chunk of code demonstrating this:
+
+@example
+int
+main(int argc, char **argv)
+@{
+    fko_ctx_t       ctx;        /* FKO Context */
+    const char     *password;   /* Encryption password */
+    char           *final_spa;  /* Final encrypted SPA data */
+    int             rc;         /* Result code */
+
+    /*
+     *  Assume we processed the command line
+     *  and retrieved the password.
+    */
+
+    /* Create the context...
+    */
+    rc = fko_new(&ctx);
+    if(rc != FKO_SUCCESS)
+    @{
+        fprintf(stderr, "Error creating context: %s\n", fko_errstr());
+        exit(1);
+    @}
+
+    /* Set the SPA message field.
+    */
+    rc = fko_set_spa_message(&ctx, "0.0.0.0,tcp/22");
+    if(rc != FKO_SUCCESS)
+    @{
+        fprintf(stderr, "Set SPA message failed: %s\n", fko_errstr());
+        exit(1);
+    @}
+
+    /* Finalize the SPA data.
+    */
+    rc = fko_spa_data_final(&ctx);
+    if(rc != FKO_SUCCESS)
+    @{
+        fprintf(stderr, "Error encoding SPA data: %s\n", fko_errstr());
+        exit(1);
+    @}
+
+    /* Take the final message and do something with it...
+    */
+    final_spa = fko_get_spa_data(&ctx);
+
+    /* assume this function packs the spa data into a UDP
+     * packet and sends it to the server...
+    */
+    send_spa_message(final_spa);
+
+    /* Done with the context.
+    */
+    fko_destroy(&ctx);
+
+    exit(0);
+@}
+@end example
+    
 @node Setting SPA Data
-@section Setting Spa Data
+@subsection Setting SPA Data
 
-TODO: Finish Me
+This section describes the functions used for setting the various
+@acronym{SPA} data fields and parameters.  All of these ''setter'' functions
+return an integer representing the return status of the function. When
+succesfull, they will return @code{FKO_SUCCESS}.  Otherwise, an error
+code value is returned.
+
+@deftypefun int fko_set_spa_digest_type (@w{fko_ctx_t @var{*ctx}, short @var{digest_type}});
+Set the message digest type.  Valid values can be found in @ref{Digests}
+of this manual. If a value other than the those that are supported is given,
+the function will return @code{FKO_ERROR_INVALID_DATA}.
+@end deftypefun
+
+@deftypefun int fko_set_spa_encryption_type (@w{fko_ctx_t @var{*ctx}, short @var{encrypt_type}});
+Set the encrytion algorithm to use when ecrypting the final @acronym{SPA}
+data. Valid values can be found in @ref{Encryption Algorithms} of this
+manual.
+@end deftypefun
+
+@deftypefun int fko_set_rand_value (@w{fko_ctx_t @var{*ctx}, const char @var{*val}});
+Set the random value portion of the spa data to the given value.  The
+given value must be a pointer to a 16-character decimal numeric string
+or NULL.  If the value is NULL, the function generate a new random value.
+If a string value is provided, it must not a 16-character decimal string,
+the function will return @code{FKO_ERROR_INVALID_DATA}.
+@end deftypefun
+
+@deftypefun int fko_set_username (@w{fko_ctx_t @var{*ctx}, const char @var{*spoof_user}});
+Set the username field of the @acronym{SPA} data. If a NULL pointer is
+given, libfko will first look for the environment variable @env{SPOOF_USER}
+and use its value if found.  Otherwise, it will try to determine the username
+itself using various methods starting with @code{cuser} or @code{getlogin},
+then fallback to the environment variables @env{LOGNAME} or @env{USER}. If
+none of those work, the function will return @code{FKO_ERROR_USERNAME_UNKNOWN}.
+@end deftypefun
+
+@deftypefun int fko_set_timestamp (@w{fko_ctx_t @var{*ctx}, int @var{offset}});
+Sets the timestamp value of the SPA data to the current time plus the offset
+value.
+@end deftypefun
+
+@deftypefun int fko_set_spa_message_type (@w{fko_ctx_t @var{*ctx}, short @var{msg_type}});
+Sets the message type for the SPA data. The choices for the
+@code{spa_message_type} are listed in @ref{SPA Messages}.
+@end deftypefun
+
+@deftypefun int fko_set_spa_message (@w{fko_ctx_t @var{*ctx}, const char @var{*msg_string}});
+Set the SPA message string to the given value. If this string does not
+conform to the required @code{spa_nat_access} format, the function will
+return @code{FKO_ERROR_INVALID_DATA}.
+@end deftypefun
+
+@deftypefun int fko_set_spa_nat_access (@w{fko_ctx_t @var{*ctx}, const char @var{*nat_access}});
+Set the optional SPA nat access string to the given value. If this string
+does not conform to the required @code{spa_nat_access} format, the function
+will return
+@code{FKO_ERROR_INVALID_DATA}.
+@end deftypefun
+
+@deftypefun int fko_set_spa_server_auth (@w{fko_ctx_t @var{*ctx}, const char @var{*server_auth}});
+Set the optional (an very seldom used) SPA server auth feature to the given
+value.  This parameter may become deprecated.
+@end deftypefun
+
+@deftypefun int fko_set_spa_client_timeout (@w{fko_ctx_t @var{*ctx}, int @var{timeout}});
+Sets the SPA client timeout value.  If the timeout is set to a value greater
+than 0, it is assumed the @code{spa_message_type} setting should be one of
+the ''TIMEOUT'' variants.  This function will change the @code{message_type}
+to the appropriate setting if necessary.  It is recommended, however, you set
+the correct @code{message_type} ahead of time.
+@end deftypefun
+
+@deftypefun int fko_set_spa_digest (@w{fko_ctx_t @var{*ctx}});
+Initiates a calculation (or recalculation) if the message digest hash for the
+current @acronym{SPA} data. If the required data fields are not set this
+function will return @code{FKO_ERROR_MISSING_ENCODED_DATA}.
+@strong{Note}: It should not be necessary to call this function directly
+as it will be called automatically by other functions during normal
+processing (most notably @code{fko_spa_data_final}).
+@end deftypefun
 
 
 @node Retrieving SPA Data
-@section Retrieving SPA Data
+@subsection Retrieving SPA Data
 
-TODO: Finish Me
+This section describes the functions used for retrieving (''getting'') the
+various @acronym{SPA} data fields and parameters settings.  They all return
+The current value of their respective field or parmeter.
+
+@deftypefun char* fko_get_spa_data (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the final encrypted
+@acronym{SPA} data.  This is the data that would be packaged
+into a packet and sent to an fwknop server.
+@end deftypefun
+
+@deftypefun char* fko_get_rand_value (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the current random 16-character
+decimal number (@code{rand_val}) associated with the current context. 
+@end deftypefun
+
+@deftypefun char* fko_get_username (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the username associated with the
+current context.
+@end deftypefun
+
+@deftypefun unsigned int fko_get_timestamp (@w{fko_ctx_t @var{*ctx}});
+Returns the timestamp value associated with the current context.
+@end deftypefun
+
+@deftypefun short fko_get_spa_message_type (@w{fko_ctx_t @var{*ctx}});
+Returns the message_type value associated with the current context.
+This value can be checked against the list of valid message_types
+listed in @ref{SPA Messages} of this manual.
+@end deftypefun
+
+@deftypefun char* fko_get_spa_message (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the fko @acronym{SPA} request
+message associated with the current context.
+@end deftypefun
+
+@deftypefun char* fko_get_spa_nat_access (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the fko @acronym{SPA} nat access
+request data associated with the current context.  The function returns
+@code{NULL} if this field is not set.
+@end deftypefun
+
+@deftypefun char* fko_get_spa_server_auth (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the fko @acronym{SPA} server auth
+data associated with the current context.  The function returns
+@code{NULL} if this field is not set.
+@end deftypefun
+
+@deftypefun int fko_get_spa_client_timeout (@w{fko_ctx_t @var{*ctx}});
+Returns the client timeout value associated with the current context or
+0 if it was not set.
+@end deftypefun
+
+@deftypefun short fko_get_spa_digest_type (@w{fko_ctx_t @var{*ctx}});
+Returns the digest type value associated with the current context.
+This value can be checked against the list of valid digest_types
+listed in @ref{Digests} of this manual.
+@end deftypefun
+
+@deftypefun char* fko_get_spa_digest (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the compued message digest hash
+for the @acronym{SPA} data associated with the current context.
+@end deftypefun
+
+@deftypefun short fko_get_spa_encryption_type (@w{fko_ctx_t @var{*ctx}});
+Returns the digest type value associated with the current context.
+This value can be checked against the list of valid digest_types
+listed in @ref{Encryption Algorithms} of this manual.
+@end deftypefun
+
+@deftypefun char* fko_version (@w{fko_ctx_t @var{*ctx}});
+Returns a pointer to the string holding the fwknop version of the data
+in the current context.  This is a static value for @acronym{SPA} data
+that is being created in a new context.  For data parsed from an external
+source, the version string will be whatever the provided data was set to.
+@end deftypefun
+
+@node Utility Functions
+@subsection Utility Functions
+
+This section describes some of the functions not covered elsewhere in this
+manual.  These are utility functions that operate on the data in the fko
+context.  All but @code{fko_spa_data_final} are called by other functions
+and are not normally explictly called by the user.  However, they can
+be, so they are listed here.
+
+All of these functions return an integer representing the return status of
+the function. When succesfull, they will return @code{FKO_SUCCESS}.
+Otherwise, an error code value is returned.
 
 
+@deftypefun int fko_spa_data_final (@w{fko_ctx_t @var{*ctx}, const char @var{*enc_key}});
+This function is the final step in creating a complete encrypted
+@acronym{SPA} data string suitable for transmission to an fwknop server.
+It does require all of the requisite @acronym{SPA} data fields be set,
+otherwise it will fail with an appropriate error code.
+@end deftypefun
 
+@deftypefun int fko_decrypt_spa_data (@w{fko_ctx_t @var{*ctx}, const char @var{*dec_key}});
+When given the correct @var{key} (passsword), this function decrypts, decodes, and
+parses the encrypted @acronym{SPA} data that was supplied to the context via
+the @code{fko_new_with_data} function that was call without the @var{key} value.  
+Once the data is decrypted, this function will also call @code{fko_decode_spa_data}
+to decode, parse, validate, and store the data fields in the context for later
+retrieval.
+@end deftypefun
+
+@deftypefun int fko_encrypt_spa_data (@w{fko_ctx_t @var{*ctx}, const char @var{*enc_key}});
+Encrypts the intermediate encoded @acronym{SPA} data stored in the context.
+This function will call @code{fko_encode} if necessary.  It is normally not
+called directly as it is called from @code{fko_spa_data_final}. 
+@end deftypefun
+
+@deftypefun int fko_decode_spa_data (@w{fko_ctx_t @var{*ctx}});
+This function performs the decoding, parsing, validation of the @acronym{SPA} 
+data that was just decrypted. It is normally not called directly as it is
+called from @code{fko_decrypt_spa_data} (which is in turn called from
+@code{fko_new_with_data} if a password is supplied to it).
+@end deftypefun
+
+@deftypefun int fko_encode_spa_data (@w{fko_ctx_t @var{*ctx}});
+Performs the base64 encoding of those @acronym{SPA} data fields that
+need to be encodes as such, performs some data validation, and calls
+@code{fkp_set_spa_digest} to recompute the @acronym{SPA} message
+digest.  It is normally not called directly as it is
+called from @code{fko_encrypt_spa_data} (which is in turn called from
+@code{fko_spa_data_final}).
+@end deftypefun
+
+@node Error Handling
+@section Error Handling
+@cindex error handling
+@cindex error codes
+@cindex error strings
+
+Most fko function return an integer value that corresponds to either
+success (0), or non-zero values for a number of possible errors.  libfko
+provides a function to get a descriptive string for the given error code.
+
+@deftypefun {const char *} fko_errstr (@w{int @var{err_code}})
+The function @code{fko_errstr} returns a pointer to a statically
+allocated string containing the descripton of the error.
+@end deftypefun
+
+@noindent
+The list of the current error codes and their corresponding descriptions as
+returned by @code{fko_errstr}. Possible values are:
+
+@deftypevar int error_code
+@table @code
+@item FKO_SUCCESS
+Success
+@item FKO_ERROR_CTX_NOT_INITIALIZED
+FKO Context is not initialized
+@item FKO_ERROR_MEMORY_ALLOCATION
+Unable to allocate memory
+@item FKO_ERROR_INVALID_DATA
+Args contain invalid data
+@item FKO_ERROR_DATA_TOO_LARGE
+Value or Size of the data exceeded the max allowed
+@item FKO_ERROR_USERNAME_UNKNOWN
+Unable to determine username
+@item FKO_ERROR_INCOMPLETE_SPA_DATA
+Missing or incomplete SPA data
+@item FKO_ERROR_MISSING_ENCODED_DATA
+There is no encoded data to process
+@item FKO_ERROR_INVALID_DIGEST_TYPE
+Invalid digest type
+@item FKO_ERROR_INVALID_ALLOW_IP
+Invalid allow IP address in the SPA mesage data
+@item FKO_ERROR_INVALID_SPA_COMMAND_MSG
+Invalid SPA command mesage format
+@item FKO_ERROR_INVALID_SPA_ACCESS_MSG
+Invalid SPA access mesage format
+@item FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG
+Invalid SPA nat_access mesage format
+@item FKO_ERROR_INVALID_ENCRYPTION_TYPE
+Invalid encryption type
+@item FKO_ERROR_DECRYPTION_SIZE_ERROR
+Unexpected or invalid size for decrypted data
+@item FKO_ERROR_DIGEST_VERIFICATION_FAILED
+The computed digest did not match the digest in the spa data
+@item FKO_ERROR_UNSUPPORTED_FEATURE
+Unsupported or unimplemented feature or function
+@item FKO_ERROR_UNKNOWN
+Unknown/Unclassified error
+@end table
+@end deftypevar
 
 @c --End of main chapters.
 
