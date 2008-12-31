@@ -34,14 +34,15 @@
 /* Initialize an fko context.
 */
 int
-fko_new(fko_ctx_t *ctx)
+fko_new(fko_ctx_t *r_ctx)
 {
+    fko_ctx_t   ctx;
     int         res;
     char       *ver;
 
-    /* Zero out the context...
-    */
-    bzero(ctx, sizeof(fko_ctx_t));
+    ctx = calloc(1, sizeof *ctx);
+    if(ctx == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
 
     /* Set default values and state.
      *
@@ -58,7 +59,10 @@ fko_new(fko_ctx_t *ctx)
     ver = strdup(FKO_PROTOCOL_VERSION);
     ctx->initval = 0;
     if(ver == NULL)
+    {
+        free(ctx);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
     
     ctx->version = ver;
 
@@ -68,7 +72,10 @@ fko_new(fko_ctx_t *ctx)
     res = fko_set_rand_value(ctx, NULL);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
+    {
+        free(ctx);
         return res;
+    }
 
     /* Username.
     */
@@ -76,7 +83,10 @@ fko_new(fko_ctx_t *ctx)
     res = fko_set_username(ctx, NULL);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
+    {
+        free(ctx);
         return res;
+    }
 
     /* Timestamp.
     */
@@ -84,7 +94,10 @@ fko_new(fko_ctx_t *ctx)
     res = fko_set_timestamp(ctx, 0);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
+    {
+        free(ctx);
         return res;
+    }
 
     /* Default Digest Type.
     */
@@ -92,7 +105,10 @@ fko_new(fko_ctx_t *ctx)
     res = fko_set_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
+    {
+        free(ctx);
         return res;
+    }
 
     /* Default Message Type.
     */
@@ -100,7 +116,10 @@ fko_new(fko_ctx_t *ctx)
     res = fko_set_spa_message_type(ctx, FKO_DEFAULT_MSG_TYPE);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
+    {
+        free(ctx);
         return res;
+    }
 
     /* Default Encryption Type.
     */
@@ -108,13 +127,18 @@ fko_new(fko_ctx_t *ctx)
     res = fko_set_spa_encryption_type(ctx, FKO_DEFAULT_ENCRYPTION);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
+    {
+        free(ctx);
         return res;
+    }
 
     /* Now we mean it.
     */
     ctx->initval = FKO_CTX_INITIALIZED;
 
     FKO_SET_CTX_INITIALIZED(ctx);
+
+    *r_ctx = ctx;
 
     return(FKO_SUCCESS);
 } 
@@ -124,19 +148,26 @@ fko_new(fko_ctx_t *ctx)
  * and parsing the provided data into the context data.
 */
 int
-fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, const char *dec_key)
+fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, const char *dec_key)
 {
-    /* Zero out the context...
-    */
-    bzero(ctx, sizeof(fko_ctx_t));
+    fko_ctx_t   ctx;
+
+    ctx = calloc(1, sizeof *ctx);
+    if(ctx == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
 
     /* First, add the data to the context.
     */
     ctx->encrypted_msg = strdup(enc_msg);
     if(ctx->encrypted_msg == NULL)
+    {
+        free(ctx);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
 
     FKO_SET_CTX_INITIALIZED(ctx);
+
+    *r_ctx = ctx;
 
     if(dec_key != NULL)
         return(fko_decrypt_spa_data(ctx, dec_key));
@@ -147,7 +178,7 @@ fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, const char *dec_key)
 /* Destroy a context and free its resources
 */
 void
-fko_destroy(fko_ctx_t *ctx)
+fko_destroy(fko_ctx_t ctx)
 {
     if(CTX_INITIALIZED(ctx))
     {
@@ -180,12 +211,14 @@ fko_destroy(fko_ctx_t *ctx)
 
         bzero(ctx, sizeof(fko_ctx_t));
     }
+
+    free(ctx);
 }
 
 /* Return the fko version
 */
 char*
-fko_version(fko_ctx_t *ctx)
+fko_version(fko_ctx_t ctx)
 {
     /* Must be initialized
     */
@@ -200,7 +233,7 @@ fko_version(fko_ctx_t *ctx)
  * set.
 */
 int
-fko_spa_data_final(fko_ctx_t *ctx, const char *enc_key)
+fko_spa_data_final(fko_ctx_t ctx, const char *enc_key)
 {
     int res;
 
@@ -215,7 +248,7 @@ fko_spa_data_final(fko_ctx_t *ctx, const char *enc_key)
 /* Return the fko SPA encrypted data.
 */
 char*
-fko_get_spa_data(fko_ctx_t *ctx)
+fko_get_spa_data(fko_ctx_t ctx)
 {
     int res;
 

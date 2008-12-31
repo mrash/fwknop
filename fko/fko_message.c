@@ -38,7 +38,7 @@ int got_allow_ip(const char *msg);
 /* Set the SPA message type.
 */
 int
-fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type)
+fko_set_spa_message_type(fko_ctx_t ctx, short msg_type)
 {
     /* Must be initialized
     */
@@ -58,7 +58,7 @@ fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type)
 /* Return the SPA message type.
 */
 short
-fko_get_spa_message_type(fko_ctx_t *ctx)
+fko_get_spa_message_type(fko_ctx_t ctx)
 {
     /* Must be initialized
     */
@@ -71,7 +71,7 @@ fko_get_spa_message_type(fko_ctx_t *ctx)
 /* Set the SPA MESSAGE data
 */
 int
-fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
+fko_set_spa_message(fko_ctx_t ctx, const char *msg)
 {
     int res = FKO_ERROR_UNKNOWN;
 
@@ -134,7 +134,7 @@ fko_set_spa_message(fko_ctx_t *ctx, const char *msg)
 /* Return the SPA message data.
 */
 char*
-fko_get_spa_message(fko_ctx_t *ctx)
+fko_get_spa_message(fko_ctx_t ctx)
 {
     /* Must be initialized
     */

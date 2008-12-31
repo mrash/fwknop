@@ -33,7 +33,7 @@
 /* Set the SPA encryption type.
 */
 int
-fko_set_spa_encryption_type(fko_ctx_t *ctx, short encrypt_type)
+fko_set_spa_encryption_type(fko_ctx_t ctx, short encrypt_type)
 {
     /* Must be initialized
     */
@@ -53,7 +53,7 @@ fko_set_spa_encryption_type(fko_ctx_t *ctx, short encrypt_type)
 /* Return the SPA encryption type.
 */
 short
-fko_get_spa_encryption_type(fko_ctx_t *ctx)
+fko_get_spa_encryption_type(fko_ctx_t ctx)
 {
     /* Must be initialized
     */
@@ -66,7 +66,7 @@ fko_get_spa_encryption_type(fko_ctx_t *ctx)
 /* Encrypt the encoded SPA data.
 */
 int
-fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key)
+fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
 {
     char           *plain;
     char           *b64cipher;
@@ -141,7 +141,7 @@ fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 int
-fko_decrypt_spa_data(fko_ctx_t *ctx, const char *dec_key)
+fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
 {
     char           *tbuf;
     unsigned char  *cipher;

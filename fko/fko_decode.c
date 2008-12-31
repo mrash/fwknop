@@ -32,7 +32,7 @@
 /* Decrypt the encoded SPA data.
 */
 int
-fko_decode_spa_data(fko_ctx_t *ctx)
+fko_decode_spa_data(fko_ctx_t ctx)
 {
     char       *tbuf, *ndx;
     int         edata_size, t_size;

@@ -60,7 +60,7 @@ append_b64(char* tbuf, char *str)
 /* Set the SPA encryption type.
 */
 int
-fko_encode_spa_data(fko_ctx_t *ctx)
+fko_encode_spa_data(fko_ctx_t ctx)
 {
     int     res, offset = 0;
     char    tbuf[FKO_ENCODE_TMP_BUF_SIZE] = {0};
@@ -181,5 +181,19 @@ fko_encode_spa_data(fko_ctx_t *ctx)
     return(FKO_SUCCESS);
 }
 
+/* Return the fko SPA encrypted data.
+*/
+char*
+fko_get_encoded_data(fko_ctx_t ctx)
+{
+    int res;
+
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return NULL;
+
+    return(ctx->encoded_msg); 
+}
 
 /***EOF***/

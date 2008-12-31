@@ -32,7 +32,7 @@
 /* Set the SPA digest type.
 */
 int
-fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type)
+fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type)
 {
     /* Must be initialized
     */
@@ -52,7 +52,7 @@ fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type)
 /* Return the SPA digest type.
 */
 short
-fko_get_spa_digest_type(fko_ctx_t *ctx)
+fko_get_spa_digest_type(fko_ctx_t ctx)
 {
     /* Must be initialized
     */
@@ -63,7 +63,7 @@ fko_get_spa_digest_type(fko_ctx_t *ctx)
 }
 
 int
-fko_set_spa_digest(fko_ctx_t *ctx)
+fko_set_spa_digest(fko_ctx_t ctx)
 {
     char    *md = NULL;
 
@@ -122,7 +122,7 @@ fko_set_spa_digest(fko_ctx_t *ctx)
 } 
 
 char*
-fko_get_spa_digest(fko_ctx_t *ctx)
+fko_get_spa_digest(fko_ctx_t ctx)
 {
     /* Must be initialized
     */

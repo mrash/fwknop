@@ -38,7 +38,7 @@
 /* Set/Generate the SPA data random value string.
 */
 int
-fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
+fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
 {
     FILE           *rfd;
     struct timeval  tv;
@@ -114,7 +114,7 @@ fko_set_rand_value(fko_ctx_t *ctx, const char *new_val)
 /* Return the current rand value.
 */
 char*
-fko_get_rand_value(fko_ctx_t *ctx)
+fko_get_rand_value(fko_ctx_t ctx)
 {
     /* Must be initialized
     */

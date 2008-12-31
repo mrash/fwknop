@@ -36,7 +36,7 @@
 /* Set the timestamp.
 */
 int
-fko_set_timestamp(fko_ctx_t *ctx, int offset)
+fko_set_timestamp(fko_ctx_t ctx, int offset)
 {
     unsigned int ts;
 
@@ -60,7 +60,7 @@ fko_set_timestamp(fko_ctx_t *ctx, int offset)
 /* Return the current timestamp.
 */
 unsigned int
-fko_get_timestamp(fko_ctx_t *ctx)
+fko_get_timestamp(fko_ctx_t ctx)
 {
     /* Must be initialized
     */

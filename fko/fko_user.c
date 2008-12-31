@@ -29,7 +29,7 @@
 /* Get or Set the username for the fko context spa data.
 */
 int
-fko_set_username(fko_ctx_t *ctx, const char *spoof_user)
+fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 {
     char   *username = NULL;
 
@@ -94,7 +94,7 @@ fko_set_username(fko_ctx_t *ctx, const char *spoof_user)
 /* Return the current username for this fko context.
 */
 char*
-fko_get_username(fko_ctx_t *ctx)
+fko_get_username(fko_ctx_t ctx)
 {
     /* Must be initialized
     */

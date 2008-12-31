@@ -5,7 +5,7 @@
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Header for the fwknop source files
+ * Purpose: Header for libfko.
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
@@ -32,7 +32,7 @@
 
 /* Supported FKO Message types...
 */
-enum {
+typedef enum {
     FKO_COMMAND_MSG = 0,
     FKO_ACCESS_MSG,
     FKO_NAT_ACCESS_MSG,
@@ -41,90 +41,32 @@ enum {
     FKO_LOCAL_NAT_ACCESS_MSG,
     FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG,
     FKO_LAST_MSG_TYPE /* Always leave this as the last one */
-};
+} fko_message_type_t;
 
 /* Supported digest types...
 */
-enum {
+typedef enum {
     FKO_DIGEST_MD5 = 0,
     FKO_DIGEST_SHA1,
     FKO_DIGEST_SHA256,
     FKO_LAST_DIGEST_TYPE /* Always leave this as the last one */
-};
+} fko_digest_type_t;
 
 /* Supported encryption types...
 */
-enum {
+typedef enum {
     FKO_ENCRYPTION_RIJNDAEL = 0,
     FKO_ENCRYPTION_GPG,
     FKO_LAST_ENCRYPTION_TYPE /* Always leave this as the last one */
-};
-
-/* General state flag bit values.
-*/
-enum {
-    FKO_CTX_SET                 = 1,        /* Set when ctx is initialized */
-    FKO_RAND_VAL_MODIFIED       = 1 << 1,
-    FKO_USERNAME_MODIFIED       = 1 << 2,
-    FKO_TIMESTAMP_MODIFIED      = 1 << 3,
-    FKO_VERSION_MODIFIED        = 1 << 4,
-    FKO_SPA_MSG_TYPE_MODIFIED   = 1 << 6,
-    FKO_CTX_SET_2               = 1 << 7,   /* Set when ctx is initialized */
-    FKO_SPA_MSG_MODIFIED        = 1 << 8,
-    FKO_NAT_ACCESS_MODIFIED     = 1 << 9,
-    FKO_SERVER_AUTH_MODIFIED    = 1 << 10,
-    FKO_CLIENT_TIMEOUT_MODIFIED = 1 << 11,
-    FKO_DIGEST_TYPE_MODIFIED    = 1 << 12,
-    FKO_ENCRYPT_TYPE_MODIFIED   = 1 << 13,
-    FKO_GPG_SUPPORTED           = 1 << 14,
-    FKO_BACKWARD_COMPATIBLE     = 1 << 15
-};
-
-/* This is used in conjunction with the ctx->initial value as a means to
- * determine if the ctx has been properly initialized.  However, this
- * may not work 100% of the time as it is possible (though not likely)
- * an ctx may have values that match both the flags and the ctx->initial
- * value.
-*/
-#define FKO_CTX_INITIALIZED  (FKO_CTX_SET|FKO_CTX_SET_2)
-
-#define FKO_SET_CTX_INITIALIZED(ctx) \
-    (ctx->state |= (FKO_CTX_INITIALIZED))
-
-#define FKO_CLEAR_CTX_INITIALIZED(ctx) \
-    (ctx->state &= (0xffff & ~FKO_CTX_INITIALIZED))
-
-/* Consolidate all SPA data modified flags.
-*/
-#define FKO_ANY_SPA_DATA_MODIFIED ( \
-    FKO_RAND_VAL_MODIFIED | FKO_USERNAME_MODIFIED | FKO_TIMESTAMP_MODIFIED \
-    | FKO_VERSION_MODIFIED | FKO_SPA_MSG_TYPE_MODIFIED | FKO_SPA_MSG_MODIFIED \
-    | FKO_NAT_ACCESS_MODIFIED | FKO_SERVER_AUTH_MODIFIED \
-    | FKO_CLIENT_TIMEOUT_MODIFIED | FKO_DIGEST_TYPE_MODIFIED \
-    | FKO_ENCRYPT_TYPE_MODIFIED )
- 
-/* This should return true if any SPA data field has been modifed since the
- * last encode/encrypt.
-*/
-#define FKO_SPA_DATA_MODIFIED(ctx) (ctx->state & FKO_ANY_SPA_DATA_MODIFIED)
-
-/* Clear all SPA data modified flags.  This is normally called after a
- * succesful encode/digest/encryption cycle.
-*/
-#define FKO_CLEAR_SPA_DATA_MODIFIED(ctx) \
-    (ctx->state &= (0xffff & ~FKO_ANY_SPA_DATA_MODIFIED))
-
-/* Macros used for determining ctx initialization state.
-*/
-#define CTX_INITIALIZED(ctx) (ctx->initval == FKO_CTX_INITIALIZED)
+} fko_encryption_type_t;
 
 /* FKO ERROR_CODES
  *
- * Note: If you change this list in any way, please be syre to make the
+ * Note: If you change this list in any way, please be sure to make the
  *       appropriate corresponding change to the error message list in
  *       fko_error.c.
 */
-enum {
+typedef enum {
     FKO_SUCCESS = 0,
     FKO_ERROR_CTX_NOT_INITIALIZED,
     FKO_ERROR_MEMORY_ALLOCATION,
@@ -144,7 +86,7 @@ enum {
 /* Add more errors above this line */
     FKO_ERROR_UNSUPPORTED_FEATURE,
     FKO_ERROR_UNKNOWN
-};
+} fko_error_codes_t;
 
 /* General Defaults
 */
@@ -152,83 +94,58 @@ enum {
 #define FKO_DEFAULT_DIGEST      FKO_DIGEST_SHA256
 #define FKO_DEFAULT_ENCRYPTION  FKO_ENCRYPTION_RIJNDAEL
 
-/* Misc.
+/* The context holds the global state and config options, as
+ * well as some intermediate results during processing.
 */
-
-/* The pieces we need to make an FKO  SPA data packet.
-*/
-typedef struct _fko_ctx {
-    /* FKO SPA user-definable message data */
-    char           *rand_val;
-    char           *username;
-    unsigned int    timestamp;
-    short           message_type;
-    char           *message;
-    char           *nat_access;
-    char           *server_auth;
-    unsigned int    client_timeout;
-
-    /* FKO SPA user-settable message encoding types */
-    short  digest_type;
-    short  encryption_type;
-
-    /* Computed or predefined data */
-    char           *version;
-    char           *digest;
-
-    /* Computed processed data (encodings, etc.) */
-    char           *encoded_msg;
-    char           *encrypted_msg;
-
-    /* State info */
-    unsigned short  state;
-    unsigned char   initval;
-} fko_ctx_t;
+struct fko_context;
+typedef struct fko_context *fko_ctx_t;
 
 /* Function prototypes */
 
 /* General api calls */
 int fko_new(fko_ctx_t *ctx);
 int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, const char *dec_key);
-void fko_destroy(fko_ctx_t *ctx);
-int fko_spa_data_final(fko_ctx_t *ctx, const char *enc_key);
-char* fko_get_spa_data(fko_ctx_t *ctx);
+void fko_destroy(fko_ctx_t ctx);
+int fko_spa_data_final(fko_ctx_t ctx, const char *enc_key);
+
+char* fko_get_spa_data(fko_ctx_t ctx);
 
 /* Set context data functions */
-int fko_set_rand_value(fko_ctx_t *ctx, const char *val);
-int fko_set_username(fko_ctx_t *ctx, const char *spoof_user);
-int fko_set_timestamp(fko_ctx_t *ctx, int offset);
-int fko_set_spa_message_type(fko_ctx_t *ctx, short msg_type);
-int fko_set_spa_message(fko_ctx_t *ctx, const char *msg_string);
-int fko_set_spa_nat_access(fko_ctx_t *ctx, const char *nat_access);
-int fko_set_spa_server_auth(fko_ctx_t *ctx, const char *server_auth);
-int fko_set_spa_client_timeout(fko_ctx_t *ctx, int timeout);
-int fko_set_spa_digest_type(fko_ctx_t *ctx, short digest_type);
-int fko_set_spa_digest(fko_ctx_t *ctx);
-int fko_set_spa_encryption_type(fko_ctx_t *ctx, short encrypt_type);
+int fko_set_rand_value(fko_ctx_t ctx, const char *val);
+int fko_set_username(fko_ctx_t ctx, const char *spoof_user);
+int fko_set_timestamp(fko_ctx_t ctx, int offset);
+int fko_set_spa_message_type(fko_ctx_t ctx, short msg_type);
+int fko_set_spa_message(fko_ctx_t ctx, const char *msg_string);
+int fko_set_spa_nat_access(fko_ctx_t ctx, const char *nat_access);
+int fko_set_spa_server_auth(fko_ctx_t ctx, const char *server_auth);
+int fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout);
+int fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type);
+int fko_set_spa_digest(fko_ctx_t ctx);
+int fko_set_spa_encryption_type(fko_ctx_t ctx, short encrypt_type);
 
 /* Data processing and misc utility functions */
 const char* fko_errstr(int err_code);
 
-int fko_encode_spa_data(fko_ctx_t *ctx);
-int fko_decode_spa_data(fko_ctx_t *ctx);
-int fko_encrypt_spa_data(fko_ctx_t *ctx, const char *enc_key);
-int fko_decrypt_spa_data(fko_ctx_t *ctx, const char *dec_key);
+int fko_encode_spa_data(fko_ctx_t ctx);
+int fko_decode_spa_data(fko_ctx_t ctx);
+int fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key);
+int fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key);
+char* fko_get_encoded_data(fko_ctx_t ctx);
 
 /* Get context data functions */
-char* fko_get_rand_value(fko_ctx_t *ctx);
-char* fko_get_username(fko_ctx_t *ctx);
-unsigned int fko_get_timestamp(fko_ctx_t *ctx);
-short fko_get_spa_message_type(fko_ctx_t *ctx);
-char* fko_get_spa_message(fko_ctx_t *ctx);
-char* fko_get_spa_nat_access(fko_ctx_t *ctx);
-char* fko_get_spa_server_auth(fko_ctx_t *ctx);
-int fko_get_spa_client_timeout(fko_ctx_t *ctx);
-short fko_get_spa_digest_type(fko_ctx_t *ctx);
-char* fko_get_spa_digest(fko_ctx_t *ctx);
-short fko_get_spa_encryption_type(fko_ctx_t *ctx);
+char* fko_get_rand_value(fko_ctx_t ctx);
+char* fko_get_username(fko_ctx_t ctx);
+unsigned int fko_get_timestamp(fko_ctx_t ctx);
+short fko_get_spa_message_type(fko_ctx_t ctx);
+char* fko_get_spa_message(fko_ctx_t ctx);
+char* fko_get_spa_nat_access(fko_ctx_t ctx);
+char* fko_get_spa_server_auth(fko_ctx_t ctx);
+int fko_get_spa_client_timeout(fko_ctx_t ctx);
+short fko_get_spa_digest_type(fko_ctx_t ctx);
+char* fko_get_spa_digest(fko_ctx_t ctx);
+short fko_get_spa_encryption_type(fko_ctx_t ctx);
 
-char* fko_version(fko_ctx_t *ctx);
+char* fko_version(fko_ctx_t ctx);
 
 #endif /* FKO_H */
 

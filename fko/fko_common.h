@@ -64,6 +64,8 @@
 #include "fko_types.h"
 #include "fko_util.h"
 #include "fko_limits.h"
+#include "fko_state.h"
+#include "fko_context.h"
 
 /* Try to cover for those that do not have bzero.
 */

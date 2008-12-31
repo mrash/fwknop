@@ -29,7 +29,7 @@
 /* Set the SPA Nat Access data
 */
 int
-fko_set_spa_nat_access(fko_ctx_t *ctx, const char *msg)
+fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
 {
     /* Context must be initialized.
     */
@@ -80,7 +80,7 @@ fko_set_spa_nat_access(fko_ctx_t *ctx, const char *msg)
 /* Return the SPA message data.
 */
 char*
-fko_get_spa_nat_access(fko_ctx_t *ctx)
+fko_get_spa_nat_access(fko_ctx_t ctx)
 {
     /* Must be initialized
     */
