@@ -1,54 +1,37 @@
 This is the top-level directory for the C version of fwknop.
 
-Additionl information and details can be found on the fwknop-c site at
+Additional information and details can be found on the fwknop-c site at
 http://devmetrix.org/trac/fwknop-c.
 
-libfwnop source files:
-======================
-These will be compiled into libfwknop.a (static for now).
 
-spa_random_number.c     - Generate a string of 16 random hex digits.
-spa_user.c              - Get or spoof the current user.
-spa_timestamp.c         - Get the current timestamp with optional offset.
-spa_version.c           - Get the fwknop-client version number.
-spa_message_type.c      - Set the message type.
-spa_message.c           - Construct the raw spa message based on the current
-                          spa data.
-spa_nat_access.c        - <not implemented yet>
-spa_server_auth.c       - <not implemented yet>
-spa_client_timeout.c    - <not implemented yet>
-spa_digest.c            - Constructs the message digest based on the current
-                          spa message data.
-
-md5.c                   - Generates md5.  Can return raw, hex, or base64.
-sha1.c                  - Generates md5.  Can return raw, hex, or base64.
-sha256.c                - Generates md5.  Can return raw, hex, or base64.
-digest.c                - Provide front-end hooks to the digest fuctions.
-
-rijndael.c              - The base Rihndael code.
-cipher_funcs.c          - Provides the code hooks to encrypt/decrypt using
-                          rijndael that is compatible with the Perl
-                          Crypt::CBC module (using Rijndael).
-
-fwknop.h                - The main common header file.  It contain default
-                          definitions, and protypes for the spa_xxx functions.
-
---more to come--
-
-
-Executables:
+INTRODUCTION
 ============
-
-fwknop                  - Soon to be the fwknop client.  At present, it just
-                          dumps some internal data for functional verification
-                          during development.
-
-fko_test                - A temp program for testing libfwknop functions during
-                          during development.  This will go away once we have
-                          a fair amount of progress in developing the client
-                          (and maybe the server).
-
---more to come--
+This distribution will be a C-based implementation of Michael Rash's
+Perl-based "fwkop" programs.  For more information on fwknop and what
+it is all about, go to http://www.cipherdyne.org/fwknop.
 
 
-###EOF###
+CURRENT STATE
+=============
+At present, we have an initial implementation of the Firewall Knock
+Operator library; `libfko'.  This library provides the back-end functionality
+for managing the Single Packet Authorization (SPA) data that fwknop
+employs.
+
+This first version is planned to be compatible with fwknop version 1.9.x.
+
+
+BUILDING libfko
+===============
+This distribution uses GNU autoconf for setting up the build.  Please see
+the `INSTALL' file for details.
+
+
+NOTE FOR DEVELOPERS
+===================
+If you are pulling this distribution from Subversion, you will need to
+run the "autogen.sh" script in the top of the distribution directory in '
+order to generate the autoconf (and other) meta files, and the `configure'
+script.
+
+
