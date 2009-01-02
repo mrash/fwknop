@@ -27,10 +27,6 @@
 */
 #include "sha.h"
 
-/* Truncate to 32 bits -- should be a null op on 32-bit machines
-*/
-#define TRUNC32(x)  ((x) & 0xffffffffL)
-
 /* 32-bit rotate to the RIGHT
 */
 #define ROT32(x,n)  TRUNC32(((x >> n) | (x << (32 - n))))

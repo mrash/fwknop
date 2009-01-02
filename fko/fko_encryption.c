@@ -117,7 +117,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
 
     /* Now make a bucket for the base64-encoded version and populate it.
     */
-    b64cipher = malloc(((cipher_len / 3) * 4) + 4);
+    b64cipher = malloc(((cipher_len / 3) * 4) + 8);
     if(b64cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 

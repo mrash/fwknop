@@ -363,7 +363,7 @@ is base64-encoded before it is added to the @acronym{SPA} data.
 Currently, libfko support the same three message digests as fwknop.  These
 are (in order of strength):
 
-@deftypevar enum fko_digest_type_t
+@deftypevar int fko_digest_type_t
 @table @code
 @item FKO_DIGEST_MD5
 @item FKO_DIGEST_SHA1
