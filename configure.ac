@@ -3,11 +3,12 @@ dnl Process thie file with autoconf to produce teh configure script
 AC_PREREQ(2.53)
 
 m4_define(my_package, [fwknop])
-m4_define(my_version, [2.0.0-alpha])
+m4_define(my_version, [1.10.0-alpha])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
 AC_CONFIG_AUX_DIR(config)
+
 AM_INIT_AUTOMAKE(my_package, my_version)
 
 dnl AM_MAINTAINER_MODE
@@ -53,9 +54,20 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strndup strrchr strspn])
 
+# Check for gpgme
+AM_PATH_GPGME
+GPGME_SUPPORT="yes"
+AC_CHECK_LIB(gpgme, gpgme_check_version, , GPGME_SUPPORT="no")
+
 AC_CONFIG_FILES([Makefile
                  fko/Makefile
                  doc/Makefile
                  src/Makefile])
 
 AC_OUTPUT
+
+echo "
+    libfko v${VERSION} has been configured.
+
+        GPG encryption support: $GPGME_SUPPORT
+"

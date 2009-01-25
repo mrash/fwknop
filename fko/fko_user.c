@@ -82,7 +82,7 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 
     ctx->username = strdup(username);
 
-    ctx->state |= FKO_USERNAME_MODIFIED;
+    ctx->state |= FKO_DATA_MODIFIED;
 
     if(ctx->username == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);

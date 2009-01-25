@@ -26,6 +26,7 @@
 
 #include "fko_common.h"
 #include "rijndael.h"
+#include "gpgme_funcs.h"
 
 /* Provide the predicted encrypted data size for given input data based
  * on a 16-byte block size (for Rijndael implementation,this also accounts
@@ -33,9 +34,13 @@
 */
 #define PREDICT_ENCSIZE(x) (1+(x>>4)+(x&0xf?1:0))<<4
 
-int fko_encrypt(uchar *in, int len, const char *key, uchar *out);
-int fko_decrypt(uchar *in, int len, const char *key, uchar *out);
-void hex_dump(uchar *data, int size);
+size_t rij_encrypt(unsigned char *in, size_t len, const char *key, unsigned char *out);
+size_t rij_decrypt(unsigned char *in, size_t len, const char *key, unsigned char *out);
+
+#if HAVE_LIBGPGME
+int gpg_encrypt(unsigned char *in, size_t len, const char *signer, const char *recip, unsigned char **out, size_t *out_sz);
+int gpg_decrypt(unsigned char *in, size_t len, const char *key, unsigned char **out, size_t *out_sz);
+#endif /* HAVE_LIBGPGME */
 
 #endif /* CIPHER_FUNCS_H */
 

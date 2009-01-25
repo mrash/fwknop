@@ -26,6 +26,8 @@
 #ifndef FKO_CONTEXT_H
 #define FKO_CONTEXT_H 1
 
+#include "fko_common.h"
+
 /* The pieces we need to make an FKO  SPA data packet.
 */
 struct fko_context {
@@ -54,6 +56,12 @@ struct fko_context {
     /* State info */
     unsigned short  state;
     unsigned char   initval;
+
+#if HAVE_LIBGPGME
+    /* For gpgme support */
+    char           *gpg_recipient;
+    char           *gpg_signer;
+#endif /* HAVE_LIBGPGME */
 };
 
 #endif /* FKO_CONTEXT_H */

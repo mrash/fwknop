@@ -55,7 +55,7 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
 
     ctx->nat_access = strdup(msg);
 
-    ctx->state |= FKO_NAT_ACCESS_MODIFIED;
+    ctx->state |= FKO_DATA_MODIFIED;
 
     if(ctx->nat_access == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);

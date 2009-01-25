@@ -44,6 +44,8 @@ static const char *fko_err_msgs[] = {
     "Invalid SPA access mesage format",
     "Invalid SPA nat_access mesage format",
     "Invalid encryption type",
+    "Wrong or inappropriate encryption type for this operation",
+    "Missing GPG key data (signer or recipient not set)",
     "Unexpected or invalid size for decrypted data",
     "The computed digest did not match the digest in the spa data",
     "Unsupported or unimplemented feature or function",

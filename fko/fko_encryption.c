@@ -30,6 +30,179 @@
 
 #define B64_RIJNDAEL_SALT "U2FsdGVkX1"
 
+/* Prep and encrypt using Rijndael
+*/
+int
+_rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
+{
+    char           *plain;
+    char           *b64cipher;
+    unsigned char  *cipher;
+    int             cipher_len;
+
+    /* Make a bucket big enough to hold the enc msg + digest (plaintext)
+     * and populate it appropriately.
+    */
+    plain = malloc(strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2);
+    if(plain == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
+
+    /* Make a bucket for the encrypted version and populate it.
+    */
+    cipher = malloc(strlen(plain) + 32); /* Plus padding for salt and Block */
+    if(cipher == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    cipher_len = rij_encrypt(
+        (unsigned char*)plain, strlen(plain), (char*)enc_key, cipher
+    );
+
+    /* Now make a bucket for the base64-encoded version and populate it.
+    */
+    b64cipher = malloc(((cipher_len / 3) * 4) + 8);
+    if(b64cipher == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    b64_encode(cipher, b64cipher, cipher_len);
+    strip_b64_eq(b64cipher);
+
+    ctx->encrypted_msg = strdup(b64cipher);
+    
+    /* Clean-up
+    */
+    free(plain);
+    free(cipher);
+    free(b64cipher);
+
+    if(ctx->encrypted_msg == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    return(FKO_SUCCESS);
+}
+
+/* Decode, decrypt, and parse SPA data into the context.
+*/
+int
+_rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
+{
+    char           *tbuf;
+    unsigned char  *cipher;
+    int             cipher_len, pt_len;
+
+    /* Now see if we need to add the "Salted__" string to the front of the
+     * encrypted data.
+    */
+    if(strncmp(ctx->encrypted_msg, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT)))
+    {
+        /* We need to realloc space for the salt.
+        */
+        tbuf = realloc(ctx->encrypted_msg, b64_len + 12);
+        if(tbuf == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+        memmove(tbuf+10, tbuf, b64_len);
+        ctx->encrypted_msg = memcpy(tbuf, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT));
+    }
+
+    /* Create a bucket for the (base64) decoded encrypted data and get the
+     * raw cipher data.
+    */
+    cipher = malloc(strlen(ctx->encrypted_msg));
+    if(cipher == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+ 
+    cipher_len = b64_decode(ctx->encrypted_msg, cipher, b64_len);
+
+    /* Create a bucket for the plaintext data and decrypt the message
+     * data into it.
+    */
+    ctx->encoded_msg = malloc(cipher_len);
+    if(ctx->encoded_msg == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    pt_len = rij_decrypt(cipher, cipher_len, dec_key, (unsigned char*)ctx->encoded_msg);
+ 
+    /* Done with cipher...
+    */
+    free(cipher);
+
+    /* The length of the decrypted data should be within 16 of the
+     * length of the encrypted version.
+    */
+    if(pt_len < (cipher_len - 32))
+        return(FKO_ERROR_DECRYPTION_SIZE_ERROR);
+
+    /* Call fko_decode and return the results.
+    */
+    return(fko_decode_spa_data(ctx));
+}
+
+
+#if HAVE_LIBGPGME
+
+/* Prep and encrypt using gpgme
+*/
+int
+_gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
+{
+    int             res;
+    char           *plain;
+    char           *b64cipher;
+    unsigned char  *cipher;
+    size_t          cipher_len;
+
+    /* First make sure we have signer and recipient keys set.
+    */
+    if(ctx->gpg_signer == NULL || ctx->gpg_recipient == NULL)
+        return(FKO_ERROR_MISSING_GPG_KEY_DATA);
+
+    /* Make a bucket big enough to hold the enc msg + digest (plaintext)
+     * and populate it appropriately.
+    */
+    plain = malloc(strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2);
+    if(plain == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
+
+    res = gpgme_encrypt(
+        (unsigned char*)plain, strlen(plain),
+        ctx->gpg_signer, ctx->gpg_recipient,
+        enc_key, &cipher, &cipher_len
+    );
+
+    /* --DSS XXX: Better parsing of what went wrong would be nice :)
+    */
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    /* Now make a bucket for the base64-encoded version and populate it.
+    */
+    b64cipher = malloc(((cipher_len / 3) * 4) + 8);
+    if(b64cipher == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    b64_encode(cipher, b64cipher, cipher_len);
+    strip_b64_eq(b64cipher);
+
+    ctx->encrypted_msg = strdup(b64cipher);
+
+    /* Clean-up
+    */
+    free(plain);
+    free(cipher);
+    free(b64cipher);
+
+    if(ctx->encrypted_msg == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    return(FKO_SUCCESS);
+}
+
+#endif /* HAVE_LIBGPGME */
+
 /* Set the SPA encryption type.
 */
 int
@@ -68,10 +241,7 @@ fko_get_spa_encryption_type(fko_ctx_t ctx)
 int
 fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
 {
-    char           *plain;
-    char           *b64cipher;
-    unsigned char  *cipher;
-    int             cipher_len, res;
+    int             res;
 
     /* Must be initialized
     */
@@ -81,7 +251,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
     /* If there is no encoded data or the SPA data has been modified,
      * go ahead and re-encode here.
     */
-    if(ctx->encoded_msg == NULL || FKO_SPA_DATA_MODIFIED(ctx))
+    if(ctx->encoded_msg == NULL || FKO_IS_SPA_DATA_MODIFIED(ctx))
     {
         res = fko_encode_spa_data(ctx);
 
@@ -96,46 +266,20 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
     if(strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
-    /* Make a bucket big enough to hold the enc msg + digest (plaintext)
-     * and populate it appropriately.
+    /* Encrypt according to type and return...
     */
-    plain = malloc(strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2);
-    if(plain == NULL)
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+    if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
+        return(_rijndael_encrypt(ctx, enc_key));
 
-    sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
+    else if(ctx->encryption_type == FKO_ENCRYPTION_GPG)
+#if HAVE_LIBGPGME
+        return(_gpg_encrypt(ctx, enc_key));
+#else
+        return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif
 
-    /* Make a bucket for the encrypted version and populate it.
-    */
-    cipher = malloc(strlen(plain) + 32); /* Plus padding for salt and Block */
-    if(cipher == NULL)
-        return(FKO_ERROR_MEMORY_ALLOCATION);
-
-    cipher_len = fko_encrypt(
-        (unsigned char*)plain, strlen(plain), (char*)enc_key, cipher
-    );
-
-    /* Now make a bucket for the base64-encoded version and populate it.
-    */
-    b64cipher = malloc(((cipher_len / 3) * 4) + 8);
-    if(b64cipher == NULL)
-        return(FKO_ERROR_MEMORY_ALLOCATION);
-
-    b64_encode(cipher, b64cipher, cipher_len);
-    strip_b64_eq(b64cipher);
-
-    ctx->encrypted_msg = strdup(b64cipher);
-    
-    /* Clean-up
-    */
-    free(plain);
-    free(cipher);
-    free(b64cipher);
-
-    if(ctx->encrypted_msg == NULL)
-        return(FKO_ERROR_MEMORY_ALLOCATION);
-
-    return(FKO_SUCCESS);
+    else
+        return(FKO_ERROR_INVALID_ENCRYPTION_TYPE);
 }
 
 /* Decode, decrypt, and parse SPA data into the context.
@@ -143,9 +287,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
 int
 fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
 {
-    char           *tbuf;
-    unsigned char  *cipher;
-    int             b64_len, cipher_len, pt_len;
+    int             b64_len;
 
     /* First, make sure we have data to work with.
     */
@@ -154,65 +296,116 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
         return(FKO_ERROR_INVALID_DATA);
 
     /* Determine type of encryption used.  For know, we are using the
-     * size of the message.  However, we will want to come up with a
-     * more reliable method of identification.
+     * size of the message.  
+     *
+     * XXX: We will want to come up with a more reliable method of
+     *      identifying the encryption type.
     */
     b64_len = strlen(ctx->encrypted_msg);
 
     if(b64_len > MIN_GNUPG_MSG_SIZE)
     {
-        /* TODO: add GPG handling */
-        /* Since we do not support GPG yet, we will just fall through */
+        ctx->encryption_type = FKO_ENCRYPTION_GPG;
+#if HAVE_LIBGPGME
+        return(FKO_ERROR_UNSUPPORTED_FEATURE);
+        //return(_gpg_decrypt(ctx, dec_key));
+#else
+        return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif
     }
-
-    /* Assuming Rijndael */
-
-    /* Now see if we need to add the "Salted__" string to the front of the
-     * encrypted data.
-    */
-    if(strncmp(ctx->encrypted_msg, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT)))
+    else /* We are assuming the default of Rijndael */
     {
-        /* We need to realloc space for the salt.
-        */
-        tbuf = realloc(ctx->encrypted_msg, b64_len + 12);
-        if(tbuf == NULL)
-            return(FKO_ERROR_MEMORY_ALLOCATION);
-
-        memmove(tbuf+10, tbuf, b64_len);
-        ctx->encrypted_msg = memcpy(tbuf, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT));
+        ctx->encryption_type = FKO_ENCRYPTION_RIJNDAEL;
+        return(_rijndael_decrypt(ctx, dec_key, b64_len));
     }
+}
 
-    /* Create a bucket for the (base64) decoded encrypted data and get the
-     * raw cipher data.
+/* Set the GPG recipient key name.
+*/
+int
+fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
     */
-    cipher = malloc(strlen(ctx->encrypted_msg));
-    if(cipher == NULL)
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    ctx->gpg_recipient = strdup(recip);
+    if(ctx->gpg_recipient == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
- 
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher, b64_len);
 
-    /* Create a bucket for the plaintext data and decrypt the message
-     * data into it.
+    ctx->state |= FKO_DATA_MODIFIED;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+/* Get the GPG recipient key name.
+*/
+char*
+fko_get_gpg_recipient(fko_ctx_t ctx)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
     */
-    ctx->encoded_msg = malloc(cipher_len);
-    if(ctx->encoded_msg == NULL)
+    if(!CTX_INITIALIZED(ctx))
+        return(NULL);
+
+    return(ctx->gpg_recipient);
+#else
+    //--DSS we should make this an error
+    return(NULL);
+#endif  /* HAVE_LIBGPGME */
+}
+
+/* Set the GPG signer key name.
+*/
+int
+fko_set_gpg_signer(fko_ctx_t ctx, const char *signer)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    ctx->gpg_signer = strdup(signer);
+    if(ctx->gpg_signer == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    pt_len = fko_decrypt(cipher, cipher_len, dec_key, (unsigned char*)ctx->encoded_msg);
- 
-    /* Done with cipher...
-    */
-    free(cipher);
+    ctx->state |= FKO_DATA_MODIFIED;
 
-    /* The length of the decrypted data should be within 16 of the
-     * length of the encrypted version.
-    */
-    if(pt_len < (cipher_len - 32))
-        return(FKO_ERROR_DECRYPTION_SIZE_ERROR);
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
 
-    /* Call fko_decode and return the results.
+/* Get the GPG signer key name.
+*/
+char*
+fko_get_gpg_signer(fko_ctx_t ctx)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
     */
-    return(fko_decode_spa_data(ctx));
+    if(!CTX_INITIALIZED(ctx))
+        return(NULL);
+
+    return(ctx->gpg_signer);
+#else
+    //--DSS we should make this an error
+    return(NULL);
+#endif  /* HAVE_LIBGPGME */
 }
 
 /***EOF***/

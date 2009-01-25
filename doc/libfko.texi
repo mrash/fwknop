@@ -354,7 +354,7 @@ gcc -o foo foo.c -I/opt/fko/include -L/opt/fko/lib -lfko
 @cindex message digest types
 @cindex default message digest
 
-The fwknop system employs an message digest hash of the @acronym{SPA} 
+The fwknop system employs a message digest hash of the @acronym{SPA} 
 data as one of the data fields to act a signature which can be used
 at the receiving end to verify the data is valid.  This provides a means
 to ensure the data was not modified in-transit.  The resulting digest

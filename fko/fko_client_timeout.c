@@ -45,7 +45,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout)
 
     ctx->client_timeout = timeout;
 
-    ctx->state |= FKO_CLIENT_TIMEOUT_MODIFIED;
+    ctx->state |= FKO_DATA_MODIFIED;
 
     /* If a timeout is set, then we may need to verify/change message
      * type accordingly.

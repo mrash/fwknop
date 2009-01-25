@@ -97,15 +97,15 @@ fko_decode_spa_data(fko_ctx_t ctx)
     switch(ctx->digest_type)
     {
         case FKO_DIGEST_MD5:
-            md5_base64(tbuf, ctx->encoded_msg, strlen(ctx->encoded_msg));
+            md5_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;
 
         case FKO_DIGEST_SHA1:
-            sha1_base64(tbuf, ctx->encoded_msg, strlen(ctx->encoded_msg));
+            sha1_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;
 
         case FKO_DIGEST_SHA256:
-            sha256_base64(tbuf, ctx->encoded_msg, strlen(ctx->encoded_msg));
+            sha256_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;
 
     } 

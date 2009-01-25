@@ -123,7 +123,7 @@ fko_set_spa_message(fko_ctx_t ctx, const char *msg)
 
     ctx->message = strdup(msg);
 
-    ctx->state |= FKO_SPA_MSG_MODIFIED;
+    ctx->state |= FKO_DATA_MODIFIED;
 
     if(ctx->message == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);

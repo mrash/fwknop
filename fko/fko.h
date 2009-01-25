@@ -81,6 +81,8 @@ typedef enum {
     FKO_ERROR_INVALID_SPA_ACCESS_MSG,
     FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG,
     FKO_ERROR_INVALID_ENCRYPTION_TYPE,
+    FKO_ERROR_WRONG_ENCRYPTION_TYPE,
+    FKO_ERROR_MISSING_GPG_KEY_DATA,
     FKO_ERROR_DECRYPTION_SIZE_ERROR,
     FKO_ERROR_DIGEST_VERIFICATION_FAILED,
 /* Add more errors above this line */
@@ -146,6 +148,12 @@ char* fko_get_spa_digest(fko_ctx_t ctx);
 short fko_get_spa_encryption_type(fko_ctx_t ctx);
 
 char* fko_version(fko_ctx_t ctx);
+
+/* GPG-related functions */
+int fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip);
+char* fko_get_gpg_recipient(fko_ctx_t ctx);
+int fko_set_gpg_signer(fko_ctx_t ctx, const char *signer);
+char* fko_get_gpg_signer(fko_ctx_t ctx);
 
 #endif /* FKO_H */
 

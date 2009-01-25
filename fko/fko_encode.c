@@ -30,8 +30,8 @@
 #include "base64.h"
 #include "digest.h"
 
-/* A rough way to make enough space for a base64 encoded version of
- * the given string, encode it, and return it.
+/* Take a given string, base64-encode it and append it to the given
+ * buffer.
 */
 int
 append_b64(char* tbuf, char *str)
@@ -63,7 +63,7 @@ int
 fko_encode_spa_data(fko_ctx_t ctx)
 {
     int     res, offset = 0;
-    char    tbuf[FKO_ENCODE_TMP_BUF_SIZE] = {0};
+    char   *tbuf;
 
     /* Must be initialized
     */
@@ -88,6 +88,12 @@ fko_encode_spa_data(fko_ctx_t ctx)
             return(FKO_ERROR_INCOMPLETE_SPA_DATA);
     }
  
+    /* Allocate our initial tmp buffer.
+    */
+    tbuf = calloc(1, FKO_ENCODE_TMP_BUF_SIZE);
+    if(tbuf == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
     /* Put it together a piece at a time, starting with the rand val.
     */
     strcpy(tbuf, ctx->rand_val);
@@ -96,7 +102,10 @@ fko_encode_spa_data(fko_ctx_t ctx)
     */
     strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
     if((res = append_b64(tbuf, ctx->username)) != FKO_SUCCESS)
+    {
+        free(tbuf);
         return(res);
+    }
     
     /* Add the timestamp.
     */
@@ -126,7 +135,10 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Add the base64-encoded SPA message.
     */
     if((res = append_b64(tbuf, ctx->message)) != FKO_SUCCESS)
+    {
+        free(tbuf);
         return(res);
+    }
     
     /* If a nat_access message was given, add it to the SPA
      * message.
@@ -135,7 +147,10 @@ fko_encode_spa_data(fko_ctx_t ctx)
     {
         strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
         if((res = append_b64(tbuf, ctx->nat_access)) != FKO_SUCCESS)
-            return(res);
+        {
+            free(tbuf);
+                return(res);
+        }
     }
  
     /* If we have a server_auth field set.  Add it here.
@@ -145,7 +160,10 @@ fko_encode_spa_data(fko_ctx_t ctx)
     {
         strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
         if((res = append_b64(tbuf, ctx->server_auth)) != FKO_SUCCESS)
-            return(res);
+        {
+            free(tbuf);
+                return(res);
+        }
     }
 
     /* If a client timeout is specified and we are not dealing with a
@@ -167,17 +185,25 @@ fko_encode_spa_data(fko_ctx_t ctx)
     */
     ctx->encoded_msg = strdup(tbuf);
     if(ctx->encoded_msg == NULL)
+    {
+        free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
 
     /* At this point we can compute the digest for this SPA data.
     */
     if((res = fko_set_spa_digest(ctx)) != FKO_SUCCESS)
+    {
+        free(tbuf);
         return(res);
+    }
 
     /* Here we can clear the modified flags on the SPA data fields.
     */
     FKO_CLEAR_SPA_DATA_MODIFIED(ctx);
  
+    free(tbuf);
+
     return(FKO_SUCCESS);
 }
 
@@ -186,8 +212,6 @@ fko_encode_spa_data(fko_ctx_t ctx)
 char*
 fko_get_encoded_data(fko_ctx_t ctx)
 {
-    int res;
-
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))

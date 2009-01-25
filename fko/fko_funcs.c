@@ -209,6 +209,14 @@ fko_destroy(fko_ctx_t ctx)
         if(ctx->encrypted_msg != NULL)
             free(ctx->encrypted_msg);
 
+#if HAVE_LIBGPGME
+        if(ctx->gpg_recipient != NULL)
+            free(ctx->gpg_recipient);
+
+        if(ctx->gpg_signer != NULL)
+            free(ctx->gpg_signer);
+
+#endif /* HAVE_LIBGPGME */
         bzero(ctx, sizeof(fko_ctx_t));
     }
 
@@ -235,8 +243,6 @@ fko_version(fko_ctx_t ctx)
 int
 fko_spa_data_final(fko_ctx_t ctx, const char *enc_key)
 {
-    int res;
-
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -250,8 +256,6 @@ fko_spa_data_final(fko_ctx_t ctx, const char *enc_key)
 char*
 fko_get_spa_data(fko_ctx_t ctx)
 {
-    int res;
-
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))

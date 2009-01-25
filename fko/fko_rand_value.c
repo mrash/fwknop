@@ -61,7 +61,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
         if(ctx->rand_val == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
-        ctx->state |= FKO_RAND_VAL_MODIFIED;
+        ctx->state |= FKO_DATA_MODIFIED;
 
         return(FKO_SUCCESS);
     }
@@ -106,7 +106,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
 
     free(tmp_buf);
 
-    ctx->state |= FKO_RAND_VAL_MODIFIED;
+    ctx->state |= FKO_DATA_MODIFIED;
 
     return(FKO_SUCCESS);
 } 

@@ -35,7 +35,7 @@
 /* Get random data.
 */
 void
-get_random_data(unsigned char *data, int len)
+get_random_data(unsigned char *data, size_t len)
 {
     FILE           *rfd;
     struct timeval  tv;
@@ -64,20 +64,23 @@ get_random_data(unsigned char *data, int len)
     }
 }
 
-/* Function to generate initial salt and initialization vector (iv).
- * This is is done to be compatible with the data produced via
+
+/*** These are Rijndael-specific functions ***/
+
+/* Rijndael function to generate initial salt and initialization vector
+ * (iv).  This is is done to be compatible with the data produced via
  * the Perl Crypt::CBC module's use of Rijndael.
 */
 void
-salt_and_iv(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
+rij_salt_and_iv(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 {
     char            pw_buf[16];
     unsigned char   tmp_buf[64];    /* How big does this need to be? */
     unsigned char   kiv_buf[48];    /* Key and IV buffer */
     unsigned char   md5_buf[16];    /* Buffer for computed md5 hash */
 
-    int             kiv_len = 0;
-    int             plen = strlen(pass);
+    size_t          kiv_len = 0;
+    size_t          plen = strlen(pass);
 
     /* First make pw 16 bytes (pad with "0" (ascii 0x30)) or truncate.
      * Note: pw_buf was initialized with '0' chars (again, not the value
@@ -144,7 +147,7 @@ rijndael_init(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 
     /* Generate the salt and initialization vector.
     */
-    salt_and_iv(ctx, pass, data);
+    rij_salt_and_iv(ctx, pass, data);
 
     /* Intialize our rinjdael context.
     */
@@ -154,8 +157,8 @@ rijndael_init(RIJNDAEL_context *ctx, const char *pass, unsigned char *data)
 /* Take a chunk of data, encrypt it in the same way the perl Crypt::CBC
  * module would.
 */
-int
-fko_encrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
+size_t
+rij_encrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];
@@ -208,8 +211,8 @@ fko_encrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
 
 /* Decrypt the given data.
 */
-int
-fko_decrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
+size_t
+rij_decrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];
@@ -270,6 +273,10 @@ fko_decrypt(unsigned char *in, int in_len, const char *pass, unsigned char *out)
 
     return(ondx - out);
 }
+
+/*** These are GPG-specific functions ***/
+
+//--DSS TODO: Finish me
 
 
 /***EOF***/
