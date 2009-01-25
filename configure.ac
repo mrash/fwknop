@@ -9,7 +9,8 @@ m4_define(my_bug_email, [dstuart@dstuart.org])
 AC_INIT(my_package, my_version, my_bug_email)
 AC_CONFIG_AUX_DIR(config)
 
-AM_INIT_AUTOMAKE(my_package, my_version)
+#AM_INIT_AUTOMAKE(my_package, my_version)
+AM_INIT_AUTOMAKE([-Wall foreign])
 
 dnl AM_MAINTAINER_MODE
 
@@ -55,8 +56,33 @@ AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strndup 
 
 # Check for gpgme
 #AM_PATH_GPGME
-GPGME_SUPPORT="yes"
-AC_CHECK_LIB(gpgme, gpgme_check_version, , GPGME_SUPPORT="no")
+#GPGME_SUPPORT="yes"
+
+AC_ARG_WITH([gpgme],
+  [AS_HELP_STRING([--with-gpgme],
+    [support for gpg encryption using libgpgme @<:@default=check@:>@])],
+  [],
+  [with_gpgme=check])
+
+LIBGPGME=
+AS_IF([test "x$with_gpgme" != xno],
+  [AC_CHECK_LIB([gpgme], [gpgme_check_version],
+    [AC_SUBST([LIBGPGME], ["-lgpgme"])
+     AC_DEFINE([HAVE_LIBGPGME], [1],
+               [Define if you have libgpgme])
+    ],
+    [if test "x$with_gpgme" != xcheck; then
+       AC_MSG_FAILURE(
+         [--with-gpgme was given, but test for gpgme failed])
+     fi
+    ])])
+
+have_gpgme=
+if test "x$LIBGPGME" == "x"; then
+  have_gpgme=no
+else
+  have_gpgme=yes
+fi
 
 AC_CONFIG_FILES([Makefile
                  fko/Makefile
@@ -67,6 +93,6 @@ AC_OUTPUT
 
 echo "
     libfko v${VERSION} has been configured.
-
-        GPG encryption support: $GPGME_SUPPORT
+    ============================================
+        GPG encryption support: $have_gpgme
 "
