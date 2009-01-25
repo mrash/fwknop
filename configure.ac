@@ -1,6 +1,6 @@
 dnl Process thie file with autoconf to produce teh configure script
 
-AC_PREREQ(2.53)
+AC_PREREQ(2.61)
 
 m4_define(my_package, [fwknop])
 m4_define(my_version, [1.10.0-alpha])
@@ -34,8 +34,7 @@ AC_CHECK_HEADERS([locale.h stdlib.h string.h sys/time.h unistd.h ctype.h])
 
 # Type checks.
 #
-AC_C_INLINE
-AC_CHECK_SIZEOF(unsigned int)
+AC_C_CONST
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
 AC_TYPE_INT16_T
@@ -46,7 +45,7 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
-AC_C_CONST
+AC_CHECK_SIZEOF(unsigned int)
 
 # Checks for library functions.
 #
@@ -55,7 +54,7 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strndup strrchr strspn])
 
 # Check for gpgme
-AM_PATH_GPGME
+#AM_PATH_GPGME
 GPGME_SUPPORT="yes"
 AC_CHECK_LIB(gpgme, gpgme_check_version, , GPGME_SUPPORT="no")
 
