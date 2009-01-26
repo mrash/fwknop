@@ -23,12 +23,14 @@
  *
  *****************************************************************************
 */
-#include <stdio.h>
-#include <string.h>
-#include "fko.h"
 
-void display_ctx(fko_ctx_t ctx);
-void hex_dump(unsigned char *data, int size);
+/* includes */
+#include "fwknop.h"
+
+static void display_ctx(fko_ctx_t ctx);
+static void hex_dump(unsigned char *data, int size);
+static void process_cmd_line(cmdl_opts *options, int argc, char **argv);
+static void usage(void);
 
 #define FKO_PW "BubbaWasHere"
 
@@ -37,6 +39,11 @@ main(int argc, char **argv)
 {
     fko_ctx_t   ctx, ctx2;
     int         res;
+    cmdl_opts    options;
+
+    /* Handle command line
+    */
+    process_cmd_line(&options, argc, argv);
 
     /* Intialize the context
     */
@@ -81,10 +88,11 @@ main(int argc, char **argv)
     res = fko_spa_data_final(ctx, FKO_PW);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_spa_data_final: %s\n", res, fko_errstr(res));
-    
+
     /* Display the context data.
     */
-    display_ctx(ctx);
+    if (! options.quiet)
+        display_ctx(ctx);
 
     /************** Decoding now *****************/
 
@@ -102,16 +110,18 @@ main(int argc, char **argv)
         fprintf(stderr, "Error #%i from fko_decrypt_spa_data: %s\n", res, fko_errstr(res));
     */
 
-    printf("\nDump of the Decoded Data\n");
-    display_ctx(ctx2);
+    if (! options.quiet) {
+        printf("\nDump of the Decoded Data\n");
+        display_ctx(ctx2);
+    }
 
     fko_destroy(ctx);
     fko_destroy(ctx2);
 
     return(0);
-} 
+}
 
-void
+static void
 display_ctx(fko_ctx_t ctx)
 {
     printf("\nFKO Context Values:\n===================\n\n");
@@ -149,7 +159,7 @@ display_ctx(fko_ctx_t ctx)
 
 }
 
-void
+static void
 hex_dump(unsigned char *data, int size)
 {
     int ln, i, j = 0;
@@ -182,6 +192,62 @@ hex_dump(unsigned char *data, int size)
 
         printf(" %s\n\n", ascii_str);
     }
+}
+
+static void process_cmd_line(cmdl_opts *options, int argc, char **argv)
+{
+    int getopt_c = 0;
+    int opt_index = 0;
+
+    memset(options, 0x00, sizeof(cmdl_opts));
+
+    while (1) {
+        opt_index = 0;
+        static struct option long_options[] = {
+            {"quiet", 0, NULL, 'q'},
+            {"verbose", 0, NULL, 'v'},
+            {"Version", 0, NULL, 'V'},
+            {"help", 0, NULL, 'h'},
+            {0, 0, 0, 0}
+        };
+        getopt_c = getopt_long(argc, argv, "qhvV",
+                long_options, &opt_index);
+        if (getopt_c == -1)
+            break;
+
+        switch (getopt_c) {
+            case 'q':
+                options->quiet = 1;
+                break;
+            case 'v':
+                options->verbose = 1;
+                break;
+            case 'V':
+                fprintf(stdout, "[+] fwknop-%s\n", FWKNOP_VERSION);
+                exit(0);
+            case 'h':
+                usage();
+                exit(0);
+           default:
+               printf("?? getopt_long returned character code 0%o ??\n",
+                    getopt_c);
+        }
+    }
+    return;
+}
+
+static void usage(void)
+{
+    fprintf(stdout,
+"fwknop; Single Packet Authorization client\n"
+"\n"
+"Usage: fwknop -A <port list> [-s|-R|-a] -D <spa_server> [options]\n"
+"\n"
+"Options:\n"
+"    -A, --Access  <port list>  - Provide a list of ports/protocols to open\n"
+"                                 on the server. The format is\n"
+    );
+    return;
 }
 
 /***EOF***/
