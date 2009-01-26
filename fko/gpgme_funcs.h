@@ -27,7 +27,7 @@
 #include "fko_common.h"
 
 int gpgme_encrypt(unsigned char *in, size_t len, const char *signer, const char *recip, const char *pw, unsigned char **out, size_t *out_len);
-int gpgme_decrypt(unsigned char *in, size_t len, const char *pw, unsigned char **out, size_t *out_len);
+int gpgme_decrypt(unsigned char *in, size_t len, const char *signer, const char *recip, const char *pw, unsigned char **out, size_t *out_len);
 
 #endif /* GPGME_FUNCS_H */
 

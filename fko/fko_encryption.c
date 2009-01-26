@@ -208,6 +208,53 @@ _gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     return(FKO_SUCCESS);
 }
 
+/* Prep and encrypt using gpgme
+*/
+int
+_gpg_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
+{
+    unsigned char  *cipher;
+    size_t          cipher_len, pt_len;
+
+    /* First make sure we have signer and recipient keys set.
+    if(ctx->gpg_signer == NULL || ctx->gpg_recipient == NULL)
+        return(FKO_ERROR_MISSING_GPG_KEY_DATA);
+    */
+
+    /* Create a bucket for the (base64) decoded encrypted data and get the
+     * raw cipher data.
+    */
+    cipher = malloc(strlen(ctx->encrypted_msg));
+    if(cipher == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+ 
+    cipher_len = b64_decode(ctx->encrypted_msg, cipher, b64_len);
+
+    /* Create a bucket for the plaintext data and decrypt the message
+     * data into it.
+    */
+    ctx->encoded_msg = malloc(cipher_len);
+    if(ctx->encoded_msg == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    pt_len = gpgme_decrypt(cipher, cipher_len,
+        ctx->gpg_signer, ctx->gpg_recipient,
+        dec_key,  (unsigned char**)&ctx->encoded_msg, &cipher_len
+    );
+ 
+    /* Done with cipher...
+    */
+    free(cipher);
+
+    /* XXX: We could put some kind of sanity check  of the decrypted
+     *      data here
+    */
+
+    /* Call fko_decode and return the results.
+    */
+    return(fko_decode_spa_data(ctx));
+}
+
 #endif /* HAVE_LIBGPGME */
 
 /* Set the SPA encryption type.
@@ -314,8 +361,7 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
     {
         ctx->encryption_type = FKO_ENCRYPTION_GPG;
 #if HAVE_LIBGPGME
-        return(FKO_ERROR_UNSUPPORTED_FEATURE);
-        //return(_gpg_decrypt(ctx, dec_key));
+        return(_gpg_decrypt(ctx, dec_key, b64_len));
 #else
         return(FKO_ERROR_UNSUPPORTED_FEATURE);
 #endif

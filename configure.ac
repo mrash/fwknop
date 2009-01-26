@@ -56,33 +56,23 @@ AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strndup 
 
 # Check for gpgme
 #AM_PATH_GPGME
-#GPGME_SUPPORT="yes"
-
 AC_ARG_WITH([gpgme],
   [AS_HELP_STRING([--with-gpgme],
     [support for gpg encryption using libgpgme @<:@default=check@:>@])],
   [],
   [with_gpgme=check])
 
-LIBGPGME=
+have_gpgme=yes
 AS_IF([test "x$with_gpgme" != xno],
   [AC_CHECK_LIB([gpgme], [gpgme_check_version],
-    [AC_SUBST([LIBGPGME], ["-lgpgme"])
-     AC_DEFINE([HAVE_LIBGPGME], [1],
-               [Define if you have libgpgme])
-    ],
+  [],
     [if test "x$with_gpgme" != xcheck; then
        AC_MSG_FAILURE(
          [--with-gpgme was given, but test for gpgme failed])
+     else
+       have_gpgme=no
      fi
-    ])])
-
-have_gpgme=
-if test "x$LIBGPGME" == "x"; then
-  have_gpgme=no
-else
-  have_gpgme=yes
-fi
+    ])], [have_gpgme=no])
 
 AC_CONFIG_FILES([Makefile
                  fko/Makefile

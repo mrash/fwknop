@@ -28,17 +28,17 @@
 
 #if HAVE_LIBGPGME
 
+//#include <locale.h>
 #include <gpgme.h>
 #include "gpgme_funcs.h"
 
 /* Callback function that supplies the password when gpgme needs it.
 */
 gpgme_error_t
-get_gpg_pw(
+passphrase_cb(
   void *hook, const char *uid_hint, const char *passphrase_info,
   int prev_was_bad, int fd)
 {
-
     /* We only need to try once as it is fed by the program
      * (for now --DSS).
     */
@@ -250,7 +250,7 @@ gpgme_encrypt(
 
     /* Set the passphrase callback.
     */
-    gpgme_set_passphrase_cb(gpg_ctx, get_gpg_pw, pw);
+    gpgme_set_passphrase_cb(gpg_ctx, passphrase_cb, (void*)pw);
 
     err = gpgme_op_encrypt_sign(gpg_ctx, key, GPGME_ENCRYPT_ALWAYS_TRUST, plaintext, data);
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
@@ -261,9 +261,118 @@ gpgme_encrypt(
         return(gpg_err_code(err));
     }
 
+    gpgme_data_release(plaintext);
+
     /* Get the encrypted data and its length from the gpgme data object.
     */
     tmp_buf = gpgme_data_release_and_get_mem(data, out_len);
+
+    *out = malloc(*out_len); /* Note: this is freed when the context is destroyed */
+    if(*out == NULL)
+    {
+        res = -2;
+    }
+    else
+    {
+        res = 0;
+        memcpy(*out, tmp_buf, *out_len);
+    }
+
+    gpgme_free(tmp_buf);
+    gpgme_release(gpg_ctx);
+
+    return(res);
+}
+
+/* The main GPG encryption routine for libfko.
+*/
+int
+gpgme_decrypt(
+  unsigned char *indata, size_t in_len, const char *signer, const char *recip,
+  const char *pw, unsigned char **out, size_t *out_len)
+{
+    char                   *tmp_buf;
+    int                     res;
+
+    gpgme_ctx_t             gpg_ctx;
+    gpgme_error_t           err;
+    gpgme_data_t            cipher, plaintext;
+    gpgme_decrypt_result_t  decrypt_result;
+    gpgme_verify_result_t   verify_result;
+
+    /* Because the gpgme manual says you should.
+    */
+    gpgme_check_version(NULL);
+    //setlocale(LC_ALL, "");
+    //gpgme_set_locale(NULL, LC_CTYPE, setlocale(LC_CTYPE, NULL));
+
+    /* Check for OpenPGP support
+    */
+    err = gpgme_engine_check_version(GPGME_PROTOCOL_OpenPGP);
+    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        /* GPG engine is not available. */
+        return(gpg_err_code(err));
+    }
+
+    /* Create our gpgme context
+    */
+    err = gpgme_new(&gpg_ctx);
+    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        return(gpg_err_code(err));
+    }
+
+    //gpgme_set_armor(gpg_ctx, 0);
+
+    err = gpgme_data_new(&plaintext);
+    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        gpgme_release(gpg_ctx);
+        return(gpg_err_code(err));
+    }
+
+    
+    /* Initialize the cipher data (place into gpgme_data object)
+    */
+    err = gpgme_data_new_from_mem(&cipher, (char*)indata, in_len, 0);
+    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        gpgme_release(gpg_ctx);
+        return(gpg_err_code(err));
+    }
+
+    /* Set the passphrase callback.
+    */
+    gpgme_set_passphrase_cb(gpg_ctx, passphrase_cb, (void*)pw);
+
+    /* Now decrypt and verify.
+    */
+    err = gpgme_op_decrypt_verify(gpg_ctx, cipher, plaintext);
+    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        gpgme_release(gpg_ctx);
+        return(gpg_err_code(err));
+    }
+
+    gpgme_data_release(cipher);
+
+    decrypt_result = gpgme_op_decrypt_result (gpg_ctx);
+
+    /* TODO: Do something with this (like the sample below)
+    if (decrypt_result->unsupported_algorithm)
+    {
+        fprintf (stderr, "%s:%i: unsupported algorithm: %s\n",
+	        __FILE__, __LINE__, decrypt_result->unsupported_algorithm);
+    }    
+    */
+
+    verify_result = gpgme_op_verify_result (gpg_ctx);
+    //TODO: Do something with this too (or not)
+
+    /* Get the encrypted data and its length from the gpgme data object.
+    */
+    tmp_buf = gpgme_data_release_and_get_mem(plaintext, out_len);
 
     *out = malloc(*out_len); /* Note: this is freed when the context is destroyed */
     if(*out == NULL)
