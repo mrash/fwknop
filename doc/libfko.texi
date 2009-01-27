@@ -147,9 +147,9 @@ provides the functions for managing the @acronym{SPA} data used by those
 programs. 
 
 @sp 1
+@noindent
 For more information on fwknop and @acronym{SPA}, go to
 @uref{http://www.cipherdyn.org/fwknop}. 
-
 
 @menu
 * Getting Started::               Purpose of the manual, and how to use it
@@ -268,12 +268,24 @@ The digest of the previous fields (including the delimiters).
 @end deftypevar
 
 With all fields defined, a complete (unencoded) @acronym{SPA} message would
-look like this (Note: the line is broken for readability and the username,
-message, nat_access, and server_auth fields are not base64-encoded):
+look something like the followin example (Note: The line is broken for
+readability and the username, message, nat_access, and server_auth fields
+are not base64-encoded):
+
+@sp 1
 @example
 8307540982176539:juser:1230665172:1.1.10:0.0.0.0,tcp/22:192.168.1.2,22:
 crypt,mypw:120:xswj8V0zMR7/7MV9pQRarSKWG1l9Zfjv+kbXaKrJ+RA
 @end example
+@sp 1
+
+For most of the fields, you need not be too concerned about the format as
+libfko handles that.  The exceptions are the @code{spa_message},
+@code{spa_nat_access}, and @code{spa_server_auth}.  The formats for these
+are not handled by libfko during creation.  However, they are checked for
+format validity during the endcoding and decoding (when parsing incoming)
+@acronym{SPA} data.  More information on the specifics of the formats for
+these fields can be found in @ref{SPA Messages}.
 
 @node Preparation
 @chapter Preparation
@@ -293,6 +305,7 @@ in your programs.
 @section libfko Header
 @cindex header file
 @cindex include file
+@cindex fko.h
 
 All interfaces (data types and functions) of the library are defined
 in the header file `fko.h'.  You must include this in all programs
@@ -441,12 +454,19 @@ of encryption:
 @deftypevar int fko_encryption_type_t
 @table @code
 @item FKO_ENCRYPTION_RIJNDAEL (default)
-@item FKO_ENCRYPTION_GPG  (not yet suppported by libfko)
+@item FKO_ENCRYPTION_GPG
 @end table
 @end deftypevar
 
-At present, libfko only supports the default Rijndael encryption algorithm.
-Support for GnuPG will be added in a future release of libfko.
+As indicated, libfko only uses Rijndael encryption by default.  Rijndael
+encryption is sufficient for most users and produces a much smaller data
+packet than @acronym{GPG} (around 146 bytes or so compared to around 1K for
+@acronym{GPG}).
+
+However, some may prefer the level of protection provided by @acronym{GPG}.
+When selected, additional parameters such as @emph{recipient} and @emph{signer}
+will need to be set as well. See @ref{Setting SPA Data} for detail on
+setting these and other @acronym{SPA} data fields.
 
 @node Using libfko
 @chapter Using libfko
@@ -621,6 +641,14 @@ parameters as well.  Setting the ``type'' parameters first is recommended
 @item spa_message -- @emph{(must be explicitly set)}
 @end itemize
 
+@noindent
+@emph{If using gpg encryption:}
+
+@itemize @bullet
+@item gpg_recipient -- @emph{(must be explicitly set)}
+@item gpg_signer -- @emph{(must be explicitly set)}
+@end itemize
+
 When a context is initialized, some of the @acronym{SPA} data fields are
 pre-set with default values (@pxref{SPA Data Format}).  For fields such
 as @code{rand_val}, @code{username}, @code{timestamp}, @code{message_type},
@@ -631,7 +659,8 @@ parameters are described in detail in @ref{Setting SPA Data}.
 
 @noindent
 @strong{Note}: Attempts to call any ``@code{fko_}'' function on a context that
-has not been initialized will return a status of
+has not been initialized can have undefined consequences.  Libfko will attempt
+to recover, and if succussful, will return a status of
 @code{FKO_ERROR_CTX_NOT_INITIALIZED}.
 
 A common @acronym{SPA} message is a simple access request.  This request asks
@@ -639,8 +668,8 @@ the fwknop server to create a temporary firewall rule to allow a particular
 IP address access to a particular port.  Assuming the defaults are fine
 for this, all we need to do is create the context, set the message data
 field, call the @code{fko_spa_data_final} function to encode and encrypt,
-process the message, then destroy the context.  Here is a contrived chunk of
-code demonstrating this:
+process the message, then destroy the context.  Below, we havea contrived bit
+of code demonstrating this:
 
 @example
 int
@@ -670,6 +699,18 @@ main(int argc, char **argv)
         fprintf(stderr, "Set SPA message failed: %s\n", fko_errstr());
         exit(1);
     @}
+
+    /* Let us assume we are using GPG encryption.  So we need to
+     * set the encrypeion type and set the required GPG parameters
+     * (we can skip checking return values for brevity).
+    */
+    fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG);
+
+    /* Key for the recipient */
+    fko_set_gpg_recipient(ctx, "recip@@some.where");
+
+    /* Key for the signer */
+    fko_set_gpg_signer(ctx, "me@@right.here");
 
     /* Finalize the SPA data */
     rc = fko_spa_data_final(ctx);
@@ -790,6 +831,26 @@ as it will be called automatically by other functions during normal
 processing (most notably @code{fko_spa_data_final}).
 @end deftypefun
 
+@cindex gpg-specific functions
+@noindent
+@emph{GPG-specific functions:}
+
+@deftypefun int fko_set_gpg_recipient (@w{fko_ctx_t @var{ctx}, const char @var{recipient}});
+Sets the @acronym{GPG} key for the recipient.  This would be the recipient's
+public key used to encyrpt the @acronym{SPA} data.  You can use the user name 
+("recip@@the.dest.com") or the key ID ("5EXXXXCC").  At present, multiple
+recipients are not supported.
+@end deftypefun
+
+@deftypefun int fko_set_gpg_signer (@w{fko_ctx_t @var{ctx}, const char @var{signer}});
+Sets the @acronym{GPG} key for signing the data.  This would be the sender's
+key used to sign the @acronym{SPA} data. You can use the user name or key ID.
+@end deftypefun
+
+@noindent
+@strong{Note}: On a libfko build without @acronym{GPG} support, the
+GPG-related functions above will simply return the FKO_ERROR_UNSUPPORTED_FEATURE
+error code.
 
 @node Retrieving SPA Data
 @section Retrieving SPA Data
@@ -892,6 +953,24 @@ in the current context.  This is a static value for @acronym{SPA} data
 that is being created in a new context.  For data parsed from an external
 source, the version string will be whatever the provided data was set to.
 @end deftypefun
+
+@cindex gpg-specific functions
+@noindent
+@emph{GPG-specific functions:}
+
+@deftypefun char* fko_get_gpg_recipient (@w{fko_ctx_t @var{ctx}});
+Returns a pointer to the string containing the @acronym{GPG} key for the
+recipient (as set with @emph{fko_set_gpg_recipient}).
+@end deftypefun
+
+@deftypefun char* fko_get_gpg_signer (@w{fko_ctx_t @var{ctx}});
+Returns a pointer to the string containing the @acronym{GPG} key for the
+signer of the @acronym{SPA} data (as set with @emph{fko_set_gpg_signer}).
+@end deftypefun
+
+@noindent
+@strong{Note}:  On a libfko build without @acronym{GPG} support, the
+GPG-related functions above will simply return NULL.
 
 @node Utility Functions
 @section Utility Functions
@@ -996,7 +1075,11 @@ Invalid SPA access mesage format
 Invalid SPA nat_access mesage format
 @item FKO_ERROR_INVALID_ENCRYPTION_TYPE
 Invalid encryption type
-@item FKO_ERROR_DECRYPTION_SIZE_ERROR
+@item FKO_ERROR_WRONG_ENCRYPTION_TYPE
+Wrong or inappropriate encryption type for this operation
+@item FKO_ERROR_MISSING_GPG_KEY_DATA
+Missing GPG key data (signer or recipient not set)
+@item FKO_ERROR_DECRYPTION_SIZE
 Unexpected or invalid size for decrypted data
 @item FKO_ERROR_DIGEST_VERIFICATION_FAILED
 The computed digest did not match the digest in the spa data

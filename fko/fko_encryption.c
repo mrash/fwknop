@@ -139,7 +139,7 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
      * length of the encrypted version.
     */
     if(pt_len < (cipher_len - 32))
-        return(FKO_ERROR_DECRYPTION_SIZE_ERROR);
+        return(FKO_ERROR_DECRYPTION_SIZE);
 
     /* Call fko_decode and return the results.
     */

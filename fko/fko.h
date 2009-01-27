@@ -28,7 +28,7 @@
 
 /* General params
 */
-#define FKO_PROTOCOL_VERSION "1.9.10" /* The fwknop protocol version */
+#define FKO_PROTOCOL_VERSION "1.10.0" /* The fwknop protocol version */
 
 /* Supported FKO Message types...
 */
@@ -83,7 +83,7 @@ typedef enum {
     FKO_ERROR_INVALID_ENCRYPTION_TYPE,
     FKO_ERROR_WRONG_ENCRYPTION_TYPE,
     FKO_ERROR_MISSING_GPG_KEY_DATA,
-    FKO_ERROR_DECRYPTION_SIZE_ERROR,
+    FKO_ERROR_DECRYPTION_SIZE,
     FKO_ERROR_DIGEST_VERIFICATION_FAILED,
 /* Add more errors above this line */
     FKO_ERROR_UNSUPPORTED_FEATURE,

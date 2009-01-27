@@ -1,6 +1,6 @@
 2008-12-21  Damien Stuart  <dstuart@dstuart.org>
 
-	Build 2.0.0 alpha
+	Build 1.10.0 alpha
 
     * autogen.sh: created.
     * autoconf/automake: Initial configuration created.
