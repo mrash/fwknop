@@ -542,7 +542,7 @@ decrypted, decoded, parsed, and stored in the context ready for retrieval.
 
 The @code{fko_new_with_data} function returns the error code
 @code{FKO_SUCCESS} if the context was successfully created.  If any of the
-intermediate steps in parsing the data, validating the @acronym{SSPA} message
+intermediate steps in parsing the data, validating the @acronym{SPA} message
 digest, or any other internal action fails, then the appropriate error code
 is returned.
 @end deftypefun

@@ -124,7 +124,7 @@ get_recip_key(gpgme_key_t *mykey, const char *recip)
         return(gpg_err_code(err));
     }
 
-    err = gpgme_op_keylist_start(list_ctx, recip, 1);
+    err = gpgme_op_keylist_start(list_ctx, recip, 0);
 
     /* Grab the first key in the list (we hope it is the only one).
     */
