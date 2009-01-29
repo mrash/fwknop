@@ -26,6 +26,13 @@
 #include "fko_common.h"
 #include "fko.h"
 
+#if HAVE_LIBGPGME
+  #include <gpgme.h>
+#endif
+
+//extern char *gpg_error_string;
+//extern char *gpg_error_source;
+
 /* Note: These messages must matchup with the ERROR_CODES enum
 *       defined in fko.h.
 */
@@ -71,14 +78,53 @@ static const char *fko_err_msgs[] = {
     "Unsupported or unimplemented feature or function",
     /* FKO_ERROR_UNKNOWN */
     "Unknown/Unclassified error",
+
+    /* Start GPGME-related errors */
+    NULL,
+
+    /* FKO_ERROR_GPGME_NO_OPENPGP */
+    "This GPGME implementation does not support OpenPGP",
+    /* FKO_ERROR_GPGME_CONTEXT */
+    "Unable to create GPGME context",
+    /* FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ */
+    "Error creating the plaintext data object",
+    /* FKO_ERROR_GPGME_SET_PROTOCOL */
+    "Unable to set GPGME to use OpenPGP protocol",
+    /* FKO_ERROR_GPGME_CIPHER_DATA_OBJ */
+    "Error creating the encrypted data data object",
+    /* FKO_ERROR_GPGME_BAD_SIGNER_PASSPHRASE */
+    "Signer passphrase was not valid",
+    /* FKO_ERROR_GPGME_ENCRYPT_SIGN */
+    "Error during the encrypt and sign operation",
+    /* FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY */
+    "Unable to create GPGME context for the signer key",
+    /* FKO_ERROR_GPGME_SIGNER_KEYLIST_START */
+    "Error from signer keylist start operation",
+    /*FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND */
+    "The key for the given signer was not found",
+    /* FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS */
+    "Ambiguous name/id for the signer key (mulitple matches)",
+    /* FKO_ERROR_GPGME_ADD_SIGNER */
+    "Error adding the signer key to the gpgme context",
+    /* FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY */
+    "Unable to create GPGME context for the recipient key",
+    /* FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START */
+    "Error from signer keylist start operation",
+    /*FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND */
+    "The key for the given recipient was not found",
+    /* FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS */
+    "Ambiguous name/id for the recipient key (mulitple matches)",
+    /* FKO_ERROR_GPGME_DECRYPT_VERIFY */
+    "Error during the decrypt and verify operation",
+
+    /* End GPGME-related errors */
     0
 };
 
 const char*
 fko_errstr(int err_code)
 {
-
-    if(err_code < 0 || err_code > FKO_ERROR_UNKNOWN)
+    if(err_code < 0 || err_code >= FKO_LAST_ERROR)
         return NULL;
 
     return(fko_err_msgs[err_code]);
