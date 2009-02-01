@@ -27,13 +27,6 @@
 /* includes */
 #include "fwknop.h"
 
-static void display_ctx(fko_ctx_t ctx);
-static void hex_dump(unsigned char *data, int size);
-static void process_cmd_line(cmdl_opts *options, int argc, char **argv);
-static void usage(void);
-
-#define FKO_PW "BubbaWasHere"
-
 int
 main(int argc, char **argv)
 {
@@ -50,6 +43,11 @@ main(int argc, char **argv)
     res = fko_new(&ctx);
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_new: %s\n", res, fko_errstr(res));
+
+    if (options.version) {
+        fprintf(stdout, "[+] fwknop-%s\n", fko_version(ctx));
+        exit(0);
+    }
 
     /* Set message type
     res = fko_set_spa_message_type(ctx, FKO_ACCESS_MSG);
@@ -94,6 +92,11 @@ main(int argc, char **argv)
     if (! options.quiet)
         display_ctx(ctx);
 
+    /* Send the SPA data across the wire with a protocol/port specified on the
+    * command line (default is UDP/62201) */
+    if (! options.test)
+        send_spa_packet(ctx, &options);
+
     /************** Decoding now *****************/
 
     /* Now we create a new context based on data from the first one.
@@ -119,6 +122,41 @@ main(int argc, char **argv)
     fko_destroy(ctx2);
 
     return(0);
+}
+
+static int
+send_spa_packet(fko_ctx_t ctx, cmdl_opts *options)
+{
+    int rv = 0;
+    if (options->proto == IPPROTO_UDP)
+        rv = send_spa_packet_udp(ctx, options);
+    else if (options->proto == IPPROTO_TCP)
+        rv = send_spa_packet_tcp(ctx, options);
+    else if (options->proto == IPPROTO_ICMP)
+        rv = send_spa_packet_icmp(ctx, options);
+
+    return rv;
+}
+
+static int
+send_spa_packet_udp(fko_ctx_t ctx, cmdl_opts *options)
+{
+    int rv;
+    return rv;
+}
+
+static int
+send_spa_packet_tcp(fko_ctx_t ctx, cmdl_opts *options)
+{
+    int rv;
+    return rv;
+}
+
+static int
+send_spa_packet_icmp(fko_ctx_t ctx, cmdl_opts *options)
+{
+    int rv;
+    return rv;
 }
 
 static void
@@ -201,30 +239,77 @@ static void process_cmd_line(cmdl_opts *options, int argc, char **argv)
 
     memset(options, 0x00, sizeof(cmdl_opts));
 
+    /* establish a few defaults such as UDP/62201 for sending the SPA
+    * packet (can be changed with --Server-proto/--Server-port) */
+    options->proto = FKO_DEFAULT_PROTO;
+    options->port  = FKO_DEFAULT_PORT;
+    options->src_port = -1;
+
     while (1) {
         opt_index = 0;
         static struct option long_options[] = {
-            {"quiet", 0, NULL, 'q'},
-            {"verbose", 0, NULL, 'v'},
-            {"Version", 0, NULL, 'V'},
-            {"help", 0, NULL, 'h'},
+            {"Destination", CMDL_HAS_ARG, NULL, 'D'},
+            {"Server-port", CMDL_HAS_ARG, NULL, 'p'},
+            {"Server-proto", CMDL_HAS_ARG, NULL, 'P'},
+            {"Source-port", CMDL_HAS_ARG, NULL, 'S'},
+            {"Spoof-src", CMDL_HAS_ARG, NULL, 'Q'},
+            {"quiet", CMDL_NO_ARG, NULL, 'q'},
+            {"Test", CMDL_NO_ARG, NULL, 'T'},
+            {"verbose", CMDL_NO_ARG, NULL, 'v'},
+            {"Version", CMDL_NO_ARG, NULL, 'V'},
+            {"help", CMDL_NO_ARG, NULL, 'h'},
             {0, 0, 0, 0}
         };
-        getopt_c = getopt_long(argc, argv, "qhvV",
+        getopt_c = getopt_long(argc, argv, "D:S:Q:p:P:TqhvV",
                 long_options, &opt_index);
         if (getopt_c == -1)
             break;
 
         switch (getopt_c) {
+            case 'D':
+                strlcpy(options->spa_server_ip_str, optarg, MAX_IP_STR_LEN);
+                break;
+            case 'Q':
+                strlcpy(options->spoof_ip_src, optarg, MAX_IP_STR_LEN);
+                break;
+            case 'p':
+                options->port = atoi(optarg);
+                if (options->port < 0 || options->port > 65535) {
+                    fprintf(stdout, "[*] Unrecognized port: %s\n", optarg);
+                    exit(0);
+                }
+                break;
+            case 'P':
+                if (strncmp(optarg, "udp", strlen("udp")) == 0)
+                    options->proto = IPPROTO_UDP;
+                else if (strncmp(optarg, "tcp", strlen("tcp")) == 0)
+                    options->proto = IPPROTO_TCP;
+                else if (strncmp(optarg, "icmp", strlen("icmp")) == 0)
+                    options->proto = IPPROTO_ICMP;
+                else {
+                    fprintf(stdout, "[*] Unrecognized protocol: %s\n", optarg);
+                    exit(0);
+                }
+                break;
+            case 'S':
+                options->src_port = atoi(optarg);
+                if (options->port < 0 || options->port > 65535) {
+                    fprintf(stdout, "[*] Unrecognized port: %s\n", optarg);
+                    exit(0);
+                }
+                break;
             case 'q':
                 options->quiet = 1;
+                break;
+            case 'T':
+                options->test = 1;
                 break;
             case 'v':
                 options->verbose = 1;
                 break;
             case 'V':
-                fprintf(stdout, "[+] fwknop-%s\n", FWKNOP_VERSION);
-                exit(0);
+                options->version = 1;
+                break;
             case 'h':
                 usage();
                 exit(0);

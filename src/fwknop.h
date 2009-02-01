@@ -30,21 +30,49 @@
 #ifndef __FWKNOP_H__
 #define __FWKNOP_H__
 
-/* includes */
+/* includes
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <netinet/in.h>
 #include "fko.h"
 
-/* defines */
-#define FWKNOP_VERSION "2.0.0-pre1"
+/* defines
+*/
+#define FKO_PW "BubbaWasHere"
+#define FKO_DEFAULT_PROTO IPPROTO_UDP
+#define FKO_DEFAULT_PORT 62201
+#define MAX_IP_STR_LEN 16
+#define CMDL_NO_ARG 0
+#define CMDL_HAS_ARG 1
 
-/* for command argument processing */
+/* for command argument processing
+*/
 typedef struct {
-    unsigned char src_addr;  /* -s */
-    int quiet;
-    int verbose;
+    unsigned char spa_server_ip_str[MAX_IP_STR_LEN];  /* -s */
+    unsigned char spoof_ip_src[MAX_IP_STR_LEN];  /* -s */
+    int proto;
+    int port;
+    int src_port;  /* only used with --Source-port */
+
+    int quiet;   /* --quiet mode */
+    int verbose; /* --verbose mode */
+    int version; /* --Version */
+    int test;
 } cmdl_opts;
+
+/* prototypes
+*/
+static int send_spa_packet(fko_ctx_t ctx, cmdl_opts *options);
+static int send_spa_packet_udp(fko_ctx_t ctx, cmdl_opts *options);
+static int send_spa_packet_tcp(fko_ctx_t ctx, cmdl_opts *options);
+static int send_spa_packet_icmp(fko_ctx_t ctx, cmdl_opts *options);
+
+static void display_ctx(fko_ctx_t ctx);
+static void hex_dump(unsigned char *data, int size);
+static void process_cmd_line(cmdl_opts *options, int argc, char **argv);
+static void usage(void);
 
 #endif  /* __FWKNOP_H__ */
