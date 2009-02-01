@@ -28,6 +28,10 @@
 #include "cipher_funcs.h"
 #include "base64.h"
 
+#if HAVE_LIBGPGME
+  #include "gpgme_funcs.h"
+#endif
+
 #define B64_RIJNDAEL_SALT "U2FsdGVkX1"
 
 /* Prep and encrypt using Rijndael
@@ -389,6 +393,9 @@ int
 fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
 {
 #if HAVE_LIBGPGME
+    int             res;
+    gpgme_key_t     key     = NULL;
+    
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -400,6 +407,18 @@ fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
     ctx->gpg_recipient = strdup(recip);
     if(ctx->gpg_recipient == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    /* Get the key.
+    */
+    res = get_gpg_key(ctx, &key, 0);
+    if(res != FKO_SUCCESS)
+    {
+        free(ctx->gpg_recipient);
+        ctx->gpg_recipient = NULL;
+        return(res);
+    }
+
+    ctx->recipient_key = key;
 
     ctx->state |= FKO_DATA_MODIFIED;
 
@@ -433,6 +452,9 @@ int
 fko_set_gpg_signer(fko_ctx_t ctx, const char *signer)
 {
 #if HAVE_LIBGPGME
+    int             res;
+    gpgme_key_t     key     = NULL;
+    
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -444,6 +466,18 @@ fko_set_gpg_signer(fko_ctx_t ctx, const char *signer)
     ctx->gpg_signer = strdup(signer);
     if(ctx->gpg_signer == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    /* Get the key.
+    */
+    res = get_gpg_key(ctx, &key, 1);
+    if(res != FKO_SUCCESS)
+    {
+        free(ctx->gpg_signer);
+        ctx->gpg_signer = NULL;
+        return(res);
+    }
+
+    ctx->signer_key = key;
 
     ctx->state |= FKO_DATA_MODIFIED;
 

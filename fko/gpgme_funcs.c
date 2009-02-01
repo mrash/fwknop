@@ -70,13 +70,17 @@ passphrase_cb(
     return 0;
 }
 
+/* Key the GPG key for the given name or ID.
+*/
 int
 get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
 {
-    gpgme_error_t err;
-    gpgme_ctx_t list_ctx;
-    gpgme_key_t key, key2;
-    char *name;
+    const char     *name;
+
+    gpgme_ctx_t     list_ctx    = NULL;
+    gpgme_key_t     key         = NULL;
+    gpgme_key_t     key2        = NULL;
+    gpgme_error_t   err;
 
     /* Create a gpgme context for the list
     */
@@ -148,14 +152,9 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
 
     gpgme_op_keylist_end(list_ctx);
 
-    /* --DSS temp for debugging
-    fprintf(stderr, "Got Key:\n%s: %s <%s>\n",
-            key->subkeys->keyid, key->uids->name, key->uids->email);
-    */
+    *mykey = key;
 
-    *mykey = fko_ctx->recipient_key = key;
-
-    return(0);
+    return(FKO_SUCCESS);
 }
 
 /* The main GPG encryption routine for libfko.
@@ -166,11 +165,11 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     char               *tmp_buf;
     int                 res;
 
-    gpgme_ctx_t         gpg_ctx;
-
+    gpgme_ctx_t         gpg_ctx     = NULL;
+    gpgme_data_t        cipher      = NULL;
+    gpgme_data_t        plaintext   = NULL;
+    gpgme_key_t         key[2]      = { NULL, NULL };
     gpgme_error_t       err;
-    gpgme_key_t         key[2] = { NULL, NULL };
-    gpgme_data_t        plaintext, cipher;
 
     /* Initialize gpgme
     */
@@ -220,26 +219,9 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     */
     gpgme_set_armor(gpg_ctx, 0);
 
-    /* Get the signer gpg key
+    /* The gpgme_encrypt.... functions take a recipient key array, so we add
+     * our single key here.
     */
-    res = get_gpg_key(fko_ctx, &(fko_ctx->signer_key), 1);
-    if(res != FKO_SUCCESS)
-    {
-        gpgme_data_release(plaintext);
-        gpgme_release(gpg_ctx);
-        return(res);
-    }
-
-    /* Get the recipient gpg key
-    */
-    res = get_gpg_key(fko_ctx, &(fko_ctx->recipient_key), 0);
-    if(res != FKO_SUCCESS)
-    {
-        gpgme_data_release(plaintext);
-        gpgme_release(gpg_ctx);
-        return(res);
-    }
-
     key[0] = fko_ctx->recipient_key;
 
     /* Create the buffer for our encrypted data.
@@ -255,6 +237,8 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
         return(FKO_ERROR_GPGME_CIPHER_DATA_OBJ);
     }
 
+    /* Here we add the signer to the gpgme context.
+    */
     gpgme_signers_clear(gpg_ctx);
     err = gpgme_signers_add(gpg_ctx, fko_ctx->signer_key);
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
@@ -272,7 +256,11 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     */
     gpgme_set_passphrase_cb(gpg_ctx, passphrase_cb, (void*)pw);
 
-    err = gpgme_op_encrypt_sign(gpg_ctx, key, GPGME_ENCRYPT_ALWAYS_TRUST, plaintext, cipher);
+    /* Encrypt and sign the SPA data.
+    */
+    err = gpgme_op_encrypt_sign(
+        gpg_ctx, key, GPGME_ENCRYPT_ALWAYS_TRUST, plaintext, cipher
+    );
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
         gpgme_data_release(plaintext);
@@ -292,14 +280,13 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     gpgme_data_release(plaintext);
 
     /* Get the encrypted data and its length from the gpgme data object.
+     * BTW, this does does free the memory used by cipher.
     */
     tmp_buf = gpgme_data_release_and_get_mem(cipher, out_len);
 
-    *out = malloc(*out_len);
+    *out = malloc(*out_len); /* This is freed upon fko_ctx destruction. */
     if(*out == NULL)
-    {
         res = FKO_ERROR_MEMORY_ALLOCATION;
-    }
     else
     {
         memcpy(*out, tmp_buf, *out_len);
@@ -312,7 +299,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     return(res);
 }
 
-/* The main GPG encryption routine for libfko.
+/* The main GPG decryption routine for libfko.
 */
 int
 gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const char *pw, unsigned char **out, size_t *out_len)
@@ -320,10 +307,10 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     char                   *tmp_buf;
     int                     res;
 
-    gpgme_ctx_t             gpg_ctx;
-
+    gpgme_ctx_t             gpg_ctx     = NULL;
+    gpgme_data_t            cipher      = NULL;
+    gpgme_data_t            plaintext   = NULL;
     gpgme_error_t           err;
-    gpgme_data_t            cipher, plaintext;
 
     /* Initialize gpgme
     */
@@ -398,7 +385,11 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     */
     tmp_buf = gpgme_data_release_and_get_mem(plaintext, out_len);
 
-    *out = malloc(*out_len);
+    /* Use calloc here with an extra byte because I am not sure if all systems
+     * will include the terminating NULL with the decrypted data (which is
+     * expected to be a string).
+    */
+    *out = calloc(1, *out_len+1); /* This is freed upon fko_ctx destruction. */
     if(*out == NULL)
         res = FKO_ERROR_MEMORY_ALLOCATION;
     else
