@@ -28,11 +28,7 @@
 #include "fko.h"
 
 #if HAVE_LIBGPGME
-#include <gpgme.h>
 #include "gpgme_funcs.h"
-
-//extern char *gpg_error_string;
-//extern char *gpg_error_source;
 
 int
 init_gpgme(void)
@@ -55,15 +51,6 @@ init_gpgme(void)
     return(FKO_SUCCESS);
 }
 
-/*
-void
-set_gpgme_errors(gpgme_error_t err)
-{
-    gpg_error_string = gpgme_strerror(err);
-    gpg_error_source = gpgme_strsource(err);
-}
-*/
-
 /* Callback function that supplies the password when gpgme needs it.
 */
 gpgme_error_t
@@ -83,87 +70,43 @@ passphrase_cb(
     return 0;
 }
 
-/* Get the key for the designated signer and add it to the main gpgme context.
-*/
 int
-set_signer(gpgme_ctx_t ctx, const char *signer)
+get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
 {
     gpgme_error_t err;
     gpgme_ctx_t list_ctx;
     gpgme_key_t key, key2;
+    char *name;
 
     /* Create a gpgme context for the list
     */
     err = gpgme_new(&list_ctx);
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
-        return(FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY);
+        fko_ctx->gpg_err = err;
+
+        if(signer)
+            return(FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY);
+        else
+            return(FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY);
     }
 
-    err = gpgme_op_keylist_start(list_ctx, signer, 1);
+    if(signer)
+        name = fko_ctx->gpg_signer;
+    else
+        name = fko_ctx->gpg_recipient;
+
+    err = gpgme_op_keylist_start(list_ctx, name, signer);
     if (err)
     {
         gpgme_release(list_ctx);
-        return(FKO_ERROR_GPGME_SIGNER_KEYLIST_START);
-    }
 
-    err = gpgme_op_keylist_next(list_ctx, &key);
-    if (err)
-    {
-        /* Secret key not found
-        */
-        gpgme_release(list_ctx);
-        return(FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND);
-    }
+        fko_ctx->gpg_err = err;
 
-    err = gpgme_op_keylist_next(list_ctx, &key2);
-
-    if (!err)
-    {
-        /* Ambiguous specfication of secret key
-        */
-        gpgme_key_release(key);
-        gpgme_key_release(key2);
-        gpgme_release(list_ctx);
-        return(FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS);
-    }
-
-    gpgme_op_keylist_end(list_ctx);
-
-    gpgme_release(list_ctx);
-
-    gpgme_signers_clear(ctx);
-
-    err = gpgme_signers_add(ctx, key);
-
-    gpgme_key_release(key);
-
-    if (err)
-        return(FKO_ERROR_GPGME_ADD_SIGNER);
-
-    return FKO_SUCCESS;
-}
-
-int
-get_recip_key(gpgme_key_t *mykey, const char *recip)
-{
-    gpgme_error_t err;
-    gpgme_ctx_t list_ctx;
-    gpgme_key_t key, key2;
-
-    /* Create a gpgme context for the list
-    */
-    err = gpgme_new(&list_ctx);
-    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
-    {
-        return(FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY);
-    }
-
-    err = gpgme_op_keylist_start(list_ctx, recip, 0);
-    if (err)
-    {
-        gpgme_release(list_ctx);
-        return(FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START);
+        if(signer)
+            return(FKO_ERROR_GPGME_SIGNER_KEYLIST_START);
+        else
+            return(FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START);
     }
 
     /* Grab the first key in the list (we hope it is the only one).
@@ -174,7 +117,13 @@ get_recip_key(gpgme_key_t *mykey, const char *recip)
         /* Key not found
         */
         gpgme_release(list_ctx);
-        return(FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND);
+
+        fko_ctx->gpg_err = err;
+
+        if(signer)
+            return(FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND);
+        else
+            return(FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND);
     }
 
     /* We try to get the next key match. If we do, then the name is
@@ -188,7 +137,13 @@ get_recip_key(gpgme_key_t *mykey, const char *recip)
         gpgme_key_release(key);
         gpgme_key_release(key2);
         gpgme_release(list_ctx);
-        return(FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS);
+
+        fko_ctx->gpg_err = err;
+
+        if(signer)
+            return(FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS);
+        else
+            return(FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS);
     }
 
     gpgme_op_keylist_end(list_ctx);
@@ -198,9 +153,7 @@ get_recip_key(gpgme_key_t *mykey, const char *recip)
             key->subkeys->keyid, key->uids->name, key->uids->email);
     */
 
-    /* Make our key the first entry in the array (just more gpgme funkyness).
-    */
-    *mykey = key;
+    *mykey = fko_ctx->recipient_key = key;
 
     return(0);
 }
@@ -208,16 +161,15 @@ get_recip_key(gpgme_key_t *mykey, const char *recip)
 /* The main GPG encryption routine for libfko.
 */
 int
-gpgme_encrypt(
-  unsigned char *indata, size_t in_len, const char *signer, const char *recip,
-  const char *pw, unsigned char **out, size_t *out_len)
+gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const char *pw, unsigned char **out, size_t *out_len)
 {
     char               *tmp_buf;
     int                 res;
 
     gpgme_ctx_t         gpg_ctx;
+
     gpgme_error_t       err;
-    gpgme_key_t         key[2] = {0};
+    gpgme_key_t         key[2] = { NULL, NULL };
     gpgme_data_t        plaintext, cipher;
 
     /* Initialize gpgme
@@ -228,9 +180,15 @@ gpgme_encrypt(
 
     /* Create our gpgme context
     */
-    err = gpgme_new(&gpg_ctx);
+    err = gpgme_new(&(fko_ctx->gpg_ctx));
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        fko_ctx->gpg_err = err;
+
         return(FKO_ERROR_GPGME_CONTEXT);
+    }
+
+    gpg_ctx = fko_ctx->gpg_ctx;
 
     /* Initialize the plaintext data (place into gpgme_data object)
     */
@@ -238,6 +196,9 @@ gpgme_encrypt(
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
         gpgme_release(gpg_ctx);
+
+        fko_ctx->gpg_err = err;
+
         return(FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ);
     }
 
@@ -248,6 +209,9 @@ gpgme_encrypt(
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
+
+        fko_ctx->gpg_err = err;
+
         return(FKO_ERROR_GPGME_SET_PROTOCOL);
     }
 
@@ -258,8 +222,8 @@ gpgme_encrypt(
 
     /* Get the signer gpg key
     */
-    res = set_signer(gpg_ctx, signer);
-    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    res = get_gpg_key(fko_ctx, &(fko_ctx->signer_key), 1);
+    if(res != FKO_SUCCESS)
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
@@ -268,13 +232,15 @@ gpgme_encrypt(
 
     /* Get the recipient gpg key
     */
-    res = get_recip_key((gpgme_key_t*)&key, recip);
-    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    res = get_gpg_key(fko_ctx, &(fko_ctx->recipient_key), 0);
+    if(res != FKO_SUCCESS)
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
         return(res);
     }
+
+    key[0] = fko_ctx->recipient_key;
 
     /* Create the buffer for our encrypted data.
     */
@@ -283,7 +249,23 @@ gpgme_encrypt(
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
+
+        fko_ctx->gpg_err = err;
+
         return(FKO_ERROR_GPGME_CIPHER_DATA_OBJ);
+    }
+
+    gpgme_signers_clear(gpg_ctx);
+    err = gpgme_signers_add(gpg_ctx, fko_ctx->signer_key);
+    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        gpgme_data_release(plaintext);
+        gpgme_data_release(cipher);
+        gpgme_release(gpg_ctx);
+
+        fko_ctx->gpg_err = err;
+
+        return(FKO_ERROR_GPGME_ADD_SIGNER);
     }
 
     /* Set the passphrase callback.
@@ -293,13 +275,14 @@ gpgme_encrypt(
     err = gpgme_op_encrypt_sign(gpg_ctx, key, GPGME_ENCRYPT_ALWAYS_TRUST, plaintext, cipher);
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
-fprintf(stderr, "ENC ERR: %s\n", gpgme_strerror(err));
         gpgme_data_release(plaintext);
         gpgme_data_release(cipher);
         gpgme_release(gpg_ctx);
 
+        fko_ctx->gpg_err = err;
+
         if(gpgme_err_code(err) == GPG_ERR_CANCELED)
-            return(FKO_ERROR_GPGME_BAD_SIGNER_PASSPHRASE);
+            return(FKO_ERROR_GPGME_BAD_PASSPHRASE);
 
         return(FKO_ERROR_GPGME_ENCRYPT_SIGN);
     }
@@ -312,7 +295,7 @@ fprintf(stderr, "ENC ERR: %s\n", gpgme_strerror(err));
     */
     tmp_buf = gpgme_data_release_and_get_mem(cipher, out_len);
 
-    *out = malloc(*out_len); /* Note: this is freed when the context is destroyed */
+    *out = malloc(*out_len);
     if(*out == NULL)
     {
         res = FKO_ERROR_MEMORY_ALLOCATION;
@@ -332,18 +315,15 @@ fprintf(stderr, "ENC ERR: %s\n", gpgme_strerror(err));
 /* The main GPG encryption routine for libfko.
 */
 int
-gpgme_decrypt(
-  unsigned char *indata, size_t in_len, const char *signer, const char *recip,
-  const char *pw, unsigned char **out, size_t *out_len)
+gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const char *pw, unsigned char **out, size_t *out_len)
 {
     char                   *tmp_buf;
     int                     res;
 
     gpgme_ctx_t             gpg_ctx;
+
     gpgme_error_t           err;
     gpgme_data_t            cipher, plaintext;
-    gpgme_decrypt_result_t  decrypt_result;
-    gpgme_verify_result_t   verify_result;
 
     /* Initialize gpgme
     */
@@ -353,14 +333,23 @@ gpgme_decrypt(
 
     /* Create our gpgme context
     */
-    err = gpgme_new(&gpg_ctx);
+    err = gpgme_new(&(fko_ctx->gpg_ctx));
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        fko_ctx->gpg_err = err;
+
         return(FKO_ERROR_GPGME_CONTEXT);
+    }
+
+    gpg_ctx = fko_ctx->gpg_ctx;
 
     err = gpgme_data_new(&plaintext);
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
         gpgme_release(gpg_ctx);
+
+        fko_ctx->gpg_err = err;
+
         return(FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ);
     }
 
@@ -371,6 +360,9 @@ gpgme_decrypt(
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
+
+        fko_ctx->gpg_err = err;
+
         return(FKO_ERROR_GPGME_CIPHER_DATA_OBJ);
     }
 
@@ -386,35 +378,29 @@ gpgme_decrypt(
         gpgme_data_release(plaintext);
         gpgme_data_release(cipher);
         gpgme_release(gpg_ctx);
-        return(FKO_ERROR_GPGME_DECRYPT_VERIFY);
+
+        fko_ctx->gpg_err = err;
+
+        return(FKO_ERROR_GPGME_DECRYPT_FAILED);
     }
 
     /* Done with the cipher text.
     */
     gpgme_data_release(cipher);
 
-    decrypt_result = gpgme_op_decrypt_result (gpg_ctx);
-
-    /* TODO: Do something with this (like the sample below)
-    if (decrypt_result->unsupported_algorithm)
-    {
-        fprintf (stderr, "%s:%i: unsupported algorithm: %s\n",
-	        __FILE__, __LINE__, decrypt_result->unsupported_algorithm);
-    }    
+    /* TODO: Do something with these (or not). For now, put them in the
+     *       fko context in case we want to check them later.
     */
-
-    verify_result = gpgme_op_verify_result (gpg_ctx);
-    //TODO: Do something with this too (or not)
+    fko_ctx->gpg_decrypt_result = gpgme_op_decrypt_result(gpg_ctx);
+    fko_ctx->gpg_verify_result  = gpgme_op_verify_result(gpg_ctx);
 
     /* Get the encrypted data and its length from the gpgme data object.
     */
     tmp_buf = gpgme_data_release_and_get_mem(plaintext, out_len);
 
-    *out = malloc(*out_len); /* Note: this is freed when the context is destroyed */
+    *out = malloc(*out_len);
     if(*out == NULL)
-    {
         res = FKO_ERROR_MEMORY_ALLOCATION;
-    }
     else
     {
         memcpy(*out, tmp_buf, *out_len);

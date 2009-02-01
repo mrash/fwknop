@@ -61,6 +61,12 @@
   #define END_C_DECLS
 #endif /* __cplusplus */
 
+/* Pull in gpgme.h if we have it.
+*/
+#if HAVE_LIBGPGME
+  #include <gpgme.h>
+#endif
+
 #include "fko_types.h"
 #include "fko_util.h"
 #include "fko_limits.h"

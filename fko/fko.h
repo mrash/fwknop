@@ -95,7 +95,7 @@ typedef enum {
     FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ,
     FKO_ERROR_GPGME_SET_PROTOCOL,
     FKO_ERROR_GPGME_CIPHER_DATA_OBJ,
-    FKO_ERROR_GPGME_BAD_SIGNER_PASSPHRASE,
+    FKO_ERROR_GPGME_BAD_PASSPHRASE,
     FKO_ERROR_GPGME_ENCRYPT_SIGN,
     FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY,
     FKO_ERROR_GPGME_SIGNER_KEYLIST_START,
@@ -106,14 +106,14 @@ typedef enum {
     FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START,
     FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND,
     FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS,
-    FKO_ERROR_GPGME_DECRYPT_VERIFY,
+    FKO_ERROR_GPGME_DECRYPT_FAILED,
 
     FKO_LAST_ERROR
 } fko_error_codes_t;
 
 /* Macro that returns true if the given error code is a gpg-related error.
 */
-#define IS_GPG_ERROR(x) (x > GPGME_ERR_START && x < LAST_ERROR)
+#define IS_GPG_ERROR(x) (x > GPGME_ERR_START && x < FKO_LAST_ERROR)
 
 /* General Defaults
 */
@@ -179,6 +179,7 @@ int fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip);
 char* fko_get_gpg_recipient(fko_ctx_t ctx);
 int fko_set_gpg_signer(fko_ctx_t ctx, const char *signer);
 char* fko_get_gpg_signer(fko_ctx_t ctx);
+const char* fko_gpg_errorstr(fko_ctx_t ctx);
 
 #endif /* FKO_H */
 

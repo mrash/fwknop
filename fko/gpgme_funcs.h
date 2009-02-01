@@ -24,10 +24,12 @@
 #ifndef GPGME_FUNCS_H
 #define GPGME_FUNCS_H 1
 
-//#include "fko_common.h"
+#include "fko_common.h"
+#include "fko.h"
 
-int gpgme_encrypt(unsigned char *in, size_t len, const char *signer, const char *recip, const char *pw, unsigned char **out, size_t *out_len);
-int gpgme_decrypt(unsigned char *in, size_t len, const char *signer, const char *recip, const char *pw, unsigned char **out, size_t *out_len);
+int get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer);
+int gpgme_encrypt(fko_ctx_t ctx, unsigned char *in, size_t len, const char *pw, unsigned char **out, size_t *out_len);
+int gpgme_decrypt(fko_ctx_t ctx, unsigned char *in, size_t len, const char *pw, unsigned char **out, size_t *out_len);
 
 #endif /* GPGME_FUNCS_H */
 

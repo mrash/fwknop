@@ -152,12 +152,12 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
 /* Prep and encrypt using gpgme
 */
 int
-_gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
+gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 {
     int             res;
     char           *plain;
     char           *b64cipher;
-    unsigned char  *cipher;
+    unsigned char  *cipher = NULL;
     size_t          cipher_len;
 
     /* First make sure we have signer and recipient keys set.
@@ -174,16 +174,22 @@ _gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 
     sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
 
-    res = gpgme_encrypt(
+    res = gpgme_encrypt(ctx,
         (unsigned char*)plain, strlen(plain),
-        ctx->gpg_signer, ctx->gpg_recipient,
         enc_key, &cipher, &cipher_len
     );
 
     /* --DSS XXX: Better parsing of what went wrong would be nice :)
     */
     if(res != FKO_SUCCESS)
+    {
+        free(plain);
+
+        if(cipher)
+            free(cipher);
+
         return(res);
+    }
 
     /* Now make a bucket for the base64-encoded version and populate it.
     */
@@ -211,10 +217,11 @@ _gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 /* Prep and encrypt using gpgme
 */
 int
-_gpg_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
+gpg_decrypt(fko_ctx_t ctx, const char *dec_key, size_t b64_len)
 {
     unsigned char  *cipher;
-    size_t          cipher_len, pt_len;
+    size_t          cipher_len;
+    int             res;
 
     /* First make sure we have signer and recipient keys set.
     if(ctx->gpg_signer == NULL || ctx->gpg_recipient == NULL)
@@ -237,14 +244,17 @@ _gpg_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    pt_len = gpgme_decrypt(cipher, cipher_len,
-        ctx->gpg_signer, ctx->gpg_recipient,
+    res = gpgme_decrypt(ctx, cipher, cipher_len,
         dec_key,  (unsigned char**)&ctx->encoded_msg, &cipher_len
     );
+    
  
     /* Done with cipher...
     */
     free(cipher);
+
+    if(res != FKO_SUCCESS)
+        return(res);
 
     /* XXX: We could put some kind of sanity check  of the decrypted
      *      data here
@@ -327,7 +337,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
 
     else if(ctx->encryption_type == FKO_ENCRYPTION_GPG)
 #if HAVE_LIBGPGME
-        return(_gpg_encrypt(ctx, enc_key));
+        return(gpg_encrypt(ctx, enc_key));
 #else
         return(FKO_ERROR_UNSUPPORTED_FEATURE);
 #endif
@@ -361,7 +371,7 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
     {
         ctx->encryption_type = FKO_ENCRYPTION_GPG;
 #if HAVE_LIBGPGME
-        return(_gpg_decrypt(ctx, dec_key, b64_len));
+        return(gpg_decrypt(ctx, dec_key, b64_len));
 #else
         return(FKO_ERROR_UNSUPPORTED_FEATURE);
 #endif

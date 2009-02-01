@@ -61,6 +61,15 @@ struct fko_context {
     /* For gpgme support */
     char           *gpg_recipient;
     char           *gpg_signer;
+
+    gpgme_ctx_t     gpg_ctx;
+    gpgme_key_t     recipient_key;
+    gpgme_key_t     signer_key;
+
+    gpgme_decrypt_result_t  gpg_decrypt_result;
+    gpgme_verify_result_t   gpg_verify_result;
+
+    gpgme_error_t   gpg_err;
 #endif /* HAVE_LIBGPGME */
 };
 
