@@ -52,7 +52,7 @@
 */
 typedef struct {
     unsigned char spa_server_ip_str[MAX_IP_STR_LEN];  /* -s */
-    unsigned char spoof_ip_src[MAX_IP_STR_LEN];  /* -s */
+    unsigned char spoof_ip_src_str[MAX_IP_STR_LEN];  /* -s */
     int proto;
     int port;
     int src_port;  /* only used with --Source-port */
@@ -66,13 +66,16 @@ typedef struct {
 /* prototypes
 */
 static int send_spa_packet(fko_ctx_t ctx, cmdl_opts *options);
-static int send_spa_packet_udp(fko_ctx_t ctx, cmdl_opts *options);
-static int send_spa_packet_tcp(fko_ctx_t ctx, cmdl_opts *options);
+static int send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+    struct sockaddr_in *addr, cmdl_opts *options);
+static int send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+    struct sockaddr_in *addr, cmdl_opts *options);
 static int send_spa_packet_icmp(fko_ctx_t ctx, cmdl_opts *options);
 
 static void display_ctx(fko_ctx_t ctx);
 static void hex_dump(unsigned char *data, int size);
 static void process_cmd_line(cmdl_opts *options, int argc, char **argv);
+static void validate_options(cmdl_opts *options);
 static void usage(void);
 
 #endif  /* __FWKNOP_H__ */

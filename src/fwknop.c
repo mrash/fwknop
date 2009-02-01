@@ -128,10 +128,34 @@ static int
 send_spa_packet(fko_ctx_t ctx, cmdl_opts *options)
 {
     int rv = 0;
+    struct sockaddr_in saddr, daddr;
+
+    /* initialize to zeros
+    */
+    memset(&saddr, 0, sizeof(saddr));
+    memset(&daddr, 0, sizeof(daddr));
+
+    saddr.sin_family = AF_INET;
+    daddr.sin_family = AF_INET;
+
+    /* set source address and port
+    */
+    saddr.sin_port = INADDR_ANY;  /* default */
+    if (options->src_port)
+        saddr.sin_port = htons(options->src_port);
+
+    saddr.sin_addr.s_addr = INADDR_ANY;  /* default */
+    if (options->spoof_ip_src_str[0] != 0x00)
+        saddr.sin_addr.s_addr = inet_addr(options->spoof_ip_src_str);
+
+    /* set destination address and port */
+    daddr.sin_port = htons(options->port);
+    daddr.sin_addr.s_addr = inet_addr(options->spa_server_ip_str);
+
     if (options->proto == IPPROTO_UDP)
-        rv = send_spa_packet_udp(ctx, options);
+        rv = send_spa_packet_udp(ctx, &saddr, &daddr, options);
     else if (options->proto == IPPROTO_TCP)
-        rv = send_spa_packet_tcp(ctx, options);
+        rv = send_spa_packet_tcp(ctx, &saddr, &daddr, options);
     else if (options->proto == IPPROTO_ICMP)
         rv = send_spa_packet_icmp(ctx, options);
 
@@ -139,14 +163,30 @@ send_spa_packet(fko_ctx_t ctx, cmdl_opts *options)
 }
 
 static int
-send_spa_packet_udp(fko_ctx_t ctx, cmdl_opts *options)
+send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+    struct sockaddr_in *daddr, cmdl_opts *options)
 {
-    int rv;
+    int rv = 0;
+    int sock = 0;
+
+    /* create the socket
+    */
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+
+    if (sock < 0) {
+        fprintf(stderr, "[*] Could not create UDP socket.\n");
+        exit(1);
+    }
+
+    sendto(sock, fko_get_spa_data(ctx), strlen(fko_get_spa_data(ctx)),
+            0, (struct sockaddr *)daddr, sizeof(*daddr));
+
     return rv;
 }
 
 static int
-send_spa_packet_tcp(fko_ctx_t ctx, cmdl_opts *options)
+send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+    struct sockaddr_in *daddr, cmdl_opts *options)
 {
     int rv;
     return rv;
@@ -243,7 +283,8 @@ static void process_cmd_line(cmdl_opts *options, int argc, char **argv)
     * packet (can be changed with --Server-proto/--Server-port) */
     options->proto = FKO_DEFAULT_PROTO;
     options->port  = FKO_DEFAULT_PORT;
-    options->src_port = -1;
+    options->spa_server_ip_str[0] = 0x00;
+    options->spoof_ip_src_str[0] = 0x00;
 
     while (1) {
         opt_index = 0;
@@ -270,13 +311,13 @@ static void process_cmd_line(cmdl_opts *options, int argc, char **argv)
                 strlcpy(options->spa_server_ip_str, optarg, MAX_IP_STR_LEN);
                 break;
             case 'Q':
-                strlcpy(options->spoof_ip_src, optarg, MAX_IP_STR_LEN);
+                strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
                 break;
             case 'p':
                 options->port = atoi(optarg);
                 if (options->port < 0 || options->port > 65535) {
-                    fprintf(stdout, "[*] Unrecognized port: %s\n", optarg);
-                    exit(0);
+                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                    exit(1);
                 }
                 break;
             case 'P':
@@ -287,15 +328,15 @@ static void process_cmd_line(cmdl_opts *options, int argc, char **argv)
                 else if (strncmp(optarg, "icmp", strlen("icmp")) == 0)
                     options->proto = IPPROTO_ICMP;
                 else {
-                    fprintf(stdout, "[*] Unrecognized protocol: %s\n", optarg);
-                    exit(0);
+                    fprintf(stderr, "[*] Unrecognized protocol: %s\n", optarg);
+                    exit(1);
                 }
                 break;
             case 'S':
                 options->src_port = atoi(optarg);
                 if (options->port < 0 || options->port > 65535) {
-                    fprintf(stdout, "[*] Unrecognized port: %s\n", optarg);
-                    exit(0);
+                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                    exit(1);
                 }
                 break;
             case 'q':
@@ -318,10 +359,27 @@ static void process_cmd_line(cmdl_opts *options, int argc, char **argv)
                     getopt_c);
         }
     }
+
+    /* perform some additional options validation
+    */
+    validate_options(options);
+
     return;
 }
 
-static void usage(void)
+static
+void validate_options(cmdl_opts *options)
+{
+    if (!options->test && options->spa_server_ip_str[0] == 0x00) {
+        fprintf(stderr,
+            "[*] Must use --Destination unless --Test mode is used\n");
+        exit(1);
+    }
+    return;
+}
+
+static
+void usage(void)
 {
     fprintf(stdout,
 "fwknop; Single Packet Authorization client\n"
