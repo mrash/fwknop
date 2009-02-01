@@ -138,8 +138,8 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
     {
         /* Ambiguous specfication of key
         */
-        gpgme_key_release(key);
-        gpgme_key_release(key2);
+        gpgme_key_unref(key);
+        gpgme_key_unref(key2);
         gpgme_release(list_ctx);
 
         fko_ctx->gpg_err = err;
@@ -152,7 +152,11 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
 
     gpgme_op_keylist_end(list_ctx);
 
+    gpgme_key_unref(key2);
+
     *mykey = key;
+
+    gpgme_release(list_ctx);
 
     return(FKO_SUCCESS);
 }
@@ -294,7 +298,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     }
 
     gpgme_free(tmp_buf);
-    gpgme_release(gpg_ctx);
+    //gpgme_release(gpg_ctx);
 
     return(res);
 }
@@ -399,7 +403,7 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     }
 
     gpgme_free(tmp_buf);
-    gpgme_release(gpg_ctx);
+    //gpgme_release(gpg_ctx);
 
     return(res);
 }

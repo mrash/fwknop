@@ -216,8 +216,21 @@ fko_destroy(fko_ctx_t ctx)
         if(ctx->gpg_signer != NULL)
             free(ctx->gpg_signer);
 
+        if(ctx->recipient_key != NULL)
+        {
+            gpgme_key_unref(ctx->recipient_key);
+        }
+        
+        if(ctx->signer_key != NULL)
+        {
+            gpgme_key_unref(ctx->signer_key);
+        }
+        
+        if(ctx->gpg_ctx != NULL)
+            gpgme_release(ctx->gpg_ctx);
 #endif /* HAVE_LIBGPGME */
-        bzero(ctx, sizeof(fko_ctx_t));
+
+        bzero(ctx, sizeof(*ctx));
     }
 
     free(ctx);
