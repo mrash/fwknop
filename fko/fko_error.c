@@ -164,8 +164,10 @@ fko_errstr(int err_code)
 const char*
 fko_gpg_errorstr(fko_ctx_t ctx)
 {
+#if HAVE_LIBGPGME
     if(ctx->gpg_err)
         return(gpgme_strerror(ctx->gpg_err));
+#endif /* HAVE_LIBGPGME */
 
     return("");
 }
