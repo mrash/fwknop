@@ -370,7 +370,8 @@ static void process_cmd_line(cmdl_opts *options, int argc, char **argv)
 static
 void validate_options(cmdl_opts *options)
 {
-    if (!options->test && options->spa_server_ip_str[0] == 0x00) {
+    if (!options->test && !options->version
+            && options->spa_server_ip_str[0] == 0x00) {
         fprintf(stderr,
             "[*] Must use --Destination unless --Test mode is used\n");
         exit(1);
