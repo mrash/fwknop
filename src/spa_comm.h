@@ -1,13 +1,13 @@
 /*
  *****************************************************************************
  *
- * File:    fwknop.h
+ * File:    spa_comm.h
  *
- * Author:  Michael Rash (mbr@cipherdyne.org)
+ * Author:  Damien Stuart (dstuart@dstuart.org)
  *
  * Purpose: Header file for fwknop client test program.
  *
- * Copyright (C) 2009 Michael Rash (mbr@cipherdyne.org)
+ * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *
@@ -22,17 +22,14 @@
  *     USA
  *
  *****************************************************************************
- *
- * $Id$
- *
 */
-#ifndef FWKNOP_H
-#define FWKNOP_H
+#ifndef SPA_COMM_H
+#define SPA_COMM_H
 
 #include "fwknop_common.h"
 
-/* prototypes
+/* Prototypes
 */
-static void display_ctx(fko_ctx_t ctx);
+int send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options);
 
-#endif  /* FWKNOP_H */
+#endif  /* SPA_COMM_H */

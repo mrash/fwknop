@@ -1,13 +1,13 @@
 /*
  *****************************************************************************
  *
- * File:    fwknop.h
+ * File:    utils.h
  *
- * Author:  Michael Rash (mbr@cipherdyne.org)
+ * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Header file for fwknop client test program.
+ * Purpose: Header file for utils.c client test program.
  *
- * Copyright (C) 2009 Michael Rash (mbr@cipherdyne.org)
+ * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *
@@ -22,17 +22,13 @@
  *     USA
  *
  *****************************************************************************
- *
- * $Id$
- *
 */
-#ifndef FWKNOP_H
-#define FWKNOP_H
+#ifndef UTILS_H
+#define UTILS_H
 
-#include "fwknop_common.h"
 
-/* prototypes
+/* Prototypes
 */
-static void display_ctx(fko_ctx_t ctx);
+void hex_dump(unsigned char *data, int size);
 
-#endif  /* FWKNOP_H */
+#endif  /* UTILS_H */
