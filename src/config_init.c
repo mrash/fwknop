@@ -335,6 +335,7 @@ usage(void)
       "     --gpg-encryption    - Use GPG encyrption (default is Rijndael).\n"
       "     --gpg-recipient-key - Specify the recipient GPG key name or ID.\n"
       "     --gpg-signer-key    - Specify the signer's GPG key name or ID.\n"
+      "     --gpg-agent         - Use GPG agent if available.\n"
       "\n"
     );
 

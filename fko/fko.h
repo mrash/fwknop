@@ -46,7 +46,7 @@ typedef enum {
 /* Supported digest types...
 */
 typedef enum {
-    FKO_DIGEST_MD5 = 0,
+    FKO_DIGEST_MD5 = 1,
     FKO_DIGEST_SHA1,
     FKO_DIGEST_SHA256,
     FKO_LAST_DIGEST_TYPE /* Always leave this as the last one */
@@ -55,7 +55,7 @@ typedef enum {
 /* Supported encryption types...
 */
 typedef enum {
-    FKO_ENCRYPTION_RIJNDAEL = 0,
+    FKO_ENCRYPTION_RIJNDAEL = 1,
     FKO_ENCRYPTION_GPG,
     FKO_LAST_ENCRYPTION_TYPE /* Always leave this as the last one */
 } fko_encryption_type_t;
@@ -131,9 +131,9 @@ typedef struct fko_context *fko_ctx_t;
 
 /* General api calls */
 int fko_new(fko_ctx_t *ctx);
-int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, const char *dec_key);
+int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, char *dec_key);
 void fko_destroy(fko_ctx_t ctx);
-int fko_spa_data_final(fko_ctx_t ctx, const char *enc_key);
+int fko_spa_data_final(fko_ctx_t ctx, char *enc_key);
 
 char* fko_get_spa_data(fko_ctx_t ctx);
 
@@ -155,8 +155,8 @@ const char* fko_errstr(int err_code);
 
 int fko_encode_spa_data(fko_ctx_t ctx);
 int fko_decode_spa_data(fko_ctx_t ctx);
-int fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key);
-int fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key);
+int fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key);
+int fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key);
 char* fko_get_encoded_data(fko_ctx_t ctx);
 
 /* Get context data functions */

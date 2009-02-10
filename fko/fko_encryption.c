@@ -34,10 +34,19 @@
 
 #define B64_RIJNDAEL_SALT "U2FsdGVkX1"
 
+/* Wipe out the password buffer.
+*/
+void
+wipe_pw(char *pw)
+{
+    if(pw != NULL)
+        bzero(pw, strlen(pw));
+}
+
 /* Prep and encrypt using Rijndael
 */
 int
-_rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
+_rijndael_encrypt(fko_ctx_t ctx, char *enc_key)
 {
     char           *plain;
     char           *b64cipher;
@@ -89,7 +98,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 int
-_rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
+_rijndael_decrypt(fko_ctx_t ctx, char *dec_key, int b64_len)
 {
     char           *tbuf;
     unsigned char  *cipher;
@@ -156,7 +165,7 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int b64_len)
 /* Prep and encrypt using gpgme
 */
 int
-gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
+gpg_encrypt(fko_ctx_t ctx, char *enc_key)
 {
     int             res;
     char           *plain;
@@ -221,7 +230,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 /* Prep and encrypt using gpgme
 */
 int
-gpg_decrypt(fko_ctx_t ctx, const char *dec_key, size_t b64_len)
+gpg_decrypt(fko_ctx_t ctx, char *dec_key, size_t b64_len)
 {
     unsigned char  *cipher;
     size_t          cipher_len;
@@ -307,61 +316,68 @@ fko_get_spa_encryption_type(fko_ctx_t ctx)
 /* Encrypt the encoded SPA data.
 */
 int
-fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
+fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
 {
     int             res;
 
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+    {
+        res = FKO_ERROR_CTX_NOT_INITIALIZED;
+        goto EWIPEOUT;
+    }
 
     /* If there is no encoded data or the SPA data has been modified,
      * go ahead and re-encode here.
     */
     if(ctx->encoded_msg == NULL || FKO_IS_SPA_DATA_MODIFIED(ctx))
-    {
         res = fko_encode_spa_data(ctx);
-
-        if(res != FKO_SUCCESS)
-            return(res);
-    }
 
     /* Croak on invalid encoded message as well. At present this is a
      * check for a somewhat arbitrary minimum length for the encoded
      * data.
     */
     if(strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
-        return(FKO_ERROR_MISSING_ENCODED_DATA);
+    {
+        res = FKO_ERROR_MISSING_ENCODED_DATA;
+        goto EWIPEOUT;
+    }
 
     /* Encrypt according to type and return...
     */
     if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
-        return(_rijndael_encrypt(ctx, enc_key));
-
+        res = _rijndael_encrypt(ctx, enc_key);
     else if(ctx->encryption_type == FKO_ENCRYPTION_GPG)
 #if HAVE_LIBGPGME
-        return(gpg_encrypt(ctx, enc_key));
+        res = gpg_encrypt(ctx, enc_key);
 #else
-        return(FKO_ERROR_UNSUPPORTED_FEATURE);
+        res = FKO_ERROR_UNSUPPORTED_FEATURE;
 #endif
-
     else
-        return(FKO_ERROR_INVALID_ENCRYPTION_TYPE);
+        res = FKO_ERROR_INVALID_ENCRYPTION_TYPE;
+
+EWIPEOUT:
+    wipe_pw(enc_key);
+
+    return(res);
 }
 
 /* Decode, decrypt, and parse SPA data into the context.
 */
 int
-fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
+fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
 {
-    int             b64_len;
+    int             b64_len, res;
 
     /* First, make sure we have data to work with.
     */
     if(ctx->encrypted_msg == NULL
       || strlen(ctx->encrypted_msg) <  MIN_SPA_ENCODED_MSG_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
+    {
+        res = FKO_ERROR_INVALID_DATA;
+        goto DWIPEOUT;
+    }
 
     /* Determine type of encryption used.  For know, we are using the
      * size of the message.  
@@ -375,16 +391,21 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
     {
         ctx->encryption_type = FKO_ENCRYPTION_GPG;
 #if HAVE_LIBGPGME
-        return(gpg_decrypt(ctx, dec_key, b64_len));
+        res = gpg_decrypt(ctx, dec_key, b64_len);
 #else
-        return(FKO_ERROR_UNSUPPORTED_FEATURE);
+        res = FKO_ERROR_UNSUPPORTED_FEATURE;
 #endif
     }
     else /* We are assuming the default of Rijndael */
     {
         ctx->encryption_type = FKO_ENCRYPTION_RIJNDAEL;
-        return(_rijndael_decrypt(ctx, dec_key, b64_len));
+        res = _rijndael_decrypt(ctx, dec_key, b64_len);
     }
+
+DWIPEOUT:
+    wipe_pw(dec_key);
+
+    return(res);
 }
 
 /* Set the GPG recipient key name.

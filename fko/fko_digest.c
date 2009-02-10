@@ -39,7 +39,7 @@ fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    if(digest_type < 0 || digest_type >= FKO_LAST_DIGEST_TYPE)
+    if(digest_type < 1 || digest_type >= FKO_LAST_DIGEST_TYPE)
         return(FKO_ERROR_INVALID_DATA);
 
     ctx->digest_type = digest_type;

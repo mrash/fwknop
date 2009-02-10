@@ -31,7 +31,7 @@ AC_PROG_LIBTOOL
 # Checks for header files.
 #
 AC_HEADER_STDC
-AC_CHECK_HEADERS([locale.h stdlib.h string.h sys/time.h unistd.h ctype.h])
+AC_CHECK_HEADERS([ctype.h netinet/in.h stdlib.h string.h strings.h sys/time.h termios.h unistd.h])
 
 # Type checks.
 #
@@ -52,7 +52,8 @@ AC_CHECK_SIZEOF(unsigned int)
 #
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([bzero gettimeofday memmove memset strchr strcspn strdup strndup strrchr strspn])
+AC_FUNC_STAT
+AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn])
 
 # Check for gpgme
 #AM_PATH_GPGME

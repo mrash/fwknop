@@ -28,14 +28,29 @@
 
 /* Common includes for our other fwknop client source files.
 */
+#if HAVE_CONFIG_H
+  #include "config.h"
+#endif
+
 #include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <ctype.h>
 #include <sys/types.h>
-#include <netinet/in.h>
+
+#if STDC_HEADERS
+  #include <stdlib.h>
+  #include <string.h>
+#elif HAVE_STRINGS_H
+  #include <strings.h>
+#endif /* STDC_HEADERS*/
+
+#if HAVE_UNISTD_H
+  #include <unistd.h>
+#endif
+
+#if HAVE_NETINET_IN_H
+  #include <netinet/in.h>
+#endif
+
+#include <signal.h>
 
 #include "fko.h"
 
@@ -55,8 +70,6 @@
 
 /* Other common defines
 */
-#define FKO_PW "BubbaWasHere" //--DSS Temp
-
 #define FKO_DEFAULT_PROTO IPPROTO_UDP
 #define FKO_DEFAULT_PORT 62201
 #define MAX_IP_STR_LEN 16

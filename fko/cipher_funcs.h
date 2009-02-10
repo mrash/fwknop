@@ -34,14 +34,12 @@
 */
 #define PREDICT_ENCSIZE(x) (1+(x>>4)+(x&0xf?1:0))<<4
 
-size_t rij_encrypt(unsigned char *in, size_t len, const char *key, unsigned char *out);
-size_t rij_decrypt(unsigned char *in, size_t len, const char *key, unsigned char *out);
+size_t rij_encrypt(unsigned char *in, size_t len, char *key, unsigned char *out);
+size_t rij_decrypt(unsigned char *in, size_t len, char *key, unsigned char *out);
 
 #if HAVE_LIBGPGME
-int gpg_encrypt(fko_ctx_t ctx, const char *enc_key);
-//int gpg_encrypt(unsigned char *in, size_t len, const char *signer, const char *recip, unsigned char **out, size_t *out_sz);
-//int gpg_decrypt(unsigned char *in, size_t len, const char *key, unsigned char **out, size_t *out_sz);
-int gpg_decrypt(fko_ctx_t ctx, const char *enc_key, size_t b64_len);
+int gpg_encrypt(fko_ctx_t ctx, char *enc_key);
+int gpg_decrypt(fko_ctx_t ctx, char *dec_key, size_t b64_len);
 #endif /* HAVE_LIBGPGME */
 
 #endif /* CIPHER_FUNCS_H */

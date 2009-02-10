@@ -27,12 +27,20 @@
 #include "config_init.h"
 #include "spa_comm.h"
 #include "utils.h"
+#include "getpasswd.h"
+
+/* Used be the getpw function below.
+*/
+#define CRYPT_OP_ENCRYPT 1
+#define CRYPT_OP_DECRYPT 2
+char* getpw(fko_cli_options_t *options, int crypt_op);
 
 int
 main(int argc, char **argv)
 {
     fko_ctx_t           ctx, ctx2;
     int                 res;
+    char               *pw;
 
     fko_cli_options_t   options;
 
@@ -55,6 +63,12 @@ main(int argc, char **argv)
     */
     if(options.use_gpg)
     {
+        /* If use-gpg-agent was not specified, then remove the GPG_AGENT_INFO
+         * ENV variable if it exists.
+        */
+        if(!options.use_gpg_agent)
+            unsetenv("GPG_AGENT_INFO");
+
         res = fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG);
         if(res != FKO_SUCCESS)
         {
@@ -144,7 +158,7 @@ main(int argc, char **argv)
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
-    res = fko_spa_data_final(ctx, FKO_PW);
+    res = fko_spa_data_final(ctx, getpw(&options, CRYPT_OP_ENCRYPT));
     if(res != FKO_SUCCESS)
     {
         fprintf(stderr,
@@ -178,7 +192,8 @@ main(int argc, char **argv)
 
         /* Now we create a new context based on data from the first one.
         */
-        res = fko_new_with_data(&ctx2, fko_get_spa_data(ctx), FKO_PW);
+        res = fko_new_with_data(&ctx2, fko_get_spa_data(ctx),
+                                getpw(&options, CRYPT_OP_DECRYPT));
         if(res != FKO_SUCCESS)
         {
             fprintf(stderr,
@@ -203,6 +218,25 @@ main(int argc, char **argv)
     fko_destroy(ctx);
 
     return(0);
+}
+
+char*
+getpw(fko_cli_options_t *options, int crypt_op)
+{
+    if(options->use_gpg)
+    {
+        return(options->use_gpg_agent ? ""
+            : getpasswd("Enter passphrase for secret key: "));
+    }
+    else
+    {
+        if(crypt_op == CRYPT_OP_ENCRYPT)
+            return(getpasswd("Enter encryption password: "));
+        else if(crypt_op == CRYPT_OP_DECRYPT)
+            return(getpasswd("Enter decryption password: "));
+        else
+            return(getpasswd("Enter password: "));
+    }
 }
 
 static void
