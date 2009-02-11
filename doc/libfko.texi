@@ -528,7 +528,7 @@ if(rc != FKO_SUCCESS)
 For a context that will be used for receiving and parsing an existing
 @acronym{SPA} message, you will use the @code{fko_new_with_data} function:
 
-@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, char @var{*data}, const char @var{*key}})
+@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, char @var{*data}, char @var{*key}})
 The function @code{fko_new_with_data} sets up and initializes a new
 @code{fko_ctx_t} context, but instead of initializing default values, it
 stores the encrypted message data and makes it ready for parsing.  This
@@ -676,7 +676,7 @@ int
 main(int argc, char **argv)
 @{
     fko_ctx_t       ctx;        /* FKO Context */
-    const char     *password;   /* Encryption password */
+    char           *password;   /* Encryption password */
     char           *final_spa;  /* Final encrypted SPA data */
     int             rc;         /* Result code */
 
@@ -987,14 +987,14 @@ All of these functions return an integer representing the return status of
 the function. When succesfull, they will return @code{FKO_SUCCESS}.
 Otherwise, an error code value is returned.
 
-@deftypefun int fko_spa_data_final (@w{fko_ctx_t @var{ctx}, const char @var{*enc_key}});
+@deftypefun int fko_spa_data_final (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}});
 This function is the final step in creating a complete encrypted
 @acronym{SPA} data string suitable for transmission to an fwknop server.
 It does require all of the requisite @acronym{SPA} data fields be set,
 otherwise it will fail with an appropriate error code.
 @end deftypefun
 
-@deftypefun int fko_decrypt_spa_data (@w{fko_ctx_t @var{ctx}, const char @var{*dec_key}});
+@deftypefun int fko_decrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*dec_key}});
 When given the correct @var{key} (passsword), this function decrypts, decodes,
 and parses the encrypted @acronym{SPA} data that was supplied to the context
 via the @code{fko_new_with_data} function that was also called without the
@@ -1003,7 +1003,7 @@ via the @code{fko_new_with_data} function that was also called without the
 fields in the context for later retrieval.
 @end deftypefun
 
-@deftypefun int fko_encrypt_spa_data (@w{fko_ctx_t @var{ctx}, const char @var{*enc_key}});
+@deftypefun int fko_encrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}});
 Encrypts the intermediate encoded @acronym{SPA} data stored in the context.
 This function will call @code{fko_encode} if necessary.  It is normally not
 called directly as it is called from @code{fko_spa_data_final}. 
@@ -1089,6 +1089,68 @@ Unsupported or unimplemented feature or function
 Unknown/Unclassified error
 @end table
 @end deftypevar
+
+If GPG support is available, there are additional possible error conditions
+and error codes.  The @acronym{GPG} support is implemented via @acronym{GPGME}.
+The libfko error handling code wraps many of the @acronym{GPGME} error codes
+that may be encountered while using libfko's @acronym{GPG} related functions.
+These are:
+
+@cindex error codes, gpgme related
+
+@deftypevar int error_code (gpgme support only)
+@table @code
+@item FKO_ERROR_GPGME_NO_OPENPGP
+This GPGME implementation does not support OpenPGP
+@item FKO_ERROR_GPGME_CONTEXT
+Unable to create GPGME context
+@item FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ
+Error creating the plaintext data object
+@item FKO_ERROR_GPGME_SET_PROTOCOL
+Unable to set GPGME to use OpenPGP protocol
+@item FKO_ERROR_GPGME_CIPHER_DATA_OBJ
+Error creating the encrypted data data object
+@item FKO_ERROR_GPGME_BAD_PASSPHRASE
+The GPG passphrase was not valid
+@item FKO_ERROR_GPGME_ENCRYPT_SIGN
+Error during the encrypt and sign operation
+@item FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY
+Unable to create GPGME context for the signer key
+@item FKO_ERROR_GPGME_SIGNER_KEYLIST_START
+Error from signer keylist start operation
+@item FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND
+The key for the given signer was not found
+@item FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS
+Ambiguous name/id for the signer key (mulitple matches)
+@item FKO_ERROR_GPGME_ADD_SIGNER
+Error adding the signer key to the gpgme context
+@item FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY
+Unable to create GPGME context for the recipient key
+@item FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START
+Error from signer keylist start operation
+@item FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND
+The key for the given recipient was not found
+@item FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS
+Ambiguous name/id for the recipient key (mulitple matches)
+@item FKO_ERROR_GPGME_DECRYPT_FAILED
+Decryption operation failed
+@end table
+@end deftypevar
+
+You can use the @code{IS_GPGME_ERROR(err_code)} macro to determine whether
+or not an error id @acronym{GPGME} related.  If the macro evaluates to a
+true value, you may be able to get additioinal information about the error
+using the following function:
+
+@cindex gpg-specific functions
+
+@deftypefun {const char *} fko_gpg_errstr (@w{int @var{err_code}})
+The function @code{fko_errstr} returns a pointer to a statically
+allocated string containing the descripton of the @acronym{GPGME} error.
+@end deftypefun
+
+@noindent
+@strong{Note}: For some errors, this function may return an empty string.
 
 @c --End of main chapters.
 
