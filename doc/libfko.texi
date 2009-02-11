@@ -268,7 +268,7 @@ The digest of the previous fields (including the delimiters).
 @end deftypevar
 
 With all fields defined, a complete (unencoded) @acronym{SPA} message would
-look something like the followin example (Note: The line is broken for
+look something like the following example (Note: The line is broken for
 readability and the username, message, nat_access, and server_auth fields
 are not base64-encoded):
 
