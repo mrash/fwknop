@@ -74,6 +74,7 @@
 #define FKO_DEFAULT_PORT 62201
 #define MAX_IP_STR_LEN 16
 
+#define MAX_LINE_LEN    1024
 #define MAX_PATH_LEN    1024
 #define MAX_GPG_KEY_ID  128
 
@@ -82,6 +83,7 @@
 typedef struct fko_cli_options
 {
     char config_file[MAX_PATH_LEN];
+    char get_key_file[MAX_PATH_LEN];
     char spa_server_ip_str[MAX_IP_STR_LEN];
     char spoof_ip_src_str[MAX_IP_STR_LEN];
     char gpg_recipient_key[MAX_GPG_KEY_ID];

@@ -29,5 +29,6 @@
 /* Prototypes
 */
 char* getpasswd(const char *prompt);
+char* getpasswd_file(const char *pw_file, const char *dst_ip_str);
 
 #endif  /* GETPASSWD_H */

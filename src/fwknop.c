@@ -228,6 +228,12 @@ getpw(fko_cli_options_t *options, int crypt_op)
         return(options->use_gpg_agent ? ""
             : getpasswd("Enter passphrase for secret key: "));
     }
+    else if (options->get_key_file[0] != 0x0) {
+        /* grab the key/password from the --get-key file
+        */
+        return(getpasswd_file(options->get_key_file,
+                        options->spa_server_ip_str));
+    }
     else
     {
         if(crypt_op == CRYPT_OP_ENCRYPT)

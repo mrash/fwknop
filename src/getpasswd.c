@@ -27,11 +27,12 @@
 #include <signal.h>
 #include <termios.h>
 
+#include "fwknop_common.h"
 #include "getpasswd.h"
 
 #define MAX_PASS_LEN    128
 
-/* Generic hex dump function.
+/* Function for accepting password input from users
 */
 char*
 getpasswd(const char *prompt)
@@ -89,6 +90,83 @@ getpasswd(const char *prompt)
     fclose(fp);
 
     return(pwbuf);
+}
+
+/* Function for accepting password input from users
+*/
+char*
+getpasswd_file(const char *pw_file, const char *dst_ip_str)
+{
+    FILE           *pwfile_ptr;
+    unsigned int    numLines = 0, i = 0, found_dst_ip;
+
+    static char     pwbuf[MAX_PASS_LEN + 1]     = {0};
+    char            conf_line_buf[MAX_LINE_LEN] = {0};
+    char            tmp_char_buf[MAX_LINE_LEN]  = {0};
+    char           *lptr;
+
+    if ((pwfile_ptr = fopen(pw_file, "r")) == NULL)
+    {
+        fprintf(stderr, "[*] Could not open config file: %s\n", pw_file);
+        exit(EXIT_FAILURE);
+    }
+
+    while ((fgets(conf_line_buf, MAX_LINE_LEN, pwfile_ptr)) != NULL)
+    {
+        numLines++;
+        conf_line_buf[MAX_LINE_LEN-1] = '\0';
+        lptr = conf_line_buf;
+
+        memset(tmp_char_buf, 0x0, MAX_LINE_LEN);
+
+        while (*lptr == ' ' || *lptr == '\t' || *lptr == '=')
+            lptr++;
+
+        /* Get past comments and empty lines.
+        */
+        if (*lptr == '#' || *lptr == '\n' || *lptr == '\r' || *lptr == '\0' || *lptr == ';')
+            continue;
+
+        /* Look for a line like "<SPA destination IP>: <password>" - this allows
+        * multiple keys to be placed within the same file, and the client will
+        * reference the matching one for the SPA server we are contacting
+        */
+        found_dst_ip = 1;
+        for (i=0; i < strlen(dst_ip_str); i++)
+            if (*lptr++ != dst_ip_str[i])
+                found_dst_ip = 0;
+
+        if (! found_dst_ip)
+            continue;
+
+        if (*lptr == ':')
+            lptr++;
+        else
+            continue;
+
+        /* Skip whitespace until we get to the password
+        */
+        while (*lptr == ' ' || *lptr == '\t' || *lptr == '=')
+            lptr++;
+
+        i = 0;
+        while (*lptr != '\0') {
+            pwbuf[i] = *lptr;
+            lptr++;
+            i++;
+        }
+        pwbuf[i] = '\0';
+    }
+
+    fclose(pwfile_ptr);
+
+    if (pwbuf[0] == '\0') {
+        fprintf(stderr, "[*] Could not get password for IP: %s from: %s\n",
+            dst_ip_str, pw_file);
+        exit(EXIT_FAILURE);
+    }
+
+    return pwbuf;
 }
 
 /***EOF***/

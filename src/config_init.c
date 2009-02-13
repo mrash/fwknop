@@ -156,7 +156,7 @@ validate_options(fko_cli_options_t *options)
         && options->spa_server_ip_str[0] == 0x0)
     {
         fprintf(stderr,
-            "[*] Must use --Destination unless --Test mode is used\n");
+            "[*] Must use --destination unless --test mode is used\n");
         exit(1);
     }
 
@@ -209,10 +209,13 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->spoof_ip_src_str[0]  = 0x0;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "D:S:Q:p:P:ghqTvV", cmd_opts, &index)) != -1) {
+            "D:G:S:Q:p:P:ghqTvV", cmd_opts, &index)) != -1) {
         switch(cmd_arg) {
             case 'D':
                 strlcpy(options->spa_server_ip_str, optarg, MAX_IP_STR_LEN);
+                break;
+            case 'G':
+                strlcpy(options->get_key_file, optarg, MAX_PATH_LEN);
                 break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
@@ -294,7 +297,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     }
 
     /* Parse configuration file to populate any params not already specified
-     * via comman-line options
+     * via command-line options
     */
     //--DSS XXX: We will use this when we have a config file to use.
     //parse_config_file(options, &ot);
@@ -326,6 +329,7 @@ usage(void)
       " -S, --source-port       - Set the source port for outgoing SPA packet.\n"
       " -Q, --spoof-source      - Set the source IP for outgoing SPA packet.\n"
       " -q, --quiet             - Perform fwknop functions quietly.\n"
+      " -G, --get-key           - Load an encryption key/password from a file.\n"
       " -T, --test              - Build the SPA packet but do not send it over\n"
       "                           the network.\n"
       " -v, --verbose           - Set verbose mode.\n"

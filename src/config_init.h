@@ -29,8 +29,6 @@
 #include <getopt.h>
 #include <sys/stat.h>
 
-#define MAX_LINE_LEN    1024
-
 /* Long options values (for those without a short option).
 */
 enum {
@@ -52,6 +50,7 @@ static struct option cmd_opts[] =
     {"server-proto",        1, NULL, 'P'},
     {"source-port",         1, NULL, 'S'},
     {"spoof-src",           1, NULL, 'Q'},
+    {"get-key",             1, NULL, 'G'},
     {"quiet",               0, NULL, 'q'},
     {"test",                0, NULL, 'T'},
     {"verbose",             0, NULL, 'v'},
