@@ -205,20 +205,33 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     */
     options->proto = FKO_DEFAULT_PROTO;
     options->port  = FKO_DEFAULT_PORT;
+
     options->spa_server_ip_str[0] = 0x0;
     options->spoof_ip_src_str[0]  = 0x0;
+    options->spoof_user[0]        = 0x0;
+    options->access_str[0]        = 0x0;
+    options->allow_ip_str[0]      = 0x0;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "D:G:S:Q:p:P:ghqTvV", cmd_opts, &index)) != -1) {
+            "A:a:D:G:S:Q:p:P:ghqdTvVn", cmd_opts, &index)) != -1) {
         switch(cmd_arg) {
+            case 'A':
+                strlcpy(options->access_str, optarg, MAX_LINE_LEN);
+                break;
             case 'D':
                 strlcpy(options->spa_server_ip_str, optarg, MAX_IP_STR_LEN);
+                break;
+            case 'a':
+                strlcpy(options->allow_ip_str, optarg, MAX_IP_STR_LEN);
                 break;
             case 'G':
                 strlcpy(options->get_key_file, optarg, MAX_PATH_LEN);
                 break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
+                break;
+            case 'U':
+                strlcpy(options->spoof_user, optarg, MAX_USERNAME_LEN);
                 break;
             case 'p':
                 options->port = atoi(optarg);
@@ -249,8 +262,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'q':
                 options->quiet = 1;
                 break;
+            case 'n':
+                options->no_save = 1;
+                break;
             case 'T':
                 options->test = 1;
+                break;
+            case 'd':
+                options->debug = 1;
                 break;
             case 'v':
                 options->verbose = 1;
@@ -321,6 +340,8 @@ usage(void)
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -A, --access            - Provide a list of ports/protocols to open\n"
       "                           on the server.\n"
+      " -a, --allow-ip          - Specify IP address to allow within the SPA\n"
+      "                           packet.\n"
       " -D, --destination       - Specify the IP address of the fwknop server.\n"
       " -p, --server-port       - Set the destination port for outgoing SPA\n"
       "                           packet.\n"
@@ -328,10 +349,12 @@ usage(void)
       "                           outgoing SPA packet.\n"
       " -S, --source-port       - Set the source port for outgoing SPA packet.\n"
       " -Q, --spoof-source      - Set the source IP for outgoing SPA packet.\n"
+      " -U, --spoof-user        - Set the username within outgoing SPA packet.\n"
       " -q, --quiet             - Perform fwknop functions quietly.\n"
       " -G, --get-key           - Load an encryption key/password from a file.\n"
       " -T, --test              - Build the SPA packet but do not send it over\n"
       "                           the network.\n"
+      " -d, --debug             - Set debug mode.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"
       "     --digest-type       - Speciy the message digest algorithm to use.\n"

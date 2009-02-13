@@ -74,18 +74,22 @@
 #define FKO_DEFAULT_PORT 62201
 #define MAX_IP_STR_LEN 16
 
-#define MAX_LINE_LEN    1024
-#define MAX_PATH_LEN    1024
-#define MAX_GPG_KEY_ID  128
+#define MAX_LINE_LEN        1024
+#define MAX_PATH_LEN        1024
+#define MAX_GPG_KEY_ID      128
+#define MAX_USERNAME_LEN    30
 
 /* fwkop client configuration parameters and values
 */
 typedef struct fko_cli_options
 {
     char config_file[MAX_PATH_LEN];
-    char get_key_file[MAX_PATH_LEN];
+    char access_str[MAX_PATH_LEN];
+    char get_key_file[MAX_LINE_LEN];
     char spa_server_ip_str[MAX_IP_STR_LEN];
+    char allow_ip_str[MAX_IP_STR_LEN];
     char spoof_ip_src_str[MAX_IP_STR_LEN];
+    char spoof_user[MAX_USERNAME_LEN];
     char gpg_recipient_key[MAX_GPG_KEY_ID];
     char gpg_signer_key[MAX_GPG_KEY_ID];
 
@@ -100,6 +104,7 @@ typedef struct fko_cli_options
     unsigned char   quiet;   /* --quiet mode */
     unsigned char   verbose; /* --verbose mode */
     unsigned char   version; /* --version */
+    unsigned char   no_save;
     unsigned char   test;
     unsigned char   use_gpg;
     unsigned char   use_gpg_agent;

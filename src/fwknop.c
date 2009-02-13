@@ -77,7 +77,7 @@ main(int argc, char **argv)
                 res, fko_errstr(res)
             );
 
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         res = fko_set_gpg_recipient(ctx, options.gpg_recipient_key);
@@ -91,7 +91,7 @@ main(int argc, char **argv)
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
     
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         res = fko_set_gpg_signer(ctx, options.gpg_signer_key);
@@ -105,7 +105,7 @@ main(int argc, char **argv)
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -117,11 +117,11 @@ main(int argc, char **argv)
 
     /* Set a message string
     */
-    res = fko_set_spa_message(ctx, "0.0.0.0,tcp/22");
+    res = fko_set_spa_message(ctx, options.access_str);
     if(res != FKO_SUCCESS)
     {
         fprintf(stderr, "Error #%i from fko_set_spa_message: %s\n", res, fko_errstr(res));
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* Set Digest type.
@@ -136,7 +136,7 @@ main(int argc, char **argv)
                 res, fko_errstr(res)
             );
 
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -169,7 +169,7 @@ main(int argc, char **argv)
         if(IS_GPG_ERROR(res))
             fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* Display the context data.
@@ -204,7 +204,7 @@ main(int argc, char **argv)
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         if (! options.quiet) {

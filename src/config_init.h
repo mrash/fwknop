@@ -45,14 +45,19 @@ enum {
 */
 static struct option cmd_opts[] =
 {
+    {"access",              1, NULL, 'A'},
     {"destination",         1, NULL, 'D'},
+    {"allow-ip",            1, NULL, 'a'},
     {"server-port",         1, NULL, 'p'},
     {"server-proto",        1, NULL, 'P'},
     {"source-port",         1, NULL, 'S'},
     {"spoof-src",           1, NULL, 'Q'},
+    {"spoof-user",          1, NULL, 'U'},
     {"get-key",             1, NULL, 'G'},
     {"quiet",               0, NULL, 'q'},
+    {"debug",               0, NULL, 'd'},
     {"test",                0, NULL, 'T'},
+    {"no-save",             0, NULL, 'n'},
     {"verbose",             0, NULL, 'v'},
     {"version",             0, NULL, 'V'},
     {"help",                0, NULL, 'h'},
