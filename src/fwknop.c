@@ -41,6 +41,7 @@ main(int argc, char **argv)
     fko_ctx_t           ctx, ctx2;
     int                 res;
     char               *pw;
+    char                access_buf[MAX_LINE_LEN];
 
     fko_cli_options_t   options;
 
@@ -115,9 +116,11 @@ main(int argc, char **argv)
         fprintf(stderr, "Error #%i from fko_set_spa_message_type: %s\n", res, fko_errstr(res));
     */
 
-    /* Set a message string
+    /* Set a message string by combining the allow IP and the port/protocol
     */
-    res = fko_set_spa_message(ctx, options.access_str);
+    snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
+            options.allow_ip_str, ",", options.access_str);
+    res = fko_set_spa_message(ctx, access_buf);
     if(res != FKO_SUCCESS)
     {
         fprintf(stderr, "Error #%i from fko_set_spa_message: %s\n", res, fko_errstr(res));
