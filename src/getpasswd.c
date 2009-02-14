@@ -150,7 +150,7 @@ getpasswd_file(const char *pw_file, const char *dst_ip_str)
             lptr++;
 
         i = 0;
-        while (*lptr != '\0') {
+        while (*lptr != '\0' && *lptr != '\n') {
             pwbuf[i] = *lptr;
             lptr++;
             i++;
