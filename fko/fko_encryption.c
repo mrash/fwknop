@@ -100,9 +100,9 @@ _rijndael_encrypt(fko_ctx_t ctx, char *enc_key)
 int
 _rijndael_decrypt(fko_ctx_t ctx, char *dec_key, int b64_len)
 {
-    char           *tbuf;
+    char           *tbuf, *ndx;
     unsigned char  *cipher;
-    int             cipher_len, pt_len;
+    int             cipher_len, pt_len, i, err = 0;
 
     /* Now see if we need to add the "Salted__" string to the front of the
      * encrypted data.
@@ -148,12 +148,24 @@ _rijndael_decrypt(fko_ctx_t ctx, char *dec_key, int b64_len)
     */
     free(cipher);
 
-    /* The length of the decrypted data should be within 16 of the
+    /* The length of the decrypted data should be within 32 bytes of the
      * length of the encrypted version.
     */
     if(pt_len < (cipher_len - 32))
         return(FKO_ERROR_DECRYPTION_SIZE);
 
+    /* At this point we can check the data to see if we have a good
+     * decryption by ensuring the first field (16-digit random decimal
+     * value) is valid and is followed by a colon.
+    */
+    ndx = ctx->encoded_msg;
+    for(i=0; i<FKO_RAND_VAL_SIZE; i++)
+        if(!isdigit(*(ndx++)))
+            err++;
+
+    if(err > 0 || *ndx != ':')
+        return(FKO_ERROR_DECRYPTION_FAILURE);
+    
     /* Call fko_decode and return the results.
     */
     return(fko_decode_spa_data(ctx));
@@ -369,6 +381,7 @@ int
 fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
 {
     int             b64_len, res;
+    char           *ndx;
 
     /* First, make sure we have data to work with.
     */

@@ -88,6 +88,9 @@ fko_errstr(int err_code)
         case FKO_ERROR_DECRYPTION_SIZE:
             return("Unexpected or invalid size for decrypted data");
 
+        case FKO_ERROR_DECRYPTION_FAILURE:
+            return("Decryption failed or decrypted data is invalid");
+
         case FKO_ERROR_DIGEST_VERIFICATION_FAILED:
             return("The computed digest did not match the digest in the spa data");
 

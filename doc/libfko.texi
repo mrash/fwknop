@@ -1139,7 +1139,7 @@ Decryption operation failed
 
 You can use the @code{IS_GPGME_ERROR(err_code)} macro to determine whether
 or not an error id @acronym{GPGME} related.  If the macro evaluates to a
-true value, you may be able to get additioinal information about the error
+true value, you may be able to get additional information about the error
 using the following function:
 
 @cindex gpg-specific functions
