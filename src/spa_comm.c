@@ -25,6 +25,9 @@
  *****************************************************************************
 */
 #include "spa_comm.h"
+#if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+#endif
 
 /* Send the SPA data via UDP packet.
 */

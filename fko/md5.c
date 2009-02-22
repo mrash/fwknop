@@ -36,21 +36,23 @@
 */
 #include "md5.h"
 
-#ifndef HIGHFIRST
-    #define byteReverse(buf, len)    /* Nothing */
+#if BYTEORDER == 1234
+  #define byteReverse(buf, len)    /* Nothing */
+#elif BYTEORDER == 4321
+  /* Note: this code is harmless on little-endian machines.
+  */
+  void byteReverse(unsigned char *buf, unsigned longs)
+  {
+      uint32 t;
+      do {
+          t = (uint32) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
+              ((unsigned) buf[1] << 8 | buf[0]);
+          *(uint32 *) buf = t;
+          buf += 4;
+      } while (--longs);
+  }
 #else
-    /* Note: this code is harmless on little-endian machines.
-    */
-    void byteReverse(unsigned char *buf, unsigned longs)
-    {
-        uint32 t;
-        do {
-            t = (uint32) ((unsigned) buf[3] << 8 | buf[2]) << 16 |
-                ((unsigned) buf[1] << 8 | buf[0]);
-            *(uint32 *) buf = t;
-            buf += 4;
-        } while (--longs);
-    }
+  #error "Unsupported Byte Order..."
 #endif
 
 /*

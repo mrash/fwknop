@@ -24,13 +24,7 @@
 #ifndef DIGEST_H
 #define DIGEST_H 1
 
-#include <endian.h>
 #include "fko_common.h"
-
-/* This should be fine for most linux systems (hopefully).
- * TODO: We should look into the portability of this. --DSS
-*/
-#define BYTEORDER __BYTE_ORDER
 
 #include "md5.h"
 #include "sha.h"

@@ -28,7 +28,6 @@
 #ifndef SHA_H
 #define SHA_H 1
 
-#include <endian.h>
 #include "fko_common.h"
 
 /* Truncate to 32 bits -- should be a null op on 32-bit machines
@@ -36,10 +35,6 @@
 #ifndef TRUNC32
   #define TRUNC32(x)  ((x) & 0xffffffffL)
 #endif
-
-/* This should be fine for most systems (hopefully).
-*/
-#define BYTEORDER __BYTE_ORDER
 
 #define SHA_BLOCKSIZE       64
 #define SHA1_DIGESTSIZE     20

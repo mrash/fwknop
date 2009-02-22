@@ -34,27 +34,6 @@
 
 #define MD5_DIGESTSIZE 16
 
-/* The following tests optimise behaviour on little-endian
- * machines, where there is no need to reverse the byte order
- * of 32 bit words in the MD5 computation.  By default,
- * HIGHFIRST is defined, which indicates we're running on a
- * big-endian (most significant byte first) machine, on which
- * the byteReverse function in md5.c must be invoked. However,
- * byteReverse is coded in such a way that it is an identity
- * function when run on a little-endian machine, so calling it
- * on such a platform causes no harm apart from wasting time. 
- * If the platform is known to be little-endian, we speed
- * things up by undefining HIGHFIRST, which defines
- * byteReverse as a null macro.  Doing things in this manner
- * insures we work on new platforms regardless of their byte
- * order.
-*/
-#define HIGHFIRST
-
-#ifdef __i386__
-#undef HIGHFIRST
-#endif
-
 typedef struct _MD5Context {
         uint32 buf[4];
         uint32 bits[2];

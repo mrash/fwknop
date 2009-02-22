@@ -10,5 +10,9 @@ libfko_source_files = \
     strlcpy.c fko_state.h fko_context.h gpgme_funcs.c gpgme_funcs.h
 
 libfko_la_SOURCES = $(libfko_source_files)
-libfko_la_LDFLAGS = -version-info 0:1:0
+libfko_la_LDFLAGS = -version-info 0:1:0 $(GPGME_LIBS)
+
+AM_CPPFLAGS = $(GPGME_CFLAGS)
+
 include_HEADERS = fko.h
+

@@ -51,6 +51,16 @@
   #define isdigit(c) (c >= 48 && c <= 57)
 #endif
 
+/* Work out endianess (sp?)
+*/
+#if HAVE_ENDIAN_H       /* Should cover most Linux systems */
+  #include <endian.h>
+  #define BYTEORDER __BYTE_ORDER
+#elif HAVE_SYS_ENDIAN_H /* FreeBSD has a sys/endian.h */
+  #include <sys/endian.h>
+  #define BYTEORDER _BYTE_ORDER
+#endif
+
 /* Convenient macros for wrapping sections in 'extern "C" {' constructs.
 */
 #ifdef __cplusplus
