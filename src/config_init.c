@@ -280,7 +280,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'h':
                 usage();
                 exit(0);
-            case 'g':
             case FKO_DIGEST_NAME:
                 if(strncasecmp(optarg, "md5", 3) == 0)
                     options->digest_type = FKO_DIGEST_MD5;
@@ -294,6 +293,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(1);
                 }
                 break;
+            case 'g':
             case GPG_ENCRYPTION:
                 options->use_gpg = 1;
                 break;
