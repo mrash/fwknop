@@ -3,11 +3,12 @@
  *
  * File:    fwknop.h
  *
- * Author:  Michael Rash (mbr@cipherdyne.org)
+ * Author:  Damien S. Stuart (dstuart@dstuart.org)
+ *          Michael Rash (mbr@cipherdyne.org)
  *
  * Purpose: Header file for fwknop client test program.
  *
- * Copyright (C) 2009 Michael Rash (mbr@cipherdyne.org)
+ * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *
