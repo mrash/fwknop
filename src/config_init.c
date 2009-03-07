@@ -206,12 +206,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->proto = FKO_DEFAULT_PROTO;
     options->port  = FKO_DEFAULT_PORT;
 
-    options->spa_server_ip_str[0] = 0x0;
-    options->spoof_ip_src_str[0]  = 0x0;
-    options->spoof_user[0]        = 0x0;
-    options->access_str[0]        = 0x0;
-    options->allow_ip_str[0]      = 0x0;
-
     while ((cmd_arg = getopt_long(argc, argv,
             "A:a:D:G:S:Q:p:P:ghqdTvVn", cmd_opts, &index)) != -1) {
         switch(cmd_arg) {
