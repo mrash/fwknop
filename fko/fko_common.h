@@ -63,6 +63,15 @@
 #elif HAVE_SYS_ENDIAN_H /* FreeBSD has a sys/endian.h */
   #include <sys/endian.h>
   #define BYTEORDER _BYTE_ORDER
+#elif HAVE_SYS_BYTEORDER_H /* Solaris (v10 at least) seems to have this */
+  #include <sys/byteorder.h>
+  #if defined(_BIG_ENDIAN)
+    #define BYTEORDER 4321
+  #elif defined(_LITTLE_ENDIAN)
+    #define BYTEORDER 1234
+  #else
+    #error unable to determine BYTEORDER
+  #endif
 #endif
 
 /* Convenient macros for wrapping sections in 'extern "C" {' constructs.

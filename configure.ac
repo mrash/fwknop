@@ -31,7 +31,7 @@ AC_PROG_LIBTOOL
 # Checks for header files.
 #
 AC_HEADER_STDC
-AC_CHECK_HEADERS([ctype.h endian.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/endian.h sys/socket.h sys/time.h termios.h unistd.h])
+AC_CHECK_HEADERS([ctype.h endian.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/socket.h sys/time.h termios.h unistd.h])
 
 # Type checks.
 #
