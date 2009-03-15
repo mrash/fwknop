@@ -46,7 +46,7 @@
 
 /* SHA256 constants
 */
-static uint32 K[64] = {
+static uint32_t K[64] = {
     0x428a2f98L, 0x71374491L, 0xb5c0fbcfL, 0xe9b5dba5L,
     0x3956c25bL, 0x59f111f1L, 0x923f82a4L, 0xab1c5ed5L,
     0xd807aa98L, 0x12835b01L, 0x243185beL, 0x550c7dc3L,
@@ -69,8 +69,8 @@ static void
 sha256_transform(SHA_INFO *sha_info)
 {
     int i, j;
-    uint8 *dp;
-    uint32 T, T1, T2, A, B, C, D, E, F, G, H, W[64];
+    uint8_t *dp;
+    uint32_t T, T1, T2, A, B, C, D, E, F, G, H, W[64];
 
     dp = sha_info->data;
 
@@ -79,7 +79,7 @@ sha256_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 1234
 #define SWAP_DONE
     for (i = 0; i < 16; ++i) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 4;
         W[i] = 
             ((T << 24) & 0xff000000) |
@@ -91,7 +91,7 @@ sha256_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 4321
 #define SWAP_DONE
     for (i = 0; i < 16; ++i) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 4;
         W[i] = TRUNC32(T);
     }
@@ -100,7 +100,7 @@ sha256_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 12345678
 #define SWAP_DONE
     for (i = 0; i < 16; i += 2) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 8;
         W[i] =  ((T << 24) & 0xff000000) | ((T <<  8) & 0x00ff0000) |
             ((T >>  8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -113,7 +113,7 @@ sha256_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 87654321
 #define SWAP_DONE
     for (i = 0; i < 16; i += 2) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 8;
         W[i] = TRUNC32(T >> 32);
         W[i+1] = TRUNC32(T);
@@ -121,8 +121,15 @@ sha256_transform(SHA_INFO *sha_info)
 #endif
 
 #ifndef SWAP_DONE
-#error Unknown byte order -- you need to add code here
+#define SWAP_DONE
+    for (i = 0; i < 16; ++i) {
+        T = *((uint32_t *) dp);
+        dp += 4;
+        W[i] = TRUNC32(T);
+    }
+#warning Unknown byte order -- we will try LITTLE_ENDIAN
 #endif /* SWAP_DONE */
+
     A = sha_info->digest[0];
     B = sha_info->digest[1];
     C = sha_info->digest[2];
@@ -172,29 +179,29 @@ sha256_init(SHA_INFO *sha_info)
     sha_info->count_lo = 0L;
     sha_info->count_hi = 0L;
     sha_info->local = 0;
-    memset((uint8 *)sha_info->data, 0, SHA_BLOCKSIZE);
+    memset((uint8_t *)sha_info->data, 0, SHA_BLOCKSIZE);
 }
 
 /* Update the SHA digest
 */
 void
-sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count)
+sha256_update(SHA_INFO *sha_info, uint8_t *buffer, int count)
 {
     int i;
-    uint32 clo;
+    uint32_t clo;
 
-    clo = TRUNC32(sha_info->count_lo + ((uint8) count << 3));
+    clo = TRUNC32(sha_info->count_lo + ((uint8_t) count << 3));
     if (clo < sha_info->count_lo) {
         sha_info->count_hi++;
     }
     sha_info->count_lo = clo;
-    sha_info->count_hi += (uint8) count >> 29;
+    sha_info->count_hi += (uint8_t) count >> 29;
     if (sha_info->local) {
         i = SHA_BLOCKSIZE - sha_info->local;
         if (i > count) {
             i = count;
         }
-        memcpy(((uint8 *) sha_info->data) + sha_info->local, buffer, i);
+        memcpy(((uint8_t *) sha_info->data) + sha_info->local, buffer, i);
         count -= i;
         buffer += i;
         sha_info->local += i;
@@ -220,18 +227,18 @@ void
 sha256_final(SHA_INFO *sha_info)
 {
     int count;
-    uint32 lo_bit_count, hi_bit_count;
+    uint32_t lo_bit_count, hi_bit_count;
 
     lo_bit_count = sha_info->count_lo;
     hi_bit_count = sha_info->count_hi;
     count = (int) ((lo_bit_count >> 3) & 0x3f);
-    ((uint8 *) sha_info->data)[count++] = 0x80;
+    ((uint8_t *) sha_info->data)[count++] = 0x80;
     if (count > SHA_BLOCKSIZE - 8) {
-        memset(((uint8 *) sha_info->data) + count, 0, SHA_BLOCKSIZE - count);
+        memset(((uint8_t *) sha_info->data) + count, 0, SHA_BLOCKSIZE - count);
         sha256_transform(sha_info);
-        memset((uint8 *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
+        memset((uint8_t *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
     } else {
-        memset(((uint8 *) sha_info->data) + count, 0,
+        memset(((uint8_t *) sha_info->data) + count, 0,
                 SHA_BLOCKSIZE - 8 - count);
     }
     sha_info->data[56] = (hi_bit_count >> 24) & 0xff;
@@ -246,7 +253,7 @@ sha256_final(SHA_INFO *sha_info)
 }
 
 void
-sha256_unpackdigest(uint8 digest[32], SHA_INFO *sha_info)
+sha256_unpackdigest(uint8_t digest[32], SHA_INFO *sha_info)
 {
     digest[ 0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
     digest[ 1] = (unsigned char) ((sha_info->digest[0] >> 16) & 0xff);

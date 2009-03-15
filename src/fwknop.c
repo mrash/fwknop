@@ -29,11 +29,11 @@
 #include "utils.h"
 #include "getpasswd.h"
 
-/* Used be the getpw function below.
+/* Used by the get_user_pw function below.
 */
 #define CRYPT_OP_ENCRYPT 1
 #define CRYPT_OP_DECRYPT 2
-char* getpw(fko_cli_options_t *options, int crypt_op);
+char* get_user_pw(fko_cli_options_t *options, int crypt_op);
 
 int
 main(int argc, char **argv)
@@ -161,7 +161,7 @@ main(int argc, char **argv)
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
-    res = fko_spa_data_final(ctx, getpw(&options, CRYPT_OP_ENCRYPT));
+    res = fko_spa_data_final(ctx, get_user_pw(&options, CRYPT_OP_ENCRYPT));
     if(res != FKO_SUCCESS)
     {
         fprintf(stderr,
@@ -196,7 +196,7 @@ main(int argc, char **argv)
         /* Now we create a new context based on data from the first one.
         */
         res = fko_new_with_data(&ctx2, fko_get_spa_data(ctx),
-                                getpw(&options, CRYPT_OP_DECRYPT));
+                                get_user_pw(&options, CRYPT_OP_DECRYPT));
         if(res != FKO_SUCCESS)
         {
             fprintf(stderr,
@@ -224,7 +224,7 @@ main(int argc, char **argv)
 }
 
 char*
-getpw(fko_cli_options_t *options, int crypt_op)
+get_user_pw(fko_cli_options_t *options, int crypt_op)
 {
     if(options->use_gpg)
     {

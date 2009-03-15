@@ -27,7 +27,7 @@
 /* Convert a raw digest into its hex string representation.
 */
 void
-digest_to_hex(char *out, uchar *in, int size)
+digest_to_hex(char *out, unsigned char *in, int size)
 {
     int i;
     for(i=0; i<size; i++)
@@ -40,21 +40,21 @@ digest_to_hex(char *out, uchar *in, int size)
 /* Compute MD5 hash on in and store result in out.
 */
 void
-md5(uchar *out, uchar *in, int size)
+md5(unsigned char *out, unsigned char *in, int size)
 {
     MD5Context ctx;
 
     MD5Init(&ctx);
-    MD5Update(&ctx, (uchar*)in, size);
+    MD5Update(&ctx, (unsigned char*)in, size);
     MD5Final(out, &ctx);
 }
 
 /* Compute MD5 hash on in and store the hex string result in out.
 */
 void
-md5_hex(char *out, uchar *in, int size)
+md5_hex(char *out, unsigned char *in, int size)
 {
-    uint8      md[MD5_DIGESTSIZE];
+    uint8_t      md[MD5_DIGESTSIZE];
 
     md5(md, in, size);
     digest_to_hex(out, md, MD5_DIGESTSIZE);
@@ -63,9 +63,9 @@ md5_hex(char *out, uchar *in, int size)
 /* Compute MD5 hash on in and store the base64 string result in out.
 */
 void
-md5_base64(char *out, uchar *in, int size)
+md5_base64(char *out, unsigned char *in, int size)
 {
-    uint8      md[MD5_DIGESTSIZE];
+    uint8_t      md[MD5_DIGESTSIZE];
 
     md5(md, in, size);
     b64_encode(md, out, MD5_DIGESTSIZE);
@@ -76,21 +76,21 @@ md5_base64(char *out, uchar *in, int size)
 /* Compute SHA1 hash on in and store result in out.
 */
 void
-sha1(uchar *out, uchar *in, int size)
+sha1(unsigned char *out, unsigned char *in, int size)
 {
     SHA_INFO    sha_info;
 
     sha1_init(&sha_info);
-    sha1_update(&sha_info, (uint8*)in, size);
+    sha1_update(&sha_info, (uint8_t*)in, size);
     sha1_final(out, &sha_info);
 }
 
 /* Compute SHA1 hash on in and store the hex string result in out.
 */
 void
-sha1_hex(char *out, uchar *in, int size)
+sha1_hex(char *out, unsigned char *in, int size)
 {
-    uint8       md[SHA1_DIGESTSIZE];
+    uint8_t       md[SHA1_DIGESTSIZE];
 
     sha1(md, in, size);
     digest_to_hex(out, md, SHA1_DIGESTSIZE);
@@ -99,9 +99,9 @@ sha1_hex(char *out, uchar *in, int size)
 /* Compute SHA1 hash on in and store the base64 string result in out.
 */
 void
-sha1_base64(char *out, uchar *in, int size)
+sha1_base64(char *out, unsigned char *in, int size)
 {
-    uint8       md[SHA1_DIGESTSIZE];
+    uint8_t       md[SHA1_DIGESTSIZE];
 
     sha1(md, in, size);
     b64_encode(md, out, SHA1_DIGESTSIZE);
@@ -112,12 +112,12 @@ sha1_base64(char *out, uchar *in, int size)
 /* Compute SHA256 hash on in and store the hex string result in out.
 */
 void
-sha256(uchar *out, uchar *in, int size)
+sha256(unsigned char *out, unsigned char *in, int size)
 {
     SHA_INFO    sha_info;
 
     sha256_init(&sha_info);
-    sha256_update(&sha_info, (uint8*)in, size);
+    sha256_update(&sha_info, (uint8_t*)in, size);
     sha256_final(&sha_info);
     sha256_unpackdigest(out, &sha_info);
 }
@@ -125,9 +125,9 @@ sha256(uchar *out, uchar *in, int size)
 /* Compute SHA256 hash on in and store the hex string result in out.
 */
 void
-sha256_hex(char *out, uchar *in, int size)
+sha256_hex(char *out, unsigned char *in, int size)
 {
-    uint8       md[SHA256_DIGESTSIZE];
+    uint8_t       md[SHA256_DIGESTSIZE];
 
     sha256(md, in, size);
     digest_to_hex(out, md, SHA256_DIGESTSIZE);
@@ -136,9 +136,9 @@ sha256_hex(char *out, uchar *in, int size)
 /* Compute SHA256 hash on in and store the base64 string result in out.
 */
 void
-sha256_base64(char *out, uchar *in, int size)
+sha256_base64(char *out, unsigned char *in, int size)
 {
-    uint8       md[SHA256_DIGESTSIZE];
+    uint8_t       md[SHA256_DIGESTSIZE];
 
     sha256(md, in, size);
     b64_encode(md, out, SHA256_DIGESTSIZE);

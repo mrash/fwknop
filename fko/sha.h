@@ -41,23 +41,23 @@
 #define SHA256_DIGESTSIZE   32
 
 typedef struct {
-    uint32  digest[8];
-    uint32  count_lo, count_hi;
-    uint8   data[SHA_BLOCKSIZE];
-    int     local;
+    uint32_t    digest[8];
+    uint32_t    count_lo, count_hi;
+    uint8_t     data[SHA_BLOCKSIZE];
+    int         local;
 } SHA_INFO;
 
 /* SHA1 prototypes.
 */
 void sha1_init(SHA_INFO *sha_info);
-void sha1_update(SHA_INFO *sha_info, uint8 *buffer, int count);
-void sha1_final(uint8 digest[SHA1_DIGESTSIZE], SHA_INFO *sha_info);
+void sha1_update(SHA_INFO *sha_info, uint8_t *buffer, int count);
+void sha1_final(uint8_t digest[SHA1_DIGESTSIZE], SHA_INFO *sha_info);
 
 /* SHA256 prototypes.
 */
 void sha256_init(SHA_INFO *sha_info);
-void sha256_update(SHA_INFO *sha_info, uint8 *buffer, int count);
+void sha256_update(SHA_INFO *sha_info, uint8_t *buffer, int count);
 void sha256_final(SHA_INFO *sha_info);
-void sha256_unpackdigest(uint8 digest[SHA256_DIGESTSIZE], SHA_INFO *sha_info);
+void sha256_unpackdigest(uint8_t digest[SHA256_DIGESTSIZE], SHA_INFO *sha_info);
 
 #endif /* SHA_H */

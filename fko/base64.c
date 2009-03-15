@@ -24,7 +24,7 @@
 */
 #include "base64.h"
 
-static uchar map2[] =
+static unsigned char map2[] =
 {
     0x3e, 0xff, 0xff, 0xff, 0x3f, 0x34, 0x35, 0x36,
     0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0xff,
@@ -39,10 +39,10 @@ static uchar map2[] =
 };
 
 int
-b64_decode(char *in, uchar *out, int out_len)
+b64_decode(char *in, unsigned char *out, int out_len)
 {
     int i, v;
-    uchar *dst = out;
+    unsigned char *dst = out;
 
     v = 0;
     for (i = 0; in[i] && in[i] != '='; i++) {
@@ -69,7 +69,7 @@ b64_decode(char *in, uchar *out, int out_len)
  *****************************************************************************
 */
 int
-b64_encode(uchar *in, char *out, int in_len)
+b64_encode(unsigned char *in, char *out, int in_len)
 {
     static const char b64[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

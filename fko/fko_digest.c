@@ -85,7 +85,7 @@ fko_set_spa_digest(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
             md5_base64(md,
-                (uchar*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;    
 
         case FKO_DIGEST_SHA1:
@@ -94,7 +94,7 @@ fko_set_spa_digest(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
             sha1_base64(md,
-                (uchar*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;    
 
         case FKO_DIGEST_SHA256:
@@ -103,7 +103,7 @@ fko_set_spa_digest(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
             sha256_base64(md,
-                (uchar*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;    
 
         default:

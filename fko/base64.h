@@ -28,8 +28,8 @@
 
 /* Prototypes
 */
-int b64_encode(uchar *in, char *out, int in_len);
-int b64_decode(char *in, uchar *out, int out_len);
+int b64_encode(unsigned char *in, char *out, int in_len);
+int b64_decode(char *in, unsigned char *out, int out_len);
 void strip_b64_eq(char *data);
 
 #endif /* BASE64_H */

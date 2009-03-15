@@ -65,8 +65,8 @@ void
 sha1_transform(SHA_INFO *sha_info)
 {
     int i;
-    uint8 *dp;
-    uint32 T, A, B, C, D, E, W[80], *WP;
+    uint8_t *dp;
+    uint32_t T, A, B, C, D, E, W[80], *WP;
 
     dp = sha_info->data;
 
@@ -75,7 +75,7 @@ sha1_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 1234
 #define SWAP_DONE
     for (i = 0; i < 16; ++i) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 4;
         W[i] = 
             ((T << 24) & 0xff000000) |
@@ -87,7 +87,7 @@ sha1_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 4321
 #define SWAP_DONE
     for (i = 0; i < 16; ++i) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 4;
         W[i] = TRUNC32(T);
     }
@@ -96,7 +96,7 @@ sha1_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 12345678
 #define SWAP_DONE
     for (i = 0; i < 16; i += 2) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 8;
         W[i] =  ((T << 24) & 0xff000000) | ((T <<  8) & 0x00ff0000) |
             ((T >>  8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);
@@ -109,7 +109,7 @@ sha1_transform(SHA_INFO *sha_info)
 #if BYTEORDER == 87654321
 #define SWAP_DONE
     for (i = 0; i < 16; i += 2) {
-        T = *((uint32 *) dp);
+        T = *((uint32_t *) dp);
         dp += 8;
         W[i] = TRUNC32(T >> 32);
         W[i+1] = TRUNC32(T);
@@ -117,7 +117,13 @@ sha1_transform(SHA_INFO *sha_info)
 #endif
 
 #ifndef SWAP_DONE
-#error Unknown byte order -- you need to add code here
+#define SWAP_DONE
+    for (i = 0; i < 16; ++i) {
+        T = *((uint32_t *) dp);
+        dp += 4;
+        W[i] = TRUNC32(T);
+    }
+#warning Unknown byte order -- we will try LITTLE_ENDIAN
 #endif /* SWAP_DONE */
 
     for (i = 16; i < 80; ++i) {
@@ -186,23 +192,23 @@ sha1_init(SHA_INFO *sha_info)
 /* update the SHA digest */
 
 void
-sha1_update(SHA_INFO *sha_info, uint8 *buffer, int count)
+sha1_update(SHA_INFO *sha_info, uint8_t *buffer, int count)
 {
     int i;
-    uint32 clo;
+    uint32_t clo;
 
-    clo = T32(sha_info->count_lo + ((uint32) count << 3));
+    clo = T32(sha_info->count_lo + ((uint32_t) count << 3));
     if (clo < sha_info->count_lo) {
     ++sha_info->count_hi;
     }
     sha_info->count_lo = clo;
-    sha_info->count_hi += (uint32) count >> 29;
+    sha_info->count_hi += (uint32_t) count >> 29;
     if (sha_info->local) {
     i = SHA_BLOCKSIZE - sha_info->local;
     if (i > count) {
         i = count;
     }
-    memcpy(((uint8 *) sha_info->data) + sha_info->local, buffer, i);
+    memcpy(((uint8_t *) sha_info->data) + sha_info->local, buffer, i);
     count -= i;
     buffer += i;
     sha_info->local += i;
@@ -251,31 +257,31 @@ sha1_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
 
 /* finish computing the SHA digest */
 void
-sha1_final(uint8 digest[20], SHA_INFO *sha_info)
+sha1_final(uint8_t digest[20], SHA_INFO *sha_info)
 {
     int count;
-    uint32 lo_bit_count, hi_bit_count;
+    uint32_t lo_bit_count, hi_bit_count;
 
     lo_bit_count = sha_info->count_lo;
     hi_bit_count = sha_info->count_hi;
     count = (int) ((lo_bit_count >> 3) & 0x3f);
-    ((uint8 *) sha_info->data)[count++] = 0x80;
+    ((uint8_t *) sha_info->data)[count++] = 0x80;
     if (count > SHA_BLOCKSIZE - 8) {
-    memset(((uint8 *) sha_info->data) + count, 0, SHA_BLOCKSIZE - count);
+    memset(((uint8_t *) sha_info->data) + count, 0, SHA_BLOCKSIZE - count);
     sha1_transform(sha_info);
-    memset((uint8 *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
+    memset((uint8_t *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
     } else {
-    memset(((uint8 *) sha_info->data) + count, 0,
+    memset(((uint8_t *) sha_info->data) + count, 0,
         SHA_BLOCKSIZE - 8 - count);
     }
-    sha_info->data[56] = (uint8)((hi_bit_count >> 24) & 0xff);
-    sha_info->data[57] = (uint8)((hi_bit_count >> 16) & 0xff);
-    sha_info->data[58] = (uint8)((hi_bit_count >>  8) & 0xff);
-    sha_info->data[59] = (uint8)((hi_bit_count >>  0) & 0xff);
-    sha_info->data[60] = (uint8)((lo_bit_count >> 24) & 0xff);
-    sha_info->data[61] = (uint8)((lo_bit_count >> 16) & 0xff);
-    sha_info->data[62] = (uint8)((lo_bit_count >>  8) & 0xff);
-    sha_info->data[63] = (uint8)((lo_bit_count >>  0) & 0xff);
+    sha_info->data[56] = (uint8_t)((hi_bit_count >> 24) & 0xff);
+    sha_info->data[57] = (uint8_t)((hi_bit_count >> 16) & 0xff);
+    sha_info->data[58] = (uint8_t)((hi_bit_count >>  8) & 0xff);
+    sha_info->data[59] = (uint8_t)((hi_bit_count >>  0) & 0xff);
+    sha_info->data[60] = (uint8_t)((lo_bit_count >> 24) & 0xff);
+    sha_info->data[61] = (uint8_t)((lo_bit_count >> 16) & 0xff);
+    sha_info->data[62] = (uint8_t)((lo_bit_count >>  8) & 0xff);
+    sha_info->data[63] = (uint8_t)((lo_bit_count >>  0) & 0xff);
     sha1_transform_and_copy(digest, sha_info);
 }
 

@@ -29,11 +29,13 @@
 
 #include "fko_common.h"
 
+#if 0
+
 #ifdef _CRYPT_RIJNDAEL_H_TYPES
 	#undef _CRYPT_RIJNDAEL_H_TYPES
 #endif
 
-/* Irix. We could include stdint.h and use uint8_t but that also
+/* Irix. We could include stdint.h and use uint8_t_t but that also
  * requires that we specifically drive the compiler in C99 mode.
  * Defining UINT8 as unsigned char is, ultimately, what stdint.h
  * would do anyway.
@@ -51,7 +53,7 @@
 #if defined( __sun__ ) || defined( __sun )
 	#define _CRYPT_RIJNDAEL_H_TYPES
 	typedef uint32_t UINT32;
-	typedef uint8_t  UINT8;
+	typedef uint8_t_t  UINT8;
 #endif
 
 /* Mac OS X 10.3 defines things differently than most other 
@@ -74,7 +76,7 @@ systems */
 #if ! defined(_CRYPT_RIJNDAEL_H_TYPES) && ( defined(_SYS_TYPES_H) || defined(_SYS_TYPES_H_) )   
 	#define _CRYPT_RIJNDAEL_H_TYPES
 	typedef __uint32_t UINT32;
-	typedef __uint8_t  UINT8;
+	typedef __uint8_t_t  UINT8;
 #endif
 
 #if defined(__CYGWIN__) && ! defined(_CRYPT_RIJNDAEL_H_TYPES)
@@ -101,6 +103,8 @@ systems */
 	typedef unsigned char UINT8;
 #endif	
 
+#endif // #if 0
+
 /* Other block sizes and key lengths are possible, but in the context of
  * the ssh protocols, 256 bits is the default. 
  */
@@ -120,14 +124,14 @@ systems */
 #define RIJNDAEL_MAX_KEYSIZE 32
 
 typedef struct {
-  UINT32 keys[60];		/* maximum size of key schedule */
-  UINT32 ikeys[60];		/* inverse key schedule */
+  uint32_t keys[60];		/* maximum size of key schedule */
+  uint32_t ikeys[60];		/* inverse key schedule */
   int nrounds;			/* number of rounds to use for our key size */
   int mode;			    /* encryption mode */
   /* Added by DSS */
-  uint8 key[32];
-  uint8 iv[16];
-  uint8 salt[8];
+  uint8_t key[32];
+  uint8_t iv[16];
+  uint8_t salt[8];
 } RIJNDAEL_context;
 
 /* This basically performs Rijndael's key scheduling algorithm, as it's the
@@ -139,7 +143,7 @@ typedef struct {
  * PASS A VALUE LESS THAN 16 TO KEYSIZE! 
  */
 void
-rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const UINT8 *key);
+rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const uint8_t *key);
 
 /*
  * rijndael_encrypt()
@@ -155,8 +159,8 @@ rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const UINT8 *key);
 
 void
 rijndael_encrypt(RIJNDAEL_context *context,
-		 const UINT8 *plaintext,
-		 UINT8 *ciphertext);
+		 const uint8_t *plaintext,
+		 uint8_t *ciphertext);
 
 /*
  * rijndael_decrypt()
@@ -173,18 +177,17 @@ rijndael_encrypt(RIJNDAEL_context *context,
 
 void
 rijndael_decrypt(RIJNDAEL_context *context,
-		 const UINT8 *ciphertext,
-		 UINT8 *plaintext);
+		 const uint8_t *ciphertext,
+		 uint8_t *plaintext);
 
 /* Encrypt a block of plaintext in a mode specified in the context */
 void
-block_encrypt(RIJNDAEL_context *ctx, UINT8 *input, int inputlen,
-	      UINT8 *output, UINT8 *iv);
+block_encrypt(RIJNDAEL_context *ctx, uint8_t *input, int inputlen,
+	      uint8_t *output, uint8_t *iv);
 
 /* Decrypt a block of plaintext in a mode specified in the context */
 void
-block_decrypt(RIJNDAEL_context *ctx, UINT8 *input, int inputlen,
-	      UINT8 *output, UINT8 *iv);
-
+block_decrypt(RIJNDAEL_context *ctx, uint8_t *input, int inputlen,
+	      uint8_t *output, uint8_t *iv);
 
 #endif /* RIJNDAEL_H */

@@ -34,15 +34,15 @@
 #define MD_HEX_SIZE(x) x * 2
 #define MD_B64_SIZE(x) ((x * 4) / 3) + 1
 
-void md5(uchar* out, uchar* in, int size);
-void md5_hex(char* out, uchar* in, int size);
-void md5_base64(char* out, uchar* in, int size);
-void sha1(uchar* out, uchar* in, int size);
-void sha1_hex(char* out, uchar* in, int size);
-void sha1_base64(char* out, uchar* in, int size);
-void sha256(uchar* out, uchar* in, int size);
-void sha256_hex(char* out, uchar* in, int size);
-void sha256_base64(char* out, uchar* in, int size);
+void md5(unsigned char* out, unsigned char* in, int size);
+void md5_hex(char* out, unsigned char* in, int size);
+void md5_base64(char* out, unsigned char* in, int size);
+void sha1(unsigned char* out, unsigned char* in, int size);
+void sha1_hex(char* out, unsigned char* in, int size);
+void sha1_base64(char* out, unsigned char* in, int size);
+void sha256(unsigned char* out, unsigned char* in, int size);
+void sha256_hex(char* out, unsigned char* in, int size);
+void sha256_base64(char* out, unsigned char* in, int size);
 
 #endif /* DIGEST_H */
 

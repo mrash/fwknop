@@ -45,10 +45,14 @@
 #endif
 
 #if HAVE_CTYPE_H
-  #include <ctype.h> /* Using this if isdigit() */
+  #include <ctype.h> /* Using this for isdigit() */
 #else
   /* Fall-back does not account for locale */
   #define isdigit(c) (c >= 48 && c <= 57)
+#endif
+
+#if HAVE_STDINT_H
+  #include <stdint.h>
 #endif
 
 /* Work out endianess (sp?)
@@ -77,7 +81,6 @@
   #include <gpgme.h>
 #endif
 
-#include "fko_types.h"
 #include "fko_util.h"
 #include "fko_limits.h"
 #include "fko_state.h"

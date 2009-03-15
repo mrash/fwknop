@@ -31,22 +31,18 @@ AC_PROG_LIBTOOL
 # Checks for header files.
 #
 AC_HEADER_STDC
-AC_CHECK_HEADERS([ctype.h endian.h netinet/in.h stdlib.h string.h strings.h sys/endian.h sys/socket.h sys/time.h termios.h unistd.h])
+AC_CHECK_HEADERS([ctype.h endian.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/endian.h sys/socket.h sys/time.h termios.h unistd.h])
 
 # Type checks.
 #
 AC_C_CONST
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_TYPE_INT8_T
-AC_TYPE_SIZE_T
 AC_HEADER_TIME
-AC_TYPE_UINT32_T
-AC_TYPE_UINT8_T
 AC_CHECK_SIZEOF(unsigned int)
+AC_CHECK_TYPES([uint8_t, uint32_t])
+
+AC_C_BIGENDIAN
 
 # Checks for library functions.
 #
@@ -54,6 +50,9 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STAT
 AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn])
+
+AC_SEARCH_LIBS([socket], [socket])
+AC_SEARCH_LIBS([inet_addr], [nsl])
 
 dnl For finding and checking gpgme (taken from the gpgme.m4 file that
 dnl  comes with gpgme)
