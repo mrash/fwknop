@@ -548,7 +548,7 @@ is returned.
 @end deftypefun
 
 @noindent
-The most common case...
+The most common (simple) case...
 
 @example
 fko_ctx_t   ctx;
@@ -570,7 +570,9 @@ if(rc != FKO_SUCCESS)
 
 @noindent
 Or, perhaps you need to defer decryption and parsing to a later point
-in the program...
+in the program.  We could use fko_new_with_data(), passing NULL for the
+decryption key, or we could use fko_new() to create an empty context,
+then use fko_set_spa_data() to add the encypted data (see code in comments).
 
 @example
 fko_ctx_t   ctx;
@@ -589,9 +591,19 @@ if(rc != FKO_SUCCESS)
     exit(1);
 @}
 
-/* Assume we called other code and functions...
+/* We could also just create and empty context and add the
+ * encrypted data as follows:
+ *
+ * rc = fko_new(&ctx);
+ * ... check rc ...
+ * rc = fko_set_spa_data(ctx, spa_data);
+ * ...
 */
 
+/* Assume we called other code and functions...  */
+
+/* Decrypt and decode...
+*/
 rc = fko_decrypt_spa_data(ctx, key);
 
 if(rc != FKO_SUCCESS)
@@ -831,6 +843,13 @@ as it will be called automatically by other functions during normal
 processing (most notably @code{fko_spa_data_final}).
 @end deftypefun
 
+@deftypefun int fko_set_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*enc_data}});
+This function is used to place encrypted @acronym{SPA} data into a newly
+created empty context (i.e. with @code{fko_new}). In most cases, you would
+use @code{fko_new_with_data} so you wouldn't have to take the extra step to
+use this function.  However, some may find a reason to do it in this way.
+@end deftypefun
+
 @cindex gpg-specific functions
 @noindent
 @emph{GPG-specific functions:}
@@ -845,6 +864,11 @@ recipients are not supported.
 @deftypefun int fko_set_gpg_signer (@w{fko_ctx_t @var{ctx}, const char @var{signer}});
 Sets the @acronym{GPG} key for signing the data.  This would be the sender's
 key used to sign the @acronym{SPA} data. You can use the user name or key ID.
+@end deftypefun
+
+@deftypefun int fko_set_gpg_home_dir (@w{fko_ctx_t @var{ctx}, const char @var{home_dir}});
+Sets the @acronym{GPG} home directory for the current gpgme context.  This
+allows for using alternate keyrings, gpg configurations, etc.
 @end deftypefun
 
 @noindent
@@ -968,9 +992,15 @@ Returns a pointer to the string containing the @acronym{GPG} key for the
 signer of the @acronym{SPA} data (as set with @emph{fko_set_gpg_signer}).
 @end deftypefun
 
+@deftypefun char* fko_get_gpg_home_dir (@w{fko_ctx_t @var{ctx}});
+Returns a pointer to the string containing the current @acronym{GPG}
+home directory.
+@end deftypefun
+
 @noindent
-@strong{Note}:  On a libfko build without @acronym{GPG} support, the
-GPG-related functions above will simply return NULL.
+@strong{Note}:  The GPG-related functions above will return NULL if the
+value was not previously set, or the current libfko build does not have
+@acronym{GPG} support.
 
 @node Utility Functions
 @section Utility Functions
@@ -1077,10 +1107,10 @@ Invalid SPA nat_access mesage format
 Invalid encryption type
 @item FKO_ERROR_WRONG_ENCRYPTION_TYPE
 Wrong or inappropriate encryption type for this operation
-@item FKO_ERROR_MISSING_GPG_KEY_DATA
-Missing GPG key data (signer or recipient not set)
 @item FKO_ERROR_DECRYPTION_SIZE
 Unexpected or invalid size for decrypted data
+@item FKO_ERROR_DECRYPTION_FAILURE
+Decryption failed or decrypted data is invalid
 @item FKO_ERROR_DIGEST_VERIFICATION_FAILED
 The computed digest did not match the digest in the spa data
 @item FKO_ERROR_UNSUPPORTED_FEATURE
@@ -1100,6 +1130,8 @@ These are:
 
 @deftypevar int error_code (gpgme support only)
 @table @code
+@item FKO_ERROR_MISSING_GPG_KEY_DATA
+Missing GPG key data (signer or recipient not set)
 @item FKO_ERROR_GPGME_NO_OPENPGP
 This GPGME implementation does not support OpenPGP
 @item FKO_ERROR_GPGME_CONTEXT
@@ -1134,6 +1166,11 @@ The key for the given recipient was not found
 Ambiguous name/id for the recipient key (mulitple matches)
 @item FKO_ERROR_GPGME_DECRYPT_FAILED
 Decryption operation failed
+@item FKO_ERROR_GPGME_BAD_HOME_DIR
+Unable to stat the given GPG home directory
+@item FKO_ERROR_GPGME_SET_HOME_DIR
+Unable to set the given GPG home directory
+
 @end table
 @end deftypevar
 

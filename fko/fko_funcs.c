@@ -152,9 +152,11 @@ fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
 {
     fko_ctx_t   ctx;
 
-    ctx = calloc(1, sizeof *ctx);
-    if(ctx == NULL)
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+    int res = fko_new(r_ctx);
+    if(res != FKO_SUCCESS)
+        return res;
+
+    ctx = *r_ctx;
 
     /* First, add the data to the context.
     */
@@ -165,10 +167,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
-    FKO_SET_CTX_INITIALIZED(ctx);
-
-    *r_ctx = ctx;
-
+    /* If a decryption password is provided, go ahead and decrypt and
+     * decode.
+    */
     if(dec_key != NULL)
         return(fko_decrypt_spa_data(ctx, dec_key));
 
@@ -281,6 +282,25 @@ fko_get_spa_data(fko_ctx_t ctx)
         return(ctx->encrypted_msg+10);
 
     return(ctx->encrypted_msg); 
+}
+
+/* Return the fko SPA encrypted data.
+*/
+int
+fko_set_spa_data(fko_ctx_t ctx, char *enc_msg)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return NULL;
+
+    /* First, add the data to the context.
+    */
+    ctx->encrypted_msg = strdup(enc_msg);
+    if(ctx->encrypted_msg == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    return(FKO_SUCCESS); 
 }
 
 /***EOF***/

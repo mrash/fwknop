@@ -31,9 +31,15 @@
 #include "gpgme_funcs.h"
 
 int
-init_gpgme(void)
+init_gpgme(fko_ctx_t fko_ctx)
 {
-    gpgme_error_t err;
+    gpgme_engine_info_t eng_info;
+    gpgme_error_t       err;
+
+    /* If we already have a context, we are done.
+    */
+    if(fko_ctx->have_gpgme_context)
+        return(FKO_SUCCESS);
 
     /* Because the gpgme manual says you should.
     */
@@ -45,8 +51,43 @@ init_gpgme(void)
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
         /* GPG engine is not available. */
+        fko_ctx->gpg_err = err;
         return(FKO_ERROR_GPGME_NO_OPENPGP);
     }
+
+    /* Create our gpgme context
+    */
+    err = gpgme_new(&(fko_ctx->gpg_ctx));
+    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    {
+        fko_ctx->gpg_err = err;
+        return(FKO_ERROR_GPGME_CONTEXT);
+    }
+
+    /* Extract the current gpgme engine information.
+    */
+    eng_info = gpgme_ctx_get_engine_info(fko_ctx->gpg_ctx);
+
+    /* If a gpg_home_dir was not given or the given dir does not
+     * match what we already have, then add the new dir to the context.
+    */
+    if(fko_ctx->gpg_home_dir != NULL)
+    {
+        err = gpgme_ctx_set_engine_info(
+            fko_ctx->gpg_ctx,
+            eng_info->protocol,
+            eng_info->file_name,
+            fko_ctx->gpg_home_dir
+        );
+
+        if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+        {
+            fko_ctx->gpg_err = err;
+            return(FKO_ERROR_GPGME_SET_HOME_DIR);
+        }
+    }
+
+    fko_ctx->have_gpgme_context = 1;
 
     return(FKO_SUCCESS);
 }
@@ -75,6 +116,7 @@ passphrase_cb(
 int
 get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
 {
+    int             res;
     const char     *name;
 
     gpgme_ctx_t     list_ctx    = NULL;
@@ -84,16 +126,18 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
 
     /* Create a gpgme context for the list
     */
-    err = gpgme_new(&list_ctx);
-    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+    /* Initialize gpgme
+    */
+    res = init_gpgme(fko_ctx);
+    if(res != FKO_SUCCESS)
     {
-        fko_ctx->gpg_err = err;
-
         if(signer)
             return(FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY);
         else
             return(FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY);
     }
+
+    list_ctx = fko_ctx->gpg_ctx;
 
     if(signer)
         name = fko_ctx->gpg_signer;
@@ -120,8 +164,6 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
     {
         /* Key not found
         */
-        gpgme_release(list_ctx);
-
         fko_ctx->gpg_err = err;
 
         if(signer)
@@ -140,7 +182,6 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
         */
         gpgme_key_unref(key);
         gpgme_key_unref(key2);
-        gpgme_release(list_ctx);
 
         fko_ctx->gpg_err = err;
 
@@ -155,8 +196,6 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
     gpgme_key_unref(key2);
 
     *mykey = key;
-
-    gpgme_release(list_ctx);
 
     return(FKO_SUCCESS);
 }
@@ -177,19 +216,9 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
 
     /* Initialize gpgme
     */
-    res = init_gpgme();
+    res = init_gpgme(fko_ctx);
     if(res != FKO_SUCCESS)
         return(res);
-
-    /* Create our gpgme context
-    */
-    err = gpgme_new(&(fko_ctx->gpg_ctx));
-    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
-    {
-        fko_ctx->gpg_err = err;
-
-        return(FKO_ERROR_GPGME_CONTEXT);
-    }
 
     gpg_ctx = fko_ctx->gpg_ctx;
 
@@ -298,7 +327,6 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     }
 
     gpgme_free(tmp_buf);
-    //gpgme_release(gpg_ctx);
 
     return(res);
 }
@@ -318,19 +346,9 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
 
     /* Initialize gpgme
     */
-    res = init_gpgme();
+    res = init_gpgme(fko_ctx);
     if(res != FKO_SUCCESS)
         return(res);
-
-    /* Create our gpgme context
-    */
-    err = gpgme_new(&(fko_ctx->gpg_ctx));
-    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
-    {
-        fko_ctx->gpg_err = err;
-
-        return(FKO_ERROR_GPGME_CONTEXT);
-    }
 
     gpg_ctx = fko_ctx->gpg_ctx;
 
@@ -403,7 +421,6 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     }
 
     gpgme_free(tmp_buf);
-    //gpgme_release(gpg_ctx);
 
     return(res);
 }

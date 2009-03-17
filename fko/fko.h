@@ -82,7 +82,6 @@ typedef enum {
     FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG,
     FKO_ERROR_INVALID_ENCRYPTION_TYPE,
     FKO_ERROR_WRONG_ENCRYPTION_TYPE,
-    FKO_ERROR_MISSING_GPG_KEY_DATA,
     FKO_ERROR_DECRYPTION_SIZE,
     FKO_ERROR_DECRYPTION_FAILURE,
     FKO_ERROR_DIGEST_VERIFICATION_FAILED,
@@ -91,6 +90,7 @@ typedef enum {
 
     /* Start GPGME-related errors */
     GPGME_ERR_START,
+    FKO_ERROR_MISSING_GPG_KEY_DATA,
     FKO_ERROR_GPGME_NO_OPENPGP,
     FKO_ERROR_GPGME_CONTEXT,
     FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ,
@@ -108,6 +108,8 @@ typedef enum {
     FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND,
     FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS,
     FKO_ERROR_GPGME_DECRYPT_FAILED,
+    FKO_ERROR_GPGME_BAD_HOME_DIR,
+    FKO_ERROR_GPGME_SET_HOME_DIR,
 
     FKO_LAST_ERROR
 } fko_error_codes_t;
@@ -136,7 +138,6 @@ int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, char *dec_key);
 void fko_destroy(fko_ctx_t ctx);
 int fko_spa_data_final(fko_ctx_t ctx, char *enc_key);
 
-char* fko_get_spa_data(fko_ctx_t ctx);
 
 /* Set context data functions */
 int fko_set_rand_value(fko_ctx_t ctx, const char *val);
@@ -150,6 +151,7 @@ int fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout);
 int fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type);
 int fko_set_spa_digest(fko_ctx_t ctx);
 int fko_set_spa_encryption_type(fko_ctx_t ctx, short encrypt_type);
+int fko_set_spa_data(fko_ctx_t ctx, char *enc_msg);
 
 /* Data processing and misc utility functions */
 const char* fko_errstr(int err_code);
@@ -172,6 +174,7 @@ int fko_get_spa_client_timeout(fko_ctx_t ctx);
 short fko_get_spa_digest_type(fko_ctx_t ctx);
 char* fko_get_spa_digest(fko_ctx_t ctx);
 short fko_get_spa_encryption_type(fko_ctx_t ctx);
+char* fko_get_spa_data(fko_ctx_t ctx);
 
 char* fko_version(fko_ctx_t ctx);
 
@@ -180,6 +183,8 @@ int fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip);
 char* fko_get_gpg_recipient(fko_ctx_t ctx);
 int fko_set_gpg_signer(fko_ctx_t ctx, const char *signer);
 char* fko_get_gpg_signer(fko_ctx_t ctx);
+int fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir);
+char* fko_get_gpg_home_dir(fko_ctx_t ctx);
 const char* fko_gpg_errorstr(fko_ctx_t ctx);
 
 #endif /* FKO_H */

@@ -30,6 +30,9 @@
 
 #if HAVE_LIBGPGME
   #include "gpgme_funcs.h"
+  #if HAVE_SYS_STAT_H
+    #include <sys/stat.h>
+  #endif
 #endif
 
 #define B64_RIJNDAEL_SALT "U2FsdGVkX1"
@@ -533,6 +536,55 @@ fko_get_gpg_signer(fko_ctx_t ctx)
         return(NULL);
 
     return(ctx->gpg_signer);
+#else
+    //--DSS we should make this an error
+    return(NULL);
+#endif  /* HAVE_LIBGPGME */
+}
+
+/* Set the GPG home dir.
+*/
+int
+fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir)
+{
+#if HAVE_LIBGPGME
+    struct stat     st;
+
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* If we are unable to stat the given dir, then return with error.
+    */
+    if(stat(gpg_home_dir, &st) != 0)
+        return(FKO_ERROR_GPGME_BAD_HOME_DIR);
+
+    if(!S_ISDIR(st.st_mode)) 
+        return(FKO_ERROR_GPGME_BAD_HOME_DIR);
+
+    ctx->gpg_home_dir = strdup(gpg_home_dir);
+    if(ctx->gpg_home_dir == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+/* Get the GPG home dir.
+*/
+char*
+fko_get_gpg_home_dir(fko_ctx_t ctx)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(NULL);
+
+    return(ctx->gpg_home_dir);
 #else
     //--DSS we should make this an error
     return(NULL);

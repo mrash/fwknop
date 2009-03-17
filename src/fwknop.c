@@ -81,6 +81,23 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
+        /* If a GPG home dir was specified, set it here.  Note: Setting
+         * this has to occur before calling any of the other GPG-related
+         * functions.
+        */
+        if(options.gpg_home_dir != NULL && strlen(options.gpg_home_dir) > 0)
+        {
+            res = fko_set_gpg_home_dir(ctx, options.gpg_home_dir);
+            if(res != FKO_SUCCESS)
+            {
+                fprintf(stderr,
+                    "Error #%i from fko_set_gpg_home_dir: %s\n",
+                    res, fko_errstr(res)
+                );
+                exit(EXIT_FAILURE);
+            }
+        }
+
         res = fko_set_gpg_recipient(ctx, options.gpg_recipient_key);
         if(res != FKO_SUCCESS)
         {
@@ -195,12 +212,84 @@ main(int argc, char **argv)
 
         /* Now we create a new context based on data from the first one.
         */
-        res = fko_new_with_data(&ctx2, fko_get_spa_data(ctx),
-                                get_user_pw(&options, CRYPT_OP_DECRYPT));
+
+        /* If gpg-home-dir is specified, we have to defer decrypting if we
+         * use the fko_new_with_data() function because we need to set the
+         * gpg home dir after the context is created, but before we attempt
+         * to decrypt the data.  Therefore we either pass NULL for the
+         * decryption key to fko_new_with_data() or use fko_new() to create
+         * an empty context, populate it with the encrypted data, set our
+         * options, then decode it.
+        */
+        res = fko_new_with_data(&ctx2, fko_get_spa_data(ctx), NULL);
+                                //get_user_pw(&options, CRYPT_OP_DECRYPT));
+        
         if(res != FKO_SUCCESS)
         {
             fprintf(stderr,
                 "Error #%i from fko_new_with_data: %s\n",
+                res, fko_errstr(res)
+            );
+            exit(EXIT_FAILURE);
+        }
+
+        /* If gpg-home-dir is specified, we have to defer decrypting if we
+         * use the fko_new_with_data() function because we need to set the
+         * gpg home dir after the context is created, but before we attempt
+         * to decrypt the data.  Therefore we either pass NULL for the
+         * decryption key to fko_new_with_data() or use fko_new() to create
+         * an empty context, populate it with the encrypted data, set our
+         * options, then decode it.
+        res = fko_new(&ctx2);
+        if(res != FKO_SUCCESS)
+        {
+            fprintf(stderr,
+                "Error #%i from fko_new: %s\n",
+                res, fko_errstr(res)
+            );
+
+            exit(EXIT_FAILURE);
+        }
+        */
+
+        /* Populate the new context with the encrypted data from the
+         * old context.
+        res = fko_set_spa_data(ctx2, fko_get_spa_data(ctx));
+        if(res != FKO_SUCCESS)
+        {
+            fprintf(stderr,
+                "Error #%i from fko_set_spa_data: %s\n",
+                res, fko_errstr(res)
+            );
+
+            exit(EXIT_FAILURE);
+        }
+        */
+
+        if(options.use_gpg)
+        {
+            if(options.gpg_home_dir != NULL && strlen(options.gpg_home_dir) > 0)
+            {
+                res = fko_set_gpg_home_dir(ctx2, options.gpg_home_dir);
+                if(res != FKO_SUCCESS)
+                {
+                    fprintf(stderr,
+                        "Error #%i from fko_set_gpg_home_dir: %s\n",
+                        res, fko_errstr(res)
+                    );
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+
+        res = fko_decrypt_spa_data(
+            ctx2, get_user_pw(&options, CRYPT_OP_DECRYPT)
+        );
+
+        if(res != FKO_SUCCESS)
+        {
+            fprintf(stderr,
+                "Error #%i from fko_decrypt_spa_data: %s\n",
                 res, fko_errstr(res)
             );
 

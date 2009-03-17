@@ -92,6 +92,7 @@ typedef struct fko_cli_options
     char spoof_user[MAX_USERNAME_LEN];
     char gpg_recipient_key[MAX_GPG_KEY_ID];
     char gpg_signer_key[MAX_GPG_KEY_ID];
+    char gpg_home_dir[MAX_PATH_LEN];
 
     int proto;
     unsigned int port;

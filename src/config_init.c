@@ -299,6 +299,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->use_gpg = 1;
                 strlcpy(options->gpg_signer_key, optarg, MAX_GPG_KEY_ID);
                 break;
+            case GPG_HOME_DIR:
+                options->use_gpg = 1;
+                strlcpy(options->gpg_home_dir, optarg, MAX_PATH_LEN);
+                break;
             case GPG_AGENT:
                 options->use_gpg = 1;
                 options->use_gpg_agent = 1;
@@ -356,6 +360,7 @@ usage(void)
       "     --gpg-encryption    - Use GPG encyrption (default is Rijndael).\n"
       "     --gpg-recipient-key - Specify the recipient GPG key name or ID.\n"
       "     --gpg-signer-key    - Specify the signer's GPG key name or ID.\n"
+      "     --gpg-home-dir      - Specify the GPG home directory.\n"
       "     --gpg-agent         - Use GPG agent if available.\n"
       "\n"
     );

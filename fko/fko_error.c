@@ -82,9 +82,6 @@ fko_errstr(int err_code)
         case FKO_ERROR_WRONG_ENCRYPTION_TYPE:
             return("Wrong or inappropriate encryption type for this operation");
 
-        case FKO_ERROR_MISSING_GPG_KEY_DATA:
-            return("Missing GPG key data (signer or recipient not set)");
-
         case FKO_ERROR_DECRYPTION_SIZE:
             return("Unexpected or invalid size for decrypted data");
 
@@ -103,6 +100,9 @@ fko_errstr(int err_code)
 #if HAVE_LIBGPGME
         /* Start GPGME-related errors
         */
+        case FKO_ERROR_MISSING_GPG_KEY_DATA:
+            return("Missing GPG key data (signer or recipient not set)");
+
         case FKO_ERROR_GPGME_NO_OPENPGP:
             return("This GPGME implementation does not support OpenPGP");
 
@@ -153,6 +153,12 @@ fko_errstr(int err_code)
 
         case FKO_ERROR_GPGME_DECRYPT_FAILED:
             return("Decryption operation failed");
+
+        case FKO_ERROR_GPGME_BAD_HOME_DIR:
+            return("Unable to stat the given GPG home directory");
+
+        case FKO_ERROR_GPGME_SET_HOME_DIR:
+            return("Unable to set the given GPG home directory");
 #endif /* HAVE_LIBGPGME */
     }
 

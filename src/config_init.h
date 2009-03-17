@@ -37,6 +37,7 @@ enum {
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
     GPG_SIGNER_KEY,
+    GPG_HOME_DIR,
     GPG_AGENT,
     NOOP /* Just to be a marker for the end */
 };
@@ -65,6 +66,7 @@ static struct option cmd_opts[] =
     {"gpg-encryption",      0, NULL, 'g'},
     {"gpg-recipient-key",   1, NULL, GPG_RECIP_KEY },
     {"gpg-signer-key",      1, NULL, GPG_SIGNER_KEY },
+    {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
     {"gpg-agent",           0, NULL, GPG_AGENT },
     {0, 0, 0, 0}
 };

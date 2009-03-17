@@ -61,6 +61,9 @@ struct fko_context {
     /* For gpgme support */
     char           *gpg_recipient;
     char           *gpg_signer;
+    char           *gpg_home_dir;
+
+    unsigned char   have_gpgme_context;
 
     gpgme_ctx_t     gpg_ctx;
     gpgme_key_t     recipient_key;
