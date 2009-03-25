@@ -149,7 +149,7 @@ programs.
 @sp 1
 @noindent
 For more information on fwknop and @acronym{SPA}, go to
-@uref{http://www.cipherdyn.org/fwknop}. 
+@uref{http://www.cipherdyne.org/fwknop}. 
 
 @menu
 * Getting Started::               Purpose of the manual, and how to use it
