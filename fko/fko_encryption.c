@@ -349,6 +349,9 @@ fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
     if(ctx->encoded_msg == NULL || FKO_IS_SPA_DATA_MODIFIED(ctx))
         res = fko_encode_spa_data(ctx);
 
+    if(res)
+        goto EWIPEOUT;
+
     /* Croak on invalid encoded message as well. At present this is a
      * check for a somewhat arbitrary minimum length for the encoded
      * data.

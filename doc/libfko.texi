@@ -274,7 +274,7 @@ are not base64-encoded):
 
 @sp 1
 @example
-8307540982176539:juser:1230665172:1.1.10:0.0.0.0,tcp/22:192.168.1.2,22:
+8307540982176539:juser:1230665172:1.1.10:1:0.0.0.0,tcp/22:192.168.1.2,22:
 crypt,mypw:120:xswj8V0zMR7/7MV9pQRarSKWG1l9Zfjv+kbXaKrJ+RA
 @end example
 @sp 1
