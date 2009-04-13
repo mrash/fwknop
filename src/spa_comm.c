@@ -114,5 +114,22 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     return rv;
 }
 
+/* Function to write SPA packet data to the filesystem
+*/
+int write_spa_packet_data(fko_ctx_t ctx, const char *save_packet_file)
+{
+    FILE   *fp;
+
+
+    if((fp = fopen(save_packet_file, "w")) == NULL)
+        return 0;
+
+    fprintf(fp, "%s\n",
+        (fko_get_spa_data(ctx) == NULL) ? "<NULL>" : fko_get_spa_data(ctx));
+
+    fclose(fp);
+
+    return 1;
+}
 
 /***EOF***/

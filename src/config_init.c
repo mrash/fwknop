@@ -221,6 +221,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'G':
                 strlcpy(options->get_key_file, optarg, MAX_PATH_LEN);
                 break;
+            case 'B':
+                strlcpy(options->save_packet_file, optarg, MAX_PATH_LEN);
+                break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
                 break;

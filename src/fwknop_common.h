@@ -86,6 +86,7 @@ typedef struct fko_cli_options
     char config_file[MAX_PATH_LEN];
     char access_str[MAX_PATH_LEN];
     char get_key_file[MAX_LINE_LEN];
+    char save_packet_file[MAX_LINE_LEN];
     char spa_server_ip_str[MAX_IP_STR_LEN];
     char allow_ip_str[MAX_IP_STR_LEN];
     char spoof_ip_src_str[MAX_IP_STR_LEN];

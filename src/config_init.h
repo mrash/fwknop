@@ -54,6 +54,7 @@ static struct option cmd_opts[] =
     {"source-port",         1, NULL, 'S'},
     {"spoof-src",           1, NULL, 'Q'},
     {"spoof-user",          1, NULL, 'U'},
+    {"save-packet",         1, NULL, 'B'},
     {"get-key",             1, NULL, 'G'},
     {"quiet",               0, NULL, 'q'},
     {"debug",               0, NULL, 'd'},
