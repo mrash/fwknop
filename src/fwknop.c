@@ -198,7 +198,7 @@ main(int argc, char **argv)
         display_ctx(ctx);
 
     if (options.save_packet_file[0] != 0x0)
-        write_spa_packet_data(ctx, options.save_packet_file);
+        write_spa_packet_data(ctx, &options);
 
     /* If not in test mode, send the SPA data across the wire with a
      * protocol/port specified on the command line (default is UDP/62201).

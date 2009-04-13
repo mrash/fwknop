@@ -207,7 +207,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->port  = FKO_DEFAULT_PORT;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "A:a:D:G:S:Q:p:P:ghqdTvVn", cmd_opts, &index)) != -1) {
+            "A:a:D:G:S:Q:p:P:BbghqdTvVn", cmd_opts, &index)) != -1) {
         switch(cmd_arg) {
             case 'A':
                 strlcpy(options->access_str, optarg, MAX_LINE_LEN);
@@ -223,6 +223,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'B':
                 strlcpy(options->save_packet_file, optarg, MAX_PATH_LEN);
+                break;
+            case 'b':
+                options->save_packet_file_append = 1;
                 break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);

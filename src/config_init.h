@@ -55,6 +55,7 @@ static struct option cmd_opts[] =
     {"spoof-src",           1, NULL, 'Q'},
     {"spoof-user",          1, NULL, 'U'},
     {"save-packet",         1, NULL, 'B'},
+    {"save-packet-append",  0, NULL, 'b'},
     {"get-key",             1, NULL, 'G'},
     {"quiet",               0, NULL, 'q'},
     {"debug",               0, NULL, 'd'},
