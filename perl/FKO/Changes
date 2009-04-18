@@ -1,0 +1,9 @@
+Revision history for Perl extension FKO.
+
+0.22  Sat Apr 18 09:38:32 2009
+	- First release; works with libfko-1.10.0-alpha.
+
+0.01  Sat Mar 21 22:02:32 2009
+	- original version; created by h2xs 1.23 with options
+		-c -n FKO -x ../fko/fko.h -lfko
+

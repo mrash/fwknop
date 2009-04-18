@@ -1,0 +1,31 @@
+FKO version 0.10
+================
+
+This module is essentially a Perl wrapper for the Firewall Knock
+Operator library, "libfko".  See the "libfko" documentation for
+additional information on the functionality provided by "libfko"
+and usage overview.
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+The Firewall Knock Operator library, "libfko".
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2009 by Damien S. Stuart <dstuart@dstuart.org>
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself, either Perl version 5.8.8 or,
+at your option, any later version of Perl 5 you may have available.
+
