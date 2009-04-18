@@ -228,7 +228,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
         gpgme_release(gpg_ctx);
-
+        fko_ctx->gpg_ctx = NULL;
         fko_ctx->gpg_err = err;
 
         return(FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ);
@@ -241,6 +241,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
 
         fko_ctx->gpg_err = err;
 
@@ -264,6 +265,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
 
         fko_ctx->gpg_err = err;
 
@@ -279,6 +281,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
         gpgme_data_release(plaintext);
         gpgme_data_release(cipher);
         gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
 
         fko_ctx->gpg_err = err;
 
@@ -299,6 +302,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
         gpgme_data_release(plaintext);
         gpgme_data_release(cipher);
         gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
 
         fko_ctx->gpg_err = err;
 
@@ -356,6 +360,7 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
         gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
 
         fko_ctx->gpg_err = err;
 
@@ -369,6 +374,7 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     {
         gpgme_data_release(plaintext);
         gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
 
         fko_ctx->gpg_err = err;
 
@@ -387,6 +393,7 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
         gpgme_data_release(plaintext);
         gpgme_data_release(cipher);
         gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
 
         fko_ctx->gpg_err = err;
 
