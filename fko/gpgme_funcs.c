@@ -111,7 +111,61 @@ passphrase_cb(
     return 0;
 }
 
-/* Key the GPG key for the given name or ID.
+/* Verify gpg signatures in a verify_result set.
+*/
+int
+process_sigs(fko_ctx_t fko_ctx, gpgme_verify_result_t vres)
+{
+    unsigned int        sig_cnt = 0;
+    gpgme_signature_t   sig     = vres->signatures;
+    fko_gpg_sig_t       fgs;
+
+    /* only want to see one signature (for now).
+    */
+    if(!sig)
+        return(FKO_ERROR_GPGME_NO_SIGNATURE);
+
+    /* --DSS TODO: Add more stuff here */
+
+    /* Iterate over the sigs and store the info we are interested in
+     * to the context.
+    */
+    while(sig != NULL)
+    {
+        fgs = calloc(1, sizeof(struct fko_gpg_sig));
+        if(fgs == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+        /* Grab the summary and status values.
+        */
+        fgs->summary    = sig->summary;
+        fgs->status     = sig->status;
+
+        /* Grab the signature fingerprint.
+        */
+        if(sig->fpr != NULL)
+        {
+            fgs->fpr = strdup(sig->fpr);
+            if(fgs->fpr == NULL)
+            {
+                free(fgs);
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+            }
+        }
+
+        if(sig_cnt == 0)
+            fko_ctx->gpg_sigs = fgs;
+        else
+            fko_ctx->gpg_sigs->next = fgs;
+
+        sig_cnt++;
+        sig = sig->next;
+    }
+
+    return(FKO_SUCCESS);
+}
+
+/* Get the GPG key for the given name or ID.
 */
 int
 get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
@@ -347,6 +401,8 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     gpgme_data_t            cipher      = NULL;
     gpgme_data_t            plaintext   = NULL;
     gpgme_error_t           err;
+    gpgme_decrypt_result_t  decrypt_res;
+    gpgme_verify_result_t   verify_res;
 
     /* Initialize gpgme
     */
@@ -404,11 +460,36 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     */
     gpgme_data_release(cipher);
 
-    /* TODO: Do something with these (or not). For now, put them in the
-     *       fko context in case we want to check them later.
+    /* We check the "usupported_algorithm" flag in the decrypt result.
     */
-    fko_ctx->gpg_decrypt_result = gpgme_op_decrypt_result(gpg_ctx);
-    fko_ctx->gpg_verify_result  = gpgme_op_verify_result(gpg_ctx);
+    decrypt_res = gpgme_op_decrypt_result(gpg_ctx);
+
+    if(decrypt_res->unsupported_algorithm)
+    {
+        gpgme_data_release(plaintext);
+        gpgme_release(gpg_ctx);
+        fko_ctx->gpg_ctx = NULL;
+
+        return(FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM);
+    }
+
+    /* Now verify the signatures if so configured.
+    */
+    if(fko_ctx->verify_gpg_sigs)
+    {
+        verify_res  = gpgme_op_verify_result(gpg_ctx);
+
+        res = process_sigs(fko_ctx, verify_res);
+
+        if(res != FKO_SUCCESS)
+        {
+            gpgme_data_release(plaintext);
+            gpgme_release(gpg_ctx);
+            fko_ctx->gpg_ctx = NULL;
+
+            return(res);
+        }
+    }
 
     /* Get the encrypted data and its length from the gpgme data object.
     */
@@ -419,6 +500,7 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
      * expected to be a string).
     */
     *out = calloc(1, *out_len+1); /* This is freed upon fko_ctx destruction. */
+
     if(*out == NULL)
         res = FKO_ERROR_MEMORY_ALLOCATION;
     else

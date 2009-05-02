@@ -94,14 +94,16 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout)
 /* Return the SPA message data.
 */
 int
-fko_get_spa_client_timeout(fko_ctx_t ctx)
+fko_get_spa_client_timeout(fko_ctx_t ctx, int *timeout)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->client_timeout);
+    *timeout = ctx->client_timeout;
+
+    return(FKO_SUCCESS);
 }
 
 /***EOF***/

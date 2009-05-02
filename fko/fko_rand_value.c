@@ -113,16 +113,17 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
 
 /* Return the current rand value.
 */
-char*
-fko_get_rand_value(fko_ctx_t ctx)
+int
+fko_get_rand_value(fko_ctx_t ctx, char **rand_value)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->rand_val);
+    *rand_value = ctx->rand_val;
+
+    return(FKO_SUCCESS);
 }
 
-    
 /***EOF***/

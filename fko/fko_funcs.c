@@ -132,6 +132,12 @@ fko_new(fko_ctx_t *r_ctx)
         return res;
     }
 
+#if HAVE_LIBGPGME
+    /* Set gpg signature verify on.
+    */
+    ctx->verify_gpg_sigs = 1;
+#endif /* HAVE_LIBGPGME */
+
     /* Now we mean it.
     */
     ctx->initval = FKO_CTX_INITIALIZED;
@@ -181,6 +187,10 @@ fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
 void
 fko_destroy(fko_ctx_t ctx)
 {
+#if HAVE_LIBGPGME
+    fko_gpg_sig_t   gsig, tgsig;
+#endif
+
     if(CTX_INITIALIZED(ctx))
     {
         if(ctx->rand_val != NULL)
@@ -229,6 +239,19 @@ fko_destroy(fko_ctx_t ctx)
         
         if(ctx->gpg_ctx != NULL)
             gpgme_release(ctx->gpg_ctx);
+
+        gsig = ctx->gpg_sigs;
+        while(gsig != NULL)
+        {
+            if(gsig->fpr != NULL)
+                free(gsig->fpr);
+
+            tgsig = gsig;
+            gsig = gsig->next;
+
+            free(tgsig);
+        }
+
 #endif /* HAVE_LIBGPGME */
 
         bzero(ctx, sizeof(*ctx));
@@ -239,15 +262,17 @@ fko_destroy(fko_ctx_t ctx)
 
 /* Return the fko version
 */
-char*
-fko_version(fko_ctx_t ctx)
+int
+fko_get_version(fko_ctx_t ctx, char **version)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return(NULL);
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->version);
+    *version = ctx->version;
+
+    return(FKO_SUCCESS);
 }
 
 /* Final update and encoding of data in the context.
@@ -267,24 +292,26 @@ fko_spa_data_final(fko_ctx_t ctx, char *enc_key)
 
 /* Return the fko SPA encrypted data.
 */
-char*
-fko_get_spa_data(fko_ctx_t ctx)
+int
+fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *spa_data = ctx->encrypted_msg; 
 
     /* Notice we omit the first 10 bytes if Rijndael encryption is
      * used (to eliminate the consistent 'Salted__' string).
     */
     if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
-        return(ctx->encrypted_msg+10);
+        *spa_data += 10;
 
-    return(ctx->encrypted_msg); 
+    return(FKO_SUCCESS);
 }
 
-/* Return the fko SPA encrypted data.
+/* Set the fko SPA encrypted data.
 */
 int
 fko_set_spa_data(fko_ctx_t ctx, char *enc_msg)
@@ -292,7 +319,7 @@ fko_set_spa_data(fko_ctx_t ctx, char *enc_msg)
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return FKO_ERROR_CTX_NOT_INITIALIZED;
 
     /* First, add the data to the context.
     */

@@ -79,15 +79,17 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
 
 /* Return the SPA message data.
 */
-char*
-fko_get_spa_nat_access(fko_ctx_t ctx)
+int
+fko_get_spa_nat_access(fko_ctx_t ctx, char **nat_access)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->nat_access);
+    *nat_access = ctx->nat_access;
+
+    return(FKO_SUCCESS);
 }
 
 /***EOF***/

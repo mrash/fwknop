@@ -93,16 +93,17 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 
 /* Return the current username for this fko context.
 */
-char*
-fko_get_username(fko_ctx_t ctx)
+int
+fko_get_username(fko_ctx_t ctx, char **username)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->username);
+    *username = ctx->username;
+
+    return(FKO_SUCCESS);
 }
-
 
 /***EOF***/

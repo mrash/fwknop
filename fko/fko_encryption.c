@@ -317,15 +317,17 @@ fko_set_spa_encryption_type(fko_ctx_t ctx, short encrypt_type)
 
 /* Return the SPA encryption type.
 */
-short
-fko_get_spa_encryption_type(fko_ctx_t ctx)
+int
+fko_get_spa_encryption_type(fko_ctx_t ctx, short *enc_type)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->encryption_type);
+    *enc_type = ctx->encryption_type;
+
+    return(FKO_SUCCESS);
 }
 
 /* Encrypt the encoded SPA data.
@@ -470,19 +472,20 @@ fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
 
 /* Get the GPG recipient key name.
 */
-char*
-fko_get_gpg_recipient(fko_ctx_t ctx)
+int
+fko_get_gpg_recipient(fko_ctx_t ctx, char **recipient)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return(NULL);
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->gpg_recipient);
+    *recipient = ctx->gpg_recipient;
+
+    return(FKO_SUCCESS);
 #else
-    //--DSS we should make this an error
-    return(NULL);
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
 #endif  /* HAVE_LIBGPGME */
 }
 
@@ -529,19 +532,20 @@ fko_set_gpg_signer(fko_ctx_t ctx, const char *signer)
 
 /* Get the GPG signer key name.
 */
-char*
-fko_get_gpg_signer(fko_ctx_t ctx)
+int
+fko_get_gpg_signer(fko_ctx_t ctx, char **signer)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return(NULL);
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->gpg_signer);
+    *signer = ctx->gpg_signer;
+
+    return(FKO_SUCCESS);
 #else
-    //--DSS we should make this an error
-    return(NULL);
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
 #endif  /* HAVE_LIBGPGME */
 }
 
@@ -578,20 +582,83 @@ fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir)
 
 /* Get the GPG home dir.
 */
-char*
-fko_get_gpg_home_dir(fko_ctx_t ctx)
+int
+fko_get_gpg_home_dir(fko_ctx_t ctx, char **home_dir)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return(NULL);
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->gpg_home_dir);
+    *home_dir = ctx->gpg_home_dir;
+
+    return(FKO_SUCCESS);
 #else
-    //--DSS we should make this an error
-    return(NULL);
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
 #endif  /* HAVE_LIBGPGME */
 }
+
+int
+fko_set_verify_gpg_sigs(fko_ctx_t ctx, unsigned char val)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    ctx->verify_gpg_sigs = (val > 0) ? 1 : 0;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+int
+fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **fpr)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* Must be using GPG encryption.
+    */
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    *fpr = ctx->gpg_sigs->fpr;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+int
+fko_get_gpg_signature_id(fko_ctx_t ctx, char **id)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* Must be using GPG encryption.
+    */
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    *id = ctx->gpg_sigs->fpr + strlen(ctx->gpg_sigs->fpr) - 8;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
 
 /***EOF***/

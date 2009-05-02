@@ -28,6 +28,20 @@
 
 #include "fko_common.h"
 
+#if HAVE_LIBGPGME
+/* Stucture to hold a list of the gpg signature information
+ * we are interested in.
+*/
+struct fko_gpg_sig {
+    struct fko_gpg_sig *next;
+    gpgme_sigsum_t      summary;
+    gpgme_error_t       status;
+    char               *fpr;
+};
+
+typedef struct fko_gpg_sig *fko_gpg_sig_t;
+#endif /* HAVE_LIBGPGME */
+
 /* The pieces we need to make an FKO  SPA data packet.
 */
 struct fko_context {
@@ -69,8 +83,9 @@ struct fko_context {
     gpgme_key_t     recipient_key;
     gpgme_key_t     signer_key;
 
-    gpgme_decrypt_result_t  gpg_decrypt_result;
-    gpgme_verify_result_t   gpg_verify_result;
+    unsigned char   verify_gpg_sigs;
+
+    fko_gpg_sig_t   gpg_sigs;
 
     gpgme_error_t   gpg_err;
 #endif /* HAVE_LIBGPGME */

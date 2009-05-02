@@ -209,15 +209,17 @@ fko_encode_spa_data(fko_ctx_t ctx)
 
 /* Return the fko SPA encrypted data.
 */
-char*
-fko_get_encoded_data(fko_ctx_t ctx)
+int
+fko_get_encoded_data(fko_ctx_t ctx, char **enc_msg)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->encoded_msg); 
+    *enc_msg = ctx->encoded_msg; 
+
+    return(FKO_SUCCESS);
 }
 
 /***EOF***/

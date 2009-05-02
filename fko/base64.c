@@ -93,6 +93,7 @@ b64_encode(unsigned char *in, char *out, int in_len)
         while ((dst - out) & 3)
             *dst++ = '=';
     }
+
     *dst = '\0';
 
     return(dst - out);

@@ -154,11 +154,18 @@ fko_errstr(int err_code)
         case FKO_ERROR_GPGME_DECRYPT_FAILED:
             return("Decryption operation failed");
 
+        case FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM:
+            return("Decryption operation failed due to unsupported algorithm");
+
         case FKO_ERROR_GPGME_BAD_HOME_DIR:
             return("Unable to stat the given GPG home directory");
 
         case FKO_ERROR_GPGME_SET_HOME_DIR:
             return("Unable to set the given GPG home directory");
+
+        case FKO_ERROR_GPGME_NO_SIGNATURE:
+            return("Unexpected number of signatures");
+
 #endif /* HAVE_LIBGPGME */
     }
 

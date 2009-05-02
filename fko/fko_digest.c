@@ -25,8 +25,8 @@
  *
  *****************************************************************************
 */
-#include "fko.h"
 #include "fko_common.h"
+#include "fko.h"
 #include "digest.h"
 
 /* Set the SPA digest type.
@@ -51,15 +51,17 @@ fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type)
 
 /* Return the SPA digest type.
 */
-short
-fko_get_spa_digest_type(fko_ctx_t ctx)
+int
+fko_get_spa_digest_type(fko_ctx_t ctx, short *digest_type)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->digest_type);
+    *digest_type = ctx->digest_type;
+
+    return(FKO_SUCCESS);
 }
 
 int
@@ -121,15 +123,17 @@ fko_set_spa_digest(fko_ctx_t ctx)
     return(FKO_SUCCESS);
 } 
 
-char*
-fko_get_spa_digest(fko_ctx_t ctx)
+int
+fko_get_spa_digest(fko_ctx_t ctx, char **md)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return(NULL);
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->digest);
+    *md = ctx->digest;
+
+    return(FKO_SUCCESS);
 }
 
 /***EOF***/

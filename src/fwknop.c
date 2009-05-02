@@ -40,7 +40,7 @@ main(int argc, char **argv)
 {
     fko_ctx_t           ctx, ctx2;
     int                 res;
-    char               *pw;
+    char               *pw, *spa_data, *version;
     char                access_buf[MAX_LINE_LEN];
 
     fko_cli_options_t   options;
@@ -55,8 +55,10 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_new: %s\n", res, fko_errstr(res));
 
+    fko_get_version(ctx, &version);
+
     if (options.version) {
-        fprintf(stdout, "[+] fwknop-%s\n", fko_version(ctx));
+        fprintf(stdout, "[+] fwknop-%s\n", version);
         exit(0);
     }
 
@@ -215,6 +217,16 @@ main(int argc, char **argv)
 
         /* Now we create a new context based on data from the first one.
         */
+        res = fko_get_spa_data(ctx, &spa_data);
+
+        if(res != FKO_SUCCESS)
+        {
+            fprintf(stderr,
+                "Error #%i from fko_get_spa_data: %s\n",
+                res, fko_errstr(res)
+            );
+            exit(EXIT_FAILURE);
+        }
 
         /* If gpg-home-dir is specified, we have to defer decrypting if we
          * use the fko_new_with_data() function because we need to set the
@@ -224,9 +236,8 @@ main(int argc, char **argv)
          * an empty context, populate it with the encrypted data, set our
          * options, then decode it.
         */
-        res = fko_new_with_data(&ctx2, fko_get_spa_data(ctx), NULL);
+        res = fko_new_with_data(&ctx2, spa_data, NULL);
                                 //get_user_pw(&options, CRYPT_OP_DECRYPT));
-        
         if(res != FKO_SUCCESS)
         {
             fprintf(stderr,
@@ -257,7 +268,7 @@ main(int argc, char **argv)
 
         /* Populate the new context with the encrypted data from the
          * old context.
-        res = fko_set_spa_data(ctx2, fko_get_spa_data(ctx));
+        res = fko_set_spa_data(ctx2, spa_data);
         if(res != FKO_SUCCESS)
         {
             fprintf(stderr,
@@ -302,6 +313,17 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
+/* --DSS temp for test
+if(options.use_gpg)
+{
+  char *fpr, *id;
+  fko_get_gpg_signature_fpr(ctx2, &fpr);
+  printf("++ SIG FPR: %s\n", fpr);
+  fko_get_gpg_signature_id(ctx2, &id);
+  printf("++ SIG  ID: %s\n", id);
+}
+*/
+
         if (! options.quiet) {
             printf("\nDump of the Decoded Data\n");
             display_ctx(ctx2);
@@ -343,9 +365,30 @@ get_user_pw(fko_cli_options_t *options, int crypt_op)
 static void
 display_ctx(fko_ctx_t ctx)
 {
-    printf("\nFKO Context Values:\n===================\n\n");
+    char            *rand_val, *username, *version, *spa_message, *nat_access,
+                    *server_auth, *enc_data, *spa_digest, *spa_data;
+    unsigned int    timestamp=0;
+    short           msg_type=-1, digest_type=-1;
+    int             client_timeout=-1, res;
+
+    /* Should be checking return values, but this is temp code. --DSS
+    */
+    fko_get_rand_value(ctx, &rand_val);
+    fko_get_username(ctx, &username);
+    fko_get_timestamp(ctx, &timestamp);
+    fko_get_version(ctx, &version);
+    fko_get_spa_message_type(ctx, &msg_type);
+    fko_get_spa_message(ctx, &spa_message);
+    fko_get_spa_nat_access(ctx, &nat_access);
+    fko_get_spa_server_auth(ctx, &server_auth);
+    fko_get_spa_client_timeout(ctx, &client_timeout);
+    fko_get_spa_digest_type(ctx, &digest_type);
+    fko_get_encoded_data(ctx, &enc_data);
+    fko_get_spa_digest(ctx, &spa_digest);
+    fko_get_spa_data(ctx, &spa_data);
 
     printf(
+        "\nFKO Context Values:\n===================\n\n"
         "   Random Value: %s\n"
         "       Username: %s\n"
         "      Timestamp: %u\n"
@@ -360,20 +403,19 @@ display_ctx(fko_ctx_t ctx)
         "\nSPA Data Digest: %s\n"
         "\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n"
         ,
-        fko_get_rand_value(ctx),
-        (fko_get_username(ctx) == NULL) ? "<NULL>" : fko_get_username(ctx),
-        fko_get_timestamp(ctx),
-        fko_version(ctx),
-        fko_get_spa_message_type(ctx),
-        (fko_get_spa_message(ctx) == NULL) ? "<NULL>" : fko_get_spa_message(ctx),
-        (fko_get_spa_nat_access(ctx) == NULL) ? "<NULL>" : fko_get_spa_nat_access(ctx),
-        (fko_get_spa_server_auth(ctx) == NULL) ? "<NULL>" : fko_get_spa_server_auth(ctx),
-        fko_get_spa_client_timeout(ctx),
-        fko_get_spa_digest_type(ctx),
-        (fko_get_encoded_data(ctx) == NULL) ? "<NULL>" : fko_get_encoded_data(ctx),
-        (fko_get_spa_digest(ctx) == NULL) ? "<NULL>" : fko_get_spa_digest(ctx),
-
-        (fko_get_spa_data(ctx) == NULL) ? "<NULL>" : fko_get_spa_data(ctx)
+        rand_val == NULL ? "<NULL>" : rand_val,
+        username == NULL ? "<NULL>" : username,
+        timestamp,
+        version == NULL ? "<NULL>" : version,
+        msg_type,
+        spa_message == NULL ? "<NULL>" : spa_message,
+        nat_access == NULL ? "<NULL>" : nat_access,
+        server_auth == NULL ? "<NULL>" : server_auth,
+        client_timeout,
+        digest_type,
+        enc_data == NULL ? "<NULL>" : enc_data,
+        spa_digest == NULL ? "<NULL>" : spa_digest,
+        spa_data == NULL ? "<NULL>" : spa_data
     );
 
 }

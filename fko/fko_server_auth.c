@@ -79,15 +79,17 @@ fko_set_spa_server_auth(fko_ctx_t ctx, const char *msg)
 
 /* Return the SPA message data.
 */
-char*
-fko_get_spa_server_auth(fko_ctx_t ctx)
+int
+fko_get_spa_server_auth(fko_ctx_t ctx, char **server_auth)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->server_auth);
+    *server_auth = ctx->server_auth;
+
+    return(FKO_SUCCESS);
 }
 
 /***EOF***/

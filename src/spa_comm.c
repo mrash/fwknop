@@ -37,6 +37,8 @@ send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
 {
     int rv = 0;
     int sock = 0;
+    int res;
+    char *spa_data;
 
     /* create the socket
     */
@@ -47,7 +49,18 @@ send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
         exit(1);
     }
 
-    sendto(sock, fko_get_spa_data(ctx), strlen(fko_get_spa_data(ctx)),
+    res = fko_get_spa_data(ctx, &spa_data);
+
+    if(res != FKO_SUCCESS)
+    {
+        fprintf(stderr,
+            "send_spa_packet_udp: Error #%i from fko_get_spa_data: %s\n",
+            res, fko_errstr(res)
+        );
+        exit(1);
+    }
+
+    sendto(sock, spa_data, strlen(spa_data),
             0, (struct sockaddr *)daddr, sizeof(*daddr));
 
     return rv;
@@ -119,6 +132,8 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 int write_spa_packet_data(fko_ctx_t ctx, fko_cli_options_t *options)
 {
     FILE   *fp;
+    char   *spa_data;
+    int     res;
 
     if (options->save_packet_file_append) {
         if((fp = fopen(options->save_packet_file, "a")) == NULL) {
@@ -131,8 +146,19 @@ int write_spa_packet_data(fko_ctx_t ctx, fko_cli_options_t *options)
         }
     }
 
+    res = fko_get_spa_data(ctx, &spa_data);
+
+    if(res != FKO_SUCCESS)
+    {
+        fprintf(stderr,
+            "write_spa_packet_data: Error #%i from fko_get_spa_data: %s\n",
+            res, fko_errstr(res)
+        );
+        exit(1);
+    }
+
     fprintf(fp, "%s\n",
-        (fko_get_spa_data(ctx) == NULL) ? "<NULL>" : fko_get_spa_data(ctx));
+        (spa_data == NULL) ? "<NULL>" : spa_data);
 
     fclose(fp);
 

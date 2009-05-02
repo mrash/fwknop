@@ -57,15 +57,17 @@ fko_set_spa_message_type(fko_ctx_t ctx, short msg_type)
 
 /* Return the SPA message type.
 */
-short
-fko_get_spa_message_type(fko_ctx_t ctx)
+int
+fko_get_spa_message_type(fko_ctx_t ctx, short *msg_type)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
-    return(ctx->message_type);
+    *msg_type = ctx->message_type;
+
+    return(FKO_SUCCESS);
 }
 
 /* Set the SPA MESSAGE data
@@ -133,15 +135,17 @@ fko_set_spa_message(fko_ctx_t ctx, const char *msg)
 
 /* Return the SPA message data.
 */
-char*
-fko_get_spa_message(fko_ctx_t ctx)
+int
+fko_get_spa_message(fko_ctx_t ctx, char **msg)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return NULL;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->message);
+    *msg = ctx->message;
+
+    return(FKO_SUCCESS);
 }
 
 /* Validate a command message format.

@@ -59,15 +59,17 @@ fko_set_timestamp(fko_ctx_t ctx, int offset)
 
 /* Return the current timestamp.
 */
-unsigned int
-fko_get_timestamp(fko_ctx_t ctx)
+int
+fko_get_timestamp(fko_ctx_t ctx, unsigned int *timestamp)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-        return 0;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(ctx->timestamp);
+    *timestamp = ctx->timestamp;
+
+    return(FKO_SUCCESS);
 }
 
 /***EOF***/
