@@ -463,7 +463,7 @@ encryption is sufficient for most users and produces a much smaller data
 packet than @acronym{GPG} (around 146 bytes or so compared to around 1K for
 @acronym{GPG}).
 
-However, some may prefer the level of protection provided by @acronym{GPG}.
+However, some may prefer the higher level of security provided by @acronym{GPG}.
 When selected, additional parameters such as @emph{recipient} and @emph{signer}
 will need to be set as well. See @ref{Setting SPA Data} for detail on
 setting these and other @acronym{SPA} data fields.
@@ -572,7 +572,8 @@ if(rc != FKO_SUCCESS)
 Or, perhaps you need to defer decryption and parsing to a later point
 in the program.  We could use fko_new_with_data(), passing NULL for the
 decryption key, or we could use fko_new() to create an empty context,
-then use fko_set_spa_data() to add the encypted data (see code in comments).
+then use fko_set_spa_data() to add the encypted data (see comments in the code
+samples).
 
 @example
 fko_ctx_t   ctx;
@@ -633,7 +634,7 @@ The function @code{gpgme_release} destroys the context with the handle
 @cindex spa, message data creation
 @cindex spa, data creation code sample
 
-This section describes in detail the process for creating a new fko
+This section describes the process for creating a new fko
 @acronym{SPA} message.  After creating a context, there are still some
 requisite @acronym{SPA} data fields and @acronym{SPA} parameters that need
 to be set before the final encrypted message is ready.
@@ -659,6 +660,7 @@ parameters as well.  Setting the ``type'' parameters first is recommended
 @itemize @bullet
 @item gpg_recipient -- @emph{(must be explicitly set)}
 @item gpg_signer -- @emph{(must be explicitly set)}
+@item gpg_home_dir -- @emph{(default may suffice)}
 @end itemize
 
 When a context is initialized, some of the @acronym{SPA} data fields are
@@ -713,16 +715,16 @@ main(int argc, char **argv)
     @}
 
     /* Let us assume we are using GPG encryption.  So we need to
-     * set the encrypeion type and set the required GPG parameters
+     * set the encryption type and set the required GPG parameters
      * (we can skip checking return values for brevity).
     */
-    fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG);
+    rc = fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG);
 
     /* Key for the recipient */
-    fko_set_gpg_recipient(ctx, "recip@@some.where");
+    rc = fko_set_gpg_recipient(ctx, "recip@@some.where");
 
     /* Key for the signer */
-    fko_set_gpg_signer(ctx, "me@@right.here");
+    rc = fko_set_gpg_signer(ctx, "me@@right.here");
 
     /* Finalize the SPA data */
     rc = fko_spa_data_final(ctx);
@@ -733,7 +735,7 @@ main(int argc, char **argv)
     @}
 
     /* Take the final message and do something with it */
-    final_spa = fko_get_spa_data(ctx);
+    rc = fko_get_spa_data(ctx, &final_spa);
 
     /* Assume this function packs the spa data into a UDP
      * packet and sends it to the server.
@@ -871,6 +873,19 @@ Sets the @acronym{GPG} home directory for the current gpgme context.  This
 allows for using alternate keyrings, gpg configurations, etc.
 @end deftypefun
 
+@deftypefun int fko_set_gpg_signature_verify (@w{fko_ctx_t @var{ctx}, unsigned char @var{verify}});
+Sets the verify @acronym{GPG} signature flag.  When set to a true value, the
+@acronym{GPG} signature is extracted and checked for validity during the
+decryption/decoding phase.  When set to false, no attempt is made to access
+or check the signature.  This flag is set to true by default.
+@end deftypefun
+
+@deftypefun int fko_set_gpg_ignore_verify_error (@w{fko_ctx_t @var{ctx}, unsigned char @var{ignore}});
+Sets the ignore signature verify error flag.  When set to a true value. Any
+signature verification errors are ignored (but still captured) and the
+decoding process will continue.  The default value of this flag is false.
+@end deftypefun
+
 @noindent
 @strong{Note}: On a libfko build without @acronym{GPG} support, the
 GPG-related functions above will simply return the FKO_ERROR_UNSUPPORTED_FEATURE
@@ -882,35 +897,44 @@ error code.
 
 This section describes the functions used for retrieving the various
 @acronym{SPA} data fields and parameters settings.  They all return
-The current value of their respective field or parmeter.
+an FKO error code. The value of the respective field or parmeter that is
+being retrieved will placed into the variables whose addresses are passed
+to the function.
 
-@deftypefun char* fko_get_spa_data (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the final encrypted
-@acronym{SPA} data.  This is the data that would be packaged
-into a packet and sent to an fwknop server.
+@deftypefun int fko_get_spa_data (@w{fko_ctx_t @var{ctx}, char @var{**spa_data}});
+Assigns the pointer to the string holding the final encrypted
+@acronym{SPA} data to the address @var{spa_data} is pointing to.  This is the
+data that would be packaged into a packet and sent to an fwknop server.
+The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_rand_value (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the current random 16-character
-decimal number (@code{rand_val}) associated with the current context. 
+@deftypefun int fko_get_rand_value (@w{fko_ctx_t @var{ctx}, char @var{**rand_val}});
+Assigns the pointer to the string holding the random 16-character decimal
+number (@code{rand_val}) associated with the current context to the address
+@var{rand_val} is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_username (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the username associated with the
-current context.
+@deftypefun int fko_get_username (@w{fko_ctx_t @var{ctx}, char @var{**username}});
+Assigns the pointer to the string holding the username associated with the
+current context to the address @var{rand_val} is pointing to.  The return value
+is an FKO error status.
 @end deftypefun
 
-@deftypefun unsigned int fko_get_timestamp (@w{fko_ctx_t @var{ctx}});
-Returns the timestamp value associated with the current context.
+@deftypefun int fko_get_timestamp (@w{fko_ctx_t @var{ctx}, unsigned int @var{*timestamp}});
+Sets the value of the @var{timestamp} variable to the timestamp value
+associated with the current context.  The return value is an FKO error
+status.
 @end deftypefun
 
-@deftypefun short fko_get_spa_message_type (@w{fko_ctx_t @var{ctx}});
-Returns the message_type value associated with the current context.
-This value can be checked against the list of valid message_types
-listed in @ref{SPA Messages} of this manual.
-For example:
+@deftypefun int fko_get_spa_message_type (@w{fko_ctx_t @var{ctx}, short @var{*msg_type}});
+Sets the value of the @var{msg_type} variable to the @acronym{SPA} message
+type value associated with the current context.  This value can be checked
+against the list of valid message_types listed in @ref{SPA Messages} of this
+manual.  For example:
 @example
-    msg_type = fko_get_spa_message_type(ctx);
+    short msg_type;
+
+    rc = fko_get_spa_message_type(ctx, &msg_type);
 
     switch(msg_type)
     @{
@@ -920,87 +944,134 @@ For example:
         case FKO_NAT_ACCESS_MSG:
             process_nat_access_msg(...);
             break;
-    ...and so on...
+    /*...and so on...*/
     @}
 @end example
+The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_spa_message (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the fko @acronym{SPA} request
-message associated with the current context.
+@deftypefun int fko_get_spa_message (@w{fko_ctx_t @var{ctx}, char @var{**spa_msg}});
+Assigns the pointer to the string holding the the fko @acronym{SPA} request
+message associated with the current context to the address @var{spa_msg} is
+pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_spa_nat_access (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the fko @acronym{SPA} nat access
-request data associated with the current context.  The function returns
-@code{NULL} if this field is not set.
+@deftypefun int fko_get_spa_nat_access (@w{fko_ctx_t @var{ctx}, char @var{**nat_access}});
+Assigns the pointer to the string holding the the fko @acronym{SPA} nat access
+message associated with the current context to the address @var{nat_access} is
+pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_spa_server_auth (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the fko @acronym{SPA} server auth
-data associated with the current context.  The function returns
-@code{NULL} if this field is not set.
+@deftypefun int fko_get_spa_server_auth (@w{fko_ctx_t @var{ctx}, char @var{**server_auth}});
+Assigns the pointer to the string holding the the fko @acronym{SPA} server
+auth message associated with the current context to the address
+@var{server_auth} is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_client_timeout (@w{fko_ctx_t @var{ctx}});
-Returns the client timeout value associated with the current context or
-0 if it was not set.
+@deftypefun int fko_get_spa_client_timeout (@w{fko_ctx_t @var{ctx}, int @var{*client_timeout}});
+Sets the value of the @var{client_timeout} variable to the client_timeout
+value associated with the current context. The return value is an FKO error
+status.
 @end deftypefun
 
-@deftypefun short fko_get_spa_digest_type (@w{fko_ctx_t @var{ctx}});
-Returns the digest type value associated with the current context.
-This value can be checked against the list of valid digest_types
-listed in @ref{Digests} of this manual.
+@deftypefun int fko_get_spa_digest_type (@w{fko_ctx_t @var{ctx}, short @var{*digest_type}});
+Sets the value of the @var{digest_type} variable to the digest type value
+associated with the current context. This value can be checked against the
+list of valid digest_types listed in @ref{Digests} of this manual.  The
+return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_spa_digest (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the computed message digest hash
-for the @acronym{SPA} data associated with the current context.
+@deftypefun int fko_get_spa_digest (@w{fko_ctx_t @var{ctx}, char @var{**spa_digest}});
+Assigns the pointer to the string holding the the fko @acronym{SPA} digest
+value associated with the current context to the address @var{spa_digest}
+is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun short fko_get_spa_encryption_type (@w{fko_ctx_t @var{ctx}});
-Returns the digest type value associated with the current context.
-This value can be checked against the list of valid digest_types
-listed in @ref{Encryption Algorithms} of this manual.
+@deftypefun int fko_get_spa_encryption_type (@w{fko_ctx_t @var{ctx}, short @var{*enc_type}});
+Sets the value of the @var{enc_type} variable to the encryption type value
+associated with the current context. This value can be checked against the
+list of valid digest_types listed in @ref{Encryption Algorithms} of this
+manual.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_encoded_data (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the encoded @acronym{SPA} data
-(before encyrption) that is associated with the current context. This is
-intermediate data that would not normally be of use unless debugging
-the library.
+@deftypefun int fko_get_encoded_data (@w{fko_ctx_t @var{ctx}, char @var{**enc_msg}});
+Assigns the pointer to the string holding the the encoded @acronym{SPA} data
+(before encryption) associated with the current context to the address
+@var{enc_msg} is pointing to.  This is intermediate data that would not
+normally be of use unless debugging the library. The return value is an
+FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_version (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string holding the fwknop version of the data
-in the current context.  This is a static value for @acronym{SPA} data
-that is being created in a new context.  For data parsed from an external
-source, the version string will be whatever the provided data was set to.
+@deftypefun int fko_get_version (@w{fko_ctx_t @var{ctx}, char @var{**fko_version}});
+Assigns the pointer to the string holding the the @acronym{SPA} version
+value associated with the current context to the address @var{fko_version}
+is pointing to.  This is a static value for @acronym{SPA} data that is being
+created in a new context.  For data parsed from an external source, the
+version string will be whatever version the sending client used. The return
+value is an FKO error status.
 @end deftypefun
 
 @cindex gpg-specific functions
 @noindent
 @emph{GPG-specific functions:}
 
-@deftypefun char* fko_get_gpg_recipient (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string containing the @acronym{GPG} key for the
-recipient (as set with @emph{fko_set_gpg_recipient}).
+@deftypefun int fko_get_gpg_recipient (@w{fko_ctx_t @var{ctx}, char @var{**recipient}});
+Assigns the pointer to the string holding the the @acronym{GPG} recipient ID
+associated with the current context to the address @var{recipient} is pointing
+to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_gpg_signer (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string containing the @acronym{GPG} key for the
-signer of the @acronym{SPA} data (as set with @emph{fko_set_gpg_signer}).
+@deftypefun int fko_get_gpg_signer (@w{fko_ctx_t @var{ctx}, char @var{**signer}});
+Assigns the pointer to the string holding the the @acronym{GPG} signer ID
+associated with the current context to the address @var{signer} is pointing
+to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun char* fko_get_gpg_home_dir (@w{fko_ctx_t @var{ctx}});
-Returns a pointer to the string containing the current @acronym{GPG}
-home directory.
+@deftypefun int fko_get_gpg_home_dir (@w{fko_ctx_t @var{ctx}, char @var{**gpg_dir}});
+Assigns the pointer to the string holding the the @acronym{GPG} home directory
+associated with the current context to the address @var{recipient} is pointing
+to.  The return value is an FKO error status.
+@end deftypefun
+
+@deftypefun int fko_get_gpg_signature_verify (@w{fko_ctx_t @var{ctx}, unsigned char @var{*val}});
+Sets the value of the @var{val} variable to the current gpg_signature_verify
+flag value associated with the current context. The return value is an FKO error
+status.
+@end deftypefun
+
+@deftypefun int fko_get_gpg_ignore_verify_error (@w{fko_ctx_t @var{ctx}, unsigned char @var{*val}});
+Sets the value of the @var{val} variable to the current ignore_verify_error
+flag value associated with the current context. The return value is an FKO error
+status.
+@end deftypefun
+
+@deftypefun int fko_get_gpg_signature_id (@w{fko_ctx_t @var{ctx}, char @var{**sig_id}});
+Assigns the pointer to the string holding the the @acronym{GPG} signature ID
+associated with the current context to the address @var{sig_id} is pointing
+to.  The return value is an FKO error status.
+@end deftypefun
+
+@deftypefun int fko_get_gpg_signature_fpr (@w{fko_ctx_t @var{ctx}, char @var{**sig_fpr}});
+Assigns the pointer to the string holding the the @acronym{GPG} signature
+fingerprint associated with the current context to the address @var{sig_id}
+is pointing to.  The return value is an FKO error status.
+@end deftypefun
+
+@deftypefun int fko_get_gpg_signature_summary (@w{fko_ctx_t @var{ctx}, unsigned char @var{*sig_sum}});
+Sets the value of the @var{sig_sum} variable to the @acronym{GPG} signature
+summary value associated with the current context. The return value is an FKO error
+status.
+@end deftypefun
+
+@deftypefun int fko_get_gpg_signature_status (@w{fko_ctx_t @var{ctx}, unsigned char @var{*sig_stat}});
+Sets the value of the @var{sig_stat} variable to the @acronym{GPG} signature
+error status value associated with the current context. The return value is an FKO error
+status.
 @end deftypefun
 
 @noindent
-@strong{Note}:  The GPG-related functions above will return NULL if the
-value was not previously set, or the current libfko build does not have
-@acronym{GPG} support.
+@strong{Note}:  The char* values retrieved by the GPG-related functions above
+will be NULL if the context value was not previously set.
 
 @node Utility Functions
 @section Utility Functions
@@ -1053,6 +1124,24 @@ need to be encoded, performs some data validation, and calls
 digest.  It is normally not called directly as it is
 called from @code{fko_encrypt_spa_data} (which is in turn called from
 @code{fko_spa_data_final}).
+@end deftypefun
+
+@cindex gpg-specific functions
+@noindent
+@emph{GPG-specific utility functions:}
+
+@deftypefun int fko_gpg_signature_id_match (@w{fko_ctx_t @var{ctx}, const char @var{*id}, unsigned char @var{*id_match}});
+Sets the value of the @var{id_match} variable to true (1) if the value of
+@var{id} matches the ID of the @acronym{GPG} signature associated with the
+current context. Otherwise, @var{id_match} is set to false (0). The return
+value is an FKO error status.
+@end deftypefun
+
+@deftypefun int fko_gpg_signature_fpr_match (@w{fko_ctx_t @var{ctx}, const char @var{*fpr}, unsigned char @var{*fpr_match}});
+Sets the value of the @var{fpr_match} variable to true (1) if the value of
+@var{fpr} matches the fingerprint of the @acronym{GPG} signature associated
+with the current context. Otherwise, @var{fpr_match} is set to false (0).
+The return value is an FKO error status.
 @end deftypefun
 
 @node Error Handling
@@ -1170,7 +1259,12 @@ Decryption operation failed
 Unable to stat the given GPG home directory
 @item FKO_ERROR_GPGME_SET_HOME_DIR
 Unable to set the given GPG home directory
-
+@item FKO_ERROR_GPGME_NO_SIGNATURE
+Missing GPG signature
+@item FKO_ERROR_GPGME_BAD_SIGNATURE
+Bad GPG signature
+@item FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED
+Trying to check signature with verification disabled
 @end table
 @end deftypevar
 
