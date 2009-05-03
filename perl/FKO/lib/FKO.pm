@@ -88,7 +88,8 @@ sub new {
     }
 
     bless {
-        _ctx => $ctx  # Gotta hang on to our context...
+        _ctx => $ctx,  # Gotta hang on to our context.
+        _err => 0      # Place to hold the last error code.
     }, $class;
 }
 
@@ -109,12 +110,18 @@ sub destroy {
 
 sub version {
     my $self = shift;
-    return FKO::_version($self->{_ctx});
+    my $val  = '';
+
+    $self->{_err} = FKO::_version($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub errstr {
     my $self = shift;
-    my $ec = shift || 0;
+    my $ec = shift;
+
+    $ec = $self->{_err} if(!defined($ec));
 
     return FKO::_error_str($ec);
 }
@@ -126,157 +133,289 @@ sub gpg_errstr {
 
 sub rand_value {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_rand_value($self->{_ctx}, $newval || 0)
-        if(defined($newval));
+    return FKO::_set_rand_value($self->{_ctx}, $val || 0)
+        if(defined($val));
 
-    return FKO::_get_rand_value($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_rand_value($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub digest_type {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_digest_type($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_digest_type($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_digest_type($self->{_ctx});
+    $val = -1;
+    $self->{_err} = FKO::_get_digest_type($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub encryption_type {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_encryption_type($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_encryption_type($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_encryption_type($self->{_ctx});
+    $val = -1;
+    $self->{_err} = FKO::_get_encryption_type($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub username {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_username($self->{_ctx}, $newval || 0)
-        if(defined($newval));
+    return FKO::_set_username($self->{_ctx}, $val || 0)
+        if(defined($val));
 
-    return FKO::_get_username($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_username($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_message_type {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_spa_message_type($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_spa_message_type($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_spa_message_type($self->{_ctx});
+    $val = -1;
+    $self->{_err} = FKO::_get_spa_message_type($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub timestamp {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_timestamp($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_timestamp($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_timestamp($self->{_ctx});
+    $val = -1;
+    $self->{_err} = FKO::_get_timestamp($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_message {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_spa_message($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_spa_message($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_spa_message($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_spa_message($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_nat_access {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_spa_nat_access($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_spa_nat_access($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_spa_nat_access($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_spa_nat_access($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_server_auth {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_spa_server_auth($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_spa_server_auth($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_spa_server_auth($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_spa_server_auth($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_client_timeout {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_spa_client_timeout($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_spa_client_timeout($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_spa_client_timeout($self->{_ctx});
+    $val = -1;
+    $self->{_err} = FKO::_get_spa_client_timeout($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_digest {
     my $self = shift;
+    my $val  = shift;
     my $recompute = shift || 0;
 
     return FKO::_set_spa_digest($self->{_ctx})
         if($recompute);
 
-    return FKO::_get_spa_digest($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_spa_digest($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_data {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_spa_data($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_spa_data($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_spa_data($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_spa_data($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub gpg_recipient {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_gpg_recipient($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_gpg_recipient($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_gpg_recipient($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_gpg_recipient($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub gpg_signer {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_gpg_signer($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_gpg_signer($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_gpg_signer($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_gpg_signer($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub gpg_home_dir {
     my $self = shift;
-    my $newval = shift;
+    my $val  = shift;
 
-    return FKO::_set_gpg_home_dir($self->{_ctx}, $newval)
-        if(defined($newval));
+    return FKO::_set_gpg_home_dir($self->{_ctx}, $val)
+        if(defined($val));
 
-    return FKO::_get_gpg_home_dir($self->{_ctx});
+    $val = '';
+    $self->{_err} = FKO::_get_gpg_home_dir($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_signature_verify {
+    my $self = shift;
+    my $val  = shift;
+
+    return FKO::_set_gpg_signature_verify($self->{_ctx}, $val)
+        if(defined($val));
+
+    $val = '';
+    $self->{_err} = FKO::_get_gpg_signature_verify($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_ignore_verify_error {
+    my $self = shift;
+    my $val  = shift;
+
+    return FKO::_set_gpg_ignore_verify_error($self->{_ctx}, $val)
+        if(defined($val));
+
+    $val = '';
+    $self->{_err} = FKO::_get_gpg_ignore_verify_error($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_signature_id {
+    my $self = shift;
+    my $val  = '';
+
+    $self->{_err} = FKO::_get_gpg_signature_id($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_signature_fpr {
+    my $self = shift;
+    my $val  = '';
+
+    $self->{_err} = FKO::_get_gpg_signature_fpr($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_signature_summary {
+    my $self = shift;
+    my $val  = '';
+
+    $self->{_err} = FKO::_get_gpg_signature_summary($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_signature_status {
+    my $self = shift;
+    my $val  = '';
+
+    $self->{_err} = FKO::_get_gpg_signature_status($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_signature_id_match {
+    my $self = shift;
+    my $id   = shift || '';
+    my $val  = '';
+
+    $self->{_err} = FKO::_get_gpg_signature_id_match($self->{_ctx}, $id, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub gpg_signature_fpr_match {
+    my $self = shift;
+    my $fpr  = shift || '';
+    my $val  = '';
+
+    $self->{_err} = FKO::_get_gpg_signature_fpr_match($self->{_ctx}, $fpr, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub encoded_data {
     my $self = shift;
-    return FKO::_get_encoded_data($self->{_ctx});
+    my $val  = '';
+
+    $self->{_err} = FKO::_get_encoded_data($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
 }
 
 sub spa_data_final {
@@ -313,6 +452,11 @@ sub decode_spa_data {
 sub DESTROY {
     my $self = shift;
     FKO::_destroy_ctx($self->{_ctx}) if($self->{_ctx});
+}
+
+sub _check_return_val {
+    my ($self, $val) = @_;
+    return($self->{_err} == 0 ? $val : undef);
 }
 
 1;
@@ -796,7 +940,7 @@ the following condition must be met:
 =back
 
 If no argument is given, the current value is returned.  Otherwise,
-gpg_recipient will be set to the given value.
+gpg_signer will be set to the given value.
 
 =item B<gpg_home_dir( )>
 
@@ -817,7 +961,79 @@ condition must be met:
 =back
 
 If no argument is given, the current value is returned.  Otherwise,
-gpg_recipient will be set to the given value.
+gpg_home_dir will be set to the given value.
+
+=head3 GPG Signature Verification
+
+By default libfko will attempt to verify GPG signatures when decrypting
+GPG-encrypted data.  If the signature is missing, expired, revoked, or 
+otherwise bad, the decoding operation will fail.
+
+The following functions are provided to process GPG key information, or
+manage how libfko deals with GPG signatures.  Like the other GPG-related
+functions, these also have the following prerequisites:
+
+=over
+
+=item * The underlying I<libfko> implementation nust have GPG support.
+
+=item * The I<encryption_type> must be set to C<FKO_ENCRYPTION_GPG>.
+
+=back
+
+=item B<gpg_signature_verify( )>
+
+=item B<gpg_signature_verify($bool)>
+
+Get or set the GPG signature verification flag.  If true (1), then GPG
+signatures are processed by libfko.  This is the default behavior.  If
+set to false (0), then libfko will not even look for or at any GPG
+signatures and will proceed with a decoding the SPA data.
+
+If no argument is given, the current value is returned.  Otherwise,
+the gpg_signature_verify flag will be set to the given value.
+
+=item B<gpg_ignore_verify_error( )>
+
+=item B<gpg_ignore_verify_error($bool)>
+
+Get or set the GPG signature ignore verification error flag.  If true (1),
+then GPG signatures are processed and retained by libfko, but a bad signature
+will not prevent the decoding phase.  The default is to not ignore errors.
+
+If no argument is given, the current value is returned.  Otherwise,
+the gpg_ignore_verify_error flag will be set to the given value.
+
+=item B<gpg_signature_id( )>
+
+Get ID of the GPG signature from the last decryption operation.
+
+=item B<gpg_signature_fpr( )>
+
+Get Fingerprint of the GPG signature from the last decryption operation.
+
+=item B<gpg_signature_summary( )>
+
+Get GPGME signature summary value of the GPG signature from the last
+decryption operation. This value is a bitmask that hold additional 
+information on the signature (see GPGME docs for more information).
+
+=item B<gpg_signature_status( )>
+
+Get error status of the GPG signature from the last decryption operation.
+This value is a GPGME error code (see GPGME docs for more information).
+
+=item B<gpg_signature_id_match($id)>
+
+Compare the given ID with the id of the GPG signature of the last decryption
+operation.  If the ID's match, then a true value is returned. Otherwise
+false is returned. 
+
+=item B<gpg_signature_fpr_match($id)>
+
+Compare the given fingerprint value with the fingerprint of the GPG signature
+of the last decryption operation.  If the ID's match, then a true value is
+returned. Otherwise false is returned. 
 
 =head1 SEE ALSO
 

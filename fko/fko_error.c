@@ -164,7 +164,13 @@ fko_errstr(int err_code)
             return("Unable to set the given GPG home directory");
 
         case FKO_ERROR_GPGME_NO_SIGNATURE:
-            return("Unexpected number of signatures");
+            return("Missing GPG signature");
+
+        case FKO_ERROR_GPGME_BAD_SIGNATURE:
+            return("Bad GPG signature");
+
+        case FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED:
+            return("Trying to check signature with verification disabled");
 
 #endif /* HAVE_LIBGPGME */
     }

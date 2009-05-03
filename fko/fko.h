@@ -112,6 +112,8 @@ typedef enum {
     FKO_ERROR_GPGME_BAD_HOME_DIR,
     FKO_ERROR_GPGME_SET_HOME_DIR,
     FKO_ERROR_GPGME_NO_SIGNATURE,
+    FKO_ERROR_GPGME_BAD_SIGNATURE,
+    FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED,
 
     FKO_LAST_ERROR
 } fko_error_codes_t;
@@ -219,8 +221,11 @@ int fko_get_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char *val);
 
 int fko_get_gpg_signature_id(fko_ctx_t ctx, char **sig_id);
 int fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **sig_fpr);
+int fko_get_gpg_signature_summary(fko_ctx_t ctx, int *sigsum);
+int fko_get_gpg_signature_status(fko_ctx_t ctx, int *sigstat);
 
-int fko_gpg_signature_match(fko_ctx_t ctx, const char *id);
+int fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id, unsigned char *result);
+int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char *fpr, unsigned char *result);
 
 #endif /* FKO_H */
 

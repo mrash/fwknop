@@ -600,7 +600,7 @@ fko_get_gpg_home_dir(fko_ctx_t ctx, char **home_dir)
 }
 
 int
-fko_set_verify_gpg_sigs(fko_ctx_t ctx, unsigned char val)
+fko_set_gpg_signature_verify(fko_ctx_t ctx, unsigned char val)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
@@ -608,13 +608,65 @@ fko_set_verify_gpg_sigs(fko_ctx_t ctx, unsigned char val)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    ctx->verify_gpg_sigs = (val > 0) ? 1 : 0;
+    ctx->verify_gpg_sigs = (val != 0) ? 1 : 0;
 
     return(FKO_SUCCESS);
 #else
     return(FKO_ERROR_UNSUPPORTED_FEATURE);
 #endif  /* HAVE_LIBGPGME */
 }
+
+int
+fko_get_gpg_signature_verify(fko_ctx_t ctx, unsigned char *val)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *val = ctx->verify_gpg_sigs;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+int
+fko_set_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char val)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    ctx->ignore_gpg_sig_error = (val != 0) ? 1 : 0;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+int
+fko_get_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char *val)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *val = ctx->ignore_gpg_sig_error;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
 
 int
 fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **fpr)
@@ -629,6 +681,16 @@ fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **fpr)
     */
     if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    /* Make sure we are supposed to verify signatures.
+    */
+    if(ctx->verify_gpg_sigs == 0)
+        return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
+
+    /* Make sure we have a signature to work with.
+    */
+    if(ctx->gpg_sigs == NULL)
+        return(FKO_ERROR_GPGME_NO_SIGNATURE);
 
     *fpr = ctx->gpg_sigs->fpr;
 
@@ -652,6 +714,16 @@ fko_get_gpg_signature_id(fko_ctx_t ctx, char **id)
     if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
+    /* Make sure we are supposed to verify signatures.
+    */
+    if(ctx->verify_gpg_sigs == 0)
+        return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
+
+    /* Make sure we have a signature to work with.
+    */
+    if(ctx->gpg_sigs == NULL)
+        return(FKO_ERROR_GPGME_NO_SIGNATURE);
+
     *id = ctx->gpg_sigs->fpr + strlen(ctx->gpg_sigs->fpr) - 8;
 
     return(FKO_SUCCESS);
@@ -660,5 +732,136 @@ fko_get_gpg_signature_id(fko_ctx_t ctx, char **id)
 #endif  /* HAVE_LIBGPGME */
 }
 
+int
+fko_get_gpg_signature_summary(fko_ctx_t ctx, int *sigsum)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* Must be using GPG encryption.
+    */
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    /* Make sure we are supposed to verify signatures.
+    */
+    if(ctx->verify_gpg_sigs == 0)
+        return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
+
+    /* Make sure we have a signature to work with.
+    */
+    if(ctx->gpg_sigs == NULL)
+        return(FKO_ERROR_GPGME_NO_SIGNATURE);
+
+    *sigsum = ctx->gpg_sigs->summary;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+int
+fko_get_gpg_signature_status(fko_ctx_t ctx, int *sigstat)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* Must be using GPG encryption.
+    */
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    /* Make sure we are supposed to verify signatures.
+    */
+    if(ctx->verify_gpg_sigs == 0)
+        return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
+
+    /* Make sure we have a signature to work with.
+    */
+    if(ctx->gpg_sigs == NULL)
+        return(FKO_ERROR_GPGME_NO_SIGNATURE);
+
+    *sigstat = ctx->gpg_sigs->status;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+int
+fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id, unsigned char *result)
+{
+#if HAVE_LIBGPGME
+    char *curr_id;
+
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* Must be using GPG encryption.
+    */
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    /* Make sure we are supposed to verify signatures.
+    */
+    if(ctx->verify_gpg_sigs == 0)
+        return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
+
+    /* Make sure we have a signature to work with.
+    */
+    if(ctx->gpg_sigs == NULL)
+        return(FKO_ERROR_GPGME_NO_SIGNATURE);
+
+    fko_get_gpg_signature_id(ctx, &curr_id);
+
+    *result = strcmp(id, curr_id) == 0 ? 1 : 0;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+int
+fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char *id, unsigned char *result)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* Must be using GPG encryption.
+    */
+    if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
+        return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
+
+    /* Make sure we are supposed to verify signatures.
+    */
+    if(ctx->verify_gpg_sigs == 0)
+        return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
+
+    /* Make sure we have a signature to work with.
+    */
+    if(ctx->gpg_sigs == NULL)
+        return(FKO_ERROR_GPGME_NO_SIGNATURE);
+
+    *result = strcmp(id, ctx->gpg_sigs->fpr) == 0 ? 1 : 0;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
 
 /***EOF***/

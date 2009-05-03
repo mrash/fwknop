@@ -125,10 +125,13 @@ process_sigs(fko_ctx_t fko_ctx, gpgme_verify_result_t vres)
     if(!sig)
         return(FKO_ERROR_GPGME_NO_SIGNATURE);
 
-    /* --DSS TODO: Add more stuff here */
-
     /* Iterate over the sigs and store the info we are interested in
      * to the context.
+     *
+     * NOTE: At present, we support only a single signature.  However,
+     *       that may change in a future release.  We go a head and
+     *       grab all signatures even though we will only use the first
+     *       one.  --DSS
     */
     while(sig != NULL)
     {
@@ -160,6 +163,21 @@ process_sigs(fko_ctx_t fko_ctx, gpgme_verify_result_t vres)
 
         sig_cnt++;
         sig = sig->next;
+    }
+
+    /* If we are ignoring bad signatures, return success here.
+    */
+    if(fko_ctx->ignore_gpg_sig_error != 0)
+        return(FKO_SUCCESS);
+
+    /* Otherwise, we check them here and respond accordingly.
+    */
+    fgs = fko_ctx->gpg_sigs;
+
+    if(fgs->status != GPG_ERR_NO_ERROR) {
+        fko_ctx->gpg_err = fgs->status;
+
+        return(FKO_ERROR_GPGME_BAD_SIGNATURE);
     }
 
     return(FKO_SUCCESS);

@@ -81,13 +81,16 @@ _destroy_ctx(ctx)
     CODE:
     fko_destroy(ctx);
 
-char*
-_version(ctx)
+int
+_version(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_version(ctx);
+    val = NULL;
+    RETVAL = fko_get_version(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 char*
@@ -118,13 +121,15 @@ _set_digest_type(ctx, digest_type)
     OUTPUT:
     RETVAL
  
-short
-_get_digest_type(ctx)
+int
+_get_digest_type(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    short val
     CODE:
-    RETVAL = fko_get_spa_digest_type(ctx);
+    RETVAL = fko_get_spa_digest_type(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -137,13 +142,15 @@ _set_encryption_type(ctx, encryption_type)
     OUTPUT:
     RETVAL
  
-short
-_get_encryption_type(ctx)
+int
+_get_encryption_type(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    short val
     CODE:
-    RETVAL = fko_get_spa_encryption_type(ctx);
+    RETVAL = fko_get_spa_encryption_type(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -156,13 +163,15 @@ _set_rand_value(ctx, rand_val)
     OUTPUT:
     RETVAL
 
-char*
-_get_rand_value(ctx)
+int
+_get_rand_value(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_rand_value(ctx);
+    RETVAL = fko_get_rand_value(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -175,13 +184,15 @@ _set_username(ctx, username)
     OUTPUT:
     RETVAL
  
-char*
-_get_username(ctx)
+int
+_get_username(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_username(ctx);
+    RETVAL = fko_get_username(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -194,13 +205,15 @@ _set_spa_message_type(ctx, spa_message_type)
     OUTPUT:
     RETVAL
  
-short
-_get_spa_message_type(ctx)
+int
+_get_spa_message_type(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    short val;
     CODE:
-    RETVAL = fko_get_spa_message_type(ctx);
+    RETVAL = fko_get_spa_message_type(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -213,13 +226,15 @@ _set_timestamp(ctx, offset)
     OUTPUT:
     RETVAL
  
-unsigned int
-_get_timestamp(ctx)
+int
+_get_timestamp(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    unsigned int val;
     CODE:
-    RETVAL = fko_get_timestamp(ctx);
+    RETVAL = fko_get_timestamp(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -232,13 +247,15 @@ _set_spa_message(ctx, spa_message)
     OUTPUT:
     RETVAL
 
-char*
-_get_spa_message(ctx)
+int
+_get_spa_message(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_spa_message(ctx);
+    RETVAL = fko_get_spa_message(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -251,13 +268,15 @@ _set_spa_nat_access(ctx, spa_nat_access)
     OUTPUT:
     RETVAL
 
-char*
-_get_spa_nat_access(ctx)
+int
+_get_spa_nat_access(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_spa_nat_access(ctx);
+    RETVAL = fko_get_spa_nat_access(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -270,13 +289,15 @@ _set_spa_server_auth(ctx, spa_server_auth)
     OUTPUT:
     RETVAL
 
-char*
-_get_spa_server_auth(ctx)
+int
+_get_spa_server_auth(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_spa_server_auth(ctx);
+    RETVAL = fko_get_spa_server_auth(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -290,12 +311,14 @@ _set_spa_client_timeout(ctx, spa_client_timeout)
     RETVAL
 
 int
-_get_spa_client_timeout(ctx)
+_get_spa_client_timeout(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    int val;
     CODE:
-    RETVAL = fko_get_spa_client_timeout(ctx);
+    RETVAL = fko_get_spa_client_timeout(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -307,13 +330,15 @@ _set_spa_digest(ctx)
     OUTPUT:
     RETVAL
 
-char*
-_get_spa_digest(ctx)
+int
+_get_spa_digest(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_spa_digest(ctx);
+    RETVAL = fko_get_spa_digest(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -326,13 +351,15 @@ _set_spa_data(ctx, spa_data)
     OUTPUT:
     RETVAL
 
-char*
-_get_spa_data(ctx)
+int
+_get_spa_data(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_spa_data(ctx);
+    RETVAL = fko_get_spa_data(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -345,13 +372,15 @@ _set_gpg_recipient(ctx, gpg_recipient)
     OUTPUT:
     RETVAL
 
-char*
-_get_gpg_recipient(ctx)
+int
+_get_gpg_recipient(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_gpg_recipient(ctx);
+    RETVAL = fko_get_gpg_recipient(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -364,13 +393,15 @@ _set_gpg_signer(ctx, gpg_signer)
     OUTPUT:
     RETVAL
 
-char*
-_get_gpg_signer(ctx)
+int
+_get_gpg_signer(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_gpg_signer(ctx);
+    RETVAL = fko_get_gpg_signer(ctx, &val);
     OUTPUT:
+    val
     RETVAL
 
 int
@@ -383,22 +414,136 @@ _set_gpg_home_dir(ctx, gpg_home_dir)
     OUTPUT:
     RETVAL
 
-char*
-_get_gpg_home_dir(ctx)
+int
+_get_gpg_home_dir(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    char *val;
     CODE:
-    RETVAL = fko_get_gpg_home_dir(ctx);
+    RETVAL = fko_get_gpg_home_dir(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_set_gpg_signature_verify(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    unsigned char val;
+    CODE:
+    RETVAL = fko_set_gpg_signature_verify(ctx, val);
     OUTPUT:
     RETVAL
 
-char*
-_get_encoded_data(ctx)
+int
+_get_gpg_signature_verify(ctx, val)
     INPUT:
     fko_ctx_t ctx;
+    unsigned char val;
     CODE:
-    RETVAL = fko_get_encoded_data(ctx);
+    RETVAL = fko_get_gpg_signature_verify(ctx, &val);
     OUTPUT:
+    val
+    RETVAL
+
+int
+_set_gpg_ignore_verify_error(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    unsigned char val;
+    CODE:
+    RETVAL = fko_set_gpg_ignore_verify_error(ctx, val);
+    OUTPUT:
+    RETVAL
+
+int
+_get_gpg_ignore_verify_error(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    unsigned char val;
+    CODE:
+    RETVAL = fko_get_gpg_ignore_verify_error(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_get_gpg_signature_id(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    char *val;
+    CODE:
+    RETVAL = fko_get_gpg_signature_id(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_get_gpg_signature_fpr(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    char *val;
+    CODE:
+    RETVAL = fko_get_gpg_signature_fpr(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_get_gpg_signature_summary(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    int val;
+    CODE:
+    RETVAL = fko_get_gpg_signature_summary(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_get_gpg_signature_status(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    int val;
+    CODE:
+    RETVAL = fko_get_gpg_signature_status(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_gpg_signature_id_match(ctx, id, val)
+    INPUT:
+    fko_ctx_t ctx;
+    char *id;
+    unsigned char val;
+    CODE:
+    RETVAL = fko_gpg_signature_id_match(ctx, id, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_gpg_signature_fpr_match(ctx, fpr, val)
+    INPUT:
+    fko_ctx_t ctx;
+    char *fpr;
+    unsigned char val;
+    CODE:
+    RETVAL = fko_gpg_signature_fpr_match(ctx, fpr, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_get_encoded_data(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    char *val;
+    CODE:
+    RETVAL = fko_get_encoded_data(ctx, &val);
+    OUTPUT:
+    val
     RETVAL
 
 int

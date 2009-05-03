@@ -84,6 +84,7 @@ struct fko_context {
     gpgme_key_t     signer_key;
 
     unsigned char   verify_gpg_sigs;
+    unsigned char   ignore_gpg_sig_error;
 
     fko_gpg_sig_t   gpg_sigs;
 

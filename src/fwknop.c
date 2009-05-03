@@ -296,6 +296,8 @@ main(int argc, char **argv)
             }
         }
 
+//fko_set_gpg_signature_verify(ctx2, 0);
+
         res = fko_decrypt_spa_data(
             ctx2, get_user_pw(&options, CRYPT_OP_DECRYPT)
         );
@@ -308,7 +310,7 @@ main(int argc, char **argv)
             );
 
             if(IS_GPG_ERROR(res))
-                fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
+                fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx2));
 
             exit(EXIT_FAILURE);
         }
@@ -316,11 +318,30 @@ main(int argc, char **argv)
 /* --DSS temp for test
 if(options.use_gpg)
 {
+  int  summ=-1, stat=-1;
   char *fpr, *id;
-  fko_get_gpg_signature_fpr(ctx2, &fpr);
-  printf("++ SIG FPR: %s\n", fpr);
-  fko_get_gpg_signature_id(ctx2, &id);
-  printf("++ SIG  ID: %s\n", id);
+
+  res = fko_get_gpg_signature_fpr(ctx2, &fpr);
+  if(res == FKO_SUCCESS)
+    printf("++ SIG FPR: %s\n", fpr);
+  else
+    printf("++ SIG FPR ERROR %i: %s\n", res, fko_errstr(res));
+
+  res = fko_get_gpg_signature_id(ctx2, &id);
+  if(res == FKO_SUCCESS)
+    printf("++ SIG  ID: %s\n", id);
+  else
+    printf("++ SIG ID ERROR %i: %s\n", res, fko_errstr(res));
+
+  res = fko_get_gpg_signature_status(ctx2, &stat);
+  if(res != FKO_SUCCESS)
+    printf("++ SIG Status ERROR %i: %s\n", res, fko_errstr(res));
+
+  res = fko_get_gpg_signature_summary(ctx2, &summ);
+  if(res != FKO_SUCCESS)
+    printf("++ SIG Summary ERROR %i: %s\n", res, fko_errstr(res));
+
+  printf("++ Status: %i,  Summary: %i\n", stat, summ);
 }
 */
 
