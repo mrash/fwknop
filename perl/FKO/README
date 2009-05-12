@@ -8,6 +8,10 @@ and usage overview.
 
 INSTALLATION
 
+The library "libfko" should already be installed on the local
+system (in a location perl will find it) before attempting to
+build/install this module.
+
 To install this module type the following:
 
    perl Makefile.PL
