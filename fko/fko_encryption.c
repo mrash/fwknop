@@ -188,9 +188,9 @@ gpg_encrypt(fko_ctx_t ctx, char *enc_key)
     unsigned char  *cipher = NULL;
     size_t          cipher_len;
 
-    /* First make sure we have signer and recipient keys set.
+    /* First make sure we have a recipient key set.
     */
-    if(ctx->gpg_signer == NULL || ctx->gpg_recipient == NULL)
+    if(ctx->gpg_recipient == NULL)
         return(FKO_ERROR_MISSING_GPG_KEY_DATA);
 
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
@@ -242,7 +242,7 @@ gpg_encrypt(fko_ctx_t ctx, char *enc_key)
     return(FKO_SUCCESS);
 }
 
-/* Prep and encrypt using gpgme
+/* Prep and decrypt using gpgme
 */
 int
 gpg_decrypt(fko_ctx_t ctx, char *dec_key, size_t b64_len)
@@ -250,11 +250,6 @@ gpg_decrypt(fko_ctx_t ctx, char *dec_key, size_t b64_len)
     unsigned char  *cipher;
     size_t          cipher_len;
     int             res;
-
-    /* First make sure we have signer and recipient keys set.
-    if(ctx->gpg_signer == NULL || ctx->gpg_recipient == NULL)
-        return(FKO_ERROR_MISSING_GPG_KEY_DATA);
-    */
 
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.

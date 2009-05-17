@@ -659,7 +659,7 @@ parameters as well.  Setting the ``type'' parameters first is recommended
 
 @itemize @bullet
 @item gpg_recipient -- @emph{(must be explicitly set)}
-@item gpg_signer -- @emph{(must be explicitly set)}
+@item gpg_signer -- @emph{(optional, but recommended - must be explicitly set)}
 @item gpg_home_dir -- @emph{(default may suffice)}
 @end itemize
 
@@ -723,7 +723,7 @@ main(int argc, char **argv)
     /* Key for the recipient */
     rc = fko_set_gpg_recipient(ctx, "recip@@some.where");
 
-    /* Key for the signer */
+    /* Key for the signer (if you want to sign it) */
     rc = fko_set_gpg_signer(ctx, "me@@right.here");
 
     /* Finalize the SPA data */

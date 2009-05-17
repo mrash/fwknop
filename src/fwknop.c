@@ -114,18 +114,21 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
-        res = fko_set_gpg_signer(ctx, options.gpg_signer_key);
-        if(res != FKO_SUCCESS)
+        if(options.gpg_signer_key != NULL && strlen(options.gpg_signer_key))
         {
-            fprintf(stderr,
-                "Error #%i from fko_set_gpg_signer: %s\n",
-                res, fko_errstr(res)
-            );
+            res = fko_set_gpg_signer(ctx, options.gpg_signer_key);
+            if(res != FKO_SUCCESS)
+            {
+                fprintf(stderr,
+                    "Error #%i from fko_set_gpg_signer: %s\n",
+                    res, fko_errstr(res)
+                );
 
-            if(IS_GPG_ERROR(res))
-                fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
+                if(IS_GPG_ERROR(res))
+                    fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-            exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
+            }
         }
     }
 
@@ -296,7 +299,8 @@ main(int argc, char **argv)
             }
         }
 
-//fko_set_gpg_signature_verify(ctx2, 0);
+fko_set_gpg_signature_verify(ctx2, 0);
+//fko_set_gpg_ignore_verify_error(ctx2, 1);
 
         res = fko_decrypt_spa_data(
             ctx2, get_user_pw(&options, CRYPT_OP_DECRYPT)
@@ -316,6 +320,7 @@ main(int argc, char **argv)
         }
 
 /* --DSS temp for test
+*/
 if(options.use_gpg)
 {
   int  summ=-1, stat=-1;
@@ -343,7 +348,6 @@ if(options.use_gpg)
 
   printf("++ Status: %i,  Summary: %i\n", stat, summ);
 }
-*/
 
         if (! options.quiet) {
             printf("\nDump of the Decoded Data\n");

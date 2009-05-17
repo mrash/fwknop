@@ -160,7 +160,7 @@ validate_options(fko_cli_options_t *options)
         exit(1);
     }
 
-    /* If we are using gpg, we mush have the signer and recipient set.
+    /* If we are using gpg, we must at least have the recipient set.
     */
     if(options->use_gpg)
     {
@@ -169,14 +169,6 @@ validate_options(fko_cli_options_t *options)
         {
             fprintf(stderr,
                 "[*] Must specify --gpg-recipient-key when GPG is used.\n");
-            exit(1);
-        }
-
-        if(options->gpg_signer_key == NULL
-            || strlen(options->gpg_signer_key) == 0)
-        {
-            fprintf(stderr,
-                "[*] Must specify --gpg-signer-key when GPG is used.\n");
             exit(1);
         }
     }

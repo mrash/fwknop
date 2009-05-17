@@ -28,7 +28,7 @@
 
 /* General params
 */
-#define FKO_PROTOCOL_VERSION "1.10.0" /* The fwknop protocol version */
+#define FKO_PROTOCOL_VERSION "1.9.12" /* The fwknop protocol version */
 
 /* Supported FKO Message types...
 */

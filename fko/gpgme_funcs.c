@@ -344,31 +344,39 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
         return(FKO_ERROR_GPGME_CIPHER_DATA_OBJ);
     }
 
-    /* Here we add the signer to the gpgme context.
+    /* Here we add the signer to the gpgme context if there is one.
     */
-    gpgme_signers_clear(gpg_ctx);
-    err = gpgme_signers_add(gpg_ctx, fko_ctx->signer_key);
-    if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
-    {
-        gpgme_data_release(plaintext);
-        gpgme_data_release(cipher);
-        gpgme_release(gpg_ctx);
-        fko_ctx->gpg_ctx = NULL;
+    if(fko_ctx->gpg_signer != NULL) {
+        gpgme_signers_clear(gpg_ctx);
+        err = gpgme_signers_add(gpg_ctx, fko_ctx->signer_key);
+        if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
+        {
+            gpgme_data_release(plaintext);
+            gpgme_data_release(cipher);
+            gpgme_release(gpg_ctx);
+            fko_ctx->gpg_ctx = NULL;
 
-        fko_ctx->gpg_err = err;
+            fko_ctx->gpg_err = err;
 
-        return(FKO_ERROR_GPGME_ADD_SIGNER);
+            return(FKO_ERROR_GPGME_ADD_SIGNER);
+        }
     }
 
     /* Set the passphrase callback.
     */
     gpgme_set_passphrase_cb(gpg_ctx, passphrase_cb, (void*)pw);
 
-    /* Encrypt and sign the SPA data.
+    /* Encrypt and sign (if a sig was provided) the SPA data.
     */
-    err = gpgme_op_encrypt_sign(
-        gpg_ctx, key, GPGME_ENCRYPT_ALWAYS_TRUST, plaintext, cipher
-    );
+    if(fko_ctx->gpg_signer == NULL)
+        err = gpgme_op_encrypt(
+            gpg_ctx, key, GPGME_ENCRYPT_ALWAYS_TRUST, plaintext, cipher
+        );
+    else
+        err = gpgme_op_encrypt_sign(
+            gpg_ctx, key, GPGME_ENCRYPT_ALWAYS_TRUST, plaintext, cipher
+        );
+
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
         gpgme_data_release(plaintext);
