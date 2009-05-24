@@ -14,5 +14,11 @@ EXTRA_DIST = \
 	perl/FKO/typemap \
 	perl/FKO/lib/FKO.pm \
 	perl/FKO/lib/FKO_Constants.pl \
-	perl/FKO/Changes
+	perl/FKO/Changes \
+    win32/config.h \
+    win32/fwknop-client.vcproj \
+    win32/getopt.c \
+    win32/getopt.h \
+    win32/libfko.sln \
+    win32/libfko.vcproj
 
