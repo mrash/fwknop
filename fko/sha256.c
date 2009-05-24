@@ -127,7 +127,9 @@ sha256_transform(SHA_INFO *sha_info)
         dp += 4;
         W[i] = TRUNC32(T);
     }
-#warning Unknown byte order -- we will try LITTLE_ENDIAN
+  #ifndef WIN32
+    #warning Undetermined or unsupported Byte Order... We will try LITTLE_ENDIAN
+  #endif
 #endif /* SWAP_DONE */
 
     A = sha_info->digest[0];
@@ -195,7 +197,7 @@ sha256_update(SHA_INFO *sha_info, uint8_t *buffer, int count)
         sha_info->count_hi++;
     }
     sha_info->count_lo = clo;
-    sha_info->count_hi += (uint8_t) count >> 29;
+    sha_info->count_hi += (uint32_t) count >> 29;
     if (sha_info->local) {
         i = SHA_BLOCKSIZE - sha_info->local;
         if (i > count) {

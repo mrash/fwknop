@@ -26,24 +26,33 @@
 #include "fko_common.h"
 #include "fko.h"
 
-#ifdef HAVE_SYS_TIME_H
-  #include <sys/time.h>
-  #ifdef TIME_WITH_SYS_TIME
-    #include <time.h>
+#ifdef WIN32
+  #include <sys/timeb.h>
+  #include <time.h>
+#else
+  #ifdef HAVE_SYS_TIME_H
+    #include <sys/time.h>
+    #ifdef TIME_WITH_SYS_TIME
+      #include <time.h>
+    #endif
   #endif
-#endif
 
-#define RAND_FILE "/dev/urandom"
+  #define RAND_FILE "/dev/urandom"
+#endif
 
 /* Set/Generate the SPA data random value string.
 */
 int
 fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
 {
+#ifdef WIN32
+	struct _timeb	tb;
+#else
     FILE           *rfd;
     struct timeval  tv;
-    unsigned int    seed;
-    char           *tmp_buf;
+#endif
+    unsigned long   seed;
+	char           *tmp_buf;
 
     /* Context must be initialized.
     */
@@ -66,6 +75,10 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
         return(FKO_SUCCESS);
     }
 
+#ifdef WIN32
+	_ftime_s(&tb);
+	seed = ((tb.time * 1000) + tb.millitm) & 0xFFFFFFFF;
+#else
     /* Attempt to read seed data from /dev/urandom.  If that does not
      * work, then fall back to a time-based method (less secure, but
      * probably more portable).
@@ -85,6 +98,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
 
         seed = tv.tv_usec;
     }
+#endif
 
     srand(seed);
 
@@ -97,7 +111,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
     sprintf(ctx->rand_val, "%u", rand());
-    
+
     while(strlen(ctx->rand_val) < FKO_RAND_VAL_SIZE)
     {
         sprintf(tmp_buf, "%u", rand());

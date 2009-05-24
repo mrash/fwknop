@@ -48,7 +48,7 @@ struct fko_context {
     /* FKO SPA user-definable message data */
     char           *rand_val;
     char           *username;
-    unsigned int    timestamp;
+    time_t          timestamp;
     short           message_type;
     char           *message;
     char           *nat_access;

@@ -25,6 +25,9 @@
 */
 #include "fwknop_common.h"
 #include "config_init.h"
+#include "getopt.h"
+#include "spa_comm.h"
+#include "utils.h"
 
 /* Routine to extract the configuration value from a line in the config
  * file.
@@ -39,7 +42,7 @@ get_char_val(const char *var_name, char *dest, char *lptr)
 
     /* var_name is guaranteed to be NULL-terminated.
     */
-    for (i=0; i < strlen(var_name); i++)
+    for (i=0; i < (int)strlen(var_name); i++)
         if (tmp_ptr[i] != var_name[i])
             return 0;
 
@@ -147,7 +150,7 @@ parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
 static void
 validate_options(fko_cli_options_t *options)
 {
-    char    *tmpc;
+    //char    *tmpc;
 
     /* Gotta have a Destination unless we are just testing or getting the
      * the version.
@@ -183,7 +186,7 @@ void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
     int                 cmd_arg, index;
-    unsigned int        tmpint;
+    //unsigned int        tmpint;
 
     struct opts_track   ot;
 
@@ -198,8 +201,13 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->proto = FKO_DEFAULT_PROTO;
     options->port  = FKO_DEFAULT_PORT;
 
+#ifdef WIN32
+	    while ((cmd_arg = getopt(argc, argv,
+			"A:a:D:G:S:Q:m:p:P:B:bghqdTvVn")) != -1) {
+#else
     while ((cmd_arg = getopt_long(argc, argv,
             "A:a:D:G:S:Q:p:P:BbghqdTvVn", cmd_opts, &index)) != -1) {
+#endif
         switch(cmd_arg) {
             case 'A':
                 strlcpy(options->access_str, optarg, MAX_LINE_LEN);
@@ -273,6 +281,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 usage();
                 exit(0);
             case FKO_DIGEST_NAME:
+			case 'm':
                 if(strncasecmp(optarg, "md5", 3) == 0)
                     options->digest_type = FKO_DIGEST_MD5;
                 else if(strncasecmp(optarg, "sha1", 4) == 0)
@@ -336,7 +345,9 @@ usage(void)
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -A, --access            - Provide a list of ports/protocols to open\n"
       "                           on the server.\n"
-      " -a, --allow-ip          - Specify IP address to allow within the SPA\n"
+      " -B, --save-packet       - Save the generated packet data to the\n"
+      "                           specified file.\n"
+	  " -a, --allow-ip          - Specify IP address to allow within the SPA\n"
       "                           packet.\n"
       " -D, --destination       - Specify the IP address of the fwknop server.\n"
       " -p, --server-port       - Set the destination port for outgoing SPA\n"
@@ -353,7 +364,7 @@ usage(void)
       " -d, --debug             - Set debug mode.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"
-      "     --digest-type       - Speciy the message digest algorithm to use.\n"
+      " -m, --digest-type       - Speciy the message digest algorithm to use.\n"
       "                           (md5, sha1, or sha256 (default)).\n"
       "     --gpg-encryption    - Use GPG encyrption (default is Rijndael).\n"
       "     --gpg-recipient-key - Specify the recipient GPG key name or ID.\n"
@@ -362,6 +373,12 @@ usage(void)
       "     --gpg-agent         - Use GPG agent if available.\n"
       "\n"
     );
+
+	// --DSS TEMP
+#ifdef WIN32
+	printf("NOTE: Long options and GPG encryption are not available\n");
+	printf("      under Windows yet.\n\n");
+#endif
 
     return;
 }

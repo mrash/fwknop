@@ -25,9 +25,6 @@
  *****************************************************************************
 */
 #include "spa_comm.h"
-#if HAVE_SYS_SOCKET_H
-  #include <sys/socket.h>
-#endif
 
 /* Send the SPA data via UDP packet.
 */
@@ -39,6 +36,17 @@ send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     int sock = 0;
     int res;
     char *spa_data;
+
+#ifdef WIN32
+	WSADATA	wsa_data;
+
+	res = WSAStartup( MAKEWORD(1,1), &wsa_data );
+    if( res != 0 )
+	{
+		fprintf(stderr, "[*] Winsock initialization error %d\n", res );
+		exit(0);
+	}
+#endif
 
     /* create the socket
     */
@@ -72,7 +80,7 @@ int
 send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
-    int rv;
+    int rv = -1;
     return rv;
 }
 
@@ -81,7 +89,7 @@ send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
 int
 send_spa_packet_icmp(fko_ctx_t ctx, fko_cli_options_t *options)
 {
-    int rv;
+    int rv = -1;
     return rv;
 }
 

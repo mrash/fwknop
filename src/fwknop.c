@@ -40,7 +40,7 @@ main(int argc, char **argv)
 {
     fko_ctx_t           ctx, ctx2;
     int                 res;
-    char               *pw, *spa_data, *version;
+    char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN];
 
     fko_cli_options_t   options;
@@ -69,8 +69,10 @@ main(int argc, char **argv)
         /* If use-gpg-agent was not specified, then remove the GPG_AGENT_INFO
          * ENV variable if it exists.
         */
+#ifndef WIN32
         if(!options.use_gpg_agent)
             unsetenv("GPG_AGENT_INFO");
+#endif
 
         res = fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG);
         if(res != FKO_SUCCESS)
@@ -175,7 +177,7 @@ main(int argc, char **argv)
     fko_set_spa_client_timeout(ctx, 120);
     */
 
-    /* Set a serer auth string.
+    /* Set a server auth string.
     res = fko_set_spa_server_auth(ctx, "crypt,SomePW");
     if(res != FKO_SUCCESS)
         fprintf(stderr, "Error #%i from fko_set_spa_server_auth: %s\n", res, fko_errstr(res));
@@ -221,7 +223,6 @@ main(int argc, char **argv)
         /* Now we create a new context based on data from the first one.
         */
         res = fko_get_spa_data(ctx, &spa_data);
-
         if(res != FKO_SUCCESS)
         {
             fprintf(stderr,
@@ -281,7 +282,6 @@ main(int argc, char **argv)
 
             exit(EXIT_FAILURE);
         }
-        */
 
         if(options.use_gpg)
         {
@@ -298,8 +298,9 @@ main(int argc, char **argv)
                 }
             }
         }
+*/
 
-fko_set_gpg_signature_verify(ctx2, 0);
+//fko_set_gpg_signature_verify(ctx2, 0);
 //fko_set_gpg_ignore_verify_error(ctx2, 1);
 
         res = fko_decrypt_spa_data(
@@ -319,35 +320,6 @@ fko_set_gpg_signature_verify(ctx2, 0);
             exit(EXIT_FAILURE);
         }
 
-/* --DSS temp for test
-*/
-if(options.use_gpg)
-{
-  int  summ=-1, stat=-1;
-  char *fpr, *id;
-
-  res = fko_get_gpg_signature_fpr(ctx2, &fpr);
-  if(res == FKO_SUCCESS)
-    printf("++ SIG FPR: %s\n", fpr);
-  else
-    printf("++ SIG FPR ERROR %i: %s\n", res, fko_errstr(res));
-
-  res = fko_get_gpg_signature_id(ctx2, &id);
-  if(res == FKO_SUCCESS)
-    printf("++ SIG  ID: %s\n", id);
-  else
-    printf("++ SIG ID ERROR %i: %s\n", res, fko_errstr(res));
-
-  res = fko_get_gpg_signature_status(ctx2, &stat);
-  if(res != FKO_SUCCESS)
-    printf("++ SIG Status ERROR %i: %s\n", res, fko_errstr(res));
-
-  res = fko_get_gpg_signature_summary(ctx2, &summ);
-  if(res != FKO_SUCCESS)
-    printf("++ SIG Summary ERROR %i: %s\n", res, fko_errstr(res));
-
-  printf("++ Status: %i,  Summary: %i\n", stat, summ);
-}
 
         if (! options.quiet) {
             printf("\nDump of the Decoded Data\n");
@@ -392,56 +364,70 @@ display_ctx(fko_ctx_t ctx)
 {
     char            *rand_val, *username, *version, *spa_message, *nat_access,
                     *server_auth, *enc_data, *spa_digest, *spa_data;
-    unsigned int    timestamp=0;
+    time_t          timestamp=0;
     short           msg_type=-1, digest_type=-1;
-    int             client_timeout=-1, res;
+    int             client_timeout=-1;
 
     /* Should be checking return values, but this is temp code. --DSS
     */
     fko_get_rand_value(ctx, &rand_val);
+//printf("RAND: '%s'\n", rand_val);
     fko_get_username(ctx, &username);
+//printf("USER: '%s'\n", username);
     fko_get_timestamp(ctx, &timestamp);
+//printf("TIME: '%lu'\n", timestamp);
     fko_get_version(ctx, &version);
+//printf("VER:  '%s'\n", version);
     fko_get_spa_message_type(ctx, &msg_type);
+//printf("MTYP: '%i'\n", msg_type);
     fko_get_spa_message(ctx, &spa_message);
+//printf("MSG:  '%s'\n", spa_message);
     fko_get_spa_nat_access(ctx, &nat_access);
+//printf("NAT:  '%s'\n", nat_access);
     fko_get_spa_server_auth(ctx, &server_auth);
+//printf("AUTH: '%s'\n", server_auth);
     fko_get_spa_client_timeout(ctx, &client_timeout);
+//printf("CLTO: '%s'\n", client_timeout);
     fko_get_spa_digest_type(ctx, &digest_type);
+//printf("DTYP: '%i'\n", digest_type);
     fko_get_encoded_data(ctx, &enc_data);
+//printf("ENC:  '%s'\n", enc_data);
     fko_get_spa_digest(ctx, &spa_digest);
+//printf("DIG:  '%s'\n", spa_digest);
     fko_get_spa_data(ctx, &spa_data);
+//printf("SDAT: '%s'\n", spa_data);
 
-    printf(
-        "\nFKO Context Values:\n===================\n\n"
-        "   Random Value: %s\n"
-        "       Username: %s\n"
-        "      Timestamp: %u\n"
-        "    FKO Version: %s\n"
-        "   Message Type: %i\n"
-        " Message String: %s\n"
-        "     Nat Access: %s\n"
-        "    Server Auth: %s\n"
-        " Client Timeout: %u\n"
-        "    Digest Type: %u\n"
-        "\n   Encoded Data: %s\n"
-        "\nSPA Data Digest: %s\n"
-        "\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n"
-        ,
-        rand_val == NULL ? "<NULL>" : rand_val,
-        username == NULL ? "<NULL>" : username,
-        timestamp,
-        version == NULL ? "<NULL>" : version,
-        msg_type,
-        spa_message == NULL ? "<NULL>" : spa_message,
-        nat_access == NULL ? "<NULL>" : nat_access,
-        server_auth == NULL ? "<NULL>" : server_auth,
-        client_timeout,
-        digest_type,
-        enc_data == NULL ? "<NULL>" : enc_data,
-        spa_digest == NULL ? "<NULL>" : spa_digest,
-        spa_data == NULL ? "<NULL>" : spa_data
-    );
+//return;
+
+    printf("\nFKO Context Values:\n===================\n\n");
+    printf("   Random Value: %s\n", rand_val);
+    printf("       Username: %s\n", username);
+    printf("      Timestamp: %u\n", timestamp);
+    printf("    FKO Version: %s\n", version);
+    printf("   Message Type: %i\n", msg_type);
+    printf(" Message String: %s\n", spa_message);
+    printf("     Nat Access: %s\n", nat_access);
+    printf("    Server Auth: %s\n", server_auth);
+    printf(" Client Timeout: %u\n", client_timeout);
+    printf("    Digest Type: %u\n", digest_type);
+    printf("\n   Encoded Data: %s\n", enc_data);
+    printf("\nSPA Data Digest: %s\n", spa_digest);
+    printf("\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n", spa_data);
+        //,
+        //rand_val,// == NULL ? "<NULL>" : rand_val,
+        //username,// == NULL ? "<NULL>" : username,
+        //timestamp,
+        //version, // == NULL ? "<NULL>" : version,
+        //msg_type,
+        //spa_message // == NULL ? "<NULL>" : spa_message,
+        //nat_access == NULL ? "<NULL>" : nat_access,
+        //server_auth == NULL ? "<NULL>" : server_auth,
+        //client_timeout,
+        //digest_type,
+        //enc_data == NULL ? "<NULL>" : enc_data,
+        //spa_digest == NULL ? "<NULL>" : spa_digest,
+        //spa_data == NULL ? "<NULL>" : spa_data
+    //);
 
 }
 

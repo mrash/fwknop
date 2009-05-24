@@ -30,6 +30,10 @@
 
 #include "fko_common.h"
 
+#ifdef WIN32
+  #define BYTEORDER 1234
+#endif
+
 /* Truncate to 32 bits -- should be a null op on 32-bit machines
 */
 #ifndef TRUNC32

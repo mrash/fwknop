@@ -26,19 +26,13 @@
 #include "fko_common.h"
 #include "fko.h"
 
-#ifdef HAVE_SYS_TIME_H
-  #include <sys/time.h>
-  #ifdef TIME_WITH_SYS_TIME
-    #include <time.h>
-  #endif
-#endif
 
 /* Set the timestamp.
 */
 int
 fko_set_timestamp(fko_ctx_t ctx, int offset)
 {
-    unsigned int ts;
+    time_t ts;
 
     /* Must be initialized
     */
@@ -60,7 +54,7 @@ fko_set_timestamp(fko_ctx_t ctx, int offset)
 /* Return the current timestamp.
 */
 int
-fko_get_timestamp(fko_ctx_t ctx, unsigned int *timestamp)
+fko_get_timestamp(fko_ctx_t ctx, time_t *timestamp)
 {
     /* Must be initialized
     */

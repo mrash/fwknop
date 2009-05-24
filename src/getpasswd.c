@@ -25,7 +25,12 @@
 */
 #include <stdio.h>
 #include <signal.h>
-#include <termios.h>
+
+#ifdef WIN32
+  #include <conio.h>
+#else
+  #include <termios.h>
+#endif
 
 #include "fwknop_common.h"
 #include "getpasswd.h"
@@ -39,10 +44,12 @@ getpasswd(const char *prompt)
 {
     static char     pwbuf[MAX_PASS_LEN + 1] = {0};
     char           *ptr;    
-    sigset_t        sig, old_sig;
-    struct termios  ts, old_ts;
-    FILE           *fp;
     int             c;
+
+#ifndef WIN32
+    FILE           *fp;
+	sigset_t        sig, old_sig;
+    struct termios  ts, old_ts;
 
     if((fp = fopen(ctermid(NULL), "r+")) == NULL)
         return(NULL);
@@ -66,33 +73,46 @@ getpasswd(const char *prompt)
     tcsetattr(fileno(fp), TCSAFLUSH, &ts);
 
     fputs(prompt, fp);
+#endif
 
     /* Read in the password.
     */
     ptr = pwbuf;
-    while((c = getc(fp)) != EOF && c != '\n')
+#ifdef WIN32
+	_cputs(prompt);
+    while((c = _getch()) != '\r')
+#else
+	while((c = getc(fp)) != EOF && c != '\n')
+#endif
         if(ptr < &pwbuf[MAX_PASS_LEN])
             *ptr++ = c;
 
-    /* Null terminate the password.
+	/* Null terminate the password.
     */
     *ptr = 0;
 
+#ifndef WIN32
     /* we can go ahead and echo out a newline.
     */
     putc('\n', fp);
 
-    /* Restore our tty state and signal handlers.
+	/* Restore our tty state and signal handlers.
     */
     tcsetattr(fileno(fp), TCSAFLUSH, &old_ts);
     sigprocmask(SIG_BLOCK, &old_sig, NULL);
 
     fclose(fp);
+#else
+	/* In Windows, it would be a CR-LF
+	*/
+	_putch('\r');
+	_putch('\n');
+#endif
 
     return(pwbuf);
 }
 
-/* Function for accepting password input from users
+/* Function for accepting password input from from a file
 */
 char*
 getpasswd_file(const char *pw_file, const char *dst_ip_str)
@@ -108,7 +128,7 @@ getpasswd_file(const char *pw_file, const char *dst_ip_str)
     if ((pwfile_ptr = fopen(pw_file, "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open config file: %s\n", pw_file);
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     while ((fgets(conf_line_buf, MAX_LINE_LEN, pwfile_ptr)) != NULL)
@@ -163,7 +183,7 @@ getpasswd_file(const char *pw_file, const char *dst_ip_str)
     if (pwbuf[0] == '\0') {
         fprintf(stderr, "[*] Could not get password for IP: %s from: %s\n",
             dst_ip_str, pw_file);
-        exit(EXIT_FAILURE);
+        exit(1);
     }
 
     return pwbuf;

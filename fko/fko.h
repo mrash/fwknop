@@ -26,6 +26,24 @@
 #ifndef FKO_H
 #define FKO_H 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef WIN32
+  #ifdef DLL_EXPORTS
+    #define DLL_API __declspec(dllexport)
+  #else
+	#ifdef DLL_IMPORTS
+		#define DLL_API __declspec(dllimport)
+	#else
+		#define DLL_API
+	#endif
+  #endif
+#else
+  #define DLL_API
+#endif
+
 /* General params
 */
 #define FKO_PROTOCOL_VERSION "1.9.12" /* The fwknop protocol version */
@@ -155,77 +173,81 @@ enum {
 
 /* General api calls
 */
-int fko_new(fko_ctx_t *ctx);
-int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, char *dec_key);
-void fko_destroy(fko_ctx_t ctx);
-int fko_spa_data_final(fko_ctx_t ctx, char *enc_key);
+DLL_API int fko_new(fko_ctx_t *ctx);
+DLL_API int fko_new_with_data(fko_ctx_t *ctx, char *enc_msg, char *dec_key);
+DLL_API void fko_destroy(fko_ctx_t ctx);
+DLL_API int fko_spa_data_final(fko_ctx_t ctx, char *enc_key);
 
 
 /* Set context data functions
 */
-int fko_set_rand_value(fko_ctx_t ctx, const char *val);
-int fko_set_username(fko_ctx_t ctx, const char *spoof_user);
-int fko_set_timestamp(fko_ctx_t ctx, int offset);
-int fko_set_spa_message_type(fko_ctx_t ctx, short msg_type);
-int fko_set_spa_message(fko_ctx_t ctx, const char *msg_string);
-int fko_set_spa_nat_access(fko_ctx_t ctx, const char *nat_access);
-int fko_set_spa_server_auth(fko_ctx_t ctx, const char *server_auth);
-int fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout);
-int fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type);
-int fko_set_spa_digest(fko_ctx_t ctx);
-int fko_set_spa_encryption_type(fko_ctx_t ctx, short encrypt_type);
-int fko_set_spa_data(fko_ctx_t ctx, char *enc_msg);
+DLL_API int fko_set_rand_value(fko_ctx_t ctx, const char *val);
+DLL_API int fko_set_username(fko_ctx_t ctx, const char *spoof_user);
+DLL_API int fko_set_timestamp(fko_ctx_t ctx, int offset);
+DLL_API int fko_set_spa_message_type(fko_ctx_t ctx, short msg_type);
+DLL_API int fko_set_spa_message(fko_ctx_t ctx, const char *msg_string);
+DLL_API int fko_set_spa_nat_access(fko_ctx_t ctx, const char *nat_access);
+DLL_API int fko_set_spa_server_auth(fko_ctx_t ctx, const char *server_auth);
+DLL_API int fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout);
+DLL_API int fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type);
+DLL_API int fko_set_spa_digest(fko_ctx_t ctx);
+DLL_API int fko_set_spa_encryption_type(fko_ctx_t ctx, short encrypt_type);
+DLL_API int fko_set_spa_data(fko_ctx_t ctx, char *enc_msg);
 
 /* Data processing and misc utility functions
 */
-const char* fko_errstr(int err_code);
+DLL_API const char* fko_errstr(int err_code);
 
-int fko_encode_spa_data(fko_ctx_t ctx);
-int fko_decode_spa_data(fko_ctx_t ctx);
-int fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key);
-int fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key);
+DLL_API int fko_encode_spa_data(fko_ctx_t ctx);
+DLL_API int fko_decode_spa_data(fko_ctx_t ctx);
+DLL_API int fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key);
+DLL_API int fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key);
 
-int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
+DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
 
 /* Get context data functions
 */
-int fko_get_rand_value(fko_ctx_t ctx, char **rand_val);
-int fko_get_username(fko_ctx_t ctx, char **username);
-int fko_get_timestamp(fko_ctx_t ctx, unsigned int *ts);
-int fko_get_spa_message_type(fko_ctx_t ctx, short *spa_msg);
-int fko_get_spa_message(fko_ctx_t ctx, char **spa_message);
-int fko_get_spa_nat_access(fko_ctx_t ctx, char **nat_access);
-int fko_get_spa_server_auth(fko_ctx_t ctx, char **server_auth);
-int fko_get_spa_client_timeout(fko_ctx_t ctx, int *client_timeout);
-int fko_get_spa_digest_type(fko_ctx_t ctx, short *spa_digest_type);
-int fko_get_spa_digest(fko_ctx_t ctx, char **spa_digest);
-int fko_get_spa_encryption_type(fko_ctx_t ctx, short *spa_enc_type);
-int fko_get_spa_data(fko_ctx_t ctx, char **spa_data);
+DLL_API int fko_get_rand_value(fko_ctx_t ctx, char **rand_val);
+DLL_API int fko_get_username(fko_ctx_t ctx, char **username);
+DLL_API int fko_get_timestamp(fko_ctx_t ctx, time_t *ts);
+DLL_API int fko_get_spa_message_type(fko_ctx_t ctx, short *spa_msg);
+DLL_API int fko_get_spa_message(fko_ctx_t ctx, char **spa_message);
+DLL_API int fko_get_spa_nat_access(fko_ctx_t ctx, char **nat_access);
+DLL_API int fko_get_spa_server_auth(fko_ctx_t ctx, char **server_auth);
+DLL_API int fko_get_spa_client_timeout(fko_ctx_t ctx, int *client_timeout);
+DLL_API int fko_get_spa_digest_type(fko_ctx_t ctx, short *spa_digest_type);
+DLL_API int fko_get_spa_digest(fko_ctx_t ctx, char **spa_digest);
+DLL_API int fko_get_spa_encryption_type(fko_ctx_t ctx, short *spa_enc_type);
+DLL_API int fko_get_spa_data(fko_ctx_t ctx, char **spa_data);
 
-int fko_get_version(fko_ctx_t ctx, char **version);
+DLL_API int fko_get_version(fko_ctx_t ctx, char **version);
 
 /* GPG-related functions */
-int fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip);
-int fko_get_gpg_recipient(fko_ctx_t ctx, char **recip);
-int fko_set_gpg_signer(fko_ctx_t ctx, const char *signer);
-int fko_get_gpg_signer(fko_ctx_t ctx, char **signer);
-int fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir);
-int fko_get_gpg_home_dir(fko_ctx_t ctx, char **gpg_home_dir);
+DLL_API int fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip);
+DLL_API int fko_get_gpg_recipient(fko_ctx_t ctx, char **recip);
+DLL_API int fko_set_gpg_signer(fko_ctx_t ctx, const char *signer);
+DLL_API int fko_get_gpg_signer(fko_ctx_t ctx, char **signer);
+DLL_API int fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir);
+DLL_API int fko_get_gpg_home_dir(fko_ctx_t ctx, char **gpg_home_dir);
 
-const char* fko_gpg_errorstr(fko_ctx_t ctx);
+DLL_API const char* fko_gpg_errorstr(fko_ctx_t ctx);
 
-int fko_set_gpg_signature_verify(fko_ctx_t ctx, unsigned char val);
-int fko_get_gpg_signature_verify(fko_ctx_t ctx, unsigned char *val);
-int fko_set_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char val);
-int fko_get_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char *val);
+DLL_API int fko_set_gpg_signature_verify(fko_ctx_t ctx, unsigned char val);
+DLL_API int fko_get_gpg_signature_verify(fko_ctx_t ctx, unsigned char *val);
+DLL_API int fko_set_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char val);
+DLL_API int fko_get_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char *val);
 
-int fko_get_gpg_signature_id(fko_ctx_t ctx, char **sig_id);
-int fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **sig_fpr);
-int fko_get_gpg_signature_summary(fko_ctx_t ctx, int *sigsum);
-int fko_get_gpg_signature_status(fko_ctx_t ctx, int *sigstat);
+DLL_API int fko_get_gpg_signature_id(fko_ctx_t ctx, char **sig_id);
+DLL_API int fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **sig_fpr);
+DLL_API int fko_get_gpg_signature_summary(fko_ctx_t ctx, int *sigsum);
+DLL_API int fko_get_gpg_signature_status(fko_ctx_t ctx, int *sigstat);
 
-int fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id, unsigned char *result);
-int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char *fpr, unsigned char *result);
+DLL_API int fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id, unsigned char *result);
+DLL_API int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char *fpr, unsigned char *result);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* FKO_H */
 

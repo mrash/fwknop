@@ -23,13 +23,22 @@
 */
 #include <stdio.h>
 #include <string.h>
-#include <sys/time.h>
+
+#ifdef WIN32
+  #include <sys/timeb.h>
+  #include <time.h>
+  #include <stdlib.h>
+#else
+  #include <sys/time.h>
+#endif
 
 #include "cipher_funcs.h"
 #include "digest.h"
 
-#ifndef RAND_FILE
-  #define RAND_FILE "/dev/urandom"
+#ifndef WIN32
+  #ifndef RAND_FILE
+    #define RAND_FILE "/dev/urandom"
+  #endif
 #endif
 
 /* Get random data.
@@ -37,9 +46,23 @@
 void
 get_random_data(unsigned char *data, size_t len)
 {
-    FILE           *rfd;
+	uint32_t		i;
+#ifdef WIN32
+	int				rnum;
+	struct _timeb	tb;
+
+	_ftime_s(&tb);
+
+	srand((uint32_t)(tb.time*1000)+tb.millitm);
+
+	for(i=0; i<len; i++)
+	{
+		rnum = rand();
+        *(data+i) = rnum % 0xff;
+	}
+#else
+	FILE           *rfd;
     struct timeval  tv;
-    int             i;
 
     /* Attempt to read seed data from /dev/urandom.  If that does not
      * work, then fall back to a time-based method (less secure, but
@@ -62,6 +85,8 @@ get_random_data(unsigned char *data, size_t len)
         fread(data, len, 1, rfd);
         fclose(rfd);
     }
+#endif
+
 }
 
 

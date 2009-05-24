@@ -28,6 +28,16 @@
 
 #include "fwknop_common.h"
 
+#ifdef WIN32
+  #include <winsock2.h>
+
+  #define unlink _unlink
+#else
+  #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+  #endif
+#endif
+
 /* Prototypes
 */
 int send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options);

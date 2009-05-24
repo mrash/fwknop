@@ -103,7 +103,8 @@ _rijndael_encrypt(fko_ctx_t ctx, char *enc_key)
 int
 _rijndael_decrypt(fko_ctx_t ctx, char *dec_key, int b64_len)
 {
-    char           *tbuf, *ndx;
+    char           *tbuf;
+	unsigned char  *ndx;
     unsigned char  *cipher;
     int             cipher_len, pt_len, i, err = 0;
 
@@ -384,7 +385,7 @@ int
 fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
 {
     int             b64_len, res;
-    char           *ndx;
+    //char           *ndx;
 
     /* First, make sure we have data to work with.
     */

@@ -53,7 +53,9 @@
   }
 #else
   #define byteReverse(buf, len)    /* Nothing */
-  #warning Undetermined or unsupported Byte Order... We will try LITTLE_ENDIAN
+  #ifndef WIN32
+    #warning Undetermined or unsupported Byte Order... We will try LITTLE_ENDIAN
+  #endif
 #endif
 
 /*

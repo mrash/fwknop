@@ -123,7 +123,9 @@ sha1_transform(SHA_INFO *sha_info)
         dp += 4;
         W[i] = TRUNC32(T);
     }
-#warning Unknown byte order -- we will try LITTLE_ENDIAN
+  #ifndef WIN32
+    #warning Undetermined or unsupported Byte Order... We will try LITTLE_ENDIAN
+  #endif
 #endif /* SWAP_DONE */
 
     for (i = 16; i < 80; ++i) {

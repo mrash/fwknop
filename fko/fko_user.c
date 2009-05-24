@@ -54,6 +54,8 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
         /* cuserid will return the effective user (i.e. su or setuid).
         */
         username = cuserid(NULL);
+#elif WIN32
+		username = strdup("NO_USER");
 #else
         username = getlogin();
 #endif

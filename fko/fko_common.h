@@ -51,8 +51,15 @@
   #define isdigit(c) (c >= 48 && c <= 57)
 #endif
 
-#if HAVE_STDINT_H
-  #include <stdint.h>
+#ifdef WIN32
+  typedef unsigned char	uint8_t;
+  typedef unsigned int	uint32_t;
+
+  #define strdup _strdup
+#else
+  #if HAVE_STDINT_H
+    #include <stdint.h>
+  #endif
 #endif
 
 /* Work out endianess (sp?)
@@ -71,6 +78,17 @@
     #define BYTEORDER 1234
   #else
     #error unable to determine BYTEORDER
+  #endif
+#endif
+
+#ifdef WIN32
+  #include <time.h>
+#else
+  #ifdef HAVE_SYS_TIME_H
+    #include <sys/time.h>
+    #ifdef TIME_WITH_SYS_TIME
+      #include <time.h>
+    #endif
   #endif
 #endif
 

@@ -50,7 +50,12 @@
   #include <netinet/in.h>
 #endif
 
-#include <signal.h>
+#ifdef WIN32
+  #define strncasecmp	_strnicmp
+  #define snprintf		_snprintf
+#else
+  #include <signal.h>
+#endif
 
 #include "fko.h"
 
