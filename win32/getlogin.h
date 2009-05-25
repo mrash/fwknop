@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    fko_util.h
+ * File:    get_login.h
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Header for utility functions used by libfko
+ * Purpose: Header for getlogin.c 
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,16 +23,13 @@
  *
  *****************************************************************************
 */
-#ifndef FKO_UTIL_H
-#define FKO_UTIL_H 1
-
-#include "fko_common.h"
+#ifndef GETLOGIN_H
+#define GETLOGIN_H 1
 
 /* Function prototypes
 */
-size_t strlcat(char *dst, const char *src, size_t siz);
-size_t strlcpy(char *dst, const char *src, size_t siz);
+char* getlogin (void);
 
-#endif /* FKO_UTIL_H */
+#endif /* GETLOGIN_H */
 
 /***EOF***/

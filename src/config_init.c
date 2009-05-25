@@ -201,13 +201,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->proto = FKO_DEFAULT_PROTO;
     options->port  = FKO_DEFAULT_PORT;
 
-#ifdef WIN32
-	    while ((cmd_arg = getopt(argc, argv,
-			"A:a:D:G:S:Q:m:p:P:B:bghqdTvVn")) != -1) {
-#else
     while ((cmd_arg = getopt_long(argc, argv,
             "A:a:D:G:S:Q:p:P:BbghqdTvVn", cmd_opts, &index)) != -1) {
-#endif
+
         switch(cmd_arg) {
             case 'A':
                 strlcpy(options->access_str, optarg, MAX_LINE_LEN);
@@ -373,12 +369,6 @@ usage(void)
       "     --gpg-agent         - Use GPG agent if available.\n"
       "\n"
     );
-
-	// --DSS TEMP
-#ifdef WIN32
-	printf("NOTE: Long options and GPG encryption are not available\n");
-	printf("      under Windows yet.\n\n");
-#endif
 
     return;
 }

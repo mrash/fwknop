@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    fko_common.h
+ * File:    config.h
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Common header for libfko source files.
+ * Purpose: Common definition header for libfko source files (Windows build).
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *

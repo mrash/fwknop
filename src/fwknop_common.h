@@ -65,8 +65,8 @@
 #define MY_DESC     "Single Packet Authorization client"
 
 #define MAJOR_VER   "1"
-#define MINOR_VER   "10"
-#define MICRO_VER   "0"
+#define MINOR_VER   "9"
+#define MICRO_VER   "12"
 #define MY_VERSION  MAJOR_VER"."MINOR_VER"."MICRO_VER
 
 /* Default config path, can override with -c

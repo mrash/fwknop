@@ -26,6 +26,10 @@
 #include "fko_common.h"
 #include "fko.h"
 
+#ifdef WIN32
+  #include <getlogin.h>
+#endif
+
 /* Get or Set the username for the fko context spa data.
 */
 int
@@ -54,27 +58,24 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
         /* cuserid will return the effective user (i.e. su or setuid).
         */
         username = cuserid(NULL);
-#elif WIN32
-		username = strdup("NO_USER");
 #else
         username = getlogin();
 #endif
 
         /* If we did not get a name using the above methods, try the
          * LOGNAME or USER environment variables. If none of those work,
-         * then we bail with an error.
+         * then we fallback to NO_USER.
         */
         if(username == NULL)
             if((username = getenv("LOGNAME")) == NULL)
                 if((username = getenv("USER")) == NULL)
-                    return(FKO_ERROR_USERNAME_UNKNOWN);
+                    username = strdup("NO_USER");
     }
 
-    /* --DSS XXX: Bail out for now.  But consider just
-     *            truncating in the future...
+    /* Truncate the username if it is too long.
     */
     if(strlen(username) > MAX_SPA_USERNAME_SIZE)
-        return(FKO_ERROR_DATA_TOO_LARGE);
+        *(username + MAX_SPA_USERNAME_SIZE) = '\0';
 
     /* Just in case this is a subsquent call to this function.  We
      * do not want to be leaking memory.
