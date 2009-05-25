@@ -64,10 +64,11 @@
 #define MY_NAME     "fwknop"
 #define MY_DESC     "Single Packet Authorization client"
 
-#define MAJOR_VER   "1"
-#define MINOR_VER   "9"
-#define MICRO_VER   "12"
-#define MY_VERSION  MAJOR_VER"."MINOR_VER"."MICRO_VER
+#define FKO_PROTO_VERSION  "1.9.12"
+
+/* Get our program version from VERSION (defined in config.h).
+*/
+#define MY_VERSION VERSION
 
 /* Default config path, can override with -c
 */

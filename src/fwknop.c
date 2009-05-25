@@ -33,7 +33,9 @@
 */
 #define CRYPT_OP_ENCRYPT 1
 #define CRYPT_OP_DECRYPT 2
+
 char* get_user_pw(fko_cli_options_t *options, int crypt_op);
+void  errmsg(char *msg, int err);
 
 int
 main(int argc, char **argv)
@@ -53,13 +55,21 @@ main(int argc, char **argv)
     */
     res = fko_new(&ctx);
     if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_new: %s\n", res, fko_errstr(res));
+    {
+        errmsg("fko_new", res);
+        return(1);
+    }
 
-    fko_get_version(ctx, &version);
-
+   
+    /* Display version info and exit.
+    */
     if (options.version) {
-        fprintf(stdout, "[+] fwknop-%s\n", version);
-        exit(0);
+        fko_get_version(ctx, &version);
+
+        fprintf(stdout, "[+] fwknop client %s, FKO protocol version %s\n",
+            MY_VERSION, version);
+
+        return(0);
     }
 
     /* Set up for using GPG if specified.
@@ -77,12 +87,8 @@ main(int argc, char **argv)
         res = fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG);
         if(res != FKO_SUCCESS)
         {
-            fprintf(stderr,
-                "Error #%i from fko_set_spa_encryption_type: %s\n",
-                res, fko_errstr(res)
-            );
-
-            exit(EXIT_FAILURE);
+            errmsg("fko_set_spa_encryption_type", res);
+            return(1);
         }
 
         /* If a GPG home dir was specified, set it here.  Note: Setting
@@ -94,26 +100,20 @@ main(int argc, char **argv)
             res = fko_set_gpg_home_dir(ctx, options.gpg_home_dir);
             if(res != FKO_SUCCESS)
             {
-                fprintf(stderr,
-                    "Error #%i from fko_set_gpg_home_dir: %s\n",
-                    res, fko_errstr(res)
-                );
-                exit(EXIT_FAILURE);
+                errmsg("fko_set_gpg_home_dir", res);
+                return(1);
             }
         }
 
         res = fko_set_gpg_recipient(ctx, options.gpg_recipient_key);
         if(res != FKO_SUCCESS)
         {
-            fprintf(stderr,
-                "Error #%i from fko_set_gpg_recipient: %s\n",
-                res, fko_errstr(res)
-            );
+            errmsg("fko_set_gpg_recipient", res);
 
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
     
-            exit(EXIT_FAILURE);
+            return(1);
         }
 
         if(options.gpg_signer_key != NULL && strlen(options.gpg_signer_key))
@@ -121,24 +121,15 @@ main(int argc, char **argv)
             res = fko_set_gpg_signer(ctx, options.gpg_signer_key);
             if(res != FKO_SUCCESS)
             {
-                fprintf(stderr,
-                    "Error #%i from fko_set_gpg_signer: %s\n",
-                    res, fko_errstr(res)
-                );
+                errmsg("fko_set_gpg_signer", res);
 
                 if(IS_GPG_ERROR(res))
                     fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-                exit(EXIT_FAILURE);
+                return(1);
             }
         }
     }
-
-    /* Set message type
-    res = fko_set_spa_message_type(ctx, FKO_ACCESS_MSG);
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_set_spa_message_type: %s\n", res, fko_errstr(res));
-    */
 
     /* Set a message string by combining the allow IP and the port/protocol
     */
@@ -147,8 +138,8 @@ main(int argc, char **argv)
     res = fko_set_spa_message(ctx, access_buf);
     if(res != FKO_SUCCESS)
     {
-        fprintf(stderr, "Error #%i from fko_set_spa_message: %s\n", res, fko_errstr(res));
-        exit(EXIT_FAILURE);
+        errmsg("fko_set_spa_message", res);
+        return(1);
     }
 
     /* Set Digest type.
@@ -158,52 +149,31 @@ main(int argc, char **argv)
         fko_set_spa_digest_type(ctx, options.digest_type);
         if(res != FKO_SUCCESS)
         {
-            fprintf(stderr,
-                "Error #%i from fko_set_spa_digest: %s\n",
-                res, fko_errstr(res)
-            );
-
-            exit(EXIT_FAILURE);
+            errmsg("fko_set_spa_digest_type", res);
+            return(1);
         }
     }
-
-    /* Set net access string.
-    res = fko_set_spa_nat_access(ctx, "192.168.1.2,22");
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_set_spa_nat_access: %s\n", res, fko_errstr(res));
-    */
-
-    /* Set client timeout value
-    fko_set_spa_client_timeout(ctx, 120);
-    */
-
-    /* Set a server auth string.
-    res = fko_set_spa_server_auth(ctx, "crypt,SomePW");
-    if(res != FKO_SUCCESS)
-        fprintf(stderr, "Error #%i from fko_set_spa_server_auth: %s\n", res, fko_errstr(res));
-    */
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
     res = fko_spa_data_final(ctx, get_user_pw(&options, CRYPT_OP_ENCRYPT));
     if(res != FKO_SUCCESS)
     {
-        fprintf(stderr,
-            "Error #%i from fko_spa_data_final: %s\n",
-            res, fko_errstr(res)
-        );
+        errmsg("fko_spa_data_final", res);
 
         if(IS_GPG_ERROR(res))
             fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-        exit(EXIT_FAILURE);
+        return(1);
     }
 
     /* Display the context data.
     */
-    if (! options.quiet)
+    if (options.verbose || options.test)
         display_ctx(ctx);
 
+    /* Save packet data payload if requested.
+    */
     if (options.save_packet_file[0] != 0x0)
         write_spa_packet_data(ctx, &options);
 
@@ -212,9 +182,10 @@ main(int argc, char **argv)
      * Otherwise, run through a decode cycle (--DSS XXX: This test/decode
      * portion should be moved elsewhere).
     */
-    if (! options.test)
+    if (!options.test)
     {
-        send_spa_packet(ctx, &options);
+        if(send_spa_packet(ctx, &options) < 1)
+            return(1);
     }
     else
     {
@@ -225,11 +196,8 @@ main(int argc, char **argv)
         res = fko_get_spa_data(ctx, &spa_data);
         if(res != FKO_SUCCESS)
         {
-            fprintf(stderr,
-                "Error #%i from fko_get_spa_data: %s\n",
-                res, fko_errstr(res)
-            );
-            exit(EXIT_FAILURE);
+            errmsg("fko_get_spa_data", res);
+            return(1);
         }
 
         /* If gpg-home-dir is specified, we have to defer decrypting if we
@@ -241,48 +209,14 @@ main(int argc, char **argv)
          * options, then decode it.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL);
-                                //get_user_pw(&options, CRYPT_OP_DECRYPT));
         if(res != FKO_SUCCESS)
         {
-            fprintf(stderr,
-                "Error #%i from fko_new_with_data: %s\n",
-                res, fko_errstr(res)
-            );
-            exit(EXIT_FAILURE);
+            errmsg("fko_new_with_data", res);
+            return(1);
         }
 
-        /* If gpg-home-dir is specified, we have to defer decrypting if we
-         * use the fko_new_with_data() function because we need to set the
-         * gpg home dir after the context is created, but before we attempt
-         * to decrypt the data.  Therefore we either pass NULL for the
-         * decryption key to fko_new_with_data() or use fko_new() to create
-         * an empty context, populate it with the encrypted data, set our
-         * options, then decode it.
-        res = fko_new(&ctx2);
-        if(res != FKO_SUCCESS)
-        {
-            fprintf(stderr,
-                "Error #%i from fko_new: %s\n",
-                res, fko_errstr(res)
-            );
-
-            exit(EXIT_FAILURE);
-        }
+        /* See if we are using gpg and if we need to set the GPG home dir.
         */
-
-        /* Populate the new context with the encrypted data from the
-         * old context.
-        res = fko_set_spa_data(ctx2, spa_data);
-        if(res != FKO_SUCCESS)
-        {
-            fprintf(stderr,
-                "Error #%i from fko_set_spa_data: %s\n",
-                res, fko_errstr(res)
-            );
-
-            exit(EXIT_FAILURE);
-        }
-
         if(options.use_gpg)
         {
             if(options.gpg_home_dir != NULL && strlen(options.gpg_home_dir) > 0)
@@ -290,18 +224,11 @@ main(int argc, char **argv)
                 res = fko_set_gpg_home_dir(ctx2, options.gpg_home_dir);
                 if(res != FKO_SUCCESS)
                 {
-                    fprintf(stderr,
-                        "Error #%i from fko_set_gpg_home_dir: %s\n",
-                        res, fko_errstr(res)
-                    );
-                    exit(EXIT_FAILURE);
+                    errmsg("fko_set_gpg_home_dir", res);
+                    return(1);
                 }
             }
         }
-*/
-
-//fko_set_gpg_signature_verify(ctx2, 0);
-//fko_set_gpg_ignore_verify_error(ctx2, 1);
 
         res = fko_decrypt_spa_data(
             ctx2, get_user_pw(&options, CRYPT_OP_DECRYPT)
@@ -309,22 +236,16 @@ main(int argc, char **argv)
 
         if(res != FKO_SUCCESS)
         {
-            fprintf(stderr,
-                "Error #%i from fko_decrypt_spa_data: %s\n",
-                res, fko_errstr(res)
-            );
+            errmsg("fko_decrypt_spa_data", res);
 
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx2));
 
-            exit(EXIT_FAILURE);
+            return(1);
         }
 
-
-        if (! options.quiet) {
-            printf("\nDump of the Decoded Data\n");
-            display_ctx(ctx2);
-        }
+        printf("\nDump of the Decoded Data\n");
+        display_ctx(ctx2);
 
         fko_destroy(ctx2);
     }
@@ -334,6 +255,8 @@ main(int argc, char **argv)
     return(0);
 }
 
+/* Prompt for and receive a user password.
+*/
 char*
 get_user_pw(fko_cli_options_t *options, int crypt_op)
 {
@@ -359,76 +282,62 @@ get_user_pw(fko_cli_options_t *options, int crypt_op)
     }
 }
 
+/* Display an FKO error message.
+*/
+void
+errmsg(char *msg, int err) {
+    fprintf(stderr, "[*] %s: %s: Error %i - %s\n",
+        MY_NAME, msg, err, fko_errstr(err));
+}
+
 static void
 display_ctx(fko_ctx_t ctx)
 {
-    char            *rand_val, *username, *version, *spa_message, *nat_access,
-                    *server_auth, *enc_data, *spa_digest, *spa_data;
-    time_t          timestamp=0;
-    short           msg_type=-1, digest_type=-1;
-    int             client_timeout=-1;
+    char       *rand_val        = NULL;
+    char       *username        = NULL;
+    char       *version         = NULL;
+    char       *spa_message     = NULL;
+    char       *nat_access      = NULL;
+    char       *server_auth     = NULL;
+    char       *enc_data        = NULL;
+    char       *spa_digest      = NULL;
+    char       *spa_data        = NULL;
+
+    time_t      timestamp       = 0;
+    short       msg_type        = -1;
+    short       digest_type     = -1;
+    int         client_timeout  = -1;
 
     /* Should be checking return values, but this is temp code. --DSS
     */
     fko_get_rand_value(ctx, &rand_val);
-//printf("RAND: '%s'\n", rand_val);
     fko_get_username(ctx, &username);
-//printf("USER: '%s'\n", username);
     fko_get_timestamp(ctx, &timestamp);
-//printf("TIME: '%lu'\n", timestamp);
     fko_get_version(ctx, &version);
-//printf("VER:  '%s'\n", version);
     fko_get_spa_message_type(ctx, &msg_type);
-//printf("MTYP: '%i'\n", msg_type);
     fko_get_spa_message(ctx, &spa_message);
-//printf("MSG:  '%s'\n", spa_message);
     fko_get_spa_nat_access(ctx, &nat_access);
-//printf("NAT:  '%s'\n", nat_access);
     fko_get_spa_server_auth(ctx, &server_auth);
-//printf("AUTH: '%s'\n", server_auth);
     fko_get_spa_client_timeout(ctx, &client_timeout);
-//printf("CLTO: '%s'\n", client_timeout);
     fko_get_spa_digest_type(ctx, &digest_type);
-//printf("DTYP: '%i'\n", digest_type);
     fko_get_encoded_data(ctx, &enc_data);
-//printf("ENC:  '%s'\n", enc_data);
     fko_get_spa_digest(ctx, &spa_digest);
-//printf("DIG:  '%s'\n", spa_digest);
     fko_get_spa_data(ctx, &spa_data);
-//printf("SDAT: '%s'\n", spa_data);
 
-//return;
-
-    printf("\nFKO Context Values:\n===================\n\n");
-    printf("   Random Value: %s\n", rand_val);
-    printf("       Username: %s\n", username);
+    printf("\nFKO Field Values:\n=================\n\n");
+    printf("   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
+    printf("       Username: %s\n", username == NULL ? "<NULL>" : username);
     printf("      Timestamp: %u\n", timestamp);
-    printf("    FKO Version: %s\n", version);
+    printf("    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
     printf("   Message Type: %i\n", msg_type);
-    printf(" Message String: %s\n", spa_message);
-    printf("     Nat Access: %s\n", nat_access);
-    printf("    Server Auth: %s\n", server_auth);
+    printf(" Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
+    printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
+    printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
     printf(" Client Timeout: %u\n", client_timeout);
     printf("    Digest Type: %u\n", digest_type);
-    printf("\n   Encoded Data: %s\n", enc_data);
-    printf("\nSPA Data Digest: %s\n", spa_digest);
+    printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
+    printf("\nSPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
     printf("\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n", spa_data);
-        //,
-        //rand_val,// == NULL ? "<NULL>" : rand_val,
-        //username,// == NULL ? "<NULL>" : username,
-        //timestamp,
-        //version, // == NULL ? "<NULL>" : version,
-        //msg_type,
-        //spa_message // == NULL ? "<NULL>" : spa_message,
-        //nat_access == NULL ? "<NULL>" : nat_access,
-        //server_auth == NULL ? "<NULL>" : server_auth,
-        //client_timeout,
-        //digest_type,
-        //enc_data == NULL ? "<NULL>" : enc_data,
-        //spa_digest == NULL ? "<NULL>" : spa_digest,
-        //spa_data == NULL ? "<NULL>" : spa_data
-    //);
-
 }
 
 /***EOF***/

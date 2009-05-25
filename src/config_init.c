@@ -202,7 +202,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->port  = FKO_DEFAULT_PORT;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "A:a:D:G:S:Q:p:P:BbghqdTvVn", cmd_opts, &index)) != -1) {
+            "A:a:D:G:S:Q:p:P:B:bghqdTvVn", cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'A':

@@ -32,29 +32,15 @@ int
 send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
-    int rv = 0;
     int sock = 0;
     int res;
     char *spa_data;
 
-#ifdef WIN32
-	WSADATA	wsa_data;
-
-	res = WSAStartup( MAKEWORD(1,1), &wsa_data );
-    if( res != 0 )
-	{
-		fprintf(stderr, "[*] Winsock initialization error %d\n", res );
-		exit(0);
-	}
-#endif
-
-    /* create the socket
-    */
     sock = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (sock < 0) {
         fprintf(stderr, "[*] Could not create UDP socket.\n");
-        exit(1);
+        return(0);
     }
 
     res = fko_get_spa_data(ctx, &spa_data);
@@ -65,13 +51,11 @@ send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
             "send_spa_packet_udp: Error #%i from fko_get_spa_data: %s\n",
             res, fko_errstr(res)
         );
-        exit(1);
+        return(0);
     }
 
-    sendto(sock, spa_data, strlen(spa_data),
-            0, (struct sockaddr *)daddr, sizeof(*daddr));
-
-    return rv;
+    return(sendto(sock, spa_data, strlen(spa_data), 0,
+        (struct sockaddr *)daddr, sizeof(*daddr)));
 }
 
 /* Send the SPA data via TCP packet.
@@ -80,7 +64,7 @@ int
 send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
-    int rv = -1;
+    int rv = 0;
     return rv;
 }
 
@@ -89,7 +73,7 @@ send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
 int
 send_spa_packet_icmp(fko_ctx_t ctx, fko_cli_options_t *options)
 {
-    int rv = -1;
+    int rv = 0;
     return rv;
 }
 
@@ -100,6 +84,17 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 {
     int rv = 0;
     struct sockaddr_in saddr, daddr;
+
+#ifdef WIN32
+	WSADATA	wsa_data;
+
+	res = WSAStartup( MAKEWORD(1,1), &wsa_data );
+    if( res != 0 )
+	{
+		fprintf(stderr, "[*] Winsock initialization error %d\n", res );
+		return(0);
+	}
+#endif
 
     /* initialize to zeros
     */
