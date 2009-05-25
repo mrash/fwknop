@@ -88,10 +88,10 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 #ifdef WIN32
 	WSADATA	wsa_data;
 
-	res = WSAStartup( MAKEWORD(1,1), &wsa_data );
-    if( res != 0 )
+	rv = WSAStartup( MAKEWORD(1,1), &wsa_data );
+    if( rv != 0 )
 	{
-		fprintf(stderr, "[*] Winsock initialization error %d\n", res );
+		fprintf(stderr, "[*] Winsock initialization error %d\n", rv );
 		return(0);
 	}
 #endif
