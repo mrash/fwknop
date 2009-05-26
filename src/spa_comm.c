@@ -26,17 +26,42 @@
 */
 #include "spa_comm.h"
 
+/* Function to generate a header checksum.
+*/
+unsigned short
+chksum(unsigned short *buf, int nbytes)
+{
+	unsigned int   sum;
+	unsigned short oddbyte;
+
+	sum = 0;
+	while (nbytes > 1) {
+		sum += *buf++;
+		nbytes -= 2;
+	}
+
+	if (nbytes == 1) {
+		oddbyte = 0;
+		*((unsigned short *) &oddbyte) = *(unsigned short *) buf;
+		sum += oddbyte;
+	}
+
+	sum = (sum >> 16) + (sum & 0xffff);
+	sum += (sum >> 16);
+
+	return (unsigned short) ~sum;
+}
+
 /* Send the SPA data via UDP packet.
 */
 int
 send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
-    int sock = 0;
     int res;
     char *spa_data;
 
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    int sock = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (sock < 0) {
         fprintf(stderr, "[*] Could not create UDP socket.\n");
@@ -64,17 +89,172 @@ int
 send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
-    int rv = 0;
-    return rv;
+    int  res;
+    char pkt_data[2048] = {0}; /* Should be enough for our purposes */
+    char *spa_data;
+    int  sd_len;
+
+    struct iphdr  *iph  = (struct iphdr *) pkt_data;
+    struct tcphdr *tcph = (struct tcphdr *) (pkt_data + sizeof (struct iphdr));
+
+    int hdrlen = sizeof(struct iphdr) + sizeof(struct tcphdr);
+
+    char one   = 1;
+
+    int sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+
+    if (sock < 0) {
+        fprintf(stderr, "[*] Could not create UDP socket. Error = %i\n", errno);
+        return(0);
+    }
+
+    res = fko_get_spa_data(ctx, &spa_data);
+
+    if(res != FKO_SUCCESS)
+    {
+        fprintf(stderr,
+            "send_spa_packet_tcp: Error #%i from fko_get_spa_data: %s\n",
+            res, fko_errstr(res)
+        );
+        return(0);
+    }
+
+    sd_len = strlen(spa_data);
+
+    /* Put the spa data in place.
+    */
+    memcpy((pkt_data + hdrlen), spa_data, sd_len);
+
+    /* Construct our own header by filling in the ip/tcp header values,
+     * starting with the IP header values.
+    */
+    iph->ihl        = 5;
+    iph->version    = 4;
+    iph->tos        = 0;
+    /* Total size is header plus payload */
+    iph->tot_len    = hdrlen + sd_len;
+    /* The value here does not matter */
+    iph->id         = random() & 0xffff;
+    iph->frag_off   = 0;
+    iph->ttl        = 255;
+    iph->protocol   = IPPROTO_TCP;
+    iph->check      = 0;
+    iph->saddr      = saddr->sin_addr.s_addr;
+    iph->daddr      = daddr->sin_addr.s_addr;
+
+    /* Now the TCP header values.
+    */
+    tcph->source    = saddr->sin_port;
+    tcph->dest      = daddr->sin_port;
+    tcph->seq       = htonl(1);
+    tcph->ack_seq   = 0;
+    tcph->doff      = 5;
+    tcph->res1      = 0;
+    /* TCP flags */
+    tcph->fin       = 0;
+    tcph->syn       = 1;
+    tcph->rst       = 0;
+    tcph->psh       = 0;
+    tcph->ack       = 0;
+    tcph->urg       = 0;
+
+    tcph->res2      = 0;
+    tcph->window    = htons(32767);
+    tcph->check     = 0;
+    tcph->urg_ptr   = 0;
+
+    /* No we can compute our checksum.
+    */
+    iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
+
+    /* Make sure the kernel knows the header is included in the data so it
+     * doesn't try to insert its own header into the packet.
+    */
+    if ((res = setsockopt (sock, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one))) < 0)
+        fprintf (stderr, "[*] send_spa_packet_tcp: setsockopt: error %i - Cannot set HDRINCL!\n", errno);
+
+    return(sendto (sock, pkt_data, iph->tot_len, 0,
+        (struct sockaddr *)daddr, sizeof(*daddr)));
 }
 
 /* Send the SPA data via ICMP packet.
 */
 int
-send_spa_packet_icmp(fko_ctx_t ctx, fko_cli_options_t *options)
+send_spa_packet_icmp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+    struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
-    int rv = 0;
-    return rv;
+    int res;
+    char pkt_data[2048] = {0};
+    char *spa_data;
+    int  sd_len;
+
+    struct iphdr  *iph    = (struct iphdr *) pkt_data;
+    struct icmphdr *icmph = (struct icmphdr *) (pkt_data + sizeof (struct iphdr));
+
+    int hdrlen = sizeof(struct iphdr) + sizeof(struct icmphdr);
+
+    char one   = 1;
+
+    int sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+
+    if (sock < 0) {
+        fprintf(stderr, "[*] Could not create UDP socket. Error = %i\n", errno);
+        return(0);
+    }
+
+    res = fko_get_spa_data(ctx, &spa_data);
+
+    if(res != FKO_SUCCESS)
+    {
+        fprintf(stderr,
+            "send_spa_packet_tcp: Error #%i from fko_get_spa_data: %s\n",
+            res, fko_errstr(res)
+        );
+        return(0);
+    }
+
+    sd_len = strlen(spa_data);
+
+    /* Put the spa data in place.
+    */
+    memcpy((pkt_data + hdrlen), spa_data, sd_len);
+
+    /* Construct our own header by filling in the ip/icmp header values,
+     * starting with the IP header values.
+    */
+    iph->ihl        = 5;
+    iph->version    = 4;
+    iph->tos        = 0;
+    /* Total size is header plus payload */
+    iph->tot_len    = hdrlen + sd_len;
+    /* The value here does not matter */
+    iph->id         = random() & 0xffff;
+    iph->frag_off   = 0;
+    iph->ttl        = 255;
+    iph->protocol   = IPPROTO_ICMP;
+    iph->check      = 0;
+    iph->saddr      = saddr->sin_addr.s_addr;
+    iph->daddr      = daddr->sin_addr.s_addr;
+
+    /* Now the ICMP header values.
+    */
+    icmph->type     = ICMP_ECHOREPLY; /* Make it an echo reply */
+    icmph->code     = 0;
+    icmph->checksum = 0;
+
+    /* No we can compute our checksum.
+    */
+    iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
+    icmph->checksum = chksum((unsigned short *)icmph, sizeof(struct icmphdr) + sd_len);
+
+    /* Make sure the kernel knows the header is included in the data so it
+     * doesn't try to insert its own header into the packet.
+    */
+    if ((res = setsockopt (sock, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one))) < 0)
+        fprintf (stderr, "[*] send_spa_packet_tcp: setsockopt: error %i - Cannot set HDRINCL!\n", errno);
+
+    return(sendto (sock, pkt_data, iph->tot_len, 0,
+        (struct sockaddr *)daddr, sizeof(*daddr)));
 }
 
 /* Function used to send the SPA data.
@@ -86,14 +266,14 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     struct sockaddr_in saddr, daddr;
 
 #ifdef WIN32
-	WSADATA	wsa_data;
+    WSADATA wsa_data;
 
-	rv = WSAStartup( MAKEWORD(1,1), &wsa_data );
+    rv = WSAStartup( MAKEWORD(1,1), &wsa_data );
     if( rv != 0 )
-	{
-		fprintf(stderr, "[*] Winsock initialization error %d\n", rv );
-		return(0);
-	}
+    {
+        fprintf(stderr, "[*] Winsock initialization error %d\n", rv );
+        return(0);
+    }
 #endif
 
     /* initialize to zeros
@@ -125,7 +305,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     else if (options->proto == IPPROTO_TCP)
         rv = send_spa_packet_tcp(ctx, &saddr, &daddr, options);
     else if (options->proto == IPPROTO_ICMP)
-        rv = send_spa_packet_icmp(ctx, options);
+        rv = send_spa_packet_icmp(ctx, &saddr, &daddr, options);
 
     return rv;
 }

@@ -184,8 +184,13 @@ main(int argc, char **argv)
     */
     if (!options.test)
     {
-        if(send_spa_packet(ctx, &options) < 1)
+        //if(send_spa_packet(ctx, &options) < 1)
+        res = send_spa_packet(ctx, &options);
+        if(res < 1)
+        {
+            perror("send_spa_packet");
             return(1);
+        }
     }
     else
     {

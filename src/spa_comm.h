@@ -27,6 +27,7 @@
 #define SPA_COMM_H
 
 #include "fwknop_common.h"
+#include <errno.h>
 
 #ifdef WIN32
   #include <winsock2.h>
@@ -37,6 +38,11 @@
     #include <sys/socket.h>
   #endif
 #endif
+
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <netinet/tcp.h>
+#include <netinet/ip_icmp.h>
 
 /* Prototypes
 */
