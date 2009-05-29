@@ -531,7 +531,7 @@ in C as part of the project to move all of I<fwknop> to C.
 
 See the C<libfko> documentation for additional information on usage and the
 functionality provided by C<libfko>.  More information on I<SPA> and I<fwknop>
-can be found at http://www.cipherdine.org/fwknop.
+can be found at http://www.cipherdyne.org/fwknop.
 
 =head1 CONSTRUCTOR
 
