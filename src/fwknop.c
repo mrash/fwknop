@@ -29,12 +29,10 @@
 #include "utils.h"
 #include "getpasswd.h"
 
-/* Used by the get_user_pw function below.
+/* prototypes
 */
-#define CRYPT_OP_ENCRYPT 1
-#define CRYPT_OP_DECRYPT 2
-
 char* get_user_pw(fko_cli_options_t *options, int crypt_op);
+static void display_ctx(fko_ctx_t ctx);
 void  errmsg(char *msg, int err);
 
 int
@@ -60,7 +58,6 @@ main(int argc, char **argv)
         return(1);
     }
 
-   
     /* Display version info and exit.
     */
     if (options.version) {
@@ -184,12 +181,16 @@ main(int argc, char **argv)
     */
     if (!options.test)
     {
-        //if(send_spa_packet(ctx, &options) < 1)
         res = send_spa_packet(ctx, &options);
-        if(res < 1)
+        if(res < 0)
         {
             perror("send_spa_packet");
             return(1);
+        }
+        else
+        {
+            if(options.verbose)
+                fprintf(stderr, "[+] send_spa_packet: bytes sent: %i\n", res);
         }
     }
     else
@@ -295,6 +296,8 @@ errmsg(char *msg, int err) {
         MY_NAME, msg, err, fko_errstr(err));
 }
 
+/* Show the fields of the FKO context.
+*/
 static void
 display_ctx(fko_ctx_t ctx)
 {

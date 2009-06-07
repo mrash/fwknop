@@ -29,8 +29,9 @@
 
 #include "fwknop_common.h"
 
-/* prototypes
+/* Used by the get_user_pw function below.
 */
-static void display_ctx(fko_ctx_t ctx);
+#define CRYPT_OP_ENCRYPT 1
+#define CRYPT_OP_DECRYPT 2
 
 #endif  /* FWKNOP_H */

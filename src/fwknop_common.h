@@ -35,6 +35,8 @@
 #include <stdio.h>
 #include <sys/types.h>
 
+#include <errno.h>
+
 #if STDC_HEADERS
   #include <stdlib.h>
   #include <string.h>
@@ -74,9 +76,18 @@
 */
 #define DEF_CONFIG_FILE MY_NAME".conf"
 
+/* Protocol assignment values
+*/
+enum {
+    FKO_PROTO_UDP,
+    FKO_PROTO_TCP,
+    FKO_PROTO_TCP_RAW,
+    FKO_PROTO_ICMP
+};
+
 /* Other common defines
 */
-#define FKO_DEFAULT_PROTO IPPROTO_UDP
+#define FKO_DEFAULT_PROTO FKO_PROTO_UDP
 #define FKO_DEFAULT_PORT 62201
 #define MAX_IP_STR_LEN 16
 
@@ -109,7 +120,6 @@ typedef struct fko_cli_options
     unsigned int digest_type;
 
     /* Various command-line flags */
-    unsigned char   debug;
     unsigned char   quiet;   /* --quiet mode */
     unsigned char   verbose; /* --verbose mode */
     unsigned char   version; /* --version */

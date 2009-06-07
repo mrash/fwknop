@@ -202,82 +202,36 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->port  = FKO_DEFAULT_PORT;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "A:a:D:G:S:Q:p:P:B:bghqdTvVn", cmd_opts, &index)) != -1) {
+            "a:A:bB:D:gG:hm:np:P:qQ:S:TU:vV", cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
-            case 'A':
-                strlcpy(options->access_str, optarg, MAX_LINE_LEN);
-                break;
-            case 'D':
-                strlcpy(options->spa_server_ip_str, optarg, MAX_IP_STR_LEN);
-                break;
             case 'a':
                 strlcpy(options->allow_ip_str, optarg, MAX_IP_STR_LEN);
                 break;
-            case 'G':
-                strlcpy(options->get_key_file, optarg, MAX_PATH_LEN);
-                break;
-            case 'B':
-                strlcpy(options->save_packet_file, optarg, MAX_PATH_LEN);
+            case 'A':
+                strlcpy(options->access_str, optarg, MAX_LINE_LEN);
                 break;
             case 'b':
                 options->save_packet_file_append = 1;
                 break;
-            case 'Q':
-                strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
+            case 'B':
+                strlcpy(options->save_packet_file, optarg, MAX_PATH_LEN);
                 break;
-            case 'U':
-                strlcpy(options->spoof_user, optarg, MAX_USERNAME_LEN);
+            case 'D':
+                strlcpy(options->spa_server_ip_str, optarg, MAX_IP_STR_LEN);
                 break;
-            case 'p':
-                options->port = atoi(optarg);
-                if (options->port < 0 || options->port > 65535) {
-                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
-                    exit(1);
-                }
+            case 'g':
+            case GPG_ENCRYPTION:
+                options->use_gpg = 1;
                 break;
-            case 'P':
-                if (strncmp(optarg, "udp", strlen("udp")) == 0)
-                    options->proto = IPPROTO_UDP;
-                else if (strncmp(optarg, "tcp", strlen("tcp")) == 0)
-                    options->proto = IPPROTO_TCP;
-                else if (strncmp(optarg, "icmp", strlen("icmp")) == 0)
-                    options->proto = IPPROTO_ICMP;
-                else {
-                    fprintf(stderr, "[*] Unrecognized protocol: %s\n", optarg);
-                    exit(1);
-                }
-                break;
-            case 'S':
-                options->src_port = atoi(optarg);
-                if (options->port < 0 || options->port > 65535) {
-                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
-                    exit(1);
-                }
-                break;
-            case 'q':
-                options->quiet = 1;
-                break;
-            case 'n':
-                options->no_save = 1;
-                break;
-            case 'T':
-                options->test = 1;
-                break;
-            case 'd':
-                options->debug = 1;
-                break;
-            case 'v':
-                options->verbose = 1;
-                break;
-            case 'V':
-                options->version = 1;
+            case 'G':
+                strlcpy(options->get_key_file, optarg, MAX_PATH_LEN);
                 break;
             case 'h':
                 usage();
                 exit(0);
+            case 'm':
             case FKO_DIGEST_NAME:
-			case 'm':
                 if(strncasecmp(optarg, "md5", 3) == 0)
                     options->digest_type = FKO_DIGEST_MD5;
                 else if(strncasecmp(optarg, "sha1", 4) == 0)
@@ -290,9 +244,54 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(1);
                 }
                 break;
-            case 'g':
-            case GPG_ENCRYPTION:
-                options->use_gpg = 1;
+            case 'n':
+                options->no_save = 1;
+                break;
+            case 'p':
+                options->port = atoi(optarg);
+                if (options->port < 0 || options->port > 65535) {
+                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                    exit(1);
+                }
+                break;
+            case 'P':
+                if (strncmp(optarg, "udp", strlen("udp")) == 0)
+                    options->proto = FKO_PROTO_UDP;
+                else if (strncmp(optarg, "tcpraw", strlen("tcpraw")) == 0)
+                    options->proto = FKO_PROTO_TCP_RAW;
+                else if (strncmp(optarg, "tcp", strlen("tcp")) == 0)
+                    options->proto = FKO_PROTO_TCP;
+                else if (strncmp(optarg, "icmp", strlen("icmp")) == 0)
+                    options->proto = FKO_PROTO_ICMP;
+                else {
+                    fprintf(stderr, "[*] Unrecognized protocol: %s\n", optarg);
+                    exit(1);
+                }
+                break;
+            case 'q':
+                options->quiet = 1;
+                break;
+            case 'Q':
+                strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
+                break;
+            case 'S':
+                options->src_port = atoi(optarg);
+                if (options->port < 0 || options->port > 65535) {
+                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                    exit(1);
+                }
+                break;
+            case 'T':
+                options->test = 1;
+                break;
+            case 'U':
+                strlcpy(options->spoof_user, optarg, MAX_USERNAME_LEN);
+                break;
+            case 'v':
+                options->verbose = 1;
+                break;
+            case 'V':
+                options->version = 1;
                 break;
             case GPG_RECIP_KEY:
                 options->use_gpg = 1;
@@ -334,7 +333,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
 void
 usage(void)
 {
-    fprintf(stderr, "\n%s version %s\n%s\n\n", MY_NAME, MY_VERSION, MY_DESC);
+    fprintf(stderr, "\n%s client version %s\n%s\n\n", MY_NAME, MY_VERSION, MY_DESC);
     fprintf(stderr,
       "Usage: fwknop -A <port list> [-s|-R|-a] -D <spa_server> [options]\n\n"
       " -h, --help              - Print this usage message and exit.\n"
@@ -348,8 +347,10 @@ usage(void)
       " -D, --destination       - Specify the IP address of the fwknop server.\n"
       " -p, --server-port       - Set the destination port for outgoing SPA\n"
       "                           packet.\n"
-      " -P, --source-protocol   - Set the protocol (UDP, TCP, ICMP) for the\n"
-      "                           outgoing SPA packet.\n"
+      " -P, --source-protocol   - Set the protocol (udp, tcp, tcpraw, icmp) for\n"
+      "                           the outgoing SPA packet. Note: The 'tcpraw'\n"
+      "                           and 'icmp' modes use raw sockets and thus\n"
+      "                           require root access to run.\n"
       " -S, --source-port       - Set the source port for outgoing SPA packet.\n"
       " -Q, --spoof-source      - Set the source IP for outgoing SPA packet.\n"
       " -U, --spoof-user        - Set the username within outgoing SPA packet.\n"
@@ -357,7 +358,6 @@ usage(void)
       " -G, --get-key           - Load an encryption key/password from a file.\n"
       " -T, --test              - Build the SPA packet but do not send it over\n"
       "                           the network.\n"
-      " -d, --debug             - Set debug mode.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"
       " -m, --digest-type       - Speciy the message digest algorithm to use.\n"

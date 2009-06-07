@@ -31,95 +31,133 @@
 unsigned short
 chksum(unsigned short *buf, int nbytes)
 {
-	unsigned int   sum;
-	unsigned short oddbyte;
+    unsigned int   sum;
+    unsigned short oddbyte;
 
-	sum = 0;
-	while (nbytes > 1) {
-		sum += *buf++;
-		nbytes -= 2;
-	}
+    sum = 0;
+    while (nbytes > 1)
+    {
+        sum += *buf++;
+        nbytes -= 2;
+    }
 
-	if (nbytes == 1) {
-		oddbyte = 0;
-		*((unsigned short *) &oddbyte) = *(unsigned short *) buf;
-		sum += oddbyte;
-	}
+    if (nbytes == 1)
+    {
+        oddbyte = 0;
+        *((unsigned short *) &oddbyte) = *(unsigned short *) buf;
+        sum += oddbyte;
+    }
 
-	sum = (sum >> 16) + (sum & 0xffff);
-	sum += (sum >> 16);
+    sum = (sum >> 16) + (sum & 0xffff);
+    sum += (sum >> 16);
 
-	return (unsigned short) ~sum;
+    return (unsigned short) ~sum;
 }
 
 /* Send the SPA data via UDP packet.
 */
 int
-send_spa_packet_udp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+send_spa_packet_udp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
-    int res;
-    char *spa_data;
+    int     sock, res;
 
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
-    if (sock < 0) {
-        fprintf(stderr, "[*] Could not create UDP socket.\n");
-        return(0);
-    }
-
-    res = fko_get_spa_data(ctx, &spa_data);
-
-    if(res != FKO_SUCCESS)
+    if (sock < 0)
     {
-        fprintf(stderr,
-            "send_spa_packet_udp: Error #%i from fko_get_spa_data: %s\n",
-            res, fko_errstr(res)
-        );
-        return(0);
+        perror("[*] send_spa_packet_udp: create socket: ");
+        return(sock);
     }
 
-    return(sendto(sock, spa_data, strlen(spa_data), 0,
-        (struct sockaddr *)daddr, sizeof(*daddr)));
+    res = sendto(sock, spa_data, sd_len, 0,
+        (struct sockaddr *)daddr, sizeof(*daddr));
+
+    if(res < 0)
+    {
+        perror("[*] send_spa_packet_udp: sendto error: ");
+    }
+    else if(res != sd_len)
+    {
+        fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, sd_len);
+    }
+
+    close(sock);
+
+    return(res);
 }
 
-/* Send the SPA data via TCP packet.
+/* Send the SPA data packet via an established TCP connection.
 */
 int
-send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+send_spa_packet_tcp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
     int  res;
+
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    if (sock < 0)
+    {
+        perror("[*] send_spa_packet_tcp: create socket: ");
+        return(sock);
+    }
+
+    res = connect(sock, (struct sockaddr *)daddr, sizeof(*daddr));
+    if(res < 0)
+    {
+        perror("[*] send_spa_packet_tcp: connect: ");
+        close(sock);
+        return(-1);
+    }
+
+    res = send(sock, spa_data, sd_len, 0);
+
+    if(res < 0)
+    {
+        perror("[*] send_spa_packet_tcp: send error: ");
+    }
+    else if(res != sd_len)
+    {
+        fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, sd_len);
+    }
+
+    close(sock);
+
+    return(res);
+}
+
+/* Send the SPA data via raw TCP packet.
+*/
+int
+send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
+    struct sockaddr_in *daddr, fko_cli_options_t *options)
+{
+#ifdef WIN32
+    fprintf(stderr, "[*] send_spa_packet_tcp_raw: raw packets are not yet supported.\n");
+    return(-1);
+#else
+    int  sock, res;
     char pkt_data[2048] = {0}; /* Should be enough for our purposes */
-    char *spa_data;
-    int  sd_len;
 
     struct iphdr  *iph  = (struct iphdr *) pkt_data;
     struct tcphdr *tcph = (struct tcphdr *) (pkt_data + sizeof (struct iphdr));
 
     int hdrlen = sizeof(struct iphdr) + sizeof(struct tcphdr);
 
-    char one   = 1;
+    /* Values for setsockopt.
+    */
+    int         one     = 1;
+    const int  *so_val  = &one;
 
-    int sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
-
-    if (sock < 0) {
-        fprintf(stderr, "[*] Could not create UDP socket. Error = %i\n", errno);
-        return(0);
-    }
-
-    res = fko_get_spa_data(ctx, &spa_data);
-
-    if(res != FKO_SUCCESS)
+    sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (sock < 0)
     {
-        fprintf(stderr,
-            "send_spa_packet_tcp: Error #%i from fko_get_spa_data: %s\n",
-            res, fko_errstr(res)
-        );
-        return(0);
+        perror("[*] send_spa_packet_tcp_raw: create socket: ");
+        return(sock);
     }
-
-    sd_len = strlen(spa_data);
 
     /* Put the spa data in place.
     */
@@ -170,50 +208,59 @@ send_spa_packet_tcp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     /* Make sure the kernel knows the header is included in the data so it
      * doesn't try to insert its own header into the packet.
     */
-    if ((res = setsockopt (sock, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one))) < 0)
-        fprintf (stderr, "[*] send_spa_packet_tcp: setsockopt: error %i - Cannot set HDRINCL!\n", errno);
+    if (setsockopt (sock, IPPROTO_IP, IP_HDRINCL, so_val, sizeof(one)) < 0)
+        perror("[*] send_spa_packet_tcp_raw: setsockopt HDRINCL: ");
 
-    return(sendto (sock, pkt_data, iph->tot_len, 0,
-        (struct sockaddr *)daddr, sizeof(*daddr)));
+    res = sendto (sock, pkt_data, iph->tot_len, 0,
+        (struct sockaddr *)daddr, sizeof(*daddr));
+
+    if(res < 0)
+    {
+        perror("[*] send_spa_packet_tcp_raw: sendto error: ");
+    }
+    else if(res != sd_len)
+    {
+        fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, sd_len);
+    }
+
+    close(sock);
+
+    return(res);
+
+#endif /* !WIN32 */
 }
 
 /* Send the SPA data via ICMP packet.
 */
 int
-send_spa_packet_icmp(fko_ctx_t ctx, struct sockaddr_in *saddr,
+send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
+#ifdef WIN32
+    fprintf(stderr, "[*] send_spa_packet_icmp: raw packets are not yet supported.\n");
+    return(-1);
+#else
     int res;
     char pkt_data[2048] = {0};
-    char *spa_data;
-    int  sd_len;
 
     struct iphdr  *iph    = (struct iphdr *) pkt_data;
     struct icmphdr *icmph = (struct icmphdr *) (pkt_data + sizeof (struct iphdr));
 
     int hdrlen = sizeof(struct iphdr) + sizeof(struct icmphdr);
 
-    char one   = 1;
+    /* Values for setsockopt.
+    */
+    int         one     = 1;
+    const int  *so_val  = &one;
 
     int sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
 
-    if (sock < 0) {
-        fprintf(stderr, "[*] Could not create UDP socket. Error = %i\n", errno);
-        return(0);
-    }
-
-    res = fko_get_spa_data(ctx, &spa_data);
-
-    if(res != FKO_SUCCESS)
+    if (sock < 0)
     {
-        fprintf(stderr,
-            "send_spa_packet_tcp: Error #%i from fko_get_spa_data: %s\n",
-            res, fko_errstr(res)
-        );
-        return(0);
+        perror("[*] send_spa_packet_icmp: create socket: ");
+        return(sock);
     }
-
-    sd_len = strlen(spa_data);
 
     /* Put the spa data in place.
     */
@@ -250,11 +297,27 @@ send_spa_packet_icmp(fko_ctx_t ctx, struct sockaddr_in *saddr,
     /* Make sure the kernel knows the header is included in the data so it
      * doesn't try to insert its own header into the packet.
     */
-    if ((res = setsockopt (sock, IPPROTO_IP, IP_HDRINCL, &one, sizeof(one))) < 0)
-        fprintf (stderr, "[*] send_spa_packet_tcp: setsockopt: error %i - Cannot set HDRINCL!\n", errno);
+    if (setsockopt (sock, IPPROTO_IP, IP_HDRINCL, so_val, sizeof(one)) < 0)
+        perror("[*] send_spa_packet_icmp: setsockopt HDRINCL: ");
 
-    return(sendto (sock, pkt_data, iph->tot_len, 0,
-        (struct sockaddr *)daddr, sizeof(*daddr)));
+    res = sendto (sock, pkt_data, iph->tot_len, 0,
+        (struct sockaddr *)daddr, sizeof(*daddr));
+
+    if(res < 0)
+    {
+        perror("[*] send_spa_packet_icmp: sendto error: ");
+    }
+    else if(res != sd_len)
+    {
+        fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, sd_len);
+    }
+
+    close(sock);
+
+    return(res);
+
+#endif /* !WIN32 */
 }
 
 /* Function used to send the SPA data.
@@ -262,12 +325,33 @@ send_spa_packet_icmp(fko_ctx_t ctx, struct sockaddr_in *saddr,
 int
 send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 {
-    int rv = 0;
-    struct sockaddr_in saddr, daddr;
+    int                 res, sd_len;
+    char               *spa_data;
+
+    struct sockaddr_in  saddr, daddr;
 
 #ifdef WIN32
     WSADATA wsa_data;
+#endif
 
+    /* Get our spa data here.
+    */
+    res = fko_get_spa_data(ctx, &spa_data);
+
+    if(res != FKO_SUCCESS)
+    {
+        fprintf(stderr,
+            "send_spa_packet: Error #%i from fko_get_spa_data: %s\n",
+            res, fko_errstr(res)
+        );
+        return(-1);
+    }
+
+    sd_len = strlen(spa_data);
+
+#ifdef WIN32
+    /* Winsock needs to be initialized...
+    */
     rv = WSAStartup( MAKEWORD(1,1), &wsa_data );
     if( rv != 0 )
     {
@@ -276,15 +360,13 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     }
 #endif
 
-    /* initialize to zeros
-    */
     memset(&saddr, 0, sizeof(saddr));
     memset(&daddr, 0, sizeof(daddr));
 
     saddr.sin_family = AF_INET;
     daddr.sin_family = AF_INET;
 
-    /* set source address and port
+    /* Set source address and port
     */
     if (options->src_port)
         saddr.sin_port = htons(options->src_port);
@@ -296,18 +378,39 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     else
         saddr.sin_addr.s_addr = INADDR_ANY;  /* default */
 
-    /* set destination address and port */
+    /* Set destination address and port
+    */
     daddr.sin_port = htons(options->port);
     daddr.sin_addr.s_addr = inet_addr(options->spa_server_ip_str);
 
-    if (options->proto == IPPROTO_UDP)
-        rv = send_spa_packet_udp(ctx, &saddr, &daddr, options);
-    else if (options->proto == IPPROTO_TCP)
-        rv = send_spa_packet_tcp(ctx, &saddr, &daddr, options);
-    else if (options->proto == IPPROTO_ICMP)
-        rv = send_spa_packet_icmp(ctx, &saddr, &daddr, options);
+    errno = 0;
 
-    return rv;
+    switch (options->proto)
+    {
+        case FKO_PROTO_UDP:
+            res = send_spa_packet_udp(spa_data, sd_len, &saddr, &daddr, options);
+            break;
+
+        case FKO_PROTO_TCP:
+            res = send_spa_packet_tcp(spa_data, sd_len, &saddr, &daddr, options);
+            break;
+
+        case FKO_PROTO_TCP_RAW:
+            res = send_spa_packet_tcp_raw(spa_data, sd_len, &saddr, &daddr, options);
+            break;
+
+        case FKO_PROTO_ICMP:
+            res = send_spa_packet_icmp(spa_data, sd_len, &saddr, &daddr, options);
+            break;
+
+        default:
+            /* --DSS XXX: What to we really want to do here? */
+            fprintf(stderr, "[*] %i is not a valid or supported protocol.\n",
+                options->proto);
+            res = -1;
+    }
+
+    return res;
 }
 
 /* Function to write SPA packet data to the filesystem
@@ -318,17 +421,6 @@ int write_spa_packet_data(fko_ctx_t ctx, fko_cli_options_t *options)
     char   *spa_data;
     int     res;
 
-    if (options->save_packet_file_append) {
-        if((fp = fopen(options->save_packet_file, "a")) == NULL) {
-            return 0;
-        }
-    } else {
-        unlink(options->save_packet_file);
-        if((fp = fopen(options->save_packet_file, "w")) == NULL) {
-            return 0;
-        }
-    }
-
     res = fko_get_spa_data(ctx, &spa_data);
 
     if(res != FKO_SUCCESS)
@@ -337,7 +429,24 @@ int write_spa_packet_data(fko_ctx_t ctx, fko_cli_options_t *options)
             "write_spa_packet_data: Error #%i from fko_get_spa_data: %s\n",
             res, fko_errstr(res)
         );
-        exit(1);
+
+        return(-1);
+    }
+
+    if (options->save_packet_file_append)
+    {
+        fp = fopen(options->save_packet_file, "a");
+    }
+    else
+    {
+        unlink(options->save_packet_file);
+        fp = fopen(options->save_packet_file, "w");
+    }
+
+    if(fp == NULL)
+    {
+        perror("write_spa_packet_data: ");
+        return(-1);
     }
 
     fprintf(fp, "%s\n",
@@ -345,7 +454,7 @@ int write_spa_packet_data(fko_ctx_t ctx, fko_cli_options_t *options)
 
     fclose(fp);
 
-    return 1;
+    return(1);
 }
 
 /***EOF***/
