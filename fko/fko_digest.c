@@ -9,7 +9,7 @@
  *          digest used is determined by the digest_type setting in the
  *          fko context.
  *
- * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
+ * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

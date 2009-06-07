@@ -7,7 +7,7 @@
  *
  * Purpose: libfko header that defines non-public parameter/limits, etc..
  *
- * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
+ * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

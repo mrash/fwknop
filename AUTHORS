@@ -1,6 +1,6 @@
 Package: fwknop
 Maintainer: Damien Stuart <dstuart@dstuart.org>
-Bug reports: bug-gpgme@gnupg.org
+Bug reports: dstuart@dstuart.org
 
 
 Mike Rash <mbr@cipherdyne.org>
@@ -8,10 +8,10 @@ Mike Rash <mbr@cipherdyne.org>
 
 Damien Stuart <dstuart@dstuart.org>
  - The initial port to C
- - libfko, fwknop (client), fwknopd (server)
+ - libfko, fwknop (client)
 
 
- Copyright 2008, Damien Stuart
+ Copyright 2009, Damien Stuart
 
  This file is free software; as a special exception the author gives
  unlimited permission to copy and/or distribute it, with or without

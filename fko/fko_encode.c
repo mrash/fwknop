@@ -9,7 +9,7 @@
  *          the necessary pieces to gether to create the single encoded
  *          message string.
  *
- * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
+ * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

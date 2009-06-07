@@ -34,4 +34,3 @@ run the "autogen.sh" script in the top of the distribution directory in '
 order to generate the autoconf (and other) meta files, and the `configure'
 script.
 
-

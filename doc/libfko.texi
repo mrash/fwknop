@@ -19,7 +19,7 @@
 This manual is for the Firewall Knock Operator library, libfko.
 (version @value{VERSION}, last updated @value{UPDATED}).
 
-Copyright @copyright{} 2008 Damien Stuart.
+Copyright @copyright{} 2009 Damien Stuart.
 
 @quotation
 The libfko manual is free; you can redistribute it and/or modify
