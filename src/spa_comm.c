@@ -352,11 +352,11 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 #ifdef WIN32
     /* Winsock needs to be initialized...
     */
-    rv = WSAStartup( MAKEWORD(1,1), &wsa_data );
-    if( rv != 0 )
+    res = WSAStartup( MAKEWORD(1,1), &wsa_data );
+    if( res != 0 )
     {
-        fprintf(stderr, "[*] Winsock initialization error %d\n", rv );
-        return(0);
+        fprintf(stderr, "[*] Winsock initialization error %d\n", res );
+        return(-1);
     }
 #endif
 
@@ -454,7 +454,7 @@ int write_spa_packet_data(fko_ctx_t ctx, fko_cli_options_t *options)
 
     fclose(fp);
 
-    return(1);
+    return(0);
 }
 
 /***EOF***/
