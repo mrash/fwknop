@@ -184,7 +184,7 @@ main(int argc, char **argv)
         res = send_spa_packet(ctx, &options);
         if(res < 0)
         {
-            perror("send_spa_packet");
+			fprintf(stderr, "[*] send_spa_packet: packet not sent.");
             return(1);
         }
         else

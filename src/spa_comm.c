@@ -83,7 +83,11 @@ send_spa_packet_udp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
             res, sd_len);
     }
 
+#ifdef WIN32
+	closesocket(sock);
+#else
     close(sock);
+#endif
 
     return(res);
 }
@@ -108,7 +112,11 @@ send_spa_packet_tcp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     if(res < 0)
     {
         perror("[*] send_spa_packet_tcp: connect: ");
-        close(sock);
+#ifdef WIN32
+		closesocket(sock);
+#else
+		close(sock);
+#endif
         return(-1);
     }
 
@@ -124,7 +132,11 @@ send_spa_packet_tcp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
             res, sd_len);
     }
 
+#ifdef WIN32
+	closesocket(sock);
+#else
     close(sock);
+#endif
 
     return(res);
 }
