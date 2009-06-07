@@ -31,8 +31,7 @@
 
 #ifdef WIN32
   #include <winsock2.h>
-
-  #define unlink _unlink
+  #include <ws2tcpip.h>
 #else
   #if HAVE_SYS_SOCKET_H
     #include <sys/socket.h>

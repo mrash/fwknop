@@ -55,6 +55,7 @@
 #ifdef WIN32
   #define strncasecmp	_strnicmp
   #define snprintf		_snprintf
+  #define unlink		_unlink
 #else
   #include <signal.h>
 #endif
