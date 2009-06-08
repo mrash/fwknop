@@ -1,0 +1,48 @@
+To whom it may concern, this is -*- outline -*- mode.
+
+* The library - libfko:
+** C-based test suite.
+** Get it out there and get feedback.
+
+* The fwknop C client:
+** Config file support.
+** Command-line options and features ala fwknop Perl client:
+*** Add NAT support.
+*** Server Command support.
+*** Server Auth support (maybe). 
+*** Client timeout support.
+*** Last command support (and show last command).
+*** Time offset from command line
+*** Rand port and NAT rand port.
+*** Add Resolve External IP (-R), --source-ip (-s), and --URL functionality.
+** Man page
+
+* The fwknopd server:
+** Create it (details pending :).
+
+* Nice to haves:
+** Binary packages:
+*** Redhat RPMS
+*** Debian .deb
+*** Solaris pkg
+** Linux/Unix platform:
+*** A GNOME or KDE GUI app for the client.
+** Windows platform:
+*** VB and/or C# class wrappers around libfko.dll.
+*** A Windows GUI app that uses the dll or wrapper classes.
+** Misc:
+*** Python module wrapping libfko.
+*** Ruby module wrapping libfko.
+*** PHP module wrapping libfko.
+
+
+Copyright 2009 - Damien Stuart
+
+This file is free software; as a special exception the author gives
+unlimited permission to copy and/or distribute it, with or without
+modifications, as long as this notice is preserved.
+
+This file is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
+implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.
