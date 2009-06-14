@@ -81,11 +81,32 @@ getpasswd(const char *prompt)
 #ifdef WIN32
 	_cputs(prompt);
     while((c = _getch()) != '\r')
+	{
+		/* Handle a backspace without backing up too far.
+		*/
+		if(c == '\b')
+		{
+			if(ptr != pwbuf)
+				*ptr--;
+
+			continue;
+		}
+
+		/* Handle a Ctrl-U to clear the password entry and start over
+		 * (like it works under Unix).
+	    */
+		if(c == 0x15)
+		{
+			ptr = pwbuf;
+			continue;
+		}
 #else
 	while((c = getc(fp)) != EOF && c != '\n')
+	{
 #endif
         if(ptr < &pwbuf[MAX_PASS_LEN])
             *ptr++ = c;
+	}
 
 	/* Null terminate the password.
     */
