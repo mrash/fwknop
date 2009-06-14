@@ -923,9 +923,9 @@ condition must be met:
 If no argument is given, the current value is returned.  Otherwise,
 gpg_recipient will be set to the given value.
 
-=item B<gps_signer( )>
+=item B<gpg_signer( )>
 
-=item B<gps_signer($gpg_id)>
+=item B<gpg_signer($gpg_id)>
 
 Get or set the gpg_signer.  This is the ID or email for the secret GPG key
 to be used to sign the encryped data.  In order for this function to work,
