@@ -35,10 +35,12 @@ require "FKO_Constants.pl";
 
 our %EXPORT_TAGS = (
     'message_types' => \@MSG_TYPES,
+    'digest_types' => \@DIGEST_TYPES,
     'encryption_types' => \@ENCRYPTION_TYPES,
     'errors' => \@ERROR_CODES,
     'types' => [
         @MSG_TYPES,
+        @DIGEST_TYPES,
         @ENCRYPTION_TYPES
     ],
     'all' => [
