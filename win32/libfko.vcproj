@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalLibraryDirectories="&quot;C:\Documents and Settings\dstuart\My Documents\Visual Studio 2008\Projects\fwknop-c\win32&quot;"
+				AdditionalLibraryDirectories=""
 				DelayLoadDLLs=""
 				GenerateDebugInformation="true"
 			/>
