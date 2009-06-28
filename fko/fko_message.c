@@ -32,6 +32,7 @@
 */
 int validate_cmd_msg(const char *msg);
 int validate_access_msg(const char *msg);
+int validate_proto_port_spec(const char *msg);
 int validate_nat_access_msg(const char *msg);
 int got_allow_ip(const char *msg);
 
@@ -177,7 +178,7 @@ validate_cmd_msg(const char *msg)
 int
 validate_access_msg(const char *msg)
 {
-    const char   *ndx;
+    const char   *ndx, *ndx2;
     int     res         = FKO_SUCCESS;
     int     startlen    = strlen(msg);
 
@@ -193,7 +194,23 @@ validate_access_msg(const char *msg)
     if(ndx == NULL || (1+(ndx - msg)) >= startlen)
         return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
  
-    ndx++;
+    /* Look for a comma to see if this is a multi-part access request.
+    */
+    do {
+        ndx++;
+        res = validate_proto_port_spec(ndx);
+    } while(ndx = strchr(ndx, ','));
+
+    return(res);
+}
+
+int
+validate_proto_port_spec(const char *msg)
+{
+    int     res         = FKO_SUCCESS;
+    int     startlen    = strlen(msg);
+
+    const char   *ndx   = msg;
 
     /* Now check for proto/port string.  Currenly we only allow protos
      * 'tcp', 'udp', and 'icmp'.
