@@ -265,13 +265,13 @@ sub spa_client_timeout {
 
 sub spa_digest {
     my $self = shift;
-    my $val  = shift;
     my $recompute = shift || 0;
+
+    my $val = '';
 
     return FKO::_set_spa_digest($self->{_ctx})
         if($recompute);
 
-    $val = '';
     $self->{_err} = FKO::_get_spa_digest($self->{_ctx}, $val);
 
     return($self->_check_return_val($val));
