@@ -1,3 +1,13 @@
+2009-07-16  Michael Rash  <mbr@cipherdyne.org>
+	* Added the ability to send SPA packets over valid HTTP requests with
+      the fwknop-c client.
+	* Added support for transmitting SPA packets over IPv6 via TCP and UDP
+      sockets, and also via HTTP.
+	* Added GnuPG 'hQ' base64 encoded prefix handling (this prefix is
+      stripped out of encrypted SPA packet data).
+	* Added hostname resolution support to the fwknop-c client if the SPA
+      server is specified as a hostname instead of an IP address.
+
 2008-12-21  Damien Stuart  <dstuart@dstuart.org>
 
 	Build 0.0.0 alpha

@@ -54,28 +54,79 @@ chksum(unsigned short *buf, int nbytes)
     return (unsigned short) ~sum;
 }
 
+static int is_ip(char *str)
+{
+    int rv = 1, i;
+    for (i=0; i < strlen(str); i++) {
+        if (str[i] != '.' && ! isdigit(str[i])) {
+            rv = 0;
+            break;
+        }
+    }
+    return rv;
+}
+
 /* Send the SPA data via UDP packet.
 */
 int
-send_spa_packet_udp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
-    struct sockaddr_in *daddr, fko_cli_options_t *options)
+send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *options)
 {
-    int     sock, res;
+    int     sock, res, error;
+    struct  addrinfo *result, *rp, hints;
 
-    sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family   = AF_UNSPEC; /* Allow IPv4 or IPv6 */
 
-    if (sock < 0)
+    if (options->spa_proto == FKO_PROTO_UDP)
     {
-        perror("[*] send_spa_packet_udp: create socket: ");
-        return(sock);
+        /* Send the SPA data packet via an single UDP packet - this is the
+         * most common usage.
+        */
+        hints.ai_socktype = SOCK_DGRAM;
+        hints.ai_protocol = IPPROTO_UDP;
+    }
+    else
+    {
+        /* Send the SPA data packet via an established TCP connection.
+        */
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_protocol = IPPROTO_TCP;
     }
 
-    res = sendto(sock, spa_data, sd_len, 0,
-        (struct sockaddr *)daddr, sizeof(*daddr));
+    error = getaddrinfo(options->spa_server_str,
+        options->spa_dst_port_str, &hints, &result);
+
+    if (error != 0)
+    {
+        fprintf(stderr, "[*] error in getaddrinfo: %s\n", gai_strerror(error));
+        exit(EXIT_FAILURE);
+    }
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        sock = socket(rp->ai_family, rp->ai_socktype,
+                rp->ai_protocol);
+        if (sock < 0)
+            continue;
+
+        if (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
+            break;  /* made it */
+
+        close(sock);
+    }
+
+    if (rp == NULL) {
+        fprintf(stderr,
+            "[*] send_spa_packet_tcp_or_udp: Could not create socket.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    freeaddrinfo(result);
+
+    res = write(sock, spa_data, sd_len);
 
     if(res < 0)
     {
-        perror("[*] send_spa_packet_udp: sendto error: ");
+        perror("[*] send_spa_packet_tcp_or_udp: write error: ");
     }
     else if(res != sd_len)
     {
@@ -84,56 +135,7 @@ send_spa_packet_udp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     }
 
 #ifdef WIN32
-	closesocket(sock);
-#else
-    close(sock);
-#endif
-
-    return(res);
-}
-
-/* Send the SPA data packet via an established TCP connection.
-*/
-int
-send_spa_packet_tcp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
-    struct sockaddr_in *daddr, fko_cli_options_t *options)
-{
-    int  res;
-
-    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
-    if (sock < 0)
-    {
-        perror("[*] send_spa_packet_tcp: create socket: ");
-        return(sock);
-    }
-
-    res = connect(sock, (struct sockaddr *)daddr, sizeof(*daddr));
-    if(res < 0)
-    {
-        perror("[*] send_spa_packet_tcp: connect: ");
-#ifdef WIN32
-		closesocket(sock);
-#else
-		close(sock);
-#endif
-        return(-1);
-    }
-
-    res = send(sock, spa_data, sd_len, 0);
-
-    if(res < 0)
-    {
-        perror("[*] send_spa_packet_tcp: send error: ");
-    }
-    else if(res != sd_len)
-    {
-        fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
-            res, sd_len);
-    }
-
-#ifdef WIN32
-	closesocket(sock);
+    closesocket(sock);
 #else
     close(sock);
 #endif
@@ -148,7 +150,8 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
 #ifdef WIN32
-    fprintf(stderr, "[*] send_spa_packet_tcp_raw: raw packets are not yet supported.\n");
+    fprintf(stderr,
+        "[*] send_spa_packet_tcp_raw: raw packets are not yet supported.\n");
     return(-1);
 #else
     int  sock, res;
@@ -332,6 +335,41 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
 #endif /* !WIN32 */
 }
 
+/* Send the SPA data packet via an HTTP request
+*/
+int
+send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
+{
+    char http_buf[HTTP_MAX_REQUEST_LEN];
+    int  i;
+
+    /* change "+" chars to "-", and "/" to "_" for HTTP requests (the server
+     * side will translate these back before decrypting) */
+    for (i=0; i < sd_len; i++) {
+        if (spa_data[i] == '+') {
+            spa_data[i] = '-';
+        }
+        else if (spa_data[i] == '/') {
+            spa_data[i] = '_';
+        }
+    }
+
+    snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
+        "%s %s %s\r\n%s %s\r\n%s %s%s\r\n%s\r\n\r\n",
+        "GET",
+        spa_data,
+        "HTTP/1.0",
+        "Host:",
+        options->spa_server_str,  /* hostname or IP */
+        "User-Agent:",
+        "Fwknop/",
+        MY_VERSION,
+        "Accept: */*",
+        "Connection: Keep-Alive");
+
+    return send_spa_packet_tcp_or_udp(http_buf, strlen(http_buf), options);
+}
+
 /* Function used to send the SPA data.
 */
 int
@@ -372,54 +410,69 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     }
 #endif
 
-    memset(&saddr, 0, sizeof(saddr));
-    memset(&daddr, 0, sizeof(daddr));
-
-    saddr.sin_family = AF_INET;
-    daddr.sin_family = AF_INET;
-
-    /* Set source address and port
-    */
-    if (options->src_port)
-        saddr.sin_port = htons(options->src_port);
-    else
-        saddr.sin_port = INADDR_ANY;  /* default */
-
-    if (options->spoof_ip_src_str[0] != 0x00)
-        saddr.sin_addr.s_addr = inet_addr(options->spoof_ip_src_str);
-    else
-        saddr.sin_addr.s_addr = INADDR_ANY;  /* default */
-
-    /* Set destination address and port
-    */
-    daddr.sin_port = htons(options->port);
-    daddr.sin_addr.s_addr = inet_addr(options->spa_server_ip_str);
-
     errno = 0;
 
-    switch (options->proto)
+    if (options->spa_proto == FKO_PROTO_TCP || options->spa_proto == FKO_PROTO_UDP)
     {
-        case FKO_PROTO_UDP:
-            res = send_spa_packet_udp(spa_data, sd_len, &saddr, &daddr, options);
-            break;
+        res = send_spa_packet_tcp_or_udp(spa_data, sd_len, options);
+    }
+    else if (options->spa_proto == FKO_PROTO_HTTP)
+    {
+        res = send_spa_packet_http(spa_data, sd_len, options);
+    }
+    else if (options->spa_proto == FKO_PROTO_TCP_RAW
+            || options->spa_proto == FKO_PROTO_ICMP)
+    {
+        memset(&saddr, 0, sizeof(saddr));
+        memset(&daddr, 0, sizeof(daddr));
 
-        case FKO_PROTO_TCP:
-            res = send_spa_packet_tcp(spa_data, sd_len, &saddr, &daddr, options);
-            break;
+        saddr.sin_family = AF_INET;
+        daddr.sin_family = AF_INET;
 
-        case FKO_PROTO_TCP_RAW:
+        /* Set source address and port
+        */
+        if (options->spa_src_port)
+            saddr.sin_port = htons(options->spa_src_port);
+        else
+            saddr.sin_port = INADDR_ANY;  /* default */
+
+        if (options->spoof_ip_src_str[0] != 0x00) {
+            saddr.sin_addr.s_addr = inet_addr(options->spoof_ip_src_str);
+        } else
+            saddr.sin_addr.s_addr = INADDR_ANY;  /* default */
+
+        if (saddr.sin_addr.s_addr == -1)
+        {
+            fprintf(stderr, "[*] Could not set source IP.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        /* Set destination address and port
+        */
+        daddr.sin_port = htons(options->spa_dst_port);
+        daddr.sin_addr.s_addr = inet_addr(options->spa_server_str);
+
+        if (daddr.sin_addr.s_addr == -1)
+        {
+            fprintf(stderr, "[*] Could not set destination IP.\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (options->spa_proto == FKO_PROTO_TCP_RAW)
+        {
             res = send_spa_packet_tcp_raw(spa_data, sd_len, &saddr, &daddr, options);
-            break;
-
-        case FKO_PROTO_ICMP:
+        }
+        else
+        {
             res = send_spa_packet_icmp(spa_data, sd_len, &saddr, &daddr, options);
-            break;
-
-        default:
-            /* --DSS XXX: What to we really want to do here? */
-            fprintf(stderr, "[*] %i is not a valid or supported protocol.\n",
-                options->proto);
-            res = -1;
+        }
+    }
+    else
+    {
+        /* --DSS XXX: What to we really want to do here? */
+        fprintf(stderr, "[*] %i is not a valid or supported protocol.\n",
+            options->spa_proto);
+        res = -1;
     }
 
     return res;

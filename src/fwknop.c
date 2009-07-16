@@ -109,7 +109,6 @@ main(int argc, char **argv)
 
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
-    
             return(1);
         }
 
@@ -184,7 +183,7 @@ main(int argc, char **argv)
         res = send_spa_packet(ctx, &options);
         if(res < 0)
         {
-			fprintf(stderr, "[*] send_spa_packet: packet not sent.");
+            fprintf(stderr, "[*] send_spa_packet: packet not sent.\n");
             return(1);
         }
         else
@@ -244,8 +243,18 @@ main(int argc, char **argv)
         {
             errmsg("fko_decrypt_spa_data", res);
 
-            if(IS_GPG_ERROR(res))
-                fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx2));
+            if(IS_GPG_ERROR(res)) {
+                /* we most likely could not decrypt the gpg-encrypted data
+                 * because we don't have access to the private key associated
+                 * with the public key we used for encryption.  Since this is
+                 * expected, return 0 instead of an error condition (so calling
+                 * programs like the fwknop test suite don't interpret this as
+                 * an unrecoverable error), but print the error string for
+                 debugging purposes. */
+                fprintf(stderr, "GPG ERR: %s\n%s\n", fko_gpg_errorstr(ctx2),
+                    "[*] No access to recipient private key?\n");
+                return(0);
+            }
 
             return(1);
         }
@@ -266,16 +275,15 @@ main(int argc, char **argv)
 char*
 get_user_pw(fko_cli_options_t *options, int crypt_op)
 {
-    if(options->use_gpg)
-    {
-        return(options->use_gpg_agent ? ""
-            : getpasswd("Enter passphrase for secret key: "));
-    }
-    else if (options->get_key_file[0] != 0x0) {
+    if (options->get_key_file[0] != 0x0) {
         /* grab the key/password from the --get-key file
         */
         return(getpasswd_file(options->get_key_file,
-                        options->spa_server_ip_str));
+                        options->spa_server_str));
+    }
+    else if (options->use_gpg) {
+        return(options->use_gpg_agent ? ""
+            : getpasswd("Enter passphrase for secret key: "));
     }
     else
     {
@@ -335,7 +343,7 @@ display_ctx(fko_ctx_t ctx)
     printf("\nFKO Field Values:\n=================\n\n");
     printf("   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
     printf("       Username: %s\n", username == NULL ? "<NULL>" : username);
-    printf("      Timestamp: %u\n", timestamp);
+    printf("      Timestamp: %u\n", (unsigned int) timestamp);
     printf("    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
     printf("   Message Type: %i\n", msg_type);
     printf(" Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);

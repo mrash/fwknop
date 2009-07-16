@@ -136,10 +136,10 @@ getpasswd(const char *prompt)
 /* Function for accepting password input from from a file
 */
 char*
-getpasswd_file(const char *pw_file, const char *dst_ip_str)
+getpasswd_file(const char *pw_file, const char *server_str)
 {
     FILE           *pwfile_ptr;
-    unsigned int    numLines = 0, i = 0, found_dst_ip;
+    unsigned int    numLines = 0, i = 0, found_dst;
 
     static char     pwbuf[MAX_PASS_LEN + 1]     = {0};
     char            conf_line_buf[MAX_LINE_LEN] = {0};
@@ -172,12 +172,12 @@ getpasswd_file(const char *pw_file, const char *dst_ip_str)
         * multiple keys to be placed within the same file, and the client will
         * reference the matching one for the SPA server we are contacting
         */
-        found_dst_ip = 1;
-        for (i=0; i < strlen(dst_ip_str); i++)
-            if (*lptr++ != dst_ip_str[i])
-                found_dst_ip = 0;
+        found_dst = 1;
+        for (i=0; i < strlen(server_str); i++)
+            if (*lptr++ != server_str[i])
+                found_dst = 0;
 
-        if (! found_dst_ip)
+        if (! found_dst)
             continue;
 
         if (*lptr == ':')
@@ -203,7 +203,7 @@ getpasswd_file(const char *pw_file, const char *dst_ip_str)
 
     if (pwbuf[0] == '\0') {
         fprintf(stderr, "[*] Could not get password for IP: %s from: %s\n",
-            dst_ip_str, pw_file);
+            server_str, pw_file);
         exit(1);
     }
 

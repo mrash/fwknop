@@ -28,6 +28,7 @@
 #include "getopt.h"
 #include "spa_comm.h"
 #include "utils.h"
+#include "ctype.h"
 
 /* Routine to extract the configuration value from a line in the config
  * file.
@@ -150,13 +151,11 @@ parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
 static void
 validate_options(fko_cli_options_t *options)
 {
-    //char    *tmpc;
-
     /* Gotta have a Destination unless we are just testing or getting the
      * the version.
     */
     if (!options->test && !options->version
-        && options->spa_server_ip_str[0] == 0x0)
+        && options->spa_server_str[0] == 0x0)
     {
         fprintf(stderr,
             "[*] Must use --destination unless --test mode is used\n");
@@ -196,10 +195,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     memset(&ot, 0x00, sizeof(ot));
 
     /* Establish a few defaults such as UDP/62201 for sending the SPA
-     * packet (can be changed with --Server-proto/--Server-port)
+     * packet (can be changed with --server-proto/--server-port)
     */
-    options->proto = FKO_DEFAULT_PROTO;
-    options->port  = FKO_DEFAULT_PORT;
+    options->spa_proto    = FKO_DEFAULT_PROTO;
+    options->spa_dst_port = FKO_DEFAULT_PORT;
+    strlcpy(options->spa_dst_port_str, FKO_DEFAULT_PORT_STR, MAX_PORT_STR_LEN);
 
     while ((cmd_arg = getopt_long(argc, argv,
             "a:A:bB:D:gG:hm:np:P:qQ:S:TU:vV", cmd_opts, &index)) != -1) {
@@ -218,7 +218,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->save_packet_file, optarg, MAX_PATH_LEN);
                 break;
             case 'D':
-                strlcpy(options->spa_server_ip_str, optarg, MAX_IP_STR_LEN);
+                strlcpy(options->spa_server_str, optarg, MAX_SERVER_STR_LEN);
                 break;
             case 'g':
             case GPG_ENCRYPTION:
@@ -248,21 +248,24 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->no_save = 1;
                 break;
             case 'p':
-                options->port = atoi(optarg);
-                if (options->port < 0 || options->port > 65535) {
+                strlcpy(options->spa_dst_port_str, optarg, MAX_PORT_STR_LEN);
+                options->spa_dst_port = atoi(optarg);
+                if (options->spa_dst_port < 0 || options->spa_dst_port > 65535) {
                     fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
                     exit(1);
                 }
                 break;
             case 'P':
                 if (strncmp(optarg, "udp", strlen("udp")) == 0)
-                    options->proto = FKO_PROTO_UDP;
+                    options->spa_proto = FKO_PROTO_UDP;
                 else if (strncmp(optarg, "tcpraw", strlen("tcpraw")) == 0)
-                    options->proto = FKO_PROTO_TCP_RAW;
+                    options->spa_proto = FKO_PROTO_TCP_RAW;
                 else if (strncmp(optarg, "tcp", strlen("tcp")) == 0)
-                    options->proto = FKO_PROTO_TCP;
+                    options->spa_proto = FKO_PROTO_TCP;
                 else if (strncmp(optarg, "icmp", strlen("icmp")) == 0)
-                    options->proto = FKO_PROTO_ICMP;
+                    options->spa_proto = FKO_PROTO_ICMP;
+                else if (strncmp(optarg, "http", strlen("http")) == 0)
+                    options->spa_proto = FKO_PROTO_HTTP;
                 else {
                     fprintf(stderr, "[*] Unrecognized protocol: %s\n", optarg);
                     exit(1);
@@ -275,8 +278,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
                 break;
             case 'S':
-                options->src_port = atoi(optarg);
-                if (options->port < 0 || options->port > 65535) {
+                strlcpy(options->spa_src_port_str, optarg, MAX_PORT_STR_LEN);
+                options->spa_src_port = atoi(optarg);
+                if (options->spa_src_port < 0 || options->spa_src_port > 65535) {
                     fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
                     exit(1);
                 }
@@ -347,7 +351,7 @@ usage(void)
       " -D, --destination       - Specify the IP address of the fwknop server.\n"
       " -p, --server-port       - Set the destination port for outgoing SPA\n"
       "                           packet.\n"
-      " -P, --server-protocol   - Set the protocol (udp, tcp, tcpraw, icmp) for\n"
+      " -P, --server-proto      - Set the protocol (udp, tcp, tcpraw, icmp) for\n"
       "                           the outgoing SPA packet. Note: The 'tcpraw'\n"
       "                           and 'icmp' modes use raw sockets and thus\n"
       "                           require root access to run.\n"
