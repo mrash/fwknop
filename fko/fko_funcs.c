@@ -30,6 +30,7 @@
  * of Rijndael encrypted data.
 */
 #define B64_RIJNDAEL_SALT "U2FsdGVkX1"
+#define B64_GPG_PREFIX "hQ"
 
 /* Initialize an fko context.
 */
@@ -303,10 +304,14 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
     *spa_data = ctx->encrypted_msg; 
 
     /* Notice we omit the first 10 bytes if Rijndael encryption is
-     * used (to eliminate the consistent 'Salted__' string).
+     * used (to eliminate the consistent 'Salted__' string), and
+     * in GnuPG mode we eliminate the consistent 'hQ' base64 encoded
+     * prefix
     */
     if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
-        *spa_data += 10;
+        *spa_data += strlen(B64_RIJNDAEL_SALT);
+    else if(ctx->encryption_type == FKO_ENCRYPTION_GPG)
+        *spa_data += strlen(B64_GPG_PREFIX);
 
     return(FKO_SUCCESS);
 }
