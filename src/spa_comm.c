@@ -56,13 +56,16 @@ chksum(unsigned short *buf, int nbytes)
 
 static int is_ip(char *str)
 {
-    int rv = 1, i;
+    int rv = 1;
+    unsigned int i;
+
     for (i=0; i < strlen(str); i++) {
         if (str[i] != '.' && ! isdigit(str[i])) {
             rv = 0;
             break;
         }
     }
+
     return rv;
 }
 
@@ -75,6 +78,7 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
     struct  addrinfo *result, *rp, hints;
 
     memset(&hints, 0, sizeof(struct addrinfo));
+
     hints.ai_family   = AF_UNSPEC; /* Allow IPv4 or IPv6 */
 
     if (options->spa_proto == FKO_PROTO_UDP)
@@ -108,21 +112,24 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
         if (sock < 0)
             continue;
 
-        if (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
+        if (error = connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
             break;  /* made it */
 
+#ifdef WIN32
+        closesocket(sock);
+#else
         close(sock);
+#endif
     }
 
     if (rp == NULL) {
-        fprintf(stderr,
-            "[*] send_spa_packet_tcp_or_udp: Could not create socket.\n");
+        perror("[*] send_spa_packet_tcp_or_udp: Could not create socket: ");
         exit(EXIT_FAILURE);
     }
 
     freeaddrinfo(result);
 
-    res = write(sock, spa_data, sd_len);
+    res = send(sock, spa_data, sd_len, 0);
 
     if(res < 0)
     {
@@ -130,8 +137,10 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
     }
     else if(res != sd_len)
     {
-        fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
-            res, sd_len);
+        fprintf(stderr,
+            "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, sd_len
+        );
     }
 
 #ifdef WIN32
@@ -235,8 +244,10 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     }
     else if(res != sd_len)
     {
-        fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
-            res, sd_len);
+        fprintf(stderr,
+            "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, sd_len
+        );
     }
 
     close(sock);

@@ -178,7 +178,7 @@ validate_cmd_msg(const char *msg)
 int
 validate_access_msg(const char *msg)
 {
-    const char   *ndx, *ndx2;
+    const char   *ndx;
     int     res         = FKO_SUCCESS;
     int     startlen    = strlen(msg);
 

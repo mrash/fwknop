@@ -28,7 +28,6 @@
 
 #include "fwknop_common.h"
 #include <errno.h>
-#include <netdb.h>
 
 #ifdef WIN32
   #include <winsock2.h>
@@ -37,6 +36,7 @@
   #if HAVE_SYS_SOCKET_H
     #include <sys/socket.h>
   #endif
+  #include <netdb.h>
 #endif
 
 /* We will roll our own packet header structs. */
