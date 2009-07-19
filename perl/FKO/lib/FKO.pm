@@ -965,6 +965,8 @@ condition must be met:
 If no argument is given, the current value is returned.  Otherwise,
 gpg_home_dir will be set to the given value.
 
+=back
+
 =head3 GPG Signature Verification
 
 By default libfko will attempt to verify GPG signatures when decrypting
@@ -982,6 +984,8 @@ functions, these also have the following prerequisites:
 =item * The I<encryption_type> must be set to C<FKO_ENCRYPTION_GPG>.
 
 =back
+
+=over
 
 =item B<gpg_signature_verify( )>
 
@@ -1036,6 +1040,8 @@ false is returned.
 Compare the given fingerprint value with the fingerprint of the GPG signature
 of the last decryption operation.  If the ID's match, then a true value is
 returned. Otherwise false is returned. 
+
+=back
 
 =head1 SEE ALSO
 
