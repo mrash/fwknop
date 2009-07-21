@@ -73,6 +73,56 @@ get_char_val(const char *var_name, char *dest, char *lptr)
     return 1;
 }
 
+/* Parse any time offset from the command line
+*/
+static int
+parse_time_offset(char *offset_str)
+{
+    int offset = 0, i, j, offset_type = TIME_OFFSET_SECONDS;
+    char offset_digits[MAX_TIME_STR_LEN];
+
+    j=0;
+    for (i=0; i < strlen(offset_str); i++) {
+        if (isdigit(offset_str[i])) {
+            offset_digits[j] = offset_str[i];
+            j++;
+        } else if (offset_str[i] == 'm' || offset_str[i] == 'M') {
+            offset_type = TIME_OFFSET_MINUTES;
+            break;
+        } else if (offset_str[i] == 'h' || offset_str[i] == 'H') {
+            offset_type = TIME_OFFSET_HOURS;
+            break;
+        } else if (offset_str[i] == 'd' || offset_str[i] == 'D') {
+            offset_type = TIME_OFFSET_DAYS;
+            break;
+        }
+    }
+    offset_digits[j] = '\0';
+    if (j < 1) {
+        fprintf(stderr, "[*] Invalid time offset: %s", offset_str);
+        exit(EXIT_FAILURE);
+    }
+
+    offset = atoi(offset_digits);
+    if (offset < 0) {
+        fprintf(stderr, "[*] Invalid time offset: %s", offset_str);
+        exit(EXIT_FAILURE);
+    }
+
+    switch (offset_type) {
+        case TIME_OFFSET_MINUTES:
+            offset *= 60;
+            break;
+        case TIME_OFFSET_HOURS:
+            offset *= 60 * 60;
+            break;
+        case TIME_OFFSET_DAYS:
+            offset *= 60 * 60 * 24;
+            break;
+    }
+    return offset;
+}
+
 /* Parse the config file...
 */
 static void
@@ -97,7 +147,7 @@ parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
         {
             fprintf(stderr, "[*] Could not open config file: %s\n",
                 options->config_file);
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         fprintf(stderr,
@@ -106,7 +156,7 @@ parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
 
         return;
     }
-    
+
     if ((cfile_ptr = fopen(options->config_file, "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open config file: %s\n",
@@ -159,7 +209,7 @@ validate_options(fko_cli_options_t *options)
     {
         fprintf(stderr,
             "[*] Must use --destination unless --test mode is used\n");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     /* If we are using gpg, we must at least have the recipient set.
@@ -171,7 +221,7 @@ validate_options(fko_cli_options_t *options)
         {
             fprintf(stderr,
                 "[*] Must specify --gpg-recipient-key when GPG is used.\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -184,9 +234,7 @@ validate_options(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int                 cmd_arg, index;
-    //unsigned int        tmpint;
-
+    int                 cmd_arg, index, i;
     struct opts_track   ot;
 
     /* Zero out options and opts_track.
@@ -199,10 +247,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     */
     options->spa_proto    = FKO_DEFAULT_PROTO;
     options->spa_dst_port = FKO_DEFAULT_PORT;
-    strlcpy(options->spa_dst_port_str, FKO_DEFAULT_PORT_STR, MAX_PORT_STR_LEN);
+    options->fw_timeout   = -1;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "a:A:bB:D:gG:hm:np:P:qQ:S:TU:vV", cmd_opts, &index)) != -1) {
+            "a:A:bB:C:D:f:gG:hIm:nN:p:P:qQ:rS:TU:vV", cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'a':
@@ -217,8 +265,18 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'B':
                 strlcpy(options->save_packet_file, optarg, MAX_PATH_LEN);
                 break;
+            case 'C':
+                strlcpy(options->server_command, optarg, MAX_LINE_LEN);
+                break;
             case 'D':
                 strlcpy(options->spa_server_str, optarg, MAX_SERVER_STR_LEN);
+                break;
+            case 'f':
+                options->fw_timeout = atoi(optarg);
+                if (options->fw_timeout < 0) {
+                    fprintf(stderr, "[*] --fw-timeout must be >= 0\n");
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 'g':
             case GPG_ENCRYPTION:
@@ -229,7 +287,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'h':
                 usage();
-                exit(0);
+                exit(EXIT_SUCCESS);
             case 'm':
             case FKO_DIGEST_NAME:
                 if(strncasecmp(optarg, "md5", 3) == 0)
@@ -241,18 +299,20 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 else
                 {
                     fprintf(stderr, "* Invalid digest type: %s\n", optarg);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 break;
             case 'n':
                 options->no_save = 1;
                 break;
+            case 'N':
+                strlcpy(options->nat_access_str, optarg, MAX_LINE_LEN);
+                break;
             case 'p':
-                strlcpy(options->spa_dst_port_str, optarg, MAX_PORT_STR_LEN);
                 options->spa_dst_port = atoi(optarg);
                 if (options->spa_dst_port < 0 || options->spa_dst_port > 65535) {
                     fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 break;
             case 'P':
@@ -268,7 +328,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     options->spa_proto = FKO_PROTO_HTTP;
                 else {
                     fprintf(stderr, "[*] Unrecognized protocol: %s\n", optarg);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 break;
             case 'q':
@@ -277,12 +337,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
                 break;
+            case 'r':
+                options->rand_port = 1;
+                break;
             case 'S':
-                strlcpy(options->spa_src_port_str, optarg, MAX_PORT_STR_LEN);
                 options->spa_src_port = atoi(optarg);
                 if (options->spa_src_port < 0 || options->spa_src_port > 65535) {
                     fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
                 break;
             case 'T':
@@ -313,9 +375,28 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->use_gpg = 1;
                 options->use_gpg_agent = 1;
                 break;
+            case NAT_LOCAL:
+                options->nat_local = 1;
+                break;
+            case NAT_RAND_PORT:
+                options->nat_rand_port = 1;
+                break;
+            case NAT_PORT:
+                options->nat_port = atoi(optarg);
+                if (options->nat_port < 0 || options->nat_port > 65535) {
+                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case TIME_OFFSET_PLUS:
+                options->time_offset_plus = parse_time_offset(optarg);
+                break;
+            case TIME_OFFSET_MINUS:
+                options->time_offset_minus = parse_time_offset(optarg);
+                break;
             default:
                 usage();
-                exit(1);
+                exit(EXIT_FAILURE);
         }
     }
 
@@ -349,6 +430,8 @@ usage(void)
       " -a, --allow-ip          - Specify IP address to allow within the SPA\n"
       "                           packet.\n"
       " -D, --destination       - Specify the IP address of the fwknop server.\n"
+      " -N, --nat-access        - Gain NAT access to an internal service\n"
+      "                           protected by the fwknop server.\n"
       " -p, --server-port       - Set the destination port for outgoing SPA\n"
       "                           packet.\n"
       " -P, --server-proto      - Set the protocol (udp, tcp, tcpraw, icmp) for\n"
@@ -360,17 +443,29 @@ usage(void)
       " -U, --spoof-user        - Set the username within outgoing SPA packet.\n"
       " -q, --quiet             - Perform fwknop functions quietly.\n"
       " -G, --get-key           - Load an encryption key/password from a file.\n"
+      " -r, --rand-port         - Send the SPA packet over a randomly assigned\n"
+      "                           port (requires a broader pcap filter on the\n"
+      "                           server side than the default of udp 62201).\n"
       " -T, --test              - Build the SPA packet but do not send it over\n"
       "                           the network.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"
       " -m, --digest-type       - Speciy the message digest algorithm to use.\n"
       "                           (md5, sha1, or sha256 (default)).\n"
+      " -f, --fw-timeout        - Specify SPA server firewall timeout from the\n"
+      "                           client side.\n"
       "     --gpg-encryption    - Use GPG encyrption (default is Rijndael).\n"
       "     --gpg-recipient-key - Specify the recipient GPG key name or ID.\n"
       "     --gpg-signer-key    - Specify the signer's GPG key name or ID.\n"
       "     --gpg-home-dir      - Specify the GPG home directory.\n"
       "     --gpg-agent         - Use GPG agent if available.\n"
+      "     --nat-local         - Use GPG agent if available.\n"
+      "     --nat-port         - Use GPG agent if available.\n"
+      "     --nat-rand-port    - Use GPG agent if available.\n"
+      "     --nat-local         - Use GPG agent if available.\n"
+      "     --time-offset-plus  - Add time to outgoing SPA packet timestamp.\n"
+      "     --time-offset-minus - Subtract time from outgoing SPA packet\n"
+      "                           timestamp.\n"
       "\n"
     );
 

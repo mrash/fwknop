@@ -91,8 +91,11 @@ enum {
 */
 #define FKO_DEFAULT_PROTO FKO_PROTO_UDP
 #define FKO_DEFAULT_PORT 62201
-#define FKO_DEFAULT_PORT_STR "62201"
+#define DEFAULT_NAT_PORT 55000
+#define MIN_HIGH_PORT 1024
+#define MAX_PORT 65535
 #define MAX_PORT_STR_LEN 6
+#define MAX_PROTO_STR_LEN 6
 #define MAX_IP_STR_LEN 16
 #define MAX_SERVER_STR_LEN 50
 
@@ -101,12 +104,23 @@ enum {
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
 
+#define MAX_TIME_STR_LEN    9
+enum {
+    TIME_OFFSET_SECONDS,
+    TIME_OFFSET_MINUTES,
+    TIME_OFFSET_HOURS,
+    TIME_OFFSET_DAYS
+};
+
+#define RAND_FILE "/dev/urandom"
+
 /* fwkop client configuration parameters and values
 */
 typedef struct fko_cli_options
 {
     char config_file[MAX_PATH_LEN];
     char access_str[MAX_PATH_LEN];
+    char server_command[MAX_LINE_LEN];
     char get_key_file[MAX_LINE_LEN];
     char save_packet_file[MAX_LINE_LEN];
     int  save_packet_file_append;
@@ -114,15 +128,23 @@ typedef struct fko_cli_options
     char allow_ip_str[MAX_IP_STR_LEN];
     char spoof_ip_src_str[MAX_IP_STR_LEN];
     char spoof_user[MAX_USERNAME_LEN];
+    int  rand_port;
     char gpg_recipient_key[MAX_GPG_KEY_ID];
     char gpg_signer_key[MAX_GPG_KEY_ID];
     char gpg_home_dir[MAX_PATH_LEN];
 
+    /* NAT access
+    */
+    char nat_access_str[MAX_PATH_LEN];
+    int  nat_local;
+    int  nat_port;
+    int  nat_rand_port;
+
+    /* SPA packet transmission port and protocol
+    */
     int spa_proto;
     unsigned int spa_dst_port;
-    char spa_dst_port_str[MAX_PORT_STR_LEN];
     unsigned int spa_src_port; /* only used with --source-port */
-    char spa_src_port_str[MAX_PORT_STR_LEN];  /* --source-port */
 
     unsigned int digest_type;
 
@@ -134,6 +156,9 @@ typedef struct fko_cli_options
     unsigned char   test;
     unsigned char   use_gpg;
     unsigned char   use_gpg_agent;
+    int             time_offset_plus;
+    int             time_offset_minus;
+    int             fw_timeout;
 
     //char            config_file[MAX_PATH_LEN];
 

@@ -1,11 +1,23 @@
+2009-07-21  Michael Rash  <mbr@cipherdyne.org>
+    * Got forward and local NAT modes working with the --nat-access,
+      --nat-local, --nat-port, and --nat-randport options.  All NAT modes
+      are now passing the fwknop test suite.
+    * Added the --server-command option to build an SPA packet with a command
+      for the server to execute.
+    * Added the --fw-timeout option for client side timeouts to be specified.
+    * Added the --time-offset-plus and --time-offset-minus options to allow
+      the user to influence the timestamp associated with an SPA packet.
+    * Added the --rand-port option so that the SPA packet destination port can
+      be randomized.
+
 2009-07-16  Michael Rash  <mbr@cipherdyne.org>
-	* Added the ability to send SPA packets over valid HTTP requests with
+    * Added the ability to send SPA packets over valid HTTP requests with
       the fwknop-c client.
-	* Added support for transmitting SPA packets over IPv6 via TCP and UDP
+    * Added support for transmitting SPA packets over IPv6 via TCP and UDP
       sockets, and also via HTTP.
-	* Added GnuPG 'hQ' base64 encoded prefix handling (this prefix is
+    * Added GnuPG 'hQ' base64 encoded prefix handling (this prefix is
       stripped out of encrypted SPA packet data).
-	* Added hostname resolution support to the fwknop-c client if the SPA
+    * Added hostname resolution support to the fwknop-c client if the SPA
       server is specified as a hostname instead of an IP address.
 
 2008-12-21  Damien Stuart  <dstuart@dstuart.org>

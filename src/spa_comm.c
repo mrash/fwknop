@@ -76,6 +76,7 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
 {
     int     sock, res, error;
     struct  addrinfo *result, *rp, hints;
+    char    port_str[MAX_PORT_STR_LEN];
 
     memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -97,8 +98,9 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
         hints.ai_protocol = IPPROTO_TCP;
     }
 
-    error = getaddrinfo(options->spa_server_str,
-        options->spa_dst_port_str, &hints, &result);
+    sprintf(port_str, "%d", options->spa_dst_port);
+
+    error = getaddrinfo(options->spa_server_str, port_str, &hints, &result);
 
     if (error != 0)
     {

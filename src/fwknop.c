@@ -33,7 +33,11 @@
 */
 char* get_user_pw(fko_cli_options_t *options, int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
-void  errmsg(char *msg, int err);
+void errmsg(char *msg, int err);
+static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
+static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
+static int get_rand_port(fko_ctx_t ctx);
+static void dump_transmit_options(fko_cli_options_t *options);
 
 int
 main(int argc, char **argv)
@@ -67,6 +71,84 @@ main(int argc, char **argv)
             MY_VERSION, version);
 
         return(0);
+    }
+
+    /* Set client timeout
+    */
+    if(options.fw_timeout >= 0)
+    {
+        res = fko_set_spa_client_timeout(ctx, options.fw_timeout);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_spa_client_timeout", res);
+            return(1);
+        }
+    }
+
+    /* Set the SPA packet message type based on command line options
+    */
+    res = set_message_type(ctx, &options);
+    if(res != FKO_SUCCESS)
+    {
+        errmsg("fko_set_spa_message_type", res);
+        return(1);
+    }
+
+    if(options.server_command[0] != 0x0)
+    {
+        /* Set the access message to a command that the server will
+         * execute
+        */
+        snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
+                options.allow_ip_str, ",", options.server_command);
+    }
+    else
+    {
+        /* Set a message string by combining the allow IP and the
+         * port/protocol.  The fwknopd server allows no port/protocol
+         * to be specified as well, so in this case append the string
+         * "none/0" to the allow IP.
+        */
+        if(options.access_str[0] != 0x0)
+        {
+            snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
+                    options.allow_ip_str, ",", options.access_str);
+        }
+        else
+        {
+            snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
+                    options.allow_ip_str, ",", "none/0");
+        }
+    }
+    res = fko_set_spa_message(ctx, access_buf);
+    if(res != FKO_SUCCESS)
+    {
+        errmsg("fko_set_spa_message", res);
+        return(1);
+    }
+
+    /* Set NAT access string
+    */
+    if (options.nat_local || options.nat_access_str[0] != 0x0)
+    {
+        res = set_nat_access(ctx, &options);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_nat_access_str", res);
+            return(1);
+        }
+    }
+
+    /* Set username
+    */
+    if(options.spoof_user[0] != 0x0)
+    {
+        res = fko_set_username(ctx, options.spoof_user);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_username", res);
+            return(1);
+        }
     }
 
     /* Set up for using GPG if specified.
@@ -127,17 +209,6 @@ main(int argc, char **argv)
         }
     }
 
-    /* Set a message string by combining the allow IP and the port/protocol
-    */
-    snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
-            options.allow_ip_str, ",", options.access_str);
-    res = fko_set_spa_message(ctx, access_buf);
-    if(res != FKO_SUCCESS)
-    {
-        errmsg("fko_set_spa_message", res);
-        return(1);
-    }
-
     /* Set Digest type.
     */
     if(options.digest_type)
@@ -172,6 +243,12 @@ main(int argc, char **argv)
     */
     if (options.save_packet_file[0] != 0x0)
         write_spa_packet_data(ctx, &options);
+
+    if (options.rand_port)
+        options.spa_dst_port = get_rand_port(ctx);
+
+    if (options.verbose)
+        dump_transmit_options(&options);
 
     /* If not in test mode, send the SPA data across the wire with a
      * protocol/port specified on the command line (default is UDP/62201).
@@ -268,6 +345,168 @@ main(int argc, char **argv)
     fko_destroy(ctx);
 
     return(0);
+}
+
+static void
+print_proto(int proto)
+{
+    switch (proto) {
+        case FKO_PROTO_UDP:
+            printf("udp");
+            break;
+        case FKO_PROTO_TCP_RAW:
+            printf("tcpraw");
+            break;
+        case FKO_PROTO_TCP:
+            printf("tcp");
+            break;
+        case FKO_PROTO_ICMP:
+            printf("icmp");
+            break;
+        case FKO_PROTO_HTTP:
+            printf("http");
+            break;
+    }
+    return;
+}
+
+static
+int get_rand_port(fko_ctx_t ctx)
+{
+    char *rand_val = NULL;
+    int   port     = 0;
+    int   res      = 0;
+
+    res = fko_get_rand_value(ctx, &rand_val);
+    if(res != FKO_SUCCESS)
+    {
+        errmsg("get_rand_port(), fko_get_rand_value", res);
+        exit(EXIT_FAILURE);
+    }
+
+    /* convert to a random value between 1024 and 65535
+    */
+    return (MIN_HIGH_PORT + (atoi(rand_val) % (MAX_PORT - MIN_HIGH_PORT)));
+}
+
+static void
+dump_transmit_options(fko_cli_options_t *options)
+{
+    printf("[+] Generating SPA packet:\n    protocol: ");
+    print_proto(options->spa_proto),
+    printf("\n    port: %d\n", options->spa_dst_port);
+    return;
+}
+
+/* See if the string is of the format "<ipv4 addr>:<port>",
+ * e.g. "123.1.2.3,12345" - this needs work.
+*/
+static int ipv4_str_has_port(char *str)
+{
+    int rv = 0, i;
+
+    for (i=0; i < strlen(str); i++) {
+        if (str[i] == ',' || str[i] == ':') {
+            str[i] = ',';  /* force "<ip>,<port>" format */
+            rv = 1;
+            continue;
+        }
+        if (rv && ! isdigit(str[i])) {
+            rv = 0;
+            break;
+        }
+    }
+
+    return rv;
+}
+
+/* Set NAT access string
+*/
+static int
+set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options)
+{
+    char nat_access_buf[MAX_LINE_LEN] = "";
+    int nat_port = 0;
+
+    if (options->nat_rand_port)
+        nat_port = get_rand_port(ctx);
+    else if (options->nat_port)
+        nat_port = options->nat_port;
+    else
+        nat_port = DEFAULT_NAT_PORT;
+
+    if (options->nat_local && options->nat_access_str[0] == 0x0)
+    {
+        snprintf(nat_access_buf, MAX_LINE_LEN, "%s,%d",
+            options->spa_server_str, nat_port);
+    }
+
+    if (nat_access_buf[0] == 0x0 && options->nat_access_str[0] != 0x0)
+    {
+        if (ipv4_str_has_port(options->nat_access_str))
+        {
+            snprintf(nat_access_buf, MAX_LINE_LEN, "%s",
+                options->nat_access_str);
+        }
+        else
+        {
+            snprintf(nat_access_buf, MAX_LINE_LEN, "%s,%d",
+                options->nat_access_str, nat_port);
+        }
+    }
+
+    return fko_set_spa_nat_access(ctx, nat_access_buf);
+}
+
+/* Set the SPA packet message type
+*/
+static int
+set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
+{
+    short message_type;
+
+    if(options->server_command[0] != 0x0)
+    {
+        message_type = FKO_COMMAND_MSG;
+    }
+    else if(options->nat_access_str[0] != 0x0)
+    {
+        if (options->nat_local)
+        {
+            if (options->fw_timeout >= 0)
+            {
+                message_type = FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG;
+            }
+            else
+            {
+                message_type = FKO_LOCAL_NAT_ACCESS_MSG;
+            }
+        }
+        else
+        {
+            if (options->fw_timeout >= 0)
+            {
+                message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
+            }
+            else
+            {
+                message_type = FKO_NAT_ACCESS_MSG;
+            }
+        }
+    }
+    else
+    {
+        if (options->fw_timeout >= 0)
+        {
+            message_type = FKO_CLIENT_TIMEOUT_ACCESS_MSG;
+        }
+        else
+        {
+            message_type = FKO_ACCESS_MSG;
+        }
+    }
+printf("....setting message type to: %d\n", message_type);
+    return fko_set_spa_message_type(ctx, message_type);
 }
 
 /* Prompt for and receive a user password.
