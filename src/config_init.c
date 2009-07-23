@@ -204,7 +204,7 @@ validate_options(fko_cli_options_t *options)
     /* Gotta have a Destination unless we are just testing or getting the
      * the version.
     */
-    if (!options->test && !options->version
+    if (!options->test && !options->version && !options->show_last_command
         && options->spa_server_str[0] == 0x0)
     {
         fprintf(stderr,
@@ -340,6 +340,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'r':
                 options->rand_port = 1;
                 break;
+            case SHOW_LAST_ARGS:
+                options->show_last_command = 1;
+                break;
             case 'S':
                 options->spa_src_port = atoi(optarg);
                 if (options->spa_src_port < 0 || options->spa_src_port > 65535) {
@@ -393,6 +396,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case TIME_OFFSET_MINUS:
                 options->time_offset_minus = parse_time_offset(optarg);
+                break;
+            case NO_SAVE_ARGS:
+                options->no_save_args = 1;
                 break;
             default:
                 usage();
@@ -459,10 +465,13 @@ usage(void)
       "     --gpg-signer-key    - Specify the signer's GPG key name or ID.\n"
       "     --gpg-home-dir      - Specify the GPG home directory.\n"
       "     --gpg-agent         - Use GPG agent if available.\n"
-      "     --nat-local         - Use GPG agent if available.\n"
-      "     --nat-port         - Use GPG agent if available.\n"
-      "     --nat-rand-port    - Use GPG agent if available.\n"
-      "     --nat-local         - Use GPG agent if available.\n"
+      "     --nat-local         - Access a local service via a forwarded port\n"
+      "                           on the fwknopd server system.\n"
+      "     --nat-port          - Specify the port to forward to access a\n"
+      "                           service via NAT.\n"
+      "     --nat-rand-port     - Have the fwknop client assign a random port\n"
+      "                           for NAT access.\n"
+      "     --show-last         - Show the last fwknop command line arguments.\n"
       "     --time-offset-plus  - Add time to outgoing SPA packet timestamp.\n"
       "     --time-offset-minus - Subtract time from outgoing SPA packet\n"
       "                           timestamp.\n"

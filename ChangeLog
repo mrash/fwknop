@@ -1,3 +1,12 @@
+2009-07-23  Michael Rash  <mbr@cipherdyne.org>
+    * Added the --show-last and --no-save command line options to show the
+      command line used for the previous fwknop invocation, and to have the
+      fwknop client not save its command line arguments.
+    * Bug fix to force libfko to recalculate the random data embedded in the
+      the SPA packet after a random port is acquired via --rand-port or
+      --nat-rand-port.  This is a precaution so that an attacker cannot guess
+      some of the internal SPA data based on the destination port number.
+
 2009-07-21  Michael Rash  <mbr@cipherdyne.org>
     * Got forward and local NAT modes working with the --nat-access,
       --nat-local, --nat-port, and --nat-randport options.  All NAT modes

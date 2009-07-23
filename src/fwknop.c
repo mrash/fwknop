@@ -34,6 +34,8 @@
 char* get_user_pw(fko_cli_options_t *options, int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
 void errmsg(char *msg, int err);
+static void show_last_command(void);
+static void save_args(int argc, char **argv);
 static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
@@ -52,6 +54,13 @@ main(int argc, char **argv)
     /* Handle command line
     */
     config_init(&options, argc, argv);
+
+    /* Handle options that don't require a libfko context
+    */
+    if(options.show_last_command)
+        show_last_command();
+    else if (!options.no_save_args)
+        save_args(argc, argv);
 
     /* Intialize the context
     */
@@ -370,8 +379,8 @@ print_proto(int proto)
     return;
 }
 
-static
-int get_rand_port(fko_ctx_t ctx)
+static int
+get_rand_port(fko_ctx_t ctx)
 {
     char *rand_val = NULL;
     int   port     = 0;
@@ -384,9 +393,22 @@ int get_rand_port(fko_ctx_t ctx)
         exit(EXIT_FAILURE);
     }
 
-    /* convert to a random value between 1024 and 65535
+    /* Convert to a random value between 1024 and 65535
     */
-    return (MIN_HIGH_PORT + (atoi(rand_val) % (MAX_PORT - MIN_HIGH_PORT)));
+    port = (MIN_HIGH_PORT + (abs(atoi(rand_val)) % (MAX_PORT - MIN_HIGH_PORT)));
+
+    /* Force libfko to calculate a new random value since we don't want to
+     * given anyone a hint (via the port value) about the contents of the
+     * encrypted SPA data.
+    */
+    res = fko_set_rand_value(ctx, NULL);
+    if(res != FKO_SUCCESS)
+    {
+        errmsg("get_rand_port(), fko_get_rand_value", res);
+        exit(EXIT_FAILURE);
+    }
+
+    return port;
 }
 
 static void
@@ -401,7 +423,8 @@ dump_transmit_options(fko_cli_options_t *options)
 /* See if the string is of the format "<ipv4 addr>:<port>",
  * e.g. "123.1.2.3,12345" - this needs work.
 */
-static int ipv4_str_has_port(char *str)
+static int
+ipv4_str_has_port(char *str)
 {
     int rv = 0, i;
 
@@ -458,6 +481,95 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options)
     return fko_set_spa_nat_access(ctx, nat_access_buf);
 }
 
+static int
+get_save_file(char *args_save_file)
+{
+    char *homedir = NULL;
+    int rv = 0;
+
+    homedir = getenv("HOME");
+
+    if (homedir != NULL) {
+        snprintf(args_save_file, MAX_PATH_LEN, "%s%s%s",
+            homedir, "/", ".fwknop.run");
+        rv = 1;
+    }
+    return rv;
+}
+
+/* Show the last command that was executed
+*/
+static void
+show_last_command(void)
+{
+    char args_save_file[MAX_PATH_LEN];
+    char args_str[MAX_LINE_LEN] = "";
+    FILE *args_file_ptr = NULL;
+
+#ifdef WIN32
+    /* Not sure what the right thing is here on Win32, just exit
+     * for now.
+    */
+    printf("[*] --show-last not implemented on Win32 yet.");
+    exit(EXIT_FAILURE);
+#endif
+
+    if (get_save_file(args_save_file)) {
+        if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
+            printf("[*] Could not open args file: %s\n",
+                args_save_file);
+            exit(EXIT_FAILURE);
+        }
+        if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
+            printf("[+] Last fwknop client command line: %s", args_str);
+        } else {
+            printf("[-] Could not read line from file: %s\n", args_save_file);
+        }
+        fclose(args_file_ptr);
+    }
+
+    exit(EXIT_SUCCESS);
+}
+
+/* Save our command line arguments
+*/
+static void
+save_args(int argc, char **argv)
+{
+    char args_save_file[MAX_PATH_LEN];
+    char args_str[MAX_LINE_LEN] = "";
+    FILE *args_file_ptr = NULL;
+    int i = 0, args_str_len;
+
+#ifdef WIN32
+    /* Not sure what the right thing is here on Win32, just return
+     * for now.
+    */
+    return;
+#endif
+
+
+    if (get_save_file(args_save_file)) {
+        if ((args_file_ptr = fopen(args_save_file, "w")) == NULL) {
+            printf("[*] Could not open args file: %s\n",
+                args_save_file);
+            exit(EXIT_FAILURE);
+        }
+        for (i=0; i < argc; i++) {
+            args_str_len += strlen(argv[i]);
+            if (args_str_len >= MAX_PATH_LEN) {
+                printf("[*] argument string too long, exiting.\n");
+                exit(EXIT_FAILURE);
+            }
+            strlcat(args_str, argv[i], MAX_PATH_LEN);
+            strlcat(args_str, " ", MAX_PATH_LEN);
+        }
+        fprintf(args_file_ptr, "%s\n", args_str);
+        fclose(args_file_ptr);
+    }
+    return;
+}
+
 /* Set the SPA packet message type
 */
 static int
@@ -505,7 +617,6 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
             message_type = FKO_ACCESS_MSG;
         }
     }
-printf("....setting message type to: %d\n", message_type);
     return fko_set_spa_message_type(ctx, message_type);
 }
 
