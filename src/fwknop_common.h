@@ -92,7 +92,7 @@ enum {
 #define FKO_DEFAULT_PROTO FKO_PROTO_UDP
 #define FKO_DEFAULT_PORT 62201
 #define DEFAULT_NAT_PORT 55000
-#define MIN_HIGH_PORT 1024
+#define MIN_HIGH_PORT 10000  /* sensible minimum for SPA dest port */
 #define MAX_PORT 65535
 #define MAX_PORT_STR_LEN 6
 #define MAX_PROTO_STR_LEN 6
