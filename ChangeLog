@@ -1,3 +1,6 @@
+2009-07-26  Michael Rash  <mbr@cipherdyne.org>
+    * Initial public release of fwknop-c-0.62.
+
 2009-07-23  Michael Rash  <mbr@cipherdyne.org>
     * Added the --show-last and --no-save command line options to show the
       command line used for the previous fwknop invocation, and to have the

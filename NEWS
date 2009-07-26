@@ -1,5 +1,7 @@
-Noteworthy changes in version 0.62 (2009-06-07)
+Noteworthy changes in version 0.62 (2009-07-26)
 -------------------------------------------------------
+
+ * Initial public release
 
  * Support for GPG encryption (via gpgme).
 
