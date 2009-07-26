@@ -250,7 +250,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->fw_timeout   = -1;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "a:A:bB:C:D:f:gG:hIm:nN:p:P:qQ:rS:TU:vV", cmd_opts, &index)) != -1) {
+            "a:A:bB:C:D:f:gG:hIm:nN:p:P:qQ:rsS:TU:vV", cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'a':
@@ -342,6 +342,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;
+                break;
+            case 's':
+                strlcpy(options->allow_ip_str, "0.0.0.0", MAX_IP_STR_LEN);
                 break;
             case 'S':
                 options->spa_src_port = atoi(optarg);
@@ -445,6 +448,10 @@ usage(void)
       "                           and 'icmp' modes use raw sockets and thus\n"
       "                           require root access to run.\n"
       " -S, --source-port       - Set the source port for outgoing SPA packet.\n"
+      " -s, --source-ip         - Tell the fwknopd server to accept whatever\n"
+      "                           source IP the SPA packet has as the IP that\n"
+      "                           needs access (not recommended, and the\n"
+      "                           fwknopd server can ignore such requests).\n"
       " -Q, --spoof-source      - Set the source IP for outgoing SPA packet.\n"
       " -U, --spoof-user        - Set the username within outgoing SPA packet.\n"
       " -q, --quiet             - Perform fwknop functions quietly.\n"

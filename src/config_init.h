@@ -80,6 +80,7 @@ static struct option cmd_opts[] =
     {"rand-port",           0, NULL, 'r'},
     {"spoof-src",           1, NULL, 'Q'},
     {"show-last",           0, NULL, SHOW_LAST_ARGS},
+    {"source-ip",           0, NULL, 's'},
     {"source-port",         1, NULL, 'S'},
     {"test",                0, NULL, 'T'},
     {"time-offset-plus",    1, NULL, TIME_OFFSET_PLUS},
