@@ -368,17 +368,15 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
     }
 
     snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
-        "%s %s %s\r\n%s %s\r\n%s %s%s\r\n%s\r\n\r\n",
-        "GET",
+        "%s%s%s%s%s%s%s",
+        "GET ",
         spa_data,
-        "HTTP/1.0",
-        "Host:",
+        " HTTP/1.0\r\nUser-Agent: ",
+        options->http_user_agent,
+        "\r\nAccept: */*\r\nHost: ",
         options->spa_server_str,  /* hostname or IP */
-        "User-Agent:",
-        "Fwknop/",
-        MY_VERSION,
-        "Accept: */*",
-        "Connection: Keep-Alive");
+        "\r\nConnection: Keep-Alive\r\n\r\n"
+    );
 
     return send_spa_packet_tcp_or_udp(http_buf, strlen(http_buf), options);
 }
