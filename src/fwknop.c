@@ -40,6 +40,7 @@ static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
 static void dump_transmit_options(fko_cli_options_t *options);
+static void resolve_ip_http(fko_cli_options_t *options);
 
 int
 main(int argc, char **argv)
@@ -113,6 +114,9 @@ main(int argc, char **argv)
     }
     else
     {
+        if (options.resolve_ip_http)
+            resolve_ip_http(&options);
+
         /* Set a message string by combining the allow IP and the
          * port/protocol.  The fwknopd server allows no port/protocol
          * to be specified as well, so in this case append the string
@@ -441,6 +445,117 @@ ipv4_str_has_port(char *str)
     }
 
     return rv;
+}
+
+static void resolve_ip_http(fko_cli_options_t *options)
+{
+    int     sock, res, error, http_buf_len, i;
+    struct  addrinfo *result, *rp, hints;
+    char    http_buf[HTTP_MAX_REQUEST_LEN];
+    char    http_response[HTTP_MAX_RESPONSE_LEN];
+    char    ip_str[MAX_IP_STR_LEN];
+
+    /* Build our HTTP request to resolve the external IP (this is similar to
+     * to contacting whatismyip.org, but using a different URL).
+    */
+    snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
+        "%s%s%s%s%s%s%s",
+        "GET ",
+        HTTP_RESOLVE_URL,
+        " HTTP/1.0\r\nUser-Agent: ",
+        options->http_user_agent,
+        "\r\nAccept: */*\r\nHost: ",
+        HTTP_RESOLVE_HOST,
+        "\r\nConnection: Keep-Alive\r\n\r\n"
+    );
+    http_buf_len = strlen(http_buf);
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+
+    hints.ai_family   = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    error = getaddrinfo(HTTP_RESOLVE_HOST, "80", &hints, &result);
+    if (error != 0)
+    {
+        fprintf(stderr, "[*] error in getaddrinfo: %s\n", gai_strerror(error));
+        exit(EXIT_FAILURE);
+    }
+
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+        sock = socket(rp->ai_family, rp->ai_socktype,
+                rp->ai_protocol);
+        if (sock < 0)
+            continue;
+
+        if (error = connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
+            break;  /* made it */
+
+#ifdef WIN32
+        closesocket(sock);
+#else
+        close(sock);
+#endif
+    }
+
+    if (rp == NULL) {
+        perror("[*] resolve_ip_http: Could not create socket: ");
+        exit(EXIT_FAILURE);
+    }
+
+    freeaddrinfo(result);
+
+    res = send(sock, http_buf, http_buf_len, 0);
+
+    if(res < 0)
+    {
+        perror("[*] resolve_ip_http: write error: ");
+    }
+    else if(res != http_buf_len)
+    {
+        fprintf(stderr,
+            "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, http_buf_len
+        );
+    }
+
+    res = read(sock, http_response, HTTP_MAX_RESPONSE_LEN);
+    http_response[HTTP_MAX_RESPONSE_LEN-1] = '\0';
+
+#ifdef WIN32
+    closesocket(sock);
+#else
+    close(sock);
+#endif
+
+    /* Now parse the response for the IP address (which should be at
+     * the end of the string
+    */
+    for (i=res-3; i >= 0; i--)
+    {
+        if(http_response[i] == '\n')
+            break;
+        if(http_response[i] != '.' && ! isdigit(http_response[i]))
+        {
+            fprintf(stderr, "[*] Invalid IP in HTTP response.\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    if (i < MIN_IP_STR_LEN)
+    {
+        fprintf(stderr, "[*] Invalid IP in HTTP response.\n");
+        exit(EXIT_FAILURE);
+    }
+    http_response[res-1] = '\0';
+
+    strlcpy(options->allow_ip_str,
+        (http_response + i+1), (res - (i+2)));
+
+    printf("[+] Resolved external IP (via http://%s%s) as: %s\n",
+        HTTP_RESOLVE_HOST, HTTP_RESOLVE_URL, options->allow_ip_str);
+
+    return;
 }
 
 /* Set NAT access string

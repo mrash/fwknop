@@ -26,7 +26,6 @@
 #include "fwknop_common.h"
 #include "config_init.h"
 #include "getopt.h"
-#include "spa_comm.h"
 #include "utils.h"
 #include "ctype.h"
 
@@ -202,15 +201,29 @@ static void
 validate_options(fko_cli_options_t *options)
 {
     /* Gotta have a Destination unless we are just testing or getting the
-     * the version.
+     * the version, and must use one of [-s|-R|-a].
     */
-    if (!options->test && !options->version && !options->show_last_command
-        && options->spa_server_str[0] == 0x0)
+    if(!options->test && !options->version && !options->show_last_command)
     {
-        fprintf(stderr,
-            "[*] Must use --destination unless --test mode is used\n");
-        exit(EXIT_FAILURE);
+        if (options->spa_server_str[0] == 0x0)
+        {
+            fprintf(stderr,
+                "[*] Must use --destination unless --test mode is used\n");
+            exit(EXIT_FAILURE);
+        }
+        if (!options->resolve_ip_http && options->allow_ip_str[0] == 0x0)
+        {
+            fprintf(stderr,
+                "[*] Must use one of [-s|-R|-a] to specify IP for SPA access.\n");
+            exit(EXIT_FAILURE);
+        }
+
     }
+
+    if(options->resolve_ip_http || options->spa_proto == FKO_PROTO_HTTP)
+        if (options->http_user_agent[0] == '\0')
+            snprintf(options->http_user_agent, HTTP_MAX_USER_AGENT_LEN,
+                "%s%s", "Fwknop/", MY_VERSION);
 
     /* If we are using gpg, we must at least have the recipient set.
     */
@@ -250,7 +263,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->fw_timeout   = -1;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "a:A:bB:C:D:f:gG:hIm:nN:p:P:qQ:rsS:TU:vV", cmd_opts, &index)) != -1) {
+            "a:A:bB:C:D:f:gG:hIm:nN:p:P:qQ:rRsS:Tu:U:vV", cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'a':
@@ -340,6 +353,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'r':
                 options->rand_port = 1;
                 break;
+            case 'R':
+                options->resolve_ip_http = 1;
+                break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;
                 break;
@@ -355,6 +371,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'T':
                 options->test = 1;
+                break;
+            case 'u':
+                strlcpy(options->http_user_agent, optarg, HTTP_MAX_USER_AGENT_LEN);
                 break;
             case 'U':
                 strlcpy(options->spoof_user, optarg, MAX_USERNAME_LEN);
@@ -447,12 +466,21 @@ usage(void)
       "                           the outgoing SPA packet. Note: The 'tcpraw'\n"
       "                           and 'icmp' modes use raw sockets and thus\n"
       "                           require root access to run.\n"
-      " -S, --source-port       - Set the source port for outgoing SPA packet.\n"
       " -s, --source-ip         - Tell the fwknopd server to accept whatever\n"
       "                           source IP the SPA packet has as the IP that\n"
       "                           needs access (not recommended, and the\n"
       "                           fwknopd server can ignore such requests).\n"
+      " -S, --source-port       - Set the source port for outgoing SPA packet.\n"
       " -Q, --spoof-source      - Set the source IP for outgoing SPA packet.\n"
+      " -R, --resolve-ip-http   - Resolve the external network IP by\n"
+      "                           connecting to the URL:\n"
+      "                             http://"
+      HTTP_RESOLVE_HOST
+      HTTP_RESOLVE_URL
+      "\n"
+      " -u, --user-agent        - Set the HTTP User-Agent for resolving the\n"
+      "                           external IP via -R, or for sending SPA\n"
+      "                           packets over HTTP.\n"
       " -U, --spoof-user        - Set the username within outgoing SPA packet.\n"
       " -q, --quiet             - Perform fwknop functions quietly.\n"
       " -G, --get-key           - Load an encryption key/password from a file.\n"

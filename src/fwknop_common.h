@@ -97,6 +97,7 @@ enum {
 #define MAX_PORT_STR_LEN 6
 #define MAX_PROTO_STR_LEN 6
 #define MAX_IP_STR_LEN 16
+#define MIN_IP_STR_LEN 9
 #define MAX_SERVER_STR_LEN 50
 
 #define MAX_LINE_LEN        1024
@@ -104,6 +105,17 @@ enum {
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
 
+/* For resolving the allow IP via HTTP and sending SPA packets over
+ * HTTP
+*/
+#define HTTP_RESOLVE_HOST          "www.cipherdyne.org"
+#define HTTP_RESOLVE_URL           "/cgi/myip.cgi"
+#define HTTP_MAX_REQUEST_LEN       2000
+#define HTTP_MAX_RESPONSE_LEN      2000
+#define HTTP_MAX_USER_AGENT_LEN    50
+
+/* For time offset handling
+*/
 #define MAX_TIME_STR_LEN    9
 enum {
     TIME_OFFSET_SECONDS,
@@ -112,9 +124,7 @@ enum {
     TIME_OFFSET_DAYS
 };
 
-#define RAND_FILE "/dev/urandom"
-
-/* fwkop client configuration parameters and values
+/* fwknop client configuration parameters and values
 */
 typedef struct fko_cli_options
 {
@@ -141,6 +151,11 @@ typedef struct fko_cli_options
     int  nat_local;
     int  nat_port;
     int  nat_rand_port;
+
+    /* External IP resolution via HTTP
+    */
+    int  resolve_ip_http;
+    char http_user_agent[HTTP_MAX_USER_AGENT_LEN];
 
     /* SPA packet transmission port and protocol
     */

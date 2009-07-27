@@ -124,10 +124,6 @@ struct icmphdr
     } un;
 };
 
-/* for sending SPA packets over HTTP
-*/
-#define HTTP_MAX_REQUEST_LEN    2000  /* bytes - reasonable maximum */
-
 #define ICMP_ECHOREPLY          0   /* Echo Reply */
 #define ICMP_DEST_UNREACH       3   /* Destination Unreachable */
 #define ICMP_SOURCE_QUENCH      4   /* Source Quench */
