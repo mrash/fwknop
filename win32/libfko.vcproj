@@ -444,7 +444,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fko\sha256.c"
+				RelativePath="..\fko\sha2.c"
 				>
 			</File>
 			<File
@@ -518,7 +518,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fko\sha.h"
+				RelativePath="..\fko\sha1.h"
+				>
+			</File>
+			<File
+				RelativePath="..\fko\sha2.h"
 				>
 			</File>
 		</Filter>
