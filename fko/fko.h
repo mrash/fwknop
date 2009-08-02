@@ -67,6 +67,8 @@ typedef enum {
     FKO_DIGEST_MD5 = 1,
     FKO_DIGEST_SHA1,
     FKO_DIGEST_SHA256,
+    FKO_DIGEST_SHA384,
+    FKO_DIGEST_SHA512,
     FKO_LAST_DIGEST_TYPE /* Always leave this as the last one */
 } fko_digest_type_t;
 

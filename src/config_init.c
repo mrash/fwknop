@@ -77,11 +77,15 @@ get_char_val(const char *var_name, char *dest, char *lptr)
 static int
 parse_time_offset(char *offset_str)
 {
-    int offset = 0, i, j, offset_type = TIME_OFFSET_SECONDS;
+    int i, j;
+    int offset      = 0;
+    int offset_type = TIME_OFFSET_SECONDS;
+    int os_len      = strlen(offset_str);
+
     char offset_digits[MAX_TIME_STR_LEN];
 
     j=0;
-    for (i=0; i < strlen(offset_str); i++) {
+    for (i=0; i < os_len; i++) {
         if (isdigit(offset_str[i])) {
             offset_digits[j] = offset_str[i];
             j++;
@@ -247,7 +251,7 @@ validate_options(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int                 cmd_arg, index, i;
+    int                 cmd_arg, index;
     struct opts_track   ot;
 
     /* Zero out options and opts_track.
@@ -309,6 +313,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     options->digest_type = FKO_DIGEST_SHA1;
                 else if(strncasecmp(optarg, "sha256", 6) == 0)
                     options->digest_type = FKO_DIGEST_SHA256;
+                else if(strncasecmp(optarg, "sha384", 6) == 0)
+                    options->digest_type = FKO_DIGEST_SHA384;
+                else if(strncasecmp(optarg, "sha512", 6) == 0)
+                    options->digest_type = FKO_DIGEST_SHA512;
                 else
                 {
                     fprintf(stderr, "* Invalid digest type: %s\n", optarg);

@@ -1,12 +1,12 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    sha.h
+ * File:    sha1.h
  *
- * Purpose: Header for sha.c
+ * Purpose: Header for sha1.c
  *
- * sha - An implementation of the NIST SHA Message Digest
- *       algorithm. This header covers SHA1 and SHA256
+ * sha - An implementation of the NIST SHA1 Message Digest
+ *       algorithm.
  *
  * Copyright (C) 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
  * This library is free software; you can redistribute it and/or
@@ -25,8 +25,8 @@
  *
  *****************************************************************************
 */
-#ifndef SHA_H
-#define SHA_H 1
+#ifndef SHA1_H
+#define SHA1_H 1
 
 #include "fko_common.h"
 
@@ -40,28 +40,20 @@
   #define TRUNC32(x)  ((x) & 0xffffffffL)
 #endif
 
-#define SHA_BLOCKSIZE       64
-#define SHA1_DIGESTSIZE     20
-#define SHA256_DIGESTSIZE   32
+#define SHA1_BLOCKSIZE      64
+#define SHA1_DIGEST_LENGTH  20
 
 typedef struct {
     uint32_t    digest[8];
     uint32_t    count_lo, count_hi;
-    uint8_t     data[SHA_BLOCKSIZE];
+    uint8_t     data[SHA1_BLOCKSIZE];
     int         local;
-} SHA_INFO;
+} SHA1_INFO;
 
 /* SHA1 prototypes.
 */
-void sha1_init(SHA_INFO *sha_info);
-void sha1_update(SHA_INFO *sha_info, uint8_t *buffer, int count);
-void sha1_final(uint8_t digest[SHA1_DIGESTSIZE], SHA_INFO *sha_info);
+void sha1_init(SHA1_INFO *sha1_info);
+void sha1_update(SHA1_INFO *sha1_info, uint8_t *buffer, int count);
+void sha1_final(uint8_t digest[SHA1_DIGEST_LENGTH], SHA1_INFO *sha1_info);
 
-/* SHA256 prototypes.
-*/
-void sha256_init(SHA_INFO *sha_info);
-void sha256_update(SHA_INFO *sha_info, uint8_t *buffer, int count);
-void sha256_final(SHA_INFO *sha_info);
-void sha256_unpackdigest(uint8_t digest[SHA256_DIGESTSIZE], SHA_INFO *sha_info);
-
-#endif /* SHA_H */
+#endif /* SHA1_H */

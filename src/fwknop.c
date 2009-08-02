@@ -431,8 +431,9 @@ static int
 ipv4_str_has_port(char *str)
 {
     int rv = 0, i;
+    int st_len = strlen(str);
 
-    for (i=0; i < strlen(str); i++) {
+    for (i=0; i < st_len; i++) {
         if (str[i] == ',' || str[i] == ':') {
             str[i] = ',';  /* force "<ip>,<port>" format */
             rv = 1;
@@ -453,7 +454,6 @@ static void resolve_ip_http(fko_cli_options_t *options)
     struct  addrinfo *result, *rp, hints;
     char    http_buf[HTTP_MAX_REQUEST_LEN];
     char    http_response[HTTP_MAX_RESPONSE_LEN];
-    char    ip_str[MAX_IP_STR_LEN];
 
     /* Build our HTTP request to resolve the external IP (this is similar to
      * to contacting whatismyip.org, but using a different URL).
@@ -520,7 +520,7 @@ static void resolve_ip_http(fko_cli_options_t *options)
         );
     }
 
-    res = read(sock, http_response, HTTP_MAX_RESPONSE_LEN);
+    res = recv(sock, http_response, HTTP_MAX_RESPONSE_LEN, 0);
     http_response[HTTP_MAX_RESPONSE_LEN-1] = '\0';
 
 #ifdef WIN32

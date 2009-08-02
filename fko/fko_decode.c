@@ -57,16 +57,24 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     switch(t_size)
     {
-        case MD_B64_SIZE(MD5_DIGESTSIZE):
+        case MD5_B64_LENGTH:
             ctx->digest_type = FKO_DIGEST_MD5;
             break;
 
-        case MD_B64_SIZE(SHA1_DIGESTSIZE):
+        case SHA1_B64_LENGTH:
             ctx->digest_type = FKO_DIGEST_SHA1;
             break;
 
-        case MD_B64_SIZE(SHA256_DIGESTSIZE):
+        case SHA256_B64_LENGTH:
             ctx->digest_type = FKO_DIGEST_SHA256;
+            break;
+
+        case SHA384_B64_LENGTH:
+            ctx->digest_type = FKO_DIGEST_SHA384;
+            break;
+
+        case SHA512_B64_LENGTH:
+            ctx->digest_type = FKO_DIGEST_SHA512;
             break;
 
         default: /* Invalid or unsupported digest */
@@ -106,6 +114,14 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
         case FKO_DIGEST_SHA256:
             sha256_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            break;
+
+        case FKO_DIGEST_SHA384:
+            sha384_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            break;
+
+        case FKO_DIGEST_SHA512:
+            sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;
 
     } 

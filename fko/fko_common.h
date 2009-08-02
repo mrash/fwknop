@@ -52,8 +52,11 @@
 #endif
 
 #ifdef WIN32
-  typedef unsigned char	uint8_t;
-  typedef unsigned int	uint32_t;
+  /* These are needed for the digest code under windows.
+  */
+  typedef unsigned __int8   uint8_t;
+  typedef unsigned __int32	uint32_t;
+  typedef unsigned __int64	uint64_t;
 
   #define strdup _strdup
 #else

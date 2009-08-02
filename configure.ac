@@ -3,7 +3,7 @@ dnl Process thie file with autoconf to produce the configure script
 AC_PREREQ(2.61)
 
 m4_define(my_package, [fwknop-c])
-m4_define(my_version, [0.62])
+m4_define(my_version, [0.63])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
@@ -21,6 +21,7 @@ AC_GNU_SOURCE
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
+AC_PROG_AWK
 AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -31,14 +32,18 @@ AC_PROG_LIBTOOL
 # Checks for header files.
 #
 AC_HEADER_STDC
-AC_CHECK_HEADERS([ctype.h endian.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/socket.h sys/stat.h sys/time.h termios.h unistd.h])
+AC_HEADER_TIME
+
+AC_CHECK_HEADERS([ctype.h endian.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/socket.h sys/stat.h sys/time.h termios.h unistd.h])
 
 # Type checks.
 #
 AC_C_CONST
 AC_TYPE_OFF_T
 AC_TYPE_SIZE_T
-AC_HEADER_TIME
+AC_TYPE_UINT32_T
+AC_TYPE_UINT8_T
+
 AC_CHECK_SIZEOF(unsigned int)
 AC_CHECK_TYPES([uint8_t, uint32_t])
 
@@ -49,6 +54,7 @@ AC_C_BIGENDIAN
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STAT
+
 AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn])
 
 AC_SEARCH_LIBS([socket], [socket])

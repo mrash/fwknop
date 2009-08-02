@@ -16,7 +16,7 @@
  *
  *****************************************************************************
 */
-#include "sha.h"
+#include "sha1.h"
 
 /* SHA f()-functions */
 #define f1(x,y,z)    ((x & y) | (~x & z))
@@ -62,13 +62,13 @@
 
 
 void
-sha1_transform(SHA_INFO *sha_info)
+sha1_transform(SHA1_INFO *sha1_info)
 {
     int i;
     uint8_t *dp;
     uint32_t T, A, B, C, D, E, W[80], *WP;
 
-    dp = sha_info->data;
+    dp = sha1_info->data;
 
 #undef SWAP_DONE
 
@@ -132,11 +132,11 @@ sha1_transform(SHA_INFO *sha_info)
     W[i] = W[i-3] ^ W[i-8] ^ W[i-14] ^ W[i-16];
     W[i] = R32(W[i], 1);
     }
-    A = sha_info->digest[0];
-    B = sha_info->digest[1];
-    C = sha_info->digest[2];
-    D = sha_info->digest[3];
-    E = sha_info->digest[4];
+    A = sha1_info->digest[0];
+    B = sha1_info->digest[1];
+    C = sha1_info->digest[2];
+    D = sha1_info->digest[3];
+    E = sha1_info->digest[4];
     WP = W;
 #ifdef UNRAVEL
     FA(1); FB(1); FC(1); FD(1); FE(1); FT(1); FA(1); FB(1); FC(1); FD(1);
@@ -147,11 +147,11 @@ sha1_transform(SHA_INFO *sha_info)
     FC(3); FD(3); FE(3); FT(3); FA(3); FB(3); FC(3); FD(3); FE(3); FT(3);
     FA(4); FB(4); FC(4); FD(4); FE(4); FT(4); FA(4); FB(4); FC(4); FD(4);
     FE(4); FT(4); FA(4); FB(4); FC(4); FD(4); FE(4); FT(4); FA(4); FB(4);
-    sha_info->digest[0] = T32(sha_info->digest[0] + E);
-    sha_info->digest[1] = T32(sha_info->digest[1] + T);
-    sha_info->digest[2] = T32(sha_info->digest[2] + A);
-    sha_info->digest[3] = T32(sha_info->digest[3] + B);
-    sha_info->digest[4] = T32(sha_info->digest[4] + C);
+    sha1_info->digest[0] = T32(sha1_info->digest[0] + E);
+    sha1_info->digest[1] = T32(sha1_info->digest[1] + T);
+    sha1_info->digest[2] = T32(sha1_info->digest[2] + A);
+    sha1_info->digest[3] = T32(sha1_info->digest[3] + B);
+    sha1_info->digest[4] = T32(sha1_info->digest[4] + C);
 #else /* !UNRAVEL */
 #ifdef UNROLL_LOOPS
     FG(1); FG(1); FG(1); FG(1); FG(1); FG(1); FG(1); FG(1); FG(1); FG(1);
@@ -168,123 +168,123 @@ sha1_transform(SHA_INFO *sha_info)
     for (i = 40; i < 60; ++i) { FG(3); }
     for (i = 60; i < 80; ++i) { FG(4); }
 #endif /* !UNROLL_LOOPS */
-    sha_info->digest[0] = T32(sha_info->digest[0] + A);
-    sha_info->digest[1] = T32(sha_info->digest[1] + B);
-    sha_info->digest[2] = T32(sha_info->digest[2] + C);
-    sha_info->digest[3] = T32(sha_info->digest[3] + D);
-    sha_info->digest[4] = T32(sha_info->digest[4] + E);
+    sha1_info->digest[0] = T32(sha1_info->digest[0] + A);
+    sha1_info->digest[1] = T32(sha1_info->digest[1] + B);
+    sha1_info->digest[2] = T32(sha1_info->digest[2] + C);
+    sha1_info->digest[3] = T32(sha1_info->digest[3] + D);
+    sha1_info->digest[4] = T32(sha1_info->digest[4] + E);
 #endif /* !UNRAVEL */
 }
 
 /* initialize the SHA digest */
 
 void
-sha1_init(SHA_INFO *sha_info)
+sha1_init(SHA1_INFO *sha1_info)
 {
-    sha_info->digest[0] = 0x67452301L;
-    sha_info->digest[1] = 0xefcdab89L;
-    sha_info->digest[2] = 0x98badcfeL;
-    sha_info->digest[3] = 0x10325476L;
-    sha_info->digest[4] = 0xc3d2e1f0L;
-    sha_info->count_lo = 0L;
-    sha_info->count_hi = 0L;
-    sha_info->local = 0;
+    sha1_info->digest[0] = 0x67452301L;
+    sha1_info->digest[1] = 0xefcdab89L;
+    sha1_info->digest[2] = 0x98badcfeL;
+    sha1_info->digest[3] = 0x10325476L;
+    sha1_info->digest[4] = 0xc3d2e1f0L;
+    sha1_info->count_lo = 0L;
+    sha1_info->count_hi = 0L;
+    sha1_info->local = 0;
 }
 
 /* update the SHA digest */
 
 void
-sha1_update(SHA_INFO *sha_info, uint8_t *buffer, int count)
+sha1_update(SHA1_INFO *sha1_info, uint8_t *buffer, int count)
 {
     int i;
     uint32_t clo;
 
-    clo = T32(sha_info->count_lo + ((uint32_t) count << 3));
-    if (clo < sha_info->count_lo) {
-    ++sha_info->count_hi;
+    clo = T32(sha1_info->count_lo + ((uint32_t) count << 3));
+    if (clo < sha1_info->count_lo) {
+    ++sha1_info->count_hi;
     }
-    sha_info->count_lo = clo;
-    sha_info->count_hi += (uint32_t) count >> 29;
-    if (sha_info->local) {
-    i = SHA_BLOCKSIZE - sha_info->local;
+    sha1_info->count_lo = clo;
+    sha1_info->count_hi += (uint32_t) count >> 29;
+    if (sha1_info->local) {
+    i = SHA1_BLOCKSIZE - sha1_info->local;
     if (i > count) {
         i = count;
     }
-    memcpy(((uint8_t *) sha_info->data) + sha_info->local, buffer, i);
+    memcpy(((uint8_t *) sha1_info->data) + sha1_info->local, buffer, i);
     count -= i;
     buffer += i;
-    sha_info->local += i;
-    if (sha_info->local == SHA_BLOCKSIZE) {
-        sha1_transform(sha_info);
+    sha1_info->local += i;
+    if (sha1_info->local == SHA1_BLOCKSIZE) {
+        sha1_transform(sha1_info);
     } else {
         return;
     }
     }
-    while (count >= SHA_BLOCKSIZE) {
-    memcpy(sha_info->data, buffer, SHA_BLOCKSIZE);
-    buffer += SHA_BLOCKSIZE;
-    count -= SHA_BLOCKSIZE;
-    sha1_transform(sha_info);
+    while (count >= SHA1_BLOCKSIZE) {
+    memcpy(sha1_info->data, buffer, SHA1_BLOCKSIZE);
+    buffer += SHA1_BLOCKSIZE;
+    count -= SHA1_BLOCKSIZE;
+    sha1_transform(sha1_info);
     }
-    memcpy(sha_info->data, buffer, count);
-    sha_info->local = count;
+    memcpy(sha1_info->data, buffer, count);
+    sha1_info->local = count;
 }
 
 
 void
-sha1_transform_and_copy(unsigned char digest[20], SHA_INFO *sha_info)
+sha1_transform_and_copy(unsigned char digest[20], SHA1_INFO *sha1_info)
 {
-    sha1_transform(sha_info);
-    digest[ 0] = (unsigned char) ((sha_info->digest[0] >> 24) & 0xff);
-    digest[ 1] = (unsigned char) ((sha_info->digest[0] >> 16) & 0xff);
-    digest[ 2] = (unsigned char) ((sha_info->digest[0] >>  8) & 0xff);
-    digest[ 3] = (unsigned char) ((sha_info->digest[0]      ) & 0xff);
-    digest[ 4] = (unsigned char) ((sha_info->digest[1] >> 24) & 0xff);
-    digest[ 5] = (unsigned char) ((sha_info->digest[1] >> 16) & 0xff);
-    digest[ 6] = (unsigned char) ((sha_info->digest[1] >>  8) & 0xff);
-    digest[ 7] = (unsigned char) ((sha_info->digest[1]      ) & 0xff);
-    digest[ 8] = (unsigned char) ((sha_info->digest[2] >> 24) & 0xff);
-    digest[ 9] = (unsigned char) ((sha_info->digest[2] >> 16) & 0xff);
-    digest[10] = (unsigned char) ((sha_info->digest[2] >>  8) & 0xff);
-    digest[11] = (unsigned char) ((sha_info->digest[2]      ) & 0xff);
-    digest[12] = (unsigned char) ((sha_info->digest[3] >> 24) & 0xff);
-    digest[13] = (unsigned char) ((sha_info->digest[3] >> 16) & 0xff);
-    digest[14] = (unsigned char) ((sha_info->digest[3] >>  8) & 0xff);
-    digest[15] = (unsigned char) ((sha_info->digest[3]      ) & 0xff);
-    digest[16] = (unsigned char) ((sha_info->digest[4] >> 24) & 0xff);
-    digest[17] = (unsigned char) ((sha_info->digest[4] >> 16) & 0xff);
-    digest[18] = (unsigned char) ((sha_info->digest[4] >>  8) & 0xff);
-    digest[19] = (unsigned char) ((sha_info->digest[4]      ) & 0xff);
+    sha1_transform(sha1_info);
+    digest[ 0] = (unsigned char) ((sha1_info->digest[0] >> 24) & 0xff);
+    digest[ 1] = (unsigned char) ((sha1_info->digest[0] >> 16) & 0xff);
+    digest[ 2] = (unsigned char) ((sha1_info->digest[0] >>  8) & 0xff);
+    digest[ 3] = (unsigned char) ((sha1_info->digest[0]      ) & 0xff);
+    digest[ 4] = (unsigned char) ((sha1_info->digest[1] >> 24) & 0xff);
+    digest[ 5] = (unsigned char) ((sha1_info->digest[1] >> 16) & 0xff);
+    digest[ 6] = (unsigned char) ((sha1_info->digest[1] >>  8) & 0xff);
+    digest[ 7] = (unsigned char) ((sha1_info->digest[1]      ) & 0xff);
+    digest[ 8] = (unsigned char) ((sha1_info->digest[2] >> 24) & 0xff);
+    digest[ 9] = (unsigned char) ((sha1_info->digest[2] >> 16) & 0xff);
+    digest[10] = (unsigned char) ((sha1_info->digest[2] >>  8) & 0xff);
+    digest[11] = (unsigned char) ((sha1_info->digest[2]      ) & 0xff);
+    digest[12] = (unsigned char) ((sha1_info->digest[3] >> 24) & 0xff);
+    digest[13] = (unsigned char) ((sha1_info->digest[3] >> 16) & 0xff);
+    digest[14] = (unsigned char) ((sha1_info->digest[3] >>  8) & 0xff);
+    digest[15] = (unsigned char) ((sha1_info->digest[3]      ) & 0xff);
+    digest[16] = (unsigned char) ((sha1_info->digest[4] >> 24) & 0xff);
+    digest[17] = (unsigned char) ((sha1_info->digest[4] >> 16) & 0xff);
+    digest[18] = (unsigned char) ((sha1_info->digest[4] >>  8) & 0xff);
+    digest[19] = (unsigned char) ((sha1_info->digest[4]      ) & 0xff);
 }
 
 /* finish computing the SHA digest */
 void
-sha1_final(uint8_t digest[20], SHA_INFO *sha_info)
+sha1_final(uint8_t digest[20], SHA1_INFO *sha1_info)
 {
     int count;
     uint32_t lo_bit_count, hi_bit_count;
 
-    lo_bit_count = sha_info->count_lo;
-    hi_bit_count = sha_info->count_hi;
+    lo_bit_count = sha1_info->count_lo;
+    hi_bit_count = sha1_info->count_hi;
     count = (int) ((lo_bit_count >> 3) & 0x3f);
-    ((uint8_t *) sha_info->data)[count++] = 0x80;
-    if (count > SHA_BLOCKSIZE - 8) {
-    memset(((uint8_t *) sha_info->data) + count, 0, SHA_BLOCKSIZE - count);
-    sha1_transform(sha_info);
-    memset((uint8_t *) sha_info->data, 0, SHA_BLOCKSIZE - 8);
+    ((uint8_t *) sha1_info->data)[count++] = 0x80;
+    if (count > SHA1_BLOCKSIZE - 8) {
+    memset(((uint8_t *) sha1_info->data) + count, 0, SHA1_BLOCKSIZE - count);
+    sha1_transform(sha1_info);
+    memset((uint8_t *) sha1_info->data, 0, SHA1_BLOCKSIZE - 8);
     } else {
-    memset(((uint8_t *) sha_info->data) + count, 0,
-        SHA_BLOCKSIZE - 8 - count);
+    memset(((uint8_t *) sha1_info->data) + count, 0,
+        SHA1_BLOCKSIZE - 8 - count);
     }
-    sha_info->data[56] = (uint8_t)((hi_bit_count >> 24) & 0xff);
-    sha_info->data[57] = (uint8_t)((hi_bit_count >> 16) & 0xff);
-    sha_info->data[58] = (uint8_t)((hi_bit_count >>  8) & 0xff);
-    sha_info->data[59] = (uint8_t)((hi_bit_count >>  0) & 0xff);
-    sha_info->data[60] = (uint8_t)((lo_bit_count >> 24) & 0xff);
-    sha_info->data[61] = (uint8_t)((lo_bit_count >> 16) & 0xff);
-    sha_info->data[62] = (uint8_t)((lo_bit_count >>  8) & 0xff);
-    sha_info->data[63] = (uint8_t)((lo_bit_count >>  0) & 0xff);
-    sha1_transform_and_copy(digest, sha_info);
+    sha1_info->data[56] = (uint8_t)((hi_bit_count >> 24) & 0xff);
+    sha1_info->data[57] = (uint8_t)((hi_bit_count >> 16) & 0xff);
+    sha1_info->data[58] = (uint8_t)((hi_bit_count >>  8) & 0xff);
+    sha1_info->data[59] = (uint8_t)((hi_bit_count >>  0) & 0xff);
+    sha1_info->data[60] = (uint8_t)((lo_bit_count >> 24) & 0xff);
+    sha1_info->data[61] = (uint8_t)((lo_bit_count >> 16) & 0xff);
+    sha1_info->data[62] = (uint8_t)((lo_bit_count >>  8) & 0xff);
+    sha1_info->data[63] = (uint8_t)((lo_bit_count >>  0) & 0xff);
+    sha1_transform_and_copy(digest, sha1_info);
 }
 
 /***EOF***/

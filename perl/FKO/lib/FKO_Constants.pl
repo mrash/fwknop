@@ -27,6 +27,8 @@ our @DIGEST_TYPES = qw(
     FKO_DIGEST_MD5
     FKO_DIGEST_SHA1
     FKO_DIGEST_SHA256
+    FKO_DIGEST_SHA384
+    FKO_DIGEST_SHA512
 );
 
 # Encryption types tag list.
@@ -101,6 +103,8 @@ use constant {
     FKO_DIGEST_MD5      => 1,
     FKO_DIGEST_SHA1     => 2,
     FKO_DIGEST_SHA256   => 3,
+    FKO_DIGEST_SHA384   => 4,
+    FKO_DIGEST_SHA512   => 5,
 
     # Encryption types
     FKO_ENCRYPTION_RIJNDAEL => 1,

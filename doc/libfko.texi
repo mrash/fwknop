@@ -381,6 +381,8 @@ are (in order of strength):
 @item FKO_DIGEST_MD5
 @item FKO_DIGEST_SHA1
 @item FKO_DIGEST_SHA256  (libfko default)
+@item FKO_DIGEST_SHA384
+@item FKO_DIGEST_SHA512
 @end table
 @end deftypevar
 

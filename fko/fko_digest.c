@@ -82,7 +82,7 @@ fko_set_spa_digest(fko_ctx_t ctx)
     switch(ctx->digest_type)
     {
         case FKO_DIGEST_MD5:
-            md = malloc(MD_HEX_SIZE(MD5_DIGESTSIZE)+1);
+            md = malloc(MD_HEX_SIZE(MD5_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
@@ -91,7 +91,7 @@ fko_set_spa_digest(fko_ctx_t ctx)
             break;    
 
         case FKO_DIGEST_SHA1:
-            md = malloc(MD_HEX_SIZE(SHA1_DIGESTSIZE)+1);
+            md = malloc(MD_HEX_SIZE(SHA1_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
@@ -100,11 +100,29 @@ fko_set_spa_digest(fko_ctx_t ctx)
             break;    
 
         case FKO_DIGEST_SHA256:
-            md = malloc(MD_HEX_SIZE(SHA256_DIGESTSIZE)+1);
+            md = malloc(MD_HEX_SIZE(SHA256_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             
             sha256_base64(md,
+                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            break;    
+
+        case FKO_DIGEST_SHA384:
+            md = malloc(MD_HEX_SIZE(SHA384_DIGEST_LENGTH)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+            
+            sha384_base64(md,
+                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            break;    
+
+        case FKO_DIGEST_SHA512:
+            md = malloc(MD_HEX_SIZE(SHA512_DIGEST_LENGTH)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+            
+            sha512_base64(md,
                 (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;    
 

@@ -16,7 +16,7 @@ use warnings;
 use Carp;
 require Exporter;
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 our @ISA = qw(Exporter);
 
@@ -705,6 +705,14 @@ The SHA1 message digest algorithm.
 =item * B<FKO_DIGEST_SHA256>
 
 The SHA256 message digest algorithm. This is the I<libfko> default.
+
+=item * B<FKO_DIGEST_SHA384>
+
+The SHA384 message digest algorithm. This is the I<libfko> default.
+
+=item * B<FKO_DIGEST_SHA512>
+
+The SHA512 message digest algorithm. This is the I<libfko> default.
 
 =back
  
