@@ -627,7 +627,7 @@ programs that process @acronym{SPA} data repeatedly (i.e. in a loop).
 Failure to destroy the context can cause memory leaks in your program.
 
 @deftypefun void fko_destroy (@w{fko_ctx_t @var{ctx}})
-The function @code{gpgme_release} destroys the context with the handle
+The function @code{fko_destroy} destroys the context with the handle
 @var{ctx} and releases all associated resources.
 @end deftypefun
 
