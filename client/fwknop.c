@@ -506,6 +506,7 @@ get_save_file(char *args_save_file)
             homedir, "/", ".fwknop.run");
         rv = 1;
     }
+
     return rv;
 }
 
@@ -598,37 +599,26 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
         if (options->nat_local)
         {
             if (options->fw_timeout >= 0)
-            {
                 message_type = FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG;
-            }
             else
-            {
                 message_type = FKO_LOCAL_NAT_ACCESS_MSG;
-            }
         }
         else
         {
             if (options->fw_timeout >= 0)
-            {
                 message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
-            }
             else
-            {
                 message_type = FKO_NAT_ACCESS_MSG;
-            }
         }
     }
     else
     {
         if (options->fw_timeout >= 0)
-        {
             message_type = FKO_CLIENT_TIMEOUT_ACCESS_MSG;
-        }
         else
-        {
             message_type = FKO_ACCESS_MSG;
-        }
     }
+
     return fko_set_spa_message_type(ctx, message_type);
 }
 

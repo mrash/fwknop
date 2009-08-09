@@ -100,29 +100,25 @@ parse_time_offset(char *offset_str)
             break;
         }
     }
+
     offset_digits[j] = '\0';
+
     if (j < 1) {
         fprintf(stderr, "[*] Invalid time offset: %s", offset_str);
         exit(EXIT_FAILURE);
     }
 
     offset = atoi(offset_digits);
+
     if (offset < 0) {
         fprintf(stderr, "[*] Invalid time offset: %s", offset_str);
         exit(EXIT_FAILURE);
     }
 
-    switch (offset_type) {
-        case TIME_OFFSET_MINUTES:
-            offset *= 60;
-            break;
-        case TIME_OFFSET_HOURS:
-            offset *= 60 * 60;
-            break;
-        case TIME_OFFSET_DAYS:
-            offset *= 60 * 60 * 24;
-            break;
-    }
+    /* Apply the offset_type value
+    */
+    offset *= offset_type;
+
     return offset;
 }
 
@@ -183,7 +179,7 @@ parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
         if (*lptr == '#' || *lptr == '\n' || *lptr == '\r' || *lptr == '\0' || *lptr == ';')
             continue;
 
-/*--DSS TODO: Figure out what to put here
+/*--DSS TODO: Figure out what to put here (these are just samples below)
  
         if (ot->got_device == 0 || options->interface.name[0] == '\0')
             get_char_val("XXXX", options->interface.name, lptr);
