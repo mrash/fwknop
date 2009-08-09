@@ -7,10 +7,10 @@ m4_define(my_version, [0.63])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
+
 AC_CONFIG_AUX_DIR(config)
 
-#AM_INIT_AUTOMAKE(my_package, my_version)
-AM_INIT_AUTOMAKE([-Wall foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 dnl AM_MAINTAINER_MODE
 
@@ -20,9 +20,9 @@ AC_GNU_SOURCE
 
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_PROG_CXX
-AC_PROG_AWK
 AC_PROG_CPP
+AC_PROG_AWK
+AC_PROG_GREP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
@@ -169,16 +169,39 @@ AS_IF([test "x$with_gpgme" != xno],
      fi
     ], [have_gpgme=no])], [have_gpgme=no])
 
+dnl Decide whether or not to build the client
+dnl
+want_client=yes
+AC_ARG_ENABLE([client],
+  [AS_HELP_STRING([--enable-client],
+    [Build the fwknop client @<:@default=yes@:>@])],
+  [want_client=$enableval],
+  [])
+AM_CONDITIONAL([WANT_CLIENT], [test "$want_client" = yes])
+
+dnl Decide whether or not to build the server
+dnl
+want_server=yes
+AC_ARG_ENABLE([server],
+  [AS_HELP_STRING([--enable-server],
+    [Build the fwknop server @<:@default=yes@:>@])],
+  [want_server=$enableval],
+  [])
+AM_CONDITIONAL([WANT_SERVER], [test "$want_server" = yes])
 
 AC_CONFIG_FILES([Makefile
-                 fko/Makefile
-                 doc/Makefile
-                 src/Makefile])
+                 lib/Makefile
+                 client/Makefile
+                 server/Makefile
+                 common/Makefile
+                 doc/Makefile])
 
 AC_OUTPUT
 
 echo "
     libfko v${VERSION} has been configured.
     ============================================
-        GPG encryption support: $have_gpgme
+        Client build:               $want_client
+        Server build:               $want_server
+        GPG encryption support:     $have_gpgme
 "

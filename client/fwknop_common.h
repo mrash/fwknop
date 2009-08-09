@@ -26,48 +26,12 @@
 #ifndef FWKNOP_COMMON_H
 #define FWKNOP_COMMON_H
 
-/* Common includes for our other fwknop client source files.
-*/
-#if HAVE_CONFIG_H
-  #include "config.h"
-#endif
-
-#include <stdio.h>
-#include <sys/types.h>
-
-#include <errno.h>
-
-#if STDC_HEADERS
-  #include <stdlib.h>
-  #include <string.h>
-#elif HAVE_STRINGS_H
-  #include <strings.h>
-#endif /* STDC_HEADERS*/
-
-#if HAVE_UNISTD_H
-  #include <unistd.h>
-#endif
-
-#if HAVE_NETINET_IN_H
-  #include <netinet/in.h>
-#endif
-
-#ifdef WIN32
-  #define strncasecmp	_strnicmp
-  #define snprintf		_snprintf
-  #define unlink		_unlink
-#else
-  #include <signal.h>
-#endif
-
-#include "fko.h"
+#include "common.h"
 
 /* My Name and Version
 */
 #define MY_NAME     "fwknop"
 #define MY_DESC     "Single Packet Authorization client"
-
-#define FKO_PROTO_VERSION  "1.9.12"
 
 /* Get our program version from VERSION (defined in config.h).
 */
@@ -77,33 +41,13 @@
 */
 #define DEF_CONFIG_FILE MY_NAME".conf"
 
-/* Protocol assignment values
+/* For time offset handling
 */
-enum {
-    FKO_PROTO_UDP,
-    FKO_PROTO_TCP,
-    FKO_PROTO_TCP_RAW,
-    FKO_PROTO_ICMP,
-    FKO_PROTO_HTTP,
-};
-
-/* Other common defines
-*/
-#define FKO_DEFAULT_PROTO FKO_PROTO_UDP
-#define FKO_DEFAULT_PORT 62201
-#define DEFAULT_NAT_PORT 55000
-#define MIN_HIGH_PORT 10000  /* sensible minimum for SPA dest port */
-#define MAX_PORT 65535
-#define MAX_PORT_STR_LEN 6
-#define MAX_PROTO_STR_LEN 6
-#define MAX_IP_STR_LEN 16
-#define MIN_IP_STR_LEN 9
-#define MAX_SERVER_STR_LEN 50
-
-#define MAX_LINE_LEN        1024
-#define MAX_PATH_LEN        1024
-#define MAX_GPG_KEY_ID      128
-#define MAX_USERNAME_LEN    30
+#define MAX_TIME_STR_LEN        9
+#define TIME_OFFSET_SECONDS     1
+#define TIME_OFFSET_MINUTES     60
+#define TIME_OFFSET_HOURS       3600
+#define TIME_OFFSET_DAYS        86400
 
 /* For resolving the allow IP via HTTP and sending SPA packets over
  * HTTP
@@ -113,16 +57,6 @@ enum {
 #define HTTP_MAX_REQUEST_LEN       2000
 #define HTTP_MAX_RESPONSE_LEN      2000
 #define HTTP_MAX_USER_AGENT_LEN    50
-
-/* For time offset handling
-*/
-#define MAX_TIME_STR_LEN    9
-enum {
-    TIME_OFFSET_SECONDS,
-    TIME_OFFSET_MINUTES,
-    TIME_OFFSET_HOURS,
-    TIME_OFFSET_DAYS
-};
 
 /* fwknop client configuration parameters and values
 */

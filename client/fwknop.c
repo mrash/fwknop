@@ -40,7 +40,10 @@ static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
 static void dump_transmit_options(fko_cli_options_t *options);
-static void resolve_ip_http(fko_cli_options_t *options);
+
+int resolve_ip_http(fko_cli_options_t *options);
+
+
 
 int
 main(int argc, char **argv)
@@ -69,7 +72,7 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_new", res);
-        return(1);
+        return(EXIT_FAILURE);
     }
 
     /* Display version info and exit.
@@ -80,7 +83,7 @@ main(int argc, char **argv)
         fprintf(stdout, "[+] fwknop client %s, FKO protocol version %s\n",
             MY_VERSION, version);
 
-        return(0);
+        return(EXIT_SUCCESS);
     }
 
     /* Set client timeout
@@ -91,7 +94,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_client_timeout", res);
-            return(1);
+            return(EXIT_FAILURE);
         }
     }
 
@@ -101,7 +104,7 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_set_spa_message_type", res);
-        return(1);
+        return(EXIT_FAILURE);
     }
 
     if(options.server_command[0] != 0x0)
@@ -114,8 +117,12 @@ main(int argc, char **argv)
     }
     else
     {
+        /* Resolve the client's public facing IP address if requestesd.
+         * if this fails, consider it fatal.
+        */
         if (options.resolve_ip_http)
-            resolve_ip_http(&options);
+            if(resolve_ip_http(&options) < 0)
+                return(EXIT_FAILURE);
 
         /* Set a message string by combining the allow IP and the
          * port/protocol.  The fwknopd server allows no port/protocol
@@ -137,7 +144,7 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_set_spa_message", res);
-        return(1);
+        return(EXIT_FAILURE);
     }
 
     /* Set NAT access string
@@ -148,7 +155,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_nat_access_str", res);
-            return(1);
+            return(EXIT_FAILURE);
         }
     }
 
@@ -160,7 +167,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_username", res);
-            return(1);
+            return(EXIT_FAILURE);
         }
     }
 
@@ -180,7 +187,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_type", res);
-            return(1);
+            return(EXIT_FAILURE);
         }
 
         /* If a GPG home dir was specified, set it here.  Note: Setting
@@ -193,7 +200,7 @@ main(int argc, char **argv)
             if(res != FKO_SUCCESS)
             {
                 errmsg("fko_set_gpg_home_dir", res);
-                return(1);
+                return(EXIT_FAILURE);
             }
         }
 
@@ -204,7 +211,7 @@ main(int argc, char **argv)
 
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
-            return(1);
+            return(EXIT_FAILURE);
         }
 
         if(options.gpg_signer_key != NULL && strlen(options.gpg_signer_key))
@@ -217,7 +224,7 @@ main(int argc, char **argv)
                 if(IS_GPG_ERROR(res))
                     fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-                return(1);
+                return(EXIT_FAILURE);
             }
         }
     }
@@ -230,7 +237,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_digest_type", res);
-            return(1);
+            return(EXIT_FAILURE);
         }
     }
 
@@ -244,7 +251,7 @@ main(int argc, char **argv)
         if(IS_GPG_ERROR(res))
             fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
 
-        return(1);
+        return(EXIT_FAILURE);
     }
 
     /* Display the context data.
@@ -274,7 +281,7 @@ main(int argc, char **argv)
         if(res < 0)
         {
             fprintf(stderr, "[*] send_spa_packet: packet not sent.\n");
-            return(1);
+            return(EXIT_FAILURE);
         }
         else
         {
@@ -292,7 +299,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_data", res);
-            return(1);
+            return(EXIT_FAILURE);
         }
 
         /* If gpg-home-dir is specified, we have to defer decrypting if we
@@ -307,7 +314,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
-            return(1);
+            return(EXIT_FAILURE);
         }
 
         /* See if we are using gpg and if we need to set the GPG home dir.
@@ -320,7 +327,7 @@ main(int argc, char **argv)
                 if(res != FKO_SUCCESS)
                 {
                     errmsg("fko_set_gpg_home_dir", res);
-                    return(1);
+                    return(EXIT_FAILURE);
                 }
             }
         }
@@ -343,10 +350,10 @@ main(int argc, char **argv)
                  debugging purposes. */
                 fprintf(stderr, "GPG ERR: %s\n%s\n", fko_gpg_errorstr(ctx2),
                     "[*] No access to recipient private key?\n");
-                return(0);
+                return(EXIT_SUCCESS);
             }
 
-            return(1);
+            return(EXIT_FAILURE);
         }
 
         printf("\nDump of the Decoded Data\n");
@@ -357,7 +364,7 @@ main(int argc, char **argv)
 
     fko_destroy(ctx);
 
-    return(0);
+    return(EXIT_SUCCESS);
 }
 
 static void
@@ -446,116 +453,6 @@ ipv4_str_has_port(char *str)
     }
 
     return rv;
-}
-
-static void resolve_ip_http(fko_cli_options_t *options)
-{
-    int     sock, res, error, http_buf_len, i;
-    struct  addrinfo *result, *rp, hints;
-    char    http_buf[HTTP_MAX_REQUEST_LEN];
-    char    http_response[HTTP_MAX_RESPONSE_LEN];
-
-    /* Build our HTTP request to resolve the external IP (this is similar to
-     * to contacting whatismyip.org, but using a different URL).
-    */
-    snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
-        "%s%s%s%s%s%s%s",
-        "GET ",
-        HTTP_RESOLVE_URL,
-        " HTTP/1.0\r\nUser-Agent: ",
-        options->http_user_agent,
-        "\r\nAccept: */*\r\nHost: ",
-        HTTP_RESOLVE_HOST,
-        "\r\nConnection: Keep-Alive\r\n\r\n"
-    );
-    http_buf_len = strlen(http_buf);
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-
-    hints.ai_family   = AF_UNSPEC; /* Allow IPv4 or IPv6 */
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-
-    error = getaddrinfo(HTTP_RESOLVE_HOST, "80", &hints, &result);
-    if (error != 0)
-    {
-        fprintf(stderr, "[*] error in getaddrinfo: %s\n", gai_strerror(error));
-        exit(EXIT_FAILURE);
-    }
-
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
-        sock = socket(rp->ai_family, rp->ai_socktype,
-                rp->ai_protocol);
-        if (sock < 0)
-            continue;
-
-        if (error = connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
-            break;  /* made it */
-
-#ifdef WIN32
-        closesocket(sock);
-#else
-        close(sock);
-#endif
-    }
-
-    if (rp == NULL) {
-        perror("[*] resolve_ip_http: Could not create socket: ");
-        exit(EXIT_FAILURE);
-    }
-
-    freeaddrinfo(result);
-
-    res = send(sock, http_buf, http_buf_len, 0);
-
-    if(res < 0)
-    {
-        perror("[*] resolve_ip_http: write error: ");
-    }
-    else if(res != http_buf_len)
-    {
-        fprintf(stderr,
-            "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
-            res, http_buf_len
-        );
-    }
-
-    res = recv(sock, http_response, HTTP_MAX_RESPONSE_LEN, 0);
-    http_response[HTTP_MAX_RESPONSE_LEN-1] = '\0';
-
-#ifdef WIN32
-    closesocket(sock);
-#else
-    close(sock);
-#endif
-
-    /* Now parse the response for the IP address (which should be at
-     * the end of the string
-    */
-    for (i=res-3; i >= 0; i--)
-    {
-        if(http_response[i] == '\n')
-            break;
-        if(http_response[i] != '.' && ! isdigit(http_response[i]))
-        {
-            fprintf(stderr, "[*] Invalid IP in HTTP response.\n");
-            exit(EXIT_FAILURE);
-        }
-    }
-    if (i < MIN_IP_STR_LEN)
-    {
-        fprintf(stderr, "[*] Invalid IP in HTTP response.\n");
-        exit(EXIT_FAILURE);
-    }
-    http_response[res-1] = '\0';
-
-    strlcpy(options->allow_ip_str,
-        (http_response + i+1), (res - (i+2)));
-
-    printf("[+] Resolved external IP (via http://%s%s) as: %s\n",
-        HTTP_RESOLVE_HOST, HTTP_RESOLVE_URL, options->allow_ip_str);
-
-    return;
 }
 
 /* Set NAT access string

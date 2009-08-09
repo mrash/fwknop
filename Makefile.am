@@ -1,4 +1,17 @@
-SUBDIRS = fko src doc
+if WANT_CLIENT
+  CLIENT_DIR = client
+endif
+
+if WANT_SERVER
+  SERVER_DIR = server
+endif
+
+SUBDIRS = \
+	lib \
+	common \
+	$(CLIENT_DIR) \
+	$(SERVER_DIR) \
+	doc 
 
 EXTRA_DIST = \
     perl/FKO/README \
