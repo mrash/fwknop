@@ -25,7 +25,17 @@
  *****************************************************************************
 */
 #include "fwknop_common.h"
-#include <netdb.h>
+#include "utils.h"
+
+#ifdef WIN32
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+#else
+  #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+  #endif
+  #include <netdb.h>
+#endif
 
 int
 resolve_ip_http(fko_cli_options_t *options)

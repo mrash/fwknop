@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;../fko;../src"
+				AdditionalIncludeDirectories=".;../common;../lib;../client"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -121,7 +121,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".;../fko;../src"
+				AdditionalIncludeDirectories=".;../common;../lib;../client"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -198,7 +198,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;../fko;../src"
+				AdditionalIncludeDirectories=".;../common;../lib;../client"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -278,7 +278,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".;../fko;../src"
+				AdditionalIncludeDirectories=".;../common;../lib;../client"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -358,7 +358,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".;../fko;../src"
+				AdditionalIncludeDirectories=".;../common;../lib;../client"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -421,11 +421,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\src\config_init.c"
+				RelativePath="..\client\config_init.c"
 				>
 			</File>
 			<File
-				RelativePath="..\src\fwknop.c"
+				RelativePath="..\client\fwknop.c"
 				>
 			</File>
 			<File
@@ -437,23 +437,27 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\getpasswd.c"
+				RelativePath="..\client\getpasswd.c"
 				>
 			</File>
 			<File
-				RelativePath="..\src\spa_comm.c"
+				RelativePath="..\client\http_resolve_host.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\strlcat.c"
+				RelativePath="..\client\spa_comm.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\strlcpy.c"
+				RelativePath="..\lib\strlcat.c"
 				>
 			</File>
 			<File
-				RelativePath="..\src\utils.c"
+				RelativePath="..\lib\strlcpy.c"
+				>
+			</File>
+			<File
+				RelativePath="..\client\utils.c"
 				>
 			</File>
 		</Filter>
@@ -463,23 +467,27 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\common\common.h"
+				>
+			</File>
+			<File
 				RelativePath=".\config.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\config_init.h"
+				RelativePath="..\client\config_init.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko.h"
+				RelativePath="..\lib\fko.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\fwknop.h"
+				RelativePath="..\client\fwknop.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\fwknop_common.h"
+				RelativePath="..\client\fwknop_common.h"
 				>
 			</File>
 			<File
@@ -487,15 +495,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\src\getpasswd.h"
+				RelativePath="..\client\getpasswd.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\spa_comm.h"
+				RelativePath="..\client\spa_comm.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\utils.h"
+				RelativePath="..\client\utils.h"
 				>
 			</File>
 		</Filter>

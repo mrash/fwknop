@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="false"
-				AdditionalIncludeDirectories=".;..\fko;..\src"
+				AdditionalIncludeDirectories=".;..\lib;..\client"
 				PreprocessorDefinitions="DLL_EXPORTS;WIN32;_DEBUG;_LIB;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="false"
-				AdditionalIncludeDirectories=".;..\fko;..\src"
+				AdditionalIncludeDirectories=".;..\lib;..\client"
 				PreprocessorDefinitions="DLL_EXPORTS;WIN32;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -185,7 +185,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				EnableIntrinsicFunctions="false"
-				AdditionalIncludeDirectories=".;..\fko;..\src"
+				AdditionalIncludeDirectories=".;..\lib;..\client"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -251,7 +251,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="false"
-				AdditionalIncludeDirectories=".;..\fko;..\src"
+				AdditionalIncludeDirectories=".;..\lib;..\client"
 				PreprocessorDefinitions="WIN32;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -314,7 +314,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="false"
-				AdditionalIncludeDirectories=".;..\fko;..\src"
+				AdditionalIncludeDirectories=".;..\lib;..\client"
 				PreprocessorDefinitions="WIN32;HAVE_CONFIG_H;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -360,67 +360,67 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\fko\base64.c"
+				RelativePath="..\lib\base64.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\cipher_funcs.c"
+				RelativePath="..\lib\cipher_funcs.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\digest.c"
+				RelativePath="..\lib\digest.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_client_timeout.c"
+				RelativePath="..\lib\fko_client_timeout.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_decode.c"
+				RelativePath="..\lib\fko_decode.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_digest.c"
+				RelativePath="..\lib\fko_digest.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_encode.c"
+				RelativePath="..\lib\fko_encode.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_encryption.c"
+				RelativePath="..\lib\fko_encryption.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_error.c"
+				RelativePath="..\lib\fko_error.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_funcs.c"
+				RelativePath="..\lib\fko_funcs.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_message.c"
+				RelativePath="..\lib\fko_message.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_nat_access.c"
+				RelativePath="..\lib\fko_nat_access.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_rand_value.c"
+				RelativePath="..\lib\fko_rand_value.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_server_auth.c"
+				RelativePath="..\lib\fko_server_auth.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_timestamp.c"
+				RelativePath="..\lib\fko_timestamp.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_user.c"
+				RelativePath="..\lib\fko_user.c"
 				>
 			</File>
 			<File
@@ -428,31 +428,31 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fko\gpgme_funcs.c"
+				RelativePath="..\lib\gpgme_funcs.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\md5.c"
+				RelativePath="..\lib\md5.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\rijndael.c"
+				RelativePath="..\lib\rijndael.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\sha1.c"
+				RelativePath="..\lib\sha1.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\sha2.c"
+				RelativePath="..\lib\sha2.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\strlcat.c"
+				RelativePath="..\lib\strlcat.c"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\strlcpy.c"
+				RelativePath="..\lib\strlcpy.c"
 				>
 			</File>
 		</Filter>
@@ -462,11 +462,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\fko\base64.h"
+				RelativePath="..\lib\base64.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\cipher_funcs.h"
+				RelativePath="..\lib\cipher_funcs.h"
 				>
 			</File>
 			<File
@@ -474,31 +474,31 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fko\digest.h"
+				RelativePath="..\lib\digest.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko.h"
+				RelativePath="..\lib\fko.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_common.h"
+				RelativePath="..\lib\fko_common.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_context.h"
+				RelativePath="..\lib\fko_context.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_limits.h"
+				RelativePath="..\lib\fko_limits.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_state.h"
+				RelativePath="..\lib\fko_state.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\fko_util.h"
+				RelativePath="..\lib\fko_util.h"
 				>
 			</File>
 			<File
@@ -506,23 +506,23 @@
 				>
 			</File>
 			<File
-				RelativePath="..\fko\gpgme_funcs.h"
+				RelativePath="..\lib\gpgme_funcs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\md5.h"
+				RelativePath="..\lib\md5.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\rijndael.h"
+				RelativePath="..\lib\rijndael.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\sha1.h"
+				RelativePath="..\lib\sha1.h"
 				>
 			</File>
 			<File
-				RelativePath="..\fko\sha2.h"
+				RelativePath="..\lib\sha2.h"
 				>
 			</File>
 		</Filter>
