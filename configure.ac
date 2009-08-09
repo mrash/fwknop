@@ -173,8 +173,8 @@ dnl Decide whether or not to build the client
 dnl
 want_client=yes
 AC_ARG_ENABLE([client],
-  [AS_HELP_STRING([--enable-client],
-    [Build the fwknop client @<:@default=yes@:>@])],
+  [AS_HELP_STRING([--disable-client],
+    [Do not build the fwknop client @<:@default is to build@:>@])],
   [want_client=$enableval],
   [])
 AM_CONDITIONAL([WANT_CLIENT], [test "$want_client" = yes])
@@ -183,8 +183,8 @@ dnl Decide whether or not to build the server
 dnl
 want_server=yes
 AC_ARG_ENABLE([server],
-  [AS_HELP_STRING([--enable-server],
-    [Build the fwknop server @<:@default=yes@:>@])],
+  [AS_HELP_STRING([--disable-server],
+    [Do not build the fwknop server @<:@default is to build@:>@])],
   [want_server=$enableval],
   [])
 AM_CONDITIONAL([WANT_SERVER], [test "$want_server" = yes])
