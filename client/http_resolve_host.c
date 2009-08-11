@@ -27,6 +27,8 @@
 #include "fwknop_common.h"
 #include "utils.h"
 
+#include <errno.h>
+
 #ifdef WIN32
   #include <winsock2.h>
   #include <ws2tcpip.h>
@@ -41,9 +43,24 @@ int
 resolve_ip_http(fko_cli_options_t *options)
 {
     int     sock, res, error, http_buf_len, i;
+	int		o1, o2, o3, o4;
     struct  addrinfo *result, *rp, hints;
     char    http_buf[HTTP_MAX_REQUEST_LEN];
-    char    http_response[HTTP_MAX_RESPONSE_LEN];
+	char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
+	char   *ndx;
+
+#ifdef WIN32
+    WSADATA wsa_data;
+
+    /* Winsock needs to be initialized...
+    */
+    res = WSAStartup( MAKEWORD(1,1), &wsa_data );
+    if( res != 0 )
+    {
+        fprintf(stderr, "[*] Winsock initialization error %d\n", res );
+        return(-1);
+    }
+#endif
 
     /* Build our HTTP request to resolve the external IP (this is similar to
      * to contacting whatismyip.org, but using a different URL).
@@ -115,36 +132,51 @@ resolve_ip_http(fko_cli_options_t *options)
     close(sock);
 #endif
 
-    /* Now parse the response for the IP address (which should be at
-     * the end of the string
-    */
-    for (i=res-3; i >= 0; i--)
-    {
-        if(http_response[i] == '\n')
-            break;
-        if(http_response[i] != '.' && ! isdigit(http_response[i]))
-        {
-            fprintf(stderr, "[*] Invalid IP in HTTP response.\n");
-            return(-1);
-        }
-    }
+	/* Move to the end of the HTTP header and to the start of the content.
+	*/
+	ndx = strstr(http_response, "\r\n\r\n");
+	if(ndx == NULL)
+	{
+		fprintf(stderr, "[*] Did not find the end of HTTP header.\n");
+        return(-1);
+	}
+	ndx += 4;
 
-    if (i < MIN_IP_STR_LEN)
+	/* Walk along the content to try to find the end of the IP address.
+	 * Note: We are expecting the content to be just an IP address
+	 *       (possibly followed by whitespace or other not-digit value).
+	*/
+	for(i=0; i<MAX_IP_STR_LEN; i++) {
+		if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
+			break;
+	}
+
+	/* Terminate at the first non-digit and non-dot.
+	*/
+	*(ndx+i) = '\0';
+
+	/* Now that we have what we think is an IP address string.  We make
+	 * sure the format and values are sane.
+    */
+	if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
+		&& o1 >= 0 && o1 <= 255
+		&& o2 >= 0 && o2 <= 255
+		&& o3 >= 0 && o3 <= 255
+		&& o4 >= 0 && o4 <= 255)
+	{
+		strlcpy(options->allow_ip_str, ndx, MAX_IP_STR_LEN);
+
+		if(options->verbose)
+			printf("[+] Resolved external IP (via http://%s%s) as: %s\n",
+				HTTP_RESOLVE_HOST, HTTP_RESOLVE_URL, options->allow_ip_str);
+
+		return(0);
+	}
+	else
     {
-        fprintf(stderr, "[*] Invalid IP in HTTP response.\n");
+        fprintf(stderr, "[*] Invalid IP (%s) in HTTP response.\n", ndx);
         return(-1);
     }
-
-    http_response[res-1] = '\0';
-
-    strlcpy(options->allow_ip_str,
-        (http_response + i+1), (res - (i+2)));
-
-    if(options->verbose)
-        printf("[+] Resolved external IP (via http://%s%s) as: %s\n",
-            HTTP_RESOLVE_HOST, HTTP_RESOLVE_URL, options->allow_ip_str);
-
-    return(0);
 }
 
 /***EOF***/

@@ -50,10 +50,10 @@
 #define TIME_OFFSET_DAYS        86400
 
 /* For resolving the allow IP via HTTP and sending SPA packets over
- * HTTP
+ * HTTP -  http://www.whatismyip.com/automation/n09230945.asp 
 */
-#define HTTP_RESOLVE_HOST          "www.cipherdyne.org"
-#define HTTP_RESOLVE_URL           "/cgi/myip.cgi"
+#define HTTP_RESOLVE_HOST          "www.whatismyip.com"
+#define HTTP_RESOLVE_URL           "/automation/n09230945.asp"
 #define HTTP_MAX_REQUEST_LEN       2000
 #define HTTP_MAX_RESPONSE_LEN      2000
 #define HTTP_MAX_USER_AGENT_LEN    50
