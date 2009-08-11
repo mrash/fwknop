@@ -74,9 +74,16 @@ static int is_ip(char *str)
 int
 send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *options)
 {
-    int     sock, res, error;
+    int     sock, res=0, error;
     struct  addrinfo *result, *rp, hints;
     char    port_str[MAX_PORT_STR_LEN];
+
+    if (options->test)
+    {
+        fprintf(stderr,
+            "[+] test mode enabled, SPA packet not actually sent.\n");
+        return res;
+    }
 
     memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -165,7 +172,7 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
         "[*] send_spa_packet_tcp_raw: raw packets are not yet supported.\n");
     return(-1);
 #else
-    int  sock, res;
+    int  sock, res = 0;
     char pkt_data[2048] = {0}; /* Should be enough for our purposes */
 
     struct iphdr  *iph  = (struct iphdr *) pkt_data;
@@ -177,6 +184,13 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     */
     int         one     = 1;
     const int  *so_val  = &one;
+
+    if (options->test)
+    {
+        fprintf(stderr,
+            "[+] test mode enabled, SPA packet not actually sent.\n");
+        return res;
+    }
 
     sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
     if (sock < 0)
@@ -269,7 +283,7 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     fprintf(stderr, "[*] send_spa_packet_icmp: raw packets are not yet supported.\n");
     return(-1);
 #else
-    int res;
+    int res = 0, sock;
     char pkt_data[2048] = {0};
 
     struct iphdr  *iph    = (struct iphdr *) pkt_data;
@@ -282,7 +296,14 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     int         one     = 1;
     const int  *so_val  = &one;
 
-    int sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (options->test)
+    {
+        fprintf(stderr,
+            "[+] test mode enabled, SPA packet not actually sent.\n");
+        return res;
+    }
+
+    sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
 
     if (sock < 0)
     {
@@ -353,30 +374,48 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
 int
 send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
 {
-    char http_buf[HTTP_MAX_REQUEST_LEN];
+    char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
     int  i;
+
+    spa_data_copy = malloc(sd_len+1);
+    if (spa_data_copy == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+    memcpy(spa_data_copy, spa_data, sd_len+1);
 
     /* change "+" chars to "-", and "/" to "_" for HTTP requests (the server
      * side will translate these back before decrypting) */
     for (i=0; i < sd_len; i++) {
-        if (spa_data[i] == '+') {
-            spa_data[i] = '-';
+        if (spa_data_copy[i] == '+') {
+            spa_data_copy[i] = '-';
         }
-        else if (spa_data[i] == '/') {
-            spa_data[i] = '_';
+        else if (spa_data_copy[i] == '/') {
+            spa_data_copy[i] = '_';
         }
     }
 
     snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
         "%s%s%s%s%s%s%s",
-        "GET ",
-        spa_data,
+        "GET /",
+        spa_data_copy,
         " HTTP/1.0\r\nUser-Agent: ",
         options->http_user_agent,
         "\r\nAccept: */*\r\nHost: ",
         options->spa_server_str,  /* hostname or IP */
         "\r\nConnection: Keep-Alive\r\n\r\n"
     );
+    free(spa_data_copy);
+
+    if (options->test)
+    {
+        if (options->verbose)
+           fprintf(stderr, "%s\n", http_buf);
+
+        fprintf(stderr,
+            "[+] test mode enabled, SPA packet not actually sent.\n");
+        return 0;
+    }
 
     return send_spa_packet_tcp_or_udp(http_buf, strlen(http_buf), options);
 }

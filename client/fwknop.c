@@ -270,26 +270,22 @@ main(int argc, char **argv)
     if (options.verbose)
         dump_transmit_options(&options);
 
-    /* If not in test mode, send the SPA data across the wire with a
-     * protocol/port specified on the command line (default is UDP/62201).
-     * Otherwise, run through a decode cycle (--DSS XXX: This test/decode
-     * portion should be moved elsewhere).
-    */
-    if (!options.test)
+    res = send_spa_packet(ctx, &options);
+    if(res < 0)
     {
-        res = send_spa_packet(ctx, &options);
-        if(res < 0)
-        {
-            fprintf(stderr, "[*] send_spa_packet: packet not sent.\n");
-            return(EXIT_FAILURE);
-        }
-        else
-        {
-            if(options.verbose)
-                fprintf(stderr, "[+] send_spa_packet: bytes sent: %i\n", res);
-        }
+        fprintf(stderr, "[*] send_spa_packet: packet not sent.\n");
+        return(EXIT_FAILURE);
     }
     else
+    {
+        if(options.verbose)
+            fprintf(stderr, "[+] send_spa_packet: bytes sent: %i\n", res);
+    }
+
+    /* Run through a decode cycle in test mode (--DSS XXX: This test/decode
+     * portion should be moved elsewhere).
+    */
+    if (options.test)
     {
         /************** Decoding now *****************/
 
