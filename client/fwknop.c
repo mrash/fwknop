@@ -432,27 +432,31 @@ dump_transmit_options(fko_cli_options_t *options)
 }
 
 /* See if the string is of the format "<ipv4 addr>:<port>",
- * e.g. "123.1.2.3,12345" - this needs work.
-*/
+ */
 static int
 ipv4_str_has_port(char *str)
 {
-    int rv = 0, i;
-    int st_len = strlen(str);
+    int o1, o2, o3, o4, p;
 
-    for (i=0; i < st_len; i++) {
-        if (str[i] == ',' || str[i] == ':') {
-            str[i] = ',';  /* force "<ip>,<port>" format */
-            rv = 1;
-            continue;
-        }
-        if (rv && ! isdigit(str[i])) {
-            rv = 0;
-            break;
-        }
+    /* Force the ':' (if any) to a ','
+    */
+    char *ndx = strchr(str, ':');
+    if(ndx != NULL)
+        *ndx = ',';
+
+    /* Check format and values.
+    */
+    if((sscanf(str, "%u.%u.%u.%u,%u", &o1, &o2, &o3, &o4, &p)) == 5
+		&& o1 >= 0 && o1 <= 255
+		&& o2 >= 0 && o2 <= 255
+		&& o3 >= 0 && o3 <= 255
+		&& o4 >= 0 && o4 <= 255
+        && p  >  0 && p  <  65536)
+	{
+        return 1;
     }
 
-    return rv;
+    return 0;
 }
 
 /* Set NAT access string
