@@ -684,7 +684,7 @@ the fwknop server to create a temporary firewall rule to allow a particular
 IP address access to a particular port.  Assuming the defaults are fine
 for this, all we need to do is create the context, set the message data
 field, call the @code{fko_spa_data_final} function to encode and encrypt,
-process the message, then destroy the context.  Below, we havea contrived bit
+process the message, then destroy the context.  Below, we have a contrived bit
 of code demonstrating this:
 
 @example
