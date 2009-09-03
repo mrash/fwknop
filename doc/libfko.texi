@@ -273,10 +273,12 @@ readability and the username, message, nat_access, and server_auth fields
 are not base64-encoded):
 
 @sp 1
+@cartouche
 @example
 8307540982176539:juser:1230665172:1.1.10:1:0.0.0.0,tcp/22:192.168.1.2,22:
 crypt,mypw:120:xswj8V0zMR7/7MV9pQRarSKWG1l9Zfjv+kbXaKrJ+RA
 @end example
+@end cartouche
 @sp 1
 
 For most of the fields, you need not be too concerned about the format as
@@ -673,11 +675,13 @@ and @code{digest_type}, these defaults may be sufficient.
 The functions used to set the various @acronym{SPA} data fields and
 parameters are described in detail in @ref{Setting SPA Data}.
 
+@cartouche
 @noindent
 @strong{Note}: Attempts to call any ``@code{fko_}'' function on a context that
 has not been initialized can have undefined consequences.  Libfko will attempt
 to recover, and if succussful, will return a status of
 @code{FKO_ERROR_CTX_NOT_INITIALIZED}.
+@end cartouche
 
 A common @acronym{SPA} message is a simple access request.  This request asks
 the fwknop server to create a temporary firewall rule to allow a particular
