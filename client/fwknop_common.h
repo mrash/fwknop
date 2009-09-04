@@ -65,8 +65,8 @@ typedef struct fko_cli_options
     char config_file[MAX_PATH_LEN];
     char access_str[MAX_PATH_LEN];
     char server_command[MAX_LINE_LEN];
-    char get_key_file[MAX_LINE_LEN];
-    char save_packet_file[MAX_LINE_LEN];
+    char get_key_file[MAX_PATH_LEN];
+    char save_packet_file[MAX_PATH_LEN];
     int  save_packet_file_append;
     int  show_last_command;
     int  no_save_args;

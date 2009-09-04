@@ -29,10 +29,14 @@
 #include <getopt.h>
 #include <sys/stat.h>
 
-/* Long options values (for those without a short option).
+/* Long options values (for those that may not have a short option).
 */
 enum {
     GPG_HOME_DIR    = 0x200,
+    GPG_KEY,
+    FIREWALL_LIST,
+    FIREWALL_FLUSH,
+    FIREWALL_LOG,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -40,8 +44,19 @@ enum {
 */
 static struct option cmd_opts[] =
 {
-    {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
+    {"config-file",         1, NULL, 'c'},
+    {"dump-config",         0, NULL, 'D'},
+    {"fw-list",             0, NULL, FIREWALL_LIST },
+    {"fw-flush",            0, NULL, FIREWALL_FLUSH },
+    {"fw-log",              1, NULL, FIREWALL_LOG },
     {"help",                0, NULL, 'h'},
+    {"interface",           1, NULL, 'i'},
+    {"kill",                0, NULL, 'K'},
+    {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
+    {"gpg-key",             1, NULL, GPG_KEY },
+    {"override-config",     1, NULL, 'O' },
+    {"restart",             0, NULL, 'R'},
+    {"status",              0, NULL, 'S'},
     {"verbose",             0, NULL, 'v'},
     {"version",             0, NULL, 'V'},
     {0, 0, 0, 0}

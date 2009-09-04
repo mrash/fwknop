@@ -389,10 +389,13 @@ The following examples illustrate the command line arguments that could be suppl
 .sp
 Packet contents printed to stdout at the fwknop client when creating an \(lqaccess mode\(rq SPA packet:
 .sp
-.if n \{\
-.RS 4
-.\}
+.\" .if n \{\
+.\" .RS 4
+.\" .\}
+.\" .nf
+.ft CW
 .nf
+.ne 1
     Random data:    6565240948266426
     Username:       mbr
     Timestamp:      1203863233
@@ -400,10 +403,12 @@ Packet contents printed to stdout at the fwknop client when creating an \(lqacce
     Type:           1 (access mode)
     Access:         127\&.0\&.0\&.2,tcp/22
     SHA256 sum:     gngquSL8AuM7r27XsR4qPmJhuBo9pG2PYwII06AaJHw
+.ft R
 .fi
-.if n \{\
-.RE
-.\}
+.\" .fi
+.\" .if n \{\
+.\" .RE
+.\" .\}
 .sp
 Use the Single Packet Authorization mode to gain access to tcp/22 (ssh) and udp/53 running on the system 10\&.0\&.0\&.123 from the IP 192\&.168\&.10\&.4:
 .sp

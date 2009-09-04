@@ -189,6 +189,16 @@ AC_ARG_ENABLE([server],
   [])
 AM_CONDITIONAL([WANT_SERVER], [test "$want_server" = yes])
 
+dnl Check for libpcap if we are building the server component
+dnl
+have_pcap=yes
+AS_IF([test "$want_server" = yes],
+  AC_CHECK_LIB([pcap],[pcap_open_live],
+    AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]), [have_pcap=no]
+  )
+)
+AM_CONDITIONAL([HAVE_LIBPCAP],[test "$have_pcap" = yes])
+
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  client/Makefile
@@ -203,5 +213,6 @@ echo "
     ============================================
         Client build:               $want_client
         Server build:               $want_server
+         - with libpcap:            $have_pcap
         GPG encryption support:     $have_gpgme
 "

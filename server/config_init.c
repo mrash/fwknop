@@ -164,21 +164,73 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
     */
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "hvV", cmd_opts, &index)) != -1) {
+            "c:Dhi:KO:RSvV", cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
+            case 'c':
+                strlcpy(options->config_file, optarg, MAX_PATH_LEN);
+                break;
+            case 'D':
+                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
+                // TODO: Add this...
+                //dump_config();
+                exit(EXIT_SUCCESS);
+                break;
+            case FIREWALL_LIST:
+                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
+                // TODO: Add this...
+                //list_firewall_rules();
+                exit(EXIT_SUCCESS);
+                break;
+            case FIREWALL_FLUSH:
+                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
+                // TODO: Add this...
+                //flush_firewall_rules();
+                exit(EXIT_SUCCESS);
+                break;
+            case FIREWALL_LOG:
+                strlcpy(options->firewall_log, optarg, MAX_PATH_LEN);
+                break;
+            case GPG_HOME_DIR:
+                strlcpy(options->gpg_home_dir, optarg, MAX_PATH_LEN);
+                break;
+            case GPG_KEY:
+                strlcpy(options->gpg_key, optarg, MAX_GPG_KEY_ID);
+                break;
             case 'h':
                 usage();
+                exit(EXIT_SUCCESS);
+                break;
+            case 'i':
+                strlcpy(options->net_interface, optarg, MAX_PATH_LEN);
+                break;
+            case 'K':
+                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
+                // TODO: Add this...
+                //kill_fwknopd();
+                exit(EXIT_SUCCESS);
+                break;
+            case 'O':
+                strlcpy(options->override_config, optarg, MAX_PATH_LEN);
+                break;
+            case 'R':
+                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
+                // TODO: Add this...
+                //restart_fwknopd();
+                exit(EXIT_SUCCESS);
+                break;
+            case 'S':
+                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
+                // TODO: Add this...
+                //fwkop_status();
                 exit(EXIT_SUCCESS);
                 break;
             case 'v':
                 options->verbose = 1;
                 break;
             case 'V':
-                options->version = 1;
-                break;
-            case GPG_HOME_DIR:
-                strlcpy(options->gpg_home_dir, optarg, MAX_PATH_LEN);
+                fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
+                exit(EXIT_SUCCESS);
                 break;
             default:
                 usage();
@@ -189,7 +241,6 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
     /* Parse configuration file to populate any params not already specified
      * via command-line options
     */
-    //--DSS XXX: We will use this when we have a config file to use.
     //parse_config_file(options, &ot);
 
     /* Now that we have all of our options set, we can validate them.
@@ -209,9 +260,21 @@ usage(void)
       "Usage: fwknopd [options]\n\n"
       " -h, --help              - Print this usage message and exit.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
+      " -D, --dump-config       - Dump the current fwknop configuration values.\n"
+      "     --fw-list           - List all active rules in the FWKNOP Netfilter chain.\n"
+      "     --fw-flush          - Flush all rules in the FWKNOP Netfilter chain.\n"
+      "     --fw-log            - Specify the path to the Netfilter log file that is\n"
+      "                           parsed when running in 'os-mode'.\n"
+      " -i, --interface         - Specify interface to listen for incoming SPA\n"
+      "                           packets.\n"
+      " -K, --kill              - Kill the currently running fwknopd.\n"
+      "     --gpg-home-dir      - Specify the GPG home directory.\n"
+      "     --gpg-key           - Specify the GPG key ID used for decryption.\n"
+      " -O, --override-config   - \n"
+      " -R, --restart           - Force the currently running fwknopd to restart.\n"
+      " -S, --status            - Display the status of any running fwknopd process.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"
-      "     --gpg-home-dir      - Specify the GPG home directory.\n"
       "\n"
     );
 

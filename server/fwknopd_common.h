@@ -28,6 +28,10 @@
 
 #include "common.h"
 
+#if HAVE_LIBPCAP
+  #include <pcap.h>
+#endif
+
 /* My Name and Version
 */
 #define MY_NAME     "fwknopd"
@@ -37,24 +41,40 @@
 */
 #define MY_VERSION VERSION
 
-/* Default config path, can override with -c
+/* Some program defaults.
 */
-#define DEF_CONFIG_FILE MY_NAME".conf"
+#ifndef DEF_CONF_DIR
+  #define DEF_CONF_DIR      "/etc/fwknop"
+#endif
+#define DEF_CONFIG_FILE     DEF_CONF_DIR"/"MY_NAME".conf"
+#define DEF_INTERFACE       "eth0"
+
+/* fwknopd-specific limits
+*/
+#define MAX_PCAP_FILTER_LEN 1024
+#define MAX_IFNAME_LEN      128
 
 /* fwknopd server configuration parameters and values
 */
 typedef struct fko_srv_options
 {
-    char config_file[MAX_PATH_LEN];
-    char gpg_home_dir[MAX_PATH_LEN];
+    /* Various command-line options and flags
+    */
+    char config_file[MAX_PATH_LEN];     /* The main fwknopd config file */
+    char firewall_log[MAX_PATH_LEN];    /* The firewall log file */
+    char gpg_home_dir[MAX_PATH_LEN];    /* GPG Home directory */
+    char gpg_key[MAX_GPG_KEY_ID];       /* The gpg key id for decrypting */
+    char net_interface[MAX_IFNAME_LEN]; /* Network interface to sniff */
+    char override_config[MAX_PATH_LEN]; /* One of more overried config files */
 
-    /* Various command-line flags */
-    unsigned char   verbose; /* --verbose mode */
-    unsigned char   version; /* --version */
-    unsigned char   test;
-    int             fw_timeout;
+    unsigned char   dump_config;        /* Dump current configuration flag */
+    unsigned char   restart;            /* Restart fwknopd flag*/
+    unsigned char   verbose;            /* Verbose mode flag */
+    unsigned char   test;               /* Test mode flag */
 
-    //char            config_file[MAX_PATH_LEN];
+    /* Options from the config file only.
+    */
+
 
 } fko_srv_options_t;
 

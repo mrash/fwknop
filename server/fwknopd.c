@@ -46,15 +46,16 @@ main(int argc, char **argv)
     */
     config_init(&options, argc, argv);
 
-    /* Display version info and exit.
+    /* TODO:  add fwknop server code below :)
     */
-    if (options.version) {
-        fko_get_version(ctx, &version);
+    printf("\nThis is fwknopd.  It would do something if it was coded"
+           " to do something:\n\n");
 
-        fprintf(stdout, "[+] fwknopd server %s\n", MY_VERSION);
-
-        return(0);
-    }
+#if HAVE_LIBPCAP
+    printf("   - fwknopd would be using libpcap version %s\n\n", pcap_lib_version());
+#else
+    printf("   - fwknopd is not using libpcap\n\n");
+#endif
 
     return(0);
 }
