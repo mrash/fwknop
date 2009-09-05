@@ -29,86 +29,77 @@
 #include "utils.h"
 #include "ctype.h"
 
-/* Routine to extract the configuration value from a line in the config
- * file.
+/* Take an index and a string value. malloc the space for the value
+ * and assign it to the array at the specified index.
 */
-int
-get_char_val(const char *var_name, char *dest, char *lptr)
+void
+set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
 {
-    int i, var_char_ctr = 0;
-    char *tmp_ptr;
+    int slen;
 
-    tmp_ptr = lptr;
-
-    /* var_name is guaranteed to be NULL-terminated.
+    /* Sanity check the index value.
     */
-    for (i=0; i < (int)strlen(var_name); i++)
-        if (tmp_ptr[i] != var_name[i])
-            return 0;
+    if(var_ndx < 0 || var_ndx >= NUMBER_OF_CONFIG_ENTRIES)
+    {
+        fprintf(stderr, "Index value of %i is not valid\n", var_ndx);
+        exit(EXIT_FAILURE);
+    }
 
-    tmp_ptr += i;
-
-    /* First char after varName better be a space or tab  or '='.
+    /* Make sure we have a valid value.
     */
-    if (*tmp_ptr != ' ' && *tmp_ptr != '\t' && *tmp_ptr != '=')
-        return 0;
+    if(value == NULL)
+    {
+        fprintf(stderr, "Config value for index %i was NULL\n", var_ndx);
+        exit(EXIT_FAILURE);
+    }
 
-    /* Walk past the delimiter.
-    */
-    while (*tmp_ptr == ' ' || *tmp_ptr == '\t' || *tmp_ptr == '=')
-        tmp_ptr++;
+    slen = strlen(value) + 1;
 
-    while (var_char_ctr < MAX_LINE_LEN && tmp_ptr[var_char_ctr] != '\n'
-            && tmp_ptr[var_char_ctr] != '\0')
-        var_char_ctr++;
+    opts->config_ent[var_ndx] = malloc(slen);
 
-    if (tmp_ptr[var_char_ctr] != '\n' || var_char_ctr >= MAX_LINE_LEN)
-        return 0;
+    if(opts->config_ent[var_ndx] == NULL)
+    {
+        fprintf(stderr, "*Fatal memory allocation error!\n");
+        exit(EXIT_FAILURE);
+    }
 
-    strncpy(dest, tmp_ptr, var_char_ctr);
-
-    dest[var_char_ctr] = '\0';
-
-    return 1;
+    strlcpy(opts->config_ent[var_ndx], value, slen);
+ 
+    return;
 }
 
 /* Parse the config file...
+*/
 static void
-parse_config_file(fko_svr_options_t *options, opts_track_t *ot)
+parse_config_file(fko_srv_options_t *options, opts_track_t *ot)
 {
     FILE           *cfile_ptr;
     unsigned int    numLines = 0;
+    unsigned int    i, good_ent;
 
     char            conf_line_buf[MAX_LINE_LEN] = {0};
-    char            tmp_char_buf[MAX_LINE_LEN]  = {0};
-    char           *lptr;
+    char            var[MAX_LINE_LEN]  = {0};
+    char            val[MAX_LINE_LEN]  = {0};
 
     struct stat     st;
 
-    * First see if the config file exists.  If it doesn't, and was
-     * specified via command-line, then error out.  Otherwise, complain
+    /* First see if the config file exists.  If it doesn't, complain
      * and go on with program defaults.
-    *
-    if(stat(options->config_file, &st) != 0)
+    */
+    if(stat(options->config_ent[CONF_CONFIG_FILE], &st) != 0)
     {
-        if(ot->got_config_file)
-        {
-            fprintf(stderr, "[*] Could not open config file: %s\n",
-                options->config_file);
-            exit(EXIT_FAILURE);
-        }
-
         fprintf(stderr,
-            "** Config file was not found. Attempting to continue with defaults...\n"
+            "** Config file: '%s' was not found. Attempting to continue with defaults...\n",
+            options->config_ent[CONF_CONFIG_FILE]
         );
 
         return;
     }
 
-    if ((cfile_ptr = fopen(options->config_file, "r")) == NULL)
+    if ((cfile_ptr = fopen(options->config_ent[CONF_CONFIG_FILE], "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open config file: %s\n",
-                options->config_file);
+                options->config_ent[CONF_CONFIG_FILE]);
         exit(EXIT_FAILURE);
     }
 
@@ -116,24 +107,45 @@ parse_config_file(fko_svr_options_t *options, opts_track_t *ot)
     {
         numLines++;
         conf_line_buf[MAX_LINE_LEN-1] = '\0';
-        lptr = conf_line_buf;
 
-        memset(tmp_char_buf, 0x0, MAX_LINE_LEN);
-
-        while (*lptr == ' ' || *lptr == '\t' || *lptr == '=')
-            lptr++;
-
-        * Get past comments and empty lines.
-        *
-        if (*lptr == '#' || *lptr == '\n' || *lptr == '\r' || *lptr == '\0' || *lptr == ';')
+        /* Get past comments and empty lines (note: we only look at the
+         * first character.
+        */
+        if(IS_EMPTY_LINE(conf_line_buf[0]))
             continue;
+
+        if(sscanf(conf_line_buf, "%s %[^;\n\r]", var, val) != 2)
+        {
+            fprintf(stderr,
+                "*Invalid config file entry at line %i.\n - '%s'",
+                numLines, conf_line_buf
+            );
+            continue;
+        }
+
+        /*
+        fprintf(stderr, "LINE: %s\tVar: %s, Val: '%s'\n", conf_line_buf, var, val);
+        */
+
+        good_ent = 0;
+        for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
+        {
+            if(CONF_VAR_IS(config_ent_map[i], var))
+            {
+                set_config_entry(options, i, val);
+                good_ent++;
+                break;
+            }
+        }
+
+        if(good_ent == 0)
+            fprintf(stderr, "*Ignoring unknown configuration parameter: '%s'\n");
     }
 
     fclose(cfile_ptr);
 
     return;
 }
-*/
 
 /* Sanity and bounds checks for the various options.
 */
@@ -168,13 +180,10 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
 
         switch(cmd_arg) {
             case 'c':
-                strlcpy(options->config_file, optarg, MAX_PATH_LEN);
+                set_config_entry(options, CONF_CONFIG_FILE, optarg);
                 break;
             case 'D':
-                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
-                // TODO: Add this...
-                //dump_config();
-                exit(EXIT_SUCCESS);
+                options->dump_config = 1;
                 break;
             case FIREWALL_LIST:
                 fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
@@ -189,20 +198,20 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
                 break;
             case FIREWALL_LOG:
-                strlcpy(options->firewall_log, optarg, MAX_PATH_LEN);
+                set_config_entry(options, FIREWALL_LOG, optarg);
                 break;
             case GPG_HOME_DIR:
-                strlcpy(options->gpg_home_dir, optarg, MAX_PATH_LEN);
+                set_config_entry(options, GPG_HOME_DIR, optarg);
                 break;
             case GPG_KEY:
-                strlcpy(options->gpg_key, optarg, MAX_GPG_KEY_ID);
+                set_config_entry(options, GPG_KEY, optarg);
                 break;
             case 'h':
                 usage();
                 exit(EXIT_SUCCESS);
                 break;
             case 'i':
-                strlcpy(options->net_interface, optarg, MAX_PATH_LEN);
+                set_config_entry(options, CONF_PCAP_INTF, optarg);
                 break;
             case 'K':
                 fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
@@ -211,7 +220,7 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
                 break;
             case 'O':
-                strlcpy(options->override_config, optarg, MAX_PATH_LEN);
+                set_config_entry(options, CONF_OVERRIDE_CONFIG, optarg);
                 break;
             case 'R':
                 fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
@@ -241,13 +250,31 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
     /* Parse configuration file to populate any params not already specified
      * via command-line options
     */
-    //parse_config_file(options, &ot);
+    parse_config_file(options, &ot);
 
     /* Now that we have all of our options set, we can validate them.
     */
     validate_options(options);
 
     return;
+}
+
+/* Dump the configuration
+*/
+void
+dump_config(fko_srv_options_t *opts)
+{
+    int i;
+    char *var, *val;
+
+    fprintf(stderr, "Current fwknopd config settings:\n");
+
+    for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
+        fprintf(stderr, "%3i. %-28s =  '%s'\n",
+            i,
+            config_ent_map[i],
+            (opts->config_ent[i] == NULL) ? "<not set>" : opts->config_ent[i]
+        );
 }
 
 /* Print usage message...

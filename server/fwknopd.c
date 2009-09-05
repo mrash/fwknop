@@ -46,6 +46,14 @@ main(int argc, char **argv)
     */
     config_init(&options, argc, argv);
 
+    /* Show config and exit dump config was wanted.
+    */
+    if(options.dump_config == 1)
+    {
+        dump_config(&options);
+        exit(EXIT_SUCCESS);
+    }
+
     /* TODO:  add fwknop server code below :)
     */
     printf("\nThis is fwknopd.  It would do something if it was coded"

@@ -29,6 +29,27 @@
 #include <getopt.h>
 #include <sys/stat.h>
 
+/* Some convenience macros */
+
+/* Characters allowed between a config parameter and its value.
+*/
+#define IS_CONFIG_PARAM_DELIMITER(x) (x == ' ' || x == '\t' || x == '=');
+
+/* End of line characters.
+*/
+#define IS_LINE_END(x) (x == '\n' || x == '\r' || x == ';');
+
+/* Characters in the first position of a line that make it considered
+ * empty or otherwise non-interesting (like a comment).
+*/
+#define IS_EMPTY_LINE(x) ( \
+    x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
+)
+
+/* String compare of macro
+*/
+#define CONF_VAR_IS(n, v) (strcmp(n, v) == 0)
+
 /* Long options values (for those that may not have a short option).
 */
 enum {
@@ -39,6 +60,7 @@ enum {
     FIREWALL_LOG,
     NOOP /* Just to be a marker for the end */
 };
+
 
 /* Our program command-line options...
 */
@@ -72,6 +94,7 @@ typedef struct opts_track {
 /* Function Prototypes
 */
 void config_init(fko_srv_options_t *options, int argc, char **argv);
+void dump_config(fko_srv_options_t *options);
 void usage(void);
 
 #endif /* CONFIG_INIT_H */
