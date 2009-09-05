@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 09/02/2009
+.\"      Date: 09/05/2009
 .\"    Manual:
 .\"    Source:
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "09/02/2009" "" ""
+.TH "FWKNOP" "8" "09/05/2009" "" ""
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -412,23 +412,90 @@ Packet contents printed to stdout at the fwknop client when creating an \(lqacce
 .sp
 Use the Single Packet Authorization mode to gain access to tcp/22 (ssh) and udp/53 running on the system 10\&.0\&.0\&.123 from the IP 192\&.168\&.10\&.4:
 .sp
-\fB$ fwknop \-A "tcp/22,udp/53" \-a 192\&.168\&.10\&.4 \-D 10\&.0\&.0\&.123\fR
+.\" .if n \{\
+.\" .RS 4
+.\" .\}
+.\" .nf
+.ft CW
+.nf
+.ne 1
+    $ fwknop \-A "tcp/22,udp/53" \-a 192\&.168\&.10\&.4 \-D 10\&.0\&.0\&.123
+.ft R
+.fi
+.\" .fi
+.\" .if n \{\
+.\" .RE
+.\" .\}
 .sp
 Same as above example, but gain access from whatever source IP is seen by the fwknop server (useful if the fwknop client is behind a NAT device):
 .sp
-\fB$ fwknop \-A "tcp/22,udp/53" \-s \-D 10\&.0\&.0\&.123\fR
+.\" .if n \{\
+.\" .RS 4
+.\" .\}
+.\" .nf
+.ft CW
+.nf
+.ne 1
+    $ fwknop \-A "tcp/22,udp/53" \-s \-D 10\&.0\&.0\&.123
+.ft R
+.fi
+.\" .fi
+.\" .if n \{\
+.\" .RE
+.\" .\}
 .sp
 Same as above example, but use the IP identification website \fIhttp://www\&.whatismyip\&.com\fR to derive the client IP address\&. This is a safer method of acquiring the client IP address than using the \fB\-s\fR option because the source IP is put within the encrypted packet instead of having the \fBfwknopd\fR daemon grant the requested access from whatever IP address the SPA packet originates:
 .sp
-\fB$ fwknop \-A "tcp/22,udp/53" \-R \-D 10\&.0\&.0\&.123\fR
+.\" .if n \{\
+.\" .RS 4
+.\" .\}
+.\" .nf
+.ft CW
+.nf
+.ne 1
+    $ fwknop \-A "tcp/22,udp/53" \-R \-D 10\&.0\&.0\&.123
+.ft R
+.fi
+.\" .fi
+.\" .if n \{\
+.\" .RE
+.\" .\}
 .sp
 Use the Single Packet Authorization mode to gain access to tcp/22 (ssh) and udp/53 running on the system 10\&.0\&.0\&.123, and use GnuPG keys to encrypt and decrypt:
 .sp
-\fB$ fwknop \-A "tcp/22,udp/53" \-\-gpg\-sign ABCD1234 \-\-gpg\-\-recipient 1234ABCD \-R \-D 10\&.0\&.0\&.123\fR
+.\" .if n \{\
+.\" .RS 4
+.\" .\}
+.\" .nf
+.ft CW
+.nf
+.ne 1
+    $ fwknop \-A "tcp/22,udp/53" \-\-gpg\-sign ABCD1234 \-\-gpg\-\-recipient
+    1234ABCD \-R \-D 10\&.0\&.0\&.123
+.ft R
+.fi
+.\" .fi
+.\" .if n \{\
+.\" .RE
+.\" .\}
 .sp
 Instruct the fwknop server running at 10\&.0\&.0\&.123 to allow 172\&.16\&.5\&.4 to connect to TCP/22, but spoof the authorization packet from an IP associated with www\&.yahoo\&.com:
 .sp
-\fB# fwknop \-\-Spoof\-src \(cqwww\&.yahoo\&.com\(cq \-A tcp/22 \-a 172\&.16\&.5\&.4 \-D 10\&.0\&.0\&.123\fR
+.\" .if n \{\
+.\" .RS 4
+.\" .\}
+.\" .nf
+.ft CW
+.nf
+.ne 1
+    # fwknop \-\-Spoof\-src \(cqwww\&.yahoo\&.com\(cq \-A tcp/22 \-a 172\&.16\&.5\&.4 \-D
+    10\&.0\&.0\&.123
+.ft R
+.fi
+.\" .fi
+.\" .if n \{\
+.\" .RE
+.\" .\}
 .SH "DEPENDENCIES"
 .sp
 \fBfwknop\fR requires \fIlibfko\fR (which is normally included with both source and binary distributions\&.

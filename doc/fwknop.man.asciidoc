@@ -338,13 +338,17 @@ Use the Single Packet Authorization mode to gain access to
 tcp/22 (ssh) and udp/53 running on the system 10.0.0.123 from
 the IP 192.168.10.4:
 
-*$ fwknop -A "tcp/22,udp/53" -a 192.168.10.4 -D 10.0.0.123*
+..........................
+    $ fwknop -A "tcp/22,udp/53" -a 192.168.10.4 -D 10.0.0.123
+..........................
 
 Same as above example, but gain access from whatever source IP
 is seen by the fwknop server (useful if the fwknop client is
 behind a NAT device):
 
-*$ fwknop -A "tcp/22,udp/53" -s -D 10.0.0.123*
+..........................
+    $ fwknop -A "tcp/22,udp/53" -s -D 10.0.0.123
+..........................
 
 Same as above example, but use the IP identification website
 'http://www.whatismyip.com' to derive the client IP address.  This
@@ -353,21 +357,27 @@ is a safer method of acquiring the client IP address than using the
 instead of having the *fwknopd* daemon grant the requested access
 from whatever IP address the SPA packet originates:
 
-*$ fwknop -A "tcp/22,udp/53" -R -D 10.0.0.123*
+..........................
+    $ fwknop -A "tcp/22,udp/53" -R -D 10.0.0.123
+..........................
 
 Use the Single Packet Authorization mode to gain access to tcp/22
 (ssh) and udp/53 running on the system 10.0.0.123, and use GnuPG keys
 to encrypt and decrypt:
 
-*$ fwknop -A "tcp/22,udp/53" --gpg-sign ABCD1234 --gpg--recipient
-1234ABCD -R -D 10.0.0.123*
+..........................
+    $ fwknop -A "tcp/22,udp/53" --gpg-sign ABCD1234 --gpg--recipient
+    1234ABCD -R -D 10.0.0.123
+..........................
 
 Instruct the fwknop server running at 10.0.0.123 to allow 172.16.5.4
 to connect to TCP/22, but spoof the authorization packet from an IP
 associated with www.yahoo.com:
 
-*# fwknop --Spoof-src ’www.yahoo.com’ -A tcp/22 -a 172.16.5.4 -D
-10.0.0.123*
+..........................
+    # fwknop --Spoof-src ’www.yahoo.com’ -A tcp/22 -a 172.16.5.4 -D
+    10.0.0.123
+..........................
 
 
 DEPENDENCIES
