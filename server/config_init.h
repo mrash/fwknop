@@ -61,6 +61,9 @@ enum {
     NOOP /* Just to be a marker for the end */
 };
 
+/* Our getopt_long options string.
+*/
+#define GETOPTS_OPTION_STRING "c:Dfhi:KO:RSvV"
 
 /* Our program command-line options...
 */
@@ -68,6 +71,7 @@ static struct option cmd_opts[] =
 {
     {"config-file",         1, NULL, 'c'},
     {"dump-config",         0, NULL, 'D'},
+    {"foreground",          0, NULL, 'f'},
     {"fw-list",             0, NULL, FIREWALL_LIST },
     {"fw-flush",            0, NULL, FIREWALL_FLUSH },
     {"fw-log",              1, NULL, FIREWALL_LOG },
@@ -83,13 +87,6 @@ static struct option cmd_opts[] =
     {"version",             0, NULL, 'V'},
     {0, 0, 0, 0}
 };
-
-/* Track config options set via command-line.
- * --DSS: XXX: These will need to be reviewed...
-*/
-typedef struct opts_track {
-    unsigned int got_server_port:1;
-} opts_track_t;
 
 /* Function Prototypes
 */

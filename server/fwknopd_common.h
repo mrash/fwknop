@@ -44,7 +44,7 @@
 /* Some program defaults.
 */
 #ifndef DEF_CONF_DIR
-  #define DEF_CONF_DIR      "/etc/fwknop"
+  #define DEF_CONF_DIR      SYSCONFDIR"/fwknop"
 #endif
 #define DEF_CONFIG_FILE     DEF_CONF_DIR"/"MY_NAME".conf"
 #define DEF_INTERFACE       "eth0"
@@ -99,7 +99,7 @@ enum {
     CONF_IPFW_SET_NUM,
     CONF_IPFW_DYNAMIC_INTERVAL,
     CONF_PCAP_CMD_TIMEOUT,
-    CONF_GPG_DEFAULT_HOME_DIR,
+    CONF_GPG_HOME_DIR,
     CONF_PCAP_PKT_FILE,
     CONF_BLACKLIST,
     CONF_MAX_HOPS,
@@ -150,7 +150,7 @@ enum {
  * Note: It is very important this list matches the one above (with the
  *       exception of the last entry above).
 */
-static char *config_ent_map[NUMBER_OF_CONFIG_ENTRIES] = {
+static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "CONFIG_FILE",
     "FIREWALL_LOG",
     "GPG_KEY",
@@ -183,7 +183,7 @@ static char *config_ent_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "IPFW_SET_NUM",
     "IPFW_DYNAMIC_INTERVAL",
     "PCAP_CMD_TIMEOUT",
-    "GPG_DEFAULT_HOME_DIR",
+    "GPG_HOME_DIR",
     "PCAP_PKT_FILE",
     "BLACKLIST",
     "MAX_HOPS",
@@ -235,6 +235,7 @@ typedef struct fko_srv_options
      * then exit.
     */
     unsigned char   dump_config;        /* Dump current configuration flag */
+    unsigned char   foreground;         /* Run in foreground flag */
     unsigned char   restart;            /* Restart fwknopd flag*/
     unsigned char   verbose;            /* Verbose mode flag */
     unsigned char   test;               /* Test mode flag */
@@ -242,7 +243,7 @@ typedef struct fko_srv_options
     /* This array holds all of the config file entry values as strings
      * indexed by their tag name.
     */
-    char           *config_ent[NUMBER_OF_CONFIG_ENTRIES];
+    char           *config[NUMBER_OF_CONFIG_ENTRIES];
 
 } fko_srv_options_t;
 

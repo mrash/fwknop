@@ -35,7 +35,7 @@
 void
 set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
 {
-    int slen;
+    int space_needed;
 
     /* Sanity check the index value.
     */
@@ -53,17 +53,23 @@ set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
         exit(EXIT_FAILURE);
     }
 
-    slen = strlen(value) + 1;
+    /* If this particular entry was already set (i.e. not NULL), then
+     * assume it needs to be freed first.
+    */
+    if(opts->config[var_ndx] != NULL)
+        free(opts->config[var_ndx]);
 
-    opts->config_ent[var_ndx] = malloc(slen);
+    space_needed = strlen(value) + 1;
 
-    if(opts->config_ent[var_ndx] == NULL)
+    opts->config[var_ndx] = malloc(space_needed);
+
+    if(opts->config[var_ndx] == NULL)
     {
         fprintf(stderr, "*Fatal memory allocation error!\n");
         exit(EXIT_FAILURE);
     }
 
-    strlcpy(opts->config_ent[var_ndx], value, slen);
+    strlcpy(opts->config[var_ndx], value, space_needed);
  
     return;
 }
@@ -71,7 +77,7 @@ set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
 /* Parse the config file...
 */
 static void
-parse_config_file(fko_srv_options_t *options, opts_track_t *ot)
+parse_config_file(fko_srv_options_t *options, char *config_file)
 {
     FILE           *cfile_ptr;
     unsigned int    numLines = 0;
@@ -86,20 +92,20 @@ parse_config_file(fko_srv_options_t *options, opts_track_t *ot)
     /* First see if the config file exists.  If it doesn't, complain
      * and go on with program defaults.
     */
-    if(stat(options->config_ent[CONF_CONFIG_FILE], &st) != 0)
+    if(stat(config_file, &st) != 0)
     {
         fprintf(stderr,
-            "** Config file: '%s' was not found. Attempting to continue with defaults...\n",
-            options->config_ent[CONF_CONFIG_FILE]
+            "** WARNING - Config file: '%s' was not found.\n",
+            config_file
         );
 
         return;
     }
 
-    if ((cfile_ptr = fopen(options->config_ent[CONF_CONFIG_FILE], "r")) == NULL)
+    if ((cfile_ptr = fopen(config_file, "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open config file: %s\n",
-                options->config_ent[CONF_CONFIG_FILE]);
+                config_file);
         exit(EXIT_FAILURE);
     }
 
@@ -117,20 +123,20 @@ parse_config_file(fko_srv_options_t *options, opts_track_t *ot)
         if(sscanf(conf_line_buf, "%s %[^;\n\r]", var, val) != 2)
         {
             fprintf(stderr,
-                "*Invalid config file entry at line %i.\n - '%s'",
-                numLines, conf_line_buf
+                "*Invalid config file entry in %s at line %i.\n - '%s'",
+                config_file, numLines, conf_line_buf
             );
             continue;
         }
 
         /*
-        fprintf(stderr, "LINE: %s\tVar: %s, Val: '%s'\n", conf_line_buf, var, val);
+        fprintf(stderr, "CONF FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n", config_file, conf_line_buf, var, val);
         */
 
         good_ent = 0;
         for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         {
-            if(CONF_VAR_IS(config_ent_map[i], var))
+            if(CONF_VAR_IS(config_map[i], var))
             {
                 set_config_entry(options, i, val);
                 good_ent++;
@@ -139,7 +145,10 @@ parse_config_file(fko_srv_options_t *options, opts_track_t *ot)
         }
 
         if(good_ent == 0)
-            fprintf(stderr, "*Ignoring unknown configuration parameter: '%s'\n");
+            fprintf(stderr,
+                "*Ignoring unknown configuration parameter: '%s' in %s\n",
+                var, config_file
+            );
     }
 
     fclose(cfile_ptr);
@@ -163,24 +172,109 @@ validate_options(fko_srv_options_t *options)
 void
 config_init(fko_srv_options_t *options, int argc, char **argv)
 {
-    int                 cmd_arg, index;
-    struct opts_track   ot;
+    int             cmd_arg, index;
+    unsigned char   got_conf_file = 0, got_override_config = 0;
+
+    char            override_file[MAX_LINE_LEN];
+    char           *ndx, *cmrk;
 
     /* Zero out options and opts_track.
     */
     memset(options, 0x00, sizeof(fko_srv_options_t));
-    memset(&ot, 0x00, sizeof(ot));
 
-    /* Establish a few defaults such as UDP/62201 for sending the SPA
-     * packet (can be changed with --server-proto/--server-port)
+    /* First, scan the command-line args for an alternate configuration
+     * file.  If we find it, use it, otherwise use the default.
+     * We also grab any override config files as well.
     */
-
     while ((cmd_arg = getopt_long(argc, argv,
-            "c:Dhi:KO:RSvV", cmd_opts, &index)) != -1) {
+            GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
+
+        /* Look for configuration file arg.
+        */
+        if(cmd_arg == 'c')
+        {
+            set_config_entry(options, CONF_CONFIG_FILE, optarg);
+            got_conf_file++;
+
+            /* If we already have the config_override option, we are done.
+            */
+            if(got_override_config > 0)
+                break;
+        }
+
+        /* Look for override configuration file arg.
+        */
+        if(cmd_arg == 'O')
+        {
+            set_config_entry(options, CONF_OVERRIDE_CONFIG, optarg);
+            got_conf_file++;
+
+            /* If we already have the conf_file option, we are done.
+            */
+            if(got_conf_file > 0)
+                break;
+        }
+    }
+
+    /* If no alternate configuration file was specified, we use the
+     * default.
+    */
+    if(options->config[CONF_CONFIG_FILE] == NULL)
+        set_config_entry(options, CONF_CONFIG_FILE, DEF_CONFIG_FILE);
+
+    /* Parse configuration file to populate any params not already specified
+     * via command-line options.
+    */
+    parse_config_file(options, options->config[CONF_CONFIG_FILE]);
+
+    /* If there are override configuration entries, process them
+     * here.
+    */
+    if(options->config[CONF_OVERRIDE_CONFIG] != NULL)
+    {
+        /* Make a copy of the overrid_config string so we can munge it.
+        */
+        strlcpy(override_file, options->config[CONF_OVERRIDE_CONFIG], MAX_LINE_LEN);
+
+        ndx  = override_file;
+        cmrk = strchr(ndx, ',');
+
+        if(cmrk == NULL)
+        {
+            /* Only one to process...
+            */
+            parse_config_file(options, ndx);
+
+        } else {
+            /* Walk the string pulling the next config override
+             * at the comma delimiters.
+            */
+            while(cmrk != NULL) {
+                *cmrk = '\0';
+                parse_config_file(options, ndx);
+                ndx = cmrk + 1;
+                cmrk = strchr(ndx, ',');
+            }
+
+            /* Process the last entry
+            */
+            parse_config_file(options, ndx);
+        }
+    }
+
+    /* Reset the options index so we can run through them again.
+    */
+    optind = 0;
+
+    /* Last, but not least, we process command-line options (some of which
+     * may override configuration file options.
+    */
+    while ((cmd_arg = getopt_long(argc, argv,
+            GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'c':
-                set_config_entry(options, CONF_CONFIG_FILE, optarg);
+                /* This was handled earlier */
                 break;
             case 'D':
                 options->dump_config = 1;
@@ -198,13 +292,13 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
                 break;
             case FIREWALL_LOG:
-                set_config_entry(options, FIREWALL_LOG, optarg);
+                set_config_entry(options, CONF_FIREWALL_LOG, optarg);
                 break;
             case GPG_HOME_DIR:
-                set_config_entry(options, GPG_HOME_DIR, optarg);
+                set_config_entry(options, CONF_GPG_HOME_DIR, optarg);
                 break;
             case GPG_KEY:
-                set_config_entry(options, GPG_KEY, optarg);
+                set_config_entry(options, CONF_GPG_KEY, optarg);
                 break;
             case 'h':
                 usage();
@@ -220,7 +314,7 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
                 break;
             case 'O':
-                set_config_entry(options, CONF_OVERRIDE_CONFIG, optarg);
+                /* This was handled earlier */
                 break;
             case 'R':
                 fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
@@ -247,11 +341,6 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
         }
     }
 
-    /* Parse configuration file to populate any params not already specified
-     * via command-line options
-    */
-    parse_config_file(options, &ot);
-
     /* Now that we have all of our options set, we can validate them.
     */
     validate_options(options);
@@ -272,8 +361,8 @@ dump_config(fko_srv_options_t *opts)
     for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         fprintf(stderr, "%3i. %-28s =  '%s'\n",
             i,
-            config_ent_map[i],
-            (opts->config_ent[i] == NULL) ? "<not set>" : opts->config_ent[i]
+            config_map[i],
+            (opts->config[i] == NULL) ? "<not set>" : opts->config[i]
         );
 }
 
