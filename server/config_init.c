@@ -74,6 +74,20 @@ set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
     return;
 }
 
+/* Given a config parameter name, return its index or -1 if not found.
+*/
+int
+config_entry_index(fko_srv_options_t *opts, char *var)
+{
+    int i;
+
+    for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
+        if(opts->config[i] != NULL && CONF_VAR_IS(var, config_map[i]))
+            return(i);
+ 
+    return(-1);
+}
+
 /* Parse the config file...
 */
 static void
@@ -82,10 +96,13 @@ parse_config_file(fko_srv_options_t *options, char *config_file)
     FILE           *cfile_ptr;
     unsigned int    numLines = 0;
     unsigned int    i, good_ent;
+    int             cndx;
 
     char            conf_line_buf[MAX_LINE_LEN] = {0};
     char            var[MAX_LINE_LEN]  = {0};
     char            val[MAX_LINE_LEN]  = {0};
+    char            tmp1[MAX_LINE_LEN]  = {0};
+    char            tmp2[MAX_LINE_LEN]  = {0};
 
     struct stat     st;
 
@@ -130,7 +147,10 @@ parse_config_file(fko_srv_options_t *options, char *config_file)
         }
 
         /*
-        fprintf(stderr, "CONF FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n", config_file, conf_line_buf, var, val);
+        fprintf(stderr,
+            "CONF FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
+            config_file, conf_line_buf, var, val
+        );
         */
 
         good_ent = 0;
@@ -138,6 +158,22 @@ parse_config_file(fko_srv_options_t *options, char *config_file)
         {
             if(CONF_VAR_IS(config_map[i], var))
             {
+                /* First check to see if we need to do a varable expansion
+                 * on this value.  Note: this only supports one expansion and
+                 * only if the value starts with the variable.
+                */
+                if(*val == '$')
+                {
+                    if(sscanf((val+1), "%[A-Z_]%s", tmp1, tmp2))
+                    {
+                        if((cndx = config_entry_index(options, tmp1)) >= 0)
+                        {
+                            strlcpy(val, options->config[cndx], MAX_LINE_LEN);
+                            strlcat(val, tmp2, MAX_LINE_LEN);
+                        }
+                    }
+                }
+
                 set_config_entry(options, i, val);
                 good_ent++;
                 break;

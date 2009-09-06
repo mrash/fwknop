@@ -46,7 +46,7 @@
     x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
 )
 
-/* String compare of macro
+/* String compare macro.
 */
 #define CONF_VAR_IS(n, v) (strcmp(n, v) == 0)
 
