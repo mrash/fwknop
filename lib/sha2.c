@@ -36,6 +36,10 @@
 #include <assert.h>	/* assert() */
 #include "sha2.h"
 
+#if HAVE_SYS_BYTEORDER_H
+  #include <sys/byteorder.h>
+#endif
+
 /*
  * ASSERT NOTE:
  * Some sanity checking code is included using assert().  On my FreeBSD
@@ -86,8 +90,14 @@
  * made).
  */
 
-#ifdef WIN32
-  #define BYTE_ORDER BIG_ENDIAN
+#ifndef BYTE_ORDER
+  #ifdef WIN32
+    #define BYTE_ORDER BIG_ENDIAN
+  #elif defined(_BIG_ENDIAN)
+    #define BYTE_ORDER BIG_ENDIAN
+  #elif defined(_LITTLE_ENDIAN)
+    #define BYTE_ORDER LITTLE_ENDIAN
+  #endif
 #endif
 
 #if !defined(BYTE_ORDER) || (BYTE_ORDER != LITTLE_ENDIAN && BYTE_ORDER != BIG_ENDIAN)

@@ -48,6 +48,10 @@ extern "C" {
  */
 #include <sys/types.h>
 
+#if HAVE_INTTYPES_H
+  #define SHA2_USE_INTTYPES_H
+#endif
+
 #ifdef SHA2_USE_INTTYPES_H
   #include <inttypes.h>
 #endif /* SHA2_USE_INTTYPES_H */
