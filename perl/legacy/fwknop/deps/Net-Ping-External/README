@@ -1,0 +1,14 @@
+Net::Ping::External README
+
+Author: Colin McMillen (colinm@cpan.org)
+
+Installation:
+-------------
+perl Makefile.PL
+make
+make test
+make install
+
+Description:
+------------
+See the POD in External.pm for more information.

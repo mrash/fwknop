@@ -1,0 +1,89 @@
+#!/usr/bin/perl
+
+use strict;
+use Net::IPv4Addr qw (:all);
+use Getopt::Long;
+
+my %opts = ();
+
+sub usage() {
+  die <<EOU;
+usage: ipv4calc [--network | --broadcast | --netmask |
+		 --cidr | --address ] addr
+EOU
+}
+
+GetOptions( \%opts, "network", "broadcast", "netmask", "cidr", "address")
+  or usage;
+
+my $str = shift;
+$str or usage;
+
+my ($ip,$cidr)  = ipv4_parse($str);
+my ($network,$msk)  = ipv4_network($ip,$cidr);
+my ($broadcast) = ipv4_broadcast($ip,$cidr);
+
+if ( $opts{network}) {
+  print $network,"\n";
+} elsif ($opts{broadcast}) {
+  print $broadcast,"\n";
+} elsif ( $opts{netmask} ) {
+  print ipv4_cidr2msk( $msk ), "\n";
+} elsif ( $opts{address} ) {
+  print $ip, "\n";
+} elsif ( $opts{cidr} ) {
+  print  $msk, "\n";
+} else {
+  print <<EOF;
+Host:	    $ip
+Network:    $network/$msk
+Broadcast:  $broadcast
+EOF
+}
+
+1;
+
+__END__
+# Below is the stub of documentation for your module. You better edit it!
+=pod
+
+=head1 NAME
+
+  ipv4calc - Calculates IPv4 elements from an address.
+
+=head1 SYNOPSIS
+
+  ipv4calc [ --network | --broadcast | --netmask | 
+	     --address | --cidr ] addr
+
+=head1 DESCRIPTION
+
+If an option is specified B<ipv4calc> calculates the requested element
+from the address and prints it on stdout.
+
+If multiple options are specified, only the first one is printed.
+
+If no options are specified, the program prints the host part of the
+address, the network and the broadcast address as deduced from the
+given address.
+
+If address doesn't contains a netmask or mask length, the default
+one is assumed.
+
+=head1 AUTHOR
+
+Francis J. Lacoste <francis.lacoste@iNsu.COM>
+
+=head1 COPYRIGHT
+
+Copyright (c) 1999,2000 iNsu Innovations Inc.
+All rights reserved.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms as perl itself.
+
+=head1 SEE ALSO
+
+Network::IPv4Addr(3).
+
+=cut

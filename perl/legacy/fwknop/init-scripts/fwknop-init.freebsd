@@ -1,0 +1,27 @@
+#!/bin/sh
+#
+# $Id: fwknop-init.freebsd 661 2007-06-01 02:55:08Z mbr $
+#
+
+# PROVIDE: fwknop
+
+. /etc/rc.subr
+
+name="fwknop"
+start_cmd="fwknop_start"
+stop_cmd="fwknop_stop"
+
+fwknop_start()
+{
+	echo "Starting fwknop."
+	/usr/sbin/fwknopd
+}
+
+fwknop_stop()
+{
+	echo "Stopping fwknop."
+	/usr/sbin/fwknopd --Kill
+}
+
+load_rc_config $name
+run_rc_command "$1"

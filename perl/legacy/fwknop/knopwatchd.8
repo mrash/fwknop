@@ -1,0 +1,47 @@
+.\"
+.TH KNOPWATCHD 8 "February 2009" Linux
+.SH NAME
+.B knopwatchd
+\- "FwKnop Watch Daemon" checks to make sure knopmd, knoptm and fwknop daemons
+are running.
+.SH SYNOPSIS
+.B knopwatchd [options]
+.SH DESCRIPTION
+.B knopwatchd
+checks on an interval of every five seconds to make sure that knopmd, knoptm
+and fwknopd are running on the box.  If any of the three daemons have died,
+knopwatchd will restart the daemon and notify each email address listed in the
+EMAIL_ADDRESSES variable that the daemon has been restarted.
+.B knopwatchd
+uses the fwknop.conf configuration file which by default is located at
+/etc/fwknop/, but a different path can be specified on the command line.
+.SH OPTIONS
+.TP
+.BR \-c\ \<config\-file>
+Specify path to config file instead of using the default configuration file
+/etc/fwknop/fwknop.conf.
+.TP
+.BR \-D
+Dump the configuration values that
+.B knopwatchd
+derives from /etc/fwknop/fwknop.conf (or other override files) on STDERR.
+.TP
+.BR \-h
+Display usage information and exit.
+.TP
+.BR \-O\ \<config\-file>
+Override config variable values that are normally read from the
+/etc/fwknop/fwknop.conf file with values from the specified file.  Multiple
+override config files can be given as a comma separated list.
+.SH SEE ALSO
+.BR fwknop (8),
+.BR fwknopd (8),
+.BR knopmd (8),
+.SH AUTHOR
+Michael Rash (mbr@cipherdyne.org)
+
+.SH DISTRIBUTION
+.B fwknop
+is distributed under the GNU General Public License (GPL), and the latest
+version may be downloaded from
+.B http://www.cipherdyne.org

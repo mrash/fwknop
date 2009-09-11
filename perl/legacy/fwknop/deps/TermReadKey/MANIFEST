@@ -1,0 +1,10 @@
+Configure.pm
+MANIFEST
+Makefile.PL
+README
+ReadKey.pm
+ReadKey.xs
+genchars.pl
+ppport.h
+test.pl
+META.yml                                Module meta-data (added by MakeMaker)

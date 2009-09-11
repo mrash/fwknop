@@ -1,0 +1,14 @@
+This package was debianized by Bernd Eckenfels <ecki@lina.inka.de> on
+Sat, 25 Sep 1999 01:26:34 +0200.
+
+It was downloaded from http://iNDev.iNsu.COM/IPv4Addr/
+
+Upstream Author(s): Francis J. Lacoste <francis.lacoste@iNsu.COM>
+
+Copyright:
+
+Copyright (c) 1999 Francis J. Lacoste and iNsu Innovations Inc . 
+All rights reserved.
+
+This package is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.

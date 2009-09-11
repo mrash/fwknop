@@ -1,0 +1,51 @@
+If you want to implement a subip protocol then read this,please.    
+
+Let me to explain my propositions. I think that
+
+1) There is no reason to implement all of the protocols in the 
+one module.
+There are so many protocols.
+
+2)There is a "generic" subclass which can be used for the implementing
+those subip protocols.
+
+You could to write the module for manipulate your desired protocol
+and use it with Net::RawIP.
+Let imagine that you have a module NetPacket::PROTO which know about
+a low level of the PROTO.
+
+Then 
+
+######################
+#!/usr/bin/perl
+
+use Net::RawIP;
+use NetPacket::PROTO;
+
+$proto = new NetPacket::PROTO; 
+$proto->set(.......);
+$datagramm = $proto->packet;
+
+$packet = new Net::RawIP({
+                     ip => { protocol => NUMBER_OF_PROTO },
+                     generic => { data => $datagramm }
+                    });
+$packet->send;
+....
+....
+($datagramm) = $packet->get({generic => [qw(data)]});
+
+$proto->bset($datagramm);
+
+($field1,$field2) = $proto->get(.....);
+
+####################
+
+So you have to implement the methods (new,set,bset,get) for your desired
+protocol in your NetPacket::PROTO and you could use it with Net::RawIP.  
+
+Is it ok for you ?
+
+Regards,
+        Sergey.
+

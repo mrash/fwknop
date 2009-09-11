@@ -1,0 +1,90 @@
+.\"
+.TH KNOPTM 8 "August, 2009" Linux
+.SH NAME
+.B knoptm
+\- Daemon in charge to remove firewall rules.
+
+.SH DESCRIPTION
+.B knoptm
+is a daemon that removes rule entries from the iptables or ipfw policies to which
+fwknop has added access rules for legitimate fwknop PK/SPA clients.  This daemon
+runs in all authentication modes supported by fwknopd (both port knocking and SPA),
+and enforces rule timeouts that defined by the
+.I /etc/fwknop/access.conf
+file.
+
+.SH OPTIONS
+.TP
+.BR \-c "\fR,\fP " \-\^\-config\ \<config-file>
+When run as a daemon
+.B knoptm
+references the file
+.B /etc/fwknop/fwknop.conf
+for various run-time configuration
+variables. The path to this file can be changed through the use of the
+.B \-\-config
+command line option.
+.TP
+.BR \-i "\fR,\fP " \-\^\-interface
+Specify the interface that
+.B fwknopd
+sniffs to acquire packet data.  This is
+used for running interface checks, such as checking whether the interface
+has been deleted and recreated (e.g. ppp restart for a VPN connection).
+The
+.B fwknopd
+daemon passes this argument on the
+.B knoptm
+command line.
+.TP
+.BR \-\^\-Debug-to-file\ \<file>
+Allow the user to collect outputs from the knoptm daemon by writing debug
+informations to a specific file.
+.TP
+.BR \-\^\-firewall-type\ \<firewall>
+Manually specify the firewall type from the command line.
+.TP
+.BR \-h "\fR,\fP " \-\^\-help
+Display usage information and exit.
+.TP
+.BR \-V "\fR,\fP " \-\^\-Version
+Display version information and exit.
+.TP
+.BR  \-\^\-Lib-dir\ \<directory>
+Path to the perl modules directory (not usually necessary).
+.TP
+.BR \-l ", " " \-\^\-locale\ \<locale>
+Provide a locale setting other than the default "C" locale.
+.TP
+.BR \-\^\-no-locale
+Do not set the locale at all so that the default system locale will apply.
+.TP
+.BR \-\^\-no-logs
+Do not generate any log output or emails (fwknop_test.pl uses this).
+.TP
+.BR \-\^\-no-voluntary-exits
+Disregard ENABLE_VOLUNTARY_EXITS setting. This way fwknopd/knoptm is not allowed
+to be restarted periodically according to EXIT_INTERVAL.
+.TP
+.BR \-O "\fR,\fP " \-\^\-Override-config\ \<file>
+Override config variable values that are normally read from the
+/etc/fwknop/fwknop.conf file with values from the specified file. Multiple
+override config files can be given as a comma separated list.
+
+.SH DIAGNOSTICS
+.B knoptm
+can be run in debug mode with the \-\-debug command line option. This will
+disable daemon mode execution, and print verbose information to the screen
+on STDERR.
+
+.SH "SEE ALSO"
+.BR fwknopd (8),
+
+.SH AUTHOR
+Michael Rash <mbr@cipherdyne.org>
+
+.SH DISTRIBUTION
+.B knoptm
+is distributed under the GNU General Public License (GPL), and the latest
+version may be downloaded from
+.B http://www.cipherdyne.org/

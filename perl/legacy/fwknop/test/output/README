@@ -1,0 +1,16 @@
+This directory is used by the fwknop test suite to store test output (both
+stdout and stderr) from various tests against the fwknopd daemon and the
+fwknop client.  The fwknop test suite creates a file in this directory that
+begins with a test number prefix for the current test.
+
+The files in this directory are useful for debugging purposes, and if there is
+a problem running fwknop on a particular system then the information in this
+directory along with the output of the test suite may provide a clue as to
+why.  If fwknop appears to not be working properly and you want additional
+help to diagnose the problem, you can tar up the output/ directory and send it
+to Michael Rash at the following email address: mbr@cipherdyne.org.  NOTE:
+the information in this directory is sensitive and contains the local firewall
+policy, interface IP addresses, and more.  Before sending the output/
+directory to anyone, you can use the --Prepare-results argument on the
+fwknop_test.pl command line to automatically anonymize the test output
+results.

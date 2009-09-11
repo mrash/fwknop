@@ -1,0 +1,51 @@
+Revision history for Perl extension Net::Ping::External.
+
+0.11: Feb 11 2003
+- Fixed a problem that caused incorrect results in a lot of (and perhaps 
+  all?) versions of Windows.  
+- Also fixed the _ping_bsd function to actually call ping and return a 
+  value (oops).
+- Peter N. Lewis submitted a _ping_darwin function that will hopefully 
+  work on all versions of Mac OS X.
+- Changed the test suite to only implore people to send me test results 
+  if there were any failures.
+- Test suite can now run non-interactively, as it doesn't prompt the 
+  user to hit enter.
+
+0.10: Nov 10 2001
+- Fixed unrecognized characters in _ping_freebsd that caused the
+  module to die on some systems. (Thanks to Jonathan Stowe for the
+  patch.)
+
+0.09: Nov 10 2001
+- Some additions and revisions to POD documentation.
+- Further fixes to Win32 support, by Randy Moore.
+- Fixes for FreeBSD support, by Marc-Andre Dumas.
+
+0.08: Sep 30 2001
+- Added support for cygwin port of perl, thanks to Alexei Gretchaninov.
+
+0.07: Sep 27 2001 
+- Added support for Mac OS X (darwin) and fixed support for Win NT.
+  (Thanks to Randy Moore for the fix.)
+
+0.06: Apr 25 2001
+- Added support for a fair number of new platforms.
+
+0.05: Apr 20 2001
+- Whoops, had a relatively major bug in 0.04 that made ping fail on
+  most systems. Fixed that.
+
+0.04: Apr 20 2001
+- Added "count" and "size" options.
+
+0.03: Mar 23 2001
+- Removed "use warnings" and "use strict" directives. Should still work
+  under warnings and strict, however.
+
+0.02: Mar 21 2001
+- Added "ip" option to the ping() function.
+- Fixed MANIFEST file.
+
+0.01: Mar 11 2001
+- Original version.

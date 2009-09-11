@@ -1,0 +1,115 @@
+Revision History for Class::MethodMaker (versions 2)
+
+2.11	Mar 24 2008
+	- Drop Module::Build support
+	  (which was broken anyway for a long time, #19167, #16241, #17059, #15987, #13755)
+	- Correct "use version" statements (#19585)
+
+2.10	Apr 27 09:24:30 CEST 2007
+	- Fixed SIGNATURE
+
+2.09	Dec  5  0:31AM GMT 2006
+	- Fixed compile problems with 5.9.4 upwards (rt.cpan.org #22413)
+
+2.07	Apr 10 10:13PM GMT 2005
+	- Fixed case error in Build.PL (rt.cpan.org #12107)
+	- Re-jiggle INSTALL* settings in Makefile.PL
+
+2.06	Mar 13  6:25PM GMT 2005
+	- Fix for passing arguments to v1 object
+	- Add patch to correctly allow single hashref initialization of hashes
+	  patch courtesy of tuck at whistlingfish dot net.
+
+2.05	Jan 30  1:28 PM GMT 2005
+	- Rejig build system, using ExtUtils::MakeMaker to play nicely
+
+2.04	Oct 16  3:03 PM GMT 2004
+	- Use Module::Build's compatibility mode to create a Makefile.PL
+	- Add an argument of the subject object to default ctor calls
+
+2.03	Oct  9  6:12 PM GMT 2004
+	- Use Module::Build rather than ExtUtils::MakeMaker
+	- Add XS code to set created sub names in profiler, etc.
+	- Documentation tweaks
+
+2.02	Apr  9 11:02 AM GMT 2004
+	- Fix redefine warnings (with V1Compat) under perl-5.8.3
+
+2.01	Apr  3 12:22 PM GMT 2004
+	- Fix obscure handling of -hash_init with v1 hash 
+	- Fix hash in v1 mode to return reference to the actual storage
+	- Make VERSION evaluate on single line to work with 
+	  ExtUtils::MakeMaker.
+	  Patch contributed by Ed Avis (ed at membled dot com)
+
+
+2.00	Nov 19 10:13 AM GMT 2003
+	- Flatten list passed to * in v1 list
+	- Fix buglet in object that called default_ctor method even when an
+	  explicit value was supplied
+	- Add compatiblity support for boolean
+	- Lots of documentation improvements
+	- Add html target to Makefile.PL
+	- Add implementation of _clear by default
+	- Add *_clear to array
+	- Add support for 5.6.x
+	- Add new -singleton
+	- Add compatiblity support for singleton
+	- Add compatiblity support for get_concat
+	- Add basic support for INTEGER type
+	- Add compatiblity support for get_counter
+	- Bug fixes to read callback
+	- Add compatiblity support for key_{attrib,with_create}
+
+2.00a09     Sep 18 11:04 AM GMT 2003
+	- Add tie_scalar, static_hash, tie_hash for V1
+	- Abandon lvalue methods
+	- Add read & store callbacks (incomplete implementation; just enough
+	  for V1 methods)
+	- Add code for V1
+	- Add new_with_hash_with_init for V1
+	- Correct handling of default in array to auto-instantiate for prior
+	  keys as needed
+	- fix object_tie_list
+	- add set_once from V1
+	- add singleton for V1
+	- add basic INTEGER handling
+	- add get_concat, get_counter for V1
+	- add key_attrib for V1
+
+2.00a08     Jul 19 10:07 AM GMT 2003
+	- Fixes for static_get_set
+	- Add v1 tie_list, static_list, object_tie_list
+	- Add 'new'
+	- Add new_with_args for V1
+	- Add basic hash handling
+	- Many doc patches
+
+2.00a07     May 10  8:11 AM GMT 2003
+	- Tune object '*' method
+	- Add !syntax, nested scope, simple name, repeated calls to V2 syntax
+	- Add method-renaming syntax
+	- Add basic array type
+	- Make basic v1 lists work
+	- Add tie functionality
+	- Add v1 object_list
+
+2.00a06 Wed Jun 19  6:56 PM GMT 2002
+	- Add object v1 compatibility
+
+2.00a05 Tue Jun 18  7:06 AM GMT 2002
+	- Add '-default', '-default_ctor' options to scalar
+
+2.00a04 Sun Jun 16  3:48 PM GMT 2002
+	- Add '-forward' option to scalar
+
+2.00a03 Sun Jun 16 12:44 AM GMT 2002
+	- Add '-type' option to scalar
+
+2.00a02	Tue Jun 11  8:10 PM GMT 2002
+	- Add tests for scalar (v2)
+	- Add warning(s) for v2 types appearing in v1 mode
+
+2.00a01	Fri Jun  6  2:38 AM GMT 2002
+	- Basic scalar implemented, passing get_set and static_get_set tests
+	  from v1

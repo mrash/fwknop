@@ -1,0 +1,11 @@
+This directory contains various fwknopd configuration files (both for global
+config directives as well as individual access SOURCE definitions).  The
+fwknop test suite is driven by files in this directory.
+
+The client-gpg and server-gpg directories contain GnuPG keys that are used to
+test SPA communications that are encrypted/decrypted with GnuPG.  The key ID's
+and passwords are (these keys are not meant for any use other than for testing
+fwknop):
+
+6A3FAD56: fwknop client test key  (password: fwknoptest)
+361BBAD4: fwknopd server test key (password: fwknoptest)

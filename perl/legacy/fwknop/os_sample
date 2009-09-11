@@ -1,0 +1,37 @@
+[+] Entering OS fingerprinting mode.
+[+] Parsing iptables log: os_sample.pkts
+[+] 195.116.91.33
+      8192:128:1:44:M*                 Windows:NT:4.0:Windows NT 4.0 (older)
+[+] 68.164.65.180
+      %8192:128:1:48:M*,N,N,S          Windows:2000:SP2+:Windows 2000 SP2, XP SP1 (seldom 98 4.10.2222)
+      *:128:1:48:M*,N,N,S              @Windows:2000::Windows XP/2000
+      %8192:128:1:48:M*,N,N,S          Windows:XP:SP1:Windows 2000 SP2, XP SP1 (seldom 98 4.10.2222)
+      *:128:1:48:M*,N,N,S              @Windows:XP::Windows XP/2000
+[+] 158.42.187.144
+      65535:128:1:48:M*,N,N,S          Windows:XP:SP1:Windows 2000 SP4, XP SP1
+      65535:128:1:48:M*,N,N,S          Windows:2000:SP4:Windows 2000 SP4, XP SP1
+      *:128:1:48:M*,N,N,S              @Windows:2000::Windows XP/2000
+      *:128:1:48:M*,N,N,S              @Windows:XP::Windows XP/2000
+[+] 24.5.11.161
+      *:128:1:64:M*,N,W*,N,N,T0,N,N,S  @Windows:XP:RFC1323:Windows XP (RFC1323, w+)
+[+] 62.153.94.66
+      S22:64:1:60:M*,S,T,N,W0          Linux:2.2::Linux 2.2
+[+] 207.126.116.62
+      8192:64:1:44:M1460               Eagle:::Eagle Secure Gateway
+[+] 80.145.183.182
+      *:128:1:52:M*,N,W0,N,N,S         @Windows:XP:RFC1323:Windows XP/2000 (RFC1323 no tstamp)
+      32767:128:1:52:M*,N,W0,N,N,S     Windows:98::Windows 98
+      *:128:1:52:M*,N,W0,N,N,S         @Windows:2000:RFC1323:Windows XP/2000 (RFC1323 no tstamp)
+[+] 213.248.54.69
+      57344:64:1:44:M*                 FreeBSD:4.6-4.8:noRFC1323:FreeBSD 4.6-4.8 (no RFC1323)
+[+] 221.208.14.9
+      S45:128:1:48:M*,N,N,S            Windows:XP:SP1:Windows 2000 SP4, XP SP 1
+      S45:128:1:48:M*,N,N,S            Windows:2000:SP4:Windows 2000 SP4, XP SP 1
+      *:128:1:48:M*,N,N,S              @Windows:2000::Windows XP/2000
+      *:128:1:48:M*,N,N,S              @Windows:XP::Windows XP/2000
+[+] 216.136.131.216
+      65535:64:1:60:M*,N,W1,N,N,T      FreeBSD:5.0-5.1::FreeBSD 4.7-5.1
+      65535:64:1:60:M*,N,W1,N,N,T      FreeBSD:4.7-4.9::FreeBSD 4.7-5.1
+[+] 61.221.206.182
+      S4:64:1:60:M*,S,T,N,W0           Linux:2.6::Linux 2.4/2.6
+      S4:64:1:60:M*,S,T,N,W0           Linux:2.4::Linux 2.4/2.6

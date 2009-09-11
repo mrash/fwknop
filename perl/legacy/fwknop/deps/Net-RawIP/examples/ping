@@ -1,0 +1,62 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+
+use Net::RawIP   qw(:pcap);
+use Getopt::Long qw(GetOptions);
+
+
+my %opts = (
+    device => 'eth0',
+);
+GetOptions(\%opts, 
+    "source=s", "destination=s", "device=s"
+    ) or exit;
+
+
+my $rawip = Net::RawIP->new({icmp =>{}});
+$rawip->set({
+        ip => {
+            saddr => $opts{source},
+            daddr => $opts{destination},
+        },
+        icmp => {
+            type => 8, id => $$,
+        }
+    });
+
+
+# insert your site here!
+$filt = 'ip proto \\icmp and icmp[0]==0 and dst host my.site.lan';
+$size = 1500;
+$tout = 30;
+$pcap = $rawip->pcapinit($opts{device}, $filt, $size, $tout);
+$i =0;
+if(fork){
+    loop $pcap,-1,\&dmp,\@a; 
+} else{
+    sleep 2;
+    for(;;){
+        $rawip->set({icmp => {sequence => $i,data => timem()}});
+        $rawip->send(1,1);
+        $i++
+    }
+}
+sub dmp {
+    my $time = timem();
+    $rawip->bset(substr($_[2],14));
+    my @ar = $rawip->get({ip => [qw(ttl)], icmp=>[qw(sequence data)]});
+    printf("%u bytes from %s: icmp_seq=%u ttl=%u time=%5.1f ms\n",length($ar[2])+8, ,$ARGV[0],$ar[1],$ar[0],($time-$ar[2])*1000);
+}
+
+sub usage {
+    print <<"END_USAGE";
+Usage: $0
+        --source SOURCE       (e.g. localhost)
+        --destination DEST
+        --device DEVICE       defaults to eth0
+
+END_USAGE
+    exit;
+}

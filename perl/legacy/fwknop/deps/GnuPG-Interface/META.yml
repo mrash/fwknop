@@ -1,0 +1,14 @@
+--- #YAML:1.0
+name:                GnuPG-Interface
+version:             0.36
+abstract:            supply object methods for interacting with GnuPG
+license:             ~
+generated_by:        ExtUtils::MakeMaker version 6.31
+distribution_type:   module
+requires:     
+    Class::MethodMaker:            1
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - Frank J. Tobin

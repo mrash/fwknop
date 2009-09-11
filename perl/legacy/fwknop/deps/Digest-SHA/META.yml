@@ -1,0 +1,17 @@
+--- #YAML:1.0
+name: Digest-SHA
+version: 5.47
+abstract: Perl extension for SHA-1/224/256/384/512
+license: perl
+author:
+  - Mark Shelor, mshelor@cpan.org
+requires:
+  perl: 5.003
+provides:
+  Digest::SHA:
+    file: lib/Digest/SHA.pm
+    version: 5.47
+meta-spec:
+  version: 1.3
+  url: http://module-build.sourceforge.net/META-spec-v1.3.html
+generated_by: Mark Shelor

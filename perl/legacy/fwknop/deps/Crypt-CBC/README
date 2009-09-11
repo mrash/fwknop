@@ -1,0 +1,68 @@
+This is Crypt::CBC, a Perl-only implementation of the cryptographic
+cipher block chaining mode (CBC).  In combination with a block cipher
+such as Crypt::DES or Crypt::IDEA, you can encrypt and decrypt
+messages of arbitrarily long length.  The encrypted messages are
+compatible with the encryption format used by B<SSLeay>.
+
+WARNING: Crypt::CBC versions 2.17 and higher will not decrypt messages
+encrypted with versions 2.16 and lower unless you pass certain options
+to the new() call. This was done for very good reasons. Please see
+README.compatibility for details.
+
+Prerequisites
+-------------
+
+In addition to this module you will need to install the MD5 module,
+and one or more of: Crypt::DES, Crypt::DES_EDE3, Crypt::IDEA, 
+Crypt::Blowfish, or Crypt::Rijndael modules.
+
+1. Digest::MD5
+   Required for key and iteration vector generation.
+
+2. Crypt::DES
+   Required for the DES encryption algorithm.
+
+3. Crypt::DES_EDE3
+   Required for the triple DES encryption algorithm in Encrypt Decrypt 
+   Encrypt mode. Note, this depends on Crypt::DES.
+
+4. Crypt::IDEA
+   Required for the IDEA encryption algorithm.
+
+5. Crypt::Blowfish
+   Required for the Blowfish encryption algorithm.
+
+6. Crypt::Blowfish_PP
+   Required for the Blowfish_PP encryption algorithm.
+
+7. Crypt::Rijndael
+   Required for the Rijndael/AES encryption algorithm.
+
+You can find these modules on a CPAN server near you!
+
+Unfortunately, Crypt::TripleDES does not work with this module, owing
+to the fact that it does not follow the same API as the other Crypt::*
+modules.  Please write to TripleDES's author, Vipul Ved Prakash
+<mail@vipul.net> and ask him to fix this.
+
+Installing Crypt::CBC
+---------------------
+
+The rest is easy
+
+	1. perl Makefile.PL
+	2. make
+	3. make test
+	4. make install
+
+Versions 1.22 and greater generate a random initialization vector, 
+rather than generating one based on the key.  Not only is this much 
+more secure, but it maintains compatibility with the current version of 
+OpenSSL, which does the same thing as of version 0.9.5.  For backwards
+compatibility, messages encrypted with older versions of Crypt::CBC
+can be decrypted with the newer version.  The reverse is not true --
+the beginning messages encrypted by the new version and decrypted by
+the old may be contaminated with "junk".
+
+Lincoln D. Stein
+lstein@cshl.org

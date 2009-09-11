@@ -1,0 +1,72 @@
+
+Building RPM files that are compatible with all possible Linux distributions
+is a difficult task.  If a given RPM file that is downloaded from
+http://www.cipherdyne.org/ is not compatible with your particular Linux
+distro, then you can use the "cd_rpmbuilder" ("CipherDyne RPM Builder") to
+build an RPM file for you on your own system.
+
+The command line interface to cd_rpmbuilder is simple, and one command line
+argument is always required "-p <project>" so that cd_rpmbuilder knows which
+CipherDyne software project you want to build:
+
+    # cd_rpmbuilder -p <project>
+
+Note that cd_rpmbuilder is normally as root because it builds RPM's within
+the /usr/src/redhat/ directory by default.  However, if you would like to
+build as a normal user within a directory of your choosing you can do:
+
+    # cd_rpmbuilder -p <project> -r <dir>
+
+By default, cd_rpmbuilder builds the latest version of the specified project,
+but if you want to build an older version, use the -b flag:
+
+    # cd_rpmbuilder -p <project> -b <version>
+
+If you want to see verbose output (including all output of the system
+rpmbuild command), then use the -v flag:
+
+    # cd_rpmbuilder -p <project> -v
+
+Finally, here is some sample output for building the fwknop project available
+at http://www.cipherdyne.org/fwknop/:
+
+    # ./cd_rpmbuilder -p fwknop
+        [+] Getting latest version file:
+              http://www.cipherdyne.org/fwknop/fwknop-latest
+        [+] Downloading file:
+              http://www.cipherdyne.org/fwknop/download/fwknop-1.0.spec
+        [+] Downloading file:
+              http://www.cipherdyne.org/fwknop/download/fwknop-1.0.spec.md5
+        [+] Valid md5 sum check for fwknop-1.0.spec
+        [+] Downloading file:
+              http://www.cipherdyne.org/fwknop/download/fwknop-1.0.tar.gz
+        [+] Downloading file:
+              http://www.cipherdyne.org/fwknop/download/fwknop-1.0.tar.gz.md5
+        [+] Valid md5 sum check for fwknop-1.0.tar.gz
+        [+] Building RPM, this may take a little while...
+
+        [+] The following RPMS were successfully built:
+
+              /usr/src/redhat/SRPMS/fwknop-1.0-1.src.rpm (source RPM)
+              /usr/src/redhat/RPMS/i386/fwknop-1.0-1.i386.rpm
+
+
+You can view the usage information like so:
+
+    [mbr@minastirith ~/src/fwknop]$  ./cd_rpmbuilder -h
+
+    cd_rpmbuilder; the CipherDyne RPM builder
+    [+] Version: 0.9
+    [+] By Michael Rash (mbr@cipherdyne.org, http://www.cipherdyne.org)
+
+    Usage: cd_rpmbuilder -p <project> [-b <version>] [-r <dir>] [-v] [-V] [-h]
+
+    Options:
+        -p, --project <name>       - This can be one of "psad", "fwknop",
+                                     "gpgdir", or "fwsnort".
+        -b, --build-version <ver>  - Build a specific project version.
+        -r, --rpm-build-dir <dir>  - Change the RPM build directory from the
+                                     default of /usr/src/redhat.
+        -v, --verbose              - Run in verbose mode.
+        -V, --Version              - Print version and exit.
+        -h, --help                 - Display usage information.

@@ -1,0 +1,44 @@
+Compatibility Notes
+-------------------
+
+Crypt::CBC version 2.17 and higher contains changes designed to make
+encrypted messages more secure. In particular, Crypt::CBC now works
+correctly with ciphers that use block sizes greater than 8 bytes,
+which includes Rijndael, the basis for the AES encryption system. It
+also interoperates seamlessly with the OpenSSL library. Unfortunately,
+these changes break compatibility with messages encrypted with
+versions 2.16 and lower.
+
+To successfully decrypt messages encrypted with Crypt::CBC 2.16 and
+lower, follow these steps:
+
+1) Pass Crypt::CBC->new() the option -header=>'randomiv'. Example:
+
+ my $cbc = Crypt::CBC->new(-key     => $key,
+                           -cipher  => 'Blowfish',
+			   -header  => 'randomiv');
+
+This tells Crypt::CBC to decrypt messages using the legacy "randomiv"
+style header rather than the default SSL-compatible "salt" style
+header.
+
+2) If the legacy messages were encrypted using Rijndael, also pass
+Crypt::CBC the -insecure_legacy_decrypt=>1 option:
+
+ my $cbc = Crypt::CBC->new(-key                     => $key,
+                           -cipher                  => 'Rijndael',
+			   -header                  => 'randomiv',
+                           -insecure_legacy_decrypt => 1 );
+
+
+This tells Crypt::CBC to allow you to decrypt Rijndael messages that
+were incorrectly encrypted by pre-2.17 versions. It is important to
+realize that Rijndael messages encrypted by version 2.16 and lower
+*ARE NOT SECURE*. New versions of Crypt::CBC will refuse to encrypt
+Rijndael messages in a way that is backward compatible with 2.16 and
+lower.
+
+I apologize for any inconvenience this causes.
+
+Lincoln Stein
+Spring 2006

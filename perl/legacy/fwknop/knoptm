@@ -1,0 +1,1372 @@
+#!/usr/bin/perl -w
+#
+#############################################################################
+#
+# File: knoptm
+#
+# Purpose: This daemon will remove firewall rules created by fwknopd (after
+#          receiving a valid SPA packet).  The fwknopd daemon communicates
+#          with knoptm via the /var/run/fwknop/knoptm_ip_timeout.sock UNIX
+#          domain socket whenever new rules are added, and knoptm removes
+#          them after the associated timer expires.
+#
+#          The format of the rules communicated to knoptm by fwknopd are as
+#          follows:
+#
+#   <rule timestamp> <timeout> <src> <sport> <dst> <dport> <proto> \
+#   <table> <chain> <target> <direction> <nat_ip> <nat_port> <ext cmd> \
+#   <ext cmd alarm>
+#
+# Author: Michael Rash (mbr@cipherdyne.org)
+#
+# Version: 1.9.12
+#
+# Copyright (C) 2004-2008 Michael Rash (mbr@cipherdyne.org)
+#
+# License (GNU Public License):
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+#    USA
+#
+#############################################################################
+#
+# $Id: knoptm 1533 2009-09-08 02:44:02Z mbr $
+#
+
+use IO::Socket;
+use IO::Handle;
+use File::Copy;
+use MIME::Base64;
+use Data::Dumper;
+use POSIX ':sys_wait_h';
+use Getopt::Long;
+use strict;
+
+my $config_file  = '/etc/fwknop/fwknop.conf';
+my $override_config_str = '';
+my $user_rc_file = '';
+
+my $version = '1.9.12';
+my $revision_svn = '$Revision: 1533 $';
+my $rev_num = '1';
+($rev_num) = $revision_svn =~ m|\$Rev.*:\s+(\S+)|;
+
+my $print_help = 0;
+my $print_ver  = 0;
+my $debug      = 0;
+my $lib_dir    = '';
+my $die_msg    = '';
+my $warn_msg   = '';
+my $fw_type    = '';
+my $no_logs    = 0;
+my $ipt_obj    = '';
+my $use_sendmail  = 0;
+my $debug_to_file = '';
+my $debug_include_pidname = 0;
+my $sniff_interface = '';
+my $intf_rx_bytes = 0;
+my $intf_tx_bytes = 0;
+my $MAX_TIMEOUT_TRIES  = 20;
+my $no_voluntary_exits = 0;
+my $fwknopd_com_sock   = '';
+my $imported_iptables_modules = 0;
+my $voluntary_exit_timestamp  = 0;
+my $ipfw_is_dynamic = 0;
+
+my @fw_cache_entries = ();
+my @conntrack_ports  = ();
+my %config = ();
+my %cmds   = ();
+my %timeout_cache = ();
+
+my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;
+my $zero_ip_re = qr|(?:0\.){3}0|;
+
+my $cmdline_locale = '';
+my $no_locale = 0;
+
+my $SEND_MAIL = 1;
+my $NO_MAIL   = 0;
+
+$| = 1;
+
+### make Getopts case sensitive
+Getopt::Long::Configure('no_ignore_case');
+exit 1 unless (GetOptions(
+    'config=s'  => \$config_file,
+    'interface=s' => \$sniff_interface,
+    'Override-config=s' => \$override_config_str,
+    'debug'     => \$debug,
+    'Debug-to-file=s' => \$debug_to_file,
+    'Debug-include-pidname' => \$debug_include_pidname,
+    'Version'   => \$print_ver,
+    'fw-type=s' => \$fw_type,
+    'no-voluntary-exits' => \$no_voluntary_exits,
+    'no-logs'   => \$no_logs,
+    'Lib-dir=s' => \$lib_dir,
+    'LC_ALL=s'  => \$cmdline_locale,
+    'locale=s'  => \$cmdline_locale,
+    'no-LC_ALL' => \$no_locale,
+    'no-locale' => \$no_locale,
+    'help'      => \$print_help
+));
+
+### Print the version number and exit if -V given on the command line.
+if ($print_ver) {
+    print
+"[+] knoptm v$version (part of the fwknop project), by Michael Rash\n",
+"    <mbr\@cipherdyne.org>\n";
+    exit 0;
+}
+
+&usage(0) if $print_help;
+
+### set things up, deal with pid's, and import config
+&knoptm_init();
+
+### setup for the main loop
+#
+$fwknopd_com_sock = IO::Socket::UNIX->new(
+    Type    => SOCK_STREAM,
+    Local   => $config{'KNOPTM_IP_TIMEOUT_SOCK'},
+    Listen  => SOMAXCONN,
+    Timeout => .1
+) or die "[*] Could not acquire fwknopd communications domain socket: $!";
+
+### main loop
+#
+my $dynamic_fw_loop_ctr  = 0;
+my $intf_checks_loop_ctr = 0;
+my $intf_error = 0;
+for (;;) {
+
+    my $fwknop_connection = $fwknopd_com_sock->accept();
+
+    if ($fwknop_connection) {
+        @fw_cache_entries = <$fwknop_connection>;
+
+        ### add new entries to the cache
+        &build_timeout_cache() if @fw_cache_entries;
+    }
+
+    ### always check to see if any fw rules need to be removed
+    &timeout_cache_entries();
+
+    &append_die_msg()  if $die_msg;
+    &append_warn_msg() if $warn_msg;
+
+    ### see if knoptm should voluntarily exit so that it can be
+    ### restarted by knopwatchd
+    &check_voluntary_exits();
+
+    @fw_cache_entries = ();
+
+    ### when using ipfw with dynamic rules, remove the disabled
+    ### rules that have no remaining dynamic rules associated
+    ### to them on a set interval
+    if ($ipfw_is_dynamic) {
+        if ($dynamic_fw_loop_ctr == $config{'IPFW_DYNAMIC_INTERVAL'}) {
+            &remove_ipfw_rules_without_connections();
+            $dynamic_fw_loop_ctr = 0;
+        }
+        $dynamic_fw_loop_ctr++;
+    }
+
+    if ($config{'ENABLE_INTF_CHECKS'} eq 'Y' and $sniff_interface
+            and $sniff_interface ne 'any') {
+
+        if ($intf_checks_loop_ctr == $config{'INTF_CHECKS_INTERVAL'}) {
+
+            ### see if the interface is in an error condition (i.e. does
+            ### not exist - and optionally whether it has been
+            ### administratively downed)
+            if (&intf_error_condition()) {
+
+                $intf_error = 1;  ### set interface error condition
+
+            } elsif ($intf_error) {
+
+                &logr('[+]', "fwknopd sniffed interface $sniff_interface " .
+                    "error condition has been cleared, shutting down " .
+                    "fwknopd and knopwatchd will restart", $SEND_MAIL);
+
+                ### the error condition has been cleared, so stop the fwknopd
+                ### daemon so that knopwatchd can restart it
+                &stop_daemon($config{'FWKNOP_PID_FILE'});
+
+                $intf_error = 0;
+            }
+
+            $intf_checks_loop_ctr = 0;
+        }
+        $intf_checks_loop_ctr++;
+    }
+
+    sleep 1;
+}
+close $fwknopd_com_sock;
+exit 0;
+#============================ end main ==============================
+
+sub build_timeout_cache() {
+
+    ### line format (iptables):
+    ### rule_timeout timeout src sport dst dport \
+    ### proto table chain target direction nat_ip \
+    ### nat_port external_cmd_close external_cmd_alarm
+
+    ### 1201982858 5 127.0.0.2 0 0.0.0.0/0 22 tcp filter FWKNOP_INPUT \
+    ### ACCEPT src 0.0.0.0/0 0 NA 0
+
+    ### line format (ipfw):
+    ### rule_timeout timeout src sport dst dport \
+    ### proto NA NA NA NA 0.0.0.0/0 0 external_cmd_close 0
+
+    for my $line (@fw_cache_entries) {
+
+        if ($debug or $debug_to_file) {
+            &logr("[+]", "Received line: $line", $NO_MAIL);
+        }
+
+        my @ar = split /\s+/, $line;
+        unless ($#ar == 14) {
+            if ($debug or $debug_to_file) {
+                &logr("[-]", "Invalid number of fields (got $#ar instead " .
+                    "14), skipping", $NO_MAIL);
+            }
+            next;
+        }
+        next unless &is_digit($ar[0]);
+        next unless &is_digit($ar[1]);
+        next unless $ar[2] =~ /$ip_re/;
+        next unless &is_digit($ar[3]);
+        next unless $ar[4] =~ /$ip_re/;
+        next unless &is_digit($ar[5]);
+        next unless $ar[6] =~ /\w+/;
+        next unless $ar[7] =~ /\w+/;
+        next unless $ar[8] =~ /\w+/;
+        next unless $ar[9] =~ /\w+/;
+        next unless $ar[10] =~ /\w+/;
+        next unless $ar[11] =~ /$ip_re/;
+        next unless &is_digit($ar[12]);
+        next unless $ar[13] =~ /\w+/;
+        next unless &is_digit($ar[14]);
+
+        ### the number represents the number of times we attempt to
+        ### delete the rule
+        $timeout_cache{$line} = 0;
+    }
+    return;
+}
+
+sub timeout_cache_entries() {
+
+    my @del_keys = ();
+
+    CACHE_ENTRY: for my $line (keys %timeout_cache) {
+
+        my @ar = split /\s+/, $line;
+
+        my $rule_timestamp = $ar[0];
+        my $timeout        = $ar[1];
+        my $src            = $ar[2];
+        my $sport          = $ar[3];
+        my $dst            = $ar[4];
+        my $dport          = $ar[5];
+        my $proto          = $ar[6];
+        my $table          = $ar[7];
+        my $chain          = $ar[8];
+        my $target         = $ar[9];
+        my $direction      = $ar[10];
+        my $nat_ip         = $ar[11];
+        my $nat_port       = $ar[12];
+        my $external_cmd_close = decode_base64($ar[13]);
+        my $external_cmd_alarm = $ar[14];
+
+        next CACHE_ENTRY unless ((time() - $rule_timestamp) > $timeout);
+
+        if ($config{'ENABLE_CONNTRACK_PERSIST'} eq 'Y'
+                and $src ne '127.0.0.1' and &is_connected($src)) {
+            ### ignore this IP for now because there is still an associated
+            ### connection in the established state
+            next CACHE_ENTRY;
+        }
+
+        if ($debug or $debug_to_file) {
+            &logr("[+]", "Expiring rule: $line", $NO_MAIL);
+        }
+
+        ### see if the rule is still active, and remove if necessary
+        if (&rm_fw_rule($rule_timestamp, $timeout, $src, $sport, $dst,
+                $dport, $proto, $table, $chain, $target, $direction,
+                $nat_ip, $nat_port, $external_cmd_close,
+                $external_cmd_alarm)) {
+
+            ### delete the entry from the in-memory cache now that
+            ### the firewall rule has been removed
+            push @del_keys, $line;
+        }
+
+        $timeout_cache{$line}++;
+
+        if ($timeout_cache{$line} > $MAX_TIMEOUT_TRIES) {
+
+            ### it seems the rule has been lost (perhaps manually
+            ### deleted) so remove it from the cache since it is
+            ### past the timeout anyway
+            if ($external_cmd_close ne 'NA') {
+                &logr('[-]', "exceeded max close tries for " .
+                    "$src running command: $external_cmd_close, " .
+                    "deleting from cache", $NO_MAIL);
+            } else {
+                my $str = "$src -> $dst($proto/$dport)";
+                if ($direction eq 'dst') {
+                    $str = "$src($proto/$sport) -> $dst";
+                }
+                &logr('[-]', "exceeded max removal tries for $str, " .
+                    "deleting from cache", $NO_MAIL);
+            }
+            push @del_keys, $line;
+        }
+    }
+    if (@del_keys) {
+        for my $key (@del_keys) {
+            delete $timeout_cache{$key};
+        }
+    }
+    return;
+}
+
+sub rm_fw_rule() {
+    my ($rule_timestamp, $timeout, $src, $sport, $dst, $dport,
+        $proto, $table, $chain, $target, $direction, $nat_ip,
+        $nat_port, $external_cmd_close, $external_cmd_alarm) = @_;
+
+    if ($external_cmd_close ne 'NA') {
+
+        ### we are executing an external command (derived ultimately
+        ### from EXTERNAL_CMD_CLOSE from access.conf (or fwknop.conf
+        ### if the global override is set).
+        return &exec_external_cmd_close($external_cmd_close,
+                $external_cmd_alarm);
+
+    } else {
+
+        if ($config{'FIREWALL_TYPE'} eq 'iptables') {
+
+            return &rm_ipt_rule($timeout, $src, $sport, $dst, $dport,
+                        $proto, $table, $chain, $target, $direction,
+                        $nat_ip, $nat_port);
+
+        } elsif ($config{'FIREWALL_TYPE'} eq 'ipfw') {
+
+            return &disable_ipfw_rule($timeout, $src, $dst, $proto, $dport);
+        }
+    }
+
+    return 0;
+}
+
+sub rm_ipt_rule() {
+    my ($timeout, $src, $sport, $dst, $dport, $proto,
+        $table, $chain, $target, $direction, $nat_ip, $nat_port) = @_;
+
+    my $removed_rule = 0;
+
+    my %extended_info = ('protocol' => $proto);
+    if ($sport) {
+        $extended_info{'s_port'} = $sport;
+    }
+    if ($dport) {
+        $extended_info{'d_port'} = $dport;
+    }
+    if ($nat_ip !~ /$zero_ip_re/ and $nat_port > 0) {
+        $extended_info{'to_ip'}   = $nat_ip;
+        $extended_info{'to_port'} = $nat_port;
+    }
+
+    my ($find_rv, $num_chain_rules) = $ipt_obj->find_ip_rule($src, $dst,
+            $table, $chain, $target, \%extended_info);
+
+    if ($find_rv) {
+
+        my $del_rv = 0;
+        my $out_ar = [];
+        my $err_ar = [];
+
+        for (my $try=0; $try < $config{'IPT_EXEC_TRIES'}; $try++) {
+            ($del_rv, $out_ar, $err_ar) = $ipt_obj->delete_ip_rule($src,
+                $dst, $table, $chain, $target, \%extended_info);
+            last if $del_rv;
+        }
+
+        my $str = "$src -> $dst($proto/$dport)";
+        if ($direction eq 'dst') {
+            $str = "$src($proto/$sport) -> $dst";
+        }
+        if (defined $extended_info{'to_ip'}) {
+            $str = "$src -> $extended_info{'to_ip'}" .
+                "($proto/$extended_info{'to_port'})";
+        }
+
+        if ($del_rv) {
+            &logr('[+]', "removed iptables $chain $target rule " .
+                "for $str, $timeout sec timeout exceeded", $SEND_MAIL);
+            $removed_rule = 1;
+        } else {
+            &logr('[-]', "could not delete $target rule for $str", $NO_MAIL);
+            &psyslog_errs($err_ar);
+        }
+    }
+    return $removed_rule;
+}
+
+sub remove_ipfw_rules_without_connections() {
+
+    my %rules_to_remove = ();
+
+    my $cmd = "$cmds{'ipfw'} -dS set $config{'IPFW_SET_NUM'} list";
+
+    open LIST, "$cmd |" or die "[*] Could not execute $cmd: $!";
+
+    my @rules = <LIST>;
+
+    for (@rules) {
+        last if (/^\s*##\s+Dynamic\s+rules/);
+        if (/^\s*#\s+DISABLED\s+(\d+)/) {
+            $rules_to_remove{$1} = 1;
+        }
+    }
+
+    die "[*] Dynamic part of rule listing missing" if (!$_);
+
+    for (@rules) {
+        if(/^\s*(\d+)\s+\d+\s+\d+\s+\(\S+\)\s+STATE/) {
+            $rules_to_remove{$1} = 0;
+        }
+    }
+
+    while ((my $rule, my $needs_remove) = each %rules_to_remove) {
+        &ipfw_delete_ip_rule($rule) if ($needs_remove);
+    }
+    close LIST;
+}
+
+sub disable_ipfw_rule() {
+    my ($timeout, $src, $dst, $proto, $port) = @_;
+
+    my $disabled_rule = 0;
+
+    $src = 'any' if $src =~ /$zero_ip_re/;
+    $dst = 'any' if $dst =~ /$zero_ip_re/;
+
+    ### FIXME, need to add specific destination IP (inspired from
+    ### the FORWARD_ACCESS capability for iptables firewalls
+    my ($rulenum, $setnum) = &ipfw_find_ip_rule($src, $dst, $proto, $port);
+
+    if ($ipfw_is_dynamic and $rulenum and $setnum == 0) {
+        if (&ipfw_move_rule($rulenum, $config{'IPFW_SET_NUM'})) {
+
+            &logr('[+]', "disabled ipfw allow " .
+                    "rule for $src -> " .
+                    "$proto/$port, $timeout " .
+                    "second timeout exceeded", $SEND_MAIL);
+            $disabled_rule = 1;
+        } else {
+            &logr('[-]', "could not disable ipfw allow rule for $src " .
+                "-> $proto/$port", $NO_MAIL);
+        }
+    } elsif ($rulenum) {
+        if (&ipfw_delete_ip_rule($rulenum)) {
+
+            &logr('[+]', "removed ipfw allow " .
+                    "rule for $src -> " .
+                    "$proto/$port, $timeout " .
+                    "second timeout exceeded", $SEND_MAIL);
+            $disabled_rule = 1;
+        } else {
+            &logr('[-]', "could not remove ipfw allow rule for $src " .
+                "-> $proto/$port", $NO_MAIL);
+        }
+    }
+
+    return $disabled_rule;
+}
+
+sub ipfw_check_dynamic_rule() {
+
+    open LIST, "$cmds{'ipfw'} list |" or
+        die "[*] Could not execute 'ipfw list'";
+    while (<LIST>) {
+        if (/check-state/) {
+            ### from the ipfw man page:
+            # check-state
+            #    Checks the packet against the dynamic ruleset.  If a match is
+            #    found, execute the action associated with the rule which gener-
+            #    ated this dynamic rule, otherwise move to the next rule.
+            #    Check-state rules do not have a body.  If no check-state rule is
+            #    found, the dynamic ruleset is checked at the first keep-state or
+            #    limit rule.
+            $ipfw_is_dynamic = 1;
+            last;
+        } elsif (/keep-state/) {
+            ### from the ipfw man page:
+            # keep-state
+            #    Upon a match, the firewall will create a dynamic rule, whose
+            #    default behaviour is to match bidirectional traffic between
+            #    source and destination IP/port using the same protocol.  The rule
+            #    has a limited lifetime (controlled by a set of sysctl(8) vari-
+            #    ables), and the lifetime is refreshed every time a matching
+            #    packet is found.
+            $ipfw_is_dynamic = 1;
+            last;
+        } elsif (/allow.*to\s+any\s+established/) {
+            last;
+        }
+    }
+    close LIST;
+    return;
+}
+
+sub ipfw_find_ip_rule() {
+    my ($src, $dst, $proto, $port) = @_;
+
+    my $rulenum = 0;
+    my $set = -1;
+
+    open LIST, "$cmds{'ipfw'} -S list |" or
+        die "[*] Could not execute 'ipfw list'";
+    while (<LIST>) {
+        if ($proto eq 'tcp') {
+            ### 00002 set 0 allow tcp from 1.1.1.1 to any dst-port 22 keep-state
+            if (/^\s*(\#\s+DISABLED\s+)?(\d+)\s+set\s+(\d+)\s+
+                        allow\s+$proto\s+from\s+$src\s+to\s+
+                        $dst\s+dst-port\s+$port\s+keep-state/x) {
+                $rulenum = $2;
+                $set = $3;
+                last;
+            }
+        } elsif ($proto eq 'udp') {
+            if (/^\s*(\#\s+DISABLED\s+)?(\d+)\s+set\s+(\d+)\s+
+                        allow\s+$proto\s+from\s+$src\s+to\s+
+                        $dst\s+dst-port\s+$port\s+keep-state/x) {
+                $rulenum = $2;
+                $set = $3;
+                last;
+            }
+        } else {  ### icmp
+            if (/^\s*(\#\s+DISABLED\s+)?(\d+)\s+set\s+(\d+)\s+
+                        allow\s+$proto\s+from\s+$src\s+to\s+$dst/x) {
+                $rulenum = $2;
+                $set = $3;
+                last;
+            }
+        }
+    }
+    close LIST;
+
+    if ($rulenum) {
+        ### remove any leading zeros from the rule number
+        $rulenum =~ s/^0{1,4}//g;
+    }
+
+    return $rulenum, $set;
+}
+
+sub ipfw_delete_ip_rule() {
+    my $rulenum = shift;
+
+    open IPFW, "| $cmds{'ipfw'} delete $rulenum" or die "[*] Could not ",
+        "execute $cmds{'ipfw'} delete $rulenum";
+    close IPFW;
+
+    return 1;
+}
+
+sub ipfw_move_rule() {
+    my ($rulenum, $setnum) = @_;
+
+    my $cmd = "$cmds{'ipfw'} set move rule $rulenum to $setnum";
+
+    open IPFW, "| $cmd" or die "[*] Could not execute $cmd: $!";
+    close IPFW;
+
+    return 1;
+}
+
+sub is_connected() {
+    my $src = shift;
+
+    my $is_connected = 0;
+
+    if ($config{'FIREWALL_TYPE'} eq 'iptables') {
+
+        ### see if the IP is involved in a currently established connection
+        open CONNTRACK, "< $config{'IPT_CONNTRACK_FILE'}"
+            or return $is_connected;
+        CONNTRACK: while (<CONNTRACK>) {
+            ### tcp   6 431997 ESTABLISHED src=127.0.0.1 dst=127.0.0.1 sport=46202
+            ### dport=80 packets=2 bytes=112 src=127.0.0.1 dst=127.0.0.1 sport=80
+            ### dport=46202 packets=1 bytes=60 [ASSURED] mark=0 secmark=0 use=1
+            for my $port (@conntrack_ports) {
+                if (/\sESTABLISHED\s+src=$src\s+dst=
+                        \S+\s+sport=\d+\s+dport=$port\s/x) {
+                    $is_connected = 1;
+                    last CONNTRACK;
+                }
+            }
+        }
+        close CONNTRACK;
+
+    } elsif ($config{'FIREWALL_TYPE'} eq 'ipfw') {
+        ### need to work out similar strategy on FreeBSD
+    }
+
+    return $is_connected;
+}
+
+sub exec_external_cmd_close() {
+    my ($cmd, $cmd_alarm) = @_;
+    my $pid;
+    if ($pid = fork()) {
+        local $SIG{'ALRM'} = sub {die "[*] External cmd timeout.\n"};
+        alarm $cmd_alarm;
+        eval {
+            waitpid($pid, 0);
+        };
+        alarm 0;
+        if ($@) {
+            kill 9, $pid unless kill 15, $pid;
+        }
+    } else {
+        die "[*] Could not fork for external cmd: $!" unless defined $pid;
+        if ($cmd =~ /\s*>\s*/) {
+            exec qq{$cmd};
+        } else {
+            exec qq{$cmd > /dev/null 2>&1};
+        }
+    }
+    return 1;
+}
+
+sub import_override_configs() {
+    my @override_configs = split /,/, $override_config_str;
+    for my $file (@override_configs) {
+        die "[*] Override config file $file does not exist"
+            unless -e $file;
+        &import_config($file);
+    }
+    return;
+}
+
+sub import_config() {
+    my $config_file = shift;
+    open C, "< $config_file" or die "[*] Could not open ",
+        "config file $config_file: $!";
+    my @lines = <C>;
+    close C;
+    for my $line (@lines) {
+        chomp $line;
+        next if ($line =~ /^\s*#/);
+        if ($line =~ /^(\S+)\s+(.*?)\;/) {
+            my $varname = $1;
+            my $val     = $2;
+            if ($val =~ m|/.+| and $varname =~ /^(\w+)Cmd$/) {
+                ### found a command
+                $cmds{$1} = $val unless defined $cmds{$1};
+            } else {
+                $config{$varname} = $val unless defined $config{$varname};
+            }
+        }
+    }
+    return;
+}
+
+sub expand_vars() {
+    my $exclude_hr = shift;
+
+    my $has_sub_var = 1;
+    my $resolve_ctr = 0;
+
+    while ($has_sub_var) {
+        $resolve_ctr++;
+        $has_sub_var = 0;
+        if ($resolve_ctr >= 20) {
+            die "[*] Exceeded maximum variable resolution counter.";
+        }
+        for my $hr (\%config, \%cmds) {
+            for my $var (keys %$hr) {
+                next if defined $exclude_hr->{$var};
+                my $val = $hr->{$var};
+                if ($val =~ m|\$(\w+)|) {
+                    my $sub_var = $1;
+                    die "[*] sub-ver $sub_var not allowed within same ",
+                        "variable $var" if $sub_var eq $var;
+                    if (defined $config{$sub_var}) {
+                        $val =~ s|\$$sub_var|$config{$sub_var}|;
+                        $hr->{$var} = $val;
+                    } else {
+                        die "[*] sub-var \"$sub_var\" not defined in ",
+                            "config for var: $var."
+                    }
+                    $has_sub_var = 1;
+                }
+            }
+        }
+    }
+    return;
+}
+
+### check paths to commands and attempt to correct if any are wrong.
+sub check_commands() {
+    my ($include_hr, $exclude_hr) = @_;
+
+    my @path = qw(
+        /bin
+        /sbin
+        /usr/bin
+        /usr/sbin
+        /usr/local/bin
+        /usr/local/sbin
+    );
+    for my $cmd (keys %cmds) {
+
+        if (keys %$include_hr) {
+            next unless defined $include_hr->{$cmd};
+        }
+        if (keys %$exclude_hr) {
+            next if defined $exclude_hr->{$cmd};
+        }
+
+        if ($cmd eq 'iptables') {
+            next unless $config{'FIREWALL_TYPE'} eq 'iptables';
+        } elsif ($cmd eq 'ipfw') {
+            next unless $config{'FIREWALL_TYPE'} eq 'ipfw';
+        }
+
+        if ($cmd eq 'mail' or $cmd eq 'sendmail') {
+            next if $config{'ALERTING_METHODS'} =~ /noe?mail/i;
+        }
+        unless (-x $cmds{$cmd}) {
+            my $found = 0;
+            PATH: for my $dir (@path) {
+                if (-x "${dir}/${cmd}") {
+                    $cmds{$cmd} = "${dir}/${cmd}";
+                    $found = 1;
+                    last PATH;
+                }
+            }
+            unless ($found) {
+                die "[*] Could not find $cmd anywhere!!!  Please edit the\n",
+                    "config section in $config_file to include the path to\n",
+                    "$cmd." unless $cmd eq 'sendmail';
+            }
+        }
+        if (-x $cmds{$cmd}) {
+            if ($cmd eq 'sendmail') {
+                $use_sendmail = 1;
+            }
+        } else {
+            die "[*] Command $cmd is located at $cmds{$cmd}, but ",
+                "is not executable by uid: $<" unless $cmd eq 'sendmail';
+        }
+    }
+    return;
+}
+
+sub sendmail() {
+    my $subject = shift;
+    $subject =~ s/\"//g;
+
+    if ($use_sendmail) {
+        open SMAIL, "| $cmds{'sendmail'} -t" or
+            die "[*] Could not execute $cmds{'sendmail'}: $!";
+        print SMAIL "From: $config{'EMAIL_ADDRESSES'}\n",
+            "To: $config{'EMAIL_ADDRESSES'}\n",
+            "Subject: $subject\n\n";
+        close SMAIL;
+    } else {
+        open MAIL, qq{| $cmds{'mail'} -s "$subject" $config{'EMAIL_ADDRESSES'} } .
+            "> /dev/null" or die "[*] Could not send mail: $cmds{'mail'} -s " .
+            "$subject\" $config{'EMAIL_ADDRESSES'}: $!";
+        close MAIL;
+    }
+    return;
+}
+
+sub uniquepid() {
+    if (-e $config{'KNOPTM_PID_FILE'}) {
+        my $caller = $0;
+        open PIDFILE, "< $config{'KNOPTM_PID_FILE'}";
+        my $pid = <PIDFILE>;
+        close PIDFILE;
+        chomp $pid;
+        if (kill 0, $pid) {  # knoptm is already running
+            die "[*] knoptm (pid: $pid) is already running!  Exiting.\n";
+        }
+    }
+    return;
+}
+
+sub writepid() {
+    open P, "> $config{'KNOPTM_PID_FILE'}" or die "[*] Could not open ",
+        "$config{'KNOPTM_PID_FILE'}: $!";
+    print P $$, "\n";
+    close P;
+    chmod 0600, $config{'KNOPTM_PID_FILE'};
+    return;
+}
+
+sub knoptm_init() {
+
+    ### import any override config files first
+    &import_override_configs() if $override_config_str;
+
+    ### import config
+    &import_config($config_file);
+
+    &expand_vars({'EXTERNAL_CMD_OPEN' => '', 'EXTERNAL_CMD_CLOSE' => ''});
+
+    ### make sure all the vars we need are actually in the config file.
+    &required_vars();
+
+    ### import all necessary perl modules
+    &import_perl_modules();
+
+    ### validate config
+    &validate_config();
+
+    &import_ipt_modules() if $config{'FIREWALL_TYPE'} eq 'iptables';
+
+    ### make sure there is not another knoptm process already running.
+    &uniquepid();
+
+    ### make sure command paths are correct
+    &check_commands({}, {'gpg' => '', 'gpg2' => '', 'mail' => ''});
+
+    &check_commands({'mail', ''}, {}) unless $use_sendmail;
+
+    unless ($debug) {
+        my $pid = fork();
+        exit 0 if $pid;
+        die "[*] $0: Couldn't fork: $!" unless defined $pid;
+        POSIX::setsid() or die "[*] $0: Can't start a new session: $!";
+    }
+
+    ### write our pid out to disk
+    &writepid();
+
+    ### Install signal handlers for debugging and for reaping zombie
+    ### whois processes.
+    $SIG{'__WARN__'} = \&warn_handler;
+    $SIG{'__DIE__'}  = \&die_handler;
+    $SIG{'CHLD'}     = \&REAPER;
+
+    unlink $config{'KNOPTM_IP_TIMEOUT_SOCK'}
+        if -e $config{'KNOPTM_IP_TIMEOUT_SOCK'};
+
+    if ($config{'ENABLE_VOLUNTARY_EXITS'} eq 'Y') {
+        $voluntary_exit_timestamp = time();
+    }
+
+    &handle_locale();
+
+    &get_ipt_object() if $config{'FIREWALL_TYPE'} eq 'iptables';
+    &ipfw_check_dynamic_rule() if $config{'FIREWALL_TYPE'} eq 'ipfw';
+
+    if ($debug_to_file) {
+        unlink $debug_to_file if -e $debug_to_file;
+    } elsif ($debug_include_pidname) {
+        $debug = 1;
+    }
+
+    if ($debug or $debug_to_file) {
+        &logr("[+]", "knoptm pid: $$ Opening $config{'KNOPTM_IP_TIMEOUT_SOCK'} " .
+            "socket, and entering main loop.", $NO_MAIL);
+    }
+
+    return;
+}
+
+### write a message to syslog (leaves off $prefix, which assigns a
+### "type" to the message, when writing syslog; might add it later
+sub logr() {
+    my ($prefix, $msg, $send_email) = @_;
+
+    return if $no_logs;
+
+    $msg = "knoptm: $msg" if $debug_include_pidname;
+
+    if ($debug) {
+        print STDERR localtime() . " $prefix $msg\n";
+        return;
+    } elsif ($debug_to_file) {
+        open DBG, ">> $debug_to_file" or die $!;
+        print DBG localtime() . " $prefix $msg\n";
+        close DBG;
+        return;
+    }
+
+    ### see if we need to send an email
+    if ($send_email and $config{'ALERTING_METHODS'} !~ /noe?mail/i) {
+        &sendmail("$prefix $config{'HOSTNAME'} knoptm: $msg");
+    }
+
+    return if $config{'ALERTING_METHODS'} =~ /no.?syslog/i;
+
+    ### this is an ugly hack to avoid the 'can't use string as subroutine'
+    ### error because of 'use strict'
+    if ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL7/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL7());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL6/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL6());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL5/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL5());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL4/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL4());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL3/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL3());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL2/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL2());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL1/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL1());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL0/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL0());
+    }
+
+    if ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_INFO/i) {
+        syslog(&LOG_INFO(), $msg);
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_DEBUG/i) {
+        syslog(&LOG_DEBUG(), $msg);
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_NOTICE/i) {
+        syslog(&LOG_NOTICE(), $msg);
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_WARNING/i) {
+        syslog(&LOG_WARNING(), $msg);
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_ERR/i) {
+        syslog(&LOG_ERR(), $msg);
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_CRIT/i) {
+        syslog(&LOG_CRIT(), $msg);
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_ALERT/i) {
+        syslog(&LOG_ALERT(), $msg);
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_EMERG/i) {
+        syslog(&LOG_EMERG(), $msg);
+    }
+
+    closelog();
+
+    return;
+}
+
+sub psyslog_errs() {
+    my $aref = shift;
+    return if $config{'ALERTING_METHODS'} =~ /no.?syslog/i;
+
+    ### this is an ugly hack to avoid the 'can't use string as subroutine'
+    ### error because of 'use strict'
+    if ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL7/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'},&LOG_DAEMON(), &LOG_LOCAL7());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL6/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL6());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL5/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL5());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL4/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL4());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL3/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL3());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL2/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL2());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL1/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL1());
+    } elsif ($config{'KNOPTM_SYSLOG_FACILITY'} =~ /LOG_LOCAL0/i) {
+        openlog($config{'KNOPTM_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL0());
+    }
+
+    if ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_INFO/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_INFO(), $aref->[$i]);
+        }
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_DEBUG/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_DEBUG(), $aref->[$i]);
+        }
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_NOTICE/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_NOTICE(), $aref->[$i]);
+        }
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_WARNING/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_WARNING(), $aref->[$i]);
+        }
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_ERR/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_ERR(), $aref->[$i]);
+        }
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_CRIT/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_CRIT(), $aref->[$i]);
+        }
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_ALERT/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_ALERT(), $aref->[$i]);
+        }
+    } elsif ($config{'KNOPTM_SYSLOG_PRIORITY'} =~ /LOG_EMERG/i) {
+        for (my $i=0; $i<5 && $i<=$#$aref; $i++) {
+            syslog(&LOG_EMERG(), $aref->[$i]);
+        }
+    }
+
+    closelog();
+    return;
+}
+
+sub intf_error_condition() {
+
+    my $found_intf   = 0;
+    my $intf_running = 0;
+    my $parsed_rx_bytes = 0;
+    my $parsed_tx_bytes = 0;
+
+    ### Linux:
+    ### ath0      Link encap:Ethernet  HWaddr 00:01:f4:88:b2:bf
+    ###          inet addr:192.168.20.169  Bcast:192.168.20.255  Mask:255.255.255.0
+    ###          inet6 addr: fe80::201:f4ff:fe88:b2bf/64 Scope:Link
+    ###          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+    ###          RX packets:595268 errors:0 dropped:0 overruns:0 frame:0
+    ###          TX packets:734031 errors:0 dropped:0 overruns:0 carrier:0
+    ###          collisions:0 txqueuelen:0 
+    ###          RX bytes:847407338 (808.1 MB)  TX bytes:124974362 (119.1 MB)
+
+    ### FreeBSD:
+    ### le0: flags=8843<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> metric 0 mtu 1500
+    ###     options=8<VLAN_MTU>
+    ###     ether 00:0c:29:f9:d0:ad
+    ###     inet 172.16.76.129 netmask 0xffffff00 broadcast 172.16.76.255
+    ###     media: Ethernet autoselect
+    ###     status: active
+
+    my $cmd = "$cmds{'ifconfig'} $sniff_interface 2> /dev/null";
+
+    open IFCONFIG, "$cmd |" or die "[*] Could not execute: $cmd: $!";
+    while (<IFCONFIG>) {
+        $found_intf   = 1 if /^\s*$sniff_interface:?/;
+        $intf_running = 1 if /RUNNING/;
+        $parsed_rx_bytes = $1 if /^\s+RX\s+packets.?(\d+)/;
+        $parsed_tx_bytes = $1 if /^\s+TX\s+packets.?(\d+)/;
+    }
+    close IFCONFIG;
+
+    ### interface existence check
+    if ($config{'ENABLE_INTF_EXISTS_CHECK'} eq 'Y') {
+        unless ($found_intf) {
+            &logr('[-]', "fwknopd sniffed interface: " .
+                "$sniff_interface does not exist", $NO_MAIL);
+            return 1;
+        }
+    }
+
+    ### The remaining checks are meaningless if the interface does not
+    ### exist.  If the interface does not exist and we are running the
+    ### the "exists" check, then we would have already returned an error.
+    ### If not, then the other checks will apply if the interface exists.
+    return 0 unless $found_intf;
+
+    ### interface "RUNNING" check
+    if ($config{'ENABLE_INTF_RUNNING_CHECK'} eq 'Y') {
+        unless ($intf_running) {
+            &logr('[-]', "fwknopd sniffed interface: " .
+                "$sniff_interface is not in the RUNNING state", $NO_MAIL);
+            return 1;
+        }
+    }
+
+    ### interface RX/TX bytes increasing check
+    if ($config{'ENABLE_INTF_BYTES_CHECK'} eq 'Y') {
+        my $return_err = 0;
+        if ($intf_rx_bytes > 0 and $parsed_rx_bytes < $intf_rx_bytes) {
+            &logr('[-]', "fwknopd sniffed interface: " .
+                "$sniff_interface RX bytes decreased", $NO_MAIL);
+            $return_err = 1;
+        }
+        if ($intf_tx_bytes > 0 and $parsed_tx_bytes < $intf_tx_bytes) {
+            &logr('[-]', "fwknopd sniffed interface: " .
+                "$sniff_interface TX bytes decreased", $NO_MAIL);
+            $return_err = 1;
+        }
+
+        $intf_rx_bytes = $parsed_rx_bytes;
+        $intf_tx_bytes = $parsed_tx_bytes;
+
+        return 1 if $return_err;
+    }
+
+    return 0;  ### no error condition
+}
+
+sub check_voluntary_exits() {
+
+    return unless $config{'ENABLE_VOLUNTARY_EXITS'} eq 'Y';
+    return if $no_voluntary_exits;
+
+    if ((time() - $voluntary_exit_timestamp) > $config{'EXIT_INTERVAL'}*60) {
+
+        ### EXIT_INTERVAL is in minutes
+        &logr('[+]', "voluntary exit timer expired, knopwatchd will restart",
+            $SEND_MAIL);
+        &logr('[+]', "stopping fwknopd daemon, knopwatchd will restart",
+            $SEND_MAIL);
+
+        &stop_daemon($config{'FWKNOP_PID_FILE'});
+
+        exit 0;
+    }
+
+    return;
+}
+
+sub stop_daemon() {
+    my $pidfile = shift;
+    return unless -e $pidfile;
+    open PID, "< $pidfile" or die "[*] Could not open $pidfile: $!";
+    my $pid = <PID>;
+    close PID;
+    chomp $pid;
+    if (kill 0, $pid) {
+        if (kill 15, $pid) {
+            unlink $pidfile;
+        } else {
+            kill 9, $pid;
+        }
+    } else {
+        unlink $pidfile;
+    }
+    return;
+}
+
+sub required_vars() {
+    for my $var qw(KNOPTM_PID_FILE FWKNOP_DIR FWKNOP_ERR_DIR
+            EMAIL_ADDRESSES AUTH_MODE KNOPTM_IP_TIMEOUT_SOCK
+            ALERTING_METHODS FIREWALL_TYPE KNOPTM_SYSLOG_IDENTITY
+            KNOPTM_SYSLOG_FACILITY KNOPTM_SYSLOG_PRIORITY
+            ENABLE_VOLUNTARY_EXITS EXIT_INTERVAL FWKNOP_PID_FILE
+            LOCALE FWKNOP_MOD_DIR IPT_CMD_ALARM IPT_EXEC_STYLE
+            IPT_EXEC_SLEEP IPT_EXEC_TRIES EXTERNAL_CMD_CLOSE
+            IPFW_SET_NUM IPFW_DYNAMIC_INTERVAL ENABLE_INTF_CHECKS
+            INTF_CHECKS_INTERVAL ENABLE_INTF_RUNNING_CHECK
+            ENABLE_INTF_EXISTS_CHECK ENABLE_INTF_BYTES_CHECK
+            ENABLE_CONNTRACK_PERSIST IPT_CONNTRACK_FILE
+            CONNTRACK_ESTAB_PORTS
+    ) {
+        die "[*] Required variable $var is not defined in $config_file"
+            unless defined $config{$var};
+    }
+    return;
+}
+
+sub validate_config() {
+
+    die qq([*] Invalid EMAIL_ADDRESSES value: "$config{'EMAIL_ADDRESSES'}")
+        unless $config{'EMAIL_ADDRESSES'} =~ /\S+\@\S+/;
+
+    ### translate commas into spaces
+    $config{'EMAIL_ADDRESSES'} =~ s/\s*\,\s/ /g;
+
+    if ($fw_type) {
+        die "[*] --fw-type must be 'iptables', 'ipfw', or 'external_cmd'"
+            unless $fw_type eq 'iptables' or $fw_type eq 'ipfw'
+                or $fw_type eq 'external_cmd';
+        $config{'FIREWALL_TYPE'} = $fw_type if $fw_type;
+    }
+
+    unless ($config{'AUTH_MODE'} eq 'KNOCK'
+            or $config{'AUTH_MODE'} eq 'ULOG_PCAP'
+            or $config{'AUTH_MODE'} eq 'FILE_PCAP'
+            or $config{'AUTH_MODE'} eq 'PCAP'
+            or $config{'AUTH_MODE'} eq 'SOCKET') {
+        die "[*] AUTH_MODE must be either KNOCK, ULOG_PCAP, ",
+            "FILE_PCAP, PCAP or SOCKET";
+    }
+
+    @conntrack_ports = split /\s*,\s*/, $config{'CONNTRACK_ESTAB_PORTS'};
+    return;
+}
+
+sub import_ipt_modules() {
+
+    unless ($imported_iptables_modules) {
+
+        require IPTables::Parse;
+        require IPTables::ChainMgr;
+
+        $imported_iptables_modules = 1;
+    }
+
+    return;
+}
+
+sub die_handler() {
+    $die_msg = shift;
+    return;
+}
+
+### write all warnings to a logfile
+sub warn_handler() {
+    $warn_msg = shift;
+    return;
+}
+
+sub REAPER {
+    my $pid;
+    while(($pid = waitpid(-1,WNOHANG)) > 0) {
+        # could add code to something with the borked pid here
+    }
+    $SIG{'CHLD'} = \&REAPER;
+    return;
+}
+
+sub is_digit() {
+    my $str = shift;
+    return 1 if $str =~ /^\d+$/;
+    return 0;
+}
+
+sub get_ipt_object() {
+
+    my %ipt_opts = (
+        'iptables' => $cmds{'iptables'},
+        'iptout'   => $config{'KNOPTM_IPT_OUTPUT_FILE'},
+        'ipterr'   => $config{'KNOPTM_IPT_ERROR_FILE'},
+        'ipt_alarm' => $config{'IPT_CMD_ALARM'},
+        'ipt_exec_style'  => $config{'IPT_EXEC_STYLE'},
+        'sigchld_handler' => \&REAPER
+    );
+    $ipt_opts{'debug'} = 1 if $debug;
+    $ipt_opts{'ipt_exec_sleep'} = $config{'IPT_EXEC_SLEEP'}
+        if $config{'IPT_EXEC_SLEEP'} > 0;
+
+    $ipt_obj = new IPTables::ChainMgr(%ipt_opts)
+        or die '[*] Could not acquire IPTables::ChainMgr object.';
+    return;
+}
+
+sub append_die_msg() {
+    open D, ">> $config{'FWKNOP_ERR_DIR'}/knoptm.die" or
+        die "[*] Could not open $config{'FWKNOP_DIR'}/knoptm.die: $!";
+    print D scalar localtime(), " knoptm v$version (file " .
+        "rev: $rev_num) pid: $$ $die_msg";
+    close D;
+    $die_msg = '';
+    return;
+}
+
+sub append_warn_msg() {
+    open D, ">> $config{'FWKNOP_ERR_DIR'}/knoptm.warn" or
+        die "[*] Could not open $config{'FWKNOP_DIR'}/knoptm.warn: $!";
+    print D scalar localtime(), " knoptm v$version (file " .
+        "rev: $rev_num) pid: $$ $warn_msg";
+    close D;
+    $warn_msg = '';
+    return;
+}
+
+sub handle_locale() {
+    $config{'LOCALE'} = $cmdline_locale if $cmdline_locale;
+
+    if ($config{'LOCALE'} ne 'NONE' and not $no_locale) {
+        ### set LC_ALL env variable
+        $ENV{'LC_ALL'} = $config{'LOCALE'};
+    }
+    return;
+}
+
+sub import_perl_modules() {
+
+    my $mod_paths_ar = &get_mod_paths();
+
+    if ($#$mod_paths_ar > -1) {  ### /usr/lib/fwknop/ exists
+        push @$mod_paths_ar, @INC;
+        splice @INC, 0, $#$mod_paths_ar+1, @$mod_paths_ar;
+    }
+
+    if ($debug or $debug_to_file) {
+        &logr('[+]', "import_perl_modules INC array:", $NO_MAIL);
+        for (@INC) {
+            &logr('[+]', $_, $NO_MAIL);
+        }
+    }
+
+    unless ($config{'ALERTING_METHODS'} =~ /no.?syslog/i) {
+        require Unix::Syslog;
+        Unix::Syslog->import(qw(:subs :macros));
+    }
+
+    return;
+}
+
+sub get_mod_paths() {
+
+    my @paths = ();
+
+    $config{'FWKNOP_MOD_DIR'} = $lib_dir if $lib_dir;
+
+    unless (-d $config{'FWKNOP_MOD_DIR'}) {
+        my $dir_tmp = $config{'FWKNOP_MOD_DIR'};
+        $dir_tmp =~ s|lib/|lib64/|;
+        if (-d $dir_tmp) {
+            $config{'FWKNOP_MOD_DIR'} = $dir_tmp;
+        } else {
+            return [];
+        }
+    }
+
+    opendir D, $config{'FWKNOP_MOD_DIR'}
+        or die "[*] Could not open $config{'FWKNOP_MOD_DIR'}: $!";
+    my @dirs = readdir D;
+    closedir D;
+
+    push @paths, $config{'FWKNOP_MOD_DIR'};
+
+    for my $dir (@dirs) {
+        ### get directories like "/usr/lib/fwknop/x86_64-linux"
+        next unless -d "$config{'FWKNOP_MOD_DIR'}/$dir";
+        push @paths, "$config{'FWKNOP_MOD_DIR'}/$dir"
+            if $dir =~ m|linux| or $dir =~ m|thread|
+                or (-d "$config{'FWKNOP_MOD_DIR'}/$dir/auto");
+    }
+    return \@paths;
+}
+
+sub usage() {
+    my $exit_status = shift;
+    print <<_HELP_;
+
+knoptm; Access timeout daemon for fwknop
+
+[+] Version: $version, by Michael Rash (mbr\@cipherdyne.org)
+    URL: http://www.cipherdyne.org/fwknop/
+
+Usage: knoptm [options]
+
+Options:
+    -c, --config <file>     - Specify path to config file instead of using
+                              the default $config_file.  This
+                              file is used only when knoptm is run as a
+                              daemon.
+    --no-voluntary-exits    - Disregard ENABLE_VOLUNTARY_EXITS setting.
+    --no-logs               - Do not generate any log output or emails
+                              (fwknop_test.pl uses this).
+    --Lib-dir <path>        - Specify path to the lib directory for perl
+                              module dependencies (not usually necessary).
+    -l, --locale <locale>   - Specify LC_ALL locale env variable.
+    --no-locale             - Do not set any locale variable.
+    -V, --Version           - Print version information and exit.
+    -h, --help              - Display usage information and exit.
+_HELP_
+    exit $exit_status;
+}

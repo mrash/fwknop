@@ -1,0 +1,33 @@
+.\"
+.TH KNOPMD 8 "July 2004" Linux
+.SH NAME
+.B knopmd
+\- separates iptables messages from all other kernel messages.
+.SH SYNOPSIS
+.B knopmd
+.SH DESCRIPTION
+.B knopmd
+reads messages from the /var/lib/fwknop/fwknopfifo named pipe and prints any firewall
+related log messages to the fwknop data file "/var/log/fwknop/fwdata".
+.B Note
+that knopmd is only used in the legacy port knocking mode, and the default
+authentication/authorization method used by fwknop is Single Packet Authorization (SPA).
+.B fwknop
+cannot detect port knocking sequences without knopmd running on the machine.
+.B knopmd
+references the fwknop.conf configuration file which by default is
+located at /etc/fwknop/fwknop.conf, but a different path can be specified
+on the command line.
+
+.SH SEE ALSO
+.BR fwknop (8),
+.BR fwknopd (8),
+.BR knopwatchd (8),
+.SH AUTHOR
+Michael Rash (mbr@cipherdyne.org)
+
+.SH DISTRIBUTION
+.B knopmd
+is distributed under the GNU General Public License (GPL), and the latest
+version may be downloaded from
+.B http://www.cipherdyne.org

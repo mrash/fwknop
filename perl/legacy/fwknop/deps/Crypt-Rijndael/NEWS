@@ -1,0 +1,10 @@
+
+Changes from Version 0.04:
+
+All modes of operation recommended by NIST as of July 2001 (ECB, CBC, CFB-128,
+OFB, and CTR) are implemented, with the exception of n-bit CFB mode.  I can't
+think of a way to do it without adding yet another incompatible method...
+
+An incompatible (to Crypt::CBC) method of changing the IV's for the
+modes which require it has been added.
+

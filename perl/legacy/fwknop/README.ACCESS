@@ -1,0 +1,90 @@
+
+This file describes some common example configurations for the
+/etc/fwknop/access.conf file.
+
+1) Define parameters for accepting single-packet authorization messages
+   from any source IP address via libpcap.  Fwknop will reconfigure the
+   local iptables policy to allow access to SSHD (TCP port 22) for 30
+   seconds from the IP also specified in the packet.  This example probably
+   represents the best configuration for most needs:
+
+  SOURCE: ANY;
+  OPEN_PORTS: tcp/22;
+  DATA_COLLECT_MODE: PCAP;
+  KEY: myencryptkey;
+  FW_ACCESS_TIMEOUT: 30;
+
+2) If you would like the fwknop client to specify which port is opened by
+   fwknopd through the firewall, then replace the OPEN_PORTS variable with
+   PERMIT_CLIENT_PORTS as follows:
+
+  SOURCE: ANY;
+  PERMIT_CLIENT_PORTS: Y;
+  DATA_COLLECT_MODE: PCAP;
+  KEY: myencryptkey;
+  FW_ACCESS_TIMEOUT: 30;
+
+3) This example is identical to example 1) above, but now we add GPG keys
+   as an alternate encryption method.  The original symmetric key will
+   still be accepted, but only if an attempted GPG decrypt does not
+   succeed.  The GPG_REMOTE_ID is the key ID that the encrypted packet is
+   signed with by the fwknop client.  Note that using GPG keys requires
+   that the client key has been imported (and signed) into the
+   GPG_HOME_DIR key ring on the server side, and the server key has been
+   imported (and signed) into the GPG key ring on the client side. Because
+   the GPG password for the server key is put within the access.conf, the
+   server key should be specifically generated and used only for fwknop
+   server functions; it should not a valuable GPG key that is used for
+   things like personal email encryption. See the fwknop man page for
+   examples of how to use the GPG encryption method from the fwknop
+   command line on the client side. To match any GPG key, set
+   GPG_REMOTE_ID to ANY.  The GPG_AGENT_INFO variable is included for
+   reference if fwknopd is run in gpg-agent mode.
+
+  SOURCE: ANY;
+  OPEN_PORTS: tcp/22;
+  DATA_COLLECT_MODE: PCAP;
+  KEY: myencryptkey;
+  GPG_HOME_DIR: /root/.gnupg;
+  GPG_DECRYPT_ID: ABCD1234;
+  GPG_DECRYPT_PW: myGpgPassword;
+  GPG_REMOTE_ID: 1234ABCD;
+  GPG_AGENT_INFO: /tmp/gpg-n7jEPC/S.gpg-agent:18333:1;  ### only for gpg-agent
+  FW_ACCESS_TIMEOUT: 30;
+
+4) This example is identical to example 1) above, but now we allow a
+   remote fwknop client to send a command to the fwknopd server (which it
+   will execute as root):
+
+  SOURCE: ANY;
+  OPEN_PORTS: tcp/22;
+  DATA_COLLECT_MODE: PCAP;
+  ENABLE_CMD_EXEC;
+  KEY: myencryptkey;
+  FW_ACCESS_TIMEOUT: 30;
+
+5) This example is identical to example 4) above, but now we specify a
+   regular expression which any remote command must match before being
+   executed:
+
+  SOURCE: ANY;
+  OPEN_PORTS: tcp/22;
+  DATA_COLLECT_MODE: PCAP;
+  ENABLE_CMD_EXEC;
+  CMD_REGEX: /sbin/iptables.*ACCEPT;
+  KEY: myencryptkey;
+  FW_ACCESS_TIMEOUT: 30;
+
+6) This example is similar to example 1) above, but this time instruct
+   fwknopd to read packets from a file that is written to by a sniffer
+   process or by something like the ulogd pcap writer (use ULOG_PCAP for
+   this).  The specific file path is defined by the PCAP_FILE keyword in
+   /etc/fwknop/fwknop.conf).  We also require that the username on the
+   system that generates the authorization packet is "mbr":
+
+  SOURCE: ANY;
+  OPEN_PORTS: tcp/22;
+  DATA_COLLECT_MODE: FILE_PCAP;
+  KEY: myencryptkey;
+  FW_ACCESS_TIMEOUT: 30;
+  REQUIRE_USERNAME: mbr;

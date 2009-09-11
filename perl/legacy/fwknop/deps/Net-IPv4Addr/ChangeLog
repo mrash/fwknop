@@ -1,0 +1,90 @@
+2000-08-01  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+
+	* Tag: IPV4ADDR_0_10
+
+	* IPv4Addr.spec: Updated for version 0.10.
+	Updated spec file to use new macros.
+
+	* IPv4Addr.pm (ipv4_network): Bad network for 0.0.0.0/0.
+	(ipv4_broadcast): Bad broadcast for 0.0.0.0/0.
+	(ipv4_in_network): 0.0.0.0/0 was included in any nets.
+	(VERSION): Updated version number to 0.10.
+
+	* NEWS: News for 0.10.
+
+	* README: Updated version number to 0.10.
+
+	* test.pl: Added test for ipv4_in_network( anything, 0.0.0.0/0).
+
+	* debian/rules: Merged changes from Bernd
+.
+	* debian/changelog: Merged changes from Bernd.
+
+	* debian/control: Merged changes from Bernd.
+
+	* IPv4Addr.pm: Copyright mods.
+
+2000-07-27 Francis J. Lacoste <francis.lacoste@iNsu.COM>
+
+        * IPv4Addr (%EXPORT_TAGS): ipv4_chkip was exported
+        under the wrong name.
+
+2000-05-03  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+	* Tag:	IPV4ADDR_0_09
+
+	* test.pl: Added test for different class networks.
+
+	* IPv4Addr.pm (ipv4_in_network) Fixed bug where
+		       comparison between network that differ
+		       by more than an octet failed.
+      		      (version) Incremented version number 
+		      to 0.09.
+
+1999-12-15  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+
+	* Tag: IPV4ADDR_0_08
+
+	* IPv4Addr.pm: Moved require statement inside BEGIN to
+		       fix problems with ipv4calc.
+		       
+		       Incremented version number to 0.08.
+
+1999-10-19  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+
+	TAG: IPV4ADDR_0_07
+
+	* debian/:	Added debian packaging by Bernd Eckenfels
+			<ecki@lina.inka.de>
+	
+	TAG: IPV4ADDR_0_06
+	
+	* IPv4Addr.pm:  Renamed module to Net::IPv4Addr.
+
+1999-09-15  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+
+	* IPv4Addr.pm:	Corrected errors in the documentation.
+
+			TAG: IPV4ADDR_0_05.
+
+1999-08-15  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+
+	* IPv4Addr.pm (ipv4_in_netwrok): Fixed broken logic
+			of ipv4_in_network. It didn't handle
+			correctly network which weren't of 
+			the same size.
+
+			TAG: IPV4ADDR_0_04.
+
+1999-07-05  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+
+	* IPv4Addr.pm (ipv4_in_network): Added check for universal 
+			broadcast address (255.255.255.255) and
+			no address (0.0.0.0).
+
+			TAG: IPV4ADDR_0_03.
+
+1999-05-27  Francis J. Lacoste  <francis.lacoste@iNsu.COM>
+
+	* IPv4Addr.pm: (ipv4_parse) removed some undefined warnings.
+			Updated version to 0.02.
+

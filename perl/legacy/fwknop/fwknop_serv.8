@@ -1,0 +1,28 @@
+.\"
+.TH FWKNOP_SERV 8 "July 2008" Linux
+.SH NAME
+.B fwknop_serv
+\- Fwknop server for the TOR network.
+
+.SH DESCRIPTION
+.B fwknop_serv
+is a simplisitc TCP server that is only used if SPA packets are sent over the 
+TOR anonymizing network (http://www.torproject.org). Use of this server results
+in bidirectional communication, so it technically breaks the usual 
+unidirectional nature of the SPA protocol; More informations can be found at
+the following : url http://www.cipherdyne.org/fwknop/docs/talks/dc14_fwknop_slides.pdf.
+
+.SH "SEE ALSO"
+.BR fwknop (8),
+.BR fwknopd (8),
+
+.SH AUTHOR
+Michael Rash <mbr@cipherdyne.org>
+
+.SH DISTRIBUTION
+.B fwknop_serv
+is distributed under the GNU General Public License (GPL), and the latest
+version may be downloaded from
+.B http://www.cipherdyne.org/
+
+

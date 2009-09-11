@@ -1,0 +1,174 @@
+
+The purpose of this directory is to provide an automated testing
+infrastructure for fwknop. This includes the ability to test the SPA mode of
+fwknop operations as well as more basic things such as program compilation.
+
+The fwknop_test.pl program should be run as root so that the local firewall
+policy can be altered to temporarily test SPA access (this is done over the
+loopback interface and does not alter the existing firewall policy).
+
+Because fwknop requires various perl modules to be installed in
+/usr/lib/fwknop/, this test suite can really only function correctly after
+fwknop has been installed. If there appears to be a problem with fwknop, this
+test suite may find it.
+
+Under normal circumstances, the output of this program should look like the
+following (under Linux; some tests are not yet enabled on systems running
+ipfw):
+
+# ./fwknop_test.pl
+
+[+] ==> Running fwknop test suite; firewall: iptables <==
+
+(Setup) perl program compilation....................................pass (0)
+(Setup) C program compilation.......................................pass (1)
+(Setup) Command line argument processing............................pass (2)
+(Setup) List iptables rules.........................................pass (3)
+(Setup) System information and fwknop installation specifics........pass (4)
+(Setup) Stopping any running fwknopd processes......................pass (5)
+(Setup) Flushing all fwknopd iptables rules.........................pass (6)
+(Setup) Deleting all fwknopd iptables chains........................pass (7)
+(Basic communications) Generating SPA access packet.................pass (8)
+(Basic communications) Sniffing SPA access packet...................pass (9)
+(Basic communications) Verifying SPA access packet format...........pass (10)
+(Basic communications) Firewall access rules exist..................pass (11)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(Basic communications) Firewall access rules removed................pass (12)
+(Basic communications) Stopping all running fwknopd processes.......pass (13)
+(Replay attacks, broken data) Rijndael key validity.................pass (14)
+(Replay attacks, broken data) Replay detection - all digests........pass (15)
+(Replay attacks, broken data) Replay detection - SHA256.............pass (16)
+(Replay attacks, broken data) Replay detection - SHA1...............pass (17)
+(Replay attacks, broken data) Replay detection - MD5................pass (18)
+(Replay attacks, broken data) 100 random packets....................pass (19)
+(Replay attacks, broken data) Truncated SPA packet..................pass (20)
+(Replay attacks, broken data) Sniffing truncated SPA packet.........pass (21)
+(Replay attacks, broken data) Firewall rules do not exist...........pass (22)
+(Replay attacks, broken data) SPA packet with bogus key.............pass (23)
+(Replay attacks, broken data) Sniffing broken SPA packet............pass (24)
+(Replay attacks, broken data) Firewall rules do not exist...........pass (25)
+(Internal digest alg mis-match) Generating SPA packet...............pass (26)
+(Internal digest alg mis-match) Sniffing SPA packet.................pass (27)
+(Internal digest alg mis-match) Verifying SPA packet format.........pass (28)
+(Internal digest alg mis-match) Firewall access rules exist.........pass (29)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(Internal digest alg mis-match) Firewall access rules removed.......pass (30)
+(Internal digest alg mis-match) Stopping all fwknopd processes......pass (31)
+(Client timeout) Generating SPA access packet.......................pass (32)
+(Client timeout) Sniffing SPA access packet.........................pass (33)
+(Client timeout) Verifying SPA access packet format.................pass (34)
+(Client timeout) Firewall access rules exist........................pass (35)
+    (Sleeping for 10 seconds for firewall rule timeout)
+    10 9 8 7 6 5 4 3 2 1 0
+(Client timeout) Firewall access rules removed......................pass (36)
+(Client timeout) Stopping all running fwknopd processes.............pass (37)
+(Append data) Data appended to SPA packet...........................pass (38)
+(Append data) Sniffing appended SPA packet..........................pass (39)
+(Append data) Firewall rules exist..................................pass (40)
+(Rijndael Salted__ compatibility) Generating SPA packet.............pass (41)
+(Rijndael Salted__ compatibility) Sniffing SPA packet...............pass (42)
+(Rijndael Salted__ compatibility) Verifying SPA format..............pass (43)
+(Rijndael Salted__ compatibility) Rules exist.......................pass (44)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(Rijndael Salted__ compatibility) Rules removed.....................pass (45)
+(Rijndael Salted__ compatibility) Stopping fwknopd..................pass (46)
+(Destination port randomness) Generating SPA packet.................pass (47)
+(Destination port randomness) Sniffing SPA packet...................pass (48)
+(Destination port randomness) Verifying SPA format..................pass (49)
+(Destination port randomness) Rules exist...........................pass (50)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(Destination port randomness) Rules removed.........................pass (51)
+(Destination port randomness) Stopping fwknopd......................pass (52)
+(Non-promisc capture) Generating SPA access packet..................pass (53)
+(Non-promisc capture) Sniffing SPA access packet....................pass (54)
+(Non-promisc capture) Verifying sniffed SPA access packet...........pass (55)
+(Non-promisc capture) Firewall access rules exist...................pass (56)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(Non-promisc capture) Firewall access rules removed.................pass (57)
+(Non-promisc capture) Stopping all fwknopd processes................pass (58)
+(SPA aging) Generating SPA access packet............................pass (59)
+(SPA aging) Expired SPA packet detection............................pass (60)
+(SPA aging) Making sure firewall rules do not exist.................pass (61)
+(Require SRC) Generating SPA packet with 0.0.0.0 src addr...........pass (62)
+(Require SRC) Sniffing packet with 0.0.0.0 src addr.................pass (63)
+(Require SRC) Making sure firewall rules do not exist...............pass (64)
+(Require user) Generating SPA packet with unauthorized user.........pass (65)
+(Require user) Unauthorized user detection..........................pass (66)
+(Require user) Making sure firewall rules do not exist..............pass (67)
+(Permit ports) Generating unauthorized port access request..........pass (68)
+(Permit ports) Unauthorized port access detection...................pass (69)
+(Permit ports) Making sure firewall rules do not exist..............pass (70)
+(Bogus src) Generating SPA packet from non-matching src.............pass (71)
+(Bogus src) Verifying SPA access packet format......................pass (72)
+(Bogus src) Non-matching SOURCE block...............................pass (73)
+(Bogus src) Making sure firewall rules do not exist.................pass (74)
+(Excluded src) Generating SPA packet from non-matching src..........pass (75)
+(Excluded src) Verifying SPA access packet format...................pass (76)
+(Excluded src) Non-matching SOURCE block............................pass (77)
+(Excluded src) Making sure firewall rules do not exist..............pass (78)
+(Blacklist src) Generating blacklisted SPA packet...................pass (79)
+(Blacklist src) Verifying SPA access packet format..................pass (80)
+(Blacklist src) Sniffing SPA packet.................................pass (81)
+(Blacklist src) Making sure firewall rules do not exist.............pass (82)
+(Multi-SOURCE) Generating SPA access packet.........................pass (83)
+(Multi-SOURCE) Sniffing SPA access packet...........................pass (84)
+(Multi-SOURCE) Verifying SPA access packet format...................pass (85)
+(Multi-SOURCE) Firewall access rules exist..........................pass (86)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(Multi-SOURCE) Firewall access rules removed........................pass (87)
+(Multi-SOURCE) Stopping running fwknopd processes...................pass (88)
+(GnuPG) Generating SPA access packet................................pass (89)
+(GnuPG) Sniffing SPA access packet to acquire access................pass (90)
+(GnuPG) Verifying sniffed SPA access packet format..................pass (91)
+(GnuPG) Firewall access rules exist.................................pass (92)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(GnuPG) Firewall access rules removed...............................pass (93)
+(GnuPG) Stopping all running fwknopd processes......................pass (94)
+(Command execution) Generating SPA command packet...................pass (95)
+(Command execution) Sniffing SPA command packet and executing.......pass (96)
+(Command execution) Verifying SPA command packet format.............pass (97)
+(Command execution) Making sure firewall rules do not exist.........pass (98)
+(Command execution) Non-matching regex command packet...............pass (99)
+(Command execution) SPA command packet filtered.....................pass (100)
+(Command execution) Making sure firewall rules do not exist.........pass (101)
+(FORWARD chain) Stopping all running fwknopd processes..............pass (102)
+(FORWARD chain) Generating FORWARD chain access packet..............pass (103)
+(FORWARD chain) FORWARD request detection...........................pass (104)
+(FORWARD chain) FORWARD and DNAT access rules.......................pass (105)
+(FORWARD chain) Verifying SPA FORWARD access packet format..........pass (106)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(FORWARD chain) Making sure firewall rules are removed..............pass (107)
+(FORWARD chain) Generating FORWARD access SPA packet................pass (108)
+(FORWARD chain) Verifying SPA FORWARD access packet format..........pass (109)
+(FORWARD chain) FORWARD access to restricted IP.....................pass (110)
+(FORWARD chain) Firewall rules do not exist.........................pass (111)
+(OUTPUT chain) Stopping all running fwknopd processes...............pass (112)
+(OUTPUT chain) Generating OUTPUT chain access packet................pass (113)
+(OUTPUT chain) OUTPUT access rules..................................pass (114)
+(OUTPUT chain) Verifying OUTPUT access packet format................pass (115)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(OUTPUT chain) Making sure firewall rules are removed...............pass (116)
+(Filesystem tcpdump capture) Sniffing over lo.......................pass (117)
+(Filesystem tcpdump capture) Stopping fwknopd processes.............pass (118)
+(Filesystem tcpdump capture) Generating SPA packet..................pass (119)
+(Filesystem tcpdump capture) SPA communications via file............pass (120)
+(Filesystem tcpdump capture) Firewall access rules exist............pass (121)
+    (Sleeping for 5 (+3) seconds for firewall rule timeout)
+    8 7 6 5 4 3 2 1 0
+(Filesystem tcpdump capture) Rules removed..........................pass (122)
+Stopping all running fwknopd processes..............................pass (123)
+Deleting all fwknopd iptables chains................................pass (124)
+Verifying SPA digest file format....................................pass (125)
+Collecting fwknop syslog messages...................................pass (126)
+
+[+] ==> Passed 127/127 tests against fwknop. <==
+[+] This console output has been stored in: test.log

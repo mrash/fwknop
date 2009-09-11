@@ -1,0 +1,236 @@
+Revision history for Perl extension Net::RawIP.
+
+0.23 Tue Jan8  2007
+    - add version number to submodules
+
+0.22 Tue Jan8  2007
+    - remove dependency on List::MoreUtils
+
+0.22_01 Mon Jul 16 2007 (Steve Bonds)
+    - fix endianness bug in ICMP packet creation
+    - add lots of comments on what's going on in the ICMP portion
+      of the RawIP.xs and RawIP.pm files
+    - break out sub-packages to their own files so "make test"
+      works even with Critic enabled
+
+0.21 Mon Mar 26 22:53:48 2007
+    - fix looping bug in set_icmp (Micha Nasriachi) 
+    - fix tests to work both as root and as regular user
+
+0.21_04
+    - Skipped
+
+
+0.21_03 Fri Sep 15 11:26:17 IDT 2006
+    - Received official maintainership from Sergey
+    - In Makefile.PL check for the location of the header file, 
+      report if it could not be found.
+
+0.21_02 Sep 10 2006
+    - Cleaning up the C code (indentation)
+    - More tests
+    - Cleaning up the documentation, replacing the bad English of Sergey
+      with the bad English of Gabor.
+    - new() dies if wrong or duplicate protocols given
+      All by Gabor Szabo
+
+0.21_01   Sat Sep  9 23:59:07 IDT 2006
+    - Cleaning up many warnings that were probably due to using gcc 4+
+    - Cleaning up several assignment errors that were probably due to gcc 4+
+    - Lots of cleanup in the Perl code 
+    - Add tests
+      All by Gabor Szabo
+
+0.2   Wed Feb  9 17:11:34 PST 2005
+    - applied patch from Bill Stearns to get module compiled on 
+      modern gcc.    
+
+0.1   Sat Feb  1 22:23:14 PST 2003
+    - applied patch from Willem Itsme <itsme@xs4all.nl> to get 
+      Perl 5.8 satisfied 
+
+0.09d Tue Nov 21 11:47:43 2000
+    - applied patch from Igal Koshevoy <igal@eBizQuality.com>
+      exit() calls were changed to croak()
+
+0.09c Mon Apr  3 16:12:56 2000
+    - small modification in Makefile.PL to get
+      the module included in the BCL 6.2 
+
+0.09b Mon Mar 27 17:15:01 2000
+    - fixed some memory leaks 
+
+0.09a Sat Mar 25 22:31:21 2000
+    - fixes in the tcp options parse code
+      Thanks to <Azrael@wwdg.com>
+    - applied patch from Stanislav Shalunov <shalunov@att.com>
+      (die() has changed to croak())
+
+0.09  Wed Oct 20 11:00:00 1999
+    - fixed bug in lookupnet 
+      Applied patch from Brian Craft <bcboy@cisco.com>
+
+0.08  Wed Oct 13 10:36:41 1999
+    - "sleep" was changed to "select" for allowing 
+      to have non-integer delay times in seconds
+      Thanks to Neal E. Young <ney@cs.dartmouth.edu> 
+
+0.07  Thu Jun 17 13:25:10 1999 
+    - some comments 
+    - added new examle scripts
+    - RawIP.xs modified for compiling with threading perl
+
+0.06e Wed May 19 11:26:08 1999
+    - applied patch from Michael Cook <cook@sightpath.com> for
+      possibility to check syntax from non-root accounts 
+
+0.06d Wed Apr 28 08:56:44 1999
+    - has been implemented DESTROY method for correctly close
+      assosiated filedescriptors. 
+      Thanks to Gang Lu <ganglu@sightpath.com> 
+
+0.06c Wed Mar 31 09:16:05 1999
+    - has been implemented send_eth_frame method by suggestion
+      from Tom Brown <tomb@heliox.com> 
+
+0.06b Sun Feb 28 11:34:34 1999
+    - has been reworked Makefile.PL for the autoconfiguration.    
+
+0.06a Fri Feb 26 09:19:00 1999 
+    - applied patch from Bryan Blackburn <blb@pobox.com> for
+      port ifaddrlist() to Solaris. Thanks ,Bryan!
+    - some rework for better guess about a raw socket format
+    
+0.06  Mon Feb 22 18:44:18 1999
+    - has been added the man page for the interface to libpcap 
+
+0.05f Mon Feb 22 09:52:20 1999
+    - rdev has been modified for handle route to localhost on 
+      a systems with a bigendian byteorder 
+
+0.05e Fri Feb 19 11:07:04 1999
+    - an ethernet related methods are implemented on OpenBSD
+      thanks to Stanislav Grozev <tacho@orbitel.bg> 
+    - modified rdev for handle default on ppp devices with remote address
+      non-compatible with netmask.Thanks to TTSG <ttsg@ttsg.com>
+    - change raw format for OpenBSD to RFC format.
+      Thanks to Stanislav Grozev <tacho@orbitel.bg>
+  
+0.05d Thu Feb 18 14:34:38 1999
+    - rdev function has been implemented on FreeBSD
+    - an ethernet related methods are implemented on BSDI
+      thanks to TTSG <ttsg@ttsg.com>
+    - ifaddrlist function returns and loopback now
+    - added sleep for better discovering mac addresses
+    - added NAVE_SOCKADDR_SA_LEN for BSDI
+    - adapted rdev for 2.2.x Linux and for point-to-point devices
+      on BSDish systems
+         
+0.05c Wed Feb 10 18:37:25 1999
+    - has been implemented the function rdev(addr) 
+      For now it work on Linux only
+
+0.05b Mon Feb  8 17:51:29 1999
+    - a ethernet related methods are implemented on FreeBSD    
+    - added method pcapinit_offline from sen_ml@eccosys.com
+            
+0.05a Thu Feb  4 19:26:46 1999
+    - has been implemented the ifaddrlist function
+      this code was imported with small modification from
+      the Firewalk portscanner 
+      FIREWALK  (c) 1998, Mike D. Schiffman <mds@es2.net>
+                          Dave H. Goldsmith <dhg@es2.net>
+      Not work on Solaris.
+
+0.05  Wed Feb  3 16:20:17 1999
+    - has been added README.DEV - readme for the developers.       
+
+0.04e Tue Feb  2 13:46:37 1999
+    - have been added some defines in the util.c for compability
+      with an old libpcap. Thanks to Seth <seth@freebie.dp.ny.frb.org> 
+
+0.04d Tue Feb  2 10:26:54 1999
+    - has been implemented the function called "linkoffset"
+    - reworked the functions which related to the send side
+      for more flexibility
+    - reworked the man page. I'd try to catch bugs in my
+      horrible english ;))
+    - small rework in the timem()    
+    - fixed bug in the "send" method related to the generic subclass
+    - has been added the traceroute script
+    - has been added the oshare script
+    
+0.04c Thu Jan 28 15:47:45 1999
+    - fix bug in timem() reported by mci@gw.al.lg.ua  
+    - fix typo bug in the "get" method related to the generic subclass
+
+0.04b Thu Jan 28 09:40:47
+    - fixes in the pod documentation 
+
+0.04a Wed Jan 27 08:55:28 1999
+    - fix small bug in udp_pkt_creat reported by
+      Michail Litvak <mci@gw.al.lg.ua>      
+
+0.04  Mon Jan 25 09:27:50 1999
+    - port to BSDI and probably to other *BSD 
+      Thanks for help to TTSG <ttsg@ttsg.com>
+    - fixes for compile with Perl 5.005, thanks to Gurusamy Sarathy
+      <gsar@umich.edu> for his finest Data::Dumper ;)
+
+0.03  Tue Jan 19 16:26:23 1999
+    - implemented generic subclass for generic ip datagramms
+    - implemented manipulate IP and TCP options
+    - added new example scripts
+    - fix in RawIP.xs from noel@burton-krahn.com
+      for suppress warning messages while compile on Alpha
+
+0.03f Wed Jan  6 16:35:58 1999
+    - insert BSDFIX() for FreeBSD rawsocket format
+    - it seems like Net::RawIP is worked on FreeBSD
+      Thanks for help porting to FreeBSD
+      to Igor Indick <igor@skif.net>
+      and Nicholas N. Matveev <nickm@ruff.granch.nsk.su>
+
+0.03e Mon Jan  4 16:22:25 1999
+    - remove memory leaks reported by 
+      ian.vitek@backupcentralen.se
+
+0.03d Thu Dec 31 07:42:57 1998
+    - reworked set_sockaddr 
+    - remove #ifdef FreeBSD and usleep(20000);
+
+0.03c Wed Dec 30 09:08:01 1998
+    - applied patch from Bryan Blackburn <blb@rmi.net>
+      for porting to Solaris
+    - added some pod fixes from Bryan Blackburn <blb@rmi.net>
+      for pod2html
+
+0.03b Mon Dec 28 13:50:17 1998
+    - fix problems with gcc 2.7.2.1 on FreeBSD
+      
+   Tue Dec 29 16:52:16 1998
+    - insert usleep(20000); for sendto() on FreeBSD
+
+0.03a Thu Dec 24 10:01:15 1998
+    - minimize files for includes for system compability
+    - Set switch $^W to FALSE for suppress warning messages
+      Thu Dec 24 18:59:42 1998
+    - added some compability with other systems
+
+0.02  Wed Dec 23 17:59:30 1998
+    - some man fixes
+
+0.02b Tue Dec 22 15:32:51 1998
+    - documenting new ethernet related features
+
+
+0.01  Thu Dec 10 19:48:04 1998
+    - original version
+      Wed Dec 16 18:29:25 1998
+    - implemented udp and icmp packets       
+      Mon Dec 21 18:40:11 1998
+    - implemented SOCK_PACKET and manipulating eth headers
+      including discovering mac adresses
+
+ 
+

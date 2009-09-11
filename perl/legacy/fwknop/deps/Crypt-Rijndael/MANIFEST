@@ -1,0 +1,27 @@
+_rijndael.c
+Changes
+COPYING
+examples/README
+LICENSE
+Makefile.PL
+MANIFEST
+NEWS
+README
+rijndael.h
+Rijndael.pm
+Rijndael.xs
+t/00_load.t
+t/blocksize.t
+t/cbc.t
+t/cfb.t
+t/ctr.t
+t/ecb.t
+t/lib/mode.pl
+t/ofb.t
+t/pcbc.t
+t/pod.t
+t/pod_coverage.t
+t/rt/27632.t
+t/test_manifest
+typemap
+META.yml                                 Module meta-data (added by MakeMaker)

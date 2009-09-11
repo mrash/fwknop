@@ -1,0 +1,15 @@
+NEWS
+README
+ChangeLog
+IPv4Addr.pm
+MANIFEST
+Makefile.PL
+test.pl
+IPv4Addr.spec
+ipv4calc
+debian/changelog
+debian/control
+debian/copyright
+debian/dirs
+debian/docs
+debian/rules

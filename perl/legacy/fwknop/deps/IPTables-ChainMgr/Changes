@@ -1,0 +1,24 @@
+Revision history for Perl extension IPTables::ChainMgr.
+
+0.8 Fri Oct 17 11:35:15 2008
+    - Added the ability to control iptables execution model.  The default is to
+      use waitpid(), but other options are to use system() or popen().
+    - Added the ability to introduce a configurable time delay between each
+      iptables command.
+    - Added the ability to use a function reference for the SIGCHLD signal
+      handler.
+    - Added the ability to configure the number of seconds used as the alarm
+      timeout for iptables command execution in the waitpid() execution model.
+    - Passed IPTables::ChainMgr option for execution model, configurable alarm
+      timeouts, the SIGCHLD signal handler reference, and the configurable
+      number of seconds for additional sleeps between iptables commands to the
+      IPTables::Parse module.
+    - Bugfix for SIGALRM handling to be more consistent with an example from
+      the perlipc man page.
+
+0.7 Sat May 17 10:49:15 2008
+    - Added perldoc documentation for 0.7 release.
+
+0.01  Tue Feb 22 01:18:14 2005
+    - original version; created by h2xs 1.23 with options
+        -A -X -b 5.6.0 -n IPTables::ChainMgr

@@ -1,0 +1,2636 @@
+#!/usr/bin/perl -w
+#
+#############################################################################
+#
+# File: fwknop
+#
+# URL: http://www.cipherdyne.org/fwknop/
+#
+# Purpose: fwknop implements an authorization scheme known as Single Packet
+#          Authorization (SPA) that requires only a single encrypted packet to
+#          communicate various pieces of information including desired access
+#          through an iptables/ipfw policy and/or specific commands to execute
+#          on the target system.  The main application of this program is to
+#          protect services such as SSH with an additional layer of security
+#          in order to make the exploitation of vulnerabilities (both 0-day
+#          and unpatched code) much more difficult.  fwknop also supports
+#          encrypted port knocking, but this is a legacy authentication mode
+#          when compared to SPA.
+#
+#          More information can be found in the fwknop(8) and fwknopd(8) man
+#          pages, and also online here:
+#
+#          http://www.cipherdyne.org/fwknop/docs/
+#
+# Author: Michael Rash (mbr@cipherdyne.org)
+#
+# Version: 1.9.12
+#
+# Copyright (C) 2004-2009 Michael Rash (mbr@cipherdyne.org)
+#
+# License - GNU Public License version 2 (GPLv2):
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+#    USA
+#
+#############################################################################
+#
+# $Id: fwknop 1533 2009-09-08 02:44:02Z mbr $
+#
+
+use IO::Socket;
+use IO::Handle;
+use MIME::Base64;
+use Data::Dumper;
+use POSIX;
+use Getopt::Long;
+use strict;
+
+my $version = '1.9.12';
+my $revision_svn = '$Revision: 1533 $';
+my $rev_num = '1';
+($rev_num) = $revision_svn =~ m|\$Rev.*:\s+(\S+)|;
+
+my $lib_dir = '/usr/lib/fwknop';
+my $print_version = 0;
+my $print_help    = 0;
+my $run_last_args = 0;
+my $debug         = 0;
+my $quiet         = 0;
+my $verbose       = 0;
+my $test_mode     = 0;
+my $cmdl_homedir  = '';
+my $knock_sleep   = 1;  ### default to 1 second difference between port knocks
+my $knock_dst     = '';
+my $homedir       = '';
+my $min_port      = 10000;
+my $max_port      = 65535;
+my $icmp_type     = 8;  ### type/code 8/0 => echo request
+my $icmp_code     = 0;
+my $spoof_src     = '';
+my $server_mode   = 'pcap';
+my $user_rc_file  = '';
+my $server_proto  = '';
+my $run_last_host = '';
+my $total_digest  = '';
+my $show_last_host_cmd = '';
+my $show_last_cmd = 0;
+my $time_offset_plus = '';
+my $time_offset_minus = '';
+my $skip_fko_module = 0;
+my $test_fko_exists = 0;
+my $use_fko_module = 0;
+my $fko_obj       = '';
+my $http_proxy_host = '';
+my $http_proxy = '';
+my $gpg_home_dir  = '';
+my $gpg_recipient = '';
+my $use_gpg_agent = 0;
+my $max_msg_len   = 1500;
+my $max_resolve_http_recv = 1500;
+my $gpg_verbose   = 0;
+my $gpg_no_options = 0;
+my $gpg_agent_info = '';
+my $include_salted = 0;
+my $client_src_port = 0;
+my $gpg_default_key = 0;
+my $gpg_use_options = 0;
+my $err_wait_timer  = 30;  ### seconds
+my $resolve_ip_url  = 'http://www.whatismyip.com/automation/n09230945.asp';
+my $gpg_signing_key = '';
+my $save_packet_mode = 0;
+my $save_packet_file = '';
+my $save_packet_append = 0;
+my $cmdline_pcap_cmd   = '';
+my $no_save_last_args  = 0;
+my $save_destination   = 0;
+my $server_auth_method = '';
+my $spa_established_tcp  = 0;
+my $spa_over_http = 0;
+my $resolve_external_ip  = 0;
+my $server_auth_crypt_pw = '';
+my $pcap_sleep_interval  = 1;  ### seconds
+my $knock_dst_pre_resolve = '';
+my $selected_random_nat_port = 0;
+my $include_base64_trailing_equals = 0;
+my $include_base64_gnupg_prefix = 0;
+my $rand_port     = 0;  ### for SPA packet destination port
+my $NAT_rand_port = 0;  ### for randomized access based on
+                        ### NAT rules (e.g. ssh -p <randport>).
+my $NAT_local = 0; ### Flag for forwarding a port to local socket.
+
+my $locale = 'C';  ### default LC_ALL env variable
+my $no_locale = 0;
+my $gpg_prefix = 'hQ';  ### base64 encoded version of 0x8502
+my $gpg_path = '';
+
+### User agent for contacting http://www.whatismyip.org/, (can
+### override with --User-agent)
+my $ext_resolve_user_agent = "Fwknop/$version";
+$ext_resolve_user_agent =~ s|-pre\d+||;
+
+### ACCESS message:
+###     random data : user : client_timestamp : client_version : \
+###     type (1) : access_request : message digest
+my $SPA_ACCESS_MODE  = 1;  ### default
+
+### COMMAND message:
+###     random data : user : client_timestamp : client_version : \
+###     type (0) : command : message digest
+my $SPA_COMMAND_MODE = 0;
+
+### NAT ACCESS message:
+###     random data : user : client_timestamp : client_version : \
+###     type (2) : access_request : NAT_info : message digest
+my $SPA_NAT_ACCESS_MODE = 2;
+
+### ACCESS message with client-defined firewall timeout:
+###     random data : user : client_timestamp : client_version : \
+###     type (3) : access_request : timeout : message digest
+my $SPA_CLIENT_TIMEOUT_ACCESS_MODE = 3;
+
+### NAT ACCESS message with client-defined firewall timeout:
+###     random data : user : client_timestamp : client_version : \
+###     type (4) : access_request : NAT_info : timeout : message digest
+my $SPA_CLIENT_TIMEOUT_NAT_ACCESS_MODE = 4;
+
+### local NAT ACCESS message:
+###     random data : user : client_timestamp : client_version : \
+###     type (5) : access_request : NAT_info : message digest
+my $SPA_LOCAL_NAT_ACCESS_MODE = 5;
+
+### local NAT ACCESS message with client-defined firewall timeout:
+###     random data : user : client_timestamp : client_version : \
+###     type (6) : access_request : NAT_info : timeout : message digest
+my $SPA_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MODE = 6;
+
+### default time values
+my $knock_interval  = 60;
+my $cmdl_fw_timeout = -1;
+
+### Digest types and command argument flags
+my $MD5_DIGEST    = 1;
+my $SHA1_DIGEST   = 2;
+my $SHA256_DIGEST = 3;
+my $digest_type = $SHA256_DIGEST; ### default
+my $cmdl_digest_alg = '';
+
+### default destination port; you can change with --Server-port,
+### --rand-port, or by appending the ":<port>" syntax to the
+## destination host
+my $DEFAULT_PORT = 62201;
+
+### default to root (client must run as root in this mode)
+my $spoof_username = '';
+my $spoof_proto    = '';
+
+### encrypted port knock vars (these are only used in the legacy
+### port knocking mode).
+my $cmdline_offset  = 0;
+my $enc_port_offset = 61000;  ### default offset
+my $enc_key         = '';
+my $enc_alg         = 'Rijndael';
+my $enc_blocksize   = 32;
+
+### there is a constant "RIJNDAEL_KEYSIZE" in the Crypt::Rijndael sources, but
+### it is not used; a 16 byte key size is fine.
+my $enc_keysize = 16;
+
+my $enc_shared_secret = '';
+my $enc_allow_ip      = '';
+my $enc_source_ip     = '';
+my $enc_rotate_proto  = 0;
+my $get_key_file      = '';  ### get key from file
+my $enc_pcap_port     = $DEFAULT_PORT;
+my $cmdl_spa_port     = 0;
+my $access_str        = '';
+my $NAT_access_str = '';  ### for access through the iptables FORWARD chain
+
+### packet counters
+my $tcp_ctr  = 0;
+my $udp_ctr  = 0;
+my $icmp_ctr = 0;
+
+### tcp option types
+my $tcp_nop_type       = 1;
+my $tcp_mss_type       = 2;
+my $tcp_win_scale_type = 3;
+my $tcp_sack_type      = 4;
+my $tcp_timestamp_type = 8;
+
+my %tcp_p0f_opt_types = (
+    'N' => $tcp_nop_type,
+    'M' => $tcp_mss_type,
+    'W' => $tcp_win_scale_type,
+    'S' => $tcp_sack_type,
+    'T' => $tcp_timestamp_type
+);
+
+my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;
+
+my @args_cp = @ARGV;
+
+### run GetOpt() to get command line args
+&handle_command_line();
+
+&usage(0) if $print_help;
+
+if ($print_version) {
+    print "[+] fwknop v$version (file revision: $rev_num)\n",
+        "      by Michael Rash <mbr\@cipherdyne.org>\n";
+    exit 0;
+}
+
+### set LC_ALL env variable
+$ENV{'LC_ALL'} = $locale unless $no_locale;
+
+&set_digest_type() if $cmdl_digest_alg;
+
+### import fwknop perl modules
+&import_perl_modules();
+
+### this is only necessary for older versions of perl (newer versions
+### call srand() automatically at the first usage of rand() if srand()
+### was not already called).
+srand();
+
+&get_homedir();
+
+### save a copy
+$knock_dst_pre_resolve = $knock_dst;
+
+&assign_spa_port();
+
+if ($run_last_args or $show_last_cmd) {
+
+    ### run fwknop with same command line args as the previous
+    ### execution
+    &run_last_cmdline();
+
+} elsif ($run_last_host or $show_last_host_cmd) {
+
+    $run_last_host = $show_last_host_cmd if $show_last_host_cmd;
+
+    ### run fwknop with the last args for this particular knock destination
+    &run_last_host_cmdline();
+}
+
+die "[*] Must specify a destination server with -D <IP|Host>"
+    unless $knock_dst;
+
+if ($cmdl_fw_timeout != -1) {
+    die "[*] Must specify a firewall timeout >= 0"
+        unless $cmdl_fw_timeout >= 0;
+}
+
+my $print_mode = '';
+if (lc($server_mode) eq 'pcap') {
+    $print_mode = 'SPA';
+} elsif (lc($server_mode) eq 'knock') {
+    $print_mode = 'encrypted port knocking';
+} elsif (lc($server_mode) eq 'shared') {
+    $print_mode = 'shared sequence port knocking';
+} else {
+    die "[*] Unknown server mode: $server_mode ",
+        qq|(must be "pcap", "knock", or "shared").|;
+}
+
+if ($debug) {
+    print "\n[+] ***DEBUG*** Starting fwknop client ($print_mode mode)...\n";
+} else {
+    print "\n[+] Starting fwknop client ($print_mode mode)...\n"
+        unless $quiet;
+}
+
+if ($verbose) {
+    print "[+] fwknop Command line: @args_cp\n";
+}
+
+unless ($knock_dst =~ /$ip_re/) {
+    print "[+] Resolving hostname: $knock_dst\n" unless $quiet;
+    ### resolve to an IP
+    my $iaddr = inet_aton($knock_dst)
+        or die "[*] Could not resolve $knock_dst to an IP.";
+    my $addr = inet_ntoa($iaddr)
+        or die "[*] Could not resolve $knock_dst to an IP.";
+    $knock_dst = $addr;
+}
+
+if ($NAT_local and not $NAT_access_str) {
+    if ($NAT_rand_port) {
+        my $rand_port = &rand_port();
+        $NAT_access_str = "$knock_dst,$rand_port";
+        print "[+] Requesting NAT access for randomized port: $rand_port\n";
+        $selected_random_nat_port = 1;
+    } else {
+        $NAT_access_str = "$knock_dst,55000";
+        print
+"[+] Requesting NAT support for port 55,000; use --NAT-rand-port for a\n",
+"    random port.\n";
+    }
+}
+
+&validate_access_str() if $access_str;
+&validate_NAT_access_str() if $NAT_access_str;
+
+if (lc($server_mode) eq 'pcap' or lc($server_mode) eq 'knock') {
+    die "[*] Must also specify: -D <destination>\n"
+        unless $knock_dst;
+
+    unless ($enc_allow_ip
+            or $enc_source_ip
+            or $resolve_external_ip) {
+        die "[*] Must either specify: --allow-IP <IP>, ",
+            "--source-IP, or --Resolve-external-IP\n";
+    }
+
+    ### make fwknop server see "0.0.0.0" in the encrypted sequence.
+    ### This will instruct the server to open the port for whatever
+    ### source IP the sequence comes from.  This is useful for
+    ### clients that are behind a NAT device.
+    $enc_allow_ip = '0.0.0.0' if $enc_source_ip;
+
+    ### resolve the extenal IP via http://www.whatismyip.org
+    $enc_allow_ip = &resolve_external_ip() if $resolve_external_ip;
+
+    if ($spoof_src) {
+        $< == 0 && $> == 0 or
+            die '[*] You must be root (or equivalent ',
+                "UID 0 account) to spoof the source address.\n";
+    }
+    unless ($enc_allow_ip =~ /$ip_re/) {
+        ### resolve to an IP
+        my $iaddr = inet_aton($enc_allow_ip)
+            or die "[*] Could not resolve $enc_allow_ip to IP.";
+        my $addr = inet_ntoa($iaddr)
+            or die "[*] Could not resolve $enc_allow_ip to IP.";
+        $enc_allow_ip = $addr;
+    }
+    if ($cmdline_offset) {
+        if (lc($server_mode) eq 'pcap') {
+            die "[*] Port offset is meaningless in pcap mode ",
+                "(only a single packet is sent).";
+        }
+        unless ($cmdline_offset < 65280 and $cmdline_offset > 0) {
+            die "[*] Port offset must be 0 < port < 65280";
+        }
+        $enc_port_offset = $cmdline_offset;
+    }
+    if (lc($server_mode) eq 'pcap') {
+        unless ($enc_pcap_port < 65535 and $enc_pcap_port > 0) {
+            die "[*] Port offset must be 0 < port < 65535";
+        }
+    }
+} else {
+    if ($enc_rotate_proto) {
+        die '[*] Can only specify --rotate-proto with ',
+            'encrypted sequences.';
+    }
+}
+
+if ($save_packet_mode) {
+    ### save of copy of the packet
+    unless ($save_packet_file) {
+        $save_packet_file = "$homedir/fwknop_save_packet.$$";
+    }
+    unless ($save_packet_append) {
+        unlink $save_packet_file if -e $save_packet_file;
+    }
+}
+
+### save our command line args (so -l can be used next time)
+unless ($run_last_args or $run_last_host or $no_save_last_args
+        or $show_last_cmd or $show_last_host_cmd) {
+    &save_args();
+}
+
+if (lc($server_mode) eq 'pcap' or lc($server_mode) eq 'knock') {
+
+    ### get the encryption key from the --get-key file
+    ### or from STDIN if it's not in the file.
+    &get_key();
+
+    &handle_server_auth_method() if $server_auth_method;
+
+    if (lc($server_mode) eq 'pcap') {
+
+        ### construct and send the encrypted message to the server
+        ### (sends a single packet).
+        &pcap_send_encrypted_msg(&pcap_build_enc_msg());
+
+    } else {
+        ### we are running in port knocking mode, so get the
+        ### encrypted port sequence (16 ports)
+        &knock_ports(&encrypt_sequence());
+    }
+} else {
+    ### we are running in non-encrypted port knocking mode, so get
+    ### the port sequence
+    &knock_ports(&import_shared_sequence());
+}
+exit 0;
+#============================ end main ==============================
+
+sub pcap_build_enc_msg() {
+
+    ### message format (all fields are separated by ":" characters
+    #
+    #  random number (16 bytes)
+    #  username
+    #  timestamp
+    #  software version
+    #  message type and content:
+    #    0 => command mode / command to execute
+    #    1 => access mode / IP,proto,port
+    #    2 => nat access mode / IP,proto,port / internalIP,externalNATPort
+    #  (optional) server_auth (post 0.9.2 release)
+    #  message digest (SHA256 / SHA1 / MD5 )
+
+    my $msg = '';
+
+    ### initialize the FKO object if we are using the FKO module
+    if ($use_fko_module) {
+        $fko_obj = FKO->new()
+            or die "[*] Could not acquire FKO object: ", FKO->error_str;
+        if ($debug) {
+            print "[+] Using libfko functions via the FKO module.\n";
+        }
+    }
+
+    unless ($quiet) {
+        print "\n[+] Building encrypted Single Packet Authorization (SPA) ",
+            "message...\n";
+        print "[+] Packet fields:\n\n";
+    }
+
+    ### start the SPA message with 16 bytes of random data
+    $msg = &SPA_random_number();
+
+    ### append the username
+    $msg .= &SPA_user();
+
+    ### append the timestamp
+    $msg .= &SPA_timestamp();
+
+    ### append the fwknop client version
+    $msg .= &SPA_version();
+
+    ### append the message type (integer)
+    $msg .= &SPA_message_type();
+
+    ### append the SPA message (this is usually just a request for
+    ### access to a port/protocol combination)
+    $msg .= &SPA_message();
+
+    ### append any client defined fw timeout (optional)
+    $msg .= &fko_SPA_client_timeout() if $use_fko_module;
+
+    ### append NAT access requirement (optional)
+    $msg .= &SPA_nat_access();
+
+    ### append server authentication method (optional)
+    $msg .= &SPA_server_auth();
+
+    ### append any client defined fw timeout (optional)
+    $msg .= &no_fko_SPA_client_timeout() unless $use_fko_module;
+
+    ### append Message Digest
+    $msg =~ s/\n//g;
+    $msg .= &SPA_digest($msg);
+
+    my $encrypted_msg = '';
+
+    ### encrypt the SPA packet using the FKO module
+    if ($use_fko_module) {
+        $encrypted_msg = &fko_encrypt();
+        $fko_obj->destroy();
+        return $encrypted_msg;
+    }
+
+    if ($debug) {
+        print "\n[+] Clear text message (some fields base64 encoded): $msg\n",
+            "    Digest: $total_digest\n";
+    }
+
+    if ($gpg_signing_key or $gpg_recipient) {
+        $encrypted_msg = &pcap_GPG_encrypt_msg($msg);
+    } else {
+        $encrypted_msg = &pcap_Rijndael_encrypt_msg($msg);
+    }
+
+    unless ($include_base64_trailing_equals and $encrypted_msg =~ /=$/) {
+        print "[+] Stripping trailing equals chars from base64 encoding.\n"
+            if $debug;
+        $encrypted_msg =~ s/=*$//;
+    }
+
+    return $encrypted_msg;
+}
+
+sub SPA_random_number() {
+
+    my $random_num = 0;
+
+    if ($use_fko_module) {
+        $random_num = $fko_obj->rand_value();
+    } else {
+        $random_num = int(rand(100000000000000));
+        $random_num .= int(rand(10)) while (length($random_num) < 16);
+    }
+    print "        Random data:    $random_num\n" unless $quiet;
+
+    return '' if $use_fko_module;
+    return $random_num;
+}
+
+sub SPA_user() {
+    my $user = 'root';
+    if ($spoof_src) {
+        if ($spoof_username) {
+            $user = $spoof_username;
+        }
+    } else {
+        ### getlogin() is better than using ENV{'USER'}, which is
+        ### easily manipulated, so only use as a last resort.
+        if ($spoof_username) {
+            $user = $spoof_username;
+        } else {
+            $user = getlogin() || getpwuid($<) ||
+                die "[*] Could not determine user; try using the ",
+                    "--Spoof-user option";
+        }
+    }
+
+    if ($use_fko_module) {
+        my $err = $fko_obj->username($user);
+        if ($err) {
+            die "[*] FKO error setting username: ",
+                $fko_obj->errstr($err), "\n";
+        }
+        $user = $fko_obj->username();
+    }
+    print  "        Username:       $user\n" unless $quiet;
+
+    return '' if $use_fko_module;
+    return ':' . encode_base64($user, '');
+}
+
+sub SPA_timestamp() {
+
+    my $timestamp = '';
+
+    $timestamp = time() unless $use_fko_module;
+
+    if ($time_offset_plus) {
+        my $offset = &time_offset($time_offset_plus);
+        $timestamp += $offset;
+        if ($use_fko_module) {
+            my $err = $fko_obj->timestamp($offset);
+            if ($err) {
+                die "[*] FKO error setting timestamp offset: ",
+                    $fko_obj->errstr($err), "\n";
+            }
+        }
+    }
+
+    if ($time_offset_minus) {
+        my $offset = &time_offset($time_offset_minus);
+        $timestamp -= $offset;
+        if ($use_fko_module) {
+            my $err = $fko_obj->timestamp(-$offset);
+            if ($err) {
+                die "[*] FKO error setting timestamp offset: ",
+                    $fko_obj->errstr($err), "\n";
+            }
+        }
+    }
+
+    $timestamp = $fko_obj->timestamp() if $use_fko_module;
+
+    print "        Timestamp:      $timestamp\n" unless $quiet;
+
+    return '' if $use_fko_module;
+    return ':' . $timestamp;
+}
+
+sub SPA_version() {
+
+    if ($use_fko_module) {
+        print "        Version:        ", $fko_obj->version(), "\n"
+            unless $quiet;
+    } else {
+        print "        Version:        $version\n" unless $quiet;
+    }
+
+    return '' if $use_fko_module;
+    return ':' . $version;
+}
+
+sub SPA_message_type() {
+
+    my $return_str = '';
+    my $print_str  = '';
+    my $spa_type   = '';
+    my $fko_err    = '';
+
+    if ($cmdline_pcap_cmd) {
+        $print_str = 'command mode';
+        $spa_type  = $SPA_COMMAND_MODE;
+        if ($use_fko_module) {
+            $fko_err  = $fko_obj->spa_message_type(FKO->FKO_COMMAND_MSG);
+            $spa_type = $fko_obj->spa_message_type();
+        }
+    } elsif ($NAT_access_str) {
+        if ($NAT_local) {
+            if ($cmdl_fw_timeout >= 0) {
+                $print_str = 'Local NAT client-timeout access mode';
+                $spa_type  = $SPA_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MODE;
+                if ($use_fko_module) {
+                    $fko_err = $fko_obj->
+                        spa_message_type(FKO->FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG);
+                    $spa_type = $fko_obj->spa_message_type();
+                }
+            } else {
+                $print_str = 'Local NAT access mode';
+                $spa_type  = $SPA_LOCAL_NAT_ACCESS_MODE;
+                if ($use_fko_module) {
+                    $fko_err = $fko_obj->
+                        spa_message_type(FKO->FKO_LOCAL_NAT_ACCESS_MSG);
+                    $spa_type = $fko_obj->spa_message_type();
+                }
+            }
+        } else {
+            if ($cmdl_fw_timeout >= 0) {
+                $print_str = 'NAT client-timeout access mode';
+                $spa_type  = $SPA_CLIENT_TIMEOUT_NAT_ACCESS_MODE;
+                if ($use_fko_module) {
+                    $fko_err = $fko_obj->
+                        spa_message_type(FKO->FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG);
+                    $spa_type = $fko_obj->spa_message_type();
+                }
+            } else {
+                $print_str = 'NAT access mode';
+                $spa_type  = $SPA_NAT_ACCESS_MODE;
+                if ($use_fko_module) {
+                    $fko_err = $fko_obj->
+                        spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
+                    $spa_type = $fko_obj->spa_message_type();
+                }
+            }
+        }
+    } else {
+        if ($cmdl_fw_timeout >= 0) {
+            $print_str = 'access client-timeout mode';
+            $spa_type  = $SPA_CLIENT_TIMEOUT_ACCESS_MODE;
+            if ($use_fko_module) {
+                $fko_err  = $fko_obj->spa_message_type(FKO->FKO_CLIENT_TIMEOUT_ACCESS_MSG);
+                $spa_type = $fko_obj->spa_message_type();
+            }
+        } else {
+            $print_str = 'access mode';
+            $spa_type  =  $SPA_ACCESS_MODE;
+            if ($use_fko_module) {
+                $fko_err  = $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+                $spa_type = $fko_obj->spa_message_type();
+            }
+        }
+    }
+
+    if ($use_fko_module) {
+        if ($fko_err) {
+            die "[*] FKO error setting message type: ",
+                $fko_obj->errstr($fko_err), "\n";
+        }
+    }
+
+    unless ($quiet) {
+        print "        Type:           $spa_type   ($print_str)\n";
+    }
+
+    return '' if $use_fko_module;
+    return ':' . $spa_type  ;
+}
+
+sub SPA_message() {
+
+    $access_str = 'none/0' unless $access_str;
+    my $print_str = "$enc_allow_ip,$access_str";
+
+    if ($cmdline_pcap_cmd) {
+        ### a specific command will be executed on the server.  Note we
+        ### prepend the command string with the $enc_allow_ip so that the
+        ### fwknopd server can apply the REQUIRE_SOURCE_ADDRESS criteria.
+
+        $print_str = $cmdline_pcap_cmd;
+
+        if ($use_fko_module) {
+            my $err = $fko_obj->spa_message("$enc_allow_ip,$cmdline_pcap_cmd");
+            if ($err) {
+                die "[*] FKO error setting command string: ",
+                    $fko_obj->errstr($err), "\n";
+            }
+            $print_str = $fko_obj->spa_message();
+        }
+        print "        Cmd:            $print_str\n" unless $quiet;
+        return '' if $use_fko_module;
+        return ':' . encode_base64("$enc_allow_ip,$cmdline_pcap_cmd", '');
+    }
+
+    if ($use_fko_module) {
+        my $err = $fko_obj->spa_message("$enc_allow_ip,$access_str");
+        if ($err) {
+            die "[*] FKO error setting access string: ",
+                $fko_obj->errstr($err), "\n";
+        }
+        $print_str = $fko_obj->spa_message();
+    }
+
+    ### access to port(s)/protocol(s) will be granted on the
+    ### server
+    print "        Access:         $print_str\n"
+        unless $quiet;
+
+    return '' if $use_fko_module;
+    return ':' . encode_base64("$enc_allow_ip,$access_str", '');
+}
+
+sub fko_SPA_client_timeout() {
+    return '' unless $cmdl_fw_timeout >= 0;
+
+    if ($use_fko_module) {
+        my $err = $fko_obj->spa_client_timeout($cmdl_fw_timeout);
+        if ($err) {
+            die "[*] FKO error setting timeout: ",
+                $fko_obj->errstr($err), "\n";
+        }
+    }
+    return '';
+}
+
+sub no_fko_SPA_client_timeout() {
+    return '' unless $cmdl_fw_timeout >= 0;
+    return ':' . $cmdl_fw_timeout;
+}
+
+sub SPA_server_auth() {
+    if (lc($server_auth_method) eq 'crypt') {
+        unless ($quiet) {
+            print "        Server auth:   $server_auth_method,";
+            for (my $i=0; $i<length($server_auth_crypt_pw); $i++) {
+                print '*';
+            }
+            print "\n";
+        }
+        return ':' . encode_base64("crypt,$server_auth_crypt_pw", '');
+    }
+    return '';
+}
+
+sub SPA_nat_access() {
+
+    return '' unless $NAT_access_str;
+
+    my $print_str = $NAT_access_str;
+
+    if ($use_fko_module) {
+        my $err = $fko_obj->spa_nat_access($NAT_access_str);
+        if ($err) {
+            die "[*] FKO error setting NAT access string: ",
+                $fko_obj->errstr($err), "\n";
+        }
+        $print_str = $fko_obj->spa_nat_access();
+    }
+
+    print "        NAT access:     $print_str\n" unless $quiet;
+
+    return '' if $use_fko_module;
+    return ':' . encode_base64($NAT_access_str, '');
+}
+
+sub SPA_digest() {
+    my $msg = shift;
+
+    my $digest = '';
+
+    if ($digest_type == $MD5_DIGEST) {
+        if ($use_fko_module) {
+            my $err = $fko_obj->digest_type(FKO->FKO_DIGEST_MD5);
+            if ($err) {
+                die "[*] FKO error setting digest: ",
+                    $fko_obj->errstr($err), "\n";
+            }
+        } else {
+            require Digest::MD5;
+            Digest::MD5->import(qw(md5_base64));
+            if ($debug) {
+                print "[+] Digest::MD5 $Digest::MD5::VERSION\n";
+            }
+            $digest = md5_base64($msg);
+            if ($debug) {
+                $total_digest = md5_base64("$msg:$digest");
+            }
+            print "        MD5 digest:     $digest\n" unless $quiet;
+        }
+    } elsif ($digest_type == $SHA1_DIGEST) {
+        if ($use_fko_module) {
+            my $err = $fko_obj->digest_type(FKO->FKO_DIGEST_SHA1);
+            if ($err) {
+                die "[*] FKO error setting digest: ",
+                    $fko_obj->errstr($err), "\n";
+            }
+        } else {
+            require Digest::SHA;
+            Digest::SHA->import(qw(sha1_base64));
+            if ($debug) {
+                print "[+] Digest::SHA::VERSION $Digest::SHA::VERSION\n";
+            }
+            $digest = sha1_base64($msg);
+            if ($debug) {
+                $total_digest = sha1_base64("$msg:$digest");
+            }
+            print "        SHA1 digest:    $digest\n" unless $quiet;
+        }
+    } elsif ($digest_type == $SHA256_DIGEST) {
+        if ($use_fko_module) {
+            my $err = $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+            if ($err) {
+                die "[*] FKO error setting digest: ",
+                    $fko_obj->errstr($err), "\n";
+            }
+        } else {
+            require Digest::SHA;
+            Digest::SHA->import(qw(sha256_base64));
+            if ($debug) {
+                print "[+] Digest::SHA::VERSION $Digest::SHA::VERSION\n";
+            }
+            $digest = sha256_base64($msg);
+            if ($debug) {
+                $total_digest = sha256_base64("$msg:$digest");
+            }
+            print "        SHA256 digest:  $digest\n" unless $quiet;
+        }
+    } else {
+        die "[*] Improper digest algorithm, use --help";
+    }
+    return '' if $use_fko_module;
+    return ':' . $digest;
+}
+
+sub fko_encrypt() {
+
+    my $fko_err = '';
+
+    if ($gpg_signing_key or $gpg_recipient) {
+        $fko_err = $fko_obj->encryption_type(FKO->FKO_ENCRYPTION_GPG);
+
+        die "[*] FKO gpg encryption error: ", $fko_obj->errstr($fko_err), "\n"
+            if $fko_err;
+
+        $fko_err = $fko_obj->gpg_home_dir($gpg_home_dir);
+        die "[*] FKO could not set gpg home dir: ",
+            $fko_obj->errstr($fko_err), "\n" if $fko_err;
+
+        if ($gpg_signing_key) {
+            $fko_err = $fko_obj->gpg_signer($gpg_signing_key);
+            die "[*] FKO could not set gpg signing key: ",
+                $fko_obj->errstr($fko_err), "\n" if $fko_err;
+        }
+
+        if ($gpg_recipient) {
+            $fko_err = $fko_obj->gpg_recipient($gpg_recipient);
+            die "[*] FKO could not set gpg recipient key: ",
+                $fko_obj->errstr($fko_err), "\n" if $fko_err;
+        }
+    }
+
+    $fko_err = $fko_obj->spa_data_final($enc_key);
+    if ($fko_err) {
+        die "[*] FKO encryption error: ", $fko_obj->errstr($fko_err), "\n";
+    }
+
+    unless ($quiet) {
+        if ($digest_type == $SHA256_DIGEST) {
+            print "        SHA256 digest:  ", $fko_obj->spa_digest(), "\n";
+        } elsif ($digest_type == $SHA1_DIGEST) {
+            print "        SHA1 digest:    ", $fko_obj->spa_digest(), "\n";
+        } elsif ($digest_type == $MD5_DIGEST) {
+            print "        MD5 digest:     ", $fko_obj->spa_digest(), "\n";
+        }
+    }
+    if ($debug) {
+        print "[+] FKO digest type: ", $fko_obj->digest_type(), "\n";
+    }
+
+    my $encrypted_msg = $fko_obj->spa_data();
+
+    if ($spa_over_http) {
+        ### change "+" chars to "-", and "/" to "_"
+        $encrypted_msg =~ s|\+|-|g;
+        $encrypted_msg =~ s|\/|_|g;
+    }
+
+    if ($gpg_signing_key or $gpg_recipient) {
+        if ($encrypted_msg =~ /^$gpg_prefix/) {
+            unless ($include_base64_gnupg_prefix) {
+                print qq|[+] Stripping encoded "$gpg_prefix" prefix from |,
+                    "outgoing encoded SPA packet.\n" if $debug;
+                ### perl -MMIME::Base64 -e 'print encode_base64("\x85\x02\n")'
+                ### The 'magic' database (via the 'file') command identifies GnuPG
+                ### encrypted files as starting with 0x8502
+                $encrypted_msg =~ s/^$gpg_prefix//;
+            }
+        } else {
+            print
+"[-] Warning: GnuPG encrypted SPA packet does not begin with: $gpg_prefix\n",
+"    It is recommend to set GPG_NO_PREFIX_ADD in access.conf on the fwknopd\n",
+"    server side.\n";
+        }
+    } else {
+        if ($include_salted and $encrypted_msg !~ /^U2FsdGVkX1/) {
+            ### the FKO module does not include the U2FsdGVkX1 string
+            ### so add it if necessary
+            print "[+] Added encoded 'Salted__' prefix (U2FsdGVkX1) to ",
+                "outgoing encoded SPA packet.\n" if $debug;
+            $encrypted_msg = 'U2FsdGVkX1' . $encrypted_msg;
+        }
+    }
+
+    unless ($include_base64_trailing_equals and $encrypted_msg =~ /=$/) {
+        print "[+] Stripping trailing equals chars from base64 encoding.\n"
+            if $debug;
+        $encrypted_msg =~ s/=*$//;
+    }
+
+    return $encrypted_msg;
+}
+
+sub assign_spa_port() {
+
+    if ($rand_port and $cmdl_spa_port != $DEFAULT_PORT) {
+        die "[*] Cannot use --Server-port and --rand-port at the same time";
+    }
+
+    if ($rand_port and $spa_over_http) {
+        die "[*] Cannot use --HTTP and --rand-port at the same time";
+    }
+
+    ### allow for ":<port>" extension to -D arg
+    if ($knock_dst =~ /(.*):(\d+)/) {
+        $knock_dst     = $1;
+        $enc_pcap_port = $2;
+
+        die "[*] Cannot use --rand-port with a manually ",
+            "specified -D <host>:<port>" if $rand_port;
+        die "[*] Cannot use --Server-port with -D <host>:<port>"
+            if $cmdl_spa_port;
+    }
+
+    if ($spa_over_http) {
+
+        ### default to port 80 if the port has not already been updated
+        ### (via --Server-port or the above IP:PORT notation).
+        $enc_pcap_port = 80;
+
+        ### if using an HTTP proxy, allow the http://HOST:PORT notation
+        ### to determine the port
+        if ($http_proxy) {
+            if ($http_proxy =~ m|http://(\S+):(\d+)|) {
+                $http_proxy_host = $1;
+                $enc_pcap_port   = $2;
+            } elsif ($http_proxy =~ m|http://(\S+)|) {
+                $http_proxy_host = $1;
+            } else {
+                die "[*] Proxy must begin with 'http://'";
+            }
+            if ($http_proxy_host =~ m|/|) {
+                die "[*] Proxy host must be a valid hostname";
+            }
+        }
+    }
+
+    if ($rand_port) {
+        ### send the SPA packet over a random port between 10,000 and 65535
+        $enc_pcap_port = &rand_port();
+    }
+
+    $enc_pcap_port = $cmdl_spa_port if $cmdl_spa_port;
+
+    return;
+}
+
+sub pcap_GPG_encrypt_msg() {
+    my $msg = shift;
+
+    my $gnupg = GnuPG::Interface->new();
+
+    my %gnupg_options = (
+        'batch' => 1,
+        'homedir' => $gpg_home_dir,
+        'no_options' => 1
+    );
+
+    delete $gnupg_options{'batch'} if $gpg_verbose;
+    delete $gnupg_options{'no_options'} if $gpg_use_options;
+
+    $gnupg->options->hash_init(%gnupg_options);
+
+    ### if --gpg-default-key is given, then we trust that the user has
+    ### set the default key with the default-key variable in ~/.gnupg/options
+    ### and we need to enable options
+    if ($gpg_default_key) {
+        delete $gnupg_options{'no_options'}
+            if defined delete $gnupg_options{'no_options'};
+    } else {
+        $gnupg->options->default_key($gpg_signing_key);
+    }
+
+    $gnupg->options->push_recipients($gpg_recipient);
+
+    if ($gpg_path) {
+        ### normally gpg is in the local path, but if not --gpg-path can
+        ### provide a custom path
+        $gnupg->call($gpg_path);
+    }
+
+    my ($input, $output, $error, $pw, $status) =
+        (IO::Handle->new(),
+        IO::Handle->new(),
+        IO::Handle->new(),
+        IO::Handle->new(),
+        IO::Handle->new());
+
+    my $handles = GnuPG::Handles->new(
+        stdin  => $input,
+        stdout => $output,
+        stderr => $error,
+        passphrase => $pw,
+        status => $status
+    );
+
+    my $pid;
+
+    if ($use_gpg_agent or $gpg_agent_info) {
+        if ($gpg_agent_info) {
+            $ENV{'GPG_AGENT_INFO'} = $gpg_agent_info;
+        }
+        $pid = $gnupg->sign_and_encrypt('handles' => $handles,
+            'command_args' => [ qw( --use-agent ) ]);
+    } else {
+        $pid = $gnupg->sign_and_encrypt('handles' => $handles);
+    }
+
+    print $pw $enc_key;
+    close $pw;
+
+    print $input $msg;
+    close $input;
+
+    my @ciphertext = <$output>;
+    close $output;
+
+    my @errors = <$error>;
+    close $error;
+
+    waitpid $pid, 0;
+
+    my $ctext = '';
+    if (@ciphertext) {
+        $ctext = join '', @ciphertext;
+    }
+
+    unless ($ctext) {
+        print "[*] GnuPG encrypt failed.\n";
+        unless ($gpg_verbose) {
+            print "    GnuPG errors:\n";
+            print for @errors;
+        }
+        exit 1;
+    }
+
+    if ($verbose) {
+        print "[+] Encrypted msg hex dump (" .
+            length($ctext) . " bytes):\n";
+        &hex_dump($ctext);
+    }
+
+    my $encoded_msg = encode_base64($ctext, '');
+
+    if ($verbose and $debug) {
+        print "[+] base64-encoded message before stripping identifying chars:\n",
+            $encoded_msg, "\n";
+    }
+
+    if ($spa_over_http) {
+        ### change "+" chars to "-", and "/" to "_"
+        $encoded_msg =~ s|\+|-|g;
+        $encoded_msg =~ s|\/|_|g;
+    }
+
+    if ($encoded_msg =~ /^$gpg_prefix/) {
+        unless ($include_base64_gnupg_prefix) {
+            print qq|[+] Stripping encoded "$gpg_prefix" prefix from |,
+                "outgoing encoded SPA packet.\n" if $debug;
+            ### perl -MMIME::Base64 -e 'print encode_base64("\x85\x02\n")'
+            ### The 'magic' database (via the 'file') command identifies GnuPG
+            ### encrypted files as starting with 0x8502
+            $encoded_msg =~ s/^$gpg_prefix//;
+        }
+    } else {
+        print
+"[-] Warning: GnuPG encrypted SPA packet does not begin with: $gpg_prefix\n",
+"    It is recommend to set GPG_NO_PREFIX_ADD in access.conf on the fwknopd\n",
+"    server side.\n";
+    }
+
+    print "[+] Encrypted message: $encoded_msg\n" if $debug;
+    return $encoded_msg;
+}
+
+sub pcap_Rijndael_encrypt_msg() {
+    my $msg = shift;
+
+    require Crypt::CBC;
+
+    if ($debug) {
+        print "[+] Crypt::CBC::VERSION $Crypt::CBC::VERSION\n";
+    }
+
+    my $cipher = Crypt::CBC->new({
+        'key'    => $enc_key,
+        'cipher' => $enc_alg,
+    });
+
+    my $encrypted_msg = $cipher->encrypt($msg);
+
+    if ($verbose) {
+        print "\n[+] Encrypted msg hex dump before base64 encoding (" .
+            length($encrypted_msg) . " bytes):\n";
+        &hex_dump($encrypted_msg);
+    }
+
+    my $encoded_msg = encode_base64($encrypted_msg, '');
+
+    if ($verbose and $debug) {
+        print "[+] base64-encoded message before stripping identifying chars:\n",
+            $encoded_msg, "\n";
+    }
+
+    if ($spa_over_http) {
+        ### change "+" chars to "-", and "/" to "_"
+        $encoded_msg =~ s|\+|-|g;
+        $encoded_msg =~ s|\/|_|g;
+    }
+
+    ### Crypt::CBC adds the string "Salted__" to the beginning of the
+    ### encrypted text (at least for how we create the cipher object
+    ### above), so delete the encoded version of this string ("U2FsdGVkX1")
+    ### before sending on the wire.  The fwknopd server will add this
+    ### string back in before decrypting.  This makes it harder to write
+    ### an IDS signature that looks for fwknop traffic (e.g. look for the
+    ### string "U2FsdGVkX1" over UDP port 62201).
+    unless ($include_salted) {
+        print "[+] Stripping encoded 'Salted__' prefix (U2FsdGVkX1) from ",
+            "outgoing encoded SPA packet.\n" if $debug;
+        $encoded_msg =~ s/^U2FsdGVkX1//;  ### encoded "Salted__" string
+    }
+
+    print "[+] Encrypted message: $encoded_msg\n" if $debug;
+    return $encoded_msg;
+}
+
+sub pcap_send_encrypted_msg() {
+    my $msg = shift;
+
+    if ($spa_over_http) {
+        ### make sure that the request begins with "/"
+        $msg = '/' . $msg unless $msg =~ m|^/|;
+    }
+
+    my $msg_len = length($msg);
+
+    if ($msg_len > $max_msg_len) {
+        die "[*] Message length is too long ($msg_len bytes), ",
+            "must be less than $max_msg_len bytes";
+    }
+
+    if ($verbose) {
+        print "\n[+] Packet data:\n\n", $msg, "\n\n" unless $quiet;
+    }
+
+    if ($save_packet_mode) {
+        print "    Saving packet data to: $save_packet_file\n" unless $quiet;
+        if ($save_packet_append) {
+            open F, ">> $save_packet_file" or die "[*] Could not open ",
+                "$save_packet_file: $!";
+        } else {
+            open F, "> $save_packet_file" or die "[*] Could not open ",
+                "$save_packet_file: $!";
+        }
+        print F $msg, "\n";
+        close F;
+    }
+
+    if ($spa_over_http) {
+
+        ### SPA over HTTP
+        &send_spa_packet_over_http($msg, $msg_len);
+
+    } elsif ($spa_established_tcp
+            or ($server_proto =~ /tcp/i and not $spoof_src)) {
+
+        ### SPA over established TCP socket - useful for Tor
+        &send_spa_packet_over_tcp($msg, $msg_len);
+
+    } else {
+
+        ### check to see if we are supposed to spoof our source address,
+        ### or use a raw socket.  If not, then we default to sending the
+        ### SPA packet over a normal UDP socket
+        my $send_over_raw_socket = '';
+
+        if ($server_proto and $server_proto =~ /icmp/i) {
+            $send_over_raw_socket = 'icmp';
+        }
+
+        if ($spoof_proto) {
+            $send_over_raw_socket = lc($spoof_proto);
+        }
+
+        ### note that a spoofed source address is not required for sending
+        ### over a raw socket - if not specified, then the OS will assign
+        ### the IP of the outgoing interface.
+        if ($spoof_src) {
+
+            unless ($send_over_raw_socket) {
+                if ($server_proto =~ /tcp/i) {
+                    $send_over_raw_socket = 'tcp';
+                } else {
+                    $send_over_raw_socket = 'udp';
+                }
+            }
+
+            unless ($spoof_src =~ /$ip_re/) {
+                ### resolve to an IP
+                my $iaddr = inet_aton($spoof_src)
+                    or die "[*] Could not resolve $spoof_src to IP.";
+                my $addr = inet_ntoa($iaddr)
+                    or die "[*] Could not resolve $spoof_src to IP.";
+                $spoof_src = $addr;
+            }
+        }
+
+        if ($send_over_raw_socket) {
+
+            ### use Net::RawIP to spoof the packets
+            require Net::RawIP;
+
+            if ($debug) {
+                print "[+] Net::RawIP::VERSION $Net::RawIP::VERSION\n";
+            }
+
+            if ($send_over_raw_socket eq 'tcp') {
+                &send_spa_over_raw_tcp($msg, $msg_len, $spoof_src);
+            } elsif ($send_over_raw_socket eq 'udp') {
+                &send_spa_over_raw_udp($msg, $msg_len, $spoof_src);
+            } elsif ($send_over_raw_socket eq 'icmp') {
+                &send_spa_over_raw_icmp($msg, $msg_len, $spoof_src);
+            } else {
+                die "[*] Unrecognized protocol: $send_over_raw_socket ",
+                    "for raw socket.";
+            }
+
+        } else {
+
+            ### default communication of SPA packet over UDP socket
+            &send_spa_packet_over_udp($msg, $msg_len);
+
+        }
+    }
+
+    unless ($quiet) {
+        if ($NAT_access_str and $NAT_access_str =~ /($ip_re),(\d+)/) {
+            my $internal_ip = $1;
+            my $nat_port    = $2;
+            print "    Requesting NAT access to $access_str on $internal_ip via ",
+                "port $nat_port\n\n";
+        } else {
+            print "\n";
+        }
+        if ($test_mode) {
+            print "    --Test-mode enabled, SPA packet not sent.\n\n";
+        }
+    }
+    return;
+}
+
+sub send_spa_packet_over_http() {
+    my ($msg, $msg_len) = @_;
+
+    my $http_host = $knock_dst_pre_resolve;
+
+    if ($http_proxy_host) {
+        $msg = "http://${http_proxy_host}${msg}";
+        $http_host = $http_proxy_host;
+    }
+
+    print "\n[+] Sending SPA packet over HTTP to ",
+        "$knock_dst:$enc_pcap_port...\n    Sending $msg_len ",
+        "byte message to $knock_dst over established ",
+        "tcp/$enc_pcap_port socket...\n"
+            unless $quiet;
+
+    my $http_request = "GET $msg HTTP/1.0\r\n" .
+        "User-Agent: $ext_resolve_user_agent\r\n" .
+        "Accept: */*\r\n" .
+        "Host: $http_host\r\n" .
+        "Connection: Keep-Alive\r\n\r\n";
+
+    print "[+] Sending SPA HTTP request:\n\n$http_request" if $debug;
+
+    unless ($test_mode) {
+        my $sock = IO::Socket::INET->new(
+            PeerAddr => $knock_dst,
+            PeerPort => $enc_pcap_port,
+            Proto    => 'tcp',
+            Timeout  => 1
+        ) or die "[*] Could not acquire TCP/$enc_pcap_port socket ",
+                "with $knock_dst: $!";
+        if (defined($sock)) {
+
+            print $sock $http_request;
+            recv($sock, my $web_data, $max_resolve_http_recv, 0);
+            close $sock;
+
+            print "\n[+] Closing connection...\n";
+        } else {
+            die "[*] Could not build TCP socket.";
+        }
+    }
+    return;
+}
+
+sub send_spa_packet_over_tcp() {
+    my ($msg, $msg_len) = @_;
+
+    print "\n[+] Establishing tcp connection to ",
+        "$knock_dst:$enc_pcap_port...\n    Sending $msg_len ",
+        "byte message to $knock_dst over established ",
+        "tcp/$enc_pcap_port socket...\n"
+            unless $quiet;
+
+    unless ($test_mode) {
+        my $socket = IO::Socket::INET->new(
+            PeerAddr => $knock_dst,
+            PeerPort => $enc_pcap_port,
+            Proto    => 'tcp',
+            Timeout  => 1
+        ) or die "[*] Could not acquire TCP/$enc_pcap_port socket ",
+                "with $knock_dst: $!";
+
+        $socket->send($msg);
+
+        print "\n[+] Closing connection...\n";
+        undef $socket;
+    }
+
+    return;
+}
+
+sub send_spa_packet_over_udp() {
+    my ($msg, $msg_len) = @_;
+
+    print "\n[+] Sending $msg_len byte message to $knock_dst ",
+        "over udp/$enc_pcap_port...\n" unless $quiet;
+
+    unless ($client_src_port) {
+        $client_src_port = &rand_port();
+    }
+    unless ($test_mode) {
+        my $socket = IO::Socket::INET->new(
+            PeerAddr  => $knock_dst,
+            PeerPort  => $enc_pcap_port,
+            LocalPort => $client_src_port,
+            Proto     => 'udp',
+            Timeout   => 1
+        ) or die "[*] Could not acquire UDP socket: $!";
+
+        $socket->send($msg);
+        undef $socket;
+    }
+    return;
+}
+
+sub send_spa_over_raw_tcp() {
+    my ($msg, $msg_len) = @_;
+
+    unless ($quiet) {
+        print
+"\n[+] Sending $msg_len byte message to $knock_dst over TCP/$enc_pcap_port";
+        if ($spoof_src) {
+            print "\n    (spoofed src IP: $spoof_src)";
+        }
+        print "...\n";
+    }
+
+    my $rand_src_port = int(rand(65535));
+    $rand_src_port = 65001 if $rand_src_port > 65535;
+    $rand_src_port += 1024 if $rand_src_port < 1024;
+
+    my $rawpkt = new Net::RawIP({
+        ip => {
+            saddr => $spoof_src,
+            daddr => $knock_dst
+        },
+        tcp =>{}});
+    $rawpkt->set({ ip => {
+            saddr => $spoof_src,
+            daddr  => $knock_dst
+        },
+        tcp => {
+            ack => 1,
+            source => $rand_src_port,
+            dest   => $enc_pcap_port,
+            data => $msg
+        }
+    });
+    $rawpkt->send() unless $test_mode;
+
+    return;
+}
+
+sub send_spa_over_raw_udp() {
+    my ($msg, $msg_len, $spoof_src) = @_;
+
+    unless ($quiet) {
+        print
+"\n[+] Sending $msg_len byte message to $knock_dst over UDP/$enc_pcap_port";
+        if ($spoof_src) {
+            print "\n    (spoofed src IP: $spoof_src)";
+        }
+        print "...\n";
+    }
+
+    my $rand_src_port = int(rand(65535));
+    $rand_src_port = 65001 if $rand_src_port > 65535;
+    $rand_src_port += 1024 if $rand_src_port < 1024;
+
+    my $rawpkt = new Net::RawIP({
+        ip => {
+            saddr => $spoof_src,
+            daddr => $knock_dst
+        },
+        udp =>{}});
+    $rawpkt->set({ ip => {
+            saddr => $spoof_src,
+            daddr => $knock_dst
+        },
+        udp => {
+            source => $rand_src_port,
+            dest   => $enc_pcap_port,
+            data   => $msg,
+        }
+    });
+    $rawpkt->send() unless $test_mode;
+
+    return;
+}
+
+sub send_spa_over_raw_icmp() {
+    my ($msg, $msg_len) = @_;
+
+    unless ($quiet) {
+        print "\n[+] Sending $msg_len byte message to $knock_dst over ICMP";
+        if ($spoof_src) {
+            print "\n    (spoofed src IP: $spoof_src)";
+        }
+        print "...\n";
+    }
+
+    my $rawpkt = new Net::RawIP({
+        ip => {
+            saddr => $spoof_src,
+            daddr => $knock_dst
+        },
+        icmp =>{}});
+    $rawpkt->set({ ip => {
+            saddr => $spoof_src,
+            daddr => $knock_dst
+        },
+        icmp => {
+            type => $icmp_type,
+            code => $icmp_code,
+            sequence => 0,
+            data => $msg
+        }
+    });
+    $rawpkt->send() unless $test_mode;
+
+    return;
+}
+
+sub knock_ports() {
+    my $ports_aref = shift;
+
+    if ($test_mode) {
+        print "[+] --Test-mode enabled, not sending sequence.\n";
+        exit 0;
+    }
+
+    print "[+] Sending port knocking sequence to knock server: $knock_dst\n"
+        unless $quiet;
+    my $packet_ctr = 0;
+    for my $href (@$ports_aref) {
+        my $proto = $href->{'proto'};
+        my $port  = $href->{'port'};
+        ### note that we never care if the destination replies with a
+        ### RST or icmp echo reply (or anything else).  In fact, hopefully
+        ### the remote firewall is configued to not reply at all
+        if ($proto eq 'icmp') {
+            require Net::Ping::External;
+            Net::Ping::External->import(qw/ping/);
+
+            if ($debug) {
+                print "[+] Net::Ping::External::VERSION ",
+                    "$Net::Ping::External::VERSION\n";
+            }
+
+            print "    icmp echo request -> $knock_dst\n";
+            ping(hostname => "$knock_dst", count => 1, timeout => 1);
+            sleep $knock_sleep;
+        } else {
+            print "    -> $knock_dst $proto/$port (packet: $packet_ctr)\n";
+            my $socket = IO::Socket::INET->new(
+                PeerAddr => $knock_dst,
+                PeerPort => $port,
+                Proto    => $proto,
+                Timeout  => 1
+            );  ### note there is no "or die" here since we just want to throw
+                ### packets on the network
+            if (defined $socket and $proto eq 'udp') {
+                $socket->send('0');  ### have to actually send something for udp
+                sleep $knock_sleep;
+            }
+            if ($proto eq 'tcp' and $knock_sleep >= 1) {
+                sleep $knock_sleep;
+            }
+            undef $socket if defined $socket;
+        }
+        $packet_ctr++;
+    }
+    print "[+] Finished knock sequence.\n";
+    return;
+}
+
+sub encrypt_sequence() {
+    my $clear_txt = '';
+    my $checksum = 0;
+    my @encrypted_seq = ();
+
+    require Crypt::CBC;
+
+    if ($debug) {
+        print "[+] Crypt::CBC::VERSION $Crypt::CBC::VERSION\n";
+    }
+
+    my $cipher = Crypt::CBC->new({
+        'key'    => $enc_key,
+        'cipher' => $enc_alg,
+    });
+
+    my @octets = split /\./, $enc_allow_ip;
+
+    $clear_txt .= chr($_) for @octets;
+    $checksum += $_ for @octets;
+
+    my $proto_num      = 0;
+    my $enc_allow_port = 0;
+    if ($access_str =~ /tcp/i) {
+        $proto_num = 6;
+        if ($access_str =~ /(\d+)/) {
+            $enc_allow_port = $1;
+        }
+    } elsif ($access_str =~ /udp/i) {
+        $proto_num = 17;
+        if ($access_str =~ /(\d+)/) {
+            $enc_allow_port = $1;
+        }
+    } elsif ($access_str =~ /icmp/i) {
+        $proto_num = 1;
+        $enc_allow_port = 0;
+    }
+
+    unless ($enc_allow_port) {
+        die "[*] Must specify port to open."
+            if $proto_num != 1;
+    }
+    my $port_upper_bits = $enc_allow_port;
+    my $port_lower_bits = $enc_allow_port;
+
+    if ($enc_allow_port == 0) {
+        $port_upper_bits = 0;
+        $port_lower_bits = 0;
+    } else {
+        $port_upper_bits = $port_upper_bits >> 8;
+        $port_lower_bits = $port_lower_bits % 256;
+    }
+
+    $clear_txt .= chr($port_upper_bits);
+    $clear_txt .= chr($port_lower_bits);
+
+    $checksum += $port_upper_bits;
+    $checksum += $port_lower_bits;
+
+    $clear_txt .= chr($proto_num);
+    $checksum += $proto_num;
+
+    $checksum = $checksum % 256;
+
+    $clear_txt .= chr($checksum);
+
+    ### append username
+    ### FIXME: either the checksum should be removed, or it should
+    ### be applied to the username as well.
+    my $username = getlogin() || getpwuid($<) || die "[*] Could not ",
+        "get process username.";
+
+    if ($username) {
+        my @chars = split //, $username;
+        for my $char (@chars) {
+            if (length($clear_txt) < $enc_blocksize-1) {
+                $clear_txt .= $char;
+            }
+        }
+    }
+
+    my @tmp_chars = split //, $clear_txt;
+    print '[+] Clear-text sequence (' . length($clear_txt) . ' bytes): ';
+    print ord($_) . ' ' for @tmp_chars;
+    print "\n";
+
+    my $cipher_txt = $cipher->encrypt($clear_txt);
+    undef $cipher;
+
+    @tmp_chars = split //, $cipher_txt;
+    print '[+] Cipher-text sequence (' . length($cipher_txt) . ' bytes): ';
+    print ord($_) . ' ' for @tmp_chars;
+
+    print "\n    Port offset: $enc_port_offset\n";
+
+    my @chars = split //, $cipher_txt;
+    my $char_ctr = 0;
+    for my $char (@chars) {
+        my %hsh;
+        if ($enc_rotate_proto) {
+            ### alternate between tcp and udp protocols
+            if ($char_ctr % 2 == 0) {
+                %hsh = ('port' => ord($char) + $enc_port_offset,
+                    'proto' => 'tcp');
+            } else {
+                %hsh = ('port' => ord($char) + $enc_port_offset,
+                    'proto' => 'udp');
+            }
+        } else {
+            ### hardcode knock sequence proto as tcp
+            %hsh = ('port' => ord($char) + $enc_port_offset,
+                'proto' => 'tcp');
+        }
+        push @encrypted_seq, \%hsh;
+        $char_ctr++;
+    }
+    return \@encrypted_seq;
+}
+
+sub resolve_external_ip() {
+
+    my $external_ip = '';
+    my $site_host   = '';
+    my $url         = '/';
+
+    if ($resolve_ip_url) {
+        die "[*] $resolve_ip_url does not begin with http://"
+            unless $resolve_ip_url =~ m|http://|i;
+
+        if ($resolve_ip_url =~ m|http://(\S+?)/(\S+)|i) {
+            $site_host = $1;
+            $url       = "/$2";
+        } elsif ($resolve_ip_url =~ m|http://(\S+?)/|i) {
+            $site_host = $1;
+        } elsif ($resolve_ip_url =~ m|http://(\S+)|i) {
+            ### there is no trailing slash
+            $site_host = $1;
+        } else {
+            die "[*] Could not get external hostname from $resolve_ip_url";
+        }
+    }
+
+    print "    Resolving external IP via: $resolve_ip_url\n"
+        unless $quiet;
+    my $w_ip_tmp = inet_aton($site_host)
+        or die "[*] Could not resolve $site_host to an IP.";
+    my $w_ip = inet_ntoa($w_ip_tmp)
+        or die "[*] Could not resolve $site_host to an IP.";
+
+    my $sock = new IO::Socket::INET(
+        PeerAddr => $w_ip,
+        PeerPort => 80,
+        Proto    => 'tcp',
+        Timeout  => 7)
+    or die "[*] Could not open tcp/80 socket with $resolve_ip_url";
+
+    if (defined($sock)) {
+        print $sock "GET $url HTTP/1.0\r\n",
+            "Host: $site_host\r\n",
+            "User-Agent: $ext_resolve_user_agent\r\n",
+            "Accept: */*\r\n",
+            "Connection: Keep-Alive\r\n\r\n";
+        recv($sock, my $web_data, $max_resolve_http_recv, 0);
+        close $sock;
+        $web_data =~ s/[^\w\.]/ /g;
+        if ($debug) {
+            print "[+] Web server data from: $resolve_ip_url\n",
+                $web_data, "\n";
+        }
+        if ($resolve_ip_url =~ /whatismyip/i) {
+            if ($web_data =~ /WhatIsMyIP\.com\s+-\s+($ip_re)\b/i) {
+                $external_ip = $1;
+            }
+        }
+        unless ($external_ip) {
+            ### greedy match to the last instance of a matching
+            ### IP regex so that we get past any HTTP header info
+            ### that might happen to match the IP regex
+            if ($web_data =~ /($ip_re)/) {
+                $external_ip = $1;
+            }
+        }
+    }
+    unless ($external_ip) {
+        print "[*] Could not extract external IP from $resolve_ip_url\n";
+        unless ($debug) {
+            print
+"    You might try running with --debug and looking at the response from\n",
+"    the webserver. Maybe it is trying to set a cookie?\n";
+        }
+        exit 1;
+    }
+
+    print "    Got external address: $external_ip\n\n" unless $quiet;
+    return $external_ip;
+}
+
+sub get_key() {
+
+    if ($gpg_signing_key or $gpg_default_key) {
+
+        ### load the GnuPG::Interface module
+        require GnuPG::Interface;
+
+        if ($debug) {
+            print "[+] GnuPG::Interface::VERSION ",
+                "$GnuPG::Interface::VERSION\n";
+        }
+
+        ### we don't need a password if we are going to acquire
+        ### a password from gpg-agent
+        return if $use_gpg_agent;
+    }
+
+    if ($get_key_file) {
+        ### get the encryption key from file
+        open F, "< $get_key_file" or die "[*] Could not open ",
+            "$get_key_file: $!";
+        my @lines = <F>;
+        close F;
+        for my $line (@lines) {
+            chomp $line;
+            if ($line =~ /$knock_dst:\s*(.*)/) {
+                $enc_key = $1;
+                last;
+            } elsif ($line =~ /$knock_dst_pre_resolve:\s*(.*)/) {
+                $enc_key = $1;
+                last;
+            }
+        }
+        unless ($enc_key) {
+            die
+"[*] Could not read encryption key/password for $knock_dst_pre_resolve\n",
+" from $get_key_file; fwknop expects the following format:\n",
+"$knock_dst_pre_resolve: <KEY/password>\n";
+        }
+    } else {
+        if ($gpg_signing_key or $gpg_default_key) {
+            print
+"[+] Enter the GnuPG password for signing key: $gpg_signing_key\n\n"
+            unless $quiet;
+        } else {
+            print
+"[+] Enter an encryption key. This key must match a key in the file\n",
+"    /etc/fwknop/access.conf on the remote system.\n\n" unless $quiet;
+        }
+        my $try = 0;
+        my $max_tries = 20;
+        ReadMode('noecho');
+        KEY: while (1) {
+            $try++;
+            if ($try >= $max_tries) {
+                ReadMode('normal');
+                die "[*] Exceeded $max_tries tries to read valid password.";
+            }
+            if ($gpg_signing_key or $gpg_default_key) {
+                print "GnuPG signing password: ";
+            } else {
+                print "Encryption Key: ";
+            }
+            my $ans = ReadLine(0);
+            next KEY unless defined $ans;
+            next KEY unless $ans =~ /\S/;
+            chomp $ans;
+            if ($gpg_signing_key or $gpg_default_key) {
+                $enc_key = $ans;
+                last KEY;
+            } else {
+                if (length($ans) >= 8) {
+                    $enc_key = $ans;
+                    last KEY;
+                } else {
+                    ReadMode('normal');
+                    die "\n[-] The symmetric key must be at least ",
+                        "8 characters long.\n";
+                }
+            }
+        }
+        ReadMode('normal');
+        print "\n";
+
+        die "[*] Could not read encryption key from STDIN.  Exiting."
+            unless $enc_key;
+    }
+    unless ($gpg_signing_key or $gpg_default_key) {
+        unless (length($enc_key) >= 8) {
+            die "\n[-] The symmetric key must be at least ",
+                "8 characters long.\n";
+        }
+        ### pad out to the key size
+        while (length($enc_key) < $enc_keysize) {
+            $enc_key .= '0';
+        }
+    }
+    return;
+}
+
+sub import_perl_modules() {
+
+    my $mod_paths_ar = &get_mod_paths();
+
+    if ($#$mod_paths_ar > -1) {  ### /usr/lib/fwknop/ exists
+        push @$mod_paths_ar, @INC;
+        splice @INC, 0, $#$mod_paths_ar+1, @$mod_paths_ar;
+    }
+
+    if ($debug) {
+        print "[+] import_perl_modules(): The \@INC array:\n";
+        print "$_\n" for @INC;
+    }
+
+    ### see if the FKO module is installed
+    unless ($skip_fko_module) {
+        eval { require FKO };
+        unless ($@) {
+            $use_fko_module = 1;
+            if ($debug or $test_fko_exists) {
+                print "[+] Using FKO module.\n";
+            }
+            exit 0 if $test_fko_exists;
+        }
+    }
+
+    require Term::ReadKey;
+    Term::ReadKey->import(qw/ReadMode ReadLine/);
+
+    print "[+] Term::ReadKey::VERSION $Term::ReadKey::VERSION\n",
+        if $debug;
+
+    return;
+}
+
+sub get_mod_paths() {
+
+    my @paths = ();
+
+    unless (-d $lib_dir) {
+        my $dir_tmp = $lib_dir;
+        $dir_tmp =~ s|lib/|lib64/|;
+        if (-d $dir_tmp) {
+            $lib_dir = $dir_tmp;
+        } else {
+            return [];
+        }
+    }
+
+    opendir D, $lib_dir or die "[*] Could not open $lib_dir: $!";
+    my @dirs = readdir D;
+    closedir D;
+
+    push @paths, $lib_dir;
+
+    for my $dir (@dirs) {
+        ### get directories like "/usr/lib/fwknop/x86_64-linux"
+        next unless -d "$lib_dir/$dir";
+        push @paths, "$lib_dir/$dir"
+            if $dir =~ m|linux| or $dir =~ m|thread|
+                or (-d "$lib_dir/$dir/auto");
+    }
+    return \@paths;
+}
+
+sub import_shared_sequence() {
+    my $connect_file = '';
+    my @lines = ();
+    if ($user_rc_file and -e $user_rc_file) {
+        $connect_file = $user_rc_file;
+    } elsif (-e "$homedir/.fwknoprc") { ### this is the default unless -f was given
+        $connect_file = "$homedir/.fwknoprc";
+    } else {
+        unless ($user_rc_file) {
+            print "[+] Creating fwknop rc file: $homedir/.fwknoprc\n",
+                "    This file is used only to define shared knock sequences.  ",
+                "If you want\n    to send an encrypted sequence, use the ",
+                "--encrypt argument.\n\n[+] To send a shared sequence you will ",
+                "first need to define\n    the sequence in $homedir/.fwknoprc\n";
+            open F, "> $homedir/.fwknoprc" or
+                die "[*] Could not open $homedir/.fwknoprc: $!";
+print F "# Shared knock sequence config file for fwknop.  This file adheres to the\n",
+    "# following format:\n# <knockdst>: <proto/port>, ..., <proto/port>.  See the example ",
+    "# below:\n\n# 192.168.10.2: tcp/5501, tcp/5502, udp/1001, tcp/5504\n\n";
+            close F;
+            exit 1;
+        }
+    }
+
+    open F, "< $connect_file" or die "[*] Could not open ",
+        "$connect_file: $!";
+    @lines = <F>;
+    close F;
+
+    ### parse out the knock sequence
+    my @knock_sequence = ();
+    my $dst = '';
+    my $found_dst = 0;
+    for my $line (@lines) {
+        chomp $line;
+        next unless $line =~ /\S/;
+        next if $line =~ /^\s*#/;
+        if ($line =~ /^\s*(\S+):\s*(.*)/) {
+            my $dst   = $1;
+            my $ports = $2;
+            next unless $dst;
+            next unless $dst eq $knock_dst;
+            my @ports_arr = split /\s*\,\s*/, $ports;
+            next unless @ports_arr and $#ports_arr > 0;
+            $found_dst = 1;
+            for my $port (@ports_arr) {
+                my %hsh = ();
+                if ($port =~ m|tcp/(\d+)|) {
+                    %hsh = ('port' => $1, 'proto' => 'tcp');
+                } elsif ($port =~ m|udp/(\d+)|) {
+                    %hsh = ('port' => $1, 'proto' => 'udp');
+                } elsif ($port =~ m|icmp|) {
+                    %hsh = ('port' => -1, 'proto' => 'icmp');
+                }
+                next unless %hsh;
+                push @knock_sequence, \%hsh;
+            }
+        }
+    }
+    die "[*] Could not find destination: $knock_dst in $connect_file"
+        unless $found_dst;
+    die "[*] No port sequence defined for $knock_dst in $connect_file"
+        unless @knock_sequence;
+    return \@knock_sequence;
+}
+
+sub get_homedir() {
+    my $uid = $<;
+    if ($cmdl_homedir) {
+        $homedir = $cmdl_homedir;
+    } else {
+        ### prefer homedir specified in /etc/passwd (if it exists)
+        if (-e '/etc/passwd') {
+            open P, "< /etc/passwd" or die "[*] Could not open /etc/passwd. ",
+                "Exiting.\n";
+            my @lines = <P>;
+            close P;
+            for my $line (@lines) {
+                ### mbr:x:222:222:Michael Rash:/home/mbr:/bin/bash
+                chomp $line;
+                if ($line =~ /^(?:.*:){2}$uid:(?:.*:){2}(\S+):/) {
+                    $homedir = $1;
+                    last;
+                }
+            }
+        }
+        unless ($homedir and -d $homedir) {
+            $homedir = $ENV{'HOME'} if defined $ENV{'HOME'};
+        }
+    }
+    die '[*] Could not determine homedir, use --Home option.'
+        unless ($homedir and -d $homedir);
+
+    if ($gpg_signing_key or $gpg_recipient) {
+        $gpg_home_dir = "$homedir/.gnupg" unless $gpg_home_dir;
+    }
+
+    return $homedir;
+}
+
+sub handle_server_auth_method() {
+    if (lc($server_auth_method) eq 'crypt') {
+        ReadMode('noecho');
+        while (1) {
+            $quiet == 1 ? print "UNIX crypt() password: "
+                : print "    UNIX crypt() password: ";
+            my $ans = ReadLine(0);
+            chomp $ans;
+            next unless $ans =~ /\S/;
+            $server_auth_crypt_pw = $ans;
+            last;
+        }
+        ReadMode('normal');
+        print "\n";
+        return;
+    }
+    die "[*] --Server-auth must be 'crypt'";
+}
+
+sub save_args() {
+    my $save_file  = "$homedir/.fwknop.run";
+    my $hosts_file = "$homedir/.fwknop.hosts";
+
+    open S, "> $save_file" or die "[*] Could not open $save_file";
+    print S "@args_cp\n";
+    close S;
+
+    if ($save_destination) {
+        open D, "> $homedir/.fwknop.save"
+            or die "[*] Could not open $homedir/.fwknop.save";
+        print D "@args_cp\n";
+        close D;
+    }
+
+    my @host_lines = ();
+    my $matched_dst = 0;
+    if (-e $hosts_file) {
+        open F, "< $hosts_file" or die "[*] Could not open $hosts_file";
+        while (<F>) {
+            if (/-(k|D)\S*\s+$knock_dst_pre_resolve/) {
+                ### if an older command is for the same knock destination
+                ### then substitute the current command (doesn't yet support
+                ### multiple commands per knock destination since we would
+                ### need a way to select among them)
+                push @host_lines, "@args_cp\n";
+                $matched_dst = 1;
+            } else {
+                push @host_lines, $_;
+            }
+        }
+        close F;
+    }
+    push @host_lines, "@args_cp\n" unless $matched_dst;
+
+    open H, "> $hosts_file" or die "[*] Could not open $hosts_file";
+    print H for @host_lines;
+    close H;
+    return;
+}
+
+sub handle_command_line() {
+
+    ### make Getopts case sensitive
+    Getopt::Long::Configure('no_ignore_case');
+
+    die "[*] Use --help for usage information.\n" unless GetOptions(
+        'Server-port=i'  => \$cmdl_spa_port,
+        'Server-mode=s'  => \$server_mode,
+        'Server-cmd=s'   => \$cmdline_pcap_cmd,
+        'Server-proto=s' => \$server_proto,
+        'Server-auth=s'  => \$server_auth_method,
+        'Spoof-src=s'    => \$spoof_src,
+        'icmp-type=i'    => \$icmp_type,
+        'icmp-code=i'    => \$icmp_code,
+        'rand-port'      => \$rand_port,
+        'NAT-rand-port'  => \$NAT_rand_port,
+        'NAT-local'      => \$NAT_local,
+        'NAT-access=s'   => \$NAT_access_str,
+        'Max-packet-size=i' => \$max_msg_len,
+        'Max-resolve-http-size=i' => \$max_resolve_http_recv,
+        'Source-port=i'  => \$client_src_port,
+        'Spoof-user=s'   => \$spoof_username,
+        'Spoof-proto=s'  => \$spoof_proto,
+        'Save-packet'    => \$save_packet_mode,
+        'Save-packet-file=s' => \$save_packet_file,
+        'Save-packet-append' => \$save_packet_append,
+        'Save-dst'       => \$save_destination,
+        'user-rc=s'      => \$user_rc_file,
+        'knock-dst=s'    => \$knock_dst,
+        'Destination=s'  => \$knock_dst,
+        'time-offset-plus=s'  => \$time_offset_plus,
+        'time-offset-minus=s' => \$time_offset_minus,
+        'gpg-signing-key=s' => \$gpg_signing_key,
+        'gpg-recipient=s'   => \$gpg_recipient,
+        'gpg-default-key'   => \$gpg_default_key,
+        'gpg-home-dir=s'    => \$gpg_home_dir,
+        'gpg-verbose'       => \$gpg_verbose,
+        'gpg-agent'         => \$use_gpg_agent,
+        'gpg-agent-info=s'  => \$gpg_agent_info,
+        'gpg-no-options'    => \$gpg_no_options,
+        'gpg-use-options'   => \$gpg_use_options,
+        'gpg-prefix=s'      => \$gpg_prefix,
+        'gpg-path=s'        => \$gpg_path,
+        'quiet'             => \$quiet,
+        'Forward-access=s'  => \$NAT_access_str,
+        'TCP-sock'       => \$spa_established_tcp,
+        'HTTP'           => \$spa_over_http,
+        'HTTP-proxy=s'      => \$http_proxy,
+        'HTTP-user-agent=s' => \$ext_resolve_user_agent,
+        'Access=s'       => \$access_str,
+        'fw-timeout=i'   => \$cmdl_fw_timeout,
+        'allow-IP=s'     => \$enc_allow_ip,
+        'digest-alg=s'   => \$cmdl_digest_alg,
+        'source-IP'      => \$enc_source_ip,
+        'rotate-proto'   => \$enc_rotate_proto,
+        'offset=i'       => \$cmdline_offset,
+        'time-delay=i'   => \$knock_sleep,
+        'test-FKO-exists' => \$test_fko_exists,
+        'last-cmd'       => \$run_last_args,
+        'no-save-args'   => \$no_save_last_args,
+        'no-FKO-module'  => \$skip_fko_module,
+        'Last-host=s'    => \$run_last_host,
+        'Show-last-cmd'  => \$show_last_cmd,
+        'Show-host-cmd=s' => \$show_last_host_cmd,
+        'Resolve-external-IP' => \$resolve_external_ip,
+        'whatismyip'     => \$resolve_external_ip, # for backwards compatibility
+        'URL=s'          => \$resolve_ip_url,
+        'User-agent=s'   => \$ext_resolve_user_agent,
+        'get-key=s'      => \$get_key_file,
+        'Home-dir=s'     => \$cmdl_homedir,
+        'Include-salted' => \$include_salted,
+        'Include-equals' => \$include_base64_trailing_equals,
+        'Include-gpg-prefix' => \$include_base64_gnupg_prefix,
+        'Test-mode'      => \$test_mode,
+        'Lib-dir=s'      => \$lib_dir,
+        'LC_ALL=s'       => \$locale,
+        'locale=s'       => \$locale,
+        'no-LC_ALL'      => \$no_locale,
+        'no-locale'      => \$no_locale,
+        'debug'          => \$debug,
+        'verbose'        => \$verbose,
+        'Version'        => \$print_version,
+        'help'           => \$print_help
+    );
+
+    ### run a few minor checks against the supplied args
+    &validate_command_line();
+
+    return;
+}
+
+sub run_last_cmdline() {
+
+    my $found_file = 0;
+
+    for my $save_file ("$homedir/.fwknop.save", "$homedir/.fwknop.run") {
+        next unless -e $save_file;
+        $found_file = 1;
+
+        open S, "< $save_file" or die "[*] Could not open $save_file: $!";
+        my $arg_line = <S>;
+        close S;
+        chomp $arg_line;
+
+        if ($show_last_cmd) {
+            print "[+] Last fwknop client command line: $arg_line\n";
+            exit 0;
+        }
+        print "[+] Running with last command line args: $arg_line\n"
+            unless $quiet;
+        @ARGV = split /\s+/, $arg_line;
+
+        ### run GetOpt() to get command line args
+        &handle_command_line();
+
+        last;
+    }
+
+    unless ($found_file) {
+        die "[*] fwknop argument save files (~/.fwknop.save and ",
+            "~/.fwknop.run) not found.";
+    }
+    return;
+}
+
+sub run_last_host_cmdline() {
+
+    my $found_file = 0;
+    my $found_host = 0;
+    for my $save_file ("$homedir/.fwknop.save", "$homedir/.fwknop.hosts") {
+        next unless -e $save_file;
+        $found_file = 1;
+
+        my $arg_line = '';
+        open H, "< $save_file" or die "[*] Could not open $save_file: $!";
+        while (<H>) {
+            if (/-(k|D)\S*\s+$run_last_host/) {
+                $arg_line = $_;
+                last;
+            }
+        }
+        close H;
+
+        if ($arg_line) {
+            chomp $arg_line;
+
+            if ($show_last_host_cmd) {
+                print "[+] Last command run for host: $show_last_host_cmd\n",
+                    "    $arg_line\n";
+                exit 0;
+            }
+            print "[+] Running with last command line args: $arg_line\n"
+                unless $quiet;
+            @ARGV = split /\s+/, $arg_line;
+
+            ### run GetOpt() to get comand line args
+            &handle_command_line();
+
+            $found_host = 1;
+            last;
+        }
+    }
+
+    unless ($found_file) {
+        die "[*] fwknop argument save files (~/.fwknop.save and ",
+            "~/.fwknop.hosts) not found.";
+    }
+
+    unless ($found_host) {
+        print "[-] No matching destination host in ~/.fwknop.save ",
+            "or ~/.fwknop.hosts\n";
+    }
+    return;
+}
+
+sub validate_access_str() {
+    $access_str = lc($access_str);
+    my @ports = split /,/, $access_str;
+    for my $str (@ports) {
+        unless ($str =~ m|(\D+)/(\d+)|) {
+            die "[*] -A format is: <proto>/<port>,...,<proto>/<port>\n",
+                "    e.g.: tcp/22,udp/53,icmp/0";
+        }
+    }
+    return;
+}
+
+sub validate_NAT_access_str() {
+    $NAT_access_str = lc($NAT_access_str);
+
+    if ($NAT_rand_port) {
+
+        unless ($selected_random_nat_port) {
+            $NAT_access_str =~ s/,\d+$//;
+            $NAT_access_str =~ s/:\d+$//;
+
+            unless ($NAT_access_str =~ /^$ip_re$/) {
+                die "[*] Must specify '<internal_IP>'";
+            }
+
+            ### append a random destination port (between 10,000
+            ### and 65535); this is the port number that will be
+            ### used on the SSH command line
+            $NAT_access_str .= ',' . &rand_port();
+        }
+
+    } else {
+        unless ($NAT_access_str =~ /^$ip_re,\d+$/
+                or $NAT_access_str =~ /^$ip_re:\d+$/) {
+            die "[*] Must specify '<internal_IP>:<external_port>'";
+        }
+    }
+
+    ### change ":" to "," for the fwknopd server (which uses colons
+    ### to separate SPA packet fields, but colons are a better
+    ### syntax for the fwknop command line)
+    $NAT_access_str =~ s/:/,/;
+    return;
+}
+
+sub set_digest_type() {
+    if ($cmdl_digest_alg =~ /sha256/i) {
+        $digest_type = $SHA256_DIGEST;
+    } elsif ($cmdl_digest_alg =~ /sha1/i) {
+        $digest_type = $SHA1_DIGEST;
+    } elsif ($cmdl_digest_alg =~ /md5/i) {
+        $digest_type = $MD5_DIGEST;
+    } else {
+        die "[*] --digest-alg can accept one of MD5, SHA1, or SHA256";
+    }
+    return;
+}
+
+sub time_offset() {
+    my $str = shift;
+    my $offset = 0;
+
+    if ($str =~ /(\d+)/) {
+        $offset = $1;
+    } else {
+        die "[*] Must specify a value like 60min";
+    }
+    if ($str =~ /min/i) {
+        $offset *= 60;
+    } elsif ($str =~ /hour/i) {
+        $offset *= 60 * 60;
+    } elsif ($str =~ /day/i) {
+        $offset *= 60 * 60 * 24;
+    } elsif ($str =~ /sec/i) {
+        ### no action
+    } else {
+        ### default to minutes
+        $offset *= 60;
+    }
+    return $offset;
+}
+
+sub hex_dump() {
+    my $data = shift;
+
+    my @chars = split //, $data;
+    my $ctr = 0;
+    my $ascii_str = '';
+    for my $char (@chars) {
+        if ($ctr % 16 == 0) {
+            print " $ascii_str\n" if $ascii_str;
+            printf "        0x%.4x:  ", $ctr;
+            $ascii_str = '';
+        }
+        printf "%.2x", ord($char);
+
+        if ((($ctr+1) % 2 == 0) and ($ctr % 16 != 0)) {
+            print ' ';
+        }
+
+        if ($char =~ /[^\x20-\x7e]/) {
+            $ascii_str .= '.';
+        } else {
+            $ascii_str .= $char;
+        }
+        $ctr++;
+    }
+    if ($ascii_str) {
+        my $remainder = 1;
+        if ($ctr % 16 != 0) {
+            $remainder = 16 - $ctr % 16;
+            if ($remainder % 2 == 0) {
+                $remainder = 2*$remainder + int($remainder/2) + 1;
+            } else {
+                $remainder = 2*$remainder + int($remainder/2) + 2;
+            }
+        }
+        print ' 'x$remainder, $ascii_str;
+    }
+    print "\n\n";
+    return;
+}
+
+sub rand_port() {
+    return int(rand($max_port - $min_port)) + $min_port;
+}
+
+sub validate_command_line() {
+    die "[*] Cannot run in both --quiet and --verbose modes simultaneously"
+        if $quiet and $verbose;
+
+    die "[*] Must also specify a GnuPG signing key with --gpg-signing-key or\n",
+        "    use --gpg-default-key to use a default key (specified in\n",
+        "    ~/.gnupg/options with the default-key variable).\n"
+        if ($gpg_recipient and (not $gpg_default_key and not $gpg_signing_key));
+
+    die "[*] Must specify a GnuPG recipient key (on the fwknopd side) with\n",
+        "    --gpg-recipient"
+        if (($gpg_default_key or $gpg_signing_key) and not $gpg_recipient);
+
+    die "[*] Cannot spoof source address for a real TCP socket."
+        if ($spoof_src and $spa_established_tcp);
+
+    die "[*] Server auth method not supported in NAT access mode.\n"
+        if $server_auth_method and $NAT_access_str;
+
+    if ($gpg_path) {
+        die "[*] $gpg_path does not exist." unless -e $gpg_path;
+        die "[*] $gpg_path not executable." unless -x $gpg_path;
+    }
+
+    if ($gpg_no_options) {
+        print "[-] Options are disabled by default, so --gpg-no-options ",
+            "is not used.\n";
+    }
+    return;
+}
+
+sub usage() {
+    my $exit_status = shift;
+    print <<_HELP_;
+
+fwknop; Single Packet Authorization client
+
+[+] Version: $version (file revision: $rev_num)
+    By Michael Rash (mbr\@cipherdyne.org)
+    URL: http://www.cipherdyne.org/fwknop/
+
+Usage: fwknop -A <port list> [-s|-R|-a] -D <spa_server> [options]
+
+Options:
+    -A, --Access  <port list>  - Provide a list of ports/protocols to open
+                                 on the server. The format is
+                                 "<proto>/<port>...<proto>/<port>". E.g.
+                                 "tcp/22,udp/53".
+    -D, --Destination <IP>     - The IP address of the fwknopd server (the
+                                 IP want to connect to).
+    --last-cmd                 - Run the fwknop with the same command line
+                                 arguments as in the previous invocation.
+                                 The args are stored in ~/fwknop.run.
+    --Last-host <host>         - Run last command line arguments for <host>.
+    --gpg-signing-key <key ID> - ID for key used to sign GnuPG encrypted
+                                 message (e.g. "0xABCD1234").
+    --gpg-recipient <recip>    - Recipient of GnuPG encrypted message.
+    --gpg-default-key          - Use the key that GnuPG defines as the
+                                 default (i.e. the key that is specified
+                                 by the default-key option in
+                                 ~/.gnupg/options).
+    --gpg-home-dir <dir>       - Path to GnuPG home dir (e.g.
+                                 /home/user/.gnupg).
+    --gpg-agent                - Acquire GnuPG signing password from a
+                                 running gpg-agent.
+    --gpg-agent-info <info>    - Specify the value for the GPG_AGENT_INFO
+                                 environment variable as returned by
+                                 'gpg-agent --daemon'.
+    --gpg-verbose              - Display all output from GnuPG process.
+    --gpg-use-options          - In GnuPG mode, instruct GnuPG to use the
+                                 local ~/.gnupg/options file for config
+                                 parameters (this is disabled by default).
+    --gpg-prefix <bytes>       - Change the bytes for the expected GnuPG
+                                 prefix from $gpg_prefix to the specified string.
+    --gpg-path <path>          - Specify the path to the gpg command (not
+                                 usually necessary if gpg is in your path).
+    -a, --allow-IP <IP>        - IP to instruct the remote fwknop server to
+                                 allow through the firewall ruleset.
+    -s, --source-IP            - Inform the destination fwknop server to use
+                                 the source address from which the SPA
+                                 packet originates (useful for
+                                 authenticating to the SPA server from
+                                 behind a NAT device). Note that the -w
+                                 option should really be used instead.
+    -F, --Forward-access <NAT> - Access an internal server (say, SSH) by
+                                 instructing the remote fwknopd instance to
+                                 build inbound DNAT rules. The format of the
+                                 argument is <InternalIP>,<Port> where
+                                 InternalIP is the internal system and Port
+                                 is the port number that will be forwarded.
+    -R, --Resolve-external-IP  - Resolve client IP via the
+                                 http://www.whatismyip.org/ website. This is
+                                 useful if fwknop is deployed on an internal
+    -w, --whatismyip           - (Synonym for --Resolve-external-IP option).
+    --URL <external IP URL>    - Specify a URL from which to determine the
+                                 external IP (the default is
+                                 http://www.whatismyip.org/).
+    --User-agent <string>      - Specify the user agent string to use when
+                                 resolving IP via http://www.whatismyip.org
+                                 (must use the -R option). The default user
+                                 agent is: $ext_resolve_user_agent
+    -f, --fw-timeout <seconds> - Specify the time the port will remain open
+                                 on the server (requires
+                                 PERMIT_CLIENT_TIMEOUT in access.conf on the
+                                 fwknopd server side).
+    --Include-salted           - Include the encoded "Salted__" prefix; this
+                                 is only necessary for older versions of the
+                                 fwknopd server (< 1.9.2).
+    --Include-equals           - Include the trailing "=" chars used by
+                                 base64 encoding scheme; this is only
+                                 necessary for older versions of the fwknopd
+                                 server (< 1.9.6).
+    --Include-gpg-prefix       - Include the base64-encoded $gpg_prefix prefix that
+                                 GnuPG includes by default; this is only
+                                 necessary for older versions of the fwknopd
+                                 server (< 1.9.6).
+    --Save-dst                 - Save the command line args for this
+                                 invocation against the destination to the
+                                 special file ~/.fwknop.save (this file
+                                 provides a priority location that is only
+                                 overwritten with --Save-dst and is useful
+                                 for an fwknop client command that you want
+                                 to always preserve).
+    --Save-packet              - Save a copy of an encrypted SPA packet to
+                                 to a file (~/fwknop_save_packet.<pid> by
+                                 default).
+    --Save-packet-file <file>  - Specify the path to the file where the
+                                 encrypted SPA packet is stored when the
+                                 --Save-packet argument is used.
+    --Save-packet-append       - Append a newly generated SPA packet to the
+                                 --Save-packet-file instead of overwriting
+                                 an existing file.  This is useful for
+                                 creating lots of SPA packets for testing
+                                 randomness and encryption properties.
+    --Source-port <port>       - Fix a specific source port for outgoing SPA
+                                 packets.  This is not usually necessary,
+                                 and the fwknop client randomizes its source
+                                 port by default.
+    --Server-port <port>       - Specify the port number to which to send
+                                 the single authentication packet (this is
+                                 only used for an fwknop server that is
+                                 operating in pcap mode).
+    --Server-mode <mode>       - Run in legacy port knocking mode ("mode" =
+                                 "knock" or "shared").
+    --Server-cmd <cmd>         - Specify a complete command that an fwknop
+                                 server should execute (as root).
+    --Server-auth <method>     - Provide additional authentication
+                                 information that the fwknopd server can
+                                 apply (such as integration with crypt()).
+    --Spoof-src <IP>           - Spoof the source IP address (requires
+                                 fwknop to be run as root).
+    --Spoof-user <username>    - Supply a non-root username when spoofing
+                                 the source address.
+    --Spoof-proto <protocol>   - Send authentication packet over the
+                                 specified protocol (tcp, udp, or icmp)
+                                 when spoofing the source address.
+    --icmp-type <type>         - Set the ICMP type when sending SPA packets
+                                 over spoofed ICMP packets (default is
+                                 $icmp_type for echo-request).
+    --icmp-code <code>         - Set the ICMP code when sending SPA packets
+                                 over spoofed ICMP packets (default is
+                                 $icmp_code for echo-request).
+    -r, --rotate-proto         - Rotate protocol (tcp and udp only) for
+                                 encrypted sequences.
+    --Max-packet-size <bytes>  - Maximum size of outbound SPA packets - the
+                                 default is $max_msg_len bytes.
+    --offset <port>            - Specify port offset to use when run in
+                                 --encrypt knock mode.  The default is
+                                 $enc_port_offset.
+    --get-key <file>           - Get encryption key from <file> instead of
+                                 from STDIN.
+    --Test-mode                - Build SPA packet data but do not send it
+                                 over the network.
+    --time-offset-plus <str>   - Add a time offset to the advertised time
+                                 stamp in the SPA packet (e.g. "60sec" or
+                                 "1day").
+    --time-offset-minus <str>  - Subtract a time offset from the advertised
+                                 time stamp in the SPA packet (e.g. "60sec"
+                                 or "1day").
+    --HTTP                     - Send SPA packets over HTTP (requires that
+                                 the system running the fwknopd server is
+                                 also running a webserver).
+    --TCP-sock                 - Send SPA packets over an established TCP
+                                 socket with the fwknopd server.  This
+                                 allows SPA packets to be sent over the Tor
+                                 network.
+    --no-save-args             - Do not save command line args to
+                                 ~/.fwknop.run file.
+    --Show-last-cmd            - Display the last fwknop command and exit.
+    --Show-host-cmd <host>     - Display the last fwknop command that was
+                                 executed for <host> and exit.
+    -u, --user-rc <rc-file>    - Specify path to user connect rc file
+                                 instead of using the default ~/.fwknoprc.
+                                 This file is not referenced for encrypted
+                                 port sequences; only for shared sequences.
+    -H, --Home-dir <directory> - Specify the home directory of the current
+                                 user that is running fwknop.
+    --time-delay <seconds>     - (Legacy port knocking mode) Introduce a
+                                 time delay between each connection in a
+                                 knock sequence.  This is mainly used in
+                                 conjunction with the MIN_TIME_DIFF access
+                                 control directive.
+    -k, --knock-dst <IP>       - Connection destination IP address for port
+                                 knock sequence (synonym for -D).
+    -d, --debug                - Run fwknop in debugging mode.
+    --Lib-dir <path>           - Path to the perl modules directory (not
+                                 usually necessary).
+    --locale <locale>          - Manually define a locale setting.
+    --no-locale                - Don't set the locale to anything (the
+                                 default is the "C" locale).
+    --no-FKO-module            - Revert to older perl implementation even if
+                                 the FKO module is installed.
+    --test-FKO-exists          - See if the FKO module is available to use
+                                 and exit (this is used by the fwknop test
+                                 suite).
+    -v, --verbose              - Verbose mode.
+    -V, --Version              - Display version and exit.
+    -h, --help                 - Print help and exit.
+_HELP_
+
+    exit $exit_status;
+}

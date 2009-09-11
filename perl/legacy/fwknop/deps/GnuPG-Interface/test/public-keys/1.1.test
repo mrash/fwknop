@@ -1,0 +1,12 @@
+test/pubring.gpg
+----------------
+pub  1024D/F950DA9C 2000-02-06 GnuPG test key (for testing purposes only)
+uid                            Foo Bar (1)
+sub   768g/2E854A6B 2000-02-06 [expires: 2002-02-05]
+
+pub  1024D/260C4FA3 1999-04-22 Frank J. Tobin <ftobin@bigfoot.com>
+uid                            Dekan
+uid                            Frank J. Tobin <ftobin@uiuc.edu>
+uid                            Frank J. Tobin <ftobin@neverending.org>
+sub  2048g/334C9F14 1999-04-22 [expires: 2001-04-21]
+

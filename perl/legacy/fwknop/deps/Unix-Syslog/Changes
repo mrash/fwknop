@@ -1,0 +1,91 @@
+-*- mode: text -*-
+
+Revision history for Perl extension Unix::Syslog.
+0.100 Wed Aug 28 17:09:37 2002
+        - (test.pl) Major changes due to complete misunderstanding of
+           eval()
+
+        - (Syslog.pm) Updated version number
+
+	- (Makefile.PL) Cleanup
+
+0.99 Wed Aug 14 21:05:43 2002
+        - Added functions priorityname() and facilityname().
+
+	- Updated docs.
+
+0.98 Tue Jan 22 22:24:39 2002
+        - (Syslog.pm) Instead of quoting percent-signs in
+          syslog()-wrapper, simply pass the string to libc-syslog() as
+          string argument via %s.  Reported by Gisle Aas
+          <gisle@ActiveState.com>.
+        
+        - (Syslog.xs) When calling libc-syslog() internally, pass
+          message as string argument, not as format string.
+        
+          Copy ident-argument using some Perl-API functions. Just
+          using a reference counter had unwanted
+          side-effects. Reported by Gisle Aas <gisle@ActiveState.com>.
+        
+        - (TODO) Declared only plan for extending Unix::Syslog for
+          unfeasable with current versions of Perl.
+
+        - Renamed distribution archive to Unix-Syslog-<version>. I
+          just discovered the `tardist' target in the Makefile :^)
+
+0.97 Wed Dec 12 03:39:15 2001
+        - (Syslog.pm) Updated version number.
+
+        - (Syslog.xs) Increase openlog()'s ident argument reference
+          counter, in order to achieve correct behaviour in case
+          openlog()'s first argument is a function call. Reported by
+          David Landgren.
+
+        - (test.pl) Check that the changes to Syslog.xs actually work.
+
+0.96  Tue Sep 25  01:17:00 2001
+        - (test.pl) Add tests to clarify meaning of LOG_MASK and
+          LOG_UPTO.
+
+0.95  Wed Feb 07 21:43:00 2001
+        - (Syslog.pm) Fixed a message formatting bug in the syslog()
+          wrapper (reported by Eric Kuzniar <kuzniar@server.airchek.com>
+          and partly fixed by Mike DeVaynes
+          <mike@radon.com>). Multiple expansion (sprintf,syslog) of
+          format string and arguments, in some cases resulted in
+          malformed messages.
+
+        - (test.pl) Added some tests related to that bug fix 
+
+        - (README) Added some details about the test suite.
+
+0.94  Sun Aug 20 23:25:00 2000
+        - (Makefile.PL) Added '-lc' to LIBS which seems to be
+          necessary to compile Unix::Syslog on NEC EWS4800 machines
+          (reported by Oota Toshiya <oota@ppd.fc.nec.co.jp>).
+
+        - (Syslog.pm) Fixed severe bug in documentation of
+          setlogmask() and the according macros.
+
+        - (README) FAQ synched with pod section in Syslog.pm
+
+0.93  Wed Mar 15 19:20:40 2000
+        - Changed author's e-mail address to <marcus.harnisch@gmx.net>
+
+        - Synched the version number of the module with the actual
+          version of Unix::Syslog
+
+        - Fixed some typos in the documentation
+
+0.92  Sun Nov 28 15:24:15 1999
+        - (README): Corrected a big howler and some other stuff
+
+0.91  Sun Oct 24 17:47:03 1999
+        - (README): Minor corrections
+
+0.90  Sun Feb 20 19:32:34 1999
+        - Finally finished documentation
+
+0.01  Thu Aug  6 20:51:16 1998
+        - original version; created by h2xs 1.18
+

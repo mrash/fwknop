@@ -1,0 +1,138 @@
+=head1 NAME
+
+Net::RawIP::libpcap - An interface to B<libpcap> in Net::RawIP(3pm)
+
+=head1 DESCRIPTION
+
+ Function    The input parameters           The output parameters
+
+ open_live   a network                      Return value is a pcap_t*
+             device(eth0,ppp0,...);         If retval less than zero
+             a snap length;                 then $err filled with
+             a promisc - boolean;           an error string.
+	     a timeout in sec;               
+	     $err is an undef scalar;
+
+ open_offline   a filename which is filled  Return value is pcap_t*
+                with a raw output of dump;  If retval less than zero
+                $err is an unfef scalar;    then $err filled with
+		                            an error string.
+
+ dump_open  pcap_t*;                        Return value is a FILE*
+            $err; 
+
+ lookupdev  $err;			    Return value is a name
+                                            of first device which is
+					    found by libpcap
+
+ lookupnet  a network device;               a netnumber;
+            a netnumer is undef;            a netmask;    
+	    a netmask is undef;             If retval less than zero
+	    $err is undef;                  then $err filled with
+				            an error string.
+  
+ dispatch   a scalar with pcap_t*;          No output parameters.
+            number of packets for proce-
+	    ssing;
+	    reference to the perl call-
+	    back,this callback will be
+	    called with 3 parameters:
+	    $_[0] is fourth parameter
+	    from dispatch,
+	    $_[1] is a scalar with struc-
+	    ture pcap_pkthdr for a current
+	    packet,
+	    $_[2] is a scalar with a current
+	    packet;
+	    fourth parameter could be
+	    an array or a hash reference
+	    or a pointer (FILE*) returned
+	    by dump_open,it can be unre-
+	    ferenced in the perl call-
+	    back or be used as a perl
+	    filehandle in that callback.
+  
+ loop 	    As for dispatch.                As for dispatch.
+  
+ dump       As for a perl callback          No output. 
+            but $_[0] must be a pointer 
+	    (FILE*) only.
+
+ compile    a scalar with pcap_t*;        a scalar with bpf_program. 
+            a bpf_program is undef;       If retval is less than zero
+	    a scalar with filter string;  then there was a problem with
+	    a boolean value (optimize or  filter grammar.
+	    not);
+	      a scalar with netmask;
+
+ setfilter  a scalar with pcap_t*;        If retval is less than zero
+	    a scalar with bpf_program     then there was a problem while
+	    returned by compile.          settting filter.
+  
+ next     a scalar with pcap_t*;          A scalar with next packet;
+          a scalar with with struc-       a scalar with with structure
+	  ture pcap_pkthdr for a current  pcap_pkthdr also will be modi
+	  packet,originally is undef.     filed for an every packet and 
+		                          it can be accessed but for read
+					  only.
+					      
+ datalink  a scalar with pcap_t*;         Retval is the link  layer type,
+                                          e.g. DLT_EN10MB.
+	 						        		 
+ snapshot  a scalar with pcap_t*;         Retval is the snapshot length 
+                                          specified when open_live was 
+					  called.		 	 	 
+    
+ is_swapped  a scalar with pcap_t*;       returns true if the current 
+                                          savefile uses a different 
+					  byte order than the current 
+					  system.                   
+  
+ major_version  a scalar with pcap_t*;    returns the major number 
+                                          of the version of the pcap 
+					  used to write the savefile.
+  
+ minor_version  a scalar with pcap_t*;    returns the minor number of the
+                                          version of the pcap used to 
+					  write the savefile.
+
+ file       a scalar with pcap_t*;        returns the name of the 
+                                          savefile.
+   											      					      
+ stats      a scalar with pcap_t*;        If retval 0 then a scalar 
+            a scalar with structure       with structure pcap_stat will
+	    pcap_stat,originally undef    be filled with the 
+                                          packet statistics.
+
+ fileno    a scalar with pcap_t*;        returns  the  file descriptor 
+                                         number of the savefile.
+					 A core perl function is 
+					 available as CORE::fileno.
+					      
+ geterr   a scalar with pcap_t*;         returns  the  error  text 
+                                         pertaining to the last pcap 
+				         library error.
+					      
+ perror   a scalar with pcap_t*;         prints the text of the last  
+          a scalar with prefix;          pcap  library error on stderr, 
+		                         prefixed by prefix.
+  
+ close    a scalar with pcap_t*;         closes the files associated with 
+                                         pcap_t* and deallocates 
+					 resources.
+	                                 A core perl function is 
+					 available as CORE::close.
+											    
+ dump_close  a scalar with pcap_t*;      closes the savefile.    					      
+
+=head1 AUTHOR
+
+Sergey Kolychev <ksv@al.lg.ua>
+
+=head1 SEE ALSO
+
+Net::RawIP(3pm),pcap(3).
+
+=cut
+                                                    		                      						     
+		      

@@ -1,0 +1,9 @@
+pub  1024D/F950DA9C 2000-02-06 GnuPG test key (for testing purposes only)
+sig        F950DA9C 2000-02-06  GnuPG test key (for testing purposes only)
+sig        260C4FA3 2000-03-16  Frank J. Tobin <ftobin@bigfoot.com>
+uid                            Foo Bar (1)
+sig        F950DA9C 2000-03-16  GnuPG test key (for testing purposes only)
+sig        260C4FA3 2000-03-16  Frank J. Tobin <ftobin@bigfoot.com>
+sub   768g/2E854A6B 2000-02-06 [expires: 2002-02-05]
+sig        F950DA9C 2000-02-06  GnuPG test key (for testing purposes only)
+

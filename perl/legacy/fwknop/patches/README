@@ -1,0 +1,23 @@
+
+If you want to patch your OpenSSH client so that it can use fwknop directly
+instead of having to use fwknop independently, then follow these instructions:
+
+1.  Download the appropriate version of OpenSSH (i.e. one for which a patch
+    exists, say, OpenSSH-4.3p2) and unpack it:
+
+        $ cd ~/src
+        $ tar xvfz openssh-4.3p2.tar.gz
+
+2.  Put the patch file into the resulting OpenSSH sources directory and apply
+    it:
+
+        $ cp ~/src/fwknop-0.9.7/patches/openssh-4.3p2_SPA.patch openssh-4.3p2
+        $ cd openssh-4.3p2
+        $ patch -p1 < openssh-4.3p2_SPA.patch
+
+3.  Run the configure script with the --with-spa-mode command line argument,
+    and then compile and install:
+
+        $ ./configure --prefix=/usr --with-spa-mode && make
+        $ su
+        # make install

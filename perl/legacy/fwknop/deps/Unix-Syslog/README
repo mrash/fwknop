@@ -1,0 +1,138 @@
+       Unix::Syslog -- Perl interface to the UNIX system logger
+       ========================================================
+
+Copyright (C) 1999,2000,2001,2002 Marcus Harnisch
+
+Introduction
+============
+
+This Module provides access to the system logger available on most
+UNIX system via Perl's XSUBs (Perl's C interface).
+
+I wrote this module because of some features I missed in Sys::Syslog
+(see FAQ below) and also to do my first steps into the secrets of
+Perl's XSUBs.
+
+Copyright and distribution
+==========================
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the Artistic License. A copy of the license (see
+file Artistic in this directory) must be included in the package.
+
+Installation
+============
+
+Unix::Syslog is a Perl module that makes use of XSUBs and hence
+requires a working C compiler and library. Execute the following
+commands to install this package (`make test' prints the results of a
+test suite. Execute `make install' only if the required tests finished
+successfully or if you know what you are doing):
+
+perl Makefile.PL
+make test
+make install
+
+Notes about the test suite
+==========================
+
+Some of the tests may fail because the respective constants are not
+available on certain systems. You should be able to distinguish these
+tests from those that fail because of a malfunction by carefully
+reading the output of the test routines.
+
+The tests that write messages to syslog cannot return a success status
+since the underlying libc functions don't return appropriate
+information. To verify that these tests work correctly, you should
+configure syslogd so that the facility `local7' and priority `info'
+will be written to a file.
+
+OS dependent behaviour and portability
+======================================
+
+This package uses system specific functions. Programs that uses this
+package may not be portable in any case. If you plan to write portable
+code using this package, please consult the manuals of the systems you
+wish to run the software on. Then modify your program accordingly.
+
+As of version 0.99 Unix::Syslog provides two functions priorityname()
+and facilityname() that return the names of priority and facility,
+respectively. This functionality is only enabled if an according
+`#define' is enabled through Makefile.PL. By default this statement is
+commented out.
+
+Known bugs
+==========
+
+OS	Description				   Workaround
+---------------------------------------------------------------------------
+Linux	On systems using glibc2 (<= version 2.1),  None possible.
+        setting the log mask has no effect.
+
+Frequently Asked Questions
+==========================
+
+1.  What is the benefit of using this module instead of Sys::Syslog?
+
+    Sys::Syslog always opens a network connection to the syslog
+    service. At least on Linux systems this may lead to some
+    trouble, because
+
+    o   Linux syslogd (from package sysklogd) does not listen to the
+        network by default. Most people working on stand-alone
+        machines (including me) didn't see any reason why to
+        enable this option. Others didn't enable it for security
+        reasons.
+
+        OS-independent, some sysadmins may run a firewall on
+        their network that blocks connections to port 514/udp.
+
+    o   By default Linux syslogd doesn't forward messages which have
+        already already received from the network to other log
+        hosts. There are reasons not to enable this option
+        unless it is really necessary. Looping messages
+        resulting from a misconfiguration may break down your
+        (log-)system.
+
+    Peter Stamfest <peter.stamfest@eunet.at> pointed out some
+    other advantages of Unix::Syslog, I didn't came across my
+    self.
+
+    o   LOG_PERROR works.
+
+    o   works with perl -Tw without warnings and problems due to
+        tainted data as it is the case for Sys::Syslog in some
+        special applications. [Especially when running a script
+        as root]
+
+2.  Well, is there any reason to use Sys::Syslog any longer?
+
+    Yes! In contrary to Unix::Syslog, Sys::Syslog works even if
+    you don't have a syslog daemon running on your system as
+    long as you are connected to a log host via a network and
+    have access to the syslog.h header file of your log host to
+    generate the initial files for Sys::Syslog (see
+    Sys::Syslog(3) for details). Unix::Syslog only logs to your
+    local syslog daemon which in turn may be configured to
+    distribute the message over the network.
+
+3.  Are calls to the functions provided by Unix::Syslog compatible
+    to those of Sys::Syslog?
+
+    Currently not. Sys::Syslog requires strings to specify many
+    of the arguments to the functions, while Unix::Syslog uses
+    numeric constants accessed via macros as defined in
+    syslog.h. Although the strings used by Sys::Syslog are also
+    defined in syslog.h, it seems that most people got used to
+    the numeric arguments. I will implement the string based
+    calls if there are enough people ($min_people > 10**40)
+    complaining about the lack of compatibility.
+
+Comments, Bug reports and Suggestions
+=====================================
+
+Please direct anything you wish to tell me about this package to the
+address given below.
+
+Have fun,
+     Marcus Harnisch <marcus.harnisch@gmx.net>

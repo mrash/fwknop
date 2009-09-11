@@ -1,0 +1,57 @@
+#!/sbin/runscript
+# Copyright 2006 Michael Rash
+# Distributed under the terms of the GNU General Public License v2
+# Author: Michael Rash
+#    Developed for the Gentoo Linux distribution
+# $Id: fwknop-init.gentoo 568 2006-10-16 02:08:51Z mbr $
+
+depend() {
+	need logger net
+}
+
+FWKNOP_CONF=/etc/fwknop/fwknop.conf
+
+checkconfig() {
+	if [ ! -f ${FWKNOP_CONF} ] ; then
+		eerror "Please create ${FWKNOP_CONF}"
+		eerror "You can find a sample config file at ${FWKNOP_CONF}.sample"
+		return 1
+	fi
+	return 0
+}
+
+start() {
+	checkconfig || return 1
+
+	ebegin "Starting ${SVCNAME}"
+	start-stop-daemon --start --quiet --exec /usr/sbin/fwknopd
+	eend $? "Failed to start ${SVCNAME}"
+}
+
+stop() {
+	ebegin "Stopping knopwatchd"
+	start-stop-daemon --stop --quiet --pidfile /var/run/fwknop/knopwatchd.pid
+	eend $? "Failed to stop knopwatchd"
+
+	ebegin "Stopping ${SVCNAME}"
+	start-stop-daemon --stop --quiet --pidfile /var/run/fwknop/fwknopd.pid
+	eend $? "Failed to stop ${SVCNAME}"
+
+	if [ -f /var/run/fwknop/knopmd.pid ] ; then
+		ebegin "Stopping knopmd"
+		start-stop-daemon --stop --quiet --pidfile /var/run/fwknop/knopmd.pid
+		eend $? "Failed to stop knopmd"
+	fi
+
+	if [ -f /var/run/fwknop/knoptm.pid ] ; then
+		ebegin "Stopping knoptm"
+		start-stop-daemon --stop --quiet --pidfile /var/run/fwknop/knoptm.pid
+		eend $? "Failed to stop knoptm"
+	fi
+
+	if [ -f /var/run/fwknop/fwknop_serv.pid ] ; then
+		ebegin "Stopping fwknop_serv"
+		start-stop-daemon --stop --quiet --pidfile /var/run/fwknop/fwknop_serv.pid
+		eend $? "Failed to stop fwknop_serv"
+	fi
+}

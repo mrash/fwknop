@@ -1,0 +1,62 @@
+#!perl
+
+	# dups: simple script for showing duplicate files
+
+=head1 NAME
+
+dups - Show Duplicate Files
+
+=head1 SYNOPSIS
+
+ Usage: dups files ...
+
+ dups is a fast script for discovering duplicate files.  It
+ achieves its efficiency by comparing file digests rather than the
+ file contents themselves, the latter being much larger in general.
+
+ The NIST Secure Hash Algorithm (SHA) is highly collision-resistant,
+ meaning that two files with the same SHA digest have an almost
+ certain probability of being identical.
+
+ The dups script works by computing the SHA-1 digest of each file
+ and looking for matches.  The search can reveal more than one set
+ of duplicates, so the output is written as follows:
+
+ match1_file1
+ 	match1_file2
+	match1_file3
+	etc.
+
+ match2_file1
+ 	match2_file2
+	etc.
+
+=head1 AUTHOR
+
+Mark Shelor <mshelor@cpan.org>
+
+=head1 SEE ALSO
+
+Perl module L<Digest::SHA> or L<Digest::SHA::PurePerl>
+
+=cut
+
+use strict;
+use Digest::SHA;
+
+die "usage: dups files ...\n" unless @ARGV;
+
+my @files = grep { -f $_ } @ARGV;
+
+my %dups;
+for (@files) {
+	my $digest = Digest::SHA->new->addfile($_, "b")->hexdigest;
+	push(@{$dups{$digest}}, $_);
+}
+
+for (keys %dups) {
+	my $ref = $dups{$_};
+	if (scalar(@$ref) > 1) {
+		print join("\n\t", @$ref), "\n\n";
+	}
+}

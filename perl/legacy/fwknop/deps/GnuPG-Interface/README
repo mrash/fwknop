@@ -1,0 +1,456 @@
+GnuPG::Interface(3)   User Contributed Perl Documentation  GnuPG::Interface(3)
+
+
+
+NNAAMMEE
+       GnuPG::Interface − Perl interface to GnuPG
+
+SSYYNNOOPPSSIISS
+         # A simple example
+         use IO::Handle;
+         use GnuPG::Interface;
+
+         # settting up the situation
+         my $gnupg = GnuPG::Interface‐>new();
+         $gnupg‐>options‐>hash_init( armor   => 1,
+                                     homedir => ’/home/foobar’ );
+
+         # Note you can set the recipients even if you aren’t encrypting!
+         $gnupg‐>options‐>push_recipients( ’ftobin@cpan.org’ );
+         $gnupg‐>options‐>meta_interactive( 0 );
+
+         # how we create some handles to interact with GnuPG
+         my $input   = IO::Handle‐>new();
+         my $output  = IO::Handle‐>new();
+         my $handles = GnuPG::Handles‐>new( stdin  => $input,
+                                            stdout => $output );
+
+         # Now we’ll go about encrypting with the options already set
+         my @plaintext = ( ’foobar’ );
+         my $pid = $gnupg‐>encrypt( handles => $handles );
+
+         # Now we write to the input of GnuPG
+         print $input @plaintext;
+         close $input;
+
+         # now we read the output
+         my @ciphertext = <$output>;
+         close $output;
+
+         waitpid $pid, 0;
+
+DDEESSCCRRIIPPTTIIOONN
+       GnuPG::Interface and its associated modules are designed to provide an
+       object‐oriented method for interacting with GnuPG, being able to per‐
+       form functions such as but not limited to encrypting, signing, decryp‐
+       tion, verification, and key‐listing parsing.
+
+       HHooww DDaattaa MMeemmbbeerr AAcccceessssoorr MMeetthhooddss aarree CCrreeaatteedd
+
+       Each module in the GnuPG::Interface bundle relies on Class::MethodMaker
+       to generate the get/set methods used to set the object’s data members.
+       _T_h_i_s _i_s _v_e_r_y _i_m_p_o_r_t_a_n_t _t_o _r_e_a_l_i_z_e_.  This means that any data member
+       which is a list has special methods assigned to it for pushing, pop‐
+       ping, and clearing the list.
+
+       UUnnddeerrssttaannddiinngg BBiiddiirreeccttiioonnaall CCoommmmuunniiccaattiioonn
+
+       It is also imperative to realize that this package uses interprocess
+       communication methods similar to those used in IPC::Open3 and "Bidirec‐
+       tional Communication with Another Process" in perlipc, and that users
+       of this package need to understand how to use this method because this
+       package does not abstract these methods for the user greatly.  This
+       package is not designed to abstract this away entirely (partly for
+       security purposes), but rather to simply help create ’proper’, clean
+       calls to GnuPG, and to implement key‐listing parsing.  Please see
+       "Bidirectional Communication with Another Process" in perlipc to learn
+       how to deal with these methods.
+
+       Using this package to do message processing generally invovlves creat‐
+       ing a GnuPG::Interface object, creating a GnuPG::Handles object, set‐
+       ting some options in its ooppttiioonnss data member, and then calling a method
+       which invokes GnuPG, such as cclleeaarrssiiggnn.  One then interacts with with
+       the handles appropriately, as described in "Bidirectional Communication
+       with Another Process" in perlipc.
+
+OOBBJJEECCTT MMEETTHHOODDSS
+       IInniittiiaalliizzaattiioonn MMeetthhooddss
+
+
+       new( _%_i_n_i_t_i_a_l_i_z_a_t_i_o_n___a_r_g_s )
+           This methods creates a new object.  The optional arguments are ini‐
+           tialization of data members; the initialization is done in a manner
+           according to the method created as described in "new_hash_init" in
+           Class::MethodMaker.
+
+       hash_init( _%_a_r_g_s ).
+           This methods work as described in "new_hash_init" in Class::Method‐
+           Maker.
+
+       OObbjjeecctt MMeetthhooddss wwhhiicchh uussee aa GGnnuuPPGG::::HHaannddlleess OObbjjeecctt
+
+
+       list_public_keys( % )
+       list_sigs( % )
+       list_secret_keys( % )
+       encrypt( % )
+       encrypt_symmetrically( % )
+       sign( % )
+       clearsign( % )
+       detach_sign( % )
+       sign_and_encrypt( % )
+       decrypt( % )
+       verify( % )
+       import_keys( % )
+       export_keys( % )
+       recv_keys( % )
+       send_keys( % )
+           These methods each correspond directly to or are very similar to a
+           GnuPG command described in gpg.  Each of these methods takes a
+           hash, which currently must contain a key of hhaannddlleess which has the
+           value of a GnuPG::Handles object.  Another optional key is ccoomm‐‐
+           mmaanndd__aarrggss which should have the value of an array reference; these
+           arguments will be passed to GnuPG as command arguments.  These com‐
+           mand arguments are used for such things as determining the keys to
+           list in the eexxppoorrtt__kkeeyyss method.  _P_l_e_a_s_e _n_o_t_e _t_h_a_t _G_n_u_P_G _c_o_m_m_a_n_d
+           _a_r_g_u_m_e_n_t_s _a_r_e _n_o_t _t_h_e _s_a_m_e _a_s _G_n_u_P_G _o_p_t_i_o_n_s.  To understand what
+           are options and what are command arguments please read "COMMANDS"
+           in gpg and "OPTIONS" in gpg.
+
+           Each of these calls returns the PID for the resulting GnuPG
+           process.  One can use this PID in a "waitpid" call instead of a
+           "wait" call if more precise process reaping is needed.
+
+           These methods will attach the handles specified in the hhaannddlleess
+           object to the running GnuPG object, so that bidirectional communi‐
+           cation can be established.  That is, the optionally‐defined ssttddiinn,
+           ssttddoouutt, ssttddeerrrr, ssttaattuuss, llooggggeerr, and ppaasssspphhrraassee handles will be
+           attached to GnuPG’s input, output, standard error, the handle cre‐
+           ated by setting ssttaattuuss‐‐ffdd, the handle created by setting llooggggeerr‐‐ffdd,
+           and the handle created by setting ppaasssspphhrraassee‐‐ffdd respectively.  This
+           tying of handles of similar to the process done in _I_P_C_:_:_O_p_e_n_3.
+
+           If you want the GnuPG process to read or write directly to an
+           already‐opened filehandle, you cannot do this via the normal
+           _I_P_C_:_:_O_p_e_n_3 mechanisms.  In order to accomplish this, set the appro‐
+           priate hhaannddlleess data member to the already‐opened filehandle, and
+           then set the option ddiirreecctt to be true for that handle, as described
+           in "options" in GnuPG::Handles.  For example, to have GnuPG read
+           from the file _i_n_p_u_t_._t_x_t and write to _o_u_t_p_u_t_._t_x_t, the following
+           snippet may do:
+
+             my $infile  = IO::File‐>new( ’input.txt’ );
+             my $outfile = IO::File‐>new( ’>output.txt’ );
+             my $handles = GnuPG::Handles‐>new( stdin  => $infile,
+                                                stdout => $outfile,
+                                              );
+             $handles‐>options( ’stdin’  )‐>{direct} = 1;
+             $handles‐>options( ’stdout’ )‐>{direct} = 1;
+
+           If any handle in the hhaannddlleess object is not defined, GnuPG’s input,
+           output, and standard error will be tied to the running program’s
+           standard error, standard output, or standard error.  If the ssttaattuuss
+           or llooggggeerr handle is not defined, this channel of communication is
+           never established with GnuPG, and so this information is not gener‐
+           ated and does not come into play.  If the ppaasssspphhrraassee data member
+           handle of the hhaannddlleess object is not defined, but the the ppaasssspphhrraassee
+           data member handle of GnuPG::Interface object is, GnuPG::Interface
+           will handle passing this information into GnuPG for the user as a
+           convience.  Note that this will result in GnuPG::Interface storing
+           the passphrase in memory, instead of having it simply
+           ’pass−through’ to GnuPG via a handle.
+
+       OOtthheerr MMeetthhooddss
+
+
+       get_public_keys( @search_strings )
+       get_secret_keys( @search_strings )
+       get_public_keys_with_sigs( @search_strings )
+           These methods create and return objects of the type GnuPG::Pub‐
+           licKey or GnuPG::SecretKey respectively.  This is done by parsing
+           the output of GnuPG with the option wwiitthh‐‐ccoolloonnss enabled.  The
+           objects created do or do not have signature information stored in
+           them, depending if the method ends in ___s_i_g_s; this separation of
+           functionality is there because of performance hits when listing
+           information with signatures.
+
+       _t_e_s_t___d_e_f_a_u_l_t___k_e_y___p_a_s_s_p_h_r_a_s_e_(_)
+           This method will return a true or false value, depending on whether
+           GnuPG reports a good passphrase was entered while signing a short
+           message using the values of the ppaasssspphhrraassee data member, and the
+           default key specified in the ooppttiioonnss data member.
+
+IInnvvookkiinngg GGnnuuPPGG wwiitthh aa ccuussttoomm ccaallll
+       GnuPG::Interface attempts to cover a lot of the commands of GnuPG that
+       one would want to perform; however, there may be a lot more calls that
+       GnuPG is and will be capable of, so a generic command interface is pro‐
+       vided, "wrap_call".
+
+       wrap_call( %args )
+           Call GnuPG with a custom command.  The %args hash must contain at
+           least the following keys:
+
+           commands
+               The value of this key in the hash must be a reference to a a
+               list of commands for GnuPG, such as "[ qw( −−encrypt −−sign )
+               ]".
+
+           handles
+               As with most other GnuPG::Interface methods, hhaannddlleess must be a
+               GnuPG::Handles object.
+
+           The following keys are optional.
+
+           command_args
+               As with other GnuPG::Interface methods, the value in hash for
+               this key must be a reference to a list of arguments to be
+               passed to the GnuPG command, such as which keys to list in a
+               key−listing.
+
+OOBBJJEECCTT DDAATTAA MMEEMMBBEERRSS
+       Note that these data members are interacted with via object methods
+       created using the methods described in "get_set" in Class::MethodMaker,
+       or "object" in Class::MethodMaker.  Please read there for more informa‐
+       tion.
+
+       call
+           This defines the call made to invoke GnuPG.  Defaults to ’gpg’;
+           this should be changed if ’gpg’ is not in your path, or there is a
+           different name for the binary on your system.
+
+       passphrase
+           In order to lessen the burden of using handles by the user of this
+           package, setting this option to one’s passphrase for a secret key
+           will allow the package to enter the passphrase via a handle to
+           GnuPG by itself instead of leaving this to the user.  See also
+           "passphrase" in GnuPG::Handles.
+
+       options
+           This data member, of the type GnuPG::Options; the setting stored in
+           this data member are used to determine the options used when call‐
+           ing GnuPG via _a_n_y of the object methods described in this package.
+           See GnuPG::Options for more information.
+
+EEXXAAMMPPLLEESS
+       The following setup can be done before any of the following examples:
+
+         use IO::Handle;
+         use GnuPG::Interface;
+
+         my @original_plaintext = ( "How do you doo?" );
+         my $passphrase = "Three Little Pigs";
+
+         my $gnupg = GnuPG::Interface‐>new();
+
+         $gnupg‐>options‐>hash_init( armor    => 1,
+                                     recipients => [ ’ftobin@uiuc.edu’,
+                                                     ’0xABCD1234’ ],
+                                     meta_interactive( 0 ),
+                                   );
+
+       EEnnccrryyppttiinngg
+
+         # We’ll let the standard error of GnuPG pass through
+         # to our own standard error, by not creating
+         # a stderr‐part of the $handles object.
+         my ( $input, $output ) = ( IO::Handle‐>new(),
+                                    IO::Handle‐>new() );
+
+         my $handles = GnuPG::Handles‐>new( stdin    => $input,
+                                            stdout   => $output );
+
+         # this sets up the communication
+         # Note that the recipients were specified earlier
+         # in the ’options’ data member of the $gnupg object.
+         my $pid = $gnupg‐>encrypt( handles => $handles );
+
+         # this passes in the plaintext
+         print $input @original_plaintext;
+
+         # this closes the communication channel,
+         # indicating we are done
+         close $input;
+
+         my @ciphertext = <$output>;  # reading the output
+
+         waitpid $pid, 0;  # clean up the finished GnuPG process
+
+       SSiiggnniinngg
+
+         # This time we’ll catch the standard error for our perusing
+         my ( $input, $output, $error ) = ( IO::Handle‐>new(),
+                                            IO::Handle‐>new(),
+                                            IO::Handle‐>new(),
+                                          );
+
+         my $handles = GnuPG::Handles‐>new( stdin    => $input,
+                                            stdout   => $output,
+                                            stderr   => $error,
+                                          );
+
+         # indicate our pasphrase through the
+         # convience method
+         $gnupg‐>passphrase( $passphrase );
+
+         # this sets up the communication
+         my $pid = $gnupg‐>sign( handles => $handles );
+
+         # this passes in the plaintext
+         print $input @original_plaintext;
+
+         # this closes the communication channel,
+         # indicating we are done
+         close $input;
+
+         my @ciphertext   = <$output>;  # reading the output
+         my @error_output = <$error>;   # reading the error
+
+         close $output;
+         close $error;
+
+         waitpid $pid, 0;  # clean up the finished GnuPG process
+
+       DDeeccrryyppttiioonn
+
+         # This time we’ll catch the standard error for our perusing
+         # as well as passing in the passphrase manually
+         # as well as the status information given by GnuPG
+         my ( $input, $output, $error, $passphrase_fh, $status_fh )
+           = ( IO::Handle‐>new(),
+               IO::Handle‐>new(),
+               IO::Handle‐>new(),
+               IO::Handle‐>new(),
+               IO::Handle‐>new(),
+             );
+
+         my $handles = GnuPG::Handles‐>new( stdin      => $input,
+                                            stdout     => $output,
+                                            stderr     => $error,
+                                            passphrase => $passphrase_fh,
+                                            status     => $status_fh,
+                                          );
+
+         # this time we’ll also demonstrate decrypting
+         # a file written to disk
+         # Make sure you "use IO::File" if you use this module!
+         my $cipher_file = IO::File‐>new( ’encrypted.gpg’ );
+
+         # this sets up the communication
+         my $pid = $gnupg‐>decrypt( handles => $handles );
+
+         # This passes in the passphrase
+         print $passphrase_fd $passphrase;
+         close $passphrase_fd;
+
+         # this passes in the plaintext
+         print $input $_ while <$cipher_file>
+
+         # this closes the communication channel,
+         # indicating we are done
+         close $input;
+         close $cipher_file;
+
+         my @plaintext    = <$output>;   # reading the output
+         my @error_output = <$error>;    # reading the error
+         my @status_info  = <$status_fh> # read the status info
+
+         # clean up...
+         close $output;
+         close $error;
+         close $status_fh;
+
+         waitpid $pid, 0;  # clean up the finished GnuPG process
+
+       PPrriinnttiinngg KKeeyyss
+
+         # This time we’ll just let GnuPG print to our own output
+         # and read from our input, because no input is needed!
+         my $handles = GnuPG::Handles‐>new();
+
+         my @ids = [ ’ftobin’, ’0xABCD1234’ ];
+
+         # this time we need to specify something for
+         # command_args because ‐‐list‐public‐keys takes
+         # search ids as arguments
+         my $pid = $gnupg‐>list_public_keys( handles      => $handles,
+                                             command_args => [ @ids ]  );
+
+          waitpid $pid, 0;
+
+       CCrreeaattiinngg GGnnuuPPGG::::PPuubblliiccKKeeyy OObbjjeeccttss
+
+         my @ids = [ ’ftobin’, ’0xABCD1234’ ];
+
+         my @keys = $gnupg‐>get_public_keys( @ids );
+
+         # no wait is required this time; it’s handled internally
+         # since the entire call is encapsulated
+
+       CCuussttoomm GGnnuuPPGG ccaallll
+
+         # assuming $handles is a GnuPG::Handles object
+         my $pid = $gnupg‐>wrap_call
+           ( commands     => [ qw( ‐‐list‐packets ) ],
+             command_args => [ qw( test/key.1.asc ) ],
+             handles      => $handles,
+           );
+
+           my @out = <$handles‐>stdout()>;
+           waitpid $pid, 0;
+
+FFAAQQ
+       How do I get GnuPG::Interface to read/write directly from a filehandle?
+           You need to set GnuPG::Handles ddiirreecctt option to be true for the
+           filehandles in concern.  See "options" in GnuPG::Handles and
+           "Object Methods which use a GnuPG::Handles Object" for more infor‐
+           mation.
+
+       Why do you make it so difficult to get GnuPG to write/read from a file‐
+       handle?  In the shell, I can just call GnuPG with the −−outfile option!
+           There are lots of issues when trying to tell GnuPG to read/write
+           directly from a file, such as if the file isn’t there, or there is
+           a file, and you want to write over it!  What do you want to happen
+           then?  Having the user of this module handle these questions
+           beforehand by opening up filehandles to GnuPG lets the user know
+           fully what is going to happen in these circumstances, and makes the
+           module less error−prone.
+
+       When having GnuPG process a large message, sometimes it just hanges
+       there.
+           Your problem may be due to buffering issues; when GnuPG
+           reads/writes to nnoonn‐‐ddiirreecctt filehandles (those that are sent to
+           filehandles which you read to from into memory, not that those
+           access the disk), buffering issues can mess things up.  I recommend
+           looking into "options" in GnuPG::Handles.
+
+NNOOTTEESS
+       This package is the successor to PGP::GPG::MessageProcessor, which I
+       found to be too inextensible to carry on further.  A total redesign was
+       needed, and this is the resulting work.
+
+       After any call to a GnuPG‐command method of GnuPG::Interface in which
+       one passes in the handles, one should all wwaaiitt to clean up GnuPG from
+       the process table.
+
+BBUUGGSS
+       Currently there are problems when transmitting large quantities of
+       information over handles; I’m guessing this is due to buffering issues.
+       This bug does not seem specific to this package; IPC::Open3 also
+       appears affected.
+
+       I don’t know yet how well this modules handles parsing OpenPGP v3 keys.
+
+SSEEEE AALLSSOO
+       GnuPG::Options, GnuPG::Handles, GnuPG::PublicKey, GnuPG::SecretKey,
+       gpg, Class::MethodMaker, "Bidirectional Communication with Another
+       Process" in perlipc
+
+AAUUTTHHOORR
+       GnuPg::Interface is currently maintained by Jesse Vincent
+       <jesse@cpan.org>.
+
+       Frank J. Tobin, ftobin@cpan.org was the original author of the package.
+
+
+
+perl v5.8.8                       2007‐04‐24               GnuPG::Interface(3)

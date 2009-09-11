@@ -1,0 +1,89 @@
+This file contains message digests of all files listed in MANIFEST,
+signed via the Module::Signature module, version 0.55.
+
+To verify the content in this distribution, first make sure you have
+Module::Signature installed, then type:
+
+    % cpansign -v
+
+It will check each file's integrity, as well as the signature's
+validity.  If "==> Signature verified OK! <==" is not displayed,
+the distribution may already have been compromised, and you should
+not run its Makefile.PL or Build.PL.
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+SHA1 187c2cfc1fc31d42c18d5b1653afa1a905bf266c COPYING
+SHA1 5df20960703ba8651c67f36ed4ed601e0d0d4406 ChangeLog
+SHA1 ae07f475fb7a1668d2ffcfe090f99961ddb77d41 MANIFEST
+SHA1 7beeb96d32ce9fd224db1fe25052960fe640c464 Makefile.PL
+SHA1 d6e32c5128419cdbfe6e6f846ff7f64fc0adac2f NEWS
+SHA1 1047dc54823b1321e939274dd261d8e40febee24 README
+SHA1 df07bf5a2dd74ffe4b69dff3063f68879cf9e355 THANKS
+SHA1 d24732774ba9a4cbdda50a384cf8be663ecf91e6 lib/GnuPG/Fingerprint.pm
+SHA1 adafb2ff1a23ca10691bba5ab96d5e3c77bdaec5 lib/GnuPG/Handles.pm
+SHA1 70b42a050f887196450846dfe9436992cc29a921 lib/GnuPG/Interface.pm
+SHA1 742929758535fe82fe609a7d668355e7142eff8c lib/GnuPG/Key.pm
+SHA1 90204e29f8ba26267a882d1e2b1b4e56fefeeeeb lib/GnuPG/Options.pm
+SHA1 f84ba91c4ed3e47f1b5bba20c02e087ee3d90e73 lib/GnuPG/PrimaryKey.pm
+SHA1 d13ae0d9fff63041cbe9f89cb6bcf329e0b4d4e6 lib/GnuPG/PublicKey.pm
+SHA1 cbe00ca1d42f6a6dff5bc0cc3e3a9bf6687440fc lib/GnuPG/SecretKey.pm
+SHA1 ca90003145b6b6c71a963b96da8415e7f22e9c20 lib/GnuPG/Signature.pm
+SHA1 76a6d21bacb3d8c8e18715aaa2c06a0db695f4b0 lib/GnuPG/SubKey.pm
+SHA1 192f417f4bdb5398130362544cf6fb4c00b4e928 lib/GnuPG/UserId.pm
+SHA1 367fdb308292a9c005afffef49ff9096a20a4da3 t/Fingerprint.t
+SHA1 501ac69701ce51b3dd98f7f82a3c19a4fba6c3bd t/GnuPG/ComparableFingerprint.pm
+SHA1 ac3e4f640c0b7ffc2e6cc1a9d08546927614a456 t/GnuPG/ComparableKey.pm
+SHA1 e6902641f0e3300f8ecebb6c0ce07c47cb8978a9 t/GnuPG/ComparablePrimaryKey.pm
+SHA1 bc0131cf790f60fe21de67435516a78a18e5694c t/GnuPG/ComparablePublicKey.pm
+SHA1 ecee8534433307382b885eb19d0c6a74f0896e9b t/GnuPG/ComparableSecretKey.pm
+SHA1 7c0828fc937021847b5f1e857c4dd086169ceb72 t/GnuPG/ComparableSignature.pm
+SHA1 11224faf53b09044aa119fe40c09553a3bf4a091 t/GnuPG/ComparableSubKey.pm
+SHA1 69961a5efc193745729505e317db48cccd728cf0 t/GnuPG/ComparableUserId.pm
+SHA1 8791d014e4efd4cf11998386e1651cc4eb16dd26 t/Interface.t
+SHA1 698ec633be083b7e762331f1a5106c1618c74dd3 t/MyTest.pm
+SHA1 6fb9814ee5634f8c121ad4c38babb8f04334c6d9 t/MyTestSpecific.pm
+SHA1 ccd942d9f00627253d7eb9c011116dc5671639b8 t/UserId.t
+SHA1 16ac3a802f059cad9b7a0567eebe8b9599cc2551 t/clearsign.t
+SHA1 fab3deb7f60a0b5aae2f92b1c39804d1a4df2848 t/decrypt.t
+SHA1 67364d69fda2826735c8e39d50ea81a80d529a6c t/detach_sign.t
+SHA1 54d40d0d5233ad3097c5ca79032f38171334c7a4 t/encrypt.t
+SHA1 eeb2c355817cf641ad9e90e90f01007efce29cbe t/encrypt_symmetrically.t
+SHA1 a95b669219675ac2fadc8b5d3c49dcfd69609fe2 t/export_keys.t
+SHA1 f57e6d8b32fe81419244d3f38f5d9843ff0927c2 t/get_public_keys.t
+SHA1 43a2e400a6e38e7b64581d6863629de00e2752d9 t/get_secret_keys.t
+SHA1 a0f7dfa3778defadaf3600a7cfd69bfd027fdad2 t/import_keys.t
+SHA1 3355815cd188313a39116a661669ff92cebd701f t/list_public_keys.t
+SHA1 2ccb69c8a216e7f6db9faa2d6127561aeaa8130c t/list_secret_keys.t
+SHA1 17bccf75d6920c3d75dc3c8dbcdc0d0855275350 t/list_sigs.t
+SHA1 a8d213b81f23469460d8466520590bbeaee14aed t/passphrase_handling.t
+SHA1 1a20b9dac32bb1b40294e966de09eb89589a8891 t/sign.t
+SHA1 fa87a1405c58a951518003efd95700a9ca4b60ed t/sign_and_encrypt.t
+SHA1 6732202eb77e2d90af01f557d3e534812ec672af t/verify.t
+SHA1 09f7e2320231cfb923325fd474d76ff20d8c6c6b t/wrap_call.t
+SHA1 58f58338a2922798c59c5e852bd0110541f27e2d test/encrypted.1.gpg
+SHA1 b012a47f295ee9dcc955560b9a78c0ad3a61e137 test/key.1.asc
+SHA1 1290379acadab2cc713d659c7c3feff2b0923f75 test/options
+SHA1 4e1243bd22c66e76c2ba9eddc1f91394e57f9f83 test/passphrase
+SHA1 59c0e6436b38645144d17ce11ac4aabfdd43e960 test/plain.1.txt
+SHA1 7d94ea032bdbb0104c1dc73583ec64ade6294495 test/public-keys-sigs/1.0.test
+SHA1 63d93054decf9ff6c2dc99eb03f131b55af4ee43 test/public-keys-sigs/1.1.test
+SHA1 bd9892a93f802c68109b11b756f79f6b0292eb1a test/public-keys-sigs/2.0.test
+SHA1 73d90696020a01753cda984262a2831dcc6ac0d7 test/public-keys-sigs/2.1.test
+SHA1 82d483adc6d203c79856a70dd259370f6efdeef7 test/public-keys/1.0.test
+SHA1 86056ad37b8bb67d55ac61b5d5a27ac4bbd1cceb test/public-keys/1.1.test
+SHA1 a8e97a2439671dae0dd29a2404c321ccb686ba7a test/public-keys/2.0.test
+SHA1 54d2c13bf3b73b7582edef091175dfe3763ddf59 test/public-keys/2.1.test
+SHA1 5fa3777416ba09b8a396113dce6ddbf6a73b4b74 test/pubring.gpg
+SHA1 e740841597775e3da265ec14e411ed0432bae5e2 test/secret-keys/1.0.test
+SHA1 3bd6135279f9ae23e32680707c6170910421e5de test/secret-keys/2.0.test
+SHA1 4ae7541bb82abaef5573e61582c4dd4f96cc7f63 test/secring.gpg
+SHA1 981418a80bf7dab91b63608cfd1ddf5091f89ad7 test/signed.1.asc
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.3 (Darwin)
+
+iD8DBQFGwIXrEi9d9xCOQEYRAhSQAJ9U5f8EkJZne2zphN0bH0n4LyGsgQCeJlQJ
+lifWJJP0osY0RQNcoQVcRkI=
+=M5Dc
+-----END PGP SIGNATURE-----

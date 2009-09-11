@@ -1,0 +1,69 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+# This script use IP option called "record route" for emulate traceroute.
+# Unfortunately max size of ip options is only 40 bytes and we can see
+# just 9 hops, other hops will be ignored ;(
+
+use Net::RawIP;
+use Getopt::Long qw(GetOptions);
+
+my %opt;
+GetOptions(\%opt, 'interface=s', 'source=s', 'dest=s');
+die "Usage $0 --interface <interface> --dest <dest host> --source <your host>"
+    unless($opt{dest} && $opt{interface} && $opt{source});
+
+my $rawip = Net::RawIP->new({icmp =>{}});
+
+$rawip->set({
+            ip => {
+                saddr => $opt{source},
+                daddr => $opt{dest},
+            },
+	        icmp => {
+                type => 8,
+                id => $$,
+            }
+        });  
+
+my $data = "\5".("\0" x 37);
+
+$rawip->optset(ip => {
+                type => [(7)],
+                data => [($data)],
+                });
+
+my $filt = "ip proto \\icmp and dst host $opt{source}";
+my $size = 1500;
+my $tout = 30;
+my $pcap = $rawip->pcapinit($opt{interface}, $filt, $size, $tout);
+my $i    = 0;
+
+my @a;
+if (fork) {
+    loop $pcap,1, \&dmp, \@a; 
+}
+else {
+    sleep 1;
+    $rawip->set({icmp => {sequence => $i,data => timem()}});
+    $rawip->send(1,1);
+}
+
+sub dmp {
+    $rawip->bset(substr($_[2],14));
+
+    my $opt = ($rawip->optget(ip => {type => [(7)] } ))[2];
+    $opt = substr($opt, 2);
+    my @route = unpack("N9", $opt);
+    my $j = 0;
+    for my $site (@route) {
+        last unless $site;
+        printf(" -> ") if $j;
+		printf("\n") if $j == 4;
+        printf("%u.%u.%u.%u", unpack("C4", pack("N", $site)));
+        $j++;
+    }
+    printf("\n");
+}
+

@@ -1,0 +1,31 @@
+
+The installation of fwknop is handled by the perl script "install.pl" that
+is bundled with the fwknop sources.  Just run:
+
+./install.pl
+
+This will result in a functioning fwknop installation on your Linux system.
+If you run the installer as a non-root user, fwknop will be installed in your
+home directory (specifically in ~/bin and a few perl modules in ~/lib).  In
+this case fwknop can only be used as an authentication client against an
+fwknop server on a different system.
+
+DEPENDENCIES:
+    fwknop requires several perl modules that may or may not already be
+installed on your Linux system.  These modules are included in the deps/
+directory in the fwknop sources (unless you have installed one of the -nodeps
+tarballs), and the list of modules is:
+
+Class-MethodMaker
+Crypt-CBC
+Crypt-Rijndael
+Digest-SHA
+GnuPG-Interface
+IPTables-ChainMgr
+IPTables-Parse
+Net-IPv4Addr
+Net-Pcap
+Net-RawIP
+Net-Ping-External
+TermReadKey
+Unix-Syslog

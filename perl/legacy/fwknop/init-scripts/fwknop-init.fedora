@@ -1,0 +1,100 @@
+#!/bin/bash
+#
+#   /etc/rc.d/init.d/fwknop
+#
+# Starts the fwknop daemon
+#
+# chkconfig: 345 99 5
+# description: The FireWall KNock OPerator (fwknop)
+# processname: fwknop
+
+# Source function library.
+. /etc/init.d/functions
+
+test -x /usr/sbin/fwknopd || exit 0
+
+RETVAL=0
+
+#
+#   See how we were called.
+#
+
+prog="fwknopd"
+
+start() {
+	# Check if fwknopd is already running
+	if [ ! -f /var/lock/subsys/fwknopd ]; then
+	    echo -n $"Starting $prog: "
+	    daemon /usr/sbin/fwknopd
+	    RETVAL=$?
+	    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/fwknopd
+	    echo
+	fi
+	return $RETVAL
+}
+
+stop() {
+	echo -n $"Stopping $prog: "
+	killproc /usr/sbin/knopwatchd
+	if [ -f /var/run/fwknop/knopmd.pid ]; then
+		killproc /usr/sbin/knopmd
+	fi
+	if [ -f /var/run/fwknop/knoptm.pid ]; then
+		killproc /usr/sbin/knoptm
+	fi
+	if [ -f /var/run/fwknop/fwknop_serv.pid ]; then
+		killproc /usr/sbin/fwknop_serv
+	fi
+	killproc /usr/sbin/fwknopd
+	RETVAL=$?
+	[ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fwknopd
+	echo
+        return $RETVAL
+}
+
+
+restart() {
+	stop
+	start
+}	
+
+reload() {
+	restart
+}	
+
+status_fwknop() {
+ 	status /usr/sbin/knopwatchd
+	if [ -f /var/run/fwknop/knopmd.pid ]; then
+		status /usr/sbin/knopmd
+	fi
+	if [ -f /var/run/fwknop/knoptm.pid ]; then
+		status /usr/sbin/knoptm
+	fi
+ 	status /usr/sbin/fwknopd
+}
+
+case "$1" in
+start)
+	start
+	;;
+stop)
+	stop
+	;;
+reload|restart)
+	restart
+	;;
+condrestart)
+	if [ -f /var/lock/subsys/fwknopd ]; then
+	    restart
+	fi
+	;;
+status)
+	status_fwknop
+	;;
+*)
+	echo $"Usage: $0 {start|stop|restart|condrestart|status}"
+	exit 1
+esac
+
+exit $?
+exit $RETVAL

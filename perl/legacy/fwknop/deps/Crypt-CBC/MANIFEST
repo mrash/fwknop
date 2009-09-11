@@ -1,0 +1,24 @@
+CBC.pm
+Changes
+MANIFEST
+META.yml			Module meta-data (added by MakeMaker)
+Makefile.PL
+README
+Crypt-CBC-2.16-vulnerability.txt
+eg/aes.pl
+eg/des.pl
+eg/idea.pl
+t/Blowfish.t
+t/Blowfish_PP.t
+t/CAST5.t
+t/DES.t
+t/IDEA.t
+t/PCBC.t
+t/Rijndael.t
+t/onezeropadding.t
+t/Rijndael_compat.t
+t/func.t
+t/null_data.t
+t/parameters.t
+t/preexisting.t
+

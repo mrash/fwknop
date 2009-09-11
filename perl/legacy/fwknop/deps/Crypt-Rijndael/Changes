@@ -1,0 +1,97 @@
+
+1.06 - Wed Apr 23 13:14:34 2008
+	* This release has a compiler-bug workaround for Sun C 5.9
+	identified by Andy Armstrong. No, really, it was a compiler
+	bug: http://in.opensolaris.org/jive/thread.jspa?threadID=53641&tstart=0
+	* You don't need to upgrade if you already have 1.05.
+
+1.05_02 - Sun Apr 20 15:26:21 2008
+	* This is a workaround for a Solaris compiler bug, but let's
+	see what CPAN Testers does with it.
+
+1.05_01 - Tue Nov 20 07:59:26 2007
+	* Updated rijndael.h to handle Mac OS X Panther, thanks to John Fong.
+	* No need to upgrade if you already have this installed.
+
+1.05 - Fri Nov  9 05:39:09 2007
+	* This version fixes the signed integer problems that Solaris had.
+	* Now this module requires perl 5.6.
+	* You don't need to upgrade if your system isn't Solaris.
+
+1.04_03 - Mon Oct 15 14:27:00 2007
+	* Quashed warnings about overflows by casting numbers to
+	unsigned ints.
+	* This compiles warning-free and passes all tests on
+	Solaris 10 with gcc 3.4.6, so it might take care of RT#27632
+
+1.04_02 - Wed Sep 19 19:24:06 2007
+	* remove test files that shouldn't be there
+
+1.04_01 - Wed Sep 12 15:34:24 2007
+	* This developer release explores the Solaris bug noted in 
+	RT#27632. Some Solaris installations may be encrypting or
+	decrpyting incorrectly.
+
+1.04 - Fri Feb 23 11:20:44 2007
+	* Todd Ross adjusted rijndael.h to use __sun to identify Solaris boxes. GCC
+	uses __sun__ or __sun, but Solaris cc only uses __sun :
+	http://blogs.sun.com/morganh/date/20060928
+	* If you've already compiled this module, you don't need to upgrade
+
+1.03 - Thu Feb 22 15:42:04 2007
+	* Updated distro to include missing Pod tests
+	* No code changes
+
+1.02 - Thu Jan 25 14:48:51 2007
+	* Updated docs to show cipher modes. No need to upgrade if you
+	already have this.
+
+1.01 - Wed Jan 10 19:14:14 2007
+	* Bump to a release version. This is the same as 0.06_10.
+	* This release should fix the problems with INT types on all
+	platforms, including 64 bit platforms.
+
+0.06_10 - Wed Jan 10 00:35:10 2007
+	* Let's try the int type for MinGW:wq
+
+0.06_09 - Fri Dec 15 08:12:02 2006
+	* Updated header file to handle Solaris special case
+	* I think this might be the release candidate for 0.07! :)
+
+0.06_08 - Wed Nov 29 19:51:33 2006
+	* Adjusting WIN32 targets for typedefs. Some things look like both
+	Unix and Windows, so I don't want compilers to choke if it tries to
+	redefine types.
+
+0.06_07 - Mon Nov 27 10:37:18 2006
+	* more header file fiddling to get everyone to define the right
+	abstract types. This time check for _SYS_TYPES_H
+
+0.06_06 - Fri Nov 17 14:56:19 2006
+	* Fooled with header file some more, and tested it myself on
+	Cygwin. Instead of checking for WIN32, just check for __CYGWIN__
+
+0.06_05 - Fri Nov 17 11:13:25 2006
+	* The last two revisions seem to not define UINTxx and ends up with a
+	parse error. Let's try this, as I go off to dig out my Windows box.
+
+0.06_04 - Wed Nov 15 14:43:37 2006
+	* Try UINT patch from David Golden to get this to work on MinGW
+
+0.06_03 - Wed Nov 15 11:07:08 2006
+	* Re-jiggered logic to define UINT32 and UINT8. First I'll try
+	sys/types.h, then check if they are already defined elsewhere, and
+	lastly hardcode the typedefs based on platform. The previous 
+	release (0.06_02) had some problems on Windows from conflicting
+	typedefs (similar to the cygwin problems with libjpeg and X), so
+	I guard my typedefs by checking for previous definitions. Let's 
+	hope those previous definitions are right :)
+
+0.06_02 - Sun Nov 12 16:23:07 2006
+	* Let's try some hardcoded types for UINT(32|8) for Windows.
+
+0.06_01 - Sun Nov 12 10:38:56 2006
+	* Adjust version number to match distro number (RT #4227)
+	* Use <sys/types.h> instead of hard-coding (RT #22755, 9514, 18812,
+	1444, 503).
+	* This module is now maintained by brian d foy (bdfoy@cpan.org)

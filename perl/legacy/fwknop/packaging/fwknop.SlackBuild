@@ -1,0 +1,27 @@
+#!/bin/bash
+################################################################################
+# fwknop.SlackBuild -- pyllyukko@maimed.org -- 26.1.2007                         #
+################################################################################
+declare -r  RPM_BUILDER="http://www.cipherdyne.org/scripts/cd_rpmbuilder.tar.gz"
+declare -r  RPM_ROOT_DIR="/usr/src/rpm"
+declare -r  ARCH="i386"
+declare -ri BUILD=1
+FWKNOP_VERSION=`wget --no-verbose --output-document=- http://www.cipherdyne.org/fwknop/fwknop-latest` || {
+  echo "error!" 1>&2
+  exit 1
+}
+################################################################################
+wget --no-verbose --output-document=- "${RPM_BUILDER}" | tar xz --to-stdout | perl -- - -p fwknop -r "${RPM_ROOT_DIR}"
+[ $[ ${PIPESTATUS[0]} | ${PIPESTATUS[1]} | ${PIPESTATUS[2]} ] -ne 0 ] && {
+  echo "error!" 1>&2
+  exit 1
+}
+[ ! -f "${RPM_ROOT_DIR}/RPMS/${ARCH}/fwknop-${FWKNOP_VERSION}-${BUILD}.${ARCH}.rpm" ] && {
+  echo "error: file \`fwknop-${FWKNOP_VERSION}-${BUILD}.${ARCH}.rpm' doesn't exist!" 1>&2
+  exit 1
+}
+pushd "${RPM_ROOT_DIR}/RPMS/${ARCH}"			|| exit 1
+rpm2tgz "fwknop-${FWKNOP_VERSION}-${BUILD}.${ARCH}.rpm"	|| exit 1
+mv -v "fwknop-${FWKNOP_VERSION}-${BUILD}.${ARCH}.tgz" "fwknop-${FWKNOP_VERSION}-${ARCH}-${BUILD}.tgz" || exit 1
+ls -l "${RPM_ROOT_DIR}/RPMS/${ARCH}/fwknop-${FWKNOP_VERSION}-${ARCH}-${BUILD}.tgz"
+exit ${?}

@@ -1,0 +1,26 @@
+
+svk diff -r11153:11154  | less
+add warnings !!
+
+
+
+$ [~/Net-RawIP-0.21_02]# perl -I../perl5lib/lib -Iblib/lib -I blib/arch t/iflist.t
+Must have EUID == 0 to use Net::RawIP at t/iflist.t line 10
+1..7
+ok 1 - ifaddrlist retursn HASH ref
+not ok 2 - lo interface exists
+#     Failed test (t/iflist.t at line 16)
+not ok 3 - lo interface is 127.0.0.1
+#     Failed test (t/iflist.t at line 17)
+#          got: undef
+#     expected: '127.0.0.1'
+# ifaddrelist returns: $VAR1 = {
+#           'eri0' => '10.56.22.43',
+#           'lo0' => '127.0.0.1'
+#         };
+rdev() is not implemented on this system at blib/lib/Net/RawIP.pm line 651.
+# Looks like you planned 7 tests but only ran 3.
+# Looks like your test died just after 3.
+
+
+

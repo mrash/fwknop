@@ -1,0 +1,85 @@
+#!/usr/bin/make -f
+#-*- makefile -*-
+# Made with the aid of dh_make, by Craig Small
+# Sample debian/rules that uses debhelper. GNU copyright 1997 by Joey Hess.
+# Some lines taken from debmake, by Christoph Lameter.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# This is the debhelper compatability version to use.
+export DH_COMPAT=1
+
+ifndef PERL
+PERL = /usr/bin/perl
+endif
+
+TMP     =`pwd`/debian/tmp
+#archlib =`$(PERL) -MConfig -e 'print $$Config{installarchlib}'`
+#config  =INSTALLDIRS=perl INSTALLMAN1DIR=$(TMP)/usr/share/man/man1 INSTALLMAN3DIR=$(TMP)/usr/share/man/man3 INSTALLPRIVLIB=$(TMP)/usr/lib/perl5 INSTALLARCHLIB=$(TMP)$(archlib)
+
+build: build-stamp
+build-stamp:
+	dh_testdir
+	# Add here commands to compile the package.
+	$(PERL) Makefile.PL
+	$(MAKE) 
+	touch build-stamp
+
+clean:
+	dh_testdir
+	rm -f build-stamp install-stamp
+	# Add here commands to clean up after the build process.
+	-$(MAKE) clean
+	-rm -rf blib/ Makefile.old Makefile
+	dh_clean
+
+install: install-stamp
+install-stamp: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+	install -m 755 blib/script/ipv4calc debian/tmp/usr/bin
+	install -m 644 blib/lib/Net/IPv4Addr.pm debian/tmp/usr/lib/perl5/Net/IPv4Addr.pm
+	touch install-stamp
+
+# Build architecture-independent files here.
+binary-indep: build install
+#	dh_testversion
+	dh_testdir
+	dh_testroot
+	dh_installdocs
+	dh_installexamples
+#	dh_installmenu
+#	dh_installemacsen
+#	dh_installpam
+	dh_installinit
+	dh_installcron
+	dh_installmanpages
+#	dh_installinfo
+#	dh_undocumented
+	dh_installchangelogs ChangeLog
+	dh_link
+	dh_strip
+	dh_compress
+	dh_fixperms
+	# You may want to make some executables suid here.
+	dh_suidregister
+#	dh_makeshlibs
+	dh_installdeb
+	dh_perl 
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dpkg --build debian/tmp ..
+
+# Build architecture-dependent files here.
+binary-arch: build install
+# We have nothing to do by default.
+
+source diff:                                                                  
+	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

@@ -1,0 +1,587 @@
+0.36 Mon Aug 13 12:16:38 EDT 2007
+
+    * [rt.cpan.org #28814] - Performance improvement from mehradek (Radoslaw Zielinski)
+        -use English;
+        +use English qw( -no_match_vars );
+
+
+0.35 Fri Apr 20 12:33:53 EDT 2007 - Jesse Vincent <jesse@bestpractical.com>
+
+    * New Maintainer: Jesse Vincent <jesse@bestpractical.com> took over
+      maintenance of this module.
+
+    * Removed test key expiry dates. (Fixes http://rt.cpan.org/Ticket/Display.html?id=17618)
+    * Applied secret key output patch for modern GPG from http://rt.cpan.org/Ticket/Display.html?id=17619
+    * Applied patch to support 'tru' record types from (http://search.cpan.org/src/JRED/Mail-GPG-1.0.6/patches/)
+
+2002-09-26 15:47  ftobin
+
+	* THANKS: add Walter Stanish <walter@pratyeka.org> for a docfix
+
+2002-09-26 11:51  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: documentation fixes, bump version
+
+2002-06-17 14:06  ftobin
+
+	* Makefile.PL: put test in to see if GnuPG is on the system
+
+2002-06-14 12:18  ftobin
+
+	* .cvsignore, test/public-keys/.cvsignore,
+	test/public-keys-sigs/.cvsignore, test/secret-keys/.cvsignore,
+	test/.cvsignore: I like .cvsignore files
+
+2002-06-14 12:10  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: add NEWS, bump version
+
+2002-06-14 12:08  ftobin
+
+	* THANKS, lib/GnuPG/Interface.pm: fix debian bug #149966, thanks to
+	 Peter Palfrader <weasel@debian.org> Seems import-keys doesn't need
+	'-' passed anymore.
+
+2002-06-11 12:01  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: add news about latest version, bump
+	version
+
+2002-02-06 00:08  ftobin
+
+	* NEWS, test/pubring.gpg, test/secring.gpg: extended the expiration
+	date on the test keys 4 years so that the test suite works
+
+2001-12-09 20:29  ftobin
+
+	* lib/GnuPG/Key.pm: minor code layout change
+
+2001-12-08 21:24  ftobin
+
+	* lib/GnuPG/Handles.pm: small doc example fix
+
+2001-12-08 21:13  ftobin
+
+	* lib/GnuPG/Interface.pm: doc example typo fix
+
+2001-09-14 08:34  ftobin
+
+	* lib/GnuPG/PrimaryKey.pm, lib/GnuPG/PublicKey.pm,
+	lib/GnuPG/SecretKey.pm, lib/GnuPG/SubKey.pm,
+	t/GnuPG/ComparableFingerprint.pm, t/GnuPG/ComparableKey.pm,
+	t/GnuPG/ComparablePrimaryKey.pm, t/GnuPG/ComparablePublicKey.pm,
+	t/GnuPG/ComparableSecretKey.pm, t/GnuPG/ComparableSignature.pm,
+	t/GnuPG/ComparableSubKey.pm, t/GnuPG/ComparableUserId.pm: use "use
+	base" instead of ISA junk
+
+2001-08-22 08:53  ftobin
+
+	* lib/GnuPG/Interface.pm: change some 'dies' to 'croak'
+
+2001-08-21 09:31  ftobin
+
+	* README, THANKS, lib/GnuPG/Fingerprint.pm, lib/GnuPG/Handles.pm,
+	lib/GnuPG/Interface.pm, lib/GnuPG/Key.pm, lib/GnuPG/Options.pm,
+	lib/GnuPG/PrimaryKey.pm, lib/GnuPG/PublicKey.pm,
+	lib/GnuPG/SecretKey.pm, lib/GnuPG/Signature.pm,
+	lib/GnuPG/SubKey.pm, lib/GnuPG/UserId.pm, t/MyTest.pm,
+	t/MyTestSpecific.pm, t/GnuPG/ComparableFingerprint.pm,
+	t/GnuPG/ComparableKey.pm, t/GnuPG/ComparablePrimaryKey.pm,
+	t/GnuPG/ComparablePublicKey.pm, t/GnuPG/ComparableSecretKey.pm,
+	t/GnuPG/ComparableSignature.pm, t/GnuPG/ComparableSubKey.pm,
+	t/GnuPG/ComparableUserId.pm: change my mail addr to ftobin@cpan.org
+
+2001-05-07 06:27  ftobin
+
+	* NEWS, README, lib/GnuPG/Interface.pm: documentation fixes, GnupG
+	-> GnuPG
+
+2001-05-03 03:40  ftobin
+
+	* lib/GnuPG/Interface.pm: put in example of how to use wrap_call()
+
+2001-05-03 03:37  ftobin
+
+	* README: add footer stuff to readme
+
+2001-05-03 03:32  ftobin
+
+	* MANIFEST, NEWS, lib/GnuPG/Interface.pm, t/wrap_call.t: bump
+	version, add news, fix test
+
+2001-05-03 02:02  ftobin
+
+	* t/passphrase_handling.t: remove spuriuos backtick
+
+2001-05-03 02:00  ftobin
+
+	* lib/GnuPG/Interface.pm, t/clearsign.t, t/decrypt.t,
+	t/detach_sign.t, t/encrypt.t, t/encrypt_symmetrically.t,
+	t/export_keys.t, t/get_public_keys.t, t/get_secret_keys.t,
+	t/import_keys.t, t/list_public_keys.t, t/list_secret_keys.t,
+	t/list_sigs.t, t/passphrase_handling.t, t/sign.t,
+	t/sign_and_encrypt.t, t/verify.t: use waitpid instead of wait for
+	everything, and remove some deprecated uses of gnupg_command_args
+	in test cases
+
+2001-04-30 22:38  ftobin
+
+	* MANIFEST: add ComparablePrimaryKey
+
+2001-04-30 22:36  ftobin
+
+	* t/GnuPG/ComparablePrimaryKey.pm: forgot to add this before
+
+2001-04-30 22:34  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: bump version
+
+2001-04-30 22:31  ftobin
+
+	* lib/GnuPG/PrimaryKey.pm: add SYNOPSIS to pod
+
+2001-04-30 22:27  ftobin
+
+	* MANIFEST: add t/Interface.t
+
+2001-04-30 01:03  ftobin
+
+	* lib/GnuPG/PrimaryKey.pm: forgot to add this file
+
+2001-04-29 22:04  ftobin
+
+	* t/Interface.t: has deprecation tests
+
+2001-04-29 22:04  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: deprecate a bunch of gnupg_x in
+	favor of just x
+
+2001-04-29 21:36  ftobin
+
+	* MANIFEST, lib/GnuPG/Fingerprint.pm, lib/GnuPG/Interface.pm,
+	lib/GnuPG/UserId.pm, t/Fingerprint.t, t/UserId.t,
+	t/get_public_keys.t: deprecate some fields
+
+2001-04-29 20:09  ftobin
+
+	* lib/GnuPG/Fingerprint.pm, lib/GnuPG/Interface.pm,
+	lib/GnuPG/Key.pm, lib/GnuPG/PublicKey.pm, lib/GnuPG/SecretKey.pm,
+	lib/GnuPG/SubKey.pm, t/get_public_keys.t, t/get_secret_keys.t,
+	t/GnuPG/ComparableFingerprint.pm, t/GnuPG/ComparableKey.pm,
+	t/GnuPG/ComparablePublicKey.pm, t/GnuPG/ComparableSecretKey.pm,
+	t/GnuPG/ComparableSignature.pm, t/GnuPG/ComparableSubKey.pm:
+	GnuPG::SubKey's signature, and GnuPG::Key's fingerprint are not
+	auto-created anymore.  I just don't like doing it.
+	
+	Introduced GnuPG::PrimaryKey, the super-class for GnuPG::PublicKey
+	and GnuPG::SecretKey
+	
+	GnuPG::Fingerprint's primary data member is now named as_hex_string
+
+2001-04-28 00:51  ftobin
+
+	* Makefile.PL: update C::MM requirements
+
+2001-04-28 00:49  ftobin
+
+	* MANIFEST, NEWS, README: don't ship with C::MM
+
+2001-04-28 00:45  ftobin
+
+	* MANIFEST, Makefile.PL, NEWS, THANKS, lib/GnuPG/Interface.pm: fix
+	SF Bug Id #229315
+
+2001-04-28 00:02  ftobin
+
+	* NEWS: update news concerning latest commits
+
+2001-04-28 00:01  ftobin
+
+	* lib/GnuPG/Fingerprint.pm, lib/GnuPG/Key.pm,
+	lib/GnuPG/PublicKey.pm, lib/GnuPG/SecretKey.pm,
+	lib/GnuPG/Signature.pm, lib/GnuPG/SubKey.pm, lib/GnuPG/UserId.pm,
+	t/get_public_keys.t, t/get_secret_keys.t, t/list_public_keys.t,
+	t/list_secret_keys.t, t/list_sigs.t,
+	t/GnuPG/ComparableFingerprint.pm, t/GnuPG/ComparableKey.pm,
+	t/GnuPG/ComparablePublicKey.pm, t/GnuPG/ComparableSecretKey.pm,
+	t/GnuPG/ComparableSignature.pm, t/GnuPG/ComparableSubKey.pm,
+	t/GnuPG/ComparableUserId.pm: rework testing structure so that
+	comparable stuff is in inherited classes used specifically for
+	testing
+	
+	also, testing is less strict on many objects, since GnuPG is
+	becoming wild and unpredicable :)
+
+2001-04-27 20:58  ftobin
+
+	* lib/GnuPG/Interface.pm, lib/GnuPG/PublicKey.pm,
+	lib/GnuPG/SecretKey.pm, lib/GnuPG/SubKey.pm, t/MyTestSpecific.pm,
+	t/export_keys.t, t/get_public_keys.t, t/get_secret_keys.t,
+	t/list_public_keys.t, t/list_secret_keys.t, t/list_sigs.t: don't
+	close stdout early; I think it's triggering a buffering issue
+
+2001-01-25 20:52  ftobin
+
+	* lib/GnuPG/: Interface.pm, Options.pm: doc updates
+
+2001-01-02 01:09  ftobin
+
+	* lib/GnuPG/Interface.pm: fix up docs for
+	GnuPG::Interface::wrap_call() and in general all around for
+	Interface.pm POD
+
+2000-11-21 13:03  ftobin
+
+	* NEWS, lib/GnuPG/Fingerprint.pm, lib/GnuPG/Handles.pm,
+	lib/GnuPG/Interface.pm, lib/GnuPG/Key.pm, lib/GnuPG/Options.pm,
+	lib/GnuPG/PublicKey.pm, lib/GnuPG/SecretKey.pm,
+	lib/GnuPG/Signature.pm, lib/GnuPG/SubKey.pm, lib/GnuPG/UserId.pm,
+	t/MyTest.pm, t/MyTestSpecific.pm: new licensing
+
+2000-11-21 12:56  ftobin
+
+	* COPYING: new licensing
+
+2000-08-05 15:22  ftobin
+
+	* THANKS: thanks for AutoLoader fix
+
+2000-08-05 15:12  ftobin
+
+	* MANIFEST: for sanity, trustdb.gpg is no longer shipped
+
+2000-08-04 00:42  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: wrote up news for 0.11, and ready
+	for 0.11
+
+2000-07-31 15:50  ftobin
+
+	* lib/GnuPG/Interface.pm: finally, the proper AutoLoader fix
+
+2000-07-27 12:26  ftobin
+
+	* lib/GnuPG/Options.pm: cosmetic typo
+
+2000-07-23 02:05  ftobin
+
+	* lib/GnuPG/Options.pm: doc fixes
+
+2000-07-22 21:46  ftobin
+
+	* t/MyTestSpecific.pm, test/trustdb.gpg: instead of having trustdb
+	in the CVS repository, which keeps getting altered anyways, let's
+	use GnuPG's --always-trust option.
+
+2000-07-22 21:43  ftobin
+
+	* lib/GnuPG/Options.pm: removed GnuPG::Options->no_comment()
+	because it doesn't do what you think it does, and comment(), if
+	defined but blank should allow GnuPG to use no comment.
+
+2000-07-22 21:39  ftobin
+
+	* lib/GnuPG/Interface.pm, test/trustdb.gpg: require all those extra
+	modules at runtime in the get_keys() method
+
+2000-07-13 02:51  ftobin
+
+	* README: oops, README had wrong version of C::MM in it
+
+2000-07-13 02:36  ftobin
+
+	* MANIFEST, NEWS, lib/GnuPG/Interface.pm, test/trustdb.gpg: getting
+	ready for 0.10
+
+2000-07-12 18:29  ftobin
+
+	* lib/GnuPG/Key.pm, t/export_keys.t, test/trustdb.gpg: Okay, I've
+	finally removed the epixration-field comparison test for
+	GnuPG::Keys cause Werner has released 1.0.2 without addressing my
+	complaints :(
+
+2000-07-12 04:29  ftobin
+
+	* lib/GnuPG/Interface.pm: added a FAQ item about filehandles
+	'stopping' (buffers and such)
+
+2000-07-12 04:21  ftobin
+
+	* lib/GnuPG/Handles.pm, lib/GnuPG/Interface.pm, t/clearsign.t,
+	t/decrypt.t, t/detach_sign.t, t/encrypt.t,
+	t/encrypt_symmetrically.t, t/export_keys.t, t/import_keys.t,
+	t/list_public_keys.t, t/list_secret_keys.t, t/list_sigs.t,
+	t/passphrase_handling.t, t/sign.t, t/sign_and_encrypt.t,
+	t/verify.t, test/trustdb.gpg: let's call this new GnuPG::Handles
+	option 'direct' instead of 'dup'.  'dup' is unintuitive,
+	inunderstandable by users who don't care what is actually
+	happening, and more 'generic' (read portable, time-standing)
+
+2000-07-12 04:10  ftobin
+
+	* lib/GnuPG/Interface.pm, test/trustdb.gpg: whoops, I really do
+	need to explictly dup, as well as compensate when it's an
+	already-opened filehandle.  Maybe I'll change the name to direct
+	instead of dup.
+
+2000-07-12 04:01  ftobin
+
+	* lib/GnuPG/Interface.pm: We really do need to dup the filehandles,
+	not just use the originals because sometimes the user will pass
+	">&STDOUT" :)
+
+2000-07-12 03:43  ftobin
+
+	* NEWS, lib/GnuPG/Fingerprint.pm, lib/GnuPG/Handles.pm,
+	lib/GnuPG/Interface.pm, lib/GnuPG/Key.pm, lib/GnuPG/Options.pm,
+	lib/GnuPG/PublicKey.pm, lib/GnuPG/SecretKey.pm,
+	lib/GnuPG/SubKey.pm, lib/GnuPG/UserId.pm, test/trustdb.gpg: small
+	doc changes, NEWS updates to reflect recent important commits, and
+	small Interface changes
+
+2000-07-11 22:56  ftobin
+
+	* lib/GnuPG/Handles.pm, lib/GnuPG/Interface.pm,
+	lib/GnuPG/Options.pm, t/MyTestSpecific.pm, t/clearsign.t,
+	t/decrypt.t, t/detach_sign.t, t/encrypt.t,
+	t/encrypt_symmetrically.t, t/export_keys.t, t/get_public_keys.t,
+	t/get_secret_keys.t, t/import_keys.t, t/list_public_keys.t,
+	t/list_secret_keys.t, t/list_sigs.t, t/passphrase_handling.t,
+	t/sign.t, t/sign_and_encrypt.t, t/verify.t, test/key.1.asc,
+	test/options, test/passphrase, test/trustdb.gpg: Lots of stuff on
+	this commit.  We now have better, 'option'-oriented fh dupping
+	support, instead of that crappy auto-magic stuff looking for >& and
+	the like at the beginning of fhs.  Most of the test files include a
+	test with dupping from/to a file, and a new command GnuPG::Handles
+	data member has been introduced, which links into the command-fd
+	option of GnuPG.
+
+2000-06-28 15:36  ftobin
+
+	* lib/GnuPG/Interface.pm: put in documentation about the returned
+	PID from 'normal' GnuPG calls
+
+2000-06-28 15:00  ftobin
+
+	* lib/GnuPG/Interface.pm: formatting changes in pod code
+
+2000-06-25 20:21  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: Now allow fh's like >&=$fh, which
+	are really fd's Also, ready for 0.09
+
+2000-06-25 06:10  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: documented how one can use file
+	descriptor numbers to use as dups
+
+2000-06-25 05:16  ftobin
+
+	* lib/GnuPG/Interface.pm: /tmp/cvsk16160
+
+2000-06-20 18:22  ftobin
+
+	* MANIFEST: forgot some files
+
+2000-06-20 18:17  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: ready for 0.08
+
+2000-06-18 22:10  ftobin
+
+	* README: 'make' should be a separate step from 'make test', as it
+	seems manifying doesn't happen during 'make test'.
+
+2000-06-18 21:25  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: use AutoLoading now.
+
+2000-06-18 21:17  ftobin
+
+	* Makefile.PL: more fun simple changes
+
+2000-06-18 20:26  ftobin
+
+	* Makefile.PL: clarification
+
+2000-06-18 20:22  ftobin
+
+	* Makefile.PL: Need C::MM 0.96
+
+2000-06-18 05:57  ftobin
+
+	* MANIFEST: typo
+
+2000-06-18 03:53  ftobin
+
+	* t/get_secret_keys.t: oops, typo
+
+2000-06-18 03:47  ftobin
+
+	* MANIFEST, t/get_public_keys.t, t/get_secret_keys.t: MANIFEST
+	changed to reflect new 'test' directory little better information
+	on GnuPG creating errors in the test scripts due to GnuPG versions
+
+2000-06-18 03:35  ftobin
+
+	* test/: public-keys-sigs.1.txt, public-keys-sigs.2.txt,
+	public-keys.1.txt, public-keys.2.txt, secret-keys.1.txt,
+	secret-keys.2.txt, trustdb.gpg, public-keys/1.0.test,
+	public-keys/1.1.test, public-keys/2.0.test, public-keys/2.1.test,
+	public-keys-sigs/1.0.test, public-keys-sigs/1.1.test,
+	public-keys-sigs/2.0.test, public-keys-sigs/2.1.test,
+	secret-keys/1.0.test, secret-keys/2.0.test: file tree rearrangement
+
+2000-06-18 03:33  ftobin
+
+	* NEWS, lib/GnuPG/Key.pm, t/get_public_keys.t, t/get_secret_keys.t,
+	t/list_public_keys.t, t/list_secret_keys.t, t/list_sigs.t: Updates
+	so that tests work better with GnuPG 1.0.1e, or are knowledgeable
+	about errors with it.
+	
+	rearrangement of 'test' directory
+
+2000-06-11 05:36  ftobin
+
+	* Makefile.PL: bumped up C::MM requirements to 0.95 because of how
+	new methods changing.
+
+2000-06-10 22:07  ftobin
+
+	* lib/GnuPG/Options.pm: typo in pod
+
+2000-05-24 21:22  ftobin
+
+	* t/MyTestSpecific.pm: More about GnuPG::Options meta methods
+	changing
+
+2000-05-24 21:21  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: Version 0.07 trying to be ready.
+	
+	    *	BACKWARDS COMPATIBILITY issue:
+		GnuPG::Options->meta_signing_key() now expects
+		an argument of type GnuPG::Object, instead of a scalar
+		key id.  See the following note for more details.
+	
+	    *	GnuPG::Options 'meta' methods that deal with keys arguments
+		are more consistent now.  Meta methods that accept key
+		ids are now appended with _id(s); other meta methods
+		that accept keys receive GnuPG::Key objects.
+
+2000-05-24 21:20  ftobin
+
+	* lib/GnuPG/Options.pm:     *	BACKWARDS COMPATIBILITY issue:
+		GnuPG::Options->meta_signing_key() now expects
+		an argument of type GnuPG::Object, instead of a scalar
+		key id.  See the following note for more details.
+	
+	    *	GnuPG::Options 'meta' methods that deal with keys arguments
+		are more consistent now.  Meta methods that accept key
+		ids are now appended with _id(s); other meta methods
+		that accept keys receive GnuPG::Key objects.
+
+2000-05-17 16:43  ftobin
+
+	* NEWS: bumped up version to 0.06 since I missed changing the
+	version in Interface.pm the last time
+
+2000-05-17 16:30  ftobin
+
+	* NEWS, lib/GnuPG/Options.pm: GnuPG::Options now makes use of
+	C::MM's booleans, and textmode option added
+
+2000-05-11 05:08  ftobin
+
+	* lib/GnuPG/Interface.pm: waitpid() are now implemented in various
+	functions that totally encapsulate the call to GnuPG.
+
+2000-05-11 05:07  ftobin
+
+	* t/passphrase_handling.t: The passphrase was never really passed
+	down through the pipe before; the error was gotten from the
+	previous call to GnuPG.
+
+2000-04-25 18:02  ftobin
+
+	* NEWS: put in 0.04 NEWS
+
+2000-04-25 17:58  ftobin
+
+	* lib/GnuPG/Interface.pm: ready for 0.04
+	
+	0.04 is a repackaging release of 0.03
+
+2000-04-25 17:41  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: ready for 0.03
+
+2000-04-25 17:01  ftobin
+
+	* MANIFEST: added NEWS to MANIFEST
+
+2000-04-25 16:40  ftobin
+
+	* MANIFEST: added ChangeLog to the MANIFEST
+
+2000-04-25 16:29  ftobin
+
+	* NEWS, lib/GnuPG/Interface.pm: ready for 2.8.0
+
+2000-04-25 16:23  ftobin
+
+	* lib/GnuPG/Options.pm: fixed bug with meta-pgp-5-compatibility
+	which was using underscores in the option passed to GnuPG instead
+	of dashes
+
+2000-04-20 22:13  ftobin
+
+	* lib/GnuPG/Interface.pm: removed debugging filehandle stuff from
+	Interface.pm This caused problems when the user does funky stuff
+	like close the STDOUT or does stuff with STDERR
+
+2000-04-20 10:30  ftobin
+
+	* lib/GnuPG/: Fingerprint.pm, Handles.pm, Interface.pm, Key.pm,
+	Options.pm, PublicKey.pm, SecretKey.pm, SubKey.pm, UserId.pm: POD
+	cleanups, mainly providing L<>'s in the SEE ALSO sections.
+
+2000-04-19 17:06  ftobin
+
+	* COPYING, MANIFEST, Makefile.PL, README, THANKS,
+	lib/GnuPG/Fingerprint.pm, lib/GnuPG/Handles.pm,
+	lib/GnuPG/Interface.pm, lib/GnuPG/Key.pm, lib/GnuPG/Options.pm,
+	lib/GnuPG/PublicKey.pm, lib/GnuPG/SecretKey.pm,
+	lib/GnuPG/Signature.pm, lib/GnuPG/SubKey.pm, lib/GnuPG/UserId.pm,
+	t/MyTest.pm, t/MyTestSpecific.pm, t/clearsign.t, t/decrypt.t,
+	t/detach_sign.t, t/encrypt.t, t/encrypt_symmetrically.t,
+	t/export_keys.t, t/get_public_keys.t, t/get_secret_keys.t,
+	t/import_keys.t, t/list_public_keys.t, t/list_secret_keys.t,
+	t/list_sigs.t, t/passphrase_handling.t, t/sign.t,
+	t/sign_and_encrypt.t, t/verify.t, test/encrypted.1.gpg,
+	test/key.1.asc, test/options, test/plain.1.txt,
+	test/public-keys-sigs.1.txt, test/public-keys-sigs.2.txt,
+	test/public-keys.1.txt, test/public-keys.2.txt, test/pubring.gpg,
+	test/secret-keys.1.txt, test/secret-keys.2.txt, test/secring.gpg,
+	test/signed.1.asc, test/trustdb.gpg: Initial revision
+
+2000-04-19 17:06  ftobin
+
+	* COPYING, MANIFEST, Makefile.PL, README, THANKS,
+	lib/GnuPG/Fingerprint.pm, lib/GnuPG/Handles.pm,
+	lib/GnuPG/Interface.pm, lib/GnuPG/Key.pm, lib/GnuPG/Options.pm,
+	lib/GnuPG/PublicKey.pm, lib/GnuPG/SecretKey.pm,
+	lib/GnuPG/Signature.pm, lib/GnuPG/SubKey.pm, lib/GnuPG/UserId.pm,
+	t/MyTest.pm, t/MyTestSpecific.pm, t/clearsign.t, t/decrypt.t,
+	t/detach_sign.t, t/encrypt.t, t/encrypt_symmetrically.t,
+	t/export_keys.t, t/get_public_keys.t, t/get_secret_keys.t,
+	t/import_keys.t, t/list_public_keys.t, t/list_secret_keys.t,
+	t/list_sigs.t, t/passphrase_handling.t, t/sign.t,
+	t/sign_and_encrypt.t, t/verify.t, test/encrypted.1.gpg,
+	test/key.1.asc, test/options, test/plain.1.txt,
+	test/public-keys-sigs.1.txt, test/public-keys-sigs.2.txt,
+	test/public-keys.1.txt, test/public-keys.2.txt, test/pubring.gpg,
+	test/secret-keys.1.txt, test/secret-keys.2.txt, test/secring.gpg,
+	test/signed.1.asc, test/trustdb.gpg: initial sourceforge deposit
+

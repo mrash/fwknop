@@ -1,0 +1,7 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Net::RawIP;
+die "Usage: $0 [hostname|IP]\n" if not @ARGV;
+print rdev($ARGV[0]),"\n";

@@ -1,0 +1,87 @@
+This file contains message digests of all files listed in MANIFEST,
+signed via the Module::Signature module, version 0.55.
+
+To verify the content in this distribution, first make sure you have
+Module::Signature installed, then type:
+
+    % cpansign -v
+
+It will check each file's integrity, as well as the signature's
+validity.  If "==> Signature verified OK! <==" is not displayed,
+the distribution may already have been compromised, and you should
+not run its Makefile.PL or Build.PL.
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+SHA1 bc631a3da6c71db69930001f906ef88d43551e3a Changes
+SHA1 b684a759c6fcf6378506173aec3dedec843a3696 Generate.pm
+SHA1 efa8cb615886410be8de15f5a6925697f624d278 INSTALL
+SHA1 a9a33407fec2fc091f98179005334f08ab526242 MANIFEST
+SHA1 6a32646da8206c7b9c4fe7f10275e833ddbae77d MANIFEST.SKIP
+SHA1 369f047e8363b0c2f971e1b7cee3bf4e376e325f META.yml
+SHA1 5b84cdcaf0907a26e7b637eb8818b038b6a02007 Makefile.PL
+SHA1 da6df21dd8f9b0be2a93a888f944177c3231561d MethodMaker.xs
+SHA1 d56038cc296a6d4d1f73d776d4f933c7120fc883 README
+SHA1 bf8192c64eff9a9356b0e45ef812457c7d672883 TODO
+SHA1 c1fa07c05e01abd3456a21972ef20b5e0880bc4c benchmark/lexical.pl
+SHA1 7fd6930bf946850e2a8b0ad1d151066b6f72f581 cmmg.pl
+SHA1 a9d3eb3c3c292639d17d8fa09a9f4522f6beb684 components/CommonMethods.pm
+SHA1 b5316820246e0845b0a1f44c77c852b41009011b components/array.m
+SHA1 b9cab903b9a7c522d6d9f6c8a210716e5c49201a components/hash.m
+SHA1 3799c8fda252617e827ae3cf6b4f15426c8fb279 components/scalar.m
+SHA1 b3bf6a2c2660ba6cac156411bae40c9af9f3ed59 configure
+SHA1 ff41a37084f5f8f73f34da34c07ec5ff499c4343 end.pod
+SHA1 d39160a9f9faf6a3036888015958afd5e6360dab examples/simple1
+SHA1 76e80cf28137e0d2e623c5ae740f62fc2e7eb83e generate.PL
+SHA1 da39a3ee5e6b4b0d3255bfef95601890afd80709 lib/Class/.placeholder
+SHA1 d82440f5dda23670fc77fb67856172c64b868953 lib/Class/MethodMaker.pm
+SHA1 e9cb30df1d39b6bf81a3eae841bba358220ae5b6 lib/Class/MethodMaker/Constants.pm
+SHA1 11b8bbde960d6e0695bbb8e1fb679bbed2b390f1 lib/Class/MethodMaker/Engine.pm
+SHA1 58dba4e3ee75fda97d12a1dbd83cc5525f410c75 lib/Class/MethodMaker/OptExt.pm
+SHA1 350e418e58d45880b9767d9deb41f37e2b1a9ce9 lib/Class/MethodMaker/V1Compat.pm
+SHA1 c4ed60e219b8582ae5f9d4c2d4e5c63da90a1346 t/0-signature.t
+SHA1 2edb4c2a623e169a898cc754ab99483835cec50e t/array.t
+SHA1 cf7521c6e01eaa4a72210996a51b09b99dd27bfe t/basic.t
+SHA1 36f35089b3cdd95f16dcbe5f42c43e31182cbb88 t/diffclass.t
+SHA1 e4a4a3eb109145be7e8323476acc1f79af702786 t/hash.t
+SHA1 c1c5c7bc50fd8c72d33ecd3470a2217edd0241ab t/new.t
+SHA1 91e1bca16495461ea447c44f17f3d19b756e946a t/redefine-warnings.t
+SHA1 46332dbc223396c9fa80e57eefaca61f163471c6 t/scalar.t
+SHA1 77682285d4d29db2c49b7fc40485a1209067925b t/test.pm
+SHA1 732e5dd8fbc6e826bbc55f7366e74715fe8f8a47 t/test_v1.pm
+SHA1 de96e569ca75f94ba14b8c8f9036d1a6aaa47855 t/v1_abstract.t
+SHA1 aec7169b86abf57a80331f1012f09cef74d7e2f9 t/v1_boolean.t
+SHA1 a19f16a1cfb464030a3d999c712a5fabcabdb73b t/v1_code.t
+SHA1 9ca9ea8b2411ff369175cfa8e74be84deb7aa4ec t/v1_copy.t
+SHA1 fb36a6219b33dd94d2f9ff6ff8f9968c2b9b48fb t/v1_counter.t
+SHA1 98e9d1ed7b5708a62b2a3a1811fe0dc8fba6c373 t/v1_get_concat.t
+SHA1 d2ce4d4c89b4f9229a7656076521037b60636727 t/v1_get_set.t
+SHA1 9a3a2c64b7a2d72f26e405d627952883b1e16603 t/v1_get_set_hi.t
+SHA1 728140bc22c37e1ec2e26f3bcd3c502de6665859 t/v1_hash.t
+SHA1 b73834e0493049db8c9d86425a062adc842c48d9 t/v1_key_attrib.t
+SHA1 3d7f6e9679b0a8e64fc406e9340f39331f8fb2cc t/v1_key_with_create.t
+SHA1 d95c2095e154c71a0f474946abf170c49a7a2124 t/v1_list.t
+SHA1 b6261d8f15aeb979997b1ae307cc96f1fe15c0e5 t/v1_method.t
+SHA1 b39bb25d98caaf4e5f150dbc8601d900f7f148d0 t/v1_new.t
+SHA1 aec1f94089dd9c07e6cfcf7d789c786dda09b6da t/v1_new_hash_with_init.t
+SHA1 91e890b233c937cd9ebd3623852b1462e6bf24a9 t/v1_object.t
+SHA1 cab0122079ec1ea0343aedbbc8e7ff497301a9b6 t/v1_object_list.t
+SHA1 7e90429ccbda017fd1717cdfe5c652da31a0fdf7 t/v1_object_tie_hash.t
+SHA1 6236251cd4776ccbf9fe98743e7f1b49b5de9efb t/v1_object_tie_list.t
+SHA1 01fb49ad695edb3becd7eeda9d1178c0934389a5 t/v1_set_once.t
+SHA1 0e231b0445d5d1d8e89a02f06315b5ef4e19932d t/v1_set_once_static.t
+SHA1 4ac211e2ba4df0b9947db7d5a8c5fea651692b60 t/v1_singleton.t
+SHA1 d84798dc101e04ad45cec163ab01d6699fdead54 t/v1_static_get_set.t
+SHA1 2d098f5569e204a8cd6451286c0adac19f43d2f8 t/v1_static_hash.t
+SHA1 d20dfc640eeb947c2df7d549c1d83f198b7daf9a t/v1_static_list.t
+SHA1 4fd4d465539698a0f8b5e320a72bbcdf7a37dbe8 t/v1_tie_hash.t
+SHA1 efdde2ef3a7c3192b2a8449fe047e2d2bd57581c t/v1_tie_list.t
+SHA1 c9105cb7d439b524207ddbfdd5804c5ef7332790 t/v1_tie_scalar.t
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFH6B5nrQV5awgKugcRAjLfAKC/b1LyP11NwWSHWXd9Ir8iQKF5twCg1p3C
+2isgniBHAlP4BjFoNfQ1lAE=
+=MrFT
+-----END PGP SIGNATURE-----

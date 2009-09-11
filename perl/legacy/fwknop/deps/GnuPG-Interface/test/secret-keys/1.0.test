@@ -1,0 +1,7 @@
+test/secring.gpg
+----------------
+sec   1024D/F950DA9C 2000-02-06
+uid                  GnuPG test key (for testing purposes only)
+uid                  Foo Bar (1)
+ssb    768g/2E854A6B 2000-02-06
+

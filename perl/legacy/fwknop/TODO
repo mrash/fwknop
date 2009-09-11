@@ -1,0 +1,129 @@
+
+Ability to send SPA packets over DNS:
+
+    The fwknop client should allow the construction of SPA packets in the form
+    of DNS queries so that the fwknopd daemon can return to a log parsing
+    model of acquiring packet data.  This would also facilitate easier
+    integration with Tor.  This idea was suggested by Jacob Appelbaum.
+
+
+Java SPA UI that can build SPA packets without using the fwknop client.
+    The SPA packet format is relatively straightforward, and it is should be
+    possible to build valid encrypted SPA packets without using the perl
+    Crypt::Rijndael module.  In particular, it should be possible to construct
+    a Java UI that is capable of generating the appropriate SPA packet that an
+    fwknopd server can decrypt and decode.  This would allow a UI to be
+    developed to complement the upcoming Delphi UI (which is already in
+    development).
+
+
+Integration with the PF firewall on OpenBSD:
+
+    The fwknopd daemon needs to be integrated with the PF firewall on OpenBSD
+    systems.  This should be accomplished similarly to the code additions in
+    the 1.8, 1.8.1, and 1.8.2 releases (see all of the functions implemented
+    in fwknopd that have "ipfw" in their name, such as ipfw_add_ip_rule(),
+    ipfw_delete_ip_rule(), and timeout_ipfw_access()).  The PF firewall offers
+    state tracking capabilities, so it should be possible to implement a
+    strategy similar to iptables firewalls for keeping a session open after
+    it an initial ACCEPT rule is deleted.
+
+
+Ability to ignore IP addresses that have flooded fwknop with bogus or replayed
+packets:
+
+    A threshold mechanism for the acceptance of SPA packets could be used to
+    weed out potential wrongdoers. There would need to also be a whitelisting
+    mechanism to augment this as a precaution against spoofed SPA packets used
+    as a DoS attack (forcing fwknopd to exclude networks of the attacker's
+    choosing from accepting valid SPA packets).
+
+Web SPA proxy:
+
+    This could turn into a substantial development effort, but the idea is to
+    allow an SSL-protected webserver to generate SPA packets (by executing the
+    fwknop client) on behalf of web clients.  By using the fwknop "-a" command
+    line argument, the web server can build SPA packets against a remote
+    fwknopd server such that the client address is allowed through.  This
+    effort would largely be a web development effort to build a website, but
+    it could be a nice feature since not everyone has the ability to run the
+    fwknop client itself.
+
+
+Develop a performance and benchmarking capability to find the current
+bottlenecks in the fwknopd server:
+
+    There is no current capability for generating large numbers of valid SPA
+    packets in order to benchmark the fwknopd daemon.  Collecting the actual
+    statistics on how fwknopd is running is relatively easy by running under
+    "perl -d:DProf" and using dprofpp, but a new piece of code needs to be
+    created to drive the fwknop client to generate thousands of SPA packets
+    to see where fwknopd has performance issues.  One design decision in
+    fwknopd that persists today is that SPA packet decryption is attempted
+    before calculating the MD5 sum, and that is probably backwards.  This
+    new benchmarking capability would make it easy to vividly show whether
+    this decision has negative performance implications.  This task may be
+    fairly easy by writing a script that drives the fwknop client with the
+    "--get-key <file>" command line argument to have fwknop read the key or
+    password from a file.
+
+
+External authentication support (LDAP, Kerberos, Radius, etc.):
+
+    Frequently there are existing authentication mechanisms in place that it
+    would be useful to interface with.  This can add an additional layer to
+    SPA communications by allowing access to be granted by fwknopd only after
+    it has received a valid authentication response via this external
+    mechanism.  The first effort at interfacing with such a mechanism was in
+    fwknop-0.9.6 with the integration of UNIX crypt().  Adding support for
+    other mechanisms such as LDAP, Kerberos, and Radius would be a great
+    addition to fwknop.
+
+
+Update fwknopd to get decryption passwords from a UNIX domain socket after
+startup:
+
+    This feature will make it possible to run fwknopd without having any
+    passwords or keys within /etc/fwknop/access.conf, at the expense of not
+    being able to decrypt SPA messages if there is a reboot until the keys and
+    passwords are entered in again.  But, assuming the user is aware of this,
+    it might be something that is useful in some deployments.
+
+
+
+ - Doc links in email messages linking back to help docs on cipherdyne.org
+ - Integrate with clients programs besides SSH.
+ - Integrate with other packet filtering architectures and products.
+ - Add ability to re-import an updated config with --HUP option.
+ - SPA proxy support.
+ - Solve the key management issue by interfacing with various existing
+   authentication systems (LDAP, Radius, Unix crypt(), etc.).
+ - Update IPTables::ChainMgr to be able to manage an iptables ruleset on a
+   remote system.
+ - Reverse shell from fwknop server.
+ - Verbose status information for fwknop server that shows stats on the
+   number of authentication requests, currently allowed addresses, etc.
+ - Re-implement p0f for the pcap modes, and use to pre-filter before
+   attempting to decrypt (for better performance).
+ - External updating of web view into fwknop status information.  Then by
+   allowing SSL encrypted sessions only with the webserver, a user can get
+   a view into what is actually happening on the server side.
+ - Tie in with pcap to detect when the first session actually established
+   after allowing access through the packet filter, and then shutting the
+   access off immediately after instead of requiring a timeout?
+ - Check to see if a service is actually listening before providing access.
+ - Secure IP auto resolution instead of cleartext http://www.whatismyip.com/.
+   One way to accomplish this may be to build a custom cgi script on
+   cipherdyne.org that returns a GPG-signed message that includes the source
+   address.
+ - Scp patch.
+ - Privilege separation to reduce code that executes as root.
+ - ssh-agent integration.
+ - Verbosity settings on outgoing email messages.
+ - In command mode, the ability to run commands as users other than root.
+ - Ability to re-sync with an NTP server if an SPA packet is too old.
+ - Automated state rule additions.
+ - XML config?
+ - Firefox SPA extension.
+ - Finish fwknop tutorial.
+ - Payload offset to look for valid SPA data.

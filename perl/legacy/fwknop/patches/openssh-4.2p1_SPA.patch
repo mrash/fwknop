@@ -1,0 +1,290 @@
+diff -u -r openssh-4.2p1.orig/acconfig.h openssh-4.2p1/acconfig.h
+--- openssh-4.2p1.orig/acconfig.h	2005-07-07 05:33:36.000000000 -0500
++++ openssh-4.2p1/acconfig.h	2005-12-18 17:36:32.000000000 -0500
+@@ -283,6 +283,9 @@
+ /* Define if you want to allow MD5 passwords */
+ #undef HAVE_MD5_PASSWORDS
+ 
++/* Define if you want to have Single Packet Authorization (SPA) mode */
++#undef ENABLE_SPA_MODE
++
+ /* Define if you want to disable shadow passwords */
+ #undef DISABLE_SHADOW
+ 
+diff -u -r openssh-4.2p1.orig/config.h.in openssh-4.2p1/config.h.in
+--- openssh-4.2p1.orig/config.h.in	2005-09-01 04:15:22.000000000 -0500
++++ openssh-4.2p1/config.h.in	2005-12-18 17:36:34.000000000 -0500
+@@ -283,6 +283,9 @@
+ /* Define if you want to allow MD5 passwords */
+ #undef HAVE_MD5_PASSWORDS
+ 
++/* Define if you want to have Single Packet Authorization (SPA) mode */
++#undef ENABLE_SPA_MODE
++
+ /* Define if you want to disable shadow passwords */
+ #undef DISABLE_SHADOW
+ 
+diff -u -r openssh-4.2p1.orig/configure openssh-4.2p1/configure
+--- openssh-4.2p1.orig/configure	2005-09-01 04:15:24.000000000 -0500
++++ openssh-4.2p1/configure	2005-12-18 17:45:59.000000000 -0500
+@@ -890,6 +890,7 @@
+   --with-xauth=PATH       Specify path to xauth program
+   --with-mantype=man|cat|doc  Set man page type
+   --with-md5-passwords    Enable use of MD5 passwords
++  --with-spa-mode         Enable Single Packet Authorization (SPA) mode
+   --without-shadow        Disable shadow password support
+   --with-ipaddr-display   Use ip address instead of hostname in \$DISPLAY
+   --with-default-path=    Specify default \$PATH environment for server
+@@ -24462,6 +24463,24 @@
+ 
+ fi;
+ 
++# Check whether to enable Single Packet Authorization (SPA) code
++SPA_MSG="no"
++
++# Check whether --with-spa-mode or --without-spa-mode was given.
++if test "${with_spa_mode+set}" = set; then
++  withval="$with_spa_mode"
++
++		if test "x$withval" != "xno" ; then
++			cat >>confdefs.h <<\_ACEOF
++#define ENABLE_SPA_MODE 1
++_ACEOF
++
++			SPA_MSG="yes"
++		fi
++
++
++fi;
++
+ # Whether to disable shadow password support
+ 
+ # Check whether --with-shadow or --without-shadow was given.
+@@ -25821,9 +25840,9 @@
+ exec 5>>config.log
+ {
+   echo
+-  sed 'h;s/./-/g;s/^.../## /;s/...$/ ##/;p;x;p;x' <<BOXI_EOF
++  sed 'h;s/./-/g;s/^.../## /;s/...$/ ##/;p;x;p;x' <<_ASBOX
+ ## Running $as_me. ##
+-BOXI_EOF
++_ASBOX
+ } >&5
+ cat >&5 <<_CSEOF
+ 
+@@ -26689,6 +26708,7 @@
+ echo "                     S/KEY support: $SKEY_MSG"
+ echo "              TCP Wrappers support: $TCPW_MSG"
+ echo "              MD5 password support: $MD5_MSG"
++echo "   Single Packet Auth (SPA)support: $SPA_MSG"
+ echo "                   libedit support: $LIBEDIT_MSG"
+ echo "       IP address in \$DISPLAY hack: $DISPLAY_HACK_MSG"
+ echo "           Translate v4 in v6 hack: $IPV4_IN6_HACK_MSG"
+diff -u -r openssh-4.2p1.orig/configure.ac openssh-4.2p1/configure.ac
+--- openssh-4.2p1.orig/configure.ac	2005-08-31 11:59:49.000000000 -0500
++++ openssh-4.2p1/configure.ac	2005-12-20 16:14:20.000000000 -0500
+@@ -2900,6 +2900,18 @@
+ 	]
+ )
+ 
++# Check whether to enable Single Packet Authorization (SPA) code
++SPA_MSG="no"
++AC_ARG_WITH(spa-mode,
++	[  --with-spa-mode         Enable Single Packet Authorization (SPA) mode],
++	[
++		if test "x$withval" != "xno" ; then
++			AC_DEFINE(ENABLE_SPA_MODE)
++			SPA_MSG="yes"
++		fi
++	]
++)
++
+ # Whether to disable shadow password support
+ AC_ARG_WITH(shadow,
+ 	[  --without-shadow        Disable shadow password support],
+@@ -3455,6 +3467,7 @@
+ echo "                     S/KEY support: $SKEY_MSG"
+ echo "              TCP Wrappers support: $TCPW_MSG"
+ echo "              MD5 password support: $MD5_MSG"
++echo "  Single Packet Auth (SPA) support: $SPA_MODE"
+ echo "                   libedit support: $LIBEDIT_MSG"
+ echo "       IP address in \$DISPLAY hack: $DISPLAY_HACK_MSG"
+ echo "           Translate v4 in v6 hack: $IPV4_IN6_HACK_MSG"
+diff -u -r openssh-4.2p1.orig/spa.h openssh-4.2p1/spa.h
+--- openssh-4.2p1.orig/spa.h	2005-12-20 16:12:22.000000000 -0500
++++ openssh-4.2p1/spa.h	2005-12-20 16:11:26.000000000 -0500
+@@ -0,0 +1,30 @@
++/*
++ ****************************************************************************
++ *
++ * File: spa.h
++ *
++ * Purpose: Header file for Single Packet Authorization (SPA) patch to SSH.
++ *          Note that the first iteration of this patch requires that fwknop
++ *          (http://www.cipherdyne.org/projects/fwknop) to be installed in
++ *          order to generate the SPA packet against a target server.
++ *
++ * Author:  Michael Rash (mbr@cipherdyne.org)
++ *
++ ****************************************************************************
++ *
++ * $Id: openssh-4.2p1_SPA.patch 576 2006-10-17 19:22:19Z mbr $
++ */
++
++#ifndef __SPA_H__
++#define __SPA_H__
++
++/* the fwknop command line can be quite long */
++#define MAX_SPA_CMD_LEN 250
++
++#define FWKNOP_PATH "/usr/bin/fwknop"
++#define SH_PATH "/bin/sh"
++#define SPA_SLEEP 1
++
++static void run_spa_client(char *spa_cmd_line);
++
++#endif
+diff -u -r openssh-4.2p1.orig/ssh.c openssh-4.2p1/ssh.c
+--- openssh-4.2p1.orig/ssh.c	2005-08-12 07:10:56.000000000 -0500
++++ openssh-4.2p1/ssh.c	2005-12-20 17:17:50.000000000 -0500
+@@ -77,6 +77,10 @@
+ #include "scard.h"
+ #endif
+ 
++#ifdef ENABLE_SPA_MODE
++#include "spa.h"
++#endif
++
+ extern char *__progname;
+ 
+ /* Flag indicating whether debug mode is on.  This can be set on the command line. */
+@@ -151,6 +155,12 @@
+ volatile sig_atomic_t control_client_terminate = 0;
+ u_int control_server_pid = 0;
+ 
++#ifdef ENABLE_SPA_MODE
++/* SPA globals */
++int spa_mode_flag = 0;
++char spa_cmd_line[MAX_SPA_CMD_LEN];
++#endif
++
+ /* Prints a help message to the user.  This function never returns. */
+ 
+ static void
+@@ -162,6 +172,9 @@
+ "           [-i identity_file] [-L [bind_address:]port:host:hostport]\n"
+ "           [-l login_name] [-m mac_spec] [-O ctl_cmd] [-o option] [-p port]\n"
+ "           [-R [bind_address:]port:host:hostport] [-S ctl_path]\n"
++#ifdef ENABLE_SPA_MODE
++"           [-K \"SPA command line\"]\n"
++#endif
+ "           [user@]hostname [command]\n"
+ 	);
+ 	exit(1);
+@@ -241,7 +254,11 @@
+ 
+ again:
+ 	while ((opt = getopt(ac, av,
++#ifdef ENABLE_SPA_MODE
++	    "1246ab:c:e:fgi:kl:m:no:p:qstvxACD:F:I:L:MNO:PR:S:TK:VXY")) != -1) {
++#else
+ 	    "1246ab:c:e:fgi:kl:m:no:p:qstvxACD:F:I:L:MNO:PR:S:TVXY")) != -1) {
++#endif
+ 		switch (opt) {
+ 		case '1':
+ 			options.protocol = SSH_PROTO_1;
+@@ -461,6 +478,14 @@
+ 		case 'T':
+ 			no_tty_flag = 1;
+ 			break;
++#ifdef ENABLE_SPA_MODE
++		case 'K':
++			spa_mode_flag = 1;
++			/* build the fwknop command line from the -K arg */
++			snprintf(spa_cmd_line, MAX_SPA_CMD_LEN,
++					"%s %s", FWKNOP_PATH, optarg);
++			break;
++#endif
+ 		case 'o':
+ 			dummy = 1;
+ 			line = xstrdup(optarg);
+@@ -513,6 +538,31 @@
+ 	if (!host)
+ 		usage();
+ 
++#ifdef ENABLE_SPA_MODE
++	if (strstr(spa_cmd_line, "--last") == NULL
++			&& strstr(spa_cmd_line, "-l") == NULL
++			&& strstr(spa_cmd_line, "-k") == NULL
++			&& strstr(spa_cmd_line, "--knock-dst") == NULL) {
++		/* we are going to use the host specified on the SSH
++		 * command line */
++		strncat(spa_cmd_line, " -k ", MAX_SPA_CMD_LEN);
++		strncat(spa_cmd_line, host, MAX_SPA_CMD_LEN);
++	}
++	/* pass on verbose mode based on SSH command line */
++	if (debug_flag) {
++		if (strstr(spa_cmd_line, "-v") == NULL
++				&& strstr(spa_cmd_line, "--verbose") == NULL) {
++			strncat(spa_cmd_line, " -v", MAX_SPA_CMD_LEN);
++		}
++	} else {
++		/* make sure the fwknop --quiet option is set */
++		if (strstr(spa_cmd_line, "-q") == NULL
++				&& strstr(spa_cmd_line, "--quiet") == NULL) {
++			strncat(spa_cmd_line, " -q", MAX_SPA_CMD_LEN);
++		}
++	}
++#endif
++
+ 	SSLeay_add_all_algorithms();
+ 	ERR_load_crypto_strings();
+ 
+@@ -633,6 +683,13 @@
+ 	if (options.control_path != NULL)
+ 		control_client(options.control_path);
+ 
++#ifdef ENABLE_SPA_MODE
++	/* Run SPA client to acquire access through packet filter before
++	 * attempting the SSH connection */
++	if (spa_mode_flag)
++		run_spa_client(spa_cmd_line);
++#endif
++
+ 	/* Open a connection to the remote host. */
+ 	if (ssh_connect(host, &hostaddr, options.port,
+ 	    options.address_family, options.connection_attempts,
+@@ -1382,3 +1439,33 @@
+ 
+ 	exit(exitval);
+ }
++
++static void run_spa_client(char *spa_cmd_line)
++{
++	pid_t child_pid;
++	int status = 0;
++
++	if (debug_flag) {
++		fprintf(stderr, "[+] Running fwknop SPA client...\n");
++		fprintf(stderr, "    SPA command line: %s\n",
++				spa_cmd_line);
++	}
++	if ((child_pid = fork()) < 0) {
++		fprintf(stderr, "[*] Could not fork()");
++		exit(EXIT_FAILURE);
++	} else if (child_pid > 0) {
++		wait(&status);
++	} else {
++		execle(SH_PATH, SH_PATH, "-c", spa_cmd_line,
++				NULL, NULL);  /* don't use env */
++	}
++	if (status != 0) {
++		fprintf(stderr, "[*] fwknop returned bad exit status: %d, exiting.\n",
++				status);
++		exit(status);
++	}
++	/* give the remote side a chance to reconfigure the packet filter
++	 * before attempting to make a real SSH connection */
++	sleep(SPA_SLEEP);
++	return;
++}

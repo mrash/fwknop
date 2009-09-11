@@ -1,0 +1,10 @@
+Most of these tests are required to be run as root.
+(Addendum by Marco Carnut: the root user check is disabled when
+running on Cygwin with winpcap)
+
+Note that some of these tests require a working network interface with
+actual traffic on it.  For example the loop test waits for 10 packets
+to be received on the network before exiting.  If there is no traffic
+on the interface, this test will block.
+
+The memory leak tests do not complete.

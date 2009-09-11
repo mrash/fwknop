@@ -1,0 +1,41 @@
+Net::IPv4Addr
+=================
+
+Version: 0.10
+
+Description
+-----------
+
+Net::IPv4Addr provides functions for parsing IPv4 addresses both
+in traditional address/netmask format and in the new CIDR format.
+There are also methods for calculating the network and broadcast
+address and also to see check if a given address is in a specific
+network.
+
+Installing
+----------
+
+The usual:
+
+    perl Makefile.PL
+    make
+    make install
+
+Documentation
+-------------
+
+Documentation is included in pod format.
+
+Bugs
+----
+
+Send bug reports and suggestions to bugs@iNsu.COM.
+
+Copyright
+---------
+
+Copyright (c) 1999,2000 iNsu Innovations Inc . 
+All rights reserved.
+
+This package is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.

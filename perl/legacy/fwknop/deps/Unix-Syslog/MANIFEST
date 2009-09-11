@@ -1,0 +1,8 @@
+Artistic
+Changes
+MANIFEST
+Makefile.PL
+README
+Syslog.pm
+Syslog.xs
+test.pl

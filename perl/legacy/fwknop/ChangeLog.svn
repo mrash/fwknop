@@ -1,0 +1,932 @@
+------------------------------------------------------------------------
+r1534 | mbr | 2009-09-07 22:49:24 -0400 (Mon, 07 Sep 2009) | 1 line
+Changed paths:
+   A /fwknop/branches/fwknop-1.9.12 (from /fwknop/trunk:1533)
+
+created fwknop-1.9.12 branch
+------------------------------------------------------------------------
+r1533 | mbr | 2009-09-07 22:44:02 -0400 (Mon, 07 Sep 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/packaging/fwknop-nobuildreqs.spec
+   M /fwknop/trunk/packaging/fwknop-nodeps.spec
+   M /fwknop/trunk/packaging/fwknop.spec
+
+bumped version to 1.9.12
+------------------------------------------------------------------------
+r1532 | mbr | 2009-09-07 22:42:18 -0400 (Mon, 07 Sep 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bug fix for FreeBSD systems to enforce firewall type in Replay attack detection
+------------------------------------------------------------------------
+r1531 | mbr | 2009-09-05 14:53:34 -0400 (Sat, 05 Sep 2009) | 10 lines
+Changed paths:
+   A /fwknop/trunk/packaging/fwknop-nobuildreqs.spec
+   M /fwknop/trunk/packaging/fwknop.spec
+
+For all RPM's built on the local system (Ubuntu for now), updated to reference the
+"-nobuildreqs.spec" file so that the "BuildRequires: perl-ExtUtils-MakeMaker" directive
+is not used.  Using this results in the following error on an Ubuntu system where no
+software is installed/upgrade with RPM:
+
+rpm: To install rpm packages on Debian systems, use alien. See README.Debian.
+error: cannot open Packages index using db3 - No such file or directory (2)
+error: cannot open Packages database in /var/lib/rpm
+
+
+------------------------------------------------------------------------
+r1530 | mbr | 2009-09-01 13:27:19 -0400 (Tue, 01 Sep 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+
+added whatismyip link update
+------------------------------------------------------------------------
+r1528 | mbr | 2009-09-01 13:22:56 -0400 (Tue, 01 Sep 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre11
+------------------------------------------------------------------------
+r1527 | mbr | 2009-09-01 13:02:53 -0400 (Tue, 01 Sep 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknopd
+
+added more strict validation for config files to require ending semicolons for config lines
+------------------------------------------------------------------------
+r1526 | mbr | 2009-09-01 11:59:10 -0400 (Tue, 01 Sep 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/CREDITS
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/fwknop.8
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/test/fwknop_test.pl
+
+applied modified version of the HTTP proxy patch from Jonathan Bennett
+------------------------------------------------------------------------
+r1525 | mbr | 2009-09-01 11:58:50 -0400 (Tue, 01 Sep 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+applied modified version of the HTTP proxy patch from Jonathan Bennett, updated -R URL to http://www.whatismyip.com/automation/n09230945.asp
+------------------------------------------------------------------------
+r1523 | mbr | 2009-08-12 08:59:16 -0400 (Wed, 12 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre10
+------------------------------------------------------------------------
+r1522 | mbr | 2009-08-12 08:58:58 -0400 (Wed, 12 Aug 2009) | 3 lines
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/test/fwknop_test.pl
+
+Implemented --HTTP-get-host and --HTTP-host-field to allow SPA over HTTP
+requests to include "http://host/" and set the HTTP "Host: host" header field.
+
+------------------------------------------------------------------------
+r1521 | mbr | 2009-08-11 22:36:07 -0400 (Tue, 11 Aug 2009) | 6 lines
+Changed paths:
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/test/fwknop_test.pl
+
+- Implemented better base64 checks on incoming SPA data to fwknopd.  Any
+  properly encoded base64 data only needs one or two '=' chars in order
+  to make the length a multiple of four.  Three equals chars is invalid.
+- Updated the test suite to acquire SPA packet data from HTTP requests
+  directly for all HTTP tests.
+
+------------------------------------------------------------------------
+r1520 | mbr | 2009-08-11 19:57:24 -0400 (Tue, 11 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/knopwatchd.c
+
+copyright date update to 2009
+------------------------------------------------------------------------
+r1519 | mbr | 2009-08-11 19:56:57 -0400 (Tue, 11 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.8
+   M /fwknop/trunk/knopmd.c
+   M /fwknop/trunk/knoptm.8
+
+copyright date update to 2009
+------------------------------------------------------------------------
+r1518 | mbr | 2009-08-10 00:14:10 -0400 (Mon, 10 Aug 2009) | 7 lines
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+- Updated HTTP SPA tests to derive the HTTP requests from the fwknop client output
+instead of manufacturing these requests from within the test suite.
+- Added tests for hostname in SPA HTTP request.
+- Updated to use the --Debug-include-pidname functionality so that knoptm and
+fwknop_serv log output is sent to stderr with a pid name prefix (enables more
+effective analysis of test suite behavior).
+
+------------------------------------------------------------------------
+r1517 | mbr | 2009-08-10 00:09:06 -0400 (Mon, 10 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop.conf
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/socket_com_tcp_serv_fwknop.conf
+   M /fwknop/trunk/test/conf/socket_com_udp_serv_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+
+added the ability to generate syslog messages with fwknop_serv
+------------------------------------------------------------------------
+r1516 | mbr | 2009-08-10 00:08:16 -0400 (Mon, 10 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+
+Added --Debug-include-pidname arg for dumping logr() output to stderr along with the pid name as a prefix (useful for the test suite to interpret what knoptm and fwknop_serv are doing)
+------------------------------------------------------------------------
+r1515 | mbr | 2009-08-09 15:33:06 -0400 (Sun, 09 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+defaulted to port 80 when sending SPA packets over HTTP, minor port handling code cleanup
+------------------------------------------------------------------------
+r1513 | mbr | 2009-08-05 23:54:01 -0400 (Wed, 05 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre9
+------------------------------------------------------------------------
+r1512 | mbr | 2009-08-05 19:34:39 -0400 (Wed, 05 Aug 2009) | 2 lines
+Changed paths:
+   M /fwknop/trunk/knoptm
+
+minor code reorganization, and bug fix for ip_conntrack parsing to ensure that established connections are recognized in ENABLE_CONNTRACK_PERSIST
+mode
+------------------------------------------------------------------------
+r1511 | mbr | 2009-08-05 00:44:39 -0400 (Wed, 05 Aug 2009) | 1 line
+Changed paths:
+   A /fwknop/trunk/test/conf/socket_com_tcp_serv_fwknop.conf
+   A /fwknop/trunk/test/conf/socket_com_udp_serv_fwknop.conf
+
+added config files for UNIX domain socket SPA communications
+------------------------------------------------------------------------
+r1510 | mbr | 2009-08-04 23:01:42 -0400 (Tue, 04 Aug 2009) | 14 lines
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.conf
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+   M /fwknop/trunk/test/fwknop_test.pl
+
+- Added the ability in fwknopd to receive SPA packets directly from either
+a TCP or UDP socket instead of using libpcap.  This bypasses libpcap
+altogether.  The fwknop_serv process listens on the socket and when it
+receives an SPA packet it sends it to fwknopd via a UNIX domain socket
+for decryption, validation, and firewall rule access to services
+requested in the SPA packet.  While TCP sockets are supported, it is
+better to use UDP instead since fwknop_serv never sends any data back to
+the client.  Hence, when UDP is used there is no way to scan for the
+service (nmap will report that it is 'open|filtered').  To enable this
+method for acquiring SPA packet data, set AUTH_MODE to 'SOCKET' in the
+/etc/fwknop/fwknop.conf file, and set either ENABLE_TCP_SERVER or
+ENABLE_UDP_SERVER as well.
+
+
+------------------------------------------------------------------------
+r1508 | mbr | 2009-08-03 01:43:40 -0400 (Mon, 03 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre8
+------------------------------------------------------------------------
+r1507 | mbr | 2009-08-03 01:40:51 -0400 (Mon, 03 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bug fix to remove + and / translation
+------------------------------------------------------------------------
+r1506 | mbr | 2009-08-03 01:40:09 -0400 (Mon, 03 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+bug fix for proper ordering of HTTP headers in --HTTP mode
+------------------------------------------------------------------------
+r1504 | mbr | 2009-08-02 03:35:13 -0400 (Sun, 02 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+updated version to 1.9.12-pre7
+------------------------------------------------------------------------
+r1503 | mbr | 2009-08-02 03:32:39 -0400 (Sun, 02 Aug 2009) | 5 lines
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+
+Updated the fwknop client to include a leading "/" in SPA packets over HTTP, and
+updated the fwknopd server to strip this out before attempting SPA
+packet decryption.
+
+
+------------------------------------------------------------------------
+r1502 | mbr | 2009-08-02 03:10:16 -0400 (Sun, 02 Aug 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/CREDITS
+   M /fwknop/trunk/ChangeLog
+
+added mention of new config variables for the ENABLE_CONNTRACK_PERSIST feature
+------------------------------------------------------------------------
+r1501 | mbr | 2009-08-02 03:05:58 -0400 (Sun, 02 Aug 2009) | 5 lines
+Changed paths:
+   M /fwknop/trunk/CREDITS
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/fwknop.conf
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_access.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/excluded_net_access.conf
+   M /fwknop/trunk/test/conf/external_cmd_access.conf
+   M /fwknop/trunk/test/conf/external_cmd_no_dash_A_access.conf
+   M /fwknop/trunk/test/conf/external_cmd_no_open_ports_access.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_access.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_internal_ip_access.conf
+   M /fwknop/trunk/test/conf/gpg2_access.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg_access.conf
+   M /fwknop/trunk/test/conf/gpg_access_no_prefix.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/multi_port_access.conf
+   M /fwknop/trunk/test/conf/multi_source_access.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_loopback_ip_match_access.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_access.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_encrypted_sequence_access.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_multi_port_shared_sequence_access.conf
+   M /fwknop/trunk/test/conf/pk_multi_protocol_shared_sequence_access.conf
+   M /fwknop/trunk/test/conf/pk_single_port_shared_sequence_access.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+   M /fwknop/trunk/test/fwknop_test.pl
+
+- Submitted a patch to allow rules added by fwknopd to not be expired if
+there are any established connections involving a source IP and a list of
+ports.  Once the established connections are removed, then any rules
+added by fwknopd are then allowed to also be removed.
+
+------------------------------------------------------------------------
+r1499 | mbr | 2009-07-26 11:51:33 -0400 (Sun, 26 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre6
+------------------------------------------------------------------------
+r1498 | mbr | 2009-07-26 11:50:47 -0400 (Sun, 26 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bug fix to properly implement --exclude tests
+------------------------------------------------------------------------
+r1496 | mbr | 2009-07-26 11:18:16 -0400 (Sun, 26 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre5
+------------------------------------------------------------------------
+r1495 | mbr | 2009-07-26 11:17:13 -0400 (Sun, 26 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+interim IP regex fix for whatismyip.org parsing
+------------------------------------------------------------------------
+r1494 | mbr | 2009-07-23 00:19:29 -0400 (Thu, 23 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+added support for the --show-last argument in the fwknop-c client
+------------------------------------------------------------------------
+r1493 | mbr | 2009-07-21 01:22:25 -0400 (Tue, 21 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+
+allow --fw-timeout=0, update to include pre-resolve hostname for SPA over HTTP
+------------------------------------------------------------------------
+r1492 | mbr | 2009-07-21 01:21:35 -0400 (Tue, 21 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+restored NAT testing for C client, updates for fwknop-c client format output
+------------------------------------------------------------------------
+r1491 | mbr | 2009-07-21 01:20:52 -0400 (Tue, 21 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+
+moved pcap sniff file to output/sniff.pcap
+------------------------------------------------------------------------
+r1490 | mbr | 2009-07-20 09:11:31 -0400 (Mon, 20 Jul 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/TODO
+
+minor TODO updates to remove older points
+------------------------------------------------------------------------
+r1489 | mbr | 2009-06-30 08:26:51 -0400 (Tue, 30 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/test/fwknop_test.pl
+
+added --spa-dump-packets mode to fwknopd and used this as the method for acquiring SPA packet digests for the test suite - this ensures the digests always conform to how the fwknopd daemon sees them
+------------------------------------------------------------------------
+r1488 | mbr | 2009-06-28 23:00:02 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop.conf
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+
+added ENABLE_FKO_MODULE config variable to allow additional control over usage of the FKO module by fwknopd
+------------------------------------------------------------------------
+r1487 | mbr | 2009-06-28 22:59:53 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+
+added FKO integration blurb
+------------------------------------------------------------------------
+r1486 | mbr | 2009-06-28 22:59:24 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/CREDITS
+
+more discussion of libfko
+------------------------------------------------------------------------
+r1485 | mbr | 2009-06-28 21:46:57 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknopd
+
+bug fix to account for the digest type for incoming SPA packets in FKO mode before overwriting this type when checking for replay attacks
+------------------------------------------------------------------------
+r1484 | mbr | 2009-06-28 20:49:24 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+bug fix to set any client timeout value in FKO mode before setting a NAT message
+------------------------------------------------------------------------
+r1483 | mbr | 2009-06-28 15:34:48 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+minor debug statement addition to print the FKO digest number
+------------------------------------------------------------------------
+r1482 | mbr | 2009-06-28 15:32:57 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+updated to run the multi-port tests since libfko now supports this as well
+------------------------------------------------------------------------
+r1481 | mbr | 2009-06-28 14:35:11 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknopd
+
+split FKO digest calculation into a dedicated function 'fko_check_digest()'
+------------------------------------------------------------------------
+r1480 | mbr | 2009-06-28 14:34:44 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+minor cleanup for variables that are no longer used
+------------------------------------------------------------------------
+r1479 | mbr | 2009-06-28 10:20:37 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknopd
+
+updated to not print perl Digest module versions if FKO is being used, update to print out calculated digests for incoming SPA packets in debug mode
+------------------------------------------------------------------------
+r1478 | mbr | 2009-06-28 10:19:43 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bug fix to parse FKO decryption errors for broken data tests
+------------------------------------------------------------------------
+r1477 | mbr | 2009-06-28 10:12:10 -0400 (Sun, 28 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bug fix to properly parse digest information from fwknop client output - this allows replay attack detection tests to work
+------------------------------------------------------------------------
+r1476 | mbr | 2009-06-27 22:23:19 -0400 (Sat, 27 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bug fix for local NAT rand port tests (local_access() calls fwknopd)
+------------------------------------------------------------------------
+r1475 | mbr | 2009-06-27 00:07:06 -0400 (Sat, 27 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+exclude the multi-port test when using the FKO module (this is a minor mode that not many people use)
+------------------------------------------------------------------------
+r1474 | mbr | 2009-06-26 23:41:10 -0400 (Fri, 26 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+
+fixed 'no -A tests', applied Salted__ prefix (and gpg prefix) logic to packet data generated via the FKO module (fixes additional fwknop_test.pl tests
+------------------------------------------------------------------------
+r1473 | mbr | 2009-06-26 23:10:12 -0400 (Fri, 26 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+added printing of test suite command line args, bug fix to sniff random port 'Local NAT' SPA packets
+------------------------------------------------------------------------
+r1472 | mbr | 2009-06-26 01:10:34 -0400 (Fri, 26 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+command execution works now using the FKO module
+------------------------------------------------------------------------
+r1471 | mbr | 2009-06-25 23:58:54 -0400 (Thu, 25 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/test/fwknop_test.pl
+
+added --test-FKO-exists argument so that FKO tests can be handled properly vs. when the perl fwknop/fwknopd does not use the FKO module (if it is not installed for example)
+------------------------------------------------------------------------
+r1470 | mbr | 2009-06-20 21:56:46 -0400 (Sat, 20 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+bug fix to set normal access SPA message type vs. NAT access message type
+------------------------------------------------------------------------
+r1469 | mbr | 2009-06-20 21:08:02 -0400 (Sat, 20 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+better --no-FKO-module handling, bug fix for the 'Require user' tests to properly manipulate the spoofed username
+------------------------------------------------------------------------
+r1468 | mbr | 2009-06-20 21:07:28 -0400 (Sat, 20 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+
+added minor 'Using FKO' statement in --debug mode
+------------------------------------------------------------------------
+r1467 | mbr | 2009-06-20 19:11:16 -0400 (Sat, 20 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+
+bug fix to handle translated '+' and '/' chars for the HTTP tests in FKO mode
+------------------------------------------------------------------------
+r1465 | mbr | 2009-06-17 23:56:22 -0400 (Wed, 17 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre4
+------------------------------------------------------------------------
+r1464 | mbr | 2009-06-17 23:55:49 -0400 (Wed, 17 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+
+major update to fwknopd to support the FKO module
+------------------------------------------------------------------------
+r1463 | mbr | 2009-06-14 21:54:17 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+minor typo fix
+------------------------------------------------------------------------
+r1462 | mbr | 2009-06-14 21:23:42 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+updated the fwknop client to use gpg functions offered by the FKO module for gpg SPA packet encryption
+------------------------------------------------------------------------
+r1461 | mbr | 2009-06-14 19:10:30 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+minor bug fix for uninitialized string when NAT mode is not used
+------------------------------------------------------------------------
+r1460 | mbr | 2009-06-14 17:28:46 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+update to set the NAT access string with the FKO module spa_nat_access() function
+------------------------------------------------------------------------
+r1459 | mbr | 2009-06-14 17:24:06 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+update to set the client timeout with the FKO module spa_client_timeout() function
+------------------------------------------------------------------------
+r1458 | mbr | 2009-06-14 17:12:06 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+minor formatting update
+------------------------------------------------------------------------
+r1457 | mbr | 2009-06-14 17:10:36 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+updated to set SPA message type with the FKO module spa_message_type() function
+------------------------------------------------------------------------
+r1456 | mbr | 2009-06-14 14:04:16 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+
+added ifconfig command to *fwknop.conf test configs
+------------------------------------------------------------------------
+r1455 | mbr | 2009-06-14 13:26:51 -0400 (Sun, 14 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+updated the fwknop client to use libfko for digest calculation via digest_type() and spa_digest()
+------------------------------------------------------------------------
+r1454 | mbr | 2009-06-13 22:14:48 -0400 (Sat, 13 Jun 2009) | 3 lines
+Changed paths:
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/test/fwknop_test.pl
+
+Added command line exclusions for the FKO module (just so the older code can
+be used if necessary - multiple implementation are good).
+
+------------------------------------------------------------------------
+r1453 | mbr | 2009-06-13 21:06:50 -0400 (Sat, 13 Jun 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknopd
+
+minor variable update to simplify sleep argument to get_iptables_chainmgr_obj()
+------------------------------------------------------------------------
+r1452 | mbr | 2009-06-10 01:24:54 -0400 (Wed, 10 Jun 2009) | 4 lines
+Changed paths:
+   M /fwknop/trunk/test/fwknop_test.pl
+
+- Updated to use --server-proto when testing the libfko C client.
+- Bug fix to ensure that lists of include/exclude matches are
+handled by the test_sleep() and other functions.
+
+------------------------------------------------------------------------
+r1451 | mbr | 2009-05-29 15:03:08 -0400 (Fri, 29 May 2009) | 4 lines
+Changed paths:
+   M /fwknop/trunk/fwknop
+
+For the fwknop perl client, made it use the FKO module by default if it exists.
+This commit is the start of the integration work for the FKO module, and the
+Basic tests pass with this update.
+
+------------------------------------------------------------------------
+r1450 | mbr | 2009-05-29 15:02:11 -0400 (Fri, 29 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/CREDITS
+
+added the FKO module that Damien wrote
+------------------------------------------------------------------------
+r1448 | mbr | 2009-05-26 14:35:57 -0400 (Tue, 26 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+bumped version to 1.9.12-pre3
+------------------------------------------------------------------------
+r1447 | mbr | 2009-05-26 14:26:51 -0400 (Tue, 26 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/knoptm
+
+bug fix to ensure that interface RX/TX checks (or other checks) are not attempted on a non-existent interface
+------------------------------------------------------------------------
+r1446 | mbr | 2009-05-26 14:21:39 -0400 (Tue, 26 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/CREDITS
+
+added Jens Binnewies
+------------------------------------------------------------------------
+r1444 | mbr | 2009-05-25 23:03:34 -0400 (Mon, 25 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+tagged 1.9.12-pre2
+------------------------------------------------------------------------
+r1443 | mbr | 2009-05-25 23:03:15 -0400 (Mon, 25 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/fwknop.conf
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+
+added the ability to test interface RX and TX bytes to ensure they are increasing and restart fwknopd if not (added a new variable ENABLE_INTF_BYTES_CHECK to support this feature)
+------------------------------------------------------------------------
+r1442 | mbr | 2009-05-25 09:11:03 -0400 (Mon, 25 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/knoptm.8
+
+added the --interface command line argument text
+------------------------------------------------------------------------
+r1440 | mbr | 2009-05-24 15:01:30 -0400 (Sun, 24 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/VERSION
+   M /fwknop/trunk/fwknop
+   M /fwknop/trunk/fwknop.h
+   M /fwknop/trunk/fwknop_serv
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/knopwatchd.c
+   M /fwknop/trunk/test/fwknop_test.pl
+
+updated version to 1.9.12-pre1
+------------------------------------------------------------------------
+r1439 | mbr | 2009-05-24 15:00:46 -0400 (Sun, 24 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/fwknopd
+
+added interface checking variables to the required_vars() function (minor change)
+------------------------------------------------------------------------
+r1438 | mbr | 2009-05-24 13:12:55 -0400 (Sun, 24 May 2009) | 13 lines
+Changed paths:
+   M /fwknop/trunk/ChangeLog
+   M /fwknop/trunk/fwknop.conf
+   M /fwknop/trunk/fwknopd
+   M /fwknop/trunk/knoptm
+   M /fwknop/trunk/test/conf/any_interface_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_dashA_IP_fwknop.conf
+   M /fwknop/trunk/test/conf/blacklist_fwknop.conf
+   M /fwknop/trunk/test/conf/default_fwknop.conf
+   M /fwknop/trunk/test/conf/filter_62203_fwknop.conf
+   M /fwknop/trunk/test/conf/forward_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_fwknop.conf
+   M /fwknop/trunk/test/conf/gpg2_http_fwknop.conf
+   M /fwknop/trunk/test/conf/http_fwknop.conf
+   M /fwknop/trunk/test/conf/icmp_fwknop.conf
+   M /fwknop/trunk/test/conf/ipt_sleep_fwknop.conf
+   M /fwknop/trunk/test/conf/md5_fwknop.conf
+   M /fwknop/trunk/test/conf/no_local_nat_fwknop.conf
+   M /fwknop/trunk/test/conf/no_promisc_fwknop.conf
+   M /fwknop/trunk/test/conf/output_chain_fwknop.conf
+   M /fwknop/trunk/test/conf/pcap_file_fwknop.conf
+   M /fwknop/trunk/test/conf/pk_fwknop.conf
+   M /fwknop/trunk/test/conf/popen_fwknop.conf
+   M /fwknop/trunk/test/conf/rand_port_fwknop.conf
+   M /fwknop/trunk/test/conf/sha1_fwknop.conf
+   M /fwknop/trunk/test/conf/sha256_fwknop.conf
+   M /fwknop/trunk/test/conf/spa_aging_fwknop.conf
+   M /fwknop/trunk/test/conf/system_fwknop.conf
+   M /fwknop/trunk/test/conf/tcp_serv_fwknop.conf
+
+Added the ability to recover from interface error conditions, such as
+when fwknopd sniffs a ppp interface (say, associated with a VPN) that
+goes away and then is recreated.  In previous versions of fwknop, this
+would result in the fwknopd daemon no longer able to receive SPA
+packets.  This new functionality is controlled by four new configuration
+variables in the fwknop.conf file: ENABLE_INTF_CHECKS,
+INTF_CHECKS_INTERVAL, ENABLE_INTF_EXISTS_CHECK, and
+ENABLE_INTF_RUNNING_CHECK.  By default, this feature is enabled, and the
+existence check is run every 20 seconds by the knoptm daemon.  If the
+existence check fails, then knoptm stops the fwknopd daemon once the
+interface comes back (fwknopd cannot receive SPA packets until this
+happens) so that knopwatchd will then restart it.
+
+------------------------------------------------------------------------
+r1437 | mbr | 2009-05-23 22:50:36 -0400 (Sat, 23 May 2009) | 1 line
+Changed paths:
+   M /fwknop/trunk/knoptm
+
+minor wording/variable update for domain socket
+------------------------------------------------------------------------

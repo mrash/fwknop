@@ -1,0 +1,46 @@
+=head1 EXAMPLES
+
+Z<>
+
+=head1 COMPATIBILITY NOTES
+
+Users porting from the v1 versions of Class::MethodMaker would do well to
+observe the following:
+
+=over 4
+
+=item ima_method_maker
+
+This class method is deprecated.  It was a way round the fact the C::MM works
+out what class to create methods in by looking up the calling stack.  It is
+unfortunate, for the first C::MM class in the calling stack that sets
+ima_method_maker to be false gets the method --- that may not be what is
+wanted (i.e., if one derived class calls another for C::MM work).
+
+By calling create_methods, the target class may is explicitly specified in the
+argument list.
+
+=back
+
+=head1 BUGS
+
+Z<>
+
+=head1 REPORTING BUGS
+
+Email the development mailing-list C<class-mmaker-devel@lists.sourceforge.net>
+
+=head1 AUTHOR
+
+Martyn J. Pearce
+
+=head1 COPYRIGHT
+
+Copyright (c) 2001--2004 Martyn J. Pearce.  This program is free software; you
+can redistribute it and/or modify it under the same terms as Perl itself.
+
+=head1 SEE ALSO
+
+Z<>
+
+=cut

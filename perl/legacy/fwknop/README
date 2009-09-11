@@ -1,0 +1,51 @@
+
+fwknop - Firewall Knock Operator
+
+fwknop implements an authorization scheme that requires only a single
+encrypted packet to communicate various pieces of information including
+desired access through an iptables policy and/or specific commands to execute
+on the target system.  The main application of this program is to protect
+services such as SSH with an additional layer of security in order to make the
+exploitation of vulnerabilities (both 0-day and unpatched code) much more
+difficult.  The authorization server passively monitors authorization packets
+via libcap and hence there is no "server" to which to connect in the
+traditional sense.  Any service protected by fwknop is inaccessible (by using
+iptables to intercept packets within the Linux kernel) before authenticating;
+anyone scanning for the service will not be able to detect that it is even
+listening.  This authorization scheme offers many advantages over port
+knocking (*), include being non-replayable, much more data can be communicated,
+and the scheme cannot be broken by simply connecting to extraneous ports on
+the server in an effort to break knock sequences.  The authorization packets
+can easiliy be spoofed as well, and this makes it possible to make it appear
+as though, say, www.yahoo.com is trying to authenticate to a target system but
+in reality the actual connection will come from a seemingly unrelated IP.
+Although the  default data collection method is to use libpcap to sniff
+packets off the wire, fwknop can also read packets out of a file that is
+written by the Netfilter ulogd pcap writer.
+
+More information can be found in the fwknop(8) man page.
+
+In addition, fwknop maintains an implementation of a port knocking scheme
+based around iptables log messages.  Supported knock sequences include both
+encrypted and shared sequences which can be augmented with both relative and
+absolute timeouts, multi-protocol usage (tcp, udp, and icmp), and passive OS
+guess masking.
+
+fwknop operates in two modes, "server" and "client".  When running in server
+mode, fwknop parses the file /etc/fwknop/access.conf to get all access
+definitions (source address, sequence type, access port(s) and protocol, OS
+fingerprint requirements, etc.) and then begins watching all iptables log
+messages as they are written to syslog.  If a matching sequence is monitored
+then the iptables ruleset on the underlying system will be modified to allow
+access to the port(s) that are either defined in access.conf or contained
+within the knock sequence (for encrypted sequences).  When running in client
+mode, fwknop sends either a shared or an encrypted knock sequence to the
+destination system (which must be running fwknop in server mode).  In client
+mode fwknop parses the file ~/.fwknoprc if sending a shared knock sequence
+to the destination or for encrypted sequences fwknop accepts command line
+input.  Also, for a
+graphical front-end to fwknop see "fwknopFE"
+(http://www.snipes.org/index.php?page=fwknopFE) written by Brian Snipes.
+
+* The term "port knocking" was coined by Martin Krzywinski, see
+http://www.portknocking.org

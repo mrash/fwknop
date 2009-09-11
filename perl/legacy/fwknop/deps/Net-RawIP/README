@@ -1,0 +1,45 @@
+This is Net::RawIP, a perl module can to manipulate raw IP packets,
+with an optional feature for manipulating Ethernet headers.
+
+NOTE: Ethernet related methods currently implemented only on Linux and *BSD!
+Help with port eth.c to other platforms is very appreciated.
+
+You need perl 5.004 or later to use this module.
+You need to have installed libpcap, available from:
+
+TBD
+
+If you are using Ubuntu you can install it by typing:
+
+   sudo apt-get install libpcap0.7-dev
+
+or
+
+   sudo apt-get install libpcap0.8-dev
+
+
+
+You install the module by running these commands:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+There are also some example scripts.
+
+Please report any bugs/suggestions to Sergey Kolychev <ksv@al.lg.ua>
+
+All files contained in this installation are Copyright (c) 1998-2000 Sergey 
+Kolychev unless otherwise specified. All rights reserved.
+
+This library is free software; you can redistribute it and/or modify it under 
+the same terms as Perl itself.
+
+One can install a development versions using CPAN.pm:
+
+cpan> install S/SZ/SZABGAB/Net-RawIP-0.21_03.tar.gz
+
+
+
+

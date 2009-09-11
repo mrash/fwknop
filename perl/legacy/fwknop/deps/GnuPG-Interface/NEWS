@@ -1,0 +1,170 @@
+Noteworthy changes in 0.35
+-----------------------------------------------------------------
+
+    * Changes are now tracked in the 'ChangeLog' file.
+      (See that file for noteworthy changes)    
+
+Noteworthy changes in 0.34
+-----------------------------------------------------------------
+
+    *	Documentation fixes.
+
+
+Noteworthy changes in 0.33
+-----------------------------------------------------------------
+
+    *	Fixed a bug in GnuPG::Interface->import_keys() so that
+	it doesn't overwrite your 'command_args' anymore.
+	Thanks to  Peter Palfrader <weasel@debian.org> for
+	pointing this out.
+
+
+Noteworthy changes in 0.32
+-----------------------------------------------------------------
+
+    *	Extended the expiration on the test keys another
+	4 years so that the test suite works.
+
+    *	Documentation fixes.
+
+    *	Other small cleanups.
+
+
+Noteworthy changes in 0.31
+-----------------------------------------------------------------
+
+    *	Fixed stalling test cases.
+
+    *	Added deprecation support for fields
+	of GnuPG::Interface::wrap_call
+
+
+Noteworthy changes in 0.30
+-----------------------------------------------------------------
+
+    *	Re-worked inheritance tree so that GnuPG::SecretKey
+	and GnuPG::PublicKey are sub-classes of
+	newly-added GnuPG::PrimaryKey.
+
+    *	Tested with GnuPG 1.0.5.
+
+    *	GnuPG::Fingerprint deprecate hex_data(), in favor
+	of as_hex_string().
+
+    *	GnuPG::UserId deprecates user_id_string(), in favor
+	of as_string().
+
+
+Noteworthy changes in 0.20
+-----------------------------------------------------------------
+
+    *	Fixes for running under Perl 5.6.0
+	(stdin, stdout, stderr filehandling changed).
+	Thanks to Paul Walmsley, the_shag@users.sourceforge.net
+
+    *	Fix testing so that it works with GnuPG 1.0.4h.
+
+    *	Move a lot of testing code from inside the code
+	to outside, so that it doesn't need to be loaded
+	along with normal usage.  This might help speed.
+
+    *	License is now the same terms as perl itself.
+
+    *	Don't ship with Class::MethodMaker
+
+Noteworthy changes in 0.11
+-----------------------------------------------------------------
+
+    *	AutoLoader is now used correctly.
+
+    *	GnuPG::Options->no_comment() is no longer exists, for clarity.
+	(It doesn't do what you think it does).
+
+    *	GnuPG::Options->comment() will now only not cause
+	a --comment option to be used if it's value is undefined.
+	This means you can do $gnupg->options->comment( '' )
+	to prevent a comment from being used.
+
+
+Noteworthy changes in 0.10
+-----------------------------------------------------------------
+
+    *	GnuPG::Interface should work fine with the recently-
+	released GnuPG 1.0.2.
+
+    *	GnuPG::Handles objects can now handle reading
+	or writing directly from already-opened filehandles.
+	This can allow a more 'natural' approach to
+	having GnuPG read and write directly to files,
+	with the exeption being that the user has to
+	open these files beforehand.
+
+    *	Documentation created to describe the new accessing
+	of open filehandle behaviour, and a FAQ started
+	in GnuPG::Interface's docs.
+
+    *	Major code cleanup and other small docs cleanup.
+
+
+Noteworthy changes in 0.09
+-----------------------------------------------------------------
+
+    *	Using GnuPG::Handles which are meant to be dupes
+	is now more viable and documented.  In particular,
+	file descriptor numbers (properly prefixed, according
+	to the open() documentation) can be used.
+	This helps when using symbols and and object handles.
+
+
+Noteworthy changes in 0.08
+-----------------------------------------------------------------
+
+    *	AutoLoader is now used; this may descrease
+	compile-time.
+
+    *	Changes so that testing on recent development versions
+	of GnuPG (namely 1.0.1e) works, or notably says
+	that the error is occuring because of GnuPG version
+	differences.
+
+
+Noteworthy changes in 0.07
+-----------------------------------------------------------------
+
+    *	BACKWARDS COMPATIBILITY issue:
+	GnuPG::Options->meta_signing_key() now expects
+	an argument of type GnuPG::Object, instead of a scalar
+	key id.  See the following note for more details.
+
+    *	GnuPG::Options 'meta' methods that deal with keys arguments
+	are more consistent now.  Meta methods that accept key
+	ids are now appended with _id(s); other meta methods
+	that accept keys receive GnuPG::Key objects.
+
+
+Noteworthy changes in 0.06
+-----------------------------------------------------------------
+
+    *	textmode option added to GnuPG::Options, and
+	booleans of GnuPG::Options now make use
+	of Class::MethodMaker's boolean usability.
+
+
+Noteworthy changes in 0.04
+-----------------------------------------------------------------
+
+    *	This is a re-packaging release of 0.03.
+
+
+Noteworty changes in 0.03
+-----------------------------------------------------------------
+
+    *	Documenation fixes.
+
+    *	GnuPG::Option meta-pgp5-compatibility bug fixed.
+
+
+Noteworty changes in 0.01
+-----------------------------------------------------------------
+
+    *	Initial release

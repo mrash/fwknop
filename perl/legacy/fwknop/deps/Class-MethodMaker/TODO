@@ -1,0 +1,98 @@
+# Implement/Check scalar ties
+
+# Ensure new is available & documented for V2
+
+# Check tie behaviour with persistent files (e.g., picks up written values on
+# first read).  'Component exists' (as opposed to element exists) should be
+# mean 'tied'
+
+# Arrays - clear should not delete storage; reset sohuld
+# Arrays/General - tie should be invoked only upon assignment to the collection
+
+# Add to list methods:
+# Add x_clear to reset array without resetting storage (so storage exists, but no members)
+# x_count(1) - count set values; (2) - count defined values; (3) - count true values
+# x_grep x_map x_for
+# x_areset to return a list of indices of set items
+# ITERATOR
+# ITERATOR over set values (leave the user to do ITERATOR over defined values,
+# etc.)
+
+# Add x_setref to hash, array as discussed in respective 'x' method
+# documentation.
+
+# Remaining array tests
+
+# Integrate Class::MethodMaker::Util
+
+# Add _exists, _delete(as for hash) to array
+
+# test forward methods on tied attributes (they're set up in scalar.t,
+# array.t, hash.t?, just not actually tested)
+
+# Add introspection
+# Split doc. for scalar across actual methods, a la array
+# Tidy up doc writing to eliminiate unnecessary =pod =cut sequences
+
+# differ clear & reset; define behaviour in terms of storage (therefore, tie)
+# finish & document array
+# finish array.t (check test notes at end)
+# tie scalars
+# split methods into files in their own directory
+# split methodmaker further; turn V1 opts into own class hierarchy?
+#                          ; remove bits that are needed only for class
+#                            manufacture (OPTEXT, more?)
+
+# document 'new'
+
+# Check user-defined components still work as they used to
+
+# Filehandle, Dirhandle, Code components?
+
+# Automatic storage translation?  Retrieval translation?  Should this just be
+# considered a likely implementation of tie?  Or implemented with tie?  Or
+# would it be faster directly?  This could also be used to implement tied data
+# _items_, as opposed to tied _components_.
+
+# Copy method  (deep copy?  shallow copy?  probably an option for both)
+# freeze/thaw integration  (is there really any value in doing this ---
+#                           storable already does it)?
+# Use of array-based classes?
+# Use of closures for linked-lists, other data-structures (i.e., the instance
+# is a subref that's closed over the data).
+# Use of closures as above for iterators?
+# Iterators over components
+# Destructor that unties any components
+
+# Finish Documentation
+# Reassign names so error messages come from "right" class name & method
+# Place doc. for data structures in middle of man page
+# Add +*_clear syntax to add in non-default methods
+# Add nonnull option
+# Add triggered & monitored types
+# Add ints, strings, timedates
+# Add enums
+#  Document default_ctor simple value trick with -type to work only with class
+#  types.
+# TODO from C::MM 1
+# Add trees, linked lists, non-destructive hashes, fib heaps
+# Integrate other CPAN data structures?
+# Mechanism to allow users to define templates of methods they commonly use
+# Test for error messages when new, catalalogue are given "standard" options
+# Add forwarding from one method to another with a different name.  Add
+#   mechanism for auto_naming, e.g., '*_name', where * is replaced by component
+#   name, to allow methods to be forwarded to multiple components e.g.,
+#   { -forward => {mode => '*_mode'} }, qw/ st1 st2 / to allow st1_mode &
+#   st2_mode
+# What to do with forwarding to a null value --- explicit check?
+#   Require default value?  Just let it happen?
+# Add writing out of source code to generated classes
+# Add default_count mechanism to array
+# Add parameter passed to default_ctor of array specifying slot ID
+# Add purely generated arrays/hashes; unable to set, both with & without a
+#  finite limit.  Are there CPAN modules for this?
+# Add _lock & _unlock methods to lock values.  Limit each to certain classes?
+# Add ties
+
+# Add introspection capability for OODoc.  See email from Marcel Gruenauer
+# <marcel@noug.at>

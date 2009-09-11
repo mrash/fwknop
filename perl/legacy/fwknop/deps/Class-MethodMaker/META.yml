@@ -1,0 +1,13 @@
+--- #YAML:1.0
+name:                Class-MethodMaker
+version:             2.11
+abstract:            a module for creating generic methods
+license:             ~
+author:              
+    - Martyn J. Pearce 
+generated_by:        ExtUtils::MakeMaker version 6.44
+distribution_type:   module
+requires:     
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3

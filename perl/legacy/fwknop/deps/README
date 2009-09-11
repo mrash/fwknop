@@ -1,0 +1,8 @@
+This directory contains perl modules and other dependencies used by fwknop.
+These dependencies are included in this directory to ease the installation
+process, but if fwknop is being installed on a system where all necessary
+dependencies are already installed then it is recommended to install from one
+of the fwknop "nodeps" tarballs or RPM's.  These distributions of fwknop do
+not include any perl modules or other dependencies:
+
+http://www.cipherdyne.org/fwknop/download/

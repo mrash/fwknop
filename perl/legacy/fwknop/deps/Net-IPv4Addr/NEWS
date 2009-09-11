@@ -1,0 +1,28 @@
+Net::IPv4Addr NEWS -- History of User-Visible Changes.  May 03 2000
+
+* Changes in IPv4Addr 0.10
+
+    - Fixed important errors which occurs when using 
+      a /0 CIDR. Thanks to Bernd Eckenfels from Debian 
+      for the fix.
+
+    - Fixed : ipv4_in_network( anything, 0.0.0.0/0) was
+      returning true. Thanks to Bernd Eckenfels from Debian
+      for the fix.
+
+    - ipv4_chkip wasn't exported with the all tag.
+
+* Changes in IPv4Addr 0.09
+
+    - Fixed an important bug in ipv4_in_network which caused 
+      comparison between networks that where in different class
+      to fail.
+
+* Changes in IPv4Addr 0.07
+
+    -  Debian packaging done by Bernd Eckenfels <ecki@lina.inka.de>.
+
+* Change in  IPv4Addr 0.06
+
+    - Module was renamed to Net::IPv4Addr to better fit into CPAN hierarchy.
+

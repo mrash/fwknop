@@ -1,0 +1,97 @@
+README for Net::Pcap 0.05
+=========================
+
+Primarily fixes for running under Cygwin with winpcap (see
+http://winpcap.polito.it/ -- you should install the SDK) and
+providing a wrapper for findalldevs (which is tremendously
+useful under cygwin since Windows' interface names are horribly
+complicated).
+
+	- test now pass under cygwin by disabling the root user check
+	- lookupdev returns the first item from findalldevs
+        - findalldevs wrapper available
+
+by Marco Carnut <kiko@tempest.com.br> 2003-jun-14
+
+README for Net::Pcap 0.04
+=========================
+
+The Net::Pcap module is a Perl binding to the LBL pcap(3) packet
+capture library.  It is a re-implementation of Peter Lister's
+original Net::Pcap version 0.01.
+
+Net::Pcap version 0.04 contains the following improvements over Net::Pcap
+version 0.03:
+
+        - now compiles and workswith Perl 5.6.0
+
+Net::Pcap version 0.03 contains the following improvements over
+previous versions:
+
+	- all pcap library functions fully implemented
+
+	- packet header and statistical information passed as
+	  perl hashes
+
+	- POD documentation
+
+The source code for the LBL pcap library can be found at
+ftp://ftp.ee.lbl.gov/libpcap.tar.Z.  If you're running Linux, there
+should be a packaged up version of libpcap available for your system.
+Check the nearest mirror site of your favourite distribution.
+
+
+Installation Notes
+==================
+
+If your pcap header files are installed somewhere strange, create the
+Makefile using the INC and/or LIBS option.
+
+	$ perl Makefile.PL INC=-I/usr/local/include/pcap \
+		LIBS='-L/usr/lib/pcap -lpcap'
+
+Compile the extension as per usual:
+
+	$ make
+	$ make test
+	$ make install
+
+To install the extension in a private directory, you can use the
+PREFIX option when creating Makefile.PL.
+
+A ANSI-compliant compiler is required to compile the extension.  For
+most of the tests, root access is required since opening a network
+interface in promiscuous mode is a privileged operation.  Some tests
+also require a working network interface with traffic on it otherwise
+the tests will appear to hang.  Consult the source for individual
+tests for more information.
+
+Net::Pcap has been tested by the author on the following systems, but
+is likely to run on many more.
+
+	- Solaris 2.6, gcc 2.8.1
+	- Linux 2.2, gcc 2.8.1
+
+
+Miscellaneous
+=============
+
+The original version of Net::Pcap, version 0.01, was written by Peter
+Lister <p.lister@cranfield.ac.uk>.
+
+Version 0.02 was created by Bo Adler <thumper@alumni.caltech.edu> and
+not uploaded to CPAN.  It can be found at:
+
+http://www.buttsoft.com/~thumper/software/perl/Net-Pcap/
+
+Thanks to David N. Blank-Edelman <dnb@ccs.neu.edu> for testing and
+general polishing up of this version of Net::Pcap.
+
+Copyright (c) 1999-2000 Tim Potter. All rights reserved. This program is
+free software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
+
+
+15/5/00
+Tim Potter
+tpot@frungy.org

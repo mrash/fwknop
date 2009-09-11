@@ -1,0 +1,31 @@
+use strict;
+
+  package MyClass;
+
+  use Class::MethodMaker
+    [ scalar => [qw/ name /],
+      new    => [qw/ new  /],
+    ];
+
+  package main;
+
+  my $m = MyClass->new;
+  my $n;
+  $\ = "\n";
+
+  print $m->name_isset ? "true" : "false";     # false
+
+  $m->name("foo");
+  $n = $m->name;
+  print defined $n ? "->$n<-" : "*undef*";     # ->foo<-
+  print $m->name_isset ? "true" : "false";     # true
+
+  $m->name(undef);
+  $n = $m->name;
+  print defined $n ? "->$n<-" : "*undef*";     # *undef*
+  print $m->name_isset ? "true" : "false";     # true
+
+  $m->name_reset;
+  $n = $m->name;
+  print defined $n ? "->$n<-" : "*undef*";     # *undef*
+  print $m->name_isset ? "true" : "false";     # false

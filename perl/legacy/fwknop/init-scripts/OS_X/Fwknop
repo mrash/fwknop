@@ -1,0 +1,32 @@
+#!/bin/sh
+
+##
+# Single Packet Authorization Server fwknopd
+# See: http://www.cipherdyne.org/fwknop/
+##
+
+. /etc/rc.common
+
+StartService ()
+{
+    if [ "${AUTHSERVER:=-NO-}" = "-YES-" ]; then
+        echo "Starting Single Packet Authorization Server fwknopd"
+        /usr/sbin/fwknopd
+    fi
+}
+
+StopService ()
+{
+    if [ "${AUTHSERVER:=-NO-}" = "-YES-" ]; then
+        echo "Stopping Single Packet Authorization Server fwknopd"
+    fi
+    /usr/sbin/fwknopd -K > /dev/null 2>&1
+}
+
+RestartService ()
+{
+    StopService
+    StartService
+}
+
+RunService "$1"

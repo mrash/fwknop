@@ -1,0 +1,76 @@
+#!/bin/sh
+#
+# Startup script for fwknop
+#
+# chkconfig: - 99 05
+# description: The FireWall KNock OPerator (fwknop)
+# processname: fwknop
+# pidfile: /var/run/fwknopd.pid
+# config: /etc/fwknop/fwknop
+#
+# $Id: fwknop-init.redhat 1201 2008-08-13 02:03:02Z mbr $
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+restart() {
+    $0 stop
+    $0 start
+}
+
+# See how we were called.
+case "$1" in
+start)
+    echo -n "Starting the fwknop daemons: "
+    daemon /usr/sbin/fwknopd
+    RETVAL=$?
+    echo
+    if [ $RETVAL -eq 0 ]; then
+        touch /var/lock/subsys/fwknop
+    fi
+    ;;
+stop)
+    echo -n "Shutting down the fwknop knopwatchd daemon: "
+        killproc knopwatchd
+        echo
+        echo -n "Shutting down the fwknop daemon: "
+        killproc fwknopd
+    RETVAL=$?
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fwknop
+    echo
+    if [ -f /var/run/fwknop/knopmd.pid ]; then
+        echo -n "Shutting down the fwknop knopmd daemon: "
+        killproc knopmd
+        echo
+    fi
+    if [ -f /var/run/fwknop/knoptm.pid ]; then
+        echo -n "Shutting down the fwknop knoptm daemon: "
+        killproc knoptm
+        echo
+    fi
+    if [ -f /var/run/fwknop/fwknop_serv.pid ]; then
+        echo -n "Shutting down the fwknop fwknop_serv daemon: "
+        killproc fwknop_serv
+        echo
+    fi
+    ;;
+status)
+    if [ -f /var/run/fwknop/knopmd.pid ]; then
+        status knopmd
+    fi
+    if [ -f /var/run/fwknop/knoptm.pid ]; then
+        status knoptm
+    fi
+    status fwknopd
+    status knopwatchd
+    ;;
+restart|reload)
+    restart
+    ;;
+condrestart|try-restart)
+    [ -f /var/lock/subsys/fwknop ] && restart || :
+    ;;
+*)
+    echo "Usage: fwknop {start|stop|status|restart|reload|condrestart}"
+    exit 3
+esac

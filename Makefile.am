@@ -14,6 +14,7 @@ SUBDIRS = \
 	doc 
 
 EXTRA_DIST = \
+    perl/legacy \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \
     perl/FKO/MANIFEST \

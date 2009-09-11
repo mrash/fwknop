@@ -1,0 +1,51 @@
+
+***NOTE*** The information in this file is for archiving purposes only to show
+how to use the deprecated port knocking mode offered by fwknop.  Single Packet
+Authorization (SPA) is the most secure method of passive authorization; see
+the following link for more information:
+
+http://www.cipherdyne.org/fwknop/docs/SPA.html
+
+The sections below illustrate how to configure SOURCE blocks in the
+/etc/fwknop/access.conf file for the legacy port knocking modes.
+
+
+1) OLD STRATEGY: define parameters for accepting an encrypted knock
+   sequence from any source IP address.  Note that the specific port that
+   will be opened is sent within the encrypted sequence (see the -p and -P
+   options when running fwknop in client mode) since the OPEN_PORTS
+   variable is not defined.
+
+  SOURCE: ANY;
+  DATA_COLLECT_MODE: ENCRYPT_SEQUENCE;
+  KEY: myencryptkey;
+
+2) OLD STRATEGY: Define parameters for an encrypted sequence that requires
+   the operating system from which the encrypted sequence originates be
+   identified as a Linux system (any kernel version).  In addition, define
+   the firewall access timeout to be 10 minutes instead of the default of
+   5 minutes, and restrict access for only those source IP addresses that
+   are within a specific subnet:
+
+  SOURCE: 192.168.10.0/24;
+  DATA_COLLECT_MODE: ENCRYPT_SEQUENCE;
+  KEY: myencryptkey;
+  FW_ACCESS_TIMEOUT: 600;
+  REQUIRE_OS_REGEX: linux;
+
+3) OLD STRATEGY: Define parameters for a shared knock sequence originating
+   from any source IP address, and use the tcp, udp, and icmp protocols in
+   the knock sequence.  The sequence consists of a total of four ports:
+
+  SOURCE: ANY;
+  SHARED_SEQUENCE: tcp/65531, udp/65533, tcp/65532, udp/65530;
+
+1) OLD STRATEGY: Define parameters for a shared knock sequence identical
+   to 7) above, but require the operating system from which the sequence
+   originates to be exactly "OpenBSD:3.0-3.5::OpenBSD 3.0-3.5" (see the
+   file /etc/fwknop/pf.os):
+
+  SOURCE: ANY;
+  SHARED_SEQUENCE: tcp/65531, udp/65533, tcp/65532, udp/65530;
+  REQUIRE_OS: OpenBSD:3.0-3.5::OpenBSD 3.0-3.5;
+

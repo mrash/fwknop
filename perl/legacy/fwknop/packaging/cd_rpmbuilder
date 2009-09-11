@@ -1,0 +1,262 @@
+#!/usr/bin/perl -w
+#
+#############################################################################
+#
+# File: cd_rpmbuilder "CipherDyne Rpm Builder"
+#
+# Purpose: Provides a consistent way to build RPMs of CipherDyne open source
+#          projects (psad, fwsnort, fwsknop, and gpgdir).
+#
+# Author: Michael Rash
+#
+# Copyright (C) 2006-2008 Michael Rash (mbr@cipherdyne.org)
+#
+# License (GNU Public License - GPLv2):
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+#    USA
+#
+#############################################################################
+#
+# $Id: cd_rpmbuilder 1864 2008-08-22 03:16:19Z mbr $
+#
+
+use File::Find;
+use File::Copy;
+use Getopt::Long 'GetOptions';
+use strict;
+
+#============================ config =============================
+my $rpm_root_dir   = '/usr/src/redhat';
+my $build_url_base = 'http://www.cipherdyne.org';
+
+### commands
+my $rpmbuildCmd = '/usr/bin/rpmbuild';
+my $wgetCmd     = '/usr/bin/wget';
+#========================== end config ===========================
+
+my $version = '0.9';
+
+my $project = '';
+my $build_version = '';
+my $print_version = 0;
+my $nodeps = 0;
+my $verbose = 0;
+my $help = 0;
+
+my @rpm_paths = ();
+
+my $RM    = 1;
+my $PRINT = 2;
+
+my %projects = (
+    'psad'    => '',
+    'fwknop'  => '',
+    'fwsnort' => '',
+    'gpgdir'  => ''
+);
+
+Getopt::Long::Configure('no_ignore_case');
+&usage() unless (GetOptions(
+    'project=s' => \$project,
+    'build-version=s' => \$build_version,
+    'rpm-build-dir=s' => \$rpm_root_dir,
+    'no-deps' => \$nodeps,
+    'verbose' => \$verbose,
+    'Version' => \$print_version,
+    'help'    => \$help
+));
+&usage() if $help;
+
+if ($print_version) {
+    print "[+] cd_rpmbuilder by Michael Rash <mbr\@cipherdyne.org>\n";
+    exit 0;
+}
+
+if ($project) {
+    unless (defined $projects{$project}) {
+        print "[*] Unrecognized project: $project; must be one of:\n";
+        print $_, "\n" for keys %projects;
+        exit 1;
+    }
+} else {
+    die "[*] Must specify a project with -p <project>\n";
+}
+
+die "[*] $wgetCmd is not a valid path to wget, update the config section."
+    unless -x $wgetCmd;
+die "[*] $rpmbuildCmd is not a valid path to rpmbuild, update the config " .
+    "section." unless -x $rpmbuildCmd;
+
+chdir "$rpm_root_dir/SPECS" or die "[*] Could not chdir $rpm_root_dir/SPECS";
+
+unless ($build_version) {
+    ### we need to get the latest version from cipherdyne.org
+    &get_latest_version();
+}
+
+my $spec_file = "$project-$build_version.spec";
+my $tar_file  = "$project-$build_version.tar.gz";
+
+if ($nodeps) {
+    $spec_file = "$project-nodeps-$build_version.spec";
+    $tar_file  = "$project-nodeps-$build_version.tar.gz";
+}
+
+### remove old RPMS
+&find_rpms($RM);
+
+### get the remote spec file
+&download_file($spec_file);
+&md5_check($spec_file);
+
+### get the remote source tarball and md5 sum file
+&download_file($tar_file);
+&md5_check($tar_file);
+
+if ($nodeps) {
+    move $tar_file, "../SOURCES/$project-$build_version.tar.gz" or die $!;
+} else {
+    move $tar_file, '../SOURCES' or die $!;
+}
+
+### build the rpm
+&build_rpm();
+
+### print the paths to the new RPMS
+&find_rpms($PRINT);
+
+exit 0;
+#======================= end main ========================
+
+sub find_rpms() {
+    my $action = shift;
+    @rpm_paths = ();
+    find(\&get_rpms, "$rpm_root_dir/SRPMS");
+    find(\&get_rpms, "$rpm_root_dir/RPMS");
+    if ($action == $PRINT) {
+        if (@rpm_paths) {
+            print "[+] The following RPMS were successfully built:\n\n";
+        } else {
+            print "[-] No RPMS were successfully built; try running ",
+                "with --verbose\n";
+        }
+    }
+    for my $rpm_file (@rpm_paths) {
+        if ($action == $RM) {
+            unlink $rpm_file or die "[*] Could not unlink $rpm_file: $!";
+        } elsif ($action == $PRINT) {
+            if ($rpm_file =~ /\.src\.rpm/) {
+                print "      $rpm_file (source RPM)\n";
+            } else {
+                print "      $rpm_file\n";
+            }
+        }
+    }
+    print "\n" if $action == $PRINT;
+    return;
+}
+
+sub get_rpms() {
+    my $file = $File::Find::name;
+    if ($file =~ /$project-$build_version-.*\.rpm$/) {
+        push @rpm_paths, $file;
+    }
+    return;
+}
+
+sub download_file() {
+    my $file = shift;
+    unlink $file if -e $file;
+    print "[+] Downloading file:\n",
+        "      $build_url_base/$project/download/$file\n";
+    my $cmd = "$wgetCmd $build_url_base/$project/download/$file";
+    unless ($verbose) {
+        $cmd .= ' > /dev/null 2>&1';
+    }
+    system $cmd;
+    die "[*] Could not download $file, try running with -v"
+        unless -e $file;
+    return;
+
+}
+
+sub md5_check() {
+    my $file = shift;
+    &download_file("$file.md5");
+    ### check MD5 sum
+    open MD5, "md5sum -c $file.md5 |"
+        or die $!;
+    my $sum_line = <MD5>;
+    close MD5;
+    unless ($sum_line =~ m/$file:\s+OK/) {
+        die "[*] MD5 sum check failed for $file, ",
+            "exiting.";
+    }
+    print "[+] Valid md5 sum check for $file\n";
+    unlink "$file.md5";
+    return;
+}
+
+sub build_rpm() {
+    print
+"[+] Building RPM, this may take a little while (try -v if you want\n",
+"    to see all of the steps)...\n\n";
+    my $cmd = "$rpmbuildCmd -ba $spec_file";
+    unless ($verbose) {
+        $cmd .= ' > /dev/null 2>&1';
+    }
+    system $cmd;
+    return;
+}
+
+sub get_latest_version() {
+    unlink "$project-latest" if -e "$project-latest";
+    print "[+] Getting latest version file:\n",
+        "      $build_url_base/$project/$project-latest\n";
+    my $cmd = "$wgetCmd $build_url_base/$project/$project-latest";
+    unless ($verbose) {
+        $cmd .= ' > /dev/null 2>&1';
+    }
+    system $cmd;
+    open F, "< $project-latest" or
+            die "[*] Could not open $project-latest: $!";
+    my $line = <F>;
+    close F;
+    chomp $line;
+    $build_version = $line;
+    die "[*] Could not get build version" unless $build_version;
+    unlink "$project-latest" if -e "$project-latest";
+    return;
+}
+
+sub usage() {
+    print <<_HELP_;
+
+cd_rpmbuilder; the CipherDyne RPM builder
+[+] Version: $version
+[+] By Michael Rash (mbr\@cipherdyne.org, http://www.cipherdyne.org)
+
+Usage: cd_rpmbuilder -p <project> [options]
+
+Options:
+    -p, --project <name>       - This can be one of "psad", "fwknop",
+                                 "gpgdir", or "fwsnort".
+    -b, --build-version <ver>  - Build a specific project version.
+    -r, --rpm-build-dir <dir>  - Change the RPM build directory from the
+                                 default of $rpm_root_dir.
+    -n, --no-deps              - Build the specified project without any
+                                 dependencies (such as perl modules).
+    -v, --verbose              - Run in verbose mode.
+    -V, --Version              - Print version and exit.
+    -h, --help                 - Display usage information.
+_HELP_
+    exit 0;
+}

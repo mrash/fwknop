@@ -1,0 +1,15 @@
+TYPEMAP
+pcap_t * 	T_IV
+pcap_dumper_t * T_IV
+pcap_handler	T_IV
+bpf_u_int32 *   T_IV
+struct pcap_pkthdr *	T_IV
+struct bpf_program *	T_IV
+u_char *		T_IV
+struct pcap_stat *      T_IV
+const u_char *		T_IV
+struct pcap_pkthdr * 	T_IV
+bpf_u_int32	T_IV
+u_int 		T_IV
+struct sockaddr_in * T_IV
+u_int32_t 		T_IV

@@ -1,0 +1,1192 @@
+fwknop-1.9.12 (09/07/2009):
+    - Fully integrated the FKO module that is part of the libfko library for
+      all SPA routines - encryption/decryption, digest calculation, replay
+      attack detection, etc.  The default is to always use the FKO module if
+      it has been installed, but the original perl code remains intact as well
+      just in case FKO does not exist on the local system.  The libfko code
+      can be viewed with Trac here:
+
+            http://trac.cipherdyne.org/trac/fwknop-c
+
+    - Added the ability to recover from interface error conditions, such as
+      when fwknopd sniffs a ppp interface (say, associated with a VPN) that
+      goes away and then is recreated.  In previous versions of fwknop, this
+      would result in the fwknopd daemon no longer able to receive SPA
+      packets.  This new functionality is controlled by five new configuration
+      variables in the fwknop.conf file: ENABLE_INTF_CHECKS,
+      INTF_CHECKS_INTERVAL, ENABLE_INTF_EXISTS_CHECK,
+      ENABLE_INTF_RUNNING_CHECK, and ENABLE_INTF_BYTES_CHECK.  By default, all
+      of these checks are enabled and are run every 20 seconds by the knoptm
+      daemon.  If any check fails, then knoptm stops the fwknopd daemon once
+      the error condition is corrected (such as when the interface comes back)
+      so that knopwatchd will then restart it.  The fwknopd daemon cannot
+      receive packet data until the error condition is cleared (most likely
+      except perhaps for the "RUNNING" check, but restarting the fwknopd
+      daemon is better than not being able to access a service).
+    - Updated the fwknop client to include the SPA destination before DNS
+      resolution when sending an SPA packet over an HTTP request.  This allows
+      more flexible Apache configurations with virtual web hosts to function
+      properly with HTTP requests that contain SPA packet data.  Also updated
+      the fwknop client to include a leading "/" in SPA packets over HTTP, and
+      updated the fwknopd server to strip this out before attempting SPA
+      packet decryption.
+    - Updated the fwknop client to resolve external IP addresses (with the -R
+      argument) via the following link by default:
+
+          http://www.whatismyip.com/automation/n09230945.asp
+
+    - (Jonathan Bennett): Submitted patch to the fwknop client to add HTTP
+      proxy support when sending SPA packets over HTTP.  The result is a new
+      --HTTP-proxy option that expects the proxy host to be given as
+      "http://HOST", and it also supports the "http://HOST:PORT" notation as
+      well.
+    - Added the ability in fwknopd to receive SPA packets directly from either
+      a TCP or UDP socket instead of using libpcap.  This bypasses libpcap
+      altogether.  The fwknop_serv process listens on the socket and when it
+      receives an SPA packet it sends it to fwknopd via a UNIX domain socket
+      for decryption, validation, and firewall rule access to services
+      requested in the SPA packet.  While TCP sockets are supported, it is
+      better to use UDP instead since fwknop_serv never sends any data back to
+      the client.  Hence, when UDP is used there is no way to scan for the
+      service (nmap will report that it is 'open|filtered').  To enable this
+      method for acquiring SPA packet data, set AUTH_MODE to 'SOCKET' in the
+      /etc/fwknop/fwknop.conf file, and set either ENABLE_TCP_SERVER or
+      ENABLE_UDP_SERVER as well.
+    - (Martin Tan): Submitted a patch to allow rules added by fwknopd to not be
+      expired if there are any established connections involving a source IP
+      and a list of ports.  Once the established connections are removed, then
+      any rules added by fwknopd are then allowed to also be removed.  This
+      feature is controlled by three new configuration variables in the
+      fwknop.conf file: ENABLE_CONNTRACK_PERSIST, CONNTRACK_ESTAB_PORTS, and
+      IPT_CONNTRACK_FILE.
+    - (Test suite): Accounted for a difference in the SPA implementation of the
+      libfko C library and its corresponding FKO perl module when it comes to
+      appending garbage data to SPA packets encrypted with Rijndael.  The
+      Crypt::Rijndael module allows garbage data to be appended (the decrypted
+      data is properly returned though) whereas libfko does not (this is
+      better).
+    - (Test suite): Added fwknop_test.pl command line arguments to the test.log
+      file so that it is easy to see how the test suite is invoked.
+
+fwknop-1.9.11 (05/11/2009):
+    - (Julien Picalaus) Contributed patches to implement a proper interface to
+      use ipfw 'sets' on systems running ipfw firewalls.  This involved
+      changes to fwknopd, knoptm, and the fwknop.conf file like so:
+      Added a test to see if the local ipfw firewall policy is using dynamic
+      rules. Added ipfw_move_rule() so that rules can be moved from one set to
+      another. Added ipfw_disable() set subroutine and it is called at init for
+      IPFW_SET_NUM (except when ipfw isn't using dynamic rules).  Made sure
+      that rule finding includes disabled rules (ipfw list -S and changes to
+      regexp) and returning the set in addition to the rule number.  When
+      granting access, if a corresponding disabled rule already exists, enable
+      it instead of adding a new one (except when ipfw isn't using dynamic
+      rules). When adding rules, only use keep-state if there are already
+      dynamic rules.  Added IPFW_SET_NUM so that the set number for new ipfw
+      can be specified, and add IPFW_DYNAMIC_INTERVAL so that the interval
+      over which rules that have no associated dynamic rules are removed (the
+      default is 60 seconds).
+    - (Franck Joncourt) Bug fix to add -O command line arg to knopwatchd to
+      specify an override config file if one is given on the fwknopd command
+      line.
+    - Added --icmp-type and --icmp-code command line arguments for the fwknop
+      client in order to manually set the ICMP type/code values when using
+      "--Spoof-proto icmp" or "--Server-proto icmp".  Also restructured how
+      SPA packets are sent over the various protocols.  Here is an example of
+      sending an SPA packet over an ICMP packet with type "123" and code
+      "123" (not normal ICMP type/code values) with the pcap trace shown:
+
+      # fwknop -A tcp/22 -s --Server-proto icmp --icmp-type 123 --icmp-code
+      123 -D 127.0.0.1
+
+      # tcpdump -i lo -l -nn icmp or udp -s 0 -X
+      tcpdump: verbose output suppressed, use -v or -vv for full protocol
+      decode listening on lo, link-type EN10MB (Ethernet), capture size 65535
+      bytes
+
+      07:24:32.527221 IP 127.0.0.1 > 127.0.0.1: ICMP type-#123, length 169
+        0x0000:  4510 00bd 0000 4000 4001 3c2e 7f00 0001  E.....@.@.<.....
+        0x0010:  7f00 0001 7b7b e66f 0000 0000 2b63 6a6f  ....{{.o....+cjo
+        0x0020:  5049 6138 7345 7a35 4864 7955 5176 624b  PIa8sEz5HdyUQvbK
+        0x0030:  6637 6f51 5934 4e36 4c6c 3454 6931 4453  f7oQY4N6Ll4Ti1DS
+        0x0040:  2b4f 3756 6636 4775 6234 756f 6738 4432  +O7Vf6Gub4uog8D2
+        0x0050:  3155 4377 5259 6b52 2b30 354b 7043 6b33  1UCwRYkR+05KpCk3
+        0x0060:  4f66 452f 4f32 6737 6d37 5064 4846 4842  OfE/O2g7m7PdHFHB
+        0x0070:  7a32 4745 3766 7a31 4a4c 7652 764e 626c  z2GE7fz1JLvRvNbl
+        0x0080:  7a4a 7250 5355 3665 5051 5375 7a54 394b  zJrPSU6ePQSuzT9K
+        0x0090:  702b 4446 4a79 7a6b 3847 6c51 6a70 3564  p+DFJyzk8GlQjp5d
+        0x00a0:  3957 3673 4f52 7945 3771 6f57 6b56 634e  9W6sORyE7qoWkVcN
+        0x00b0:  4e41 6167 6231 5a79 6a63 4834 49         NAagb1ZyjcH4I
+
+    - Updated all unpack() calls for packet decoding in fwknopd to use the
+      "mN" format instead of "m[N]" format for proper operation on older
+      versions of perl.  On FreeBSD 7.0 with perl-5.6.2 the following error
+      is generated without this fix: "Invalid type in unpack: '['".
+    - Bug fix to not require that gpg is installed in order to install fwknop.
+    - (Franck Joncourt) Documentation updates for the knopwatchd.8 man page
+      to include the latest command line options.
+    - (Martin Ferrari) Bug fix to provide a work around for fwknopd segfaults
+      on Debian systems when the version of Net::Pcap that is installed comes
+      from doing 'apt-get install fwknop-server'.  See the thread at
+      http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=508432 for more info.
+    - Bug fix to ensure that UDP rules in ipfw firewalls are timed out
+      correctly by knoptm (the problem was that 'keep-state' was required).
+    - (Test suite): Added tests for multi-port access requests.  So, to gain
+      access to tcp/22,udp/1194 with one SPA packet, the test suite verifies
+      that the code support this.
+    - (Test suite): Started on updates to handle the upcoming libfko C
+      implementation of Single Packet Authorization (the command line args
+      are somewhat different).
+    - (Test suite): Added support for multiple include/exclude test
+      identifying strings (separated by commas).  For example, to run the
+      'Setup', 'Basic', and 'Replay' tests, just do:
+
+      ./fwknop_test.pl --include Setup,Basic,Replay
+
+    - (Test suite): Added the ability to test sending SPA packets over ICMP.
+    - (Test suite): Added import_perl_modules() routine from fwknop itself to
+      enforce the usage of the same perl modules as those that fwknop
+      references.  The main application of this is for the Net::RawIP module
+      which is used by the test suite for the SPA over ICMP tests.
+
+fwknop-1.9.10 (01/12/2009):
+    - Added the ability to send SPA packet over HTTP to a webserver.  This
+      requires that the same running fwknopd is also running a webserver, or
+      that ENABLE_TCP_SERVER is enabled so that fwknopd spawns fwknop_serv to
+      listen on a real TCP socket.  Sending SPA packets over HTTP is
+      accomplished with a new command line argument --HTTP on the fwknop
+      client command line, and via a new configuration variable
+      ENABLE_SPA_OVER_HTTP in the fwknop.conf file.
+    - Added ENABLE_EXTERNAL_CMDS for fwknopd to control whether the
+      EXTERNAL_CMD_OPEN and EXTERNAL_CMD_CLOSE directives are used (instead of
+      just checking whether they are set to __NONE__);
+    - Bug fix to make sure to properly construct hash reference for the
+      "include" command list for the check_commands() function when checking
+      for the mail command.
+    - Bug fix for fwknopd to not require Net::Pcap::lookupnet() to succeed on
+      interfaces with no IPv4 address assigned.  This function sets the IP and
+      netmask of the local interface, but if fwknopd sniffs an interface
+      without any IP assigned, then such information will not necessarily
+      exist.
+    - Bug fix to add --Override config support to knopwatchd (Franck
+      Joncourt).
+    - Bug fix to add client timeout (--fw-timeout) support to both forward
+      NAT and local NAT modes (Damien Stuart).  This required increasing the
+      number of expected fields in decrypted SPA packets in fwknopd.
+    - Bug fix in the install.pl script for Cygwin systems (or others where a
+      client-mode only install is done) to take into account the newer perl
+      library path handling code.
+    - Updated minimum ICMP header length to 8 bytes in fwknopd to accept
+      spoofed SPA packets over ICMP echo requests.
+    - Added config dumping support to knopwatchd with -D (Franck Joncourt).
+    - Minor code cleanups and updates to knopwatched (such as the usage of
+      isspace() to allow tab chars between variable names and values in the
+      fwknop.conf file (Franck Joncourt).
+    - Added ENABLE_COOKED_INTF to force fwknopd to always treat the sniffing
+      interface as the "cooked" interface type found on Linux.
+    - Updated knopwatchd to allow more than one overwrite file (Franck
+      Joncourt).
+    - Added --Single-mod-install to the perl installer so that individual
+      module dependencies can be installed piecemeal.
+    - (Test suite): Bug fix for the proper usage of the 'ps' command on
+      FreeBSD and Mac OS X systems.  The test suite now runs successfully on
+      these systems after this fix.
+    - (Test suite): Added the ability to test sending SPA packets over
+      established TCP connections with the fwknop_serv daemon.
+    - (Test suite): Added support for collecting *.warn and *.die output for
+      each test as it is executed and appending this data to each test output
+      file.
+
+fwknop-1.9.9 (11/13/2008):
+    - Added support to fwknop for the Linux 'any' interface which allows SPA
+      packets to be received on multiple interfaces on a Linux system.  This
+      is useful for running fwknop on a dual-homed Linux host, and then
+      accepting SPA packets on either the internal or external interface so
+      that SPA packets can influence the packet filter from either network.
+    - Added support for interfacing fwknop with third party software through
+      the addition of three new variables in the access.conf file (or set
+      globally in the fwknop.conf file): EXTERNAL_CMD_OPEN,
+      EXTERNAL_CMD_CLOSE, and EXTERNAL_CMD_ALARM.
+            The "open" and "close" commands might be manually supplied firewall
+      commands, and both support variable substitution of any of the variables
+      in the access.conf file with "$VAR".  Also, three special variables are
+      supported: $SRC, $PORT, and $PROTO, which are derived from actual values
+      from within valid SPA packets (as opposed to $SOURCE from access.conf
+      which may contain a list of networks instead of a single IP address).
+        Here are some examples:
+        - Execute a specific iptables command on behalf of the source IP
+          in a valid SPA packet to add a new ACCEPT rule, and execute another
+          command (to delete the same rule after a timeout):
+                EXTERNAL_CMD_OPEN       iptables -A INPUT -s $SRC -j ACCEPT
+                EXTERNAL_CMD_CLOSE      iptables -D INPUT -s $SRC -j ACCEPT
+        - Execute a custom binary with the SOURCE and OPEN_PORTS variables from
+          the access.conf file as input on the command line, and after a
+          timeout execute a different program but use the real SPA source IP:
+                EXTERNAL_CMD_OPEN       /path/someprog $SOURCE $OPEN_PORTS
+                EXTERNAL_CMD_OPEN       /path/otherprog $SRC
+    - Added IPT_CMD_ALARM to control the number of seconds that the
+      IPTables::ChainMgr module uses to wrap alarm() calls around iptables
+      commands (for IPTables::ChainMgr 0.8 and later, although this does not
+      interfere with earlier versions of the module).
+    - Added IPT_EXEC_STYLE to control the execution method used for iptables
+      commands in the IPTables::ChainMgr module.  The default is "waitpid",
+      but "system", and "popen" are also supported.
+    - Added IPT_EXEC_SLEEP to control the number of seconds that the
+      IPTables::ChainMgr module uses to delay between each iptables command.
+      The default is zero (no delay), but this can be increased to ensure that
+      iptables commands are issued at a slower pace.
+    - Added IPT_EXEC_TRIES to allow critical iptables commands to be tried
+      multiple times (with a default of 1) in case there are any errors from
+      iptables execution.
+    - Added --Override-config to fwknopd (suggested by Franck Joncourt) to
+      allow config variables in the normal /etc/fwknop/fwknop.conf file to be
+      superseded by values from other specified files.  The --Override-config
+      command line argument accepts a comma-separated list of multiple files
+      from which to import configuration variables from.
+    - Added code to prefer the usage of the /usr/sbin/sendmail binary to send
+      email alerts before falling back to the mail binary (suggested by
+      Alexander Perlis).
+    - Added --Dump-config to fwknopd (suggested by Franck Joncourt).
+    - Added execution of --Dump-config to the test suite to collect the
+      installed version of the fwknop.conf and access.conf files (personal
+      information is anonymized).
+    - Updated fwknopd to use the POSIX sys_wait_h API for SIGCHLD handling in
+      order to be more consistent with an example from the perlipc man page.
+    - Updated fwknopd to pass in a reference to the SIGCHLD signal handler to
+      the IPTables::ChainMgr module so that all command executions via fork()
+      and exec() are associated with the same signal handler.
+    - Updated to IPTables::ChainMgr version 0.8.
+    - Updated to IPTables::Parse version 0.7.
+    - (Test suite): Added time stamps to MSG and TEST lines for each test
+      (useful to see the relative time if an alarm expires).
+    - (Test suite): Added tests for fwknopd --Override-config, --Dump-config,
+      and writing SPA packets to disk with the --Save-packet functionality (in
+      the fwknop client).
+    - (Test suite): Added tests for IPT_EXEC_SLEEP delays for executing
+      iptables commands.
+    - (Test suite): Added tests for Linux 'any' interface capture of SPA
+      packets on all interfaces.
+    - (Test suite): Added the ability to collect output from knoptm to see
+      when requests are received from fwknopd and when rules are added and
+      removed.
+    - Added version information for fwknopd to syslog startup message.
+    - Bug fix for the fwknop client in symmetric key mode where the terminal
+      would not be taken out of 'noecho' mode if a password less than 8
+      characters long is provided.  Previous to this fix, it was necessary to
+      blindly type 'reset'.  (Reported by Alexander Perlis.)
+
+fwknop-1.9.8 (09/30/2008):
+    - Added GPG_NO_REQUIRE_PREFIX to access.conf to control whether the GnuPG
+      'hQ' prefix is added before base64 decoding and decrypting.  Normally
+      this is not needed, but if there appear to be communications issues
+      between the fwknop client and the fwknopd server then this option can be
+      useful to ensure that encrypted SPA data is sent through the GnuPG
+      decryption routine.  The 'hQ' prefix is a heuristic derived from the
+      file 'magic' database for describing data encrypted with GnuPG, and the
+      fwknop client normally strips this data from outgoing SPA packets
+      (unless the --Include-gpg-prefix option is used).
+    - Added 'GPG_PATH <path>' to fwknopd (via access.conf) so that different
+      paths to the gpg binary can be specified on a per-SOURCE basis.  This
+      allows one SOURCE stanza to apply one gpg binary to decrypt incoming SPA
+      packets (say /usr/bin/gpg), and another SOURCE stanza to apply to another
+      gpg binary (say /usr/bin/gpg2).  In this way, fwknop/fwknopd now
+      supports gpg2 in addition to gpg.
+    - Bugfix to make sure that neither fwknop nor fwknopd reference any
+      options file in GnuPG mode, and this is now the default (which overrides
+      the now unnecessary --gpg-no-options arg).  There is a new option
+      --gpg-use-options and GPG_USE_OPTIONS to restore the usage of an options
+      file by GnuPG by fwknop and fwknopd (not normally needed).
+    - Added '--gpg-prefix <bytes>' to the fwknop client so that the
+      predictable prefix for GnuPG encrypted data can be changed.  Normally
+      this prefix is 'hQ' (base64 encoded), or the raw bytes 0x8502.
+    - Added the ability to control the path used for the gpg binary on the
+      client side with a new argument '--gpg-path <path>', and on the server
+      side with gpgCmd in the fwknop.conf file.  The GnuPG::Interface module
+      normally just takes the first instance of gpg that is the current path,
+      but this new feature allows the path to the binary to be explicitly set.
+    - Added --Save-packet-append to allow SPA packets to be appended to the
+      --Save-packet-file in --Save-packet mode.  This allows multiple SPA
+      packets to more easily be stored for closer examination (i.e. to make
+      sure randomness is high or to test encryption properties over large
+      sets of SPA packets).
+    - Updated fwknopd to enforce the DIGEST_TYPE variable more strictly by not
+      accepting SPA packets that do not include digest of the specified type.
+      The DIGEST_TYPE default is 'ALL', so normally fwknopd accepts any
+      supported digest.
+    - Bugfix to make sure to apply BLACKLIST checks to IP addresses specified
+      with -a (or derived via -R) in addition to the source IP in the IP
+      header (which can be modified via --Spoof-src).  (Franck Joncourt
+      submitted a patch for this.)
+    - Bugfix to ensure that the permissions for the
+      /var/run/fwknop/knopwatchd.pid file are set to 0600 (noticed by Franck
+      Joncourt).
+    - Bugfix to remove the Net::IPv4Addr dependency in the fwknop client and
+      knoptm daemon (Franck Joncourt).
+    - (Test suite) Added the base64_byte_frequency.pl script to the test/
+      directory.  This script parses files that contain base64 encoded data
+      (one record per line), and produces data files that can be graphed with
+      Gnuplot in order to visualize SPA packets.  The new --Save-packet-append
+      argument makes it easy to generate large collections of SPA packets with
+      the fwknop client, and this data can then be parsed by
+      base64_byte_frequency.pl to look for features that are common across SPA
+      packets (this should be minimized because every fwknop SPA packet contains
+      16 bytes of random data).  Some analysis of randomness in SPA packets
+      generated by fwknop is presented in this blog post:
+
+      http://www.cipherdyne.org/blog/2008/09/visualizing-spa-packet-randomness.html
+
+    - (Test suite) Added tests for GPG_NO_REQUIRE_PREFIX functionality and for
+      the expected GnuPG prefix.
+    - (Test suite) Added tests for GnuPG version 2 (a check is made to see if
+      it is installed before these tests are run).
+
+fwknop-1.9.7 (08/24/2008):
+    - Mirek Trmac from Red Hat contributed several patches so that fwknop can
+      be bundled within the Fedora Linux distribution.  These patches
+      implemented the following changes:
+
+        Updates to fwknopd to remove the NetPacket module as a dependency
+      (this is a particularly important update since it assists with getting
+      fwknop bundled with Debian as well).  The patch manually decodes the
+      network and transport layer headers.
+        A patch to make the fwknop init script not start fwknopd by default
+      on Red Hat systems.  This patch also supports Fedora init script
+      conventions better (i.e. fwknop instead of the fwknopd name for the lock
+      file in /var/lock/subsys).
+        Updated the fwknop Makefile to respect the OPTS variable which is used
+      in the RPM spec file.
+        Bugfix in fwknop_serv to support the variable expansion code from
+      fwknopd.  This was important for the TCPSERV_PID_FILE file which is
+      defined as $FWKNOP_RUN_DIR/fwknop_serv.pid.
+        Updated fwknopd to use the Net::Pcap API valid in Net::Pcap-0.14 for
+      the datalink() function (used to detect the datalink layer type).
+
+    - Updated fwknop, fwknopd, and knoptm to import perl modules out of the
+      /usr/lib/fwknop/ directory if it exists.  This allows the perl module
+      path to be manipulated via the --Lib-dir command line argument and
+      'require' statements instead of the old 'use module' strategy.
+    - Added module version output for each non-core perl module used by fwknop
+      and fwknopd in --debug mode.  This is mostly useful for the test suite
+      to see which versions of the modules are being used.
+    - Added the ability to ignore any local GnuPG 'options' file with a new
+      command line argument --gpg-no-options (for the fwknop client) and a new
+      access.conf config variable GPG_NO_OPTIONS (for the fwknopd daemon).
+      This fixes a problem reported by Mike Holzmann where the 'encrypt-to'
+      option in the default options file was causing SPA packets to exceed
+      1500 bytes when encrypted with a 2048-bit GnuPG key.  Also added the
+      MAX_SNIFF_BYTES to the fwknop.conf file and --Max-packet-size to the
+      fwknop command line to alter the default of 1500 bytes if needed (but
+      this shouldn't really be necessary).
+    - Bugfix for 'Premature end of base64 data' and 'Premature padding of
+      base64 data' warning messages from MIME::Base64 errors.  Now fwknopd
+      applies more rigorous checks for base64 encoded characters, and either
+      of these two messages above will result in the packet data being
+      discarded before it is sent through any decryption function.  Mike
+      Holzmann reported this issue.
+    - (Test suite) Added --test-system-fwknop to allow any installed version
+      of fwknop to be installed instead of the scripts bundled within the
+      local source distribution.
+
+fwknop-1.9.6 (07/18/2008):
+    - SPA packets are base64-encoded by the fwknop client, and this encoding
+      pads data with '=' chars until the total length of the encoded data is a
+      multiple of four.  This characteristic can be used within a Snort rule
+      to assist in the detection of SPA communications.  The 1.9.6 release of
+      fwknop strips out these padding characters before the client sends an
+      SPA packet, and the fwknopd server adds them back in (to form a multiple
+      of four) before base64 decoding the packet data.  This reduces the level
+      of identifying information in SPA packets and therefore makes it more
+      difficult to detect the usage of SPA for service access.  For reference,
+      a Snort rule that would detect SPA packets via the trailing '=' chars
+      (previous to this release) would be:
+
+        alert udp any any -> any 62201 (msg:"fwknop SPA traffic"; \
+        dsize:>150; pcre:"/==$/"; sid:20080001; rev:1;)
+
+    - According to the 'file' command (via it's 'magic') database, files that
+      are encrypted with GnuPG begin with 0x8502, and this is true for SPA
+      packets generated by fwknop (previous to this release).  In
+      fwknop-1.9.6, the "hQ" prefix is removed by the fwknop client and added
+      back in by the fwknopd server if it doesn't exist.  This measure is
+      another effort to make SPA packets more difficult to detect on the wire,
+      such as with the following Snort rule:
+
+        alert udp any any -> any 62201 (msg:"fwknop GnuPG encrypted SPA
+        traffic"; content:"hQ"; depth:2; dsize:>1000; sid:20080003; rev:1;)
+
+    - Updated the fwknop client to randomize the UDP source port for default
+      SPA packet generation.  There is also a new command line argument
+      --Source-port <port> to allow the user to manually set the source port
+      on the fwknop client command line.  A lot more attention is given now to
+      source ports after the Dan Kaminsky DNS caching exploit, and it turns
+      out that even on Linux that the kernel did not randomize UDP source
+      ports until the 2.6.24 kernel.  Of course, any userspace process is free
+      to request a random port itself, but if a userspace application did not
+      build this in then it would be up to the kernel to assign a source port.
+      In the case of Linux, here are two links that show the change to the
+      kernel code as well as the ChangeLog entry for UDP source port
+      randomization:
+
+        http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;\
+        a=commit;h=32c1da70810017a98aa6c431a5494a302b6b9a30
+        http://www.kernel.org/pub/linux/kernel/v2.6/ChangeLog-2.6.24
+
+    - (Test suite): Added the ability to explicitly run major classes of tests
+      with two new command line arguments to the fwknop_test.pl script:
+      --test-include <test>, and --test-exclude <test>.  In each case the
+      <test> string is used as a sub-string match against the main identifying
+      string for the name of the test.  For example, to run all tests for
+      replay attacks, use "--test-include Replay", and for all port
+      randomization tests use "--test-include random".  To see all possible
+      classes of tests, run the test suite without any command line arguments
+      and examine the test.log file.
+    - (Test suite): Added tests for the legacy shared and encrypted port
+      knocking modes.
+    - (Legacy port knocking mode): Updated to not require iptables log
+      messages to be written to the fwknopfifo named pipe and just parse the
+      /var/log/messages file directly by default.  This can be configured via
+      two new variables ENABLE_SYSLOG_FILE and IPT_SYSLOG_FILE (similarly to
+      the psad project).  In support of this feature, install.pl now does not
+      create the fwknopfifo or reconfigure the syslog daemon unless the
+      --install-syslog-fifo argument is used, and the knopmd does not have to
+      run.
+    - (Legacy port knocking mode): Added the ability to re-open the
+      /var/log/messages file if it is rotated by an external program such as
+      logrotate.
+    - (Test suite): Bugfix to use --fw-type argument on fwknopd command line.
+      This fixes various tests on Mac OS X and FreeBSD systems running ipfw.
+    - Minor bugfix to require a space character after variable names when
+      parsing the fwknop.conf file via knopmd and knopwatchd (implemented in
+      fwknop_funcs.c)
+
+fwknop-1.9.5 (06/08/2008):
+    - Updated to Class::MethodMaker 2.11 from CPAN.  This helps with systems
+      running perl-5.10.0 and greater (such as Fedora 9).
+    - Added the LOCALE variable to fwknop.conf and made the "C" locale set by
+      default so that gpg process output would always be correctly
+      interpreted.
+    - Updated to Net::RawIP 0.23 from 0.21_03 and removed List::MoreUtils
+      since Net::RawIP no longer requires it
+    - Updated to Crypt::Rijndael 1.06 from 1.04.
+    - Updated to Crypt::CBC 2.29 from 2.19.
+    - Updated to GnuPG::Interface 0.36 from 0.34.
+    - Removed legacy knopmd.conf file since knopmd uses the fwknop.conf file
+      instead.  Also, note that knopmd only runs in the legacy port knocking
+      mode to collect iptables log information from syslog.  The default
+      authentication/authorization method used by fwknop is SPA which exhibits
+      far better security properties than port knocking (see
+      http://www.cipherdyne.org/fwknop/docs/SPA.html).
+
+fwknop-1.9.4 (06/01/2008):
+    - Added two new port randomization options.  The first instructs the
+      fwknop client to select a random port between 10,000 and 65,535 as the
+      destination port over which to send an SPA packet.  This feature is
+      enabled with a new command line argument "--rand-port" like so:
+
+      $ fwknop -A tcp/22 --rand-port -R -D 11.1.1.1
+
+      On the fwknopd server side, the default PCAP_FILTER setting of "udp port
+      62201" should be changed to "udp dst portrange 10000-65535" so that
+      fwknopd can sniff SPA packets that are sent over randomized destination
+      ports.  Randomizing the destination port makes it more difficult to
+      write IDS signatures to detect fwknop SPA communications.
+
+      The second port randomization technique uses a new SPA message type to
+      tell the fwknopd daemon to create a NAT rule for access to a local
+      socket via the iptables INPUT chain.  This allows an SSH client to meet
+      the local SSHD daemon running on the fwknopd server system by SSH'ing to
+      the random port.  This functionality is implemented via two new command
+      line arguments on the fwknop client command line: "--NAT-rand-port" to
+      instruct fwknop to select a random port over which the follow-on
+      connection will be made), and "--NAT-local" (to instruct the fwknopd
+      server that new firewall rules should NAT an incoming connection to the
+      randomly selected port).  Here is an example:
+
+      $ fwknop -A tcp/22 --NAT-rand-port --NAT-local -R -D 11.1.1.1
+
+      Now the fwknop client will select a random port to NAT the incoming
+      connection.  So say it selects port 31001 (as indicated by the output of
+      fwknop on the command line as displayed below) - then you would SSH to
+      this port to access the real SSH daemon on the system where fwknopd is
+      running:
+
+      [+] Sending 206 byte message to 127.0.0.1 over udp/46245...
+      Requesting NAT access to tcp/22 on 127.0.0.1 via port 31001
+
+      $ ssh -p 31001 <user>@11.1.1.1
+
+      Note that in this case it is not necessary to use --NAT-access since the
+      fwknopd daemon knows that access is requested to a local service (so an
+      internal IP address does not have to be specified).
+
+    - Added the ability to specify the port that SPA packets are sent over
+      with the fwknop client by using the syntax "<host|IP>:<port>".  So, for
+      example, to have the client send an SPA packet to 11.1.1.1 over UDP port
+      12345 (instead of the default of 62201), one could use the following
+      command:
+
+      $ fwknop -A tcp/22 -R -D 11.1.1.1:12345
+
+    - Bugfix to add a check for "keep-state" in ipfw policies in addition to
+      the existing "check-state" check (noticed by Sebastien Jeanquier).
+    - Updated the install.pl script to try to determine the OS type as early
+      as possible during the install process.
+    - Added the MIN_SPA_PKT_LEN variable with 150 (bytes) as the default.
+      This allows fwknopd to ignore packets that are not at least this many
+      bytes (including packet headers) before any decryption attempt is made.
+    - Added --time-offset-plus and --time-offset-minus args to the fwknop
+      client command line.  This allows the time stamp within an SPA packet to
+      be influenced without setting the system clock (which normal users
+      cannot usually do).  This is useful for when the client and server
+      systems have clocks that are out of sync.
+    - Bugfix on Ubuntu systems to make sure that the fwknop init script is
+      installed with a priority of 99 instead of 20 - this puts fwknop as late
+      as possible within the boot sequence so that the system is ready to run
+      fwknop.
+    - Bugfix to not open ports that are not specifically requested in an SPA
+      packet even if those ports are listed in the OPEN_PORTS variable in the
+      access.conf file.
+    - Updated to version 5.47 of the Digest::SHA module.
+    - Updated to version 0.7 of the IPTables::ChainMgr module (includes
+      perldoc documentation).
+    - Updated to version 0.6 of the IPTables::Parse module (includes perldoc
+      documentation).
+    - Added NAT, port randomization, and and time offset option discussions to
+      fwknop(8) man page.
+
+fwknop-1.9.3 (04/05/2008):
+    - Added MASQUERADE and SNAT support to complement inbound DNAT connections
+      for SPA packets that request --Forward-access to internal systems.  This
+      functionality is only enabled when both ENABLE_IPT_FORWARDING and
+      ENABLE_IPT_SNAT are set, and is configured by two new variables
+      IPT_MASQUERADE_ACCESS and IPT_SNAT_ACCESS which define the iptables
+      interface to creating SNAT rules.  The SNAT supplements of DNAT rules
+      are not usually necessary because internal systems usually have a route
+      back out to the Internet, but this feature accommodates those systems
+      that do not have such a route.  By default, the MASQUERADE target is
+      used if ENABLE_IPT_SNAT is enabled because this means that the external
+      IP does not have to be manually defined.  However, the external IP can
+      be defined by the SNAT_TRANSLATE_IP variable.
+    - Added hex_dump() feature for fwknop client so that raw encrypted SPA
+      packet data can be displayed in --verbose mode.
+    - When ENABLE_IPT_FORWARDING is set, added a check for the value of the
+      /proc/sys/net/ipv4/ip_forward file to ensure that the local system
+      allows packets to be forwarded.  Unless ENABLE_PROC_IP_FORWARD is
+      disabled, then fwknopd will automatically set the ip_forward file to "1"
+      if it is set to "0" (again, only if ENABLE_IPT_FORWARDING is enabled).
+    - Minor bugfix to remove sys_log() call in legacy port knocking mode.
+    - Minor bugfix to expand both the Id and Revision tags via the
+      svn:keywords directive.
+
+fwknop-1.9.2 (03/12/2008):
+    - Crypt::CBC adds the string "Salted__" to the beginning of the encrypted
+      text (at least for how fwknop interfaces with Crypt::CBC), so the fwknop
+      client was updated to delete the encoded version of this string
+      "U2FsdGVkX1" before sending a Rijndael-encrypted SPA packet on the wire.
+      The fwknopd server will add this string back in before decrypting.  This
+      makes it harder to write an IDS signature that looks for fwknop traffic;
+      e.g. look for the default prefix string "U2FsdGVkX1" over UDP port 62201,
+      which would work for fwknop clients < 1.9.2 (as long as the port number
+      is not changed with --Server-port).
+    - Added more granular source IP and allowed IP tests so that access to
+      particular internal IP addresses can be excluded in --Forward-access
+      mode.  A new keyword "INTERNAL_NET_ACCESS" is now parsed from the
+      access.conf file in order to implemented these restrictions.
+    - (SPAPICT Group) Added BLACKLIST functionality to allow source IP
+      addresses to easily be excluded from the authentication process.
+    - (Grant Ferley) Submitted patch to handle SIGCHLD in IPTables::ChainMgr.
+    - (Grant Ferley) Submitted patch to handle Linux "cooked" interfaces for
+      packet capture (e.g. PPPoE interfaces).
+    - (SPAPICT Group) Applied modified version of the client-defined access
+      timeout patches submitted by the PICT SPA Group.  There are two new
+      message types to facilitate client timeouts; one for normal access mode,
+      and the other for the FORWARD access mode.  In the access.conf file,
+      there is also a new variable "PERMIT_CLIENT_TIMEOUT" to allow each
+      SOURCE stanza to allow client-defined timeouts or not.
+    - (SPAPICT Group) Submitted patches to include support for the SHA1 digest
+      algorithm for SPA packet replay attack detection.  I modified these
+      patches for maximum configurability (see the --digest-alg argument on
+      the fwknop command line), and the ability to use the SHA256 algorithm as
+      well.  The default path to the /var/log/fwknop/md5sums file has been
+      changed to /var/log/fwknop/digest.cache, and the default digest
+      algorithm is now SHA256 (but this is tunable via the DIGEST_TYPE
+      variable in the fwknop.conf file).
+    - Added the Digest::SHA perl module in support of the SHA1 and SHA256
+      digest algorithms for replay attack detection and SPA message integrity.
+    - Added full packet hex dumps (including packet headers) to fwknopd in
+      --debug --verbose mode.  This is to help diagnose packet sniffing issues
+      over the loopback interface on Mac OS X (first reported by Sebastien
+      Jeanquier).
+    - (Test suite) Bugfix to ensure that the FWKNOP_DIR variable is set to the
+      local output/ directory in several of the test config files in the
+      test/conf/ directory.
+    - (Test suite) Added several tests for configurable digest algorithms in
+      support for the SHA256, SHA1, and MD5 digest changes made by the SPAPICT
+      Group.
+    - Updated the fwknop client to always call encode_base64() with the string
+      to encode along with a second null-string argument to force all encoded
+      data to not include line breaks.
+    - Bugfix in install.pl to not test for the iptable command on non-Linux
+      systems, and to not test for the ipfw command on systems that are Linux.
+    - (Test suite) Updated to include the /proc/config.gz file so that the
+      kernel config can be reviewed (not all Netfilter hooks are necessarily
+      compiled in).
+
+fwknop-1.9.1 (01/26/2008):
+    - Added ENABLE_OUTPUT_ACCESS keyword to access.conf file parsing. This
+      provides a similar configuration gate for the iptables OUTPUT chain to
+      the ENABLE_FORWARD_ACCESS keyword, and adds the abiliy to control which
+      access.conf SOURCE blocks interface to the OUTPUT chain.
+    - Better installation support for various Linux distributions including
+      Fedora 8 and Ubuntu.  The current runlevel is now acquired via the
+      "runlevel" command instead of attempting to read /etc/inittab (which
+      does not even exist on Ubuntu 7.10), and there are new command line
+      arguments --init-dir, --init-name, and --runlevel to allow the init
+      directory, init script name, and the runlevel to be manually specified
+      on the install.pl command line.
+    - Added command line argument display to fwknop client --verbose mode.
+    - Updated the test suite to include OUTPUT chain tests, reference
+      access.conf files in the test/conf/ directory, and perform SPA packet
+      format validation tests by parsing fwknopd output.
+    - Updated fwknopd to use always use the -c argument on the knoptm command
+      line (this makes sure that the test suite usage of fwknopd causes knoptm
+      to reference the correct configuration).
+    - Updated IPTables::ChainMgr to print iptables command output to stdout or
+      stderr if running in debug or verbose mode.
+    - Added --Exclude-mod-regex to install.pl so that the installation of
+      particular perl modules that match the supplied regex can be skipped.
+    - Added SIGALRM wrapper to the test suite since some libpcap and system
+      combinations break the ability of fwknopd to sniff packets.
+    - Added srand() call to the fwknop client (this is useful for older
+      versions of perl which do not automatically call srand() at the first
+      rand() call if srand() was not already called).
+    - Added a test to the test suite for sniffing packets over the loopback
+      interface.
+    - Added SPA packet aging test to the test suite to ensure that packet
+      expirations work properly (this feature protects against MITM attacks
+      where a valid SPA packet is stopped by an inline attacker and
+      retransmitted at a later time to acquire access).
+    - Added a file (test.log) to collect test suite console output.
+    - Added --Prepare-results argument to test suite to anonymize test results
+      and create a tarball that can be emailed to a third party to assist in
+    - Added full firewall policy dumps and the collection of system specifics
+      to the test suite. This makes it easy to send the output directory and
+      the test.log file to developers to assist in debugging (no information
+      is sent anywhere except as part of a manual process of course, and
+      addresses can be anonymized with --Prepare-results - loopback addresses
+      are not modified).
+    - Added --fw-del-ip <IP> argument to fwknopd so that a specific IP address
+      can be removed from the local firewall policy (this is used by the test
+      suite to ensure that if a test for removed firewall rules fails then
+      subsequent tests will not also fail because they are no longer tracked
+      by a running knoptm instance).
+    - Added a test to the test suite to collect fwknopd syslog output.  This
+      is useful to see if a mechanism such as SELinux is deployed in a manner
+      that prevents normal fwknop communications.
+    - Bugfix to track MD5 digest for SPA command mode packets.
+    - Bugfix in fwknopd to not open ports listed in OPEN_PORTS in the absence
+      of the PERMIT_CLIENT_PORTS directive when an SPA packet contains a
+      request for access to a port not listed in OPEN_PORTS.
+      debugging fwknop if there are any issues.
+    - Added --verbose flag to fwknopd commands issued by the test suite so
+      that more data is collected for debugging analysis.
+    - Added GnuPG tests to the test suite with dedicated keys (for use only
+      with the test suite) in the test/conf/client-gpg and
+      test/conf/server-gpg directories.
+    - Added digest file validation to test suite to make sure that fwknopd
+      correctly tracks SPA packet MD5 digests.
+    - Updated to search state tracking rule in any iptables chain (many
+      iptables policies have user-defined chains that can be a bit complicated
+      to parse).
+    - Updated install.pl to be more strict in stopping any running fwknopd
+      processes.
+
+fwknop-1.9.0 (12/15/2007):
+    - Added a test suite so that fwknop and fwknopd functionality can be
+      automatically tested over the loopback interface (see the fwknop_test.pl
+      script in the test/ directory).
+    - Major update to allow SPA packets to create DNAT connections to internal
+      systems through the FORWARD chain (iptables only).  This is useful to
+      connect through to internal systems (that may be running on non-routable
+      IP addresses) via a border firewall or router that is running fwknopd to
+      create inbound DNAT rules.
+    - Added support for the iptables OUTPUT chain via two new variable in the
+      fwknop.conf file: ENABLE_IPT_OUTPUT and IPT_OUTPUT_ACCESS. This is
+      useful for iptables firewalls that are not running the conntrack modules
+      and that have a restrictive OUTPUT chain (so SYN/ACK responses are not
+      allowed out without an explicit ACCEPT rule).
+    - Added the ability to force the fwknopd and knoptm daemons to restart
+      themselves (via knopwatchd) after a configurable timeout (see the
+      ENABLE_VOLUNTARY_EXITS and EXIT_INTERVAL variables in the
+      /etc/fwknop/fwknop.conf file). This feature is for those that want
+      fwknopd to go through its initialization routine periodically just in
+      case there is a logic (or other) bug that might result in fwknopd not
+      accepting a valid SPA packet. NOTE: This feature is disabled by default,
+      and is not normally needed since fwknopd is quite stable in most
+      deployments.
+    - Major update to perform all firewall rule expirations with knoptm, which
+      is now started in all data collection modes.  Older versions of fwknopd
+      maintained its own firewall rule expiration code for the FILE_PCAP,
+      ULOG_PCAP, and KNOCK modes, so two mechanisms were being maintained for
+      the same purpose.  The 1.9.0 release fixes this oversight.
+    - Minor bugfix to have knopwatchd generate syslog messages whenever an
+      fwknop daemon needs to be restarted.
+    - Added --interface command line argument to install.pl to allow the
+      sniffing interface to be specified from the command line. Also updated
+      install.pl to enforce a 10-try maximum for attempting to accept a valid
+      interface name from the command line (LANG env issues can exist
+      sometimes).
+    - Updated SPA packet format for server_auth and forward_info elements;
+      the internal MD5 sum is now always the last field in an SPA packet. This
+      makes extensions of the SPA protocol much easier, and the generation of
+      SPA packets more elegant. Also, SPA packet validation has been improved
+      to ensure that fields that are supposed to be digits really only contain
+      integer data.
+    - Added ENABLE_FORWARD_ACCESS variable to the access.conf file, and added
+      ENABLE_IPT_FORWARDING to the fwknop.conf file. These variables provide
+      the per-SOURCE ability to create DNAT connnections through the FORWARD
+      chain..
+    - Replaced the IPT_AUTO_CHAIN1 variable with IPT_INPUT_ACCESS and
+      IPT_FORWARD_ACCESS in fwknop.conf.
+    - Added --Forward-access argument to the fwknop client.
+    - Added client version number to syslog messages generated by fwknopd when
+      a valid SPA packet is received.
+    - Added human readable timestamp to MD5 cache. Here is an example of the
+      update format:
+        127.0.0.1 X6WF2C29kEgAv4aDJ8TDeQ [Wed Nov 28 09:24:46 2007]
+    - Added --Count argument to fwknopd so that it calls exit() when the
+      specified number of packets is monitored.
+    - Added --no-logs argument to knoptm in support of the test suite so that
+      no emails are generated.
+    - Bugfix in fwknopd to account for non-Ethernet link layer header over
+      *BSD loopback interfaces.
+    - Added --Save-dst argument to the fwknop client to add a priority file to
+      store client command line arguments (~/.fwknop.save). This file is only
+      overwritten when --Save-dst is used.
+    - Added fwknopd --fw-del-chains to allow the fwknopd iptables chains to
+      easily be deleted.
+    - Minor fwknopd bugfix to set process exit status to 0 when --Kill is
+      used.
+
+fwknop-1.8.3 (11/17/2007):
+    - Updated external IP resolution to point to http://www.whatismyip.org,
+      and added http://www.cipherdyne.org/cgi/clientip.cgi as a backup site
+      for fwknop IP resolution.
+    - Added storage of source IP along with SPA MD5 sum. This allows the user
+      to infer which networks are more hostile if an SPA packet is replayed.
+    - Added SPA packet hex dumps in 'fwknopd --debug' mode so that the
+      integration of third-party encryption algorithms is easier to
+      troubleshoot. Sean Greven contributed a patch for this.
+    - Reinstated the legacy port knocking mode. It appears that all encrypted
+      output from the updated Crypt::Rijndael module is at least 32 bytes
+      long, so port knocking sequences are now 32 bytes long as well (they
+      were previously 16 bytes long in old versions of fwknop).
+    - Bugfix to ensure the key length is at least 8 chars in --get-key mode.
+    - Minor update to remove init message on OS X install.
+    - Updated install.pl to set the LANG environmental variable to
+      "en_US.UTF-8". This should fix the problem where the output of ifconfig
+      was not interpreted correctly if the locale LANG setting is not English.
+    - Implemented verbose email alerting by setting the ALERTING_METHODS
+      variable to "verbose". This instructs fwknopd to generate a new email
+      message for each message that it normally logs vis syslog (this feature
+      is not the default, and must be manually enabled).
+
+fwknop-1.8.2 (09/15/2007):
+    - Added fwknopd server support for Mac OS X. The Darwin uname return
+      string is detected and this enables Darwin-specific installation code in
+      install.pl.
+    - Updated to not print sensitive key/password information in --debug mode
+      with fwknopd.
+    - Bugfix for install.pl on Windows 2003 Server running under Cygwin where
+      'uname -o' output is reported 'Gygwin' for some reason.
+    - Added --Cygwin-install command line argument to install.pl to force
+      client-only fwknop install on Cygwin systems.
+    - Added --OS-type command line argument to install.pl to allow the user to
+      force the installation type.
+    - Updated to version 1.04 of Crypt::Rijndael. This fixes incompatibilities
+      between SPA packets between 64-bit and 32-bit platorms.
+    - Bugfix to enforce a maximum of 20 tries to read a password from stdin.
+    - Applied TCP options parsing fix from psad for invalid zero or one length
+      fields that break TLV encoding (this is for fwknopd, and only applies to
+      the legacy port knocking mode).
+    - Added code to fwknopd to check to see if there are any state tracking
+      rules in place within the local iptables or ipfw policy.
+    - Made syslog identity, facility, and priority configurable (applied code
+      from the psad project).
+    - Implemented --fw-list for ipfw firewalls.
+    - Bugfix for knoptm removing ipfw rules too quickly after not timing out
+      previously instantiated rules properly.
+    - Implemented smarter cache removal strategy in knoptm so that rules that
+      are manually removed from the running iptables or ipfw policy are also
+      removed from the cache.
+    - Added /var/log/fwknop/errs/fwknopd.{warn,die} tracking to the fwknopd
+      daemon for the PCAP modes of collecting packet data. Added
+      knoptm{warn,die} files for knoptm as well.
+    - Bugfix to import the GnuPG::Interface module in --get-key mode.
+    - Bugfix to send source IP as a part of the command message in command
+      mode so that REQUIRE_SOURCE_ADDRESS controls can be applied.
+    - Added --Test-mode to fwknop client so that SPA packets can be built but
+      never sent over the network.
+
+fwknop-1.8.1 (06/06/2007):
+    - Bugfix to ensure that the "keep-state" directive is added to firewall
+      rules on systems running the ipfw firewall.
+    - Added the --Save-packet and --Save-packet-file command line arguments
+      to the fwknop client. These options instruct fwknop to save a copy of
+      an encrypted SPA packet before it is sent across the network.
+    - Bugfix to find minimal unused ipfw rule number for ipfw firewalls. This
+      fixes an issue where ipfw rules added by fwknopd could be inserted at
+      the same position as rules from an existing ipfw policy. While ipfw
+      allows duplicate rules, whenever such a rule is deleted by its rule
+      number all matching rules are deleted.
+
+fwknop-1.8 (06/03/2007):
+    - Added support for ipfw firewalls (found on *BSD systems).  The
+      IPTables::Parse and IPTables::ChainMgr modules are not installed on
+      such systems.
+    - Added gpg-agent support for both the fwknop client and fwknopd SPA
+      server.
+    - Updated client-only installation mode to restrict perl module
+      installation to those module that are actually required by the fwknop
+      client. This results in clean installs of the fwknop client on Windows
+      systems running Cygwin.
+    - Added --Defaults to install.pl so that fwknop can be installed without
+      prompting the user to answer any questions. This is to make it easier
+      to install fwknop on the Source Mage Linux distro.
+    - Consolidated daemon config files into the fwknop.conf file (except for
+      the access.conf file). This simplifies the configuration of fwknop.
+    - Added recursive variable resolution in the parsing routines for the
+      fwknop.conf file. This allows variable values to contain embedded
+      variables.
+    - Added init script for FreeBSD systems.
+    - Added --BSD-install command line argument to install.pl. This is not
+      normally necessary since the installer should detect installations on
+      *BSD systems, but this option can force this behavior.
+    - Updated knopmd and knopwatchd to use safe_malloc() instead of malloc().
+    - Bugfix to never time out rules from SOURCE blocks with FW_ACCESS_TIMEOUT
+      set to zero
+
+fwknop-1.0.1 (01/09/2007):
+    - Updated fwknopd to allow the GPG_REMOTE_ID variable to have the value
+      "ANY" to allow a SOURCE block to match on arbitrary remote gpg signing
+      keys (Leland Weathers).
+    - Bugfix to allow OPEN_PORTS to be omitted in access.conf in favor of
+      having only PERMIT_CLIENT_PORTS enabled (reported by Raul Siles).
+    - Added the cd_rpmbuilder script to make it easy to build RPM's out of
+      CipherDyne projects by automatically downloading the project .tar.gz and
+      .spec files from http://www.cipherdyne.org/.
+
+fwknop-1.0 (11/05/2006):
+    - Bugfix for OpenSSH-4.3p2 patch to make sure to include the spa.h header
+      file.
+    - Bugfix for access hashes accumluating when multiple ports are requested
+      to be opened by a client.
+    - Better validation of IPT_AUTO_CHAIN variable so that the from_chain
+      cannot be identical to the to_chain.
+    - Bugfix in RPM to install List::MoreUtils.
+    - Bugfix so that the MD5 sum for an SPA packet is not examined for each
+      SOURCE block.  This fixes a problem where an SPA packet could appear to
+      be replayed if multiple SOURCE blocks are defined in
+      /etc/fwknop/access.conf.
+    - Refactored main SPA access loop so that it is clearer how and when SPA
+      clients are granted access.
+    - Better handling of GnuPG key identifier strings (they can now contain
+      spaces, and syslog messages wrap the identifiers with double quotes).
+    - Added source IP address to command string in the SPA packet so that
+      the REQUIRE_SOURCE_ADDRESS criteria can be applied by the fwknopd
+      server.
+    - Added --Show-last-cmd and --Show-host-cmd args to fwknop so that the
+      last fwknop command and the last fwknop host commands can be viewed.
+    - Added the svn revision number to --Version and --help output.
+
+fwknop-0.9.9 (10/15/2006):
+    - Added REQUIRE_SOURCE_ADDRESS (disabled by default) to force fwknop
+      clients to know their source IP address (i.e. -s cannot be used).  So,
+      either fwknop clients have to use -R to resolve their externally
+      routable address, or they must just know what it is.
+    - Updated to Net-RawIP-0.21_03 for compatibility with gcc-4.x compilers.
+    - Added List-MoreUtils-0.22 which is a dependency of the new Net::RawIP
+      module.
+    - Bugfix to restore "start" functionality in Gentoo init script.
+    - Bugfix to use the IPT_OUTPUT_FILE and IPT_ERROR_FILE configuration
+      variables in fwknopd.
+    - Added KNOPTM_IPT_OUTPUT_FILE and KNOPTM_IPT_ERROR_FILE variables
+      specifically for the knoptm daemon so that it can use IPTables::ChainMgr
+      completely independently of fwknopd (this removes a potential race
+      condition between fwknopd and knoptm).
+
+fwknop-0.9.8 (09/17/2006):
+    - Added the ability to ignore old SPA packets through use of the
+      client-side time stamp.  This means that an attacker cannot intercept an
+      SPA packet, prevent it from being forwarded to its intended destination,
+      and then put the packet on the wire at some time outside of the allowed
+      time window.  There are two new configuration options in fwknop.conf
+      "ENABLE_SPA_PACKET_AGING" and "MAX_SPA_PACKET_AGE" that control the
+      length of the acceptable time window (2 minutes by default).  This
+      requires some level of synchronization between the fwknop client and the
+      fwknopd server, but this is not onerous through the use of NTP.  This
+      feature is enabled by default, and the idea for it was contributed by
+      Sebastien J.
+    - Completely re-worked IPTables::ChainMgr to support the return of
+      iptables error messages that are collected via stderr.  This is critical
+      to fixing any bugs where fwknopd could die as a result of a poorly
+      crafted iptables command.
+      but no information would be returned to the user.
+    - Added the ability to specify the position for both the jump rule into
+      the fwknopd chains as well as the position for new rules within the
+      fwknopd chains via the -I argument to iptables.  This fixes a bug where
+      the user was given the impression that the IPTABLES_AUTO_RULENUM would
+      accomplish this (IPTABLES_AUTO_RULENUM has been removed).
+    - Updated fwknopd to require < 1500 byte payload length before attempting
+      to decrypt.  Also, GnuPG decrypts are not attempted unless the encrypted
+      payload is at least 400 bytes long (this is conservative since even
+      encrypting a single byte with a 1024-bit key will result in about 340
+      bytes of encrypted data).
+    - Added the --gpg-default-key option to have fwknop use the default GnuPG
+      key that is defined in the ~/.gnupg/options file.
+    - Added the --URL command line argument so that a URL other than the
+      default http://www.whatismyip.com/ can be provided by the user for
+      external IP resolution (suggested by Sebastien J.).
+    - Updated to be more rigorous with md5 sums; we now require that the
+      md5_base64() function actually returns a non-null result.
+    - Bugfix to make sure that only the users associated with the a specific
+      REQUIRE_USERNAME value (in a specific SOURCE block in access.conf) are
+      granted the appropriate access even if a valid encrypted packet is
+      constructed from a different user name (by an fwknop client).
+    - Populated the _debug option in the IPTables::ChainMgr module, and also
+      added a _verbose option so that the specific iptables commands can
+      actually be seen as IPTables::ChainMgr functions are called.
+    - Added code to install.pl to update command paths in fwknop.conf and
+      knopwatchd.conf if any of the paths are broken (i.e. the local system
+      does not conform to the default paths).  By default this only happens if
+      the user does not want old configs to be merged, but to override this
+      use the new --path-update command line argument to install.pl.
+    - Added the --Skip-mod-install command line argument to install.pl to
+      allow all perl module installs to be skipped.
+    - Added the --force-mod-regex command line argument to install.pl to allow
+      a regex match on perl module names to force matching modules to be
+      installed.
+    - Minor bugfix to generate better (i.e. closer to those that Firefox
+      generates) http requests to http://www.whatismyip.com/).
+    - Adapted Mate Wierdl's RPM patch from the psad project so that the fwknop
+      RPM builds on x86_64 systems.
+    - Removed iptables requirement in RPM spec file because fwknop may be
+      installed on a system just to run the fwknop client.
+    - Updated to email username mismatch errors.
+
+fwknop-0.9.7 (08/04/2006):
+    - Added fwknop_serv to function as minimal TCP server over which SPA
+      packets can be sent.  This allows SPA to be compatible with the Tor
+      network, which requires that a virtual circuit is established before
+      traffic can be sent.
+    - Updated to Crypt::CBC-2.18 after a vulnerability was discovered in
+      previous versions of Crypt::CBC that caused weak ciphertext to be
+      generated for algorithms that have blocksizes greater than 8 bytes (such
+      as Rijndael used by fwknop).  Manually specifying initialization vectors
+      is not necessary now.
+    - Updated SSH patch to support OpenSSH-4.3p2.
+    - Bugfix to make sure to create /var/* directories if they don't exist
+      (such as when /var is a tmpfs).
+    - Bugfix (Dwayne Rightler) to restore -w IP lookup functionality after
+      format change on data returned by whatismyip.com.
+    - Bugfix to wrap SPA Rijndael decryption with eval{} so that fwknopd does
+      not die if there are problems trying to decrypt data.  This is necessary
+      because of the security vulnerability fix in Crypt::CBC that creates
+      some incompatibilities in different versions of Crypt::CBC.
+    - Added "--L-host" command line argument so that the arguments used for
+      multiple hosts are preserved and can be recalled.
+    - Changed default user-agent setting for whatismyip.com lookups to
+      Firefox/1.0.5.4; there is no need to gratuitously advertise fwknop
+      traffic.
+    - Updated GunPG HOWTO to provide a step-by-step guide to getting fwknop
+      Single Packet Authorization working with GnuPG.
+    - Updated to derive perl module versions from the VERSION files within
+      each of the perl module source directories.
+
+fwknop-0.9.6 (01/13/2006):
+    - Added GPG based authentication capability for SPA packets.  This new
+      mode can be configured to require that a GPG message be signed with a
+      particular key or set of keys.
+    - In GPG mode, the fwknop client now prints GPG errors to stdout if not
+      running with --gpg-no-batch-mode.
+    - Added the ability to require that the client know the UNIX crypt()
+      password associated with a username on the server side.  This
+      functionality is enabled on the fwknop client with the "--Server-auth
+      crypt" command line argument, and the REQUIRE_AUTH_METHOD variable in
+      /etc/fwknop/access.conf on the fwknopd server.
+    - Added patch against OpenSSH-4.2p1 to integrate SPA mode.  This patch
+      adds a "-K <fwknop cmd line>" argument to the SSH client so that
+      fwknop can be executed directly before an SSH connection is made.
+    - Separated server and client portions of fwknop into "fwknopd" and
+      fwknop repectively.  This will allow better portability to be
+      developed since the client and server pieces can be developed more
+      independently.  NOTE: With so many changes, it is probably a good idea
+      to not preserve old fwknop configs via install.pl.
+    - Renamed all relevant fwknopd command and file paths to support new
+      fwknopd server component.
+    - Added --quiet mode (this is used by default in the OpenSSH patch).
+    - Removed legacy port knocking installation in install.pl (fwknopfifo,
+      and fwdata file) unless the data collection mode is set to syslog or
+      syslog-ng for legacy iptables log messages.
+    - Added inode checking for PCAP_PKT_FILE. This helps to ensure that log
+      rotation schemes don't interfere with reading packets out of the file
+      since this check is size independent.
+    - Bugfix for Makefile debug mode.
+    - Added compilation check for perl programs in install.pl before
+      installation into the filesystem.
+    - Bugfix for knopwatchd to make sure it can actually restart all running
+      daemons properly.
+    - Added --force-mod command line argument to install.pl to allow the user
+      to force all perl modules to be be installed regardless of whether a
+      module exists in the system perl lib tree.
+    - Added --no-save-args to fwknop so that existing .fwknop.run file can
+      be preserved (helps to testing new features of fwknop client).
+    - Removed useless --encrypt command line argument (only the old shared
+      port knock sequences are not encrypted).
+
+fwknop-0.9.5 (10/02/2005):
+    - Added the ability to resolve the external IP associated with the
+      local network via http://www.whatismyip.com.  This is a more secure
+      method of accomplishing what the -s option performs.  The new
+      command line option is --whatismyip (or just -w).
+    - Updated fwknop to communicate with knoptm via a UNIX domain socket
+      instead of the previous file-based communication.
+    - Updated to flush the fwknop iptables chains at start time.
+    - Bugfix for removing the wrong hash key in the knoptm IP cache.
+
+fwknop-0.9.4 (09/17/2005):
+    - Bugfix for knoptm timing out new entries based on old time values
+      (this caused new rules to timed out too quickly).
+    - Added support for multiple users in REQUIRE_USERNAME keyword in
+      access.conf.
+    - Added the ability to display raw encrypted packet data in client
+      mode with --verbose.
+    - Created fwknop RPM for RPM-based Linux distributions.
+    - Bugfix for inappropriate redirects in command mode where the command
+      already contained a redirect.
+
+fwknop-0.9.3 (08/27/2005):
+    - Added an on-disk cache of md5 sums so that the md5 sum check can
+      survive restarts of fwknop.
+    - Updated install.pl to be more friendly to Mac OS X (Blair Zajac).
+    - Updated to allow access.conf variables to have values instead of just
+      being defined.
+    - Started on additional server authentication mode code (re-worked MD5
+      sum calculation to allow packet format to be extended by taking into
+      account the fwknop version number).
+
+fwknop-0.9.2 (08/06/2005):
+    - Added FILE_PCAP data collection method when running in server mode.
+      This is a more general way of getting packets than the ULOG_PCAP
+      mode since then a normal ethernet sniffer can be used to build the
+      file.
+    - Added the ability to re-open a pcap file if its size shrinks (i.e.
+      it gets rotated out or something).
+    - Bugfix for multiple rules with the same timestamp not being timed out
+      by knoptm.
+    - Integrated spoofing capability directly within fwknop (instead of
+      using the knopspoof command) through the use of "require Net::RawIP".
+    - Better multi-protocol support in server mode.  Tcp and icmp packets
+      are properly decoded now.
+
+fwknop-0.9.1 (07/29/2005):
+    - Added the ability to specify multiple ports/protocols to access on a
+      server with the --Access command line option.
+    - Added the ability to spoof SPA packets over icmp and tcp protocols.
+    - Added the ability to restrict access at the server to only those
+      ports defined in the OPEN_PORTS keyword.  This option is controled by
+      a new keyword "PERMIT_CLIENT_PORTS".
+    - Bugfix for MD5 sum not being properly calculated over decrypted data.
+      This allowed old packets that contained additional garbage data to
+      be replayed against an fwknop server.
+    - Updated to fall back to getpwuid() if getlogin() fails (Blair Zajac).
+    - Added --ipt-list to list all current rules in the FWKNOP iptables
+      chains.
+    - Added --ipt-flush to flush all current rules in the FWKNOP iptables
+      chains.
+    - Bugfix for the installer dying if ~/lib already exists (Blair Zajac).
+    - Updated to delay the loading of server perl modules (Net::Pcap, etc.)
+      only if we are running in server mode.
+    - Bugfix for module directory paths in install.pl.
+
+fwknop-0.9.0 (05/29/2005):
+    - Added new authorization mode that uses Net::Pcap to read packets
+      out of a file that is written to by the ulogd pcap writer (also
+      stubbed in code to sniff packets directly off the wire).  This
+      authorization mode only requires single packets, and has many
+      characteristics that are better than simple port knocking, including
+      being non-replayable, and much more data can be sent.  This mode
+      is now the default for both the server and the client.
+    - Made the execution of knopmd optional depending on whether AUTH_MODE
+      is a pcap mode (e.g. ULOG_PCAP or PCAP).
+    - Added --Spoof-src argument so that encrypted packets can be spoofed
+      via /usr/sbin/knopspoof.
+    - Added /usr/sbin/knoptm so that firewall rules can be timed-out when
+      the server is running in PCAP mode even if new packets don't appear
+      on the wire.
+    - Updated fwknop man page to talk about the new pcap-based
+      authorization mode.
+
+fwknop-0.5.0 (03/19/2005):
+    - Added ALERTING_METHOD to allow syslog and/or email reporting to be
+      disabled (there is a dedicated file /etc/fwknop/alert.conf that
+      governs this behavior, and both fwknop and knopwatchd reference this
+      file).
+    - Bugfix for distinguishing OPT field associated with --log-tcp-options
+      vs. --log-ip-options.
+    - Added install_perl_module() install.pl from psad to provide a
+      consistent installation interface.
+    - Applied patch to only install perl modules that are not already
+      installed (Blair Zajac).
+    - Added --last-cmd option to allow fwknop to be executed with command
+      line arguments from the previous execution (they are saved in
+      ~/.fwknop.run).
+    - Added --Home-dir option to allow the home directory to be manually
+      specified.
+    - Re-worked get_homedir() to be more friendly to systems that do not
+      necessarily have /etc/passwd (e.g. OS X).
+    - Added configuration preservation and querying for which syslog
+      daemon is running to install.pl.  These features were adapted from the
+      psad installer (http://www.cipherdyne.org/psad).
+    - Added IPTables::ChainMgr.  Fwknop uses this module to maintain
+      dedicated chains to which access rules are added.
+    - Added IPTables::Parse, which is used internally by IPTables::ChainMgr.
+    - Added __WARN__ and __DIE__ handlers so errors can easily be collected.
+
+fwknop-0.4.2 (09/27/2004):
+    - Added init script for Fedora systems.
+    - Added --Kill, --Restart, and --Status modes (this fixes the generic
+      init script which depends on these arguments).
+
+fwknop-0.4.1 (09/14/2004):
+    - Bugfix for legacy posf code in fwknop and variable in fwknop.conf.
+
+fwknop-0.4 (09/10/2004):
+    - Added ability to specify multiple IPs/networks in a single SOURCE
+      definition.
+    - Better examples section in the fwknop manpage.
+    - Bugfix to make sure EMAIL_ADDRESSES variable does not contain commas
+      (any commas are translated into spaces).
+    - Added LICENSE file.
+
+fwknop-0.3 (08/21/2004):
+    - Bugfix for tracking knock sequences by source IP address.
+    - Bugfix for knock sequence timeouts.
+    - Removed old passive OS fingerprinting code in favor of the p0f
+      strategy.
+    - Added support for taking encryption keys from a file specified on
+      the command line.
+    - Update to send "sequence decrypt failed" email message only if
+      decryption failed for all encrypt sequence SOURCE blocks.
+
+fwknop-0.2 (07/31/2004):
+    - Implemented remote username checking in encrypted sequences.
+    - Added support for icmp in knock sequences.
+    - Added protocol rotation option for encrypted sequences.
+    - Added code for multiple SOURCE access blocks with the same source
+      net/IP.
+    - Added KNOCK_LIMIT access control variable to limit the number of
+      times a particular knock sequence is honored.
+    - Added email alerts.
+
+fwknop-0.1 (07/08/2004):
+    - Initial release.

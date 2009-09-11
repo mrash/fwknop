@@ -1,0 +1,37 @@
+#!/bin/sh
+#
+# Startup script for fwknop
+#
+# chkconfig: 345 99 05
+# description: The Port Scan Attack Detector (fwknop)
+# processname: fwknop
+# pidfile: /var/run/fwknopd.pid
+# config: /etc/fwknop/fwknop.conf
+#
+# $Id: fwknop-init.generic 434 2006-01-04 02:45:17Z mbr $
+
+restart() {
+    $0 stop
+    $0 start
+}
+
+# See how we were called.
+case "$1" in
+start)
+    echo -n "Starting the fwknop daemons. "
+    /usr/sbin/fwknopd
+    echo
+    ;;
+stop)
+    /usr/sbin/fwknopd --Kill
+    ;;
+status)
+    /usr/sbin/fwknopd --Status
+    ;;
+restart)
+    restart
+    ;;
+*)
+    echo "Usage: fwknop {start|stop|status|restart}"
+    exit 1
+esac

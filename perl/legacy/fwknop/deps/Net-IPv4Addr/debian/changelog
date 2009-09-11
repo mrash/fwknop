@@ -1,0 +1,37 @@
+libnetwork-ipv4addr-perl (0.09-2) frozen unstable; urgency=high
+
+  * fixed bug #66073 and fixed bug #66080
+  * changed maintainer email address to @debian.org
+  * fixed section and standards version
+ 
+ -- Bernd Eckenfels <ecki@debian.org>  Sat, 22 Jul 2000 07:02:12 +0200
+
+
+libnetwork-ipv4addr-perl (0.09-1) frozen unstable; urgency=high
+
+  * in this version #63482 is not visible anymore (fixed i guess)
+  * fixed security bug (#63529)
+ 
+ -- Bernd Eckenfels <ecki@debian.org>  Thu,  4 May 2000 05:50:32 +0200
+
+libnetwork-ipv4addr-perl (0.07-2) unstable; urgency=low
+
+  * fixed bug with 5.005 pl3 (Bug#49609:) thanks to Bitkoenig!
+ 
+ -- Bernd Eckenfels <ecki@debian.org>  Tue,  9 Nov 1999 03:05:41 +0100
+
+libnetwork-ipv4addr-perl (0.07-1) unstable; urgency=low
+
+  * new version, including a full working debian/ subdir, thanks Francis
+
+ -- Bernd Eckenfels <ecki@debian.org>  Sat, 23 Oct 1999 20:19:13 +0200
+
+libnetwork-ipv4addr-perl (0.05-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Bernd Eckenfels <ecki@debian.org>  Sat, 25 Sep 1999 01:26:34 +0200
+
+Local variables:
+mode: debian-changelog
+End:

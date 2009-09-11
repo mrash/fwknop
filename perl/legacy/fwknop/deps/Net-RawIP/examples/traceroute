@@ -1,0 +1,122 @@
+#!/usr/bin/perl
+# Has been created by ShaD0w <mci@gw.al.lg.ua>
+# This is free software; you can redistribute it and/or modify it under the
+# same terms as Perl itself.
+# Look at user configurable section for set defaults
+
+use Net::RawIP qw(:pcap);
+use Socket;
+require 'getopts.pl';
+Getopts('m:q:w:t:h');
+
+$|=1;
+$dest = $opt_t;
+if ($opt_h || !$opt_t){
+  print "Usage $0 [ -h ] [-w timeout(sec)] [-q nqueries] [-m max_ttl] -t host\n ";
+  exit 
+           }
+
+$max_ttl = ($opt_m ? $opt_m : 30);   
+$n_pakets = ($opt_q ? $opt_q : 3);
+$timeout = ($opt_w ? $opt_w: 5); 
+
+($name,$ip) = (gethostbyname($dest))[0,4];
+die "$dest: host not found" if $?; 
+
+#############
+# User configurable section
+
+# If rdev and ifaddrlist functions are not implemented
+
+# $dev='eth0'; # set your device
+# $ip_addr = 'amk.lan'; # set your ip address
+
+# The rdev and ifaddrlist functions are implemented (auto)
+
+$dev = rdev($dest);
+$ip_addr = ${ifaddrlist()}{$dev};
+
+#############
+
+print "traceroute to $name (";
+printf ("%u.%u.%u.%u",unpack("C4",$ip));
+print ") , $max_ttl hops max, 40 byte packets\n";
+
+srand();
+
+$packet = new Net::RawIP({udp=>{}});
+$icmp = new Net::RawIP({icmp=>{}});			  
+$udp  = new Net::RawIP({udp=>{}});  
+
+$filt="ip proto \\icmp and dst host $ip_addr and (icmp[0]==3 or icmp[0]==11)";
+$pcap = $packet->pcapinit($dev,$filt,1500,60);
+$offset = linkoffset($pcap);
+
+
+
+$packet->set({ip=>  {saddr=>$ip_addr, daddr=>$dest, frag_off=>0,
+                                 tos=>0, id=>$$},
+			  udp=> {data=>'a'x12}});
+for($i=1;$i<=$max_ttl;$i++){
+ print "$i. ";
+ $printed = 0;
+ for($np=0;$np<$n_pakets;$np++){
+   $gen=10000+int(rand(1000));
+   $packet->set({ip=>{ttl=>$i},udp=>{source=>$gen, dest=>$gen+1}}); 
+   undef($ipacket);
+   $packet->send();
+   $stime = timem();
+   $drop = 1;
+   do { 
+   $end = 1 if($p_type==3);
+   $p_addr=$p_type=$p_code=0;
+   $ipacket = &next($pcap,$temp);
+   $etime=timem();
+   if($ipacket) {
+     $icmp->bset(substr($ipacket,$offset));
+     ($addr,$type,$code,$data) = $icmp->get({ip=>['saddr'],icmp=>['type','code','data']});    
+     $udp->bset($data);
+     ($sign) = $udp->get({udp=>['source']});
+     if($sign eq $gen){   
+        $drop = 0;
+       ($p_addr, $p_type, $p_code) = ($addr, $type, $code);
+     }
+   }
+   } while((($etime-$stime)<$timeout) && $drop);
+   unless(($etime-$stime)<$timeout){
+     print "* ";
+     next;
+   }
+   $dtime = ($etime-$stime);
+   unless($printed){
+     print ip2name($p_addr), " (",ip2dot($p_addr), ") ",destun($type,$p_code) ? rtt_ms($dtime):cod2name($dtime,$p_code);
+     $printed = 1;
+   } else {
+     print " ",destun($type,$p_code) ? rtt_ms($dtime):cod2name($dtime,$p_code);
+   }
+ }
+ print "\n";
+ exit if $end;
+}
+
+sub ip2dot {
+  sprintf("%u.%u.%u.%u",unpack "C4", pack "N1", shift);
+}
+
+sub ip2name {
+ my $addr = shift;
+ (gethostbyaddr(pack("N",$addr),AF_INET))[0] || ip2dot($addr);
+}
+
+sub rtt_ms {
+   sprintf("%.2f ms", 1000*shift);
+}
+
+sub cod2name {
+ my @str = qw( !N !H !P 0 !F !S); 
+ return rtt_ms($_[0])." ".$str[$_[1]]; 
+}
+
+sub destun { 
+$_[0]!=3 || ($_[0]==3 && $_[1] == 3)
+}

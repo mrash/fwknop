@@ -1,0 +1,14 @@
+# $Id: test_manifest 2305 2007-09-12 20:29:54Z comdog $
+00_load.t
+pod.t
+pod_coverage.t
+blocksize.t
+cbc.t
+cfb.t
+ctr.t
+ecb.t
+ofb.t
+pcbc.t
+#ref/cbc_d_m.t
+rt/27632.t
+#bad_iv.t

@@ -1,0 +1,504 @@
+#!/usr/bin/perl -w
+#
+############################################################################
+#
+# File: fwknop_serv
+#
+# Purpose: To provide a minimal TCP server over which the fwknop client can
+#          connect to send the SPA packet.  This breaks the traditional SPA
+#          model of only using a single packet to transmit desired access
+#          modifications, but if you want to send SPA packets over the Tor
+#          network then this server is necessary.  A circuit through the
+#          Tor network is built up over successive TCP connections, and
+#          there is no way to send packets through Tor without an
+#          established circuit.
+#
+# Author: Michael Rash (mbr@cipherdyne.org)
+#
+# Version: 1.9.12
+#
+# Copyright (C) 2004-2009 Michael Rash (mbr@cipherdyne.org)
+#
+# License (GNU Public License):
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program; if not, write to the Free Software
+#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+#    USA
+#
+############################################################################
+#
+# $Id: fwknop_serv 1533 2009-09-08 02:44:02Z mbr $
+#
+
+use IO::Socket;
+use POSIX;
+use Getopt::Long;
+use strict;
+
+my $config_file = '/etc/fwknop/fwknop.conf';
+my %config = ();
+my $debug  = 0;
+my $lib_dir = '';
+my $no_logs = 0;
+my $print_help = 0;
+my $no_locale  = 0;
+my $print_version  = 0;
+my $cmdline_locale = '';
+my $override_config_str = '';
+my $debug_to_file = '';
+my $debug_include_pidname = 0;
+my $IPPROTO_TCP  = 6;
+my $IPPROTO_UDP  = 17;
+my $SEND_MAIL = 1;
+my $NO_MAIL   = 0;
+
+my $version = '1.9.12';
+my $revision_svn = '$Revision: 1359 $';
+my $rev_num = '1';
+($rev_num) = $revision_svn =~ m|\$Rev.*:\s+(\S+)|;
+
+### run GetOpt() to get comand line args
+&handle_command_line();
+
+&usage(0) if $print_help;
+
+&setup();
+
+if ($config{'ENABLE_TCP_SERVER'} eq 'Y') {
+
+    &run_tcp_server();
+
+} elsif ($config{'ENABLE_UDP_SERVER'} eq 'Y') {
+
+    &run_udp_server();
+
+} else {
+    die "[*] Must have either ENABLE_TCP_SERVER or ENABLE_UDP_SERVER = Y";
+}
+
+exit 0;
+
+#================================= end main ===============================
+
+sub run_tcp_server() {
+
+    &logr('[+]', "listening on tcp port $config{'TCPSERV_PORT'}", $NO_MAIL);
+
+    my $server = IO::Socket::INET->new(
+        LocalPort => $config{'TCPSERV_PORT'},
+        Type   => SOCK_STREAM,
+        Reuse  => 1,
+        Listen => 5
+    ) or (&logr("[*] Could not listen on " .
+        "tcp/$config{'TCPSERV_PORT'}: $!", $SEND_MAIL) and die);
+
+    &drop_privs() unless $config{'AUTH_MODE'} eq 'SOCKET';
+
+    ### trivial loop; we just want the local TCP stack to accept connections;
+    ### fwknopd gets data from pcap anyway (unless AUTH_MODE == 'SOCKET', in
+    ### which case we send SPA packet data to fwknopd via a domain socket).
+    while (my $client = $server->accept()) {
+
+        $client->recv(my $candidate_spa_data, 1500, 0);
+
+        if ($config{'AUTH_MODE'} eq 'SOCKET') {
+            if (length($candidate_spa_data) >= $config{'MIN_SPA_PKT_LEN'}) {
+                &send_spa_data_to_fwknopd_via_socket($candidate_spa_data,
+                    &IO::Socket::INET::peerhost($client), $IPPROTO_TCP);
+            }
+        }
+    }
+
+    close $server;
+
+    return;
+}
+
+sub run_udp_server() {
+
+    &logr('[+]', "listening on udp port $config{'TCPSERV_PORT'}", $NO_MAIL);
+
+    my $server = IO::Socket::INET->new(
+        LocalPort => $config{'UDPSERV_PORT'},
+        Proto  => 'udp',
+        Reuse  => 1,
+    ) or (&logr("[*] Could not listen on " .
+        "udp/$config{'UDPSERV_PORT'}: $!", $SEND_MAIL) and die);
+
+    &drop_privs() unless $config{'AUTH_MODE'} eq 'SOCKET';
+
+    while ($server->recv(my $candidate_spa_data, 1500, 0)) {
+        if ($config{'AUTH_MODE'} eq 'SOCKET') {
+            if (length($candidate_spa_data) >= $config{'MIN_SPA_PKT_LEN'}) {
+                &send_spa_data_to_fwknopd_via_socket($candidate_spa_data,
+                    &IO::Socket::INET::peerhost($server), $IPPROTO_UDP);
+            }
+        }
+    }
+
+    close $server;
+
+    return;
+}
+
+sub send_spa_data_to_fwknopd_via_socket() {
+    my ($candidate_spa_data, $src_ip, $proto) = @_;
+
+    ### open domain socket with running fwknopd process
+    my $sock = IO::Socket::UNIX->new($config{'FWKNOP_SERV_SOCK'})
+        or die "[*] Could not acquire $config{'FWKNOP_SERV_SOCK'} ",
+        "socket: $!";
+    print $sock "$src_ip:$proto:$candidate_spa_data";
+    close $sock;
+
+    return;
+}
+
+sub drop_privs() {
+
+    &logr('[+]', "dropping privileges", $NO_MAIL);
+
+    my ($login, $pass, $uid, $gid) = getpwnam('nobody');
+    unless ($uid and $gid) {
+        warn "[-] Could not get UID and GID of user nobody";
+    }
+
+    ### drop privileges
+    if ($uid and $gid) {
+        POSIX::setuid($uid);
+        POSIX::setgid($gid);
+    }
+
+    return;
+}
+
+sub setup() {
+
+    ### import any override config files first
+    &import_override_configs() if $override_config_str;
+
+    ### import config
+    &import_config();
+
+    ### expand any embedded vars within config values
+    &expand_vars();
+
+    ### make sure all the vars we need are actually in the config file.
+    &required_vars();
+
+    ### import all necessary perl modules
+    &import_perl_modules();
+
+    ### validate config
+    &validate_config();
+
+    my $pid = fork();
+    exit 0 if $pid;
+    die "[*] $0: Couldn't fork: $!" unless defined $pid;
+    POSIX::setsid() or die "[*] $0: Can't start a new session: $!";
+
+    ### make sure there isn't another fwknop_serv process already running
+    &uniquepid();
+
+    ### write our pid out to disk
+    &writepid();
+
+    &handle_locale();
+
+    $debug = 1 if $debug_include_pidname and not $debug_to_file;
+
+    return;
+}
+
+sub handle_locale() {
+    if ($config{'LOCALE'} ne 'NONE') {
+        ### set LC_ALL env variable
+        $ENV{'LC_ALL'} = $config{'LOCALE'};
+    }
+    return;
+}
+
+sub validate_config() {
+    unless (&is_digit($config{'TCPSERV_PORT'})
+            and $config{'TCPSERV_PORT'} > 0
+            and $config{'TCPSERV_PORT'} < 65535) {
+        die "[*] TCPSERV_PORT must be between 1 and 65535";
+    }
+    unless (&is_digit($config{'UDPSERV_PORT'})
+            and $config{'UDPSERV_PORT'} > 0
+            and $config{'UDPSERV_PORT'} < 65535) {
+        die "[*] UDPSERV_PORT must be between 1 and 65535";
+    }
+    return;
+}
+
+sub is_digit() {
+    my $str = shift;
+    return 1 if $str =~ /^\d+$/;
+    return 0;
+}
+
+sub uniquepid() {
+    if (-e $config{'TCPSERV_PID_FILE'}) {
+        my $caller = $0;
+        open PIDFILE, "< $config{'TCPSERV_PID_FILE'}";
+        my $pid = <PIDFILE>;
+        close PIDFILE;
+        chomp $pid;
+        if (kill 0, $pid) {  # fwknop_serv is already running
+            die "[*] fwknop_serv (pid: $pid) is already running!  Exiting.\n";
+        }
+    }
+    return;
+}
+
+sub writepid() {
+    open P, "> $config{'TCPSERV_PID_FILE'}" or die "[*] Could not open ",
+        "$config{'TCPSERV_PID_FILE'}: $!";
+    print P $$, "\n";
+    close P;
+    chmod 0600, $config{'TCPSERV_PID_FILE'};
+    return;
+}
+
+sub import_override_configs() {
+    my @override_configs = split /,/, $override_config_str;
+    for my $file (@override_configs) {
+        die "[*] Override config file $file does not exist"
+            unless -e $file;
+        &import_config($file);
+    }
+    return;
+}
+
+sub import_config() {
+    open C, "< $config_file" or die "[*] Could not open ",
+        "config file $config_file: $!";
+    while (<C>) {
+        next if /^\s*#/;
+        if (/^\s*(\S+)\s+(\S+);/) {
+            $config{$1} = $2;
+        }
+    }
+    close C;
+    return;
+}
+
+### write a message to syslog (leaves off $prefix, which assigns a
+### "type" to the message, when writing syslog; might add it later
+sub logr() {
+    my ($prefix, $msg, $send_email) = @_;
+
+    return if $no_logs;
+
+    $msg = "fwknop_serv: $msg" if $debug_include_pidname;
+
+    if ($debug) {
+        print STDERR localtime() . " $prefix $msg\n";
+        return;
+    } elsif ($debug_to_file) {
+        open DBG, ">> $debug_to_file" or die $!;
+        print DBG localtime() . " $prefix $msg\n";
+        close DBG;
+        return;
+    }
+
+    ### see if we need to send an email
+    if ($send_email and $config{'ALERTING_METHODS'} !~ /noe?mail/i) {
+        &sendmail("$prefix $config{'HOSTNAME'} fwknop_serv: $msg");
+    }
+
+    return if $config{'ALERTING_METHODS'} =~ /no.?syslog/i;
+
+    ### this is an ugly hack to avoid the 'can't use string as subroutine'
+    ### error because of 'use strict'
+    if ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL7/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL7());
+    } elsif ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL6/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL6());
+    } elsif ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL5/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL5());
+    } elsif ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL4/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL4());
+    } elsif ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL3/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL3());
+    } elsif ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL2/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL2());
+    } elsif ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL1/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL1());
+    } elsif ($config{'FWSERV_SYSLOG_FACILITY'} =~ /LOG_LOCAL0/i) {
+        openlog($config{'FWSERV_SYSLOG_IDENTITY'}, &LOG_DAEMON(), &LOG_LOCAL0());
+    }
+
+    if ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_INFO/i) {
+        syslog(&LOG_INFO(), $msg);
+    } elsif ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_DEBUG/i) {
+        syslog(&LOG_DEBUG(), $msg);
+    } elsif ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_NOTICE/i) {
+        syslog(&LOG_NOTICE(), $msg);
+    } elsif ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_WARNING/i) {
+        syslog(&LOG_WARNING(), $msg);
+    } elsif ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_ERR/i) {
+        syslog(&LOG_ERR(), $msg);
+    } elsif ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_CRIT/i) {
+        syslog(&LOG_CRIT(), $msg);
+    } elsif ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_ALERT/i) {
+        syslog(&LOG_ALERT(), $msg);
+    } elsif ($config{'FWSERV_SYSLOG_PRIORITY'} =~ /LOG_EMERG/i) {
+        syslog(&LOG_EMERG(), $msg);
+    }
+
+    closelog();
+
+    return;
+}
+
+sub expand_vars() {
+
+    my $has_sub_var = 1;
+    my $resolve_ctr = 0;
+
+    while ($has_sub_var) {
+        $resolve_ctr++;
+        $has_sub_var = 0;
+        if ($resolve_ctr >= 20) {
+            die "[*] Exceeded maximum variable resolution counter.";
+        }
+        for my $var (keys %config) {
+            my $val = $config{$var};
+            if ($val =~ m|\$(\w+)|) {
+                my $sub_var = $1;
+                die "[*] sub-ver $sub_var not allowed within same ",
+                    "variable $var" if $sub_var eq $var;
+                if (defined $config{$sub_var}) {
+                    $val =~ s|\$$sub_var|$config{$sub_var}|;
+                    $config{$var} = $val;
+                } else {
+                    die "[*] sub-var \"$sub_var\" not defined in ",
+                        "config for var: $var."
+                }
+                $has_sub_var = 1;
+            }
+        }
+    }
+    return;
+}
+
+sub handle_command_line() {
+
+    ### make Getopts case sensitive
+    Getopt::Long::Configure('no_ignore_case');
+    die "[*] Use --help for usage information.\n"  unless (GetOptions(
+        'config=s'  => \$config_file,
+        'debug'     => \$debug,
+        'Debug-to-file=s' => \$debug_to_file,
+        'Debug-include-pidname' => \$debug_include_pidname,
+        'no-logs'   => \$no_logs,
+        'Override-config=s' => \$override_config_str,
+        'LC_ALL=s'  => \$cmdline_locale,
+        'locale=s'  => \$cmdline_locale,
+        'no-LC_ALL' => \$no_locale,
+        'no-locale' => \$no_locale,
+        'Version'   => \$print_version,
+        'help'      => \$print_help
+    ));
+    return;
+}
+
+sub required_vars() {
+    for my $var qw(ENABLE_TCP_SERVER TCPSERV_PORT TCPSERV_PID_FILE
+            ENABLE_UDP_SERVER UDPSERV_PORT LOCALE MIN_SPA_PKT_LEN
+            FWSERV_SYSLOG_IDENTITY FWSERV_SYSLOG_FACILITY
+            FWSERV_SYSLOG_PRIORITY) {
+        die "[*] Required variable $var is not defined in $config_file"
+            unless defined $config{$var};
+    }
+    return;
+}
+
+sub import_perl_modules() {
+
+    my $mod_paths_ar = &get_mod_paths();
+
+    if ($#$mod_paths_ar > -1) {  ### /usr/lib/fwknop/ exists
+        push @$mod_paths_ar, @INC;
+        splice @INC, 0, $#$mod_paths_ar+1, @$mod_paths_ar;
+    }
+
+    if ($debug or $debug_to_file) {
+        &logr('[+]', "import_perl_modules INC array:", $NO_MAIL);
+        for (@INC) {
+            &logr('[+]', $_, $NO_MAIL);
+        }
+    }
+
+    unless ($config{'ALERTING_METHODS'} =~ /no.?syslog/i) {
+        require Unix::Syslog;
+        Unix::Syslog->import(qw(:subs :macros));
+    }
+
+    return;
+}
+
+sub get_mod_paths() {
+
+    my @paths = ();
+
+    $config{'FWKNOP_MOD_DIR'} = $lib_dir if $lib_dir;
+
+    unless (-d $config{'FWKNOP_MOD_DIR'}) {
+        my $dir_tmp = $config{'FWKNOP_MOD_DIR'};
+        $dir_tmp =~ s|lib/|lib64/|;
+        if (-d $dir_tmp) {
+            $config{'FWKNOP_MOD_DIR'} = $dir_tmp;
+        } else {
+            return [];
+        }
+    }
+
+    opendir D, $config{'FWKNOP_MOD_DIR'}
+        or die "[*] Could not open $config{'FWKNOP_MOD_DIR'}: $!";
+    my @dirs = readdir D;
+    closedir D;
+
+    push @paths, $config{'FWKNOP_MOD_DIR'};
+
+    for my $dir (@dirs) {
+        ### get directories like "/usr/lib/fwknop/x86_64-linux"
+        next unless -d "$config{'FWKNOP_MOD_DIR'}/$dir";
+        push @paths, "$config{'FWKNOP_MOD_DIR'}/$dir"
+            if $dir =~ m|linux| or $dir =~ m|thread|
+                or (-d "$config{'FWKNOP_MOD_DIR'}/$dir/auto");
+    }
+    return \@paths;
+}
+
+sub usage() {
+    my $exit_status = shift;
+    print <<_HELP_;
+
+fwknop_serv - Lightweight TCP socket service for fwknop SPA communications
+
+[+] Version: $version (file revision: $rev_num)
+    By Michael Rash (mbr\@cipherdyne.org)
+    URL: http://www.cipherdyne.org/fwknop/
+
+Usage: fwknop_serv [options]
+
+Options:
+    -c, --config <file>         - Specify path to config file instead of
+                                  using the default path:
+                                  $config_file
+    -O, --Override-config <str> - Allow config variables from the normal
+                                  $config_file to be superseded with values
+                                  from the specified file(s).
+_HELP_
+
+    exit $exit_status;
+}

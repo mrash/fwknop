@@ -1,0 +1,43 @@
+#
+# typemap file for the Net::Pcap extension
+#
+# Copyright (c) 1999 Tim Potter. All rights reserved. This program is free 
+# software; you can redistribute it and/or modify it under the same terms 
+# as Perl itself.
+#
+# $Id: typemap 209 2005-03-21 02:37:37Z mbr $
+#
+
+#
+# Map C types to Perl types
+#
+
+pcap_t *		T_PTROBJ
+pcap_dumper_t *		T_PTROBJ
+struct bpf_program *	T_PTROBJ
+bpf_u_int32		T_IV
+u_char *		T_PV
+FILE *			T_IN
+
+#
+# Input conversions
+#
+
+INPUT
+
+T_PTROBJ
+        if (sv_derived_from($arg, \"${ntype}\")) {
+            IV tmp = SvIV((SV*)SvRV($arg));
+            $var = ($type) tmp;
+        }
+        else
+            croak(\"$var is not of type ${ntype}\")
+
+#
+# Output conversions
+#
+
+OUTPUT
+
+T_PTROBJ
+        sv_setref_pv($arg, \"${ntype}\", (void*)$var);

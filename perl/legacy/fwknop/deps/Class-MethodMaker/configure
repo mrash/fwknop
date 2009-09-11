@@ -1,0 +1,20 @@
+#!/usr/bin/perl -w
+
+# Pragma ------------------------------
+
+use 5.006;
+use strict;
+
+# Utility -----------------------------
+
+use Getopt::Long          2.19 qw( GetOptions );
+
+my $prefix;
+GetOptions('prefix=s' => \$prefix,)
+  or die "Options parsing failed";
+
+my @cmd = ($^X => 'Makefile.PL');
+push @cmd, "PREFIX=$prefix"
+  if defined $prefix;
+
+exec @cmd;
