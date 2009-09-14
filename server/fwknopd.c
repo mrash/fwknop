@@ -25,12 +25,15 @@
 */
 #include "fwknopd.h"
 #include "config_init.h"
+#include "process_packet.h"
+#include "pcap_capture.h"
+#include "log_msg.h"
 #include "utils.h"
 
-/* prototypes
+/* Prototypes
 */
-static void display_ctx(fko_ctx_t ctx);
-void errmsg(char *msg, int err);
+void daemonize_process(const char *pid_file);
+void write_pid(const char *pid_file, const pid_t pid);
 
 int
 main(int argc, char **argv)
@@ -40,92 +43,149 @@ main(int argc, char **argv)
     char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN];
 
-    fko_srv_options_t   options;
+    fko_srv_options_t   opts;
 
     /* Handle command line
     */
-    config_init(&options, argc, argv);
+    config_init(&opts, argc, argv);
+
+    /* Process any options that do their thing and exit. */
 
     /* Show config and exit dump config was wanted.
     */
-    if(options.dump_config == 1)
+    if(opts.dump_config == 1)
     {
-        dump_config(&options);
+        dump_config(&opts);
         exit(EXIT_SUCCESS);
     }
 
-    /* TODO:  add fwknop server code below :)
+    /* Kill the currently running fwknopd?
     */
-    printf("\nThis is fwknopd.  It would do something if it was coded"
-           " to do something:\n\n");
+    if(opts.kill == 1)
+    {
+        //sendsig_fwknopd(&opts, SIGTERM);
+        fprintf(stderr, "Kill option no implemented yet.\n");
+        exit(EXIT_SUCCESS);
+    }
 
-#if HAVE_LIBPCAP
-    printf("   - fwknopd would be using libpcap version %s\n\n", pcap_lib_version());
-#else
-    printf("   - fwknopd is not using libpcap\n\n");
+    /* Restart the currently running fwknopd?
+    */
+    if(opts.restart == 1)
+    {
+        //sendsig_fwknopd(&opts, SIGHUP);
+        fprintf(stderr, "Restart option no implemented yet.\n");
+        exit(EXIT_SUCCESS);
+    }
+
+    /* Status of the currently running fwknopd?
+    */
+    if(opts.status == 1)
+    {
+        //fwknopd_status(&opts, SIGHUP);
+        fprintf(stderr, "Status option no implemented yet.\n");
+        exit(EXIT_SUCCESS);
+    }
+
+    /* If foreground mode is not set, the fork off and become a daemon.
+    */
+    if(opts.foreground == 0)
+        daemonize_process(opts.config[CONF_FWKNOP_PID_FILE]);
+
+    log_msg(LOG_INFO, "Starting %s", MY_NAME);
+
+    if((strncasecmp(opts.config[CONF_AUTH_MODE], "pcap", 4)) != 0)
+    {
+        log_msg(LOG_ERR|LOG_STDERR,
+            "Capture/auth mode other than 'PCAP' is not supported."
+        );
+        exit(EXIT_FAILURE);
+    }
+
+#ifndef HAVE_LIBPCAP
+    log_msg(LOG_ERR|LOG_STDERR,
+        "libpcap is not avaiable, I'm hosed (for now).");
+    exit(EXIT_FAILURE);
 #endif
+ 
+    /* Intiate pcap capture mode...
+    */
+    pcap_capture(&opts);
 
     return(0);
 }
 
-/* Display an FKO error message.
+/* Become a daemon: fork(), start a new session, chdir "/",
+ * and close unneeded standard filehandles.
 */
-void
-errmsg(char *msg, int err) {
-    fprintf(stderr, "[*] %s: %s: Error %i - %s\n",
-        MY_NAME, msg, err, fko_errstr(err));
+void daemonize_process(const char *pid_file)
+{
+    pid_t child_pid, sid;
+
+    if ((child_pid = fork()) < 0) {
+        perror("Unable to fork: ");
+        exit(EXIT_FAILURE);
+    }
+
+    /* The parent will write the child PID to the pid_file
+     * then exit.
+    */
+    if (child_pid > 0) {
+        write_pid(pid_file, child_pid);
+        exit(EXIT_SUCCESS);
+    }
+
+    /* Child process from here on out */
+
+    /* Start a new session
+    */
+    if ((sid = setsid()) < 0) {
+        perror("Error from setsid(): ");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Chdir to  "/"
+    */
+    if ((chdir("/")) < 0) {
+        perror("Could not chdir() to /: ");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Reset the our umask
+    */
+    umask(0);
+
+    /* Close un-needed file handles
+    */
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+
+    return;
 }
 
-/* Show the fields of the FKO context.
-*/
-static void
-display_ctx(fko_ctx_t ctx)
+void write_pid(const char *pid_file, const pid_t pid)
 {
-    char       *rand_val        = NULL;
-    char       *username        = NULL;
-    char       *version         = NULL;
-    char       *spa_message     = NULL;
-    char       *nat_access      = NULL;
-    char       *server_auth     = NULL;
-    char       *enc_data        = NULL;
-    char       *spa_digest      = NULL;
-    char       *spa_data        = NULL;
+    FILE *pidfile_ptr;
 
-    time_t      timestamp       = 0;
-    short       msg_type        = -1;
-    short       digest_type     = -1;
-    int         client_timeout  = -1;
+    if ((pidfile_ptr = fopen(pid_file, "w")) == NULL) {
+        fprintf(stderr, "Could not open the pid file: %s: %s",
+            pid_file, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
-    /* Should be checking return values, but this is temp code. --DSS
+    /* Write the pid to the pid file
     */
-    fko_get_rand_value(ctx, &rand_val);
-    fko_get_username(ctx, &username);
-    fko_get_timestamp(ctx, &timestamp);
-    fko_get_version(ctx, &version);
-    fko_get_spa_message_type(ctx, &msg_type);
-    fko_get_spa_message(ctx, &spa_message);
-    fko_get_spa_nat_access(ctx, &nat_access);
-    fko_get_spa_server_auth(ctx, &server_auth);
-    fko_get_spa_client_timeout(ctx, &client_timeout);
-    fko_get_spa_digest_type(ctx, &digest_type);
-    fko_get_encoded_data(ctx, &enc_data);
-    fko_get_spa_digest(ctx, &spa_digest);
-    fko_get_spa_data(ctx, &spa_data);
+    if (fprintf(pidfile_ptr, "%d\n", pid) == 0) {
+        fprintf(stderr, "PID: %d could not be written to pid file: %s: %s",
+            pid, pid_file, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
-    printf("\nFKO Field Values:\n=================\n\n");
-    printf("   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
-    printf("       Username: %s\n", username == NULL ? "<NULL>" : username);
-    printf("      Timestamp: %u\n", (unsigned int) timestamp);
-    printf("    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
-    printf("   Message Type: %i\n", msg_type);
-    printf(" Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
-    printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
-    printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
-    printf(" Client Timeout: %u\n", client_timeout);
-    printf("    Digest Type: %u\n", digest_type);
-    printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
-    printf("\nSPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
-    printf("\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n", spa_data);
+    fclose(pidfile_ptr);
+
+    chmod(pid_file, 0600);
+
+    return;
 }
 
 /***EOF***/

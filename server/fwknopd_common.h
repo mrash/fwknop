@@ -53,6 +53,7 @@
 */
 #define MAX_PCAP_FILTER_LEN 1024
 #define MAX_IFNAME_LEN      128
+#define MAX_SPA_PACKET_LEN  1500 /* --DSS check this? */
 
 /* Data collection modes
 */
@@ -236,9 +237,16 @@ typedef struct fko_srv_options
     */
     unsigned char   dump_config;        /* Dump current configuration flag */
     unsigned char   foreground;         /* Run in foreground flag */
-    unsigned char   restart;            /* Restart fwknopd flag*/
-    unsigned char   verbose;            /* Verbose mode flag */
+    unsigned char   kill;               /* flag to initiate kill of fwknopd */
+    unsigned char   restart;            /* Restart fwknopd flag */
+    unsigned char   status;             /* Get fwknopd status flag */
     unsigned char   test;               /* Test mode flag */
+    unsigned char   verbose;            /* Verbose mode flag */
+
+    int             data_link_offset;
+
+    unsigned int    packet_data_len;    /* Is > 0 if we have data */
+    unsigned char   packet_data[MAX_SPA_PACKET_LEN+1];
 
     /* This array holds all of the config file entry values as strings
      * indexed by their tag name.

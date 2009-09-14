@@ -91,7 +91,7 @@ config_entry_index(fko_srv_options_t *opts, char *var)
 /* Parse the config file...
 */
 static void
-parse_config_file(fko_srv_options_t *options, char *config_file)
+parse_config_file(fko_srv_options_t *opts, char *config_file)
 {
     FILE           *cfile_ptr;
     unsigned int    numLines = 0;
@@ -166,15 +166,15 @@ parse_config_file(fko_srv_options_t *options, char *config_file)
                 {
                     if(sscanf((val+1), "%[A-Z_]%s", tmp1, tmp2))
                     {
-                        if((cndx = config_entry_index(options, tmp1)) >= 0)
+                        if((cndx = config_entry_index(opts, tmp1)) >= 0)
                         {
-                            strlcpy(val, options->config[cndx], MAX_LINE_LEN);
+                            strlcpy(val, opts->config[cndx], MAX_LINE_LEN);
                             strlcat(val, tmp2, MAX_LINE_LEN);
                         }
                     }
                 }
 
-                set_config_entry(options, i, val);
+                set_config_entry(opts, i, val);
                 good_ent++;
                 break;
             }
@@ -195,9 +195,28 @@ parse_config_file(fko_srv_options_t *options, char *config_file)
 /* Sanity and bounds checks for the various options.
 */
 static void
-validate_options(fko_srv_options_t *options)
+validate_options(fko_srv_options_t *opts)
 {
-    /*** TODO: put stuff here ***/
+    /* Some options just trigger some output of information, or trigger an
+     * external function, but do not actually start fwknopd.  If any of those
+     * are set, we can return here an skip the validation routines as all
+     * other options will be ignored anyway.
+     *
+     * These are also mutually exclusive (for now).
+    */
+    if((opts->dump_config + opts->kill + opts->restart + opts->status) == 1)
+        return;
+
+    if((opts->dump_config + opts->kill + opts->restart + opts->status) > 1)
+    {
+        fprintf(stderr,
+            "The -D, -K, -R, and -S options are mutually exclusive.  Pick only one.\n"
+        );
+        exit(EXIT_FAILURE);
+    }
+
+    /* TODO: Add more validation and sanity checks... --DSS */
+
 
     return;
 }
@@ -206,7 +225,7 @@ validate_options(fko_srv_options_t *options)
  * switches.
 */
 void
-config_init(fko_srv_options_t *options, int argc, char **argv)
+config_init(fko_srv_options_t *opts, int argc, char **argv)
 {
     int             cmd_arg, index;
     unsigned char   got_conf_file = 0, got_override_config = 0;
@@ -216,7 +235,7 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
 
     /* Zero out options and opts_track.
     */
-    memset(options, 0x00, sizeof(fko_srv_options_t));
+    memset(opts, 0x00, sizeof(fko_srv_options_t));
 
     /* First, scan the command-line args for an alternate configuration
      * file.  If we find it, use it, otherwise use the default.
@@ -229,7 +248,7 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
         */
         if(cmd_arg == 'c')
         {
-            set_config_entry(options, CONF_CONFIG_FILE, optarg);
+            set_config_entry(opts, CONF_CONFIG_FILE, optarg);
             got_conf_file++;
 
             /* If we already have the config_override option, we are done.
@@ -242,7 +261,7 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
         */
         if(cmd_arg == 'O')
         {
-            set_config_entry(options, CONF_OVERRIDE_CONFIG, optarg);
+            set_config_entry(opts, CONF_OVERRIDE_CONFIG, optarg);
             got_conf_file++;
 
             /* If we already have the conf_file option, we are done.
@@ -255,22 +274,22 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
     /* If no alternate configuration file was specified, we use the
      * default.
     */
-    if(options->config[CONF_CONFIG_FILE] == NULL)
-        set_config_entry(options, CONF_CONFIG_FILE, DEF_CONFIG_FILE);
+    if(opts->config[CONF_CONFIG_FILE] == NULL)
+        set_config_entry(opts, CONF_CONFIG_FILE, DEF_CONFIG_FILE);
 
     /* Parse configuration file to populate any params not already specified
      * via command-line options.
     */
-    parse_config_file(options, options->config[CONF_CONFIG_FILE]);
+    parse_config_file(opts, opts->config[CONF_CONFIG_FILE]);
 
     /* If there are override configuration entries, process them
      * here.
     */
-    if(options->config[CONF_OVERRIDE_CONFIG] != NULL)
+    if(opts->config[CONF_OVERRIDE_CONFIG] != NULL)
     {
         /* Make a copy of the overrid_config string so we can munge it.
         */
-        strlcpy(override_file, options->config[CONF_OVERRIDE_CONFIG], MAX_LINE_LEN);
+        strlcpy(override_file, opts->config[CONF_OVERRIDE_CONFIG], MAX_LINE_LEN);
 
         ndx  = override_file;
         cmrk = strchr(ndx, ',');
@@ -279,7 +298,7 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
         {
             /* Only one to process...
             */
-            parse_config_file(options, ndx);
+            parse_config_file(opts, ndx);
 
         } else {
             /* Walk the string pulling the next config override
@@ -287,14 +306,14 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
             */
             while(cmrk != NULL) {
                 *cmrk = '\0';
-                parse_config_file(options, ndx);
+                parse_config_file(opts, ndx);
                 ndx = cmrk + 1;
                 cmrk = strchr(ndx, ',');
             }
 
             /* Process the last entry
             */
-            parse_config_file(options, ndx);
+            parse_config_file(opts, ndx);
         }
     }
 
@@ -313,7 +332,10 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
                 /* This was handled earlier */
                 break;
             case 'D':
-                options->dump_config = 1;
+                opts->dump_config = 1;
+                break;
+            case 'f':
+                opts->foreground = 1;
                 break;
             case FIREWALL_LIST:
                 fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
@@ -328,44 +350,35 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
                 break;
             case FIREWALL_LOG:
-                set_config_entry(options, CONF_FIREWALL_LOG, optarg);
+                set_config_entry(opts, CONF_FIREWALL_LOG, optarg);
                 break;
             case GPG_HOME_DIR:
-                set_config_entry(options, CONF_GPG_HOME_DIR, optarg);
+                set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);
                 break;
             case GPG_KEY:
-                set_config_entry(options, CONF_GPG_KEY, optarg);
+                set_config_entry(opts, CONF_GPG_KEY, optarg);
                 break;
             case 'h':
                 usage();
                 exit(EXIT_SUCCESS);
                 break;
             case 'i':
-                set_config_entry(options, CONF_PCAP_INTF, optarg);
+                set_config_entry(opts, CONF_PCAP_INTF, optarg);
                 break;
             case 'K':
-                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
-                // TODO: Add this...
-                //kill_fwknopd();
-                exit(EXIT_SUCCESS);
+                opts->kill = 1;
                 break;
             case 'O':
                 /* This was handled earlier */
                 break;
             case 'R':
-                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
-                // TODO: Add this...
-                //restart_fwknopd();
-                exit(EXIT_SUCCESS);
+                opts->restart = 1;
                 break;
             case 'S':
-                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
-                // TODO: Add this...
-                //fwkop_status();
-                exit(EXIT_SUCCESS);
+                opts->status = 1;
                 break;
             case 'v':
-                options->verbose = 1;
+                opts->verbose = 1;
                 break;
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
@@ -377,9 +390,10 @@ config_init(fko_srv_options_t *options, int argc, char **argv)
         }
     }
 
-    /* Now that we have all of our options set, we can validate them.
+    /* Now that we have all of our options set, and we are actually going to
+     * start fwknopd, we can validate them.
     */
-    validate_options(options);
+    validate_options(opts);
 
     return;
 }

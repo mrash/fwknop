@@ -708,7 +708,7 @@ main(int argc, char **argv)
     rc = fko_new(&ctx);
     if(rc != FKO_SUCCESS)
     @{
-        fprintf(stderr, "Error creating context: %s\n", fko_errstr());
+        fprintf(stderr, "Error creating context: %s\n", fko_errstr(rc));
         exit(1);
     @}
 
@@ -716,7 +716,7 @@ main(int argc, char **argv)
     rc = fko_set_spa_message(ctx, "0.0.0.0,tcp/22");
     if(rc != FKO_SUCCESS)
     @{
-        fprintf(stderr, "Set SPA message failed: %s\n", fko_errstr());
+        fprintf(stderr, "Set SPA message failed: %s\n", fko_errstr(rc));
         exit(1);
     @}
 
@@ -736,7 +736,7 @@ main(int argc, char **argv)
     rc = fko_spa_data_final(ctx);
     if(rc != FKO_SUCCESS)
     @{
-        fprintf(stderr, "Error encoding SPA data: %s\n", fko_errstr());
+        fprintf(stderr, "Error encoding SPA data: %s\n", fko_errstr(rc));
         exit(1);
     @}
 

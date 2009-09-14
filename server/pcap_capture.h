@@ -1,11 +1,11 @@
 /*
  *****************************************************************************
  *
- * File:    utils.h
+ * File:    pcap_capture.h
  *
  * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Header file for utils.c fwknopd server program.
+ * Purpose: Header file for pcap_capture.c.
  *
  * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,21 +23,11 @@
  *
  *****************************************************************************
 */
-#ifndef UTILS_H
-#define UTILS_H
-
-#include "fko.h"
+#ifndef PCAP_CAPTURE_H
+#define PCAP_CAPTURE_H
 
 /* Prototypes
 */
-void hex_dump(unsigned char *data, int size);
-void display_ctx(fko_ctx_t ctx);
+int pcap_capture(fko_srv_options_t *opts);
 
-#ifdef WIN32
-  /* Function prototypes we need for Windows
-  */
-  size_t strlcat(char *dst, const char *src, size_t siz);
-  size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
-
-#endif  /* UTILS_H */
+#endif  /* PCAP_CAPTURE_H */

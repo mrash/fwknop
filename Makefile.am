@@ -7,11 +7,11 @@ if WANT_SERVER
 endif
 
 SUBDIRS = \
-	lib \
-	common \
-	$(CLIENT_DIR) \
-	$(SERVER_DIR) \
-	doc 
+    lib \
+    common \
+    $(CLIENT_DIR) \
+    $(SERVER_DIR) \
+    doc 
 
 EXTRA_DIST = \
     perl/legacy \

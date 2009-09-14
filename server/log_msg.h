@@ -1,11 +1,11 @@
 /*
  *****************************************************************************
  *
- * File:    utils.h
+ * File:    log_msg.h
  *
  * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Header file for utils.c fwknopd server program.
+ * Purpose: Header file for pcap_capture.c.
  *
  * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,21 +23,23 @@
  *
  *****************************************************************************
 */
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef LOG_MSG_H
+#define LOG_MSG_H
 
-#include "fko.h"
+#include <syslog.h>
+#include <stdarg.h>
 
-/* Prototypes
+/* The LOG_STDERR value can be or'ed with the msg_log() level value
+ * to cause message going to syslog to be printed to stderr as well.
+ * LOG_STDERR_ONLY can be set to send a message stderr with a copy to
+ * syslog as well.
 */
-void hex_dump(unsigned char *data, int size);
-void display_ctx(fko_ctx_t ctx);
+#define LOG_STDERR      0x1000
+#define LOG_STDERR_ONLY 0x3000
+#define LOG_STDERR_MASK 0x0FFF
 
-#ifdef WIN32
-  /* Function prototypes we need for Windows
-  */
-  size_t strlcat(char *dst, const char *src, size_t siz);
-  size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
+void log_msg(int, char*, ...);
 
-#endif  /* UTILS_H */
+#endif /* LOG_MSG_H */
+
+/***EOF***/

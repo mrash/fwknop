@@ -1,11 +1,11 @@
 /*
  *****************************************************************************
  *
- * File:    utils.h
+ * File:    incoming_spa.h
  *
  * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Header file for utils.c fwknopd server program.
+ * Purpose: Header file for incoming_spa.c.
  *
  * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,21 +23,12 @@
  *
  *****************************************************************************
 */
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef INCOMING_SPA_H
+#define INCOMING_SPA_H
 
-#include "fko.h"
 
 /* Prototypes
 */
-void hex_dump(unsigned char *data, int size);
-void display_ctx(fko_ctx_t ctx);
+int incoming_spa(fko_srv_options_t *opts);
 
-#ifdef WIN32
-  /* Function prototypes we need for Windows
-  */
-  size_t strlcat(char *dst, const char *src, size_t siz);
-  size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
-
-#endif  /* UTILS_H */
+#endif  /* INCOMING_SPA_H */

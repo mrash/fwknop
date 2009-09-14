@@ -1,11 +1,11 @@
 /*
  *****************************************************************************
  *
- * File:    utils.h
+ * File:    process_packet.h
  *
  * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Header file for utils.c fwknopd server program.
+ * Purpose: Header file for process_packet and other fwknopd code.
  *
  * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,21 +23,14 @@
  *
  *****************************************************************************
 */
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef PROCESS_PACKET_H
+#define PROCESS_PACKET_H
 
-#include "fko.h"
+#define IPV4_VER_MASK   0x15
+#define MIN_IPV4_WORDS  0x05
 
 /* Prototypes
 */
-void hex_dump(unsigned char *data, int size);
-void display_ctx(fko_ctx_t ctx);
+void process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header, const unsigned char *packet);
 
-#ifdef WIN32
-  /* Function prototypes we need for Windows
-  */
-  size_t strlcat(char *dst, const char *src, size_t siz);
-  size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
-
-#endif  /* UTILS_H */
+#endif  /* PROCESS_PACKET_H */
