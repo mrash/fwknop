@@ -1,4 +1,4 @@
-lib_LTLIBRARIES = libfko.la
+lib_LTLIBRARIES     = libfko.la
 
 libfko_source_files = \
     base64.c base64.h cipher_funcs.c cipher_funcs.h digest.c digest.h \
@@ -9,10 +9,10 @@ libfko_source_files = \
     rijndael.c rijndael.h sha1.c sha1.h sha2.c sha2.h strlcat.c \
     strlcpy.c fko_state.h fko_context.h gpgme_funcs.c gpgme_funcs.h
 
-libfko_la_SOURCES = $(libfko_source_files)
-libfko_la_LDFLAGS = -version-info 0:1:0 $(GPGME_LIBS)
+libfko_la_SOURCES   = $(libfko_source_files)
 
-AM_CPPFLAGS = $(GPGME_CFLAGS)
+libfko_la_LDFLAGS   = -version-info 0:1:0 $(GPGME_LIBS)
 
-include_HEADERS = fko.h
+AM_CPPFLAGS         = $(GPGME_CFLAGS)
 
+include_HEADERS     = fko.h

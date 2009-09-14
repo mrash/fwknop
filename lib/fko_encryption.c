@@ -37,15 +37,6 @@
 
 #define B64_RIJNDAEL_SALT "U2FsdGVkX1"
 
-/* Wipe out the password buffer.
-*/
-void
-wipe_pw(char *pw)
-{
-    if(pw != NULL)
-        bzero(pw, strlen(pw));
-}
-
 /* Prep and encrypt using Rijndael
 */
 int
@@ -337,8 +328,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
     */
     if(!CTX_INITIALIZED(ctx))
     {
-        res = FKO_ERROR_CTX_NOT_INITIALIZED;
-        goto EWIPEOUT;
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
     }
 
     /* If there is no encoded data or the SPA data has been modified,
@@ -348,7 +338,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
         res = fko_encode_spa_data(ctx);
 
     if(res)
-        goto EWIPEOUT;
+        return(res);
 
     /* Croak on invalid encoded message as well. At present this is a
      * check for a somewhat arbitrary minimum length for the encoded
@@ -356,8 +346,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
     */
     if(strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
     {
-        res = FKO_ERROR_MISSING_ENCODED_DATA;
-        goto EWIPEOUT;
+        return(FKO_ERROR_MISSING_ENCODED_DATA);
     }
 
     /* Encrypt according to type and return...
@@ -372,9 +361,6 @@ fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
 #endif
     else
         res = FKO_ERROR_INVALID_ENCRYPTION_TYPE;
-
-EWIPEOUT:
-    wipe_pw(enc_key);
 
     return(res);
 }
@@ -392,8 +378,7 @@ fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
     if(ctx->encrypted_msg == NULL
       || strlen(ctx->encrypted_msg) <  MIN_SPA_ENCODED_MSG_SIZE)
     {
-        res = FKO_ERROR_INVALID_DATA;
-        goto DWIPEOUT;
+        return(FKO_ERROR_INVALID_DATA);
     }
 
     /* Determine type of encryption used.  For know, we are using the
@@ -418,9 +403,6 @@ fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
         ctx->encryption_type = FKO_ENCRYPTION_RIJNDAEL;
         res = _rijndael_decrypt(ctx, dec_key, b64_len);
     }
-
-DWIPEOUT:
-    wipe_pw(dec_key);
 
     return(res);
 }
