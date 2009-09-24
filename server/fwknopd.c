@@ -23,6 +23,9 @@
  *
  *****************************************************************************
 */
+#include <signal.h>
+#include <sys/file.h>
+
 #include "fwknopd.h"
 #include "config_init.h"
 #include "process_packet.h"
@@ -32,8 +35,9 @@
 
 /* Prototypes
 */
-void daemonize_process(const char *pid_file);
-void write_pid(const char *pid_file, const pid_t pid);
+static void daemonize_process(fko_srv_options_t *opts);
+static int write_pid_file(fko_srv_options_t *opts);
+static pid_t get_running_pid(fko_srv_options_t *opts);
 
 int
 main(int argc, char **argv)
@@ -42,6 +46,7 @@ main(int argc, char **argv)
     int                 res;
     char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN];
+    pid_t               old_pid;
 
     fko_srv_options_t   opts;
 
@@ -63,9 +68,27 @@ main(int argc, char **argv)
     */
     if(opts.kill == 1)
     {
-        //sendsig_fwknopd(&opts, SIGTERM);
-        fprintf(stderr, "Kill option no implemented yet.\n");
-        exit(EXIT_SUCCESS);
+        old_pid = get_running_pid(&opts);
+
+        if(old_pid > 0)
+        {
+            res = kill(old_pid, SIGTERM);
+            if(res == 0)
+            {
+                fprintf(stderr, "Killed fwknopd (pid=%i)\n", old_pid);
+                exit(EXIT_SUCCESS);
+            }
+            else
+            {
+                perror("Unable to kill fwknop: ");
+                exit(EXIT_FAILURE);
+            }
+        }
+        else
+        {
+            fprintf(stderr, "No running fwknopd detected.\n", old_pid);
+            exit(EXIT_FAILURE);
+        }
     }
 
     /* Restart the currently running fwknopd?
@@ -73,7 +96,7 @@ main(int argc, char **argv)
     if(opts.restart == 1)
     {
         //sendsig_fwknopd(&opts, SIGHUP);
-        fprintf(stderr, "Restart option no implemented yet.\n");
+        fprintf(stderr, "Restart option not implemented yet.\n");
         exit(EXIT_SUCCESS);
     }
 
@@ -82,14 +105,14 @@ main(int argc, char **argv)
     if(opts.status == 1)
     {
         //fwknopd_status(&opts, SIGHUP);
-        fprintf(stderr, "Status option no implemented yet.\n");
+        fprintf(stderr, "Status option not implemented yet.\n");
         exit(EXIT_SUCCESS);
     }
 
     /* If foreground mode is not set, the fork off and become a daemon.
     */
     if(opts.foreground == 0)
-        daemonize_process(opts.config[CONF_FWKNOP_PID_FILE]);
+        daemonize_process(&opts);
 
     log_msg(LOG_INFO, "Starting %s", MY_NAME);
 
@@ -117,20 +140,22 @@ main(int argc, char **argv)
 /* Become a daemon: fork(), start a new session, chdir "/",
  * and close unneeded standard filehandles.
 */
-void daemonize_process(const char *pid_file)
+static void
+daemonize_process(fko_srv_options_t *opts)
 {
-    pid_t child_pid, sid;
+    pid_t pid, old_pid;
 
-    if ((child_pid = fork()) < 0) {
+    /* Reset the our umask
+    */
+    umask(0);
+
+    if ((pid = fork()) < 0)
+    {
         perror("Unable to fork: ");
         exit(EXIT_FAILURE);
     }
-
-    /* The parent will write the child PID to the pid_file
-     * then exit.
-    */
-    if (child_pid > 0) {
-        write_pid(pid_file, child_pid);
+    else if (pid != 0) /* parent */
+    {
         exit(EXIT_SUCCESS);
     }
 
@@ -138,21 +163,30 @@ void daemonize_process(const char *pid_file)
 
     /* Start a new session
     */
-    if ((sid = setsid()) < 0) {
-        perror("Error from setsid(): ");
+    setsid();
+
+    /* Create the PID file (or be blocked by an existing one).
+    */
+    old_pid = write_pid_file(opts);
+    if(old_pid > 0)
+    {
+        fprintf(stderr,
+            "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+        );
+
         exit(EXIT_FAILURE);
     }
+    else if(old_pid < 0)
+    {
+        fprintf(stderr, "* PID file error. The lock may not be effective.\n");
+    }
 
-    /* Chdir to  "/"
+    /* Chdir to the root of the filesystem 
     */
     if ((chdir("/")) < 0) {
         perror("Could not chdir() to /: ");
         exit(EXIT_FAILURE);
     }
-
-    /* Reset the our umask
-    */
-    umask(0);
 
     /* Close un-needed file handles
     */
@@ -163,29 +197,94 @@ void daemonize_process(const char *pid_file)
     return;
 }
 
-void write_pid(const char *pid_file, const pid_t pid)
+static int
+write_pid_file(fko_srv_options_t *opts)
 {
-    FILE *pidfile_ptr;
+    pid_t   old_pid, my_pid;
+    int     op_fd, lck_res;
+    char    buf[6]  = {0};
 
-    if ((pidfile_ptr = fopen(pid_file, "w")) == NULL) {
-        fprintf(stderr, "Could not open the pid file: %s: %s",
-            pid_file, strerror(errno));
-        exit(EXIT_FAILURE);
-    }
-
-    /* Write the pid to the pid file
+    /* Reset errno (just in case)
     */
-    if (fprintf(pidfile_ptr, "%d\n", pid) == 0) {
-        fprintf(stderr, "PID: %d could not be written to pid file: %s: %s",
-            pid, pid_file, strerror(errno));
-        exit(EXIT_FAILURE);
+    errno = 0;
+
+    /* Open the PID file
+    */
+    op_fd = open(
+        opts->config[CONF_FWKNOP_PID_FILE], O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR
+    );
+
+    if(op_fd == -1)
+    {
+        perror("Error trying to open PID file: ");
+        return -1;
     }
 
-    fclose(pidfile_ptr);
+    /* Attempt to lock the PID file.  If we get an EWOULDBLOCK
+     * error, another instance already has the lock. So we grab
+     * the pid from the existing lock file, complain and bail.
+    */
+    lck_res = flock(op_fd, LOCK_EX|LOCK_NB);
+    if(lck_res == -1)
+    {
+        if(errno != EWOULDBLOCK)
+        {
+            perror("Unexpected error from flock: ");
+            return -1;
+        }
 
-    chmod(pid_file, 0600);
+        close(op_fd);
 
-    return;
+        /* Look for an existing lock holder. If we get a pid return it.
+        */
+        old_pid = get_running_pid(opts);
+        if(old_pid)
+            return old_pid;
+ 
+        /* Otherwise, consider it an error.
+        */
+        perror("Unable read existing PID file: ");
+        return -1;
+    }
+
+    /* Write our PID to the file
+    */
+    my_pid = getpid();
+    snprintf(buf, 6, "%i\n", my_pid);
+
+    if(opts->verbose)
+        fprintf(stderr, "[+] Writing my PID (%i) to the lock file: %s\n",
+            my_pid, opts->config[CONF_FWKNOP_PID_FILE]);
+
+    write(op_fd, buf, strlen(buf));
+
+    if(errno)
+        perror("Lock may not be valid. PID file write error: ");
+
+    /* Sync/flush regardless...
+    */
+    fsync(op_fd);
+
+    return 0;
+}
+
+static pid_t
+get_running_pid(fko_srv_options_t *opts)
+{
+    int     op_fd;
+    char    buf[6]  = {0};
+    pid_t   rpid    = 0;
+
+    op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
+
+    if(op_fd > 0)
+    {
+        read(op_fd, buf, 6);
+        rpid = (pid_t)atoi(buf);
+        close(op_fd);
+    }
+
+    return(rpid);
 }
 
 /***EOF***/
