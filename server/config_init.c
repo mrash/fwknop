@@ -111,18 +111,18 @@ parse_config_file(fko_srv_options_t *opts, char *config_file)
     */
     if(stat(config_file, &st) != 0)
     {
-        fprintf(stderr,
-            "** WARNING - Config file: '%s' was not found.\n",
-            config_file
-        );
+        fprintf(stderr, "[*] Config file: '%s' was not found.\n",
+            config_file);
 
-        return;
+        exit(EXIT_FAILURE);
     }
 
     if ((cfile_ptr = fopen(config_file, "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open config file: %s\n",
-                config_file);
+            config_file);
+        perror(NULL);
+
         exit(EXIT_FAILURE);
     }
 
@@ -197,6 +197,12 @@ parse_config_file(fko_srv_options_t *opts, char *config_file)
 static void
 validate_options(fko_srv_options_t *opts)
 {
+    /* If a HOSTNAME was specified in the config file, set the opts->hostname
+     * value to it.
+    */
+    if(opts->config[CONF_HOSTNAME] != NULL && opts->config[CONF_HOSTNAME][0] != '\0')
+        strlcpy(opts->hostname, opts->config[CONF_HOSTNAME], MAX_HOSTNAME_LEN);
+
     /* Some options just trigger some output of information, or trigger an
      * external function, but do not actually start fwknopd.  If any of those
      * are set, we can return here an skip the validation routines as all
@@ -236,6 +242,15 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     /* Zero out options and opts_track.
     */
     memset(opts, 0x00, sizeof(fko_srv_options_t));
+
+    /* First, set any default or otherwise static settings here.  Some may
+     * end up being overwritten vail config file or command-line.
+    */
+    /* Default Hostname (or unknown if gethostname cannot tell us).
+    */
+    if(gethostname(opts->hostname, MAX_HOSTNAME_LEN-1) < 0)
+        strcpy(opts->hostname, "UNKNOWN");
+
 
     /* First, scan the command-line args for an alternate configuration
      * file.  If we find it, use it, otherwise use the default.
@@ -414,6 +429,12 @@ dump_config(fko_srv_options_t *opts)
             config_map[i],
             (opts->config[i] == NULL) ? "<not set>" : opts->config[i]
         );
+
+    fprintf(stderr, "\n");
+
+    fprintf(stderr, "Hostname is set to '%s'.\n", opts->hostname);
+
+    fprintf(stderr, "\n");
 }
 
 /* Print usage message...

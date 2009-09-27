@@ -54,6 +54,7 @@
 #define MAX_PCAP_FILTER_LEN 1024
 #define MAX_IFNAME_LEN      128
 #define MAX_SPA_PACKET_LEN  1500 /* --DSS check this? */
+#define MAX_HOSTNAME_LEN    64
 
 /* Data collection modes
 */
@@ -111,7 +112,6 @@ enum {
     CONF_SYSLOG_DAEMON,
     CONF_SYSLOG_IDENTITY,
     CONF_SYSLOG_FACILITY,
-    CONF_SYSLOG_PRIORITY,
     CONF_ALERTING_METHODS,
     CONF_IPT_CMD_ALARM,
     CONF_IPT_EXEC_STYLE,
@@ -195,7 +195,6 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "SYSLOG_DAEMON",
     "SYSLOG_IDENTITY",
     "SYSLOG_FACILITY",
-    "SYSLOG_PRIORITY",
     "ALERTING_METHODS",
     "IPT_CMD_ALARM",
     "IPT_EXEC_STYLE",
@@ -252,6 +251,10 @@ typedef struct fko_srv_options
      * indexed by their tag name.
     */
     char           *config[NUMBER_OF_CONFIG_ENTRIES];
+
+    /* Misc
+    */
+    char            hostname[MAX_HOSTNAME_LEN];
 
 } fko_srv_options_t;
 

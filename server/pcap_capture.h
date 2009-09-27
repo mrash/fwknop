@@ -26,6 +26,11 @@
 #ifndef PCAP_CAPTURE_H
 #define PCAP_CAPTURE_H
 
+/* How many consecutive pcap capture errors will we allow
+ * before giving up and bailing out.
+*/
+#define MAX_PCAP_ERRORS_BEFORE_BAIL 100
+
 /* Prototypes
 */
 int pcap_capture(fko_srv_options_t *opts);

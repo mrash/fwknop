@@ -27,11 +27,109 @@
 #include "fwknopd_common.h"
 #include "log_msg.h"
 
-void log_msg(int level, char* msg, ...)
+/* The default log facility (can be overridden via config file directive).
+*/
+static int  syslog_fac      = LOG_DAEMON;
+
+/* This value is or'ed with the log level on all logging calls. This allows
+ * for force log to stderr instead of syslog simply be setting this to the
+ * appropriate value (which is done at init_logging().
+*/
+static int  static_log_flag = 0;
+
+/* The name to use for ID in log messages.  This defaults to fwknopd.
+*/
+static char *log_name = NULL;
+
+/* Initialize logging sets the name used for syslog.
+*/
+void
+init_logging(fko_srv_options_t *opts) {
+    char                   *my_name = NULL;
+    static unsigned char    linit   = 0;
+
+    /* Do nothing but silently return if we have already been called.
+    */
+    if(linit++)
+        return;
+ 
+    /* Allocate memory for the log_name and set the my_name to point
+     * to the appropriate name. If the name is set in the config file,
+     * use it.  Otherwise, fallback to the default of 'fwknop'.
+    */
+    if(opts->config[CONF_SYSLOG_IDENTITY] != NULL
+      && opts->config[CONF_SYSLOG_IDENTITY][0] != '\0')
+    {
+        my_name  = opts->config[CONF_SYSLOG_IDENTITY];
+        log_name = malloc(strlen(opts->config[CONF_SYSLOG_IDENTITY])+1);
+    }
+    else
+    {
+        my_name  = (char*)&MY_NAME;
+        log_name = malloc(strlen(MY_NAME)+1);
+    }
+
+    if(log_name == NULL)
+    {
+        fprintf(stderr, "Memory allocation error setting log_name!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Set our name.
+    */
+    strcpy(log_name, my_name);
+
+    /* If we are running in the foreground, all logging will go to stderr.
+    */
+    if(opts->foreground != 0)
+        static_log_flag = LOG_STDERR | LOG_STDERR_ONLY;
+
+    /* If a log facility was specified in the config file, parse it and
+     * use it.
+    */
+    if(opts->config[CONF_SYSLOG_FACILITY] != NULL
+      && opts->config[CONF_SYSLOG_FACILITY][0] != '\0')
+    {
+        if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_DAEMON"))
+            syslog_fac = LOG_DAEMON;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL0"))
+            syslog_fac = LOG_LOCAL0;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL1"))
+            syslog_fac = LOG_LOCAL1;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL2"))
+            syslog_fac = LOG_LOCAL2;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL3"))
+            syslog_fac = LOG_LOCAL3;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL4"))
+            syslog_fac = LOG_LOCAL4;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL5"))
+            syslog_fac = LOG_LOCAL5;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL6"))
+            syslog_fac = LOG_LOCAL6;
+        else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL7"))
+            syslog_fac = LOG_LOCAL7;
+    }
+}
+
+/* Set the log facility value.
+*/
+void
+set_log_facility(int fac)
+{
+    syslog_fac = fac;
+}
+
+/* Syslog message function.  It uses default set at intialization, and also
+ * takes variable args to accomodate printf-like formatting and expansion.
+*/
+void
+log_msg(int level, char* msg, ...)
 {
     va_list ap, apse;
 
     va_start(ap, msg);
+
+    level |= static_log_flag;
 
     /* Print msg to stderr if the level was or'ed with LOG_STDERR
     */
@@ -57,7 +155,7 @@ void log_msg(int level, char* msg, ...)
 
     /* Send the message to syslog.
     */
-    openlog(MY_NAME, LOG_PID, LOG_DAEMON);
+    openlog(log_name, LOG_PID, syslog_fac);
 
     vsyslog(level, msg, ap);
 

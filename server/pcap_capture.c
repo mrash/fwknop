@@ -41,12 +41,21 @@ pcap_capture(fko_srv_options_t *opts)
     char                errstr[PCAP_ERRBUF_SIZE] = {0};
     struct bpf_program  fp;
 
-    int                 res, pcap_errcnt = 0;;
+    int                 res, pcap_errcnt = 0;
+
+    int                 promisc = 1;
+
+    /* Set non-promiscuous mode only of the ENABLE_PCAP_POROMISC is
+     * explicitly set to 'N'.
+    */
+    if(opts->config[CONF_ENABLE_PCAP_PROMISC] != NULL
+      && opts->config[CONF_ENABLE_PCAP_PROMISC][0] == 'N')
+        promisc = 0;
 
     pcap = pcap_open_live(
         opts->config[CONF_PCAP_INTF],
         atoi(opts->config[CONF_MAX_SNIFF_BYTES]),
-        1, 500, errstr
+        promisc, 500, errstr
     );
 
     if(pcap == NULL)
@@ -68,7 +77,8 @@ pcap_capture(fko_srv_options_t *opts)
 
     /* Set pcap filters, if any. 
     */
-    if (opts->config[CONF_PCAP_FILTER][0] != '\0')
+    if (opts->config[CONF_PCAP_FILTER] != NULL
+      && opts->config[CONF_PCAP_FILTER][0] != '\0')
     {
         if(pcap_compile(pcap, &fp, opts->config[CONF_PCAP_FILTER], 1, 0) == -1)
         {
@@ -138,7 +148,7 @@ pcap_capture(fko_srv_options_t *opts)
                 pcap_geterr(pcap)
             );
 
-            if(pcap_errcnt++ > 100) /* --DSS XXX: Shoudl do this better */
+            if(pcap_errcnt++ > MAX_PCAP_ERRORS_BEFORE_BAIL)
             {
                 fprintf(stderr, "[*] %i consecutive pcap errors.  Giving up\n",
                     pcap_errcnt

@@ -110,9 +110,32 @@ main(int argc, char **argv)
     }
 
     /* If foreground mode is not set, the fork off and become a daemon.
+     * Otherwise, attempt to get the pid fiel lock and go on.
     */
     if(opts.foreground == 0)
+    {
         daemonize_process(&opts);
+    }
+    else
+    {
+        old_pid = write_pid_file(&opts);
+        if(old_pid > 0)
+        {
+            fprintf(stderr,
+                "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+            );
+
+            exit(EXIT_FAILURE);
+        }
+        else if(old_pid < 0)
+        {
+            fprintf(stderr, "* PID file error. The lock may not be effective.\n");
+        }
+    }
+
+    /* Initialize logging.
+    */
+    init_logging(&opts);
 
     log_msg(LOG_INFO, "Starting %s", MY_NAME);
 

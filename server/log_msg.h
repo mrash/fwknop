@@ -38,6 +38,8 @@
 #define LOG_STDERR_ONLY 0x3000
 #define LOG_STDERR_MASK 0x0FFF
 
+void init_logging(fko_srv_options_t *opts);
+void set_log_facility(int fac);
 void log_msg(int, char*, ...);
 
 #endif /* LOG_MSG_H */
