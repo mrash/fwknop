@@ -66,6 +66,12 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     unsigned short      pkt_len = packet_header->len;
 
+    /* This is a hack to determine if we are using the linux cooked
+     * interface.  We base it on the offset being 16 which is the
+     * value it would be if the datalink is DLT_LINUX_SLL.  I don't
+     * know if this is the correct way to do this, but it seems to work.
+    */
+    unsigned char       assume_cooked = (offset == 16 ? 1 : 0);
 
     /* Determine packet end.
     */
@@ -91,7 +97,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     /* When using libpcap, pkthdr->len for 802.3 frames include CRC_LEN,
      * but Ethenet_II frames do not.
     */
-    if (eth_type > 1500)
+    if (eth_type > 1500 || assume_cooked == 1)
     {
         pkt_len += ETHER_CRC_LEN;
 
@@ -123,7 +129,6 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     if (ip_hdr_words < MIN_IPV4_WORDS)
         return;
-
 
     /* Now, find the packet data payload (depending on IPPROTO).
     */

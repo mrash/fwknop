@@ -105,6 +105,9 @@ pcap_capture(fko_srv_options_t *opts)
         case DLT_EN10MB:
             opts->data_link_offset = 14;
             break;
+        case DLT_LINUX_SLL:
+            opts->data_link_offset = 16;
+            break;
         case DLT_NULL:
             opts->data_link_offset = 4;
             break;
@@ -139,6 +142,7 @@ pcap_capture(fko_srv_options_t *opts)
             pcap_errcnt = 0;
             continue;
         }
+
         /* If there was an error, complain and go on (to an extent
          * before giving up).
         */
