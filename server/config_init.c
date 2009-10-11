@@ -88,6 +88,18 @@ config_entry_index(fko_srv_options_t *opts, char *var)
     return(-1);
 }
 
+/* Free the config memory
+*/
+void
+free_configs(fko_srv_options_t *opts)
+{
+    int i;
+
+    for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
+        if(opts->config[i] != NULL)
+            free(opts->config[i]);
+}
+
 /* Parse the config file...
 */
 static void
@@ -244,13 +256,16 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     memset(opts, 0x00, sizeof(fko_srv_options_t));
 
     /* First, set any default or otherwise static settings here.  Some may
-     * end up being overwritten vail config file or command-line.
+     * end up being overwritten via config file or command-line.
     */
     /* Default Hostname (or unknown if gethostname cannot tell us).
     */
     if(gethostname(opts->hostname, MAX_HOSTNAME_LEN-1) < 0)
         strcpy(opts->hostname, "UNKNOWN");
 
+    /* In case this is a re-config.
+    */
+    optind = 0;
 
     /* First, scan the command-line args for an alternate configuration
      * file.  If we find it, use it, otherwise use the default.
@@ -363,9 +378,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 // TODO: Add this...
                 //flush_firewall_rules();
                 exit(EXIT_SUCCESS);
-                break;
-            case FIREWALL_LOG:
-                set_config_entry(opts, CONF_FIREWALL_LOG, optarg);
                 break;
             case GPG_HOME_DIR:
                 set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);

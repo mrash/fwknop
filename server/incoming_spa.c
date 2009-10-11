@@ -34,21 +34,19 @@ incoming_spa(fko_srv_options_t *opts)
     fko_ctx_t       ctx;
     int             res;
 
+    spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
+
     /* Sanity check
     */
-    if(opts->packet_data_len <= 0)
+    if(spa_pkt->packet_data_len <= 0)
         return;
 
-    /* Reset the packet data length to 0.
-    */
-    opts->packet_data_len = 0;
-
-fprintf(stderr, "SPA Packet: '%s'\n", opts->packet_data);
+fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 
     /* Get the decryption key
     */
 
-    res = fko_new_with_data(&ctx, opts->packet_data, "sdf");
+    res = fko_new_with_data(&ctx, spa_pkt->packet_data, "sdf");
 
     if(res == FKO_SUCCESS)
     {
@@ -63,6 +61,9 @@ fprintf(stderr, "Decode res = %i\n", res);
         fprintf(stderr, "Error creating fko context: %s\n", fko_errstr(res));
     }
 
+    /* Reset the packet data length to 0.
+    */
+    spa_pkt->packet_data_len = 0;
 
     return(0);
 }

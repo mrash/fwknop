@@ -41,17 +41,24 @@ static int  static_log_flag = 0;
 */
 static char *log_name = NULL;
 
+/* Free resources allocated for logging.
+*/
+void
+free_logging(void)
+{
+    if(log_name != NULL)
+        free(log_name);
+}
+
 /* Initialize logging sets the name used for syslog.
 */
 void
 init_logging(fko_srv_options_t *opts) {
     char                   *my_name = NULL;
-    static unsigned char    linit   = 0;
 
-    /* Do nothing but silently return if we have already been called.
+    /* In case this is a re-init.
     */
-    if(linit++)
-        return;
+    free_logging();
  
     /* Allocate memory for the log_name and set the my_name to point
      * to the appropriate name. If the name is set in the config file,

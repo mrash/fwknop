@@ -29,6 +29,8 @@
 #include "pcap_capture.h"
 #include "process_packet.h"
 #include "incoming_spa.h"
+#include "config_init.h"
+#include "sig_handler.h"
 
 /* The pcap capture routine.
 */
@@ -39,13 +41,14 @@ pcap_capture(fko_srv_options_t *opts)
     pcap_t              *pcap;
 
     char                errstr[PCAP_ERRBUF_SIZE] = {0};
+
     struct bpf_program  fp;
 
     int                 res, pcap_errcnt = 0;
 
     int                 promisc = 1;
 
-    /* Set non-promiscuous mode only of the ENABLE_PCAP_POROMISC is
+    /* Set non-promiscuous mode only of the ENABLE_PCAP_PROMISC is
      * explicitly set to 'N'.
     */
     if(opts->config[CONF_ENABLE_PCAP_PROMISC] != NULL
@@ -126,16 +129,27 @@ pcap_capture(fko_srv_options_t *opts)
         exit(EXIT_FAILURE);
     }
 
+    /* Initialize our signal handlers. You can check the return value for
+     * the number of signals that were *not* set.  Those that we not set
+     * will be listed in the log/stderr output.
+    */
+    set_sig_handlers();
+
     /* Jump into our home-grown packet cature loop.
     */
     while(1)
     {
+        /* Any signal except USR1 and USR2 mean break the loop.
+        */
+        if(got_signal && (got_sigusr1 + got_sigusr2) == 0)
+            pcap_breakloop(pcap);
+
         res = pcap_dispatch(pcap, 1, (pcap_handler)&process_packet, (unsigned char *)opts);
 
         /* If there was a packet and it was processed without error, then
          * keep going.
         */
-        if(res > 0 && opts->packet_data_len > 0)
+        if(res > 0 && opts->spa_pkt.packet_data_len > 0)
         {
             incoming_spa(opts);
 
@@ -162,7 +176,7 @@ pcap_capture(fko_srv_options_t *opts)
         }
         else if(res == -2)
         {
-            /* pcap_break_loop was called, so we bail. */
+            /* pcap_breakloop was called, so we bail. */
             break;
         }
         else
@@ -176,6 +190,9 @@ pcap_capture(fko_srv_options_t *opts)
         usleep(10000);
     }
 #endif /* HAVE_LIBPCAP */
+
+    pcap_close(pcap);
+
     return(0);
 }
 

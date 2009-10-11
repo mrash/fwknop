@@ -1,11 +1,11 @@
 /*
  *****************************************************************************
  *
- * File:    log_msg.h
+ * File:    sig_handler.h
  *
  * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Header file for log_msg.c.
+ * Purpose: Header file for sig_handler functions and data.
  *
  * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,26 +23,21 @@
  *
  *****************************************************************************
 */
-#ifndef LOG_MSG_H
-#define LOG_MSG_H
+#ifndef SIG_HANDLER_H
+#define SIG_HANDLER_H
 
-#include <syslog.h>
-#include <stdarg.h>
+#include <signal.h>
 
-/* The LOG_STDERR value can be or'ed with the msg_log() level value
- * to cause message going to syslog to be printed to stderr as well.
- * LOG_STDERR_ONLY can be set to send a message stderr with a copy to
- * syslog as well.
-*/
-#define LOG_STDERR      0x1000
-#define LOG_STDERR_ONLY 0x3000
-#define LOG_STDERR_MASK 0x0FFF
+extern sig_atomic_t got_signal;
 
-void init_logging(fko_srv_options_t *opts);
-void free_logging(void);
-void set_log_facility(int fac);
-void log_msg(int, char*, ...);
+extern sig_atomic_t got_sighup;
+extern sig_atomic_t got_sigint;
+extern sig_atomic_t got_sigterm;
+extern sig_atomic_t got_sigusr1;
+extern sig_atomic_t got_sigusr2;
 
-#endif /* LOG_MSG_H */
+void sig_handler(int sig);
+
+#endif /* SIG_HANDLER_H */
 
 /***EOF***/

@@ -32,6 +32,7 @@
 #include "pcap_capture.h"
 #include "log_msg.h"
 #include "utils.h"
+#include "sig_handler.h"
 
 /* Prototypes
 */
@@ -43,119 +44,187 @@ int
 main(int argc, char **argv)
 {
     fko_ctx_t           ctx;
-    int                 res;
+    int                 res, last_sig;
     char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN];
     pid_t               old_pid;
 
     fko_srv_options_t   opts;
 
-    /* Handle command line
-    */
-    config_init(&opts, argc, argv);
-
-    /* Process any options that do their thing and exit. */
-
-    /* Show config and exit dump config was wanted.
-    */
-    if(opts.dump_config == 1)
+    while(1)
     {
-        dump_config(&opts);
-        exit(EXIT_SUCCESS);
-    }
+        /* Handle command line
+        */
+        config_init(&opts, argc, argv);
 
-    /* Kill the currently running fwknopd?
-    */
-    if(opts.kill == 1)
-    {
-        old_pid = get_running_pid(&opts);
+        /* Process any options that do their thing and exit. */
 
-        if(old_pid > 0)
+        /* Show config and exit dump config was wanted.
+        */
+        if(opts.dump_config == 1)
         {
-            res = kill(old_pid, SIGTERM);
-            if(res == 0)
+            dump_config(&opts);
+            exit(EXIT_SUCCESS);
+        }
+
+        /* Kill the currently running fwknopd?
+        */
+        if(opts.kill == 1)
+        {
+            old_pid = get_running_pid(&opts);
+
+            if(old_pid > 0)
             {
-                fprintf(stderr, "Killed fwknopd (pid=%i)\n", old_pid);
-                exit(EXIT_SUCCESS);
+                res = kill(old_pid, SIGTERM);
+                if(res == 0)
+                {
+                    fprintf(stderr, "Killed fwknopd (pid=%i)\n", old_pid);
+                    exit(EXIT_SUCCESS);
+                }
+                else
+                {
+                    perror("Unable to kill fwknop: ");
+                    exit(EXIT_FAILURE);
+                }
             }
             else
             {
-                perror("Unable to kill fwknop: ");
+                fprintf(stderr, "No running fwknopd detected.\n", old_pid);
                 exit(EXIT_FAILURE);
             }
         }
+
+        /* Restart the currently running fwknopd?
+        */
+        if(opts.restart == 1)
+        {
+            old_pid = get_running_pid(&opts);
+
+            if(old_pid > 0)
+            {
+                res = kill(old_pid, SIGHUP);
+                if(res == 0)
+                {
+                    fprintf(stderr, "Sent restart signal to fwknopd (pid=%i)\n", old_pid);
+                    exit(EXIT_SUCCESS);
+                }
+                else
+                {
+                    perror("Unable to send signal to fwknop: ");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                fprintf(stderr, "No running fwknopd detected.\n", old_pid);
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        /* Status of the currently running fwknopd?
+        */
+        if(opts.status == 1)
+        {
+            fprintf(stderr, "Status option not implemented yet.\n");
+            exit(EXIT_SUCCESS);
+        }
+
+        /* Initialize logging.
+        */
+        init_logging(&opts);
+
+        if(get_running_pid(&opts) != getpid())
+        {
+            /* If foreground mode is not set, the fork off and become a daemon.
+            * Otherwise, attempt to get the pid fiel lock and go on.
+            */
+            if(opts.foreground == 0)
+            {
+                daemonize_process(&opts);
+            }
+            else
+            {
+                old_pid = write_pid_file(&opts);
+                if(old_pid > 0)
+                {
+                    fprintf(stderr,
+                        "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+                    );
+
+                    exit(EXIT_FAILURE);
+                }
+                else if(old_pid < 0)
+                {
+                    fprintf(stderr, "* PID file error. The lock may not be effective.\n");
+                }
+            }
+
+            log_msg(LOG_INFO, "Starting %s", MY_NAME);
+        }
         else
         {
-            fprintf(stderr, "No running fwknopd detected.\n", old_pid);
-            exit(EXIT_FAILURE);
+            log_msg(LOG_INFO, "Re-starting %s", MY_NAME);
         }
-    }
 
-    /* Restart the currently running fwknopd?
-    */
-    if(opts.restart == 1)
-    {
-        //sendsig_fwknopd(&opts, SIGHUP);
-        fprintf(stderr, "Restart option not implemented yet.\n");
-        exit(EXIT_SUCCESS);
-    }
+        dump_config(&opts);
 
-    /* Status of the currently running fwknopd?
-    */
-    if(opts.status == 1)
-    {
-        //fwknopd_status(&opts, SIGHUP);
-        fprintf(stderr, "Status option not implemented yet.\n");
-        exit(EXIT_SUCCESS);
-    }
-
-    /* If foreground mode is not set, the fork off and become a daemon.
-     * Otherwise, attempt to get the pid fiel lock and go on.
-    */
-    if(opts.foreground == 0)
-    {
-        daemonize_process(&opts);
-    }
-    else
-    {
-        old_pid = write_pid_file(&opts);
-        if(old_pid > 0)
+        if((strncasecmp(opts.config[CONF_AUTH_MODE], "pcap", 4)) != 0)
         {
-            fprintf(stderr,
-                "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+            log_msg(LOG_ERR|LOG_STDERR,
+                "Capture/auth mode other than 'PCAP' is not supported."
             );
-
             exit(EXIT_FAILURE);
         }
-        else if(old_pid < 0)
-        {
-            fprintf(stderr, "* PID file error. The lock may not be effective.\n");
-        }
-    }
-
-    /* Initialize logging.
-    */
-    init_logging(&opts);
-
-    log_msg(LOG_INFO, "Starting %s", MY_NAME);
-
-    if((strncasecmp(opts.config[CONF_AUTH_MODE], "pcap", 4)) != 0)
-    {
-        log_msg(LOG_ERR|LOG_STDERR,
-            "Capture/auth mode other than 'PCAP' is not supported."
-        );
-        exit(EXIT_FAILURE);
-    }
 
 #ifndef HAVE_LIBPCAP
-    log_msg(LOG_ERR|LOG_STDERR,
-        "libpcap is not avaiable, I'm hosed (for now).");
-    exit(EXIT_FAILURE);
+        log_msg(LOG_ERR|LOG_STDERR,
+            "libpcap is not avaiable, I'm hosed (for now).");
+        exit(EXIT_FAILURE);
 #endif
  
-    /* Intiate pcap capture mode...
+        /* Intiate pcap capture mode...
+        */
+        pcap_capture(&opts);
+
+        if(last_sig = got_signal) {
+            got_signal = 0;
+            if(got_sighup)
+            {
+                log_msg(LOG_WARNING|LOG_STDERR, "Got SIGHUP.  Re-reading configs.");
+                free_configs(&opts);
+                got_sighup = 0;
+            }
+            else if(got_sigint)
+            {
+                log_msg(LOG_WARNING|LOG_STDERR, "Got SIGINT.  Exiting...");
+                got_sigint = 0;
+                break;
+            }
+            else if(got_sigterm)
+            {
+                log_msg(LOG_WARNING|LOG_STDERR, "Got SIGTERM.  Exiting...");
+                got_sigterm = 0;
+                break;
+            }
+            else
+            {
+                log_msg(LOG_WARNING|LOG_STDERR,
+                    "Got signal %i. No defined action but to exit.", last_sig);
+                break;
+            }
+        }
+        else    /* got_signal was not set (should be if we are here) */
+        {
+            log_msg(LOG_WARNING|LOG_STDERR,
+                "Capture ended without signal.  Exiting...");
+            break;
+        }
+    }
+
+    /* Other cleanup.
     */
-    pcap_capture(&opts);
+    free_logging();
+    free_configs(&opts);
 
     return(0);
 }

@@ -61,7 +61,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     unsigned short      eth_type;
 
     fko_srv_options_t   *opts = (fko_srv_options_t *)args;
- 
+
     int                 offset = opts->data_link_offset;
 
     unsigned short      pkt_len = packet_header->len;
@@ -164,7 +164,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
         return;
 
     /* 
-     * Now we have data. For now we are not checking IP or port values. We
+     * Now we have data. For now, we are not checking IP or port values. We
      * are relying on the pcap filter. This may change so we do retain the IP
      * addresses and ports just in case. We just go ahead and queue the
      * data.
@@ -178,8 +178,9 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     /* Put the data in our 1-entry queue.
     */
-    memcpy(opts->packet_data, pkt_data, pkt_data_len);
-    opts->packet_data_len = pkt_data_len; 
+    strlcpy(opts->spa_pkt.packet_data, pkt_data, pkt_data_len+1);
+    opts->spa_pkt.packet_data_len = pkt_data_len; 
+    opts->spa_pkt.packet_src_ip   = src_ip; 
 
     return;
 }

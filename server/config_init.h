@@ -90,8 +90,9 @@ static struct option cmd_opts[] =
 
 /* Function Prototypes
 */
-void config_init(fko_srv_options_t *options, int argc, char **argv);
-void dump_config(fko_srv_options_t *options);
+void config_init(fko_srv_options_t *opts, int argc, char **argv);
+void dump_config(fko_srv_options_t *opts);
+void clear_configs(fko_srv_options_t *opts);
 void usage(void);
 
 #endif /* CONFIG_INIT_H */
