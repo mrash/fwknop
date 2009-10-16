@@ -158,12 +158,11 @@ int
 fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
 {
     fko_ctx_t   ctx;
+    int         res = FKO_SUCCESS; /* Are we optimistic or what? */
 
-    int res = fko_new(r_ctx);
-    if(res != FKO_SUCCESS)
-        return res;
-
-    ctx = *r_ctx;
+    ctx = calloc(1, sizeof *ctx);
+    if(ctx == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
 
     /* First, add the data to the context.
     */
@@ -174,13 +173,35 @@ fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
+    /* Consider it initialized here.
+    */
+    ctx->initval = FKO_CTX_INITIALIZED;
+    FKO_SET_CTX_INITIALIZED(ctx);
+
     /* If a decryption password is provided, go ahead and decrypt and
      * decode.
     */
     if(dec_key != NULL)
-        return(fko_decrypt_spa_data(ctx, dec_key));
+    {
+        res = fko_decrypt_spa_data(ctx, dec_key);
 
-    return(FKO_SUCCESS);
+        if(res != FKO_SUCCESS)
+        {
+            fko_destroy(ctx);
+            return(res);
+        }
+    }
+
+#if HAVE_LIBGPGME
+    /* Set gpg signature verify on.
+    */
+    ctx->verify_gpg_sigs = 1;
+#endif /* HAVE_LIBGPGME */
+
+
+    *r_ctx = ctx;
+
+    return(res);
 }
 
 /* Destroy a context and free its resources

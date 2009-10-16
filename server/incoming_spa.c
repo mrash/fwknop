@@ -25,6 +25,7 @@
 */
 #include "fwknopd_common.h"
 #include "incoming_spa.h"
+#include "log_msg.h"
 
 /* The pcap capture routine.
 */
@@ -45,27 +46,35 @@ fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 
     /* Get the decryption key
     */
+    // TODO: finish me
 
+    /* Decode the packet data
+     * --DSS TEMP note using the hard-coded "sdf" as the password.
+     *            this is just for dev testing until I get the 
+     *            access.conf handling in.
+    */
     res = fko_new_with_data(&ctx, spa_pkt->packet_data, "sdf");
-
-    if(res == FKO_SUCCESS)
-    {
-        
-fprintf(stderr, "Decode res = %i\n", res);
-        display_ctx(ctx);
-
-        fko_destroy(ctx);
-    }
-    else
-    {
-        fprintf(stderr, "Error creating fko context: %s\n", fko_errstr(res));
-    }
 
     /* Reset the packet data length to 0.
     */
     spa_pkt->packet_data_len = 0;
 
-    return(0);
+    if(res != FKO_SUCCESS)
+    {
+        fprintf(stderr, "Error creating fko context: %s\n", fko_errstr(res));
+        return(-1);
+    }
+
+fprintf(stderr, "Decode res = %i\n", res);
+
+
+    display_ctx(ctx);
+
+    res = replay_check(opts, ctx);
+
+    fko_destroy(ctx);
+
+    return(res);
 }
 
 /***EOF***/

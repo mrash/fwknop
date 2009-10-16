@@ -33,6 +33,7 @@
 #include "log_msg.h"
 #include "utils.h"
 #include "sig_handler.h"
+#include "replay_dbm.h"
 
 /* Prototypes
 */
@@ -44,7 +45,7 @@ int
 main(int argc, char **argv)
 {
     fko_ctx_t           ctx;
-    int                 res, last_sig;
+    int                 res, last_sig, rpdb_count;
     char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN];
     pid_t               old_pid;
@@ -176,12 +177,12 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
-#ifndef HAVE_LIBPCAP
-        log_msg(LOG_ERR|LOG_STDERR,
-            "libpcap is not avaiable, I'm hosed (for now).");
-        exit(EXIT_FAILURE);
-#endif
- 
+        /* Initialize the digest cache (replay attack detection dbm).
+        */
+        rpdb_count = replay_db_init(&opts);
+
+fprintf(stderr, "RPDB Count: %i\n", rpdb_count);
+
         /* Intiate pcap capture mode...
         */
         pcap_capture(&opts);

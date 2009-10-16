@@ -111,6 +111,7 @@ _rijndael_decrypt(fko_ctx_t ctx, char *dec_key, int b64_len)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
         memmove(tbuf+strlen(B64_RIJNDAEL_SALT), tbuf, b64_len);
+
         ctx->encrypted_msg = memcpy(tbuf, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT));
 
         /* Adjust b64_len for added SALT value and Make sure we are still
