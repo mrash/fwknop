@@ -2236,7 +2236,7 @@ sub http_verify_request_header_ordering() {
             die "[*] Could not open $http_test_file: $!";
     while (<F>) {
         if (m|Raw\s+packet\s+data\s.*\sGET\s\S+\s+HTTP/1\.0NANA
-                User\-Agent:\s+Fwknop/\d+\.\d+\S{0,3}NANAAccept:\s\*/\*NANA
+                User\-Agent:\s+Fwknop/\d+\.\d+\S{0,3}.*?NANAAccept:\s\*/\*NANA
                 Host:\s\S+NANAConnection:\sKeep-Alive|x) {
             close F;
             return 1;
@@ -2251,7 +2251,7 @@ sub http_verify_pre_resolv_hostname_in_get_request() {
             die "[*] Could not open $http_test_file: $!";
     while (<F>) {
         if (m|Raw\s+packet\s+data\s.*\sGET\s/\S+\s+HTTP/1\.0NANA
-                User\-Agent:\s+Fwknop/\d+\.\d+\S{0,3}NANAAccept:\s\*/\*NANA
+                User\-Agent:\s+Fwknop/\d+\.\d+\S{0,3}.*?NANAAccept:\s\*/\*NANA
                 Host:\slocalhostNANAConnection:\sKeep-Alive|x) {
             close F;
             return 1;
@@ -2267,7 +2267,7 @@ sub http_verify_include_hostname_in_request() {
             die "[*] Could not open $http_test_file: $!";
     while (<F>) {
         if (m|Raw\s+packet\s+data\s.*\sGET\shttp://$http_proxy_host/\S+\s+HTTP/1\.0NANA
-                User\-Agent:\s+Fwknop/\d+\.\d+\S{0,3}NANAAccept:\s\*/\*NANA
+                User\-Agent:\s+Fwknop/\d+\.\d+\S{0,3}.*?NANAAccept:\s\*/\*NANA
                 Host:\s${http_proxy_host}NANAConnection:\sKeep-Alive|x) {
             close F;
             return 1;
