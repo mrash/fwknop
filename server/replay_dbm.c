@@ -106,7 +106,7 @@ replay_db_init(fko_srv_options_t *opts)
         db_count++;
 #endif
 
-    dbm_close(rpdb);
+    MY_DBM_CLOSE(rpdb);
 
     return(db_count);
 }
