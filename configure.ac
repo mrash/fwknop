@@ -34,7 +34,7 @@ AC_PROG_LIBTOOL
 AC_HEADER_STDC
 AC_HEADER_TIME
 
-AC_CHECK_HEADERS([ctype.h endian.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/socket.h sys/stat.h sys/time.h termios.h unistd.h])
+AC_CHECK_HEADERS([ctype.h endian.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/socket.h sys/stat.h sys/time.h termios.h unistd.h gdbm.h gdbm-ndbm.h gdbm/ndbm.h])
 
 # Type checks.
 #
@@ -200,7 +200,7 @@ AS_IF([test "$want_server" = yes],
 
   # Looking for gdbm or fallback to ndbm or bail
   #
-  AC_CHECK_LIB([gdbm],[dbm_open], [], 
+  AC_CHECK_LIB([gdbm],[gdbm_open], [], 
     [ AC_CHECK_LIB([ndbm],[dbm_open], [],
         [ AC_MSG_ERROR([fwknopd needs either gdbm or ndbm])]
     )]

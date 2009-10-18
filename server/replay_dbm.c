@@ -29,15 +29,22 @@
 #include "log_msg.h"
 
 #if HAVE_LIBGDBM
-  /* NOTE: We are using gdbm in ndbm compatibility mode so we grab its
-   * version of ndbm.h
-  */
-//  #include <gdbm.h>
-  #include <gdbm/ndbm.h>
+  #include <gdbm.h>
+
+  #define MY_DBM_FETCH(d, k)        gdbm_fetch(d, k)
+  #define MY_DBM_STORE(d, k, v, m)  gdbm_store(d, k, v, m)
+  #define MY_DBM_STRERROR(x)        gdbm_strerror(x)
+  #define MY_DBM_CLOSE(d)           gdbm_close(d)
+
 #elif HAVE_LIBNDBM
   #include <ndbm.h>
+
+  #define MY_DBM_FETCH(d, k)        dbm_fetch(d, k)
+  #define MY_DBM_STORE(d, k, v, m)  dbm_store(d, k, v, m)
+  #define MY_DBM_STRERROR(x)        strerror(x)
+  #define MY_DBM_CLOSE(d)           dbm_close(d)
 #else
-  #error "No DBM header file found. WTF?"
+  #error "No GDBM or NDBM header file found. WTF?"
 #endif
 
 #if HAVE_SYS_SOCKET_H
@@ -55,21 +62,49 @@
 int
 replay_db_init(fko_srv_options_t *opts)
 {
-    DBM    *rpdb;
-    datum   db_ent;
+#ifdef HAVE_LIBGDBM
+    GDBM_FILE   rpdb;
+#elif HAVE_LIBNDBM
+    DBM        *rpdb;
+#endif
 
-    int     db_count = 0;
+    datum       db_key, db_next_key;
+    int         db_count = 0;
 
-    rpdb = dbm_open(opts->config[CONF_DIGEST_FILE], O_RDWR|O_CREAT, S_IRUSR|S_IWUSR);
+#ifdef HAVE_LIBGDBM
+    rpdb = gdbm_open(
+        opts->config[CONF_DIGEST_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
+    );
+#elif HAVE_LIBNDBM
+    rpdb = dbm_open(
+        opts->config[CONF_DIGEST_FILE], O_RDWR|O_CREAT, S_IRUSR|S_IWUSR
+    );
+#endif
 
     if(!rpdb)
     {
-        perror("Unable to create digest cache file: ");
+        log_msg(LOG_ERR|LOG_STDERR,
+            "Unable to open digest cache file: ",
+            MY_DBM_STRERROR(errno)
+        );
+
         return(-1);
     }
 
-    for (db_ent = dbm_firstkey(rpdb); db_ent.dptr != NULL; db_ent = dbm_nextkey(rpdb))
+#ifdef HAVE_LIBGDBM
+    db_key = gdbm_firstkey(rpdb);
+
+    while (db_key.dptr != NULL)
+    {
         db_count++;
+        db_next_key = gdbm_nextkey(rpdb, db_key);
+        free(db_key.dptr);
+        db_key = db_next_key;
+    }
+#elif HAVE_LIBNDBM
+    for (db_key = dbm_firstkey(rpdb); db_ent.dptr != NULL; db_key = dbm_nextkey(rpdb))
+        db_count++;
+#endif
 
     dbm_close(rpdb);
 
@@ -83,10 +118,16 @@ replay_db_init(fko_srv_options_t *opts)
 int
 replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
-    DBM    *rpdb;
-    datum   db_key, db_ent;
+#ifdef HAVE_LIBGDBM
+    GDBM_FILE   rpdb;
+#elif HAVE_LIBNDBM
+    DBM        *rpdb;
+#endif
 
-    char    ipaddr[INET_ADDRSTRLEN+1] = {0};
+    datum       db_key, db_ent;
+
+    char    curr_ip[INET_ADDRSTRLEN+1] = {0};
+    char    last_ip[INET_ADDRSTRLEN+1] = {0};
 
     char   *digest;
     int     digest_len, res;
@@ -107,40 +148,56 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     /* Check the db for the key
     */
+#ifdef HAVE_LIBGDBM
+    rpdb = gdbm_open(
+         opts->config[CONF_DIGEST_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
+    );
+#elif HAVE_LIBNDBM
     rpdb = dbm_open(opts->config[CONF_DIGEST_FILE], O_RDWR, 0);
+#endif
 
     if(!rpdb)
     {
         log_msg(LOG_WARNING|LOG_STDERR, "Error opening digest_cache: %s",
-            strerror(errno));
+            MY_DBM_STRERROR(errno)
+        );
 
         return(-1);
     }
 
-    db_ent = dbm_fetch(rpdb, db_key);
+    db_ent = MY_DBM_FETCH(rpdb, db_key);
 
     /* If the datum is not null, we have a match.  Otherwise, we add
     * this entry to the cache.
     */
     if(db_ent.dptr != NULL)
     {
-        /* Convert the IP to a human readable form
+        /* Convert the IPs to a human readable form
         */
         inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
-            ipaddr, INET_ADDRSTRLEN);
+            curr_ip, INET_ADDRSTRLEN);
+        
+        inet_ntop(AF_INET, db_ent.dptr, last_ip, INET_ADDRSTRLEN);
         
         log_msg(LOG_WARNING|LOG_STDERR,
-            "Replay detected from source IP: %s", ipaddr);
+            "Replay detected from source IP: %s (cached ip: %s)",
+            curr_ip, last_ip
+        );
+
+#ifdef HAVE_LIBGDBM
+        free(db_ent.dptr);
+#endif
 
         res = 1;
     } else {
         db_ent.dptr = (char*)&(opts->spa_pkt.packet_src_ip);
         db_ent.dsize = sizeof(opts->spa_pkt.packet_src_ip);
 
-        if(dbm_store(rpdb, db_key, db_ent, DBM_INSERT) != 0)
+        if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_INSERT) != 0)
         {
             log_msg(LOG_WARNING|LOG_STDERR, "Error adding entry digest_cache: %s",
-                strerror(errno));
+                MY_DBM_STRERROR(errno)
+            );
 
             res = -1;
         }
@@ -148,7 +205,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         res = 0;
     } 
 
-    dbm_close(rpdb);
+    MY_DBM_CLOSE(rpdb);
 
     return(res);
 }
