@@ -477,7 +477,7 @@ FKO - Perl module wrapper for libfko
   my $fko = FKO->new();
 
   if(!$fko) {
-    die "Unable to create FKO object: $FKO::error_str\n");
+    die "Unable to create FKO object: $FKO::error_str\n";
   }
 
   # Override the username (default is current user).
