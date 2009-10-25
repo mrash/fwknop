@@ -979,10 +979,12 @@ sub SPA_check_packet_age() {
     my $remote_time = shift;
 
     if ($config{'ENABLE_SPA_PACKET_AGING'} eq 'Y') {
-        if (abs((time() - $remote_time))
-                > $config{'MAX_SPA_PACKET_AGE'}) {
+        my $time_diff = time() - $remote_time;
+        if (abs($time_diff) > $config{'MAX_SPA_PACKET_AGE'}) {
             &logr('[-]', "remote time stamp age difference is larger than " .
                 "$config{'MAX_SPA_PACKET_AGE'} second max.", $SEND_MAIL);
+            print STDERR localtime() . " [-] Time difference: $time_diff " .
+                "(seconds), " . ($time_diff / 3600) . " (hours)\n";
             return 0;
         }
     }
