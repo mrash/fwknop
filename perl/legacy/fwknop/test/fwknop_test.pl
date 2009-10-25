@@ -152,6 +152,7 @@ my $test_exclude = '';
 my @tests_to_exclude = ();
 my $unauth_port = 0;
 my $sniff_file = '';
+my $list_mode  = 0;
 my $open_ports = '';
 my $PRINT_LEN = 68;
 my $NUM_RAND  = 100;
@@ -229,6 +230,7 @@ exit 1 unless GetOptions(
     'skip-lx-check'     => \$skip_language_check,
     'no-client-FKO-module' => \$no_client_fko_module, # fwknop client without using libfko
     'no-server-FKO-module' => \$no_server_fko_module, # fwknop server without using libfko
+    'List-mode'         => \$list_mode,
     'help'              => \$help
 );
 
@@ -1262,11 +1264,13 @@ if ($failed_tests) {
     &logr("[+] ==> Failed $failed_tests/$test_num tests " .
         "against fwknop. <==\n");
 }
-&logr("[+] This console output has been stored in: $logfile\n\n");
 
-&flush_quiet();
-system "$fwknopdCmd $gpg_mode_str -c $default_fwknop_conf " .
-    "--fw-type $config{'FIREWALL_TYPE'} --Kill > /dev/null 2>\&1";
+unless ($list_mode) {
+    &logr("[+] This console output has been stored in: $logfile\n\n");
+    &flush_quiet();
+    system "$fwknopdCmd $gpg_mode_str -c $default_fwknop_conf " .
+        "--fw-type $config{'FIREWALL_TYPE'} --Kill > /dev/null 2>\&1";
+}
 
 exit 0;
 #======================== end main =========================
@@ -1294,6 +1298,11 @@ sub test_driver() {
             }
         }
         return if $found;
+    }
+
+    if ($list_mode) {
+        print $msg, "\n";
+        return;
     }
 
     ### remove the *.warn and *.die files before executing
@@ -2078,6 +2087,11 @@ sub stop_fwknopd_quiet() {
         return if $found;
     }
 
+    if ($list_mode) {
+        print $msg, "\n";
+        return;
+    }
+
     &flush_quiet();
     system "$fwknopdCmd $gpg_mode_str -c $default_fwknop_conf " .
         "--fw-type $config{'FIREWALL_TYPE'} --Kill > /dev/null 2>\&1";
@@ -2108,6 +2122,11 @@ sub test_sleep() {
             }
         }
         return if $found;
+    }
+
+    if ($list_mode) {
+        print $msg_log, "\n";
+        return;
     }
 
     &logr("    $msg_log\n    ");
@@ -4591,6 +4610,12 @@ sub dots_print() {
 }
 
 sub setup() {
+
+    if ($list_mode) {
+        $config{'FIREWALL_TYPE'} = '<fw>';
+        return;
+    }
+
     $< == 0 && $> == 0 or
         die "[*] $0: You must be root (or equivalent ",
             "UID 0 account) to effectively test fwknop";
@@ -4988,6 +5013,8 @@ Options:
                                perl.
     --no-client-FKO-module   - Disable FKO usage of the fwknop perl client.
     --no-server-FKO-module   - Disable FKO usage of the fwknop perl server.
+    -L, --List-mode          - List identifying test strings on stdout and
+                               and exit.
     -h, --help               - Display usage information.
 
 _HELP_
