@@ -225,6 +225,13 @@ validate_options(fko_cli_options_t *options)
             snprintf(options->http_user_agent, HTTP_MAX_USER_AGENT_LEN,
                 "%s%s", "Fwknop/", MY_VERSION);
 
+    if(options->http_proxy[0] != 0x0 && options->spa_proto != FKO_PROTO_HTTP)
+    {
+        fprintf(stderr,
+            "[*] Cannot set --http-proxy with a non-HTTP protocol.\n");
+        exit(EXIT_FAILURE);
+    }
+
     /* If we are using gpg, we must at least have the recipient set.
     */
     if(options->use_gpg)
@@ -263,7 +270,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->fw_timeout   = -1;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "a:A:bB:C:D:f:gG:hm:nN:p:P:qQ:rRsS:Tu:U:vV", cmd_opts, &index)) != -1) {
+            "a:A:bB:C:D:f:gG:hH:m:nN:p:P:qQ:rRsS:Tu:U:vV", cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'a':
@@ -301,6 +308,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'h':
                 usage();
                 exit(EXIT_SUCCESS);
+            case 'H':
+                options->spa_proto = FKO_PROTO_HTTP;
+                strlcpy(options->http_proxy, optarg, MAX_PATH_LEN);
+                break;
             case 'm':
             case FKO_DIGEST_NAME:
                 if(strncasecmp(optarg, "md5", 3) == 0)

@@ -163,6 +163,8 @@ my %config = ();
 my %cmds   = ();
 my $ip_re  = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;
 my $current_test_file  = "$output_dir/$test_num.test";
+my $http_proxy_ip = '1.2.3.4';
+my $http_end_url_host  = 'endhost.through.proxy.com';
 my $previous_test_file = '';
 my $pk_shared_sequence = '';
 my $pk_encrypted_sequence = '';
@@ -272,7 +274,6 @@ my $show_last_opt   = '--Show-last';
 my $http_proxy_opt  = '--HTTP-proxy';
 my $server_test_mode_opt = '--Test';
 
-my $http_proxy_host = 'proxy.host.domain.com';
 if ($client_language eq 'C') {
     $test_mode_opt   = '--test';
     $spoof_user_opt  = '--spoof-user';
@@ -282,6 +283,7 @@ if ($client_language eq 'C') {
     $nat_local_opt   = '--nat-local';
     $nat_rand_opt    = '--nat-rand-port';
     $http_opt        = '--server-proto http';
+    $http_proxy_opt  = '--http-proxy';
     $digest_opt      = '--digest-type';
     $server_cmd_opt  = '--server-command';
     $show_last_opt   = '--show-last';
@@ -2285,16 +2287,16 @@ sub http_verify_include_hostname_in_request() {
     open F, "< $http_test_file" or
             die "[*] Could not open $http_test_file: $!";
     while (<F>) {
-        if (m|Raw\s+packet\s+data\s.*\sGET\shttp://$http_proxy_host/\S+\s+HTTP/1\.0NANA
+        if (m|Raw\s+packet\s+data\s.*\sGET\shttp://$http_end_url_host/\S+\s+HTTP/1\.0NANA
                 User\-Agent:\s+Fwknop/\d+\.\d+\S{0,3}.*?NANAAccept:\s\*/\*NANA
-                Host:\s${http_proxy_host}NANAConnection:\sKeep-Alive|x) {
+                Host:\s${http_proxy_ip}NANAConnection:\sKeep-Alive|x) {
             close F;
             return 1;
         }
     }
     close F;
     return &print_errors('[-] GET request does not contain ' .
-        "http://$http_proxy_host hostname");
+        "http://$http_end_url_host hostname");
 }
 
 sub SPA_sniff_decrypt_established_tcp() {
@@ -3679,9 +3681,11 @@ sub SPA_access_packet_http_localhost() {
 }
 
 sub SPA_access_packet_http_include_host() {
+    $default_fwknop_args =~ s/-D\s$localhost/-D $http_end_url_host/;
     my $rv = &get_access_packet("$default_fwknop_args " .
-        "$http_opt $http_proxy_opt http://$http_proxy_host",
+        "$http_opt $http_proxy_opt http://$http_proxy_ip",
         $default_fwknop_conf, $NO_QUIET);
+    $default_fwknop_args =~ s/-D\s$http_end_url_host/-D $localhost/;
     return $rv;
 }
 
@@ -4844,6 +4848,7 @@ sub write_key() {
         or die "[*] Could not open $local_key_file: $!";
     print K "$localhost: $cache_key\n";
     print K "localhost: $cache_key\n";
+    print K "$http_end_url_host: $cache_key\n";
     close K;
     return;
 }

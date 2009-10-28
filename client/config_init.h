@@ -69,6 +69,7 @@ static struct option cmd_opts[] =
     {"gpg-agent",           0, NULL, GPG_AGENT },
     {"get-key",             1, NULL, 'G'},
     {"help",                0, NULL, 'h'},
+    {"http-proxy",          1, NULL, 'H'},
     {"no-save",             0, NULL, 'n'},
     {"nat-access",          1, NULL, 'N'},
     {"nat-local",           0, NULL, NAT_LOCAL},

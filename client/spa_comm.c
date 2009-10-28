@@ -375,7 +375,8 @@ int
 send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
 {
     char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
-    int  i;
+    char http_proxy_host[MAX_HOSTNAME_LEN] = "";
+    int  i, j, http_proxy_start;
 
     spa_data_copy = malloc(sd_len+1);
     if (spa_data_copy == NULL)
@@ -395,16 +396,55 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
         }
     }
 
-    snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
-        "%s%s%s%s%s%s%s",
-        "GET /",
-        spa_data_copy,
-        " HTTP/1.0\r\nUser-Agent: ",
-        options->http_user_agent,
-        "\r\nAccept: */*\r\nHost: ",
-        options->spa_server_str,  /* hostname or IP */
-        "\r\nConnection: Keep-Alive\r\n\r\n"
-    );
+    if(options->http_proxy[0] == 0x0)
+    {
+        snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
+            "%s%s%s%s%s%s%s",
+            "GET /",
+            spa_data_copy,
+            " HTTP/1.0\r\nUser-Agent: ",
+            options->http_user_agent,
+            "\r\nAccept: */*\r\nHost: ",
+            options->spa_server_str,  /* hostname or IP */
+            "\r\nConnection: Keep-Alive\r\n\r\n"
+        );
+    }
+    else /* we are sending the SPA packet through an HTTP proxy */
+    {
+        /* get the proxy hostname from the proxy URL */
+        http_proxy_start = 0;
+        if(options->http_proxy[0] == 'h'
+            && options->http_proxy[1] == 't'
+            && options->http_proxy[2] == 't'
+            && options->http_proxy[3] == 'p'
+            && options->http_proxy[4] == ':'
+            && options->http_proxy[5] == '/'
+            && options->http_proxy[6] == '/')
+        {
+            http_proxy_start = 7;
+        }
+
+        for (i=http_proxy_start, j=0;
+                i < strlen(options->http_proxy) && options->http_proxy[i] != ':'; i++, j++)
+        {
+            http_proxy_host[j] = options->http_proxy[i];
+        }
+        http_proxy_host[j] = 0x0;
+
+        snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
+            "%s%s%s%s%s%s%s%s%s",
+            "GET http://",
+            options->spa_server_str,
+            "/",
+            spa_data_copy,
+            " HTTP/1.0\r\nUser-Agent: ",
+            options->http_user_agent,
+            "\r\nAccept: */*\r\nHost: ",
+            http_proxy_host,  /* hostname or IP */
+            "\r\nConnection: Keep-Alive\r\n\r\n"
+        );
+        strlcpy(options->spa_server_str, http_proxy_host, MAX_SERVER_STR_LEN);
+    }
     free(spa_data_copy);
 
     if (options->test)

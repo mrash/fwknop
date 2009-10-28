@@ -69,6 +69,7 @@ my $test_mode     = 0;
 my $cmdl_homedir  = '';
 my $knock_sleep   = 1;  ### default to 1 second difference between port knocks
 my $knock_dst     = '';
+my $knock_dst_pre_resolve = '';
 my $homedir       = '';
 my $min_port      = 10000;
 my $max_port      = 65535;
@@ -87,7 +88,7 @@ my $time_offset_minus = '';
 my $skip_fko_module = 0;
 my $test_fko_exists = 0;
 my $use_fko_module = 0;
-my $fko_obj       = '';
+my $fko_obj = '';
 my $http_proxy_host = '';
 my $http_proxy = '';
 my $gpg_home_dir  = '';
@@ -117,7 +118,6 @@ my $spa_over_http = 0;
 my $resolve_external_ip  = 0;
 my $server_auth_crypt_pw = '';
 my $pcap_sleep_interval  = 1;  ### seconds
-my $knock_dst_pre_resolve = '';
 my $selected_random_nat_port = 0;
 my $include_base64_trailing_equals = 0;
 my $include_base64_gnupg_prefix = 0;
@@ -263,7 +263,7 @@ srand();
 
 &get_homedir();
 
-### save a copy
+### save a copy of the SPA destination
 $knock_dst_pre_resolve = $knock_dst;
 
 &assign_spa_port();
@@ -313,7 +313,7 @@ if ($verbose) {
     print "[+] fwknop Command line: @args_cp\n";
 }
 
-unless ($knock_dst =~ /$ip_re/) {
+unless ($knock_dst =~ /$ip_re/ or $http_proxy) {
     print "[+] Resolving hostname: $knock_dst\n" unless $quiet;
     ### resolve to an IP
     my $iaddr = inet_aton($knock_dst)
@@ -996,7 +996,7 @@ sub assign_spa_port() {
 
         ### default to port 80 if the port has not already been updated
         ### (via --Server-port or the above IP:PORT notation).
-        $enc_pcap_port = 80;
+        $enc_pcap_port = 80 unless $knock_dst =~ /.*:\d+/;
 
         ### if using an HTTP proxy, allow the http://HOST:PORT notation
         ### to determine the port
@@ -1333,35 +1333,62 @@ sub pcap_send_encrypted_msg() {
 sub send_spa_packet_over_http() {
     my ($msg, $msg_len) = @_;
 
-    my $http_host = $knock_dst_pre_resolve;
+    ### default to use the pre-resolution host as the HTTP server to
+    ### send the SPA packet to.
+    my $http_host    = $knock_dst_pre_resolve;
+    my $http_host_ip = $knock_dst;
 
     if ($http_proxy_host) {
-        $msg = "http://${http_proxy_host}${msg}";
+
+        ### if we are sending the SPA packet through a proxy, set the
+        ### SPA destination IP as the IP of the proxy host, and use the
+        ### -D arg as part of the end host URL
+
         $http_host = $http_proxy_host;
+
+        $knock_dst_pre_resolve =~ s|/$|| if $knock_dst_pre_resolve =~ m|/$|;
+        $knock_dst_pre_resolve =~ s|http://||
+            if $knock_dst_pre_resolve =~ m|^http://|;
+        $knock_dst_pre_resolve =~ s|(.*?)/.*|$1|;
+
+        ### this is used as the GET request
+        $msg = "http://${knock_dst_pre_resolve}${msg}";  ### FIXME, include http?
+
+        $http_host    = $http_proxy_host;
+        $http_host_ip = $http_proxy_host;
+
+        unless ($http_host_ip =~ /$ip_re/) {
+            ### resolve to an IP
+            my $iaddr = inet_aton($http_host_ip)
+                or die "[*] Could not resolve $http_host_ip to an IP.";
+            my $addr = inet_ntoa($iaddr)
+                or die "[*] Could not resolve $http_host_ip to an IP.";
+            $http_host_ip = $addr;
+        }
     }
 
     print "\n[+] Sending SPA packet over HTTP to ",
-        "$knock_dst:$enc_pcap_port...\n    Sending $msg_len ",
-        "byte message to $knock_dst over established ",
+        "$http_host:$enc_pcap_port...\n    Sending $msg_len ",
+        "byte message to $http_host over established ",
         "tcp/$enc_pcap_port socket...\n"
             unless $quiet;
 
     my $http_request = "GET $msg HTTP/1.0\r\n" .
         "User-Agent: $ext_resolve_user_agent\r\n" .
         "Accept: */*\r\n" .
-        "Host: $http_host\r\n" .
+        "Host: $http_host\r\n" .  ### FIXME?
         "Connection: Keep-Alive\r\n\r\n";
 
     print "[+] Sending SPA HTTP request:\n\n$http_request" if $debug;
 
     unless ($test_mode) {
         my $sock = IO::Socket::INET->new(
-            PeerAddr => $knock_dst,
+            PeerAddr => $http_host_ip,
             PeerPort => $enc_pcap_port,
             Proto    => 'tcp',
             Timeout  => 1
         ) or die "[*] Could not acquire TCP/$enc_pcap_port socket ",
-                "with $knock_dst: $!";
+                "with $http_host_ip: $!";
         if (defined($sock)) {
 
             print $sock $http_request;
@@ -2440,6 +2467,9 @@ sub validate_command_line() {
         print "[-] Options are disabled by default, so --gpg-no-options ",
             "is not used.\n";
     }
+
+    $spa_over_http = 1 if $http_proxy;
+
     return;
 }
 

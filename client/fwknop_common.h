@@ -57,6 +57,7 @@
 #define HTTP_MAX_REQUEST_LEN       2000
 #define HTTP_MAX_RESPONSE_LEN      2000
 #define HTTP_MAX_USER_AGENT_LEN    50
+#define MAX_HOSTNAME_LEN           70
 
 /* fwknop client configuration parameters and values
 */
@@ -90,6 +91,10 @@ typedef struct fko_cli_options
     */
     int  resolve_ip_http;
     char http_user_agent[HTTP_MAX_USER_AGENT_LEN];
+
+    /* HTTP proxy support
+    */
+    char http_proxy[HTTP_MAX_REQUEST_LEN];
 
     /* SPA packet transmission port and protocol
     */
