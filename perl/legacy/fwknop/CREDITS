@@ -346,3 +346,11 @@ Jonathan Bennett
       sending SPA packets over HTTP.  The result is a new --HTTP-proxy option
       that expects the proxy host to be given as "http://HOST", and it also
       supports the "http://HOST:PORT" notation as well.
+    - Bug fix for the fwknop client sending an SPA packet through an HTTP
+      proxy based on the --HTTP-proxy arg with the ultimate destination
+      specified via  the -D arg.
+
+Daniel Lopez
+    - Wrote the morpheus-fwknop clietn UI:
+        http://sourceforge.net/projects/morpheus-fwknop/files/0.7.3501.21619 \
+        /Morpheus%200.7%20Installer.zip/download
