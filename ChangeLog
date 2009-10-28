@@ -1,3 +1,10 @@
+2009-10-27  Michael Rash  <mbr@cipherdyne.org>
+	* Added --http-proxy argument to the fwknop C client so that SPA packets
+	  can be sent through HTTP proxies.
+	* (Legacy code) Changed HTTP proxy handling to point an SPA packet to
+	  an HTTP proxy with -D specifying the end point host and --HTTP-proxy
+	  pointing to the proxy host.  This fix was suggested by Jonathan Bennett.
+
 2009-08-02  Damien Stuart <dstuart@dstuart.org>
 	* Tweaks to digest code - added SHA384 and SHA512 to supported digests.
 	* Updated autoconf files to account or new headers and types recently added.
