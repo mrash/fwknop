@@ -29,6 +29,14 @@
 #include "fwknopd_common.h"
 #include "fko.h"
 
+typedef struct digest_cache_info {
+    unsigned int    src_ip;
+    time_t          created;
+    time_t          first_replay;
+    time_t          last_replay;
+    int             replay_count;
+} digest_cache_info_t;
+
 /* Prototypes
 */
 int replay_db_init(fko_srv_options_t *opts);

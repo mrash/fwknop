@@ -28,6 +28,8 @@
 #include "replay_dbm.h"
 #include "log_msg.h"
 
+#include <time.h>
+
 #if HAVE_LIBGDBM
   #include <gdbm.h>
 
@@ -123,14 +125,19 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 #elif HAVE_LIBNDBM
     DBM        *rpdb;
 #endif
-
     datum       db_key, db_ent;
 
-    char    curr_ip[INET_ADDRSTRLEN+1] = {0};
-    char    last_ip[INET_ADDRSTRLEN+1] = {0};
+    //struct tm   created, first, last;
+    char        created[18], first[18], last[18];
+    int         replay_count    = 0;
 
-    char   *digest;
-    int     digest_len, res;
+    char        curr_ip[INET_ADDRSTRLEN+1] = {0};
+    char        last_ip[INET_ADDRSTRLEN+1] = {0};
+
+    char       *digest;
+    int         digest_len, res;
+
+    digest_cache_info_t dc_info, *dci_p;
 
     res = fko_get_spa_digest(ctx, &digest);
     if(res != FKO_SUCCESS)
@@ -172,17 +179,51 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
     */
     if(db_ent.dptr != NULL)
     {
+        dci_p = (digest_cache_info_t *)db_ent.dptr;
+
         /* Convert the IPs to a human readable form
         */
         inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
             curr_ip, INET_ADDRSTRLEN);
-        
-        inet_ntop(AF_INET, db_ent.dptr, last_ip, INET_ADDRSTRLEN);
-        
+        inet_ntop(AF_INET, &(dci_p->src_ip), last_ip, INET_ADDRSTRLEN);
+ 
+        /* Mark the last_replay time.
+        */
+        dci_p->last_replay = time(NULL);
+
+        /* Increment the replay count and check to see if it is the first one.
+        */
+        if(++(dci_p->replay_count) == 1)
+        {
+            /* This is the first replay so make it the same as last_replay
+            */
+            dci_p->first_replay = dci_p->last_replay;
+        }
+
+        strftime(created, 18, "%D %H:%M:%S", localtime(&(dci_p->created)));
+        strftime(first, 18, "%D %H:%M:%S", localtime(&(dci_p->first_replay)));
+        strftime(last, 18, "%D %H:%M:%S", localtime(&(dci_p->last_replay)));
+
         log_msg(LOG_WARNING|LOG_STDERR,
-            "Replay detected from source IP: %s (cached ip: %s)",
-            curr_ip, last_ip
+            "Replay detected from source IP: %s\n"
+            "            Original source IP: %s\n"
+            "                 Entry created: %s\n"
+            "                  First replay: %s\n"
+            "                   Last replay: %s\n"
+            "                  Replay count: %i\n",
+            curr_ip, last_ip,
+            created,
+            first,
+            last,
+            dci_p->replay_count
         );
+
+        /* Save it back to the digest cache
+        */
+        if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_REPLACE) != 0)
+            log_msg(LOG_WARNING|LOG_STDERR, "Error updating entry digest_cache: %s",
+                MY_DBM_STRERROR(errno)
+            );
 
 #ifdef HAVE_LIBGDBM
         free(db_ent.dptr);
@@ -190,8 +231,14 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 
         res = 1;
     } else {
-        db_ent.dptr = (char*)&(opts->spa_pkt.packet_src_ip);
-        db_ent.dsize = sizeof(opts->spa_pkt.packet_src_ip);
+        /* This is a new SPA packet that needs to be added to the cache.
+        */
+        dc_info.src_ip  = opts->spa_pkt.packet_src_ip;
+        dc_info.created = time(NULL);
+        dc_info.first_replay = dc_info.last_replay = dc_info.replay_count = 0;
+
+        db_ent.dsize    = sizeof(digest_cache_info_t);
+        db_ent.dptr     = (char*)&(dc_info);
 
         if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_INSERT) != 0)
         {

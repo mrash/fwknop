@@ -34,7 +34,7 @@ AC_PROG_LIBTOOL
 AC_HEADER_STDC
 AC_HEADER_TIME
 
-AC_CHECK_HEADERS([ctype.h endian.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/socket.h sys/stat.h sys/time.h termios.h unistd.h gdbm.h gdbm-ndbm.h gdbm/ndbm.h])
+AC_CHECK_HEADERS([ctype.h endian.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/socket.h sys/stat.h sys/time.h termios.h unistd.h])
 
 # Type checks.
 #
