@@ -51,6 +51,7 @@ use MIME::Base64;
 use Data::Dumper;
 use POSIX;
 use Getopt::Long;
+use warnings;
 use strict;
 
 my $version = '1.9.12';
@@ -90,7 +91,12 @@ my $test_fko_exists = 0;
 my $use_fko_module = 0;
 my $fko_obj = '';
 my $http_proxy_host = '';
-my $http_proxy = '';
+my $http_proxy;
+### the variable is declared, but not defined. This is necessary for the
+###--HTTP_proxy cli option to work as expected.
+
+my $http_proxy_user = '';
+my $http_proxy_pass = '';
 my $gpg_home_dir  = '';
 my $gpg_recipient = '';
 my $use_gpg_agent = 0;
@@ -1000,8 +1006,27 @@ sub assign_spa_port() {
 
         ### if using an HTTP proxy, allow the http://HOST:PORT notation
         ### to determine the port
+        ### parses all the potential forms of http_proxy
+               ###FIXME: Is this the best place to parse this?
         if ($http_proxy) {
-            if ($http_proxy =~ m|http://(\S+):(\d+)|) {
+            if ($http_proxy =~ m|http://(\S+):(\S+)@(\S+):(\d+)|) {
+                if ($http_proxy_user eq '') {
+                    $http_proxy_user = $1;
+                }
+                if ($http_proxy_pass eq '') {
+                    $http_proxy_pass = $2;
+                }
+                $http_proxy_host = $3;
+                $enc_pcap_port   = $4;
+            } elsif ($http_proxy =~ m|http://(\S+):(\S+)@(\S+)|) {
+                if ($http_proxy_user eq '') {
+                    $http_proxy_user = $1;
+                }
+                if ($http_proxy_pass eq '') {
+                    $http_proxy_pass = $2;
+                }
+                $http_proxy_host = $3;
+            } elsif ($http_proxy =~ m|http://(\S+):(\d+)|) {
                 $http_proxy_host = $1;
                 $enc_pcap_port   = $2;
             } elsif ($http_proxy =~ m|http://(\S+)|) {
@@ -1337,7 +1362,7 @@ sub send_spa_packet_over_http() {
     ### send the SPA packet to.
     my $http_host    = $knock_dst_pre_resolve;
     my $http_host_ip = $knock_dst;
-
+    my $http_proxy_auth_string = '';
     if ($http_proxy_host) {
 
         ### if we are sending the SPA packet through a proxy, set the
@@ -1365,6 +1390,10 @@ sub send_spa_packet_over_http() {
                 or die "[*] Could not resolve $http_host_ip to an IP.";
             $http_host_ip = $addr;
         }
+        if ($http_proxy_user) {
+            my $proxy_auth = encode_base64($http_proxy_user . ':' . $http_proxy_pass);
+            $http_proxy_auth_string = 'Proxy-Authorization: Basic ' .  $proxy_auth . "\r\n";
+        }
     }
 
     print "\n[+] Sending SPA packet over HTTP to ",
@@ -1377,7 +1406,9 @@ sub send_spa_packet_over_http() {
         "User-Agent: $ext_resolve_user_agent\r\n" .
         "Accept: */*\r\n" .
         "Host: $http_host\r\n" .  ### FIXME?
-        "Connection: Keep-Alive\r\n\r\n";
+        "Connection: Keep-Alive\r\n" .
+        "$http_proxy_auth_string" .
+        "\r\n";
 
     print "[+] Sending SPA HTTP request:\n\n$http_request" if $debug;
 
@@ -2184,7 +2215,9 @@ sub handle_command_line() {
         'Forward-access=s'  => \$NAT_access_str,
         'TCP-sock'       => \$spa_established_tcp,
         'HTTP'           => \$spa_over_http,
-        'HTTP-proxy=s'      => \$http_proxy,
+        'HTTP-proxy:s'      => \$http_proxy, # the :s indicates that the argument is optional
+        'HTTP-proxy-user=s' => \$http_proxy_user,
+        'HTTP-proxy-password=s' => \$http_proxy_pass,
         'HTTP-user-agent=s' => \$ext_resolve_user_agent,
         'Access=s'       => \$access_str,
         'fw-timeout=i'   => \$cmdl_fw_timeout,
@@ -2224,6 +2257,11 @@ sub handle_command_line() {
 
     ### run a few minor checks against the supplied args
     &validate_command_line();
+
+    ### if HTTP_proxy is specified, but not explicitly set, get it from the env variable
+    if (defined $http_proxy and $http_proxy eq ''){
+	$http_proxy = $ENV{'http_proxy'};
+    }
 
     return;
 }
@@ -2468,7 +2506,8 @@ sub validate_command_line() {
             "is not used.\n";
     }
 
-    $spa_over_http = 1 if $http_proxy;
+    ### if $ENV{'http_proxy'} is to be used, $http_proxy will be '' at this point
+    $spa_over_http = 1 if defined $http_proxy;
 
     return;
 }

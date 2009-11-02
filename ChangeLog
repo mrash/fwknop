@@ -1,3 +1,11 @@
+2009-11-01  Michael Rash  <mbr@cipherdyne.org>
+	* (Legacy code) Applied patch from Jonthan Bennett to support the usage of
+	  the http_proxy environmental variable for sending SPA packets through an
+	  HTTP proxy.  The patch also adds support for specifying an HTTP proxy
+	  user and password via the following syntax:
+	     'http://username:password@proxy.com:port' or
+	     'http://username:password@proxy.com'
+
 2009-10-27  Michael Rash  <mbr@cipherdyne.org>
 	* Added --http-proxy argument to the fwknop C client so that SPA packets
 	  can be sent through HTTP proxies.
