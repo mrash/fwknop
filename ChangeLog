@@ -5,6 +5,8 @@
 	  user and password via the following syntax:
 	     'http://username:password@proxy.com:port' or
 	     'http://username:password@proxy.com'
+	* (Legacy code) Bug fix to allow the --rand-port argument to function along
+	  without an inappropriate check for the --Server-port arg.
 
 2009-10-27  Michael Rash  <mbr@cipherdyne.org>
 	* Added --http-proxy argument to the fwknop C client so that SPA packets

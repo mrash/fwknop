@@ -979,7 +979,7 @@ sub fko_encrypt() {
 
 sub assign_spa_port() {
 
-    if ($rand_port and $cmdl_spa_port != $DEFAULT_PORT) {
+    if ($rand_port and $cmdl_spa_port != 0) {
         die "[*] Cannot use --Server-port and --rand-port at the same time";
     }
 
