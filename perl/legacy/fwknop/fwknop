@@ -350,6 +350,12 @@ if (lc($server_mode) eq 'pcap' or lc($server_mode) eq 'knock') {
     die "[*] Must also specify: -D <destination>\n"
         unless $knock_dst;
 
+    if ($spoof_src) {
+        $< == 0 && $> == 0 or
+            die '[*] You must be root (or equivalent ',
+                "UID 0 account) to spoof the source address.\n";
+    }
+
     unless ($enc_allow_ip
             or $enc_source_ip
             or $resolve_external_ip) {
@@ -366,11 +372,6 @@ if (lc($server_mode) eq 'pcap' or lc($server_mode) eq 'knock') {
     ### resolve the extenal IP via http://www.whatismyip.org
     $enc_allow_ip = &resolve_external_ip() if $resolve_external_ip;
 
-    if ($spoof_src) {
-        $< == 0 && $> == 0 or
-            die '[*] You must be root (or equivalent ',
-                "UID 0 account) to spoof the source address.\n";
-    }
     unless ($enc_allow_ip =~ /$ip_re/) {
         ### resolve to an IP
         my $iaddr = inet_aton($enc_allow_ip)
@@ -379,6 +380,7 @@ if (lc($server_mode) eq 'pcap' or lc($server_mode) eq 'knock') {
             or die "[*] Could not resolve $enc_allow_ip to IP.";
         $enc_allow_ip = $addr;
     }
+
     if ($cmdline_offset) {
         if (lc($server_mode) eq 'pcap') {
             die "[*] Port offset is meaningless in pcap mode ",
@@ -1824,7 +1826,7 @@ sub resolve_external_ip() {
             ### greedy match to the last instance of a matching
             ### IP regex so that we get past any HTTP header info
             ### that might happen to match the IP regex
-            if ($web_data =~ /($ip_re)/) {
+            if ($web_data =~ /\b($ip_re)\b/) {
                 $external_ip = $1;
             }
         }
@@ -2260,7 +2262,7 @@ sub handle_command_line() {
 
     ### if HTTP_proxy is specified, but not explicitly set, get it from the env variable
     if (defined $http_proxy and $http_proxy eq ''){
-	$http_proxy = $ENV{'http_proxy'};
+        $http_proxy = $ENV{'http_proxy'};
     }
 
     return;
