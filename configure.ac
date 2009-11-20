@@ -3,7 +3,7 @@ dnl Process thie file with autoconf to produce the configure script
 AC_PREREQ(2.61)
 
 m4_define(my_package, [fwknop])
-m4_define(my_version, [2.0.0-alpha])
+m4_define(my_version, [2.0.0-alpha-pre1])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
