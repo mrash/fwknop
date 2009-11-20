@@ -4210,7 +4210,8 @@ sub get_access_packet() {
 
     ### append default port if necessary
     $fwknop_cmdline .= " $server_port_opt 62201"
-        unless $fwknop_cmdline =~ /$server_port_opt/;
+        unless $fwknop_cmdline =~ /$server_port_opt/
+            or $fwknop_cmdline =~ /rand\-port/;
 
     unless (&run_cmd($fwknop_cmdline, $NO_APPEND)) {
         if ($fwknop_cmdline =~ /fw\-timeout/) {
