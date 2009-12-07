@@ -39,13 +39,11 @@ pcap_capture(fko_srv_options_t *opts)
 {
 #if HAVE_LIBPCAP
     pcap_t              *pcap;
-
     char                errstr[PCAP_ERRBUF_SIZE] = {0};
-
     struct bpf_program  fp;
-
-    int                 res, pcap_errcnt = 0;
-
+    int                 res;
+    int                 pcap_errcnt = 0;
+    int                 pending_break = 0;
     int                 promisc = 1;
 
     /* Set non-promiscuous mode only of the ENABLE_PCAP_PROMISC is
@@ -141,8 +139,11 @@ pcap_capture(fko_srv_options_t *opts)
     {
         /* Any signal except USR1 and USR2 mean break the loop.
         */
-        if(got_signal && (got_sigusr1 + got_sigusr2) == 0)
+        if((got_signal != 0) && ((got_sigusr1 + got_sigusr2) == 0))
+        {
             pcap_breakloop(pcap);
+            pending_break = 1;
+        }
 
         res = pcap_dispatch(pcap, 1, (pcap_handler)&process_packet, (unsigned char *)opts);
 
@@ -174,7 +175,7 @@ pcap_capture(fko_srv_options_t *opts)
                 exit(EXIT_FAILURE);
             }
         }
-        else if(res == -2)
+        else if(pending_break == 1 || res == -2)
         {
             /* pcap_breakloop was called, so we bail. */
             break;

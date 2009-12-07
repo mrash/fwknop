@@ -495,8 +495,8 @@ to further illustrate usage.
 @section Creating Contexts
 @cindex context, creation
 
-Before doing anything with libfko, you need to create a context.  As stated
-earlier, A context can created for one of two reasons.  One is for the
+Before doing anything with libfko, you need to create a context.  
+A context is created for one of two reasons.  One is for the
 purpose of building a new fko @acronym{SPA} message from scratch (typically
 to be packaged and sent to an fwknop server somewhere). The other would be
 a context for taking an existing @acronym{SPA} message for decoding,
