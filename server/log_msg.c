@@ -60,9 +60,9 @@ init_logging(fko_srv_options_t *opts) {
     */
     free_logging();
  
-    /* Allocate memory for the log_name and set the my_name to point
-     * to the appropriate name. If the name is set in the config file,
-     * use it.  Otherwise, fallback to the default of 'fwknop'.
+    /* Allocate memory for the log_name and set the my_name to point to the
+     * appropriate name. The name should already be set in the config struct
+     * but if it is not, fallback to the default as defined by 'MY_NAME'.
     */
     if(opts->config[CONF_SYSLOG_IDENTITY] != NULL
       && opts->config[CONF_SYSLOG_IDENTITY][0] != '\0')
@@ -91,8 +91,8 @@ init_logging(fko_srv_options_t *opts) {
     if(opts->foreground != 0)
         static_log_flag = LOG_STDERR | LOG_STDERR_ONLY;
 
-    /* If a log facility was specified in the config file, parse it and
-     * use it.
+    /* Parse the log facility as specified in the config struct. If, for some
+     * reason, it is not, fac will already be set to LOG_DAEMON.
     */
     if(opts->config[CONF_SYSLOG_FACILITY] != NULL
       && opts->config[CONF_SYSLOG_FACILITY][0] != '\0')

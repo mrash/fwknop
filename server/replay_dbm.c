@@ -86,7 +86,8 @@ replay_db_init(fko_srv_options_t *opts)
     if(!rpdb)
     {
         log_msg(LOG_ERR|LOG_STDERR,
-            "Unable to open digest cache file: ",
+            "Unable to open digest cache file: '%s': %s",
+            opts->config[CONF_DIGEST_FILE],
             MY_DBM_STRERROR(errno)
         );
 
@@ -165,7 +166,8 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     if(!rpdb)
     {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error opening digest_cache: %s",
+        log_msg(LOG_WARNING|LOG_STDERR, "Error opening digest_cache: '%s': %s",
+            opts->config[CONF_DIGEST_FILE],
             MY_DBM_STRERROR(errno)
         );
 
@@ -221,7 +223,8 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         /* Save it back to the digest cache
         */
         if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_REPLACE) != 0)
-            log_msg(LOG_WARNING|LOG_STDERR, "Error updating entry digest_cache: %s",
+            log_msg(LOG_WARNING|LOG_STDERR, "Error updating entry in digest_cache: '%s': %s",
+                opts->config[CONF_DIGEST_FILE],
                 MY_DBM_STRERROR(errno)
             );
 

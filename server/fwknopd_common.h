@@ -44,9 +44,23 @@
 /* Some program defaults.
 */
 #ifndef DEF_CONF_DIR
+  /* Our default config directory is based on SYSCONFDIR as set by the
+   * configure script.
+  */
   #define DEF_CONF_DIR      SYSCONFDIR"/fwknop"
 #endif
 #define DEF_CONFIG_FILE     DEF_CONF_DIR"/"MY_NAME".conf"
+#define DEF_ACCESS_FILE     DEF_CONF_DIR"/access.conf"
+
+#ifndef DEF_RUN_DIR
+  /* Our default run directory is based on LOCALSTATEDIR as set by the
+   * configure script. This is where we put the PID and digest cache files.
+  */
+  #define DEF_RUN_DIR       SYSRUNDIR"/run/fwknop"
+#endif
+#define DEF_PID_FILE        DEF_RUN_DIR"/"MY_NAME".pid"
+#define DEF_DIGEST_CACHE    DEF_RUN_DIR"/digest.cache"
+
 
 #define DEF_INTERFACE       "eth0"
 
@@ -126,7 +140,7 @@ enum {
     //CONF_IPT_SNAT_ACCESS,
     //CONF_IPT_MASQUERADE_ACCESS,
     //CONF_FWKNOP_DIR,
-    CONF_FWKNOP_RUN_DIR,
+    //CONF_FWKNOP_RUN_DIR,
     //CONF_FWKNOP_MOD_DIR,
     //CONF_FWKNOP_CONF_DIR,
     //CONF_FWKNOP_ERR_DIR,
@@ -209,7 +223,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"IPT_SNAT_ACCESS",
     //"IPT_MASQUERADE_ACCESS",
     //"FWKNOP_DIR",
-    "FWKNOP_RUN_DIR",
+    //"FWKNOP_RUN_DIR",
     //"FWKNOP_MOD_DIR",
     //"FWKNOP_CONF_DIR",
     //"FWKNOP_ERR_DIR",

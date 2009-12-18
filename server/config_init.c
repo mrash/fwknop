@@ -28,6 +28,7 @@
 #include "getopt.h"
 #include "utils.h"
 #include "ctype.h"
+#include "log_msg.h"
 
 /* Take an index and a string value. malloc the space for the value
  * and assign it to the array at the specified index.
@@ -215,6 +216,25 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_HOSTNAME] != NULL && opts->config[CONF_HOSTNAME][0] != '\0')
         strlcpy(opts->hostname, opts->config[CONF_HOSTNAME], MAX_HOSTNAME_LEN);
 
+    /* If the pid and digest cache files where not set in the config file or
+     * via command-line, then grab the defaults.
+    */
+    if(opts->config[CONF_FWKNOP_PID_FILE] == NULL)
+        set_config_entry(opts, CONF_FWKNOP_PID_FILE, DEF_PID_FILE);
+
+    if(opts->config[CONF_DIGEST_FILE] == NULL)
+        set_config_entry(opts, CONF_DIGEST_FILE, DEF_DIGEST_CACHE);
+
+
+    /* If log facility and default identity where not set in the config file,
+     * fall back to defaults.
+    */
+    if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
+        set_config_entry(opts, CONF_SYSLOG_IDENTITY, MY_NAME);
+
+    if(opts->config[CONF_SYSLOG_FACILITY] == NULL)
+        set_config_entry(opts, CONF_SYSLOG_FACILITY, "LOG_DAEMON");
+
     /* Some options just trigger some output of information, or trigger an
      * external function, but do not actually start fwknopd.  If any of those
      * are set, we can return here an skip the validation routines as all
@@ -232,6 +252,7 @@ validate_options(fko_srv_options_t *opts)
         );
         exit(EXIT_FAILURE);
     }
+
 
     /* TODO: Add more validation and sanity checks... --DSS */
 
@@ -317,7 +338,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     */
     if(opts->config[CONF_OVERRIDE_CONFIG] != NULL)
     {
-        /* Make a copy of the overrid_config string so we can munge it.
+        /* Make a copy of the override_config string so we can munge it.
         */
         strlcpy(override_file, opts->config[CONF_OVERRIDE_CONFIG], MAX_LINE_LEN);
 
