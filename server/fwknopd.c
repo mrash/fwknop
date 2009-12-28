@@ -23,8 +23,6 @@
  *
  *****************************************************************************
 */
-#include <sys/file.h>
-
 #include "fwknopd.h"
 #include "config_init.h"
 #include "process_packet.h"

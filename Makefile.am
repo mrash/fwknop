@@ -1,3 +1,4 @@
+
 if WANT_CLIENT
   CLIENT_DIR = client
 endif
@@ -14,6 +15,7 @@ SUBDIRS = \
     doc 
 
 EXTRA_DIST = \
+	m4 \
     perl/legacy \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \

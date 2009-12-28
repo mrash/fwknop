@@ -29,6 +29,25 @@
 
 #include "fwknopd_common.h"
 
+#include <sys/file.h>
+#include <sys/fcntl.h>
+
+/* If the flock flags are not defined at this point, we take the liberty
+ * of defining them here.
+*/
+#ifndef LOCK_SH
+  #define   LOCK_SH        0x01      /* shared file lock */
+#endif
+#ifndef LOCK_EX
+  #define   LOCK_EX        0x02      /* exclusive file lock */
+#endif
+#ifndef LOCK_NB
+  #define   LOCK_NB        0x04      /* do not block when locking */
+#endif
+#ifndef LOCK_UN
+  #define   LOCK_UN        0x08      /* unlock file */
+#endif
+
 /* Used by the get_user_pw function.
 */
 #define CRYPT_OP_ENCRYPT 1

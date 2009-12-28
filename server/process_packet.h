@@ -29,6 +29,15 @@
 #define IPV4_VER_MASK   0x15
 #define MIN_IPV4_WORDS  0x05
 
+/* For items not defined by this system
+*/
+#ifndef ETHER_CRC_LEN
+  #define ETHER_CRC_LEN 4
+#endif
+#ifndef ETHER_HDR_LEN
+  #define ETHER_HDR_LEN 14
+#endif
+
 /* Prototypes
 */
 void process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header, const unsigned char *packet);
