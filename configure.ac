@@ -164,36 +164,141 @@ AS_IF([test "$want_server" = yes], [
 dnl Add various common way to sbin dir to the path (just in case)
   APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
 
-  AC_PATH_PROG(IPTABLES_EXE, [iptables], [], [$APP_PATH])
-  AS_IF([test x$IPTABLES_EXE != x], [
+dnl Check for iptables
+dnl
+  AC_ARG_WITH([iptables],
+    [AS_HELP_STRING([--with-iptables=/path/to/iptables],
+      [Specify path to the iptables executable @<:@default=check path@:>@])],
+    [
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+          [AC_MSG_ERROR([--with-iptables requires an argument specifying a path to iptables])],
+          [
+            AC_CHECK_FILE([$withval], [], [
+              AC_MSG_WARN([Specified path to iptables does not exist on this system])
+              iptables_exe_warn="*not found*"
+            ])
+            IPTABLES_EXE=$withval
+          ]
+        )
+    ],
+    [
+        AC_PATH_PROG(IPTABLES_EXE, [iptables], [], [$APP_PATH])
+    ]
+  )
+  AS_IF([test "x$IPTABLES_EXE" != x],
+    [
       AC_DEFINE_UNQUOTED([IPTABLES_EXE], ["$IPTABLES_EXE"], [Path to iptables executable])
       iptables_exe=$IPTABLES_EXE
     ], [ iptables_exe="(not found)"]
   )
 
-  AC_PATH_PROG(IPFW_EXE, [ipfw], [], [$APP_PATH])
-  AS_IF([test x$IPFW_EXE != x], [
+dnl Check for ipfw
+dnl
+  AC_ARG_WITH([ipfw],
+    [AS_HELP_STRING([--with-ipfw=/path/to/ipfw],
+      [Specify path to the ipfw executable @<:@default=check path@:>@])],
+    [
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+          [AC_MSG_ERROR([--with-ipfw requires an argument specifying a path to ipfw])],
+          [
+            AC_CHECK_FILE([$withval], [], [
+              AC_MSG_WARN([Specified path to ipfw does not exist on this system])
+              ipfw_exe_warn="*not found*"
+            ])
+            IPFW_EXE=$withval
+          ]
+        )
+    ],
+    [
+        AC_PATH_PROG(IPFW_EXE, [ipfw], [], [$APP_PATH])
+    ]
+  )
+  AS_IF([test "x$IPFW_EXE" != x],
+    [
       AC_DEFINE_UNQUOTED([IPFW_EXE], ["$IPFW_EXE"], [Path to ipfw executable])
       ipfw_exe=$IPFW_EXE
     ], [ ipfw_exe="(not found)"]
   )
 
-  AC_PATH_PROG(SENDMAIL_EXE, [sendmail], [], [$APP_PATH$PATH_SEPARATOR/usr/lib])
-  AS_IF([test x$SENDMAIL_EXE != x], [
+dnl Check for sendmail
+dnl
+  AC_ARG_WITH([sendmail],
+    [AS_HELP_STRING([--with-sendmail=/path/to/sendmail],
+      [Specify path to the sendmail executable @<:@default=check path@:>@])],
+    [
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+          [AC_MSG_ERROR([--with-sendmail requires an argument specifying a path to sendmail])],
+          [
+            AC_CHECK_FILE([$withval], [], [
+              AC_MSG_WARN([Specified path to sendmail does not exist on this system])
+              sendmail_exe_warn="*not found*"
+            ])
+            SENDMAIL_EXE=$withval
+          ]
+        )
+    ],
+    [
+        AC_PATH_PROG(SENDMAIL_EXE, [sendmail], [], [$APP_PATH])
+    ]
+  )
+  AS_IF([test "x$SENDMAIL_EXE" != x],
+    [
       AC_DEFINE_UNQUOTED([SENDMAIL_EXE], ["$SENDMAIL_EXE"], [Path to sendmail executable])
       sendmail_exe=$SENDMAIL_EXE
     ], [ sendmail_exe="(not found)"]
   )
 
-  AC_PATH_PROG(MAIL_EXE, [mail], [], [$APP_PATH])
-  AS_IF([test x$MAIL_EXE != x], [
+dnl Check for mail
+dnl
+  AC_ARG_WITH([mail],
+    [AS_HELP_STRING([--with-mail=/path/to/mail],
+      [Specify path to the mail executable @<:@default=check path@:>@])],
+    [
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+          [AC_MSG_ERROR([--with-mail requires an argument specifying a path to mail])],
+          [
+            AC_CHECK_FILE([$withval], [], [
+              AC_MSG_WARN([Specified path to mail does not exist on this system])
+              mail_exe_warn="*not found*"
+            ])
+            MAIL_EXE=$withval
+          ]
+        )
+    ],
+    [
+        AC_PATH_PROG(MAIL_EXE, [mail], [], [$APP_PATH])
+    ]
+  )
+  AS_IF([test "x$MAIL_EXE" != x],
+    [
       AC_DEFINE_UNQUOTED([MAIL_EXE], ["$MAIL_EXE"], [Path to mail executable])
       mail_exe=$MAIL_EXE
-    ], [ mail_exe="(not found)"]
+    ], [ iptables_exe="(not found)"]
   )
 
-  AC_PATH_PROG(SH_EXE, [sh], [], [$APP_PATH])
-  AS_IF([test x$SH_EXE != x], [
+dnl Check for sh
+dnl
+  AC_ARG_WITH([sh],
+    [AS_HELP_STRING([--with-sh=/path/to/sh],
+      [Specify path to the sh executable @<:@default=check path@:>@])],
+    [
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+          [AC_MSG_ERROR([--with-sh requires an argument specifying a path to sh])],
+          [
+            AC_CHECK_FILE([$withval], [], [
+              AC_MSG_WARN([Specified path to sh does not exist on this system])
+              sh_exe_warn="*not found*"
+            ])
+            SH_EXE=$withval
+          ]
+        )
+    ],
+    [
+        AC_PATH_PROG(SH_EXE, [sh], [], [$APP_PATH])
+    ]
+  )
+  AS_IF([test "x$SH_EXE" != x],
+    [
       AC_DEFINE_UNQUOTED([SH_EXE], ["$SH_EXE"], [Path to sh executable])
       sh_exe=$SH_EXE
     ], [ sh_exe="(not found)"]
@@ -224,11 +329,11 @@ echo "
 "
 if [test $want_server = "yes" ]; then
   echo "    Server support programs:
-        iptables:                   $iptables_exe
-        ipfw:                       $ipfw_exe
-        sendmail:                   $sendmail_exe
-        mail:                       $mail_exe
-        sh:                         $sh_exe
+        iptables:                   $iptables_exe $iptables_exe_warn
+        ipfw:                       $ipfw_exe $ipfw_exe_warn
+        sendmail:                   $sendmail_exe $sendmail_exe_warn
+        mail:                       $mail_exe $mail_exe_warn
+        sh:                         $sh_exe $sh_exe_warn
 "
 fi
 
