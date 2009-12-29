@@ -273,7 +273,7 @@ dnl
     [
       AC_DEFINE_UNQUOTED([MAIL_EXE], ["$MAIL_EXE"], [Path to mail executable])
       mail_exe=$MAIL_EXE
-    ], [ iptables_exe="(not found)"]
+    ], [ mail_exe="(not found)"]
   )
 
 dnl Check for sh
