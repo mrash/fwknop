@@ -79,6 +79,20 @@ enum {
     SPA_CAP_MODE_TCP
 };
 
+/* SPA message handling status code
+ */
+enum {
+    SPA_MSG_SUCCESS = 0,
+    SPA_MSG_BAD_DATA,
+    SPA_MSG_FKO_CTX_ERROR,
+    SPA_MSG_DIGEST_ERROR,
+    SPA_MSG_DIGEST_CACHE_ERROR,
+    SPA_MSG_REPLAY,
+    SPA_MSG_TOO_OLD,
+    SPA_MSG_ACCESS_DENIED,
+    SPA_MSG_ERROR
+};
+
 /* Configuration file parameter tags.
  * This will correspond to entries in the configuration parameters
  * array.

@@ -146,7 +146,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         log_msg(LOG_WARNING|LOG_STDERR, "Error getting digest from SPA data: %s",
             fko_errstr(res));
 
-        return(-1);
+        return(SPA_MSG_DIGEST_ERROR);
     }
 
     digest_len = strlen(digest);
@@ -171,7 +171,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
             MY_DBM_STRERROR(errno)
         );
 
-        return(-1);
+        return(SPA_MSG_DIGEST_CACHE_ERROR);
     }
 
     db_ent = MY_DBM_FETCH(rpdb, db_key);
@@ -232,7 +232,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         free(db_ent.dptr);
 #endif
 
-        res = 1;
+        res = SPA_MSG_REPLAY;
     } else {
         /* This is a new SPA packet that needs to be added to the cache.
         */
@@ -249,10 +249,10 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
                 MY_DBM_STRERROR(errno)
             );
 
-            res = -1;
+            res = SPA_MSG_DIGEST_CACHE_ERROR;
         }
 
-        res = 0;
+        res = SPA_MSG_SUCCESS;
     } 
 
     MY_DBM_CLOSE(rpdb);

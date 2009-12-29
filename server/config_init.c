@@ -288,17 +288,25 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     */
     optind = 0;
 
-    /* First, scan the command-line args for an alternate configuration
-     * file.  If we find it, use it, otherwise use the default.
-     * We also grab any override config files as well.
+    /* First, scan the command-line args for -h/--help or an alternate
+     * configuration file. If we find an alternate config file, use it,
+     * otherwise use the default.  We also grab any override config files
+     * as well.
     */
     while ((cmd_arg = getopt_long(argc, argv,
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
+        /* If help is wanted, give it and exit.
+        */
+        switch(cmd_arg) {
+            case 'h':
+                usage();
+                exit(EXIT_SUCCESS);
+                break;
+
         /* Look for configuration file arg.
         */
-        if(cmd_arg == 'c')
-        {
+        case 'c':
             set_config_entry(opts, CONF_CONFIG_FILE, optarg);
             got_conf_file++;
 
@@ -306,14 +314,12 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             */
             if(got_override_config > 0)
                 break;
-        }
 
         /* Look for override configuration file arg.
         */
-        if(cmd_arg == 'O')
-        {
+        case 'O':
             set_config_entry(opts, CONF_OVERRIDE_CONFIG, optarg);
-            got_conf_file++;
+            got_override_config++;
 
             /* If we already have the conf_file option, we are done.
             */
@@ -405,10 +411,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case GPG_KEY:
                 set_config_entry(opts, CONF_GPG_KEY, optarg);
-                break;
-            case 'h':
-                usage();
-                exit(EXIT_SUCCESS);
                 break;
             case 'i':
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);

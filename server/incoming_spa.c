@@ -5,7 +5,7 @@
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: The pcap capture routines for fwknopd.
+ * Purpose: Process an incoming SPA data packet for fwknopd.
  *
  * Copyright (C) 2009 Damien Stuart (dstuart@dstuart.org)
  *
@@ -27,22 +27,26 @@
 #include "incoming_spa.h"
 #include "log_msg.h"
 
-/* The pcap capture routine.
+/* Process the SPA packet data
 */
 int
 incoming_spa(fko_srv_options_t *opts)
 {
     fko_ctx_t       ctx;
     int             res;
+    time_t          spa_ts, now_ts;
+    int             ts_diff;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
     /* Sanity check
     */
     if(spa_pkt->packet_data_len <= 0)
-        return;
+        return(SPA_MSG_BAD_DATA);
 
+/* --DSS temp */
 fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
+/* --DSS temp */
 
     /* Get the decryption key
     */
@@ -61,19 +65,60 @@ fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 
     if(res != FKO_SUCCESS)
     {
-        fprintf(stderr, "Error creating fko context: %s\n", fko_errstr(res));
-        return(-1);
+        log_msg(LOG_WARNING|LOG_STDERR, "Error creating fko context: %s",
+            fko_errstr(res));
+        return(SPA_MSG_FKO_CTX_ERROR);
     }
 
+/* --DSS temp */
 fprintf(stderr, "Decode res = %i\n", res);
+display_ctx(ctx);
+/* --DSS temp */
+
+    if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+    {
+        res = replay_check(opts, ctx);
+        if(res != SPA_MSG_SUCCESS)
+            goto clean_and_bail;
+    }
+
+    /* Check packet age if so configured.
+    */
+    if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
+    {
+        if(fko_get_timestamp(ctx, &spa_ts) != FKO_SUCCESS)
+        {
+            log_msg(LOG_WARNING|LOG_STDERR, "Error getting SPA timestamp: %s",
+                fko_errstr(res));
+            res = SPA_MSG_ERROR;
+            goto clean_and_bail;
+        }
+
+        time(&now_ts);
+
+        ts_diff = now_ts - spa_ts;
+
+        if(ts_diff > atoi(opts->config[CONF_MAX_SPA_PACKET_AGE]))
+        {
+            log_msg(LOG_WARNING|LOG_STDERR, "SPA data is too old (%i seconds).",
+                ts_diff);
+            res = SPA_MSG_TOO_OLD;
+            goto clean_and_bail;
+        }
+    }
+
+    /* Additional access checks
+    */
+    // TODO: Finish me
 
 
-    display_ctx(ctx);
+    /* Send to the firewall rule processor.
+    */
+    // TODO: Finish me
 
-    res = replay_check(opts, ctx);
 
+clean_and_bail:
     fko_destroy(ctx);
-
     return(res);
 }
 
