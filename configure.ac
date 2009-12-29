@@ -144,7 +144,7 @@ AS_IF([test "x$with_gpgme" != xno],
 
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
-AS_IF([test "$want_server" = yes],
+AS_IF([test "$want_server" = yes], [
   # Looking for libpcap
   #
   AC_CHECK_LIB([pcap],[pcap_open_live], [],
@@ -158,48 +158,47 @@ AS_IF([test "$want_server" = yes],
         [ AC_MSG_ERROR([fwknopd needs either gdbm or ndbm])]
     )]
   )
-)
 
-dnl Find various locally-installed executables
-CONFIGURE_PART(Find Local Executables)
+  CONFIGURE_PART(Find local executables used by the server)
 
 dnl Add various common way to sbin dir to the path (just in case)
-APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
+  APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
 
-AC_PATH_PROG(IPTABLES_EXE, [iptables], [], [$APP_PATH])
-AS_IF([test x$IPTABLES_EXE != x], [
-    AC_DEFINE_UNQUOTED([IPTABLES_EXE], ["$IPTABLES_EXE"], [Path to iptables executable])
-    iptables_exe=$IPTABLES_EXE
-  ], [ iptables_exe="(not found)"]
-)
+  AC_PATH_PROG(IPTABLES_EXE, [iptables], [], [$APP_PATH])
+  AS_IF([test x$IPTABLES_EXE != x], [
+      AC_DEFINE_UNQUOTED([IPTABLES_EXE], ["$IPTABLES_EXE"], [Path to iptables executable])
+      iptables_exe=$IPTABLES_EXE
+    ], [ iptables_exe="(not found)"]
+  )
 
-AC_PATH_PROG(IPFW_EXE, [ipfw], [], [$APP_PATH])
-AS_IF([test x$IPFW_EXE != x], [
-    AC_DEFINE_UNQUOTED([IPFW_EXE], ["$IPFW_EXE"], [Path to ipfw executable])
-    ipfw_exe=$IPFW_EXE
-  ], [ ipfw_exe="(not found)"]
-)
+  AC_PATH_PROG(IPFW_EXE, [ipfw], [], [$APP_PATH])
+  AS_IF([test x$IPFW_EXE != x], [
+      AC_DEFINE_UNQUOTED([IPFW_EXE], ["$IPFW_EXE"], [Path to ipfw executable])
+      ipfw_exe=$IPFW_EXE
+    ], [ ipfw_exe="(not found)"]
+  )
 
-AC_PATH_PROG(SENDMAIL_EXE, [sendmail], [], [$APP_PATH$PATH_SEPARATOR/usr/lib])
-AS_IF([test x$SENDMAIL_EXE != x], [
-    AC_DEFINE_UNQUOTED([SENDMAIL_EXE], ["$SENDMAIL_EXE"], [Path to sendmail executable])
-    sendmail_exe=$SENDMAIL_EXE
-  ], [ sendmail_exe="(not found)"]
-)
+  AC_PATH_PROG(SENDMAIL_EXE, [sendmail], [], [$APP_PATH$PATH_SEPARATOR/usr/lib])
+  AS_IF([test x$SENDMAIL_EXE != x], [
+      AC_DEFINE_UNQUOTED([SENDMAIL_EXE], ["$SENDMAIL_EXE"], [Path to sendmail executable])
+      sendmail_exe=$SENDMAIL_EXE
+    ], [ sendmail_exe="(not found)"]
+  )
 
-AC_PATH_PROG(MAIL_EXE, [mail], [], [$APP_PATH])
-AS_IF([test x$MAIL_EXE != x], [
-    AC_DEFINE_UNQUOTED([MAIL_EXE], ["$MAIL_EXE"], [Path to mail executable])
-    mail_exe=$MAIL_EXE
-  ], [ mail_exe="(not found)"]
-)
+  AC_PATH_PROG(MAIL_EXE, [mail], [], [$APP_PATH])
+  AS_IF([test x$MAIL_EXE != x], [
+      AC_DEFINE_UNQUOTED([MAIL_EXE], ["$MAIL_EXE"], [Path to mail executable])
+      mail_exe=$MAIL_EXE
+    ], [ mail_exe="(not found)"]
+  )
 
-AC_PATH_PROG(SH_EXE, [sh], [], [$APP_PATH])
-AS_IF([test x$SH_EXE != x], [
-    AC_DEFINE_UNQUOTED([SH_EXE], ["$SH_EXE"], [Path to sh executable])
-    sh_exe=$SH_EXE
-  ], [ sh_exe="(not found)"]
-)
+  AC_PATH_PROG(SH_EXE, [sh], [], [$APP_PATH])
+  AS_IF([test x$SH_EXE != x], [
+      AC_DEFINE_UNQUOTED([SH_EXE], ["$SH_EXE"], [Path to sh executable])
+      sh_exe=$SH_EXE
+    ], [ sh_exe="(not found)"]
+  )
+])
 
 CONFIGURE_PART(Generating Files)
 
@@ -215,17 +214,21 @@ AC_OUTPUT
 CONFIGURE_PART(Configure Summary)
 
 echo "
-    $PACKAGE_NAME-$PACKAGE_VERSION has been configured.
+    $PACKAGE_NAME-$PACKAGE_VERSION configuration.
     ==========================================================
         Client build:               $want_client
         Server build:               $want_server
         GPG encryption support:     $have_gpgme
 
         Installation prefix:        $prefix
-
+"
+if [test $want_server = "yes" ]; then
+  echo "    Server support programs:
         iptables:                   $iptables_exe
         ipfw:                       $ipfw_exe
         sendmail:                   $sendmail_exe
         mail:                       $mail_exe
         sh:                         $sh_exe
 "
+fi
+
