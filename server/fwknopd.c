@@ -34,6 +34,8 @@
 
 /* Prototypes
 */
+static void check_dir_path(const char *path, const char *path_name, unsigned char use_basename);
+static int make_dir_path(const char *path);
 static void daemonize_process(fko_srv_options_t *opts);
 static int write_pid_file(fko_srv_options_t *opts);
 static pid_t get_running_pid(fko_srv_options_t *opts);
@@ -44,6 +46,7 @@ main(int argc, char **argv)
     fko_ctx_t           ctx;
     int                 res, last_sig, rpdb_count;
     char               *spa_data, *version;
+    char               *locale;
     char                access_buf[MAX_LINE_LEN];
     pid_t               old_pid;
 
@@ -131,6 +134,40 @@ main(int argc, char **argv)
         */
         init_logging(&opts);
 
+#if HAVE_LOCALE_H
+        /* Set the locale if specified.
+        */
+        if(opts.config[CONF_LOCALE] != NULL)
+        {
+            locale = setlocale(LC_ALL, opts.config[CONF_LOCALE]);
+
+            if(locale == NULL)
+            {
+                log_msg(LOG_ERR|LOG_STDERR,
+                    "WARNING: Unable to set locale to %s.",
+                    opts.config[CONF_LOCALE]
+                );
+            }
+            else
+            {
+                if(opts.verbose)
+                    log_msg(LOG_ERR|LOG_STDERR,
+                        "Locale set to %s.", opts.config[CONF_LOCALE]
+                    );
+            }
+        }
+#endif
+
+        /* Make sure we have a valid run dir and path leading to digest file
+         * in case it configured to be somewhere other than the run dir.
+        */
+        check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0);
+        check_dir_path((const char *)opts.config[CONF_DIGEST_FILE], "Run", 1);
+
+        /* If we are a new process (just being started), proceed with normal
+         * startp.  Otherwise, we are here as a result of a signal sent to an
+         * existing process and we want to restart.
+        */
         if(get_running_pid(&opts) != getpid())
         {
             /* If foreground mode is not set, the fork off and become a daemon.
@@ -164,8 +201,8 @@ main(int argc, char **argv)
             log_msg(LOG_INFO, "Re-starting %s", MY_NAME);
         }
 
-        dump_config(&opts);
-
+        /* We only support pcap capture at this point.
+        */
         if((strncasecmp(opts.config[CONF_AUTH_MODE], "pcap", 4)) != 0)
         {
             log_msg(LOG_ERR|LOG_STDERR,
@@ -174,11 +211,22 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
-        /* Initialize the digest cache (replay attack detection dbm).
-        */
-        rpdb_count = replay_db_init(&opts);
+        if(opts.verbose > 1)
+            dump_config(&opts);
 
-fprintf(stderr, "RPDB Count: %i\n", rpdb_count);
+        /* Initialize the digest cache (replay attack detection dbm)
+         * if so configured.
+        */
+        if(strncasecmp(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+        {
+            rpdb_count = replay_db_init(&opts);
+
+            if(opts.verbose)
+                log_msg(LOG_ERR|LOG_STDERR,
+                    "Using Digest Cache: '%s' (entry count = %i)",
+                    opts.config[CONF_DIGEST_FILE], rpdb_count
+                );
+        }
 
         /* Intiate pcap capture mode...
         */
@@ -225,6 +273,145 @@ fprintf(stderr, "RPDB Count: %i\n", rpdb_count);
     free_configs(&opts);
 
     return(0);
+}
+
+/* Ensure the specified directory exists.  If not, create it or die.
+*/
+static void
+check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_basename)
+{
+    struct stat     st;
+    int             res;
+    char            tmp_path[MAX_PATH_LEN];
+    char            *ndx;
+
+    /* 
+     * FIXME:  We shouldn't use a hard-coded dir-separator here.
+    */
+    /* But first make sure we are using an absolute path.
+    */
+    if(*filepath != '/')
+    {
+        log_msg(LOG_ERR|LOG_STDERR,
+            "Configured %s directory (%s) is not an absolute path.", fp_desc, filepath
+        );
+        exit(EXIT_FAILURE);
+    }
+
+    /* If this is a file path that we want to use only the basename, strip
+     * the trailing filename here.
+    */
+    if(use_basename && ((ndx = strrchr(filepath, '/')) != NULL))
+        strlcpy(tmp_path, filepath, (ndx-filepath)+1);
+    else
+        strcpy(tmp_path, filepath);
+
+    /* At this point, we should make the path is more than just "/".
+     * If it is not, silently return.
+    */
+    if(strlen(tmp_path) < 2)
+        return;
+
+    /* Make sure we have a valid directory.
+    */
+    res = stat(tmp_path, &st);
+    if(res != 0)
+    {
+        if(errno == ENOENT)
+        {
+            log_msg(LOG_WARNING|LOG_STDERR,
+                "%s directory: %s does not exist.  Attempting to create it.", fp_desc, tmp_path
+            );
+
+            /* Directory does not exist, so attempt to create it.
+            */
+            res = make_dir_path(tmp_path);
+            if(res != 0)
+            {
+                log_msg(LOG_ERR|LOG_STDERR,
+                    "Unable to create %s directory: %s (error: %i)", fp_desc, tmp_path, errno
+                );
+                exit(EXIT_FAILURE);
+            }
+
+            log_msg(LOG_ERR|LOG_STDERR,
+                "Successfully created %s directory: %s", fp_desc, tmp_path
+            );
+        }
+        else
+        {
+            log_msg(LOG_ERR|LOG_STDERR,
+                "Stat of %s returned error %i", tmp_path, errno
+            );
+            exit(EXIT_FAILURE);
+        }
+    }
+    else
+    {
+        /* It is a file, but is it a directory?
+        */
+        if(! S_ISDIR(st.st_mode))
+        {
+            log_msg(LOG_ERR|LOG_STDERR,
+                "Specified %s directory: %s is NOT a directory\n\n", fp_desc, tmp_path
+            );
+            exit(EXIT_FAILURE);
+        }
+    }
+}
+
+static int
+make_dir_path(const char *run_dir)
+{
+    struct stat     st;
+    int             res, len;
+    char            tmp_path[MAX_PATH_LEN];
+    char            *ndx;
+
+    strlcpy(tmp_path, run_dir, MAX_PATH_LEN);
+
+    len = strlen(tmp_path);
+
+    /* Strip any trailing dir sep char.
+    */
+    if(tmp_path[len-1] == '/')
+        tmp_path[len-1] = '\0';
+
+    for(ndx = tmp_path+1; *ndx; ndx++)
+    {
+        if(*ndx == '/')
+        {
+            *ndx = '\0';
+
+            /* Stat this part of the path to see if it is a valid directory.
+             * If it does not exist, attempt to create it. If it does, and
+             * it is a directory, go on.  Otherwise, any other error cause it
+             * to bail.
+            */
+            if(stat(tmp_path, &st) != 0)
+            {
+                if(errno == ENOENT)
+                    res = mkdir(tmp_path, S_IRWXU);
+
+                if(res != 0)
+                    return res;
+            }
+
+            if(! S_ISDIR(st.st_mode))
+            {
+                log_msg(LOG_ERR|LOG_STDERR,
+                    "Component: %s of %s is NOT a directory\n\n", tmp_path, run_dir
+                );
+                return(ENOTDIR);
+            }
+
+            *ndx = '/';
+        }
+    }
+
+    res = mkdir(tmp_path, S_IRWXU);
+
+    return(res);
 }
 
 /* Become a daemon: fork(), start a new session, chdir "/",

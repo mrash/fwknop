@@ -210,21 +210,49 @@ parse_config_file(fko_srv_options_t *opts, char *config_file)
 static void
 validate_options(fko_srv_options_t *opts)
 {
+    char tmp_path[MAX_PATH_LEN];
+
     /* If a HOSTNAME was specified in the config file, set the opts->hostname
      * value to it.
     */
     if(opts->config[CONF_HOSTNAME] != NULL && opts->config[CONF_HOSTNAME][0] != '\0')
         strlcpy(opts->hostname, opts->config[CONF_HOSTNAME], MAX_HOSTNAME_LEN);
 
-    /* If the pid and digest cache files where not set in the config file or
-     * via command-line, then grab the defaults.
+    /* If no conf dir is set in the config file, use the default.
     */
+    if(opts->config[CONF_FWKNOP_CONF_DIR] == NULL)
+        set_config_entry(opts, CONF_FWKNOP_CONF_DIR, DEF_CONF_DIR);
+
+    /* If the pid and digest cache files where not set in the config file or
+     * via command-line, then grab the defaults. Start with RUN_DIR as the
+     * files may depend on that.
+    */
+    if(opts->config[CONF_FWKNOP_RUN_DIR] == NULL)
+        set_config_entry(opts, CONF_FWKNOP_RUN_DIR, DEF_RUN_DIR);
+
     if(opts->config[CONF_FWKNOP_PID_FILE] == NULL)
-        set_config_entry(opts, CONF_FWKNOP_PID_FILE, DEF_PID_FILE);
+    {
+        strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], MAX_PATH_LEN);
+
+        if(tmp_path[strlen(tmp_path)-1] != '/')
+            strlcat(tmp_path, "/", MAX_PATH_LEN);
+
+        strlcat(tmp_path, DEF_PID_FILENAME, MAX_PATH_LEN);
+
+        set_config_entry(opts, CONF_FWKNOP_PID_FILE, tmp_path);
+    }
 
     if(opts->config[CONF_DIGEST_FILE] == NULL)
-        set_config_entry(opts, CONF_DIGEST_FILE, DEF_DIGEST_CACHE);
+    {
+        strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], MAX_PATH_LEN);
 
+        if(tmp_path[strlen(tmp_path)-1] != '/')
+            strlcat(tmp_path, "/", MAX_PATH_LEN);
+
+        strlcat(tmp_path, DEF_DIGEST_CACHE_FILENAME, MAX_PATH_LEN);
+
+        set_config_entry(opts, CONF_DIGEST_FILE, tmp_path);
+    }
 
     /* If log facility and default identity where not set in the config file,
      * fall back to defaults.
@@ -284,6 +312,11 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     if(gethostname(opts->hostname, MAX_HOSTNAME_LEN-1) < 0)
         strcpy(opts->hostname, "UNKNOWN");
 
+    /* Set the conf hostname entry here in case it is not set in the conf
+     * file.
+    */
+    set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
+    
     /* In case this is a re-config.
     */
     optind = 0;
@@ -428,7 +461,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 opts->status = 1;
                 break;
             case 'v':
-                opts->verbose = 1;
+                opts->verbose++;
                 break;
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
@@ -464,10 +497,6 @@ dump_config(fko_srv_options_t *opts)
             config_map[i],
             (opts->config[i] == NULL) ? "<not set>" : opts->config[i]
         );
-
-    fprintf(stderr, "\n");
-
-    fprintf(stderr, "Hostname is set to '%s'.\n", opts->hostname);
 
     fprintf(stderr, "\n");
 }

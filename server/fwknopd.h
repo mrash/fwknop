@@ -32,6 +32,10 @@
 #include <sys/file.h>
 #include <sys/fcntl.h>
 
+#if HAVE_LOCALE_H
+  #include <locale.h>
+#endif
+
 /* If the flock flags are not defined at this point, we take the liberty
  * of defining them here.
 */
