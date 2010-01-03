@@ -63,13 +63,14 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "c:Dfhi:KO:RSvV"
+#define GETOPTS_OPTION_STRING "c:C:Dfhi:KO:RSvV"
 
 /* Our program command-line options...
 */
 static struct option cmd_opts[] =
 {
     {"config-file",         1, NULL, 'c'},
+    {"packet-limit",        1, NULL, 'C'},
     {"dump-config",         0, NULL, 'D'},
     {"foreground",          0, NULL, 'f'},
     {"fw-list",             0, NULL, FIREWALL_LIST },

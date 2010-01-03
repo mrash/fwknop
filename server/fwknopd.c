@@ -259,6 +259,13 @@ main(int argc, char **argv)
                 break;
             }
         }
+        else if (opts.packet_ctr >= opts.packet_ctr_limit)
+        {
+            log_msg(LOG_INFO|LOG_STDERR,
+                "Packet count limit (%d) reached.  Exiting...",
+                opts.packet_ctr_limit);
+            break;
+        }
         else    /* got_signal was not set (should be if we are here) */
         {
             log_msg(LOG_WARNING|LOG_STDERR,

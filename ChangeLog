@@ -1,3 +1,9 @@
+2010-01-02  Michael Rash  <mbr@cipherdyne.org>
+	* Added --packet-limit to fwknopd so that the number of incoming candidate
+	  SPA packets can be limited from the command line.  When this limit is
+	  reached (any packet that contains application layer data and passes the
+	  pcap filter is included in the count) then fwknopd exits.
+
 2009-11-01  Michael Rash  <mbr@cipherdyne.org>
 	* (Legacy code) Applied patch from Jonthan Bennett to support the usage of
 	  the http_proxy environmental variable for sending SPA packets through an

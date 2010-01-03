@@ -316,7 +316,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
      * file.
     */
     set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
-    
+
     /* In case this is a re-config.
     */
     optind = 0;
@@ -421,6 +421,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'c':
                 /* This was handled earlier */
                 break;
+            case 'C':
+                opts->packet_ctr_limit = atoi(optarg);
+                break;
             case 'D':
                 opts->dump_config = 1;
                 break;
@@ -511,6 +514,8 @@ usage(void)
       "Usage: fwknopd [options]\n\n"
       " -h, --help              - Print this usage message and exit.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
+      " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
+      "                           process and exit when this limit is reached.\n"
       " -D, --dump-config       - Dump the current fwknop configuration values.\n"
       " -f, --foreground        - Run fwknopd in the foreground so that it never\n"
       "                           forks off into the background.\n"

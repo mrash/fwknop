@@ -154,6 +154,17 @@ pcap_capture(fko_srv_options_t *opts)
         {
             incoming_spa(opts);
 
+            /* Count this packet since it has at least one byte of payload
+             * data - we use this as a comparison for --packet-limit regardless
+             * of SPA packet validity at this point.
+            */
+            opts->packet_ctr++;
+            if (opts->packet_ctr >= opts->packet_ctr_limit)
+            {
+                pcap_breakloop(pcap);
+                pending_break = 1;
+            }
+
             pcap_errcnt = 0;
             continue;
         }

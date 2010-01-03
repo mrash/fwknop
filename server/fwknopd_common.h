@@ -287,6 +287,12 @@ typedef struct fko_srv_options
 
     spa_pkt_info_t  spa_pkt;            /* The current SPA packet */
 
+    /* Counter set from the command line to exit after the specified
+     * number of SPA packets are processed.
+    */
+    unsigned int    packet_ctr_limit;
+    unsigned int    packet_ctr;  /* counts packets with >0 payload bytes */
+
     /* This array holds all of the config file entry values as strings
      * indexed by their tag name.
     */
