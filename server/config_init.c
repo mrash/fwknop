@@ -512,6 +512,8 @@ usage(void)
       " -h, --help              - Print this usage message and exit.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -D, --dump-config       - Dump the current fwknop configuration values.\n"
+      " -f, --foreground        - Run fwknopd in the foreground so that it never\n"
+      "                           forks off into the background.\n"
       "     --fw-list           - List all active rules in the FWKNOP Netfilter chain.\n"
       "     --fw-flush          - Flush all rules in the FWKNOP Netfilter chain.\n"
       "     --fw-log            - Specify the path to the Netfilter log file that is\n"
