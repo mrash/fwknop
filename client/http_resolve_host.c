@@ -1,4 +1,4 @@
-/*
+/* $Id$
  *****************************************************************************
  *
  * File:    http_resolve_host.c
@@ -43,11 +43,11 @@ int
 resolve_ip_http(fko_cli_options_t *options)
 {
     int     sock, res, error, http_buf_len, i;
-	int		o1, o2, o3, o4;
+    int     o1, o2, o3, o4;
     struct  addrinfo *result, *rp, hints;
     char    http_buf[HTTP_MAX_REQUEST_LEN];
-	char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
-	char   *ndx;
+    char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
+    char   *ndx;
 
 #ifdef WIN32
     WSADATA wsa_data;
