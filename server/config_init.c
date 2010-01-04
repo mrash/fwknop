@@ -114,8 +114,8 @@ parse_config_file(fko_srv_options_t *opts, char *config_file)
     char            conf_line_buf[MAX_LINE_LEN] = {0};
     char            var[MAX_LINE_LEN]  = {0};
     char            val[MAX_LINE_LEN]  = {0};
-    char            tmp1[MAX_LINE_LEN]  = {0};
-    char            tmp2[MAX_LINE_LEN]  = {0};
+    char            tmp1[MAX_LINE_LEN] = {0};
+    char            tmp2[MAX_LINE_LEN] = {0};
 
     struct stat     st;
 

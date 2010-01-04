@@ -65,7 +65,9 @@
 #define DEF_PID_FILENAME            MY_NAME".pid"
 #define DEF_DIGEST_CACHE_FILENAME   "digest.cache"
 
-#define DEF_INTERFACE       "eth0"
+#define DEF_FW_ACCESS_TIMEOUT   60
+
+#define DEF_INTERFACE           "eth0"
 
 /* fwknopd-specific limits
 */
@@ -93,6 +95,7 @@ enum {
     SPA_MSG_REPLAY,
     SPA_MSG_TOO_OLD,
     SPA_MSG_ACCESS_DENIED,
+    SPA_MSG_NOT_SUPPORTED,
     SPA_MSG_ERROR
 };
 
@@ -102,7 +105,6 @@ enum {
 */
 enum {
     CONF_CONFIG_FILE = 0,
-    CONF_GPG_KEY,
     CONF_OVERRIDE_CONFIG,
     CONF_EMAIL_ADDRESSES,
     CONF_HOSTNAME,
@@ -132,7 +134,6 @@ enum {
     //CONF_IPFW_SET_NUM,
     //CONF_IPFW_DYNAMIC_INTERVAL,
     CONF_PCAP_CMD_TIMEOUT,
-    CONF_GPG_HOME_DIR,
     //CONF_PCAP_PKT_FILE,
     //CONF_BLACKLIST,
     //CONF_MAX_HOPS,
@@ -174,6 +175,10 @@ enum {
     CONF_EXE_MKNOD,
     CONF_EXE_IPTABLES,
     CONF_EXE_IPFW,
+
+    CONF_GPG_HOME_DIR,
+    CONF_GPG_KEY,
+
     NUMBER_OF_CONFIG_ENTRIES  /* Marks the end and number of entries */
 };
 
@@ -185,7 +190,6 @@ enum {
 */
 static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "CONFIG_FILE",
-    "GPG_KEY",
     "OVERRIDE_CONFIG",
     "EMAIL_ADDRESSES",
     "HOSTNAME",
@@ -215,7 +219,6 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"IPFW_SET_NUM",
     //"IPFW_DYNAMIC_INTERVAL",
     "PCAP_CMD_TIMEOUT",
-    "GPG_HOME_DIR",
     //"PCAP_PKT_FILE",
     //"BLACKLIST",
     //"MAX_HOPS",
@@ -256,8 +259,54 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "EXE_SH",
     "EXE_MKNOD",
     "EXE_IPTABLES",
-    "EXE_IPFW"
+    "EXE_IPFW",
+
+    "GPG_HOME_DIR",
+    "GPG_KEY"
 };  
+
+/* A simple linked list of uints for the access stanza items that allow
+ * multiple comma-separated entries.
+*/
+typedef struct acc_int_list
+{
+    unsigned int        maddr;
+    unsigned int        mask;
+    struct acc_int_list *next;
+} acc_int_list_t;
+
+/* A simple linked list of proto and ports for the access stanza items that
+ * allow multiple comma-separated entries.
+*/
+typedef struct acc_port_list
+{
+    unsigned int            proto;
+    unsigned int            port;
+    struct acc_port_list    *next;
+} acc_port_list_t;
+
+/* Access stanza list struct.
+*/
+typedef struct acc_stanza
+{
+    char                *source;
+    acc_int_list_t      *source_list;
+    char                *open_ports;
+    acc_port_list_t     *oport_list;
+    char                *restrict_ports;
+    acc_port_list_t     *rport_list;
+    char                *key;
+    int                 fw_access_timeout;
+    unsigned char       enable_cmd_exec;
+    char                *cmd_regex;
+    unsigned char       require_username;
+    unsigned char       require_source_address;
+    char                *gpg_home_dir;
+    char                *gpg_decrypt_id;
+    char                *gpg_decrypt_pw;
+    char                *gpg_remote_id;
+    struct acc_stanza   *next;
+} acc_stanza_t;
 
 /* SPA Packet info struct.
 */
@@ -297,6 +346,8 @@ typedef struct fko_srv_options
      * indexed by their tag name.
     */
     char           *config[NUMBER_OF_CONFIG_ENTRIES];
+
+    acc_stanza_t    *acc_stanzas;       /* List of access stanzas */
 
     /* Misc
     */

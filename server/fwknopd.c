@@ -25,6 +25,7 @@
 */
 #include "fwknopd.h"
 #include "config_init.h"
+#include "access.h"
 #include "process_packet.h"
 #include "pcap_capture.h"
 #include "log_msg.h"
@@ -164,6 +165,10 @@ main(int argc, char **argv)
         check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0);
         check_dir_path((const char *)opts.config[CONF_DIGEST_FILE], "Run", 1);
 
+        /* Process the access.conf file.
+        */
+        parse_access_file(&opts, DEF_ACCESS_FILE);
+
         /* If we are a new process (just being started), proceed with normal
          * startp.  Otherwise, we are here as a result of a signal sent to an
          * existing process and we want to restart.
@@ -211,8 +216,11 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
 
-        if(opts.verbose > 1)
+        if(opts.verbose > 1 && opts.foreground)
+        {
             dump_config(&opts);
+            dump_access_list(&opts);
+        }
 
         /* Initialize the digest cache (replay attack detection dbm)
          * if so configured.
@@ -327,7 +335,8 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
         if(errno == ENOENT)
         {
             log_msg(LOG_WARNING|LOG_STDERR,
-                "%s directory: %s does not exist.  Attempting to create it.", fp_desc, tmp_path
+                "%s directory: %s does not exist.  Attempting to create it.",
+                fp_desc, tmp_path
             );
 
             /* Directory does not exist, so attempt to create it.
@@ -336,7 +345,8 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
             if(res != 0)
             {
                 log_msg(LOG_ERR|LOG_STDERR,
-                    "Unable to create %s directory: %s (error: %i)", fp_desc, tmp_path, errno
+                    "Unable to create %s directory: %s (error: %i)",
+                    fp_desc, tmp_path, errno
                 );
                 exit(EXIT_FAILURE);
             }
