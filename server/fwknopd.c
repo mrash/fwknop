@@ -167,7 +167,7 @@ main(int argc, char **argv)
 
         /* Process the access.conf file.
         */
-        parse_access_file(&opts, DEF_ACCESS_FILE);
+        parse_access_file(&opts);
 
         /* If we are a new process (just being started), proceed with normal
          * startp.  Otherwise, we are here as a result of a signal sent to an

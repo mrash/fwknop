@@ -31,7 +31,7 @@
 
 /* Function Prototypes
 */
-void parse_access_file(fko_srv_options_t *opts, char *access_file);
+void parse_access_file(fko_srv_options_t *opts);
 acc_stanza_t* acc_check_source(fko_srv_options_t *opts, uint32_t ip);
 int acc_check_port_access(acc_stanza_t *acc, char *port_str);
 void dump_access_list(fko_srv_options_t *opts);

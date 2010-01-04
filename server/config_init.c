@@ -223,6 +223,12 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_FWKNOP_CONF_DIR] == NULL)
         set_config_entry(opts, CONF_FWKNOP_CONF_DIR, DEF_CONF_DIR);
 
+    /* If no access.conf path was specified on the command line or set in
+     * the config file, use the default.
+    */
+    if(opts->config[CONF_ACCESS_FILE] == NULL)
+        set_config_entry(opts, CONF_ACCESS_FILE, DEF_ACCESS_FILE);
+
     /* If the pid and digest cache files where not set in the config file or
      * via command-line, then grab the defaults. Start with RUN_DIR as the
      * files may depend on that.
@@ -418,6 +424,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
+            case 'a':
+                set_config_entry(opts, CONF_ACCESS_FILE, optarg);
+                break;
             case 'c':
                 /* This was handled earlier */
                 break;

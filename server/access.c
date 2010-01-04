@@ -488,7 +488,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 /* Read and parse the access file, popluating the access data as we go.
 */
 void
-parse_access_file(fko_srv_options_t *opts, char *access_file)
+parse_access_file(fko_srv_options_t *opts)
 {
     FILE           *file_ptr;
     int             got_source = 0;
@@ -507,18 +507,18 @@ parse_access_file(fko_srv_options_t *opts, char *access_file)
     /* First see if the access file exists.  If it doesn't, complain
      * and go on with program defaults.
     */
-    if(stat(access_file, &st) != 0)
+    if(stat(opts->config[CONF_ACCESS_FILE], &st) != 0)
     {
         fprintf(stderr, "[*] Access file: '%s' was not found.\n",
-            access_file);
+            opts->config[CONF_ACCESS_FILE]);
 
         exit(EXIT_FAILURE);
     }
 
-    if ((file_ptr = fopen(access_file, "r")) == NULL)
+    if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open access file: %s\n",
-            access_file);
+            opts->config[CONF_ACCESS_FILE]);
         perror(NULL);
 
         exit(EXIT_FAILURE);
@@ -546,7 +546,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_file)
         {
             fprintf(stderr,
                 "*Invalid access file entry in %s at line %i.\n - '%s'",
-                access_file, num_lines, access_line_buf
+                opts->config[CONF_ACCESS_FILE], num_lines, access_line_buf
             );
             continue;
         }
@@ -554,7 +554,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_file)
         /*
         fprintf(stderr,
             "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
-            access_file, access_line_buf, var, val
+            opts->config[CONF_ACCESS_FILE], access_line_buf, var, val
         );
         */
 
@@ -625,7 +625,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_file)
         {
             fprintf(stderr,
                 "*Ignoring unknown access parameter: '%s' in %s\n",
-                var, access_file
+                var, opts->config[CONF_ACCESS_FILE]
             );
         }
     }
