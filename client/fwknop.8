@@ -113,10 +113,13 @@ client to write a newly created SPA packet out to the specified file so that it 
 Load an encryption key/password from the specified file\&.
 .RE
 .PP
-\fB\-\-show\-last\fR
+\fB\-\-no\-save\-args\fR
 .RS 4
-Display the last command\-line arguments used by
-\fBfwknop\fR\&.
+Instruct the
+\fBfwknop\fR
+client to not save its command line arguments to the \fI$HOME/fwknop.run\fR file\&.
+This file is used by the \fB\-\-show\-last\fR argument to display the last command
+line args that \fBfwknop\fR was invoked with\&.
 .RE
 .PP
 \fB\-q, \-\-quiet\fR
@@ -124,6 +127,12 @@ Display the last command\-line arguments used by
 Perform
 \fBfwknop\fR
 functions quietly (suppress informational output)\&.
+.RE
+.PP
+\fB\-\-show\-last\fR
+.RS 4
+Display the last command\-line arguments used by
+\fBfwknop\fR\&.
 .RE
 .PP
 \fB\-T, \-\-test\fR
@@ -174,6 +183,15 @@ Use GPG encryption on the SPA packet (default if not specified is Rijndael)\&.
 Use of this option will require the specification of a GPG recipient (see
 \fB\-\-gpg\-recipient\fR
 along with other GPG\-related options below)\&.
+.RE
+.PP
+\fB\-H, \-\-http-proxy\fR=\fI<proxy\-URL>\fR
+.RS 4
+Specify an HTTP proxy URL that the
+\fBfwknop\fR
+client will use to send the SPA packet through\&.  Using this option will
+automatically set the SPA packet transmission mode (usually set via the
+\fB\-\-server\-proto\fR argument) to "http"\&.
 .RE
 .PP
 \fB\-m, \-\-digest\-type\fR=\fI<digest>\fR
