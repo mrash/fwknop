@@ -1,8 +1,24 @@
+2010-01-03  Damien Stuart <dstuart@dstuart.org>
+	* Added access.conf file, parsing, and processing.
+	* Added a new acces.conf parameter, RESTRICT_PORTS for specifying 1 or more
+	  proto/ports that are explicitly not allowed.
+	* Upon startup, fwknopd will now create the path to the configured run direcory
+	  and/or the basename of the digest cache file if they do not already exist.
+
 2010-01-02  Michael Rash  <mbr@cipherdyne.org>
 	* Added --packet-limit to fwknopd so that the number of incoming candidate
 	  SPA packets can be limited from the command line.  When this limit is
 	  reached (any packet that contains application layer data and passes the
 	  pcap filter is included in the count) then fwknopd exits.
+
+2009-12-28  Damien Stuart <dstuart@dstuart.org>
+	* Updated autoconf to look for local external executables like iptables,
+	  ipfw, sendmail, mail, and sh in the PATH and set corresponding
+	  definitions in config.h (only if the server is being built).
+	* Added ability to set the path to the executables listed above via
+	  "--with-xx=<path>" arguments to configure.  The arg will force the
+	  given value whether it exists or not (though it will issue a warning
+	  if the path does not exist).
 
 2009-11-01  Michael Rash  <mbr@cipherdyne.org>
 	* (Legacy code) Applied patch from Jonthan Bennett to support the usage of

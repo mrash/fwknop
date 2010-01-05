@@ -164,6 +164,11 @@ SPA OPTIONS
     a GPG recipient (see *--gpg-recipient* along with other GPG-related
     options below).
 
+*-H, --http-proxy*='<proxy-URL>'::
+    Specify an HTTP *fwknopd* client will use to send the SPA packet through.
+    Using this option will automatically set the SPA packet transmission mode
+    (usually set via the *--server-proto* argument) to ``http''.
+
 *-m, --digest-type*='<digest>'::
     Specify the message digest algorithm to use in the SPA data.  Choices
     are: *md5*, *sha1*, *sha256* (the default), *sha384*, and *sha512*.
