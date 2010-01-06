@@ -22,7 +22,7 @@ AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE([tar-ustar -Wall -Werror foreign])
 
-AM_MAINTAINER_MODE
+dnl AM_MAINTAINER_MODE
 
 AC_CONFIG_HEADER([config.h])
 
