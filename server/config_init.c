@@ -522,6 +522,7 @@ usage(void)
     fprintf(stderr,
       "Usage: fwknopd [options]\n\n"
       " -h, --help              - Print this usage message and exit.\n"
+      " -a, --access-file       - Specify an alternate access.conf file.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
       "                           process and exit when this limit is reached.\n"
