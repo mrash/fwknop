@@ -270,7 +270,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->fw_timeout   = -1;
 
     while ((cmd_arg = getopt_long(argc, argv,
-            "a:A:bB:C:D:f:gG:hH:m:nN:p:P:qQ:rRsS:Tu:U:vV", cmd_opts, &index)) != -1) {
+            GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'a':

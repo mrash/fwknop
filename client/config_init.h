@@ -49,6 +49,10 @@ enum {
     NOOP /* Just to be a marker for the end */
 };
 
+/* Our getopt_long options string.
+*/
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:m:nN:p:P:qQ:rRsS:Tu:U:vV"
+
 /* Our program command-line options...
 */
 static struct option cmd_opts[] =
