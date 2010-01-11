@@ -285,6 +285,15 @@ typedef struct acc_port_list
     struct acc_port_list    *next;
 } acc_port_list_t;
 
+/* A simple linked list of strings for the access stanza items that
+ * allow multiple comma-separated entries.
+*/
+typedef struct acc_string_list
+{
+    char                    *str;
+    struct acc_string_list  *next;
+} acc_string_list_t;
+
 /* Access stanza list struct.
 */
 typedef struct acc_stanza
@@ -305,6 +314,7 @@ typedef struct acc_stanza
     char                *gpg_decrypt_id;
     char                *gpg_decrypt_pw;
     char                *gpg_remote_id;
+    acc_string_list_t   *gpg_remote_id_list;
     struct acc_stanza   *next;
 } acc_stanza_t;
 

@@ -262,6 +262,53 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
     new_plist->port  = port;
 }
 
+/* Add a string list entry to the given acc_string_list.
+*/
+static void
+add_string_list_ent(acc_string_list_t **stlist, char *str_str)
+{
+    char                *ndx;
+
+    acc_string_list_t   *last_stlist, *new_stlist, *tmp_stlist;
+
+    if((new_stlist = calloc(1, sizeof(acc_string_list_t))) == NULL)
+    {
+        log_msg(LOG_ERR|LOG_STDERR,
+            "Fatal memory allocation error creating string list entry"
+        );
+        exit(EXIT_FAILURE);
+    }
+
+    /* If this is not the first entry, we walk our pointer to the
+     * end of the list.
+    */
+    if(*stlist == NULL)
+    {
+        *stlist = new_stlist;
+    }
+    else
+    {
+        tmp_stlist = *stlist;
+
+        do {
+            last_stlist = tmp_stlist;
+        } while(tmp_stlist = tmp_stlist->next);
+
+        last_stlist->next = new_stlist;
+    }
+    
+    new_stlist->str = strdup(str_str);
+
+    if(new_stlist->str == NULL)
+    {
+        log_msg(LOG_ERR|LOG_STDERR,
+            "Fatal memory allocation error adding string list entry item"
+        );
+        exit(EXIT_FAILURE);
+    }
+
+}
+
 /* Expand a proto/port access string to a list of access proto-port struct.
 */
 static acc_port_list_t*
@@ -285,6 +332,31 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
     strlcpy(buf, start, (ndx-start)+1);
 
     add_port_list_ent(plist, buf);
+}
+
+/* Expand a comma-separated string into a simple acc_string_list.
+*/
+static acc_string_list_t*
+expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
+{
+    char           *ndx, *start;
+    char            buf[1024];
+
+    start = stlist_str;
+
+    for(ndx = start; *ndx; ndx++)
+    {
+        if(*ndx == ',')
+        {
+            strlcpy(buf, start, (ndx-start)+1);
+            add_string_list_ent(stlist, buf);
+            start = ndx+1;
+        }
+    }
+
+    strlcpy(buf, start, (ndx-start)+1);
+
+    add_string_list_ent(stlist, buf);
 }
 
 /* Free the acc source_list
@@ -316,6 +388,22 @@ free_acc_port_list(acc_port_list_t *ple)
         ple = last_ple->next;
 
         free(last_ple);
+    }
+}
+
+/* Free a string_list
+*/
+static void
+free_acc_string_list(acc_string_list_t *stl)
+{
+    acc_string_list_t    *last_stl;
+
+    while(stl != NULL)
+    {
+        last_stl = stl;
+        stl = last_stl->next;
+
+        free(last_stl);
     }
 }
 
@@ -362,7 +450,10 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->gpg_decrypt_pw);
 
     if(acc->gpg_remote_id != NULL)
+    {
         free(acc->gpg_remote_id);
+        free_acc_string_list(acc->gpg_remote_id_list);
+    }
 }
 
 /* Expand any access entries that may be multi-value.
@@ -393,6 +484,11 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         if(acc->restrict_ports != NULL && strlen(acc->restrict_ports))
             expand_acc_port_list(&(acc->rport_list), acc->restrict_ports);
 
+        /* Expand the GPG_REMOTE_ID string.
+        */
+        if(acc->gpg_remote_id != NULL && strlen(acc->gpg_remote_id))
+            expand_acc_string_list(&(acc->gpg_remote_id_list), acc->gpg_remote_id);
+ 
         acc = acc->next;
     }
 }
@@ -491,6 +587,7 @@ void
 parse_access_file(fko_srv_options_t *opts)
 {
     FILE           *file_ptr;
+    char           *ndx;
     int             got_source = 0;
     unsigned int    num_lines = 0;
 
@@ -550,6 +647,11 @@ parse_access_file(fko_srv_options_t *opts)
             );
             continue;
         }
+
+        /* Remove any colon that may be on the end of the var
+        */
+        if((ndx = strrchr(var, ':')) != NULL)
+            *ndx = '\0';
 
         /*
         fprintf(stderr,
