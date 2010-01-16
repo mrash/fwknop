@@ -118,6 +118,11 @@ GENERAL OPTIONS
     Instruct the *fwknop* client to write a newly created SPA packet out
     to the specified file so that it can be examined off-line.
 
+*-l, --last-cmd*::
+    Execute *fwknop* with the command-line arguments from the previous
+    invocation (if any).  The previous arguments are parsed out of the
+    '~/.fwknop.run' file.
+
 *-G, --get-key*='<file>'::
     Load an encryption key/password from the specified file.
 
@@ -284,7 +289,7 @@ SPA OPTIONS
     the *fwknop* client to satisfy any non-root *REQUIRE_USERNAME* keyword
     on the fwknopd server (*--spoof-src* mode requires that the *fwknop*
     client is executed as root).
- 
+
 
 GPG-RELATED OPTIONS
 -------------------
@@ -400,7 +405,7 @@ is required on the underlying operating system.
 DIAGNOSTICS
 -----------
 fwknop can be run with the *-T* (or *--test*) command line option.
-This will have *fwkop* simply create and print the SPA packet information,
+This will have *fwknop* simply create and print the SPA packet information,
 then run it through a decrypt/decode cycle and print it again.
 
 SEE ALSO
