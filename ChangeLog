@@ -1,3 +1,13 @@
+2010-01-02  Michael Rash  <mbr@cipherdyne.org>
+	* Added a new command line argument "--last-cmd" to run the fwknop client
+	  with the same command line arguments as the previous time it was
+	  executed.  The previous arguments are parsed out of the ~/.fwknop.run
+	  file (if it exists).
+	* Bug fix to not send any SPA packet out on the wire if a NULL password/key
+	  is provided to the fwknop client.  This could happen if the user tried to
+	  abort fwknop execution by sending the process a SIGINT while being
+	  prompted to enter the password/key for SPA encryption.
+
 2010-01-03  Damien Stuart <dstuart@dstuart.org>
 	* Added access.conf file, parsing, and processing.
 	* Added a new acces.conf parameter, RESTRICT_PORTS for specifying 1 or more

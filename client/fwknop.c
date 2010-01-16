@@ -36,13 +36,13 @@ static void display_ctx(fko_ctx_t ctx);
 void errmsg(char *msg, int err);
 static void show_last_command(void);
 static void save_args(int argc, char **argv);
+static void run_last_args(fko_cli_options_t *options);
 static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
 static void dump_transmit_options(fko_cli_options_t *options);
 
 int resolve_ip_http(fko_cli_options_t *options);
-
 
 
 int
@@ -58,10 +58,11 @@ main(int argc, char **argv)
     /* Handle command line
     */
     config_init(&options, argc, argv);
-
     /* Handle options that don't require a libfko context
     */
-    if(options.show_last_command)
+    if(options.run_last_command)
+        run_last_args(&options);
+    else if(options.show_last_command)
         show_last_command();
     else if (!options.no_save_args)
         save_args(argc, argv);
@@ -523,13 +524,13 @@ show_last_command(void)
     /* Not sure what the right thing is here on Win32, just exit
      * for now.
     */
-    printf("[*] --show-last not implemented on Win32 yet.");
+    fprintf(stderr, "[*] --show-last not implemented on Win32 yet.");
     exit(EXIT_FAILURE);
 #endif
 
     if (get_save_file(args_save_file)) {
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
-            printf("[*] Could not open args file: %s\n",
+            fprintf(stderr, "[*] Could not open args file: %s\n",
                 args_save_file);
             exit(EXIT_FAILURE);
         }
@@ -542,6 +543,73 @@ show_last_command(void)
     }
 
     exit(EXIT_SUCCESS);
+}
+
+/* Get the command line arguments from the previous invocation
+*/
+static void
+run_last_args(fko_cli_options_t *options)
+{
+    FILE           *args_file_ptr = NULL;
+
+    int             current_arg_ctr = 0;
+    int             argc_new = 0;
+    int             i = 0;
+
+    char            args_save_file[MAX_PATH_LEN] = {0};
+    char            args_str[MAX_LINE_LEN] = {0};
+    char            arg_tmp[MAX_LINE_LEN]  = {0};
+    char           *argv_new[200];  /* should be way more than enough */
+
+
+#ifdef WIN32
+    /* Not sure what the right thing is here on Win32, just return
+     * for now.
+    */
+    return;
+#endif
+
+    if (get_save_file(args_save_file))
+    {
+        if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
+        {
+            fprintf(stderr, "[*] Could not open args file: %s\n",
+                args_save_file);
+            exit(EXIT_FAILURE);
+        }
+        if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL)
+        {
+            args_str[MAX_LINE_LEN-1] = '\0';
+            if (options->verbose)
+                printf("[+] Executing: %s\n", args_str);
+            for (i=0; i < strlen(args_str); i++)
+            {
+                if (!isspace(args_str[i]))
+                {
+                    arg_tmp[current_arg_ctr] = args_str[i];
+                    current_arg_ctr++;
+                }
+                else
+                {
+                    arg_tmp[current_arg_ctr] = '\0';
+                    argv_new[argc_new] = malloc(strlen(arg_tmp)+1);
+                    if (argv_new[argc_new] == NULL)
+                    {
+                        fprintf(stderr, "[*] malloc failure for cmd line arg.\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    strcpy(argv_new[argc_new], arg_tmp);
+                    current_arg_ctr = 0;
+                    argc_new++;
+                }
+            }
+        }
+        fclose(args_file_ptr);
+
+        config_init(options, argc_new, argv_new);
+    }
+
+    return;
 }
 
 /* Save our command line arguments
@@ -564,14 +632,14 @@ save_args(int argc, char **argv)
 
     if (get_save_file(args_save_file)) {
         if ((args_file_ptr = fopen(args_save_file, "w")) == NULL) {
-            printf("[*] Could not open args file: %s\n",
+            fprintf(stderr, "[*] Could not open args file: %s\n",
                 args_save_file);
             exit(EXIT_FAILURE);
         }
         for (i=0; i < argc; i++) {
             args_str_len += strlen(argv[i]);
             if (args_str_len >= MAX_PATH_LEN) {
-                printf("[*] argument string too long, exiting.\n");
+                fprintf(stderr, "[*] argument string too long, exiting.\n");
                 exit(EXIT_FAILURE);
             }
             strlcat(args_str, argv[i], MAX_PATH_LEN);
@@ -627,25 +695,35 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 char*
 get_user_pw(fko_cli_options_t *options, int crypt_op)
 {
+    char *pw_ptr = NULL;
+
     if (options->get_key_file[0] != 0x0) {
         /* grab the key/password from the --get-key file
         */
-        return(getpasswd_file(options->get_key_file,
-                        options->spa_server_str));
+        pw_ptr = getpasswd_file(options->get_key_file,
+                        options->spa_server_str);
     }
     else if (options->use_gpg) {
-        return(options->use_gpg_agent ? ""
-            : getpasswd("Enter passphrase for secret key: "));
+        pw_ptr = options->use_gpg_agent ? ""
+            : getpasswd("Enter passphrase for secret key: ");
     }
     else
     {
         if(crypt_op == CRYPT_OP_ENCRYPT)
-            return(getpasswd("Enter encryption password: "));
+            pw_ptr = getpasswd("Enter encryption password: ");
         else if(crypt_op == CRYPT_OP_DECRYPT)
-            return(getpasswd("Enter decryption password: "));
+            pw_ptr = getpasswd("Enter decryption password: ");
         else
-            return(getpasswd("Enter password: "));
+            pw_ptr = getpasswd("Enter password: ");
     }
+
+    if (pw_ptr == NULL || pw_ptr[0] == '\0')
+    {
+        fprintf(stderr, "[*] Received no password data, exiting.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return pw_ptr;
 }
 
 /* Display an FKO error message.

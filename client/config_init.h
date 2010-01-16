@@ -51,7 +51,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:m:nN:p:P:qQ:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:nN:p:P:qQ:rRsS:Tu:U:vV"
 
 /* Our program command-line options...
 */
@@ -74,6 +74,7 @@ static struct option cmd_opts[] =
     {"get-key",             1, NULL, 'G'},
     {"help",                0, NULL, 'h'},
     {"http-proxy",          1, NULL, 'H'},
+    {"last-cmd",            0, NULL, 'l'},
     {"nat-access",          1, NULL, 'N'},
     {"nat-local",           0, NULL, NAT_LOCAL},
     {"nat-port",            1, NULL, NAT_PORT},

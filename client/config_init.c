@@ -203,7 +203,10 @@ validate_options(fko_cli_options_t *options)
     /* Gotta have a Destination unless we are just testing or getting the
      * the version, and must use one of [-s|-R|-a].
     */
-    if(!options->test && !options->version && !options->show_last_command)
+    if(!options->test
+        && !options->version
+        && !options->show_last_command
+        && !options->run_last_command)
     {
         if (options->spa_server_str[0] == 0x0)
         {
@@ -311,6 +314,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'H':
                 options->spa_proto = FKO_PROTO_HTTP;
                 strlcpy(options->http_proxy, optarg, MAX_PATH_LEN);
+                break;
+            case 'l':
+                options->run_last_command = 1;
                 break;
             case 'm':
             case FKO_DIGEST_NAME:
@@ -500,6 +506,9 @@ usage(void)
       "                             SPA packet will be sent.\n"
       " -U, --spoof-user            Set the username within outgoing SPA packet.\n"
       " -q, --quiet                 Perform fwknop functions quietly.\n"
+      " -l, --last-cmd              Run the fwknop client with the same command\n"
+      "                             line args as the last time it was executed\n"
+      "                             (args are read from the ~/.fwknop.run file).\n"
       " -G, --get-key               Load an encryption key/password from a file.\n"
       " -r, --rand-port             Send the SPA packet over a randomly assigned\n"
       "                             port (requires a broader pcap filter on the\n"
@@ -508,7 +517,7 @@ usage(void)
       "                             the network.\n"
       " -v, --verbose               Set verbose mode.\n"
       " -V, --version               Print version number.\n"
-      " -m, --digest-type           Speciy the message digest algorithm to use.\n"
+      " -m, --digest-type           Specify the message digest algorithm to use.\n"
       "                             (md5, sha1, or sha256 (default)).\n"
       " -f, --fw-timeout            Specify SPA server firewall timeout from the\n"
       "                             client side.\n"
