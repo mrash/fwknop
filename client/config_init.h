@@ -62,7 +62,7 @@ static struct option cmd_opts[] =
     {"save-packet-append",  0, NULL, 'b'},
     {"save-packet",         1, NULL, 'B'},
     {"no-save-args",        0, NULL, NO_SAVE_ARGS},
-    {"server-command",      1, NULL, 'C'},
+    {"server-cmd",          1, NULL, 'C'},
     {"digest-type",         1, NULL, FKO_DIGEST_NAME},
     {"destination",         1, NULL, 'D'},
     {"fw-timeout",          1, NULL, 'f'},

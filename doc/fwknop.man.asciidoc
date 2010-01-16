@@ -79,7 +79,7 @@ syslog and email alerts are generated if a replay is detected (although this
 can be tuned via the *ALERTING_METHODS* variable in the
 '/etc/fwknop/fwknop.conf' file). By default, the *fwknop* client sends
 authorization packets over UDP port 62201, but this can be altered with the
-*--Server-port* argument. The server must first be configured to acquire the
+*--server-port* argument. The server must first be configured to acquire the
 SPA data on the changed protocol-port. Also, *fwknop* can send the SPA packet
 over a random port via the *--rand-port* argument. See 'fwknopd(8)' for
 further details. See the *EXAMPLES* section for example invocations of the
@@ -99,7 +99,7 @@ REQUIRED ARGUMENTS
     running *fwknopd*.  The format of this list is
     ``+<proto>/<port>...<proto>/<port>+'', e.g. ``tcp/22,udp/53''. *NOTE:*
     The vast majority of usages for *fwknop* require the *-A* argument, but
-    sending full commands with the *--Server-cmd* argument via an SPA
+    sending full commands with the *--server-cmd* argument via an SPA
     packet to be executed by *fwknopd* does not require this argument.
 
 *-R|-a|-s*::
@@ -118,19 +118,19 @@ GENERAL OPTIONS
     Instruct the *fwknop* client to write a newly created SPA packet out
     to the specified file so that it can be examined off-line.
 
+*-G, --get-key*='<file>'::
+    Load an encryption key/password from the specified file.
+
 *-l, --last-cmd*::
     Execute *fwknop* with the command-line arguments from the previous
     invocation (if any).  The previous arguments are parsed out of the
     '~/.fwknop.run' file.
 
-*-G, --get-key*='<file>'::
-    Load an encryption key/password from the specified file.
+*-q, --quiet*::
+    Perform *fwknop* functions quietly (suppress informational output).
 
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
-
-*-q, --quiet*::
-    Perform *fwknop* functions quietly (suppress informational output).
 
 *-T, --test*::
     Test mode.  Generate the SPA packet data, but do not send it.  Instead,
@@ -163,6 +163,12 @@ SPA OPTIONS
     system is connected to by querying the 'http://www.whatismyip.com'
     website.
 
+*-C, --server-cmd*='<command to execute>'::
+    Instead of requesting access to a service with an SPA packet, the
+    *--server-cmd* argument specifies a command that will be executed by
+    the *fwknopd* server.  The command is encrypted within the SPA packet
+    and sniffed off the wire (as usual) by the *fwknopd* server.
+
 *-g, --gpg-encryption*::
     Use GPG encryption on the SPA packet (default if not specified is
     Rijndael). *Note:* Use of this option will require the specification of
@@ -170,9 +176,10 @@ SPA OPTIONS
     options below).
 
 *-H, --http-proxy*='<proxy-URL>'::
-    Specify an HTTP *fwknopd* client will use to send the SPA packet through.
-    Using this option will automatically set the SPA packet transmission mode
-    (usually set via the *--server-proto* argument) to ``http''.
+    Specify an HTTP proxy that the *fwknop* client will use to send the SPA
+    packet through.  Using this option will automatically set the SPA packet
+    transmission mode (usually set via the *--server-proto* argument) to
+    ``http''.
 
 *-m, --digest-type*='<digest>'::
     Specify the message digest algorithm to use in the SPA data.  Choices
