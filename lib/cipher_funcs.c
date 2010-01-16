@@ -63,12 +63,29 @@ get_random_data(unsigned char *data, size_t len)
 #else
 	FILE           *rfd;
     struct timeval  tv;
+    int             do_time = 0;
+    size_t          amt_read;
 
     /* Attempt to read seed data from /dev/urandom.  If that does not
      * work, then fall back to a time-based method (less secure, but
      * probably more portable).
     */
     if((rfd = fopen(RAND_FILE, "r")) == NULL)
+    {
+        do_time = 1;
+    }
+    else
+    {
+        /* Read seed from /dev/urandom
+        */
+        amt_read = fread(data, len, 1, rfd);
+        fclose(rfd);
+
+        if (amt_read != 1)
+            do_time = 1;
+    }
+
+    if (do_time)
     {
         /* Seed based on time (current usecs).
         */
@@ -78,13 +95,7 @@ get_random_data(unsigned char *data, size_t len)
         for(i=0; i<len; i++)
             *(data+i) = rand() % 0xff;
     }
-    else
-    {
-        /* Read seed from /dev/urandom
-        */
-        fread(data, len, 1, rfd);
-        fclose(rfd);
-    }
+
 #endif
 
 }

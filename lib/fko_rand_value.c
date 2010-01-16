@@ -53,6 +53,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
 #endif
     unsigned long   seed;
 	char           *tmp_buf;
+    size_t          amt_read;
 
     /* Context must be initialized.
     */
@@ -87,8 +88,11 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
     {
         /* Read seed from /dev/urandom
         */
-        fread(&seed, 4, 1, rfd);
+        amt_read = fread(&seed, 4, 1, rfd);
         fclose(rfd);
+
+        if (amt_read != 1)
+            return(FKO_ERROR_FILESYSTEM_OPERATION);
     }
     else
     {

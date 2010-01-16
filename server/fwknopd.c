@@ -495,7 +495,7 @@ static int
 write_pid_file(fko_srv_options_t *opts)
 {
     pid_t   old_pid, my_pid;
-    int     op_fd, lck_res;
+    int     op_fd, lck_res, num_bytes;
     char    buf[6]  = {0};
 
     /* Reset errno (just in case)
@@ -550,9 +550,9 @@ write_pid_file(fko_srv_options_t *opts)
         fprintf(stderr, "[+] Writing my PID (%i) to the lock file: %s\n",
             my_pid, opts->config[CONF_FWKNOP_PID_FILE]);
 
-    write(op_fd, buf, strlen(buf));
+    num_bytes = write(op_fd, buf, strlen(buf));
 
-    if(errno)
+    if(errno || num_bytes != strlen(buf))
         perror("Lock may not be valid. PID file write error: ");
 
     /* Sync/flush regardless...
@@ -573,8 +573,10 @@ get_running_pid(fko_srv_options_t *opts)
 
     if(op_fd > 0)
     {
-        read(op_fd, buf, 6);
-        rpid = (pid_t)atoi(buf);
+        if (read(op_fd, buf, 6) == 6)
+        {
+            rpid = (pid_t)atoi(buf);
+        }
         close(op_fd);
     }
 

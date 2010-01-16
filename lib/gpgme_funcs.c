@@ -99,14 +99,21 @@ passphrase_cb(
   void *pw, const char *uid_hint, const char *passphrase_info,
   int prev_was_bad, int fd)
 {
+    ssize_t num_bytes = 0;
+
     /* We only need to try once as it is fed by the program
      * (for now --DSS).
     */
     if(prev_was_bad)
         return(GPG_ERR_CANCELED);
 
-    write(fd, (const char*)pw, strlen((const char*)pw));
-    write(fd, "\n", 1);
+    num_bytes = write(fd, (const char*)pw, strlen((const char*)pw));
+    if (num_bytes != strlen((const char*)pw))
+        return(FKO_ERROR_FILESYSTEM_OPERATION);
+
+    num_bytes = write(fd, "\n", 1);
+    if (num_bytes != 1)
+        return(FKO_ERROR_FILESYSTEM_OPERATION);
 
     return 0;
 }

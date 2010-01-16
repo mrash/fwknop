@@ -110,7 +110,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Add the timestamp.
     */
     offset = strlen(tbuf);
-    sprintf(((char*)tbuf+offset), ":%u:", ctx->timestamp);
+    sprintf(((char*)tbuf+offset), ":%u:", (unsigned int) ctx->timestamp);
 
     /* Add the version string.
     */

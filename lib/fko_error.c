@@ -46,6 +46,9 @@ fko_errstr(int err_code)
         case FKO_ERROR_MEMORY_ALLOCATION:
             return("Unable to allocate memory");
 
+        case FKO_ERROR_FILESYSTEM_OPERATION:
+            return("Read/write bytes mismatch");
+
         case FKO_ERROR_INVALID_DATA:
             return("Args contain invalid data");
 
