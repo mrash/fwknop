@@ -2210,6 +2210,7 @@ sub gpg_sniff_decrypt_no_prefix_add() {
 }
 
 sub gpg_sniff_decrypt_http() {
+    $http_test_file = $current_test_file;
     return &sniff_decrypt($http_fwknop_conf, $gpg_access_conf);
 }
 
@@ -2222,6 +2223,7 @@ sub gpg2_sniff_decrypt() {
 }
 
 sub gpg2_sniff_decrypt_http() {
+    $http_test_file = $current_test_file;
     return &sniff_decrypt($gpg2_http_fwknop_conf, $gpg2_access_conf);
 }
 
