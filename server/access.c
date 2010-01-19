@@ -588,7 +588,7 @@ parse_access_file(fko_srv_options_t *opts)
 {
     FILE           *file_ptr;
     char           *ndx;
-    int             got_source = 0;
+    int             got_source = 0, got_open_ports = 0, got_key = 0;
     unsigned int    num_lines = 0;
 
     char            access_line_buf[MAX_LINE_LEN] = {0};
@@ -599,7 +599,7 @@ parse_access_file(fko_srv_options_t *opts)
 
     struct stat     st;
 
-    acc_stanza_t   *curr_acc;
+    acc_stanza_t   *curr_acc = NULL;
 
     /* First see if the access file exists.  If it doesn't, complain
      * and go on with program defaults.
@@ -673,11 +673,18 @@ parse_access_file(fko_srv_options_t *opts)
             curr_acc = acc_stanza_add(opts);
 
             add_acc_string(&(curr_acc->source), val);
-
+            got_source++;
+        }
+        else if (curr_acc == NULL)
+        {
+            /* The stanza must start with the "SOURCE" variable
+            */
+            continue;
         }
         else if(CONF_VAR_IS(var, "OPEN_PORTS"))
         {
             add_acc_string(&(curr_acc->open_ports), val);
+            got_open_ports++;
         }
         else if(CONF_VAR_IS(var, "RESTRICT_PORTS"))
         {
@@ -686,6 +693,7 @@ parse_access_file(fko_srv_options_t *opts)
         else if(CONF_VAR_IS(var, "KEY"))
         {
             add_acc_string(&(curr_acc->key), val);
+            got_key++;
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {
@@ -733,6 +741,19 @@ parse_access_file(fko_srv_options_t *opts)
     }
 
     fclose(file_ptr);
+
+    /* Basic check to ensure that we got at least one SOURCE stanza with
+     * the OPEN_PORTS and KEY variables defined.
+    */
+    if (got_source == 0
+        || got_open_ports == 0
+        || got_key == 0)
+    {
+        fprintf(stderr,
+            "[*] Could not find valid SOURCE stanza in access file: '%s'\n",
+            opts->config[CONF_ACCESS_FILE]);
+        exit(EXIT_FAILURE);
+    }
 
     /* Expand our the expandable fields into their respective data buckets.
     */
