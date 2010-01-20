@@ -61,14 +61,6 @@ main(int argc, char **argv)
 
         /* Process any options that do their thing and exit. */
 
-        /* Show config and exit dump config was wanted.
-        */
-        if(opts.dump_config == 1)
-        {
-            dump_config(&opts);
-            exit(EXIT_SUCCESS);
-        }
-
         /* Kill the currently running fwknopd?
         */
         if(opts.kill == 1)
@@ -168,6 +160,16 @@ main(int argc, char **argv)
         /* Process the access.conf file.
         */
         parse_access_file(&opts);
+
+        /* Show config (including access.conf vars) and exit dump config was
+         * wanted.
+        */
+        if(opts.dump_config == 1)
+        {
+            dump_config(&opts);
+            dump_access_list(&opts);
+            exit(EXIT_SUCCESS);
+        }
 
         /* If we are a new process (just being started), proceed with normal
          * startp.  Otherwise, we are here as a result of a signal sent to an
