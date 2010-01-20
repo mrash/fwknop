@@ -606,6 +606,10 @@ run_last_args(fko_cli_options_t *options)
         }
         fclose(args_file_ptr);
 
+        /* Reset the options index so we can run through them again.
+        */
+        optind = 0;
+
         config_init(options, argc_new, argv_new);
     }
 
