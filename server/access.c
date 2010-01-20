@@ -223,6 +223,12 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 
     acc_port_list_t     *last_plist, *new_plist, *tmp_plist;
 
+    /* Parse the string into its components and continue only if there
+     * are no problems with the incoming string.
+    */
+    if(parse_proto_and_port(port_str, &proto_int, &port) != 0)
+        return;
+
     if((new_plist = calloc(1, sizeof(acc_port_list_t))) == NULL)
     {
         log_msg(LOG_ERR|LOG_STDERR,
@@ -247,15 +253,6 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
         } while(tmp_plist = tmp_plist->next);
 
         last_plist->next = new_plist;
-    }
-    
-    /* Parse the string into its components.
-    */
-    if(parse_proto_and_port(port_str, &proto_int, &port) != 0)
-    {
-        free(new_plist);
-        new_plist = NULL;
-        return;
     }
 
     new_plist->proto = proto_int;
