@@ -308,7 +308,7 @@ typedef struct acc_stanza
     int                 fw_access_timeout;
     unsigned char       enable_cmd_exec;
     char                *cmd_regex;
-    unsigned char       require_username;
+    char                *require_username;
     unsigned char       require_source_address;
     char                *gpg_home_dir;
     char                *gpg_decrypt_id;

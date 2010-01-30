@@ -578,6 +578,23 @@ set_acc_defaults(fko_srv_options_t *opts)
     }
 }
 
+/* Perform some sanity checks on an acc stanza data.
+*/
+int
+acc_data_is_valid(acc_stanza_t *acc)
+{
+    if((acc->key == NULL || !strlen(acc->key))
+      && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw)))
+    {
+        fprintf(stderr,
+            "[*] No keys found for access stanza source: '%s'\n", acc->source
+        );
+        return(0);
+    }
+
+    return(1);
+}
+
 /* Read and parse the access file, popluating the access data as we go.
 */
 void
@@ -585,7 +602,7 @@ parse_access_file(fko_srv_options_t *opts)
 {
     FILE           *file_ptr;
     char           *ndx;
-    int             got_source = 0, got_open_ports = 0, got_key = 0;
+    int             got_source = 0;
     unsigned int    num_lines = 0;
 
     char            access_line_buf[MAX_LINE_LEN] = {0};
@@ -665,11 +682,25 @@ parse_access_file(fko_srv_options_t *opts)
 
         if(CONF_VAR_IS(var, "SOURCE"))
         {
+            /* If this is not the first stanza, sanity check the previous
+             * stanza for the minimum required data.
+            */
+            if(curr_acc != NULL) {
+                if(!acc_data_is_valid(curr_acc))
+                {
+                    fprintf(stderr,
+                        "[*] Data error in access file: '%s'\n",
+                        opts->config[CONF_ACCESS_FILE]);
+                    exit(EXIT_FAILURE);
+                }
+            }
+
             /* Start new stanza.
             */
             curr_acc = acc_stanza_add(opts);
 
             add_acc_string(&(curr_acc->source), val);
+
             got_source++;
         }
         else if (curr_acc == NULL)
@@ -681,7 +712,6 @@ parse_access_file(fko_srv_options_t *opts)
         else if(CONF_VAR_IS(var, "OPEN_PORTS"))
         {
             add_acc_string(&(curr_acc->open_ports), val);
-            got_open_ports++;
         }
         else if(CONF_VAR_IS(var, "RESTRICT_PORTS"))
         {
@@ -689,8 +719,14 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "KEY"))
         {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                fprintf(stderr,
+                    "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                exit(EXIT_FAILURE);
+            }
             add_acc_string(&(curr_acc->key), val);
-            got_key++;
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {
@@ -706,7 +742,7 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
         {
-            add_acc_bool(&(curr_acc->require_username), val);
+            add_acc_string(&(curr_acc->require_username), val);
         }
         else if(CONF_VAR_IS(var, "REQUIRE_SOURCE_ADDRESS"))
         {
@@ -722,6 +758,13 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_PW"))
         {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                fprintf(stderr,
+                    "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                exit(EXIT_FAILURE);
+            }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
         }
         else if(CONF_VAR_IS(var, "GPG_REMOTE_ID"))
@@ -740,14 +783,23 @@ parse_access_file(fko_srv_options_t *opts)
     fclose(file_ptr);
 
     /* Basic check to ensure that we got at least one SOURCE stanza with
-     * the OPEN_PORTS and KEY variables defined.
+     * a valid KEY defined (valid meaning it has a value that is not
+     * "__CHANGEME__".
     */
-    if (got_source == 0
-        || got_open_ports == 0
-        || got_key == 0)
+    if (got_source == 0)
     {
         fprintf(stderr,
             "[*] Could not find valid SOURCE stanza in access file: '%s'\n",
+            opts->config[CONF_ACCESS_FILE]);
+        exit(EXIT_FAILURE);
+    }
+
+    /* Sanity check the last stanza
+    */
+    if(!acc_data_is_valid(curr_acc))
+    {
+        fprintf(stderr,
+            "[*] Data error in access file: '%s'\n",
             opts->config[CONF_ACCESS_FILE]);
         exit(EXIT_FAILURE);
     }
@@ -933,7 +985,7 @@ dump_access_list(fko_srv_options_t *opts)
             acc->fw_access_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
             (acc->cmd_regex == NULL) ? "<not set>" : acc->cmd_regex,
-            acc->require_username ? "Yes" : "No",
+            (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,

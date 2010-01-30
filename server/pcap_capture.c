@@ -31,6 +31,7 @@
 #include "incoming_spa.h"
 #include "config_init.h"
 #include "sig_handler.h"
+#include "log_msg.h"
 
 /* The pcap capture routine.
 */
@@ -61,18 +62,18 @@ pcap_capture(fko_srv_options_t *opts)
 
     if(pcap == NULL)
     {
-        fprintf(stderr, "* pcap_open_live error: %s\n", errstr);
+        log_msg(LOG_ERR|LOG_STDERR, "* pcap_open_live error: %s\n", errstr);
         exit(EXIT_FAILURE);
     }
 
     /* We are only interested on seeing packets coming into the interface.
     */
     if (pcap_setdirection(pcap, PCAP_D_IN) < 0)
-        fprintf(stderr, "* Warning: pcap error on setdirection\n");
+        log_msg(LOG_WARNING|LOG_STDERR, "* Warning: pcap error on setdirection");
 
     if (pcap == NULL)
     {
-        fprintf(stderr, "[*] pcap error: %s\n", errstr);
+        log_msg(LOG_ERR|LOG_STDERR, "[*] pcap error: %s", errstr);
         exit(EXIT_FAILURE);
     }
 
@@ -83,7 +84,7 @@ pcap_capture(fko_srv_options_t *opts)
     {
         if(pcap_compile(pcap, &fp, opts->config[CONF_PCAP_FILTER], 1, 0) == -1)
         {
-            fprintf(stderr, "[*] Error compiling pcap filter: %s\n",
+            log_msg(LOG_ERR|LOG_STDERR, "[*] Error compiling pcap filter: %s",
                 pcap_geterr(pcap)
             );
             exit(EXIT_FAILURE);
@@ -91,7 +92,7 @@ pcap_capture(fko_srv_options_t *opts)
 
         if(pcap_setfilter(pcap, &fp) == -1)
         {
-            fprintf(stderr, "[*] Error setting pcap filter: %s\n",
+            log_msg(LOG_ERR|LOG_STDERR, "[*] Error setting pcap filter: %s",
                 pcap_geterr(pcap)
             );
             exit(EXIT_FAILURE);
@@ -121,7 +122,7 @@ pcap_capture(fko_srv_options_t *opts)
     */
     if((pcap_setnonblock(pcap, 1, errstr)) == -1)
     {
-        fprintf(stderr, "[*] Error setting pcap to non-blocking: %s\n",
+        log_msg(LOG_ERR|LOG_STDERR, "[*] Error setting pcap to non-blocking: %s",
             errstr
         );
         exit(EXIT_FAILURE);
@@ -159,28 +160,29 @@ pcap_capture(fko_srv_options_t *opts)
              * of SPA packet validity at this point.
             */
             opts->packet_ctr++;
-            if (opts->packet_ctr >= opts->packet_ctr_limit)
+            if (opts->packet_ctr_limit && opts->packet_ctr >= opts->packet_ctr_limit)
             {
+                log_msg(LOG_WARNING|LOG_STDERR,
+                    "* Incoming packet count limit of %i reached",
+                    opts->packet_ctr_limit
+                );
+
                 pcap_breakloop(pcap);
                 pending_break = 1;
             }
-
-            pcap_errcnt = 0;
-            continue;
         }
-
         /* If there was an error, complain and go on (to an extent
          * before giving up).
         */
         else if(res == -1)
         {
-            fprintf(stderr, "[*] Error from pcap_dispatch: %s\n",
+            log_msg(LOG_ERR|LOG_STDERR, "[*] Error from pcap_dispatch: %s",
                 pcap_geterr(pcap)
             );
 
             if(pcap_errcnt++ > MAX_PCAP_ERRORS_BEFORE_BAIL)
             {
-                fprintf(stderr, "[*] %i consecutive pcap errors.  Giving up\n",
+                log_msg(LOG_ERR|LOG_STDERR, "[*] %i consecutive pcap errors.  Giving up",
                     pcap_errcnt
                 );
                 exit(EXIT_FAILURE);

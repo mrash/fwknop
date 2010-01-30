@@ -406,16 +406,18 @@ the correct message format and content.  These message types are:
 @table @code
 @item FKO_COMMAND_MSG
 A request to have the fwknop server execute the given command.  The format
-for this type is: @samp{<ip of requestor>:<command text>}
+for this type is: @samp{<ip of requestor>,<command text>}.
 @example
-"192.168.1.2:uname -a"
+"192.168.1.2,uname -a"
 @end example
 
 @item FKO_ACCESS_MSG
 A basic access request.  This is the most common type in use. The format
-for this type is: @samp{<ip of requestor>:<protocol>/<port>}.
+for this type is: @samp{<ip of requestor>,<protocol>/<port>}.  Note that
+mulitple protocol/port entries are allowed.
 @example
-"192.168.1.2:tcp/22"
+"192.168.1.2,tcp/22"
+"192.168.1.2,tcp/22,udp/5005"
 @end example
 
 @item FKO_NAT_ACCESS_MSG
