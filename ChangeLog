@@ -1,3 +1,14 @@
+2010-01-30  Damien Stuart <dstuart@dstuart.org>
+	* Set working version to 2.0.0-alpha-pre2.
+	* Added additional sanity checks and clean-up of access.conf processing
+	  and functionality.
+	* Fixed REQUIRE_SOURCE and added check for REQUIRE_USERNAME.
+	* Added fallback to use GPG_DECRYPT_PW if it was set and the normal KEY
+	  failed with a decyption error.
+	* Fixed packet count checks to allow a limit of 0 to mean unlimited
+	  number of packets.
+	* Minor libfko documentation updates.
+
 2010-01-02  Michael Rash  <mbr@cipherdyne.org>
 	* Added a new command line argument "--last-cmd" to run the fwknop client
 	  with the same command line arguments as the previous time it was
@@ -10,10 +21,11 @@
 
 2010-01-03  Damien Stuart <dstuart@dstuart.org>
 	* Added access.conf file, parsing, and processing.
-	* Added a new acces.conf parameter, RESTRICT_PORTS for specifying 1 or more
-	  proto/ports that are explicitly not allowed.
-	* Upon startup, fwknopd will now create the path to the configured run direcory
-	  and/or the basename of the digest cache file if they do not already exist.
+	* Added a new acces.conf parameter, RESTRICT_PORTS for specifying 1 or
+	  more proto/ports that are explicitly not allowed.
+	* Upon startup, fwknopd will now create the path to the configured run
+	  direcory and/or the basename of the digest cache file if they do not
+	  already exist.
 
 2010-01-02  Michael Rash  <mbr@cipherdyne.org>
 	* Added --packet-limit to fwknopd so that the number of incoming candidate
@@ -91,7 +103,7 @@
 
 2008-05-24  Damien Stuart  <dstuart@dstuart.org>
 	* Added win32 direcory with Visual Studio 2008 solution and project files
-	  for buildin on the Windows platform.
+	  for building on the Windows platform.
 
 2008-12-21  Damien Stuart  <dstuart@dstuart.org>
 
