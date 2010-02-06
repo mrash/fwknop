@@ -582,7 +582,7 @@ run_last_args(fko_cli_options_t *options)
             args_str[MAX_LINE_LEN-1] = '\0';
             if (options->verbose)
                 printf("[+] Executing: %s\n", args_str);
-            for (i=0; i < strlen(args_str); i++)
+            for (i=0; i < (int)strlen(args_str); i++)
             {
                 if (!isspace(args_str[i]))
                 {

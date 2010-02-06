@@ -24,6 +24,7 @@
  *
  *****************************************************************************
 */
+#include "fko_common.h"
 #include "spa_comm.h"
 
 /* Function to generate a header checksum.
@@ -425,7 +426,7 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
         }
 
         for (i=http_proxy_start, j=0;
-                i < strlen(options->http_proxy) && options->http_proxy[i] != ':'; i++, j++)
+                i < (int)strlen(options->http_proxy) && options->http_proxy[i] != ':'; i++, j++)
         {
             http_proxy_host[j] = options->http_proxy[i];
         }
