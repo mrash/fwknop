@@ -38,8 +38,7 @@ incoming_spa(fko_srv_options_t *opts)
     char            spa_msg_src_ip[16];
     char            spa_msg_remain[1024]; /* --DSS should not have arbitrary limit */
     time_t          now_ts;
-    int             res;
-    int             ts_diff;
+    int             res, ts_diff, enc_type;
     int             got_spa_error = 0;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
@@ -76,32 +75,92 @@ incoming_spa(fko_srv_options_t *opts)
 fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 /* --DSS temp */
 
-    /* Decode the packet data. Try the plain key, then fallback to the gpg
-     * decrypt pw.
-    */
-    if(acc->key != NULL)
-    {
-        res = fko_new_with_data(&ctx, spa_pkt->packet_data, acc->key);
-
-        /* If we had a decryption failure, fallback to gpg if we have a
-         * decryption key to try.
-        */
-        if(res == FKO_ERROR_DECRYPTION_FAILURE && acc->gpg_decrypt_pw != NULL)
-            res = fko_new_with_data(&ctx, spa_pkt->packet_data, acc->gpg_decrypt_pw);
-    }
-    else if(acc->gpg_decrypt_pw != NULL)
-    {
-        /* Otherwise this is probably a GPG-only stanza...
-        */
-        res = fko_new_with_data(&ctx, spa_pkt->packet_data, acc->gpg_decrypt_pw);
-    }
-
     /* Reset the packet data length to 0.  This our indicator to the rest of
      * the program that we do not have a current spa packet to process
-     * (whcih we won't be the time we return from this function for whatever
-     * reason.
+     * (which we won't by the time we return from this function for whatever
+     * reason).
     */
     spa_pkt->packet_data_len = 0;
+
+    /* Get encryption type and try its decoding routine first (if the key
+     * for that type is set)
+    */
+    enc_type = fko_encryption_type(spa_pkt->packet_data);
+
+    if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
+    {
+        if(acc->key != NULL)
+            res = fko_new_with_data(&ctx, spa_pkt->packet_data, acc->key);
+        else 
+        {
+            log_msg(LOG_ERR|LOG_STDERR,
+                "No KEY for RIJNDAEL encrypted messages");
+            return(SPA_MSG_FKO_CTX_ERROR);
+        }
+    }
+    else if(enc_type == FKO_ENCRYPTION_GPG)
+    {
+        /* For GPG we create the new context without decrypting on the fly
+         * so we can set some  GPG parameters first.
+        */
+        if(acc->gpg_decrypt_pw != NULL)
+        {
+            res = fko_new_with_data(&ctx, spa_pkt->packet_data, NULL);
+            if(res != FKO_SUCCESS)
+            {
+                log_msg(LOG_WARNING|LOG_STDERR,
+                    "Error creating fko context (before decryption): %s",
+                    fko_errstr(res)
+                );
+                return(SPA_MSG_FKO_CTX_ERROR);
+            }
+
+            /* Set whatever GPG parameters we have.
+            */
+            if(acc->gpg_home_dir != NULL)
+                fko_set_gpg_home_dir(ctx, acc->gpg_home_dir);
+
+            if(acc->gpg_decrypt_id != NULL)
+                fko_set_gpg_recipient(ctx, acc->gpg_decrypt_id);
+
+            /* If REMOTE_ID is set validate the check the signer.  Otherwise,
+             * skip and ignore verify errors.
+             *
+             * TODO: At present we are not checking signatures.
+            */
+            if(acc->gpg_remote_id != NULL)
+            {
+                /* TODO: Add sig verify code */
+
+            /**  --DSS replace these with the real code     **/
+            /**/  fko_set_gpg_signature_verify(ctx, 0);    /**/
+            /**/  fko_set_gpg_ignore_verify_error(ctx, 1); /**/
+            /**  --DSS replace these with the real code     **/
+
+            }
+            else
+            {
+                fko_set_gpg_signature_verify(ctx, 0);
+                fko_set_gpg_ignore_verify_error(ctx, 1);
+            }
+
+            /* Now decrypt the data.
+            */
+            res = fko_decrypt_spa_data(ctx, acc->gpg_decrypt_pw);
+        }
+        else
+        {
+            log_msg(LOG_ERR|LOG_STDERR,
+                "No GPG_DECRYPT_PW for GPG encrypted messages");
+            return(SPA_MSG_FKO_CTX_ERROR);
+        }
+    }
+    else
+    {
+        log_msg(LOG_ERR|LOG_STDERR, "Unable to determing encryption type. Got type=%i.",
+            enc_type);
+        return(SPA_MSG_FKO_CTX_ERROR);
+    }
 
     /* Do we have a valid FKO context?
     */
@@ -109,7 +168,12 @@ fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
     {
         log_msg(LOG_WARNING|LOG_STDERR, "Error creating fko context: %s",
             fko_errstr(res));
-        return(SPA_MSG_FKO_CTX_ERROR);
+
+        if(IS_GPG_ERROR(res))
+            log_msg(LOG_WARNING|LOG_STDERR, " - GPG ERROR: %s",
+                fko_gpg_errstr(ctx));
+
+        goto clean_and_bail;
     }
 
 /* --DSS temp */

@@ -211,7 +211,7 @@ main(int argc, char **argv)
             errmsg("fko_set_gpg_recipient", res);
 
             if(IS_GPG_ERROR(res))
-                fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
+                fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errstr(ctx));
             return(EXIT_FAILURE);
         }
 
@@ -223,7 +223,7 @@ main(int argc, char **argv)
                 errmsg("fko_set_gpg_signer", res);
 
                 if(IS_GPG_ERROR(res))
-                    fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
+                    fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errstr(ctx));
 
                 return(EXIT_FAILURE);
             }
@@ -250,7 +250,7 @@ main(int argc, char **argv)
         errmsg("fko_spa_data_final", res);
 
         if(IS_GPG_ERROR(res))
-            fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errorstr(ctx));
+            fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errstr(ctx));
 
         return(EXIT_FAILURE);
     }
@@ -345,7 +345,7 @@ main(int argc, char **argv)
                  * programs like the fwknop test suite don't interpret this as
                  * an unrecoverable error), but print the error string for
                  debugging purposes. */
-                fprintf(stderr, "GPG ERR: %s\n%s\n", fko_gpg_errorstr(ctx2),
+                fprintf(stderr, "GPG ERR: %s\n%s\n", fko_gpg_errstr(ctx2),
                     "[*] No access to recipient private key?\n");
                 return(EXIT_SUCCESS);
             }
@@ -699,17 +699,31 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 char*
 get_user_pw(fko_cli_options_t *options, int crypt_op)
 {
-    char *pw_ptr = NULL;
+    char        *pw_ptr = NULL;
+    static char *no_pw  = "";
 
-    if (options->get_key_file[0] != 0x0) {
-        /* grab the key/password from the --get-key file
-        */
-        pw_ptr = getpasswd_file(options->get_key_file,
-                        options->spa_server_str);
+    /* First of all if we are using GPG and GPG_AGENT
+     * then there is no password to return.
+    */
+    if(options->use_gpg
+      && (options->use_gpg_agent
+           || (crypt_op == CRYPT_OP_ENCRYPT && options->gpg_signer_key == NULL)))
+        return(no_pw);
+
+    /* If --get-key file was specified grab the key/password from it.
+    */
+    if (options->get_key_file[0] != 0x0)
+    {
+        pw_ptr = getpasswd_file(options->get_key_file, options->spa_server_str);
     }
-    else if (options->use_gpg) {
-        pw_ptr = options->use_gpg_agent ? ""
-            : getpasswd("Enter passphrase for secret key: ");
+    else if (options->use_gpg)
+    {
+        if(crypt_op == CRYPT_OP_DECRYPT)
+            pw_ptr = getpasswd("Enter passphrase for secret key: ");
+        else if(options->gpg_signer_key && strlen(options->gpg_signer_key))
+            pw_ptr = getpasswd("Enter passphrase for signing: ");
+        else
+            pw_ptr = no_pw;
     }
     else
     {
@@ -721,7 +735,9 @@ get_user_pw(fko_cli_options_t *options, int crypt_op)
             pw_ptr = getpasswd("Enter password: ");
     }
 
-    if (pw_ptr == NULL || pw_ptr[0] == '\0')
+    /* Empty password is allowed, NULL password is not.
+    */
+    if (pw_ptr == NULL)
     {
         fprintf(stderr, "[*] Received no password data, exiting.\n");
         exit(EXIT_FAILURE);

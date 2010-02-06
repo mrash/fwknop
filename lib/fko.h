@@ -64,7 +64,9 @@ typedef enum {
 /* Supported digest types...
 */
 typedef enum {
-    FKO_DIGEST_MD5 = 1,
+    FKO_DIGEST_INVALID_DATA = -1,
+    FKO_DIGEST_UNKNOWN = 0,
+    FKO_DIGEST_MD5,
     FKO_DIGEST_SHA1,
     FKO_DIGEST_SHA256,
     FKO_DIGEST_SHA384,
@@ -75,7 +77,9 @@ typedef enum {
 /* Supported encryption types...
 */
 typedef enum {
-    FKO_ENCRYPTION_RIJNDAEL = 1,
+    FKO_ENCRYPTION_INVALID_DATA = -1,
+    FKO_ENCRYPTION_UNKNOWN = 0,
+    FKO_ENCRYPTION_RIJNDAEL,
     FKO_ENCRYPTION_GPG,
     FKO_LAST_ENCRYPTION_TYPE /* Always leave this as the last one */
 } fko_encryption_type_t;
@@ -130,6 +134,7 @@ typedef enum {
     FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS,
     FKO_ERROR_GPGME_DECRYPT_FAILED,
     FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM,
+    FKO_ERROR_GPGME_BAD_GPG_EXE,
     FKO_ERROR_GPGME_BAD_HOME_DIR,
     FKO_ERROR_GPGME_SET_HOME_DIR,
     FKO_ERROR_GPGME_NO_SIGNATURE,
@@ -200,6 +205,7 @@ DLL_API int fko_set_spa_data(fko_ctx_t ctx, char *enc_msg);
 /* Data processing and misc utility functions
 */
 DLL_API const char* fko_errstr(int err_code);
+DLL_API int fko_encryption_type(char *enc_data);
 
 DLL_API int fko_encode_spa_data(fko_ctx_t ctx);
 DLL_API int fko_decode_spa_data(fko_ctx_t ctx);
@@ -207,6 +213,7 @@ DLL_API int fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key);
 DLL_API int fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key);
 
 DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
+
 
 /* Get context data functions
 */
@@ -226,6 +233,9 @@ DLL_API int fko_get_spa_data(fko_ctx_t ctx, char **spa_data);
 DLL_API int fko_get_version(fko_ctx_t ctx, char **version);
 
 /* GPG-related functions */
+DLL_API int fko_set_gpg_exe(fko_ctx_t ctx, const char *gpg_exe);
+DLL_API int fko_get_gpg_exe(fko_ctx_t ctx, char **gpg_exe);
+
 DLL_API int fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip);
 DLL_API int fko_get_gpg_recipient(fko_ctx_t ctx, char **recip);
 DLL_API int fko_set_gpg_signer(fko_ctx_t ctx, const char *signer);
@@ -233,7 +243,7 @@ DLL_API int fko_get_gpg_signer(fko_ctx_t ctx, char **signer);
 DLL_API int fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir);
 DLL_API int fko_get_gpg_home_dir(fko_ctx_t ctx, char **gpg_home_dir);
 
-DLL_API const char* fko_gpg_errorstr(fko_ctx_t ctx);
+DLL_API const char* fko_gpg_errstr(fko_ctx_t ctx);
 
 DLL_API int fko_set_gpg_signature_verify(fko_ctx_t ctx, unsigned char val);
 DLL_API int fko_get_gpg_signature_verify(fko_ctx_t ctx, unsigned char *val);

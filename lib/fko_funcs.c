@@ -25,12 +25,7 @@
 */
 #include "fko_common.h"
 #include "fko.h"
-
-/* The base64 encoded version of "Salted__" that may be found at the head
- * of Rijndael encrypted data.
-*/
-#define B64_RIJNDAEL_SALT "U2FsdGVkX1"
-#define B64_GPG_PREFIX "hQ"
+#include "cipher_funcs.h"
 
 /* Initialize an fko context.
 */
@@ -74,7 +69,7 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
-        free(ctx);
+        fko_destroy(ctx);
         return res;
     }
 
@@ -85,7 +80,7 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
-        free(ctx);
+        fko_destroy(ctx);
         return res;
     }
 
@@ -96,7 +91,7 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
-        free(ctx);
+        fko_destroy(ctx);
         return res;
     }
 
@@ -107,7 +102,7 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
-        free(ctx);
+        fko_destroy(ctx);
         return res;
     }
 
@@ -118,7 +113,7 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
-        free(ctx);
+        fko_destroy(ctx);
         return res;
     }
 
@@ -129,7 +124,7 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
-        free(ctx);
+        fko_destroy(ctx);
         return res;
     }
 
@@ -137,6 +132,7 @@ fko_new(fko_ctx_t *r_ctx)
     /* Set gpg signature verify on.
     */
     ctx->verify_gpg_sigs = 1;
+
 #endif /* HAVE_LIBGPGME */
 
     /* Now we mean it.
@@ -196,8 +192,8 @@ fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
     /* Set gpg signature verify on.
     */
     ctx->verify_gpg_sigs = 1;
-#endif /* HAVE_LIBGPGME */
 
+#endif /* HAVE_LIBGPGME */
 
     *r_ctx = ctx;
 
@@ -243,6 +239,12 @@ fko_destroy(fko_ctx_t ctx)
             free(ctx->encrypted_msg);
 
 #if HAVE_LIBGPGME
+        if(ctx->gpg_exe != NULL)
+            free(ctx->gpg_exe);
+
+        if(ctx->gpg_home_dir != NULL)
+            free(ctx->gpg_home_dir);
+
         if(ctx->gpg_recipient != NULL)
             free(ctx->gpg_recipient);
 

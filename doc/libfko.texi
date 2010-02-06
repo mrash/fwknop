@@ -894,6 +894,13 @@ signature verification errors are ignored (but still captured) and the
 decoding process will continue.  The default value of this flag is false.
 @end deftypefun
 
+@deftypefun int fko_set_gpg_exe (@w{fko_ctx_t @var{ctx}, const char @var{gpg_exe}});
+Sets the path to the @acronym{GPG} executable that @emph{gpgme} will use.  By default,
+@emph{libfko} forces @emph{gpgme} to use @command{gpg} in case @emph{gpgme} was compiled
+to use @command{gpg2} as its default engine.  You can use this function to override and
+set what @acronym{GPG} executable @emph{gpgme} will use.
+@end deftypefun
+
 @noindent
 @strong{Note}: On a libfko build without @acronym{GPG} support, the
 GPG-related functions above will simply return the FKO_ERROR_UNSUPPORTED_FEATURE
@@ -1037,7 +1044,7 @@ to.  The return value is an FKO error status.
 
 @deftypefun int fko_get_gpg_home_dir (@w{fko_ctx_t @var{ctx}, char @var{**gpg_dir}});
 Assigns the pointer to the string holding the the @acronym{GPG} home directory
-associated with the current context to the address @var{recipient} is pointing
+associated with the current context to the address @var{gpg_dir} is pointing
 to.  The return value is an FKO error status.
 @end deftypefun
 
@@ -1075,6 +1082,12 @@ status.
 Sets the value of the @var{sig_stat} variable to the @acronym{GPG} signature
 error status value associated with the current context. The return value is an FKO error
 status.
+@end deftypefun
+
+@deftypefun int fko_get_gpg_exe (@w{fko_ctx_t @var{ctx}, char @var{**gpg_exe}});
+Assigns the pointer to the string holding the the @acronym{GPG} executable path
+associated with the current context to the address @var{gpg_exe} is pointing
+to.  The return value is an FKO error status.
 @end deftypefun
 
 @noindent
@@ -1263,6 +1276,8 @@ The key for the given recipient was not found
 Ambiguous name/id for the recipient key (mulitple matches)
 @item FKO_ERROR_GPGME_DECRYPT_FAILED
 Decryption operation failed
+@item FKO_ERROR_GPGME_BAD_GPG_EXE
+Unable to stat the given GPG executable
 @item FKO_ERROR_GPGME_BAD_HOME_DIR
 Unable to stat the given GPG home directory
 @item FKO_ERROR_GPGME_SET_HOME_DIR

@@ -6,7 +6,7 @@
 #
 set -x
 
-aclocal -I config -I m4
+aclocal -I config
 libtoolize --automake --copy --force
 autoheader
 automake --add-missing --copy

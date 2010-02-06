@@ -73,6 +73,7 @@ struct fko_context {
 
 #if HAVE_LIBGPGME
     /* For gpgme support */
+    char           *gpg_exe;
     char           *gpg_recipient;
     char           *gpg_signer;
     char           *gpg_home_dir;

@@ -1,3 +1,17 @@
+2010-02-05  Damien Stuart <dstuart@dstuart.org>
+	* Updated libfko to set gpgme to use of gpg (vice gpg2) by default.
+	* Added fko_set_gpg_exe and fko_get_gpg_exe function for getting or
+	  setting the path to gpg.  Updated docs accordingly.
+	* Fixed some potential memory leak issues in libfko and fwknopd.
+	* Reworked the get_user_pw routines to accomodate use of gpg-agent and not
+	  prompting for a password when GPG is used without signing.
+	* Fixed bug where the 'hQ' prefix was removed by the client, but not put
+	  back by the server.
+	* Added check for (and ability to override) the path to gpg to the
+	  configure script.
+	* Reverted/removed the pretty-print routines from the configure script as
+	  the changes caused more issues than they were worth.
+
 2010-01-30  Damien Stuart <dstuart@dstuart.org>
 	* Set working version to 2.0.0-alpha-pre2.
 	* Added additional sanity checks and clean-up of access.conf processing

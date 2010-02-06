@@ -35,8 +35,6 @@
   #endif
 #endif
 
-#define B64_RIJNDAEL_SALT "U2FsdGVkX1"
-
 /* Prep and encrypt using Rijndael
 */
 int
@@ -92,12 +90,14 @@ _rijndael_encrypt(fko_ctx_t ctx, char *enc_key)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 int
-_rijndael_decrypt(fko_ctx_t ctx, char *dec_key, int b64_len)
+_rijndael_decrypt(fko_ctx_t ctx, char *dec_key)
 {
     char           *tbuf;
 	unsigned char  *ndx;
     unsigned char  *cipher;
     int             cipher_len, pt_len, i, err = 0;
+
+    int             b64_len = strlen(ctx->encrypted_msg);
 
     /* Now see if we need to add the "Salted__" string to the front of the
      * encrypted data.
@@ -238,11 +238,37 @@ gpg_encrypt(fko_ctx_t ctx, char *enc_key)
 /* Prep and decrypt using gpgme
 */
 int
-gpg_decrypt(fko_ctx_t ctx, char *dec_key, size_t b64_len)
+gpg_decrypt(fko_ctx_t ctx, char *dec_key)
 {
+    char           *tbuf;
     unsigned char  *cipher;
     size_t          cipher_len;
     int             res;
+
+    int             b64_len = strlen(ctx->encrypted_msg);
+
+    /* Now see if we need to add the "hQ" string to the front of the
+     * base64-encoded-GPG-encrypted data.
+    */
+    if(strncmp(ctx->encrypted_msg, B64_GPG_PREFIX, strlen(B64_GPG_PREFIX)))
+    {
+        /* We need to realloc space for the GPG prefix of hQ.
+        */
+        tbuf = realloc(ctx->encrypted_msg, b64_len + 12);
+        if(tbuf == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+        memmove(tbuf+strlen(B64_GPG_PREFIX), tbuf, b64_len);
+
+        ctx->encrypted_msg = memcpy(tbuf, B64_GPG_PREFIX, strlen(B64_GPG_PREFIX));
+
+        /* Adjust b64_len for added SALT value and Make sure we are still
+         * a properly NULL-terminated string (Ubuntu was one system for
+         * which this was an issue).
+        */
+        b64_len += strlen(B64_GPG_PREFIX);
+        tbuf[b64_len] = '\0';
+    }
 
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.
@@ -251,19 +277,21 @@ gpg_decrypt(fko_ctx_t ctx, char *dec_key, size_t b64_len)
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
  
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher, b64_len);
+    cipher_len = b64_decode(ctx->encrypted_msg, cipher, strlen(ctx->encrypted_msg));
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
     */
-    ctx->encoded_msg = malloc(cipher_len);
-    if(ctx->encoded_msg == NULL)
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+    /* --DSS Actually, the needed memory will be malloced in the gpgme_decrypt
+    //       function. Just leaving this here for reference (for now).
+    //ctx->encoded_msg = malloc(cipher_len);
+    //if(ctx->encoded_msg == NULL)
+    //    return(FKO_ERROR_MEMORY_ALLOCATION);
+    */
 
     res = gpgme_decrypt(ctx, cipher, cipher_len,
         dec_key,  (unsigned char**)&ctx->encoded_msg, &cipher_len
     );
-    
  
     /* Done with cipher...
     */
@@ -371,16 +399,46 @@ fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
 int
 fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
 {
-    int             b64_len, res;
-    //char           *ndx;
+    int     enc_type, res;
 
-    /* First, make sure we have data to work with.
+    /* Get the (assumed) type of encryption used. This will also provide
+     * some data validation.
     */
-    if(ctx->encrypted_msg == NULL
-      || strlen(ctx->encrypted_msg) <  MIN_SPA_ENCODED_MSG_SIZE)
+    enc_type = fko_encryption_type(ctx->encrypted_msg);
+
+    //strlen(ctx->encrypted_msg) <  MIN_SPA_ENCODED_MSG_SIZE)
+
+    if(enc_type == FKO_ENCRYPTION_GPG)
     {
-        return(FKO_ERROR_INVALID_DATA);
+        ctx->encryption_type = FKO_ENCRYPTION_GPG;
+#if HAVE_LIBGPGME
+        res = gpg_decrypt(ctx, dec_key);
+#else
+        res = FKO_ERROR_UNSUPPORTED_FEATURE;
+#endif
     }
+    else if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
+    {
+        ctx->encryption_type = FKO_ENCRYPTION_RIJNDAEL;
+        res = _rijndael_decrypt(ctx, dec_key);
+    }
+    else
+        return(FKO_ERROR_INVALID_DATA);
+
+    return(res);
+}
+
+/* Return the assumed encryption type based on the raw encrypted data.
+*/
+int
+fko_encryption_type(char *enc_data)
+{
+    int enc_data_len;
+
+    /* Sanity check the data.
+    */
+    if(enc_data == NULL)
+        return(FKO_ENCRYPTION_INVALID_DATA);
 
     /* Determine type of encryption used.  For know, we are using the
      * size of the message.  
@@ -388,24 +446,17 @@ fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
      * XXX: We will want to come up with a more reliable method of
      *      identifying the encryption type.
     */
-    b64_len = strlen(ctx->encrypted_msg);
+    enc_data_len = strlen(enc_data);
 
-    if(b64_len > MIN_GNUPG_MSG_SIZE)
-    {
-        ctx->encryption_type = FKO_ENCRYPTION_GPG;
-#if HAVE_LIBGPGME
-        res = gpg_decrypt(ctx, dec_key, b64_len);
-#else
-        res = FKO_ERROR_UNSUPPORTED_FEATURE;
-#endif
-    }
-    else /* We are assuming the default of Rijndael */
-    {
-        ctx->encryption_type = FKO_ENCRYPTION_RIJNDAEL;
-        res = _rijndael_decrypt(ctx, dec_key, b64_len);
-    }
+    if(enc_data_len >= MIN_GNUPG_MSG_SIZE)
+        return(FKO_ENCRYPTION_GPG);
 
-    return(res);
+    else if(enc_data_len < MIN_GNUPG_MSG_SIZE
+      && enc_data_len >= MIN_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ENCRYPTION_RIJNDAEL);
+
+    else
+        return(FKO_ENCRYPTION_UNKNOWN);
 }
 
 /* Set the GPG recipient key name.
@@ -442,6 +493,57 @@ fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
     ctx->recipient_key = key;
 
     ctx->state |= FKO_DATA_MODIFIED;
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+/* Set the GPG home dir.
+*/
+int
+fko_set_gpg_exe(fko_ctx_t ctx, const char *gpg_exe)
+{
+#if HAVE_LIBGPGME
+    struct stat     st;
+
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    /* If we are unable to stat the given path/file and determine if it
+     * is a regular file or symbolic link, then return with error.
+    */
+    if(stat(gpg_exe, &st) != 0)
+        return(FKO_ERROR_GPGME_BAD_GPG_EXE);
+
+    if(!S_ISREG(st.st_mode) && !S_ISLNK(st.st_mode)) 
+        return(FKO_ERROR_GPGME_BAD_GPG_EXE);
+
+    ctx->gpg_exe = strdup(gpg_exe);
+    if(ctx->gpg_exe == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    return(FKO_SUCCESS);
+#else
+    return(FKO_ERROR_UNSUPPORTED_FEATURE);
+#endif  /* HAVE_LIBGPGME */
+}
+
+/* Get the GPG home dir.
+*/
+int
+fko_get_gpg_exe(fko_ctx_t ctx, char **gpg_exe)
+{
+#if HAVE_LIBGPGME
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *gpg_exe = ctx->gpg_exe;
 
     return(FKO_SUCCESS);
 #else

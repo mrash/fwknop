@@ -26,8 +26,6 @@ dnl AM_MAINTAINER_MODE
 
 AC_CONFIG_HEADER([config.h])
 
-AC_CONFIG_MACRO_DIR([m4])
-
 dnl The top of our header
 dnl
 AH_TOP([
@@ -61,8 +59,6 @@ AC_ARG_ENABLE([server],
   [])
 AM_CONDITIONAL([WANT_SERVER], [test "$want_server" = yes])
 
-CONFIGURE_PART(Compilation Environment)
-
 AC_GNU_SOURCE
 
 AC_PROG_CC
@@ -79,8 +75,6 @@ AC_PROG_LIBTOOL
 
 # Checks for header files.
 #
-CONFIGURE_PART(Header File Checks)
-
 AC_HEADER_STDC
 AC_HEADER_TIME
 AC_HEADER_RESOLV
@@ -89,8 +83,6 @@ AC_CHECK_HEADERS([ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netin
 
 # Type checks.
 #
-CONFIGURE_PART(Type Checks)
-
 AC_C_CONST
 AC_TYPE_INT8_T
 AC_TYPE_INT16_T
@@ -112,8 +104,6 @@ AC_C_BIGENDIAN
 
 # Checks for library functions.
 #
-CONFIGURE_PART(Library Function Checks)
-
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STAT
@@ -123,8 +113,8 @@ AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup s
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
-CONFIGURE_PART(3rd-party Libraries)
-
+# Check for 3rd-party libs
+#
 AC_ARG_WITH([gpgme],
   [AS_HELP_STRING([--with-gpgme],
     [support for gpg encryption using libgpgme @<:@default=check@:>@])],
@@ -160,10 +150,37 @@ AS_IF([test "$want_server" = yes], [
     )]
   )
 
-  CONFIGURE_PART(Find local executables used by the server)
-
 dnl Add various common way to sbin dir to the path (just in case)
   APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
+
+dnl Check for gpg (not gpg2)
+dnl
+  AC_ARG_WITH([gpg],
+    [AS_HELP_STRING([--with-gpg=/path/to/gpg],
+      [Specify path to the gpg executable that gpgme will use @<:@default=check path@:>@])],
+    [
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+          [AC_MSG_ERROR([--with-gpg requires an argument specifying a path to gpg])],
+          [
+            AC_CHECK_FILE([$withval], [], [
+              AC_MSG_WARN([Specified path to gpg does not exist on this system])
+              gpg_exe_warn="*not found*"
+            ])
+            GPG_EXE=$withval
+          ]
+        )
+    ],
+    [
+        AC_PATH_PROG(GPG_EXE, [gpg], [], [$APP_PATH])
+    ]
+  )
+  AS_IF([test "x$GPG_EXE" != x],
+    [
+      AC_DEFINE_UNQUOTED([GPG_EXE], ["$GPG_EXE"], [Path to gpg executable])
+      gpg_exe=$GPG_EXE
+    ], [ gpg_exe="(not found)"]
+  )
+
 
 dnl Check for iptables
 dnl
@@ -306,8 +323,6 @@ dnl
   )
 ])
 
-CONFIGURE_PART(Generating Files)
-
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  client/Makefile
@@ -317,7 +332,10 @@ AC_CONFIG_FILES([Makefile
 
 AC_OUTPUT
 
-CONFIGURE_PART(Configure Summary)
+if [test $have_gpgme = "yes" ]; then
+    have_gpgme="$have_gpgme
+                  Gpgme engine:     $GPG_EXE"
+fi
 
 echo "
     $PACKAGE_NAME-$PACKAGE_VERSION configuration.

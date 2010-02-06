@@ -160,6 +160,9 @@ fko_errstr(int err_code)
         case FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM:
             return("Decryption operation failed due to unsupported algorithm");
 
+        case FKO_ERROR_GPGME_BAD_GPG_EXE:
+            return("Unable to stat the given GPG executable");
+
         case FKO_ERROR_GPGME_BAD_HOME_DIR:
             return("Unable to stat the given GPG home directory");
 
@@ -187,7 +190,7 @@ fko_errstr(int err_code)
 }
 
 const char*
-fko_gpg_errorstr(fko_ctx_t ctx)
+fko_gpg_errstr(fko_ctx_t ctx)
 {
 #if HAVE_LIBGPGME
     if(ctx->gpg_err)

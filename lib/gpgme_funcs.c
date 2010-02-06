@@ -50,10 +50,19 @@ init_gpgme(fko_ctx_t fko_ctx)
     err = gpgme_engine_check_version(GPGME_PROTOCOL_OpenPGP);
     if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
     {
-        /* GPG engine is not available. */
+        /* GPG engine is not available.
+        */
         fko_ctx->gpg_err = err;
         return(FKO_ERROR_GPGME_NO_OPENPGP);
     }
+
+    /* Extract the current gpgme engine information.
+    */
+    gpgme_set_engine_info(
+            GPGME_PROTOCOL_OpenPGP,
+            (fko_ctx->gpg_exe != NULL) ? fko_ctx->gpg_exe : GPG_EXE,
+            fko_ctx->gpg_home_dir   /* If this is NULL, the default is used */
+    );
 
     /* Create our gpgme context
     */
@@ -64,29 +73,6 @@ init_gpgme(fko_ctx_t fko_ctx)
         return(FKO_ERROR_GPGME_CONTEXT);
     }
 
-    /* Extract the current gpgme engine information.
-    */
-    eng_info = gpgme_ctx_get_engine_info(fko_ctx->gpg_ctx);
-
-    /* If a gpg_home_dir was not given or the given dir does not
-     * match what we already have, then add the new dir to the context.
-    */
-    if(fko_ctx->gpg_home_dir != NULL)
-    {
-        err = gpgme_ctx_set_engine_info(
-            fko_ctx->gpg_ctx,
-            eng_info->protocol,
-            eng_info->file_name,
-            fko_ctx->gpg_home_dir
-        );
-
-        if(gpg_err_code(err) != GPG_ERR_NO_ERROR)
-        {
-            fko_ctx->gpg_err = err;
-            return(FKO_ERROR_GPGME_SET_HOME_DIR);
-        }
-    }
-
     fko_ctx->have_gpgme_context = 1;
 
     return(FKO_SUCCESS);
@@ -95,25 +81,22 @@ init_gpgme(fko_ctx_t fko_ctx)
 /* Callback function that supplies the password when gpgme needs it.
 */
 gpgme_error_t
-passphrase_cb(
+my_passphrase_cb(
   void *pw, const char *uid_hint, const char *passphrase_info,
   int prev_was_bad, int fd)
 {
-    ssize_t num_bytes = 0;
-
     /* We only need to try once as it is fed by the program
      * (for now --DSS).
     */
     if(prev_was_bad)
         return(GPG_ERR_CANCELED);
 
-    num_bytes = write(fd, (const char*)pw, strlen((const char*)pw));
-    if (num_bytes != strlen((const char*)pw))
-        return(FKO_ERROR_FILESYSTEM_OPERATION);
+    if(write(fd, (const char*)pw, strlen((const char*)pw))
+      != strlen((const char*)pw))
+        return(GPG_ERR_SYSTEM_ERROR); /* Must be a GPG error, but which one? */
 
-    num_bytes = write(fd, "\n", 1);
-    if (num_bytes != 1)
-        return(FKO_ERROR_FILESYSTEM_OPERATION);
+    if(write(fd, "\n", 1) != 1)
+        return(GPG_ERR_SYSTEM_ERROR); /* Must be a GPG error, but which one? */
 
     return 0;
 }
@@ -371,7 +354,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
 
     /* Set the passphrase callback.
     */
-    gpgme_set_passphrase_cb(gpg_ctx, passphrase_cb, (void*)pw);
+    gpgme_set_passphrase_cb(gpg_ctx, my_passphrase_cb, (void*)pw);
 
     /* Encrypt and sign (if a sig was provided) the SPA data.
     */
@@ -472,7 +455,7 @@ gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
 
     /* Set the passphrase callback.
     */
-    gpgme_set_passphrase_cb(gpg_ctx, passphrase_cb, (void*)pw);
+    gpgme_set_passphrase_cb(gpg_ctx, my_passphrase_cb, (void*)pw);
 
     /* Now decrypt and verify.
     */
