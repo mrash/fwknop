@@ -50,7 +50,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
 #else
     FILE           *rfd;
     struct timeval  tv;
-	size_t          amt_read;
+    size_t          amt_read;
 #endif
     unsigned long   seed;
 	char           *tmp_buf;

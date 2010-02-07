@@ -7,30 +7,15 @@ To whom it may concern, this is -*- outline -*- mode.
 * The fwknop C client:
 ** Config file support.
 ** Command-line options and features ala fwknop Perl client:
-*** Add NAT support.
-*** Server Command support.
 *** Server Auth support (maybe). 
-*** Client timeout support.
-*** Last command support (and show last command).
-*** Time offset from command line
-*** Rand port and NAT rand port.
-*** Add Resolve External IP (-R), --source-ip (-s), and --URL functionality.
-** Man page
 
 * The fwknopd server:
 ** Sniffer support to acquire SPA packet data ala the fwknopd Perl server:
-*** Packets acquired via libpcap from a live networking interface.
 *** Packets acquired via a file (supports the ulogd pcap writer).
-*** User-defined pcap filters.
-*** IP address exclusions/inclusions.
-** Replay attack detection via storage and verification of SPA digests.
 ** SPA packet decryption:
-*** Support of multiple encryption keys and access requirements (SOURCE stanzas).
-*** GnuPG and Rijndael decryption.
 *** Username restrictions.
 ** Firewall rule manipulation upon receipt of a valid SPA packet:
 *** Initially manipulate firewall rules by executing the firewall binary directly.
-*** Possibly use libdnet once we move past executing the firewall binary.
 *** Should concentrate on iptables, but ipfw and pf support eventually.
 *** User-defined firewall rule timeouts.
 *** NAT rules to internal systems.
