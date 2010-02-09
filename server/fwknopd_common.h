@@ -106,7 +106,7 @@ enum {
 enum {
     CONF_CONFIG_FILE = 0,
     CONF_OVERRIDE_CONFIG,
-    CONF_EMAIL_ADDRESSES,
+    //CONF_EMAIL_ADDRESSES,
     CONF_HOSTNAME,
     CONF_FIREWALL_TYPE,
     CONF_AUTH_MODE,
@@ -123,13 +123,12 @@ enum {
     CONF_SNAT_TRANSLATE_IP,
     CONF_ENABLE_PROC_IP_FORWARD,
     CONF_ENABLE_IPT_OUTPUT,
-    CONF_REQUIRE_SOURCE_ADDRESS,
     //CONF_ENABLE_COOKED_INTF,
     CONF_ENABLE_VOLUNTARY_EXITS,
     CONF_EXIT_INTERVAL,
     CONF_MAX_SNIFF_BYTES,
-    //CONF_FLUSH_IPT_AT_INIT,
-    //CONF_FLUSH_IPT_AT_EXIT,
+    CONF_FLUSH_IPT_AT_INIT,
+    CONF_FLUSH_IPT_AT_EXIT,
     //CONF_IPFW_RULE_NUM,
     //CONF_IPFW_SET_NUM,
     //CONF_IPFW_DYNAMIC_INTERVAL,
@@ -143,7 +142,6 @@ enum {
     CONF_LOCALE,
     CONF_SYSLOG_IDENTITY,
     CONF_SYSLOG_FACILITY,
-    //CONF_ALERTING_METHODS,
     CONF_IPT_EXEC_TRIES,
     //CONF_ENABLE_EXTERNAL_CMDS,
     //CONF_EXTERNAL_CMD_OPEN,
@@ -191,7 +189,7 @@ enum {
 static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "CONFIG_FILE",
     "OVERRIDE_CONFIG",
-    "EMAIL_ADDRESSES",
+    //"EMAIL_ADDRESSES",
     "HOSTNAME",
     "FIREWALL_TYPE",
     "AUTH_MODE",
@@ -208,13 +206,12 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "SNAT_TRANSLATE_IP",
     "ENABLE_PROC_IP_FORWARD",
     "ENABLE_IPT_OUTPUT",
-    "REQUIRE_SOURCE_ADDRESS",
     //"ENABLE_COOKED_INTF",
     "ENABLE_VOLUNTARY_EXITS",
     "EXIT_INTERVAL",
     "MAX_SNIFF_BYTES",
-    //"FLUSH_IPT_AT_INIT",
-    //"FLUSH_IPT_AT_EXIT",
+    "FLUSH_IPT_AT_INIT",
+    "FLUSH_IPT_AT_EXIT",
     //"IPFW_RULE_NUM",
     //"IPFW_SET_NUM",
     //"IPFW_DYNAMIC_INTERVAL",
@@ -228,7 +225,6 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "LOCALE",
     "SYSLOG_IDENTITY",
     "SYSLOG_FACILITY",
-    //"ALERTING_METHODS",
     "IPT_EXEC_TRIES",
     //"ENABLE_EXTERNAL_CMDS",
     //"EXTERNAL_CMD_OPEN",
@@ -337,6 +333,7 @@ typedef struct fko_srv_options
     unsigned char   dump_config;        /* Dump current configuration flag */
     unsigned char   foreground;         /* Run in foreground flag */
     unsigned char   kill;               /* flag to initiate kill of fwknopd */
+    unsigned char   no_locale;          /* Flag to not allow setting locale */
     unsigned char   restart;            /* Restart fwknopd flag */
     unsigned char   status;             /* Get fwknopd status flag */
     unsigned char   test;               /* Test mode flag */

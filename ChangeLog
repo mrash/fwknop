@@ -1,3 +1,9 @@
+2010-02-09  Damien Stuart <dstuart@dstuart.org>
+	* Created initial fwknopd.8 man page.
+	* Added --locale and --no-locale options.
+	* Allow using internal set_config_entry function to set NULL values
+	  to configuration options to clear and free them.
+
 2010-02-05  Damien Stuart <dstuart@dstuart.org>
 	* Updated libfko to set gpgme to use of gpg (vice gpg2) by default.
 	* Added fko_set_gpg_exe and fko_get_gpg_exe function for getting or

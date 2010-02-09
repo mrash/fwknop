@@ -46,20 +46,22 @@ set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
         exit(EXIT_FAILURE);
     }
 
-    /* Make sure we have a valid value.
-    */
-    if(value == NULL)
-    {
-        fprintf(stderr, "Config value for index %i was NULL\n", var_ndx);
-        exit(EXIT_FAILURE);
-    }
-
     /* If this particular entry was already set (i.e. not NULL), then
      * assume it needs to be freed first.
     */
     if(opts->config[var_ndx] != NULL)
         free(opts->config[var_ndx]);
 
+    /* If we are setting it to NULL, do it and be done.
+    */
+    if(value == NULL)
+    {
+        opts->config[var_ndx] = NULL;
+        return;
+    }
+
+    /* Otherwise, make the space we need and set it.
+    */
     space_needed = strlen(value) + 1;
 
     opts->config[var_ndx] = malloc(space_needed);
@@ -463,6 +465,15 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'K':
                 opts->kill = 1;
                 break;
+            case 'l':
+                if(opts->no_locale)
+                    fprintf(stderr, "Local option ignored due to no-locale flag.\n");
+                else
+                    set_config_entry(opts, CONF_LOCALE, optarg);
+                break;
+            case NO_LOCALE:
+                set_config_entry(opts, CONF_LOCALE, NULL);
+                break;
             case 'O':
                 /* This was handled earlier */
                 break;
@@ -538,7 +549,11 @@ usage(void)
       " -K, --kill              - Kill the currently running fwknopd.\n"
       "     --gpg-home-dir      - Specify the GPG home directory.\n"
       "     --gpg-key           - Specify the GPG key ID used for decryption.\n"
-      " -O, --override-config   - \n"
+      " -l, --locale            - Provide a locale setting other than the default\n"
+      "                           of \"C\".\n"
+      "     --no-locale         - Do not set any locale.  Allow the system default\n"
+      " -O, --override-config   - Specify a file with configuration entries that will\n"
+      "                           overide those in fwknopd.conf\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
       " -S, --status            - Display the status of any running fwknopd process.\n"
       " -v, --verbose           - Set verbose mode.\n"

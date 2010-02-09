@@ -13,5 +13,7 @@ fwknopd_CPPFLAGS    = -I $(top_srcdir)/lib -I $(top_srcdir)/common -DSYSCONFDIR=
 
 fwknopddir          = @sysconfdir@/fwknop
 
+dist_man_MANS		= fwknopd.8
+
 dist_fwknopd_DATA   = fwknopd.conf access.conf
 

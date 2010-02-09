@@ -130,7 +130,7 @@ main(int argc, char **argv)
 #if HAVE_LOCALE_H
         /* Set the locale if specified.
         */
-        if(opts.config[CONF_LOCALE] != NULL)
+        if(opts.config[CONF_LOCALE] != NULL && !opts.no_locale)
         {
             locale = setlocale(LC_ALL, opts.config[CONF_LOCALE]);
 
