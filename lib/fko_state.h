@@ -80,7 +80,7 @@ typedef enum {
 
 /* Macros used for determining ctx initialization state.
 */
-#define CTX_INITIALIZED(ctx) (ctx->initval == FKO_CTX_INITIALIZED)
+#define CTX_INITIALIZED(ctx) (ctx != NULL && ctx->initval == FKO_CTX_INITIALIZED)
 
 #endif /* FKO_STATE_H */
 

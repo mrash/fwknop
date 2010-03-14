@@ -33,7 +33,11 @@
 int
 incoming_spa(fko_srv_options_t *opts)
 {
-    fko_ctx_t       ctx;
+    /* Always a good idea to initialize ctx to null if it will be used
+     * repeatedly (especially when using fko_new_with_data().
+    */
+    fko_ctx_t       ctx = NULL;
+
     char            *spa_ip_demark;
     char            spa_msg_src_ip[16];
     char            spa_msg_remain[1024]; /* --DSS should not have arbitrary limit */
@@ -372,7 +376,9 @@ display_ctx(ctx);
 
 
 clean_and_bail:
-    fko_destroy(ctx);
+    if(ctx != NULL)
+        fko_destroy(ctx);
+
     return(res);
 }
 

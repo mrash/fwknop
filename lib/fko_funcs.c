@@ -184,6 +184,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
         if(res != FKO_SUCCESS)
         {
             fko_destroy(ctx);
+            *r_ctx = NULL; /* Make sure the caller ctx is null just in case */
             return(res);
         }
     }
