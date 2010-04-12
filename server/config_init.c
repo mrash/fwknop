@@ -296,6 +296,45 @@ validate_options(fko_srv_options_t *opts)
     return;
 }
 
+void
+set_preconfig_entries(fko_srv_options_t *opts)
+{
+    /* First, set any default or otherwise static settings here.  Some may
+     * end up being overwritten via config file or command-line.
+    */
+    /* Default Hostname (or unknown if gethostname cannot tell us).
+    */
+    if(gethostname(opts->hostname, MAX_HOSTNAME_LEN-1) < 0)
+        strcpy(opts->hostname, "UNKNOWN");
+
+    /* Set the conf hostname entry here in case it is not set in the conf
+     * file.
+    */
+    set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
+
+    /* Setup the local executables based on build-time info.
+    */
+#ifdef GPG_EXE
+    set_config_entry(opts, CONF_EXE_GPG, GPG_EXE);
+#endif
+#ifdef MAIL_EXE
+    set_config_entry(opts, CONF_EXE_MAIL, MAIL_EXE);
+#endif
+#ifdef SENDMAIL_EXE
+    set_config_entry(opts, CONF_EXE_SENDMAIL, SENDMAIL_EXE);
+#endif
+#ifdef SH_EXE
+    set_config_entry(opts, CONF_EXE_SH, SH_EXE);
+#endif
+#ifdef IPTABLES_EXE
+    set_config_entry(opts, CONF_EXE_IPTABLES, IPTABLES_EXE);
+#endif
+#ifdef IPFW_EXE
+    set_config_entry(opts, CONF_EXE_IPFW, IPFW_EXE);
+#endif
+
+}
+
 /* Initialize program configuration via config file and/or command-line
  * switches.
 */
@@ -312,18 +351,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     */
     memset(opts, 0x00, sizeof(fko_srv_options_t));
 
-    /* First, set any default or otherwise static settings here.  Some may
-     * end up being overwritten via config file or command-line.
+    /* Set some preconfiguration options (i.e. build-time defaults)
     */
-    /* Default Hostname (or unknown if gethostname cannot tell us).
-    */
-    if(gethostname(opts->hostname, MAX_HOSTNAME_LEN-1) < 0)
-        strcpy(opts->hostname, "UNKNOWN");
-
-    /* Set the conf hostname entry here in case it is not set in the conf
-     * file.
-    */
-    set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
+    set_preconfig_entries(opts);
 
     /* In case this is a re-config.
     */

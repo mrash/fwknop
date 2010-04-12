@@ -149,12 +149,12 @@ enum {
     //CONF_EXTERNAL_CMD_ALARM,
     //CONF_ENABLE_EXT_CMD_PREFIX,
     //CONF_EXT_CMD_PREFIX,
-    //CONF_IPT_INPUT_ACCESS,
-    //CONF_IPT_OUTPUT_ACCESS,
-    //CONF_IPT_FORWARD_ACCESS,
-    //CONF_IPT_DNAT_ACCESS,
-    //CONF_IPT_SNAT_ACCESS,
-    //CONF_IPT_MASQUERADE_ACCESS,
+    CONF_IPT_INPUT_ACCESS,
+    CONF_IPT_OUTPUT_ACCESS,
+    CONF_IPT_FORWARD_ACCESS,
+    CONF_IPT_DNAT_ACCESS,
+    CONF_IPT_SNAT_ACCESS,
+    CONF_IPT_MASQUERADE_ACCESS,
     //CONF_FWKNOP_DIR,
     CONF_FWKNOP_RUN_DIR,
     //CONF_FWKNOP_MOD_DIR,
@@ -232,12 +232,12 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"EXTERNAL_CMD_ALARM",
     //"ENABLE_EXT_CMD_PREFIX",
     //"EXT_CMD_PREFIX",
-    //"IPT_INPUT_ACCESS",
-    //"IPT_OUTPUT_ACCESS",
-    //"IPT_FORWARD_ACCESS",
-    //"IPT_DNAT_ACCESS",
-    //"IPT_SNAT_ACCESS",
-    //"IPT_MASQUERADE_ACCESS",
+    "IPT_INPUT_ACCESS",
+    "IPT_OUTPUT_ACCESS",
+    "IPT_FORWARD_ACCESS",
+    "IPT_DNAT_ACCESS",
+    "IPT_SNAT_ACCESS",
+    "IPT_MASQUERADE_ACCESS",
     //"FWKNOP_DIR",
     "FWKNOP_RUN_DIR",
     //"FWKNOP_MOD_DIR",
@@ -314,6 +314,74 @@ typedef struct acc_stanza
     struct acc_stanza   *next;
 } acc_stanza_t;
 
+
+/* Firewall-related data and types. */
+/* --DSS XXX: These are arbitrary. We should determine appropriate values.
+*/
+#define MAX_TABLE_NAME_LEN      16
+#define MAX_CHAIN_NAME_LEN      32
+#define MAX_TARGET_NAME_LEN     32
+
+#define MAX_FW_COMMAND_ARGS_LEN 256
+
+/* iptables command args            
+*/
+#define IPT_ADD_RULE_ARGS "-t %s -I %s %i -p %s -s %s -d %s --dport %s -j %s"
+#define IPT_DEL_RULE_ARGS "-t %s -D %s %i"
+#define IPT_NEW_CHAIN_ARGS "-t %s -N %s"
+#define IPT_FLUSH_CHAIN_ARGS "-t %s -F %s"
+#define IPT_DEL_CHAIN_ARGS "-t %s -X %s"
+#define IPT_ADD_JUMP_RULE_ARGS "-t %s -I %s %i -j %s"
+#define IPT_LIST_RULES_ARGS " -t %s -L %s --line-numbers -n"
+
+/* Fwknop custom chain types
+*/
+enum {
+    IPT_INPUT_ACCESS,
+    IPT_OUTPUT_ACCESS,
+    IPT_FORWARD_ACCESS,
+    IPT_DNAT_ACCESS,
+    IPT_SNAT_ACCESS,
+    IPT_MASQUERADE_ACCESS,
+    NUM_FWKNOP_CHAIN_TYPES  /* Leave this entry last */
+};
+
+#define FW_CHAIN_DIR_SRC_STR    "src"
+#define FW_CHAIN_DIR_DST_STR    "dst"
+#define FW_CHAIN_DIR_BOTH_STR   "both"
+
+/* Fwknop chain directions
+*/
+enum {
+    FW_CHAIN_DIR_UNKNOWN,
+    FW_CHAIN_DIR_SRC,
+    FW_CHAIN_DIR_DST,
+    FW_CHAIN_DIR_BOTH
+};
+
+/* Structure to define an fwknop firewall chain configuration.
+*/
+struct fw_chain {
+    int     type;
+    char    target[MAX_TARGET_NAME_LEN];
+    int     direction;
+    char    table[MAX_TABLE_NAME_LEN];
+    char    from_chain[MAX_CHAIN_NAME_LEN];
+    int     jump_rule_pos;
+    char    to_chain[MAX_CHAIN_NAME_LEN];
+    int     rule_pos;
+};
+
+/* Based on the fw_chain fields (not counting type)
+*/
+#define FW_NUM_CHAIN_FIELDS 7
+
+struct fw_config {
+    struct fw_chain chain[NUM_FWKNOP_CHAIN_TYPES];
+    char            fw_command[MAX_PATH_LEN];
+};
+
+
 /* SPA Packet info struct.
 */
 typedef struct spa_pkt_info
@@ -354,7 +422,11 @@ typedef struct fko_srv_options
     */
     char           *config[NUMBER_OF_CONFIG_ENTRIES];
 
-    acc_stanza_t    *acc_stanzas;       /* List of access stanzas */
+    acc_stanza_t   *acc_stanzas;       /* List of access stanzas */
+
+    /* Firewall config info.
+    */
+    struct fw_config *fw_config;
 
     /* Misc
     */

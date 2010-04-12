@@ -238,6 +238,10 @@ main(int argc, char **argv)
                 );
         }
 
+        /* Initialize the firewall rules handler.
+        */
+        fw_initialize(&opts);
+
         /* Intiate pcap capture mode...
         */
         pcap_capture(&opts);
@@ -287,6 +291,7 @@ main(int argc, char **argv)
 
     /* Other cleanup.
     */
+    fw_cleanup();
     free_logging();
     free_configs(&opts);
 
