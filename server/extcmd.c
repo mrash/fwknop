@@ -153,7 +153,8 @@ run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_bu
             /* Select error - so kill the child and bail.
             */
             kill(pid, SIGTERM);
-            return(EXTCMD_SELECT_ERROR);
+            retval |= EXTCMD_SELECT_ERROR;
+            break;
         }
 
         if(selval == 0)
@@ -161,14 +162,15 @@ run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_bu
             /* Timeout - so kill the child and bail
             */
             kill(pid, SIGTERM);
-            return(retval | EXTCMD_EXECUTION_TIMEOUT);
+            retval |= EXTCMD_EXECUTION_TIMEOUT;
+            break;
         }
 
         /* The stdout pipe...
         */
+        bytes_read = read(so[0], so_read_buf, IO_READ_BUF_LEN);
         if(so_buf_remaining > 0)
         {
-            bytes_read = read(so[0], so_read_buf, IO_READ_BUF_LEN);
             if(bytes_read > 0)
             {
                 /* We have data, so process it...
@@ -203,12 +205,14 @@ run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_bu
                 so_buf_remaining = 0;
             }
         }
+        else
+            break;
 
         /* The stderr pipe...
         */
+        bytes_read = read(se[0], se_read_buf, IO_READ_BUF_LEN);
         if(se_buf_remaining > 0)
         {
-            bytes_read = read(se[0], se_read_buf, IO_READ_BUF_LEN);
             if(bytes_read > 0)
             {
                 /* We have data, so process it...
@@ -243,6 +247,8 @@ run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_bu
                 se_buf_remaining = 0;
             }
         }
+        else
+            break;
     }
 
     close(so[0]);

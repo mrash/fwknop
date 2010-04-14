@@ -113,9 +113,6 @@ jump_rule_exists(int chain_num)
 
         if(sscanf(line_buf, "%i %s ", &num, target) == 2)
         {
-            //printf("GOT MATCH: '%s' - (pos=%i, target=%s)\n",
-            //    line_buf, num, target);
-
             if(strcmp(target, fwc.chain[chain_num].to_chain) == 0)
             {
                 pos = num;
@@ -157,7 +154,6 @@ delete_all_chains(void)
             );
 
             //printf("CMD: '%s'\n", cmd_buf);
-            //system(cmd_buf);
             res = run_extcmd(cmd_buf, NULL, err, 0, 256, &status);
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
@@ -177,7 +173,6 @@ delete_all_chains(void)
         );
 
         //printf("CMD: '%s'\n", cmd_buf);
-        //system(cmd_buf);
         res = run_extcmd(cmd_buf, NULL, err, 0, 256, &status);
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -209,7 +204,6 @@ create_fw_chains(void)
         );
 
         //printf("CMD: '%s'\n", cmd_buf);
-        //res = system(cmd_buf);
         res = run_extcmd(cmd_buf, NULL, err, 0, 256, &status);
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -229,7 +223,6 @@ create_fw_chains(void)
         );
 
         //printf("CMD: '%s'\n", cmd_buf);
-        //res = system(cmd_buf);
         res = run_extcmd(cmd_buf, NULL, err, 0, 256, &status);
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
