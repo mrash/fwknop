@@ -28,6 +28,48 @@
 #include "access.h"
 #include "log_msg.h"
 
+/* Popluate a spa_data struct from an initialized (and populated) FKO context.
+*/
+int
+get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
+{
+    int res = FKO_SUCCESS;
+
+    res = fko_get_username(ctx, &(spdat->username));
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    res = fko_get_timestamp(ctx, &(spdat->timestamp));
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    res = fko_get_version(ctx, &(spdat->version));
+    if(res != FKO_SUCCESS)
+        return(res);
+ 
+    res = fko_get_spa_message_type(ctx, &(spdat->message_type));
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    res = fko_get_spa_message(ctx, &(spdat->spa_message));
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    res = fko_get_spa_nat_access(ctx, &(spdat->nat_access));
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    res = fko_get_spa_server_auth(ctx, &(spdat->server_auth));
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    res = fko_get_spa_client_timeout(ctx, &(spdat->client_timeout));
+    if(res != FKO_SUCCESS)
+        return(res);
+
+    return(res);
+}
+
 /* Process the SPA packet data
 */
 int
@@ -39,32 +81,29 @@ incoming_spa(fko_srv_options_t *opts)
     fko_ctx_t       ctx = NULL;
 
     char            *spa_ip_demark;
-    char            spa_msg_src_ip[16];
-    char            spa_msg_remain[1024]; /* --DSS should not have arbitrary limit */
     time_t          now_ts;
     int             res, ts_diff, enc_type;
-    int             got_spa_error = 0;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
-    /* SPA data fields we will want to pull:
+    /* This will hold our pertinent SPA data.
     */
-    time_t          spa_ts;
-    short           spa_msg_type;
-    char            *spa_username;
-    char            *spa_msg;
-    char            *spa_nat_access;
-    int             spa_client_timeout;
+    spa_data_t spadat;
 
     /* Get the access.conf data for the stanza that matches this incoming
      * source IP address.
     */
     acc_stanza_t   *acc = acc_check_source(opts, spa_pkt->packet_src_ip);
 
+    inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
+        spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+
+    log_msg(LOG_INFO, "SPA packet from IP: %s received.", spadat.pkt_source_ip);
+
     if(acc == NULL)
     {
         log_msg(LOG_WARNING|LOG_STDERR,
-            "No access data found for source IP: %u", spa_pkt->packet_src_ip
+            "No access data found for source IP: %s", spadat.pkt_source_ip
         );
 
         return(SPA_MSG_ACCESS_DENIED);
@@ -76,7 +115,7 @@ incoming_spa(fko_srv_options_t *opts)
         return(SPA_MSG_BAD_DATA);
 
 /* --DSS temp */
-fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
+//fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 /* --DSS temp */
 
     /* Reset the packet data length to 0.  This our indicator to the rest of
@@ -127,7 +166,7 @@ fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
             if(acc->gpg_decrypt_id != NULL)
                 fko_set_gpg_recipient(ctx, acc->gpg_decrypt_id);
 
-            /* If REMOTE_ID is set validate the check the signer.  Otherwise,
+            /* If REMOTE_ID is set, validate and check the signer.  Otherwise,
              * skip and ignore verify errors.
              *
              * TODO: At present we are not checking signatures.
@@ -180,33 +219,45 @@ fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
         goto clean_and_bail;
     }
 
+    /* At this point, we assume the SPA data is valid.  Now we need to see
+     * if it meets our access criteria.
+    */
 /* --DSS temp */
-fprintf(stderr, "Decode res = %i\n", res);
-display_ctx(ctx);
+//fprintf(stderr, "Decode res = %i\n", res);
+//display_ctx(ctx);
 /* --DSS temp */
 
+    /* Check for replays if so configured.
+    */
     if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
     {
         res = replay_check(opts, ctx);
-        if(res != SPA_MSG_SUCCESS)
+        if(res != 0) /* non-zero means we have seen this packet before. */
             goto clean_and_bail;
+    }
+
+    /* Populate our spa data struct for future reference.
+    */
+    res = get_spa_data_fields(ctx, &spadat);
+
+    spadat.fw_access_timeout = (acc->fw_access_timeout > 0)
+        ? acc->fw_access_timeout : DEF_FW_ACCESS_TIMEOUT;
+
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR|LOG_STDERR, "Unexpected error pulling SPA data from the context: %s",
+            fko_errstr(res));
+        res = SPA_MSG_ERROR;
+        goto clean_and_bail;
     }
 
     /* Check packet age if so configured.
     */
     if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
     {
-        if(fko_get_timestamp(ctx, &spa_ts) != FKO_SUCCESS)
-        {
-            log_msg(LOG_WARNING|LOG_STDERR, "Error getting SPA timestamp: %s",
-                fko_errstr(res));
-            res = SPA_MSG_ERROR;
-            goto clean_and_bail;
-        }
-
         time(&now_ts);
 
-        ts_diff = now_ts - spa_ts;
+        ts_diff = now_ts - spadat.timestamp;
 
         if(ts_diff > atoi(opts->config[CONF_MAX_SPA_PACKET_AGE]))
         {
@@ -217,26 +268,11 @@ display_ctx(ctx);
         }
     }
 
-    /* Ok, we can pull the rest of the spa data we are interested in.
-    */
-    if(fko_get_spa_message_type(ctx, &spa_msg_type) != FKO_SUCCESS)
-    {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error getting SPA message type: %s",
-            fko_errstr(res));
-        got_spa_error++;
-    }
-    if(fko_get_spa_message(ctx, &spa_msg) != FKO_SUCCESS)
-    {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error getting SPA message string: %s",
-            fko_errstr(res));
-        got_spa_error++;
-    }
-
     /* At this point, we have enough to check the embedded (or packet source)
      * IP address against the defined access rights.  We start by splitting
      * the spa msg source IP from the remainder of the message.
     */
-    spa_ip_demark = strchr(spa_msg, ',');
+    spa_ip_demark = strchr(spadat.spa_message, ',');
     if(spa_ip_demark == NULL)
     {
         log_msg(LOG_WARNING|LOG_STDERR, "Error parsing SPA message string: %s",
@@ -245,68 +281,47 @@ display_ctx(ctx);
         goto clean_and_bail;
     }
 
-    strlcpy(spa_msg_src_ip, spa_msg, (spa_ip_demark-spa_msg)+1);
-    strlcpy(spa_msg_remain, spa_ip_demark+1, 1024);
+    strlcpy(spadat.spa_message_src_ip, spadat.spa_message, (spa_ip_demark - spadat.spa_message) + 1);
+    strlcpy(spadat.spa_message_remain, spa_ip_demark+1, 1024);
 
     /* If use source IP was requested (embedded IP of 0.0.0.0), make sure it
      * is allowed.
     */
-    if((strcmp(spa_msg_src_ip, "0.0.0.0") == 0) && acc->require_source_address)
+    if(strcmp(spadat.spa_message_src_ip, "0.0.0.0") == 0)
     {
-        log_msg(LOG_WARNING|LOG_STDERR,
-            "Got 0.0.0.0 when valid source IP was required."
-        );
-        res = SPA_MSG_ACCESS_DENIED;
-        goto clean_and_bail;
+        if(acc->require_source_address)
+        {
+            log_msg(LOG_WARNING|LOG_STDERR,
+                "Got 0.0.0.0 when valid source IP was required."
+            );
+            res = SPA_MSG_ACCESS_DENIED;
+            goto clean_and_bail;
+        }
+
+        spadat.use_src_ip = spadat.pkt_source_ip;
     }
+    else
+        spadat.use_src_ip = spadat.spa_message_src_ip;
 
     /* If REQUIRE_USERNAME is set, make sure the username in this SPA data
      * matches.
     */
     if(acc->require_username != NULL)
     {
-        if(fko_get_username(ctx, &spa_username) != FKO_SUCCESS)
-        {
-            log_msg(LOG_WARNING|LOG_STDERR, "Error getting SPA username string: %s",
-                fko_errstr(res));
-            got_spa_error++;
-        }
-
-        if(strcmp(spa_username, acc->require_username) != 0)
+        if(strcmp(spadat.username, acc->require_username) != 0)
         {
             log_msg(LOG_WARNING|LOG_STDERR,
                 "Username in SPA data (%s) does not match required username: %s",
-                spa_username, acc->require_username
+                spadat.username, acc->require_username
             );
             res = SPA_MSG_ACCESS_DENIED;
             goto clean_and_bail;
         }
     }
 
-    /* Get the rest of our SPA data fields.
-    */
-    if(fko_get_spa_nat_access(ctx, &spa_nat_access) != FKO_SUCCESS)
-    {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error getting SPA nat access string: %s",
-            fko_errstr(res));
-        got_spa_error++;
-    }
-    if(fko_get_spa_client_timeout(ctx, &spa_client_timeout) != FKO_SUCCESS)
-    {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error getting SPA client_timeout: %s",
-            fko_errstr(res));
-        got_spa_error++;
-    }
-
-    if(got_spa_error > 0)
-    {
-        res = SPA_MSG_ERROR;
-        goto clean_and_bail;
-    }
-
     /* Take action based on SPA message type.
     */
-    switch(spa_msg_type)
+    switch(spadat.message_type)
     {
         /* Command messages.
         */
@@ -314,7 +329,7 @@ display_ctx(ctx);
             if(!acc->enable_cmd_exec)
             {
                 log_msg(LOG_WARNING|LOG_STDERR,
-                    "SPA Command message are not yet allowed or supported."
+                    "SPA Command message are not allowed in the current configuration."
                 );
                 res = SPA_MSG_ACCESS_DENIED;
             }
@@ -356,17 +371,28 @@ display_ctx(ctx);
         case FKO_CLIENT_TIMEOUT_ACCESS_MSG:
             /* Check access against restrict_ports and open_ports.
             */
-            res = acc_check_port_access(acc, spa_msg_remain);
+            res = acc_check_port_access(acc, spadat.spa_message_remain);
 
-            // --DSS temp
-            log_msg(LOG_WARNING|LOG_STDERR,
-                "<<<< This SPA access msg would be %s >>>>",
-                res ? "allowed":"DENIED due to port restictions"
-            );
-
-            res = SPA_MSG_NOT_SUPPORTED;
-
-            /* --DSS TODO: Finish Me */
+            if(!res)
+            {
+                log_msg(LOG_WARNING|LOG_STDERR,
+                    "One or more requested protocol/ports was denied per access.conf."
+                );
+                res = SPA_MSG_ACCESS_DENIED;
+            }
+            else
+            {
+                /* Process the access message.
+                */
+                /* --DSS temp
+                log_msg(LOG_WARNING|LOG_STDERR,
+                    "<<<< This SPA access msg would be %s >>>>",
+                    res ? "allowed":"DENIED due to port restictions"
+                );
+                res = SPA_MSG_NOT_SUPPORTED;
+                */ 
+                res = process_access_request(opts, &spadat);
+            }
             break;
     }
 

@@ -172,7 +172,7 @@ main(int argc, char **argv)
         }
 
         /* If we are a new process (just being started), proceed with normal
-         * startp.  Otherwise, we are here as a result of a signal sent to an
+         * start-up.  Otherwise, we are here as a result of a signal sent to an
          * existing process and we want to restart.
         */
         if(get_running_pid(&opts) != getpid())
@@ -581,10 +581,9 @@ get_running_pid(fko_srv_options_t *opts)
 
     if(op_fd > 0)
     {
-        if (read(op_fd, buf, 6) == 6)
-        {
+        if (read(op_fd, buf, 6) > 0)
             rpid = (pid_t)atoi(buf);
-        }
+
         close(op_fd);
     }
 

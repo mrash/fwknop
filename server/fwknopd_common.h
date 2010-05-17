@@ -85,7 +85,7 @@ enum {
 };
 
 /* SPA message handling status code
- */
+*/
 enum {
     SPA_MSG_SUCCESS = 0,
     SPA_MSG_BAD_DATA,
@@ -97,6 +97,15 @@ enum {
     SPA_MSG_ACCESS_DENIED,
     SPA_MSG_NOT_SUPPORTED,
     SPA_MSG_ERROR
+};
+
+/* Firewall rule processing error codes
+*/
+enum {
+    FW_RULE_SUCCESS = 0,
+    FW_RULE_ADD_ERROR = 0x1000,
+    FW_RULE_DELETE_ERROR,
+    FW_RULE_UNKNOWN_ERROR
 };
 
 /* Configuration file parameter tags.
@@ -322,18 +331,6 @@ typedef struct acc_stanza
 #define MAX_CHAIN_NAME_LEN      32
 #define MAX_TARGET_NAME_LEN     32
 
-#define MAX_FW_COMMAND_ARGS_LEN 256
-
-/* iptables command args            
-*/
-#define IPT_ADD_RULE_ARGS "-t %s -I %s %i -p %s -s %s -d %s --dport %s -j %s"
-#define IPT_DEL_RULE_ARGS "-t %s -D %s %i"
-#define IPT_NEW_CHAIN_ARGS "-t %s -N %s"
-#define IPT_FLUSH_CHAIN_ARGS "-t %s -F %s"
-#define IPT_DEL_CHAIN_ARGS "-t %s -X %s"
-#define IPT_ADD_JUMP_RULE_ARGS "-t %s -I %s %i -j %s"
-#define IPT_LIST_RULES_ARGS " -t %s -L %s --line-numbers -n"
-
 /* Fwknop custom chain types
 */
 enum {
@@ -370,6 +367,8 @@ struct fw_chain {
     int     jump_rule_pos;
     char    to_chain[MAX_CHAIN_NAME_LEN];
     int     rule_pos;
+    int     active_rules;
+    time_t  next_expire;
 };
 
 /* Based on the fw_chain fields (not counting type)
@@ -381,7 +380,6 @@ struct fw_config {
     char            fw_command[MAX_PATH_LEN];
 };
 
-
 /* SPA Packet info struct.
 */
 typedef struct spa_pkt_info
@@ -390,6 +388,25 @@ typedef struct spa_pkt_info
     unsigned int    packet_src_ip;
     unsigned char   packet_data[MAX_SPA_PACKET_LEN+1];
 } spa_pkt_info_t;
+
+/* Struct for (processed and verified) SPA data used by the server.
+*/
+typedef struct spa_data
+{
+    char           *username;
+    time_t          timestamp;
+    char           *version;
+    short           message_type;
+    char           *spa_message;
+    char            spa_message_src_ip[16];
+    char            pkt_source_ip[16];
+    char            spa_message_remain[1024]; /* --DSS arbitrary bounds */
+    char           *nat_access;
+    char           *server_auth;
+    unsigned int    client_timeout;
+    unsigned int    fw_access_timeout;
+    char            *use_src_ip;
+} spa_data_t;
 
 /* fwknopd server configuration parameters and values
 */

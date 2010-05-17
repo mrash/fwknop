@@ -308,7 +308,7 @@ add_string_list_ent(acc_string_list_t **stlist, char *str_str)
 
 /* Expand a proto/port access string to a list of access proto-port struct.
 */
-static acc_port_list_t*
+void
 expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
 {
     char           *ndx, *start;
@@ -333,7 +333,7 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
 
 /* Expand a comma-separated string into a simple acc_string_list.
 */
-static acc_string_list_t*
+static void
 expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
 {
     char           *ndx, *start;
@@ -374,7 +374,7 @@ free_acc_source_list(acc_int_list_t *sle)
 
 /* Free a port_list
 */
-static void
+void
 free_acc_port_list(acc_port_list_t *ple)
 {
     acc_port_list_t    *last_ple;
@@ -616,7 +616,7 @@ parse_access_file(fko_srv_options_t *opts)
     acc_stanza_t   *curr_acc = NULL;
 
     /* First see if the access file exists.  If it doesn't, complain
-     * and go on with program defaults.
+     * and bail.
     */
     if(stat(opts->config[CONF_ACCESS_FILE], &st) != 0)
     {

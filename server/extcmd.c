@@ -49,6 +49,8 @@ set_nonblock(int fd)
 int
 run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
 {
+//--DSS temp
+//return(0);
     pid_t pid;
 
     struct timeval  tv;

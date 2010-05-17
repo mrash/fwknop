@@ -31,6 +31,7 @@
 #include "incoming_spa.h"
 #include "config_init.h"
 #include "sig_handler.h"
+#include "fw_util.h"
 #include "log_msg.h"
 
 /* The pcap capture routine.
@@ -198,8 +199,7 @@ pcap_capture(fko_srv_options_t *opts)
 
         /* Check for any expired firewall rules and deal with them.
         */
-        //--DSS TODO: still need to write this part...
-        //check_firewall_rules(opts);
+        check_firewall_rules(opts);
 
         usleep(10000);
     }

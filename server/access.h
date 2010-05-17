@@ -26,8 +26,8 @@
 #ifndef ACCESS_H
 #define ACCESS_H
 
-#define PROTO_TCP   0
-#define PROTO_UDP   1
+#define PROTO_TCP   6
+#define PROTO_UDP   17
 
 /* Function Prototypes
 */
@@ -35,6 +35,8 @@ void parse_access_file(fko_srv_options_t *opts);
 acc_stanza_t* acc_check_source(fko_srv_options_t *opts, uint32_t ip);
 int acc_check_port_access(acc_stanza_t *acc, char *port_str);
 void dump_access_list(fko_srv_options_t *opts);
+void expand_acc_port_list(acc_port_list_t **plist, char *plist_str);
+void free_acc_port_list(acc_port_list_t *plist);
 
 #endif /* ACCESS_H */
 

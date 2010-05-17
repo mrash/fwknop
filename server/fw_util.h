@@ -26,10 +26,28 @@
 #ifndef FW_UTIL_H
 #define FW_UTIL_H
 
+#define CMD_BUFSIZE 256
+#define MAX_FW_COMMAND_ARGS_LEN 256
+
+/* iptables command args            
+*/
+//#define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -j %s"
+#define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s"
+#define IPT_DEL_RULE_ARGS "-t %s -D %s %i"
+#define IPT_NEW_CHAIN_ARGS "-t %s -N %s"
+#define IPT_FLUSH_CHAIN_ARGS "-t %s -F %s"
+#define IPT_DEL_CHAIN_ARGS "-t %s -X %s"
+#define IPT_ADD_JUMP_RULE_ARGS "-t %s -I %s %i -j %s"
+#define IPT_LIST_RULES_ARGS "-t %s -L %s --line-numbers -n"
+
+#define DEF_FW_ACCESS_TIMEOUT   60
+
 /* Function prototypes
 */
 void fw_initialize(fko_srv_options_t *opts);
 void fw_cleanup(void);
+int process_access_request(fko_srv_options_t *opts, spa_data_t *spdat);
+void check_firewall_rules(fko_srv_options_t *opts);
 
 #endif /* FW_UTIL_H */
 
