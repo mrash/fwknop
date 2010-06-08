@@ -379,6 +379,10 @@ fw_cleanup(void)
     delete_all_chains();
 }
 
+/****************************************************************************/
+
+/* Rule Processing - Create an access request...
+*/
 int
 process_access_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
@@ -455,7 +459,7 @@ check_firewall_rules(fko_srv_options_t *opts)
 {
     char             cmd_buf[CMD_BUFSIZE] = {0};
     char             err[CMD_BUFSIZE] = {0};
-    char             cmd_out[4096];
+    char             cmd_out[STANDARD_CMD_OUT_BUFSIZE];
     char             exp_str[12];
     char             rule_num_str[6];
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
@@ -476,7 +480,7 @@ check_firewall_rules(fko_srv_options_t *opts)
         if(ch[i].active_rules < 0)
             ch[i].active_rules = 0;
 
-        /* If there are now active rules or we have not yet
+        /* If there are no active rules or we have not yet
          * reached our expected next expire time, continue.
         */
         if(ch[i].active_rules == 0 || ch[i].next_expire > now)
@@ -496,9 +500,11 @@ check_firewall_rules(fko_srv_options_t *opts)
             ch[i].to_chain
         );
 
-        memset(cmd_out, 0x0, 4096);
+        memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 
-        res = run_extcmd(cmd_buf, cmd_out, err, 4096, CMD_BUFSIZE, &status);
+        res = run_extcmd(cmd_buf, cmd_out, err,
+                STANDARD_CMD_OUT_BUFSIZE, CMD_BUFSIZE, &status);
+
         if(!EXTCMD_IS_SUCCESS(res))
         {
             parse_extcmd_error(res, status, err);

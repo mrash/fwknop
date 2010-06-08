@@ -26,12 +26,13 @@
 #ifndef FW_UTIL_H
 #define FW_UTIL_H
 
-#define CMD_BUFSIZE 256
-#define MAX_FW_COMMAND_ARGS_LEN 256
+#define CMD_BUFSIZE                 256
+#define MAX_FW_COMMAND_ARGS_LEN     256
+
+#define STANDARD_CMD_OUT_BUFSIZE    4096
 
 /* iptables command args            
 */
-//#define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -j %s"
 #define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s"
 #define IPT_DEL_RULE_ARGS "-t %s -D %s %i"
 #define IPT_NEW_CHAIN_ARGS "-t %s -N %s"
