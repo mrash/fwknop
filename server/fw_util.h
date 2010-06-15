@@ -34,6 +34,9 @@
 /* iptables command args            
 */
 #define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s"
+#define IPT_ADD_OUT_RULE_ARGS "-t %s -A %s -p %i -d %s --sport %i -m comment --comment _exp_%u -j %s"
+#define IPT_ADD_FWD_RULE_ARGS "-t %s -A %s -p %i -s %s -d %s --dport %i -m comment --comment _exp_%u -j %s"
+#define IPT_ADD_DNAT_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s --to-destination %s:%i"
 #define IPT_DEL_RULE_ARGS "-t %s -D %s %i"
 #define IPT_NEW_CHAIN_ARGS "-t %s -N %s"
 #define IPT_FLUSH_CHAIN_ARGS "-t %s -F %s"

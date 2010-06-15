@@ -340,7 +340,7 @@ enum {
     IPT_DNAT_ACCESS,
     IPT_SNAT_ACCESS,
     IPT_MASQUERADE_ACCESS,
-    NUM_FWKNOP_CHAIN_TYPES  /* Leave this entry last */
+    NUM_FWKNOP_ACCESS_TYPES  /* Leave this entry last */
 };
 
 #define FW_CHAIN_DIR_SRC_STR    "src"
@@ -376,7 +376,7 @@ struct fw_chain {
 #define FW_NUM_CHAIN_FIELDS 7
 
 struct fw_config {
-    struct fw_chain chain[NUM_FWKNOP_CHAIN_TYPES];
+    struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
     char            fw_command[MAX_PATH_LEN];
 };
 
@@ -400,7 +400,7 @@ typedef struct spa_data
     char           *spa_message;
     char            spa_message_src_ip[16];
     char            pkt_source_ip[16];
-    char            spa_message_remain[1024]; /* --DSS arbitrary bounds */
+    char            spa_message_remain[1024]; /* --DSS FIXME: arbitrary bounds */
     char           *nat_access;
     char           *server_auth;
     unsigned int    client_timeout;

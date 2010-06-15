@@ -281,7 +281,7 @@ incoming_spa(fko_srv_options_t *opts)
         goto clean_and_bail;
     }
 
-    strlcpy(spadat.spa_message_src_ip, spadat.spa_message, (spa_ip_demark - spadat.spa_message) + 1);
+    strlcpy(spadat.spa_message_src_ip, spadat.spa_message, (spa_ip_demark-spadat.spa_message)+1);
     strlcpy(spadat.spa_message_remain, spa_ip_demark+1, 1024);
 
     /* If use source IP was requested (embedded IP of 0.0.0.0), make sure it
@@ -319,87 +319,86 @@ incoming_spa(fko_srv_options_t *opts)
         }
     }
 
-    /* Take action based on SPA message type.
+    /* Take action based on SPA message type.  */
+
+    /* Command messages.
     */
-    switch(spadat.message_type)
+    if(spadat.message_type == FKO_COMMAND_MSG)
     {
-        /* Command messages.
-        */
-        case FKO_COMMAND_MSG:
-            if(!acc->enable_cmd_exec)
-            {
-                log_msg(LOG_WARNING|LOG_STDERR,
-                    "SPA Command message are not allowed in the current configuration."
-                );
-                res = SPA_MSG_ACCESS_DENIED;
-            }
-            else
-            {
-                /* --DSS TODO: Finish Me */
-                log_msg(LOG_WARNING|LOG_STDERR,
-                    "SPA Command message are not yet supported."
-                );
-                res = SPA_MSG_NOT_SUPPORTED;
-            }
-            break;
-
-        /* NAT access messages.
-        */
-        case FKO_NAT_ACCESS_MSG:
-        case FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG:
+        if(!acc->enable_cmd_exec)
+        {
             log_msg(LOG_WARNING|LOG_STDERR,
-                "SPA NAT access messages are not yet supported."
+                "SPA Command message are not allowed in the current configuration."
+            );
+            res = SPA_MSG_ACCESS_DENIED;
+        }
+        else
+        {
+            /* --DSS TODO: Finish Me */
+            log_msg(LOG_WARNING|LOG_STDERR,
+                "SPA Command message are not yet supported."
             );
             res = SPA_MSG_NOT_SUPPORTED;
-            /* --DSS TODO: Finish Me */
-            break;
+        }
 
-        /* Local NAT access messages.
-        */
-        case FKO_LOCAL_NAT_ACCESS_MSG:
-        case FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG:
-            log_msg(LOG_WARNING|LOG_STDERR,
-                "SPA Local NAT access messages are not yet supported."
-            );
-            res = SPA_MSG_NOT_SUPPORTED;
-            /* --DSS TODO: Finish Me */
-            break;
-
-        /* Standard access messages.
-        */
-        case FKO_ACCESS_MSG:
-        case FKO_CLIENT_TIMEOUT_ACCESS_MSG:
-            /* Check access against restrict_ports and open_ports.
-            */
-            res = acc_check_port_access(acc, spadat.spa_message_remain);
-
-            if(!res)
-            {
-                log_msg(LOG_WARNING|LOG_STDERR,
-                    "One or more requested protocol/ports was denied per access.conf."
-                );
-                res = SPA_MSG_ACCESS_DENIED;
-            }
-            else
-            {
-                /* Process the access message.
-                */
-                /* --DSS temp
-                log_msg(LOG_WARNING|LOG_STDERR,
-                    "<<<< This SPA access msg would be %s >>>>",
-                    res ? "allowed":"DENIED due to port restictions"
-                );
-                res = SPA_MSG_NOT_SUPPORTED;
-                */ 
-                res = process_access_request(opts, &spadat);
-            }
-            break;
+        goto clean_and_bail;
     }
 
-    /* Send to the firewall rule processor.
+    /* From this point forward, we have some kind of access message. So
+     * we first see if access is allowed by checking access against
+     * restrict_ports and open_ports.
+     *
+     *  --DSS TODO: We should add BLACKLIST support here as well.
     */
-    // TODO: Finish me
+    if(! acc_check_port_access(acc, spadat.spa_message_remain))
+    {
+        log_msg(LOG_WARNING|LOG_STDERR,
+            "One or more requested protocol/ports was denied per access.conf."
+        );
 
+        res = SPA_MSG_ACCESS_DENIED;
+
+        goto clean_and_bail;       
+    }
+
+    /* If we are here we will at least need to have the base access. So we
+     * can go ahead an generate that now.
+    */
+    res = process_access_request(opts, &spadat);
+
+#if 0
+    if(res != FKO_SUCCESS)
+        goto clean_and_bail;
+
+    /* Now see if we are looking for a local NAT access of some sort.
+    */
+    if(spadat.message_type == FKO_LOCAL_NAT_ACCESS_MSG
+      || spadat.message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+    {
+        log_msg(LOG_WARNING|LOG_STDERR,
+            "SPA Local NAT access messages are not yet supported."
+        );
+
+        /* --DSS TODO: Finish Me */
+        res = SPA_MSG_NOT_SUPPORTED;
+
+        goto clean_and_bail;
+    }
+
+    /* NAT access messages.
+    */
+    if(spadat.message_type == FKO_NAT_ACCESS_MSG
+      || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+    {
+        log_msg(LOG_WARNING|LOG_STDERR,
+            "SPA NAT access messages are not yet supported."
+        );
+
+        res = SPA_MSG_NOT_SUPPORTED;
+
+        /* --DSS TODO: Finish Me */
+    }
+#endif
 
 clean_and_bail:
     if(ctx != NULL)
