@@ -31,12 +31,15 @@
 
 #define STANDARD_CMD_OUT_BUFSIZE    4096
 
+#define SNAT_TARGET_BUFSIZE         64
+
 /* iptables command args            
 */
 #define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s"
 #define IPT_ADD_OUT_RULE_ARGS "-t %s -A %s -p %i -d %s --sport %i -m comment --comment _exp_%u -j %s"
 #define IPT_ADD_FWD_RULE_ARGS "-t %s -A %s -p %i -s %s -d %s --dport %i -m comment --comment _exp_%u -j %s"
 #define IPT_ADD_DNAT_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s --to-destination %s:%i"
+#define IPT_ADD_SNAT_RULE_ARGS "-t %s -A %s -p %i -d %s --dport %i -m comment --comment _exp_%u -j %s %s"
 #define IPT_DEL_RULE_ARGS "-t %s -D %s %i"
 #define IPT_NEW_CHAIN_ARGS "-t %s -N %s"
 #define IPT_FLUSH_CHAIN_ARGS "-t %s -F %s"
@@ -50,7 +53,7 @@
 */
 void fw_initialize(fko_srv_options_t *opts);
 void fw_cleanup(void);
-int process_access_request(fko_srv_options_t *opts, spa_data_t *spdat);
+int process_spa_request(fko_srv_options_t *opts, spa_data_t *spdat);
 void check_firewall_rules(fko_srv_options_t *opts);
 
 #endif /* FW_UTIL_H */

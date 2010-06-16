@@ -137,7 +137,7 @@ delete_all_chains(void)
     char    cmd_buf[CMD_BUFSIZE] = {0};
     char    err[CMD_BUFSIZE] = {0};
 
-    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES-1); i++)
+    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
@@ -193,7 +193,7 @@ create_fw_chains(void)
     char    cmd_buf[CMD_BUFSIZE] = {0};
     char    err[CMD_BUFSIZE] = {0};
 
-    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES-1); i++)
+    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
@@ -206,7 +206,7 @@ create_fw_chains(void)
             fwc.chain[i].to_chain
         );
 
-        //printf("CMD: '%s'\n", cmd_buf);
+        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
         res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -227,7 +227,7 @@ create_fw_chains(void)
             fwc.chain[i].to_chain
         );
 
-        //printf("CMD: '%s'\n", cmd_buf);
+        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
         res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -371,8 +371,8 @@ fw_initialize(fko_srv_options_t *opts)
              *             this.
              *
             */
-            if(opts->config[CONF_ENABLE_IPT_SNAT] != NULL
-              && strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "_CHANGE_ME_", 11)!=0)
+            if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL
+              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "_CHANGEME_", 10)!=0)
             {
                 if(opts->config[CONF_IPT_SNAT_ACCESS] != NULL)
                     set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]);
@@ -415,11 +415,12 @@ fw_cleanup(void)
 /* Rule Processing - Create an access request...
 */
 int
-process_access_request(fko_srv_options_t *opts, spa_data_t *spadat)
+process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
     char             cmd_buf[CMD_BUFSIZE] = {0};
     char             err[CMD_BUFSIZE] = {0};
     char             nat_ip[16] = {0};
+    char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
     char            *ndx;
 
     unsigned int     nat_port = 0;;
@@ -427,14 +428,14 @@ process_access_request(fko_srv_options_t *opts, spa_data_t *spadat)
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
 
-    unsigned int    cproto;
-    unsigned int    cport;
+    unsigned int    fst_proto;
+    unsigned int    fst_port;
 
-    struct fw_chain *in_chain = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
-    struct fw_chain *out_chain = &(opts->fw_config->chain[IPT_OUTPUT_ACCESS]);
-    struct fw_chain *fwd_chain = &(opts->fw_config->chain[IPT_FORWARD_ACCESS]);
+    struct fw_chain *in_chain   = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
+    struct fw_chain *out_chain  = &(opts->fw_config->chain[IPT_OUTPUT_ACCESS]);
+    struct fw_chain *fwd_chain  = &(opts->fw_config->chain[IPT_FORWARD_ACCESS]);
     struct fw_chain *dnat_chain = &(opts->fw_config->chain[IPT_DNAT_ACCESS]);
-    struct fw_chain *snat_chain; // We assign this later (when we get it done)
+    struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
     int             status, res;
     time_t          now, exp_ts;
@@ -443,103 +444,116 @@ process_access_request(fko_srv_options_t *opts, spa_data_t *spadat)
     */
     expand_acc_port_list(&port_list, spadat->spa_message_remain);
 
-    /* Create an access command for each proto/port for the source ip.
+    /* Start at the top of the proto-port list...
     */
     ple = port_list;
 
-    cproto = ple->proto;
-    cport  = ple->port;
+    /* Remember the first proto/port combo in case we need them
+     * for NAT access requests.
+    */
+    fst_proto = ple->proto;
+    fst_port  = ple->port;
 
-    while(ple != NULL)
+    /* Set our expire time value.
+    */
+    time(&now);
+    exp_ts = now + spadat->fw_access_timeout;
+
+    /* For straight access requests, we currently support multiple proto/port
+     * request.
+    */
+    if(spadat->message_type == FKO_ACCESS_MSG
+      || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG)
     {
-        time(&now);
-        exp_ts = now + spadat->fw_access_timeout;
-
-        memset(cmd_buf, 0x0, CMD_BUFSIZE);
-
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_RULE_ARGS,
-            opts->fw_config->fw_command,
-            in_chain->table,
-            in_chain->to_chain,
-            ple->proto,
-            spadat->use_src_ip,
-            ple->port,
-            exp_ts,
-            in_chain->target
-        );
-
-//--DSS tmp
-//fprintf(stderr, "ADD CMD: %s\n", cmd_buf);
-        res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
-        if(EXTCMD_IS_SUCCESS(res))
-        {
-            log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
-                in_chain->to_chain, spadat->use_src_ip,
-                spadat->spa_message_remain, exp_ts
-            );
-
-            in_chain->active_rules++;
-
-            /* Reset the next expected expire time for this chain if it
-             * is warranted.
-            */
-            if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
-                in_chain->next_expire = exp_ts;
-        }
-        else
-            parse_extcmd_error(res, status, err);
-
-        /* If we have to make an corresponding OUTPUT rule if out_chain target
-         * is not NULL.
+        /* Create an access command for each proto/port for the source ip.
         */
-        if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
+        while(ple != NULL)
         {
             memset(cmd_buf, 0x0, CMD_BUFSIZE);
 
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_OUT_RULE_ARGS,
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_RULE_ARGS,
                 opts->fw_config->fw_command,
-                out_chain->table,
-                out_chain->to_chain,
+                in_chain->table,
+                in_chain->to_chain,
                 ple->proto,
                 spadat->use_src_ip,
                 ple->port,
                 exp_ts,
-                out_chain->target
+                in_chain->target
             );
 
 //--DSS tmp
-//fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
+//fprintf(stderr, "ADD CMD: %s\n", cmd_buf);
             res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
             if(EXTCMD_IS_SUCCESS(res))
             {
-                log_msg(LOG_INFO, "Added OUTPUT Rule to %s for %s, %s expires at %u",
-                    out_chain->to_chain, spadat->use_src_ip,
+                log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
+                    in_chain->to_chain, spadat->use_src_ip,
                     spadat->spa_message_remain, exp_ts
                 );
 
-                out_chain->active_rules++;
+                in_chain->active_rules++;
 
                 /* Reset the next expected expire time for this chain if it
                 * is warranted.
                 */
-                if(out_chain->next_expire < now || exp_ts < out_chain->next_expire)
-                    out_chain->next_expire = exp_ts;
+                if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
+                    in_chain->next_expire = exp_ts;
             }
             else
                 parse_extcmd_error(res, status, err);
 
+            /* If we have to make an corresponding OUTPUT rule if out_chain target
+            * is not NULL.
+            */
+            if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
+            {
+                memset(cmd_buf, 0x0, CMD_BUFSIZE);
+
+                snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_OUT_RULE_ARGS,
+                    opts->fw_config->fw_command,
+                    out_chain->table,
+                    out_chain->to_chain,
+                    ple->proto,
+                    spadat->use_src_ip,
+                    ple->port,
+                    exp_ts,
+                    out_chain->target
+                );
+
+//--DSS tmp
+//fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
+                res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+                if(EXTCMD_IS_SUCCESS(res))
+                {
+                    log_msg(LOG_INFO, "Added OUTPUT Rule to %s for %s, %s expires at %u",
+                        out_chain->to_chain, spadat->use_src_ip,
+                        spadat->spa_message_remain, exp_ts
+                    );
+
+                    out_chain->active_rules++;
+
+                    /* Reset the next expected expire time for this chain if it
+                    * is warranted.
+                    */
+                    if(out_chain->next_expire < now || exp_ts < out_chain->next_expire)
+                        out_chain->next_expire = exp_ts;
+                }
+                else
+                    parse_extcmd_error(res, status, err);
+
+            }
+
+            ple = ple->next;
         }
 
-        ple = ple->next;
+        /* Done with the port list for access rules.
+        */
+        free_acc_port_list(port_list);
+
     }
-
-    /* Done with the port list for access rules.
-    */
-    free_acc_port_list(port_list);
-
-    /* Now see if we have NAT rules to create...
-    */
-    if(  spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+    /* NAT requests... */
+    else if(  spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG  )
@@ -566,7 +580,7 @@ process_access_request(fko_srv_options_t *opts, spa_data_t *spadat)
                 opts->fw_config->fw_command,
                 fwd_chain->table,
                 fwd_chain->to_chain,
-                cproto,
+                fst_proto,
                 spadat->use_src_ip,
                 nat_ip,
                 nat_port,
@@ -604,9 +618,9 @@ process_access_request(fko_srv_options_t *opts, spa_data_t *spadat)
                 opts->fw_config->fw_command,
                 dnat_chain->table,
                 dnat_chain->to_chain,
-                cproto,
+                fst_proto,
                 spadat->use_src_ip,
-                cport,
+                fst_port,
                 exp_ts,
                 dnat_chain->target,
                 nat_ip,
@@ -630,6 +644,69 @@ process_access_request(fko_srv_options_t *opts, spa_data_t *spadat)
                 */
                 if(dnat_chain->next_expire < now || exp_ts < dnat_chain->next_expire)
                     dnat_chain->next_expire = exp_ts;
+            }
+            else
+                parse_extcmd_error(res, status, err);
+        }
+
+        /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
+        */
+        if(opts->config[CONF_ENABLE_IPT_SNAT] != NULL
+          && strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+        {
+            memset(cmd_buf, 0x0, CMD_BUFSIZE);
+
+            /* Setup some parameter depending on whether we are using SNAT
+             * or MASQUERADE.
+            */
+            if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL
+              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "_CHANGEME_", 10)!=0)
+            {
+                /* Using static SNAT */
+                snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
+                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                    "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
+                    fst_port);
+            }
+            else
+            {
+                /* Using MASQUERADE */
+                snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
+                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                    "--to-ports %i", fst_port);
+            }
+
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_SNAT_RULE_ARGS,
+                opts->fw_config->fw_command,
+                snat_chain->table,
+                snat_chain->to_chain,
+                fst_proto,
+                //spadat->use_src_ip,
+                nat_ip,
+                //fst_port,
+                nat_port,
+                exp_ts,
+                snat_chain->target,
+                snat_target
+            );
+
+//--DSS tmp
+fprintf(stderr, "ADD SNAT CMD: %s\n", cmd_buf);
+            res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+            if(EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_INFO, "Added Source NAT Rule to %s for %s, %s expires at %u",
+                    snat_chain->to_chain, spadat->use_src_ip,
+                    spadat->spa_message_remain, exp_ts
+                );
+
+                snat_chain->active_rules++;
+
+                /* Reset the next expected expire time for this chain if it
+                * is warranted.
+                */
+            if(snat_chain->next_expire < now || exp_ts < snat_chain->next_expire)
+                    snat_chain->next_expire = exp_ts;
             }
             else
                 parse_extcmd_error(res, status, err);
@@ -663,7 +740,9 @@ check_firewall_rules(fko_srv_options_t *opts)
     */
     for(i = 0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
-        /* Just in case we somehow lose track and fall out-of-whack.
+        /* Just in case we somehow lose track and fall out-of-whack,
+         * we be the hero and reset it to zero.
+         *  (poet but don't know it :-o )
         */
         if(ch[i].active_rules < 0)
             ch[i].active_rules = 0;

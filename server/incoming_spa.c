@@ -240,8 +240,16 @@ incoming_spa(fko_srv_options_t *opts)
     */
     res = get_spa_data_fields(ctx, &spadat);
 
-    spadat.fw_access_timeout = (acc->fw_access_timeout > 0)
-        ? acc->fw_access_timeout : DEF_FW_ACCESS_TIMEOUT;
+    /* Figure out what our timeout will be. If it is specified in the SPA
+     * data, then use that.  If not, try the FW_ACCESS_TIMEOUT from the
+     * access.conf file (if there is one).  Otherwise use the default.
+    */
+    if(spadat.client_timeout > 0)
+        spadat.fw_access_timeout = spadat.client_timeout;
+    else if(acc->fw_access_timeout > 0)
+        spadat.fw_access_timeout = acc->fw_access_timeout;
+    else
+        spadat.fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
 
     if(res != FKO_SUCCESS)
     {
@@ -364,7 +372,7 @@ incoming_spa(fko_srv_options_t *opts)
     /* If we are here we will at least need to have the base access. So we
      * can go ahead an generate that now.
     */
-    res = process_access_request(opts, &spadat);
+    res = process_spa_request(opts, &spadat);
 
 #if 0
     if(res != FKO_SUCCESS)
