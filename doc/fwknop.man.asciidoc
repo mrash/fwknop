@@ -106,7 +106,8 @@ REQUIRED ARGUMENTS
     One of these options (see below) is required to tell the remote
     *fwknopd* daemon what IP should be let through the local firewall.  It
     is recommend to use the *-R* or *-a* options instead of *-s* in order
-    to harden SPA communications against possible MITM attacks.
+    to harden SPA communications against possible Man-In-The-Middle (MITM)
+    attacks.
 
 
 GENERAL OPTIONS
@@ -400,7 +401,7 @@ associated with www.yahoo.com:
 DEPENDENCIES
 ------------
 *fwknop* requires 'libfko' (which is normally included with both source and
-binary distributions.
+binary distributions).
 
 For GPG functionality, GnuPG must also be correctly installed and configured.
 
@@ -417,14 +418,14 @@ then run it through a decrypt/decode cycle and print it again.
 
 SEE ALSO
 --------
-fwknopd(8), iptables(8), gpg(1), gpg-agent(1), libfko documentation.
+fwknopd(8), iptables(8), gpg(1), libfko documentation.
 
 More information on Single Packet Authorization can be found in the paper
 ``Single Packet Authorization with fwknop'' available at
 'http://www.cipherdyne.org/fwknop/docs/SPA.html'.
 
-AUTHOR
-------
+AUTHORS
+-------
 Damien Stuart <dstuart@dstuart.org>
 
 Michael Rash <mbr@cipherdyne.org>

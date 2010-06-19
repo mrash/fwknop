@@ -525,7 +525,7 @@ rc = fko_new(&ctx);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error %i from fko_new: %s\n", fko_errstr(rc));
+    fprintf(stderr, "Error %i from fko_new: %s\n", rc, fko_errstr(rc));
     exit(1);
 @}
 @end example
@@ -569,7 +569,7 @@ rc = fko_new_with_data(&ctx, spa_data, key);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error %i from fko_new_with_data\n");
+    fprintf(stderr, "Error %i from fko_new_with_data: %s\n", rc, fkoerrstr(rc));
     exit(1);
 @}
 @end example
@@ -594,7 +594,7 @@ rc = fko_new_with_data(&ctx, spa_data, NULL);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error %i from fko_new_with_data\n");
+    fprintf(stderr, "Error from fko_new_with_data: %s\n", fko_errstr(rc));
     exit(1);
 @}
 
@@ -615,7 +615,7 @@ rc = fko_decrypt_spa_data(ctx, key);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error %i from fko_decrypt_spa_data\n");
+    fprintf(stderr, "Error from fko_decrypt_spa_data: %s\n", fko_errstr(rc));
     exit(1);
 @}
 @end example

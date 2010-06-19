@@ -5,28 +5,20 @@ To whom it may concern, this is -*- outline -*- mode.
 ** Get it out there and get feedback.
 
 * The fwknop C client:
-** Config file support.
-** Command-line options and features ala fwknop Perl client:
-*** Server Auth support (maybe). 
+** Config file support (~/.fwknoprc ?).
+** Server Auth support (maybe). 
 
 * The fwknopd server:
 ** Sniffer support to acquire SPA packet data ala the fwknopd Perl server:
 *** Packets acquired via a file (supports the ulogd pcap writer).
 ** SPA packet decryption:
-*** Username restrictions.
-** Firewall rule manipulation upon receipt of a valid SPA packet:
-*** Initially manipulate firewall rules by executing the firewall binary directly.
-*** Should concentrate on iptables, but ipfw and pf support eventually.
-*** User-defined firewall rule timeouts.
-*** NAT rules to internal systems.
+*** Add support for ipfw and pf support eventually.
 ** Test on embedded platforms - especially OpenWRT on a Linksys router.
-** Process monitoring daemon (can probably just use knopwatchd since it is C already).
 
 * Nice to haves:
 ** Binary packages:
 *** Redhat RPMS
 *** Debian .deb
-*** Solaris pkg
 ** Linux/Unix platform:
 *** A GNOME or KDE GUI app for the client.
 ** Windows platform:

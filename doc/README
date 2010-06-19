@@ -17,3 +17,24 @@ items on succesive line without intervening lines (i.e. the AUTHORS section
 of the generated man page).  In those cases, simply change the ".sp"
 between those lines to ".br".
 
+Generating HTML versions of the documentation:
+
+Here are some of the commands used to create/generate HTML versions of
+the fwknop documentation.
+
+For the libfko API doc, you could just do a "make html" to create a
+libfki.html directory with a reasonable set of HTML pages.  You can also
+use "texi2html" which give a bit more flexibility.  For example:
+
+    texi2html --noheader --nomenu --toc-links libfko.texi
+
+Will generate a single HTML document. With this, the table of contents is
+put at the end of the document, but it is not hard to edit the file and to
+relocate it to the top.
+
+For creating HTML versions of the man pages, simply use the "-f xhtml"
+option to the "a2x" command:
+
+    a2x -f xhtml fwknopd.man.asciidoc
+
+

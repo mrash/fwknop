@@ -24,7 +24,24 @@ This first version is planned to be compatible with fwknop version 1.9.x.
 BUILDING libfko
 ===============
 This distribution uses GNU autoconf for setting up the build.  Please see
-the `INSTALL' file for details.
+the `INSTALL' file for the general basics on using autoconf.
+
+There are some "configure" options that are specific to fwknop.  They are
+(extracted from ./configure --help):
+
+  --with-gpgme            support for gpg encryption using libgpgme
+                          [default=check]
+  --with-gpgme-prefix=PFX prefix where GPGME is installed (optional)
+  --with-gpg=/path/to/gpg Specify path to the gpg executable that gpgme will
+                          use [default=check path]
+  --with-iptables=/path/to/iptables
+                          Specify path to the iptables executable
+                          [default=check path]
+  --with-ipfw=/path/to/ipfw
+                          Specify path to the ipfw executable [default=check
+                          path]
+  --with-sh=/path/to/sh   Specify path to the sh executable [default=check
+                          path]
 
 
 NOTE FOR DEVELOPERS
@@ -33,4 +50,9 @@ If you are pulling this distribution from Subversion, you will need to
 run the "autogen.sh" script in the top of the distribution directory in '
 order to generate the autoconf (and other) meta files, and the `configure'
 script.
+
+The fwknop and fwknopd man page nroff sources are included in their
+respective directorys (client and server).  These nroff files are derived
+from the asciidoc sources in the 'docs' directory.  See the README in docs
+for details.
 
