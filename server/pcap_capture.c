@@ -193,8 +193,8 @@ pcap_capture(fko_srv_options_t *opts)
                 pending_break = 1;
             }
         }
-        /* If there was an error, complain and go on (to an extent
-         * before giving up).
+        /* If there was an error, complain and go on (to an extent before
+         * giving up).
         */
         else if(res == -1)
         {

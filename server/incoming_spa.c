@@ -71,7 +71,8 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
             return(SPA_MSG_HTTP_NOT_ENABLED);
         }
 
-        /* Now extract, adjust, and set just the SPA message itself.
+        /* Now extract, adjust (convert characters translated by the fwknop
+         * client), and reset the SPA message itself.
         */
         strlcpy(spa_pkt->packet_data, ndx+5, pkt_data_len);
 
@@ -106,6 +107,8 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
             ndx++;
         }
     }
+
+    /* --DSS:  Are there other checks we can do here ??? */
 
     /* If we made it here, we have no reason to assume this is not SPA data
      * (at least until we come up with more checks).

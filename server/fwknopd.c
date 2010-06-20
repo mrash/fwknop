@@ -242,6 +242,29 @@ main(int argc, char **argv)
         */
         fw_initialize(&opts);
 
+        /* If the TCP server option was specified, fire it up here.
+        */
+        if(opts.config[CONF_ENABLE_TCP_SERVER] != NULL
+          && strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
+        {
+            if(opts.config[CONF_TCPSERV_PORT] == NULL
+              || atoi(opts.config[CONF_TCPSERV_PORT]) <= 0
+              || atoi(opts.config[CONF_TCPSERV_PORT]) >  65535)
+            {
+                log_msg(LOG_WARNING,
+                    "WARNING: ENABLE_TCP_SERVER is set, but TCPSERV_PORT is not set or not valid."
+                );
+            }
+            else
+            {
+                res = run_tcp_server(&opts);
+                if(res < 0)
+                    log_msg(LOG_WARNING, "Fork error from run_tcp_serv.");
+                else
+                    opts.tcp_server_pid = res;
+            }
+        }
+
         /* Intiate pcap capture mode...
         */
         pcap_capture(&opts);

@@ -312,10 +312,6 @@ set_preconfig_entries(fko_srv_options_t *opts)
     */
     set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
 
-    /* SPA_OVER_HTTP_PORT default to 80
-    */
-    set_config_entry(opts, CONF_SPA_OVER_HTTP_PORT, "80");
-
     /* Setup the local executables based on build-time info.
 #ifdef GPG_EXE
     set_config_entry(opts, CONF_EXE_GPG, GPG_EXE);

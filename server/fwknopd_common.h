@@ -151,9 +151,8 @@ enum {
     //CONF_PCAP_PKT_FILE,
     //CONF_BLACKLIST,
     CONF_ENABLE_SPA_OVER_HTTP,
-    CONF_SPA_OVER_HTTP_PORT,
-    //CONF_ENABLE_TCP_SERVER,
-    //CONF_TCPSERV_PORT,
+    CONF_ENABLE_TCP_SERVER,
+    CONF_TCPSERV_PORT,
     CONF_LOCALE,
     CONF_SYSLOG_IDENTITY,
     CONF_SYSLOG_FACILITY,
@@ -233,9 +232,8 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"PCAP_PKT_FILE",
     //"BLACKLIST",
     "ENABLE_SPA_OVER_HTTP",
-    "SPA_OVER_HTTP_PORT",
-    //"ENABLE_TCP_SERVER",
-    //"TCPSERV_PORT",
+    "ENABLE_TCP_SERVER",
+    "TCPSERV_PORT",
     "LOCALE",
     "SYSLOG_IDENTITY",
     "SYSLOG_FACILITY",
@@ -404,8 +402,8 @@ typedef struct spa_data
     char           *version;
     short           message_type;
     char           *spa_message;
-    char            spa_message_src_ip[16];
-    char            pkt_source_ip[16];
+    char            spa_message_src_ip[MAX_IP_STR_LEN];
+    char            pkt_source_ip[MAX_IP_STR_LEN];
     char            spa_message_remain[1024]; /* --DSS FIXME: arbitrary bounds */
     char           *nat_access;
     char           *server_auth;
@@ -431,6 +429,7 @@ typedef struct fko_srv_options
     unsigned char   verbose;            /* Verbose mode flag */
 
     int             data_link_offset;
+    int             tcp_server_pid;
 
     spa_pkt_info_t  spa_pkt;            /* The current SPA packet */
 
