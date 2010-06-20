@@ -312,8 +312,11 @@ set_preconfig_entries(fko_srv_options_t *opts)
     */
     set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
 
-    /* Setup the local executables based on build-time info.
+    /* SPA_OVER_HTTP_PORT default to 80
     */
+    set_config_entry(opts, CONF_SPA_OVER_HTTP_PORT, "80");
+
+    /* Setup the local executables based on build-time info.
 #ifdef GPG_EXE
     set_config_entry(opts, CONF_EXE_GPG, GPG_EXE);
 #endif
@@ -326,6 +329,7 @@ set_preconfig_entries(fko_srv_options_t *opts)
 #ifdef SH_EXE
     set_config_entry(opts, CONF_EXE_SH, SH_EXE);
 #endif
+    */
 #ifdef IPTABLES_EXE
     set_config_entry(opts, CONF_EXE_IPTABLES, IPTABLES_EXE);
 #endif
@@ -572,8 +576,6 @@ usage(void)
       "                           forks off into the background.\n"
       "     --fw-list           - List all active rules in the FWKNOP Netfilter chain.\n"
       "     --fw-flush          - Flush all rules in the FWKNOP Netfilter chain.\n"
-      "     --fw-log            - Specify the path to the Netfilter log file that is\n"
-      "                           parsed when running in 'os-mode'.\n"
       " -i, --interface         - Specify interface to listen for incoming SPA\n"
       "                           packets.\n"
       " -K, --kill              - Kill the currently running fwknopd.\n"

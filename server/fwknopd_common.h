@@ -76,6 +76,10 @@
 #define MAX_SPA_PACKET_LEN  1500 /* --DSS check this? */
 #define MAX_HOSTNAME_LEN    64
 
+/* The minimum possible valid SPA data size.
+*/
+#define MIN_SPA_DATA_SIZE   140
+
 /* Data collection modes
 */
 enum {
@@ -89,6 +93,9 @@ enum {
 enum {
     SPA_MSG_SUCCESS = 0,
     SPA_MSG_BAD_DATA,
+    SPA_MSG_LEN_TOO_SMALL,
+    SPA_MSG_NOT_SPA_DATA,
+    SPA_MSG_HTTP_NOT_ENABLED,
     SPA_MSG_FKO_CTX_ERROR,
     SPA_MSG_DIGEST_ERROR,
     SPA_MSG_DIGEST_CACHE_ERROR,
@@ -133,7 +140,6 @@ enum {
     CONF_ENABLE_PROC_IP_FORWARD,
     CONF_ENABLE_IPT_OUTPUT,
     //CONF_ENABLE_COOKED_INTF,
-    CONF_ENABLE_VOLUNTARY_EXITS,
     CONF_EXIT_INTERVAL,
     CONF_MAX_SNIFF_BYTES,
     CONF_FLUSH_IPT_AT_INIT,
@@ -144,8 +150,8 @@ enum {
     CONF_PCAP_CMD_TIMEOUT,
     //CONF_PCAP_PKT_FILE,
     //CONF_BLACKLIST,
-    //CONF_MAX_HOPS,
-    //CONF_ENABLE_SPA_OVER_HTTP,
+    CONF_ENABLE_SPA_OVER_HTTP,
+    CONF_SPA_OVER_HTTP_PORT,
     //CONF_ENABLE_TCP_SERVER,
     //CONF_TCPSERV_PORT,
     CONF_LOCALE,
@@ -175,11 +181,11 @@ enum {
     //CONF_FWKNOP_CMDLINE_FILE,
     //CONF_TCPSERV_PID_FILE,
     //CONF_PROC_IP_FORWARD_FILE,
-    CONF_EXE_GPG,
-    CONF_EXE_MAIL,
-    CONF_EXE_SENDMAIL,
-    CONF_EXE_SH,
-    CONF_EXE_MKNOD,
+    //CONF_EXE_GPG,
+    //CONF_EXE_MAIL,
+    //CONF_EXE_SENDMAIL,
+    //CONF_EXE_SH,
+    //CONF_EXE_MKNOD,
     CONF_EXE_IPTABLES,
     CONF_EXE_IPFW,
 
@@ -216,7 +222,6 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "ENABLE_PROC_IP_FORWARD",
     "ENABLE_IPT_OUTPUT",
     //"ENABLE_COOKED_INTF",
-    "ENABLE_VOLUNTARY_EXITS",
     "EXIT_INTERVAL",
     "MAX_SNIFF_BYTES",
     "FLUSH_IPT_AT_INIT",
@@ -227,8 +232,8 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "PCAP_CMD_TIMEOUT",
     //"PCAP_PKT_FILE",
     //"BLACKLIST",
-    //"MAX_HOPS",
-    //"ENABLE_SPA_OVER_HTTP",
+    "ENABLE_SPA_OVER_HTTP",
+    "SPA_OVER_HTTP_PORT",
     //"ENABLE_TCP_SERVER",
     //"TCPSERV_PORT",
     "LOCALE",
@@ -258,11 +263,11 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"FWKNOP_CMDLINE_FILE",
     //"TCPSERV_PID_FILE",
     //"PROC_IP_FORWARD_FILE",
-    "EXE_GPG",
-    "EXE_MAIL",
-    "EXE_SENDMAIL",
-    "EXE_SH",
-    "EXE_MKNOD",
+    //"EXE_GPG",
+    //"EXE_MAIL",
+    //"EXE_SENDMAIL",
+    //"EXE_SH",
+    //"EXE_MKNOD",
     "EXE_IPTABLES",
     "EXE_IPFW",
 
@@ -386,6 +391,7 @@ typedef struct spa_pkt_info
 {
     unsigned int    packet_data_len;
     unsigned int    packet_src_ip;
+    unsigned short  packet_dest_port;
     unsigned char   packet_data[MAX_SPA_PACKET_LEN+1];
 } spa_pkt_info_t;
 

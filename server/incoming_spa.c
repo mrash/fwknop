@@ -28,9 +28,94 @@
 #include "access.h"
 #include "log_msg.h"
 
+/* Validate and in some cases preprocess/reformat the SPA data.  Return an
+ * error code value if there is any indication the data is not valid spa data.
+*/
+static int
+preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
+{
+    spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
+
+    unsigned char    *ndx = &(spa_pkt->packet_data);
+    int      pkt_data_len = spa_pkt->packet_data_len;
+    int      tc, i;
+
+    /* At this point, we can reset the packet data length to 0.  This our
+     * indicator to the rest of the program that we do not have a current
+     * spa packet to process (after this one that is).
+    */
+    spa_pkt->packet_data_len = 0;
+
+    /* Expect the data to be at least the minimum required size.
+    */
+    if(pkt_data_len < MIN_SPA_DATA_SIZE)
+        return(SPA_MSG_LEN_TOO_SMALL);
+
+    /* Detect and parse out SPA data from an HTTP reqest. If the SPA data
+     * starts with "GET /" and the user agent starts with "Fwknop", then
+     * assume it is a SPA over HTTP request.
+    */
+    if(strncasecmp(ndx, "GET /", 5) == 0
+      && strstr(ndx, "User-Agent: Fwknop") != NULL)
+    {
+        /* This looks like an HTTP request, so let's see if we are
+         * configured to accept such request and if so, find the DPA
+         * data.
+        */
+        if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL
+          || strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "Y", 1) != 0)
+        {
+            log_msg(LOG_WARNING,
+                "HTTP request from %s detected, but not enabled.", src_ip
+            );
+            return(SPA_MSG_HTTP_NOT_ENABLED);
+        }
+
+        /* Now extract, adjust, and set just the SPA message itself.
+        */
+        strlcpy(spa_pkt->packet_data, ndx+5, pkt_data_len);
+
+        for(i=0; i<pkt_data_len; i++)
+        {
+            if(isspace(*ndx)) /* The first space marks the end of the req */
+            {
+                *ndx = '\0';
+                break;
+            }
+            else if(*ndx == '-') /* Convert '-' to '+' */
+                *ndx = '+';
+            else if(*ndx == '_') /* Convert '_' to '/' */
+                *ndx = '/';
+            /* Make sure it is a valid base64 char. */
+            else if(!(isalnum(*ndx) || *ndx == '/' || *ndx == '+' || *ndx == '='))
+                return(SPA_MSG_NOT_SPA_DATA);
+
+            ndx++;
+        }
+    }
+    else
+    {
+        /* Make sure the data is valid Base64-encoded characters
+        * (at least the first MIN_SPA_DATA_SIZE bytes).
+        */
+        ndx = spa_pkt->packet_data;
+        for(i=0; i<MIN_SPA_DATA_SIZE; i++)
+        {
+            if(!(isalnum(*ndx) || *ndx == '/' || *ndx == '+' || *ndx == '='))
+                return(SPA_MSG_NOT_SPA_DATA);
+            ndx++;
+        }
+    }
+
+    /* If we made it here, we have no reason to assume this is not SPA data
+     * (at least until we come up with more checks).
+    */
+    return(FKO_SUCCESS);
+}
+
 /* Popluate a spa_data struct from an initialized (and populated) FKO context.
 */
-int
+static int
 get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
 {
     int res = FKO_SUCCESS;
@@ -98,7 +183,15 @@ incoming_spa(fko_srv_options_t *opts)
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
 
-    log_msg(LOG_INFO, "SPA packet from IP: %s received.", spadat.pkt_source_ip);
+    /* At this point, we want to validate and (if needed) preprocess the
+     * SPA data and/or to be reasonably sure we have a SPA packet (i.e
+     * try to eliminate obvious non-spa packets).
+    */
+    res = preprocess_spa_data(opts, spadat.pkt_source_ip);
+    if(res != FKO_SUCCESS)
+        return(SPA_MSG_NOT_SPA_DATA);
+
+    log_msg(LOG_INFO, "SPA Packet from IP: %s received.", spadat.pkt_source_ip);
 
     if(acc == NULL)
     {
@@ -109,21 +202,8 @@ incoming_spa(fko_srv_options_t *opts)
         return(SPA_MSG_ACCESS_DENIED);
     }
 
-    /* Sanity check
-    */
-    if(spa_pkt->packet_data_len <= 0)
-        return(SPA_MSG_BAD_DATA);
-
-/* --DSS temp */
-//fprintf(stderr, "SPA Packet: '%s'\n", spa_pkt->packet_data);
-/* --DSS temp */
-
-    /* Reset the packet data length to 0.  This our indicator to the rest of
-     * the program that we do not have a current spa packet to process
-     * (which we won't by the time we return from this function for whatever
-     * reason).
-    */
-    spa_pkt->packet_data_len = 0;
+    if(opts->verbose > 1)
+        log_msg(LOG_DEBUG, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 
     /* Get encryption type and try its decoding routine first (if the key
      * for that type is set)
@@ -222,10 +302,8 @@ incoming_spa(fko_srv_options_t *opts)
     /* At this point, we assume the SPA data is valid.  Now we need to see
      * if it meets our access criteria.
     */
-/* --DSS temp */
-//fprintf(stderr, "Decode res = %i\n", res);
-//display_ctx(ctx);
-/* --DSS temp */
+    if(opts->verbose > 2)
+        log_msg(LOG_DEBUG, "SPA Decode (res=%i):\n%s", res, dump_ctx(ctx));
 
     /* Check for replays if so configured.
     */

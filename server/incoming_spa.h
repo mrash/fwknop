@@ -26,7 +26,6 @@
 #ifndef INCOMING_SPA_H
 #define INCOMING_SPA_H
 
-
 /* Prototypes
 */
 int incoming_spa(fko_srv_options_t *opts);

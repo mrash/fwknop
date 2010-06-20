@@ -180,8 +180,9 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     /* Put the data in our 1-entry queue.
     */
     strlcpy(opts->spa_pkt.packet_data, pkt_data, pkt_data_len+1);
-    opts->spa_pkt.packet_data_len = pkt_data_len; 
-    opts->spa_pkt.packet_src_ip   = src_ip; 
+    opts->spa_pkt.packet_data_len  = pkt_data_len; 
+    opts->spa_pkt.packet_src_ip    = src_ip; 
+    opts->spa_pkt.packet_dest_port = dest_port; 
 
     return;
 }

@@ -65,9 +65,13 @@ hex_dump(unsigned char *data, int size)
 
 /* Show the fields of the FKO context.
 */
-void
-display_ctx(fko_ctx_t ctx)
+char *
+dump_ctx(fko_ctx_t ctx)
 {
+    static char buf[CTX_DUMP_BUFSIZE];
+    char       *ndx;
+    int         cp;
+
     char       *rand_val        = NULL;
     char       *username        = NULL;
     char       *version         = NULL;
@@ -99,20 +103,37 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_digest(ctx, &spa_digest);
     fko_get_spa_data(ctx, &spa_data);
 
-    printf("\nFKO Field Values:\n=================\n\n");
-    printf("   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
-    printf("       Username: %s\n", username == NULL ? "<NULL>" : username);
-    printf("      Timestamp: %u\n", (unsigned int) timestamp);
-    printf("    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
-    printf("   Message Type: %i\n", msg_type);
-    printf(" Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
-    printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
-    printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
-    printf(" Client Timeout: %u\n", client_timeout);
-    printf("    Digest Type: %u\n", digest_type);
-    printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
-    printf("\nSPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
-    printf("\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n", spa_data);
+    memset(buf, 0x0, CTX_DUMP_BUFSIZE);
+
+    ndx = buf;
+
+    cp = sprintf(ndx, "SPA Field Values:\n=================\n");
+    ndx += cp;
+    cp = sprintf(ndx, "   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
+    ndx += cp;
+    cp = sprintf(ndx, "       Username: %s\n", username == NULL ? "<NULL>" : username);
+    ndx += cp;
+    cp = sprintf(ndx, "      Timestamp: %u\n", (unsigned int) timestamp);
+    ndx += cp;
+    cp = sprintf(ndx, "    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
+    ndx += cp;
+    cp = sprintf(ndx, "   Message Type: %i\n", msg_type);
+    ndx += cp;
+    cp = sprintf(ndx, " Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
+    ndx += cp;
+    cp = sprintf(ndx, "     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
+    ndx += cp;
+    cp = sprintf(ndx, "    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
+    ndx += cp;
+    cp = sprintf(ndx, " Client Timeout: %u\n", client_timeout);
+    ndx += cp;
+    cp = sprintf(ndx, "    Digest Type: %u\n", digest_type);
+    ndx += cp;
+    cp = sprintf(ndx, "   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
+    ndx += cp;
+    cp = sprintf(ndx, "SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
+
+    return(buf);
 }
 
 /***EOF***/

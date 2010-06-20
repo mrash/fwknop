@@ -28,10 +28,12 @@
 
 #include "fko.h"
 
+#define  CTX_DUMP_BUFSIZE   4096
+
 /* Prototypes
 */
 void hex_dump(unsigned char *data, int size);
-void display_ctx(fko_ctx_t ctx);
+char* dump_ctx(fko_ctx_t ctx);
 
 #ifdef WIN32
   /* Function prototypes we need for Windows

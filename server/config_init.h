@@ -77,7 +77,6 @@ static struct option cmd_opts[] =
     {"foreground",          0, NULL, 'f'},
     {"fw-list",             0, NULL, FIREWALL_LIST },
     {"fw-flush",            0, NULL, FIREWALL_FLUSH },
-    {"fw-log",              1, NULL, FIREWALL_LOG },
     {"help",                0, NULL, 'h'},
     {"interface",           1, NULL, 'i'},
     {"kill",                0, NULL, 'K'},

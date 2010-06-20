@@ -99,6 +99,8 @@ pcap_capture(fko_srv_options_t *opts)
             exit(EXIT_FAILURE);
         }
 
+        log_msg(LOG_INFO|LOG_STDERR, "PCAP filter is: %s", opts->config[CONF_PCAP_FILTER]);
+
         pcap_freecode(&fp);
     }
 
@@ -135,6 +137,8 @@ pcap_capture(fko_srv_options_t *opts)
     */
     set_sig_handlers();
 
+    log_msg(LOG_INFO|LOG_STDERR, "Starting fwknopd main event loop.");
+
     /* Jump into our home-grown packet cature loop.
     */
     while(1)
@@ -154,7 +158,24 @@ pcap_capture(fko_srv_options_t *opts)
         */
         if(res > 0 && opts->spa_pkt.packet_data_len > 0)
         {
-            incoming_spa(opts);
+            res = incoming_spa(opts);
+
+            if(res != 0 && opts->verbose > 1)
+            {
+                /* make use of the pcap errstr buffer to set the err string
+                 * (yeah, I'm lazy).
+                */
+                if(res == SPA_MSG_NOT_SPA_DATA)
+                    strcpy(errstr, "Not SPA Data");
+                else if(res == SPA_MSG_LEN_TOO_SMALL)
+                    strcpy(errstr, "Msg size too small");
+                else if(res == SPA_MSG_HTTP_NOT_ENABLED)
+                    strcpy(errstr, "HTTP requests not enabled");
+                else
+                    strcpy(errstr, "Undefined Error");
+
+                log_msg(LOG_DEBUG, "Got error %i: '%s' on incoming packet.", res, errstr);
+            }
 
             /* Count this packet since it has at least one byte of payload
              * data - we use this as a comparison for --packet-limit regardless
@@ -192,6 +213,7 @@ pcap_capture(fko_srv_options_t *opts)
         else if(pending_break == 1 || res == -2)
         {
             /* pcap_breakloop was called, so we bail. */
+            log_msg(LOG_INFO|LOG_STDERR, "Gracefully leaving the fwknopd event loop.");
             break;
         }
         else
