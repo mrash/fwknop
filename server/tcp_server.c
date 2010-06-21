@@ -50,7 +50,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     unsigned short      port = atoi(opts->config[CONF_TCPSERV_PORT]);
 
-    log_msg(LOG_INFO, "Kicking off TCP server for port %i", port);
+    log_msg(LOG_INFO, "Kicking off TCP server for port %i)", port);
 
     /* Fork off a child process to run the command and provide its outputs.
     */
@@ -60,7 +60,10 @@ run_tcp_server(fko_srv_options_t *opts)
      * in either case we simply return that value to the caller.
     */
     if (pid != 0)
+    {
+        opts->tcp_server_pid = pid;
         return(pid);
+    }
 
     /* We are the child, so let's make a TCP server */
 
@@ -111,7 +114,7 @@ run_tcp_server(fko_srv_options_t *opts)
             exit(EXIT_FAILURE); /* Should this be fatal? */
         }
 
-        if(opts->verbose > 1)
+        if(opts->verbose)
         {
             memset(sipbuf, 0x0, MAX_IP_STR_LEN);
             inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IP_STR_LEN);

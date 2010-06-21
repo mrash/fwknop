@@ -258,10 +258,10 @@ main(int argc, char **argv)
             else
             {
                 res = run_tcp_server(&opts);
-                if(res < 0)
-                    log_msg(LOG_WARNING, "Fork error from run_tcp_serv.");
-                else
-                    opts.tcp_server_pid = res;
+                //if(res < 0)
+                //    log_msg(LOG_WARNING, "Fork error from run_tcp_serv.");
+                //else
+                //    opts.tcp_server_pid = res;
             }
         }
 
@@ -273,25 +273,25 @@ main(int argc, char **argv)
             got_signal = 0;
             if(got_sighup)
             {
-                log_msg(LOG_WARNING|LOG_STDERR, "Got SIGHUP.  Re-reading configs.");
+                log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");
                 free_configs(&opts);
                 got_sighup = 0;
             }
             else if(got_sigint)
             {
-                log_msg(LOG_WARNING|LOG_STDERR, "Got SIGINT.  Exiting...");
+                log_msg(LOG_WARNING, "Got SIGINT.  Exiting...");
                 got_sigint = 0;
                 break;
             }
             else if(got_sigterm)
             {
-                log_msg(LOG_WARNING|LOG_STDERR, "Got SIGTERM.  Exiting...");
+                log_msg(LOG_WARNING, "Got SIGTERM.  Exiting...");
                 got_sigterm = 0;
                 break;
             }
             else
             {
-                log_msg(LOG_WARNING|LOG_STDERR,
+                log_msg(LOG_WARNING,
                     "Got signal %i. No defined action but to exit.", last_sig);
                 break;
             }
@@ -310,6 +310,25 @@ main(int argc, char **argv)
                 "Capture ended without signal.  Exiting...");
             break;
         }
+    }
+
+    log_msg(LOG_INFO, "Shutting Down fwknopd.");
+
+    /* Kill the TCP server (if we have one running).
+    */
+    if(opts.tcp_server_pid > 0)
+    {
+        log_msg(LOG_INFO, "Killing the TCP server (pid=%i)",
+            opts.tcp_server_pid);
+
+        kill(opts.tcp_server_pid, SIGTERM);
+
+        /* --DSS XXX: This seems to be necessary if the tcp server
+         *            was restarted byt this program.  We need to 
+         *            investigate an fix this. For now, this works
+         *            (it is kludgy, but does no harm afaik).
+        */
+        kill(opts.tcp_server_pid, SIGKILL);
     }
 
     /* Other cleanup.

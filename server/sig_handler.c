@@ -34,6 +34,7 @@ sig_atomic_t got_sigint     = 0;    /* SIGINT flag  */
 sig_atomic_t got_sigterm    = 0;    /* SIGTERM flag */
 sig_atomic_t got_sigusr1    = 0;    /* SIGUSR1 flag */
 sig_atomic_t got_sigusr2    = 0;    /* SIGUSR2 flag */
+sig_atomic_t got_sigchld    = 0;    /* SIGCHLD flag */
 
 /* SIGHUP Handler
 */
@@ -57,6 +58,9 @@ sig_handler(int sig)
             return;
         case SIGUSR2:
             got_sigusr2 = 1;
+            return;
+        case SIGCHLD:
+            got_sigchld = 1;
             return;
     }
 }
@@ -104,6 +108,12 @@ set_sig_handlers(void)
     }
 
     if(signal(SIGUSR2, sig_handler) == SIG_ERR)
+    {
+        log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGUSR2 handler");
+        err++;
+    }
+
+    if(signal(SIGCHLD, sig_handler) == SIG_ERR)
     {
         log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGUSR2 handler");
         err++;

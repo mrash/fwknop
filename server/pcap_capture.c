@@ -24,6 +24,8 @@
  *****************************************************************************
 */
 #include <pcap.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "fwknopd_common.h"
 #include "pcap_capture.h"
@@ -33,6 +35,7 @@
 #include "sig_handler.h"
 #include "fw_util.h"
 #include "log_msg.h"
+#include "sig_handler.h"
 
 /* The pcap capture routine.
 */
@@ -47,6 +50,8 @@ pcap_capture(fko_srv_options_t *opts)
     int                 pcap_errcnt = 0;
     int                 pending_break = 0;
     int                 promisc = 1;
+    int                 status;
+    pid_t               child_pid;
 
     /* Set non-promiscuous mode only of the ENABLE_PCAP_PROMISC is
      * explicitly set to 'N'.
@@ -143,12 +148,13 @@ pcap_capture(fko_srv_options_t *opts)
     */
     while(1)
     {
-        /* Any signal except USR1 and USR2 mean break the loop.
+        /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
         */
-        if((got_signal != 0) && ((got_sigusr1 + got_sigusr2) == 0))
+        if((got_signal != 0) && ((got_sigusr1 + got_sigusr2 + got_sigchld) == 0))
         {
             pcap_breakloop(pcap);
             pending_break = 1;
+            signal(SIGCHLD, SIG_IGN);
         }
 
         res = pcap_dispatch(pcap, 1, (pcap_handler)&process_packet, (unsigned char *)opts);
@@ -222,6 +228,38 @@ pcap_capture(fko_srv_options_t *opts)
         /* Check for any expired firewall rules and deal with them.
         */
         check_firewall_rules(opts);
+
+        /* If we got a SIGCHLD and it was the tcp server, then handle it here.
+        */
+        if(got_sigchld && pending_break != 1)
+        {
+            if(opts->tcp_server_pid > 0)
+            {
+                child_pid = waitpid(0, &status, WNOHANG);
+
+                if(child_pid == opts->tcp_server_pid)
+                {
+                    if(WIFSIGNALED(status))
+                        log_msg(LOG_WARNING, "TCP server got signal: %i",  WTERMSIG(status));
+
+                    log_msg(LOG_WARNING, "TCP server exited with status of %i. Attempting restart.",
+                        WEXITSTATUS(status));
+
+                    opts->tcp_server_pid = 0;
+
+                    /* Attempt to restart tcp server ? */
+                    usleep(1000000);
+                    res = run_tcp_server(opts);
+                    //if(res < 0)
+                    //    log_msg(LOG_WARNING, "Fork error from run_tcp_serv.");
+                    //else
+                    //    opts->tcp_server_pid = res;
+                }
+            }
+
+            got_sigchld = 0;
+            got_signal = 0;
+        }
 
         usleep(10000);
     }

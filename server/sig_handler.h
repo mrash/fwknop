@@ -35,6 +35,7 @@ extern sig_atomic_t got_sigint;
 extern sig_atomic_t got_sigterm;
 extern sig_atomic_t got_sigusr1;
 extern sig_atomic_t got_sigusr2;
+extern sig_atomic_t got_sigchld;
 
 void sig_handler(int sig);
 
