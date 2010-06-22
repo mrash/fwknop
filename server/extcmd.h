@@ -33,7 +33,8 @@
  * may end up in.
 */
 enum {
-    EXTCMD_SELECT_ERROR             =   -2,
+    EXTCMD_SELECT_ERROR             =   -3,
+    EXTCMD_PIPE_ERROR               =   -2,
     EXTCMD_FORK_ERROR               =   -1,
     EXTCMD_SUCCESS_ALL_OUTPUT       = 0x00,
     EXTCMD_SUCCESS_PARTIAL_STDOUT   = 0x01,

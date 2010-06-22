@@ -75,8 +75,11 @@ run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_bu
     /* Create the pipes we will use for getting stdout and stderr
      * from the child process.
     */
-    pipe(so);
-    pipe(se);
+    if(pipe(so) != 0)
+        return(EXTCMD_PIPE_ERROR);
+
+    if(pipe(se) != 0)
+        return(EXTCMD_PIPE_ERROR);
 
     /* Fork off a child process to run the command and provide its outputs.
     */

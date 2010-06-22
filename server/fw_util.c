@@ -438,7 +438,8 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
     int             status, res;
-    time_t          now, exp_ts;
+    time_t          now;
+    unsigned int    exp_ts;
 
     /* Parse and expand our access message.
     */
