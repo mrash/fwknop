@@ -148,13 +148,53 @@ pcap_capture(fko_srv_options_t *opts)
     */
     while(1)
     {
+        /* If we got a SIGCHLD and it was the tcp server, then handle it here.
+        */
+        if(got_sigchld)
+        {
+            if(opts->tcp_server_pid > 0)
+            {
+                child_pid = waitpid(0, &status, WNOHANG);
+
+                if(child_pid == opts->tcp_server_pid)
+                {
+                    if(WIFSIGNALED(status))
+                        log_msg(LOG_WARNING, "TCP server got signal: %i",  WTERMSIG(status));
+
+                    log_msg(LOG_WARNING, "TCP server exited with status of %i. Attempting restart.",
+                        WEXITSTATUS(status));
+
+                    opts->tcp_server_pid = 0;
+
+                    /* Attempt to restart tcp server ? */
+                    usleep(1000000);
+                    run_tcp_server(opts);
+                }
+            }
+
+            got_sigchld = 0;
+        }
+
+
         /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
         */
-        if((got_signal != 0) && ((got_sigusr1 + got_sigusr2 + got_sigchld) == 0))
+        if(got_signal != 0)
         {
-            pcap_breakloop(pcap);
-            pending_break = 1;
-            signal(SIGCHLD, SIG_IGN);
+            if(got_sigint || got_sigterm || got_sighup)
+            {
+                signal(SIGCHLD, SIG_IGN);
+                pcap_breakloop(pcap);
+                pending_break = 1;
+            }
+            else if(got_sigusr1 || got_sigusr2)
+            {
+                /* Not doing anything with these yet.
+                */
+                got_sigusr1 = got_sigusr2 = 0;
+                got_signal = 0;
+            }
+            else
+                got_signal = 0;
         }
 
         res = pcap_dispatch(pcap, 1, (pcap_handler)&process_packet, (unsigned char *)opts);
@@ -228,38 +268,6 @@ pcap_capture(fko_srv_options_t *opts)
         /* Check for any expired firewall rules and deal with them.
         */
         check_firewall_rules(opts);
-
-        /* If we got a SIGCHLD and it was the tcp server, then handle it here.
-        */
-        if(got_sigchld && pending_break != 1)
-        {
-            if(opts->tcp_server_pid > 0)
-            {
-                child_pid = waitpid(0, &status, WNOHANG);
-
-                if(child_pid == opts->tcp_server_pid)
-                {
-                    if(WIFSIGNALED(status))
-                        log_msg(LOG_WARNING, "TCP server got signal: %i",  WTERMSIG(status));
-
-                    log_msg(LOG_WARNING, "TCP server exited with status of %i. Attempting restart.",
-                        WEXITSTATUS(status));
-
-                    opts->tcp_server_pid = 0;
-
-                    /* Attempt to restart tcp server ? */
-                    usleep(1000000);
-                    res = run_tcp_server(opts);
-                    //if(res < 0)
-                    //    log_msg(LOG_WARNING, "Fork error from run_tcp_serv.");
-                    //else
-                    //    opts->tcp_server_pid = res;
-                }
-            }
-
-            got_sigchld = 0;
-            got_signal = 0;
-        }
 
         usleep(10000);
     }

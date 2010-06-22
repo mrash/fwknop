@@ -257,11 +257,7 @@ main(int argc, char **argv)
             }
             else
             {
-                res = run_tcp_server(&opts);
-                //if(res < 0)
-                //    log_msg(LOG_WARNING, "Fork error from run_tcp_serv.");
-                //else
-                //    opts.tcp_server_pid = res;
+                run_tcp_server(&opts);
             }
         }
 
@@ -275,6 +271,8 @@ main(int argc, char **argv)
             {
                 log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");
                 free_configs(&opts);
+                kill(opts.tcp_server_pid, SIGTERM);
+                usleep(1000000);
                 got_sighup = 0;
             }
             else if(got_sigint)

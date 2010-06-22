@@ -503,7 +503,7 @@ usage(void)
       " -u, --user-agent            Set the HTTP User-Agent for resolving the\n"
       "                             external IP via -R, or for sending SPA\n"
       "                             packets over HTTP.\n"
-      " -H, --http-proxy            Specify and HTTP proxy URL through which the\n"
+      " -H, --http-proxy            Specify an HTTP proxy URL through which the\n"
       "                             SPA packet will be sent.\n"
       " -U, --spoof-user            Set the username within outgoing SPA packet.\n"
       " -q, --quiet                 Perform fwknop functions quietly.\n"

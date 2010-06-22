@@ -11,7 +11,7 @@ AC_PREREQ(2.61)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
-m4_define(my_version,   [2.0.0-alpha-pre2])
+m4_define(my_version,   [2.0.0-beta-rc1])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
@@ -240,59 +240,59 @@ dnl
 
 dnl Check for sendmail
 dnl
-  AC_ARG_WITH([sendmail],
-    [AS_HELP_STRING([--with-sendmail=/path/to/sendmail],
-      [Specify path to the sendmail executable @<:@default=check path@:>@])],
-    [
-        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
-          [AC_MSG_ERROR([--with-sendmail requires an argument specifying a path to sendmail])],
-          [
-            AC_CHECK_FILE([$withval], [], [
-              AC_MSG_WARN([Specified path to sendmail does not exist on this system])
-              sendmail_exe_warn="*not found*"
-            ])
-            SENDMAIL_EXE=$withval
-          ]
-        )
-    ],
-    [
-        AC_PATH_PROG(SENDMAIL_EXE, [sendmail], [], [$APP_PATH])
-    ]
-  )
-  AS_IF([test "x$SENDMAIL_EXE" != x],
-    [
-      AC_DEFINE_UNQUOTED([SENDMAIL_EXE], ["$SENDMAIL_EXE"], [Path to sendmail executable])
-      sendmail_exe=$SENDMAIL_EXE
-    ], [ sendmail_exe="(not found)"]
-  )
+dnl  AC_ARG_WITH([sendmail],
+dnl    [AS_HELP_STRING([--with-sendmail=/path/to/sendmail],
+dnl      [Specify path to the sendmail executable @<:@default=check path@:>@])],
+dnl    [
+dnl        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+dnl          [AC_MSG_ERROR([--with-sendmail requires an argument specifying a path to sendmail])],
+dnl          [
+dnl            AC_CHECK_FILE([$withval], [], [
+dnl              AC_MSG_WARN([Specified path to sendmail does not exist on this system])
+dnl              sendmail_exe_warn="*not found*"
+dnl            ])
+dnl            SENDMAIL_EXE=$withval
+dnl          ]
+dnl        )
+dnl    ],
+dnl    [
+dnl        AC_PATH_PROG(SENDMAIL_EXE, [sendmail], [], [$APP_PATH])
+dnl    ]
+dnl  )
+dnl  AS_IF([test "x$SENDMAIL_EXE" != x],
+dnl    [
+dnl      AC_DEFINE_UNQUOTED([SENDMAIL_EXE], ["$SENDMAIL_EXE"], [Path to sendmail executable])
+dnl      sendmail_exe=$SENDMAIL_EXE
+dnl    ], [ sendmail_exe="(not found)"]
+dnl  )
 
 dnl Check for mail
 dnl
-  AC_ARG_WITH([mail],
-    [AS_HELP_STRING([--with-mail=/path/to/mail],
-      [Specify path to the mail executable @<:@default=check path@:>@])],
-    [
-        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
-          [AC_MSG_ERROR([--with-mail requires an argument specifying a path to mail])],
-          [
-            AC_CHECK_FILE([$withval], [], [
-              AC_MSG_WARN([Specified path to mail does not exist on this system])
-              mail_exe_warn="*not found*"
-            ])
-            MAIL_EXE=$withval
-          ]
-        )
-    ],
-    [
-        AC_PATH_PROG(MAIL_EXE, [mail], [], [$APP_PATH])
-    ]
-  )
-  AS_IF([test "x$MAIL_EXE" != x],
-    [
-      AC_DEFINE_UNQUOTED([MAIL_EXE], ["$MAIL_EXE"], [Path to mail executable])
-      mail_exe=$MAIL_EXE
-    ], [ mail_exe="(not found)"]
-  )
+dnl  AC_ARG_WITH([mail],
+dnl    [AS_HELP_STRING([--with-mail=/path/to/mail],
+dnl      [Specify path to the mail executable @<:@default=check path@:>@])],
+dnl    [
+dnl        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+dnl          [AC_MSG_ERROR([--with-mail requires an argument specifying a path to mail])],
+dnl          [
+dnl            AC_CHECK_FILE([$withval], [], [
+dnl              AC_MSG_WARN([Specified path to mail does not exist on this system])
+dnl              mail_exe_warn="*not found*"
+dnl            ])
+dnl            MAIL_EXE=$withval
+dnl          ]
+dnl        )
+dnl    ],
+dnl    [
+dnl        AC_PATH_PROG(MAIL_EXE, [mail], [], [$APP_PATH])
+dnl    ]
+dnl  )
+dnl  AS_IF([test "x$MAIL_EXE" != x],
+dnl    [
+dnl      AC_DEFINE_UNQUOTED([MAIL_EXE], ["$MAIL_EXE"], [Path to mail executable])
+dnl      mail_exe=$MAIL_EXE
+dnl    ], [ mail_exe="(not found)"]
+dnl  )
 
 dnl Check for sh
 dnl
@@ -350,8 +350,6 @@ if [test $want_server = "yes" ]; then
   echo "    Server support programs:
         iptables:                   $iptables_exe $iptables_exe_warn
         ipfw:                       $ipfw_exe $ipfw_exe_warn
-        sendmail:                   $sendmail_exe $sendmail_exe_warn
-        mail:                       $mail_exe $mail_exe_warn
         sh:                         $sh_exe $sh_exe_warn
 "
 fi
