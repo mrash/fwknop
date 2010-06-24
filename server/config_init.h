@@ -55,16 +55,13 @@
 enum {
     GPG_HOME_DIR    = 0x200,
     GPG_KEY,
-    FIREWALL_LIST,
-    FIREWALL_FLUSH,
-    FIREWALL_LOG,
-    NO_LOCALE,
+    ROTATE_DIGEST_CACHE,
     NOOP /* Just to be a marker for the end */
 };
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:c:C:Dfhi:Kl:O:RSvV"
+#define GETOPTS_OPTION_STRING "a:c:C:Dfhi:KO:RSvV"
 
 /* Our program command-line options...
 */
@@ -75,15 +72,12 @@ static struct option cmd_opts[] =
     {"packet-limit",        1, NULL, 'C'},
     {"dump-config",         0, NULL, 'D'},
     {"foreground",          0, NULL, 'f'},
-    {"fw-list",             0, NULL, FIREWALL_LIST },
-    {"fw-flush",            0, NULL, FIREWALL_FLUSH },
     {"help",                0, NULL, 'h'},
     {"interface",           1, NULL, 'i'},
     {"kill",                0, NULL, 'K'},
     {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
     {"gpg-key",             1, NULL, GPG_KEY },
-    {"locale",              1, NULL, 'l' },
-    {"no-locale",           0, NULL, NO_LOCALE },
+    {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },
     {"override-config",     1, NULL, 'O' },
     {"restart",             0, NULL, 'R'},
     {"status",              0, NULL, 'S'},

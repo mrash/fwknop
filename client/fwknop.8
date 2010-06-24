@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.74.3 <http://docbook.sf.net/>
-.\"      Date: 09/05/2009
-.\"    Manual:
-.\"    Source:
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 06/17/2010
+.\"    Manual: 
+.\"    Source: 
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "09/05/2009" "" ""
+.TH "FWKNOP" "8" "06/17/2010" "" ""
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -50,9 +50,9 @@ Authorization packets are either encrypted with the \fIRijndael\fR block cipher 
 .RE
 .\}
 .sp
-Each of the above fields are separated by a \(lq:\(rq character due to the variable length of several of the fields, and those that might contain \(lq:\(rq characters are base64 encoded\&. The message digest (\fBSHA256\fR by default in all versions of \fBfwknop\fR greater than 1\&.9\&.1) allows the server to check message integrity after decryption, and the 16 bytes of random data ensures (with high probability) that no two messages are identical\&. This ensures that replay attacks are not possible against \fBfwknop\fR\&.
+Each of the above fields are separated by a \(oq`+:+\'\' character due to the variable length of several of the fields, and those that might contain ``:\(cq\' characters are base64 encoded\&. The message digest (\fBSHA256\fR by default in all versions of \fBfwknop\fR greater than 1\&.9\&.1) allows the server to check message integrity after decryption, and the 16 bytes of random data ensures (with high probability) that no two messages are identical\&. This ensures that replay attacks are not possible against \fBfwknop\fR\&.
 .sp
-For each packet coming from an \fBfwknop\fR client, the \fBfwknopd\fR server caches the \fBSHA256\fR digest calculated over the entire packet and compares against previous packet digests in order to detect attempted replay attacks\&. The digest cache file is located at \fI/var/log/fwknop/digest\&.cache\fR and is not rotated so that the detection of duplicate SPA messages is maximized\&. Both syslog and email alerts are generated if a replay is detected (although this can be tuned via the \fBALERTING_METHODS\fR variable in the \fI/etc/fwknop/fwknop\&.conf\fR file)\&. By default, the \fBfwknop\fR client sends authorization packets over UDP port 62201, but this can be altered with the \fB\-\-Server\-port\fR argument\&. The server must first be configured to acquire the SPA data on the changed protocol\-port\&. Also, \fBfwknop\fR can send the SPA packet over a random port via the \fB\-\-rand\-port\fR argument\&. See \fIfwknopd(8)\fR for further details\&. See the \fBEXAMPLES\fR section for example invocations of the \fBfwknop\fR client\&.
+For each packet coming from an \fBfwknop\fR client, the \fBfwknopd\fR server caches the \fBSHA256\fR digest calculated over the entire packet and compares against previous packet digests in order to detect attempted replay attacks\&. The digest cache file is located at \fI/var/log/fwknop/digest\&.cache\fR and is not rotated so that the detection of duplicate SPA messages is maximized\&. Both syslog and email alerts are generated if a replay is detected (although this can be tuned via the \fBALERTING_METHODS\fR variable in the \fI/etc/fwknop/fwknop\&.conf\fR file)\&. By default, the \fBfwknop\fR client sends authorization packets over UDP port 62201, but this can be altered with the \fB\-\-server\-port\fR argument\&. The server must first be configured to acquire the SPA data on the changed protocol\-port\&. Also, \fBfwknop\fR can send the SPA packet over a random port via the \fB\-\-rand\-port\fR argument\&. See \fIfwknopd(8)\fR for further details\&. See the \fBEXAMPLES\fR section for example invocations of the \fBfwknop\fR client\&.
 .SH "REQUIRED ARGUMENTS"
 .PP
 \fB\-D, \-\-destination\fR=\fI<IP\-address>\fR
@@ -76,7 +76,7 @@ The vast majority of usages for
 require the
 \fB\-A\fR
 argument, but sending full commands with the
-\fB\-\-Server\-cmd\fR
+\fB\-\-server\-cmd\fR
 argument via an SPA packet to be executed by
 \fBfwknopd\fR
 does not require this argument\&.
@@ -113,13 +113,13 @@ client to write a newly created SPA packet out to the specified file so that it 
 Load an encryption key/password from the specified file\&.
 .RE
 .PP
-\fB\-\-no\-save\-args\fR
+\fB\-l, \-\-last\-cmd\fR
 .RS 4
-Instruct the
+Execute
 \fBfwknop\fR
-client to not save its command line arguments to the \fI$HOME/fwknop.run\fR file\&.
-This file is used by the \fB\-\-show\-last\fR argument to display the last command
-line args that \fBfwknop\fR was invoked with\&.
+with the command\-line arguments from the previous invocation (if any)\&. The previous arguments are parsed out of the
+\fI~/\&.fwknop\&.run\fR
+file\&.
 .RE
 .PP
 \fB\-q, \-\-quiet\fR
@@ -176,6 +176,17 @@ client to automatically resolve the externally routable IP address the local sys
 website\&.
 .RE
 .PP
+\fB\-C, \-\-server\-cmd\fR=\fI<command to execute>\fR
+.RS 4
+Instead of requesting access to a service with an SPA packet, the
+\fB\-\-server\-cmd\fR
+argument specifies a command that will be executed by the
+\fBfwknopd\fR
+server\&. The command is encrypted within the SPA packet and sniffed off the wire (as usual) by the
+\fBfwknopd\fR
+server\&.
+.RE
+.PP
 \fB\-g, \-\-gpg\-encryption\fR
 .RS 4
 Use GPG encryption on the SPA packet (default if not specified is Rijndael)\&.
@@ -185,13 +196,13 @@ Use of this option will require the specification of a GPG recipient (see
 along with other GPG\-related options below)\&.
 .RE
 .PP
-\fB\-H, \-\-http-proxy\fR=\fI<proxy\-URL>\fR
+\fB\-H, \-\-http\-proxy\fR=\fI<proxy\-URL>\fR
 .RS 4
-Specify an HTTP proxy URL that the
+Specify an HTTP proxy that the
 \fBfwknop\fR
-client will use to send the SPA packet through\&.  Using this option will
-automatically set the SPA packet transmission mode (usually set via the
-\fB\-\-server\-proto\fR argument) to "http"\&.
+client will use to send the SPA packet through\&. Using this option will automatically set the SPA packet transmission mode (usually set via the
+\fB\-\-server\-proto\fR
+argument) to \(lqhttp\(rq\&.
 .RE
 .PP
 \fB\-m, \-\-digest\-type\fR=\fI<digest>\fR
@@ -215,7 +226,8 @@ server is protecting an internal network on an RFC\-1918 address space, an exter
 \fBfwknop\fR
 client can request that the server port forward an external port to an internal IP, i\&.e\&. \(lq\-\-NAT\-access 192\&.168\&.10\&.2:55000\(rq\&. In this case, access will be granted to 192\&.168\&.10\&.2 via port 55000 to whatever service is requested via the
 \fB\-\-access\fR
-argument (usually tcp/22)\&. Hence, after sending such an SPA packet, one would then do \(lqssh \-p 55000 user@host\(rq and the connection would be forwarded on through to the internal 192\&.168\&.10\&.2 system automatically\&. Note that the port \(lq55000\(rq can be randomly generated via the
+argument (usually tcp/22)\&. Hence, after sending such an SPA packet, one would then do \(lqssh \-p 55000
+user@host\(rq and the connection would be forwarded on through to the internal 192\&.168\&.10\&.2 system automatically\&. Note that the port \(lq55000\(rq can be randomly generated via the
 \fB\-\-nat\-rand\-port\fR
 argument (described later)\&.
 .RE
@@ -386,14 +398,14 @@ client\&. This is useful when a \(lqroot\(rq user wishes to log into a remote ma
 .PP
 \fB\-\-gpg\-recipient\fR=\fI<key ID or Name>\fR
 .RS 4
-Specify the GnuPG key ID, e\&.g\&. \(lq1234ABCD\(rq (see the output of "gpg \-\-list\-keys") or the key name (associated email address) of the recipient of the Single Packet Authorization message\&. This key is imported by the
+Specify the GnuPG key ID, e\&.g\&. \(lq1234ABCD\(rq (see the output of "gpg\(emlist\-keys") or the key name (associated email address) of the recipient of the Single Packet Authorization message\&. This key is imported by the
 \fBfwknopd\fR
 server and the associated private key is used to decrypt the SPA packet\&. The recipient\(cqs key must first be imported into the client GnuPG key ring\&.
 .RE
 .PP
 \fB\-\-gpg\-signer\-key\fR=\fI<key ID or Name>\fR
 .RS 4
-Specify the GnuPG key ID, e\&.g\&. \(lqABCD1234\(rq (see the output of \(lqgpg \-\-list\-keys\(rq) or the key name to use when signing the SPA message\&. The user is prompted for the associated GnuPG password to create the signature\&. This adds a cryptographically strong mechanism to allow the
+Specify the GnuPG key ID, e\&.g\&. \(oq`+ABCD1234+\'\' (see the output of ``gpg \-\-list\-keys\(cq\') or the key name to use when signing the SPA message\&. The user is prompted for the associated GnuPG password to create the signature\&. This adds a cryptographically strong mechanism to allow the
 \fBfwknopd\fR
 daemon on the remote server to authenticate who created the SPA message\&.
 .RE
@@ -407,13 +419,10 @@ The following examples illustrate the command line arguments that could be suppl
 .sp
 Packet contents printed to stdout at the fwknop client when creating an \(lqaccess mode\(rq SPA packet:
 .sp
-.\" .if n \{\
-.\" .RS 4
-.\" .\}
-.\" .nf
-.ft CW
+.if n \{\
+.RS 4
+.\}
 .nf
-.ne 1
     Random data:    6565240948266426
     Username:       mbr
     Timestamp:      1203863233
@@ -421,99 +430,72 @@ Packet contents printed to stdout at the fwknop client when creating an \(lqacce
     Type:           1 (access mode)
     Access:         127\&.0\&.0\&.2,tcp/22
     SHA256 sum:     gngquSL8AuM7r27XsR4qPmJhuBo9pG2PYwII06AaJHw
-.ft R
 .fi
-.\" .fi
-.\" .if n \{\
-.\" .RE
-.\" .\}
+.if n \{\
+.RE
+.\}
 .sp
 Use the Single Packet Authorization mode to gain access to tcp/22 (ssh) and udp/53 running on the system 10\&.0\&.0\&.123 from the IP 192\&.168\&.10\&.4:
 .sp
-.\" .if n \{\
-.\" .RS 4
-.\" .\}
-.\" .nf
-.ft CW
+.if n \{\
+.RS 4
+.\}
 .nf
-.ne 1
     $ fwknop \-A "tcp/22,udp/53" \-a 192\&.168\&.10\&.4 \-D 10\&.0\&.0\&.123
-.ft R
 .fi
-.\" .fi
-.\" .if n \{\
-.\" .RE
-.\" .\}
+.if n \{\
+.RE
+.\}
 .sp
 Same as above example, but gain access from whatever source IP is seen by the fwknop server (useful if the fwknop client is behind a NAT device):
 .sp
-.\" .if n \{\
-.\" .RS 4
-.\" .\}
-.\" .nf
-.ft CW
+.if n \{\
+.RS 4
+.\}
 .nf
-.ne 1
     $ fwknop \-A "tcp/22,udp/53" \-s \-D 10\&.0\&.0\&.123
-.ft R
 .fi
-.\" .fi
-.\" .if n \{\
-.\" .RE
-.\" .\}
+.if n \{\
+.RE
+.\}
 .sp
 Same as above example, but use the IP identification website \fIhttp://www\&.whatismyip\&.com\fR to derive the client IP address\&. This is a safer method of acquiring the client IP address than using the \fB\-s\fR option because the source IP is put within the encrypted packet instead of having the \fBfwknopd\fR daemon grant the requested access from whatever IP address the SPA packet originates:
 .sp
-.\" .if n \{\
-.\" .RS 4
-.\" .\}
-.\" .nf
-.ft CW
+.if n \{\
+.RS 4
+.\}
 .nf
-.ne 1
     $ fwknop \-A "tcp/22,udp/53" \-R \-D 10\&.0\&.0\&.123
-.ft R
 .fi
-.\" .fi
-.\" .if n \{\
-.\" .RE
-.\" .\}
+.if n \{\
+.RE
+.\}
 .sp
 Use the Single Packet Authorization mode to gain access to tcp/22 (ssh) and udp/53 running on the system 10\&.0\&.0\&.123, and use GnuPG keys to encrypt and decrypt:
 .sp
-.\" .if n \{\
-.\" .RS 4
-.\" .\}
-.\" .nf
-.ft CW
+.if n \{\
+.RS 4
+.\}
 .nf
-.ne 1
     $ fwknop \-A "tcp/22,udp/53" \-\-gpg\-sign ABCD1234 \-\-gpg\-\-recipient
     1234ABCD \-R \-D 10\&.0\&.0\&.123
-.ft R
 .fi
-.\" .fi
-.\" .if n \{\
-.\" .RE
-.\" .\}
+.if n \{\
+.RE
+.\}
 .sp
 Instruct the fwknop server running at 10\&.0\&.0\&.123 to allow 172\&.16\&.5\&.4 to connect to TCP/22, but spoof the authorization packet from an IP associated with www\&.yahoo\&.com:
 .sp
-.\" .if n \{\
-.\" .RS 4
-.\" .\}
-.\" .nf
-.ft CW
+.if n \{\
+.RS 4
+.\}
 .nf
-.ne 1
     # fwknop \-\-Spoof\-src \(cqwww\&.yahoo\&.com\(cq \-A tcp/22 \-a 172\&.16\&.5\&.4 \-D
     10\&.0\&.0\&.123
-.ft R
 .fi
-.\" .fi
-.\" .if n \{\
-.\" .RE
-.\" .\}
+.if n \{\
+.RE
+.\}
 .SH "DEPENDENCIES"
 .sp
 \fBfwknop\fR requires \fIlibfko\fR (which is normally included with both source and binary distributions\&.
@@ -523,7 +505,7 @@ For GPG functionality, GnuPG must also be correctly installed and configured\&.
 To take advantage of all of the authentication and access management features of the \fBfwknopd\fR daemon/service a functioning iptables firewall is required on the underlying operating system\&.
 .SH "DIAGNOSTICS"
 .sp
-fwknop can be run with the \fB\-T\fR (or \fB\-\-test\fR) command line option\&. This will have \fBfwkop\fR simply create and print the SPA packet information, then run it through a decrypt/decode cycle and print it again\&.
+fwknop can be run with the \fB\-T\fR (or \fB\-\-test\fR) command line option\&. This will have \fBfwknop\fR simply create and print the SPA packet information, then run it through a decrypt/decode cycle and print it again\&.
 .SH "SEE ALSO"
 .sp
 fwknopd(8), iptables(8), gpg(1), gpg\-agent(1), libfko documentation\&.
@@ -532,9 +514,8 @@ More information on Single Packet Authorization can be found in the paper \(lqSi
 .SH "AUTHOR"
 .sp
 Damien Stuart <dstuart@dstuart\&.org>
-.br
-Michael Rash <mbr@cipherdyne\&.org>
 .sp
+Michael Rash <mbr@cipherdyne\&.org>
 .SH "CONTRIBUTORS"
 .sp
 This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttp://www\&.cipherdyne\&.org/fwknop/docs/contributors\&.html\fR to view the online list of contributors\&.

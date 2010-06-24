@@ -85,37 +85,37 @@ set_sig_handlers(void)
 
     if(signal(SIGHUP, sig_handler) == SIG_ERR)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGHUP handler");
+        log_msg(LOG_ERR, "* Error setting SIGHUP handler");
         err++;
     }
 
     if(signal(SIGINT, sig_handler) == SIG_ERR)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGINT handler");
+        log_msg(LOG_ERR, "* Error setting SIGINT handler");
         err++;
     }
 
     if(signal(SIGTERM, sig_handler) == SIG_ERR)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGTERM handler");
+        log_msg(LOG_ERR, "* Error setting SIGTERM handler");
         err++;
     }
 
     if(signal(SIGUSR1, sig_handler) == SIG_ERR)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGUSR1 handler");
+        log_msg(LOG_ERR, "* Error setting SIGUSR1 handler");
         err++;
     }
 
     if(signal(SIGUSR2, sig_handler) == SIG_ERR)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGUSR2 handler");
+        log_msg(LOG_ERR, "* Error setting SIGUSR2 handler");
         err++;
     }
 
     if(signal(SIGCHLD, sig_handler) == SIG_ERR)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "* Error setting SIGUSR2 handler");
+        log_msg(LOG_ERR, "* Error setting SIGUSR2 handler");
         err++;
     }
 

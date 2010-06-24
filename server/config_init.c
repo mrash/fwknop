@@ -313,18 +313,6 @@ set_preconfig_entries(fko_srv_options_t *opts)
     set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
 
     /* Setup the local executables based on build-time info.
-#ifdef GPG_EXE
-    set_config_entry(opts, CONF_EXE_GPG, GPG_EXE);
-#endif
-#ifdef MAIL_EXE
-    set_config_entry(opts, CONF_EXE_MAIL, MAIL_EXE);
-#endif
-#ifdef SENDMAIL_EXE
-    set_config_entry(opts, CONF_EXE_SENDMAIL, SENDMAIL_EXE);
-#endif
-#ifdef SH_EXE
-    set_config_entry(opts, CONF_EXE_SH, SH_EXE);
-#endif
     */
 #ifdef IPTABLES_EXE
     set_config_entry(opts, CONF_EXE_IPTABLES, IPTABLES_EXE);
@@ -471,18 +459,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'f':
                 opts->foreground = 1;
                 break;
-            case FIREWALL_LIST:
-                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
-                // TODO: Add this...
-                //list_firewall_rules();
-                exit(EXIT_SUCCESS);
-                break;
-            case FIREWALL_FLUSH:
-                fprintf(stderr, "*NOT IMPLEMENTED YET*\n");
-                // TODO: Add this...
-                //flush_firewall_rules();
-                exit(EXIT_SUCCESS);
-                break;
             case GPG_HOME_DIR:
                 set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);
                 break;
@@ -495,17 +471,11 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'K':
                 opts->kill = 1;
                 break;
-            case 'l':
-                if(opts->no_locale)
-                    fprintf(stderr, "Local option ignored due to no-locale flag.\n");
-                else
-                    set_config_entry(opts, CONF_LOCALE, optarg);
-                break;
-            case NO_LOCALE:
-                set_config_entry(opts, CONF_LOCALE, NULL);
-                break;
             case 'O':
                 /* This was handled earlier */
+                break;
+            case ROTATE_DIGEST_CACHE:
+                opts->rotate_digest_cache = 1;
                 break;
             case 'R':
                 opts->restart = 1;
@@ -568,21 +538,19 @@ usage(void)
       " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
       "                           process and exit when this limit is reached.\n"
       " -D, --dump-config       - Dump the current fwknop configuration values.\n"
-      " -f, --foreground        - Run fwknopd in the foreground so that it never\n"
-      "                           forks off into the background.\n"
-      "     --fw-list           - List all active rules in the FWKNOP Netfilter chain.\n"
-      "     --fw-flush          - Flush all rules in the FWKNOP Netfilter chain.\n"
+      " -f, --foreground        - Run fwknopd in the foreground (do not become\n"
+      "                           a background daemon).\n"
       " -i, --interface         - Specify interface to listen for incoming SPA\n"
       "                           packets.\n"
       " -K, --kill              - Kill the currently running fwknopd.\n"
       "     --gpg-home-dir      - Specify the GPG home directory.\n"
       "     --gpg-key           - Specify the GPG key ID used for decryption.\n"
-      " -l, --locale            - Provide a locale setting other than the default\n"
-      "                           of \"C\".\n"
-      "     --no-locale         - Do not set any locale.  Allow the system default\n"
       " -O, --override-config   - Specify a file with configuration entries that will\n"
       "                           overide those in fwknopd.conf\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
+      "     --rotate-digest-cache\n"
+      "                         - Rotate the digest cache file by renaming it to\n"
+      "                           '<name>-old', and starting a new one.\n"
       " -S, --status            - Display the status of any running fwknopd process.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"

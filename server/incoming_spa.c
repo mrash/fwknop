@@ -198,7 +198,7 @@ incoming_spa(fko_srv_options_t *opts)
 
     if(acc == NULL)
     {
-        log_msg(LOG_WARNING|LOG_STDERR,
+        log_msg(LOG_WARNING,
             "No access data found for source IP: %s", spadat.pkt_source_ip
         );
 
@@ -206,7 +206,7 @@ incoming_spa(fko_srv_options_t *opts)
     }
 
     if(opts->verbose > 1)
-        log_msg(LOG_DEBUG, "SPA Packet: '%s'\n", spa_pkt->packet_data);
+        log_msg(LOG_INFO, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 
     /* Get encryption type and try its decoding routine first (if the key
      * for that type is set)
@@ -219,7 +219,7 @@ incoming_spa(fko_srv_options_t *opts)
             res = fko_new_with_data(&ctx, spa_pkt->packet_data, acc->key);
         else 
         {
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "No KEY for RIJNDAEL encrypted messages");
             return(SPA_MSG_FKO_CTX_ERROR);
         }
@@ -234,7 +234,7 @@ incoming_spa(fko_srv_options_t *opts)
             res = fko_new_with_data(&ctx, spa_pkt->packet_data, NULL);
             if(res != FKO_SUCCESS)
             {
-                log_msg(LOG_WARNING|LOG_STDERR,
+                log_msg(LOG_WARNING,
                     "Error creating fko context (before decryption): %s",
                     fko_errstr(res)
                 );
@@ -276,14 +276,14 @@ incoming_spa(fko_srv_options_t *opts)
         }
         else
         {
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "No GPG_DECRYPT_PW for GPG encrypted messages");
             return(SPA_MSG_FKO_CTX_ERROR);
         }
     }
     else
     {
-        log_msg(LOG_ERR|LOG_STDERR, "Unable to determing encryption type. Got type=%i.",
+        log_msg(LOG_ERR, "Unable to determing encryption type. Got type=%i.",
             enc_type);
         return(SPA_MSG_FKO_CTX_ERROR);
     }
@@ -292,11 +292,11 @@ incoming_spa(fko_srv_options_t *opts)
     */
     if(res != FKO_SUCCESS)
     {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error creating fko context: %s",
+        log_msg(LOG_WARNING, "Error creating fko context: %s",
             fko_errstr(res));
 
         if(IS_GPG_ERROR(res))
-            log_msg(LOG_WARNING|LOG_STDERR, " - GPG ERROR: %s",
+            log_msg(LOG_WARNING, " - GPG ERROR: %s",
                 fko_gpg_errstr(ctx));
 
         goto clean_and_bail;
@@ -306,7 +306,7 @@ incoming_spa(fko_srv_options_t *opts)
      * if it meets our access criteria.
     */
     if(opts->verbose > 2)
-        log_msg(LOG_DEBUG, "SPA Decode (res=%i):\n%s", res, dump_ctx(ctx));
+        log_msg(LOG_INFO, "SPA Decode (res=%i):\n%s", res, dump_ctx(ctx));
 
     /* Check for replays if so configured.
     */
@@ -334,7 +334,7 @@ incoming_spa(fko_srv_options_t *opts)
 
     if(res != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "Unexpected error pulling SPA data from the context: %s",
+        log_msg(LOG_ERR, "Unexpected error pulling SPA data from the context: %s",
             fko_errstr(res));
         res = SPA_MSG_ERROR;
         goto clean_and_bail;
@@ -350,7 +350,7 @@ incoming_spa(fko_srv_options_t *opts)
 
         if(ts_diff > atoi(opts->config[CONF_MAX_SPA_PACKET_AGE]))
         {
-            log_msg(LOG_WARNING|LOG_STDERR, "SPA data is too old (%i seconds).",
+            log_msg(LOG_WARNING, "SPA data is too old (%i seconds).",
                 ts_diff);
             res = SPA_MSG_TOO_OLD;
             goto clean_and_bail;
@@ -364,7 +364,7 @@ incoming_spa(fko_srv_options_t *opts)
     spa_ip_demark = strchr(spadat.spa_message, ',');
     if(spa_ip_demark == NULL)
     {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error parsing SPA message string: %s",
+        log_msg(LOG_WARNING, "Error parsing SPA message string: %s",
             fko_errstr(res));
         res = SPA_MSG_ERROR;
         goto clean_and_bail;
@@ -380,7 +380,7 @@ incoming_spa(fko_srv_options_t *opts)
     {
         if(acc->require_source_address)
         {
-            log_msg(LOG_WARNING|LOG_STDERR,
+            log_msg(LOG_WARNING,
                 "Got 0.0.0.0 when valid source IP was required."
             );
             res = SPA_MSG_ACCESS_DENIED;
@@ -399,7 +399,7 @@ incoming_spa(fko_srv_options_t *opts)
     {
         if(strcmp(spadat.username, acc->require_username) != 0)
         {
-            log_msg(LOG_WARNING|LOG_STDERR,
+            log_msg(LOG_WARNING,
                 "Username in SPA data (%s) does not match required username: %s",
                 spadat.username, acc->require_username
             );
@@ -416,7 +416,7 @@ incoming_spa(fko_srv_options_t *opts)
     {
         if(!acc->enable_cmd_exec)
         {
-            log_msg(LOG_WARNING|LOG_STDERR,
+            log_msg(LOG_WARNING,
                 "SPA Command message are not allowed in the current configuration."
             );
             res = SPA_MSG_ACCESS_DENIED;
@@ -424,7 +424,7 @@ incoming_spa(fko_srv_options_t *opts)
         else
         {
             /* --DSS TODO: Finish Me */
-            log_msg(LOG_WARNING|LOG_STDERR,
+            log_msg(LOG_WARNING,
                 "SPA Command message are not yet supported."
             );
             res = SPA_MSG_NOT_SUPPORTED;
@@ -441,7 +441,7 @@ incoming_spa(fko_srv_options_t *opts)
     */
     if(! acc_check_port_access(acc, spadat.spa_message_remain))
     {
-        log_msg(LOG_WARNING|LOG_STDERR,
+        log_msg(LOG_WARNING,
             "One or more requested protocol/ports was denied per access.conf."
         );
 
@@ -464,7 +464,7 @@ incoming_spa(fko_srv_options_t *opts)
     if(spadat.message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat.message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
     {
-        log_msg(LOG_WARNING|LOG_STDERR,
+        log_msg(LOG_WARNING,
             "SPA Local NAT access messages are not yet supported."
         );
 
@@ -479,7 +479,7 @@ incoming_spa(fko_srv_options_t *opts)
     if(spadat.message_type == FKO_NAT_ACCESS_MSG
       || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
     {
-        log_msg(LOG_WARNING|LOG_STDERR,
+        log_msg(LOG_WARNING,
             "SPA NAT access messages are not yet supported."
         );
 

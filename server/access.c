@@ -43,7 +43,7 @@ add_acc_string(char **var, char *val)
 {
     if((*var = strdup(val)) == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Fatal memory allocation error adding access list entry: %s", var
         );
         exit(EXIT_FAILURE);
@@ -82,7 +82,7 @@ add_source_mask(acc_stanza_t *acc, char *ip)
 
     if((new_sle = calloc(1, sizeof(acc_int_list_t))) == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Fatal memory allocation error adding stanza source_list entry"
         );
         exit(EXIT_FAILURE);
@@ -131,7 +131,7 @@ add_source_mask(acc_stanza_t *acc, char *ip)
 
         if(inet_aton(ip_str, &in) == 0)
         {
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "Error parsing IP to int for: %s", ip_str
             );
 
@@ -186,7 +186,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
     */
     if((ndx = strchr(pstr, '/')) == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Parse error on access port entry: %s", pstr);
 
         return(-1);
@@ -202,7 +202,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
         *proto = PROTO_UDP;
     else 
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Invalid protocol in access port entry: %s", pstr);
 
         return(-1);
@@ -231,7 +231,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 
     if((new_plist = calloc(1, sizeof(acc_port_list_t))) == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Fatal memory allocation error adding stanza source_list entry"
         );
         exit(EXIT_FAILURE);
@@ -270,7 +270,7 @@ add_string_list_ent(acc_string_list_t **stlist, char *str_str)
 
     if((new_stlist = calloc(1, sizeof(acc_string_list_t))) == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Fatal memory allocation error creating string list entry"
         );
         exit(EXIT_FAILURE);
@@ -298,7 +298,7 @@ add_string_list_ent(acc_string_list_t **stlist, char *str_str)
 
     if(new_stlist->str == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Fatal memory allocation error adding string list entry item"
         );
         exit(EXIT_FAILURE);
@@ -527,7 +527,7 @@ acc_stanza_add(fko_srv_options_t *opts)
 
     if(new_acc == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Fatal memory allocation error adding access stanza"
         );
         exit(EXIT_FAILURE);
@@ -828,7 +828,7 @@ acc_check_source(fko_srv_options_t *opts, uint32_t ip)
 
     if(acc == NULL)
     {
-        log_msg(LOG_WARNING|LOG_STDERR,
+        log_msg(LOG_WARNING,
             "Check access source called with no access stanzas defined."
         );
         return(NULL);
@@ -917,7 +917,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
 
     if(in_pl == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Unable to create acc_port_list from incoming data: %s", port_str
         );
         return(0);

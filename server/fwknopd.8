@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 02/09/2010
+.\"      Date: 06/23/2010
 .\"    Manual: 
 .\"    Source: 
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "02/09/2010" ""
+.TH "FWKNOPD" "8" "06/23/2010" "" ""
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -62,16 +62,6 @@ Manually specify interface on which to sniff, e\&.g\&. \(lq\-i eth0\(rq\&. This 
 file defines the sniffing interface\&.
 .RE
 .PP
-\fB\-\-fw\-list\fR
-.RS 4
-List all active rules in the \(lqFWKNOP\(rq Netfilter chain(s)\&.
-.RE
-.PP
-\fB\-\-fw\-flush\fR
-.RS 4
-Flush all active rules in the \(lqFWKNOP\(rq Netfilter chain(s)\&.
-.RE
-.PP
 \fB\-O, \-\-Override\-config\fR=\fI<file>\fR
 .RS 4
 Override config variable values that are normally read from the
@@ -114,21 +104,16 @@ and
 files\&. This will also force a flush of the current \(lqFWKNOP\(rq Netfilter chain(s)\&.
 .RE
 .PP
+\fB\-\-rotate\-digest\-cache\fR
+.RS 4
+Rotate the digest cache file by renaming it to \(lq<name>\-old\(rq, and starting a new one\&.
+.RE
+.PP
 \fB\-S, \-\-Status\fR
 .RS 4
 Display the status of any
 \fBfwknopd\fR
 processes that may or not be running\&.
-.RE
-.PP
-\fB\-l, \-\-locale\fR=\fI<locale>\fR
-.RS 4
-Provide a locale setting other than the default \(lqC\(rq locale\&.
-.RE
-.PP
-\fB\-\-no\-locale\fR
-.RS 4
-Do not set the locale at all so that the default system locale will apply\&.
 .RE
 .PP
 \fB\-v, \-\-verbose\fR
@@ -394,13 +379,6 @@ Set the default port number that the
 \(lqdummy\(rq TCP server listens on\&. This server is only spawned when \(lqENABLE_TCP_SERVER\(rq is set to \(lqY\(rq\&.
 .RE
 .PP
-\fBLOCALE\fR \fI<locale>\fR
-.RS 4
-Set the locale (via the LC_ALL variable)\&. This can be unset or set to \(lqNONE\(rq to have
-\fBfwknopd\fR
-honor the default system locale\&.
-.RE
-.PP
 \fBSYSLOG_IDENTITY\fR \fI<identity>\fR
 .RS 4
 Override syslog identity on message logged by
@@ -464,13 +442,6 @@ This instructs
 to accept complete commands that are contained within an authorization packet\&. Any such command will be executed as root by the
 \fBfwknopd\fR
 server\&.
-.RE
-.PP
-\fBCMD_REGEX\fR: \fI<regex>\fR \fI(NOT IMPLEMENTED)\fR
-.RS 4
-If \(lqENABLE_CMD_EXEC\(rq is specified, the \(lqCMD_REGEX\(rq keyword instructs
-\fBfwknopd\fR
-to restrict command execution to only those command that match the given regular expression\&.
 .RE
 .PP
 \fBREQUIRE_USERNAME\fR: \fI<username>\fR
@@ -549,11 +520,11 @@ The \fBfwknopd\fR daemon requires a functioning Netfilter firewall on the underl
 \fBfwknopd\fR can be run in debug mode with the \fB\-\-debug\fR command line option\&. This will disable daemon mode execution, and print verbose information to the screen on STDERR as packets are received\&.
 .SH "SEE ALSO"
 .sp
-fwknop(8), iptables(8), gpg(1), gpg\-agent(1), libfko docmentation\&.
+fwknop(8), iptables(8), libfko docmentation\&.
 .SH "AUTHOR"
 .sp
 Damien Stuart <dstuart@dstuart\&.org>
-.br
+.sp
 Michael Rash <mbr@cipherdyne\&.org>
 .SH "CREDITS"
 .sp

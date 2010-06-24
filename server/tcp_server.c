@@ -50,7 +50,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     unsigned short      port = atoi(opts->config[CONF_TCPSERV_PORT]);
 
-    log_msg(LOG_INFO, "Kicking off TCP server for port %i)", port);
+    log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.", port);
 
     /* Fork off a child process to run the command and provide its outputs.
     */
@@ -69,7 +69,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     if ((s_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "run_tcp_server: socket() failed: %s",
+        log_msg(LOG_ERR, "run_tcp_server: socket() failed: %s",
             strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -83,7 +83,7 @@ run_tcp_server(fko_srv_options_t *opts)
     /* Bind to the local address */
     if (bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "run_tcp_server: bind() failed: %s",
+        log_msg(LOG_ERR, "run_tcp_server: bind() failed: %s",
             strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -93,7 +93,7 @@ run_tcp_server(fko_srv_options_t *opts)
     */
     if (listen(s_sock, 1) < 0)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "run_tcp_server: listen() failed: %s",
+        log_msg(LOG_ERR, "run_tcp_server: listen() failed: %s",
             strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -109,7 +109,7 @@ run_tcp_server(fko_srv_options_t *opts)
         */
         if((c_sock = accept(s_sock, (struct sockaddr *) &caddr, &clen)) < 0)
         {
-            log_msg(LOG_ERR|LOG_STDERR, "run_tcp_server: accept() failed: %s",
+            log_msg(LOG_ERR, "run_tcp_server: accept() failed: %s",
                 strerror(errno));
             exit(EXIT_FAILURE); /* Should this be fatal? */
         }

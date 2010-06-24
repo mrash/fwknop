@@ -259,7 +259,7 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     {
         perror("[*] send_spa_packet_tcp_raw: sendto error: ");
     }
-    else if(res != sd_len)
+    else if(res != sd_len + hdrlen) /* account for the header ?*/
     {
         fprintf(stderr,
             "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
@@ -357,7 +357,7 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     {
         perror("[*] send_spa_packet_icmp: sendto error: ");
     }
-    else if(res != sd_len)
+    else if(res != sd_len + hdrlen) /* account for icmp header */
     {
         fprintf(stderr, "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
             res, sd_len);

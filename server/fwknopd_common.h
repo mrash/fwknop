@@ -153,7 +153,7 @@ enum {
     CONF_ENABLE_SPA_OVER_HTTP,
     CONF_ENABLE_TCP_SERVER,
     CONF_TCPSERV_PORT,
-    CONF_LOCALE,
+    //CONF_LOCALE,
     CONF_SYSLOG_IDENTITY,
     CONF_SYSLOG_FACILITY,
     CONF_IPT_EXEC_TRIES,
@@ -234,7 +234,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "ENABLE_SPA_OVER_HTTP",
     "ENABLE_TCP_SERVER",
     "TCPSERV_PORT",
-    "LOCALE",
+    //"LOCALE",
     "SYSLOG_IDENTITY",
     "SYSLOG_FACILITY",
     "IPT_EXEC_TRIES",
@@ -422,7 +422,8 @@ typedef struct fko_srv_options
     unsigned char   dump_config;        /* Dump current configuration flag */
     unsigned char   foreground;         /* Run in foreground flag */
     unsigned char   kill;               /* flag to initiate kill of fwknopd */
-    unsigned char   no_locale;          /* Flag to not allow setting locale */
+    unsigned char   rotate_digest_cache;/* flag to force rotation of digest */
+    //unsigned char   no_locale;          /* Flag to not allow setting locale */
     unsigned char   restart;            /* Restart fwknopd flag */
     unsigned char   status;             /* Get fwknopd status flag */
     unsigned char   test;               /* Test mode flag */

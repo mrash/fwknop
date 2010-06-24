@@ -40,7 +40,7 @@ parse_extcmd_error(int retval, int status, char *se_buf)
 
     if(retval < 0)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "Extcmd fork error: %s", strerror(errno));
+        log_msg(LOG_ERR, "Extcmd fork error: %s", strerror(errno));
         return;
     }
 
@@ -77,7 +77,7 @@ parse_extcmd_error(int retval, int status, char *se_buf)
         emptr += strlen(emptr);
     }
 
-    log_msg(LOG_WARNING|LOG_STDERR, errmsg);
+    log_msg(LOG_WARNING, errmsg);
 }
 
 static int
@@ -99,7 +99,7 @@ jump_rule_exists(int chain_num)
 
     if(ipt == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Got error %i trying to get rules list.\n", errno);
         return(-1);
     }
@@ -691,8 +691,6 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                 snat_target
             );
 
-//--DSS tmp
-fprintf(stderr, "ADD SNAT CMD: %s\n", cmd_buf);
             res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
             if(EXTCMD_IS_SUCCESS(res))
             {
@@ -756,13 +754,10 @@ check_firewall_rules(fko_srv_options_t *opts)
 
         rn_offset = 0;
 
-//fprintf(stderr, "CHAIN: %i, active_rules: %i, next_exp: %u, Now: %u\n",
-//    i, ch[i].active_rules, ch[i].next_expire, now);
-
         /* There should be a rule to delete.  Get the current list of
          * rules for this chain and delete the ones that are expired.
         */
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS "\n",
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
             opts->fw_config->fw_command,
             ch[i].table,
             ch[i].to_chain
@@ -779,14 +774,15 @@ check_firewall_rules(fko_srv_options_t *opts)
             continue;
         }
 
-        //fprintf(stderr, "RULES LIST:\n%s\n", cmd_out);
+        if(opts->verbose > 1)
+            log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
 
         ndx = strstr(cmd_out, "_exp_");
         if(ndx == NULL)
         {
             /* we did not find an expected rule.
             */
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "Did not find expire comment in rules list %i.\n", i);
 
             ch[i].active_rules--;
@@ -825,7 +821,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                     /* This should not happen. But if it does, complain,
                      * decrement the active rule value, and go on.
                     */
-                    log_msg(LOG_ERR|LOG_STDERR,
+                    log_msg(LOG_ERR,
                         "Rule parse error while finding rule line start in chain %i", i);
 
                     ch[i].active_rules--;
@@ -839,7 +835,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                     /* This should not happen. But if it does, complain,
                      * decrement the active rule value, and go on.
                     */
-                    log_msg(LOG_ERR|LOG_STDERR,
+                    log_msg(LOG_ERR,
                         "Rule parse error while finding rule number in chain %i", i);
 
                     ch[i].active_rules--;

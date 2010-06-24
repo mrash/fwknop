@@ -68,18 +68,18 @@ pcap_capture(fko_srv_options_t *opts)
 
     if(pcap == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "* pcap_open_live error: %s\n", errstr);
+        log_msg(LOG_ERR, "* pcap_open_live error: %s\n", errstr);
         exit(EXIT_FAILURE);
     }
 
     /* We are only interested on seeing packets coming into the interface.
     */
     if (pcap_setdirection(pcap, PCAP_D_IN) < 0)
-        log_msg(LOG_WARNING|LOG_STDERR, "* Warning: pcap error on setdirection");
+        log_msg(LOG_WARNING, "* Warning: pcap error on setdirection");
 
     if (pcap == NULL)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "[*] pcap error: %s", errstr);
+        log_msg(LOG_ERR, "[*] pcap error: %s", errstr);
         exit(EXIT_FAILURE);
     }
 
@@ -90,7 +90,7 @@ pcap_capture(fko_srv_options_t *opts)
     {
         if(pcap_compile(pcap, &fp, opts->config[CONF_PCAP_FILTER], 1, 0) == -1)
         {
-            log_msg(LOG_ERR|LOG_STDERR, "[*] Error compiling pcap filter: %s",
+            log_msg(LOG_ERR, "[*] Error compiling pcap filter: %s",
                 pcap_geterr(pcap)
             );
             exit(EXIT_FAILURE);
@@ -98,13 +98,13 @@ pcap_capture(fko_srv_options_t *opts)
 
         if(pcap_setfilter(pcap, &fp) == -1)
         {
-            log_msg(LOG_ERR|LOG_STDERR, "[*] Error setting pcap filter: %s",
+            log_msg(LOG_ERR, "[*] Error setting pcap filter: %s",
                 pcap_geterr(pcap)
             );
             exit(EXIT_FAILURE);
         }
 
-        log_msg(LOG_INFO|LOG_STDERR, "PCAP filter is: %s", opts->config[CONF_PCAP_FILTER]);
+        log_msg(LOG_INFO, "PCAP filter is: %s", opts->config[CONF_PCAP_FILTER]);
 
         pcap_freecode(&fp);
     }
@@ -130,7 +130,7 @@ pcap_capture(fko_srv_options_t *opts)
     */
     if((pcap_setnonblock(pcap, 1, errstr)) == -1)
     {
-        log_msg(LOG_ERR|LOG_STDERR, "[*] Error setting pcap to non-blocking: %s",
+        log_msg(LOG_ERR, "[*] Error setting pcap to non-blocking: %s",
             errstr
         );
         exit(EXIT_FAILURE);
@@ -142,7 +142,7 @@ pcap_capture(fko_srv_options_t *opts)
     */
     set_sig_handlers();
 
-    log_msg(LOG_INFO|LOG_STDERR, "Starting fwknopd main event loop.");
+    log_msg(LOG_INFO, "Starting fwknopd main event loop.");
 
     /* Jump into our home-grown packet cature loop.
     */
@@ -220,7 +220,7 @@ pcap_capture(fko_srv_options_t *opts)
                 else
                     strcpy(errstr, "Undefined Error");
 
-                log_msg(LOG_DEBUG, "Got error %i: '%s' on incoming packet.", res, errstr);
+                log_msg(LOG_INFO, "Got error %i: '%s' on incoming packet.", res, errstr);
             }
 
             /* Count this packet since it has at least one byte of payload
@@ -230,7 +230,7 @@ pcap_capture(fko_srv_options_t *opts)
             opts->packet_ctr++;
             if (opts->packet_ctr_limit && opts->packet_ctr >= opts->packet_ctr_limit)
             {
-                log_msg(LOG_WARNING|LOG_STDERR,
+                log_msg(LOG_WARNING,
                     "* Incoming packet count limit of %i reached",
                     opts->packet_ctr_limit
                 );
@@ -244,13 +244,13 @@ pcap_capture(fko_srv_options_t *opts)
         */
         else if(res == -1)
         {
-            log_msg(LOG_ERR|LOG_STDERR, "[*] Error from pcap_dispatch: %s",
+            log_msg(LOG_ERR, "[*] Error from pcap_dispatch: %s",
                 pcap_geterr(pcap)
             );
 
             if(pcap_errcnt++ > MAX_PCAP_ERRORS_BEFORE_BAIL)
             {
-                log_msg(LOG_ERR|LOG_STDERR, "[*] %i consecutive pcap errors.  Giving up",
+                log_msg(LOG_ERR, "[*] %i consecutive pcap errors.  Giving up",
                     pcap_errcnt
                 );
                 exit(EXIT_FAILURE);
@@ -259,7 +259,7 @@ pcap_capture(fko_srv_options_t *opts)
         else if(pending_break == 1 || res == -2)
         {
             /* pcap_breakloop was called, so we bail. */
-            log_msg(LOG_INFO|LOG_STDERR, "Gracefully leaving the fwknopd event loop.");
+            log_msg(LOG_INFO, "Gracefully leaving the fwknopd event loop.");
             break;
         }
         else

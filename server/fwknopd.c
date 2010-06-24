@@ -47,7 +47,6 @@ main(int argc, char **argv)
     fko_ctx_t           ctx;
     int                 res, last_sig, rpdb_count;
     char               *spa_data, *version;
-    char               *locale;
     char                access_buf[MAX_LINE_LEN];
     pid_t               old_pid;
 
@@ -88,9 +87,24 @@ main(int argc, char **argv)
             }
         }
 
+        /* Status of the currently running fwknopd?
+        */
+        if(opts.status == 1)
+        {
+            //old_pid = get_running_pid(&opts);
+            old_pid = write_pid_file(&opts);
+
+            if(old_pid > 0)
+                fprintf(stderr, "Detected fwknopd is running (pid=%i).\n", old_pid);
+            else
+                fprintf(stderr, "No running fwknopd detected.\n", old_pid);
+
+            exit(EXIT_SUCCESS);
+        }
+
         /* Restart the currently running fwknopd?
         */
-        if(opts.restart == 1)
+        if(opts.restart == 1 || opts.status == 1)
         {
             old_pid = get_running_pid(&opts);
 
@@ -115,41 +129,9 @@ main(int argc, char **argv)
             }
         }
 
-        /* Status of the currently running fwknopd?
-        */
-        if(opts.status == 1)
-        {
-            fprintf(stderr, "Status option not implemented yet.\n");
-            exit(EXIT_SUCCESS);
-        }
-
         /* Initialize logging.
         */
         init_logging(&opts);
-
-#if HAVE_LOCALE_H
-        /* Set the locale if specified.
-        */
-        if(opts.config[CONF_LOCALE] != NULL && !opts.no_locale)
-        {
-            locale = setlocale(LC_ALL, opts.config[CONF_LOCALE]);
-
-            if(locale == NULL)
-            {
-                log_msg(LOG_ERR|LOG_STDERR,
-                    "WARNING: Unable to set locale to %s.",
-                    opts.config[CONF_LOCALE]
-                );
-            }
-            else
-            {
-                if(opts.verbose)
-                    log_msg(LOG_ERR|LOG_STDERR,
-                        "Locale set to %s.", opts.config[CONF_LOCALE]
-                    );
-            }
-        }
-#endif
 
         /* Make sure we have a valid run dir and path leading to digest file
          * in case it configured to be somewhere other than the run dir.
@@ -212,7 +194,7 @@ main(int argc, char **argv)
         */
         if((strncasecmp(opts.config[CONF_AUTH_MODE], "pcap", 4)) != 0)
         {
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "Capture/auth mode other than 'PCAP' is not supported."
             );
             exit(EXIT_FAILURE);
@@ -231,8 +213,16 @@ main(int argc, char **argv)
         {
             rpdb_count = replay_db_init(&opts);
 
+            if(rpdb_count < 0)
+            {
+                log_msg(LOG_WARNING,
+                    "Error opening digest cache file. Incoming digests will not be remembered."
+                );
+                strcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N");
+            }
+
             if(opts.verbose)
-                log_msg(LOG_ERR|LOG_STDERR,
+                log_msg(LOG_ERR,
                     "Using Digest Cache: '%s' (entry count = %i)",
                     opts.config[CONF_DIGEST_FILE], rpdb_count
                 );
@@ -297,14 +287,14 @@ main(int argc, char **argv)
         else if (opts.packet_ctr_limit > 0
             && opts.packet_ctr >= opts.packet_ctr_limit)
         {
-            log_msg(LOG_INFO|LOG_STDERR,
+            log_msg(LOG_INFO,
                 "Packet count limit (%d) reached.  Exiting...",
                 opts.packet_ctr_limit);
             break;
         }
         else    /* got_signal was not set (should be if we are here) */
         {
-            log_msg(LOG_WARNING|LOG_STDERR,
+            log_msg(LOG_WARNING,
                 "Capture ended without signal.  Exiting...");
             break;
         }
@@ -355,7 +345,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     */
     if(*filepath != '/')
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Configured %s directory (%s) is not an absolute path.", fp_desc, filepath
         );
         exit(EXIT_FAILURE);
@@ -382,7 +372,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     {
         if(errno == ENOENT)
         {
-            log_msg(LOG_WARNING|LOG_STDERR,
+            log_msg(LOG_WARNING,
                 "%s directory: %s does not exist.  Attempting to create it.",
                 fp_desc, tmp_path
             );
@@ -392,20 +382,20 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
             res = make_dir_path(tmp_path);
             if(res != 0)
             {
-                log_msg(LOG_ERR|LOG_STDERR,
+                log_msg(LOG_ERR,
                     "Unable to create %s directory: %s (error: %i)",
                     fp_desc, tmp_path, errno
                 );
                 exit(EXIT_FAILURE);
             }
 
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "Successfully created %s directory: %s", fp_desc, tmp_path
             );
         }
         else
         {
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "Stat of %s returned error %i", tmp_path, errno
             );
             exit(EXIT_FAILURE);
@@ -417,7 +407,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
         */
         if(! S_ISDIR(st.st_mode))
         {
-            log_msg(LOG_ERR|LOG_STDERR,
+            log_msg(LOG_ERR,
                 "Specified %s directory: %s is NOT a directory\n\n", fp_desc, tmp_path
             );
             exit(EXIT_FAILURE);
@@ -464,7 +454,7 @@ make_dir_path(const char *run_dir)
 
             if(! S_ISDIR(st.st_mode))
             {
-                log_msg(LOG_ERR|LOG_STDERR,
+                log_msg(LOG_ERR,
                     "Component: %s of %s is NOT a directory\n\n", tmp_path, run_dir
                 );
                 return(ENOTDIR);
@@ -594,8 +584,8 @@ write_pid_file(fko_srv_options_t *opts)
     my_pid = getpid();
     snprintf(buf, 6, "%i\n", my_pid);
 
-    if(opts->verbose)
-        fprintf(stderr, "[+] Writing my PID (%i) to the lock file: %s\n",
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "[+] Writing my PID (%i) to the lock file: %s\n",
             my_pid, opts->config[CONF_FWKNOP_PID_FILE]);
 
     num_bytes = write(op_fd, buf, strlen(buf));

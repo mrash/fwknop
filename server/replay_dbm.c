@@ -58,6 +58,37 @@
 
 #define MAX_DIGEST_SIZE 64
 
+/* Rotate the digest file by simply renaming it.
+*/
+static void
+rotate_digest_cache_file(fko_srv_options_t *opts)
+{
+    int         res;
+    char       *new_file = NULL;
+
+    log_msg(LOG_INFO, "Rotating digest cache file.");
+
+    new_file = malloc(strlen(opts->config[CONF_DIGEST_FILE])+5);
+
+    if(new_file == NULL)
+    {
+        log_msg(LOG_ERR, "rotate_digest_cache_file: Memory allocation error.");
+        exit(EXIT_FAILURE);
+    }
+
+    /* The new filename is just the original with a trailing '-old'.
+    */
+    strcpy(new_file, opts->config[CONF_DIGEST_FILE]);
+    strcat(new_file, "-old");
+
+    res = rename(opts->config[CONF_DIGEST_FILE], new_file);
+
+    if(res < 0)
+        log_msg(LOG_ERR, "Unable to rename digest file: %s to %s: %s",
+            opts->config[CONF_DIGEST_FILE], new_file, strerror(errno)
+        );
+}
+
 /* Check for the existence of the replay dbm file, and create it if it does
  * not exist.  Returns the number of db entries or -1 on error.
 */
@@ -73,6 +104,11 @@ replay_db_init(fko_srv_options_t *opts)
     datum       db_key, db_next_key;
     int         db_count = 0;
 
+    /* If rotation was specified, do it.
+    */
+    if(opts->rotate_digest_cache)
+        rotate_digest_cache_file(opts);
+
 #ifdef HAVE_LIBGDBM
     rpdb = gdbm_open(
         opts->config[CONF_DIGEST_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
@@ -85,7 +121,7 @@ replay_db_init(fko_srv_options_t *opts)
 
     if(!rpdb)
     {
-        log_msg(LOG_ERR|LOG_STDERR,
+        log_msg(LOG_ERR,
             "Unable to open digest cache file: '%s': %s",
             opts->config[CONF_DIGEST_FILE],
             MY_DBM_STRERROR(errno)
@@ -143,7 +179,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
     res = fko_get_spa_digest(ctx, &digest);
     if(res != FKO_SUCCESS)
     {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error getting digest from SPA data: %s",
+        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
             fko_errstr(res));
 
         return(SPA_MSG_DIGEST_ERROR);
@@ -166,7 +202,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     if(!rpdb)
     {
-        log_msg(LOG_WARNING|LOG_STDERR, "Error opening digest_cache: '%s': %s",
+        log_msg(LOG_WARNING, "Error opening digest_cache: '%s': %s",
             opts->config[CONF_DIGEST_FILE],
             MY_DBM_STRERROR(errno)
         );
@@ -206,7 +242,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         strftime(first, 18, "%D %H:%M:%S", localtime(&(dci_p->first_replay)));
         strftime(last, 18, "%D %H:%M:%S", localtime(&(dci_p->last_replay)));
 
-        log_msg(LOG_WARNING|LOG_STDERR,
+        log_msg(LOG_WARNING,
             "Replay detected from source IP: %s\n"
             "            Original source IP: %s\n"
             "                 Entry created: %s\n"
@@ -223,7 +259,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         /* Save it back to the digest cache
         */
         if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_REPLACE) != 0)
-            log_msg(LOG_WARNING|LOG_STDERR, "Error updating entry in digest_cache: '%s': %s",
+            log_msg(LOG_WARNING, "Error updating entry in digest_cache: '%s': %s",
                 opts->config[CONF_DIGEST_FILE],
                 MY_DBM_STRERROR(errno)
             );
@@ -245,7 +281,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 
         if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_INSERT) != 0)
         {
-            log_msg(LOG_WARNING|LOG_STDERR, "Error adding entry digest_cache: %s",
+            log_msg(LOG_WARNING, "Error adding entry digest_cache: %s",
                 MY_DBM_STRERROR(errno)
             );
 

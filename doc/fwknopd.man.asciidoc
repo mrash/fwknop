@@ -49,12 +49,6 @@ COMMAND-LINE OPTIONS
     option is not usually needed because the ``PCAP_INTF'' keyword in the
     'fwknopd.conf' file defines the sniffing interface.
 
-*--fw-list*::
-    List all active rules in the ``FWKNOP'' Netfilter chain(s).
-
-*--fw-flush*::
-    Flush all active rules in the ``FWKNOP'' Netfilter chain(s).
-
 *-O, --Override-config*='<file>'::
     Override config variable values that are normally read from the
     'fwknop.conf' file with values from the specified file.  Multiple
@@ -75,16 +69,13 @@ COMMAND-LINE OPTIONS
     'fwknopd.conf' and 'access.conf' files.  This will also force a
     flush of the current ``FWKNOP'' Netfilter chain(s).
 
+*--rotate-digest-cache*::
+    Rotate the digest cache file by renaming it to ``<name>-old'', and
+    starting a new one.
+
 *-S, --Status*::
     Display the status of any *fwknopd* processes that may or not be
     running.
-
-*-l, --locale*='<locale>'::
-    Provide a locale setting other than the default ``C'' locale.
-
-*--no-locale*::
-    Do not set the locale at all so that the default system locale
-    will apply.
 
 *-v, --verbose*::
     Run *fwknopd* in verbose mode.
@@ -236,7 +227,6 @@ the full list and corresponding details.
 *PCAP_CMD_TIMEOUT* '<seconds>'::
     Define the timeout for running a command.
 
-
 *GPG_HOME_DIR* '<path>'::
     If GPG keys are used instead of a Rijndael symmetric key, this is
     the default GPG keys directory.  Note that each access block in
@@ -275,10 +265,6 @@ the full list and corresponding details.
     Set the default port number that the 'fwknopd_serv' ``dummy'' TCP server
     listens on. This server is only spawned when ``ENABLE_TCP_SERVER'' is set
     to ``Y''.
-
-*LOCALE* '<locale>'::
-    Set the locale (via the LC_ALL variable).  This can be unset or set to
-    ``NONE'' to have *fwknopd* honor the default system locale.
 
 *SYSLOG_IDENTITY* '<identity>'::
     Override syslog identity on message logged by *fwknopd*.  The defaults
@@ -344,11 +330,6 @@ directive starts a new stanza.
     This instructs *fwknopd* to accept complete commands that are
     contained within an authorization packet.  Any such command will
     be executed as root by the *fwknopd* server.
-
-*CMD_REGEX*: '<regex>' '(NOT IMPLEMENTED)'::
-    If ``ENABLE_CMD_EXEC'' is specified, the
-    ``CMD_REGEX'' keyword instructs *fwknopd* to restrict command execution
-    to only those command that match the given regular expression.
 
 *REQUIRE_USERNAME*: '<username>'::
     Require a specific username from the client system as encoded in the SPA
@@ -421,7 +402,7 @@ to the screen on STDERR as packets are received.
 
 SEE ALSO
 --------
-fwknop(8), iptables(8), gpg(1), gpg-agent(1), libfko docmentation.
+fwknop(8), iptables(8), libfko docmentation.
 
 
 AUTHOR
