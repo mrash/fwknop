@@ -142,13 +142,6 @@ parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
     */
     if(stat(options->config_file, &st) != 0)
     {
-        if(ot->got_config_file)
-        {
-            fprintf(stderr, "[*] Could not open config file: %s\n",
-                options->config_file);
-            exit(EXIT_FAILURE);
-        }
-
         fprintf(stderr,
             "** Config file was not found. Attempting to continue with defaults...\n"
         );
@@ -178,16 +171,6 @@ parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
         */
         if (*lptr == '#' || *lptr == '\n' || *lptr == '\r' || *lptr == '\0' || *lptr == ';')
             continue;
-
-/*--DSS TODO: Figure out what to put here (these are just samples below)
- 
-        if (ot->got_device == 0 || options->interface.name[0] == '\0')
-            get_char_val("XXXX", options->interface.name, lptr);
-
-
-        if (ot->got_snaplen == 0 && get_char_val("SNAPLEN", tmp_char_buf, lptr))
-            options->snapLen = atoi(tmp_char_buf);
-*/
     }
 
     fclose(cfile_ptr);
@@ -258,12 +241,10 @@ void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
     int                 cmd_arg, index;
-    struct opts_track   ot;
 
     /* Zero out options and opts_track.
     */
     memset(options, 0x00, sizeof(fko_cli_options_t));
-    memset(&ot, 0x00, sizeof(ot));
 
     /* Establish a few defaults such as UDP/62201 for sending the SPA
      * packet (can be changed with --server-proto/--server-port)
@@ -365,9 +346,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
                 break;
-            case 'q':
-                options->quiet = 1;
-                break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
                 break;
@@ -449,12 +427,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         }
     }
 
-    /* Parse configuration file to populate any params not already specified
-     * via command-line options
-    */
-    //--DSS XXX: We will use this when we have a config file to use.
-    //parse_config_file(options, &ot);
-
     /* Now that we have all of our options set, we can validate them.
     */
     validate_options(options);
@@ -503,10 +475,11 @@ usage(void)
       " -u, --user-agent            Set the HTTP User-Agent for resolving the\n"
       "                             external IP via -R, or for sending SPA\n"
       "                             packets over HTTP.\n"
-      " -H, --http-proxy            Specify an HTTP proxy URL through which the\n"
-      "                             SPA packet will be sent.\n"
+      " -H, --http-proxy            Specify an HTTP proxy host through which the\n"
+      "                             SPA packet will be sent.  The port can also be\n"
+      "                             specified here by following the host/ip with\n"
+      "                             \":<port>\".\n"
       " -U, --spoof-user            Set the username within outgoing SPA packet.\n"
-      " -q, --quiet                 Perform fwknop functions quietly.\n"
       " -l, --last-cmd              Run the fwknop client with the same command\n"
       "                             line args as the last time it was executed\n"
       "                             (args are read from the ~/.fwknop.run file).\n"

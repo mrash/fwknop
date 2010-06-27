@@ -1,3 +1,6 @@
+:man source: Fwknop Server
+:man manual: Fwknop Server 
+
 FWKNOPD(8)
 ==========
 
@@ -24,7 +27,7 @@ layer of security in order to make the exploitation of vulnerabilities
 
 The main configuration for *fwknopd* is maintained within two files:
 'fwknopd.conf' and 'access.conf'.  The default location for these files
-is determined at package configuration (typically '/etc/fwknop')The
+is determined at package configuration (typically '<prefix>/etc/fwknop')The
 configuration variables within these files are desribed below.
 
 
@@ -32,13 +35,13 @@ COMMAND-LINE OPTIONS
 --------------------
 *-a, --access-file*='<access-file>'::
     Specify the location of the 'access.conf' file.  If this option is
-    not given, 'fwkopd' will use the default location (typically
-    '/etc/fwknop/access.conf'.
+    not given, 'fwkopd' will use the compile-time default location (typically
+    '<prefix>/etc/fwknop/access.conf'.
 
 *-c, --config*='<config-file>'::
     Specify the location of the 'fwknopd.conf' file.  If this option is
     not given, 'fwkopd' will use the default location (typically
-    '/etc/fwknop/fwknopd.conf'.
+    '<prefix>/etc/fwknop/fwknopd.conf'.
 
 *-C, --packet-limit*='<n>'::
     Specify the number of candidate SPA packets to process and exit when
@@ -71,7 +74,8 @@ COMMAND-LINE OPTIONS
 
 *--rotate-digest-cache*::
     Rotate the digest cache file by renaming it to ``<name>-old'', and
-    starting a new one.
+    starting a new one.  The digest cache file is typically found in
+    '<prefix>/var/run/fwknop/digest.cache'.
 
 *-S, --Status*::
     Display the status of any *fwknopd* processes that may or not be
@@ -246,11 +250,6 @@ the full list and corresponding details.
     IP (or has an internal --allow-ip) within a blacklisted network will be
     ignored.
 
-*MAX_HOPS* '<num_hops>'::
-    TTL values are decremented depending on the number of hops the packet
-    has taken before it hits the firewall.  We will assume packets will not
-    jump through more than 'num_hops' hops on average.
-
 *ENABLE_SPA_OVER_HTTP* '<Y/N>'::
     Allow *fwknopd* to acquire SPA data from HTTP requests (generated with
     the fwknop client in *--HTTP* mode).  Note that the ``PCAP_FILTER''
@@ -258,26 +257,27 @@ the full list and corresponding details.
     over TCP/80 connections.
 
 *ENABLE_TCP_SERVER* '<Y/N>'::
-    Note that *fwknopd* still only gets its data via pcap, so the filter
-    defined by ``PCAP_FILTER'' needs to be updated to include this TCP port.
+    Enable the fwknopd TCP server.  This is a "dummy" TCP server that will
+     accept TCP connection requests on the specified TCPSERV_PORT.
+     If set to "Y", fwknopd will fork off a child process to listen for, and
+     accept incoming TCP request.  This server only accepts the
+     request.  It does not otherwise communicate. This is only to allow the
+     incoming SPA over TCP packet which is detected via PCAP. The connection
+     is closed after 1 second regardless. 
+     Note that fwknopd still only gets its data via pcap, so the filter
+     defined by PCAP_FILTER needs to be updated to include this TCP port.
 
 *TCPSERV_PORT* '<port>'::
-    Set the default port number that the 'fwknopd_serv' ``dummy'' TCP server
-    listens on. This server is only spawned when ``ENABLE_TCP_SERVER'' is set
-    to ``Y''.
+    Set the port number that the ``dummy'' TCP server listens on. This server
+    is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
 
 *SYSLOG_IDENTITY* '<identity>'::
     Override syslog identity on message logged by *fwknopd*.  The defaults
     are usually ok.
 
 *SYSLOG_FACILITY* '<facility>'::
-Override syslog facility.  The ``SYSLOG_FACILITY'' variable can be set to
-one of ``LOG_LOCAL{0-7}'' or ``LOG_DAEMON'' (the default).
-
-*IPT_EXEC_TRIES* '<num_tries>'::
-    Define the number of times that *fwknopd* will run certain critical
-    iptables commands (such as adding a new access rule) if any
-    problems are encountered.
+    Override syslog facility.  The ``SYSLOG_FACILITY'' variable can be set to
+    one of ``LOG_LOCAL{0-7}'' or ``LOG_DAEMON'' (the default).
 
 
 ACCESS.CONF VARIABLES
@@ -323,13 +323,19 @@ directive starts a new stanza.
 *FW_ACCESS_TIMEOUT*: '<seconds>'::
     Define the length of time access will be granted by *fwknopd* through the
     firewall after a valid knock sequence from a source IP address.  If
-    ``FW_ACCESS_TIMEOUT'' is not set then the default timeout of 120 seconds
-    (2 minutes) will automatically be set.
+    ``FW_ACCESS_TIMEOUT'' is not set then the default timeout of 60 seconds
+    will automatically be set.
 
 *ENABLE_CMD_EXEC*: '<Y/N>'::
     This instructs *fwknopd* to accept complete commands that are
     contained within an authorization packet.  Any such command will
     be executed as root by the *fwknopd* server.
+
+*CMD_EXEC_USER*: '<username>'::
+     This specifies the user that will execute commands contained within a SPA
+     packet.  If not specified, fwknopd will execute it as the user it is
+     running as (most likely root). Setting this to a non-root user is highly
+     recommended.
 
 *REQUIRE_USERNAME*: '<username>'::
     Require a specific username from the client system as encoded in the SPA
@@ -380,10 +386,10 @@ directive starts a new stanza.
 
 FILES
 -----
-*/etc/fwknop/fwknop.conf*::
+*fwknop.conf*::
 The main configuration file for fwknop.
 
-*/etc/fwknop/access.conf*::
+*access.conf*::
 Defines all knock sequences and access control directives.
 
 

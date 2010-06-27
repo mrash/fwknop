@@ -376,8 +376,8 @@ int
 send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
 {
     char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
-    char http_proxy_host[MAX_HOSTNAME_LEN] = "";
-    int  i, j, http_proxy_start;
+    char *ndx = options->http_proxy;
+    int  i, j, proxy_port;
 
     spa_data_copy = malloc(sd_len+1);
     if (spa_data_copy == NULL)
@@ -386,8 +386,9 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
     }
     memcpy(spa_data_copy, spa_data, sd_len+1);
 
-    /* change "+" chars to "-", and "/" to "_" for HTTP requests (the server
-     * side will translate these back before decrypting) */
+    /* Change "+" to "-", and "/" to "_" for HTTP requests (the server
+     * side will translate these back before decrypting)
+    */
     for (i=0; i < sd_len; i++) {
         if (spa_data_copy[i] == '+') {
             spa_data_copy[i] = '-';
@@ -400,51 +401,47 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
     if(options->http_proxy[0] == 0x0)
     {
         snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
-            "%s%s%s%s%s%s%s",
-            "GET /",
+            "GET /%s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
+            "Host: %s\r\nConnection: Keep-Alive\r\n\r\n",
             spa_data_copy,
-            " HTTP/1.0\r\nUser-Agent: ",
             options->http_user_agent,
-            "\r\nAccept: */*\r\nHost: ",
-            options->spa_server_str,  /* hostname or IP */
-            "\r\nConnection: Keep-Alive\r\n\r\n"
+            options->spa_server_str  /* hostname or IP */
         );
     }
     else /* we are sending the SPA packet through an HTTP proxy */
     {
-        /* get the proxy hostname from the proxy URL */
-        http_proxy_start = 0;
-        if(options->http_proxy[0] == 'h'
-            && options->http_proxy[1] == 't'
-            && options->http_proxy[2] == 't'
-            && options->http_proxy[3] == 'p'
-            && options->http_proxy[4] == ':'
-            && options->http_proxy[5] == '/'
-            && options->http_proxy[6] == '/')
+        /* Extract the hostname if it was specified as a URL. Actually,
+         * we just move the start of the hostname to the begining of the
+         * original string.
+        */
+        if(strncasecmp(ndx, "http://", 7) == 0)
+            memmove(ndx, ndx+7, strlen(ndx)+1);
+
+        /* If there is a colon assume the proxy hostame or IP is on the left
+         * and the proxy port is on the right. So we make the : a \0 and 
+         * extract the port value.
+        */
+        ndx = strchr(options->http_proxy, ':');
+        if(ndx)
         {
-            http_proxy_start = 7;
+            *ndx = '\0';
+            proxy_port = atoi(ndx+1);
         }
 
-        for (i=http_proxy_start, j=0;
-                i < (int)strlen(options->http_proxy) && options->http_proxy[i] != ':'; i++, j++)
-        {
-            http_proxy_host[j] = options->http_proxy[i];
-        }
-        http_proxy_host[j] = 0x0;
+        /* If we have a valid port value, use it.
+        */
+        if(proxy_port)
+            options->spa_dst_port = proxy_port;
 
         snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
-            "%s%s%s%s%s%s%s%s%s",
-            "GET http://",
+            "GET http://%s/%s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
+            "Host: %s\r\nConnection: Keep-Alive\r\n\r\n",
             options->spa_server_str,
-            "/",
             spa_data_copy,
-            " HTTP/1.0\r\nUser-Agent: ",
             options->http_user_agent,
-            "\r\nAccept: */*\r\nHost: ",
-            http_proxy_host,  /* hostname or IP */
-            "\r\nConnection: Keep-Alive\r\n\r\n"
+            options->http_proxy  /* hostname or IP */
         );
-        strlcpy(options->spa_server_str, http_proxy_host, MAX_SERVER_STR_LEN);
+        strlcpy(options->spa_server_str, options->http_proxy, MAX_SERVER_STR_LEN);
     }
     free(spa_data_copy);
 
@@ -454,7 +451,7 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
            fprintf(stderr, "%s\n", http_buf);
 
         fprintf(stderr,
-            "[+] test mode enabled, SPA packet not actually sent.\n");
+            "[+] Test mode enabled, SPA packet not actually sent.\n");
         return 0;
     }
 

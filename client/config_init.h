@@ -51,7 +51,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:nN:p:P:qQ:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:nN:p:P:Q:rRsS:Tu:U:vV"
 
 /* Our program command-line options...
 */
@@ -81,7 +81,6 @@ static struct option cmd_opts[] =
     {"nat-rand-port",       0, NULL, NAT_RAND_PORT},
     {"server-port",         1, NULL, 'p'},
     {"server-proto",        1, NULL, 'P'},
-    {"quiet",               0, NULL, 'q'},
     {"spoof-src",           1, NULL, 'Q'},
     {"rand-port",           0, NULL, 'r'},
     {"resolve-ip-http",     0, NULL, 'R'},
@@ -97,18 +96,6 @@ static struct option cmd_opts[] =
     {"version",             0, NULL, 'V'},
     {0, 0, 0, 0}
 };
-
-/* Track config options set via command-line.
- * --DSS: XXX: These will need to be reviewed...
-*/
-typedef struct opts_track {
-    unsigned int got_destination:1;
-    unsigned int got_server_port:1;
-    unsigned int got_server_proto:1;
-    unsigned int got_config_file:1;
-    unsigned int got_source_port:1;
-    unsigned int got_spoof_src:1;
-} opts_track_t;
 
 /* Function Prototypes
 */
