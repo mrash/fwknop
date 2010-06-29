@@ -29,6 +29,7 @@
   #include <sys/socket.h>
 #endif
 #include <arpa/inet.h>
+#include "pwd.h"
 
 #include "fwknopd_common.h"
 #include "access.h"
@@ -434,8 +435,8 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->key != NULL)
         free(acc->key);
 
-    if(acc->cmd_regex != NULL)
-        free(acc->cmd_regex);
+    if(acc->cmd_exec_user != NULL)
+        free(acc->cmd_exec_user);
 
     if(acc->gpg_home_dir != NULL)
         free(acc->gpg_home_dir);
@@ -611,6 +612,7 @@ parse_access_file(fko_srv_options_t *opts)
     char            tmp1[MAX_LINE_LEN]  = {0};
     char            tmp2[MAX_LINE_LEN]  = {0};
 
+    struct passwd  *pw;
     struct stat     st;
 
     acc_stanza_t   *curr_acc = NULL;
@@ -736,9 +738,21 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_bool(&(curr_acc->enable_cmd_exec), val);
         }
-        else if(CONF_VAR_IS(var, "CMD_REGEX"))
+        else if(CONF_VAR_IS(var, "CMD_EXEC_USER"))
         {
-            add_acc_string(&(curr_acc->cmd_regex), val);
+            add_acc_string(&(curr_acc->cmd_exec_user), val);
+
+            errno = 0;
+            pw = getpwnam(val);
+
+            if(pw == NULL)
+            {
+                fprintf(stderr, "Unable to determine UID for CMD_EXEC_USER: %s.\n",
+                    errno ? strerror(errno) : "Not a user on this system");
+                exit(EXIT_FAILURE); 
+            } 
+
+            curr_acc->cmd_exec_uid = pw->pw_uid;
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
         {
@@ -970,7 +984,7 @@ dump_access_list(fko_srv_options_t *opts)
             "                    KEY:  %s\n"
             "      FW_ACCESS_TIMEOUT:  %i\n"
             "        ENABLE_CMD_EXEC:  %s\n"
-            "              CMD_REGEX:  %s\n"
+            "          CMD_EXEC_USER:  %s\n"
             "       REQUIRE_USERNAME:  %s\n"
             " REQUIRE_SOURCE_ADDRESS:  %s\n"
             "           GPG_HOME_DIR:  %s\n"
@@ -984,7 +998,7 @@ dump_access_list(fko_srv_options_t *opts)
             (acc->key == NULL) ? "<not set>" : acc->key,
             acc->fw_access_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
-            (acc->cmd_regex == NULL) ? "<not set>" : acc->cmd_regex,
+            (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,

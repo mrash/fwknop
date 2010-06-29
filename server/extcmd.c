@@ -46,7 +46,7 @@ set_nonblock(int fd)
  * buffers with STDOUT an STDERR up to the size provided.
 */
 int
-run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
+_run_extcmd(uid_t user_uid, char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
 {
     pid_t pid;
 
@@ -102,9 +102,20 @@ run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_bu
         close(so[0]);
         close(se[0]);
 
-        /* --DSS XXX: It would be more efficient to use one of the exec()
-         *            calls.  (i.e. 'return(execvp(ext_cmd, &argv[1]));' ).
-         *            but for now, we use system() and exit with the external
+        /* If user is not null, then we setuid to that user before running the
+         * command.
+        */
+        if(user_uid > 0)
+        {
+            if(setuid(user_uid) < 0)
+            {
+                exit(EXTCMD_SETUID_ERROR);
+            }
+        }
+
+        /* --DSS XXX: Would it be more efficient to use one of the exec()
+         *            calls (i.e. 'return(execvp(ext_cmd, &argv[1]));')?
+         *            For now, we use system() and exit with the external
          *            command exit status.
         */
         exit(WEXITSTATUS(system(cmd)));
@@ -267,3 +278,18 @@ run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_bu
     */
     return(retval);
 }
+
+/* Run an external command.  This is wrapper around _run_extcmd()
+*/
+run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
+{
+    return _run_extcmd(0, cmd, so_buf, se_buf, so_buf_sz, se_buf_sz, status);
+}
+
+/* Run an external command as the specified user.  This is wrapper around _run_extcmd()
+*/
+run_extcmd_as(uid_t user_uid, char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
+{
+    return _run_extcmd(user_uid, cmd, so_buf, se_buf, so_buf_sz, se_buf_sz, status);
+}
+

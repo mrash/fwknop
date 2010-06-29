@@ -33,6 +33,7 @@
  * may end up in.
 */
 enum {
+    EXTCMD_SETUID_ERROR             =   -4,
     EXTCMD_SELECT_ERROR             =   -3,
     EXTCMD_PIPE_ERROR               =   -2,
     EXTCMD_FORK_ERROR               =   -1,
@@ -66,6 +67,7 @@ enum {
 /* Function prototypes
 */
 int run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status);
+int run_extcmd_as(uid_t uid, char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status);
 
 #endif /* EXTCMD_H */
 

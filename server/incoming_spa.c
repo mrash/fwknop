@@ -26,6 +26,7 @@
 #include "fwknopd_common.h"
 #include "incoming_spa.h"
 #include "access.h"
+#include "extcmd.h"
 #include "log_msg.h"
 
 /* Validate and in some cases preprocess/reformat the SPA data.  Return an
@@ -36,7 +37,7 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
 {
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
-    unsigned char    *ndx = &(spa_pkt->packet_data);
+    unsigned char    *ndx = (unsigned char *)&(spa_pkt->packet_data);
     int      pkt_data_len = spa_pkt->packet_data_len;
     int      tc, i;
 
@@ -170,7 +171,8 @@ incoming_spa(fko_srv_options_t *opts)
 
     char            *spa_ip_demark;
     time_t          now_ts;
-    int             res, ts_diff, enc_type;
+    int             res, status, ts_diff, enc_type;
+    uid_t           myuid;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -423,11 +425,42 @@ incoming_spa(fko_srv_options_t *opts)
         }
         else
         {
-            /* --DSS TODO: Finish Me */
-            log_msg(LOG_WARNING,
-                "SPA Command message are not yet supported."
+            log_msg(LOG_INFO,
+                "Processing SPA Command message: command='%s'.",
+                spadat.spa_message_remain
             );
-            res = SPA_MSG_NOT_SUPPORTED;
+
+            /* Do we need to become another user? If so, we call
+             * run_extcmd_as and pass the cmd_exec_uid.
+            */
+            if(acc->cmd_exec_user != NULL && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
+            {
+                if(opts->verbose)
+                    log_msg(LOG_INFO, "Setting effective user to %s (UID=%i) before running command.",
+                        acc->cmd_exec_user, acc->cmd_exec_uid);
+
+
+                res = run_extcmd_as(acc->cmd_exec_uid,
+                                    spadat.spa_message_remain,
+                                    NULL, NULL, 0, 0, &status);
+            }
+            else /* Just run it as we are (root that is). */
+                res = run_extcmd(spadat.spa_message_remain,
+                                 NULL, NULL, 0, 0, &status);
+
+            /* --DSS XXX: I have found that the status (and res for that
+             *            matter) have been unreliable indicators of the
+             *            actual exit status of some commands.  Not sure
+             *            why yet.  For now, we will take what we get.
+            */
+            status = WEXITSTATUS(status);
+
+            if(opts->verbose > 1)
+                log_msg(LOG_WARNING,
+                    "CMD_EXEC: result: %i, command returned %i", res, status);
+
+            if(res != 0 || status != 0)
+                res = SPA_MSG_COMMAND_ERROR;
         }
 
         goto clean_and_bail;
@@ -450,44 +483,9 @@ incoming_spa(fko_srv_options_t *opts)
         goto clean_and_bail;       
     }
 
-    /* If we are here we will at least need to have the base access. So we
-     * can go ahead an generate that now.
+    /* At this point, we can process the SPA request.
     */
     res = process_spa_request(opts, &spadat);
-
-#if 0
-    if(res != FKO_SUCCESS)
-        goto clean_and_bail;
-
-    /* Now see if we are looking for a local NAT access of some sort.
-    */
-    if(spadat.message_type == FKO_LOCAL_NAT_ACCESS_MSG
-      || spadat.message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
-    {
-        log_msg(LOG_WARNING,
-            "SPA Local NAT access messages are not yet supported."
-        );
-
-        /* --DSS TODO: Finish Me */
-        res = SPA_MSG_NOT_SUPPORTED;
-
-        goto clean_and_bail;
-    }
-
-    /* NAT access messages.
-    */
-    if(spadat.message_type == FKO_NAT_ACCESS_MSG
-      || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
-    {
-        log_msg(LOG_WARNING,
-            "SPA NAT access messages are not yet supported."
-        );
-
-        res = SPA_MSG_NOT_SUPPORTED;
-
-        /* --DSS TODO: Finish Me */
-    }
-#endif
 
 clean_and_bail:
     if(ctx != NULL)

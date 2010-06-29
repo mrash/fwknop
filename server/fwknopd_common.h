@@ -102,6 +102,7 @@ enum {
     SPA_MSG_REPLAY,
     SPA_MSG_TOO_OLD,
     SPA_MSG_ACCESS_DENIED,
+    SPA_MSG_COMMAND_ERROR,
     SPA_MSG_NOT_SUPPORTED,
     SPA_MSG_ERROR
 };
@@ -315,7 +316,8 @@ typedef struct acc_stanza
     char                *key;
     int                 fw_access_timeout;
     unsigned char       enable_cmd_exec;
-    char                *cmd_regex;
+    char                *cmd_exec_user;
+    uid_t               cmd_exec_uid;
     char                *require_username;
     unsigned char       require_source_address;
     char                *gpg_home_dir;

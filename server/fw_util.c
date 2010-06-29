@@ -372,7 +372,7 @@ fw_initialize(fko_srv_options_t *opts)
              *
             */
             if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL
-              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "_CHANGEME_", 10)!=0)
+              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
             {
                 if(opts->config[CONF_IPT_SNAT_ACCESS] != NULL)
                     set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]);
@@ -661,7 +661,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
              * or MASQUERADE.
             */
             if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL
-              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "_CHANGEME_", 10)!=0)
+              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
             {
                 /* Using static SNAT */
                 snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
