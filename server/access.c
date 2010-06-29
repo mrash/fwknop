@@ -670,11 +670,12 @@ parse_access_file(fko_srv_options_t *opts)
             *ndx = '\0';
 
         /*
-        fprintf(stderr,
-            "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
-            opts->config[CONF_ACCESS_FILE], access_line_buf, var, val
-        );
         */
+        if(opts->verbose > 3)
+            fprintf(stderr,
+                "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
+                opts->config[CONF_ACCESS_FILE], access_line_buf, var, val
+            );
 
         /* Process the entry.
          *
@@ -780,6 +781,14 @@ parse_access_file(fko_srv_options_t *opts)
                 exit(EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
+        }
+        else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
+        {
+            add_acc_bool(&(curr_acc->gpg_require_sig), val);
+        }
+        else if(CONF_VAR_IS(var, "GPG_IGNORE_SIG_VERIFY_ERROR"))
+        {
+            add_acc_bool(&(curr_acc->gpg_ignore_sig_error), val);
         }
         else if(CONF_VAR_IS(var, "GPG_REMOTE_ID"))
         {
@@ -956,6 +965,23 @@ cleanup_and_bail:
     return(res);
 }
 
+/* Take a GPG ID string and check it against the list of allowed
+ * GPG_REMOTE_ID's.
+ *
+ * Return 1 if we are allowed
+*/
+int
+acc_check_gpg_remote_id(acc_stanza_t *acc, char *gpg_id)
+{
+    acc_string_list_t *ndx;
+
+    for(ndx = acc->gpg_remote_id_list; ndx != NULL; ndx=ndx->next)
+        if(strcasecmp(ndx->str, gpg_id) == 0)
+            return(1);
+
+    return(0);
+}
+
 /* Dump the configuration
 */
 void
@@ -979,18 +1005,20 @@ dump_access_list(fko_srv_options_t *opts)
         fprintf(stderr,
             "SOURCE (%i):  %s\n"
             "==============================================================\n"
-            "             OPEN_PORTS:  %s\n"
-            "         RESTRICT_PORTS:  %s\n"
-            "                    KEY:  %s\n"
-            "      FW_ACCESS_TIMEOUT:  %i\n"
-            "        ENABLE_CMD_EXEC:  %s\n"
-            "          CMD_EXEC_USER:  %s\n"
-            "       REQUIRE_USERNAME:  %s\n"
-            " REQUIRE_SOURCE_ADDRESS:  %s\n"
-            "           GPG_HOME_DIR:  %s\n"
-            "         GPG_DECRYPT_ID:  %s\n"
-            "         GPG_DECRYPT_PW:  %s\n"
-            "          GPG_REMOTE_ID:  %s\n",
+            "                 OPEN_PORTS:  %s\n"
+            "             RESTRICT_PORTS:  %s\n"
+            "                        KEY:  %s\n"
+            "          FW_ACCESS_TIMEOUT:  %i\n"
+            "            ENABLE_CMD_EXEC:  %s\n"
+            "              CMD_EXEC_USER:  %s\n"
+            "           REQUIRE_USERNAME:  %s\n"
+            "     REQUIRE_SOURCE_ADDRESS:  %s\n"
+            "               GPG_HOME_DIR:  %s\n"
+            "             GPG_DECRYPT_ID:  %s\n"
+            "             GPG_DECRYPT_PW:  %s\n"
+            "            GPG_REQUIRE_SIG:  %s\n"
+            "GPG_IGNORE_SIG_VERIFY_ERROR:  %s\n"
+            "              GPG_REMOTE_ID:  %s\n",
             ++i,
             acc->source,
             (acc->open_ports == NULL) ? "<not set>" : acc->open_ports,
@@ -1004,6 +1032,8 @@ dump_access_list(fko_srv_options_t *opts)
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,
             (acc->gpg_decrypt_pw == NULL) ? "<not set>" : acc->gpg_decrypt_pw,
+            acc->gpg_require_sig ? "Yes" : "No",
+            acc->gpg_ignore_sig_error  ? "Yes" : "No",
             (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id
         );
 

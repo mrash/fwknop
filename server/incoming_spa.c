@@ -169,7 +169,7 @@ incoming_spa(fko_srv_options_t *opts)
     */
     fko_ctx_t       ctx = NULL;
 
-    char            *spa_ip_demark;
+    char            *spa_ip_demark, *gpg_id;
     time_t          now_ts;
     int             res, status, ts_diff, enc_type;
     uid_t           myuid;
@@ -251,20 +251,17 @@ incoming_spa(fko_srv_options_t *opts)
             if(acc->gpg_decrypt_id != NULL)
                 fko_set_gpg_recipient(ctx, acc->gpg_decrypt_id);
 
-            /* If REMOTE_ID is set, validate and check the signer.  Otherwise,
-             * skip and ignore verify errors.
-             *
-             * TODO: At present we are not checking signatures.
+            /* If GPG_REQUIRE_SIG is set for this acc stanza, then set
+             * the FKO context accordingly and check the other GPG Sig-
+             * related parameters.
             */
-            if(acc->gpg_remote_id != NULL)
+            if(acc->gpg_require_sig)
             {
-                /* TODO: Add sig verify code */
+                fko_set_gpg_signature_verify(ctx, 1);
 
-            /**  --DSS replace these with the real code     **/
-            /**/  fko_set_gpg_signature_verify(ctx, 0);    /**/
-            /**/  fko_set_gpg_ignore_verify_error(ctx, 1); /**/
-            /**  --DSS replace these with the real code     **/
-
+                /* Set whether or not to ignore signature verification errors.
+                */
+                fko_set_gpg_ignore_verify_error(ctx, acc->gpg_ignore_sig_error);
             }
             else
             {
@@ -309,6 +306,29 @@ incoming_spa(fko_srv_options_t *opts)
     */
     if(opts->verbose > 2)
         log_msg(LOG_INFO, "SPA Decode (res=%i):\n%s", res, dump_ctx(ctx));
+
+    /* First, if this is a GPG message, and GPG_REMOTE_ID list is not empty,
+     * then we need to make sure this incoming message is signer ID matches
+     * an entry in the list.
+    */
+    if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_remote_id != NULL)
+    {
+        res = fko_get_gpg_signature_id(ctx, &gpg_id);
+        if(res != FKO_SUCCESS)
+        {
+            log_msg(LOG_WARNING, "Error pulling the GPG signature ID from the context: %s",
+                fko_gpg_errstr(ctx));
+            goto clean_and_bail;
+        }
+        
+        if(!acc_check_gpg_remote_id(acc, gpg_id))
+        {
+            log_msg(LOG_WARNING,
+                "Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
+                gpg_id);
+            goto clean_and_bail;
+        }
+    }
 
     /* Check for replays if so configured.
     */

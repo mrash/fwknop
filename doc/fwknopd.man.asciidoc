@@ -342,7 +342,7 @@ directive starts a new stanza.
     data.  This variable is optional and if not specified, the username data
     in the SPA data is ignored.
 
-*REQUIRE_SOURCE_ADDRESS:* '<Y/N>'::
+*REQUIRE_SOURCE_ADDRESS*: '<Y/N>'::
     Force all SPA packets to contain a real IP address within the
     encrypted data.  This makes it impossible to use the *-s* command
     line argument on the *fwknop* client command line, so either *-R* has
@@ -376,12 +376,25 @@ directive starts a new stanza.
     ``GPG_DECRYPT_ID'' above.  This is a required field for gpg-based
     authentication.
 
+*GPG_REQUIRE_SIG*: '<Y/N>'::
+    With this setting set to 'Y',  fwknopd check all GPG-encrypted SPA
+    messages for a signature (signed by the sender's key).  If the incoming
+    message is not signed, the decryption process will fail.  If not set, the
+    default is 'N'.
+
+*GPG_IGNORE_SIG_VERIFY_ERROR*: '<Y/N>'::
+    Setting this will allow fwknopd to accept incoming GPG-encrypted packets
+    that are signed, but the signature did not pass verification (i.e. the
+    signer key was expired, etc.).  This setting only applies if the
+    GPG_REQUIRE_SIG is also set to 'Y'.
+
 *GPG_REMOTE_ID*: '<keyID,...,keyID>'::
     Define a list of gpg key ID's that are required to have signed
     any incoming SPA message that has been encrypted with the
     *fwknopd* server key.  This ensures that the verification of the
-    remote user is accomplished via a strong cryptographic
-    mechanism.
+    remote user is accomplished via a strong cryptographic mechanism.
+    This setting only applies if the ``GPG_REQUIRE_SIG'' is set to 'Y'.
+    Separate multiple entries with a comma.
 
 
 FILES

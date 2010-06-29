@@ -323,6 +323,8 @@ typedef struct acc_stanza
     char                *gpg_home_dir;
     char                *gpg_decrypt_id;
     char                *gpg_decrypt_pw;
+    unsigned char       gpg_require_sig;
+    unsigned char       gpg_ignore_sig_error;
     char                *gpg_remote_id;
     acc_string_list_t   *gpg_remote_id_list;
     struct acc_stanza   *next;

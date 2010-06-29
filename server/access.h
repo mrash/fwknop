@@ -34,6 +34,7 @@
 void parse_access_file(fko_srv_options_t *opts);
 acc_stanza_t* acc_check_source(fko_srv_options_t *opts, uint32_t ip);
 int acc_check_port_access(acc_stanza_t *acc, char *port_str);
+int acc_check_gpg_remote_id(acc_stanza_t *acc, char *gpg_id);
 void dump_access_list(fko_srv_options_t *opts);
 void expand_acc_port_list(acc_port_list_t **plist, char *plist_str);
 void free_acc_port_list(acc_port_list_t *plist);
