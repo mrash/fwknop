@@ -435,6 +435,7 @@ typedef struct fko_srv_options
 
     int             data_link_offset;
     int             tcp_server_pid;
+    int             lock_fd;
 
     spa_pkt_info_t  spa_pkt;            /* The current SPA packet */
 

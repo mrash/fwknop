@@ -597,6 +597,11 @@ write_pid_file(fko_srv_options_t *opts)
     */
     fsync(op_fd);
 
+    /* Put the lock file discriptor in out options struct so any
+     * child processes we my spawn can close and release it.
+    */
+    opts->lock_fd = op_fd;
+
     return 0;
 }
 

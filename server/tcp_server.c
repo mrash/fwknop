@@ -33,9 +33,10 @@
     #include <sys/socket.h>
 #endif
 #include <netdb.h>
-#include <signal.h>
+#include <fcntl.h>
+#include <sys/select.h>
 
-static int c_sock;
+//static int c_sock;
 
 /* Fork off and run a "dummy" TCP server. The return value is the PID of
  * the child process or -1 if there is a fork error.
@@ -43,9 +44,12 @@ static int c_sock;
 int
 run_tcp_server(fko_srv_options_t *opts)
 {
-    pid_t               pid;
-    int                 s_sock, clen;
+    pid_t               pid, ppid;
+    int                 s_sock, c_sock, sfd_flags, clen, selval;
+    int                 reuse_addr = 1;
+    fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
+    struct timeval      tv;
     char                sipbuf[MAX_IP_STR_LEN];
 
     unsigned short      port = atoi(opts->config[CONF_TCPSERV_PORT]);
@@ -65,8 +69,19 @@ run_tcp_server(fko_srv_options_t *opts)
         return(pid);
     }
 
-    /* We are the child, so let's make a TCP server */
+    /* Get our parent PID so we can periodically check for it. We want to 
+     * know when it goes away so we can to.
+    */
+    ppid = getppid();
 
+    /* We are the child.  The first thing to do is close our copy of the
+     * parent PID file so we don't end up holding the lock if the parent
+     * suffers a sudden death that doesn't take us out too.
+    */
+    close(opts->lock_fd);
+
+    /* Now, let's make a TCP server
+    */
     if ((s_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
         log_msg(LOG_ERR, "run_tcp_server: socket() failed: %s",
@@ -74,6 +89,29 @@ run_tcp_server(fko_srv_options_t *opts)
         exit(EXIT_FAILURE);
     }
       
+    /* So that we can re-bind to it without TIME_WAIT problems
+    */
+	setsockopt(s_sock, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
+
+    /* Make our main socket non-blocking so we don't have to be stuck on
+     * listening for incoming connections.
+    */
+    if((sfd_flags = fcntl(s_sock, F_GETFL, 0)) < 0)
+    {
+        log_msg(LOG_ERR, "run_tcp_server: fcntl F_GETFL error: %s",
+            strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    sfd_flags |= O_NONBLOCK;
+
+    if(fcntl(s_sock, F_SETFL, sfd_flags) < 0)
+    {
+        log_msg(LOG_ERR, "run_tcp_server: fcntl F_SETFL error setting )_NONBLOCK: %s",
+            strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
     /* Construct local address structure */
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family      = AF_INET;           /* Internet address family */
@@ -105,6 +143,38 @@ run_tcp_server(fko_srv_options_t *opts)
     */
     while(1)
     {
+        /* Initialize and setup the socket for select.
+        */
+        FD_ZERO(&sfd_set);
+        FD_SET(s_sock, &sfd_set);
+
+        /* Set our select timeout to 200 ms.
+        */
+        tv.tv_sec = 0;
+        tv.tv_usec = 200000;
+
+        selval = select(s_sock+1, &sfd_set, NULL, NULL, &tv);
+
+        if(selval == -1)
+        {
+            /* Select error - so kill the child and bail.
+            */
+            log_msg(LOG_ERR, "run_tcp_server: select error socket: %s",
+                strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+
+        if(selval == 0)
+        {
+            /* Timeout - So we check to make sure our parent is still there by simply
+             *           using kill(ppid, 0) and checking the return value.
+            */
+            if(kill(ppid, 0) != 0 && errno == ESRCH)
+                exit(EXIT_FAILURE);
+
+            continue;
+        }
+
         /* Wait for a client to connect
         */
         if((c_sock = accept(s_sock, (struct sockaddr *) &caddr, &clen)) < 0)
@@ -118,7 +188,7 @@ run_tcp_server(fko_srv_options_t *opts)
         {
             memset(sipbuf, 0x0, MAX_IP_STR_LEN);
             inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IP_STR_LEN);
-            log_msg(LOG_INFO, "tcp_server: Got TCP connection from %s.", sipbuf);
+            log_msg(LOG_INFO|LOG_STDERR, "tcp_server: Got TCP connection from %s.", sipbuf);
         }
 
         /* Though hacky and clunky, we just sleep for a second then
@@ -128,7 +198,7 @@ run_tcp_server(fko_srv_options_t *opts)
          * after that time.
         */
         usleep(1000000);
-
+        shutdown(c_sock, SHUT_RDWR);
         close(c_sock);
     }
 }
