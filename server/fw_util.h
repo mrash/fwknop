@@ -35,17 +35,17 @@
 
 /* iptables command args            
 */
-#define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s"
-#define IPT_ADD_OUT_RULE_ARGS "-t %s -A %s -p %i -d %s --sport %i -m comment --comment _exp_%u -j %s"
-#define IPT_ADD_FWD_RULE_ARGS "-t %s -A %s -p %i -s %s -d %s --dport %i -m comment --comment _exp_%u -j %s"
-#define IPT_ADD_DNAT_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s --to-destination %s:%i"
-#define IPT_ADD_SNAT_RULE_ARGS "-t %s -A %s -p %i -d %s --dport %i -m comment --comment _exp_%u -j %s %s"
-#define IPT_DEL_RULE_ARGS "-t %s -D %s %i"
-#define IPT_NEW_CHAIN_ARGS "-t %s -N %s"
-#define IPT_FLUSH_CHAIN_ARGS "-t %s -F %s"
-#define IPT_DEL_CHAIN_ARGS "-t %s -X %s"
-#define IPT_ADD_JUMP_RULE_ARGS "-t %s -I %s %i -j %s"
-#define IPT_LIST_RULES_ARGS "-t %s -L %s --line-numbers -n"
+#define IPT_ADD_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s 2>&1"
+#define IPT_ADD_OUT_RULE_ARGS "-t %s -A %s -p %i -d %s --sport %i -m comment --comment _exp_%u -j %s 2>&1"
+#define IPT_ADD_FWD_RULE_ARGS "-t %s -A %s -p %i -s %s -d %s --dport %i -m comment --comment _exp_%u -j %s 2>&1"
+#define IPT_ADD_DNAT_RULE_ARGS "-t %s -A %s -p %i -s %s --dport %i -m comment --comment _exp_%u -j %s --to-destination %s:%i 2>&1"
+#define IPT_ADD_SNAT_RULE_ARGS "-t %s -A %s -p %i -d %s --dport %i -m comment --comment _exp_%u -j %s %s 2>&1"
+#define IPT_DEL_RULE_ARGS "-t %s -D %s %i 2>&1"
+#define IPT_NEW_CHAIN_ARGS "-t %s -N %s 2>&1"
+#define IPT_FLUSH_CHAIN_ARGS "-t %s -F %s 2>&1"
+#define IPT_DEL_CHAIN_ARGS "-t %s -X %s 2>&1"
+#define IPT_ADD_JUMP_RULE_ARGS "-t %s -I %s %i -j %s 2>&1"
+#define IPT_LIST_RULES_ARGS "-t %s -L %s --line-numbers -n 2>&1"
 
 #define DEF_FW_ACCESS_TIMEOUT   60
 

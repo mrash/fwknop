@@ -461,12 +461,10 @@ incoming_spa(fko_srv_options_t *opts)
 
 
                 res = run_extcmd_as(acc->cmd_exec_uid,
-                                    spadat.spa_message_remain,
-                                    NULL, NULL, 0, 0, &status);
+                                    spadat.spa_message_remain, NULL, 0, 0);
             }
             else /* Just run it as we are (root that is). */
-                res = run_extcmd(spadat.spa_message_remain,
-                                 NULL, NULL, 0, 0, &status);
+                res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5);
 
             /* --DSS XXX: I have found that the status (and res for that
              *            matter) have been unreliable indicators of the
@@ -475,11 +473,11 @@ incoming_spa(fko_srv_options_t *opts)
             */
             status = WEXITSTATUS(status);
 
-            if(opts->verbose > 1)
+            if(opts->verbose > 2)
                 log_msg(LOG_WARNING,
-                    "CMD_EXEC: result: %i, command returned %i", res, status);
+                    "CMD_EXEC: command returned %i", res);
 
-            if(res != 0 || status != 0)
+            if(res != 0)
                 res = SPA_MSG_COMMAND_ERROR;
         }
 

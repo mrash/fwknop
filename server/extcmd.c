@@ -5,21 +5,25 @@
  *
 */
 
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <fcntl.h>
+#include <sys/types.h>
 #include <sys/select.h>
+*/
+#include <errno.h>
 #include <signal.h>
+#include <sys/wait.h>
+#include "fwknopd_common.h"
 #include "extcmd.h"
+#include "log_msg.h"
 
+static sig_atomic_t got_sigalrm; 
 
 /* Takes a file descriptor and makes it non-blocking.
-*/
 static int
 set_nonblock(int fd)
 {
@@ -41,37 +45,97 @@ set_nonblock(int fd)
 
     return(0);
 }
+*/
 
-/* Run en external command returning exit status, and filling provided
- * buffers with STDOUT an STDERR up to the size provided.
+static void 
+alarm_handler(int sig)
+{
+    got_sigalrm = 1;
+}
+
+/* Run en external command returning exit status, and optionally filling
+ * provided  buffer with STDOUT output up to the size provided.
+ *
+ * Note: XXX: We are not using the timeout parameter at present. We still need
+ *       to implement a reliable timeout mechanism.
 */
 int
-_run_extcmd(uid_t user_uid, char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
+_run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
 {
-    pid_t pid;
+    FILE   *ipt;
+    int     retval = 0;
+    char    so_read_buf[IO_READ_BUF_LEN];
+    pid_t   pid;
 
-    struct timeval  tv;
-    fd_set          rfds;
-    fd_set          efds; 
-    int             selval;
+    if(so_buf == NULL)
+    {
+        /* Since we do not have to capture output, we will fork here (which we
+         * would have to do anyway if we are running as another user as well).
+        */
+        pid = fork();
+        if(pid == -1)
+        {
+            log_msg(LOG_ERR, "run_extcmd: fork failed: %s", strerror(errno));
+            return(EXTCMD_FORK_ERROR);
+        }
+        else if (pid == 0)
+        {
+            /* We are the child */
+            /* If user is not null, then we setuid to that user before running the
+            * command.
+            */
+            if(user_uid > 0)
+            {
+                if(setuid(user_uid) < 0)
+                {
+                    exit(EXTCMD_SETUID_ERROR);
+                }
+            }
 
-    int so[2], se[2];   /* For our pipes */
+            exit(WEXITSTATUS(system(cmd)));
+        }
 
-    int bytes_read;
+        /* Retval is forced to 0 as we don't care about the exit status of
+         * the child (for now)>
+        */
+        retval = 0;
+    }
+    else
+    {
+        /* Looking for output use popen and fill the buffer to its limit.
+        */
+        ipt = popen(cmd, "r");
 
-    char so_read_buf[IO_READ_BUF_LEN];
-    char se_read_buf[IO_READ_BUF_LEN];
+        if(ipt == NULL)
+        {
+            log_msg(LOG_ERR, "Got popen error %i:  %s", errno, strerror(errno));
+            retval = -1;
+        }
+        else
+        {
+            memset(so_buf, 0x0, so_buf_sz);
 
-    /* Set our remaining_buf counters to one less than the given size so we
-     * can leave room for a terminating '\0'.
-    */
-    int so_buf_remaining = (so_buf_sz > 0) ? so_buf_sz-1 : 0;
-    int se_buf_remaining = (se_buf_sz > 0) ? se_buf_sz-1 : 0;
+            while((fgets(so_read_buf, IO_READ_BUF_LEN, ipt)) != NULL)
+            {
+                if(so_buf == NULL)
+                    continue;
 
-    /* Be optimistic :)
-    */
-    int retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+                strlcat(so_buf, so_read_buf, so_buf_sz);
 
+                if(strlen(so_buf) >= so_buf_sz-1)
+                    break;
+            }
+
+            pclose(ipt);
+        }
+    }
+
+    return(retval);
+}
+
+/*** END TEST Section ***/
+
+#if 0
     /* Create the pipes we will use for getting stdout and stderr
      * from the child process.
     */
@@ -278,18 +342,19 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, char *se_buf, size_t so_buf
     */
     return(retval);
 }
+#endif
 
 /* Run an external command.  This is wrapper around _run_extcmd()
 */
-run_extcmd(char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
+run_extcmd(char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
 {
-    return _run_extcmd(0, cmd, so_buf, se_buf, so_buf_sz, se_buf_sz, status);
+    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout);
 }
 
 /* Run an external command as the specified user.  This is wrapper around _run_extcmd()
 */
-run_extcmd_as(uid_t user_uid, char *cmd, char *so_buf, char *se_buf, size_t so_buf_sz, size_t se_buf_sz, int *status)
+run_extcmd_as(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
 {
-    return _run_extcmd(user_uid, cmd, so_buf, se_buf, so_buf_sz, se_buf_sz, status);
+    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout);
 }
 

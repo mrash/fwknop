@@ -161,8 +161,10 @@ pcap_capture(fko_srv_options_t *opts)
                     if(WIFSIGNALED(status))
                         log_msg(LOG_WARNING, "TCP server got signal: %i",  WTERMSIG(status));
 
-                    log_msg(LOG_WARNING, "TCP server exited with status of %i. Attempting restart.",
-                        WEXITSTATUS(status));
+                    log_msg(LOG_WARNING,
+                        "TCP server exited with status of %i. Attempting restart.",
+                        WEXITSTATUS(status)
+                    );
 
                     opts->tcp_server_pid = 0;
 

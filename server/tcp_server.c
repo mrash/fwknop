@@ -188,7 +188,7 @@ run_tcp_server(fko_srv_options_t *opts)
         {
             memset(sipbuf, 0x0, MAX_IP_STR_LEN);
             inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IP_STR_LEN);
-            log_msg(LOG_INFO|LOG_STDERR, "tcp_server: Got TCP connection from %s.", sipbuf);
+            log_msg(LOG_INFO, "tcp_server: Got TCP connection from %s.", sipbuf);
         }
 
         /* Though hacky and clunky, we just sleep for a second then

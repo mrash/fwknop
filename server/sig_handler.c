@@ -61,6 +61,7 @@ sig_handler(int sig)
             return;
         case SIGCHLD:
             got_sigchld = 1;
+            waitpid(-1, NULL, WNOHANG);
             return;
     }
 }

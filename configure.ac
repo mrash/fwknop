@@ -133,6 +133,37 @@ AS_IF([test "x$with_gpgme" != xno],
      fi
     ], [have_gpgme=no])], [have_gpgme=no])
 
+dnl Add various common way to sbin dir to the path (just in case)
+  APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
+
+dnl Check for gpg (not gpg2)
+dnl
+AC_ARG_WITH([gpg],
+  [AS_HELP_STRING([--with-gpg=/path/to/gpg],
+    [Specify path to the gpg executable that gpgme will use @<:@default=check path@:>@])],
+  [
+      AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+        [AC_MSG_ERROR([--with-gpg requires an argument specifying a path to gpg])],
+        [
+          AC_CHECK_FILE([$withval], [], [
+            AC_MSG_WARN([Specified path to gpg does not exist on this system])
+            gpg_exe_warn="*not found*"
+          ])
+          GPG_EXE=$withval
+        ]
+      )
+  ],
+  [
+      AC_PATH_PROG(GPG_EXE, [gpg], [], [$APP_PATH])
+  ]
+)
+AS_IF([test "x$GPG_EXE" != x],
+  [
+    AC_DEFINE_UNQUOTED([GPG_EXE], ["$GPG_EXE"], [Path to gpg executable])
+    gpg_exe=$GPG_EXE
+  ], [ gpg_exe="(not found)"]
+)
+
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
@@ -149,38 +180,6 @@ AS_IF([test "$want_server" = yes], [
         [ AC_MSG_ERROR([fwknopd needs either gdbm or ndbm])]
     )]
   )
-
-dnl Add various common way to sbin dir to the path (just in case)
-  APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
-
-dnl Check for gpg (not gpg2)
-dnl
-  AC_ARG_WITH([gpg],
-    [AS_HELP_STRING([--with-gpg=/path/to/gpg],
-      [Specify path to the gpg executable that gpgme will use @<:@default=check path@:>@])],
-    [
-        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
-          [AC_MSG_ERROR([--with-gpg requires an argument specifying a path to gpg])],
-          [
-            AC_CHECK_FILE([$withval], [], [
-              AC_MSG_WARN([Specified path to gpg does not exist on this system])
-              gpg_exe_warn="*not found*"
-            ])
-            GPG_EXE=$withval
-          ]
-        )
-    ],
-    [
-        AC_PATH_PROG(GPG_EXE, [gpg], [], [$APP_PATH])
-    ]
-  )
-  AS_IF([test "x$GPG_EXE" != x],
-    [
-      AC_DEFINE_UNQUOTED([GPG_EXE], ["$GPG_EXE"], [Path to gpg executable])
-      gpg_exe=$GPG_EXE
-    ], [ gpg_exe="(not found)"]
-  )
-
 
 dnl Check for iptables
 dnl

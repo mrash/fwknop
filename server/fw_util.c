@@ -155,10 +155,10 @@ delete_all_chains(void)
             );
 
             //printf("CMD: '%s'\n", cmd_buf);
-            res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
-                parse_extcmd_error(res, status, err); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
         }
 
         memset(cmd_buf, 0x0, CMD_BUFSIZE);
@@ -176,10 +176,10 @@ delete_all_chains(void)
         );
 
         //printf("CMD: '%s'\n", cmd_buf);
-        res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+        res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-            parse_extcmd_error(res, status, err); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
     }
 }
 
@@ -207,11 +207,12 @@ create_fw_chains(void)
         );
 
         //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-        res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+        res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            parse_extcmd_error(res, status, err); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
             got_err++;
         }
 
@@ -228,11 +229,12 @@ create_fw_chains(void)
         );
 
         //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-        res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+        res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            parse_extcmd_error(res, status, err); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
             got_err++;
         }
     }
@@ -485,7 +487,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD CMD: %s\n", cmd_buf);
-            res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
@@ -502,7 +504,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     in_chain->next_expire = exp_ts;
             }
             else
-                parse_extcmd_error(res, status, err);
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
 
             /* If we have to make an corresponding OUTPUT rule if out_chain target
             * is not NULL.
@@ -524,7 +526,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
-                res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+                res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
                 if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Added OUTPUT Rule to %s for %s, %s expires at %u",
@@ -541,7 +543,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                         out_chain->next_expire = exp_ts;
                 }
                 else
-                    parse_extcmd_error(res, status, err);
+                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
 
             }
 
@@ -591,7 +593,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
-            res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added FORWARD Rule to %s for %s, %s expires at %u",
@@ -608,7 +610,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     fwd_chain->next_expire = exp_ts;
             }
             else
-                parse_extcmd_error(res, status, err);
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
         }
 
         if(dnat_chain->to_chain != NULL && strlen(dnat_chain->to_chain))
@@ -630,7 +632,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD DNAT CMD: %s\n", cmd_buf);
-            res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added DNAT Rule to %s for %s, %s expires at %u",
@@ -647,7 +649,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     dnat_chain->next_expire = exp_ts;
             }
             else
-                parse_extcmd_error(res, status, err);
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
         }
 
         /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
@@ -691,7 +693,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                 snat_target
             );
 
-            res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added Source NAT Rule to %s for %s, %s expires at %u",
@@ -708,7 +710,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     snat_chain->next_expire = exp_ts;
             }
             else
-                parse_extcmd_error(res, status, err);
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
         }
     }
 
@@ -765,16 +767,15 @@ check_firewall_rules(fko_srv_options_t *opts)
 
         memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 
-        res = run_extcmd(cmd_buf, cmd_out, err,
-                STANDARD_CMD_OUT_BUFSIZE, CMD_BUFSIZE, &status);
+        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
         if(!EXTCMD_IS_SUCCESS(res))
         {
-            parse_extcmd_error(res, status, err);
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
             continue;
         }
 
-        if(opts->verbose > 1)
+        if(opts->verbose > 2)
             log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
 
         ndx = strstr(cmd_out, "_exp_");
@@ -855,7 +856,7 @@ check_firewall_rules(fko_srv_options_t *opts)
  
 
 //fprintf(stderr, "DELETE RULE CMD: %s\n", cmd_buf);
-                res = run_extcmd(cmd_buf, NULL, err, 0, CMD_BUFSIZE, &status);
+                res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
                 if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u.",
@@ -866,7 +867,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                     ch[i].active_rules--;
                 }
                 else
-                    parse_extcmd_error(res, status, err);
+                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
 
             }
             else
