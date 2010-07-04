@@ -471,6 +471,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'K':
                 opts->kill = 1;
                 break;
+            case 'l': 
+                set_config_entry(opts, CONF_LOCALE, optarg); 
+                break; 
             case 'O':
                 /* This was handled earlier */
                 break;
@@ -545,6 +548,8 @@ usage(void)
       " -K, --kill              - Kill the currently running fwknopd.\n"
       "     --gpg-home-dir      - Specify the GPG home directory.\n"
       "     --gpg-key           - Specify the GPG key ID used for decryption.\n"
+      " -l, --locale            - Provide a locale setting other than the system\n"
+      "                           default.\n"
       " -O, --override-config   - Specify a file with configuration entries that will\n"
       "                           overide those in fwknopd.conf\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"

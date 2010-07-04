@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 06/28/2010
+.\"      Date: 07/04/2010
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "06/28/2010" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "07/04/2010" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -89,6 +89,11 @@ process\&. This provides a quick and easy way to stop
 without having to look in the process table\&.
 .RE
 .PP
+\fB\-l, \-\-locale\fR=\fI<locale>\fR
+.RS 4
+Set/override the system default locale setting\&.
+.RE
+.PP
 \fB\-R, \-\-Restart\fR
 .RS 4
 Restart the currently running
@@ -162,23 +167,6 @@ for BSD systems\&. Also supported is
 to allow
 \fBfwknopd\fR
 to invoke an external command instead of interfacing with the firewall at all\&.
-.RE
-.PP
-\fBAUTH_MODE\fR \fI<PCAP|FILE_PCAP|ULOG_PCAP>\fR
-.RS 4
-This defines the general strategy
-\fBfwknopd\fR
-uses to authenticate remote clients\&. Possible values are
-\fIPCAP\fR
-(authenticate via regular pcap; this is the default and puts the interface in promiscuous mode unless \(lqENABLE_PCAP_PROMISC\(rq is turned off),
-\fIFILE_PCAP\fR
-(authenticate via a pcap file that is built by a sniffer),
-\fIULOG_PCAP\fR
-(authenticate via the ulogd pcap writer)\&.
-\fBNote:\fR
-Currently, only
-\fIPCAP\fR
-is implemented\&.
 .RE
 .PP
 \fBPCAP_INTF\fR \fI<interface>\fR
@@ -322,11 +310,6 @@ For
 firewalls set the interval (in seconds) over those rules that have no remaining dynamic rules associated with them will be removed\&.
 .RE
 .PP
-\fBPCAP_CMD_TIMEOUT\fR \fI<seconds>\fR
-.RS 4
-Define the timeout for running a command\&.
-.RE
-.PP
 \fBGPG_HOME_DIR\fR \fI<path>\fR
 .RS 4
 If GPG keys are used instead of a Rijndael symmetric key, this is the default GPG keys directory\&. Note that each access block in
@@ -340,9 +323,9 @@ directory of the user running
 (most likely root)\&.
 .RE
 .PP
-\fBPCAP_PKT_FILE\fR \fI</path/to/sniff\&.pcap>\fR
+\fBLOCALE\fR \fI<locale>\fR
 .RS 4
-This gets used if AUTH_MODE is set to "FILE_PCAP"\&. This file must be created by a sniffer process (or something like the ulogd pcap writer)\&.
+Set the locale (via the LC_ALL variable)\&. This can be set to override the default system locale\&.
 .RE
 .PP
 \fBBLACKLIST\fR \fI<ipaddr/mask,\&...ipaddr,etc>\fR

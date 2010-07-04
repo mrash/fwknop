@@ -48,6 +48,7 @@ main(int argc, char **argv)
     int                 res, last_sig, rpdb_count;
     char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN];
+    char               *locale;
     pid_t               old_pid;
 
     fko_srv_options_t   opts;
@@ -133,6 +134,31 @@ main(int argc, char **argv)
         */
         init_logging(&opts);
 
+#if HAVE_LOCALE_H 
+        /* Set the locale if specified. 
+        */ 
+        if(opts.config[CONF_LOCALE] != NULL
+          && strncasecmp(opts.config[CONF_LOCALE], "NONE", 4) != 0) 
+        { 
+            locale = setlocale(LC_ALL, opts.config[CONF_LOCALE]); 
+ 
+            if(locale == NULL) 
+            { 
+                log_msg(LOG_ERR, 
+                    "WARNING: Unable to set locale to '%s'.", 
+                    opts.config[CONF_LOCALE] 
+                ); 
+            } 
+            else 
+            { 
+                if(opts.verbose) 
+                    log_msg(LOG_INFO, 
+                        "Locale set to '%s'.", opts.config[CONF_LOCALE] 
+                    ); 
+            } 
+        } 
+#endif 
+
         /* Make sure we have a valid run dir and path leading to digest file
          * in case it configured to be somewhere other than the run dir.
         */
@@ -188,16 +214,6 @@ main(int argc, char **argv)
         else
         {
             log_msg(LOG_INFO, "Re-starting %s", MY_NAME);
-        }
-
-        /* We only support pcap capture at this point.
-        */
-        if((strncasecmp(opts.config[CONF_AUTH_MODE], "pcap", 4)) != 0)
-        {
-            log_msg(LOG_ERR,
-                "Capture/auth mode other than 'PCAP' is not supported."
-            );
-            exit(EXIT_FAILURE);
         }
 
         if(opts.verbose > 1 && opts.foreground)

@@ -133,9 +133,9 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
     return(retval);
 }
 
-/*** END TEST Section ***/
 
-#if 0
+#if 0 /* --DSS the original method that did not work on some systems */
+
     /* Create the pipes we will use for getting stdout and stderr
      * from the child process.
     */
