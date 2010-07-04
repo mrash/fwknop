@@ -214,12 +214,6 @@ validate_options(fko_srv_options_t *opts)
 {
     char tmp_path[MAX_PATH_LEN];
 
-    /* If a HOSTNAME was specified in the config file, set the opts->hostname
-     * value to it.
-    */
-    if(opts->config[CONF_HOSTNAME] != NULL && opts->config[CONF_HOSTNAME][0] != '\0')
-        strlcpy(opts->hostname, opts->config[CONF_HOSTNAME], MAX_HOSTNAME_LEN);
-
     /* If no conf dir is set in the config file, use the default.
     */
     if(opts->config[CONF_FWKNOP_CONF_DIR] == NULL)
@@ -302,15 +296,6 @@ set_preconfig_entries(fko_srv_options_t *opts)
     /* First, set any default or otherwise static settings here.  Some may
      * end up being overwritten via config file or command-line.
     */
-    /* Default Hostname (or unknown if gethostname cannot tell us).
-    */
-    if(gethostname(opts->hostname, MAX_HOSTNAME_LEN-1) < 0)
-        strcpy(opts->hostname, "UNKNOWN");
-
-    /* Set the conf hostname entry here in case it is not set in the conf
-     * file.
-    */
-    set_config_entry(opts, CONF_HOSTNAME, opts->hostname);
 
     /* Setup the local executables based on build-time info.
     */

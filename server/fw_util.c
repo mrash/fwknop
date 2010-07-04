@@ -291,7 +291,7 @@ set_fw_chain_conf(int type, char *conf_str)
     /* Pull and set Target */
     strlcpy(chain->target, chain_fields[0], MAX_TARGET_NAME_LEN);
 
-    /* Pull and set Direction */
+    /* Pull and set Direction
     if(strcmp(chain_fields[1], FW_CHAIN_DIR_SRC_STR) == 0)
         chain->direction = FW_CHAIN_DIR_SRC;
     else if(strcmp(chain_fields[1], FW_CHAIN_DIR_DST_STR) == 0)
@@ -300,21 +300,21 @@ set_fw_chain_conf(int type, char *conf_str)
         chain->direction = FW_CHAIN_DIR_BOTH;
     else
         chain->direction = FW_CHAIN_DIR_UNKNOWN;
-
+*/
     /* Pull and set Table */
-    strlcpy(chain->table, chain_fields[2], MAX_TABLE_NAME_LEN);
+    strlcpy(chain->table, chain_fields[1], MAX_TABLE_NAME_LEN);
 
     /* Pull and set From_chain */
-    strlcpy(chain->from_chain, chain_fields[3], MAX_CHAIN_NAME_LEN);
+    strlcpy(chain->from_chain, chain_fields[2], MAX_CHAIN_NAME_LEN);
 
     /* Pull and set Jump_rule_position */
-    chain->jump_rule_pos = atoi(chain_fields[4]);
+    chain->jump_rule_pos = atoi(chain_fields[3]);
 
     /* Pull and set To_chain */
-    strlcpy(chain->to_chain, chain_fields[5], MAX_CHAIN_NAME_LEN);
+    strlcpy(chain->to_chain, chain_fields[4], MAX_CHAIN_NAME_LEN);
 
     /* Pull and set Jump_rule_position */
-    chain->rule_pos = atoi(chain_fields[6]);
+    chain->rule_pos = atoi(chain_fields[5]);
 
 }
 

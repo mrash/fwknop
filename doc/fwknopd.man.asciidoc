@@ -65,6 +65,9 @@ COMMAND-LINE OPTIONS
     Kill the current *fwknopd* process.  This provides a quick and easy
     way to stop *fwknopd* without having to look in the process table.
 
+*-l, --locale*='<locale>':: 
+   Set/override the system default locale setting.
+
 *-R, --Restart*::
     Restart the currently running *fwknopd* processes.  This option
     will preserve the command line options that were supplied to the
@@ -110,23 +113,11 @@ This section list the more prominent configuration variables used by
 *fwknopd*.  It is not a complete list.  See the 'fwknopd.conf' file for
 the full list and corresponding details.
 
-*HOSTNAME* '<hostname>'::
-    Force hostname to this value. If not set here, *fwknopd* will attempt
-    to use 'gethostname()' to determine the local hostname and use that.
-
 *FIREWALL_TYPE*  '<iptables|ipfw>'::
     Define the firewall type.  The default is 'iptables' for Linux systems,
     but this can be set to 'ipfw' for BSD systems.  Also supported is
     'external_cmd' to allow *fwknopd* to invoke an external command instead
     of interfacing with the firewall at all.
-
-*AUTH_MODE* '<PCAP|FILE_PCAP|ULOG_PCAP>'::
-    This defines the general strategy *fwknopd* uses to authenticate remote
-    clients.  Possible values are 'PCAP' (authenticate via regular pcap;
-    this is the default and puts the interface in promiscuous mode unless
-    ``ENABLE_PCAP_PROMISC'' is turned off), 'FILE_PCAP' (authenticate via
-    a pcap file that is built by a sniffer), 'ULOG_PCAP' (authenticate via
-    the ulogd pcap writer). *Note:* Currently, only 'PCAP' is implemented.
 
 *PCAP_INTF* '<interface>'::
     Define the ethernet interface on which *fwknopd* will sniff packets.
@@ -228,9 +219,6 @@ the full list and corresponding details.
     that have no remaining dynamic rules associated with them will be
     removed.
 
-*PCAP_CMD_TIMEOUT* '<seconds>'::
-    Define the timeout for running a command.
-
 *GPG_HOME_DIR* '<path>'::
     If GPG keys are used instead of a Rijndael symmetric key, this is
     the default GPG keys directory.  Note that each access block in
@@ -239,16 +227,9 @@ the full list and corresponding details.
     the '$HOME/.gnupg' directory of the user running *fwknopd* (most
     likely root).
 
-*PCAP_PKT_FILE* '</path/to/sniff.pcap>'::
-    This gets used if AUTH_MODE is set to "FILE_PCAP".  This file must
-    be created by a sniffer process (or something like the ulogd pcap
-    writer).
-
-*BLACKLIST* '<ipaddr/mask,...ipaddr,etc>'::
-    Define a comma-separated set of IP addresses and/or networks that should
-    be globally blacklisted.  That is, any SPA packet that is from a source
-    IP (or has an internal --allow-ip) within a blacklisted network will be
-    ignored.
+*LOCALE* '<locale>':: 
+    Set the locale (via the LC_ALL variable).  This can be set to override
+    the default system locale. 
 
 *ENABLE_SPA_OVER_HTTP* '<Y/N>'::
     Allow *fwknopd* to acquire SPA data from HTTP requests (generated with
@@ -323,7 +304,7 @@ directive starts a new stanza.
 *FW_ACCESS_TIMEOUT*: '<seconds>'::
     Define the length of time access will be granted by *fwknopd* through the
     firewall after a valid knock sequence from a source IP address.  If
-    ``FW_ACCESS_TIMEOUT'' is not set then the default timeout of 60 seconds
+    ``FW_ACCESS_TIMEOUT'' is not set then the default timeout of 30 seconds
     will automatically be set.
 
 *ENABLE_CMD_EXEC*: '<Y/N>'::

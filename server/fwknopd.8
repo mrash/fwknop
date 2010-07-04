@@ -147,15 +147,6 @@ The access control directives are contained in the \fIaccess\&.conf\fR file\&. A
 .sp
 This section list the more prominent configuration variables used by \fBfwknopd\fR\&. It is not a complete list\&. See the \fIfwknopd\&.conf\fR file for the full list and corresponding details\&.
 .PP
-\fBHOSTNAME\fR \fI<hostname>\fR
-.RS 4
-Force hostname to this value\&. If not set here,
-\fBfwknopd\fR
-will attempt to use
-\fIgethostname()\fR
-to determine the local hostname and use that\&.
-.RE
-.PP
 \fBFIREWALL_TYPE\fR \fI<iptables|ipfw>\fR
 .RS 4
 Define the firewall type\&. The default is
@@ -328,11 +319,6 @@ directory of the user running
 Set the locale (via the LC_ALL variable)\&. This can be set to override the default system locale\&.
 .RE
 .PP
-\fBBLACKLIST\fR \fI<ipaddr/mask,\&...ipaddr,etc>\fR
-.RS 4
-Define a comma\-separated set of IP addresses and/or networks that should be globally blacklisted\&. That is, any SPA packet that is from a source IP (or has an internal \-\-allow\-ip) within a blacklisted network will be ignored\&.
-.RE
-.PP
 \fBENABLE_SPA_OVER_HTTP\fR \fI<Y/N>\fR
 .RS 4
 Allow
@@ -398,7 +384,7 @@ Define the key used for decrypting an incoming SPA packet that is using its buil
 .RS 4
 Define the length of time access will be granted by
 \fBfwknopd\fR
-through the firewall after a valid knock sequence from a source IP address\&. If \(lqFW_ACCESS_TIMEOUT\(rq is not set then the default timeout of 60 seconds will automatically be set\&.
+through the firewall after a valid knock sequence from a source IP address\&. If \(lqFW_ACCESS_TIMEOUT\(rq is not set then the default timeout of 30 seconds will automatically be set\&.
 .RE
 .PP
 \fBENABLE_CMD_EXEC\fR: \fI<Y/N>\fR

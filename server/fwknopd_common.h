@@ -65,7 +65,7 @@
 #define DEF_PID_FILENAME            MY_NAME".pid"
 #define DEF_DIGEST_CACHE_FILENAME   "digest.cache"
 
-#define DEF_FW_ACCESS_TIMEOUT   60
+#define DEF_FW_ACCESS_TIMEOUT   30
 
 #define DEF_INTERFACE           "eth0"
 
@@ -115,9 +115,7 @@ enum {
 enum {
     CONF_CONFIG_FILE = 0,
     CONF_OVERRIDE_CONFIG,
-    CONF_HOSTNAME,
     CONF_FIREWALL_TYPE,
-    //CONF_AUTH_MODE,
     CONF_PCAP_INTF,
     CONF_ENABLE_PCAP_PROMISC,
     CONF_PCAP_FILTER,
@@ -136,7 +134,6 @@ enum {
     //CONF_IPFW_SET_NUM,
     //CONF_IPFW_DYNAMIC_INTERVAL,
     //CONF_CMD_EXEC_TIMEOUT,
-    //CONF_PCAP_PKT_FILE,
     //CONF_BLACKLIST,
     CONF_ENABLE_SPA_OVER_HTTP,
     CONF_ENABLE_TCP_SERVER,
@@ -180,9 +177,7 @@ enum {
 static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "CONFIG_FILE",
     "OVERRIDE_CONFIG",
-    "HOSTNAME",
     "FIREWALL_TYPE",
-    //"AUTH_MODE",
     "PCAP_INTF",
     "ENABLE_PCAP_PROMISC",
     "PCAP_FILTER",
@@ -201,7 +196,6 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"IPFW_SET_NUM",
     //"IPFW_DYNAMIC_INTERVAL",
     //"CMD_EXEC_TIMEOUT",
-    //"PCAP_PKT_FILE",
     //"BLACKLIST",
     "ENABLE_SPA_OVER_HTTP",
     "ENABLE_TCP_SERVER",
@@ -293,9 +287,9 @@ typedef struct acc_stanza
 /* Firewall-related data and types. */
 /* --DSS XXX: These are arbitrary. We should determine appropriate values.
 */
-#define MAX_TABLE_NAME_LEN      16
-#define MAX_CHAIN_NAME_LEN      32
-#define MAX_TARGET_NAME_LEN     32
+#define MAX_TABLE_NAME_LEN      64
+#define MAX_CHAIN_NAME_LEN      64
+#define MAX_TARGET_NAME_LEN     64
 
 /* Fwknop custom chain types
 */
@@ -309,25 +303,25 @@ enum {
     NUM_FWKNOP_ACCESS_TYPES  /* Leave this entry last */
 };
 
+/* Fwknop chain directions
 #define FW_CHAIN_DIR_SRC_STR    "src"
 #define FW_CHAIN_DIR_DST_STR    "dst"
 #define FW_CHAIN_DIR_BOTH_STR   "both"
 
-/* Fwknop chain directions
-*/
 enum {
     FW_CHAIN_DIR_UNKNOWN,
     FW_CHAIN_DIR_SRC,
     FW_CHAIN_DIR_DST,
     FW_CHAIN_DIR_BOTH
 };
+*/
 
 /* Structure to define an fwknop firewall chain configuration.
 */
 struct fw_chain {
     int     type;
     char    target[MAX_TARGET_NAME_LEN];
-    int     direction;
+    //int     direction;
     char    table[MAX_TABLE_NAME_LEN];
     char    from_chain[MAX_CHAIN_NAME_LEN];
     int     jump_rule_pos;
@@ -339,7 +333,7 @@ struct fw_chain {
 
 /* Based on the fw_chain fields (not counting type)
 */
-#define FW_NUM_CHAIN_FIELDS 7
+#define FW_NUM_CHAIN_FIELDS 6
 
 struct fw_config {
     struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
@@ -414,10 +408,6 @@ typedef struct fko_srv_options
     /* Firewall config info.
     */
     struct fw_config *fw_config;
-
-    /* Misc
-    */
-    char            hostname[MAX_HOSTNAME_LEN];
 
 } fko_srv_options_t;
 
