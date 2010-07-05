@@ -29,49 +29,6 @@
 #include "utils.h"
 #include "ctype.h"
 
-/* Routine to extract the configuration value from a line in the config
- * file.
-*/
-int
-get_char_val(const char *var_name, char *dest, char *lptr)
-{
-    int i, var_char_ctr = 0;
-    char *tmp_ptr;
-
-    tmp_ptr = lptr;
-
-    /* var_name is guaranteed to be NULL-terminated.
-    */
-    for (i=0; i < (int)strlen(var_name); i++)
-        if (tmp_ptr[i] != var_name[i])
-            return 0;
-
-    tmp_ptr += i;
-
-    /* First char after varName better be a space or tab  or '='.
-    */
-    if (*tmp_ptr != ' ' && *tmp_ptr != '\t' && *tmp_ptr != '=')
-        return 0;
-
-    /* Walk past the delimiter.
-    */
-    while (*tmp_ptr == ' ' || *tmp_ptr == '\t' || *tmp_ptr == '=')
-        tmp_ptr++;
-
-    while (var_char_ctr < MAX_LINE_LEN && tmp_ptr[var_char_ctr] != '\n'
-            && tmp_ptr[var_char_ctr] != '\0')
-        var_char_ctr++;
-
-    if (tmp_ptr[var_char_ctr] != '\n' || var_char_ctr >= MAX_LINE_LEN)
-        return 0;
-
-    strncpy(dest, tmp_ptr, var_char_ctr);
-
-    dest[var_char_ctr] = '\0';
-
-    return 1;
-}
-
 /* Parse any time offset from the command line
 */
 static int
@@ -120,62 +77,6 @@ parse_time_offset(char *offset_str)
     offset *= offset_type;
 
     return offset;
-}
-
-/* Parse the config file...
-*/
-static void
-parse_config_file(fko_cli_options_t *options, struct opts_track* ot)
-{
-    FILE           *cfile_ptr;
-    unsigned int    numLines = 0;
-
-    char            conf_line_buf[MAX_LINE_LEN] = {0};
-    char            tmp_char_buf[MAX_LINE_LEN]  = {0};
-    char           *lptr;
-
-    struct stat     st;
-
-    /* First see if the config file exists.  If it doesn't, and was
-     * specified via command-line, then error out.  Otherwise, complain
-     * and go on with program defaults.
-    */
-    if(stat(options->config_file, &st) != 0)
-    {
-        fprintf(stderr,
-            "** Config file was not found. Attempting to continue with defaults...\n"
-        );
-
-        return;
-    }
-
-    if ((cfile_ptr = fopen(options->config_file, "r")) == NULL)
-    {
-        fprintf(stderr, "[*] Could not open config file: %s\n",
-                options->config_file);
-        exit(EXIT_FAILURE);
-    }
-
-    while ((fgets(conf_line_buf, MAX_LINE_LEN, cfile_ptr)) != NULL)
-    {
-        numLines++;
-        conf_line_buf[MAX_LINE_LEN-1] = '\0';
-        lptr = conf_line_buf;
-
-        memset(tmp_char_buf, 0x0, MAX_LINE_LEN);
-
-        while (*lptr == ' ' || *lptr == '\t' || *lptr == '=')
-            lptr++;
-
-        /* Get past comments and empty lines.
-        */
-        if (*lptr == '#' || *lptr == '\n' || *lptr == '\r' || *lptr == '\0' || *lptr == ';')
-            continue;
-    }
-
-    fclose(cfile_ptr);
-
-    return;
 }
 
 /* Sanity and bounds checks for the various options.
@@ -468,10 +369,7 @@ usage(void)
       " -Q, --spoof-source          Set the source IP for outgoing SPA packet.\n"
       " -R, --resolve-ip-http       Resolve the external network IP by\n"
       "                             connecting to the URL:\n"
-      "                             http://"
-      HTTP_RESOLVE_HOST
-      HTTP_RESOLVE_URL
-      "\n"
+      "                             http://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL "\n"
       " -u, --user-agent            Set the HTTP User-Agent for resolving the\n"
       "                             external IP via -R, or for sending SPA\n"
       "                             packets over HTTP.\n"
