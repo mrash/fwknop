@@ -29,6 +29,44 @@
 #include "utils.h"
 #include "ctype.h"
 
+/* Convert a digest_type string to its intger value.
+*/
+static int
+digest_strtoint(char *dt_str)
+{
+    if(strcasecmp(dt_str, "md5") == 0)
+        return(FKO_DIGEST_MD5);
+    else if(strcasecmp(dt_str, "sha1") == 0)
+        return(FKO_DIGEST_SHA1);
+    else if(strcasecmp(dt_str, "sha256") == 0)
+        return(FKO_DIGEST_SHA256);
+    else if(strcasecmp(dt_str, "sha384") == 0)
+        return(FKO_DIGEST_SHA384);
+    else if(strcasecmp(dt_str, "sha512") == 0)
+        return(FKO_DIGEST_SHA512);
+    else
+        return(-1);
+}
+
+/* Convert a protocol string to its intger value.
+*/
+static int
+proto_strtoint(char *pr_str)
+{
+    if (strcasecmp(optarg, "udp") == 0)
+        return(FKO_PROTO_UDP);
+    else if (strcasecmp(optarg, "tcpraw") == 0)
+        return(FKO_PROTO_TCP_RAW);
+    else if (strcasecmp(optarg, "tcp") == 0)
+        return(FKO_PROTO_TCP);
+    else if (strcasecmp(optarg, "icmp") == 0)
+        return(FKO_PROTO_ICMP);
+    else if (strcasecmp(optarg, "http") == 0)
+        return(FKO_PROTO_HTTP);
+    else 
+        return(-1);
+}
+
 /* Parse any time offset from the command line
 */
 static int
@@ -61,14 +99,14 @@ parse_time_offset(char *offset_str)
     offset_digits[j] = '\0';
 
     if (j < 1) {
-        fprintf(stderr, "[*] Invalid time offset: %s", offset_str);
+        fprintf(stderr, "Invalid time offset: %s", offset_str);
         exit(EXIT_FAILURE);
     }
 
     offset = atoi(offset_digits);
 
     if (offset < 0) {
-        fprintf(stderr, "[*] Invalid time offset: %s", offset_str);
+        fprintf(stderr, "Invalid time offset: %s", offset_str);
         exit(EXIT_FAILURE);
     }
 
@@ -77,6 +115,393 @@ parse_time_offset(char *offset_str)
     offset *= offset_type;
 
     return offset;
+}
+
+static int
+create_fwknoprc(char *rcfile)
+{
+    FILE    *rc;
+    int     res;
+
+    fprintf(stderr, "Creating initial rc file: %s.\n", rcfile);
+
+    if ((rc = fopen(rcfile, "w")) == NULL)
+    {
+        fprintf(stderr, "Unable to create rc file: %s: %s\n",
+            rcfile, strerror(errno));
+        return(-1);
+    }
+
+    fprintf(rc,
+        "# .fwknoprc\n"
+        "##############################################################################\n"
+        "#\n"
+        "# Firewall Knock Operator (fwknop) client rc file.\n"
+        "#\n"
+        "# This file contains user-specific fwknop client configuration default\n"
+        "# and named parameter sets for specific invocations of the fwknop client.\n"
+        "#\n"
+        "# Each section (or stanza) is identified and started by a line in this\n"
+        "# file that contains a single identifier surrounded by square brackets.\n"
+        "#\n"
+        "# The parameters within the stanza typicaly match corresponding client \n"
+        "# command-line parameters.\n"
+        "#\n"
+        "# The first one should always be `[default]' as it defines the global\n"
+        "# default settings for the user. These override the program defaults\n"
+        "# for these parameter.  If a named stanza is used, its entries will\n"
+        "# override any of the default.  Command-line options will trump them\n"
+        "# all.\n"
+        "#\n"
+        "# Subsequent stanzas will have only the overriding and destination\n"
+        "# specific parameters.\n"
+        "#\n"
+        "# Lines starting with `#' and empty lines are ignored.\n"
+        "#\n"
+        "# See the fwknop.8 man page for a complete list of valid parameters\n"
+        "# and thier values.\n"
+        "#\n"
+        "##############################################################################\n"
+        "#\n"
+        "# We start with the 'default' stanza.  Uncomment and edit for your\n"
+        "# preferences.  The client will use its build-in default for those items\n"
+        "# that are commented out.\n"
+        "#\n"
+        "[default]\n"
+        "\n"
+        "#DIGEST_TYPE         sha256\n"
+        "#FW_TIMEOUT          30\n"
+        "#SPA_SERVER_PORT     62201\n"
+        "#SPA_SERVER_PROTO    udp\n"
+        "#ALLOW_IP            <ip addr>\n"
+        "#SPOOF_USER          <username>\n"
+        "#SPOOF_SOURCE_IP     <IPaddr>\n"
+        "#TIME_OFFSET         0\n"
+        "#USE_GPG             N\n"
+        "#GPG_HOMEDIR         /path/to/.gnupg\n"
+        "#GPG_SIGNER          <signer ID>\n"
+        "#GPG_RECIPIENT       <recipient ID>\n"
+        "\n"
+        "# User-provided named stanzas:\n"
+        "\n"
+        "# Example for a destination server of 192.168.1.20 to open access to \n"
+        "# SSH for an IP that is resoved exteranlly, and one with a nat request\n"
+        "# for a specific source IP that maps port 8088 on the server\n"
+        "# to port 88 on 192.168.1.55 with timeout.\n"
+        "#\n"
+        "#[myssh]\n"
+        "#SPA_SERVER          192.168.1.20\n"
+        "#ACCESS              tcp/22\n"
+        "#RESOLVE_IP_HTTP     Y\n"
+        "#\n"
+        "#[mynatreq]\n"
+        "#SERVER              192.168.1.20\n"
+        "#ACCESS              tcp/8088\n"
+        "#ALLOW_IP            10.21.2.6\n"
+        "#NAT_ACCESS          192.168.1.55,88\n"
+        "#CLIENT_TIMEOUT      60\n"
+        "#\n"
+        "\n"
+        "###EOF###\n"
+    );
+
+    return(0);
+}
+
+static int
+parse_rc_param(fko_cli_options_t *options, char *var, char * val)
+{
+    int     tmpint;
+
+    /* Digest Type */
+    if(CONF_VAR_IS(var, "DIGEST_TYPE"))
+    {
+        tmpint = digest_strtoint(val);
+        if(tmpint < 0)
+            return(-1);
+        else
+            options->digest_type = tmpint;
+    }
+    /* Server protocol */
+    else if(CONF_VAR_IS(var, "SPA_SERVER_PROTO"))
+    {
+        tmpint = proto_strtoint(val);
+        if(tmpint < 0)
+            return(-1);
+        else
+            options->spa_proto = tmpint;
+    }
+    /* Server port */
+    else if(CONF_VAR_IS(var, "SPA_SERVER_PORT"))
+    {
+        tmpint = atoi(val);
+        if(tmpint < 0 || tmpint > 65535)
+            return(-1);
+        else
+            options->spa_dst_port = tmpint;
+    }
+    /* Source port */
+    else if(CONF_VAR_IS(var, "SPA_SOURCE_PORT"))
+    {
+        tmpint = atoi(val);
+        if(tmpint < 0 || tmpint > 65535)
+            return(-1);
+        else
+            options->spa_src_port = tmpint;
+    }
+    /* Firewall rule timeout */
+    else if(CONF_VAR_IS(var, "FW_TIMEOUT"))
+    {
+        tmpint = atoi(val);
+        if(tmpint < 0)
+            return(-1);
+        else
+            options->fw_timeout = tmpint;
+    }
+    /* Allow IP */
+    else if(CONF_VAR_IS(var, "ALLOW_IP"))
+    {
+        /* use source, resolve, or an actual IP
+        */
+        if(strcasecmp(val, "source") == 0)
+            strlcpy(options->allow_ip_str, "0.0.0.0", 8);
+        else if(strcasecmp(val, "resolve") == 0)
+            options->resolve_ip_http = 1;
+        else /* Assume IP address */
+            strlcpy(options->allow_ip_str, val, MAX_IP_STR_LEN);
+    }
+    /* Time Offset */
+    else if(CONF_VAR_IS(var, "TIME_OFFSET"))
+    {
+        if(val[0] == '-')
+        {
+            val++;
+            options->time_offset_minus = parse_time_offset(val);
+        }
+        else
+            options->time_offset_plus = parse_time_offset(val);
+    }
+    /* Use GPG ? */
+    else if(CONF_VAR_IS(var, "USE_GPG"))
+    {
+        if(val[0] == 'y' || val[0] == 'Y')
+            options->use_gpg = 1;
+    }
+    /* GPG Recipient */
+    else if(CONF_VAR_IS(var, "GPG_RECIPIENT"))
+    {
+        strlcpy(options->gpg_recipient_key, val, MAX_GPG_KEY_ID);
+    }
+    /* GPG Signer */
+    else if(CONF_VAR_IS(var, "GPG_SIGNER"))
+    {
+        strlcpy(options->gpg_signer_key, val, MAX_GPG_KEY_ID);
+    }
+    /* GPG Homedir */
+    else if(CONF_VAR_IS(var, "GPG_HOMEDIR"))
+    {
+        strlcpy(options->gpg_home_dir, val, MAX_PATH_LEN);
+    }
+    /* Spoof User */
+    else if(CONF_VAR_IS(var, "SPOOF_USER"))
+    {
+        strlcpy(options->spoof_user, val, MAX_USERNAME_LEN);
+    }
+    /* Spoof Source IP */
+    else if(CONF_VAR_IS(var, "SPOOF_SOURCE_IP"))
+    {
+        strlcpy(options->spoof_ip_src_str, val, MAX_IP_STR_LEN);
+    }
+    /* ACCESS request */
+    else if(CONF_VAR_IS(var, "ACCESS"))
+    {
+        strlcpy(options->access_str, val, MAX_LINE_LEN);
+    }
+    /* SPA Server (destination) */
+    else if(CONF_VAR_IS(var, "SPA_SERVER"))
+    {
+        strlcpy(options->spa_server_str, val, MAX_SERVER_STR_LEN);
+    }
+    /* Rand port ? */
+    else if(CONF_VAR_IS(var, "RAND_PORT"))
+    {
+        if(val[0] == 'y' || val[0] == 'Y')
+            options->rand_port = 1;
+    }
+    /* Key file */
+    else if(CONF_VAR_IS(var, "KEY_FILE"))
+    {
+        strlcpy(options->get_key_file, val, MAX_PATH_LEN);
+    }
+    /* NAT Access Request */
+    else if(CONF_VAR_IS(var, "NAT_ACCESS"))
+    {
+        strlcpy(options->nat_access_str, val, MAX_PATH_LEN);
+    }
+    /* HTTP User Agent */
+    else if(CONF_VAR_IS(var, "HTTP_USER_AGENT"))
+    {
+        strlcpy(options->http_user_agent, val, HTTP_MAX_USER_AGENT_LEN);
+    }
+    /* NAT Local ? */
+    else if(CONF_VAR_IS(var, "NAT_LOCAL"))
+    {
+        if(val[0] == 'y' || val[0] == 'Y')
+            options->nat_local = 1;
+    }
+    /* NAT rand port ? */
+    else if(CONF_VAR_IS(var, "NAT_RAND_PORT"))
+    {
+        if(val[0] == 'y' || val[0] == 'Y')
+            options->nat_rand_port = 1;
+    }
+    /* NAT port */
+    else if(CONF_VAR_IS(var, "NAT_PORT"))
+    {
+        tmpint = atoi(val);
+        if(tmpint < 0 || tmpint > 65535)
+            return(-1);
+        else
+            options->nat_port = tmpint;
+    }
+
+    return(0);
+}
+
+/* Process (create if necessary) the users ~/.fwknoprc file.
+*/
+static void
+process_rc(fko_cli_options_t *options)
+{
+    FILE    *rc;
+    int     tmpint, line_num = 0;
+    char    rcfile[MAX_PATH_LEN];
+    char    line[MAX_LINE_LEN];
+    char    curr_stanza[MAX_LINE_LEN] = {0};
+    char    var[MAX_LINE_LEN]  = {0};
+    char    val[MAX_LINE_LEN]  = {0};
+
+    char    *ndx, *emark, *homedir = getenv("HOME");
+
+    if(homedir == NULL)
+    {
+        fprintf(stderr, "Warning: Unable to determine HOME directory.\n"
+            " No .fwknoprc file processed.\n");
+        return;
+    }
+
+    strlcpy(rcfile, homedir, MAX_PATH_LEN);
+    strlcat(rcfile, PATH_SEP);
+    strlcat(rcfile, ".fwknoprc");
+
+    /* Open the rc file for reading, if it does not exist, then create
+     * an initial .fwknoprc file with defaults and go on.
+    */
+    if ((rc = fopen(rcfile, "r")) == NULL)
+    {
+        if(errno == ENOENT)
+        {
+            if(create_fwknoprc(rcfile) != 0)
+                return;
+        }
+        else
+            fprintf(stderr, "Unable to open rc file: %s: %s\n",
+                rcfile, strerror(errno));
+ 
+        return;
+    }
+
+    /* Read in and parse the rc file parameters.
+    */
+    while ((fgets(line, MAX_LINE_LEN, rc)) != NULL)
+    {
+        line_num++;
+        line[MAX_LINE_LEN-1] = '\0';
+
+        ndx = line;
+
+        /* Skip any leading whitespace.
+        */
+        while(isspace(*ndx))
+            ndx++;
+
+        /* Get past comments and empty lines (note: we only look at the
+         * first character.
+        */
+        if(IS_EMPTY_LINE(line[0]))
+            continue;
+
+        if(*ndx == '[')
+        {
+            ndx++;
+            emark = strchr(ndx, ']');
+            if(emark == NULL)
+            {
+                fprintf(stderr, "Unterminated stanza line: '%s'.  Skipping.\n",
+                    line);
+                continue;
+            }
+
+            *emark = '\0';
+
+            strlcpy(curr_stanza, ndx, MAX_LINE_LEN);
+
+            if(options->verbose > 3)
+                fprintf(stderr,
+                    "RC FILE: %s, LINE: %s\tSTANZA: %s:\n",
+                    rcfile, line, curr_stanza
+                );
+
+            continue;
+        }
+
+        if(sscanf(line, "%s %[^;\n\r#]", var, val) != 2)
+        {
+            fprintf(stderr,
+                "*Invalid entry in %s at line %i.\n - '%s'",
+                rcfile, line_num, line
+            );
+            continue;
+        }
+
+        /* Remove any colon that may be on the end of the var
+        */
+        if((ndx = strrchr(var, ':')) != NULL)
+            *ndx = '\0';
+
+        if(options->verbose > 3)
+            fprintf(stderr,
+                "RC FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
+                rcfile, line, var, val
+            );
+
+        /* We do not proceed with parsing until we know we are in
+         * a stanza.
+        */
+        if(strlen(curr_stanza) < 1)
+            continue;
+
+        /* Process the values. We assume we will see the default stanza
+         * first, then if a named-stanza is specified, we process its
+         * entries as well.
+        */
+        if(strcasecmp(curr_stanza, "default") == 0 || (options->use_rc_stanza[0] != '\0'
+          && strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0))
+        {
+            if(parse_rc_param(options, var, val) < 0)
+                fprintf(stderr, "Parameter error in %s, line %i: var=%s, val=%i\n",
+                    rcfile, line_num, var, val);
+        }
+        else if(options->use_rc_stanza[0] != '\0'
+          && strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
+        {
+            options->got_named_stanza = 1;
+            if(parse_rc_param(options, var, val) < 0)
+                fprintf(stderr, "Parameter error in %s, stanza: %s, line %i: var=%s, val=%i\n",
+                    rcfile, curr_stanza, line_num, var, val);
+        }
+
+    } /* end while fgets rc */
 }
 
 /* Sanity and bounds checks for the various options.
@@ -92,19 +517,27 @@ validate_options(fko_cli_options_t *options)
         && !options->show_last_command
         && !options->run_last_command)
     {
-        if (options->spa_server_str[0] == 0x0)
+        if(options->use_rc_stanza[0] != 0x0 && options->got_named_stanza == 0)
         {
-            fprintf(stderr,
-                "[*] Must use --destination unless --test mode is used\n");
-            exit(EXIT_FAILURE);
-        }
-        if (!options->resolve_ip_http && options->allow_ip_str[0] == 0x0)
-        {
-            fprintf(stderr,
-                "[*] Must use one of [-s|-R|-a] to specify IP for SPA access.\n");
+            fprintf(stderr, "Named configuration stanza: [%s] was not found.\n",
+                options->use_rc_stanza);
+
             exit(EXIT_FAILURE);
         }
 
+        if (options->spa_server_str[0] == 0x0)
+        {
+            fprintf(stderr,
+                "Must use --destination unless --test mode is used\n");
+            exit(EXIT_FAILURE);
+        }
+
+        if (!options->resolve_ip_http && options->allow_ip_str[0] == 0x0)
+        {
+            fprintf(stderr,
+                "Must use one of [-s|-R|-a] to specify IP for SPA access.\n");
+            exit(EXIT_FAILURE);
+        }
     }
 
     if(options->resolve_ip_http || options->spa_proto == FKO_PROTO_HTTP)
@@ -115,7 +548,7 @@ validate_options(fko_cli_options_t *options)
     if(options->http_proxy[0] != 0x0 && options->spa_proto != FKO_PROTO_HTTP)
     {
         fprintf(stderr,
-            "[*] Cannot set --http-proxy with a non-HTTP protocol.\n");
+            "Cannot set --http-proxy with a non-HTTP protocol.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -127,7 +560,7 @@ validate_options(fko_cli_options_t *options)
             || strlen(options->gpg_recipient_key) == 0)
         {
             fprintf(stderr,
-                "[*] Must specify --gpg-recipient-key when GPG is used.\n");
+                "Must specify --gpg-recipient-key when GPG is used.\n");
             exit(EXIT_FAILURE);
         }
     }
@@ -154,6 +587,33 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     options->spa_dst_port = FKO_DEFAULT_PORT;
     options->fw_timeout   = -1;
 
+    /* First pass over cmd_line args to see if a named-stanza in the 
+     * rc file is used.
+    */
+    while ((cmd_arg = getopt_long(argc, argv,
+            GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
+        switch(cmd_arg) {
+            case 'h':
+                usage();
+                exit(EXIT_SUCCESS);
+            case 'n':
+                options->no_save_args = 1;
+                strlcpy(options->use_rc_stanza, optarg, MAX_LINE_LEN);
+                break;
+            case 'v':
+                options->verbose++;
+                break;
+        }
+    }
+
+    /* First process the .fwknoprc file.
+    */
+    process_rc(options);
+
+    /* Reset the options index so we can run through them again.
+    */
+    optind = 0;
+ 
     while ((cmd_arg = getopt_long(argc, argv,
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
@@ -179,7 +639,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'f':
                 options->fw_timeout = atoi(optarg);
                 if (options->fw_timeout < 0) {
-                    fprintf(stderr, "[*] --fw-timeout must be >= 0\n");
+                    fprintf(stderr, "--fw-timeout must be >= 0\n");
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -202,48 +662,34 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'm':
             case FKO_DIGEST_NAME:
-                if(strncasecmp(optarg, "md5", 3) == 0)
-                    options->digest_type = FKO_DIGEST_MD5;
-                else if(strncasecmp(optarg, "sha1", 4) == 0)
-                    options->digest_type = FKO_DIGEST_SHA1;
-                else if(strncasecmp(optarg, "sha256", 6) == 0)
-                    options->digest_type = FKO_DIGEST_SHA256;
-                else if(strncasecmp(optarg, "sha384", 6) == 0)
-                    options->digest_type = FKO_DIGEST_SHA384;
-                else if(strncasecmp(optarg, "sha512", 6) == 0)
-                    options->digest_type = FKO_DIGEST_SHA512;
-                else
+                if((options->digest_type = digest_strtoint(optarg)) < 0)
                 {
                     fprintf(stderr, "* Invalid digest type: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;
+            case 'NO_SAVE_ARGS':
+                options->no_save_args = 1;
+                break;
             case 'n':
-                options->no_save = 1;
+                /* We already handled this earlier, so we do nothing here
+                */
                 break;
             case 'N':
                 strlcpy(options->nat_access_str, optarg, MAX_LINE_LEN);
                 break;
             case 'p':
                 options->spa_dst_port = atoi(optarg);
-                if (options->spa_dst_port < 0 || options->spa_dst_port > 65535) {
-                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                if (options->spa_dst_port < 0 || options->spa_dst_port > 65535)
+                {
+                    fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;
             case 'P':
-                if (strncmp(optarg, "udp", strlen("udp")) == 0)
-                    options->spa_proto = FKO_PROTO_UDP;
-                else if (strncmp(optarg, "tcpraw", strlen("tcpraw")) == 0)
-                    options->spa_proto = FKO_PROTO_TCP_RAW;
-                else if (strncmp(optarg, "tcp", strlen("tcp")) == 0)
-                    options->spa_proto = FKO_PROTO_TCP;
-                else if (strncmp(optarg, "icmp", strlen("icmp")) == 0)
-                    options->spa_proto = FKO_PROTO_ICMP;
-                else if (strncmp(optarg, "http", strlen("http")) == 0)
-                    options->spa_proto = FKO_PROTO_HTTP;
-                else {
-                    fprintf(stderr, "[*] Unrecognized protocol: %s\n", optarg);
+                if((options->spa_proto = proto_strtoint(optarg)) < 0)
+                {
+                    fprintf(stderr, "Unrecognized protocol: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -264,8 +710,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'S':
                 options->spa_src_port = atoi(optarg);
-                if (options->spa_src_port < 0 || options->spa_src_port > 65535) {
-                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                if (options->spa_src_port < 0 || options->spa_src_port > 65535)
+                {
+                    fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -279,7 +726,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->spoof_user, optarg, MAX_USERNAME_LEN);
                 break;
             case 'v':
-                options->verbose = 1;
+                /* Handled earlier.
+                */
                 break;
             case 'V':
                 options->version = 1;
@@ -308,8 +756,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case NAT_PORT:
                 options->nat_port = atoi(optarg);
-                if (options->nat_port < 0 || options->nat_port > 65535) {
-                    fprintf(stderr, "[*] Unrecognized port: %s\n", optarg);
+                if (options->nat_port < 0 || options->nat_port > 65535)
+                {
+                    fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -353,6 +802,9 @@ usage(void)
       " -C, --server-cmd            Specify a command that the fwknop server will\n"
       "                             execute on behalf of the fwknop client..\n"
       " -D, --destination           Specify the IP address of the fwknop server.\n"
+      " -n, --named-config          Specify an named configuration stanza in the\n"
+      "                             '$HOME/.fwknoprc' file to provide some of all\n"
+      "                             of the configuration parameters.\n"
       " -N, --nat-access            Gain NAT access to an internal service\n"
       "                             protected by the fwknop server.\n"
       " -p, --server-port           Set the destination port for outgoing SPA\n"

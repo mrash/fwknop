@@ -148,7 +148,7 @@ getpasswd_file(const char *pw_file, const char *server_str)
 
     if ((pwfile_ptr = fopen(pw_file, "r")) == NULL)
     {
-        fprintf(stderr, "[*] Could not open config file: %s\n", pw_file);
+        fprintf(stderr, "Could not open config file: %s\n", pw_file);
         exit(1);
     }
 
@@ -202,7 +202,7 @@ getpasswd_file(const char *pw_file, const char *server_str)
     fclose(pwfile_ptr);
 
     if (pwbuf[0] == '\0') {
-        fprintf(stderr, "[*] Could not get password for IP: %s from: %s\n",
+        fprintf(stderr, "Could not get password for IP: %s from: %s\n",
             server_str, pw_file);
         exit(1);
     }

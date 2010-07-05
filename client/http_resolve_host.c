@@ -57,7 +57,7 @@ resolve_ip_http(fko_cli_options_t *options)
     res = WSAStartup( MAKEWORD(1,1), &wsa_data );
     if( res != 0 )
     {
-        fprintf(stderr, "[*] Winsock initialization error %d\n", res );
+        fprintf(stderr, "Winsock initialization error %d\n", res );
         return(-1);
     }
 #endif
@@ -82,7 +82,7 @@ resolve_ip_http(fko_cli_options_t *options)
     error = getaddrinfo(HTTP_RESOLVE_HOST, "80", &hints, &result);
     if (error != 0)
     {
-        fprintf(stderr, "[*] error in getaddrinfo: %s\n", gai_strerror(error));
+        fprintf(stderr, "error in getaddrinfo: %s\n", gai_strerror(error));
         return(-1);
     }
 
@@ -103,7 +103,7 @@ resolve_ip_http(fko_cli_options_t *options)
     }
 
     if (rp == NULL) {
-        perror("[*] resolve_ip_http: Could not create socket: ");
+        perror("resolve_ip_http: Could not create socket: ");
         return(-1);
     }
 
@@ -113,7 +113,7 @@ resolve_ip_http(fko_cli_options_t *options)
 
     if(res < 0)
     {
-        perror("[*] resolve_ip_http: write error: ");
+        perror("resolve_ip_http: write error: ");
     }
     else if(res != http_buf_len)
     {
@@ -137,7 +137,7 @@ resolve_ip_http(fko_cli_options_t *options)
 	ndx = strstr(http_response, "\r\n\r\n");
 	if(ndx == NULL)
 	{
-		fprintf(stderr, "[*] Did not find the end of HTTP header.\n");
+		fprintf(stderr, "Did not find the end of HTTP header.\n");
         return(-1);
 	}
 	ndx += 4;
@@ -167,14 +167,14 @@ resolve_ip_http(fko_cli_options_t *options)
 		strlcpy(options->allow_ip_str, ndx, MAX_IP_STR_LEN);
 
 		if(options->verbose)
-			printf("[+] Resolved external IP (via http://%s%s) as: %s\n",
+			printf("Resolved external IP (via http://%s%s) as: %s\n",
 				HTTP_RESOLVE_HOST, HTTP_RESOLVE_URL, options->allow_ip_str);
 
 		return(0);
 	}
 	else
     {
-        fprintf(stderr, "[*] Invalid IP (%s) in HTTP response.\n", ndx);
+        fprintf(stderr, "Invalid IP (%s) in HTTP response.\n", ndx);
         return(-1);
     }
 }

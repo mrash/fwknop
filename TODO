@@ -10,7 +10,6 @@ To whom it may concern, this is -*- outline -*- mode.
 
 * The fwknopd server:
 ** Sniffer support to acquire SPA packet data ala the fwknopd Perl server:
-*** Packets acquired via a file (supports the ulogd pcap writer).
 ** SPA packet decryption:
 *** Add support for ipfw and pf support eventually.
 ** Test on embedded platforms - especially OpenWRT on a Linksys router.
@@ -30,7 +29,7 @@ To whom it may concern, this is -*- outline -*- mode.
 *** PHP module wrapping libfko.
 
 
-Copyright 2009 - Damien Stuart
+Copyright 2009-2010 - Damien Stuart
 
 This file is free software; as a special exception the author gives
 unlimited permission to copy and/or distribute it, with or without

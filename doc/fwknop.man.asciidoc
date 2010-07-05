@@ -122,6 +122,18 @@ GENERAL OPTIONS
     invocation (if any).  The previous arguments are parsed out of the
     '~/.fwknop.run' file.
 
+*-n, --named-config*='<stanza name>'::
+    The *fwknop* client program can use parameters specified in it rc file,
+    ``.fwknoprc'' which is found in the user's home directory.  If *fwknop*
+    does not detect the $HOME/.fwknoprc file, it will create it.  The
+    '.fwkoprc' file contains a default configuration area or 'stanza'
+    which holds global configuration directives that override the program
+    defaults.  You can edit this file and create additonal 'named stanzas'
+    that can be specified with this ('-n') option.  Parameters defined
+    in the named stanzas will override any matching 'default' stanza
+    directives. See the section: FWKNOPRC FILE below for a list of the
+    valid configuration directives in the ``.fwknoprc'' file.
+
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
 
@@ -319,6 +331,102 @@ GPG-RELATED OPTIONS
     signature.  This adds a cryptographically strong mechanism to allow
     the *fwknopd* daemon on the remote server to authenticate who created
     the SPA message.
+
+
+FWKNOPRC FILE
+-------------
+The ``.fwknoprc'' file is used to set various parameters to override default
+program parameters at runtime.  It also allows for additional named configuration
+'stanzas' for setting program parameters for a particular invocation.
+
+The *fwkop* client will create this file if it does not exist in the user's
+home directory.  This initial version has some sample directives that are
+commented out.  It is up to the user to edit this file to meet their needs.
+
+There are directives to match most of the command-line parameters *fwknop*
+supports.  Here is the current list of each directive along with a brief
+description and (if applicable) it matching command-line option:
+
+*DIGEST_TYPE*::
+    Set the SPA message digest type ('-m, --digest-type).
+
+*SPA_SERVER_PROTO*::
+    Set the protocol to use for sending the SPA packet ('-P, --server-proto').
+
+*SPA_SERVER*::
+    Specify the IP or hostname of the destination (*fwknopd*) server
+    ('-D, --destination).
+
+*SPA_SERVER_PORT*::
+    Set the server port to use for sending the SPA packet ('-p, --server-port').
+
+*SPA_SOURCE_PORT*::
+    Set the source port to use for sending the SPA packet ('-S, --source-port').
+
+*FW_TIMEOUT*::
+    Set the firewall rule timeout value ('-f, --fw-timeout').
+
+*ALLOW_IP*::
+    Specify the address to allow within the SPA data.  Note: This parameter
+    covers the '-a', '-s', and '-R' command-line options.  You can specify
+    an IP address (the '-a' option), specify the word "source" to tell the
+    *fwknopd* server to accept the source IP of the packet as the IP to
+    allow (the '-s' option), or use the word "resolve" to have *fwknop*
+    resolve the external network IP via HTTP request (the '-R' option).
+
+*TIME_OFFSET*::
+    Set a value to apply to the timestamp in the SPA packet.  This can
+    be either a positive or negative value ('--time-offset-plus/minus').
+
+*USE_GPG*::
+    Set to 'Y' to specify the use of GPG for encryption ('--gpg-encryption').
+
+*GPG_SIGNER*::
+    Specify the GPG key name or ID for signing the GPG-encrypted SPA data
+    ('--gpg-signer-key').
+
+*GPG_RECIPIENT*::
+    Specify the GPG key name or ID for the recipient of the GPG-encrypted SPA
+    data ('--gpg-recipient-key').
+
+*GPG_HOMEDIR*::
+    Specify the GPG home directory ('--gpg-home-dir').
+
+*SPOOF_USER*::
+    Set the username in the SPA data to the specified value ('-U,
+    --spoof-user').
+
+*SPOOF_SOURCE_IP*::
+    Set the source IP of the outgoing SPA packet to the specified value
+    ('-Q, --spoof-source').
+
+*ACCESS*::
+    Set the one or more protocol/ports to open on the firewall ('-A, --access').
+
+*RAND_PORT*::
+    Send the SPA packet over a randomly assigned port ('-r, --rand-port').
+
+*KEY_FILE*::
+    Load an encryption key/password from a file ('-G, --get-key').
+
+*HTTP_USER_AGENT*::
+    Set the HTTP User-Agent for resolving the external IP via -R, or for
+    sending SPA packets over HTTP ('-u, --user-agent').   
+
+*NAT_ACCESS*::
+    Gain NAT access to an internal service protected by the fwknop server
+    ('-N, --nat-access').
+
+*NAT_LOCAL*::
+    Access a local service via a forwarded port on the fwknopd server
+    system ('--nat-local').
+
+*NAT_PORT*::
+    Specify the port to forward to access a service via NAT ('--nat-port').
+
+*NAT_RAND_PORT*::
+    Have the fwknop client assign a random port for NAT access
+    ('--nat-rand-port').
 
 
 ENVIRONMENT

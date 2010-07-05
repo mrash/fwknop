@@ -58,6 +58,7 @@ main(int argc, char **argv)
     /* Handle command line
     */
     config_init(&options, argc, argv);
+
     /* Handle options that don't require a libfko context
     */
     if(options.run_last_command)
@@ -81,7 +82,7 @@ main(int argc, char **argv)
     if (options.version) {
         fko_get_version(ctx, &version);
 
-        fprintf(stdout, "[+] fwknop client %s, FKO protocol version %s\n",
+        fprintf(stdout, "fwknop client %s, FKO protocol version %s\n",
             MY_VERSION, version);
 
         return(EXIT_SUCCESS);
@@ -274,13 +275,13 @@ main(int argc, char **argv)
     res = send_spa_packet(ctx, &options);
     if(res < 0)
     {
-        fprintf(stderr, "[*] send_spa_packet: packet not sent.\n");
+        fprintf(stderr, "send_spa_packet: packet not sent.\n");
         return(EXIT_FAILURE);
     }
     else
     {
         if(options.verbose)
-            fprintf(stderr, "[+] send_spa_packet: bytes sent: %i\n", res);
+            fprintf(stderr, "send_spa_packet: bytes sent: %i\n", res);
     }
 
     /* Run through a decode cycle in test mode (--DSS XXX: This test/decode
@@ -346,7 +347,7 @@ main(int argc, char **argv)
                  * an unrecoverable error), but print the error string for
                  debugging purposes. */
                 fprintf(stderr, "GPG ERR: %s\n%s\n", fko_gpg_errstr(ctx2),
-                    "[*] No access to recipient private key?\n");
+                    "No access to recipient private key?\n");
                 return(EXIT_SUCCESS);
             }
 
@@ -422,7 +423,7 @@ get_rand_port(fko_ctx_t ctx)
 static void
 dump_transmit_options(fko_cli_options_t *options)
 {
-    printf("[+] Generating SPA packet:\n    protocol: ");
+    printf("Generating SPA packet:\n    protocol: ");
     print_proto(options->spa_proto),
     printf("\n    port: %d\n", options->spa_dst_port);
     return;
@@ -524,20 +525,20 @@ show_last_command(void)
     /* Not sure what the right thing is here on Win32, just exit
      * for now.
     */
-    fprintf(stderr, "[*] --show-last not implemented on Win32 yet.");
+    fprintf(stderr, "--show-last not implemented on Win32 yet.");
     exit(EXIT_FAILURE);
 #endif
 
     if (get_save_file(args_save_file)) {
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
-            fprintf(stderr, "[*] Could not open args file: %s\n",
+            fprintf(stderr, "Could not open args file: %s\n",
                 args_save_file);
             exit(EXIT_FAILURE);
         }
         if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
-            printf("[+] Last fwknop client command line: %s", args_str);
+            printf("Last fwknop client command line: %s", args_str);
         } else {
-            printf("[-] Could not read line from file: %s\n", args_save_file);
+            printf("Could not read line from file: %s\n", args_save_file);
         }
         fclose(args_file_ptr);
     }
@@ -573,7 +574,7 @@ run_last_args(fko_cli_options_t *options)
     {
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
         {
-            fprintf(stderr, "[*] Could not open args file: %s\n",
+            fprintf(stderr, "Could not open args file: %s\n",
                 args_save_file);
             exit(EXIT_FAILURE);
         }
@@ -581,7 +582,7 @@ run_last_args(fko_cli_options_t *options)
         {
             args_str[MAX_LINE_LEN-1] = '\0';
             if (options->verbose)
-                printf("[+] Executing: %s\n", args_str);
+                printf("Executing: %s\n", args_str);
             for (i=0; i < (int)strlen(args_str); i++)
             {
                 if (!isspace(args_str[i]))
@@ -595,7 +596,7 @@ run_last_args(fko_cli_options_t *options)
                     argv_new[argc_new] = malloc(strlen(arg_tmp)+1);
                     if (argv_new[argc_new] == NULL)
                     {
-                        fprintf(stderr, "[*] malloc failure for cmd line arg.\n");
+                        fprintf(stderr, "malloc failure for cmd line arg.\n");
                         exit(EXIT_FAILURE);
                     }
                     strcpy(argv_new[argc_new], arg_tmp);
@@ -636,14 +637,14 @@ save_args(int argc, char **argv)
 
     if (get_save_file(args_save_file)) {
         if ((args_file_ptr = fopen(args_save_file, "w")) == NULL) {
-            fprintf(stderr, "[*] Could not open args file: %s\n",
+            fprintf(stderr, "Could not open args file: %s\n",
                 args_save_file);
             exit(EXIT_FAILURE);
         }
         for (i=0; i < argc; i++) {
             args_str_len += strlen(argv[i]);
             if (args_str_len >= MAX_PATH_LEN) {
-                fprintf(stderr, "[*] argument string too long, exiting.\n");
+                fprintf(stderr, "argument string too long, exiting.\n");
                 exit(EXIT_FAILURE);
             }
             strlcat(args_str, argv[i], MAX_PATH_LEN);
@@ -739,7 +740,7 @@ get_user_pw(fko_cli_options_t *options, int crypt_op)
     */
     if (pw_ptr == NULL)
     {
-        fprintf(stderr, "[*] Received no password data, exiting.\n");
+        fprintf(stderr, "Received no password data, exiting.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -750,7 +751,7 @@ get_user_pw(fko_cli_options_t *options, int crypt_op)
 */
 void
 errmsg(char *msg, int err) {
-    fprintf(stderr, "[*] %s: %s: Error %i - %s\n",
+    fprintf(stderr, "%s: %s: Error %i - %s\n",
         MY_NAME, msg, err, fko_errstr(err));
 }
 

@@ -56,8 +56,10 @@
   #define strncasecmp	_strnicmp
   #define snprintf		_snprintf
   #define unlink		_unlink
+  #define PATH_SEP      "\\"
 #else
   #include <signal.h>
+  #define PATH_SEP      "/"
 #endif
 
 #include "fko.h"
@@ -91,6 +93,23 @@ enum {
 #define MAX_PATH_LEN        1024
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
+
+/* Some convenience macros */
+
+/* Characters allowed between a config parameter and its value.
+*/
+#define IS_CONFIG_PARAM_DELIMITER(x) (x == ' ' || x == '\t' || x == '=');
+
+/* End of line characters.
+*/
+#define IS_LINE_END(x) (x == '\n' || x == '\r' || x == ';');
+
+/* Characters in the first position of a line that make it considered
+ * empty or otherwise non-interesting (like a comment).
+*/
+#define IS_EMPTY_LINE(x) ( \
+    x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
+)
 
 #endif /* _COMMON_H */
 

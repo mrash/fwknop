@@ -29,6 +29,10 @@
 #include <getopt.h>
 #include <sys/stat.h>
 
+/* String compare macro.
+*/
+#define CONF_VAR_IS(n, v) (strcmp(n, v) == 0)
+
 /* Long options values (for those without a short option).
 */
 enum {
@@ -51,7 +55,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:nN:p:P:Q:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:n:N:p:P:Q:rRsS:Tu:U:vV"
 
 /* Our program command-line options...
 */
@@ -76,6 +80,7 @@ static struct option cmd_opts[] =
     {"http-proxy",          1, NULL, 'H'},
     {"last-cmd",            0, NULL, 'l'},
     {"nat-access",          1, NULL, 'N'},
+    {"named-config",        1, NULL, 'n'},
     {"nat-local",           0, NULL, NAT_LOCAL},
     {"nat-port",            1, NULL, NAT_PORT},
     {"nat-rand-port",       0, NULL, NAT_RAND_PORT},

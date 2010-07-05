@@ -82,7 +82,7 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
     if (options->test)
     {
         fprintf(stderr,
-            "[+] test mode enabled, SPA packet not actually sent.\n");
+            "test mode enabled, SPA packet not actually sent.\n");
         return res;
     }
 
@@ -112,7 +112,7 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
 
     if (error != 0)
     {
-        fprintf(stderr, "[*] error in getaddrinfo: %s\n", gai_strerror(error));
+        fprintf(stderr, "error in getaddrinfo: %s\n", gai_strerror(error));
         exit(EXIT_FAILURE);
     }
 
@@ -133,7 +133,7 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
     }
 
     if (rp == NULL) {
-        perror("[*] send_spa_packet_tcp_or_udp: Could not create socket: ");
+        perror("send_spa_packet_tcp_or_udp: Could not create socket: ");
         exit(EXIT_FAILURE);
     }
 
@@ -143,7 +143,7 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
 
     if(res < 0)
     {
-        perror("[*] send_spa_packet_tcp_or_udp: write error: ");
+        perror("send_spa_packet_tcp_or_udp: write error: ");
     }
     else if(res != sd_len)
     {
@@ -170,7 +170,7 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
 {
 #ifdef WIN32
     fprintf(stderr,
-        "[*] send_spa_packet_tcp_raw: raw packets are not yet supported.\n");
+        "send_spa_packet_tcp_raw: raw packets are not yet supported.\n");
     return(-1);
 #else
     int  sock, res = 0;
@@ -189,14 +189,14 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     if (options->test)
     {
         fprintf(stderr,
-            "[+] test mode enabled, SPA packet not actually sent.\n");
+            "test mode enabled, SPA packet not actually sent.\n");
         return res;
     }
 
     sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
     if (sock < 0)
     {
-        perror("[*] send_spa_packet_tcp_raw: create socket: ");
+        perror("send_spa_packet_tcp_raw: create socket: ");
         return(sock);
     }
 
@@ -250,14 +250,14 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
      * doesn't try to insert its own header into the packet.
     */
     if (setsockopt (sock, IPPROTO_IP, IP_HDRINCL, so_val, sizeof(one)) < 0)
-        perror("[*] send_spa_packet_tcp_raw: setsockopt HDRINCL: ");
+        perror("send_spa_packet_tcp_raw: setsockopt HDRINCL: ");
 
     res = sendto (sock, pkt_data, iph->tot_len, 0,
         (struct sockaddr *)daddr, sizeof(*daddr));
 
     if(res < 0)
     {
-        perror("[*] send_spa_packet_tcp_raw: sendto error: ");
+        perror("send_spa_packet_tcp_raw: sendto error: ");
     }
     else if(res != sd_len + hdrlen) /* account for the header ?*/
     {
@@ -281,7 +281,7 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     struct sockaddr_in *daddr, fko_cli_options_t *options)
 {
 #ifdef WIN32
-    fprintf(stderr, "[*] send_spa_packet_icmp: raw packets are not yet supported.\n");
+    fprintf(stderr, "send_spa_packet_icmp: raw packets are not yet supported.\n");
     return(-1);
 #else
     int res = 0, sock;
@@ -300,7 +300,7 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
     if (options->test)
     {
         fprintf(stderr,
-            "[+] test mode enabled, SPA packet not actually sent.\n");
+            "test mode enabled, SPA packet not actually sent.\n");
         return res;
     }
 
@@ -308,7 +308,7 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
 
     if (sock < 0)
     {
-        perror("[*] send_spa_packet_icmp: create socket: ");
+        perror("send_spa_packet_icmp: create socket: ");
         return(sock);
     }
 
@@ -348,14 +348,14 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
      * doesn't try to insert its own header into the packet.
     */
     if (setsockopt (sock, IPPROTO_IP, IP_HDRINCL, so_val, sizeof(one)) < 0)
-        perror("[*] send_spa_packet_icmp: setsockopt HDRINCL: ");
+        perror("send_spa_packet_icmp: setsockopt HDRINCL: ");
 
     res = sendto (sock, pkt_data, iph->tot_len, 0,
         (struct sockaddr *)daddr, sizeof(*daddr));
 
     if(res < 0)
     {
-        perror("[*] send_spa_packet_icmp: sendto error: ");
+        perror("send_spa_packet_icmp: sendto error: ");
     }
     else if(res != sd_len + hdrlen) /* account for icmp header */
     {
@@ -451,7 +451,7 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
            fprintf(stderr, "%s\n", http_buf);
 
         fprintf(stderr,
-            "[+] Test mode enabled, SPA packet not actually sent.\n");
+            "Test mode enabled, SPA packet not actually sent.\n");
         return 0;
     }
 
@@ -493,7 +493,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     res = WSAStartup( MAKEWORD(1,1), &wsa_data );
     if( res != 0 )
     {
-        fprintf(stderr, "[*] Winsock initialization error %d\n", res );
+        fprintf(stderr, "Winsock initialization error %d\n", res );
         return(-1);
     }
 #endif
@@ -531,7 +531,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 
         if (saddr.sin_addr.s_addr == -1)
         {
-            fprintf(stderr, "[*] Could not set source IP.\n");
+            fprintf(stderr, "Could not set source IP.\n");
             exit(EXIT_FAILURE);
         }
 
@@ -542,7 +542,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 
         if (daddr.sin_addr.s_addr == -1)
         {
-            fprintf(stderr, "[*] Could not set destination IP.\n");
+            fprintf(stderr, "Could not set destination IP.\n");
             exit(EXIT_FAILURE);
         }
 
@@ -558,7 +558,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     else
     {
         /* --DSS XXX: What to we really want to do here? */
-        fprintf(stderr, "[*] %i is not a valid or supported protocol.\n",
+        fprintf(stderr, "%i is not a valid or supported protocol.\n",
             options->spa_proto);
         res = -1;
     }

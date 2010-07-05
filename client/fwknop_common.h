@@ -113,13 +113,15 @@ typedef struct fko_cli_options
     /* Various command-line flags */
     unsigned char   verbose; /* --verbose mode */
     unsigned char   version; /* --version */
-    unsigned char   no_save;
     unsigned char   test;
     unsigned char   use_gpg;
     unsigned char   use_gpg_agent;
     int             time_offset_plus;
     int             time_offset_minus;
     int             fw_timeout;
+
+    char            use_rc_stanza[MAX_LINE_LEN];
+    unsigned char   got_named_stanza;
 
     //char            config_file[MAX_PATH_LEN];
 
