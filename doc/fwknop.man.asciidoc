@@ -123,16 +123,12 @@ GENERAL OPTIONS
     '~/.fwknop.run' file.
 
 *-n, --named-config*='<stanza name>'::
-    The *fwknop* client program can use parameters specified in it rc file,
-    ``.fwknoprc'' which is found in the user's home directory.  If *fwknop*
-    does not detect the $HOME/.fwknoprc file, it will create it.  The
-    '.fwkoprc' file contains a default configuration area or 'stanza'
-    which holds global configuration directives that override the program
-    defaults.  You can edit this file and create additonal 'named stanzas'
-    that can be specified with this ('-n') option.  Parameters defined
-    in the named stanzas will override any matching 'default' stanza
-    directives. See the section: FWKNOPRC FILE below for a list of the
-    valid configuration directives in the ``.fwknoprc'' file.
+    Specify the name of the configuration stanza in the ``$HOME/.fwknoprc''
+    file to pull configuration and command directives.  These named stanzas
+    alleviate the need for remembering the various command-line arguments
+    for frequently used invocations of *fwknop*. See the section labeled,
+    FWKNOPRC FILE below for a list of the valid configuration directives in
+    the ``.fwknoprc'' file.
 
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
@@ -336,16 +332,23 @@ GPG-RELATED OPTIONS
 FWKNOPRC FILE
 -------------
 The ``.fwknoprc'' file is used to set various parameters to override default
-program parameters at runtime.  It also allows for additional named configuration
-'stanzas' for setting program parameters for a particular invocation.
+program parameters at runtime.  It also allows for additional named
+configuration 'stanzas' for setting program parameters for a particular
+invocation.
 
 The *fwkop* client will create this file if it does not exist in the user's
 home directory.  This initial version has some sample directives that are
 commented out.  It is up to the user to edit this file to meet their needs.
 
+The ``.fwkoprc'' file contains a default configuration area or 'stanza' which
+holds global configuration directives that override the program defaults. 
+You can edit this file and create additonal 'named stanzas' that can be
+specified with this ('-n') option.  Parameters defined in the named stanzas
+will override any matching 'default' stanza directives.
+
 There are directives to match most of the command-line parameters *fwknop*
 supports.  Here is the current list of each directive along with a brief
-description and (if applicable) it matching command-line option:
+description and its matching command-line option(s):
 
 *DIGEST_TYPE*::
     Set the SPA message digest type ('-m, --digest-type).

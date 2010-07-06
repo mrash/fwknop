@@ -159,7 +159,7 @@ create_fwknoprc(char *rcfile)
         "# Lines starting with `#' and empty lines are ignored.\n"
         "#\n"
         "# See the fwknop.8 man page for a complete list of valid parameters\n"
-        "# and thier values.\n"
+        "# and their values.\n"
         "#\n"
         "##############################################################################\n"
         "#\n"
