@@ -195,7 +195,7 @@ create_fwknoprc(char *rcfile)
         "#RESOLVE_IP_HTTP     Y\n"
         "#\n"
         "#[mynatreq]\n"
-        "#SERVER              192.168.1.20\n"
+        "#SPA_SERVER          192.168.1.20\n"
         "#ACCESS              tcp/8088\n"
         "#ALLOW_IP            10.21.2.6\n"
         "#NAT_ACCESS          192.168.1.55,88\n"
