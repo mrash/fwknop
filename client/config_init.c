@@ -485,8 +485,7 @@ process_rc(fko_cli_options_t *options)
          * first, then if a named-stanza is specified, we process its
          * entries as well.
         */
-        if(strcasecmp(curr_stanza, "default") == 0 || (options->use_rc_stanza[0] != '\0'
-          && strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0))
+        if(strcasecmp(curr_stanza, "default") == 0)
         {
             if(parse_rc_param(options, var, val) < 0)
                 fprintf(stderr, "Parameter error in %s, line %i: var=%s, val=%i\n",
@@ -497,7 +496,8 @@ process_rc(fko_cli_options_t *options)
         {
             options->got_named_stanza = 1;
             if(parse_rc_param(options, var, val) < 0)
-                fprintf(stderr, "Parameter error in %s, stanza: %s, line %i: var=%s, val=%i\n",
+                fprintf(stderr,
+                    "Parameter error in %s, stanza: %s, line %i: var=%s, val=%i\n",
                     rcfile, curr_stanza, line_num, var, val);
         }
 
