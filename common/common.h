@@ -53,6 +53,7 @@
 #endif
 
 #ifdef WIN32
+  #define strcasecmp	_stricmp
   #define strncasecmp	_strnicmp
   #define snprintf		_snprintf
   #define unlink		_unlink

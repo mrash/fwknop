@@ -378,7 +378,7 @@ static void
 process_rc(fko_cli_options_t *options)
 {
     FILE    *rc;
-    int     tmpint, line_num = 0;
+    int     line_num = 0;
     char    rcfile[MAX_PATH_LEN];
     char    line[MAX_LINE_LEN];
     char    curr_stanza[MAX_LINE_LEN] = {0};
@@ -395,8 +395,8 @@ process_rc(fko_cli_options_t *options)
     }
 
     strlcpy(rcfile, homedir, MAX_PATH_LEN);
-    strlcat(rcfile, PATH_SEP);
-    strlcat(rcfile, ".fwknoprc");
+    strlcat(rcfile, PATH_SEP, MAX_PATH_LEN);
+    strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
 
     /* Open the rc file for reading, if it does not exist, then create
      * an initial .fwknoprc file with defaults and go on.
@@ -672,7 +672,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
                 break;
-            case 'NO_SAVE_ARGS':
+            case NO_SAVE_ARGS:
                 options->no_save_args = 1;
                 break;
             case 'n':
@@ -771,9 +771,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case TIME_OFFSET_MINUS:
                 options->time_offset_minus = parse_time_offset(optarg);
-                break;
-            case NO_SAVE_ARGS:
-                options->no_save_args = 1;
                 break;
             default:
                 usage();
