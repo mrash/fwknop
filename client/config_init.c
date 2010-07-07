@@ -384,7 +384,13 @@ process_rc(fko_cli_options_t *options)
     char    var[MAX_LINE_LEN]  = {0};
     char    val[MAX_LINE_LEN]  = {0};
 
-    char    *ndx, *emark, *homedir = getenv("HOME");
+    char    *ndx, *emark, *homedir;
+
+#ifdef WIN32
+    homedir = getenv("USERPROFILE");
+#else
+    homedir = getenv("HOME");
+#endif
 
     if(homedir == NULL)
     {
