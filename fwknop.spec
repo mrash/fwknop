@@ -1,21 +1,13 @@
-#%define _prefix /usr
-#%define _bindir /usr/bin
-#%define _sbindir /usr/sbin
-#%define _mandir /usr/share/man/man8
-#%define _infodir /usr/share/info
-#%define _sysconfdir /etc
-#%define _localstatedir /var
 %ifarch x86_64
 %define _libdir /usr/lib64
 %else
 %define _libdir /usr/lib
 %endif
-#%define _includedir /usr/include
 
 Name:		fwknop
 Version:	2.0.0_beta_rc1
 Release:	1%{?dist}
-Summary:	Firewall KNock OPerator.  An implementation of Single Packet Authorization (SPA).
+Summary:	Firewall Knock Operator client.  An implementation of Single Packet Authorization.
 
 Group:		Applications/Internet
 License:	GPL
@@ -39,9 +31,9 @@ Group:		Development/Libraries
 Requires:	libfko
 
 %package server
-Summary:	The fwknop server
+Summary:	The Firewall Knock Operator server.  An implementation of Single Packet Authorization.
 Group:		System Environment/Daemons
-Requires:	libfko
+Requires:	libfko gpgme, libpcap, gdbm, iptables
 
 
 %description
