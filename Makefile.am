@@ -15,6 +15,7 @@ SUBDIRS = \
     doc 
 
 EXTRA_DIST = \
+    fwknop.spec \
     perl/legacy \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \

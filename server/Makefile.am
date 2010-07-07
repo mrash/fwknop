@@ -18,6 +18,3 @@ dist_man_MANS     = fwknopd.8
 
 dist_fwknopd_DATA = fwknopd.conf access.conf
 
-install-data-hook:
-	chmod 600 $(fwknopddir)/fwknopd.conf
-	chmod 600 $(fwknopddir)/access.conf
