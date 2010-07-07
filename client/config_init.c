@@ -185,14 +185,14 @@ create_fwknoprc(char *rcfile)
         "# User-provided named stanzas:\n"
         "\n"
         "# Example for a destination server of 192.168.1.20 to open access to \n"
-        "# SSH for an IP that is resoved exteranlly, and one with a nat request\n"
+        "# SSH for an IP that is resoved exteranlly, and one with a NAT request\n"
         "# for a specific source IP that maps port 8088 on the server\n"
         "# to port 88 on 192.168.1.55 with timeout.\n"
         "#\n"
         "#[myssh]\n"
         "#SPA_SERVER          192.168.1.20\n"
         "#ACCESS              tcp/22\n"
-        "#RESOLVE_IP_HTTP     Y\n"
+        "#ALLOW_IP            resolve\n"
         "#\n"
         "#[mynatreq]\n"
         "#SPA_SERVER          192.168.1.20\n"
@@ -261,6 +261,10 @@ parse_rc_param(fko_cli_options_t *options, char *var, char * val)
     /* Allow IP */
     else if(CONF_VAR_IS(var, "ALLOW_IP"))
     {
+        /* In case this was set previously
+        */
+        options->resolve_ip_http = 0;
+
         /* use source, resolve, or an actual IP
         */
         if(strcasecmp(val, "source") == 0)
