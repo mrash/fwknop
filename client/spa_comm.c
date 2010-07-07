@@ -377,7 +377,7 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
 {
     char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
     char *ndx = options->http_proxy;
-    int  i, j, proxy_port;
+    int  i, proxy_port;
 
     spa_data_copy = malloc(sd_len+1);
     if (spa_data_copy == NULL)

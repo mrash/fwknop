@@ -121,7 +121,6 @@ static int
 create_fwknoprc(char *rcfile)
 {
     FILE    *rc;
-    int     res;
 
     fprintf(stderr, "Creating initial rc file: %s.\n", rcfile);
 
