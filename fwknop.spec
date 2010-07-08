@@ -119,8 +119,8 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
-* Tue Jul  6 2010 Damien Stuart <dstuart@dstuart.org>
-- Initial RPMification.
 * Wed Jul  7 2010 Damien Stuart <dstuart@dstuart.org>
 - Made the post and preun steps specific to libfko-devel.
+* Tue Jul  6 2010 Damien Stuart <dstuart@dstuart.org>
+- Initial RPMification.
 
