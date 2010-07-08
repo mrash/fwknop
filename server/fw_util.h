@@ -47,8 +47,6 @@
 #define IPT_ADD_JUMP_RULE_ARGS "-t %s -I %s %i -j %s 2>&1"
 #define IPT_LIST_RULES_ARGS "-t %s -L %s --line-numbers -n 2>&1"
 
-#define DEF_FW_ACCESS_TIMEOUT   60
-
 /* Function prototypes
 */
 void fw_initialize(fko_srv_options_t *opts);

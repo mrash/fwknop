@@ -167,19 +167,28 @@ AS_IF([test "x$GPG_EXE" != x],
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
+  use_ndbm=no
   # Looking for libpcap
   #
-  AC_CHECK_LIB([pcap],[pcap_open_live], [],
+  AC_CHECK_LIB([pcap],[pcap_open_live],
+    [ AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]) ],
     [ AC_MSG_ERROR([fwknopd needs libpcap])]
   )
 
   # Looking for gdbm or fallback to ndbm or bail
   #
-  AC_CHECK_LIB([gdbm],[gdbm_open], [], 
-    [ AC_CHECK_LIB([ndbm],[dbm_open], [],
+  AC_CHECK_LIB([gdbm],[gdbm_open],
+    [ AC_DEFINE([HAVE_LIBGDBM], [1], [Define if you have libgdbm]) ],
+    [ AC_CHECK_LIB([ndbm],[dbm_open],
+        [
+            AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
+            use_ndbm=yes
+        ],
         [ AC_MSG_ERROR([fwknopd needs either gdbm or ndbm])]
     )]
   )
+
+  AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xyes])
 
 dnl Check for iptables
 dnl

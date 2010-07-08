@@ -8,7 +8,12 @@ fwknopd_SOURCES   = fwknopd.c fwknopd.h config_init.c config_init.h \
                     access.c access.h fw_util.c fw_util.h extcmd.c extcmd.h \
                     tcp_server.c tcp_server.h
 
-fwknopd_LDADD     = $(top_builddir)/lib/libfko.la
+fwknopd_LDADD     = $(top_builddir)/lib/libfko.la -lpcap
+if USE_NDBM
+    fwknopd_LDADD += -lndbm
+else
+    fwknopd_LDADD += -lgdbm
+endif
 
 fwknopd_CPPFLAGS  = -I $(top_srcdir)/lib -I $(top_srcdir)/common -DSYSCONFDIR=\"$(sysconfdir)\" -DSYSRUNDIR=\"$(localstatedir)\"
 
