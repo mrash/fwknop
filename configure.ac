@@ -102,6 +102,8 @@ dnl AC_CHECK_TYPES([uint8_t, uint32_t])
 
 AC_C_BIGENDIAN
 
+AC_SYS_LARGEFILE
+
 # Checks for library functions.
 #
 AC_FUNC_MALLOC
