@@ -16,17 +16,16 @@ SYNOPSIS
 DESCRIPTION
 -----------
 *fwknop* implements an authorization scheme known as Single Packet
-Authorization (SPA) for Linux systems running iptables, and for Mac OS X
-and FreeBSD systems running ipfw.  This mechanism requires only a single
-encrypted and non-replayed packet to communicate various pieces of
-information including desired access through an iptables or ipfw policy.
-The main application of this program is to use iptables or ipfw in a
-default-drop stance to protect services such as 'SSH' with an additional
-layer of security in order to make the exploitation of vulnerabilities
-(both 0-day and unpatched code) much more difficult.
+Authorization (SPA) for Linux systems running iptables.  This mechanism
+requires only a single encrypted and non-replayed packet to communicate
+various pieces of information including desired access through an iptables
+or ipfw policy.  The main application of this program is to use iptables
+in a default-drop stance to protect services such as 'SSH' with an
+additional layer of security in order to make the exploitation of
+vulnerabilities (both 0-day and unpatched code) much more difficult.
 
 An authorization server *fwknopd* passively monitors authorization packets
-via 'libpcap' and hence there is no "server" to which to connect in the
+via 'libpcap' and hence there is no ``server'' to which to connect in the
 traditional sense.  Any service protected by *fwknop* is inaccessible (by
 using 'iptables' or 'ipfw' to intercept packets within the kernel) before
 authenticating; anyone scanning for the service will not be able to detect
@@ -60,9 +59,9 @@ format (before they are encrypted):
     message digest (SHA512 / SHA384 / SHA256 / SHA1 / MD5)
 ..........................
 
-Each of the above fields are separated by a ``+:+'' character due to the
+Each of the above fields are separated by a ":" character due to the
 variable length of several of the fields, and those that might contain
-``+:+'' characters are base64 encoded.  The message digest (*SHA256* by
+":" characters are base64 encoded.  The message digest (*SHA256* by
 default in all versions of *fwknop* greater than 1.9.1) allows the server
 to check message integrity after decryption, and the 16 bytes of random data
 ensures (with high probability) that no two messages are identical.  This
@@ -83,11 +82,15 @@ Also, *fwknop* can send the SPA packet over a random port via the
 
 REQUIRED ARGUMENTS
 ------------------
+These required arguments can be specified via command-line or from within
+the '.fwknoprc' file (see '-n, --named-config' option and the FWKNOPRC FILE
+section below.
+
 *-D, --destination*='<IP-address>'::
     Direct the *fwknop* client to authenticate with the *fwknopd*
-    daemon/service at the destination address <IP>.  The connection mode
-    is discovered by the *fwknopd* daemon/service when it decrypts and
-    parses the authentication packet.
+    daemon/service at the specified destination hostname or IP address. The
+    connection mode is discovered by the *fwknopd* daemon/service when it
+    decrypts and parses the authentication packet.
 
 *-A, --access*='<port list>'::
     Provide a list of ports and protocols to access on a remote computer
@@ -115,7 +118,12 @@ GENERAL OPTIONS
     to the specified file so that it can be examined off-line.
 
 *-G, --get-key*='<file>'::
-    Load an encryption key/password from the specified file.
+    Load an encryption key/password from the specified file.  The key file
+    contains a line for each destination hostname or IP address, a colon
+    (":"), optional space and the password, followed by a newline.  Note
+    that the last line has to have a terminating newline character. 
+    Also note: though this is a convenience, have a file on your system with
+    cleartext passwords is not a good idea and is not recommended.
 
 *-l, --last-cmd*::
     Execute *fwknop* with the command-line arguments from the previous
@@ -128,7 +136,7 @@ GENERAL OPTIONS
     alleviate the need for remembering the various command-line arguments
     for frequently used invocations of *fwknop*. See the section labeled,
     FWKNOPRC FILE below for a list of the valid configuration directives in
-    the ``.fwknoprc'' file.
+    the '.fwknoprc' file.
 
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
@@ -140,7 +148,9 @@ GENERAL OPTIONS
     This is primarily a debugging feature.
 
 *-v, --verbose*::
-    Run the *fwknop* client in verbose mode.
+    Run the *fwknop* client in verbose mode.  This causes *fwknop* to print
+    some extra information about the current command and the resulting SPA
+    data.
 
 *-V, --Version*::
     Display version information and exit.
@@ -151,18 +161,18 @@ SPA OPTIONS
 *-a, --allow-ip*='<IP-address>'::
     Specify IP address that should be permitted through the destination
     *fwknopd* server firewall (this IP is encrypted within the SPA packet
-    itself).  This is useful to prevent a 'Man-In-The-Middle' (MTIM) attack
-    where an SPA packet can be intercepted enroute and sent from a
-    different IP than the original.  Hence, if the *fwknopd* server trusts
-    the source address on the  SPA  packet IP header then the attacker
-    gains access.  The *-a* option puts the source address within the
-    encrypted SPA packet, and so thwarts this attack.  The *-a* option
-    is also useful to specify the IP that will be granted access when the
+    itself).  This is useful to prevent a MTIM attack where a SPA packet
+    can be intercepted enroute and sent from a different IP than the
+    original.  Hence, if the *fwknopd* server trusts the source address
+    on the  SPA  packet IP header then the attacker gains access. 
+    The *-a* option puts the source address within the encrypted SPA
+    packet, and so thwarts this attack.  The *-a* option is also
+    useful to specify the IP that will be granted access when the
     SPA packet itself is spoofed with the *--spoof-src* option.  Another
     related option is *-R* (see below) which instructs the *fwknop* client
     to automatically resolve the externally routable IP address the local
-    system is connected to by querying the 'http://www.whatismyip.com'
-    website.
+    system is connected to by querying a website that returns the actual
+    IP address it sees from the calling system.
 
 *-C, --server-cmd*='<command to execute>'::
     Instead of requesting access to a service with an SPA packet, the
@@ -180,7 +190,7 @@ SPA OPTIONS
     Specify an HTTP proxy that the *fwknop* client will use to send the SPA
     packet through.  Using this option will automatically set the SPA packet
     transmission mode (usually set via the *--server-proto* argument) to
-    ``http''.  You can also specify the proxy port by adding ':<port>' to
+    "http".  You can also specify the proxy port by adding ":<port>" to
     the proxy host name or ip.
 
 *-m, --digest-type*='<digest>'::
@@ -193,7 +203,7 @@ SPA OPTIONS
     iptables NAT capabilities.  So, if the *fwknopd* server is protecting
     an internal network on an RFC-1918 address space, an external *fwknop*
     client can request that the server port forward an external port to an
-    internal IP, i.e. ``+--NAT-access 192.168.10.2:55000+''.  In this case,
+    internal IP, i.e. ``+--NAT-access 192.168.10.2,55000+''.  In this case,
     access will be granted to 192.168.10.2 via port 55000 to whatever
     service is requested via the *--access* argument (usually tcp/22). 
     Hence, after sending such an SPA packet, one would then do
@@ -230,14 +240,14 @@ SPA OPTIONS
     over UDP port 62201.
 
 *-P, --server-proto*='<protocol>'::
-    Set the protocol (udp, tcp, tcpraw, icmp) for the outgoing SPA packet. 
-    Note: The *tcpraw* and *icmp* modes use raw sockets and thus require
-    root access to run.  Also note: The *tcp* mode expects to establish a
-    TCP connection to the server before sending the SPA packet.  This is
+    Set the protocol (udp, tcp, http, tcpraw, or icmp) for the outgoing SPA
+    packet.  Note: The *tcpraw* and *icmp* modes use raw sockets and thus
+    require root access to run.  Also note: The *tcp* mode expects to establish
+    a TCP connection to the server before sending the SPA packet.  This is
     not normally done, but is useful for compatibility with the Tor for
     strong anonymity; see 'http://tor.eff.org/'.  In this case, the
-    *fwknopd* server uses the *fwknop_serv* daemon to listen on a TCP
-    port (62201 by default).
+    *fwknopd* server will need to be configured to listen on the target TCP
+    port (which is 62201 by default).
 
 *-Q, --spoof-src*='<IP>'::
     Spoof the source address from which the *fwknop* client sends SPA
@@ -255,11 +265,13 @@ SPA OPTIONS
 
 *-R, --resolve-ip-http*::
     This is an important option, and instructs the *fwknop* client and
-    the *fwknopd* daemon/service to query 'http://www.whatismyip.com' to
-    determine the IP address that should be allowed through the iptables
-    policy at the remote fwknopd server side.  This is useful if the
-    *fwknop* client is being used on a system that is behind an obscure
-    NAT address.
+    the *fwknopd* daemon/service to query a web server that returns the
+    caller's IP address (as seen by the web server). In some cases, this is
+    needed to determine the IP address that should be allowed through the
+    iptables policy at the remote fwknopd server side.  This is useful if
+    the *fwknop* client is being used on a system that is behind an obscure
+    NAT address. Presently, *fwknop* uses the URL:
+    'http://www.cipherdyne.org/cgi-bin/myip' to resolve the caller IP.
 
 *-s, --source-ip*::
     Instruct the *fwknop* client to form an SPA packet that contains the
@@ -268,7 +280,7 @@ SPA OPTIONS
     SPA packet originates as the IP that will be allowed through upon
     modification of the firewall ruleset.  This option is useful if the
     *fwknop* client is deployed on a machine that is behind a NAT device. 
-    The permit-address options *-s* (default), *-R* and *-a* are mutually
+    The permit-address options *-s*, *-R* and *-a* are mutually
     exclusive.
 
 *--time-offset-plus*='<time>'::
@@ -322,7 +334,7 @@ GPG-RELATED OPTIONS
 
 *--gpg-signer-key*='<key ID or Name>'::
     Specify the GnuPG key ID, e.g. ``+ABCD1234+'' (see the output of
-    ``+gpg --list-keys+'') or the key name to use when signing the SPA message. 
+    "gpg --list-keys") or the key name to use when signing the SPA message. 
     The user is prompted for the associated GnuPG password to create the
     signature.  This adds a cryptographically strong mechanism to allow
     the *fwknopd* daemon on the remote server to authenticate who created
@@ -331,7 +343,7 @@ GPG-RELATED OPTIONS
 
 FWKNOPRC FILE
 -------------
-The ``.fwknoprc'' file is used to set various parameters to override default
+The '.fwknoprc' file is used to set various parameters to override default
 program parameters at runtime.  It also allows for additional named
 configuration 'stanzas' for setting program parameters for a particular
 invocation.
@@ -340,18 +352,20 @@ The *fwkop* client will create this file if it does not exist in the user's
 home directory.  This initial version has some sample directives that are
 commented out.  It is up to the user to edit this file to meet their needs.
 
-The ``.fwkoprc'' file contains a default configuration area or 'stanza' which
+The '.fwkoprc' file contains a default configuration area or stanza which
 holds global configuration directives that override the program defaults. 
 You can edit this file and create additonal 'named stanzas' that can be
-specified with this ('-n') option.  Parameters defined in the named stanzas
-will override any matching 'default' stanza directives.
+specified with the *-n* or *--named-config* option. Parameters defined in
+the named stanzas will override any matching 'default' stanza directives.
+Note that command-line options will still override any corresponding
+'.fwknoprc' directives.
 
 There are directives to match most of the command-line parameters *fwknop*
 supports.  Here is the current list of each directive along with a brief
 description and its matching command-line option(s):
 
 *DIGEST_TYPE*::
-    Set the SPA message digest type ('-m, --digest-type).
+    Set the SPA message digest type ('-m, --digest-type').
 
 *SPA_SERVER_PROTO*::
     Set the protocol to use for sending the SPA packet ('-P, --server-proto').
@@ -371,11 +385,11 @@ description and its matching command-line option(s):
 
 *ALLOW_IP*::
     Specify the address to allow within the SPA data.  Note: This parameter
-    covers the '-a', '-s', and '-R' command-line options.  You can specify
-    an IP address (the '-a' option), specify the word "source" to tell the
-    *fwknopd* server to accept the source IP of the packet as the IP to
-    allow (the '-s' option), or use the word "resolve" to have *fwknop*
-    resolve the external network IP via HTTP request (the '-R' option).
+    covers the *-a*, *-s*, and *-R* command-line options.  You can specify
+    a hostname or IP address (the *-a* option), specify the word "source" to
+    tell the *fwknopd* server to accept the source IP of the packet as the IP
+    to allow (the *-s* option), or use the word "resolve" to have *fwknop*
+    resolve the external network IP via HTTP request (the *-R* option).
 
 *TIME_OFFSET*::
     Set a value to apply to the timestamp in the SPA packet.  This can
@@ -434,7 +448,7 @@ description and its matching command-line option(s):
 
 ENVIRONMENT
 -----------
-*GPG_AGENT_INFO* (only used in *--gpg-agent* mode).
+*SPOOF_USER*, *GPG_AGENT_INFO* (only used in *--gpg-agent* mode).
 
 EXAMPLES
 --------
@@ -472,12 +486,11 @@ behind a NAT device):
     $ fwknop -A "tcp/22,udp/53" -s -D 10.0.0.123
 ..........................
 
-Same as above example, but use the IP identification website
-'http://www.whatismyip.com' to derive the client IP address.  This
-is a safer method of acquiring the client IP address than using the
-*-s* option because the source IP is put within the encrypted packet
-instead of having the *fwknopd* daemon grant the requested access
-from whatever IP address the SPA packet originates:
+Same as above example, but use an IP identification website to derive
+the client IP address.  This is a safer method of acquiring the client
+IP address than using the *-s* option because the source IP is put within
+the encrypted packet instead of having the *fwknopd* daemon grant the
+requested access from whatever IP address the SPA packet originates:
 
 ..........................
     $ fwknop -A "tcp/22,udp/53" -R -D 10.0.0.123
@@ -530,8 +543,7 @@ More information on Single Packet Authorization can be found in the paper
 
 AUTHORS
 -------
-Damien Stuart <dstuart@dstuart.org>
-
+Damien Stuart <dstuart@dstuart.org>, 
 Michael Rash <mbr@cipherdyne.org>
 
 CONTRIBUTORS

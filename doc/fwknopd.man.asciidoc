@@ -1,5 +1,5 @@
 :man source: Fwknop Server
-:man manual: Fwknop Server 
+:man manual: Fwknop Server
 
 FWKNOPD(8)
 ==========
@@ -407,8 +407,7 @@ fwknop(8), iptables(8), libfko docmentation.
 
 AUTHOR
 ------
-Damien Stuart <dstuart@dstuart.org>
-
+Damien Stuart <dstuart@dstuart.org>, 
 Michael Rash <mbr@cipherdyne.org>
 
 

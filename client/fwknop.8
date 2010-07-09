@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 07/05/2010
+.\"      Date: 07/08/2010
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "07/05/2010" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "07/08/2010" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -25,9 +25,9 @@ fwknop \- Firewall Knock Operator
 \fBfwknop\fR \fB\-A\fR <\fIproto/ports\fR> \fB\-R\fR|\fB\-a\fR|\fB\-s \-D\fR <\fIhost\fR> [\fIoptions\fR]
 .SH "DESCRIPTION"
 .sp
-\fBfwknop\fR implements an authorization scheme known as Single Packet Authorization (SPA) for Linux systems running iptables, and for Mac OS X and FreeBSD systems running ipfw\&. This mechanism requires only a single encrypted and non\-replayed packet to communicate various pieces of information including desired access through an iptables or ipfw policy\&. The main application of this program is to use iptables or ipfw in a default\-drop stance to protect services such as \fISSH\fR with an additional layer of security in order to make the exploitation of vulnerabilities (both 0\-day and unpatched code) much more difficult\&.
+\fBfwknop\fR implements an authorization scheme known as Single Packet Authorization (SPA) for Linux systems running iptables\&. This mechanism requires only a single encrypted and non\-replayed packet to communicate various pieces of information including desired access through an iptables or ipfw policy\&. The main application of this program is to use iptables in a default\-drop stance to protect services such as \fISSH\fR with an additional layer of security in order to make the exploitation of vulnerabilities (both 0\-day and unpatched code) much more difficult\&.
 .sp
-An authorization server \fBfwknopd\fR passively monitors authorization packets via \fIlibpcap\fR and hence there is no "server" to which to connect in the traditional sense\&. Any service protected by \fBfwknop\fR is inaccessible (by using \fIiptables\fR or \fIipfw\fR to intercept packets within the kernel) before authenticating; anyone scanning for the service will not be able to detect that it is even listening\&. Single Packet Authorization offers many advantages over port knocking, including non\-replayability of SPA packets, ability to use asymmetric ciphers (such as Elgamal), and SPA cannot be broken by simply spoofing packets to duplicate ports within the knock sequence on the server to break port knocking authentication\&.
+An authorization server \fBfwknopd\fR passively monitors authorization packets via \fIlibpcap\fR and hence there is no \(lqserver\(rq to which to connect in the traditional sense\&. Any service protected by \fBfwknop\fR is inaccessible (by using \fIiptables\fR or \fIipfw\fR to intercept packets within the kernel) before authenticating; anyone scanning for the service will not be able to detect that it is even listening\&. Single Packet Authorization offers many advantages over port knocking, including non\-replayability of SPA packets, ability to use asymmetric ciphers (such as Elgamal), and SPA cannot be broken by simply spoofing packets to duplicate ports within the knock sequence on the server to break port knocking authentication\&.
 .sp
 SPA packets can easily be spoofed as well (this is a good thing in this context), and this makes it possible to make it appear as though, say, www\&.yahoo\&.com is trying to authenticate to a target system but in reality the actual connection will come from a seemingly unrelated IP\&.
 .sp
@@ -50,12 +50,14 @@ Authorization packets are either encrypted with the \fIRijndael\fR block cipher 
 .RE
 .\}
 .sp
-Each of the above fields are separated by a \(oq`+:+\'\' character due to the variable length of several of the fields, and those that might contain ``:\(cq\' characters are base64 encoded\&. The message digest (\fBSHA256\fR by default in all versions of \fBfwknop\fR greater than 1\&.9\&.1) allows the server to check message integrity after decryption, and the 16 bytes of random data ensures (with high probability) that no two messages are identical\&. This ensures that replay attacks are not possible against \fBfwknop\fR\&.
+Each of the above fields are separated by a ":" character due to the variable length of several of the fields, and those that might contain ":" characters are base64 encoded\&. The message digest (\fBSHA256\fR by default in all versions of \fBfwknop\fR greater than 1\&.9\&.1) allows the server to check message integrity after decryption, and the 16 bytes of random data ensures (with high probability) that no two messages are identical\&. This ensures that replay attacks are not possible against \fBfwknop\fR\&.
 .sp
 For each packet coming from an \fBfwknop\fR client, the \fBfwknopd\fR server can cache the digest calculated over the entire packet and compares against previous packet digests in order to detect attempted replay attacks\&. Syslog alerts are generated if a replay is detected\&.
 .sp
 By default, the \fBfwknop\fR client sends authorization packets over UDP port 62201, but this can be altered with the \fB\-\-server\-port\fR argument\&. The server must first be configured to acquire the SPA data on the changed protocol\-port\&. Also, \fBfwknop\fR can send the SPA packet over a random port via the \fB\-\-rand\-port\fR argument\&. See \fIfwknopd(8)\fR for further details\&. See the \fBEXAMPLES\fR section for example invocations of the \fBfwknop\fR client\&.
 .SH "REQUIRED ARGUMENTS"
+.sp
+These required arguments can be specified via command\-line or from within the \fI\&.fwknoprc\fR file (see \fI\-n, \-\-named\-config\fR option and the FWKNOPRC FILE section below\&.
 .PP
 \fB\-D, \-\-destination\fR=\fI<IP\-address>\fR
 .RS 4
@@ -63,7 +65,7 @@ Direct the
 \fBfwknop\fR
 client to authenticate with the
 \fBfwknopd\fR
-daemon/service at the destination address <IP>\&. The connection mode is discovered by the
+daemon/service at the specified destination hostname or IP address\&. The connection mode is discovered by the
 \fBfwknopd\fR
 daemon/service when it decrypts and parses the authentication packet\&.
 .RE
@@ -114,7 +116,7 @@ client to write a newly created SPA packet out to the specified file so that it 
 .PP
 \fB\-G, \-\-get\-key\fR=\fI<file>\fR
 .RS 4
-Load an encryption key/password from the specified file\&.
+Load an encryption key/password from the specified file\&. The key file contains a line for each destination hostname or IP address, a colon (":"), optional space and the password, followed by a newline\&. Note that the last line has to have a terminating newline character\&. Also note: though this is a convenience, have a file on your system with cleartext passwords is not a good idea and is not recommended\&.
 .RE
 .PP
 \fB\-l, \-\-last\-cmd\fR
@@ -128,9 +130,10 @@ file\&.
 .PP
 \fB\-n, \-\-named\-config\fR=\fI<stanza name>\fR
 .RS 4
-The
-\fBfwknop\fR
-client program can use parameters specified in it rc file, \(oq`\&.fwknoprc\'\' which is found in the user\'s home directory\&. If *fwknop* does not detect the $HOME/\&.fwknoprc file, it will create it\&. The \'\&.fwkoprc\' file contains a default configuration area or \'stanza\' which holds global configuration directives that override the program defaults\&. You can edit this file and create additonal \'named stanzas\' that can be specified with this (\'\-n\') option\&. Parameters defined in the named stanzas will override any matching \'default\' stanza directives\&. See the section: FWKNOPRC FILE below for a list of the valid configuration directives in the ``\&.fwknoprc\(cq\' file\&.
+Specify the name of the configuration stanza in the \(lq$HOME/\&.fwknoprc\(rq file to pull configuration and command directives\&. These named stanzas alleviate the need for remembering the various command\-line arguments for frequently used invocations of
+\fBfwknop\fR\&. See the section labeled, FWKNOPRC FILE below for a list of the valid configuration directives in the
+\fI\&.fwknoprc\fR
+file\&.
 .RE
 .PP
 \fB\-\-show\-last\fR
@@ -148,7 +151,9 @@ Test mode\&. Generate the SPA packet data, but do not send it\&. Instead, print 
 .RS 4
 Run the
 \fBfwknop\fR
-client in verbose mode\&.
+client in verbose mode\&. This causes
+\fBfwknop\fR
+to print some extra information about the current command and the resulting SPA data\&.
 .RE
 .PP
 \fB\-V, \-\-Version\fR
@@ -161,9 +166,7 @@ Display version information and exit\&.
 .RS 4
 Specify IP address that should be permitted through the destination
 \fBfwknopd\fR
-server firewall (this IP is encrypted within the SPA packet itself)\&. This is useful to prevent a
-\fIMan\-In\-The\-Middle\fR
-(MTIM) attack where an SPA packet can be intercepted enroute and sent from a different IP than the original\&. Hence, if the
+server firewall (this IP is encrypted within the SPA packet itself)\&. This is useful to prevent a MTIM attack where a SPA packet can be intercepted enroute and sent from a different IP than the original\&. Hence, if the
 \fBfwknopd\fR
 server trusts the source address on the SPA packet IP header then the attacker gains access\&. The
 \fB\-a\fR
@@ -175,9 +178,7 @@ option\&. Another related option is
 \fB\-R\fR
 (see below) which instructs the
 \fBfwknop\fR
-client to automatically resolve the externally routable IP address the local system is connected to by querying the
-\fIhttp://www\&.whatismyip\&.com\fR
-website\&.
+client to automatically resolve the externally routable IP address the local system is connected to by querying a website that returns the actual IP address it sees from the calling system\&.
 .RE
 .PP
 \fB\-C, \-\-server\-cmd\fR=\fI<command to execute>\fR
@@ -206,9 +207,7 @@ Specify an HTTP proxy that the
 \fBfwknop\fR
 client will use to send the SPA packet through\&. Using this option will automatically set the SPA packet transmission mode (usually set via the
 \fB\-\-server\-proto\fR
-argument) to \(lqhttp\(rq\&. You can also specify the proxy port by adding
-\fI:<port>\fR
-to the proxy host name or ip\&.
+argument) to "http"\&. You can also specify the proxy port by adding ":<port>" to the proxy host name or ip\&.
 .RE
 .PP
 \fB\-m, \-\-digest\-type\fR=\fI<digest>\fR
@@ -230,7 +229,7 @@ server offers the ability to provide SPA access through an iptables firewall to 
 \fBfwknopd\fR
 server is protecting an internal network on an RFC\-1918 address space, an external
 \fBfwknop\fR
-client can request that the server port forward an external port to an internal IP, i\&.e\&. \(lq\-\-NAT\-access 192\&.168\&.10\&.2:55000\(rq\&. In this case, access will be granted to 192\&.168\&.10\&.2 via port 55000 to whatever service is requested via the
+client can request that the server port forward an external port to an internal IP, i\&.e\&. \(lq\-\-NAT\-access 192\&.168\&.10\&.2,55000\(rq\&. In this case, access will be granted to 192\&.168\&.10\&.2 via port 55000 to whatever service is requested via the
 \fB\-\-access\fR
 argument (usually tcp/22)\&. Hence, after sending such an SPA packet, one would then do \(lqssh \-p 55000
 user@host\(rq and the connection would be forwarded on through to the internal 192\&.168\&.10\&.2 system automatically\&. Note that the port \(lq55000\(rq can be randomly generated via the
@@ -282,7 +281,7 @@ looks for authorization packets over UDP port 62201\&.
 .PP
 \fB\-P, \-\-server\-proto\fR=\fI<protocol>\fR
 .RS 4
-Set the protocol (udp, tcp, tcpraw, icmp) for the outgoing SPA packet\&. Note: The
+Set the protocol (udp, tcp, http, tcpraw, or icmp) for the outgoing SPA packet\&. Note: The
 \fBtcpraw\fR
 and
 \fBicmp\fR
@@ -291,9 +290,7 @@ modes use raw sockets and thus require root access to run\&. Also note: The
 mode expects to establish a TCP connection to the server before sending the SPA packet\&. This is not normally done, but is useful for compatibility with the Tor for strong anonymity; see
 \fIhttp://tor\&.eff\&.org/\fR\&. In this case, the
 \fBfwknopd\fR
-server uses the
-\fBfwknop_serv\fR
-daemon to listen on a TCP port (62201 by default)\&.
+server will need to be configured to listen on the target TCP port (which is 62201 by default)\&.
 .RE
 .PP
 \fB\-Q, \-\-spoof\-src\fR=\fI<IP>\fR
@@ -327,11 +324,13 @@ This is an important option, and instructs the
 \fBfwknop\fR
 client and the
 \fBfwknopd\fR
-daemon/service to query
-\fIhttp://www\&.whatismyip\&.com\fR
-to determine the IP address that should be allowed through the iptables policy at the remote fwknopd server side\&. This is useful if the
+daemon/service to query a web server that returns the caller\(cqs IP address (as seen by the web server)\&. In some cases, this is needed to determine the IP address that should be allowed through the iptables policy at the remote fwknopd server side\&. This is useful if the
 \fBfwknop\fR
-client is being used on a system that is behind an obscure NAT address\&.
+client is being used on a system that is behind an obscure NAT address\&. Presently,
+\fBfwknop\fR
+uses the URL:
+\fIhttp://www\&.cipherdyne\&.org/cgi\-bin/myip\fR
+to resolve the caller IP\&.
 .RE
 .PP
 \fB\-s, \-\-source\-ip\fR
@@ -343,8 +342,7 @@ client to form an SPA packet that contains the special\-case IP address \(lq0\&.
 SPA server to use the source IP address from which the SPA packet originates as the IP that will be allowed through upon modification of the firewall ruleset\&. This option is useful if the
 \fBfwknop\fR
 client is deployed on a machine that is behind a NAT device\&. The permit\-address options
-\fB\-s\fR
-(default),
+\fB\-s\fR,
 \fB\-R\fR
 and
 \fB\-a\fR
@@ -411,21 +409,23 @@ server and the associated private key is used to decrypt the SPA packet\&. The r
 .PP
 \fB\-\-gpg\-signer\-key\fR=\fI<key ID or Name>\fR
 .RS 4
-Specify the GnuPG key ID, e\&.g\&. \(oq`+ABCD1234+\'\' (see the output of ``gpg \-\-list\-keys\(cq\') or the key name to use when signing the SPA message\&. The user is prompted for the associated GnuPG password to create the signature\&. This adds a cryptographically strong mechanism to allow the
+Specify the GnuPG key ID, e\&.g\&. \(lqABCD1234\(rq (see the output of "gpg \-\-list\-keys") or the key name to use when signing the SPA message\&. The user is prompted for the associated GnuPG password to create the signature\&. This adds a cryptographically strong mechanism to allow the
 \fBfwknopd\fR
 daemon on the remote server to authenticate who created the SPA message\&.
 .RE
 .SH "FWKNOPRC FILE"
 .sp
-The \(lq\&.fwknoprc\(rq file is used to set various parameters to override default program parameters at runtime\&. It also allows for additional named configuration \fIstanzas\fR for setting program parameters for a particular invocation\&.
+The \fI\&.fwknoprc\fR file is used to set various parameters to override default program parameters at runtime\&. It also allows for additional named configuration \fIstanzas\fR for setting program parameters for a particular invocation\&.
 .sp
 The \fBfwkop\fR client will create this file if it does not exist in the user\(cqs home directory\&. This initial version has some sample directives that are commented out\&. It is up to the user to edit this file to meet their needs\&.
 .sp
-There are directives to match most of the command\-line parameters \fBfwknop\fR supports\&. Here is the current list of each directive along with a brief description and (if applicable) it matching command\-line option:
+The \fI\&.fwkoprc\fR file contains a default configuration area or stanza which holds global configuration directives that override the program defaults\&. You can edit this file and create additonal \fInamed stanzas\fR that can be specified with the \fB\-n\fR or \fB\-\-named\-config\fR option\&. Parameters defined in the named stanzas will override any matching \fIdefault\fR stanza directives\&. Note that command\-line options will still override any corresponding \fI\&.fwknoprc\fR directives\&.
+.sp
+There are directives to match most of the command\-line parameters \fBfwknop\fR supports\&. Here is the current list of each directive along with a brief description and its matching command\-line option(s):
 .PP
 \fBDIGEST_TYPE\fR
 .RS 4
-Set the SPA message digest type (\'\-m, \-\-digest\-type)\&.
+Set the SPA message digest type (\fI\-m, \-\-digest\-type\fR)\&.
 .RE
 .PP
 \fBSPA_SERVER_PROTO\fR
@@ -456,19 +456,19 @@ Set the firewall rule timeout value (\fI\-f, \-\-fw\-timeout\fR)\&.
 \fBALLOW_IP\fR
 .RS 4
 Specify the address to allow within the SPA data\&. Note: This parameter covers the
-\fI\-a\fR,
-\fI\-s\fR, and
-\fI\-R\fR
-command\-line options\&. You can specify an IP address (the
-\fI\-a\fR
+\fB\-a\fR,
+\fB\-s\fR, and
+\fB\-R\fR
+command\-line options\&. You can specify a hostname or IP address (the
+\fB\-a\fR
 option), specify the word "source" to tell the
 \fBfwknopd\fR
 server to accept the source IP of the packet as the IP to allow (the
-\fI\-s\fR
+\fB\-s\fR
 option), or use the word "resolve" to have
 \fBfwknop\fR
 resolve the external network IP via HTTP request (the
-\fI\-R\fR
+\fB\-R\fR
 option)\&.
 .RE
 .PP
@@ -550,7 +550,7 @@ Have the fwknop client assign a random port for NAT access (\fI\-\-nat\-rand\-po
 .RE
 .SH "ENVIRONMENT"
 .sp
-\fBGPG_AGENT_INFO\fR (only used in \fB\-\-gpg\-agent\fR mode)\&.
+\fBSPOOF_USER\fR, \fBGPG_AGENT_INFO\fR (only used in \fB\-\-gpg\-agent\fR mode)\&.
 .SH "EXAMPLES"
 .sp
 The following examples illustrate the command line arguments that could be supplied to the fwknop client in a few situations:
@@ -598,7 +598,7 @@ Same as above example, but gain access from whatever source IP is seen by the fw
 .RE
 .\}
 .sp
-Same as above example, but use the IP identification website \fIhttp://www\&.whatismyip\&.com\fR to derive the client IP address\&. This is a safer method of acquiring the client IP address than using the \fB\-s\fR option because the source IP is put within the encrypted packet instead of having the \fBfwknopd\fR daemon grant the requested access from whatever IP address the SPA packet originates:
+Same as above example, but use an IP identification website to derive the client IP address\&. This is a safer method of acquiring the client IP address than using the \fB\-s\fR option because the source IP is put within the encrypted packet instead of having the \fBfwknopd\fR daemon grant the requested access from whatever IP address the SPA packet originates:
 .sp
 .if n \{\
 .RS 4
@@ -652,9 +652,7 @@ fwknopd(8), iptables(8), gpg(1), libfko documentation\&.
 More information on Single Packet Authorization can be found in the paper \(lqSingle Packet Authorization with fwknop\(rq available at \fIhttp://www\&.cipherdyne\&.org/fwknop/docs/SPA\&.html\fR\&.
 .SH "AUTHORS"
 .sp
-Damien Stuart <dstuart@dstuart\&.org>
-.sp
-Michael Rash <mbr@cipherdyne\&.org>
+Damien Stuart <dstuart@dstuart\&.org>, Michael Rash <mbr@cipherdyne\&.org>
 .SH "CONTRIBUTORS"
 .sp
 This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttp://www\&.cipherdyne\&.org/fwknop/docs/contributors\&.html\fR to view the online list of contributors\&.
