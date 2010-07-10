@@ -92,7 +92,6 @@ main(int argc, char **argv)
         */
         if(opts.status == 1)
         {
-            //old_pid = get_running_pid(&opts);
             old_pid = write_pid_file(&opts);
 
             if(old_pid > 0)
