@@ -1,6 +1,6 @@
 NOTES on the generation of the fwknop man pages:
 
-UNtil we decide on a better way, the man pages for 'fwknop' (client) and
+Until we decide on a better way, the man pages for 'fwknop' (client) and
 'fwknopd' (server) are generated from the asciidoc sources in this directory,
 then copied to their respective directories before check-in.
 

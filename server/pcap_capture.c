@@ -184,7 +184,6 @@ pcap_capture(fko_srv_options_t *opts)
         {
             if(got_sigint || got_sigterm || got_sighup)
             {
-                signal(SIGCHLD, SIG_IGN);
                 pcap_breakloop(pcap);
                 pending_break = 1;
             }

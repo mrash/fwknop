@@ -36,11 +36,14 @@ sig_atomic_t got_sigusr1    = 0;    /* SIGUSR1 flag */
 sig_atomic_t got_sigusr2    = 0;    /* SIGUSR2 flag */
 sig_atomic_t got_sigchld    = 0;    /* SIGCHLD flag */
 
+sigset_t    *csmask;
+
 /* SIGHUP Handler
 */
 void
 sig_handler(int sig)
 {
+    int o_errno;
     got_signal = sig;
 
     switch(sig) {
@@ -60,8 +63,10 @@ sig_handler(int sig)
             got_sigusr2 = 1;
             return;
         case SIGCHLD:
+            o_errno = errno; /* Save errno */
             got_sigchld = 1;
             waitpid(-1, NULL, WNOHANG);
+            errno = o_errno; /* restore errno (in case reset by waitpid) */
             return;
     }
 }
@@ -71,7 +76,8 @@ sig_handler(int sig)
 int
 set_sig_handlers(void)
 {
-    int err = 0;
+    int                 err = 0;
+    struct sigaction    act;
 
     /* Clear the signal flags.
     */
@@ -82,41 +88,51 @@ set_sig_handlers(void)
     got_sigusr1    = 0;
     got_sigusr2    = 0;
 
-    /* Setup the handlers */
+    /* Setup the handlers
+    */
+    act.sa_handler = sig_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_RESTART;
 
-    if(signal(SIGHUP, sig_handler) == SIG_ERR)
+    if(sigaction(SIGHUP, &act, NULL) < 0)
     {
-        log_msg(LOG_ERR, "* Error setting SIGHUP handler");
+        log_msg(LOG_ERR, "* Error setting SIGHUP handler: %s",
+            strerror(errno));
         err++;
     }
 
-    if(signal(SIGINT, sig_handler) == SIG_ERR)
+    if(sigaction(SIGINT, &act, NULL) < 0)
     {
-        log_msg(LOG_ERR, "* Error setting SIGINT handler");
+        log_msg(LOG_ERR, "* Error setting SIGINT handler: %s",
+            strerror(errno));
         err++;
     }
 
-    if(signal(SIGTERM, sig_handler) == SIG_ERR)
+    if(sigaction(SIGTERM, &act, NULL) < 0)
     {
-        log_msg(LOG_ERR, "* Error setting SIGTERM handler");
+        log_msg(LOG_ERR, "* Error setting SIGTERM handler: %s",
+            strerror(errno));
         err++;
     }
 
-    if(signal(SIGUSR1, sig_handler) == SIG_ERR)
+    if(sigaction(SIGUSR1, &act, NULL) < 0)
     {
-        log_msg(LOG_ERR, "* Error setting SIGUSR1 handler");
+        log_msg(LOG_ERR, "* Error setting SIGUSR1 handler: %s",
+            strerror(errno));
         err++;
     }
 
-    if(signal(SIGUSR2, sig_handler) == SIG_ERR)
+    if(sigaction(SIGUSR2, &act, NULL) < 0)
     {
-        log_msg(LOG_ERR, "* Error setting SIGUSR2 handler");
+        log_msg(LOG_ERR, "* Error setting SIGUSR2 handler: %s",
+            strerror(errno));
         err++;
     }
 
-    if(signal(SIGCHLD, sig_handler) == SIG_ERR)
+    if(sigaction(SIGCHLD, &act, NULL) < 0)
     {
-        log_msg(LOG_ERR, "* Error setting SIGUSR2 handler");
+        log_msg(LOG_ERR, "* Error setting SIGCHLD handler: %s",
+            strerror(errno));
         err++;
     }
 
