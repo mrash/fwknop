@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 07/09/2010
+.\"      Date: 07/10/2010
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "07/09/2010" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "07/10/2010" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -29,7 +29,7 @@ fwknopd \- Firewall Knock Operator Daemon
 .sp
 The main application of this program is to protect services such as \fISSH\fR with an additional layer of security in order to make the exploitation of vulnerabilities (both 0\-day and unpatched code) much more difficult\&.
 .sp
-The main configuration for \fBfwknopd\fR is maintained within two files: \fIfwknopd\&.conf\fR and \fIaccess\&.conf\fR\&. The default location for these files is determined at package configuration (typically \fI<prefix>/etc/fwknop\fR)The configuration variables within these files are desribed below\&.
+The main configuration for \fBfwknopd\fR is maintained within two files: \fIfwknopd\&.conf\fR and \fIaccess\&.conf\fR\&. The default location for these files is determined at package configuration (typically \fI@sysconfdir@/fwknop\fR)The configuration variables within these files are desribed below\&.
 .SH "COMMAND-LINE OPTIONS"
 .PP
 \fB\-a, \-\-access\-file\fR=\fI<access\-file>\fR
@@ -39,7 +39,7 @@ Specify the location of the
 file\&. If this option is not given,
 \fIfwkopd\fR
 will use the compile\-time default location (typically
-\fI<prefix>/etc/fwknop/access\&.conf\fR\&.
+\fI@sysconfdir@/fwknop/access\&.conf\fR\&.
 .RE
 .PP
 \fB\-c, \-\-config\fR=\fI<config\-file>\fR
@@ -49,7 +49,7 @@ Specify the location of the
 file\&. If this option is not given,
 \fIfwkopd\fR
 will use the default location (typically
-\fI<prefix>/etc/fwknop/fwknopd\&.conf\fR\&.
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\&.
 .RE
 .PP
 \fB\-C, \-\-packet\-limit\fR=\fI<n>\fR
@@ -121,7 +121,7 @@ files\&. This will also force a flush of the current \(lqFWKNOP\(rq Netfilter ch
 \fB\-\-rotate\-digest\-cache\fR
 .RS 4
 Rotate the digest cache file by renaming it to \(lq<name>\-old\(rq, and starting a new one\&. The digest cache file is typically found in
-\fI<prefix>/var/run/fwknop/digest\&.cache\fR\&.
+\fI@localstatedir@/run/fwknop/digest\&.cache\fR\&.
 .RE
 .PP
 \fB\-S, \-\-Status\fR
@@ -135,7 +135,7 @@ processes that may or not be running\&.
 .RS 4
 Run
 \fBfwknopd\fR
-in verbose mode\&. This can option acn be specified multiple times to increase the verbosity of the output to the system log file (or to the screen if running in the foreground)\&.
+in verbose mode\&. This can option can be specified multiple times to increase the verbosity of the output to the system log file (or to the screen if running in the foreground)\&.
 .RE
 .PP
 \fB\-h, \-\-help\fR

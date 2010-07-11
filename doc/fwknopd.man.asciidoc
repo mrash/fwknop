@@ -28,7 +28,7 @@ vulnerabilities (both 0-day and unpatched code) much more difficult.
 
 The main configuration for *fwknopd* is maintained within two files:
 'fwknopd.conf' and 'access.conf'.  The default location for these files
-is determined at package configuration (typically '<prefix>/etc/fwknop')The
+is determined at package configuration (typically '@sysconfdir@/fwknop')The
 configuration variables within these files are desribed below.
 
 
@@ -37,12 +37,12 @@ COMMAND-LINE OPTIONS
 *-a, --access-file*='<access-file>'::
     Specify the location of the 'access.conf' file.  If this option is
     not given, 'fwkopd' will use the compile-time default location (typically
-    '<prefix>/etc/fwknop/access.conf'.
+    '@sysconfdir@/fwknop/access.conf'.
 
 *-c, --config*='<config-file>'::
     Specify the location of the 'fwknopd.conf' file.  If this option is
     not given, 'fwkopd' will use the default location (typically
-    '<prefix>/etc/fwknop/fwknopd.conf'.
+    '@sysconfdir@/fwknop/fwknopd.conf'.
 
 *-C, --packet-limit*='<n>'::
     Specify the number of candidate SPA packets to process and exit when
@@ -84,14 +84,14 @@ COMMAND-LINE OPTIONS
 *--rotate-digest-cache*::
     Rotate the digest cache file by renaming it to ``<name>-old'', and
     starting a new one.  The digest cache file is typically found in
-    '<prefix>/var/run/fwknop/digest.cache'.
+    '@localstatedir@/run/fwknop/digest.cache'.
 
 *-S, --Status*::
     Display the status of any *fwknopd* processes that may or not be
     running.
 
 *-v, --verbose*::
-    Run *fwknopd* in verbose mode. This can option acn be specified
+    Run *fwknopd* in verbose mode. This can option can be specified
     multiple times to increase the verbosity of the output to the system
     log file (or to the screen if running in the foreground).
 

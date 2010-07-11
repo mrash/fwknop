@@ -40,3 +40,12 @@ EXTRA_DIST = \
     win32/libfko.sln \
     win32/libfko.vcproj
 
+# Make dist makes the man pages to put them in the distribution.  We
+# do not want that. They will be remade after configure and make is
+# later.  This is bit of a kludge, but seems to work (until I find a
+# better way).   --DSS
+#
+dist-hook:
+	rm -f $(distdir)/client/fwknop.8
+	rm -f $(distdir)/server/fwknopd.8
+

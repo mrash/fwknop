@@ -1,8 +1,16 @@
+%define _prefix /usr
+%define _bindir /usr/bin
+%define _sbindir /usr/sbin
+%define _includedir /usr/include
 %ifarch x86_64
 %define _libdir /usr/lib64
 %else
 %define _libdir /usr/lib
 %endif
+%define _sysconfdir /etc
+%define _localstatedir /var
+%define _infodir /usr/share/info
+%define _mandir /usr/share/man
 
 Name:		fwknop
 Version:	2.0.0_beta_rc1
