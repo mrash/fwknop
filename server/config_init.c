@@ -265,6 +265,13 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_SYSLOG_FACILITY] == NULL)
         set_config_entry(opts, CONF_SYSLOG_FACILITY, "LOG_DAEMON");
 
+    /* If the GPG_HOME_DIR variable is not set in the config file and the
+     * --gpg-home-dir option was not specified on the command line, set the
+     * default gpg keyring path.
+    */
+    if(opts->config[CONF_GPG_HOME_DIR] == NULL)
+        set_config_entry(opts, CONF_GPG_HOME_DIR, GPG_DEFAULT_KEYRING);
+
     /* Some options just trigger some output of information, or trigger an
      * external function, but do not actually start fwknopd.  If any of those
      * are set, we can return here an skip the validation routines as all

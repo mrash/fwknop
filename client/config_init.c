@@ -497,7 +497,7 @@ process_rc(fko_cli_options_t *options)
         if(strcasecmp(curr_stanza, "default") == 0)
         {
             if(parse_rc_param(options, var, val) < 0)
-                fprintf(stderr, "Parameter error in %s, line %i: var=%s, val=%i\n",
+                fprintf(stderr, "Parameter error in %s, line %i: var=%s, val=%s\n",
                     rcfile, line_num, var, val);
         }
         else if(options->use_rc_stanza[0] != '\0'
@@ -506,7 +506,7 @@ process_rc(fko_cli_options_t *options)
             options->got_named_stanza = 1;
             if(parse_rc_param(options, var, val) < 0)
                 fprintf(stderr,
-                    "Parameter error in %s, stanza: %s, line %i: var=%s, val=%i\n",
+                    "Parameter error in %s, stanza: %s, line %i: var=%s, val=%s\n",
                     rcfile, curr_stanza, line_num, var, val);
         }
 
@@ -577,6 +577,19 @@ validate_options(fko_cli_options_t *options)
     return;
 }
 
+/* Establish a few defaults such as UDP/62201 for sending the SPA
+ * packet (can be changed with --server-proto/--server-port)
+*/
+static void
+set_defaults(fko_cli_options_t *options)
+{
+    options->spa_proto    = FKO_DEFAULT_PROTO;
+    options->spa_dst_port = FKO_DEFAULT_PORT;
+    options->fw_timeout   = -1;
+
+    return;
+}
+
 /* Initialize program configuration via config file and/or command-line
  * switches.
 */
@@ -589,12 +602,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     */
     memset(options, 0x00, sizeof(fko_cli_options_t));
 
-    /* Establish a few defaults such as UDP/62201 for sending the SPA
-     * packet (can be changed with --server-proto/--server-port)
+    /* Make sure a few reasonable defaults are set
     */
-    options->spa_proto    = FKO_DEFAULT_PROTO;
-    options->spa_dst_port = FKO_DEFAULT_PORT;
-    options->fw_timeout   = -1;
+    set_defaults(options);
 
     /* First pass over cmd_line args to see if a named-stanza in the 
      * rc file is used.

@@ -569,11 +569,15 @@ set_acc_defaults(fko_srv_options_t *opts)
 
     while(acc)
     {
-        /* fw_access_timeout is the only one that need a default fallback
-         * (so far).
+        /* set default fw_access_timeout if necessary
         */
         if(acc->fw_access_timeout < 1)
             acc->fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
+
+        /* set default gpg keyring path if necessary
+        */
+        if(acc->gpg_home_dir == NULL)
+            add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]);
 
         acc = acc->next;
     }
