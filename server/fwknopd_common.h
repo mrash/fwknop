@@ -69,6 +69,10 @@
 
 #define DEF_INTERFACE           "eth0"
 
+/* The default path to the gpg keyring
+*/
+#define DEF_GPG_KEYRING         "/root/.gnupg"
+
 /* fwknopd-specific limits
 */
 #define MAX_PCAP_FILTER_LEN 1024

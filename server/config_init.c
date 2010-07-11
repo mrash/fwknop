@@ -270,7 +270,7 @@ validate_options(fko_srv_options_t *opts)
      * default gpg keyring path.
     */
     if(opts->config[CONF_GPG_HOME_DIR] == NULL)
-        set_config_entry(opts, CONF_GPG_HOME_DIR, GPG_DEFAULT_KEYRING);
+        set_config_entry(opts, CONF_GPG_HOME_DIR, DEF_GPG_KEYRING);
 
     /* Some options just trigger some output of information, or trigger an
      * external function, but do not actually start fwknopd.  If any of those
