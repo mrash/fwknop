@@ -576,7 +576,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 
         /* set default gpg keyring path if necessary
         */
-        if(acc->gpg_home_dir == NULL)
+        if(acc->gpg_decrypt_pw != NULL && acc->gpg_home_dir == NULL)
             add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]);
 
         acc = acc->next;
