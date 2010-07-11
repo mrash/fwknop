@@ -253,9 +253,10 @@ incoming_spa(fko_srv_options_t *opts)
 
             /* If GPG_REQUIRE_SIG is set for this acc stanza, then set
              * the FKO context accordingly and check the other GPG Sig-
-             * related parameters.
+             * related parameters. This also applies when REMOTE_ID is
+             * set.
             */
-            if(acc->gpg_require_sig)
+            if(acc->gpg_require_sig || acc->gpg_remote_id != NULL)
             {
                 fko_set_gpg_signature_verify(ctx, 1);
 
@@ -313,10 +314,6 @@ incoming_spa(fko_srv_options_t *opts)
     */
     if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_remote_id != NULL)
     {
-        /* Set sig verify flag accordingly (just in case)
-        */
-        fko_set_gpg_signature_verify(ctx, 1);
-
         res = fko_get_gpg_signature_id(ctx, &gpg_id);
         if(res != FKO_SUCCESS)
         {
