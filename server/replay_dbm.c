@@ -27,6 +27,7 @@
 */
 #include "replay_dbm.h"
 #include "log_msg.h"
+#include "fwknopd_errors.h"
 
 #include <time.h>
 

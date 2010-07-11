@@ -35,6 +35,7 @@
 #include "sig_handler.h"
 #include "fw_util.h"
 #include "log_msg.h"
+#include "fwknopd_errors.h"
 #include "sig_handler.h"
 
 /* The pcap capture routine.
@@ -208,21 +209,8 @@ pcap_capture(fko_srv_options_t *opts)
             res = incoming_spa(opts);
 
             if(res != 0 && opts->verbose > 1)
-            {
-                /* make use of the pcap errstr buffer to set the err string
-                 * (yeah, I'm lazy).
-                */
-                if(res == SPA_MSG_NOT_SPA_DATA)
-                    strcpy(errstr, "Not SPA Data");
-                else if(res == SPA_MSG_LEN_TOO_SMALL)
-                    strcpy(errstr, "Msg size too small");
-                else if(res == SPA_MSG_HTTP_NOT_ENABLED)
-                    strcpy(errstr, "HTTP requests not enabled");
-                else
-                    strcpy(errstr, "Undefined Error");
-
-                log_msg(LOG_INFO, "Got error %i: '%s' on incoming packet.", res, errstr);
-            }
+                log_msg(LOG_INFO, "incoming_spa returned error %i: '%s' for incoming packet.",
+                    res, get_errstr(res));
 
             /* Count this packet since it has at least one byte of payload
              * data - we use this as a comparison for --packet-limit regardless

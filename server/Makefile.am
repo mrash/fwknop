@@ -5,8 +5,9 @@ fwknopd_SOURCES   = fwknopd.c fwknopd.h config_init.c config_init.h \
                     pcap_capture.c pcap_capture.h process_packet.c \
                     process_packet.h log_msg.c log_msg.h utils.c utils.h \
                     sig_handler.c sig_handler.h replay_dbm.c replay_dbm.h \
-                    access.c access.h fw_util.c fw_util.h extcmd.c extcmd.h \
-                    tcp_server.c tcp_server.h
+                    access.c access.h fwknopd_errors.c fwknopd_errors.h \
+                    tcp_server.c tcp_server.h extcmd.c extcmd.h \
+					fw_util.c fw_util.h
 
 fwknopd_LDADD     = $(top_builddir)/lib/libfko.la -lpcap
 if USE_NDBM

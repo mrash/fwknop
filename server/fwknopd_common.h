@@ -84,34 +84,6 @@
 */
 #define MIN_SPA_DATA_SIZE   140
 
-/* SPA message handling status code
-*/
-enum {
-    SPA_MSG_SUCCESS = 0,
-    SPA_MSG_BAD_DATA,
-    SPA_MSG_LEN_TOO_SMALL,
-    SPA_MSG_NOT_SPA_DATA,
-    SPA_MSG_HTTP_NOT_ENABLED,
-    SPA_MSG_FKO_CTX_ERROR,
-    SPA_MSG_DIGEST_ERROR,
-    SPA_MSG_DIGEST_CACHE_ERROR,
-    SPA_MSG_REPLAY,
-    SPA_MSG_TOO_OLD,
-    SPA_MSG_ACCESS_DENIED,
-    SPA_MSG_COMMAND_ERROR,
-    SPA_MSG_NOT_SUPPORTED,
-    SPA_MSG_ERROR
-};
-
-/* Firewall rule processing error codes
-*/
-enum {
-    FW_RULE_SUCCESS = 0,
-    FW_RULE_ADD_ERROR = 0x1000,
-    FW_RULE_DELETE_ERROR,
-    FW_RULE_UNKNOWN_ERROR
-};
-
 /* Configuration file parameter tags.
  * This will correspond to entries in the configuration parameters
  * array.

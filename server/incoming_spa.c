@@ -28,6 +28,7 @@
 #include "access.h"
 #include "extcmd.h"
 #include "log_msg.h"
+#include "fwknopd_errors.h"
 
 /* Validate and in some cases preprocess/reformat the SPA data.  Return an
  * error code value if there is any indication the data is not valid spa data.

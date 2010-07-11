@@ -175,8 +175,7 @@ interface of the library.
 
 The primary advantage of using libfko is it provides a single API for either
 creating, or parsing of existing @acronym{SPA} data that is fully compatible
-with the current fwknop implemetation (currently written in Perl).  Other
-advantages include:
+with the existing Perl-based fwknop implemetation.  Other advantages include:
 
 @table @asis
 @item It's free software
@@ -184,7 +183,7 @@ Anybody can use, modify, and redistribute it under the terms of the GNU
 General Public License (@pxref{Library Copying}).
 
 @item It's lightweight
-The current Perl-based implementation requires several additional Perl
+The Perl-based implementation requires several additional Perl
 modules and has a relatively large footprint in memory.  This C-based
 library eliminates those dependencies and has a much smaller footprint.
 
@@ -341,10 +340,10 @@ command-line:
 gcc -c foo.c -I/opt/fko/include ...
 @end example
 
-A similar problem occurs when linking the program with the library.
-Again, the compiler has to find the library files.  For this to work,
-the path to the library files has to be added to the library search
-path (via the @option{-L} option).
+The same is true when linking a program with the library.  In this case,
+the linker has to find the library files.  For this to work, the path to
+the library files has to be added to the library search path (via the
+@option{-L} option).
 
 Continuing with the example above you may want to add @command{-L/opt/fko/lib}
 to @env{LDFLAGS}, or directly on the command-line:
@@ -375,8 +374,8 @@ at the receiving end to verify the data is valid.  This provides a means
 to ensure the data was not modified in-transit.  The resulting digest
 is base64-encoded before it is added to the @acronym{SPA} data.
 
-Currently, libfko support the same three message digests as fwknop.  These
-are (in order of strength):
+Currently, libfko support the same message digests as the legacy fwknop
+plus 2 others (SHA384 and SHA512).  These are (in order of strength):
 
 @deftypevar int fko_digest_type_t
 @table @code
@@ -464,21 +463,21 @@ of encryption:
 @end table
 @end deftypevar
 
-As indicated, libfko only uses Rijndael encryption by default.  Rijndael
+As indicated, libfko uses Rijndael encryption by default.  Rijndael
 encryption is sufficient for most users and produces a much smaller data
-packet than @acronym{GPG} (around 146 bytes or so compared to around 1K for
-@acronym{GPG}).
+packet than @acronym{GPG} (between 140 bytes with MD5 digest to around 225
+bytes or so with SHA512, compared to around 1100 for signed @acronym{GPG}).
 
 However, some may prefer the higher level of security provided by @acronym{GPG}.
 When selected, additional parameters such as @emph{recipient} and @emph{signer}
-will need to be set as well. See @ref{Setting SPA Data} for detail on
+may be set as well. See @ref{Setting SPA Data} for detail on
 setting these and other @acronym{SPA} data fields.
 
 @node Using libfko
 @chapter Using libfko
 
 This chapter provides the ``howto'' for using libfko, including required
-functions and parameter choices.  In some places, code samples are provided
+functions and parameter choices.  In some sections, code samples are provided
 to further illustrate usage.  
 
 @menu
@@ -525,7 +524,8 @@ rc = fko_new(&ctx);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error %i from fko_new: %s\n", rc, fko_errstr(rc));
+    fprintf(stderr, "Error %i from fko_new: %s\n",
+        rc, fko_errstr(rc));
     exit(1);
 @}
 @end example
@@ -569,7 +569,8 @@ rc = fko_new_with_data(&ctx, spa_data, key);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error %i from fko_new_with_data: %s\n", rc, fkoerrstr(rc));
+    fprintf(stderr, "Error %i from fko_new_with_data: %s\n",
+        rc, fkoerrstr(rc));
     exit(1);
 @}
 @end example
@@ -594,7 +595,8 @@ rc = fko_new_with_data(&ctx, spa_data, NULL);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error from fko_new_with_data: %s\n", fko_errstr(rc));
+    fprintf(stderr, "Error from fko_new_with_data: %s\n",
+        fko_errstr(rc));
     exit(1);
 @}
 
@@ -615,7 +617,8 @@ rc = fko_decrypt_spa_data(ctx, key);
 
 if(rc != FKO_SUCCESS)
 @{
-    fprintf(stderr, "Error from fko_decrypt_spa_data: %s\n", fko_errstr(rc));
+    fprintf(stderr, "Error from fko_decrypt_spa_data: %s\n",
+        fko_errstr(rc));
     exit(1);
 @}
 @end example
@@ -665,8 +668,8 @@ parameters as well.  Setting the ``type'' parameters first is recommended
 
 @itemize @bullet
 @item gpg_recipient -- @emph{(must be explicitly set)}
-@item gpg_signer -- @emph{(optional, but recommended - must be explicitly set)}
-@item gpg_home_dir -- @emph{(default may suffice)}
+@item gpg_signer -- @emph{(optional, but recommended - must be explicitly set if used)}
+@item gpg_home_dir -- @emph{(default may suffice - typically $HOME/.gnupg)}
 @end itemize
 
 When a context is initialized, some of the @acronym{SPA} data fields are
@@ -681,17 +684,17 @@ parameters are described in detail in @ref{Setting SPA Data}.
 @noindent
 @strong{Note}: Attempts to call any ``@code{fko_}'' function on a context that
 has not been initialized can have undefined consequences.  Libfko will attempt
-to recover, and if succussful, will return a status of
+to recover, and if successful, will return a status of
 @code{FKO_ERROR_CTX_NOT_INITIALIZED}.
 @end cartouche
 
 A common @acronym{SPA} message is a simple access request.  This request asks
 the fwknop server to create a temporary firewall rule to allow a particular
-IP address access to a particular port.  Assuming the defaults are fine
-for this, all we need to do is create the context, set the message data
-field, call the @code{fko_spa_data_final} function to encode and encrypt,
-process the message, then destroy the context.  Below, we have a contrived bit
-of code demonstrating this:
+IP address access to a particular port on the fwknop server.  Assuming the
+defaults are fine for this, all we need to do is create the context, set the
+message data field, call the @code{fko_spa_data_final} function to encode
+and encrypt, process the message, then destroy the context.  Below, we have
+a contrived bit of code demonstrating this:
 
 @example
 int
@@ -714,8 +717,10 @@ main(int argc, char **argv)
         exit(1);
     @}
 
-    /* Set the SPA message field */
-    rc = fko_set_spa_message(ctx, "0.0.0.0,tcp/22");
+    /* Set the SPA message field - asking to open tcp port 22
+     * for the system at 192.168.0.33
+    */
+    rc = fko_set_spa_message(ctx, "192.168.0.33,tcp/22");
     if(rc != FKO_SUCCESS)
     @{
         fprintf(stderr, "Set SPA message failed: %s\n", fko_errstr(rc));
@@ -788,16 +793,16 @@ For example:
 @end deftypefun
 
 @deftypefun int fko_set_rand_value (@w{fko_ctx_t @var{ctx}, const char @var{*val}});
-Set the random value portion of the spa data to the given value.  The
-given value must be a pointer to a 16-character decimal numeric string
+Set the random value portion of the spa data to the given value (@var{val}).
+The given value must be a pointer to a 16-character decimal numeric string
 or NULL.  If the value is NULL, the function generate a new random value.
 If a string value is provided, it must not a 16-character decimal string,
 the function will return @code{FKO_ERROR_INVALID_DATA}.
 @end deftypefun
 
 @deftypefun int fko_set_username (@w{fko_ctx_t @var{ctx}, const char @var{*spoof_user}});
-Set the username field of the @acronym{SPA} data. If a NULL pointer is
-given, libfko will first look for the environment variable @env{SPOOF_USER}
+Set the username field of the @acronym{SPA} data. If @var{spoof_user} is NULL,
+libfko will first look for the environment variable @env{SPOOF_USER}
 and use its value if found.  Otherwise, it will try to determine the username
 itself using various methods starting with @code{cuser} or @code{getlogin},
 then fallback to the environment variables @env{LOGNAME} or @env{USER}. If
@@ -895,16 +900,17 @@ decoding process will continue.  The default value of this flag is false.
 @end deftypefun
 
 @deftypefun int fko_set_gpg_exe (@w{fko_ctx_t @var{ctx}, const char @var{gpg_exe}});
-Sets the path to the @acronym{GPG} executable that @emph{gpgme} will use.  By default,
-@emph{libfko} forces @emph{gpgme} to use @command{gpg} in case @emph{gpgme} was compiled
-to use @command{gpg2} as its default engine.  You can use this function to override and
-set what @acronym{GPG} executable @emph{gpgme} will use.
+Sets the path to the @acronym{GPG} executable that @emph{gpgme} will use.
+By default, @emph{libfko} forces @emph{gpgme} to use @command{gpg} in case
+@emph{gpgme} was compiled to use @command{gpg2} as its default engine.  You
+can use this function to override and set what @acronym{GPG} executable
+@emph{gpgme} will use.
 @end deftypefun
 
 @noindent
-@strong{Note}: On a libfko build without @acronym{GPG} support, the
-GPG-related functions above will simply return the FKO_ERROR_UNSUPPORTED_FEATURE
-error code.
+@strong{Note}: On a libfko build without @acronym{GPG} support, the GPG-related
+functions above will simply return the FKO_ERROR_UNSUPPORTED_FEATURE error
+code.
 
 @node Retrieving SPA Data
 @section Retrieving SPA Data
@@ -1050,14 +1056,14 @@ to.  The return value is an FKO error status.
 
 @deftypefun int fko_get_gpg_signature_verify (@w{fko_ctx_t @var{ctx}, unsigned char @var{*val}});
 Sets the value of the @var{val} variable to the current gpg_signature_verify
-flag value associated with the current context. The return value is an FKO error
-status.
+flag value associated with the current context. The return value is an FKO
+error status.
 @end deftypefun
 
 @deftypefun int fko_get_gpg_ignore_verify_error (@w{fko_ctx_t @var{ctx}, unsigned char @var{*val}});
 Sets the value of the @var{val} variable to the current ignore_verify_error
-flag value associated with the current context. The return value is an FKO error
-status.
+flag value associated with the current context. The return value is an FKO
+error status.
 @end deftypefun
 
 @deftypefun int fko_get_gpg_signature_id (@w{fko_ctx_t @var{ctx}, char @var{**sig_id}});
@@ -1068,20 +1074,20 @@ to.  The return value is an FKO error status.
 
 @deftypefun int fko_get_gpg_signature_fpr (@w{fko_ctx_t @var{ctx}, char @var{**sig_fpr}});
 Assigns the pointer to the string holding the the @acronym{GPG} signature
-fingerprint associated with the current context to the address @var{sig_id}
+fingerprint associated with the current context to the address @var{sig_fpr}
 is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
 @deftypefun int fko_get_gpg_signature_summary (@w{fko_ctx_t @var{ctx}, unsigned char @var{*sig_sum}});
 Sets the value of the @var{sig_sum} variable to the @acronym{GPG} signature
-summary value associated with the current context. The return value is an FKO error
-status.
+summary value associated with the current context. The return value is an FKO
+error status.
 @end deftypefun
 
 @deftypefun int fko_get_gpg_signature_status (@w{fko_ctx_t @var{ctx}, unsigned char @var{*sig_stat}});
 Sets the value of the @var{sig_stat} variable to the @acronym{GPG} signature
-error status value associated with the current context. The return value is an FKO error
-status.
+error status value associated with the current context. The return value is an
+FKO error status.
 @end deftypefun
 
 @deftypefun int fko_get_gpg_exe (@w{fko_ctx_t @var{ctx}, char @var{**gpg_exe}});
@@ -1117,7 +1123,7 @@ otherwise it will fail with an appropriate error code.
 @end deftypefun
 
 @deftypefun int fko_decrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*dec_key}});
-When given the correct @var{key} (passsword), this function decrypts, decodes,
+When given the correct @var{key} (password), this function decrypts, decodes,
 and parses the encrypted @acronym{SPA} data that was supplied to the context
 via the @code{fko_new_with_data} function that was also called without the
 @var{key} value.  Once the data is decrypted, this function will also call
