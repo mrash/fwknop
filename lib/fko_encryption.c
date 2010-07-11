@@ -764,10 +764,9 @@ fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **fpr)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
     /* Make sure we are supposed to verify signatures.
-     * --DSS don't think we need to do this
+    */
     if(ctx->verify_gpg_sigs == 0)
         return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
-    */
 
     /* Make sure we have a signature to work with.
     */
@@ -797,10 +796,9 @@ fko_get_gpg_signature_id(fko_ctx_t ctx, char **id)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
     /* Make sure we are supposed to verify signatures.
-     * --DSS don't think we need to do this
+    */
     if(ctx->verify_gpg_sigs == 0)
         return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
-    */
 
     /* Make sure we have a signature to work with.
     */
@@ -830,10 +828,9 @@ fko_get_gpg_signature_summary(fko_ctx_t ctx, int *sigsum)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
     /* Make sure we are supposed to verify signatures.
-     * --DSS don't think we need to do this
+    */
     if(ctx->verify_gpg_sigs == 0)
         return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
-    */
 
     /* Make sure we have a signature to work with.
     */
@@ -863,10 +860,9 @@ fko_get_gpg_signature_status(fko_ctx_t ctx, int *sigstat)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
     /* Make sure we are supposed to verify signatures.
-     * --DSS don't think we need to do this
+    */
     if(ctx->verify_gpg_sigs == 0)
         return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
-    */
 
     /* Make sure we have a signature to work with.
     */
@@ -898,10 +894,9 @@ fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id, unsigned char *result)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
     /* Make sure we are supposed to verify signatures.
-     * --DSS don't think we need to do this
+    */
     if(ctx->verify_gpg_sigs == 0)
         return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
-    */
 
     /* Make sure we have a signature to work with.
     */
@@ -933,10 +928,9 @@ fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char *id, unsigned char *result
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
     /* Make sure we are supposed to verify signatures.
-     * --DSS don't think we need to do this
+    */
     if(ctx->verify_gpg_sigs == 0)
         return(FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED);
-    */
 
     /* Make sure we have a signature to work with.
     */

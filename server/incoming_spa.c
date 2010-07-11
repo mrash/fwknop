@@ -313,6 +313,10 @@ incoming_spa(fko_srv_options_t *opts)
     */
     if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_remote_id != NULL)
     {
+        /* Set sig verify flag accordingly (just in case)
+        */
+        fko_set_gpg_signature_verify(ctx, 1);
+
         res = fko_get_gpg_signature_id(ctx, &gpg_id);
         if(res != FKO_SUCCESS)
         {
