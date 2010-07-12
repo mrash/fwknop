@@ -452,7 +452,17 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 opts->foreground = 1;
                 break;
             case GPG_HOME_DIR:
-                set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);
+                if (is_valid_dir(optarg))
+                {
+                    set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);
+                }
+                else
+                {
+                    fprintf(stderr,
+                        "[*] Directory '%s' could not stat()/does not exist?\n",
+                        optarg);
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case GPG_KEY:
                 set_config_entry(opts, CONF_GPG_KEY, optarg);

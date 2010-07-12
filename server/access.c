@@ -769,7 +769,17 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "GPG_HOME_DIR"))
         {
-            add_acc_string(&(curr_acc->gpg_home_dir), val);
+            if (is_valid_dir(val))
+            {
+                add_acc_string(&(curr_acc->gpg_home_dir), val);
+            }
+            else
+            {
+                fprintf(stderr,
+                    "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'\n",
+                    val, curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                exit(EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_ID"))
         {

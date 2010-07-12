@@ -136,4 +136,23 @@ dump_ctx(fko_ctx_t ctx)
     return(buf);
 }
 
+/* Basic directory checks (stat() and whether the path is actually
+ * a directory).
+*/
+int
+is_valid_dir(const char *path)
+{
+    struct stat     st;
+
+    /* If we are unable to stat the given dir, then return with error.
+    */
+    if(stat(path, &st) != 0)
+        return(0);
+
+    if(!S_ISDIR(st.st_mode))
+        return(0);
+
+    return(1);
+}
+
 /***EOF***/

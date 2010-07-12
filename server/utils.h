@@ -34,6 +34,7 @@
 */
 void hex_dump(unsigned char *data, int size);
 char* dump_ctx(fko_ctx_t ctx);
+int is_valid_dir(const char *path);
 
 #ifdef WIN32
   /* Function prototypes we need for Windows

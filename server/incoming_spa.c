@@ -247,7 +247,16 @@ incoming_spa(fko_srv_options_t *opts)
             /* Set whatever GPG parameters we have.
             */
             if(acc->gpg_home_dir != NULL)
-                fko_set_gpg_home_dir(ctx, acc->gpg_home_dir);
+                res = fko_set_gpg_home_dir(ctx, acc->gpg_home_dir);
+                if(res != FKO_SUCCESS)
+                {
+                    log_msg(LOG_WARNING,
+                        "Error setting GPG keyring path to %s: %s",
+                        acc->gpg_home_dir,
+                        fko_errstr(res)
+                    );
+                    return(SPA_MSG_FKO_CTX_ERROR);
+                }
 
             if(acc->gpg_decrypt_id != NULL)
                 fko_set_gpg_recipient(ctx, acc->gpg_decrypt_id);
