@@ -178,6 +178,20 @@ main(int argc, char **argv)
             exit(EXIT_SUCCESS);
         }
 
+        /* Initialize the firewall rules handler based on the fwknopd.conf
+         * file, but (for iptables firewalls) don't flush any rules or create
+         * any chains yet.  This allows us to dump the current firewall rules
+         * via fw_rules_dump() in --fw-list mode before changing around any rules
+         * of an existing fwknopd process.
+        */
+        fw_config_init(&opts);
+
+        if(opts.fw_list == 1)
+        {
+            fw_dump_rules(&opts);
+            exit(EXIT_SUCCESS);
+        }
+
         /* If we are a new process (just being started), proceed with normal
          * start-up.  Otherwise, we are here as a result of a signal sent to an
          * existing process and we want to restart.
@@ -185,7 +199,7 @@ main(int argc, char **argv)
         if(get_running_pid(&opts) != getpid())
         {
             /* If foreground mode is not set, the fork off and become a daemon.
-            * Otherwise, attempt to get the pid fiel lock and go on.
+            * Otherwise, attempt to get the pid file lock and go on.
             */
             if(opts.foreground == 0)
             {
@@ -243,9 +257,10 @@ main(int argc, char **argv)
                 );
         }
 
-        /* Initialize the firewall rules handler.
+        /* Prepare the firewall - i.e. flush any old rules and (for iptables)
+         * create fwknop chains.
         */
-        fw_initialize(&opts);
+        fw_initialize();
 
         /* If the TCP server option was specified, fire it up here.
         */

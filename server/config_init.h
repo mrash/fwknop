@@ -53,7 +53,8 @@
 /* Long options values (for those that may not have a short option).
 */
 enum {
-    GPG_HOME_DIR    = 0x200,
+    FW_LIST         = 0x200,
+    GPG_HOME_DIR,
     GPG_KEY,
     ROTATE_DIGEST_CACHE,
     NOOP /* Just to be a marker for the end */
@@ -75,6 +76,7 @@ static struct option cmd_opts[] =
     {"help",                0, NULL, 'h'},
     {"interface",           1, NULL, 'i'},
     {"kill",                0, NULL, 'K'},
+    {"fw-list",             0, NULL, FW_LIST },
     {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
     {"gpg-key",             1, NULL, GPG_KEY },
     {"locale",              1, NULL, 'l' },

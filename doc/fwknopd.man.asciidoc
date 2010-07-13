@@ -62,6 +62,10 @@ COMMAND-LINE OPTIONS
     in the foreground, message that would go to the log would instead be
     sent to stderr. This mode is usually used when testing and/or debugging.
 
+*--fw-list*::
+    List all firewall rules that any running *fwknopd* daemon has created
+    and then exit.
+
 *-K, --Kill*::
     Kill the current *fwknopd* process.  This provides a quick and easy
     way to stop *fwknopd* without having to look in the process table.

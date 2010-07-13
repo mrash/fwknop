@@ -359,6 +359,7 @@ typedef struct fko_srv_options
     //unsigned char   no_locale;          /* Flag to not allow setting locale */
     unsigned char   restart;            /* Restart fwknopd flag */
     unsigned char   status;             /* Get fwknopd status flag */
+    unsigned char   fw_list;            /* List current firewall rules */
     unsigned char   test;               /* Test mode flag */
     unsigned char   verbose;            /* Verbose mode flag */
 

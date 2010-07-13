@@ -69,6 +69,7 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
 
     if(so_buf == NULL)
     {
+
         /* Since we do not have to capture output, we will fork here (which we
          * would have to do anyway if we are running as another user as well).
         */
@@ -77,6 +78,12 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
         {
             log_msg(LOG_ERR, "run_extcmd: fork failed: %s", strerror(errno));
             return(EXTCMD_FORK_ERROR);
+        }
+        if (pid > 0)
+        {
+            /* we are the parent
+            */
+            wait(NULL);
         }
         else if (pid == 0)
         {
@@ -91,7 +98,6 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
                     exit(EXTCMD_SETUID_ERROR);
                 }
             }
-
             exit(WEXITSTATUS(system(cmd)));
         }
 

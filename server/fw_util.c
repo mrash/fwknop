@@ -107,7 +107,7 @@ jump_rule_exists(int chain_num)
     while((fgets(line_buf, CMD_BUFSIZE-1, ipt)) != NULL)
     {
         /* Get past comments and empty lines (note: we only look at the
-         * first character.
+         * first character).
         */
         if(IS_EMPTY_LINE(line_buf[0]))
             continue;
@@ -125,6 +125,48 @@ jump_rule_exists(int chain_num)
     pclose(ipt);
 
     return(pos);
+}
+
+/* Print all firewall rules currently instantiated by the running fwknopd
+ * daemon to stdout.
+*/
+int
+fw_dump_rules(fko_srv_options_t *opts)
+{
+    int     i;
+    int     pos, res, status, got_err = 0;
+    int     jump_rule_num;
+    char    cmd_buf[CMD_BUFSIZE] = {0};
+    char    err[CMD_BUFSIZE] = {0};
+
+    struct fw_chain *ch = opts->fw_config->chain;
+
+    printf("Listing rules in fwknop chains...\n");
+    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+    {
+
+        if(fwc.chain[i].target[0] == '\0')
+            continue;
+
+        /* Create the list command
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+            opts->fw_config->fw_command,
+            ch[i].table,
+            ch[i].to_chain
+        );
+
+        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
+        res = run_extcmd(cmd_buf, NULL, 0, 0);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+            got_err++;
+        }
+    }
+    return;
 }
 
 /* Quietly flush and delete all fwknop custom chains.
@@ -319,9 +361,8 @@ set_fw_chain_conf(int type, char *conf_str)
 }
 
 void
-fw_initialize(fko_srv_options_t *opts)
+fw_config_init(fko_srv_options_t *opts)
 {
-    int res;
 
     memset(&fwc, 0x0, sizeof(struct fw_config));
 
@@ -390,6 +431,14 @@ fw_initialize(fko_srv_options_t *opts)
     /* Let us find it via our opts struct as well.
     */
     opts->fw_config = &fwc;
+
+    return;
+}
+
+void
+fw_initialize(void)
+{
+    int res;
 
     /* Flush the chains (just in case) so we can start fresh.
     */

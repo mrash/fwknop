@@ -451,6 +451,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'f':
                 opts->foreground = 1;
                 break;
+            case FW_LIST:
+                opts->fw_list = 1;
+                break;
             case GPG_HOME_DIR:
                 if (is_valid_dir(optarg))
                 {

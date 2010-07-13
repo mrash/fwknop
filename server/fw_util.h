@@ -49,10 +49,12 @@
 
 /* Function prototypes
 */
-void fw_initialize(fko_srv_options_t *opts);
+void fw_config_init(fko_srv_options_t *opts);
+void fw_initialize(void);
 void fw_cleanup(void);
 int process_spa_request(fko_srv_options_t *opts, spa_data_t *spdat);
 void check_firewall_rules(fko_srv_options_t *opts);
+int fw_dump_rules(fko_srv_options_t *opts);
 
 #endif /* FW_UTIL_H */
 
