@@ -157,7 +157,7 @@ fw_dump_rules(fko_srv_options_t *opts)
         );
 
         //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-        res = run_extcmd(cmd_buf, NULL, 0, 0);
+        res = system(cmd_buf);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))

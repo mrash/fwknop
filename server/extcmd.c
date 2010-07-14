@@ -79,12 +79,6 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
             log_msg(LOG_ERR, "run_extcmd: fork failed: %s", strerror(errno));
             return(EXTCMD_FORK_ERROR);
         }
-        if (pid > 0)
-        {
-            /* we are the parent
-            */
-            wait(NULL);
-        }
         else if (pid == 0)
         {
             /* We are the child */
