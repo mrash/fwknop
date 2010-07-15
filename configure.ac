@@ -11,7 +11,7 @@ AC_PREREQ(2.61)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
-m4_define(my_version,   [2.0.0_beta_rc1])
+m4_define(my_version,   [2.0.0rc1])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)

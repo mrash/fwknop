@@ -62,16 +62,39 @@
   #define DEF_RUN_DIR       SYSRUNDIR"/run/"PACKAGE_NAME
 #endif
 
-#define DEF_PID_FILENAME            MY_NAME".pid"
-#define DEF_DIGEST_CACHE_FILENAME   "digest.cache"
-
-#define DEF_FW_ACCESS_TIMEOUT   30
-
-#define DEF_INTERFACE           "eth0"
-
-/* The default path to the gpg keyring
+/* More Conf defaults
 */
-#define DEF_GPG_KEYRING         "/root/.gnupg"
+#define DEF_PID_FILENAME                MY_NAME".pid"
+#define DEF_DIGEST_CACHE_FILENAME       "digest.cache"
+
+#define DEF_INTERFACE                   "eth0"
+#define DEF_ENABLE_PCAP_PROMISC         "N"
+#define DEF_PCAP_FILTER                 "udp port 62201"
+#define DEF_ENABLE_SPA_PACKET_AGING     "Y"
+#define DEF_MAX_SPA_PACKET_AGE          "120"
+#define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
+#define DEF_ENABLE_IPT_FORWARDING       "N"
+#define DEF_ENABLE_IPT_LOCAL_NAT        "Y"
+#define DEF_ENABLE_IPT_SNAT             "N"
+#define DEF_ENABLE_IPT_OUTPUT           "N"
+#define DEF_MAX_SNIFF_BYTES             "1500"
+#define DEF_FLUSH_IPT_AT_INIT           "Y"
+#define DEF_FLUSH_IPT_AT_EXIT           "Y"
+#define DEF_GPG_HOME_DIR                "/root/.gnupg"
+#define DEF_ENABLE_SPA_OVER_HTTP        "N"
+#define DEF_ENABLE_TCP_SERVER           "N"
+#define DEF_TCPSERV_PORT                "62201"
+#define DEF_SYSLOG_IDENTITY             MY_NAME
+#define DEF_SYSLOG_FACILITY             "LOG_DAEMON"
+
+#define DEF_IPT_INPUT_ACCESS      "ACCEPT, filter, INPUT, 1, FWKNOP_INPUT, 1"
+#define DEF_IPT_OUTPUT_ACCESS     "ACCEPT, filter, OUTPUT, 1, FWKNOP_OUTPUT, 1"
+#define DEF_IPT_FORWARD_ACCESS    "ACCEPT, filter, FORWARD, 1, FWKNOP_FORWARD, 1"
+#define DEF_IPT_DNAT_ACCESS       "DNAT, nat, PREROUTING, 1, FWKNOP_PREROUTING, 1"
+#define DEF_IPT_SNAT_ACCESS       "SNAT, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+#define DEF_IPT_MASQUERADE_ACCESS "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+
+#define DEF_FW_ACCESS_TIMEOUT       30
 
 /* fwknopd-specific limits
 */
@@ -91,7 +114,7 @@
 enum {
     CONF_CONFIG_FILE = 0,
     CONF_OVERRIDE_CONFIG,
-    CONF_FIREWALL_TYPE,
+    //CONF_FIREWALL_TYPE,
     CONF_PCAP_INTF,
     CONF_ENABLE_PCAP_PROMISC,
     CONF_PCAP_FILTER,
@@ -139,7 +162,6 @@ enum {
     CONF_EXE_IPFW,
 
     CONF_GPG_HOME_DIR,
-    CONF_GPG_KEY,
 
     NUMBER_OF_CONFIG_ENTRIES  /* Marks the end and number of entries */
 };
@@ -153,7 +175,7 @@ enum {
 static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "CONFIG_FILE",
     "OVERRIDE_CONFIG",
-    "FIREWALL_TYPE",
+    //"FIREWALL_TYPE",
     "PCAP_INTF",
     "ENABLE_PCAP_PROMISC",
     "PCAP_FILTER",
@@ -200,7 +222,6 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "EXE_IPFW",
 
     "GPG_HOME_DIR",
-    "GPG_KEY"
 };  
 
 /* A simple linked list of uints for the access stanza items that allow

@@ -61,11 +61,10 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
       && strstr(ndx, "User-Agent: Fwknop") != NULL)
     {
         /* This looks like an HTTP request, so let's see if we are
-         * configured to accept such request and if so, find the DPA
+         * configured to accept such request and if so, find the SPA
          * data.
         */
-        if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL
-          || strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "Y", 1) != 0)
+        if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "N", 1) == 0)
         {
             log_msg(LOG_WARNING,
                 "HTTP request from %s detected, but not enabled.", src_ip

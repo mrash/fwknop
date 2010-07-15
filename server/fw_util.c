@@ -374,37 +374,24 @@ fw_config_init(fko_srv_options_t *opts)
      * config struct.  The IPT_INPUT is the only one that is
      * required. The rest are optional.
     */
-    if(opts->config[CONF_IPT_INPUT_ACCESS] != NULL)
-        set_fw_chain_conf(IPT_INPUT_ACCESS, opts->config[CONF_IPT_INPUT_ACCESS]);
-    else
-    {
-        fprintf(stderr, "The IPT_INPUT_ACCESS chain must be defined in the config file.\n");
-        exit(EXIT_FAILURE);
-    }
+    set_fw_chain_conf(IPT_INPUT_ACCESS, opts->config[CONF_IPT_INPUT_ACCESS]);
 
     /* The FWKNOP_OUTPUT_ACCESS requires ENABLE_IPT_OUTPUT_ACCESS be Y
     */
-    if(opts->config[CONF_ENABLE_IPT_OUTPUT] != NULL
-      && (strncasecmp(opts->config[CONF_ENABLE_IPT_OUTPUT], "Y", 1)==0)
-      && opts->config[CONF_IPT_OUTPUT_ACCESS] != NULL)
+    if(strncasecmp(opts->config[CONF_ENABLE_IPT_OUTPUT], "Y", 1)==0)
         set_fw_chain_conf(IPT_OUTPUT_ACCESS, opts->config[CONF_IPT_OUTPUT_ACCESS]);
 
     /* The remaining access chains require ENABLE_IPT_FORWARDING = Y
     */
-    if(opts->config[CONF_ENABLE_IPT_FORWARDING] != NULL
-      && (strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)==0))
+    if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)==0)
     {
 
-        if(opts->config[CONF_IPT_FORWARD_ACCESS] != NULL)
-            set_fw_chain_conf(IPT_FORWARD_ACCESS, opts->config[CONF_IPT_FORWARD_ACCESS]);
-
-        if(opts->config[CONF_IPT_DNAT_ACCESS] != NULL)
-            set_fw_chain_conf(IPT_DNAT_ACCESS, opts->config[CONF_IPT_DNAT_ACCESS]);
+        set_fw_chain_conf(IPT_FORWARD_ACCESS, opts->config[CONF_IPT_FORWARD_ACCESS]);
+        set_fw_chain_conf(IPT_DNAT_ACCESS, opts->config[CONF_IPT_DNAT_ACCESS]);
 
         /* SNAT (whichever mode) requires ENABLE_IPT_SNAT = Y
         */
-        if(opts->config[CONF_ENABLE_IPT_SNAT] != NULL
-          && (strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1)==0))
+        if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1)==0)
         {
             /* If an SNAT_TRANSLATE_IP is specified use the SNAT_ACCESS mode.
              * Otherwise, use MASQUERADE_ACCESS.
@@ -416,15 +403,9 @@ fw_config_init(fko_srv_options_t *opts)
             */
             if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL
               && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
-            {
-                if(opts->config[CONF_IPT_SNAT_ACCESS] != NULL)
-                    set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]);
-            }
+                set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]);
             else
-            {
-                if(opts->config[CONF_IPT_MASQUERADE_ACCESS] != NULL)
-                    set_fw_chain_conf(IPT_MASQUERADE_ACCESS, opts->config[CONF_IPT_MASQUERADE_ACCESS]);
-            }
+                set_fw_chain_conf(IPT_MASQUERADE_ACCESS, opts->config[CONF_IPT_MASQUERADE_ACCESS]);
         }
     }
 
@@ -703,16 +684,14 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
         /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
         */
-        if(opts->config[CONF_ENABLE_IPT_SNAT] != NULL
-          && strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+        if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
         {
             memset(cmd_buf, 0x0, CMD_BUFSIZE);
 
             /* Setup some parameter depending on whether we are using SNAT
              * or MASQUERADE.
             */
-            if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL
-              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
+            if(strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
             {
                 /* Using static SNAT */
                 snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);

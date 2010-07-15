@@ -207,7 +207,7 @@ parse_config_file(fko_srv_options_t *opts, char *config_file)
     return;
 }
 
-/* Sanity and bounds checks for the various options.
+/* Set defaults, and do sanity and bounds checks for the various options.
 */
 static void
 validate_options(fko_srv_options_t *opts)
@@ -256,21 +256,148 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_DIGEST_FILE, tmp_path);
     }
 
-    /* If log facility and default identity where not set in the config file,
-     * fall back to defaults.
+    /* Set remaining require CONF_ vars if they are not already set.  */
+
+    /* PCAP capture interface.
     */
-    if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
-        set_config_entry(opts, CONF_SYSLOG_IDENTITY, MY_NAME);
+    if(opts->config[CONF_PCAP_INTF] == NULL)
+        set_config_entry(opts, CONF_PCAP_INTF, DEF_INTERFACE);
 
-    if(opts->config[CONF_SYSLOG_FACILITY] == NULL)
-        set_config_entry(opts, CONF_SYSLOG_FACILITY, "LOG_DAEMON");
+    /* PCAP Promiscuous mode.
+    */
+    if(opts->config[CONF_ENABLE_PCAP_PROMISC] == NULL)
+        set_config_entry(opts, CONF_ENABLE_PCAP_PROMISC,
+            DEF_ENABLE_PCAP_PROMISC);
 
-    /* If the GPG_HOME_DIR variable is not set in the config file and the
-     * --gpg-home-dir option was not specified on the command line, set the
-     * default gpg keyring path.
+    /* PCAP Filter.
+    */
+    if(opts->config[CONF_PCAP_FILTER] == NULL)
+        set_config_entry(opts, CONF_PCAP_FILTER, DEF_PCAP_FILTER);
+
+    /* Enable SPA packet aging.
+    */
+    if(opts->config[CONF_ENABLE_SPA_PACKET_AGING] == NULL)
+        set_config_entry(opts, CONF_ENABLE_SPA_PACKET_AGING,
+            DEF_ENABLE_SPA_PACKET_AGING);
+
+    /* SPA packet age.
+    */
+    if(opts->config[CONF_MAX_SPA_PACKET_AGE] == NULL)
+        set_config_entry(opts, CONF_MAX_SPA_PACKET_AGE,
+            DEF_MAX_SPA_PACKET_AGE);
+
+
+    /* Enable digest persistence.
+    */
+    if(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE] == NULL)
+        set_config_entry(opts, CONF_ENABLE_DIGEST_PERSISTENCE,
+            DEF_ENABLE_DIGEST_PERSISTENCE);
+
+    /* Enable IPT forwarding.
+    */
+    if(opts->config[CONF_ENABLE_IPT_FORWARDING] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_FORWARDING,
+            DEF_ENABLE_IPT_FORWARDING);
+
+    /* Enable IPT local NAT.
+    */
+    if(opts->config[CONF_ENABLE_IPT_LOCAL_NAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_LOCAL_NAT,
+            DEF_ENABLE_IPT_LOCAL_NAT);
+
+    /* Enable IPT SNAT.
+    */
+    if(opts->config[CONF_ENABLE_IPT_SNAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_SNAT,
+            DEF_ENABLE_IPT_SNAT);
+
+    /* Enable IPT OUTPUT.
+    */
+    if(opts->config[CONF_ENABLE_IPT_OUTPUT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_OUTPUT,
+            DEF_ENABLE_IPT_OUTPUT);
+
+    /* Max sniff bytes.
+    */
+    if(opts->config[CONF_MAX_SNIFF_BYTES] == NULL)
+        set_config_entry(opts, CONF_MAX_SNIFF_BYTES, DEF_MAX_SNIFF_BYTES);
+
+    /* Flush IPT at init.
+    */
+    if(opts->config[CONF_FLUSH_IPT_AT_INIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_IPT_AT_INIT, DEF_FLUSH_IPT_AT_INIT);
+
+    /* Flush IPT at exit.
+    */
+    if(opts->config[CONF_FLUSH_IPT_AT_EXIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_IPT_AT_EXIT, DEF_FLUSH_IPT_AT_EXIT);
+
+    /* GPG Home dir.
     */
     if(opts->config[CONF_GPG_HOME_DIR] == NULL)
-        set_config_entry(opts, CONF_GPG_HOME_DIR, DEF_GPG_KEYRING);
+        set_config_entry(opts, CONF_GPG_HOME_DIR, DEF_GPG_HOME_DIR);
+
+    /* Enable SPA over HTTP.
+    */
+    if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL)
+        set_config_entry(opts, CONF_ENABLE_SPA_OVER_HTTP,
+            DEF_ENABLE_SPA_OVER_HTTP);
+
+    /* Enable TCP server.
+    */
+    if(opts->config[CONF_ENABLE_TCP_SERVER] == NULL)
+        set_config_entry(opts, CONF_ENABLE_TCP_SERVER, DEF_ENABLE_TCP_SERVER);
+
+    /* TCP Server port.
+    */
+    if(opts->config[CONF_TCPSERV_PORT] == NULL)
+        set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
+
+    /* Syslog identity.
+    */
+    if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
+        set_config_entry(opts, CONF_SYSLOG_IDENTITY, DEF_SYSLOG_IDENTITY);
+
+    /* Syslog facility.
+    */
+    if(opts->config[CONF_SYSLOG_FACILITY] == NULL)
+        set_config_entry(opts, CONF_SYSLOG_FACILITY, DEF_SYSLOG_FACILITY);
+
+    /* IPT input access.
+    */
+    if(opts->config[CONF_IPT_INPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_INPUT_ACCESS,
+            DEF_IPT_INPUT_ACCESS);
+
+    /* IPT output access.
+    */
+    if(opts->config[CONF_IPT_OUTPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_OUTPUT_ACCESS,
+            DEF_IPT_OUTPUT_ACCESS);
+
+    /* IPT forward access.
+    */
+    if(opts->config[CONF_IPT_FORWARD_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_FORWARD_ACCESS,
+            DEF_IPT_FORWARD_ACCESS);
+
+    /* IPT dnat access.
+    */
+    if(opts->config[CONF_IPT_DNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_DNAT_ACCESS,
+            DEF_IPT_DNAT_ACCESS);
+
+    /* IPT snat access.
+    */
+    if(opts->config[CONF_IPT_SNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_SNAT_ACCESS,
+            DEF_IPT_SNAT_ACCESS);
+
+    /* IPT masquerade access.
+    */
+    if(opts->config[CONF_IPT_MASQUERADE_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_MASQUERADE_ACCESS,
+            DEF_IPT_MASQUERADE_ACCESS);
 
     /* Some options just trigger some output of information, or trigger an
      * external function, but do not actually start fwknopd.  If any of those
@@ -290,8 +417,6 @@ validate_options(fko_srv_options_t *opts)
         exit(EXIT_FAILURE);
     }
 
-
-    /* TODO: Add more validation and sanity checks... --DSS */
 
 
     return;
@@ -467,9 +592,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
                 break;
-            case GPG_KEY:
-                set_config_entry(opts, CONF_GPG_KEY, optarg);
-                break;
             case 'i':
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);
                 break;
@@ -552,7 +674,6 @@ usage(void)
       "                           packets.\n"
       " -K, --kill              - Kill the currently running fwknopd.\n"
       "     --gpg-home-dir      - Specify the GPG home directory.\n"
-      "     --gpg-key           - Specify the GPG key ID used for decryption.\n"
       " -l, --locale            - Provide a locale setting other than the system\n"
       "                           default.\n"
       " -O, --override-config   - Specify a file with configuration entries that will\n"

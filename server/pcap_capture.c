@@ -50,16 +50,14 @@ pcap_capture(fko_srv_options_t *opts)
     int                 res;
     int                 pcap_errcnt = 0;
     int                 pending_break = 0;
-    int                 promisc = 1;
+    int                 promisc = 0;
     int                 status;
     pid_t               child_pid;
 
-    /* Set non-promiscuous mode only of the ENABLE_PCAP_PROMISC is
-     * explicitly set to 'N'.
+    /* Set promiscuous mode if ENABLE_PCAP_PROMISC is set to 'Y'.
     */
-    if(opts->config[CONF_ENABLE_PCAP_PROMISC] != NULL
-      && opts->config[CONF_ENABLE_PCAP_PROMISC][0] == 'N')
-        promisc = 0;
+    if(opts->config[CONF_ENABLE_PCAP_PROMISC][0] == 'Y')
+        promisc = 1;
 
     pcap = pcap_open_live(
         opts->config[CONF_PCAP_INTF],
@@ -86,8 +84,7 @@ pcap_capture(fko_srv_options_t *opts)
 
     /* Set pcap filters, if any. 
     */
-    if (opts->config[CONF_PCAP_FILTER] != NULL
-      && opts->config[CONF_PCAP_FILTER][0] != '\0')
+    if (opts->config[CONF_PCAP_FILTER][0] != '\0')
     {
         if(pcap_compile(pcap, &fp, opts->config[CONF_PCAP_FILTER], 1, 0) == -1)
         {
