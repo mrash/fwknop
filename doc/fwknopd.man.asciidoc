@@ -273,7 +273,7 @@ directive starts a new stanza.
 *OPEN_PORTS*: '<proto/port>,...,<proto/port>'::
     Define a set of ports and protocols (tcp or udp) that will be
     opened if a valid knock sequence is seen.  If this entry is not set,
-    *fwknopd* will attempt to honor any proto/port request specifed in the
+    *fwknopd* will attempt to honor any proto/port request specified in the
     SPA data (unless of it matches any ``RESTRICT_PORTS'' entries). Multiple
     entries are comma-separated.
 
