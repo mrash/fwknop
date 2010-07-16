@@ -34,6 +34,7 @@ Requires:	libfko
 Version:	0.0.1
 Summary:	The fwknop library
 Group:		Development/Libraries
+Requires:   gpgme
 
 %package -n libfko-devel
 Version:	0.0.1
@@ -44,7 +45,7 @@ Requires:	libfko
 %package server
 Summary:	The Firewall Knock Operator server.  An implementation of Single Packet Authorization.
 Group:		System Environment/Daemons
-Requires:	libfko gpgme, libpcap, gdbm, iptables
+Requires:	libfko, libpcap, gdbm, iptables
 
 
 %description
@@ -129,8 +130,13 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Thu Jul 15 2010 Damien Stuart <dstuart@dstuart.org>
+- Fixed some misplaced depenencies (moved gpgpme from server to libfko).
+
 * Wed Jul  7 2010 Damien Stuart <dstuart@dstuart.org>
 - Made the post and preun steps specific to libfko-devel.
+
 * Tue Jul  6 2010 Damien Stuart <dstuart@dstuart.org>
 - Initial RPMification.
 
+###EOF###
