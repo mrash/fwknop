@@ -416,7 +416,14 @@ validate_options(fko_srv_options_t *opts)
         exit(EXIT_FAILURE);
     }
 
-
+    if(opts->config[CONF_EXE_IPTABLES] == NULL
+      && opts->config[CONF_EXE_IPFW] == NULL)
+    {
+        fprintf(stderr,
+            "No firewall command executable is set. Please check fwknopd.conf for EXE_IPTABLES or EXE_IPFW.\n"
+        );
+        exit(EXIT_FAILURE);
+    }
 
     return;
 }
