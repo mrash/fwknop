@@ -52,6 +52,14 @@
   #include <netinet/in.h>
 #endif
 
+#if HAVE_CTYPE_H
+  #include <ctype.h>
+#endif
+
+#if HAVE_TIME_H
+  #include <time.h>
+#endif
+
 #ifdef WIN32
   #define strcasecmp	_stricmp
   #define strncasecmp	_strnicmp

@@ -30,13 +30,7 @@
 /* Prototypes
 */
 void hex_dump(unsigned char *data, int size);
-
-
-#ifdef WIN32
-  /* Function prototypes we need for Windows
-  */
-  size_t strlcat(char *dst, const char *src, size_t siz);
-  size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
+size_t strlcat(char *dst, const char *src, size_t siz);
+size_t strlcpy(char *dst, const char *src, size_t siz);
 
 #endif  /* UTILS_H */

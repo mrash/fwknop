@@ -36,11 +36,7 @@ void hex_dump(unsigned char *data, int size);
 char* dump_ctx(fko_ctx_t ctx);
 int is_valid_dir(const char *path);
 
-#ifdef WIN32
-  /* Function prototypes we need for Windows
-  */
-  size_t strlcat(char *dst, const char *src, size_t siz);
-  size_t strlcpy(char *dst, const char *src, size_t siz);
-#endif
+size_t strlcat(char *dst, const char *src, size_t siz);
+size_t strlcpy(char *dst, const char *src, size_t siz);
 
 #endif  /* UTILS_H */

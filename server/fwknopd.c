@@ -30,8 +30,10 @@
 #include "pcap_capture.h"
 #include "log_msg.h"
 #include "utils.h"
+#include "fw_util.h"
 #include "sig_handler.h"
 #include "replay_dbm.h"
+#include "tcp_server.h"
 
 /* Prototypes
 */
@@ -44,10 +46,7 @@ static pid_t get_running_pid(fko_srv_options_t *opts);
 int
 main(int argc, char **argv)
 {
-    fko_ctx_t           ctx;
     int                 res, last_sig, rpdb_count;
-    char               *spa_data, *version;
-    char                access_buf[MAX_LINE_LEN];
     char               *locale;
     pid_t               old_pid;
 
@@ -83,7 +82,7 @@ main(int argc, char **argv)
             }
             else
             {
-                fprintf(stderr, "No running fwknopd detected.\n", old_pid);
+                fprintf(stderr, "No running fwknopd detected.\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -97,7 +96,7 @@ main(int argc, char **argv)
             if(old_pid > 0)
                 fprintf(stderr, "Detected fwknopd is running (pid=%i).\n", old_pid);
             else
-                fprintf(stderr, "No running fwknopd detected.\n", old_pid);
+                fprintf(stderr, "No running fwknopd detected.\n");
 
             exit(EXIT_SUCCESS);
         }
@@ -124,7 +123,7 @@ main(int argc, char **argv)
             }
             else
             {
-                fprintf(stderr, "No running fwknopd detected.\n", old_pid);
+                fprintf(stderr, "No running fwknopd detected.\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -283,8 +282,10 @@ main(int argc, char **argv)
         */
         pcap_capture(&opts);
 
-        if(last_sig = got_signal) {
+        if(got_signal) {
+            last_sig   = got_signal;
             got_signal = 0;
+
             if(got_sighup)
             {
                 log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");

@@ -27,7 +27,6 @@
 #include "config_init.h"
 #include "getopt.h"
 #include "utils.h"
-#include "ctype.h"
 
 /* Convert a digest_type string to its intger value.
 */

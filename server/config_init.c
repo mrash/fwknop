@@ -27,7 +27,6 @@
 #include "config_init.h"
 #include "getopt.h"
 #include "utils.h"
-#include "ctype.h"
 #include "log_msg.h"
 
 /* Take an index and a string value. malloc the space for the value
@@ -640,7 +639,6 @@ void
 dump_config(fko_srv_options_t *opts)
 {
     int i;
-    char *var, *val;
 
     fprintf(stderr, "Current fwknopd config settings:\n");
 

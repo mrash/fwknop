@@ -92,7 +92,7 @@ resolve_ip_http(fko_cli_options_t *options)
         if (sock < 0)
             continue;
 
-        if (error = connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
+        if ((error = (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)))
             break;  /* made it */
 
 #ifdef WIN32
@@ -132,6 +132,7 @@ resolve_ip_http(fko_cli_options_t *options)
     close(sock);
 #endif
 
+fprintf(stderr, "RESP:'%s'\n", http_response);
 	/* Move to the end of the HTTP header and to the start of the content.
 	*/
 	ndx = strstr(http_response, "\r\n\r\n");

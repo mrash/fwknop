@@ -199,7 +199,7 @@ validate_access_msg(const char *msg)
     do {
         ndx++;
         res = validate_proto_port_spec(ndx);
-    } while(ndx = strchr(ndx, ','));
+    } while((ndx = strchr(ndx, ',')));
 
     return(res);
 }
@@ -207,7 +207,6 @@ validate_access_msg(const char *msg)
 int
 validate_proto_port_spec(const char *msg)
 {
-    int     res         = FKO_SUCCESS;
     int     startlen    = strlen(msg);
 
     const char   *ndx   = msg;

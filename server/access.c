@@ -39,7 +39,7 @@
 
 /* Add an access string entry
 */
-static char *
+void
 add_acc_string(char **var, char *val)
 {
     if((*var = strdup(val)) == NULL)
@@ -102,7 +102,7 @@ add_source_mask(acc_stanza_t *acc, char *ip)
 
         do {
             last_sle = tmp_sle;
-        } while(tmp_sle = tmp_sle->next);
+        } while((tmp_sle = tmp_sle->next));
 
         last_sle->next = new_sle;
     }
@@ -155,7 +155,7 @@ add_source_mask(acc_stanza_t *acc, char *ip)
 
 /* Expand the access SOURCE string to a list of masks.
 */
-static acc_int_list_t*
+void
 expand_acc_source(acc_stanza_t *acc)
 {
     char           *ndx, *start;
@@ -218,8 +218,6 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
 static void
 add_port_list_ent(acc_port_list_t **plist, char *port_str)
 {
-    char                *ndx;
-    char                proto_str[16];
     int                 proto_int, port;
 
     acc_port_list_t     *last_plist, *new_plist, *tmp_plist;
@@ -251,7 +249,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 
         do {
             last_plist = tmp_plist;
-        } while(tmp_plist = tmp_plist->next);
+        } while((tmp_plist = tmp_plist->next));
 
         last_plist->next = new_plist;
     }
@@ -265,8 +263,6 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 static void
 add_string_list_ent(acc_string_list_t **stlist, char *str_str)
 {
-    char                *ndx;
-
     acc_string_list_t   *last_stlist, *new_stlist, *tmp_stlist;
 
     if((new_stlist = calloc(1, sizeof(acc_string_list_t))) == NULL)
@@ -290,7 +286,7 @@ add_string_list_ent(acc_string_list_t **stlist, char *str_str)
 
         do {
             last_stlist = tmp_stlist;
-        } while(tmp_stlist = tmp_stlist->next);
+        } while((tmp_stlist = tmp_stlist->next));
 
         last_stlist->next = new_stlist;
     }
@@ -459,11 +455,6 @@ free_acc_stanza_data(acc_stanza_t *acc)
 static void
 expand_acc_ent_lists(fko_srv_options_t *opts)
 {
-    char           *ndx, *start, *end;
-    char            buf[1024];
-    uint32_t        tmpint;
-
-
     acc_stanza_t   *acc = opts->acc_stanzas;
 
     /* We need to do this for each stanza.
@@ -545,7 +536,7 @@ acc_stanza_add(fko_srv_options_t *opts)
     {
         do {
             last_acc = acc;
-        } while(acc = acc->next);
+        } while((acc = acc->next));
     
         last_acc->next = new_acc;
     }
@@ -559,9 +550,6 @@ acc_stanza_add(fko_srv_options_t *opts)
 static void
 set_acc_defaults(fko_srv_options_t *opts)
 {
-    int             i = 0;
-    char            *var, *val;
-
     acc_stanza_t    *acc = opts->acc_stanzas;
 
     if(!acc)
@@ -613,8 +601,6 @@ parse_access_file(fko_srv_options_t *opts)
     char            access_line_buf[MAX_LINE_LEN] = {0};
     char            var[MAX_LINE_LEN]  = {0};
     char            val[MAX_LINE_LEN]  = {0};
-    char            tmp1[MAX_LINE_LEN]  = {0};
-    char            tmp2[MAX_LINE_LEN]  = {0};
 
     struct passwd  *pw;
     struct stat     st;
@@ -861,7 +847,6 @@ acc_stanza_t*
 acc_check_source(fko_srv_options_t *opts, uint32_t ip)
 {
     acc_stanza_t    *acc = opts->acc_stanzas;
-    char            *source;
 
     if(acc == NULL)
     {
@@ -893,7 +878,6 @@ compare_port_list(acc_port_list_t *in, acc_port_list_t *ac, int match_any)
 {
     int a_cnt = 0;
     int i_cnt = 0;
-    int tres  = 0;
 
     acc_port_list_t *tlist;
     while(in)
@@ -1002,7 +986,6 @@ void
 dump_access_list(fko_srv_options_t *opts)
 {
     int             i = 0;
-    char            *var, *val;
 
     acc_stanza_t    *acc = opts->acc_stanzas;
 

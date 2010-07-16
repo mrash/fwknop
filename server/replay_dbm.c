@@ -165,9 +165,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 #endif
     datum       db_key, db_ent;
 
-    //struct tm   created, first, last;
     char        created[18], first[18], last[18];
-    int         replay_count    = 0;
 
     char        curr_ip[INET_ADDRSTRLEN+1] = {0};
     char        last_ip[INET_ADDRSTRLEN+1] = {0};

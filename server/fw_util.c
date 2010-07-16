@@ -25,13 +25,19 @@
 */
 #include "fwknopd_common.h"
 #include "fw_util.h"
+#include "utils.h"
 #include "log_msg.h"
 #include "config_init.h"  /* for the IS_EMPTY_LINE macro */
 #include "extcmd.h"
 #include "access.h"
 
+#if HAVE_TIME_H
+  #include <time.h>
+#endif
+
 static struct fw_config fwc;
 
+/*
 static void
 parse_extcmd_error(int retval, int status, char *se_buf)
 {
@@ -79,11 +85,12 @@ parse_extcmd_error(int retval, int status, char *se_buf)
 
     log_msg(LOG_WARNING, errmsg);
 }
+*/
 
 static int
 jump_rule_exists(int chain_num)
 {
-    int     num, x, pos = 0;
+    int     num, pos = 0;
     char    cmd_buf[CMD_BUFSIZE] = {0};
     char    target[CMD_BUFSIZE] = {0};
     char    line_buf[CMD_BUFSIZE] = {0};
@@ -134,8 +141,7 @@ int
 fw_dump_rules(fko_srv_options_t *opts)
 {
     int     i;
-    int     pos, res, status, got_err = 0;
-    int     jump_rule_num;
+    int     res, got_err = 0;
     char    cmd_buf[CMD_BUFSIZE] = {0};
     char    err[CMD_BUFSIZE] = {0};
 
@@ -166,7 +172,8 @@ fw_dump_rules(fko_srv_options_t *opts)
             got_err++;
         }
     }
-    return;
+
+    return(got_err);
 }
 
 /* Quietly flush and delete all fwknop custom chains.
@@ -174,7 +181,7 @@ fw_dump_rules(fko_srv_options_t *opts)
 static void
 delete_all_chains(void)
 {
-    int     i, pos, res, status;
+    int     i, res;
     int     jump_rule_num;
     char    cmd_buf[CMD_BUFSIZE] = {0};
     char    err[CMD_BUFSIZE] = {0};
@@ -231,7 +238,7 @@ static int
 create_fw_chains(void)
 {
     int     i;
-    int     res, status, got_err = 0;
+    int     res, got_err = 0;
     char    cmd_buf[CMD_BUFSIZE] = {0};
     char    err[CMD_BUFSIZE] = {0};
 
@@ -289,7 +296,6 @@ static void
 set_fw_chain_conf(int type, char *conf_str)
 {
     int i, j;
-    char *mark;
     char tbuf[1024]     = {0};
     char *ndx           = conf_str;
 
@@ -469,7 +475,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     struct fw_chain *dnat_chain = &(opts->fw_config->chain[IPT_DNAT_ACCESS]);
     struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
-    int             status, res;
+    int             res = 0;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -756,8 +762,8 @@ check_firewall_rules(fko_srv_options_t *opts)
     char             rule_num_str[6];
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i, res, status, rn_offset;
-    time_t          now, rule_exp, min_exp;
+    int             i, res, rn_offset;
+    time_t          now, rule_exp, min_exp = 0;
 
     struct fw_chain *ch = opts->fw_config->chain;
 
@@ -915,7 +921,7 @@ check_firewall_rules(fko_srv_options_t *opts)
         */
         if(ch[i].active_rules < 1)
             ch[i].next_expire = 0;
-        else
+        else if(min_exp)
             ch[i].next_expire = min_exp;
     }
 }

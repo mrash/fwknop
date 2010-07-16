@@ -27,6 +27,10 @@
 #include "log_msg.h"
 #include "sig_handler.h"
 
+#if HAVE_SYS_WAIT_H
+  #include <sys/wait.h>
+#endif
+
 sig_atomic_t got_signal     = 0;    /* General signal flag (break capture) */
 
 sig_atomic_t got_sighup     = 0;    /* SIGHUP flag  */

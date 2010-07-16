@@ -33,7 +33,6 @@
 int
 init_gpgme(fko_ctx_t fko_ctx)
 {
-    gpgme_engine_info_t eng_info;
     gpgme_error_t       err;
 
     /* If we already have a context, we are done.

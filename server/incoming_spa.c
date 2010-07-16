@@ -28,7 +28,14 @@
 #include "access.h"
 #include "extcmd.h"
 #include "log_msg.h"
+#include "utils.h"
+#include "fw_util.h"
 #include "fwknopd_errors.h"
+#include "replay_dbm.h"
+
+#if HAVE_ARPA_INET_H
+  #include <arpa/inet.h>
+#endif
 
 /* Validate and in some cases preprocess/reformat the SPA data.  Return an
  * error code value if there is any indication the data is not valid spa data.
@@ -38,9 +45,9 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
 {
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
-    unsigned char    *ndx = (unsigned char *)&(spa_pkt->packet_data);
+    char    *ndx = (char *)&(spa_pkt->packet_data);
     int      pkt_data_len = spa_pkt->packet_data_len;
-    int      tc, i;
+    int      i;
 
     /* At this point, we can reset the packet data length to 0.  This our
      * indicator to the rest of the program that we do not have a current
@@ -75,7 +82,7 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
         /* Now extract, adjust (convert characters translated by the fwknop
          * client), and reset the SPA message itself.
         */
-        strlcpy(spa_pkt->packet_data, ndx+5, pkt_data_len);
+        strlcpy((char *)spa_pkt->packet_data, ndx+5, pkt_data_len);
 
         for(i=0; i<pkt_data_len; i++)
         {
@@ -100,7 +107,7 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
         /* Make sure the data is valid Base64-encoded characters
         * (at least the first MIN_SPA_DATA_SIZE bytes).
         */
-        ndx = spa_pkt->packet_data;
+        ndx = (char *)spa_pkt->packet_data;
         for(i=0; i<MIN_SPA_DATA_SIZE; i++)
         {
             if(!(isalnum(*ndx) || *ndx == '/' || *ndx == '+' || *ndx == '='))
@@ -152,7 +159,7 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
     if(res != FKO_SUCCESS)
         return(res);
 
-    res = fko_get_spa_client_timeout(ctx, &(spdat->client_timeout));
+    res = fko_get_spa_client_timeout(ctx, (int *)&(spdat->client_timeout));
     if(res != FKO_SUCCESS)
         return(res);
 
@@ -172,7 +179,6 @@ incoming_spa(fko_srv_options_t *opts)
     char            *spa_ip_demark, *gpg_id;
     time_t          now_ts;
     int             res, status, ts_diff, enc_type;
-    uid_t           myuid;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -213,12 +219,12 @@ incoming_spa(fko_srv_options_t *opts)
     /* Get encryption type and try its decoding routine first (if the key
      * for that type is set)
     */
-    enc_type = fko_encryption_type(spa_pkt->packet_data);
+    enc_type = fko_encryption_type((char *)spa_pkt->packet_data);
 
     if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
     {
         if(acc->key != NULL)
-            res = fko_new_with_data(&ctx, spa_pkt->packet_data, acc->key);
+            res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, acc->key);
         else 
         {
             log_msg(LOG_ERR,
@@ -233,7 +239,7 @@ incoming_spa(fko_srv_options_t *opts)
         */
         if(acc->gpg_decrypt_pw != NULL)
         {
-            res = fko_new_with_data(&ctx, spa_pkt->packet_data, NULL);
+            res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL);
             if(res != FKO_SUCCESS)
             {
                 log_msg(LOG_WARNING,
@@ -481,13 +487,13 @@ incoming_spa(fko_srv_options_t *opts)
              *            actual exit status of some commands.  Not sure
              *            why yet.  For now, we will take what we get.
             */
-            status = WEXITSTATUS(status);
+            status = WEXITSTATUS(res);
 
             if(opts->verbose > 2)
                 log_msg(LOG_WARNING,
-                    "CMD_EXEC: command returned %i", res);
+                    "CMD_EXEC: command returned %i", status);
 
-            if(res != 0)
+            if(status != 0)
                 res = SPA_MSG_COMMAND_ERROR;
         }
 

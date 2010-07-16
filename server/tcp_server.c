@@ -27,16 +27,21 @@
 #include "fwknopd_common.h"
 #include "tcp_server.h"
 #include "log_msg.h"
+#include "utils.h"
 #include <errno.h>
 
 #if HAVE_SYS_SOCKET_H
-    #include <sys/socket.h>
+  #include <sys/socket.h>
 #endif
-#include <netdb.h>
+#if HAVE_ARPA_INET_H
+  #include <arpa/inet.h>
+#endif
+#if HAVE_NETDB
+  #include <netdb.h>
+#endif
+
 #include <fcntl.h>
 #include <sys/select.h>
-
-//static int c_sock;
 
 /* Fork off and run a "dummy" TCP server. The return value is the PID of
  * the child process or -1 if there is a fork error.
@@ -177,7 +182,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
         /* Wait for a client to connect
         */
-        if((c_sock = accept(s_sock, (struct sockaddr *) &caddr, &clen)) < 0)
+        if((c_sock = accept(s_sock, (struct sockaddr *) &caddr, (socklen_t *)&clen)) < 0)
         {
             log_msg(LOG_ERR, "run_tcp_server: accept() failed: %s",
                 strerror(errno));

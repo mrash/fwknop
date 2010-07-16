@@ -1,9 +1,32 @@
-/* extcmd.c
+/* $Id$
+ *****************************************************************************
  *
- * A test program to run an external command and capture its
- * stdout and stderr and exit code into varaibles to print later.
+ * File:    extcmd.c
  *
+ * Author:  Damien Stuart (dstuart@dstuart.org)
+ *
+ * Purpose: Routines for executing and processing external commands.
+ *
+ * Copyright (C) 2010 Damien Stuart (dstuart@dstuart.org)
+ *
+ *  License (GNU Public License):
+ *
+ *     This program is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ *     You should have received a copy of the GNU General Public License
+ *     along with this program; if not, write to the Free Software
+ *     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+ *     USA
+ *
+ *****************************************************************************
 */
+#include "fwknopd_common.h"
+#include "extcmd.h"
+#include "log_msg.h"
+#include "utils.h"
 
 /*
 #include <stdio.h>
@@ -16,12 +39,14 @@
 */
 #include <errno.h>
 #include <signal.h>
-#include <sys/wait.h>
-#include "fwknopd_common.h"
-#include "extcmd.h"
-#include "log_msg.h"
 
+#if HAVE_SYS_WAIT_H
+  #include <sys/wait.h>
+#endif
+
+/*
 static sig_atomic_t got_sigalrm; 
+*/
 
 /* Takes a file descriptor and makes it non-blocking.
 static int
@@ -45,13 +70,13 @@ set_nonblock(int fd)
 
     return(0);
 }
-*/
 
 static void 
 alarm_handler(int sig)
 {
     got_sigalrm = 1;
 }
+*/
 
 /* Run en external command returning exit status, and optionally filling
  * provided  buffer with STDOUT output up to the size provided.
@@ -346,6 +371,7 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
 
 /* Run an external command.  This is wrapper around _run_extcmd()
 */
+int
 run_extcmd(char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
 {
     return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout);
@@ -353,6 +379,7 @@ run_extcmd(char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
 
 /* Run an external command as the specified user.  This is wrapper around _run_extcmd()
 */
+int
 run_extcmd_as(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
 {
     return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout);

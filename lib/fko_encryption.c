@@ -154,7 +154,7 @@ _rijndael_decrypt(fko_ctx_t ctx, char *dec_key)
      * decryption by ensuring the first field (16-digit random decimal
      * value) is valid and is followed by a colon.
     */
-    ndx = ctx->encoded_msg;
+    ndx = (unsigned char *)ctx->encoded_msg;
     for(i=0; i<FKO_RAND_VAL_SIZE; i++)
         if(!isdigit(*(ndx++)))
             err++;

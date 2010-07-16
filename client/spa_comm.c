@@ -55,6 +55,7 @@ chksum(unsigned short *buf, int nbytes)
     return (unsigned short) ~sum;
 }
 
+/*
 static int is_ip(char *str)
 {
     int rv = 1;
@@ -69,6 +70,7 @@ static int is_ip(char *str)
 
     return rv;
 }
+*/
 
 /* Send the SPA data via UDP packet.
 */
@@ -122,7 +124,7 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
         if (sock < 0)
             continue;
 
-        if (error = connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)
+        if ((error = (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)))
             break;  /* made it */
 
 #ifdef WIN32
@@ -377,7 +379,7 @@ send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
 {
     char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
     char *ndx = options->http_proxy;
-    int  i, proxy_port;
+    int  i, proxy_port = 0;
 
     spa_data_copy = malloc(sd_len+1);
     if (spa_data_copy == NULL)

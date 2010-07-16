@@ -38,6 +38,7 @@ extern sig_atomic_t got_sigusr2;
 extern sig_atomic_t got_sigchld;
 
 void sig_handler(int sig);
+int set_sig_handlers(void);
 
 #endif /* SIG_HANDLER_H */
 

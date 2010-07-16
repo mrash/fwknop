@@ -79,7 +79,7 @@ AC_HEADER_STDC
 AC_HEADER_TIME
 AC_HEADER_RESOLV
 
-AC_CHECK_HEADERS([ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netinet/ether.h netinet/ip_icmp.h netinet/in.h netinet/ip.h netinet/tcp.h netinet/udp.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/ethernet.h sys/socket.h sys/stat.h sys/time.h termios.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netinet/ether.h netinet/ip_icmp.h netinet/in.h netinet/ip.h netinet/tcp.h netinet/udp.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/ethernet.h sys/socket.h sys/stat.h sys/time.h sys/wait.h termios.h time.h unistd.h])
 
 # Type checks.
 #

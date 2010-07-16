@@ -37,6 +37,7 @@
 #include "log_msg.h"
 #include "fwknopd_errors.h"
 #include "sig_handler.h"
+#include "tcp_server.h"
 
 /* The pcap capture routine.
 */
@@ -138,7 +139,8 @@ pcap_capture(fko_srv_options_t *opts)
      * the number of signals that were *not* set.  Those that we not set
      * will be listed in the log/stderr output.
     */
-    set_sig_handlers();
+    if(set_sig_handlers() > 0)
+        log_msg(LOG_ERR, "Errors encountered when setting signal handlers.");
 
     log_msg(LOG_INFO, "Starting fwknopd main event loop.");
 

@@ -36,7 +36,15 @@
   #if HAVE_SYS_SOCKET_H
     #include <sys/socket.h>
   #endif
-  #include <netdb.h>
+  #if HAVE_NETDB_H
+    #include <netdb.h>
+  #endif
+  #if HAVE_NETINET_IN_H
+    #include <netinet/in.h>
+  #endif
+  #if HAVE_ARPA_INET_H
+    #include <arpa/inet.h>
+  #endif
 #endif
 
 /* We will roll our own packet header structs. */
