@@ -1,0 +1,200 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          fwknop-c-server
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: FireWall KNock OPerator (fwknop)
+### END INIT INFO
+
+# Author: Franck Joncourt <franck@debian.org>
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="FireWall KNock OPerator"
+NAME=fwknopd
+DAEMON=/usr/sbin/$NAME
+PIDDIR=/var/run/fwknop
+SCRIPTNAME=/etc/init.d/fwknop-c-server
+
+# Exit if the package is not installed
+[ -x "$DAEMON" ] || exit 0
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+##
+# Function that checks if all of the configuration files exist
+#
+# @return status
+#          0 : all of the configuration files exist
+#          6 : at least one file is missing
+##
+
+check_config()
+{
+	local retval
+	local file_list
+
+	retval=0
+	file_list="/etc/fwknop/access.conf /etc/fwknop/fwknopd.conf"
+
+	for ConfFile in $file_list; do
+		if [ ! -f "$ConfFile" ]; then
+			retval=6	
+		 	break	
+		fi
+	done
+
+	return $retval
+}
+
+##
+# Function that starts the daemon/service
+#
+# @return status
+#          0 : daemon has been started or was already running
+#          1 : generic or unspecified errors (could not be started)
+#          6 : program is not configured (missing configuration files)
+##
+
+do_start()
+{
+	local retval
+
+        echo -n "Starting $DESC: $NAME "
+
+        mkdir -p $PIDDIR
+        chmod 755 $PIDDIR
+
+	# Check fwknopd configuration
+	check_config
+	retval=$?
+
+	# Try to start fwknopd
+	if [ "$retval"  = "0" ]; then
+		start-stop-daemon --start --quiet --pidfile $PIDDIR/$NAME --exec $DAEMON
+		retval="$?"
+	fi
+
+	# Handle return status codes
+	case "$retval" in
+		0)	 
+			log_success_msg
+			;;
+		6)	
+			log_failure_msg "You are missing the configuration file $ConfFile."
+			;;
+		9)	
+			retval=0
+			;;
+		*)
+			retval=1
+			log_failure_msg "Unable to start the daemon."
+			;;
+	esac
+
+	return $retval
+}
+
+##
+# Function that stops the daemon/service
+#
+# @return status
+#            0 : daemon has been stopped or was already stopped
+#            1 : daemon could not be stopped
+##
+
+do_stop()
+{
+	local retval="0"
+	local status kill_status
+	local pid pidfile
+	local process_list="fwknopd"
+
+	echo -n "Stopping $DESC:"
+
+	# For each process
+	for process in $process_list; do
+
+		pidfile="$PIDDIR/$process.pid"
+		status="0"
+		kill_status="1"
+
+		echo -n " $process"
+
+		# Try to kill the process associated to the pid
+		if [ -r "$pidfile" ]; then
+			pid=`cat "$pidfile" 2>/dev/null`
+			kill -0 "${pid:-}" 2>/dev/null
+			kill_status="$?"
+		fi
+
+		# Stop the process
+		if [ "$kill_status" = "0" ]; then
+			start-stop-daemon --stop --oknodo --quiet --pidfile "$pidfile"
+			status="$?"
+		fi
+
+		# Remove its pid file
+		if [ -r "$pidfile" ] && [ "$status" = "0" ]; then
+			 rm -f "$pidfile" 2>/dev/null
+			 status="$?"
+		fi
+
+		[ "$status" = "0" ] || retval="1"
+
+	done
+
+
+	if [ "$retval" = "0" ]; then
+		log_success_msg
+	else
+		echo -n " "
+		log_failure_msg "One or more process could not be stopped."
+	fi
+
+	return $retval
+}
+
+##
+# Function that returns the daemon status
+##
+
+do_status()
+{
+	echo "Status of $DESC:"
+	$DAEMON -S
+}
+
+case "$1" in
+	start)
+		do_start
+		;;
+
+	stop)
+		do_stop
+		;;
+
+	restart|force-reload)
+		do_stop
+		sleep 1
+		do_start
+		;;
+
+	status)
+		do_status
+		exit $?
+		;;
+
+	*)
+		log_success_msg "Usage: $0 {start|stop|restart|status}" >&2
+		exit 1 
+		;;
+esac
+
+exit

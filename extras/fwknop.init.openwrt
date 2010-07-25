@@ -1,0 +1,29 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006-2010 OpenWrt.org
+# Copyright (C) 2010 Damien Stuart
+#
+START=60
+
+FWKNOPD_BIN=/usr/sbin/fwknopd
+
+start()
+{
+	$FWKNOPD_BIN
+}
+
+stop()
+{
+	$FWKNOPD_BIN -K
+}
+
+restart()
+{
+    stop;
+    sleep 1;
+    start;
+}
+
+reload()
+{
+	$FWKNOPD_BIN -R
+}

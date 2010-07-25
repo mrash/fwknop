@@ -1,0 +1,115 @@
+#!/bin/bash
+#
+# fwknopd        This starts and stops fwknopd.
+#
+# chkconfig: 345 60 10
+# description: Fwknop implements an authorization scheme known as \
+#              Single Packet Authorization (SPA) for Linux systems \
+#              running iptables. This mechanism requires only a single \
+#              encrypted and non-replayed packet to communicate various \
+#              pieces of information including desired access through \
+#              an iptables policy.
+#
+# processname: /usr/sbin/fwknopd
+#
+
+### BEGIN INIT INFO
+# Provides: 
+# Required-Start: $syslog $local_fs $network $iptables
+# Required-Stop: $syslog $local_fs $network $iptables
+# Should-Start: 
+# Should-Stop: 
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 2 6
+# Short-Description: start and stop fwknopd
+# Description: Fwknop implements an authorization scheme known as \
+#              Single Packet Authorization (SPA) for Linux systems \
+#              running iptables.
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/bin:/usr/sbin
+
+# Source function library.
+. /etc/init.d/functions
+
+# Get config.
+test -f /etc/sysconfig/network && . /etc/sysconfig/network
+
+
+RETVAL=0
+
+prog="fwknopd"
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch /var/lock/subsys/fwknopd
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/fwknopd
+    return $RETVAL
+}
+
+reload(){
+    echo -n $"Reloading configuration: "	
+    killproc $prog -HUP
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
+restart(){
+    stop
+    sleep 1
+    start
+}
+
+condrestart(){
+    if [ -e /var/lock/subsys/fwknopd ] ; then
+        restart
+        RETVAL=$?
+        return $RETVAL
+    fi
+    RETVAL=0
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+	start
+	RETVAL=$?
+	;;
+    stop)
+	stop
+	RETVAL=$?
+	;;
+    status)
+	status $prog
+	RETVAL=$?
+	;;
+    restart)
+	restart
+	RETVAL=$?
+	;;
+    reload|force-reload)
+	reload
+	RETVAL=$?
+	;;
+    condrestart|try-restart)
+	condrestart
+	RETVAL=$?
+	;;
+    *)
+	echo $"Usage: $0 {start|stop|status|restart|condrestart|reload}"
+	RETVAL=2
+esac
+
+exit $RETVAL
