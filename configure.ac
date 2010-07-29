@@ -228,8 +228,13 @@ dnl
       AC_DEFINE_UNQUOTED([IPFW_EXE], ["$IPFW_EXE"], [Path to ipfw executable])
       ipfw_exe=$IPFW_EXE
     ], [ ipfw_exe="(not found)"]
-  )
-])
+  )],
+
+  [test "$want_server" = no], [
+    use_ndbm=no
+    AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xno])
+  ]
+)
 
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
