@@ -271,7 +271,7 @@ incoming_spa(fko_srv_options_t *opts)
              * related parameters. This also applies when REMOTE_ID is
              * set.
             */
-            if(acc->gpg_require_sig || acc->gpg_remote_id != NULL)
+            if(acc->gpg_require_sig)
             {
                 fko_set_gpg_signature_verify(ctx, 1);
 
@@ -327,7 +327,7 @@ incoming_spa(fko_srv_options_t *opts)
      * then we need to make sure this incoming message is signer ID matches
      * an entry in the list.
     */
-    if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_remote_id != NULL)
+    if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_require_sig)
     {
         res = fko_get_gpg_signature_id(ctx, &gpg_id);
         if(res != FKO_SUCCESS)
@@ -336,8 +336,11 @@ incoming_spa(fko_srv_options_t *opts)
                 fko_gpg_errstr(ctx));
             goto clean_and_bail;
         }
-        
-        if(!acc_check_gpg_remote_id(acc, gpg_id))
+ 
+        if(opts->verbose)
+        log_msg(LOG_INFO, "Incoming SPA data signed by '%s'.", gpg_id);
+
+        if(acc->gpg_remote_id != NULL && !acc_check_gpg_remote_id(acc, gpg_id))
         {
             log_msg(LOG_WARNING,
                 "Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",

@@ -13,7 +13,7 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.0.0rc1
+Version:	2.0.0rc2
 # Uncomment this when the version becomes 2.0.0 (without the rcX).
 #Epoch:      1
 Release:	1%{?dist}
@@ -25,7 +25,7 @@ URL:		http://www.cipherdyne.org/fwknop/
 Source0:	fwknop-%{version}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:	gpgme-devel, libpcap-devel, gdbm-devel
+BuildRequires:	gpg, gpgme-devel, libpcap-devel, gdbm-devel
 
 Requires:	libfko
 
@@ -34,7 +34,7 @@ Requires:	libfko
 Version:	0.0.1
 Summary:	The fwknop library
 Group:		Development/Libraries
-Requires:   gpgme
+Requires:   gpg, gpgme
 
 %package -n libfko-devel
 Version:	0.0.1

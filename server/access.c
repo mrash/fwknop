@@ -167,11 +167,21 @@ expand_acc_source(acc_stanza_t *acc)
     {
         if(*ndx == ',')
         {
+            /* Skip over any leading whitespace.
+            */
+            while(isspace(*start))
+                start++;
+
             strlcpy(buf, start, (ndx-start)+1);
             add_source_mask(acc, buf);
             start = ndx+1;
         }
     }
+
+    /* Skip over any leading whitespace (once again for the last in the list).
+    */
+    while(isspace(*start))
+        start++;
 
     strlcpy(buf, start, (ndx-start)+1);
     add_source_mask(acc, buf);
@@ -317,11 +327,21 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
     {
         if(*ndx == ',')
         {
+            /* Skip over any leading whitespace.
+            */
+            while(isspace(*start))
+                start++;
+
             strlcpy(buf, start, (ndx-start)+1);
             add_port_list_ent(plist, buf);
             start = ndx+1;
         }
     }
+
+    /* Skip over any leading whitespace (once again for the last in the list).
+    */
+    while(isspace(*start))
+        start++;
 
     strlcpy(buf, start, (ndx-start)+1);
 
@@ -336,17 +356,29 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
     char           *ndx, *start;
     char            buf[1024];
 
+    int             stlen = strlen(stlist_str);
+
     start = stlist_str;
 
     for(ndx = start; *ndx; ndx++)
     {
         if(*ndx == ',')
         {
+            /* Skip over any leading whitespace.
+            */
+            while(isspace(*start))
+                start++;
+
             strlcpy(buf, start, (ndx-start)+1);
             add_string_list_ent(stlist, buf);
             start = ndx+1;
         }
     }
+
+    /* Skip over any leading whitespace (once again for the last in the list).
+    */
+    while(isspace(*start))
+        start++;
 
     strlcpy(buf, start, (ndx-start)+1);
 
