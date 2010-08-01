@@ -15,7 +15,13 @@ SUBDIRS = \
     doc 
 
 EXTRA_DIST = \
-	extras \
+    extras/fwknop.init.debian \
+    extras/fwknop.init.openwrt \
+    extras/fwknop.init.redhat \
+    extras/openwrt/README.openwrt \
+    extras/openwrt/package/fwknop/Makefile \
+    extras/openwrt/package/fwknop/files/fwknopd.init \
+    extras/openwrt/package/gpgme/Makefile \
     fwknop.spec \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \
