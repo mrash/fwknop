@@ -260,7 +260,7 @@ pcap_capture(fko_srv_options_t *opts)
 
         /* Check for any expired firewall rules and deal with them.
         */
-//--DSS        check_firewall_rules(opts);
+        check_firewall_rules(opts);
 
     }
 
