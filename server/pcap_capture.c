@@ -24,8 +24,6 @@
  *****************************************************************************
 */
 #include <pcap.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 
 #include "fwknopd_common.h"
 #include "pcap_capture.h"
@@ -39,12 +37,15 @@
 #include "sig_handler.h"
 #include "tcp_server.h"
 
+#if HAVE_SYS_WAIT_H
+  #include <sys/wait.h>
+#endif
+
 /* The pcap capture routine.
 */
 int
 pcap_capture(fko_srv_options_t *opts)
 {
-#if HAVE_LIBPCAP
     pcap_t              *pcap;
     char                errstr[PCAP_ERRBUF_SIZE] = {0};
     struct bpf_program  fp;
@@ -63,7 +64,7 @@ pcap_capture(fko_srv_options_t *opts)
     pcap = pcap_open_live(
         opts->config[CONF_PCAP_INTF],
         atoi(opts->config[CONF_MAX_SNIFF_BYTES]),
-        promisc, 500, errstr
+        promisc, 100, errstr
     );
 
     if(pcap == NULL)
@@ -125,12 +126,16 @@ pcap_capture(fko_srv_options_t *opts)
             break;
     }
 
-    /* Set our pcap handle to nonblocking mode.
+    /* Set our pcap handle nonblocking mode.
+     *
+     * NOTE: This is simply set to 0 for now until we find a need
+     *       to actually use this mode (which when set on a FreeBSD
+     *       system, it silently breaks the packet capture). 
     */
-    if((pcap_setnonblock(pcap, 1, errstr)) == -1)
+    if((pcap_setnonblock(pcap, 0, errstr)) == -1)
     {
-        log_msg(LOG_ERR, "[*] Error setting pcap to non-blocking: %s",
-            errstr
+        log_msg(LOG_ERR, "[*] Error setting pcap nonblocking to %i: %s",
+            0, errstr
         );
         exit(EXIT_FAILURE);
     }
@@ -255,11 +260,9 @@ pcap_capture(fko_srv_options_t *opts)
 
         /* Check for any expired firewall rules and deal with them.
         */
-        check_firewall_rules(opts);
+//--DSS        check_firewall_rules(opts);
 
-        usleep(10000);
     }
-#endif /* HAVE_LIBPCAP */
 
     pcap_close(pcap);
 

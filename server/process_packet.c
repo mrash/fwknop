@@ -28,13 +28,8 @@
 */
 #include <pcap.h>
 
-#include <netinet/in.h>
-#include <netinet/if_ether.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netinet/udp.h>
-
 #include "fwknopd_common.h"
+#include "netinet_common.h"
 #include "process_packet.h"
 #include "utils.h"
 

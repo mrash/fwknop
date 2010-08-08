@@ -73,13 +73,24 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 
+# It seems we need to add these for (at least my) FreeBSD system.
+# (--DSS TOD): See if we can either make this conditional on OS or
+#              add the search path at check time).
+#
+if [ test "x$CPPFLAGS" = "x" ] ; then
+    CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
+fi
+if [ test "x$LDFLAGS" = "x" ] ; then
+    LDFLAGS="-L/usr/local/lib"
+fi
+
 # Checks for header files.
 #
 AC_HEADER_STDC
 AC_HEADER_TIME
 AC_HEADER_RESOLV
 
-AC_CHECK_HEADERS([arpa/inet.h ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netinet/ether.h netinet/in.h netinet/ip.h netinet/tcp.h netinet/udp.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/ethernet.h sys/socket.h sys/stat.h sys/time.h sys/wait.h termios.h time.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/ethernet.h sys/socket.h sys/stat.h sys/time.h sys/wait.h termios.h time.h unistd.h])
 
 # Type checks.
 #

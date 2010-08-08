@@ -372,7 +372,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     */
     /* But first make sure we are using an absolute path.
     */
-    if(*filepath != '/')
+    if(*filepath != PATH_SEP)
     {
         log_msg(LOG_ERR,
             "Configured %s directory (%s) is not an absolute path.", fp_desc, filepath
@@ -383,13 +383,13 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     /* If this is a file path that we want to use only the basename, strip
      * the trailing filename here.
     */
-    if(use_basename && ((ndx = strrchr(filepath, '/')) != NULL))
+    if(use_basename && ((ndx = strrchr(filepath, PATH_SEP)) != NULL))
         strlcpy(tmp_path, filepath, (ndx-filepath)+1);
     else
         strcpy(tmp_path, filepath);
 
-    /* At this point, we should make the path is more than just "/".
-     * If it is not, silently return.
+    /* At this point, we should make the path is more than just the
+     * PATH_SEP.  If it is not, silently return.
     */
     if(strlen(tmp_path) < 2)
         return;
@@ -458,7 +458,7 @@ make_dir_path(const char *run_dir)
 
     /* Strip any trailing dir sep char.
     */
-    if(tmp_path[len-1] == '/')
+    if(tmp_path[len-1] == PATH_SEP)
         tmp_path[len-1] = '\0';
 
     for(ndx = tmp_path+1; *ndx; ndx++)

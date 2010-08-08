@@ -20,7 +20,7 @@ fwknop.8: fwknop.8.in
 		-e 's|[@]bindir@|$(bindir)|g' \
 		-e 's|[@]sbindir@|$(sbindir)|g' \
 		-e 's|[@]localstatedir@|$(localstatedir)|g' \
-		< "$<" > "$@"
+		< "fwknop.8.in" > "$@"
 
 clean-local:
 	rm -f fwknop.8

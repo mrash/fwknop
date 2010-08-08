@@ -24,6 +24,12 @@
  *****************************************************************************
 */
 #include "fwknopd_common.h"
+#include "netinet_common.h"
+
+#if HAVE_SYS_WAIT_H
+  #include <sys/wait.h>
+#endif
+
 #include "incoming_spa.h"
 #include "access.h"
 #include "extcmd.h"
@@ -32,10 +38,6 @@
 #include "fw_util.h"
 #include "fwknopd_errors.h"
 #include "replay_dbm.h"
-
-#if HAVE_ARPA_INET_H
-  #include <arpa/inet.h>
-#endif
 
 /* Validate and in some cases preprocess/reformat the SPA data.  Return an
  * error code value if there is any indication the data is not valid spa data.

@@ -33,9 +33,14 @@
 #endif
 
 #include <stdio.h>
-#include <sys/types.h>
 
-#include <errno.h>
+#if HAVE_SYS_TYPES_H
+  #include <sys/types.h>
+#endif
+
+#if HAVE_ERRNO_H
+  #include <errno.h>
+#endif
 
 #if STDC_HEADERS
   #include <stdlib.h>
@@ -65,10 +70,10 @@
   #define strncasecmp	_strnicmp
   #define snprintf		_snprintf
   #define unlink		_unlink
-  #define PATH_SEP      "\\"
+  #define PATH_SEP      '\\'
 #else
   #include <signal.h>
-  #define PATH_SEP      "/"
+  #define PATH_SEP      '/'
 #endif
 
 #include "fko.h"

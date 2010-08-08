@@ -28,7 +28,9 @@
 
 #include "common.h"
 
-#include <sys/stat.h>
+#if HAVE_SYS_STAT_H
+  #include <sys/stat.h>
+#endif
 
 #if HAVE_LIBPCAP
   #include <pcap.h>
