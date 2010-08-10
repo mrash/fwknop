@@ -1,11 +1,11 @@
 /* $Id$
  *****************************************************************************
  *
- * File:    fw_util.c
+ * File:    fw_util_ipf.h
  *
- * Author:  Damien S. Stuart
+ * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Fwknop routines for managing the firewall rules.
+ * Purpose: Header file for fw_util_ipf.c.
  *
  * Copyright (C) 2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -23,16 +23,21 @@
  *
  *****************************************************************************
 */
-#include "fwknopd_common.h"
-#include "fw_util.h"
-#include "utils.h"
-#include "log_msg.h"
-#include "config_init.h"  /* for the IS_EMPTY_LINE macro */
-#include "extcmd.h"
-#include "access.h"
+#ifndef FW_UTIL_IPF_H
+#define FW_UTIL_IPF_H
 
-/* --DSS This is a place holder for now.  We may put the generalized external
- *       firewall script code here ( or not).
+#define SNAT_TARGET_BUFSIZE         64
+
+/* ipfw command args   (gotta flesh these out)         
 */
+#define IPF_ADD_RULE_ARGS ""
+#define IPF_ADD_OUT_RULE_ARGS ""
+#define IPF_ADD_FWD_RULE_ARGS ""
+#define IPF_ADD_DNAT_RULE_ARGS ""
+#define IPF_ADD_SNAT_RULE_ARGS ""
+#define IPF_DEL_RULE_ARGS ""
+#define IPF_LIST_RULES_ARGS ""
+
+#endif /* FW_UTIL_IPF_H */
 
 /***EOF***/

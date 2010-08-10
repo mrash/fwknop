@@ -585,12 +585,12 @@ write_pid_file(fko_srv_options_t *opts)
      * error, another instance already has the lock. So we grab
      * the pid from the existing lock file, complain and bail.
     */
-    lck_res = flock(op_fd, LOCK_EX|LOCK_NB);
+    lck_res = lockf(op_fd, F_TLOCK, 0);
     if(lck_res == -1)
     {
-        if(errno != EWOULDBLOCK)
+        if(errno != EAGAIN)
         {
-            perror("Unexpected error from flock: ");
+            perror("Unexpected error from lockf: ");
             return -1;
         }
 

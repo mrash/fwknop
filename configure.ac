@@ -203,20 +203,16 @@ dnl
     [AS_HELP_STRING([--with-iptables=/path/to/iptables],
       [Specify path to the iptables executable @<:@default=check path@:>@])],
     [
-        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
           [AC_MSG_ERROR([--with-iptables requires an argument specifying a path to iptables])],
           [ IPTABLES_EXE=$withval ]
         )
+      )
     ],
     [
-        AC_PATH_PROG(IPTABLES_EXE, [iptables], [], [$APP_PATH])
+      AC_PATH_PROG(IPTABLES_EXE, [iptables], [], [$APP_PATH])
     ]
-  )
-  AS_IF([test "x$IPTABLES_EXE" != x],
-    [
-      AC_DEFINE_UNQUOTED([IPTABLES_EXE], ["$IPTABLES_EXE"], [Path to iptables executable])
-      iptables_exe=$IPTABLES_EXE
-    ], [ iptables_exe="(not found)"]
   )
 
 dnl Check for ipfw
@@ -225,22 +221,64 @@ dnl
     [AS_HELP_STRING([--with-ipfw=/path/to/ipfw],
       [Specify path to the ipfw executable @<:@default=check path@:>@])],
     [
-        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
           [AC_MSG_ERROR([--with-ipfw requires an argument specifying a path to ipfw])],
           [ IPFW_EXE=$withval ]
         )
+      )
     ],
     [
-        AC_PATH_PROG(IPFW_EXE, [ipfw], [], [$APP_PATH])
+      AC_PATH_PROG(IPFW_EXE, [ipfw], [], [$APP_PATH])
     ]
   )
-  AS_IF([test "x$IPFW_EXE" != x],
-    [
-      AC_DEFINE_UNQUOTED([IPFW_EXE], ["$IPFW_EXE"], [Path to ipfw executable])
-      ipfw_exe=$IPFW_EXE
-    ], [ ipfw_exe="(not found)"]
-  )],
 
+dnl Check for ipf (ipfilter)
+dnl
+  AC_ARG_WITH([ipf],
+    [AS_HELP_STRING([--with-ipf=/path/to/ipf],
+      [Specify path to the ipf executable @<:@default=check path@:>@])],
+    [
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
+          [AC_MSG_ERROR([--with-ipfw requires an argument specifying a path to ipfw])],
+          [ IPF_EXE=$withval ]
+        )
+      )
+    ],
+    [
+      AC_PATH_PROG(IPF_EXE, [ipf], [], [$APP_PATH])
+    ]
+  )
+
+dnl Determine which firewall exe we use (if we have one).
+dnl If iptables was found or specified, it wins, then we fallback to ipfw,
+dnl otherwise we try ipf.
+dnl
+  AS_IF([test "x$IPTABLES_EXE" != x], [
+      FW_DEF="FW_IPTABLES"
+      FIREWALL_TYPE="iptables" 
+      FIREWALL_EXE=$IPTABLES_EXE
+      AC_DEFINE_UNQUOTED([FIREWALL_IPTABLES], [1], [The firewall type: iptables.])
+  ],[
+    AS_IF([test "x$IPFW_EXE" != x], [
+        FW_DEF="FW_IPFW"
+        FIREWALL_TYPE="ipfw" 
+        FIREWALL_EXE=$IPFW_EXE
+        AC_DEFINE_UNQUOTED([FIREWALL_IPFW], [1], [The firewall type: ipfw.])
+    ],[ AS_IF([test "x$IPF_EXE" != x], [
+          FIREWALL_TYPE="ipf" 
+          FIREWALL_EXE=$IPF_EXE
+          AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
+      ], [AC_MSG_ERROR([No firewall program was found or specified.]) ]
+    ]
+  ]
+  )))
+
+  AC_DEFINE_UNQUOTED([FIREWALL_EXE], ["$FIREWALL_EXE"],
+    [Path to firewall command executable (it should match the firewall type).])
+
+  ],
   [test "$want_server" = no], [
     use_ndbm=no
     AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xno])
@@ -271,9 +309,9 @@ echo "
         Installation prefix:        $prefix
 "
 if [test $want_server = "yes" ]; then
-  echo "    Server support programs:
-        iptables:                   $iptables_exe
-        ipfw:                       $ipfw_exe
+  echo "    Server support:
+        firewall type:              $FIREWALL_TYPE
+        firewall program path:      $FIREWALL_EXE
 "
 fi
 

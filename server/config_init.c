@@ -416,11 +416,10 @@ validate_options(fko_srv_options_t *opts)
         exit(EXIT_FAILURE);
     }
 
-    if(opts->config[CONF_EXE_IPTABLES] == NULL
-      && opts->config[CONF_EXE_IPFW] == NULL)
+    if(opts->config[CONF_FIREWALL_EXE] == NULL)
     {
         fprintf(stderr,
-            "No firewall command executable is set. Please check fwknopd.conf for EXE_IPTABLES or EXE_IPFW.\n"
+            "No firewall command executable is set. Please check FIREWALL_EXE in fwknopd.conf.\n"
         );
         exit(EXIT_FAILURE);
     }
@@ -435,13 +434,12 @@ set_preconfig_entries(fko_srv_options_t *opts)
      * end up being overwritten via config file or command-line.
     */
 
-    /* Setup the local executables based on build-time info.
+    /* Setup the firewall executable based on build-time info.
+     * --DSS Note: We will want to either force external script mode, or
+     *             error out if we do not have a firewall executable defined.
     */
-#ifdef IPTABLES_EXE
-    set_config_entry(opts, CONF_EXE_IPTABLES, IPTABLES_EXE);
-#endif
-#ifdef IPFW_EXE
-    set_config_entry(opts, CONF_EXE_IPFW, IPFW_EXE);
+#ifdef FIREWALL_EXE
+    set_config_entry(opts, CONF_FIREWALL_EXE, FIREWALL_EXE);
 #endif
 
 }

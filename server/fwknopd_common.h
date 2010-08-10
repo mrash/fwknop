@@ -160,8 +160,7 @@ enum {
     CONF_ACCESS_FILE,
     CONF_FWKNOP_PID_FILE,
     CONF_DIGEST_FILE,
-    CONF_EXE_IPTABLES,
-    CONF_EXE_IPFW,
+    CONF_FIREWALL_EXE,
 
     CONF_GPG_HOME_DIR,
 
@@ -220,8 +219,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "ACCESS_FILE",
     "FWKNOP_PID_FILE",
     "DIGEST_FILE",
-    "EXE_IPTABLES",
-    "EXE_IPFW",
+    "FIREWALL_EXE",
 
     "GPG_HOME_DIR",
 };  

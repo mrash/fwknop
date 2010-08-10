@@ -44,6 +44,13 @@
   #endif
   #if HAVE_NET_ETHERNET_H
     #include <net/ethernet.h>
+  #elif HAVE_SYS_ETHERNET_H
+    #include <sys/ethernet.h> /* Seems to be where Solaris puts it. */
+    /* Also probably need to define ETHER_IS_VALID_LEN here */
+    #ifndef ETHER_IS_VALID_LEN
+      #define ETHER_IS_VALID_LEN(x) \
+        ((x) >= ETHERMIN && (x) <= ETHERMAX)
+    #endif
   #endif
 #endif
 
