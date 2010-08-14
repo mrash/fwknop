@@ -399,7 +399,7 @@ process_rc(fko_cli_options_t *options)
     }
 
     strlcpy(rcfile, homedir, MAX_PATH_LEN);
-    rcfile[strlen(rcfile)-1] = PATH_SEP;
+    rcfile[strlen(rcfile)] = PATH_SEP;
     strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
 
     /* Open the rc file for reading, if it does not exist, then create
