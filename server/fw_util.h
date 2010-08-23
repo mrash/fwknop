@@ -46,8 +46,8 @@
 /* Function prototypes
 */
 void fw_config_init(fko_srv_options_t *opts);
-void fw_initialize(void);
-void fw_cleanup(void);
+void fw_initialize(fko_srv_options_t *opts);
+int fw_cleanup(void);
 void check_firewall_rules(fko_srv_options_t *opts);
 int fw_dump_rules(fko_srv_options_t *opts);
 int process_spa_request(fko_srv_options_t *opts, spa_data_t *spdat);

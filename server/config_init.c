@@ -292,6 +292,12 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_ENABLE_DIGEST_PERSISTENCE,
             DEF_ENABLE_DIGEST_PERSISTENCE);
 
+    /* Max sniff bytes.
+    */
+    if(opts->config[CONF_MAX_SNIFF_BYTES] == NULL)
+        set_config_entry(opts, CONF_MAX_SNIFF_BYTES, DEF_MAX_SNIFF_BYTES);
+
+#if FIREWALL_IPTABLES
     /* Enable IPT forwarding.
     */
     if(opts->config[CONF_ENABLE_IPT_FORWARDING] == NULL)
@@ -316,11 +322,6 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_ENABLE_IPT_OUTPUT,
             DEF_ENABLE_IPT_OUTPUT);
 
-    /* Max sniff bytes.
-    */
-    if(opts->config[CONF_MAX_SNIFF_BYTES] == NULL)
-        set_config_entry(opts, CONF_MAX_SNIFF_BYTES, DEF_MAX_SNIFF_BYTES);
-
     /* Flush IPT at init.
     */
     if(opts->config[CONF_FLUSH_IPT_AT_INIT] == NULL)
@@ -330,37 +331,6 @@ validate_options(fko_srv_options_t *opts)
     */
     if(opts->config[CONF_FLUSH_IPT_AT_EXIT] == NULL)
         set_config_entry(opts, CONF_FLUSH_IPT_AT_EXIT, DEF_FLUSH_IPT_AT_EXIT);
-
-    /* GPG Home dir.
-    */
-    if(opts->config[CONF_GPG_HOME_DIR] == NULL)
-        set_config_entry(opts, CONF_GPG_HOME_DIR, DEF_GPG_HOME_DIR);
-
-    /* Enable SPA over HTTP.
-    */
-    if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL)
-        set_config_entry(opts, CONF_ENABLE_SPA_OVER_HTTP,
-            DEF_ENABLE_SPA_OVER_HTTP);
-
-    /* Enable TCP server.
-    */
-    if(opts->config[CONF_ENABLE_TCP_SERVER] == NULL)
-        set_config_entry(opts, CONF_ENABLE_TCP_SERVER, DEF_ENABLE_TCP_SERVER);
-
-    /* TCP Server port.
-    */
-    if(opts->config[CONF_TCPSERV_PORT] == NULL)
-        set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
-
-    /* Syslog identity.
-    */
-    if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
-        set_config_entry(opts, CONF_SYSLOG_IDENTITY, DEF_SYSLOG_IDENTITY);
-
-    /* Syslog facility.
-    */
-    if(opts->config[CONF_SYSLOG_FACILITY] == NULL)
-        set_config_entry(opts, CONF_SYSLOG_FACILITY, DEF_SYSLOG_FACILITY);
 
     /* IPT input access.
     */
@@ -397,6 +367,84 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_IPT_MASQUERADE_ACCESS] == NULL)
         set_config_entry(opts, CONF_IPT_MASQUERADE_ACCESS,
             DEF_IPT_MASQUERADE_ACCESS);
+
+#elif FIREWALL_IPFW
+    /* Set IPFW start rule number.
+    */
+    if(opts->config[CONF_IPFW_START_RULE_NUM] == NULL)
+        set_config_entry(opts, CONF_IPFW_START_RULE_NUM,
+            DEF_IPFW_START_RULE_NUM);
+
+    /* Set IPFW max rules.
+    */
+    if(opts->config[CONF_IPFW_MAX_RULES] == NULL)
+        set_config_entry(opts, CONF_IPFW_MAX_RULES,
+            DEF_IPFW_MAX_RULES);
+
+    /* Set IPFW active set number.
+    */
+    if(opts->config[CONF_IPFW_ACTIVE_SET_NUM] == NULL)
+        set_config_entry(opts, CONF_IPFW_ACTIVE_SET_NUM,
+            DEF_IPFW_ACTIVE_SET_NUM);
+
+    /* Set IPFW expire set number.
+    */
+    if(opts->config[CONF_IPFW_EXPIRE_SET_NUM] == NULL)
+        set_config_entry(opts, CONF_IPFW_EXPIRE_SET_NUM,
+            DEF_IPFW_EXPIRE_SET_NUM);
+
+    /* Set IPFW Dynamic rule expiry interval.
+    */
+    if(opts->config[CONF_IPFW_DYNAMIC_INTERVAL] == NULL)
+        set_config_entry(opts, CONF_IPFW_DYNAMIC_INTERVAL,
+            DEF_IPFW_DYNAMIC_INTERVAL);
+
+    /* Set IPFW Dynamic rule expiry interval.
+    */
+    if(opts->config[CONF_IPFW_ADD_CHECK_STATE] == NULL)
+        set_config_entry(opts, CONF_IPFW_ADD_CHECK_STATE,
+            DEF_IPFW_ADD_CHECK_STATE);
+
+#elif FIREWALL_IPF
+
+    /* --DSS Place-holder */
+
+#elif FIREWALL_PF
+
+    /* --DSS Place-holder */
+
+#endif /* FIREWALL type */
+
+    /* GPG Home dir.
+    */
+    if(opts->config[CONF_GPG_HOME_DIR] == NULL)
+        set_config_entry(opts, CONF_GPG_HOME_DIR, DEF_GPG_HOME_DIR);
+
+    /* Enable SPA over HTTP.
+    */
+    if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL)
+        set_config_entry(opts, CONF_ENABLE_SPA_OVER_HTTP,
+            DEF_ENABLE_SPA_OVER_HTTP);
+
+    /* Enable TCP server.
+    */
+    if(opts->config[CONF_ENABLE_TCP_SERVER] == NULL)
+        set_config_entry(opts, CONF_ENABLE_TCP_SERVER, DEF_ENABLE_TCP_SERVER);
+
+    /* TCP Server port.
+    */
+    if(opts->config[CONF_TCPSERV_PORT] == NULL)
+        set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
+
+    /* Syslog identity.
+    */
+    if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
+        set_config_entry(opts, CONF_SYSLOG_IDENTITY, DEF_SYSLOG_IDENTITY);
+
+    /* Syslog facility.
+    */
+    if(opts->config[CONF_SYSLOG_FACILITY] == NULL)
+        set_config_entry(opts, CONF_SYSLOG_FACILITY, DEF_SYSLOG_FACILITY);
 
     /* Some options just trigger some output of information, or trigger an
      * external function, but do not actually start fwknopd.  If any of those

@@ -26,8 +26,6 @@
 #ifndef FW_UTIL_IPF_H
 #define FW_UTIL_IPF_H
 
-#define SNAT_TARGET_BUFSIZE         64
-
 /* ipfw command args   (gotta flesh these out)         
 */
 #define IPF_ADD_RULE_ARGS ""

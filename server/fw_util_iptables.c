@@ -36,6 +36,17 @@
 #include "access.h"
 
 static struct fw_config fwc;
+static char   cmd_buf[CMD_BUFSIZE];
+static char   err_buf[CMD_BUFSIZE];
+static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
+
+void
+zero_cmd_buffers(void)
+{
+    memset(cmd_buf, 0x0, CMD_BUFSIZE);
+    memset(err_buf, 0x0, CMD_BUFSIZE);
+    memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
+}
 
 static int
 jump_rule_exists(int chain_num)
@@ -92,8 +103,6 @@ fw_dump_rules(fko_srv_options_t *opts)
 {
     int     i;
     int     res, got_err = 0;
-    char    cmd_buf[CMD_BUFSIZE] = {0};
-    char    err[CMD_BUFSIZE] = {0};
 
     struct fw_chain *ch = opts->fw_config->chain;
 
@@ -103,6 +112,8 @@ fw_dump_rules(fko_srv_options_t *opts)
 
         if(fwc.chain[i].target[0] == '\0')
             continue;
+
+        zero_cmd_buffers();
 
         /* Create the list command
         */
@@ -118,7 +129,7 @@ fw_dump_rules(fko_srv_options_t *opts)
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
             got_err++;
         }
     }
@@ -133,8 +144,6 @@ delete_all_chains(void)
 {
     int     i, res;
     int     jump_rule_num;
-    char    cmd_buf[CMD_BUFSIZE] = {0};
-    char    err[CMD_BUFSIZE] = {0};
 
     for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
     {
@@ -146,6 +155,8 @@ delete_all_chains(void)
         */
         if((jump_rule_num = jump_rule_exists(i)) > 0)
         {
+            zero_cmd_buffers();
+
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
                 fwc.fw_command,
                 fwc.chain[i].table,
@@ -154,13 +165,13 @@ delete_all_chains(void)
             );
 
             //printf("CMD: '%s'\n", cmd_buf);
-            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
         }
 
-        memset(cmd_buf, 0x0, CMD_BUFSIZE);
+        zero_cmd_buffers();
 
         /* Now flush and remove the chain.
         */
@@ -175,10 +186,10 @@ delete_all_chains(void)
         );
 
         //printf("CMD: '%s'\n", cmd_buf);
-        res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
     }
 }
 
@@ -189,13 +200,13 @@ create_fw_chains(void)
 {
     int     i;
     int     res, got_err = 0;
-    char    cmd_buf[CMD_BUFSIZE] = {0};
-    char    err[CMD_BUFSIZE] = {0};
 
     for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
+
+        zero_cmd_buffers();
 
         /* Create the custom chain.
         */
@@ -206,16 +217,16 @@ create_fw_chains(void)
         );
 
         //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-        res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
             got_err++;
         }
 
-        memset(cmd_buf, 0x0, CMD_BUFSIZE);
+        zero_cmd_buffers();
 
         /* Then create the jump rule to that chain.
         */
@@ -228,12 +239,12 @@ create_fw_chains(void)
         );
 
         //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-        res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
             got_err++;
         }
     }
@@ -289,16 +300,6 @@ set_fw_chain_conf(int type, char *conf_str)
     /* Pull and set Target */
     strlcpy(chain->target, chain_fields[0], MAX_TARGET_NAME_LEN);
 
-    /* Pull and set Direction
-    if(strcmp(chain_fields[1], FW_CHAIN_DIR_SRC_STR) == 0)
-        chain->direction = FW_CHAIN_DIR_SRC;
-    else if(strcmp(chain_fields[1], FW_CHAIN_DIR_DST_STR) == 0)
-        chain->direction = FW_CHAIN_DIR_DST;
-    else if(strcmp(chain_fields[1], FW_CHAIN_DIR_BOTH_STR) == 0)
-        chain->direction = FW_CHAIN_DIR_BOTH;
-    else
-        chain->direction = FW_CHAIN_DIR_UNKNOWN;
-*/
     /* Pull and set Table */
     strlcpy(chain->table, chain_fields[1], MAX_TABLE_NAME_LEN);
 
@@ -373,7 +374,7 @@ fw_config_init(fko_srv_options_t *opts)
 }
 
 void
-fw_initialize(void)
+fw_initialize(fko_srv_options_t *opts)
 {
     int res;
 
@@ -392,10 +393,11 @@ fw_initialize(void)
     }
 }
 
-void
+int
 fw_cleanup(void)
 {
     delete_all_chains();
+    return(0);
 }
 
 /****************************************************************************/
@@ -405,8 +407,6 @@ fw_cleanup(void)
 int
 process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
-    char             cmd_buf[CMD_BUFSIZE] = {0};
-    char             err[CMD_BUFSIZE] = {0};
     char             nat_ip[16] = {0};
     char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
     char            *ndx;
@@ -458,7 +458,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
         */
         while(ple != NULL)
         {
-            memset(cmd_buf, 0x0, CMD_BUFSIZE);
+            zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_RULE_ARGS,
                 opts->fw_config->fw_command,
@@ -473,7 +473,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD CMD: %s\n", cmd_buf);
-            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
@@ -490,14 +490,14 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     in_chain->next_expire = exp_ts;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
 
             /* If we have to make an corresponding OUTPUT rule if out_chain target
             * is not NULL.
             */
             if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
             {
-                memset(cmd_buf, 0x0, CMD_BUFSIZE);
+                zero_cmd_buffers();
 
                 snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_OUT_RULE_ARGS,
                     opts->fw_config->fw_command,
@@ -512,7 +512,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
-                res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
                 if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Added OUTPUT Rule to %s for %s, %s expires at %u",
@@ -529,7 +529,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                         out_chain->next_expire = exp_ts;
                 }
                 else
-                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
 
             }
 
@@ -563,7 +563,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
         */
         if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
         {
-            memset(cmd_buf, 0x0, CMD_BUFSIZE);
+            zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_FWD_RULE_ARGS,
                 opts->fw_config->fw_command,
@@ -579,7 +579,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
-            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added FORWARD Rule to %s for %s, %s expires at %u",
@@ -596,12 +596,12 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     fwd_chain->next_expire = exp_ts;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
         }
 
         if(dnat_chain->to_chain != NULL && strlen(dnat_chain->to_chain))
         {
-            memset(cmd_buf, 0x0, CMD_BUFSIZE);
+            zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_DNAT_RULE_ARGS,
                 opts->fw_config->fw_command,
@@ -618,7 +618,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
 //--DSS tmp
 //fprintf(stderr, "ADD DNAT CMD: %s\n", cmd_buf);
-            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added DNAT Rule to %s for %s, %s expires at %u",
@@ -635,14 +635,14 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     dnat_chain->next_expire = exp_ts;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
         }
 
         /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
         */
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
         {
-            memset(cmd_buf, 0x0, CMD_BUFSIZE);
+            zero_cmd_buffers();
 
             /* Setup some parameter depending on whether we are using SNAT
              * or MASQUERADE.
@@ -675,7 +675,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                 snat_target
             );
 
-            res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added Source NAT Rule to %s for %s, %s expires at %u",
@@ -692,7 +692,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     snat_chain->next_expire = exp_ts;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
         }
     }
 
@@ -705,9 +705,6 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 void
 check_firewall_rules(fko_srv_options_t *opts)
 {
-    char             cmd_buf[CMD_BUFSIZE] = {0};
-    char             err[CMD_BUFSIZE] = {0};
-    char             cmd_out[STANDARD_CMD_OUT_BUFSIZE];
     char             exp_str[12];
     char             rule_num_str[6];
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
@@ -736,6 +733,8 @@ check_firewall_rules(fko_srv_options_t *opts)
         if(ch[i].active_rules == 0 || ch[i].next_expire > now)
             continue;
 
+        zero_cmd_buffers();
+
         rn_offset = 0;
 
         /* There should be a rule to delete.  Get the current list of
@@ -746,8 +745,6 @@ check_firewall_rules(fko_srv_options_t *opts)
             ch[i].table,
             ch[i].to_chain
         );
-
-        memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 
         res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
@@ -827,7 +824,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                  
                 strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
 
-                memset(cmd_buf, 0x0, CMD_BUFSIZE);
+                zero_cmd_buffers();
 
                 snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
                     opts->fw_config->fw_command,
@@ -838,7 +835,7 @@ check_firewall_rules(fko_srv_options_t *opts)
  
 
 //fprintf(stderr, "DELETE RULE CMD: %s\n", cmd_buf);
-                res = run_extcmd(cmd_buf, err, CMD_BUFSIZE, 0);
+                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
                 if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u.",
@@ -849,7 +846,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                     ch[i].active_rules--;
                 }
                 else
-                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err); 
+                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
 
             }
             else

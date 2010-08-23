@@ -259,7 +259,7 @@ main(int argc, char **argv)
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
         */
-        fw_initialize();
+        fw_initialize(&opts);
 
         /* If the TCP server option was set, fire it up here.
         */

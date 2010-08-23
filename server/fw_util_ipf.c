@@ -35,6 +35,9 @@
 #include "access.h"
 
 static struct fw_config fwc;
+static char   cmd_buf[CMD_BUFSIZE];
+static char   err_buf[CMD_BUFSIZE];
+static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
 
 /* Print all firewall rules currently instantiated by the running fwknopd
  * daemon to stdout.
@@ -44,8 +47,8 @@ fw_dump_rules(fko_srv_options_t *opts)
 {
     int     i;
     int     res, got_err = 0;
-    char    cmd_buf[CMD_BUFSIZE] = {0};
-    char    err[CMD_BUFSIZE] = {0};
+
+    zero_cmd_buffers();
 
     /* TODO: Implement or get rid of me */
 
@@ -72,7 +75,7 @@ fw_config_init(fko_srv_options_t *opts)
 }
 
 void
-fw_initialize(void)
+fw_initialize(fko_srv_options_t *opts)
 {
     int res = 0;
 
@@ -85,12 +88,13 @@ fw_initialize(void)
     }
 }
 
-void
+int
 fw_cleanup(void)
 {
 
     /* TODO: Implement or get rid of me */
 
+    return(0);
 }
 
 /****************************************************************************/
@@ -102,10 +106,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
     /* TODO: Implement me */
 
-    char             cmd_buf[CMD_BUFSIZE] = {0};
-    char             err[CMD_BUFSIZE] = {0};
     char             nat_ip[16] = {0};
-    char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
     char            *ndx;
 
     unsigned int     nat_port = 0;;
@@ -153,9 +154,6 @@ check_firewall_rules(fko_srv_options_t *opts)
 
     /* TODO: Implement me */
 
-    char             cmd_buf[CMD_BUFSIZE] = {0};
-    char             err[CMD_BUFSIZE] = {0};
-    char             cmd_out[STANDARD_CMD_OUT_BUFSIZE];
     char             exp_str[12];
     char             rule_num_str[6];
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
@@ -165,6 +163,7 @@ check_firewall_rules(fko_srv_options_t *opts)
 
     time(&now);
 
+    zero_cmd_buffers();
 }
 
 #endif /* FIREWALL_IPF */

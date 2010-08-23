@@ -75,13 +75,7 @@
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
 #define DEF_MAX_SPA_PACKET_AGE          "120"
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
-#define DEF_ENABLE_IPT_FORWARDING       "N"
-#define DEF_ENABLE_IPT_LOCAL_NAT        "Y"
-#define DEF_ENABLE_IPT_SNAT             "N"
-#define DEF_ENABLE_IPT_OUTPUT           "N"
 #define DEF_MAX_SNIFF_BYTES             "1500"
-#define DEF_FLUSH_IPT_AT_INIT           "Y"
-#define DEF_FLUSH_IPT_AT_EXIT           "Y"
 #define DEF_GPG_HOME_DIR                "/root/.gnupg"
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
@@ -89,14 +83,45 @@
 #define DEF_SYSLOG_IDENTITY             MY_NAME
 #define DEF_SYSLOG_FACILITY             "LOG_DAEMON"
 
-#define DEF_IPT_INPUT_ACCESS      "ACCEPT, filter, INPUT, 1, FWKNOP_INPUT, 1"
-#define DEF_IPT_OUTPUT_ACCESS     "ACCEPT, filter, OUTPUT, 1, FWKNOP_OUTPUT, 1"
-#define DEF_IPT_FORWARD_ACCESS    "ACCEPT, filter, FORWARD, 1, FWKNOP_FORWARD, 1"
-#define DEF_IPT_DNAT_ACCESS       "DNAT, nat, PREROUTING, 1, FWKNOP_PREROUTING, 1"
-#define DEF_IPT_SNAT_ACCESS       "SNAT, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
-#define DEF_IPT_MASQUERADE_ACCESS "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+#define DEF_FW_ACCESS_TIMEOUT           30
 
-#define DEF_FW_ACCESS_TIMEOUT       30
+/* Iptables-specific defines
+*/
+#if FIREWALL_IPTABLES
+
+  #define DEF_FLUSH_IPT_AT_INIT     "Y"
+  #define DEF_FLUSH_IPT_AT_EXIT     "Y"
+  #define DEF_ENABLE_IPT_FORWARDING "N"
+  #define DEF_ENABLE_IPT_LOCAL_NAT  "Y"
+  #define DEF_ENABLE_IPT_SNAT       "N"
+  #define DEF_ENABLE_IPT_OUTPUT     "N"
+  #define DEF_IPT_INPUT_ACCESS      "ACCEPT, filter, INPUT, 1, FWKNOP_INPUT, 1"
+  #define DEF_IPT_OUTPUT_ACCESS     "ACCEPT, filter, OUTPUT, 1, FWKNOP_OUTPUT, 1"
+  #define DEF_IPT_FORWARD_ACCESS    "ACCEPT, filter, FORWARD, 1, FWKNOP_FORWARD, 1"
+  #define DEF_IPT_DNAT_ACCESS       "DNAT, nat, PREROUTING, 1, FWKNOP_PREROUTING, 1"
+  #define DEF_IPT_SNAT_ACCESS       "SNAT, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+  #define DEF_IPT_MASQUERADE_ACCESS "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+
+/* Ipfw-specific defines
+*/
+#elif FIREWALL_IPFW
+
+  #define DEF_IPFW_START_RULE_NUM     "10000"
+  #define DEF_IPFW_MAX_RULES          "1000"
+  #define DEF_IPFW_ACTIVE_SET_NUM     "1"
+  #define DEF_IPFW_EXPIRE_SET_NUM     "2"
+  #define DEF_IPFW_DYNAMIC_INTERVAL   "60"
+  #define DEF_IPFW_ADD_CHECK_STATE    "N"
+
+#elif FIREWALL_IPF
+
+    /* --DSS Place-holder */
+
+#elif FIREWALL_PF
+
+    /* --DSS Place-holder */
+
+#endif /* FIREWALL Type */
 
 /* fwknopd-specific limits
 */
@@ -120,21 +145,11 @@ enum {
     CONF_PCAP_INTF,
     CONF_ENABLE_PCAP_PROMISC,
     CONF_PCAP_FILTER,
+    CONF_MAX_SNIFF_BYTES,
     CONF_ENABLE_SPA_PACKET_AGING,
     CONF_MAX_SPA_PACKET_AGE,
     CONF_ENABLE_DIGEST_PERSISTENCE,
-    CONF_ENABLE_IPT_FORWARDING,
-    CONF_ENABLE_IPT_LOCAL_NAT,
-    CONF_ENABLE_IPT_SNAT,
-    CONF_SNAT_TRANSLATE_IP,
-    CONF_ENABLE_IPT_OUTPUT,
-    CONF_MAX_SNIFF_BYTES,
-    CONF_FLUSH_IPT_AT_INIT,
-    CONF_FLUSH_IPT_AT_EXIT,
-    //CONF_IPFW_RULE_NUM,
-    //CONF_IPFW_SET_NUM,
-    //CONF_IPFW_DYNAMIC_INTERVAL,
-    //CONF_CMD_EXEC_TIMEOUT,
+    CONF_CMD_EXEC_TIMEOUT,
     //CONF_BLACKLIST,
     CONF_ENABLE_SPA_OVER_HTTP,
     CONF_ENABLE_TCP_SERVER,
@@ -149,20 +164,39 @@ enum {
     //CONF_EXTERNAL_CMD_ALARM,
     //CONF_ENABLE_EXT_CMD_PREFIX,
     //CONF_EXT_CMD_PREFIX,
+#if FIREWALL_IPTABLES
+    CONF_ENABLE_IPT_FORWARDING,
+    CONF_ENABLE_IPT_LOCAL_NAT,
+    CONF_ENABLE_IPT_SNAT,
+    CONF_SNAT_TRANSLATE_IP,
+    CONF_ENABLE_IPT_OUTPUT,
+    CONF_FLUSH_IPT_AT_INIT,
+    CONF_FLUSH_IPT_AT_EXIT,
     CONF_IPT_INPUT_ACCESS,
     CONF_IPT_OUTPUT_ACCESS,
     CONF_IPT_FORWARD_ACCESS,
     CONF_IPT_DNAT_ACCESS,
     CONF_IPT_SNAT_ACCESS,
     CONF_IPT_MASQUERADE_ACCESS,
+#elif FIREWALL_IPFW
+    CONF_IPFW_START_RULE_NUM,
+    CONF_IPFW_MAX_RULES,
+    CONF_IPFW_ACTIVE_SET_NUM,
+    CONF_IPFW_EXPIRE_SET_NUM,
+    CONF_IPFW_DYNAMIC_INTERVAL,
+    CONF_IPFW_ADD_CHECK_STATE,
+#elif FIREWALL_IPF
+    /* --DSS Place-holder */
+#elif FIREWALL_PF
+    /* --DSS Place-holder */
+#endif /* FIREWALL type */
     CONF_FWKNOP_RUN_DIR,
     CONF_FWKNOP_CONF_DIR,
     CONF_ACCESS_FILE,
     CONF_FWKNOP_PID_FILE,
     CONF_DIGEST_FILE,
-    CONF_FIREWALL_EXE,
-
     CONF_GPG_HOME_DIR,
+    CONF_FIREWALL_EXE,
 
     NUMBER_OF_CONFIG_ENTRIES  /* Marks the end and number of entries */
 };
@@ -180,21 +214,11 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "PCAP_INTF",
     "ENABLE_PCAP_PROMISC",
     "PCAP_FILTER",
+    "MAX_SNIFF_BYTES",
     "ENABLE_SPA_PACKET_AGING",
     "MAX_SPA_PACKET_AGE",
     "ENABLE_DIGEST_PERSISTENCE",
-    "ENABLE_IPT_FORWARDING",
-    "ENABLE_IPT_LOCAL_NAT",
-    "ENABLE_IPT_SNAT",
-    "SNAT_TRANSLATE_IP",
-    "ENABLE_IPT_OUTPUT",
-    "MAX_SNIFF_BYTES",
-    "FLUSH_IPT_AT_INIT",
-    "FLUSH_IPT_AT_EXIT",
-    //"IPFW_RULE_NUM",
-    //"IPFW_SET_NUM",
-    //"IPFW_DYNAMIC_INTERVAL",
-    //"CMD_EXEC_TIMEOUT",
+    "CMD_EXEC_TIMEOUT",
     //"BLACKLIST",
     "ENABLE_SPA_OVER_HTTP",
     "ENABLE_TCP_SERVER",
@@ -208,20 +232,39 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"EXTERNAL_CMD_ALARM",
     //"ENABLE_EXT_CMD_PREFIX",
     //"EXT_CMD_PREFIX",
+#if FIREWALL_IPTABLES
+    "ENABLE_IPT_FORWARDING",
+    "ENABLE_IPT_LOCAL_NAT",
+    "ENABLE_IPT_SNAT",
+    "SNAT_TRANSLATE_IP",
+    "ENABLE_IPT_OUTPUT",
+    "FLUSH_IPT_AT_INIT",
+    "FLUSH_IPT_AT_EXIT",
     "IPT_INPUT_ACCESS",
     "IPT_OUTPUT_ACCESS",
     "IPT_FORWARD_ACCESS",
     "IPT_DNAT_ACCESS",
     "IPT_SNAT_ACCESS",
     "IPT_MASQUERADE_ACCESS",
+#elif FIREWALL_IPFW
+    "IPFW_START_RULE_NUM",
+    "IPFW_MAX_RULES",
+    "IPFW_ACTIVE_SET_NUM",
+    "IPFW_EXPIRE_SET_NUM",
+    "IPFW_DYNAMIC_INTERVAL",
+    "IPFW_ADD_CHECK_STATE",
+#elif FIREWALL_IPF
+    /* --DSS Place-holder */
+#elif FIREWALL_PF
+    /* --DSS Place-holder */
+#endif /* FIREWALL type */
     "FWKNOP_RUN_DIR",
     "FWKNOP_CONF_DIR",
     "ACCESS_FILE",
     "FWKNOP_PID_FILE",
     "DIGEST_FILE",
-    "FIREWALL_EXE",
-
     "GPG_HOME_DIR",
+    "FIREWALL_EXE",
 };  
 
 /* A simple linked list of uints for the access stanza items that allow
@@ -282,60 +325,71 @@ typedef struct acc_stanza
 
 
 /* Firewall-related data and types. */
-/* --DSS XXX: These are arbitrary. We should determine appropriate values.
-*/
-#define MAX_TABLE_NAME_LEN      64
-#define MAX_CHAIN_NAME_LEN      64
-#define MAX_TARGET_NAME_LEN     64
 
-/* Fwknop custom chain types
-*/
-enum {
-    IPT_INPUT_ACCESS,
-    IPT_OUTPUT_ACCESS,
-    IPT_FORWARD_ACCESS,
-    IPT_DNAT_ACCESS,
-    IPT_SNAT_ACCESS,
-    IPT_MASQUERADE_ACCESS,
-    NUM_FWKNOP_ACCESS_TYPES  /* Leave this entry last */
-};
+#if FIREWALL_IPTABLES
+  /* --DSS XXX: These are arbitrary. We should determine appropriate values.
+  */
+  #define MAX_TABLE_NAME_LEN      64
+  #define MAX_CHAIN_NAME_LEN      64
+  #define MAX_TARGET_NAME_LEN     64
 
-/* Fwknop chain directions
-#define FW_CHAIN_DIR_SRC_STR    "src"
-#define FW_CHAIN_DIR_DST_STR    "dst"
-#define FW_CHAIN_DIR_BOTH_STR   "both"
+  /* Fwknop custom chain types
+  */
+  enum {
+      IPT_INPUT_ACCESS,
+      IPT_OUTPUT_ACCESS,
+      IPT_FORWARD_ACCESS,
+      IPT_DNAT_ACCESS,
+      IPT_SNAT_ACCESS,
+      IPT_MASQUERADE_ACCESS,
+      NUM_FWKNOP_ACCESS_TYPES  /* Leave this entry last */
+  };
 
-enum {
-    FW_CHAIN_DIR_UNKNOWN,
-    FW_CHAIN_DIR_SRC,
-    FW_CHAIN_DIR_DST,
-    FW_CHAIN_DIR_BOTH
-};
-*/
+  /* Structure to define an fwknop firewall chain configuration.
+  */
+  struct fw_chain {
+      int     type;
+      char    target[MAX_TARGET_NAME_LEN];
+      //int     direction;
+      char    table[MAX_TABLE_NAME_LEN];
+      char    from_chain[MAX_CHAIN_NAME_LEN];
+      int     jump_rule_pos;
+      char    to_chain[MAX_CHAIN_NAME_LEN];
+      int     rule_pos;
+      int     active_rules;
+      time_t  next_expire;
+  };
 
-/* Structure to define an fwknop firewall chain configuration.
-*/
-struct fw_chain {
-    int     type;
-    char    target[MAX_TARGET_NAME_LEN];
-    //int     direction;
-    char    table[MAX_TABLE_NAME_LEN];
-    char    from_chain[MAX_CHAIN_NAME_LEN];
-    int     jump_rule_pos;
-    char    to_chain[MAX_CHAIN_NAME_LEN];
-    int     rule_pos;
-    int     active_rules;
-    time_t  next_expire;
-};
+  /* Based on the fw_chain fields (not counting type)
+  */
+  #define FW_NUM_CHAIN_FIELDS 6
 
-/* Based on the fw_chain fields (not counting type)
-*/
-#define FW_NUM_CHAIN_FIELDS 6
+  struct fw_config {
+      struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
+      char            fw_command[MAX_PATH_LEN];
+  };
 
-struct fw_config {
-    struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
-    char            fw_command[MAX_PATH_LEN];
-};
+#elif FIREWALL_IPFW
+
+  struct fw_config {
+      unsigned short    start_rule_num;
+      unsigned short    max_rules;
+      unsigned short    active_set_num;
+      unsigned short    expire_set_num;
+      unsigned char    *rule_map;
+      time_t            next_expire;
+      char              fw_command[MAX_PATH_LEN];
+  };
+
+#elif FIREWALL_IPF
+
+    /* --DSS Place-holder */
+
+#elif FIREWALL_PF
+
+    /* --DSS Place-holder */
+
+#endif /* FIREWALL type */
 
 /* SPA Packet info struct.
 */
@@ -377,7 +431,6 @@ typedef struct fko_srv_options
     unsigned char   foreground;         /* Run in foreground flag */
     unsigned char   kill;               /* flag to initiate kill of fwknopd */
     unsigned char   rotate_digest_cache;/* flag to force rotation of digest */
-    //unsigned char   no_locale;          /* Flag to not allow setting locale */
     unsigned char   restart;            /* Restart fwknopd flag */
     unsigned char   status;             /* Get fwknopd status flag */
     unsigned char   fw_list;            /* List current firewall rules */
