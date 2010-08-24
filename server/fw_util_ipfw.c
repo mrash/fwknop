@@ -46,7 +46,7 @@ get_next_rule_num(void)
 
     for(i=0; i < fwc.max_rules; i++)
     {
-        if(fwc.rule_map[i] == 0)
+        if(fwc.rule_map[i] == RULE_FREE)
             return(fwc.start_rule_num + i);
     }
 
@@ -124,6 +124,7 @@ fw_config_init(fko_srv_options_t *opts)
     fwc.max_rules      = atoi(opts->config[CONF_IPFW_MAX_RULES]);
     fwc.active_set_num = atoi(opts->config[CONF_IPFW_ACTIVE_SET_NUM]);
     fwc.expire_set_num = atoi(opts->config[CONF_IPFW_EXPIRE_SET_NUM]);
+    fwc.purge_interval = atoi(opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL]);
 
     /* Let us find it via our opts struct as well.
     */
@@ -178,11 +179,28 @@ fw_initialize(fko_srv_options_t *opts)
                 fwc.active_set_num
             );
 
-            (fwc.rule_map)[0] = 1;
+            fwc.rule_map[0] = RULE_ACTIVE;
         }
         else
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
     }
+
+    /* Make sure our expire set is disabled.
+    */
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_DISABLE_SET_ARGS,
+        fwc.fw_command,
+        fwc.expire_set_num
+    );
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if(EXTCMD_IS_SUCCESS(res))
+        log_msg(LOG_INFO, "Set ipfw set %u to disabled.",
+            fwc.expire_set_num);
+    else
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
 }
 
 int
@@ -246,9 +264,6 @@ fw_cleanup(void)
 int
 process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
-    /* TODO: Implement me */
-
-    char             nat_ip[16] = {0};
     char            *ndx;
 
     unsigned short   rule_num;
@@ -288,7 +303,18 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     if(spadat->message_type == FKO_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG)
     {
+        /* Pull the next available rule number.
+        */
         rule_num = get_next_rule_num();
+
+        /* If rule_num comes back as 0, we aready have the maximum number
+         * of active rules allowed so we reject and bail here.
+        */
+        if(rule_num == 0)
+        {
+            log_msg(LOG_WARNING, "Access request rejected: Maximum allowed number of rules has been reached.");
+            return(-1);
+        }
 
         /* Create an access command for each proto/port for the source ip.
         */
@@ -317,10 +343,13 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                     spadat->spa_message_remain, exp_ts
                 );
 
-                (fwc.rule_map)[fwc.start_rule_num + rule_num] = 1;
+                fwc.rule_map[rule_num - fwc.start_rule_num] = RULE_ACTIVE;
+
+                fwc.active_rules++;
+                fwc.total_rules++;
 
                 /* Reset the next expected expire time for this chain if it
-                * is warranted.
+                 * is warranted.
                 */
                 if(fwc.next_expire < now || exp_ts < fwc.next_expire)
                     fwc.next_expire = exp_ts;
@@ -334,8 +363,19 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     }
     else
     {
-        /* No other modes supported yet.
+        /* No other SPA request modes are supported yet.
         */
+        if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+        {
+            log_msg(LOG_WARNING, "Local NAT requests are not currently supported.");
+        }
+        else if(spadat->message_type == FKO_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+        {
+            log_msg(LOG_WARNING, "Forwarding/NAT requests are not currently supported.");
+        }
+        
         return(-1);
     }
 
@@ -348,17 +388,305 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 void
 check_firewall_rules(fko_srv_options_t *opts)
 {
-    char             exp_str[12];
-    char             rule_num_str[6];
-    char            *ndx, *rn_start, *rn_end, *tmp_mark;
+    char            exp_str[12];
+    char            rule_num_str[6];
+    char           *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i, res, rn_offset;
+    int             i, res;
     time_t          now, rule_exp, min_exp = 0;
+    unsigned short  curr_rule;
 
     time(&now);
 
+    /* Just in case we somehow lose track and fall out-of-whack.
+    */
+    if(fwc.active_rules > fwc.max_rules)
+        fwc.active_rules = 0;
+
+    /* If there are no active rules or we have not yet
+     * reached our expected next expire time, continue.
+    */
+    if(fwc.active_rules == 0 || fwc.next_expire > now)
+        return;
+
     zero_cmd_buffers();
 
+    /* There should be a rule to delete.  Get the current list of
+     * rules for this chain and delete the ones that are expired.
+    */
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_SET_RULES_ARGS,
+        opts->fw_config->fw_command,
+        fwc.active_set_num
+    );
+
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    if(!EXTCMD_IS_SUCCESS(res))
+    {
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+        return;
+    }
+
+    if(opts->verbose > 2)
+        log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
+
+    /* Find the first _exp_ string (if any).
+    */
+    ndx = strstr(cmd_out, "_exp_");
+
+    if(ndx == NULL)
+    {
+        /* we did not find an expected rule.
+        */
+        log_msg(LOG_ERR,
+            "Did not find expire comment in rules list %i.\n", i);
+
+        fwc.active_rules--;
+        return;
+    }
+
+    /* Walk the list and process rules as needed.
+    */
+    while (ndx != NULL) {
+        /* Jump forward and extract the timestamp
+        */
+        ndx +=5;
+
+        /* remember this spot for when we look for the next
+         * rule.
+        */
+        tmp_mark = ndx;
+
+        strlcpy(exp_str, ndx, 11);
+        rule_exp = (time_t)atoll(exp_str);
+
+//fprintf(stderr, "RULE_EXP=%u, NOW=%u\n", rule_exp, now);
+        if(rule_exp <= now)
+        {
+            /* Backtrack and get the rule number and delete it.
+            */
+            rn_start = ndx;
+            while(--rn_start > cmd_out)
+            {
+                if(*rn_start == '\n')
+                    break;
+            }
+            
+            if(*rn_start == '\n')
+            {
+                rn_start++;
+            }
+            else if(rn_start > cmd_out)
+            {
+                /* This should not happen. But if it does, complain,
+                 * decrement the active rule value, and go on.
+                */
+                log_msg(LOG_ERR,
+                    "Rule parse error while finding rule line start.");
+
+                fwc.active_rules--;
+                break;
+            }
+
+            rn_end = strchr(rn_start, ' ');
+
+            if(rn_end == NULL)
+            {
+                /* This should not happen. But if it does, complain,
+                 * decrement the active rule value, and go on.
+                */
+                log_msg(LOG_ERR,
+                    "Rule parse error while finding rule number.");
+
+                fwc.active_rules--;
+                break;
+            }
+             
+            strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
+
+            curr_rule = atoi(rule_num_str);
+
+            zero_cmd_buffers();
+
+            /* Move the rule to the expired rules set.
+            */
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_MOVE_RULE_ARGS,
+                opts->fw_config->fw_command,
+                curr_rule,
+                fwc.expire_set_num
+            );
+
+//fprintf(stderr, "MOVE RULE CMD: %s\n", cmd_buf);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+            if(EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_INFO, "Moved rule %s with expire time of %u to set %u.",
+                    rule_num_str, rule_exp, fwc.expire_set_num
+                );
+
+                fwc.active_rules--;
+                fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
+            }
+            else
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+        }
+        else
+        {
+            /* Track the minimum future rule expire time.
+            */
+            if(rule_exp > now)
+                min_exp = (min_exp < rule_exp) ? min_exp : rule_exp;
+        }
+
+        /* Push our tracking index forward beyond (just processed) _exp_
+         * string so we can continue to the next rule in the list.
+        */
+        ndx = strstr(tmp_mark, "_exp_");
+    }
+
+    /* Set the next pending expire time accordingly. 0 if there are no
+     * more rules, or whatever the next expected (min_exp) time will be.
+    */
+    if(fwc.active_rules < 1)
+        fwc.next_expire = 0;
+    else if(min_exp)
+        fwc.next_expire = min_exp;
+}
+
+/* Iterate over the expired rule set and purge those that no longer have
+ * corresponding dynamic rules.
+*/
+void
+purge_expired_rules(fko_srv_options_t *opts)
+{
+    char            exp_str[12];
+    char            rule_num_str[6];
+    char           *ndx, *next_nl, *co_end;
+
+    int             i, res;
+
+    unsigned short  curr_rule;
+
+    /* First, we get the current active dynamic rules for the expired rule
+     * set. Then we compare it to the expired rules in the rule_map. Any
+     * rules in the map that do not have a dynamic rule, can be deleted.
+    */
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_SET_DYN_RULES_ARGS,
+        opts->fw_config->fw_command,
+        fwc.expire_set_num
+    );
+
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    if(!EXTCMD_IS_SUCCESS(res))
+    {
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+        return;
+    }
+
+    co_end = cmd_out + strlen(cmd_out);
+
+    if(opts->verbose > 2)
+        log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nEXP RULES LIST: %s", res, cmd_buf, cmd_out);
+
+    /* Find the "## Dynamic rules" string.
+    */
+    ndx = strcasestr(cmd_out, "## Dynamic rules");
+
+    if(ndx == NULL)
+    {
+        log_msg(LOG_ERR,
+            "Unexpected error: did not find 'Dynamic rules' string in list output."
+        ); 
+        return;
+    }
+ 
+    /* Jump to the next newline char.
+    */
+    ndx = strchr(ndx, '\n');
+
+    if(ndx == NULL)
+    {
+        log_msg(LOG_ERR,
+            "Unexpected error: did not find 'Dynamic rules' line terminating newline."
+        ); 
+        return;
+    }
+ 
+
+    /* Walk the list of dynamic rules (if any).
+    */
+    while(ndx != NULL)
+    {
+        ndx++;
+
+        while(!isdigit(*ndx) && ndx < co_end)
+            ndx++;
+
+        if(ndx >= co_end)
+            break;
+
+        /* If we are at a digit, assume it is a rule number, extract it,
+         * and if it falls in the correct range, mark it (so it is not
+         * removed in the next step.
+        */
+        if(isdigit(*ndx))
+        {
+            curr_rule = atoi(ndx);
+
+            if(curr_rule >= fwc.start_rule_num
+              && curr_rule < fwc.start_rule_num + fwc.max_rules)
+                fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_TMP_MARKED;
+        }
+
+        ndx = strchr(ndx, '\n');
+    }
+
+    /* Now, walk the rule map an remove any still marked as expired.
+    */
+    for(i=0; i<fwc.max_rules; i++)
+    {
+        /* If it is TMP_MARKED, set it back to EXPIRED and move on.
+        */
+        if(fwc.rule_map[i] == RULE_TMP_MARKED)
+        {
+            fwc.rule_map[i] = RULE_EXPIRED;
+            continue;
+        }
+
+        /* If it is not expired, move on.
+        */
+        if(fwc.rule_map[i] != RULE_EXPIRED)
+            continue;
+
+        /* This rule is ready to go away.
+        */
+        zero_cmd_buffers();
+
+        curr_rule = fwc.start_rule_num + i;
+
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_DEL_RULE_ARGS,
+            opts->fw_config->fw_command,
+            fwc.expire_set_num,
+            curr_rule
+        );
+
+        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+        if(!EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+            continue;
+        }
+
+        log_msg(LOG_INFO, "Purged rule %u from set %u", curr_rule, fwc.expire_set_num); 
+
+        fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_FREE;
+
+        fwc.total_rules--;
+    }
 }
 
 #endif /* FIREWALL_IPFW */

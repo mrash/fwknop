@@ -395,9 +395,9 @@ validate_options(fko_srv_options_t *opts)
 
     /* Set IPFW Dynamic rule expiry interval.
     */
-    if(opts->config[CONF_IPFW_DYNAMIC_INTERVAL] == NULL)
-        set_config_entry(opts, CONF_IPFW_DYNAMIC_INTERVAL,
-            DEF_IPFW_DYNAMIC_INTERVAL);
+    if(opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL] == NULL)
+        set_config_entry(opts, CONF_IPFW_EXPIRE_PURGE_INTERVAL,
+            DEF_IPFW_EXPIRE_PURGE_INTERVAL);
 
     /* Set IPFW Dynamic rule expiry interval.
     */

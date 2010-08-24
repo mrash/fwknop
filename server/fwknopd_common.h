@@ -106,12 +106,12 @@
 */
 #elif FIREWALL_IPFW
 
-  #define DEF_IPFW_START_RULE_NUM     "10000"
-  #define DEF_IPFW_MAX_RULES          "1000"
-  #define DEF_IPFW_ACTIVE_SET_NUM     "1"
-  #define DEF_IPFW_EXPIRE_SET_NUM     "2"
-  #define DEF_IPFW_DYNAMIC_INTERVAL   "60"
-  #define DEF_IPFW_ADD_CHECK_STATE    "N"
+  #define DEF_IPFW_START_RULE_NUM        "10000"
+  #define DEF_IPFW_MAX_RULES             "1000"
+  #define DEF_IPFW_ACTIVE_SET_NUM        "1"
+  #define DEF_IPFW_EXPIRE_SET_NUM        "2"
+  #define DEF_IPFW_EXPIRE_PURGE_INTERVAL "30"
+  #define DEF_IPFW_ADD_CHECK_STATE       "N"
 
 #elif FIREWALL_IPF
 
@@ -183,7 +183,7 @@ enum {
     CONF_IPFW_MAX_RULES,
     CONF_IPFW_ACTIVE_SET_NUM,
     CONF_IPFW_EXPIRE_SET_NUM,
-    CONF_IPFW_DYNAMIC_INTERVAL,
+    CONF_IPFW_EXPIRE_PURGE_INTERVAL,
     CONF_IPFW_ADD_CHECK_STATE,
 #elif FIREWALL_IPF
     /* --DSS Place-holder */
@@ -251,7 +251,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "IPFW_MAX_RULES",
     "IPFW_ACTIVE_SET_NUM",
     "IPFW_EXPIRE_SET_NUM",
-    "IPFW_DYNAMIC_INTERVAL",
+    "IPFW_EXPIRE_PURGE_INTERVAL",
     "IPFW_ADD_CHECK_STATE",
 #elif FIREWALL_IPF
     /* --DSS Place-holder */
@@ -374,10 +374,14 @@ typedef struct acc_stanza
   struct fw_config {
       unsigned short    start_rule_num;
       unsigned short    max_rules;
+      unsigned short    active_rules;
+      unsigned short    total_rules;
       unsigned short    active_set_num;
       unsigned short    expire_set_num;
+      unsigned short    purge_interval;
       unsigned char    *rule_map;
       time_t            next_expire;
+      time_t            last_purge;
       char              fw_command[MAX_PATH_LEN];
   };
 

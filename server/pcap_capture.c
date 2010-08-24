@@ -55,6 +55,7 @@ pcap_capture(fko_srv_options_t *opts)
     int                 promisc = 0;
     int                 status;
     pid_t               child_pid;
+    time_t              now;
 
     /* Set promiscuous mode if ENABLE_PCAP_PROMISC is set to 'Y'.
     */
@@ -264,6 +265,20 @@ pcap_capture(fko_srv_options_t *opts)
         */
         check_firewall_rules(opts);
 
+#if FIREWALL_IPFW
+        /* Purge expired rules that no longer have any corresponding 
+         * dynamic rules.
+        */
+        if(opts->fw_config->total_rule > 0)
+        {
+            time(&now);
+            if(opts->fw_config->last_purge < (now - opts->fw_config->purge_interval))
+            {
+                purge_expired_rules(opts);
+                opts->fw_config->last_purge = now;
+            }
+        }
+#endif
     }
 
     pcap_close(pcap);
