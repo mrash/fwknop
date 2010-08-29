@@ -44,6 +44,7 @@ enum {
 #define IPFW_DEL_RULE_SET_ARGS       "delete set %u"
 #define IPFW_LIST_RULES_ARGS         "-d -S -T set %u list"
 #define IPFW_LIST_SET_RULES_ARGS     "set %u list"
+#define IPFW_LIST_EXP_SET_RULES_ARGS "-S set %u list"
 #define IPFW_LIST_SET_DYN_RULES_ARGS "-d set %u list"
 
 void purge_expired_rules(fko_srv_options_t *opts);

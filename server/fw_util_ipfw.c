@@ -136,7 +136,9 @@ fw_config_init(fko_srv_options_t *opts)
 void
 fw_initialize(fko_srv_options_t *opts)
 {
-    int res = 0;
+    int             res = 0;
+    unsigned short  curr_rule;
+    char           *ndx;
 
     /* For now, we just call fw_cleanup to start with clean slate.
     */
@@ -201,7 +203,66 @@ fw_initialize(fko_srv_options_t *opts)
             fwc.expire_set_num);
     else
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+
+    /* Now read the expire set in case there are existing
+     * rules to track.
+    */
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_EXP_SET_RULES_ARGS,
+        opts->fw_config->fw_command,
+        fwc.expire_set_num
+    );
+
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    if(!EXTCMD_IS_SUCCESS(res))
+    {
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+        return;
+    }
+
+    if(opts->verbose > 2)
+        log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
+
+    /* Find the first "# DISABLED" string (if any).
+    */
+    ndx = strstr(cmd_out, "# DISABLED ");
+ 
+    /* Assume no disabled rules if we did not see the string.
+    */
+    if(ndx == NULL)
+        return;
+
+    /* Otherwise we walk each line to pull the rule number and
+     * set the appropriate rule map entries.
+    */
+    while(ndx != NULL)
+    {
+        /* Skip over the DISABLED string to the rule num.
+        */
+        ndx += 11;
+
+        if(isdigit(*ndx))
+        {
+            curr_rule = atoi(ndx);
+
+            if(curr_rule >= fwc.start_rule_num
+              && curr_rule < fwc.start_rule_num + fwc.max_rules)
+            {
+                fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
+                fwc.total_rules++;
+            }
+        }
+        else
+            log_msg(LOG_WARNING, "fw_initialize: No rule number found where expected.");
+
+        /* Find the next "# DISABLED" string (if any).
+        */
+        ndx = strstr(ndx, "# DISABLED ");
+    }
 }
+
 
 int
 fw_cleanup(void)
@@ -230,9 +291,13 @@ fw_cleanup(void)
         }
     }
 
+/* --DSS Keep expired rule list so any existing established
+         are not lost */
+#if 0
+
     if(fwc.expire_set_num > 0)
     {
-        /* Create the set delete command for active rules
+        /* Create the set delete command for expired rules
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_DEL_RULE_SET_ARGS,
             fwc.fw_command,
@@ -249,10 +314,12 @@ fw_cleanup(void)
             got_err++;
         }
     }
+#endif
 
     /* Free the rule map.
     */
-    free(fwc.rule_map);
+    if(fwc.rule_map != NULL)
+        free(fwc.rule_map);
 
     return(got_err);
 }

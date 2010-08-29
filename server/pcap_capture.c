@@ -271,7 +271,7 @@ pcap_capture(fko_srv_options_t *opts)
         /* Purge expired rules that no longer have any corresponding 
          * dynamic rules.
         */
-        if(opts->fw_config->total_rule > 0)
+        if(opts->fw_config->total_rules > 0)
         {
             time(&now);
             if(opts->fw_config->last_purge < (now - opts->fw_config->purge_interval))
