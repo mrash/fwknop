@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHOR" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 07/16/2010
+.\"      Date: 08/28/2010
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "07/16/2010" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "08/28/2010" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -159,9 +159,9 @@ Display version information and exit\&.
 \fBfwknopd\fR references the \fIfwknopd\&.conf\fR file for configuration variables that define its operational parameters (what network interface and port to sniff, what features to enable/disable, etc\&.)\&. The \fIfwknopd\&.conf\fR file does not define any access control directives\&.
 .sp
 The access control directives are contained in the \fIaccess\&.conf\fR file\&. Access control directives define encryption keys and level of access that is granted to an fwknop client that has generated the appropriate encrypted SPA message\&.
-.SS "FWKNOPS\&.CONF VARIABLES"
+.SS "FWKNOPD\&.CONF VARIABLES"
 .sp
-This section list the more prominent configuration variables used by \fBfwknopd\fR\&. It is not a complete list\&. See the \fIfwknopd\&.conf\fR file for the full list and corresponding details\&.
+This section list the more prominent configuration variables used by \fBfwknopd\fR\&. It is not a complete list\&. There are directives for the type of firewall used by \fBfwknopd\fR (i\&.e\&. \fIiptables\fR or \fIipfw\fR)\&. You will want to make sure to check these to make sure they have appropriate values\&. See the \fIfwknopd\&.conf\fR file for the full list and corresponding details\&.
 .PP
 \fBPCAP_INTF\fR \fI<interface>\fR
 .RS 4

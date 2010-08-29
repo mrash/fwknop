@@ -118,11 +118,13 @@ Access control directives define encryption keys and level of access that
 is granted to an fwknop client that has generated the appropriate encrypted
 SPA message.
 
-FWKNOPS.CONF VARIABLES
+FWKNOPD.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~~
 This section list the more prominent configuration variables used by
-*fwknopd*.  It is not a complete list.  See the 'fwknopd.conf' file for
-the full list and corresponding details.
+*fwknopd*.  It is not a complete list.  There are directives for the type
+of firewall used by *fwknopd* (i.e. _iptables_ or _ipfw_).  You will want
+to make sure to check these to make sure they have appropriate values.  See
+the 'fwknopd.conf' file for the full list and corresponding details.
 
 *PCAP_INTF* '<interface>'::
     Specify the ethernet interface on which *fwknopd* will sniff packets.
