@@ -1,5 +1,12 @@
+2010-08-28  Damien Stuart <dstuart@dstuart.org>
+	* Version 2.0.0rc2
+	* Added support for access requests using ipfw.
+	* Added platform-related ifdefs around platform-specific code.
+	* Stubbed in ipf and pf firewall program support (not operational
+	  yet).
+	* Updates to accomodate compiling on FreeBSD-basded systems.
+
 2010-07-21  Damien Stuart <dstuart@dstuart.org>
-	* Bumped version in configure.ac to 2.0.0rc2
 	* Added extras directory to source distribution as a holder for extra
 	  and/or contributed files.  This initially includes startup (init)
 	  scripts for various platforms.

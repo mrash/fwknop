@@ -267,6 +267,7 @@ dnl
         FIREWALL_EXE=$IPFW_EXE
         AC_DEFINE_UNQUOTED([FIREWALL_IPFW], [1], [The firewall type: ipfw.])
     ],[ AS_IF([test "x$IPF_EXE" != x], [
+          AC_MSG_ERROR([Sorry - ipf was specified or the only one found, however, it is not supported yet.])
           FIREWALL_TYPE="ipf" 
           FIREWALL_EXE=$IPF_EXE
           AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
