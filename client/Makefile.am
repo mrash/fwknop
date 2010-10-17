@@ -12,7 +12,8 @@ dist_man_MANS       = fwknop.8
 
 EXTRA_DIST          = fwknop.8.in
 
-fwknop.8: fwknop.8.in
+#fwknop.8: fwknop.8.in
+fwknop.8: $(top_srcdir)/client/fwknop.8.in
 	$(SED) \
 		-e 's|[@]prefix@|$(prefix)|g' \
 		-e 's|[@]sysconfdir@|$(sysconfdir)|g' \
@@ -20,7 +21,7 @@ fwknop.8: fwknop.8.in
 		-e 's|[@]bindir@|$(bindir)|g' \
 		-e 's|[@]sbindir@|$(sbindir)|g' \
 		-e 's|[@]localstatedir@|$(localstatedir)|g' \
-		< "fwknop.8.in" > "$@"
+		< $(top_srcdir)/client/fwknop.8.in > "$@"
 
 clean-local:
 	rm -f fwknop.8

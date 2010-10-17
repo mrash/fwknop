@@ -28,7 +28,7 @@ dist_fwknopd_DATA = fwknopd.conf access.conf
 
 EXTRA_DIST        = fwknopd.8.in
 
-fwknopd.8: fwknopd.8.in
+fwknopd.8: $(top_srcdir)/server/fwknopd.8.in
 	$(SED) \
 		-e 's|[@]prefix@|$(prefix)|g' \
 		-e 's|[@]sysconfdir@|$(sysconfdir)|g' \
@@ -36,7 +36,7 @@ fwknopd.8: fwknopd.8.in
 		-e 's|[@]bindir@|$(bindir)|g' \
 		-e 's|[@]sbindir@|$(sbindir)|g' \
 		-e 's|[@]localstatedir@|$(localstatedir)|g' \
-		< "fwknopd.8.in" > "$@"
+		< $(top_srcdir)/server/fwknopd.8.in > "$@"
 
 clean-local:
 	rm -f fwknopd.8
