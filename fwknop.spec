@@ -86,11 +86,10 @@ access after a configurable timeout.
 
 make %{?_smp_mflags}
 
-
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
-
+install -D ./extras/fwknop.init.redhat ${RPM_BUILD_ROOT}/etc/rc.d/init.d/fwknopd
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -99,12 +98,19 @@ rm -rf $RPM_BUILD_ROOT
 /sbin/ldconfig
 /sbin/install-info %{_infodir}/libfko.info* %{_infodir}/dir
 
+%post -n fwknop-server
+/sbin/chkconfig --add fwknopd
+/sbin/chkconfig fwknopd off
+
+%preun -n fwknop-server
+/sbin/chkconfig --del fwknopd
+
 %preun -n libfko-devel
 if [ "$1" = 0 ]; then
  /sbin/install-info --delete %{_infodir}/libfko.info* %{_infodir}/dir
 fi
 
-%postun
+%postun -n libfko
 /sbin/ldconfig
 
 %files
@@ -125,6 +131,7 @@ fi
 %files server
 %defattr(-,root,root,-)
 %attr(0755,root,root) %{_sbindir}/fwknopd
+%attr(0755,root,root) /etc/rc.d/init.d/fwknopd
 %attr(0644,root,root) %{_mandir}/man8/fwknopd.8*
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/fwknopd.conf
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
