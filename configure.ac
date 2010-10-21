@@ -7,7 +7,7 @@ dnl Inspiration from RRDtool configure.ac, the AutoConf Archive
 dnl (http://www.nongnu.org/autoconf-archive/), and other examples.
 
 dnl Minimum Autoconf version required.
-AC_PREREQ(2.61)
+AC_PREREQ(2.62)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
@@ -24,7 +24,7 @@ AM_INIT_AUTOMAKE([tar-ustar -Wall -Werror foreign])
 
 dnl AM_MAINTAINER_MODE
 
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 dnl The top of our header
 dnl

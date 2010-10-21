@@ -31,6 +31,17 @@
 */
 #define MAX_PCAP_ERRORS_BEFORE_BAIL 100
 
+/* We normally want pcap in non-blockinbg mode, but this seems to be
+ * broken on FreeBSD 7 (at least my test host), so we'll set the default
+ * mode to on unless it is a FreeBSD system. --DSS XXX: What we really need
+ * to do is figure out what the difference is and address it correctly.
+*/
+#if defined(__FreeBSD__)
+    #define DEF_PCAP_NONBLOCK 0
+#else
+    #define DEF_PCAP_NONBLOCK 1
+#endif
+
 /* Prototypes
 */
 int pcap_capture(fko_srv_options_t *opts);

@@ -137,7 +137,7 @@ pcap_capture(fko_srv_options_t *opts)
      *       to actually use this mode (which when set on a FreeBSD
      *       system, it silently breaks the packet capture). 
     */
-    if((pcap_setnonblock(pcap, 0, errstr)) == -1)
+    if((pcap_setnonblock(pcap, DEF_PCAP_NONBLOCK, errstr)) == -1)
     {
         log_msg(LOG_ERR, "[*] Error setting pcap nonblocking to %i: %s",
             0, errstr

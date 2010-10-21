@@ -1036,7 +1036,7 @@ dump_access_list(fko_srv_options_t *opts)
             "==============================================================\n"
             "                 OPEN_PORTS:  %s\n"
             "             RESTRICT_PORTS:  %s\n"
-            "                        KEY:  %s\n"
+            "                        KEY:  <see the access.conf file>\n"
             "          FW_ACCESS_TIMEOUT:  %i\n"
             "            ENABLE_CMD_EXEC:  %s\n"
             "              CMD_EXEC_USER:  %s\n"
@@ -1044,7 +1044,7 @@ dump_access_list(fko_srv_options_t *opts)
             "     REQUIRE_SOURCE_ADDRESS:  %s\n"
             "               GPG_HOME_DIR:  %s\n"
             "             GPG_DECRYPT_ID:  %s\n"
-            "             GPG_DECRYPT_PW:  %s\n"
+            "             GPG_DECRYPT_PW:  <see the access.conf file>\n"
             "            GPG_REQUIRE_SIG:  %s\n"
             "GPG_IGNORE_SIG_VERIFY_ERROR:  %s\n"
             "              GPG_REMOTE_ID:  %s\n",
@@ -1052,7 +1052,7 @@ dump_access_list(fko_srv_options_t *opts)
             acc->source,
             (acc->open_ports == NULL) ? "<not set>" : acc->open_ports,
             (acc->restrict_ports == NULL) ? "<not set>" : acc->restrict_ports,
-            (acc->key == NULL) ? "<not set>" : acc->key,
+            //(acc->key == NULL) ? "<not set>" : acc->key,
             acc->fw_access_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
@@ -1060,7 +1060,7 @@ dump_access_list(fko_srv_options_t *opts)
             acc->require_source_address ? "Yes" : "No",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,
-            (acc->gpg_decrypt_pw == NULL) ? "<not set>" : acc->gpg_decrypt_pw,
+            //(acc->gpg_decrypt_pw == NULL) ? "<not set>" : acc->gpg_decrypt_pw,
             acc->gpg_require_sig ? "Yes" : "No",
             acc->gpg_ignore_sig_error  ? "Yes" : "No",
             (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id
