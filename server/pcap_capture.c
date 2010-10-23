@@ -281,6 +281,8 @@ pcap_capture(fko_srv_options_t *opts)
             }
         }
 #endif
+
+        usleep(10000);
     }
 
     pcap_close(pcap);
