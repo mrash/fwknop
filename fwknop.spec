@@ -31,13 +31,13 @@ Requires:	libfko
 
 
 %package -n libfko
-Version:	0.0.1
+Version:	0.0.2
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	0.0.1
+Version:	0.0.2
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
 Requires:	libfko
