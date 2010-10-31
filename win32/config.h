@@ -113,6 +113,9 @@
 /* Define to 1 if you have the <sys/endian.h> header file. */
 #undef HAVE_SYS_ENDIAN_H
 
+/* Define to 1 if you have the <errno.h> header file. */
+#define HAVE_ERRNO_H 1
+
 /* Define to 1 if you have the <sys/socket.h> header file. */
 #undef HAVE_SYS_SOCKET_H
 
@@ -172,7 +175,7 @@
 #undef TIME_WITH_SYS_TIME
 
 /* Version number of package */
-#define VERSION "2.0.0rc1"
+#define VERSION "2.0.0rc2"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
