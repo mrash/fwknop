@@ -90,6 +90,9 @@ make %{?_smp_mflags}
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 install -D ./extras/fwknop.init.redhat ${RPM_BUILD_ROOT}/etc/rc.d/init.d/fwknopd
+# Just in case...
+[ -d "${RPM_BUILD_ROOT}/usr/share/info/dir" ] \
+    || mkdir -p ${RPM_BUILD_ROOT}/usr/share/info/dir
 
 %clean
 rm -rf $RPM_BUILD_ROOT

@@ -11,7 +11,7 @@ libfko_source_files = \
 
 libfko_la_SOURCES   = $(libfko_source_files)
 
-libfko_la_LDFLAGS   = -version-info 0:2:0 $(GPGME_LIBS)
+libfko_la_LDFLAGS   = -version-info 0:3:0 $(GPGME_LIBS)
 
 AM_CPPFLAGS         = $(GPGME_CFLAGS)
 
