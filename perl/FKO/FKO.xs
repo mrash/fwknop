@@ -93,7 +93,7 @@ _version(ctx, val)
     val
     RETVAL
 
-char*
+const char*
 _error_str(err_code)
     INPUT:
     int     err_code;
@@ -102,12 +102,12 @@ _error_str(err_code)
     OUTPUT:
     RETVAL
  
-char*
+const char*
 _gpg_error_str(ctx)
     INPUT:
     fko_ctx_t ctx;
     CODE:
-    RETVAL = fko_gpg_errorstr(ctx);
+    RETVAL = fko_gpg_errstr(ctx);
     OUTPUT:
     RETVAL
  
@@ -230,7 +230,7 @@ int
 _get_timestamp(ctx, val)
     INPUT:
     fko_ctx_t ctx;
-    unsigned int val;
+    time_t val;
     CODE:
     RETVAL = fko_get_timestamp(ctx, &val);
     OUTPUT:

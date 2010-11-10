@@ -44,6 +44,7 @@ our @ERROR_CODES = qw(
     FKO_SUCCESS
     FKO_ERROR_CTX_NOT_INITIALIZED
     FKO_ERROR_MEMORY_ALLOCATION
+    FKO_ERROR_FILESYSTEM_OPERATION
     FKO_ERROR_INVALID_DATA
     FKO_ERROR_DATA_TOO_LARGE
     FKO_ERROR_USERNAME_UNKNOWN
@@ -80,6 +81,8 @@ our @ERROR_CODES = qw(
     FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND
     FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS
     FKO_ERROR_GPGME_DECRYPT_FAILED
+    FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM
+    FKO_ERROR_GPGME_BAD_GPG_EXE
     FKO_ERROR_GPGME_BAD_HOME_DIR
     FKO_ERROR_GPGME_SET_HOME_DIR
     FKO_ERROR_GPGME_NO_SIGNATURE
@@ -111,51 +114,54 @@ use constant {
     FKO_ENCRYPTION_GPG      => 2,
 
     # FKO error codes
-    FKO_SUCCESS                                 => 0,
-    FKO_ERROR_CTX_NOT_INITIALIZED               => 1,
-    FKO_ERROR_MEMORY_ALLOCATION                 => 2,
-    FKO_ERROR_INVALID_DATA                      => 3,
-    FKO_ERROR_DATA_TOO_LARGE                    => 4,
-    FKO_ERROR_USERNAME_UNKNOWN                  => 5,
-    FKO_ERROR_INCOMPLETE_SPA_DATA               => 6,
-    FKO_ERROR_MISSING_ENCODED_DATA              => 7,
-    FKO_ERROR_INVALID_DIGEST_TYPE               => 8,
-    FKO_ERROR_INVALID_ALLOW_IP                  => 9,
-    FKO_ERROR_INVALID_SPA_COMMAND_MSG           => 10,
-    FKO_ERROR_INVALID_SPA_ACCESS_MSG            => 11,
-    FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG        => 12,
-    FKO_ERROR_INVALID_ENCRYPTION_TYPE           => 13,
-    FKO_ERROR_WRONG_ENCRYPTION_TYPE             => 14,
-    FKO_ERROR_DECRYPTION_SIZE                   => 15,
-    FKO_ERROR_DECRYPTION_FAILURE                => 16,
-    FKO_ERROR_DIGEST_VERIFICATION_FAILED        => 17,
-    FKO_ERROR_UNSUPPORTED_FEATURE               => 18,
-    FKO_ERROR_UNKNOWN                           => 19,
+    FKO_SUCCESS                                   => 0,
+    FKO_ERROR_CTX_NOT_INITIALIZED                 => 1,
+    FKO_ERROR_MEMORY_ALLOCATION                   => 2,
+    FKO_ERROR_FILESYSTEM_OPERATION                => 3,
+    FKO_ERROR_INVALID_DATA                        => 4,
+    FKO_ERROR_DATA_TOO_LARGE                      => 5,
+    FKO_ERROR_USERNAME_UNKNOWN                    => 6,
+    FKO_ERROR_INCOMPLETE_SPA_DATA                 => 7,
+    FKO_ERROR_MISSING_ENCODED_DATA                => 8,
+    FKO_ERROR_INVALID_DIGEST_TYPE                 => 9,
+    FKO_ERROR_INVALID_ALLOW_IP                    => 10,
+    FKO_ERROR_INVALID_SPA_COMMAND_MSG             => 11,
+    FKO_ERROR_INVALID_SPA_ACCESS_MSG              => 12,
+    FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG          => 13,
+    FKO_ERROR_INVALID_ENCRYPTION_TYPE             => 14,
+    FKO_ERROR_WRONG_ENCRYPTION_TYPE               => 15,
+    FKO_ERROR_DECRYPTION_SIZE                     => 16,
+    FKO_ERROR_DECRYPTION_FAILURE                  => 17,
+    FKO_ERROR_DIGEST_VERIFICATION_FAILED          => 18,
+    FKO_ERROR_UNSUPPORTED_FEATURE                 => 19,
+    FKO_ERROR_UNKNOWN                             => 20,
     # Start GPGME-related errors
-    GPGME_ERR_START                             => 20,
-    FKO_ERROR_MISSING_GPG_KEY_DATA              => 21,
-    FKO_ERROR_GPGME_NO_OPENPGP                  => 22,
-    FKO_ERROR_GPGME_CONTEXT                     => 23,
-    FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ          => 24,
-    FKO_ERROR_GPGME_SET_PROTOCOL                => 25,
-    FKO_ERROR_GPGME_CIPHER_DATA_OBJ             => 26,
-    FKO_ERROR_GPGME_BAD_PASSPHRASE              => 27,
-    FKO_ERROR_GPGME_ENCRYPT_SIGN                => 28,
-    FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY          => 29,
-    FKO_ERROR_GPGME_SIGNER_KEYLIST_START        => 30,
-    FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND        => 31,
-    FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS        => 32,
-    FKO_ERROR_GPGME_ADD_SIGNER                  => 33,
-    FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY       => 34,
-    FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START     => 35,
-    FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND     => 36,
-    FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS     => 37,
-    FKO_ERROR_GPGME_DECRYPT_FAILED              => 38,
-    FKO_ERROR_GPGME_BAD_HOME_DIR                => 39,
-    FKO_ERROR_GPGME_SET_HOME_DIR                => 40,
-    FKO_ERROR_GPGME_NO_SIGNATURE                => 41,
-    FKO_ERROR_GPGME_BAD_SIGNATURE               => 42,
-    FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED   => 43,
+    GPGME_ERR_START                               => 21,
+    FKO_ERROR_MISSING_GPG_KEY_DATA                => 22,
+    FKO_ERROR_GPGME_NO_OPENPGP                    => 23,
+    FKO_ERROR_GPGME_CONTEXT                       => 24,
+    FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ            => 25,
+    FKO_ERROR_GPGME_SET_PROTOCOL                  => 26,
+    FKO_ERROR_GPGME_CIPHER_DATA_OBJ               => 27,
+    FKO_ERROR_GPGME_BAD_PASSPHRASE                => 28,
+    FKO_ERROR_GPGME_ENCRYPT_SIGN                  => 29,
+    FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY            => 30,
+    FKO_ERROR_GPGME_SIGNER_KEYLIST_START          => 31,
+    FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND          => 32,
+    FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS          => 33,
+    FKO_ERROR_GPGME_ADD_SIGNER                    => 34,
+    FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY         => 35,
+    FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START       => 36,
+    FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND       => 37,
+    FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS       => 38,
+    FKO_ERROR_GPGME_DECRYPT_FAILED                => 39,
+    FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM => 40,
+    FKO_ERROR_GPGME_BAD_GPG_EXE                   => 41,
+    FKO_ERROR_GPGME_BAD_HOME_DIR                  => 42,
+    FKO_ERROR_GPGME_SET_HOME_DIR                  => 43,
+    FKO_ERROR_GPGME_NO_SIGNATURE                  => 44,
+    FKO_ERROR_GPGME_BAD_SIGNATURE                 => 45,
+    FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED     => 46,
 };
 
 1;
