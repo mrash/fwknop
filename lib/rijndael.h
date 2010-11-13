@@ -1,23 +1,33 @@
-/* rijndael - An implementation of the Rijndael cipher.
- * Copyright (C) 2000 Rafael R. Sevilla <sevillar@team.ph.inter.net>
+/* $Id$
+ *****************************************************************************
+ *
+ * File:    rigndael.c
+ *
+ * Purpose: rijndael - An implementation of the Rijndael cipher.
+ *
+ * Copyright (C) 2000, 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
  *
  * Currently maintained by brian d foy, <bdfoy@cpan.org>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ *  License (GNU Public License):
  *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+ *  USA
+ *
+ *****************************************************************************
+*/
 /*
  * Rijndael is a 128/192/256-bit block cipher that accepts key sizes of
  * 128, 192, or 256 bits, designed by Joan Daemen and Vincent Rijmen.  See
@@ -28,82 +38,6 @@
 #define RIJNDAEL_H 1
 
 #include "fko_common.h"
-
-#if 0
-
-#ifdef _CRYPT_RIJNDAEL_H_TYPES
-	#undef _CRYPT_RIJNDAEL_H_TYPES
-#endif
-
-/* Irix. We could include stdint.h and use uint8_t_t but that also
- * requires that we specifically drive the compiler in C99 mode.
- * Defining UINT8 as unsigned char is, ultimately, what stdint.h
- * would do anyway.
- */
-#if defined(_SGIAPI) || defined( __sgi )
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef __uint32_t    UINT32;
-	typedef unsigned char UINT8;
-#endif
-
-/* Solaris has sys/types.h, but doesn't act like everyone else 
- * GCC defines __sun__ and __sun (report from Todd Ross)
- * Solaris cc defines __sun
- */
-#if defined( __sun__ ) || defined( __sun )
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef uint32_t UINT32;
-	typedef uint8_t_t  UINT8;
-#endif
-
-/* Mac OS X 10.3 defines things differently than most other 
-systems */
-#if defined( __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ ) &&  __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__-0 < 1140
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef u_int32_t UINT32;
-	typedef u_char    UINT8;
-#endif
-
-/* Mac OS X 10.3 defines things differently than most other
-systems */
-#if defined(__APPLE__) && ! defined(__DARWIN_UNIX03)
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef u_int32_t UINT32;
-	typedef u_char    UINT8;
-#endif
-
-/* I expect this to be the usual case */
-#if ! defined(_CRYPT_RIJNDAEL_H_TYPES) && ( defined(_SYS_TYPES_H) || defined(_SYS_TYPES_H_) )   
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef __uint32_t UINT32;
-	typedef __uint8_t_t  UINT8;
-#endif
-
-#if defined(__CYGWIN__) && ! defined(_CRYPT_RIJNDAEL_H_TYPES)
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef unsigned int  UINT32;
-	typedef unsigned char UINT8;
-#endif
-
-#if defined(__MINGW32__) && ! defined(_CRYPT_RIJNDAEL_H_TYPES)
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef unsigned int  UINT32;
-	typedef unsigned char UINT8;
-#endif
-
-#if defined(WIN32) && ! defined(_CRYPT_RIJNDAEL_H_TYPES)
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef unsigned int  UINT32;
-	typedef unsigned char UINT8;
-#endif
-
-#if ! defined(_CRYPT_RIJNDAEL_H_TYPES)
-	#define _CRYPT_RIJNDAEL_H_TYPES
-	typedef unsigned int  UINT32;
-	typedef unsigned char UINT8;
-#endif	
-
-#endif // #if 0
 
 /* Other block sizes and key lengths are possible, but in the context of
  * the ssh protocols, 256 bits is the default. 

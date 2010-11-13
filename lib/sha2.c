@@ -1,8 +1,14 @@
-/*
- * FILE:	sha2.c
+/* $Id$
+ *****************************************************************************
+ *
+ * File:    sha2.c
+ *
+ * Purpose: An implementation of the SHA 26/384/512 digests.
+ *
  * AUTHOR:	Aaron D. Gifford - http://www.aarongifford.com/
  * 
  * Copyright (c) 2000-2001, Aaron D. Gifford
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,9 +35,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sha2.c,v 1.1 2001/11/08 00:01:51 adg Exp adg $
- */
-
+ *****************************************************************************
+*/
 #include <string.h>	/* memcpy()/memset() or bcopy()/bzero() */
 #include <assert.h>	/* assert() */
 #include "sha2.h"

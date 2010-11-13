@@ -1,5 +1,10 @@
-/*
- * FILE:	sha2.h
+/* $Id$
+ *****************************************************************************
+ *
+ * File:    sha2.h
+ *
+ * Purpose: Header for sha2.c - Implementation of the SHA 26/384/512 digests.
+ *
  * AUTHOR:	Aaron D. Gifford - http://www.aarongifford.com/
  * 
  * Copyright (c) 2000-2001, Aaron D. Gifford
@@ -29,9 +34,8 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * $Id: sha2.h,v 1.1 2001/11/08 00:02:01 adg Exp adg $
- */
-
+ *****************************************************************************
+*/
 #ifndef __SHA2_H__
 #define __SHA2_H__
 

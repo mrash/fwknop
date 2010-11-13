@@ -1,6 +1,10 @@
-/*	$OpenBSD: strlcat.c,v 1.9 2003/03/14 14:35:29 millert Exp $	*/
-
-/*
+/* $Id$
+ *****************************************************************************
+ *
+ * File:    strlcat.c
+ *
+ * Purpose: Safer string concat routine.
+ *
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
  * All rights reserved.
  *
@@ -25,8 +29,9 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
+ *
+ *****************************************************************************
+*/
 #include "fko_common.h"
 
 /*

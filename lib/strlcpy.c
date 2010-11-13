@@ -1,6 +1,10 @@
-/*	$OpenBSD: strlcpy.c,v 1.6 2003/03/14 14:35:29 millert Exp $	*/
-
-/*
+/* $Id$
+ *****************************************************************************
+ *
+ * File:    strlcpy.c
+ *
+ * Purpose: Safer string copy routine.
+ *
  * Copyright (c) 1998 Todd C. Miller <Todd.Miller@courtesan.com>
  * All rights reserved.
  *
@@ -25,8 +29,9 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
+ *
+ *****************************************************************************
+*/
 #include "fko_common.h"
 
 /*
