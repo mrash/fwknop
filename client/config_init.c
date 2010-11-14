@@ -382,8 +382,9 @@ process_rc(fko_cli_options_t *options)
 {
     FILE    *rc;
     int     line_num = 0;
-    char    rcfile[MAX_PATH_LEN];
+    int     rcf_offset;
     char    line[MAX_LINE_LEN];
+    char    rcfile[MAX_PATH_LEN];
     char    curr_stanza[MAX_LINE_LEN] = {0};
     char    var[MAX_LINE_LEN]  = {0};
     char    val[MAX_LINE_LEN]  = {0};
@@ -403,8 +404,24 @@ process_rc(fko_cli_options_t *options)
         return;
     }
 
+    memset(rcfile, 0x0, MAX_PATH_LEN);
+
     strlcpy(rcfile, homedir, MAX_PATH_LEN);
-    rcfile[strlen(rcfile)] = PATH_SEP;
+
+    rcf_offset = strlen(rcfile);
+
+    /* Sanity check the path to .fwknoprc.
+     * The preceeding path plus the path separator and '.fwknoprc' = 11
+     * cannot exceed MAX_PATH_LEN.
+    */
+    if(rcf_offset > (MAX_PATH_LEN - 11))
+    {
+        fprintf(stderr, "Warning: Path to .fwknoprc file is too long.\n"
+            " No .fwknoprc file processed.\n");
+        return;
+    }
+
+    rcfile[rcf_offset] = PATH_SEP;
     strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
 
     /* Open the rc file for reading, if it does not exist, then create
