@@ -37,6 +37,9 @@ EXTRA_DIST = \
     perl/FKO/lib/FKO.pm \
     perl/FKO/lib/FKO_Constants.pl \
     perl/FKO/Changes \
+	python/README \
+	python/setup.py \
+	python/fkomodule.c \
     win32/config.h \
     win32/fwknop-client.vcproj \
     win32/getopt.c \

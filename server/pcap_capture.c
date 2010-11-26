@@ -281,7 +281,7 @@ pcap_capture(fko_srv_options_t *opts)
             time(&now);
             if(opts->fw_config->last_purge < (now - opts->fw_config->purge_interval))
             {
-                purge_expired_rules(opts);
+                ipfw_purge_expired_rules(opts);
                 opts->fw_config->last_purge = now;
             }
         }

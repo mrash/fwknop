@@ -629,7 +629,7 @@ check_firewall_rules(fko_srv_options_t *opts)
  * corresponding dynamic rules.
 */
 void
-purge_expired_rules(fko_srv_options_t *opts)
+ipfw_purge_expired_rules(fko_srv_options_t *opts)
 {
     char            exp_str[12];
     char            rule_num_str[6];

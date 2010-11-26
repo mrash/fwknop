@@ -1,0 +1,19 @@
+fko python module version 1.0
+==============================
+
+This module is essentially a Python wrapper for the Firewall Knock
+Operator library, "libfko".  See the "libfko" documentation for
+additional information on the functionality provided by "libfko"
+and usage overview.
+
+Before attempting to build this module, libfko needs to be installed on
+the system.
+
+To build and install the module:
+
+   * Build with "python setup.py build"
+   * Install with "python setup.py install"
+
+Note: This version is just a plain wrapper around libfko.  I do plan to
+      make a more complete OO Python module that wraps this one. --DSS
+

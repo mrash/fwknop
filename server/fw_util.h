@@ -48,7 +48,11 @@
   #include <time.h>
 #endif
 
-/* Function prototypes
+/* Function prototypes.
+ *
+ * Note: These are the public functions for managing firewall rules.
+ *       They should be implemented in each of the corresponding
+ *       fw_util_<fw-type>.c files.
 */
 void fw_config_init(fko_srv_options_t *opts);
 void fw_initialize(fko_srv_options_t *opts);

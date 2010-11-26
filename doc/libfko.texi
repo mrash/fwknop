@@ -796,12 +796,12 @@ For example:
 Set the random value portion of the spa data to the given value (@var{val}).
 The given value must be a pointer to a 16-character decimal numeric string
 or NULL.  If the value is NULL, the function generate a new random value.
-If a string value is provided, it must not a 16-character decimal string,
-the function will return @code{FKO_ERROR_INVALID_DATA}.
+If a string value is provided, it must be a 16-character decimal string.
+Otherwise, the function will return @code{FKO_ERROR_INVALID_DATA}.
 @end deftypefun
 
-@deftypefun int fko_set_username (@w{fko_ctx_t @var{ctx}, const char @var{*spoof_user}});
-Set the username field of the @acronym{SPA} data. If @var{spoof_user} is NULL,
+@deftypefun int fko_set_username (@w{fko_ctx_t @var{ctx}, const char @var{*username}});
+Set the username field of the @acronym{SPA} data. If @var{username} is NULL,
 libfko will first look for the environment variable @env{SPOOF_USER}
 and use its value if found.  Otherwise, it will try to determine the username
 itself using various methods starting with @code{cuser} or @code{getlogin},
@@ -941,7 +941,7 @@ current context to the address @var{rand_val} is pointing to.  The return value
 is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_timestamp (@w{fko_ctx_t @var{ctx}, unsigned int @var{*timestamp}});
+@deftypefun int fko_get_timestamp (@w{fko_ctx_t @var{ctx}, time_t @var{*timestamp}});
 Sets the value of the @var{timestamp} variable to the timestamp value
 associated with the current context.  The return value is an FKO error
 status.
@@ -1078,13 +1078,13 @@ fingerprint associated with the current context to the address @var{sig_fpr}
 is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signature_summary (@w{fko_ctx_t @var{ctx}, unsigned char @var{*sig_sum}});
+@deftypefun int fko_get_gpg_signature_summary (@w{fko_ctx_t @var{ctx}, int @var{*sig_sum}});
 Sets the value of the @var{sig_sum} variable to the @acronym{GPG} signature
 summary value associated with the current context. The return value is an FKO
 error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signature_status (@w{fko_ctx_t @var{ctx}, unsigned char @var{*sig_stat}});
+@deftypefun int fko_get_gpg_signature_status (@w{fko_ctx_t @var{ctx}, int @var{*sig_stat}});
 Sets the value of the @var{sig_stat} variable to the @acronym{GPG} signature
 error status value associated with the current context. The return value is an
 FKO error status.
