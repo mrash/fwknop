@@ -14,6 +14,46 @@ To build and install the module:
    * Build with "python setup.py build"
    * Install with "python setup.py install"
 
-Note: This version is just a plain wrapper around libfko.  I do plan to
-      make a more complete OO Python module that wraps this one. --DSS
+
+Simple usage example:
+
+#!/usr/bin/python
+#
+# Import the Fko class and all constants.
+#
+from fko import *
+
+# Create an Fko instance with an empty context.
+#
+fko = Fko()
+
+# Set the SPA message (Note: Access request is default if not specified).
+#
+fko.spa_message("0.0.0.0,tcp/22")
+
+# Create the final SPA data message string.
+#
+fko.spa_data_final("mypassword")
+
+# print the spa message.
+#
+print fko.spa_data()
+
+(prints something like this):
+81ugT7+dv6p0qKPmFKwZYz9qAtqThBib+mIeZae9FK2UYQF5CNyujAmEH2+0CBxm3DpArlyySWqdfITvmfSBd11XbFPksK3iqWAPR65lVTYXrNywOxVN65Nmm9D0Qzsczx1hkeNg+g8qxecxO1XBc/LdHEa5C0FmI
+
+# To decode SPA data:
+#
+fko = Fko("81ugT7+dv6p0qKPmFKwZYz9qAtqThBib+mIeZae9FK2UYQF5CNyujAmEH2+0CBxm3DpArlyySWqdfITvmfSBd11XbFPksK3iqWAPR65lVTYXrNywOxVN65Nmm9D0Qzsczx1hkeNg+g8qxecxO1XBc/LdHEa5C0FmI", "mypassword")
+
+# Print some of the data:
+#
+print "Version:", fko.version()
+print "Timestamp:", fko.timestamp()
+print "Username:", fko.username()
+print "Digest Type (value):", fko.digest_type()
+print "Digest Type (string):", fko.digest_type_str()
+print "Digest:", fko.digest()
+print "SPA Message:", fko.spa_message()
+
 

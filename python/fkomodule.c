@@ -209,11 +209,11 @@ static PyMethodDef FKOMethods[] = {
  * Module init
 */
 PyMODINIT_FUNC
-initfko(void)
+init_fko(void)
 {
     PyObject *m;
 
-    m = Py_InitModule("fko", FKOMethods);
+    m = Py_InitModule("_fko", FKOMethods);
     if (m == NULL)
         return;
 
@@ -423,7 +423,7 @@ get_timestamp(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    return Py_BuildValue("I", timestamp);
+    return Py_BuildValue("k", timestamp);
 }
 
 /* set_timestamp
@@ -434,7 +434,7 @@ set_timestamp(PyObject *self, PyObject *args)
     fko_ctx_t ctx;
     int res, offset;
 
-    if(!PyArg_ParseTuple(args, "ki", &ctx, &offset))
+    if(!PyArg_ParseTuple(args, "kk", &ctx, &offset))
         return NULL;
 
     res = fko_set_timestamp(ctx, offset);
