@@ -104,8 +104,9 @@ FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED = 46
 ### End FKO Constants ###
 
 class Fko:
-    """This class wraps the Firewall KNock OPerator (fwknop) library,
-    libfko.  It provides the functionality to manage and process
+    """This class wraps the Firewall KNock OPerator (fwknop) library, libfko.
+
+    It provides the functionality to manage and process
     Single Packet Authorization (SPA) data.
     """
 
@@ -129,7 +130,7 @@ class Fko:
         # If there is SPA data, attempt to process it. Otherwise, create
         # an empty context.
         #
-        if(spa_data != None):
+        if spa_data != None:
             self.ctx = _fko.init_ctx_with_data(spa_data, key)
         else:
             self.ctx = _fko.init_ctx()
@@ -163,7 +164,7 @@ class Fko:
         If a provided value is not a valid 16-character decimal string, the
         function will throw an fko.error exception.
         """
-        if(val != None):
+        if val != None:
             _fko.set_rand_value(self.ctx, val)
         else:
             return _fko.get_rand_value(self.ctx)
@@ -185,7 +186,7 @@ class Fko:
         Upon creation of a new Fko object, this value is automatically
         generated based on the libfko method described above.
         """
-        if(val != None):
+        if val != None:
             _fko.set_username(self.ctx, val)
         else:
             return _fko.get_username(self.ctx)
@@ -202,7 +203,7 @@ class Fko:
         Upon creation of a new FKO object, this value is automatically
         generated based on the time of object creation.
         """
-        if(val != None):
+        if val != None:
             _fko.set_timestamp(self.ctx, val)
         else:
             return _fko.get_timestamp(self.ctx)
@@ -223,7 +224,7 @@ class Fko:
             FKO_DIGEST_SHA384 - The SHA384 message digest.
             FKO_DIGEST_SHA512 - The SHA512 message digest.
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_digest_type(self.ctx, val)
         else:
             return _fko.get_spa_digest_type(self.ctx)
@@ -243,7 +244,7 @@ class Fko:
             GnuPG encryption (if supported by the underlying libfko
             implementation).
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_encryption_type(self.ctx, val)
         else:
             return _fko.get_spa_encryption_type(self.ctx)
@@ -299,7 +300,7 @@ class Fko:
             parameter for the fwknop server.  The timeout value is provided
             via the "client_timeout" data field.
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_message_type(self.ctx, val)
         else:
             return _fko.get_spa_message_type(self.ctx)
@@ -313,7 +314,7 @@ class Fko:
         This is the string that represents the data for the message type
         as described in the spa_message_type section above.
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_message(self.ctx, val)
         else:
             return _fko.get_spa_message(self.ctx)
@@ -324,7 +325,7 @@ class Fko:
         If no argument is given, the current value is returned. Otherwise,
         SPA nat access string will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_nat_access(self.ctx, val)
         else:
             return _fko.get_spa_nat_access(self.ctx)
@@ -335,7 +336,7 @@ class Fko:
         If no argument is given, the current value is returned. Otherwise,
         the SPA server auth string will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_server_auth(self.ctx, val)
         else:
             return _fko.get_spa_server_auth(self.ctx)
@@ -347,7 +348,7 @@ class Fko:
         is returned.  Otherwise, the SPA message client timeout value will
         be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_client_timeout(self.ctx, val)
         else:
             return _fko.get_spa_client_timeout(self.ctx)
@@ -383,7 +384,7 @@ class Fko:
               "decrypt_spa_data(key)" method to complete the
               decryption, decoding, and parsing process.
         """
-        if(val != None):
+        if val != None:
             _fko.set_spa_data(self.ctx, val)
         else:
             return _fko.get_spa_data(self.ctx)
@@ -481,7 +482,7 @@ class Fko:
         If no argument is given, the current value is returned.  Otherwise,
         gpg_recipient will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_gpg_recipient(self.ctx, val)
         else:
             return _fko.get_gpg_recipient(self.ctx)
@@ -500,7 +501,7 @@ class Fko:
         If no argument is given, the current value is returned.  Otherwise,
         gpg_signer will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_gpg_signer(self.ctx, val)
         else:
             return _fko.get_gpg_signer(self.ctx)
@@ -518,7 +519,7 @@ class Fko:
         If no argument is given, the current value is returned. Otherwise,
         gpg_home_dir will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_gpg_home_dir(self.ctx, val)
         else:
             return _fko.get_gpg_home_dir(self.ctx)
@@ -534,7 +535,7 @@ class Fko:
         If no argument is given, the current value is returned.  Otherwise,
         the gpg_signature_verify flag will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_gpg_signature_verify(self.ctx, val)
         else:
             return _fko.get_gpg_signature_verify(self.ctx)
@@ -549,7 +550,7 @@ class Fko:
         If no argument is given, the current value is returned. Otherwise,
         the gpg_ignore_verify_error flag will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_gpg_ignore_verify_error(self.ctx, val)
         else:
             return _fko.get_gpg_ignore_verify_error(self.ctx)
@@ -560,7 +561,7 @@ class Fko:
         If no argument is given, the current value is returned. Otherwise,
         gpg_exe will be set to the given value.
         """
-        if(val != None):
+        if val != None:
             _fko.set_gpg_exe(self.ctx, val)
         else:
             return _fko.get_gpg_exe(self.ctx)
@@ -596,7 +597,7 @@ class Fko:
         last decryption operation.  If the ID's match, then a true value
         is returned. Otherwise false is returned.
         """
-        if(_fko.gpg_signature_id_match(self.ctx) > 0):
+        if _fko.gpg_signature_id_match(self.ctx) > 0:
             return True
         return False
 
@@ -605,7 +606,7 @@ class Fko:
         GPG signature of the last decryption operation.  If the ID's match,
         then a true value is returned. Otherwise false is returned.
         """
-        if(_fko.gpg_signature_fpr_match(self.ctx) > 0):
+        if _fko.gpg_signature_fpr_match(self.ctx) > 0:
             return True
         return False
 
