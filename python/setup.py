@@ -1,4 +1,4 @@
-#
+#!/usr/bin/python
 ##############################################################################
 #
 # File:    setup.py
@@ -11,7 +11,9 @@
 #
 from distutils.core import setup, Extension
 
-module1 = Extension(
+# The fko extension module.
+#
+fko_ext = Extension(
     '_fko',
     define_macros = [('MAJOR_VERSION', '1'), ('MINOR_VERSION', '0')],
                     libraries = ['fko'],
@@ -29,6 +31,8 @@ setup (
 Python module that wraps the fwknop library to provide the ability to
 generate, decode, parse, and process SPA formatted messages.
 ''',
-    ext_modules = [module1],
+    ext_modules = [fko_ext],
     py_modules = ['fko']
 )
+
+###EOF###
