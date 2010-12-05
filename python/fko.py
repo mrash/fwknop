@@ -9,21 +9,43 @@ You can find more detailed information in the libfko documention
 
 Example simple minimal fknop client:
 
-    import fko
     import socket
+    from fko import *
 
     fko_port = 62201
     fko_host = "192.168.7.67"
 
-    f = fko.Fko()
+    # Create the Fko object which will initialize the FKO
+    # context and populate some of its fields with default
+    # data.
+    #
+    f = Fko()
+
+    # Set the SPA message (access request)
+    #
     f.spa_message('192.168.7.5,tcp/22')
+
+    # Alternate way to set SPA message using the FkoAccess class.
+    #
+    # ar = FkoAccess("192.168.7.5", "tcp", 22)
+    # f.spa_message(ar.str())
+
+    # Generate the final SPA data string.
+    #
     f.spa_data_final('put_pw_here')
 
+    # Display the final SPA data string.
+    #
+    print "SPA Data:", f.spa_data()
+
+    # Send the SPA request.
+    #
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.sendto(f.spa_data(), (fko_host, fko_port))
     s.close()
 """
 import _fko
+from string import join
 
 # FKO Constants definitions
 
@@ -102,6 +124,11 @@ FKO_ERROR_GPGME_BAD_SIGNATURE = 45
 FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED = 46
 
 ### End FKO Constants ###
+
+class FkoException(Exception):
+    """General exception class for fko.
+    """
+    pass
 
 class Fko:
     """This class wraps the Firewall KNock OPerator (fwknop) library, libfko.
@@ -677,5 +704,136 @@ class Fko:
         else:
             ets = "Unknown encryption type"
         return ets
+
+    def __call__(self):
+        """Calls the spa_data() method.
+
+        If an Fko object is called directly, then it will return
+        the SPA data string for that object.
+        """
+        try:
+            return self.spa_data()
+        except:
+            return None
+
+
+class FkoAccess():
+    """Class for creating SPA Access Request message strings.
+    """
+    def _check_port(self, port):
+        """Internal function that validates a port or list of ports.
+        """
+        plist = []
+        if type(port) is int:
+            plist.append(port)
+        elif type(port) is list:
+            plist += port
+        else:
+            raise FkoException("Invalid type: not an integer or a list")
+
+        for p in plist:
+            if type(p) is not int:
+                raise FkoException("Port value not an integer")
+            if p < 1 or p > 65535:
+                raise FkoException("Port value out of range: 1-65535")
+        return plist
+
+    def __init__(self, host="0.0.0.0", proto="tcp", port=None):
+        """Constructor for the FkoAccess class.
+
+        The three optional arguments are:
+            - host   - hostname or IP address (default is 0.0.0.0).
+            - proto  - protocol, which can be "tcp" (default) or "udp".
+            - port   - integer or list of integers representing the
+                       port(s) access beinbg requested.
+        """
+        self.host = host
+        self.proto = proto
+        if port is None:
+            self.port = []
+        else:
+            self.port = self._check_port(port)
+
+    def setport(self, port):
+        """Set the port(s) for the Access Request.
+
+        Takes either an integer or a list of integers and replaces the
+        FkoAccess object's requested ports.
+        """
+        self.port = self._check_port(port)
+
+    def addport(self, port):
+        """Add the port(s) to the Access Request.
+
+        Takes either an integer or a list of integers and adds them to
+        the the existing FkoAccess object's requested ports.
+        """
+        self.port += self._check_port(port)
+
+    def delport(self, port):
+        """Remove the port(s) from the Access Request.
+
+        Takes either an integer or a list of integers and removes any
+        matching ports from the FkoAccess object's requested ports list.
+        """
+        plist = self._check_port(port)
+        try:
+            for p in plist:
+                if p in self.port:
+                    self.port.remove(p)
+        except:
+            pass
+
+    def str(self):
+        """Return the Access Request string.
+
+        Generates and returns the properly formatted Access Request
+        string based on the object's host, proto, and ports values.
+        """
+        if len(self.port) < 1:
+            raise FkoException("No port value in FkoAccess")
+        return self.host+','+self.proto+'/'+join(map(str,self.port),",")
+
+    def __call__(self):
+        """Calls the str() method.
+
+        If an FkoAccess object is called directly, then it will return
+        the Access Request string for that object.
+        """
+        return self.str()
+
+class FkoNatAccess():
+    """Class for creating SPA NAT Access Request message strings.
+    """
+    def __init__(self, ip, port):
+        """Constructor for the FkoNatAccess class.
+
+        The two required arguments are:
+            - ip   - IP address of the NAT destination.
+            - port - Port number of the NAT destination.
+        """
+        if type(port) is not int:
+            raise FkoException("Port value not an integer")
+        if port < 1 and port > 65535:
+            raise FkoException("Port value out of range 1-65535")
+        self.ip = ip
+        self.port = port
+
+    def str(self):
+        """Return the NAT Access Request string.
+
+        Generates and returns the properly formatted NAT Access Request
+        string based on the object's ip and port values.
+        """
+        return join([self.ip, str(self.port)], ",")
+
+    def __call__(self):
+        """Calls the str() method.
+
+        If an FkoNatAccess object is called directly, then it will return
+        the NAT Access Request string for that object.
+        """
+        return self.str()
+
 
 ###EOF###

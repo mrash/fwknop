@@ -13,7 +13,7 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.0.0rc2
+Version:	2.0.0rc3
 # Uncomment this when the version becomes 2.0.0 (without the rcX).
 #Epoch:      1
 Release:	1%{?dist}
@@ -31,13 +31,13 @@ Requires:	libfko
 
 
 %package -n libfko
-Version:	0.0.2
+Version:	0.0.3
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	0.0.2
+Version:	0.0.3
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
 Requires:	libfko
@@ -91,8 +91,8 @@ rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
 install -D ./extras/fwknop.init.redhat ${RPM_BUILD_ROOT}/etc/rc.d/init.d/fwknopd
 # Just in case...
-[ -d "${RPM_BUILD_ROOT}/usr/share/info/dir" ] \
-    || mkdir -p ${RPM_BUILD_ROOT}/usr/share/info/dir
+[ ! -d "${RPM_BUILD_ROOT}/usr/share/info" ] \
+    || mkdir -p ${RPM_BUILD_ROOT}/usr/share/info
 
 %clean
 rm -rf $RPM_BUILD_ROOT
