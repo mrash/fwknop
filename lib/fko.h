@@ -31,6 +31,8 @@
 #ifndef FKO_H
 #define FKO_H 1
 
+#include <time.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

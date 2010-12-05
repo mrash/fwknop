@@ -330,6 +330,11 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    /* We expect to have encrypted data to process.  If not, we bail.
+    */
+    if(ctx->encrypted_msg == NULL || (strlen(ctx->encrypted_msg) < 1))
+        return(FKO_ERROR_MISSING_ENCODED_DATA);
+
     *spa_data = ctx->encrypted_msg; 
 
     /* Notice we omit the first 10 bytes if Rijndael encryption is
