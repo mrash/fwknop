@@ -29,7 +29,6 @@
  *
  *****************************************************************************
 */
-#include "fko_common.h"
 #include "spa_comm.h"
 
 /* Function to generate a header checksum.
