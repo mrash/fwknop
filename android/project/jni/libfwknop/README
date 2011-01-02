@@ -1,0 +1,10 @@
+README for the libfwknop directory (android/project/jni/libfwknop)
+===============================================================================
+
+This directory should contain all of the .c and .h files from the fwknop
+main distribution "lib" directory. These are the source files for libfko.
+You can either copy or link to the libfko source files.  Either way, they
+need to exist in this directory before you attempt to build the Android
+fwknop client.
+
+

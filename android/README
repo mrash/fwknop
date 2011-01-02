@@ -1,0 +1,142 @@
+===============================================================================
+FWKNOP for Android
+
+Max Kastanas <max2idea@users.sourceforge.net>
+
+Based on fwknop C implementation by Damien Stuart
+===============================================================================
+
+1. Requirements:
+
+    a. Apache Ant (1.7.1)
+        http://ant.apache.org/bindownload.cgi
+
+    b. Android NDK (Android r5-linux)
+        http://developer.android.com/sdk/ndk/index.html
+        Unzip the contents under a directory ie:
+        /home/yourname/tools/android-sdk-linux_86
+
+    c. Android SDK (Android r08-linux)
+        http://developer.android.com/sdk/index.html
+        Unzip the contents under a directory ie:
+        /home/yourname/tools/android-ndk-r5
+
+    d. Include the Android SDK tools directory in your user PATH variable:
+        export PATH=$PATH:/home/dev/tools/android-sdk-linux_86/tools:/home/yourname/tools/android-ndk-r5
+
+    e. Download an SDK Android platform, in a command shell type: "android &"
+       to start up the "Android SDK and AVD Manager".  Download an SDK
+       platform (Android 2.1 and above is recommended) under the
+       "Available Packages" section.
+
+    f. Java SDK (1.6 and above)
+        http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+    g. Netbeans (6.9 and above) - Optional if you want to use Netbeans as
+       the IDE:
+        http://netbeans.org/downloads/
+
+    h. Netbeans Android plugin (0.11 and above) - Optional if you are using
+       the Netbeans IDE:
+        http://kenai.com/projects/nbandroid/pages/Install
+
+===============================================================================
+2. Setup
+
+    a. Untar the tar.gz file:
+        tar -zxf Fwknop-0.9.tar.gz
+
+    b. Update the properties files with the path to the sdk and ndk tools:
+        .../fwknop-android/project/build.properties
+            sdk.dir=/home/yourname/tools/android-sdk-linux_86
+            ndk.dir=/home/yourname/tools/android-ndk-r5
+
+    c. Include the Android SDK platform directory in your user PATH variable
+        export PATH=$PATH:/home/dev/tools/android-sdk-linux_86/platforms-tools
+
+    d. Create a new Android device, in a command shell type: "android".
+        This will start the android SDK and AVD Manager
+        Under Virtual Devices create an AVD device and name it as "Android2.1"
+
+    e. Update (if needed) project file with the right virtual device as above:
+        .../fwknop-android/project/nbproject/project.properties
+            platform.active=Android2.1
+
+    f. The relevant fwknop android C code can be found under the
+       ".../project/jni" directory:
+         1. The ".../project/jni/libfwknop" directory should contain all of
+            the .c and .h files from the main fwknop/lib/ directory (the
+            libfko source files.  You can copy all of the *.[ch] files from
+            .../fwknop.../lib manually, or use the "get_libfko_files.sh"
+            script.
+
+         2. The ".../project/jni/fwknop" directory contains the code for
+            the android-specific client code (with the Java Native Interface
+            hooks).
+
+===============================================================================
+3. Build
+
+    a. To build the app make sure you're under the project directory:
+        $> cd /home/yourname/.../fwknop-android/project
+
+    b. To build the application type:
+        $> ant jar
+
+===============================================================================
+4. Run
+
+    a. Now search under the .../fwknop-android/dist directory for a .apk
+       file.  You can copy the .apk file to your SD card by typing (make
+       sure the Android Emulator is on):
+            $> adb push Fwknop.apk /sdcard/
+
+    Then you can open it and install it from within your Android device
+    using a Filemanager like Astro. Make sure that you have turned on the 
+    "Unknown Sources" Option under Application settings.
+
+===============================================================================
+5. Android Emulator
+
+    If you don't have a device you can install and run Fwknop in the Android
+    emulator. To do so follow these steps:
+        $> android
+
+    Under the virtual devices find your device "Android2.1" and start it up
+
+    In a command line type:
+        $> adb install Fwknop.apk
+
+    You can now find the Firewall Knock Operator app under the menu tap on
+    the icon to get started.
+
+===============================================================================
+6. Developing with Netbeans
+
+To develop and build with Netbeans make sure you have installed the nbandroid
+plugin (see requirements. Once you have that install a new Java platform under
+the Tool -> Java Platforms and choose a Google Android platform, navigate
+under the SDK platform directory you downloaded under step 1e. Finally, just
+open the .../fwknop-android/project directory as a Netbeans project.
+
+===============================================================================
+7. Debugging
+
+You can use gdb to debug the app.  Before you do so make sure you have the
+following attribute in your AndroidManifest.xml file:
+    android:debuggable="true" 
+Now rebuild the application and start the Android Emulator, then in a command
+shell type:
+    $> ndk-gdb --project=<path-to>/android/project
+
+This will start gdb in remote debugging, similarly you can follow the same
+steps to debug a physical device
+
+===============================================================================
+Changelog
+v0.9 Dec 28 2010
+1) Rijndael client support
+2) Local and External IP resolution
+2) Automatically start ConnectBot
+
+
