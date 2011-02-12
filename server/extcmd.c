@@ -96,6 +96,7 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
     int     retval = 0;
     char    so_read_buf[IO_READ_BUF_LEN];
     pid_t   pid;
+    int     res;
 
     if(so_buf == NULL)
     {
@@ -122,7 +123,8 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
                     exit(EXTCMD_SETUID_ERROR);
                 }
             }
-            exit(WEXITSTATUS(system(cmd)));
+            res = system(cmd);
+            exit(WEXITSTATUS(res));
         }
 
         /* Retval is forced to 0 as we don't care about the exit status of

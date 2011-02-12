@@ -73,6 +73,7 @@ EXTRA_DIST = \
 	python/README \
 	python/setup.py \
 	python/fkomodule.c \
+	python/fko.py \
     win32/config.h \
     win32/fwknop-client.vcproj \
     win32/getopt.c \
