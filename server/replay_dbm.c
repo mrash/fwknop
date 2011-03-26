@@ -44,6 +44,9 @@
   #define MY_DBM_STRERROR(x)        gdbm_strerror(x)
   #define MY_DBM_CLOSE(d)           gdbm_close(d)
 
+  #define MY_DBM_REPLACE            GDBM_REPLACE
+  #define MY_DBM_INSERT             GDBM_INSERT
+
 #elif HAVE_LIBNDBM
   #include <ndbm.h>
 
@@ -51,6 +54,10 @@
   #define MY_DBM_STORE(d, k, v, m)  dbm_store(d, k, v, m)
   #define MY_DBM_STRERROR(x)        strerror(x)
   #define MY_DBM_CLOSE(d)           dbm_close(d)
+
+  #define MY_DBM_REPLACE            DBM_REPLACE
+  #define MY_DBM_INSERT             DBM_INSERT
+
 #else
   #error "No GDBM or NDBM header file found. WTF?"
 #endif
@@ -107,7 +114,7 @@ replay_db_init(fko_srv_options_t *opts)
     DBM        *rpdb;
 #endif
 
-    datum       db_key, db_next_key;
+    datum       db_key, db_ent, db_next_key;
     int         db_count = 0;
 
     /* If rotation was specified, do it.
@@ -262,7 +269,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 
         /* Save it back to the digest cache
         */
-        if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_REPLACE) != 0)
+        if(MY_DBM_STORE(rpdb, db_key, db_ent, MY_DBM_REPLACE) != 0)
             log_msg(LOG_WARNING, "Error updating entry in digest_cache: '%s': %s",
                 opts->config[CONF_DIGEST_FILE],
                 MY_DBM_STRERROR(errno)
@@ -283,7 +290,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         db_ent.dsize    = sizeof(digest_cache_info_t);
         db_ent.dptr     = (char*)&(dc_info);
 
-        if(MY_DBM_STORE(rpdb, db_key, db_ent, GDBM_INSERT) != 0)
+        if(MY_DBM_STORE(rpdb, db_key, db_ent, MY_DBM_INSERT) != 0)
         {
             log_msg(LOG_WARNING, "Error adding entry digest_cache: %s",
                 MY_DBM_STRERROR(errno)

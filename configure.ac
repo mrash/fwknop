@@ -191,7 +191,14 @@ AS_IF([test "$want_server" = yes], [
             AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
             use_ndbm=yes
         ],
-        [ AC_MSG_ERROR([fwknopd needs either gdbm or ndbm])]
+        [ AC_CHECK_HEADER([ndbm.h],
+            [ AC_CHECK_FUNC([dbm_open],
+                [
+                    AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
+                ],
+                [ AC_MSG_ERROR([fwknopd needs either gdbm or ndbm])]
+            )]
+        )]
     )]
   )
 
