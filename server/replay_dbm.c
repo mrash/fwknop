@@ -76,6 +76,9 @@
 static void
 rotate_digest_cache_file(fko_srv_options_t *opts)
 {
+#ifdef NO_DIGEST_CACHE
+    log_msg(LOG_WARNING, "Digest cache not supported. Nothing to rotate.");
+#else
     int         res;
     char       *new_file = NULL;
 
@@ -100,6 +103,7 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
         log_msg(LOG_ERR, "Unable to rename digest file: %s to %s: %s",
             opts->config[CONF_DIGEST_FILE], new_file, strerror(errno)
         );
+#endif /* NO_DIGEST_CACHE */
 }
 
 /* Check for the existence of the replay dbm file, and create it if it does
@@ -108,6 +112,10 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
 int
 replay_db_init(fko_srv_options_t *opts)
 {
+#ifdef NO_DIGEST_CACHE
+    return 0;
+#else
+
 #ifdef HAVE_LIBGDBM
     GDBM_FILE   rpdb;
 #elif HAVE_LIBNDBM
@@ -161,6 +169,7 @@ replay_db_init(fko_srv_options_t *opts)
     MY_DBM_CLOSE(rpdb);
 
     return(db_count);
+#endif /* NO_DIGEST_CACHE */
 }
 
 /* Take an fko context, pull the digest and use it as the key to check the
@@ -170,6 +179,10 @@ replay_db_init(fko_srv_options_t *opts)
 int
 replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
+#ifdef NO_DIGEST_CACHE
+    return 0;
+#else
+
 #ifdef HAVE_LIBGDBM
     GDBM_FILE   rpdb;
 #elif HAVE_LIBNDBM
@@ -305,6 +318,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
     MY_DBM_CLOSE(rpdb);
 
     return(res);
+#endif /* NO_DIGEST_CACHE */
 }
 
 /***EOF***/

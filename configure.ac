@@ -59,6 +59,16 @@ AC_ARG_ENABLE([server],
   [])
 AM_CONDITIONAL([WANT_SERVER], [test "$want_server" = yes])
 
+dnl Decide whether or not to enable the digest-cache
+dnl
+want_digest_cache=yes
+AC_ARG_ENABLE([digest-cache],
+  [AS_HELP_STRING([--disable-digest-cache],
+    [Do not enable the fwknopd digest-cache @<:@default is to build@:>@])],
+  [want_digest_cache=$enableval],
+  [])
+dnl AM_CONDITIONAL([WANT_DIGEST_CACHE], [test "$want_digest_cache" = yes])
+
 AC_GNU_SOURCE
 
 AC_PROG_CC
@@ -174,32 +184,44 @@ AS_IF([test "x$GPG_EXE" != x],
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
-  use_ndbm=no
-  # Looking for libpcap
-  #
-  AC_CHECK_LIB([pcap],[pcap_open_live],
-    [ AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]) ],
-    [ AC_MSG_ERROR([fwknopd needs libpcap])]
-  )
+    # Looking for libpcap
+    #
+    AC_CHECK_LIB([pcap],[pcap_open_live],
+      [ AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]) ],
+      [ AC_MSG_ERROR([fwknopd needs libpcap])]
+    )
 
-  # Looking for gdbm or fallback to ndbm or bail
-  #
-  AC_CHECK_LIB([gdbm],[gdbm_open],
-    [ AC_DEFINE([HAVE_LIBGDBM], [1], [Define if you have libgdbm]) ],
-    [ AC_CHECK_LIB([ndbm],[dbm_open],
+  AS_IF([test "$want_digest_cache" = yes], [
+    use_ndbm=no
+    have_digest_cache=yes
+
+    # Looking for gdbm or fallback to ndbm or bail
+    #
+    AC_CHECK_LIB([gdbm],[gdbm_open],
         [
-            AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
-            use_ndbm=yes
+            AC_DEFINE([HAVE_LIBGDBM], [1], [Define if you have libgdbm])
         ],
-        [ AC_CHECK_HEADER([ndbm.h],
-            [ AC_CHECK_FUNC([dbm_open],
-                [
-                    AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
-                ],
-                [ AC_MSG_ERROR([fwknopd needs either gdbm or ndbm])]
+        [ AC_CHECK_LIB([ndbm],[dbm_open],
+            [
+                AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
+                use_ndbm=yes
+            ],
+            [ AC_CHECK_HEADER([ndbm.h],
+                [ AC_CHECK_FUNC([dbm_open],
+                    [ AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])],
+                    [
+                        AC_DEFINE([NO_DIGEST_CACHE], [1], [Define this to disable the digest cache for replay detection.])
+                        AC_MSG_WARN([No DBM implementation found. Replay detection will be disabled.])
+                        have_digest_cache=no
+                    ]
+                )]
             )]
         )]
-    )]
+    )],
+    [
+        AC_DEFINE([NO_DIGEST_CACHE], [1], [Define this to disable the digest cache for replay detection.])
+        have_digest_cache=no
+    ]
   )
 
   AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xyes])
@@ -302,7 +324,7 @@ AC_CONFIG_FILES([Makefile
 
 AC_OUTPUT
 
-if [test $have_gpgme = "yes" ]; then
+if [test "$have_gpgme" = "yes" ]; then
     have_gpgme="$have_gpgme
                   Gpgme engine:     $GPG_EXE"
 fi
@@ -316,10 +338,16 @@ echo "
 
         Installation prefix:        $prefix
 "
-if [test $want_server = "yes" ]; then
+if [test "$want_server" = "yes" ]; then
   echo "    Server support:
         firewall type:              $FIREWALL_TYPE
         firewall program path:      $FIREWALL_EXE
 "
-fi
 
+    if [test "$want_digest_cache" = "no" ]; then
+        echo "    *WARNING*
+        The digest-cache functionality is not enabled.  This
+        could leave the fwknopd server open to replay attacks!
+"
+    fi
+fi
