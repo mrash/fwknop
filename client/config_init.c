@@ -350,6 +350,20 @@ parse_rc_param(fko_cli_options_t *options, char *var, char * val)
     {
         strlcpy(options->http_user_agent, val, HTTP_MAX_USER_AGENT_LEN);
     }
+    /* Resolve URL */
+    else if(CONF_VAR_IS(var, "RESOLVE_URL"))
+    {
+        if(options->resolve_url != NULL)
+            free(options->resolve_url);
+        tmpint = strlen(val)+1;
+        options->resolve_url = malloc(tmpint);
+        if(options->resolve_url == NULL)
+        {
+            fprintf(stderr, "Memory allocation error for resolve URL.\n");
+            exit(EXIT_FAILURE);
+        }
+        strlcpy(options->resolve_url, val, tmpint);
+    }
     /* NAT Local ? */
     else if(CONF_VAR_IS(var, "NAT_LOCAL"))
     {
@@ -562,6 +576,9 @@ validate_options(fko_cli_options_t *options)
             exit(EXIT_FAILURE);
         }
 
+        if (options->resolve_url != NULL)
+            options->resolve_ip_http = 1;
+
         if (!options->resolve_ip_http && options->allow_ip_str[0] == 0x0)
         {
             fprintf(stderr,
@@ -742,6 +759,17 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'R':
                 options->resolve_ip_http = 1;
                 break;
+            case RESOLVE_URL:
+                if(options->resolve_url != NULL)
+                    free(options->resolve_url);
+                options->resolve_url = malloc(strlen(optarg)+1);
+                if(options->resolve_url == NULL)
+                {
+                    fprintf(stderr, "Memory allocation error for resolve URL.\n");
+                    exit(EXIT_FAILURE);
+                }
+                strcpy(options->resolve_url, optarg);
+                break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;
                 break;
@@ -857,8 +885,12 @@ usage(void)
       " -S, --source-port           Set the source port for outgoing SPA packet.\n"
       " -Q, --spoof-source          Set the source IP for outgoing SPA packet.\n"
       " -R, --resolve-ip-http       Resolve the external network IP by\n"
-      "                             connecting to the URL:\n"
+      "                             connecting to a URL such as the default of:\n"
       "                             http://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL "\n"
+      "                             This can be overridden with the --resolve-url\n"
+      "                             option.\n"
+      "     --resolve-url           Override the default URL used for resolving\n"
+      "                             the source IP address.\n"
       " -u, --user-agent            Set the HTTP User-Agent for resolving the\n"
       "                             external IP via -R, or for sending SPA\n"
       "                             packets over HTTP.\n"

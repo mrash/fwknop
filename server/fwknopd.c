@@ -586,6 +586,8 @@ write_pid_file(fko_srv_options_t *opts)
         return -1;
     }
 
+    fcntl(op_fd, F_SETFD, FD_CLOEXEC);
+
     /* Attempt to lock the PID file.  If we get an EWOULDBLOCK
      * error, another instance already has the lock. So we grab
      * the pid from the existing lock file, complain and bail.

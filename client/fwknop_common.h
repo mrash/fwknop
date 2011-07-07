@@ -62,12 +62,14 @@
   *             so we will make the default run on cipherdyne website
   *             for now.
 */
-#define HTTP_RESOLVE_HOST          "www.cipherdyne.org"
-#define HTTP_RESOLVE_URL           "/cgi-bin/myip"
-#define HTTP_MAX_REQUEST_LEN       2000
-#define HTTP_MAX_RESPONSE_LEN      2000
-#define HTTP_MAX_USER_AGENT_LEN    50
-#define MAX_HOSTNAME_LEN           70
+#define HTTP_RESOLVE_HOST           "www.cipherdyne.org"
+#define HTTP_RESOLVE_URL            "/cgi-bin/myip"
+#define HTTP_MAX_REQUEST_LEN        2000
+#define HTTP_MAX_RESPONSE_LEN       2000
+#define HTTP_MAX_USER_AGENT_LEN     50
+#define MAX_HOSTNAME_LEN            70
+#define MAX_URL_HOST_LEN            256
+#define MAX_URL_PATH_LEN            1024
 
 /* fwknop client configuration parameters and values
 */
@@ -101,6 +103,7 @@ typedef struct fko_cli_options
     /* External IP resolution via HTTP
     */
     int  resolve_ip_http;
+    char *resolve_url;
     char http_user_agent[HTTP_MAX_USER_AGENT_LEN];
 
     /* HTTP proxy support

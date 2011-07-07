@@ -44,12 +44,97 @@
   #include <netdb.h>
 #endif
 
+struct url
+{
+    char    port[6];
+    char    host[256];
+    char    path[1024];
+};
+
+static int
+parse_url(char *res_url, struct url* url)
+{
+    char *s_ndx, *e_ndx;
+    int  tlen, tlen_offset, port;
+
+    /* https is not supported.
+    */
+    if(strncasecmp(res_url, "https", 5) == 0)
+    {
+        fprintf(stderr, "https is not yet supported for http-resolve-ip.\n");
+        return(-1);
+    }
+
+    /* Strip off http:// portion if necessary
+    */
+    if(strncasecmp(res_url, "http://", 7) == 0)
+        s_ndx = res_url + 7;
+    else
+        s_ndx = res_url;
+
+    /* Look for a colon in case an alternate port was specified.
+    */
+    e_ndx = strchr(s_ndx, ':');
+    if(e_ndx != NULL)
+    {
+        port = atoi(e_ndx+1);
+        if(port < 1 || port > 65535)
+        {
+            fprintf(stderr, "resolve-url port value is invalid.\n");
+            return(-1);
+        }
+
+        sprintf(url->port, "%u", port);
+
+        /* Get the offset we need to skip the port portion when we
+         * extract the hostname part.
+        */
+        tlen_offset = strlen(url->port)+1;
+    }
+    else
+    {
+        strcpy(url->port, "80");
+        tlen_offset = 0;
+    }
+
+    e_ndx = strchr(s_ndx, '/');
+    if(e_ndx == NULL)
+        tlen = strlen(s_ndx)+1;
+    else
+        tlen = (e_ndx-s_ndx)+1;
+
+    tlen -= tlen_offset;
+
+    if(tlen > MAX_URL_HOST_LEN)
+    {
+        fprintf(stderr, "resolve-url hostname portion is too large.\n");
+        return(-1);
+    }
+    strlcpy(url->host, s_ndx, tlen);
+
+    if(e_ndx != NULL)
+    {
+        if(strlen(e_ndx) > MAX_URL_PATH_LEN)
+        {
+            fprintf(stderr, "resolve-url path portion is too large.\n");
+            return(-1);
+        }
+
+        strlcpy(url->path, e_ndx, MAX_URL_PATH_LEN);
+    }
+    else
+        *(url->path) = '\0';
+
+    return(0);
+}
+
 int
 resolve_ip_http(fko_cli_options_t *options)
 {
     int     sock, res, error, http_buf_len, i;
     int     o1, o2, o3, o4;
     struct  addrinfo *result, *rp, hints;
+    struct  url url;
     char    http_buf[HTTP_MAX_REQUEST_LEN];
     char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
     char   *ndx;
@@ -67,13 +152,28 @@ resolve_ip_http(fko_cli_options_t *options)
     }
 #endif
 
+    if(options->resolve_url != NULL)
+    {
+        if(parse_url(options->resolve_url, &url) < 0)
+        {
+            fprintf(stderr, "Error parsing resolve-url\n");
+            return(-1);
+        }
+    } else {
+        strlcpy(url.port, "80", 3);
+        strlcpy(url.host, HTTP_RESOLVE_HOST, MAX_URL_HOST_LEN);
+        strlcpy(url.path, HTTP_RESOLVE_URL, MAX_URL_PATH_LEN);
+    }
+
     /* Build our HTTP request to resolve the external IP (this is similar to
      * to contacting whatismyip.org, but using a different URL).
     */
     snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
         "GET %s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
         "Host: %s\r\nConnection: Keep-Alive\r\n\r\n",
-        HTTP_RESOLVE_URL, options->http_user_agent, HTTP_RESOLVE_HOST
+        url.path,
+        options->http_user_agent,
+        url.host
     );
 
     http_buf_len = strlen(http_buf);
@@ -84,7 +184,7 @@ resolve_ip_http(fko_cli_options_t *options)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    error = getaddrinfo(HTTP_RESOLVE_HOST, "80", &hints, &result);
+    error = getaddrinfo(url.host, url.port, &hints, &result);
     if (error != 0)
     {
         fprintf(stderr, "error in getaddrinfo: %s\n", gai_strerror(error));
@@ -173,7 +273,9 @@ resolve_ip_http(fko_cli_options_t *options)
 
 		if(options->verbose)
 			printf("Resolved external IP (via http://%s%s) as: %s\n",
-				HTTP_RESOLVE_HOST, HTTP_RESOLVE_URL, options->allow_ip_str);
+                url.host,
+                url.path,
+				options->allow_ip_str);
 
 		return(0);
 	}

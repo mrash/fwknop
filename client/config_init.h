@@ -49,6 +49,7 @@ enum {
     TIME_OFFSET_PLUS,
     NO_SAVE_ARGS,
     SHOW_LAST_ARGS,
+    RESOLVE_URL,
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
@@ -94,6 +95,7 @@ static struct option cmd_opts[] =
     {"spoof-src",           1, NULL, 'Q'},
     {"rand-port",           0, NULL, 'r'},
     {"resolve-ip-http",     0, NULL, 'R'},
+    {"resolve-url",         1, NULL, RESOLVE_URL},
     {"show-last",           0, NULL, SHOW_LAST_ARGS},
     {"source-ip",           0, NULL, 's'},
     {"source-port",         1, NULL, 'S'},
