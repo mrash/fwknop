@@ -630,7 +630,7 @@ save_args(int argc, char **argv)
     char args_save_file[MAX_PATH_LEN];
     char args_str[MAX_LINE_LEN] = "";
     FILE *args_file_ptr = NULL;
-    int i = 0, args_str_len;
+    int i = 0, args_str_len = 0;
 
 #ifdef WIN32
     /* Not sure what the right thing is here on Win32, just return
