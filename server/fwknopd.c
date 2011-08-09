@@ -37,7 +37,7 @@
 #include "utils.h"
 #include "fw_util.h"
 #include "sig_handler.h"
-#include "replay_dbm.h"
+#include "replay_cache.h"
 #include "tcp_server.h"
 
 /* Prototypes
@@ -239,7 +239,7 @@ main(int argc, char **argv)
             dump_access_list(&opts);
         }
 
-        /* Initialize the digest cache (replay attack detection dbm)
+        /* Initialize the digest cache for replay attack detection
          * if so configured.
         */
         if(strncasecmp(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)

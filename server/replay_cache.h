@@ -1,11 +1,11 @@
 /*
  *****************************************************************************
  *
- * File:    replay_dbm.h
+ * File:    replay_cache.h
  *
  * Author:  Damien Stuart (dstuart@dstuart.org)
  *
- * Purpose: Header file for fwknopd replay_dbm.c functions.
+ * Purpose: Header file for fwknopd replay_cache.c functions.
  *
  * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
  *

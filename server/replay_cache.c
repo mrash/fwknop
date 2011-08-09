@@ -1,13 +1,15 @@
 /*
  *****************************************************************************
  *
- * File:    replay_dbm.c
+ * File:    replay_cache.c
  *
  * Author:  Damien S. Stuart
  *
  * Purpose: Provides the functions to check for possible replay attacks
- *          by using a dbm (ndbm or gdbm in ndbm compatibility mode) file
- *          to store a digest of previously received SPA packets.
+ *          by using a cache of previously seen digests.  This cache is a
+ *          simple file by default, but can be made to use a dbm solution
+ *          (ndbm or gdbm in ndbm compatibility mode) file to store the digest
+ *          of a previously received SPA packets.
  *
  * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -30,7 +32,7 @@
  *
  *****************************************************************************
 */
-#include "replay_dbm.h"
+#include "replay_cache.h"
 #include "log_msg.h"
 #include "fwknopd_errors.h"
 

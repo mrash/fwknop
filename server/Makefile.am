@@ -4,7 +4,7 @@ fwknopd_SOURCES   = fwknopd.c fwknopd.h config_init.c config_init.h \
                     fwknopd_common.h incoming_spa.c incoming_spa.h \
                     pcap_capture.c pcap_capture.h process_packet.c \
                     process_packet.h log_msg.c log_msg.h utils.c utils.h \
-                    sig_handler.c sig_handler.h replay_dbm.c replay_dbm.h \
+                    sig_handler.c sig_handler.h replay_cache.c replay_cache.h \
                     access.c access.h fwknopd_errors.c fwknopd_errors.h \
                     tcp_server.c tcp_server.h extcmd.c extcmd.h \
 					fw_util.c fw_util.h fw_util_ipf.c fw_util_ipf.h \
