@@ -50,7 +50,7 @@ COMMAND-LINE OPTIONS
 
 *-D, --Dump-config*::
     Dump the configuration values that *fwknopd* derives from the
-    'fwknop.conf' (or override files) and 'access.conf' on stderr.
+    'fwknopd.conf' (or override files) and 'access.conf' on stderr.
 
 *-i, --interface*='<interface>'::
     Manually specify interface on which to sniff, e.g. ``-i eth0''.  This
@@ -75,8 +75,13 @@ COMMAND-LINE OPTIONS
 
 *-O, --Override-config*='<file>'::
     Override config variable values that are normally read from the
-    'fwknop.conf' file with values from the specified file.  Multiple
+    'fwknopd.conf' file with values from the specified file.  Multiple
     override config files can be given as a comma-separated list.
+
+*-P, --pcap-filter*='<filter>'::
+    Specify a Berkeley packet filter statement on the *fwknopd* command
+    line.  This overrides the value of the PCAP_FILTER variable taken
+    from the 'fwknopd.conf' file.
 
 *-R, --Restart*::
     Restart the currently running *fwknopd* processes.  This option
@@ -369,7 +374,7 @@ directive starts a new stanza.
 
 FILES
 -----
-*fwknop.conf*::
+*fwknopd.conf*::
 The main configuration file for fwknop.
 
 *access.conf*::

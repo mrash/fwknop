@@ -66,7 +66,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:c:C:Dfhi:Kl:O:RSvV"
+#define GETOPTS_OPTION_STRING "a:c:C:Dfhi:Kl:O:P:RSvV"
 
 /* Our program command-line options...
 */
@@ -85,6 +85,7 @@ static struct option cmd_opts[] =
     {"locale",              1, NULL, 'l' },
     {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },
     {"override-config",     1, NULL, 'O' },
+    {"pcap-filter",         1, NULL, 'P'},
     {"restart",             0, NULL, 'R'},
     {"status",              0, NULL, 'S'},
     {"verbose",             0, NULL, 'v'},

@@ -661,6 +661,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'O':
                 /* This was handled earlier */
                 break;
+            case 'P':
+                set_config_entry(opts, CONF_PCAP_FILTER, optarg);
+                break; 
             case ROTATE_DIGEST_CACHE:
                 opts->rotate_digest_cache = 1;
                 break;
@@ -734,6 +737,8 @@ usage(void)
       "                           default.\n"
       " -O, --override-config   - Specify a file with configuration entries that will\n"
       "                           overide those in fwknopd.conf\n"
+      " -P, --pcap-filter       - Specify a Berkeley packet filter statement to\n"
+      "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
       "     --rotate-digest-cache\n"
       "                         - Rotate the digest cache file by renaming it to\n"
