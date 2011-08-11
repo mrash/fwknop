@@ -72,7 +72,11 @@
 /* More Conf defaults
 */
 #define DEF_PID_FILENAME                MY_NAME".pid"
-#define DEF_DIGEST_CACHE_FILENAME       "digest.cache"
+#if USE_FILE_CACHE
+  #define DEF_DIGEST_CACHE_FILENAME       "digest.cache"
+#else
+  #define DEF_DIGEST_CACHE_DB_FILENAME    "digest_db.cache"
+#endif
 
 #define DEF_INTERFACE                   "eth0"
 #define DEF_ENABLE_PCAP_PROMISC         "N"
@@ -199,7 +203,11 @@ enum {
     CONF_FWKNOP_CONF_DIR,
     CONF_ACCESS_FILE,
     CONF_FWKNOP_PID_FILE,
+#if USE_FILE_CACHE
     CONF_DIGEST_FILE,
+#else
+    CONF_DIGEST_DB_FILE,
+#endif
     CONF_GPG_HOME_DIR,
     CONF_FIREWALL_EXE,
 
@@ -267,7 +275,11 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "FWKNOP_CONF_DIR",
     "ACCESS_FILE",
     "FWKNOP_PID_FILE",
+#if USE_FILE_CACHE
     "DIGEST_FILE",
+#else
+    "DIGEST_DB_FILE",
+#endif
     "GPG_HOME_DIR",
     "FIREWALL_EXE",
 };  

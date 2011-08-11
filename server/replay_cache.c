@@ -88,7 +88,11 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
 
     log_msg(LOG_INFO, "Rotating digest cache file.");
 
+#if USE_FILE_CACHE
     new_file = malloc(strlen(opts->config[CONF_DIGEST_FILE])+5);
+#else
+    new_file = malloc(strlen(opts->config[CONF_DIGEST_DB_FILE])+5);
+#endif
 
     if(new_file == NULL)
     {
@@ -98,14 +102,26 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
 
     /* The new filename is just the original with a trailing '-old'.
     */
+#if USE_FILE_CACHE
     strcpy(new_file, opts->config[CONF_DIGEST_FILE]);
+#else
+    strcpy(new_file, opts->config[CONF_DIGEST_DB_FILE]);
+#endif
     strcat(new_file, "-old");
 
+#if USE_FILE_CACHE
     res = rename(opts->config[CONF_DIGEST_FILE], new_file);
+#else
+    res = rename(opts->config[CONF_DIGEST_DB_FILE], new_file);
+#endif
 
     if(res < 0)
         log_msg(LOG_ERR, "Unable to rename digest file: %s to %s: %s",
+#if USE_FILE_CACHE
             opts->config[CONF_DIGEST_FILE], new_file, strerror(errno)
+#else
+            opts->config[CONF_DIGEST_DB_FILE], new_file, strerror(errno)
+#endif
         );
 #endif /* NO_DIGEST_CACHE */
 }
@@ -164,11 +180,11 @@ replay_db_cache_init(fko_srv_options_t *opts)
 
 #ifdef HAVE_LIBGDBM
     rpdb = gdbm_open(
-        opts->config[CONF_DIGEST_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
+        opts->config[CONF_DIGEST_DB_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
     );
 #elif HAVE_LIBNDBM
     rpdb = dbm_open(
-        opts->config[CONF_DIGEST_FILE], O_RDWR|O_CREAT, S_IRUSR|S_IWUSR
+        opts->config[CONF_DIGEST_DB_FILE], O_RDWR|O_CREAT, S_IRUSR|S_IWUSR
     );
 #endif
 
@@ -176,7 +192,7 @@ replay_db_cache_init(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR,
             "Unable to open digest cache file: '%s': %s",
-            opts->config[CONF_DIGEST_FILE],
+            opts->config[CONF_DIGEST_DB_FILE],
             MY_DBM_STRERROR(errno)
         );
 
@@ -327,16 +343,16 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     */
 #ifdef HAVE_LIBGDBM
     rpdb = gdbm_open(
-         opts->config[CONF_DIGEST_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
+         opts->config[CONF_DIGEST_DB_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
     );
 #elif HAVE_LIBNDBM
-    rpdb = dbm_open(opts->config[CONF_DIGEST_FILE], O_RDWR, 0);
+    rpdb = dbm_open(opts->config[CONF_DIGEST_DB_FILE], O_RDWR, 0);
 #endif
 
     if(!rpdb)
     {
         log_msg(LOG_WARNING, "Error opening digest_cache: '%s': %s",
-            opts->config[CONF_DIGEST_FILE],
+            opts->config[CONF_DIGEST_DB_FILE],
             MY_DBM_STRERROR(errno)
         );
 
@@ -393,7 +409,7 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
         */
         if(MY_DBM_STORE(rpdb, db_key, db_ent, MY_DBM_REPLACE) != 0)
             log_msg(LOG_WARNING, "Error updating entry in digest_cache: '%s': %s",
-                opts->config[CONF_DIGEST_FILE],
+                opts->config[CONF_DIGEST_DB_FILE],
                 MY_DBM_STRERROR(errno)
             );
 

@@ -166,7 +166,11 @@ main(int argc, char **argv)
          * in case it configured to be somewhere other than the run dir.
         */
         check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0);
+#if USE_FILE_CACHE
         check_dir_path((const char *)opts.config[CONF_DIGEST_FILE], "Run", 1);
+#else
+        check_dir_path((const char *)opts.config[CONF_DIGEST_DB_FILE], "Run", 1);
+#endif
 
         /* Process the access.conf file.
         */
@@ -258,7 +262,11 @@ main(int argc, char **argv)
             if(opts.verbose)
                 log_msg(LOG_ERR,
                     "Using Digest Cache: '%s' (entry count = %i)",
+#if USE_FILE_CACHE
                     opts.config[CONF_DIGEST_FILE], rp_cache_count
+#else
+                    opts.config[CONF_DIGEST_DB_FILE], rp_cache_count
+#endif
                 );
         }
 

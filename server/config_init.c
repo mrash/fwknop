@@ -248,16 +248,25 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_FWKNOP_PID_FILE, tmp_path);
     }
 
+#if USE_FILE_CACHE
     if(opts->config[CONF_DIGEST_FILE] == NULL)
+#else
+    if(opts->config[CONF_DIGEST_DB_FILE] == NULL)
+#endif
     {
         strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], MAX_PATH_LEN);
 
         if(tmp_path[strlen(tmp_path)-1] != '/')
             strlcat(tmp_path, "/", MAX_PATH_LEN);
 
-        strlcat(tmp_path, DEF_DIGEST_CACHE_FILENAME, MAX_PATH_LEN);
 
+#if USE_FILE_CACHE
+        strlcat(tmp_path, DEF_DIGEST_CACHE_FILENAME, MAX_PATH_LEN);
         set_config_entry(opts, CONF_DIGEST_FILE, tmp_path);
+#else
+        strlcat(tmp_path, DEF_DIGEST_CACHE_DB_FILENAME, MAX_PATH_LEN);
+        set_config_entry(opts, CONF_DIGEST_DB_FILE, tmp_path);
+#endif
     }
 
     /* Set remaining require CONF_ vars if they are not already set.  */
