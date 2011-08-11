@@ -51,7 +51,7 @@ static pid_t get_running_pid(fko_srv_options_t *opts);
 int
 main(int argc, char **argv)
 {
-    int                 res, last_sig, rpdb_count;
+    int                 res, last_sig, rp_cache_count;
     char               *locale;
     pid_t               old_pid;
 
@@ -239,14 +239,15 @@ main(int argc, char **argv)
             dump_access_list(&opts);
         }
 
-        /* Initialize the digest cache for replay attack detection
+        /* Initialize the digest cache for replay attack detection (either
+         * with dbm support or with the default simple cache file strategy)
          * if so configured.
         */
         if(strncasecmp(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
         {
-            rpdb_count = replay_db_init(&opts);
+            rp_cache_count = replay_cache_init(&opts);
 
-            if(rpdb_count < 0)
+            if(rp_cache_count < 0)
             {
                 log_msg(LOG_WARNING,
                     "Error opening digest cache file. Incoming digests will not be remembered."
@@ -257,7 +258,7 @@ main(int argc, char **argv)
             if(opts.verbose)
                 log_msg(LOG_ERR,
                     "Using Digest Cache: '%s' (entry count = %i)",
-                    opts.config[CONF_DIGEST_FILE], rpdb_count
+                    opts.config[CONF_DIGEST_FILE], rp_cache_count
                 );
         }
 

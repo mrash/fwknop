@@ -69,6 +69,19 @@ AC_ARG_ENABLE([digest-cache],
   [])
 dnl AM_CONDITIONAL([WANT_DIGEST_CACHE], [test "$want_digest_cache" = yes])
 
+dnl Decide whether or not to try to look for gdbm/ndbm (default to just
+dnl use a file-based solution - reduces dependencies)
+dnl
+want_file_cache=yes
+AC_ARG_ENABLE([file-cache],
+  [AS_HELP_STRING([--disable-file-cache],
+    [Replace file cache with gdbm/ndbm @<:@default on@:>@])],
+  [want_file_cache=$enableval],
+  [])
+AS_IF([test "$want_file_cache" = yes], [
+    AC_DEFINE([USE_FILE_CACHE], [1], [Define this to enable non-gdbm/ndbm digest storing (eliminates gdbm/ndbm dependency).])
+])
+
 AC_GNU_SOURCE
 
 AC_PROG_CC
@@ -195,36 +208,40 @@ AS_IF([test "$want_server" = yes], [
     use_ndbm=no
     have_digest_cache=yes
 
-    # Looking for gdbm or fallback to ndbm or bail
-    #
-    AC_CHECK_LIB([gdbm],[gdbm_open],
-        [
-            AC_DEFINE([HAVE_LIBGDBM], [1], [Define if you have libgdbm])
-        ],
-        [ AC_CHECK_LIB([ndbm],[dbm_open],
-            [
-                AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
-                use_ndbm=yes
-            ],
-            [ AC_CHECK_HEADER([ndbm.h],
-                [ AC_CHECK_FUNC([dbm_open],
-                    [ AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])],
-                    [
-                        AC_DEFINE([NO_DIGEST_CACHE], [1], [Define this to disable the digest cache for replay detection.])
-                        AC_MSG_WARN([No DBM implementation found. Replay detection will be disabled.])
-                        have_digest_cache=no
-                    ]
-                )]
-            )]
-        )]
+    AS_IF([test "$want_file_cache" = no], [
+
+      # Looking for gdbm or fallback to ndbm or bail
+      #
+      AC_CHECK_LIB([gdbm],[gdbm_open],
+          [
+              AC_DEFINE([HAVE_LIBGDBM], [1], [Define if you have libgdbm])
+          ],
+          [ AC_CHECK_LIB([ndbm],[dbm_open],
+              [
+                  AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])
+                  use_ndbm=yes
+              ],
+              [ AC_CHECK_HEADER([ndbm.h],
+                  [ AC_CHECK_FUNC([dbm_open],
+                      [ AC_DEFINE([HAVE_LIBNDBM], [1], [Define if you have libndbm])],
+                      [
+                          AC_DEFINE([NO_DIGEST_CACHE], [1], [Define this to disable the digest cache for replay detection - not recommended.])
+                          AC_MSG_WARN([No DBM implementation found. Replay detection will be disabled.])
+                          have_digest_cache=no
+                      ]
+                  )]
+              )]
+          )]
+      )]
     )],
     [
-        AC_DEFINE([NO_DIGEST_CACHE], [1], [Define this to disable the digest cache for replay detection.])
+        AC_DEFINE([NO_DIGEST_CACHE], [1], [Define this to disable the digest cache for replay detection - not recommended.])
         have_digest_cache=no
     ]
   )
 
   AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xyes])
+  AM_CONDITIONAL([CONFIG_FILE_CACHE], [test x$want_file_cache = xyes])
 
 dnl Check for iptables
 dnl
@@ -312,6 +329,7 @@ dnl
   [test "$want_server" = no], [
     use_ndbm=no
     AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xno])
+    AM_CONDITIONAL([CONFIG_FILE_CACHE], [test x$use_ndbm = xno])
   ]
 )
 

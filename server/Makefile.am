@@ -12,10 +12,13 @@ fwknopd_SOURCES   = fwknopd.c fwknopd.h config_init.c config_init.h \
 					fw_util_ipfw.c fw_util_ipfw.h
 
 fwknopd_LDADD     = $(top_builddir)/lib/libfko.la -lpcap
+
+if ! CONFIG_FILE_CACHE
 if USE_NDBM
     fwknopd_LDADD += -lndbm
 else
     fwknopd_LDADD += -lgdbm
+endif
 endif
 
 fwknopd_CPPFLAGS  = -I $(top_srcdir)/lib -I $(top_srcdir)/common -DSYSCONFDIR=\"$(sysconfdir)\" -DSYSRUNDIR=\"$(localstatedir)\"

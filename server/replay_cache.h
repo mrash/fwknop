@@ -28,8 +28,8 @@
  *
  *****************************************************************************
 */
-#ifndef REPLAY_DBM_H
-#define REPLAY_DBM_H
+#ifndef REPLAY_CACHE_H
+#define REPLAY_CACHE_H
 
 #include "fwknopd_common.h"
 #include "fko.h"
@@ -44,7 +44,14 @@ typedef struct digest_cache_info {
 
 /* Prototypes
 */
-int replay_db_init(fko_srv_options_t *opts);
+int replay_cache_init(fko_srv_options_t *opts);
 int replay_check(fko_srv_options_t *opts, fko_ctx_t ctx);
+#ifdef USE_FILE_CACHE
+int replay_file_cache_init(fko_srv_options_t *opts);
+int replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx);
+#else
+int replay_db_cache_init(fko_srv_options_t *opts);
+int replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx);
+#endif
 
-#endif  /* REPLAY_DBM_H */
+#endif  /* REPLAY_CACHE_H */

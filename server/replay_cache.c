@@ -38,7 +38,9 @@
 
 #include <time.h>
 
-#if HAVE_LIBGDBM
+#if USE_FILE_CACHE
+
+#elif HAVE_LIBGDBM
   #include <gdbm.h>
 
   #define MY_DBM_FETCH(d, k)        gdbm_fetch(d, k)
@@ -61,7 +63,7 @@
   #define MY_DBM_INSERT             DBM_INSERT
 
 #else
-  #error "No GDBM or NDBM header file found. WTF?"
+  #error "File cache method disabled, and No GDBM or NDBM header file found. WTF?"
 #endif
 
 #if HAVE_SYS_SOCKET_H
@@ -108,11 +110,39 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
 #endif /* NO_DIGEST_CACHE */
 }
 
+int
+replay_cache_init(fko_srv_options_t *opts)
+{
+#ifdef NO_DIGEST_CACHE
+    return 0;
+#else
+
+#if USE_FILE_CACHE
+    return replay_file_cache_init(opts);
+#else
+    return replay_db_cache_init(opts);
+#endif
+
+#endif /* NO_DIGEST_CACHE */
+}
+
+#if USE_FILE_CACHE
+int
+replay_file_cache_init(fko_srv_options_t *opts)
+{
+    /* if the file exists, import the previous SPA digests into
+     * the cache list
+    */
+    return 0;
+}
+
+#else /* USE_FILE_CACHE */
+
 /* Check for the existence of the replay dbm file, and create it if it does
  * not exist.  Returns the number of db entries or -1 on error.
 */
 int
-replay_db_init(fko_srv_options_t *opts)
+replay_db_cache_init(fko_srv_options_t *opts)
 {
 #ifdef NO_DIGEST_CACHE
     return 0;
@@ -173,6 +203,7 @@ replay_db_init(fko_srv_options_t *opts)
     return(db_count);
 #endif /* NO_DIGEST_CACHE */
 }
+#endif /* USE_FILE_CACHE */
 
 /* Take an fko context, pull the digest and use it as the key to check the
  * replay db (digest cache). Returns 1 if there was a match (a replay),
@@ -180,6 +211,82 @@ replay_db_init(fko_srv_options_t *opts)
 */
 int
 replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
+{
+#ifdef NO_DIGEST_CACHE
+    return 0;
+#else
+
+#if USE_FILE_CACHE
+    return replay_check_file_cache(opts, ctx);
+#else
+    return replay_check_dbm_cache(opts, ctx);
+#endif
+#endif /* NO_DIGEST_CACHE */
+}
+
+#if USE_FILE_CACHE
+int
+replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
+{
+    char       *digest = NULL;
+    char        src_ip[INET_ADDRSTRLEN+1] = {0};
+    char        dst_ip[INET_ADDRSTRLEN+1] = {0};
+    int         res = 0, digest_len = 0;
+    FILE       *digest_file_cache_ptr = NULL;
+
+    digest_cache_info_t dc_info, *dci_p;
+
+    res = fko_get_spa_digest(ctx, &digest);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
+            fko_errstr(res));
+
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    digest_len = strlen(digest);
+
+    /* Check the cache for the key
+    */
+
+    if (0)
+    {
+    }
+    else
+    {
+        /* This is a new SPA packet that needs to be added to the cache.
+        */
+
+        /* First, add the digest into the digest cache list
+        */
+
+        /* Now, write the digest to disk
+        */
+        if ((digest_file_cache_ptr = fopen(opts->config[CONF_DIGEST_FILE], "a")) == NULL)
+        {
+            log_msg(LOG_WARNING, "Could not open digest cache: %s",
+                opts->config[CONF_DIGEST_FILE]);
+            return(SPA_MSG_DIGEST_CACHE_ERROR);
+        }
+
+        inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
+            src_ip, INET_ADDRSTRLEN);
+        fprintf(digest_file_cache_ptr, "%s %s %d\n",
+            digest, src_ip, (unsigned int) time(NULL));
+
+        fclose(digest_file_cache_ptr); 
+
+        res = SPA_MSG_SUCCESS;
+    }
+
+    return(res);
+}
+#endif /* USE_FILE_CACHE */
+
+#if !USE_FILE_CACHE
+int
+replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
 #ifdef NO_DIGEST_CACHE
     return 0;
@@ -250,7 +357,7 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
         inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
             curr_ip, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &(dci_p->src_ip), last_ip, INET_ADDRSTRLEN);
- 
+
         /* Mark the last_replay time.
         */
         dci_p->last_replay = time(NULL);
@@ -322,5 +429,6 @@ replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
     return(res);
 #endif /* NO_DIGEST_CACHE */
 }
+#endif /* USE_FILE_CACHE */
 
 /***EOF***/
