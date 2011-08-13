@@ -131,7 +131,7 @@ int
 replay_cache_init(fko_srv_options_t *opts)
 {
 #ifdef NO_DIGEST_CACHE
-    return 0;
+    return(-1);
 #else
 
     /* If rotation was specified, do it.
@@ -152,9 +152,39 @@ replay_cache_init(fko_srv_options_t *opts)
 int
 replay_file_cache_init(fko_srv_options_t *opts)
 {
+    FILE       *digest_file_cache_ptr = NULL;
+
     /* if the file exists, import the previous SPA digests into
      * the cache list
     */
+    if (access(opts->config[CONF_DIGEST_FILE], F_OK) == 0)
+    {
+        /* Check permissions
+        */
+        if (access(opts->config[CONF_DIGEST_FILE], R_OK|W_OK) != 0)
+        {
+            log_msg(LOG_WARNING, "Digest file '%s' exists but: '%s'",
+                opts->config[CONF_DIGEST_FILE], strerror(errno));
+            return(-1);
+        }
+    }
+    else
+    {
+        /* the does not exist yet, so it will be created when the first
+         * successful SPA packet digest is written to disk
+        */
+        return(-1);
+    }
+
+    if ((digest_file_cache_ptr = fopen(opts->config[CONF_DIGEST_FILE], "r")) == NULL)
+    {
+        log_msg(LOG_WARNING, "Could not open digest cache: %s",
+            opts->config[CONF_DIGEST_FILE]);
+        return(-1);
+    }
+
+    fclose(digest_file_cache_ptr);
+
     return 0;
 }
 
@@ -167,7 +197,7 @@ int
 replay_db_cache_init(fko_srv_options_t *opts)
 {
 #ifdef NO_DIGEST_CACHE
-    return 0;
+    return(-1);
 #else
 
 #ifdef HAVE_LIBGDBM
@@ -230,7 +260,7 @@ int
 replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
 #ifdef NO_DIGEST_CACHE
-    return 0;
+    return(-1);
 #else
 
 #if USE_FILE_CACHE
