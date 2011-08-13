@@ -37,10 +37,21 @@
 typedef struct digest_cache_info {
     unsigned int    src_ip;
     time_t          created;
+#if USE_FILE_CACHE
+    char           *digest;
+#else
     time_t          first_replay;
     time_t          last_replay;
     int             replay_count;
+#endif
 } digest_cache_info_t;
+
+#if USE_FILE_CACHE
+struct digest_cache_list {
+    digest_cache_info_t cache_info;
+    struct digest_cache_list *next;
+};
+#endif
 
 /* Prototypes
 */

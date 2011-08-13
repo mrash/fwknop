@@ -462,6 +462,10 @@ typedef struct fko_srv_options
     int             tcp_server_pid;
     int             lock_fd;
 
+#if USE_FILE_CACHE
+    struct digest_cache_list *digest_cache;   /* In-memory digest cache list */
+#endif
+
     spa_pkt_info_t  spa_pkt;            /* The current SPA packet */
 
     /* Counter set from the command line to exit after the specified

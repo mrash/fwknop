@@ -35,6 +35,7 @@
 #include "replay_cache.h"
 #include "log_msg.h"
 #include "fwknopd_errors.h"
+#include "utils.h"
 
 #include <time.h>
 
@@ -133,6 +134,11 @@ replay_cache_init(fko_srv_options_t *opts)
     return 0;
 #else
 
+    /* If rotation was specified, do it.
+    */
+    if(opts->rotate_digest_cache)
+        rotate_digest_cache_file(opts);
+
 #if USE_FILE_CACHE
     return replay_file_cache_init(opts);
 #else
@@ -172,11 +178,6 @@ replay_db_cache_init(fko_srv_options_t *opts)
 
     datum       db_key, db_ent, db_next_key;
     int         db_count = 0;
-
-    /* If rotation was specified, do it.
-    */
-    if(opts->rotate_digest_cache)
-        rotate_digest_cache_file(opts);
 
 #ifdef HAVE_LIBGDBM
     rpdb = gdbm_open(
@@ -246,11 +247,10 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
     char       *digest = NULL;
     char        src_ip[INET_ADDRSTRLEN+1] = {0};
-    char        dst_ip[INET_ADDRSTRLEN+1] = {0};
     int         res = 0, digest_len = 0;
     FILE       *digest_file_cache_ptr = NULL;
 
-    digest_cache_info_t dc_info, *dci_p;
+    struct digest_cache_list *digest_list_ptr = NULL, *digest_elm = NULL;
 
     res = fko_get_spa_digest(ctx, &digest);
     if(res != FKO_SUCCESS)
@@ -263,40 +263,63 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     digest_len = strlen(digest);
 
-    /* Check the cache for the key
+    /* Check the cache for the SPA packet digest
     */
-
-    if (0)
-    {
-    }
-    else
-    {
-        /* This is a new SPA packet that needs to be added to the cache.
-        */
-
-        /* First, add the digest into the digest cache list
-        */
-
-        /* Now, write the digest to disk
-        */
-        if ((digest_file_cache_ptr = fopen(opts->config[CONF_DIGEST_FILE], "a")) == NULL)
-        {
-            log_msg(LOG_WARNING, "Could not open digest cache: %s",
-                opts->config[CONF_DIGEST_FILE]);
-            return(SPA_MSG_DIGEST_CACHE_ERROR);
+    for (digest_list_ptr = opts->digest_cache;
+            digest_list_ptr != NULL;
+            digest_list_ptr = digest_list_ptr->next) {
+        if (strncmp(digest_list_ptr->cache_info.digest, digest, digest_len) == 0) {
+            /* Detected a replay attack - bail
+            */
+            return(SPA_MSG_REPLAY);
         }
-
-        inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
-            src_ip, INET_ADDRSTRLEN);
-        fprintf(digest_file_cache_ptr, "%s %s %d\n",
-            digest, src_ip, (unsigned int) time(NULL));
-
-        fclose(digest_file_cache_ptr); 
-
-        res = SPA_MSG_SUCCESS;
     }
 
-    return(res);
+    /* If we make it here, then this is a new SPA packet that needs to be
+     * added to the cache.  We've already decrypted the data, so we know that
+     * the contents are valid.
+    */
+    if ((digest_elm = calloc(1, sizeof(struct digest_cache_list))) == NULL)
+    {
+        log_msg(LOG_WARNING, "Error malloc() returned NULL for digest cache element",
+            fko_errstr(SPA_MSG_ERROR));
+
+        return(SPA_MSG_ERROR);
+    }
+    if ((digest_elm->cache_info.digest = calloc(1, digest_len+1)) == NULL)
+    {
+        log_msg(LOG_WARNING, "Error malloc() returned NULL for digest cache string",
+            fko_errstr(SPA_MSG_ERROR));
+        free(digest_elm);
+        return(SPA_MSG_ERROR);
+    }
+
+    strlcpy(digest_elm->cache_info.digest, digest, digest_len+1);
+    digest_elm->cache_info.src_ip = opts->spa_pkt.packet_src_ip;
+    digest_elm->cache_info.created = time(NULL);
+
+    /* First, add the digest at the head of the in-memory list
+    */
+    digest_elm->next = opts->digest_cache;
+    opts->digest_cache = digest_elm;
+
+    /* Now, write the digest to disk
+    */
+    if ((digest_file_cache_ptr = fopen(opts->config[CONF_DIGEST_FILE], "a")) == NULL)
+    {
+        log_msg(LOG_WARNING, "Could not open digest cache: %s",
+            opts->config[CONF_DIGEST_FILE]);
+        return(SPA_MSG_DIGEST_CACHE_ERROR);
+    }
+
+    inet_ntop(AF_INET, &(digest_elm->cache_info.src_ip),
+        src_ip, INET_ADDRSTRLEN);
+    fprintf(digest_file_cache_ptr, "%s %s %d\n",
+        digest, src_ip, (int) digest_elm->cache_info.created);
+
+    fclose(digest_file_cache_ptr);
+
+    return(SPA_MSG_SUCCESS);
 }
 #endif /* USE_FILE_CACHE */
 
