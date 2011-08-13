@@ -277,6 +277,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
     char       *digest = NULL;
     char        src_ip[INET_ADDRSTRLEN+1] = {0};
+    char        dst_ip[INET_ADDRSTRLEN+1] = {0};
     int         res = 0, digest_len = 0;
     FILE       *digest_file_cache_ptr = NULL;
 
@@ -326,6 +327,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     strlcpy(digest_elm->cache_info.digest, digest, digest_len+1);
     digest_elm->cache_info.src_ip = opts->spa_pkt.packet_src_ip;
+    digest_elm->cache_info.dst_ip = opts->spa_pkt.packet_dst_ip;
     digest_elm->cache_info.created = time(NULL);
 
     /* First, add the digest at the head of the in-memory list
@@ -344,8 +346,10 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     inet_ntop(AF_INET, &(digest_elm->cache_info.src_ip),
         src_ip, INET_ADDRSTRLEN);
-    fprintf(digest_file_cache_ptr, "%s %s %d\n",
-        digest, src_ip, (int) digest_elm->cache_info.created);
+    inet_ntop(AF_INET, &(digest_elm->cache_info.dst_ip),
+        dst_ip, INET_ADDRSTRLEN);
+    fprintf(digest_file_cache_ptr, "%s %s %s %d\n",
+        digest, src_ip, dst_ip, (int) digest_elm->cache_info.created);
 
     fclose(digest_file_cache_ptr);
 

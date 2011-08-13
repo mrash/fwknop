@@ -54,7 +54,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     unsigned int        ip_hdr_words;
 
     unsigned int        src_ip;
-    unsigned int        dest_ip;
+    unsigned int        dst_ip;
 
     unsigned short      src_port;
     unsigned short      dest_port;
@@ -133,8 +133,8 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     /* Now, find the packet data payload (depending on IPPROTO).
     */
-    src_ip  = iph_p->saddr;
-    dest_ip = iph_p->daddr;
+    src_ip = iph_p->saddr;
+    dst_ip = iph_p->daddr;
 
     if (iph_p->protocol == IPPROTO_TCP)
     {
@@ -182,6 +182,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     strlcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len+1);
     opts->spa_pkt.packet_data_len  = pkt_data_len; 
     opts->spa_pkt.packet_src_ip    = src_ip; 
+    opts->spa_pkt.packet_dst_ip    = dst_ip; 
     opts->spa_pkt.packet_dest_port = dest_port; 
 
     return;

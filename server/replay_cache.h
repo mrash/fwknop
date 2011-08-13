@@ -39,6 +39,7 @@ typedef struct digest_cache_info {
     time_t          created;
 #if USE_FILE_CACHE
     char           *digest;
+    unsigned int    dst_ip;
 #else
     time_t          first_replay;
     time_t          last_replay;
