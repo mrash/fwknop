@@ -417,9 +417,11 @@ typedef struct acc_stanza
 typedef struct spa_pkt_info
 {
     unsigned int    packet_data_len;
+    unsigned int    packet_proto;
     unsigned int    packet_src_ip;
     unsigned int    packet_dst_ip;
-    unsigned short  packet_dest_port;
+    unsigned short  packet_src_port;
+    unsigned short  packet_dst_port;
     unsigned char   packet_data[MAX_SPA_PACKET_LEN+1];
 } spa_pkt_info_t;
 

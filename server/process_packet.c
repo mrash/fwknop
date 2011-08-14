@@ -53,11 +53,12 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     unsigned int        ip_hdr_words;
 
+    unsigned char       proto;
     unsigned int        src_ip;
     unsigned int        dst_ip;
 
     unsigned short      src_port;
-    unsigned short      dest_port;
+    unsigned short      dst_port;
 
     unsigned short      eth_type;
 
@@ -136,27 +137,29 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     src_ip = iph_p->saddr;
     dst_ip = iph_p->daddr;
 
-    if (iph_p->protocol == IPPROTO_TCP)
+    proto = iph_p->protocol;
+
+    if (proto == IPPROTO_TCP)
     {
         /* Process TCP packet
         */
         tcph_p = (struct tcphdr*)((unsigned char*)iph_p + (ip_hdr_words << 2));
 
-        src_port  = ntohs(tcph_p->source);
-        dest_port = ntohs(tcph_p->dest);
+        src_port = ntohs(tcph_p->source);
+        dst_port = ntohs(tcph_p->dest);
 
         pkt_data = ((unsigned char*)(tcph_p+1))+((tcph_p->doff)<<2)-sizeof(struct tcphdr);
 
         pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
     }
-    else if (iph_p->protocol == IPPROTO_UDP)
+    else if (proto == IPPROTO_UDP)
     {
         /* Process UDP packet
         */
         udph_p = (struct udphdr*)((unsigned char*)iph_p + (ip_hdr_words << 2));
 
-        src_port  = ntohs(udph_p->source);
-        dest_port = ntohs(udph_p->dest);
+        src_port = ntohs(udph_p->source);
+        dst_port = ntohs(udph_p->dest);
 
         pkt_data = ((unsigned char*)(udph_p + 1));
         pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
@@ -180,10 +183,12 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     /* Put the data in our 1-entry queue.
     */
     strlcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len+1);
-    opts->spa_pkt.packet_data_len  = pkt_data_len; 
-    opts->spa_pkt.packet_src_ip    = src_ip; 
-    opts->spa_pkt.packet_dst_ip    = dst_ip; 
-    opts->spa_pkt.packet_dest_port = dest_port; 
+    opts->spa_pkt.packet_data_len = pkt_data_len; 
+    opts->spa_pkt.packet_proto    = proto; 
+    opts->spa_pkt.packet_src_ip   = src_ip; 
+    opts->spa_pkt.packet_dst_ip   = dst_ip; 
+    opts->spa_pkt.packet_src_port = src_port; 
+    opts->spa_pkt.packet_dst_port = dst_port; 
 
     return;
 }

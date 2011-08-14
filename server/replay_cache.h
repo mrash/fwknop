@@ -40,6 +40,9 @@ typedef struct digest_cache_info {
 #if USE_FILE_CACHE
     char           *digest;
     unsigned int    dst_ip;
+    unsigned short  src_port;
+    unsigned short  dst_port;
+    unsigned char   proto;
 #else
     time_t          first_replay;
     time_t          last_replay;

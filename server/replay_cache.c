@@ -277,7 +277,9 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
     char       *digest = NULL;
     char        src_ip[INET_ADDRSTRLEN+1] = {0};
+    char        orig_src_ip[INET_ADDRSTRLEN+1] = {0};
     char        dst_ip[INET_ADDRSTRLEN+1] = {0};
+    char        created[18];
     int         res = 0, digest_len = 0;
     FILE       *digest_file_cache_ptr = NULL;
 
@@ -300,8 +302,27 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
             digest_list_ptr != NULL;
             digest_list_ptr = digest_list_ptr->next) {
         if (strncmp(digest_list_ptr->cache_info.digest, digest, digest_len) == 0) {
+
+            /* Convert the IPs to a human readable form
+            */
+            inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
+                src_ip, INET_ADDRSTRLEN);
+            inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
+                orig_src_ip, INET_ADDRSTRLEN);
+
+            strftime(created, 18, "%D %H:%M:%S",
+                localtime(&(digest_list_ptr->cache_info.created)));
+
             /* Detected a replay attack - bail
             */
+            log_msg(LOG_WARNING,
+                "Replay detected from source IP: %s\n"
+                "            Original source IP: %s\n"
+                "                 Entry created: %s\n",
+                src_ip,
+                orig_src_ip,
+                created
+            );
             return(SPA_MSG_REPLAY);
         }
     }
@@ -326,8 +347,11 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     }
 
     strlcpy(digest_elm->cache_info.digest, digest, digest_len+1);
-    digest_elm->cache_info.src_ip = opts->spa_pkt.packet_src_ip;
-    digest_elm->cache_info.dst_ip = opts->spa_pkt.packet_dst_ip;
+    digest_elm->cache_info.proto    = opts->spa_pkt.packet_proto;
+    digest_elm->cache_info.src_ip   = opts->spa_pkt.packet_src_ip;
+    digest_elm->cache_info.dst_ip   = opts->spa_pkt.packet_dst_ip;
+    digest_elm->cache_info.src_port = opts->spa_pkt.packet_src_port;
+    digest_elm->cache_info.dst_port = opts->spa_pkt.packet_dst_port;
     digest_elm->cache_info.created = time(NULL);
 
     /* First, add the digest at the head of the in-memory list
@@ -348,8 +372,14 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
         src_ip, INET_ADDRSTRLEN);
     inet_ntop(AF_INET, &(digest_elm->cache_info.dst_ip),
         dst_ip, INET_ADDRSTRLEN);
-    fprintf(digest_file_cache_ptr, "%s %s %s %d\n",
-        digest, src_ip, dst_ip, (int) digest_elm->cache_info.created);
+    fprintf(digest_file_cache_ptr, "%s %d %s %d %s %d %d\n",
+        digest,
+        digest_elm->cache_info.proto,
+        src_ip,
+        (int) digest_elm->cache_info.src_port,
+        dst_ip,
+        digest_elm->cache_info.dst_port,
+        (int) digest_elm->cache_info.created);
 
     fclose(digest_file_cache_ptr);
 
