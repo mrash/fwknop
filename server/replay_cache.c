@@ -619,4 +619,36 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 }
 #endif /* USE_FILE_CACHE */
 
+#if USE_FILE_CACHE
+/* Free replay list memory
+*/
+void
+free_replay_list(fko_srv_options_t *opts)
+{
+#ifdef NO_DIGEST_CACHE
+    return;
+#endif
+    struct digest_cache_list *digest_list_ptr = NULL, *digest_tmp = NULL;
+
+    if (opts->digest_cache == NULL)
+        return;
+
+    digest_list_ptr = opts->digest_cache;
+    while (digest_list_ptr != NULL)
+    {
+        digest_tmp = digest_list_ptr->next;
+        if (digest_list_ptr->cache_info.digest != NULL
+                && digest_list_ptr->cache_info.digest[0] != '\0')
+        {
+            free(digest_list_ptr->cache_info.digest);
+        }
+        free(digest_list_ptr);
+        digest_list_ptr = digest_tmp;
+    }
+
+    return;
+}
+#endif
+
+
 /***EOF***/

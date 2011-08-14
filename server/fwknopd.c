@@ -366,6 +366,11 @@ main(int argc, char **argv)
     */
     fw_cleanup();
     free_logging();
+
+#if USE_FILE_CACHE
+    free_replay_list(&opts);
+#endif
+
     free_configs(&opts);
 
     return(0);

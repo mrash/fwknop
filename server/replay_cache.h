@@ -63,6 +63,7 @@ int replay_check(fko_srv_options_t *opts, fko_ctx_t ctx);
 #ifdef USE_FILE_CACHE
 int replay_file_cache_init(fko_srv_options_t *opts);
 int replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx);
+void free_replay_list(fko_srv_options_t *opts);
 #else
 int replay_db_cache_init(fko_srv_options_t *opts);
 int replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx);
