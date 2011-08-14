@@ -152,7 +152,13 @@ replay_cache_init(fko_srv_options_t *opts)
 int
 replay_file_cache_init(fko_srv_options_t *opts)
 {
-    FILE       *digest_file_cache_ptr = NULL;
+    FILE           *digest_file_ptr = NULL;
+    unsigned int    num_lines = 0;
+    char            line_buf[MAX_LINE_LEN] = {0};
+    char            src_ip[INET_ADDRSTRLEN+1] = {0};
+    char            dst_ip[INET_ADDRSTRLEN+1] = {0};
+
+    struct digest_cache_list *digest_elm = NULL;
 
     /* if the file exists, import the previous SPA digests into
      * the cache list
@@ -170,20 +176,96 @@ replay_file_cache_init(fko_srv_options_t *opts)
     }
     else
     {
-        /* the does not exist yet, so it will be created when the first
+        /* the file does not exist yet, so it will be created when the first
          * successful SPA packet digest is written to disk
         */
         return(-1);
     }
 
-    if ((digest_file_cache_ptr = fopen(opts->config[CONF_DIGEST_FILE], "r")) == NULL)
+    /* File exist, and we have access - create in-memory digest cache
+    */
+    if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "r")) == NULL)
     {
         log_msg(LOG_WARNING, "Could not open digest cache: %s",
             opts->config[CONF_DIGEST_FILE]);
         return(-1);
     }
 
-    fclose(digest_file_cache_ptr);
+    /* Line format:
+     * <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>
+     * Example:
+     * 7XgadOyqv0tF5xG8uhg2iIrheeNKglCWKmxQDgYP1dY 17 127.0.0.1 40305 127.0.0.1 62201 1313283481
+    */
+    while ((fgets(line_buf, MAX_LINE_LEN, digest_file_ptr)) != NULL)
+    {
+        num_lines++;
+        line_buf[MAX_LINE_LEN-1] = '\0';
+
+        if(IS_EMPTY_LINE(line_buf[0]))
+            continue;
+
+        /* Initialize a digest cache list element, and add it into the list if
+         * valid.
+        */
+        if ((digest_elm = calloc(1, sizeof(struct digest_cache_list))) == NULL)
+        {
+            fprintf(stderr, "Could not allocate digest list element\n");
+            continue;
+        }
+        if ((digest_elm->cache_info.digest = calloc(1, MAX_DIGEST_SIZE+1)) == NULL)
+        {
+            free(digest_elm);
+            fprintf(stderr, "Could not allocate digest string\n");
+            continue;
+        }
+        src_ip[0] = '\0';
+        dst_ip[0] = '\0';
+
+        if(sscanf(line_buf, "%s %hhu %s %hu %s %hu %ld",
+            digest_elm->cache_info.digest,
+            &(digest_elm->cache_info.proto),
+            src_ip,
+            &(digest_elm->cache_info.src_port),
+            dst_ip,
+            &(digest_elm->cache_info.dst_port),
+            &(digest_elm->cache_info.created)) != 7)
+        {
+            if(opts->verbose)
+                fprintf(stderr,
+                    "*Skipping invalid digest file entry in %s at line %i.\n - %s",
+                    opts->config[CONF_DIGEST_FILE], num_lines, line_buf
+                );
+            free(digest_elm->cache_info.digest);
+            free(digest_elm);
+            continue;
+        }
+
+        if (inet_pton(AF_INET, src_ip, &(digest_elm->cache_info.src_ip)) != 1)
+        {
+            free(digest_elm->cache_info.digest);
+            free(digest_elm);
+            continue;
+        }
+
+        if (inet_pton(AF_INET, dst_ip, &(digest_elm->cache_info.dst_ip)) != 1)
+        {
+            free(digest_elm->cache_info.digest);
+            free(digest_elm);
+            continue;
+        }
+
+        digest_elm->next   = opts->digest_cache;
+        opts->digest_cache = digest_elm;
+
+        if(opts->verbose > 3)
+            fprintf(stderr,
+                "DIGEST FILE: %s, VALID LINE: %s",
+                opts->config[CONF_DIGEST_FILE], line_buf
+            );
+
+    }
+
+    fclose(digest_file_ptr);
 
     return 0;
 }
@@ -281,7 +363,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     char        dst_ip[INET_ADDRSTRLEN+1] = {0};
     char        created[18];
     int         res = 0, digest_len = 0;
-    FILE       *digest_file_cache_ptr = NULL;
+    FILE       *digest_file_ptr = NULL;
 
     struct digest_cache_list *digest_list_ptr = NULL, *digest_elm = NULL;
 
@@ -307,7 +389,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
             */
             inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
                 src_ip, INET_ADDRSTRLEN);
-            inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
+            inet_ntop(AF_INET, &(digest_list_ptr->cache_info.src_ip),
                 orig_src_ip, INET_ADDRSTRLEN);
 
             strftime(created, 18, "%D %H:%M:%S",
@@ -333,14 +415,14 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     */
     if ((digest_elm = calloc(1, sizeof(struct digest_cache_list))) == NULL)
     {
-        log_msg(LOG_WARNING, "Error malloc() returned NULL for digest cache element",
+        log_msg(LOG_WARNING, "Error calloc() returned NULL for digest cache element",
             fko_errstr(SPA_MSG_ERROR));
 
         return(SPA_MSG_ERROR);
     }
     if ((digest_elm->cache_info.digest = calloc(1, digest_len+1)) == NULL)
     {
-        log_msg(LOG_WARNING, "Error malloc() returned NULL for digest cache string",
+        log_msg(LOG_WARNING, "Error calloc() returned NULL for digest cache string",
             fko_errstr(SPA_MSG_ERROR));
         free(digest_elm);
         return(SPA_MSG_ERROR);
@@ -361,7 +443,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     /* Now, write the digest to disk
     */
-    if ((digest_file_cache_ptr = fopen(opts->config[CONF_DIGEST_FILE], "a")) == NULL)
+    if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "a")) == NULL)
     {
         log_msg(LOG_WARNING, "Could not open digest cache: %s",
             opts->config[CONF_DIGEST_FILE]);
@@ -372,7 +454,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
         src_ip, INET_ADDRSTRLEN);
     inet_ntop(AF_INET, &(digest_elm->cache_info.dst_ip),
         dst_ip, INET_ADDRSTRLEN);
-    fprintf(digest_file_cache_ptr, "%s %d %s %d %s %d %d\n",
+    fprintf(digest_file_ptr, "%s %d %s %d %s %d %d\n",
         digest,
         digest_elm->cache_info.proto,
         src_ip,
@@ -381,7 +463,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
         digest_elm->cache_info.dst_port,
         (int) digest_elm->cache_info.created);
 
-    fclose(digest_file_cache_ptr);
+    fclose(digest_file_ptr);
 
     return(SPA_MSG_SUCCESS);
 }
