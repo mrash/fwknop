@@ -37,13 +37,12 @@
 typedef struct digest_cache_info {
     unsigned int    src_ip;
     time_t          created;
-#if USE_FILE_CACHE
     char           *digest;
     unsigned int    dst_ip;
     unsigned short  src_port;
     unsigned short  dst_port;
     unsigned char   proto;
-#else
+#if ! USE_FILE_CACHE
     time_t          first_replay;
     time_t          last_replay;
     int             replay_count;

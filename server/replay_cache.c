@@ -39,9 +39,7 @@
 
 #include <time.h>
 
-#if USE_FILE_CACHE
-
-#elif HAVE_LIBGDBM
+#if HAVE_LIBGDBM
   #include <gdbm.h>
 
   #define MY_DBM_FETCH(d, k)        gdbm_fetch(d, k)
@@ -64,7 +62,9 @@
   #define MY_DBM_INSERT             DBM_INSERT
 
 #else
-  #error "File cache method disabled, and No GDBM or NDBM header file found. WTF?"
+  #if ! USE_FILE_CACHE
+    #error "File cache method disabled, and No GDBM or NDBM header file found. WTF?"
+  #endif
 #endif
 
 #if HAVE_SYS_SOCKET_H
@@ -74,6 +74,7 @@
 
 #include <fcntl.h>
 
+#define DATE_LEN 18
 #define MAX_DIGEST_SIZE 64
 
 /* Rotate the digest file by simply renaming it.
@@ -125,6 +126,69 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
 #endif
         );
 #endif /* NO_DIGEST_CACHE */
+}
+
+static void
+replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
+{
+    char        src_ip[INET_ADDRSTRLEN+1] = {0};
+    char        orig_src_ip[INET_ADDRSTRLEN+1] = {0};
+    char        created[DATE_LEN];
+
+#if ! USE_FILE_CACHE
+    char        last_ip[INET_ADDRSTRLEN+1] = {0};
+    char        first[DATE_LEN], last[DATE_LEN];
+#endif
+
+    /* Convert the IPs to a human readable form
+    */
+    inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
+        src_ip, INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &(digest_info->src_ip), orig_src_ip, INET_ADDRSTRLEN);
+
+#if ! USE_FILE_CACHE
+    /* Mark the last_replay time.
+    */
+    digest_info->last_replay = time(NULL);
+
+    /* Increment the replay count and check to see if it is the first one.
+    */
+    if(++(digest_info->replay_count) == 1)
+    {
+        /* This is the first replay so make it the same as last_replay
+        */
+        digest_info->first_replay = digest_info->last_replay;
+    }
+
+    strftime(first, DATE_LEN, "%D %H:%M:%S", localtime(&(digest_info->first_replay)));
+    strftime(last, DATE_LEN, "%D %H:%M:%S", localtime(&(digest_info->last_replay)));
+#endif
+
+    strftime(created, DATE_LEN, "%D %H:%M:%S", localtime(&(digest_info->created)));
+
+    log_msg(LOG_WARNING,
+        "Replay detected from source IP: %s\n"
+        "            Original source IP: %s\n"
+#if USE_FILE_CACHE
+        "                 Entry created: %s\n",
+#else
+        "                 Entry created: %s\n"
+        "                  First replay: %s\n"
+        "                   Last replay: %s\n"
+        "                  Replay count: %i\n",
+#endif
+        src_ip, orig_src_ip,
+#if USE_FILE_CACHE
+        created
+#else
+        created,
+        first,
+        last,
+        digest_info->replay_count
+#endif
+    );
+
+    return;
 }
 
 int
@@ -359,9 +423,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 {
     char       *digest = NULL;
     char        src_ip[INET_ADDRSTRLEN+1] = {0};
-    char        orig_src_ip[INET_ADDRSTRLEN+1] = {0};
     char        dst_ip[INET_ADDRSTRLEN+1] = {0};
-    char        created[18];
     int         res = 0, digest_len = 0;
     FILE       *digest_file_ptr = NULL;
 
@@ -383,28 +445,11 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     for (digest_list_ptr = opts->digest_cache;
             digest_list_ptr != NULL;
             digest_list_ptr = digest_list_ptr->next) {
+
         if (strncmp(digest_list_ptr->cache_info.digest, digest, digest_len) == 0) {
 
-            /* Convert the IPs to a human readable form
-            */
-            inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
-                src_ip, INET_ADDRSTRLEN);
-            inet_ntop(AF_INET, &(digest_list_ptr->cache_info.src_ip),
-                orig_src_ip, INET_ADDRSTRLEN);
+            replay_warning(opts, &(digest_list_ptr->cache_info));
 
-            strftime(created, 18, "%D %H:%M:%S",
-                localtime(&(digest_list_ptr->cache_info.created)));
-
-            /* Detected a replay attack - bail
-            */
-            log_msg(LOG_WARNING,
-                "Replay detected from source IP: %s\n"
-                "            Original source IP: %s\n"
-                "                 Entry created: %s\n",
-                src_ip,
-                orig_src_ip,
-                created
-            );
             return(SPA_MSG_REPLAY);
         }
     }
@@ -484,15 +529,10 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 #endif
     datum       db_key, db_ent;
 
-    char        created[18], first[18], last[18];
-
-    char        curr_ip[INET_ADDRSTRLEN+1] = {0};
-    char        last_ip[INET_ADDRSTRLEN+1] = {0};
-
     char       *digest;
     int         digest_len, res;
 
-    digest_cache_info_t dc_info, *dci_p;
+    digest_cache_info_t dc_info;
 
     res = fko_get_spa_digest(ctx, &digest);
     if(res != FKO_SUCCESS)
@@ -535,44 +575,7 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     */
     if(db_ent.dptr != NULL)
     {
-        dci_p = (digest_cache_info_t *)db_ent.dptr;
-
-        /* Convert the IPs to a human readable form
-        */
-        inet_ntop(AF_INET, &(opts->spa_pkt.packet_src_ip),
-            curr_ip, INET_ADDRSTRLEN);
-        inet_ntop(AF_INET, &(dci_p->src_ip), last_ip, INET_ADDRSTRLEN);
-
-        /* Mark the last_replay time.
-        */
-        dci_p->last_replay = time(NULL);
-
-        /* Increment the replay count and check to see if it is the first one.
-        */
-        if(++(dci_p->replay_count) == 1)
-        {
-            /* This is the first replay so make it the same as last_replay
-            */
-            dci_p->first_replay = dci_p->last_replay;
-        }
-
-        strftime(created, 18, "%D %H:%M:%S", localtime(&(dci_p->created)));
-        strftime(first, 18, "%D %H:%M:%S", localtime(&(dci_p->first_replay)));
-        strftime(last, 18, "%D %H:%M:%S", localtime(&(dci_p->last_replay)));
-
-        log_msg(LOG_WARNING,
-            "Replay detected from source IP: %s\n"
-            "            Original source IP: %s\n"
-            "                 Entry created: %s\n"
-            "                  First replay: %s\n"
-            "                   Last replay: %s\n"
-            "                  Replay count: %i\n",
-            curr_ip, last_ip,
-            created,
-            first,
-            last,
-            dci_p->replay_count
-        );
+        replay_warning(opts, (digest_cache_info_t *)db_ent.dptr);
 
         /* Save it back to the digest cache
         */
@@ -607,7 +610,7 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
         }
 
         res = SPA_MSG_SUCCESS;
-    } 
+    }
 
     MY_DBM_CLOSE(rpdb);
 
