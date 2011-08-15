@@ -361,8 +361,6 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
     char           *ndx, *start;
     char            buf[1024];
 
-    int             stlen = strlen(stlist_str);
-
     start = stlist_str;
 
     for(ndx = start; *ndx; ndx++)

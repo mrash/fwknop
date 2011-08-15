@@ -60,7 +60,10 @@ pcap_capture(fko_srv_options_t *opts)
     int                 promisc = 0;
     int                 status;
     pid_t               child_pid;
+
+#if FIREWALL_IPFW
     time_t              now;
+#endif
 
     /* Set promiscuous mode if ENABLE_PCAP_PROMISC is set to 'Y'.
     */
