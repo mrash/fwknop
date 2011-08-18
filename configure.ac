@@ -82,6 +82,41 @@ AS_IF([test "$want_file_cache" = yes], [
     AC_DEFINE([USE_FILE_CACHE], [1], [Define this to enable non-gdbm/ndbm digest storing (eliminates gdbm/ndbm dependency).])
 ])
 
+use_stack_protector=yes
+AC_ARG_ENABLE(stackprotect,
+    [  --without-stackprotect  Don't use compiler's stack protection], [
+    if test "x$withval" = "xno"; then
+    use_stack_protector=no
+    fi ])
+
+use_pie=yes
+AC_ARG_ENABLE(pie,
+    [  --without-pie  Do not use Position Independent Executables], [
+    if test "x$withval" = "xno"; then
+    use_pie=no
+    fi ])
+
+use_fortify_source=yes
+AC_ARG_ENABLE(fortify_source,
+    [  --without-fortify-source  Do not fortify source functions], [
+    if test "x$withval" = "xno"; then
+    use_fortify_source=no
+    fi ])
+
+use_ro_relocations=yes
+AC_ARG_ENABLE(ro_relocations,
+    [  --without-ro-relocations  Do not use read-only relocation protection], [
+    if test "x$withval" = "xno"; then
+    use_ro_relocations=no
+    fi ])
+
+use_immediate_binding=yes
+AC_ARG_ENABLE(immediate_binding,
+    [  --without-immediate-binding  Do not use immediate binding protection], [
+    if test "x$withval" = "xno"; then
+    use_immediate_binding=no
+    fi ])
+
 AC_GNU_SOURCE
 
 AC_PROG_CC
@@ -96,16 +131,18 @@ AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 
-# It seems we need to add these for (at least my) FreeBSD system.
-# (--DSS TOD): See if we can either make this conditional on OS or
-#              add the search path at check time).
-#
-if [ test "x$CPPFLAGS" = "x" ] ; then
-    CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
-fi
-if [ test "x$LDFLAGS" = "x" ] ; then
-    LDFLAGS="-L/usr/local/lib"
-fi
+case "$host" in
+*-*-linux*)
+    ;;
+*-*-freebsd*)
+    if [ test "x$CPPFLAGS" = "x" ] ; then
+        CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
+    fi
+    if [ test "x$LDFLAGS" = "x" ] ; then
+        LDFLAGS="-L/usr/local/lib"
+    fi
+    ;;
+esac
 
 # Checks for header files.
 #
@@ -148,6 +185,189 @@ AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup s
 
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
+
+# Check for security features offered by the compiler
+#
+
+# From OpenSSH:
+# -fstack-protector-all doesn't always work for some GCC versions
+# and/or platforms, so we test if we can.  If it's not supported
+# on a given platform gcc will emit a warning so we use -Werror.
+if test "x$use_stack_protector" = "xyes"; then
+#    for t in "-fstack-protector-all" "-fstack-protector" "-fPIE -pie" "-D_FORTIFY_SOURCE=2" "-O2" "-Wl,-z,now"; do
+    for t in -fstack-protector-all -fstack-protector; do
+        AC_MSG_CHECKING(if $CC supports $t)
+        saved_CFLAGS="$CFLAGS"
+        saved_LDFLAGS="$LDFLAGS"
+        CFLAGS="$CFLAGS $t -Werror"
+        LDFLAGS="$LDFLAGS $t -Werror"
+        AC_LINK_IFELSE(
+            [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+             ])],
+            [ AC_MSG_RESULT(yes)
+              CFLAGS="$saved_CFLAGS $t"
+              LDFLAGS="$saved_LDFLAGS $t"
+              AC_MSG_CHECKING(if $t works)
+              AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+            ])],
+            [ AC_MSG_RESULT(yes)
+              break ],
+            [ AC_MSG_RESULT(no) ],
+            [ AC_MSG_WARN([cross compiling: cannot test])
+              break ]
+              )
+            ],
+            [ AC_MSG_RESULT(no) ]
+        )
+        CFLAGS="$saved_CFLAGS"
+        LDFLAGS="$saved_LDFLAGS"
+    done
+fi
+
+if test "x$use_pie" = "xyes"; then
+    for t in "-fPIE -pie"; do
+        AC_MSG_CHECKING(if $CC supports $t)
+        saved_CFLAGS="$CFLAGS"
+        saved_LDFLAGS="$LDFLAGS"
+        CFLAGS="$CFLAGS $t -Werror"
+        LDFLAGS="$LDFLAGS $t -Werror"
+        AC_LINK_IFELSE(
+            [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+             ])],
+            [ AC_MSG_RESULT(yes)
+              CFLAGS="$saved_CFLAGS $t"
+              LDFLAGS="$saved_LDFLAGS $t"
+              AC_MSG_CHECKING(if $t works)
+              AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+            ])],
+            [ AC_MSG_RESULT(yes)
+              break ],
+            [ AC_MSG_RESULT(no) ],
+            [ AC_MSG_WARN([cross compiling: cannot test])
+              break ]
+              )
+            ],
+            [ AC_MSG_RESULT(no) ]
+        )
+        CFLAGS="$saved_CFLAGS"
+        LDFLAGS="$saved_LDFLAGS"
+    done
+fi
+
+if test "x$use_fortify_source" = "xyes"; then
+    for t in "-D_FORTIFY_SOURCE=2"; do
+        AC_MSG_CHECKING(if $CC supports $t)
+        saved_CFLAGS="$CFLAGS"
+        saved_LDFLAGS="$LDFLAGS"
+        CFLAGS="$CFLAGS $t -Werror"
+        LDFLAGS="$LDFLAGS $t -Werror"
+        AC_LINK_IFELSE(
+            [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+             ])],
+            [ AC_MSG_RESULT(yes)
+              CFLAGS="$saved_CFLAGS $t"
+              LDFLAGS="$saved_LDFLAGS $t"
+              AC_MSG_CHECKING(if $t works)
+              AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+            ])],
+            [ AC_MSG_RESULT(yes)
+              break ],
+            [ AC_MSG_RESULT(no) ],
+            [ AC_MSG_WARN([cross compiling: cannot test])
+              break ]
+              )
+            ],
+            [ AC_MSG_RESULT(no) ]
+        )
+        CFLAGS="$saved_CFLAGS"
+        LDFLAGS="$saved_LDFLAGS"
+    done
+fi
+
+if test "x$use_ro_relocations" = "xyes"; then
+    for t in "-Wl,-z,relro"; do
+        AC_MSG_CHECKING(if $CC supports $t)
+        saved_CFLAGS="$CFLAGS"
+        saved_LDFLAGS="$LDFLAGS"
+        CFLAGS="$CFLAGS $t -Werror"
+        LDFLAGS="$LDFLAGS $t -Werror"
+        AC_LINK_IFELSE(
+            [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+             ])],
+            [ AC_MSG_RESULT(yes)
+              CFLAGS="$saved_CFLAGS $t"
+              LDFLAGS="$saved_LDFLAGS $t"
+              AC_MSG_CHECKING(if $t works)
+              AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+            ])],
+            [ AC_MSG_RESULT(yes)
+              break ],
+            [ AC_MSG_RESULT(no) ],
+            [ AC_MSG_WARN([cross compiling: cannot test])
+              break ]
+              )
+            ],
+            [ AC_MSG_RESULT(no) ]
+        )
+        CFLAGS="$saved_CFLAGS"
+        LDFLAGS="$saved_LDFLAGS"
+    done
+fi
+
+if test "x$use_immediate_binding" = "xyes"; then
+    for t in "-Wl,-z,now"; do
+        AC_MSG_CHECKING(if $CC supports $t)
+        saved_CFLAGS="$CFLAGS"
+        saved_LDFLAGS="$LDFLAGS"
+        CFLAGS="$CFLAGS $t -Werror"
+        LDFLAGS="$LDFLAGS $t -Werror"
+        AC_LINK_IFELSE(
+            [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+             ])],
+            [ AC_MSG_RESULT(yes)
+              CFLAGS="$saved_CFLAGS $t"
+              LDFLAGS="$saved_LDFLAGS $t"
+              AC_MSG_CHECKING(if $t works)
+              AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+            ])],
+            [ AC_MSG_RESULT(yes)
+              break ],
+            [ AC_MSG_RESULT(no) ],
+            [ AC_MSG_WARN([cross compiling: cannot test])
+              break ]
+              )
+            ],
+            [ AC_MSG_RESULT(no) ]
+        )
+        CFLAGS="$saved_CFLAGS"
+        LDFLAGS="$saved_LDFLAGS"
+    done
+fi
 
 # Check for 3rd-party libs
 #
