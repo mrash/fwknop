@@ -112,10 +112,9 @@ preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
     else
     {
         /* Make sure the data is valid Base64-encoded characters
-        * (at least the first MIN_SPA_DATA_SIZE bytes).
         */
         ndx = (char *)spa_pkt->packet_data;
-        for(i=0; i<MIN_SPA_DATA_SIZE; i++)
+        for(i=0; i<pkt_data_len; i++)
         {
             if(!(isalnum(*ndx) || *ndx == '/' || *ndx == '+' || *ndx == '='))
                 return(SPA_MSG_NOT_SPA_DATA);
