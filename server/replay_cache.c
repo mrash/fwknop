@@ -168,7 +168,9 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
 
     log_msg(LOG_WARNING,
         "Replay detected from source IP: %s\n"
+        "        Destination proto/port: %d/%d\n"
         "            Original source IP: %s\n"
+        "       Original dst proto/port: %d/%d\n"
 #if USE_FILE_CACHE
         "                 Entry created: %s\n",
 #else
@@ -177,7 +179,12 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
         "                   Last replay: %s\n"
         "                  Replay count: %i\n",
 #endif
-        src_ip, orig_src_ip,
+        src_ip,
+        opts->spa_pkt.packet_proto,
+        opts->spa_pkt.packet_dst_port,
+        orig_src_ip,
+        digest_info->proto,
+        digest_info->dst_port,
 #if USE_FILE_CACHE
         created
 #else
@@ -593,8 +600,12 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     } else {
         /* This is a new SPA packet that needs to be added to the cache.
         */
-        dc_info.src_ip  = opts->spa_pkt.packet_src_ip;
-        dc_info.created = time(NULL);
+        dc_info.src_ip   = opts->spa_pkt.packet_src_ip;
+        dc_info.dst_ip   = opts->spa_pkt.packet_dst_ip;
+        dc_info.src_port = opts->spa_pkt.packet_src_port;
+        dc_info.dst_port = opts->spa_pkt.packet_dst_port;
+        dc_info.proto    = opts->spa_pkt.packet_proto;
+        dc_info.created  = time(NULL);
         dc_info.first_replay = dc_info.last_replay = dc_info.replay_count = 0;
 
         db_ent.dsize    = sizeof(digest_cache_info_t);
