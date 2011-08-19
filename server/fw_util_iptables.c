@@ -54,6 +54,34 @@ zero_cmd_buffers(void)
 }
 
 static int
+add_jump_rule(int chain_num)
+{
+    int res = 0;
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
+        fwc.fw_command,
+        fwc.chain[chain_num].table,
+        fwc.chain[chain_num].from_chain,
+        fwc.chain[chain_num].jump_rule_pos,
+        fwc.chain[chain_num].to_chain
+    );
+
+    //printf("(%i) CMD: '%s'\n", i, cmd_buf);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if(EXTCMD_IS_SUCCESS(res))
+        log_msg(LOG_INFO, "Added jump rule from chain: %s to chain: %s",
+            fwc.chain[chain_num].from_chain,
+            fwc.chain[chain_num].to_chain);
+    else
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+    return res;
+}
+
+static int
 jump_rule_exists(int chain_num)
 {
     int     num, pos = 0;
@@ -61,7 +89,7 @@ jump_rule_exists(int chain_num)
     char    target[CMD_BUFSIZE] = {0};
     char    line_buf[CMD_BUFSIZE] = {0};
     FILE   *ipt;
-    
+
     sprintf(cmd_buf, "%s " IPT_LIST_RULES_ARGS,
         fwc.fw_command,
         fwc.chain[chain_num].table,
@@ -231,27 +259,13 @@ create_fw_chains(void)
             got_err++;
         }
 
-        zero_cmd_buffers();
-
         /* Then create the jump rule to that chain.
         */
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
-            fwc.fw_command,
-            fwc.chain[i].table,
-            fwc.chain[i].from_chain,
-            fwc.chain[i].jump_rule_pos,
-            fwc.chain[i].to_chain
-        );
-
-        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        res = add_jump_rule(i);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-        {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
             got_err++;
-        }
     }
 
     return(got_err);
@@ -416,7 +430,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
     char            *ndx;
 
-    unsigned int     nat_port = 0;;
+    unsigned int     nat_port = 0;
 
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
@@ -459,6 +473,17 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     if(spadat->message_type == FKO_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG)
     {
+
+        /* Check to make sure that the jump rules exist for each
+         * required chain
+        */
+        if(jump_rule_exists(IPT_INPUT_ACCESS) == 0)
+            add_jump_rule(IPT_INPUT_ACCESS);
+
+        if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
+            if(jump_rule_exists(IPT_OUTPUT_ACCESS) == 0)
+                add_jump_rule(IPT_OUTPUT_ACCESS);
+
         /* Create an access command for each proto/port for the source ip.
         */
         while(ple != NULL)
@@ -568,6 +593,12 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
         */
         if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
         {
+
+            /* Make sure the required jump rule exists
+            */
+            if (jump_rule_exists(IPT_FORWARD_ACCESS) == 0)
+                add_jump_rule(IPT_FORWARD_ACCESS);
+
             zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_FWD_RULE_ARGS,
@@ -606,6 +637,12 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
         if(dnat_chain->to_chain != NULL && strlen(dnat_chain->to_chain))
         {
+
+            /* Make sure the required jump rule exists
+            */
+            if (jump_rule_exists(IPT_DNAT_ACCESS) == 0)
+                add_jump_rule(IPT_DNAT_ACCESS);
+
             zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_DNAT_RULE_ARGS,
