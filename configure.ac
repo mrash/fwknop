@@ -156,6 +156,15 @@ case "$host" in
 *-*-linux*)
     ;;
 *-*-freebsd*)
+    # disable read-only locations and immediate binding protection on FreeBSD
+    # due the following errors (there is probably a solution to this in another
+    # way, please email Michael Rash mbr.at.cipherdyne.org
+    # gcc: -z: linker input file unused because linking not done
+    # gcc: relro: linker input file unused because linking not done
+    # gcc: -z: linker input file unused because linking not done
+    # gcc: now: linker input file unused because linking not done
+    use_ro_relocations=no
+    use_immediate_binding=no
     if [ test "x$CPPFLAGS" = "x" ] ; then
         CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
     fi
