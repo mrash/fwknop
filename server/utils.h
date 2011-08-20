@@ -35,6 +35,27 @@
 
 #define  CTX_DUMP_BUFSIZE   4096
 
+/* Some convenience macros */
+
+/* Characters allowed between a config parameter and its value.
+*/
+#define IS_CONFIG_PARAM_DELIMITER(x) (x == ' ' || x == '\t' || x == '=');
+
+/* String compare macro.
+*/
+#define CONF_VAR_IS(n, v) (strcmp(n, v) == 0)
+
+/* End of line characters.
+*/
+#define IS_LINE_END(x) (x == '\n' || x == '\r' || x == ';');
+
+/* Characters in the first position of a line that make it considered
+ * empty or otherwise non-interesting (like a comment).
+*/
+#define IS_EMPTY_LINE(x) ( \
+    x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
+)
+
 /* Prototypes
 */
 void hex_dump(unsigned char *data, int size);

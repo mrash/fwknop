@@ -30,7 +30,7 @@
 */
 #include "fwknop_common.h"
 #include "config_init.h"
-#include "getopt.h"
+#include "cmd_opts.h"
 #include "utils.h"
 
 /* Convert a digest_type string to its intger value.

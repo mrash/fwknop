@@ -34,65 +34,6 @@
 #include <getopt.h>
 #include <sys/stat.h>
 
-/* Some convenience macros */
-
-/* Characters allowed between a config parameter and its value.
-*/
-#define IS_CONFIG_PARAM_DELIMITER(x) (x == ' ' || x == '\t' || x == '=');
-
-/* End of line characters.
-*/
-#define IS_LINE_END(x) (x == '\n' || x == '\r' || x == ';');
-
-/* Characters in the first position of a line that make it considered
- * empty or otherwise non-interesting (like a comment).
-*/
-#define IS_EMPTY_LINE(x) ( \
-    x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
-)
-
-/* String compare macro.
-*/
-#define CONF_VAR_IS(n, v) (strcmp(n, v) == 0)
-
-/* Long options values (for those that may not have a short option).
-*/
-enum {
-    FW_LIST         = 0x200,
-    GPG_HOME_DIR,
-    ROTATE_DIGEST_CACHE,
-    NOOP /* Just to be a marker for the end */
-};
-
-/* Our getopt_long options string.
-*/
-#define GETOPTS_OPTION_STRING "a:c:C:Dfhi:Kl:O:P:RSvV"
-
-/* Our program command-line options...
-*/
-static struct option cmd_opts[] =
-{
-    {"access-file",         1, NULL, 'a'},
-    {"config-file",         1, NULL, 'c'},
-    {"packet-limit",        1, NULL, 'C'},
-    {"dump-config",         0, NULL, 'D'},
-    {"foreground",          0, NULL, 'f'},
-    {"help",                0, NULL, 'h'},
-    {"interface",           1, NULL, 'i'},
-    {"kill",                0, NULL, 'K'},
-    {"fw-list",             0, NULL, FW_LIST },
-    {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
-    {"locale",              1, NULL, 'l' },
-    {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },
-    {"override-config",     1, NULL, 'O' },
-    {"pcap-filter",         1, NULL, 'P'},
-    {"restart",             0, NULL, 'R'},
-    {"status",              0, NULL, 'S'},
-    {"verbose",             0, NULL, 'v'},
-    {"version",             0, NULL, 'V'},
-    {0, 0, 0, 0}
-};
-
 /* Function Prototypes
 */
 void config_init(fko_srv_options_t *opts, int argc, char **argv);

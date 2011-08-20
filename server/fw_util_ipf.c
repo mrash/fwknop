@@ -35,7 +35,6 @@
 #include "fw_util.h"
 #include "utils.h"
 #include "log_msg.h"
-#include "config_init.h"  /* for the IS_EMPTY_LINE macro */
 #include "extcmd.h"
 #include "access.h"
 

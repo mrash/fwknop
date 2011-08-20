@@ -30,7 +30,7 @@
 */
 #include "fwknopd_common.h"
 #include "config_init.h"
-#include "getopt.h"
+#include "cmd_opts.h"
 #include "utils.h"
 #include "log_msg.h"
 

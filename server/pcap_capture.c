@@ -34,7 +34,6 @@
 #include "pcap_capture.h"
 #include "process_packet.h"
 #include "incoming_spa.h"
-#include "config_init.h"
 #include "sig_handler.h"
 #include "fw_util.h"
 #include "log_msg.h"

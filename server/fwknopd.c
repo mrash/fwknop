@@ -29,8 +29,8 @@
  *****************************************************************************
 */
 #include "fwknopd.h"
-#include "config_init.h"
 #include "access.h"
+#include "config_init.h"
 #include "process_packet.h"
 #include "pcap_capture.h"
 #include "log_msg.h"

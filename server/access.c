@@ -38,7 +38,6 @@
 
 #include "fwknopd_common.h"
 #include "access.h"
-#include "config_init.h"    /* For the convenience macros */
 #include "utils.h"
 #include "log_msg.h"
 
