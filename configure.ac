@@ -82,40 +82,51 @@ AS_IF([test "$want_file_cache" = yes], [
     AC_DEFINE([USE_FILE_CACHE], [1], [Define this to enable non-gdbm/ndbm digest storing (eliminates gdbm/ndbm dependency).])
 ])
 
+dnl Decide whether or not to enable -fstack-protector
+dnl
 use_stack_protector=yes
-AC_ARG_ENABLE(stackprotect,
-    [  --without-stackprotect  Don't use compiler's stack protection], [
-    if test "x$withval" = "xno"; then
-    use_stack_protector=no
-    fi ])
+AC_ARG_ENABLE([stack-protector],
+  [AS_HELP_STRING([--disable-stack-protector],
+    [Do not enable -fstack-protector @<:@default is on@:>@])],
+  [use_stack_protector=$enableval],
+  [])
 
+dnl Decide whether or not to enable Position Independent Executable (PIE)
+dnl support
+dnl
 use_pie=yes
-AC_ARG_ENABLE(pie,
-    [  --without-pie  Do not use Position Independent Executables], [
-    if test "x$withval" = "xno"; then
-    use_pie=no
-    fi ])
+AC_ARG_ENABLE([pie],
+  [AS_HELP_STRING([--disable-pie],
+    [Do not enable Position Independent Executable support @<:@default is on@:>@])],
+  [use_pie=$enableval],
+  [])
 
+dnl Decide whether or not to enable -D_FORTIFY_SOURCE support
+dnl
 use_fortify_source=yes
-AC_ARG_ENABLE(fortify_source,
-    [  --without-fortify-source  Do not fortify source functions], [
-    if test "x$withval" = "xno"; then
-    use_fortify_source=no
-    fi ])
+AC_ARG_ENABLE([fortify-source],
+  [AS_HELP_STRING([--disable-fortify-source],
+    [Do not enable -D_FORTIFY_SOURCE support @<:@default is on@:>@])],
+  [use_fortify_source=$enableval],
+  [])
 
+dnl Decide whether or not to use read-only relocations protection
+dnl
 use_ro_relocations=yes
-AC_ARG_ENABLE(ro_relocations,
-    [  --without-ro-relocations  Do not use read-only relocation protection], [
-    if test "x$withval" = "xno"; then
-    use_ro_relocations=no
-    fi ])
+AC_ARG_ENABLE([ro-relocations],
+  [AS_HELP_STRING([--disable-ro-relocations],
+    [Do not enable read-only relocations protection @<:@default is on@:>@])],
+  [use_ro_relocations=$enableval],
+  [])
 
+dnl Decide whether or not to use immediate binding protection
+dnl
 use_immediate_binding=yes
-AC_ARG_ENABLE(immediate_binding,
-    [  --without-immediate-binding  Do not use immediate binding protection], [
-    if test "x$withval" = "xno"; then
-    use_immediate_binding=no
-    fi ])
+AC_ARG_ENABLE([immediate-binding],
+  [AS_HELP_STRING([--disable-immediate-binding],
+    [Do not enable immediate binding protection @<:@default is on@:>@])],
+  [use_immediate_binding=$enableval],
+  [])
 
 AC_GNU_SOURCE
 
@@ -194,7 +205,6 @@ AC_SEARCH_LIBS([inet_addr], [nsl])
 # and/or platforms, so we test if we can.  If it's not supported
 # on a given platform gcc will emit a warning so we use -Werror.
 if test "x$use_stack_protector" = "xyes"; then
-#    for t in "-fstack-protector-all" "-fstack-protector" "-fPIE -pie" "-D_FORTIFY_SOURCE=2" "-O2" "-Wl,-z,now"; do
     for t in -fstack-protector-all -fstack-protector; do
         AC_MSG_CHECKING(if $CC supports $t)
         saved_CFLAGS="$CFLAGS"
