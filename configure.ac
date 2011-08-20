@@ -82,6 +82,16 @@ AS_IF([test "$want_file_cache" = yes], [
     AC_DEFINE([USE_FILE_CACHE], [1], [Define this to enable non-gdbm/ndbm digest storing (eliminates gdbm/ndbm dependency).])
 ])
 
+dnl Decide whether or not to enable all warnings with -Wall
+dnl
+use_wall=yes
+AC_ARG_ENABLE([wall],
+  [AS_HELP_STRING([--disable-wall],
+    [Do not enable all warnings via -Wall @<:@default is on@:>@])],
+  [use_wall=$enableval],
+  [])
+
+
 dnl Decide whether or not to enable -fstack-protector
 dnl
 use_stack_protector=yes
@@ -197,10 +207,47 @@ AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup s
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
+# Add -Wall
+#
+if test "x$use_wall" = "xyes"; then
+    for t in -Wall; do
+        AC_MSG_CHECKING(if $CC supports $t)
+        saved_CFLAGS="$CFLAGS"
+        saved_LDFLAGS="$LDFLAGS"
+        CFLAGS="$CFLAGS $t -Werror"
+        LDFLAGS="$LDFLAGS $t -Werror"
+        AC_LINK_IFELSE(
+            [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+             ])],
+            [ AC_MSG_RESULT(yes)
+              CFLAGS="$saved_CFLAGS $t"
+              LDFLAGS="$saved_LDFLAGS $t"
+              AC_MSG_CHECKING(if $t works)
+              AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+            ])],
+            [ AC_MSG_RESULT(yes)
+              break ],
+            [ AC_MSG_RESULT(no) ],
+            [ AC_MSG_WARN([cross compiling: cannot test])
+              break ]
+              )
+            ],
+            [ AC_MSG_RESULT(no) ]
+        )
+        CFLAGS="$saved_CFLAGS"
+        LDFLAGS="$saved_LDFLAGS"
+    done
+fi
+
 # Check for security features offered by the compiler
 #
 
-# From OpenSSH:
+# Adapted from OpenSSH:
 # -fstack-protector-all doesn't always work for some GCC versions
 # and/or platforms, so we test if we can.  If it's not supported
 # on a given platform gcc will emit a warning so we use -Werror.
