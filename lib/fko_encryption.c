@@ -356,7 +356,7 @@ fko_get_spa_encryption_type(fko_ctx_t ctx, short *enc_type)
 int
 fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
 {
-    int             res;
+    int             res = 0;
 
     /* Must be initialized
     */

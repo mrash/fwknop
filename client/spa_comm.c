@@ -30,6 +30,7 @@
  *****************************************************************************
 */
 #include "spa_comm.h"
+#include "utils.h"
 
 /* Function to generate a header checksum.
 */
