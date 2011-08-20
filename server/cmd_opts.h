@@ -31,6 +31,77 @@
 #ifndef CMD_OPTS_H
 #define CMD_OPTS_H
 
+/* The config entry indexes are defined in the fwknopd_common.h, and now we
+ * create a config entry name map as well (too lazy to make a hash table).
+ *
+ * Note: It is very important this list matches the enum in fwknopd_common.h
+ *
+*/
+static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
+    "CONFIG_FILE",
+    "OVERRIDE_CONFIG",
+    //"FIREWALL_TYPE",
+    "PCAP_INTF",
+    "ENABLE_PCAP_PROMISC",
+    "PCAP_FILTER",
+    "MAX_SNIFF_BYTES",
+    "ENABLE_SPA_PACKET_AGING",
+    "MAX_SPA_PACKET_AGE",
+    "ENABLE_DIGEST_PERSISTENCE",
+    "CMD_EXEC_TIMEOUT",
+    //"BLACKLIST",
+    "ENABLE_SPA_OVER_HTTP",
+    "ENABLE_TCP_SERVER",
+    "TCPSERV_PORT",
+    "LOCALE",
+    "SYSLOG_IDENTITY",
+    "SYSLOG_FACILITY",
+    //"ENABLE_EXTERNAL_CMDS",
+    //"EXTERNAL_CMD_OPEN",
+    //"EXTERNAL_CMD_CLOSE",
+    //"EXTERNAL_CMD_ALARM",
+    //"ENABLE_EXT_CMD_PREFIX",
+    //"EXT_CMD_PREFIX",
+#if FIREWALL_IPTABLES
+    "ENABLE_IPT_FORWARDING",
+    "ENABLE_IPT_LOCAL_NAT",
+    "ENABLE_IPT_SNAT",
+    "SNAT_TRANSLATE_IP",
+    "ENABLE_IPT_OUTPUT",
+    "FLUSH_IPT_AT_INIT",
+    "FLUSH_IPT_AT_EXIT",
+    "IPT_INPUT_ACCESS",
+    "IPT_OUTPUT_ACCESS",
+    "IPT_FORWARD_ACCESS",
+    "IPT_DNAT_ACCESS",
+    "IPT_SNAT_ACCESS",
+    "IPT_MASQUERADE_ACCESS",
+#elif FIREWALL_IPFW
+    "IPFW_START_RULE_NUM",
+    "IPFW_MAX_RULES",
+    "IPFW_ACTIVE_SET_NUM",
+    "IPFW_EXPIRE_SET_NUM",
+    "IPFW_EXPIRE_PURGE_INTERVAL",
+    "IPFW_ADD_CHECK_STATE",
+#elif FIREWALL_IPF
+    /* --DSS Place-holder */
+#elif FIREWALL_PF
+    /* --DSS Place-holder */
+#endif /* FIREWALL type */
+    "FWKNOP_RUN_DIR",
+    "FWKNOP_CONF_DIR",
+    "ACCESS_FILE",
+    "FWKNOP_PID_FILE",
+#if USE_FILE_CACHE
+    "DIGEST_FILE",
+#else
+    "DIGEST_DB_FILE",
+#endif
+    "GPG_HOME_DIR",
+    "FIREWALL_EXE",
+};  
+
+
 /* Long options values (for those that may not have a short option).
 */
 enum {
