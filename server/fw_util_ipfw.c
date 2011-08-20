@@ -46,7 +46,7 @@ static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
 unsigned short
 get_next_rule_num(void)
 {
-    unsigned short i, next_rule;
+    unsigned short i;
 
     for(i=0; i < fwc.max_rules; i++)
     {
@@ -335,8 +335,6 @@ fw_cleanup(void)
 int
 process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
-    char            *ndx;
-
     unsigned short   rule_num;
 
     acc_port_list_t *port_list = NULL;
@@ -463,7 +461,7 @@ check_firewall_rules(fko_srv_options_t *opts)
     char            rule_num_str[6];
     char           *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i, res;
+    int             i=0, res=0;
     time_t          now, rule_exp, min_exp = 0;
     unsigned short  curr_rule;
 
@@ -630,9 +628,7 @@ check_firewall_rules(fko_srv_options_t *opts)
 void
 ipfw_purge_expired_rules(fko_srv_options_t *opts)
 {
-    char            exp_str[12];
-    char            rule_num_str[6];
-    char           *ndx, *next_nl, *co_end;
+    char           *ndx, *co_end;
 
     int             i, res;
 

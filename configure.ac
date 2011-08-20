@@ -156,7 +156,7 @@ case "$host" in
 *-*-linux*)
     ;;
 *-*-freebsd*)
-    # disable read-only locations and immediate binding protection on FreeBSD
+    # disable read-only relocations and immediate binding protection on FreeBSD
     # due the following errors (there is probably a solution to this in another
     # way, please email Michael Rash mbr.at.cipherdyne.org
     # gcc: -z: linker input file unused because linking not done

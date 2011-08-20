@@ -382,7 +382,7 @@ static void
 check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_basename)
 {
     struct stat     st;
-    int             res;
+    int             res = 0;
     char            tmp_path[MAX_PATH_LEN];
     char            *ndx;
 
@@ -467,7 +467,7 @@ static int
 make_dir_path(const char *run_dir)
 {
     struct stat     st;
-    int             res, len;
+    int             res = 0, len = 0;
     char            tmp_path[MAX_PATH_LEN];
     char            *ndx;
 
