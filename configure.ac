@@ -165,12 +165,6 @@ case "$host" in
     # gcc: now: linker input file unused because linking not done
     use_ro_relocations=no
     use_immediate_binding=no
-    if [ test "x$CPPFLAGS" = "x" ] ; then
-        CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
-    fi
-    if [ test "x$LDFLAGS" = "x" ] ; then
-        LDFLAGS="-L/usr/local/lib"
-    fi
     ;;
 esac
 
@@ -479,6 +473,21 @@ AS_IF([test "x$GPG_EXE" != x],
     gpg_exe=$GPG_EXE
   ], [ gpg_exe="(not found)"]
 )
+
+if [test "$have_gpgme" = "yes" ]; then
+case "$host" in
+*-*-linux*)
+    ;;
+*-*-freebsd*)
+    if [ test "x$CPPFLAGS" = "x" ] ; then
+        CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
+    fi
+    if [ test "x$LDFLAGS" = "x" ] ; then
+        LDFLAGS="-L/usr/local/lib"
+    fi
+    ;;
+esac
+fi
 
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
