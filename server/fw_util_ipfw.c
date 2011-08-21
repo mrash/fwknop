@@ -677,65 +677,70 @@ ipfw_purge_expired_rules(fko_srv_options_t *opts)
         return;
     }
 
-    co_end = cmd_out + strlen(cmd_out);
-
-    if(opts->verbose > 2)
-        log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nEXP RULES LIST: %s", res, cmd_buf, cmd_out);
-
-    /* Find the "## Dynamic rules" string.
+    /* We may not have any dynamic rules at all - someone might not have
+     * initiated a connection (for example)
     */
-    ndx = strcasestr(cmd_out, "## Dynamic rules");
-
-    if(ndx == NULL)
+    if (cmd_out[0] != '\0')
     {
-        log_msg(LOG_ERR,
-            "Unexpected error: did not find 'Dynamic rules' string in list output."
-        ); 
-        return;
-    }
- 
-    /* Jump to the next newline char.
-    */
-    ndx = strchr(ndx, '\n');
+        co_end = cmd_out + strlen(cmd_out);
 
-    if(ndx == NULL)
-    {
-        log_msg(LOG_ERR,
-            "Unexpected error: did not find 'Dynamic rules' line terminating newline."
-        ); 
-        return;
-    }
- 
+        if(opts->verbose > 2)
+            log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nEXP RULES LIST: %s", res, cmd_buf, cmd_out);
 
-    /* Walk the list of dynamic rules (if any).
-    */
-    while(ndx != NULL)
-    {
-        ndx++;
-
-        while(!isdigit(*ndx) && ndx < co_end)
-            ndx++;
-
-        if(ndx >= co_end)
-            break;
-
-        /* If we are at a digit, assume it is a rule number, extract it,
-         * and if it falls in the correct range, mark it (so it is not
-         * removed in the next step.
+        /* Find the "## Dynamic rules" string.
         */
-        if(isdigit(*ndx))
-        {
-            curr_rule = atoi(ndx);
+        ndx = strcasestr(cmd_out, "## Dynamic rules");
 
-            if(curr_rule >= fwc.start_rule_num
-              && curr_rule < fwc.start_rule_num + fwc.max_rules)
-                fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_TMP_MARKED;
+        if(ndx == NULL)
+        {
+            log_msg(LOG_ERR,
+                "Unexpected error: did not find 'Dynamic rules' string in list output."
+            );
+            return;
         }
 
+        /* Jump to the next newline char.
+        */
         ndx = strchr(ndx, '\n');
+
+        if(ndx == NULL)
+        {
+            log_msg(LOG_ERR,
+                "Unexpected error: did not find 'Dynamic rules' line terminating newline."
+            );
+            return;
+        }
+
+        /* Walk the list of dynamic rules (if any).
+        */
+        while(ndx != NULL)
+        {
+            ndx++;
+
+            while(!isdigit(*ndx) && ndx < co_end)
+                ndx++;
+
+            if(ndx >= co_end)
+                break;
+
+            /* If we are at a digit, assume it is a rule number, extract it,
+             * and if it falls in the correct range, mark it (so it is not
+             * removed in the next step.
+            */
+            if(isdigit(*ndx))
+            {
+                curr_rule = atoi(ndx);
+
+                if(curr_rule >= fwc.start_rule_num
+                  && curr_rule < fwc.start_rule_num + fwc.max_rules)
+                    fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_TMP_MARKED;
+            }
+
+            ndx = strchr(ndx, '\n');
+        }
     }
 
-    /* Now, walk the rule map an remove any still marked as expired.
+    /* Now, walk the rule map and remove any still marked as expired.
     */
     for(i=0; i<fwc.max_rules; i++)
     {
