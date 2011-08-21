@@ -224,7 +224,7 @@ int
 replay_file_cache_init(fko_srv_options_t *opts)
 {
     FILE           *digest_file_ptr = NULL;
-    unsigned int    num_lines = 0;
+    unsigned int    num_lines = 0, digest_ctr = 0;
     char            line_buf[MAX_LINE_LEN] = {0};
     char            src_ip[INET_ADDRSTRLEN+1] = {0};
     char            dst_ip[INET_ADDRSTRLEN+1] = {0};
@@ -250,7 +250,15 @@ replay_file_cache_init(fko_srv_options_t *opts)
         /* the file does not exist yet, so it will be created when the first
          * successful SPA packet digest is written to disk
         */
-        return(-1);
+        if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "w")) == NULL)
+        {
+            log_msg(LOG_WARNING, "Could not open digest cache: %s",
+                opts->config[CONF_DIGEST_FILE]);
+        }
+        fprintf(digest_file_ptr,
+            "# <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>\n");
+        fclose(digest_file_ptr);
+        return(0);
     }
 
     /* File exist, and we have access - create in-memory digest cache
@@ -327,6 +335,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
 
         digest_elm->next   = opts->digest_cache;
         opts->digest_cache = digest_elm;
+        digest_ctr++;
 
         if(opts->verbose > 3)
             fprintf(stderr,
@@ -338,7 +347,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
 
     fclose(digest_file_ptr);
 
-    return 0;
+    return(digest_ctr);
 }
 
 #else /* USE_FILE_CACHE */
