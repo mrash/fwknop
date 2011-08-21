@@ -13,7 +13,7 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.0.0rc3
+Version:	2.0.0rc4
 # Uncomment this when the version becomes 2.0.0 (without the rcX).
 #Epoch:      1
 Release:	1%{?dist}
