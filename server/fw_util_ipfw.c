@@ -65,6 +65,29 @@ zero_cmd_buffers(void)
     memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 }
 
+static int
+ipfw_set_exists(const char *fw_command, const unsigned short set_num)
+{
+    int res = 0;
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_SET_RULES_ARGS,
+        fw_command,
+        set_num
+    );
+
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    if(!EXTCMD_IS_SUCCESS(res))
+        return(0);
+
+    if(cmd_out[0] == '\0')
+        return(0);
+
+    return(1);
+}
+
 /* Print all firewall rules currently instantiated by the running fwknopd
  * daemon to stdout.
 */
@@ -275,7 +298,8 @@ fw_cleanup(void)
 
     zero_cmd_buffers();
 
-    if(fwc.active_set_num > 0)
+    if(fwc.active_set_num > 0
+        && ipfw_set_exists(fwc.fw_command, fwc.active_set_num))
     {
         /* Create the set delete command for active rules
         */
@@ -283,7 +307,7 @@ fw_cleanup(void)
             fwc.fw_command,
             fwc.active_set_num
         );
-   
+
         //printf("CMD: '%s'\n", cmd_buf);
         res = system(cmd_buf);
 
