@@ -585,6 +585,24 @@ dnl
     ]
   )
 
+dnl Check for pf from OpenBSD
+dnl
+  AC_ARG_WITH([pf],
+    [AS_HELP_STRING([--with-pf=/path/to/pfctl],
+      [Specify path to the pf executable @<:@default=check path@:>@])],
+    [
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
+          [AC_MSG_ERROR([--with-pf requires an argument specifying a path to pf])],
+          [ PF_EXE=$withval ]
+        )
+      )
+    ],
+    [
+      AC_PATH_PROG(PF_EXE, [pfctl], [], [$APP_PATH])
+    ]
+  )
+
 dnl Check for ipf (ipfilter)
 dnl
   AC_ARG_WITH([ipf],
@@ -593,7 +611,7 @@ dnl
     [
       AS_IF([ test "x$withval" = xno ], [],
         AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
-          [AC_MSG_ERROR([--with-ipfw requires an argument specifying a path to ipfw])],
+          [AC_MSG_ERROR([--with-ipf requires an argument specifying a path to ipf])],
           [ IPF_EXE=$withval ]
         )
       )
@@ -605,7 +623,7 @@ dnl
 
 dnl Determine which firewall exe we use (if we have one).
 dnl If iptables was found or specified, it wins, then we fallback to ipfw,
-dnl otherwise we try ipf.
+dnl then pf, and otherwise we try ipf.
 dnl
   AS_IF([test "x$IPTABLES_EXE" != x], [
       FW_DEF="FW_IPTABLES"
@@ -618,15 +636,23 @@ dnl
         FIREWALL_TYPE="ipfw" 
         FIREWALL_EXE=$IPFW_EXE
         AC_DEFINE_UNQUOTED([FIREWALL_IPFW], [1], [The firewall type: ipfw.])
-    ],[ AS_IF([test "x$IPF_EXE" != x], [
-          AC_MSG_ERROR([Sorry - ipf was specified or the only one found, however, it is not supported yet.])
-          FIREWALL_TYPE="ipf" 
-          FIREWALL_EXE=$IPF_EXE
-          AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
-      ], [AC_MSG_ERROR([No firewall program was found or specified.]) ]
+    ],[
+        AS_IF([test "x$PF_EXE" != x], [
+            FW_DEF="FW_PF"
+            FIREWALL_TYPE="pf"
+            FIREWALL_EXE=$PF_EXE
+            AC_DEFINE_UNQUOTED([FIREWALL_PF], [1], [The firewall type: pf.])
+        ],[
+            AS_IF([test "x$IPF_EXE" != x], [
+              AC_MSG_ERROR([Sorry - ipf was specified or the only one found, however, it is not supported yet.])
+              FIREWALL_TYPE="ipf" 
+              FIREWALL_EXE=$IPF_EXE
+              AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
+          ], [AC_MSG_ERROR([No firewall program was found or specified.]) ]
+        ]
     ]
   ]
-  )))
+  ))))
 
   AC_DEFINE_UNQUOTED([FIREWALL_EXE], ["$FIREWALL_EXE"],
     [Path to firewall command executable (it should match the firewall type).])
