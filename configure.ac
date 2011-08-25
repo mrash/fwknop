@@ -166,6 +166,17 @@ case "$host" in
     use_ro_relocations=no
     use_immediate_binding=no
     ;;
+*-*-openbsd*)
+    # disable read-only relocations and immediate binding protection on FreeBSD
+    # due the following errors (there is probably a solution to this in another
+    # way, please email Michael Rash mbr.at.cipherdyne.org
+    # gcc: -z: linker input file unused because linking not done
+    # gcc: relro: linker input file unused because linking not done
+    # gcc: -z: linker input file unused because linking not done
+    # gcc: now: linker input file unused because linking not done
+    use_ro_relocations=no
+    use_immediate_binding=no
+    ;;
 esac
 
 # Checks for header files.
