@@ -763,6 +763,8 @@ usage(void)
       " -S, --status            - Display the status of any running fwknopd process.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"
+      "     --fw-list           - List add firewall rules that fwknop has created\n"
+      "                           and then exit.\n"
       "\n"
     );
 
