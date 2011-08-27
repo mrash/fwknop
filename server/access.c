@@ -33,10 +33,10 @@
 #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
 #endif
-#include <arpa/inet.h>
-#include "pwd.h"
 
 #include "fwknopd_common.h"
+#include <arpa/inet.h>
+#include "pwd.h"
 #include "access.h"
 #include "utils.h"
 #include "log_msg.h"
@@ -52,7 +52,7 @@ add_acc_string(char **var, char *val)
             "Fatal memory allocation error adding access list entry: %s", var
         );
         exit(EXIT_FAILURE);
-    }            
+    }
 }
 
 /* Add an access int entry
@@ -206,7 +206,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
 
         return(-1);
     }
- 
+
     strlcpy(proto_str, pstr,  (ndx - pstr)+1);
 
     *port = atoi(ndx+1);
@@ -537,7 +537,7 @@ acc_stanza_init(fko_srv_options_t *opts)
         free_acc_stanza_data(last_acc);
         free(last_acc);
     }
-         
+
     return;
 }
 
@@ -571,10 +571,10 @@ acc_stanza_add(fko_srv_options_t *opts)
         do {
             last_acc = acc;
         } while((acc = acc->next));
-    
+
         last_acc->next = new_acc;
     }
-    
+
     return(new_acc);
 }
 

@@ -419,12 +419,20 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_IPFW_ADD_CHECK_STATE,
             DEF_IPFW_ADD_CHECK_STATE);
 
-#elif FIREWALL_IPF
-
-    /* --DSS Place-holder */
-
 #elif FIREWALL_PF
+    /* Set PF anchor name
+    */
+    if(opts->config[CONF_PF_ANCHOR_NAME] == NULL)
+        set_config_entry(opts, CONF_PF_ANCHOR_NAME,
+            DEF_PF_ANCHOR_NAME);
 
+    /* Set PF rule expiry interval.
+    */
+    if(opts->config[CONF_PF_EXPIRE_INTERVAL] == NULL)
+        set_config_entry(opts, CONF_PF_EXPIRE_INTERVAL,
+            DEF_PF_EXPIRE_INTERVAL);
+
+#elif FIREWALL_IPF
     /* --DSS Place-holder */
 
 #endif /* FIREWALL type */

@@ -44,7 +44,7 @@ static char   cmd_buf[CMD_BUFSIZE];
 static char   err_buf[CMD_BUFSIZE];
 static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
 
-void
+static void
 zero_cmd_buffers(void)
 {
     memset(cmd_buf, 0x0, CMD_BUFSIZE);

@@ -83,9 +83,10 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "IPFW_EXPIRE_SET_NUM",
     "IPFW_EXPIRE_PURGE_INTERVAL",
     "IPFW_ADD_CHECK_STATE",
-#elif FIREWALL_IPF
-    /* --DSS Place-holder */
 #elif FIREWALL_PF
+    "PF_ANCHOR_NAME",
+    "PF_EXPIRE_INTERVAL",
+#elif FIREWALL_IPF
     /* --DSS Place-holder */
 #endif /* FIREWALL type */
     "FWKNOP_RUN_DIR",
@@ -99,7 +100,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
 #endif
     "GPG_HOME_DIR",
     "FIREWALL_EXE",
-};  
+};
 
 
 /* Long options values (for those that may not have a short option).

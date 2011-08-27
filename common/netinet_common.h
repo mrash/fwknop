@@ -46,6 +46,15 @@
   #if HAVE_NETINET_IN_H
     #include <netinet/in.h>
   #endif
+  #if PLATFORM_OPENBSD  /* OpenBSD hack due to autoconf net/if.h difficulties */
+    #include <net/if.h>
+    #include <net/ethertypes.h>
+    #include <netinet/if_ether.h>
+    #ifndef ETHER_IS_VALID_LEN
+      #define ETHER_IS_VALID_LEN(x) \
+        ((x) >= ETHER_MIN_LEN && (x) <= ETHER_MAX_LEN)
+    #endif
+  #endif
   #if HAVE_ARPA_INET_H
     #include <arpa/inet.h>
   #endif
@@ -62,7 +71,7 @@
 #endif
 
 /* We will roll our own packet header structs. */
-    
+
 /* The IP header
 */
 struct iphdr

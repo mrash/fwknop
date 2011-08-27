@@ -1,11 +1,12 @@
 /*
  *****************************************************************************
  *
- * File:    fw_util.h
+ * File:    fw_util_pf.h
  *
- * Author:  Damien Stuart (dstuart@dstuart.org)
+ * Author:  Damien Stuart (dstuart@dstuart.org), Michael Rash
+ *                                                  (mbr@cipherdyne.org)
  *
- * Purpose: Header file for fw_util.c.
+ * Purpose: Header file for fw_util_pf.c.
  *
  * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -28,41 +29,14 @@
  *
  *****************************************************************************
 */
-#ifndef FW_UTIL_H
-#define FW_UTIL_H
+#ifndef FW_UTIL_PF_H
+#define FW_UTIL_PF_H
 
-#define CMD_BUFSIZE                 256
-#define MAX_FW_COMMAND_ARGS_LEN     256
-
-#define STANDARD_CMD_OUT_BUFSIZE    4096
-
-#if FIREWALL_IPTABLES
-  #include "fw_util_iptables.h"
-#elif FIREWALL_IPFW
-  #include "fw_util_ipfw.h"
-#elif FIREWALL_PF
-  #include "fw_util_pf.h"
-#elif FIREWALL_IPF
-  #include "fw_util_ipf.h"
-#endif
-
-#if HAVE_TIME_H
-  #include <time.h>
-#endif
-
-/* Function prototypes.
- *
- * Note: These are the public functions for managing firewall rules.
- *       They should be implemented in each of the corresponding
- *       fw_util_<fw-type>.c files.
+/* pf command args
 */
-void fw_config_init(fko_srv_options_t *opts);
-void fw_initialize(fko_srv_options_t *opts);
-int fw_cleanup(void);
-void check_firewall_rules(fko_srv_options_t *opts);
-int fw_dump_rules(fko_srv_options_t *opts);
-int process_spa_request(fko_srv_options_t *opts, spa_data_t *spdat);
+#define PF_LIST_RULES_ARGS "-a %s -s rules"
+#define PF_LIST_ALL_RULES_ARGS "-s rules"  /* to check for fwknop anchor */
 
-#endif /* FW_UTIL_H */
+#endif /* FW_UTIL_PF_H */
 
 /***EOF***/

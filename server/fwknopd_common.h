@@ -33,6 +33,10 @@
 
 #include "common.h"
 
+#if PLATFORM_OPENBSD
+  #include <netinet/in.h>
+#endif
+
 #if HAVE_SYS_STAT_H
   #include <sys/stat.h>
 #endif
@@ -122,11 +126,12 @@
   #define DEF_IPFW_EXPIRE_PURGE_INTERVAL "30"
   #define DEF_IPFW_ADD_CHECK_STATE       "N"
 
-#elif FIREWALL_IPF
-
-    /* --DSS Place-holder */
-
 #elif FIREWALL_PF
+
+  #define DEF_PF_ANCHOR_NAME "fwknop"
+  #define DEF_PF_EXPIRE_INTERVAL "30"
+
+#elif FIREWALL_IPF
 
     /* --DSS Place-holder */
 
@@ -197,9 +202,10 @@ enum {
     CONF_IPFW_EXPIRE_SET_NUM,
     CONF_IPFW_EXPIRE_PURGE_INTERVAL,
     CONF_IPFW_ADD_CHECK_STATE,
-#elif FIREWALL_IPF
-    /* --DSS Place-holder */
 #elif FIREWALL_PF
+    CONF_PF_ANCHOR_NAME,
+    CONF_PF_EXPIRE_INTERVAL,
+#elif FIREWALL_IPF
     /* --DSS Place-holder */
 #endif /* FIREWALL type */
     CONF_FWKNOP_RUN_DIR,
@@ -335,11 +341,17 @@ typedef struct acc_stanza
       char              fw_command[MAX_PATH_LEN];
   };
 
-#elif FIREWALL_IPF
-
-    /* --DSS Place-holder */
-
 #elif FIREWALL_PF
+
+  #define MAX_PF_ANCHOR_LEN 64
+
+  struct fw_config {
+      time_t            next_expire;
+      char              anchor[MAX_PF_ANCHOR_LEN];
+      char              fw_command[MAX_PATH_LEN];
+  };
+
+#elif FIREWALL_IPF
 
     /* --DSS Place-holder */
 

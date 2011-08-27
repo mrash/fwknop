@@ -43,7 +43,7 @@ static char   cmd_buf[CMD_BUFSIZE];
 static char   err_buf[CMD_BUFSIZE];
 static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
 
-unsigned short
+static unsigned short
 get_next_rule_num(void)
 {
     unsigned short i;
@@ -57,7 +57,7 @@ get_next_rule_num(void)
     return(0);
 }
 
-void
+static void
 zero_cmd_buffers(void)
 {
     memset(cmd_buf, 0x0, CMD_BUFSIZE);
@@ -255,7 +255,7 @@ fw_initialize(fko_srv_options_t *opts)
     /* Find the first "# DISABLED" string (if any).
     */
     ndx = strstr(cmd_out, "# DISABLED ");
- 
+
     /* Assume no disabled rules if we did not see the string.
     */
     if(ndx == NULL)
