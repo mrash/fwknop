@@ -343,8 +343,6 @@ typedef struct acc_stanza
 
 #elif FIREWALL_PF
 
-  #define MAX_PF_ANCHOR_LEN 64
-
   struct fw_config {
       time_t            next_expire;
       char              anchor[MAX_PF_ANCHOR_LEN];

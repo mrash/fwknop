@@ -57,19 +57,18 @@ zero_cmd_buffers(void)
 int
 fw_dump_rules(fko_srv_options_t *opts)
 {
-    int     i = 0;
     int     res, got_err = 0;
 
     zero_cmd_buffers();
 
     /* Create the list command for active rules
     */
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_LIST_RULES_ARGS,
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_LIST_ANCHOR_RULES_ARGS,
         opts->fw_config->fw_command,
         opts->fw_config->anchor
     );
 
-    printf("\nActive Rules in PF anchor: %s:\n", opts->fw_config->anchor);
+    printf("\nActive Rules in PF anchor '%s':\n", opts->fw_config->anchor);
     res = system(cmd_buf);
 
     /* Expect full success on this */
@@ -80,6 +79,71 @@ fw_dump_rules(fko_srv_options_t *opts)
     }
 
     return(got_err);
+}
+
+/* Check to see if the fwknop anchor is linked into the main policy.  If not,
+ * any rules added/deleted by fwknopd will have no effect on real traffic.
+*/
+static int
+anchor_active(fko_srv_options_t *opts)
+{
+    int    res = 0;
+    char  *ndx = NULL;
+    char   anchor_search_str[MAX_PF_ANCHOR_SEARCH_LEN] = {0};
+
+    /* Build our anchor search string
+    */
+    snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\"",
+        "anchor \"", opts->fw_config->anchor);
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_LIST_ALL_RULES_ARGS,
+        opts->fw_config->fw_command
+    );
+
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    /* first check for the anchor at the very first rule position
+    */
+    if (strncmp(cmd_buf, anchor_search_str, strlen(anchor_search_str)) != 0)
+    {
+        anchor_search_str[0] = '\0';
+
+        /* look for the anchor in the middle of the rule set, but make sure
+         * it appears only after a newline
+        */
+        snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\"",
+            "\nanchor \"", opts->fw_config->anchor);
+
+        ndx = strstr(cmd_out, anchor_search_str);
+
+        if(ndx == NULL)
+            return 0;
+    }
+
+    return 1;
+}
+
+static void
+delete_all_anchor_rules(fko_srv_options_t *opts)
+{
+    int res = 0;
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_DEL_ALL_ANCHOR_RULES,
+        fwc.fw_command,
+        fwc.anchor
+    );
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    /* Expect full success on this */
+    if(! EXTCMD_IS_SUCCESS(res))
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+    return;
 }
 
 void
@@ -105,13 +169,18 @@ fw_config_init(fko_srv_options_t *opts)
 void
 fw_initialize(fko_srv_options_t *opts)
 {
-    int res = 0;
 
-    if(res != 0)
+    if (! anchor_active(opts))
     {
-        fprintf(stderr, "Warning: Errors detected during fwknop custom chain creation.\n");
+        fprintf(stderr, "Warning: the fwknop anchor is not active in the pf policy\n");
         exit(EXIT_FAILURE);
     }
+
+    /* Delete any existing rules in the fwknop anchor
+    */
+    delete_all_anchor_rules(opts);
+
+    return;
 }
 
 int
@@ -127,6 +196,7 @@ fw_cleanup(void)
 int
 process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
+#if 0
     char             nat_ip[16] = {0};
     char            *ndx;
 
@@ -162,6 +232,8 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     exp_ts = now + spadat->fw_access_timeout;
 
     return(res);
+#endif
+    return 0;
 }
 
 /* Iterate over the configure firewall access chains and purge expired
@@ -170,6 +242,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 void
 check_firewall_rules(fko_srv_options_t *opts)
 {
+#if 0
     char             exp_str[12];
     char             rule_num_str[6];
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
@@ -180,6 +253,7 @@ check_firewall_rules(fko_srv_options_t *opts)
     time(&now);
 
     zero_cmd_buffers();
+#endif
 }
 
 #endif /* FIREWALL_PF */

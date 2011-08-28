@@ -32,10 +32,14 @@
 #ifndef FW_UTIL_PF_H
 #define FW_UTIL_PF_H
 
+#define MAX_PF_ANCHOR_LEN 64
+#define MAX_PF_ANCHOR_SEARCH_LEN    (MAX_PF_ANCHOR_LEN+11)   /* room for 'anchor "' string */
+
 /* pf command args
 */
-#define PF_LIST_RULES_ARGS "-a %s -s rules"
-#define PF_LIST_ALL_RULES_ARGS "-s rules"  /* to check for fwknop anchor */
+#define PF_LIST_ANCHOR_RULES_ARGS "-a %s -s rules 2>&1"
+#define PF_LIST_ALL_RULES_ARGS "-s rules 2>&1"  /* to check for fwknop anchor */
+#define PF_DEL_ALL_ANCHOR_RULES "-a %s -F all 2>&1"
 
 #endif /* FW_UTIL_PF_H */
 
