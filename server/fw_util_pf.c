@@ -7,7 +7,8 @@
  *
  * Purpose: Fwknop routines for managing pf firewall rules.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2011 Damien Stuart (dstuart@dstuart.org),
+ *                Michael Rash (mbr@cipherdyne.org)
  *
  *  License (GNU Public License):
  *
