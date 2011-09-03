@@ -148,7 +148,7 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
     res = fko_get_version(ctx, &(spdat->version));
     if(res != FKO_SUCCESS)
         return(res);
- 
+
     res = fko_get_spa_message_type(ctx, &(spdat->message_type));
     if(res != FKO_SUCCESS)
         return(res);
@@ -342,7 +342,7 @@ incoming_spa(fko_srv_options_t *opts)
                 fko_gpg_errstr(ctx));
             goto clean_and_bail;
         }
- 
+
         if(opts->verbose)
         log_msg(LOG_INFO, "Incoming SPA data signed by '%s'.", gpg_id);
 

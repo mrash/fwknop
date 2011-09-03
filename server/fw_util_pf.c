@@ -75,7 +75,7 @@ fw_dump_rules(fko_srv_options_t *opts)
     /* Expect full success on this */
     if(! EXTCMD_IS_SUCCESS(res))
     {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
         got_err++;
     }
 
@@ -94,7 +94,7 @@ anchor_active(fko_srv_options_t *opts)
 
     /* Build our anchor search string
     */
-    snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\"",
+    snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\" ",
         "anchor \"", opts->fw_config->anchor);
 
     zero_cmd_buffers();
@@ -114,7 +114,7 @@ anchor_active(fko_srv_options_t *opts)
         /* look for the anchor in the middle of the rule set, but make sure
          * it appears only after a newline
         */
-        snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\"",
+        snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\" ",
             "\nanchor \"", opts->fw_config->anchor);
 
         ndx = strstr(cmd_out, anchor_search_str);
@@ -197,11 +197,10 @@ fw_cleanup(void)
 int
 process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 {
-#if 0
-    char             nat_ip[16] = {0};
-    char            *ndx;
+    char             new_rule[MAX_PF_NEW_RULE_LEN];
+    char             write_cmd[CMD_BUFSIZE];
 
-    unsigned int     nat_port = 0;;
+    FILE            *pfctl_fd = NULL;
 
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
@@ -232,9 +231,106 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
     time(&now);
     exp_ts = now + spadat->fw_access_timeout;
 
+    /* For straight access requests, we currently support multiple proto/port
+     * request.
+    */
+    if(spadat->message_type == FKO_ACCESS_MSG
+      || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG)
+    {
+        /* Create an access command for each proto/port for the source ip.
+        */
+        while(ple != NULL)
+        {
+            zero_cmd_buffers();
+
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_LIST_ANCHOR_RULES_ARGS,
+                opts->fw_config->fw_command,
+                opts->fw_config->anchor
+            );
+
+            /* Cache the current anchor rule set
+            */
+            res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+            /* Build the new rule string
+            */
+            memset(new_rule, 0x0, MAX_PF_NEW_RULE_LEN);
+            snprintf(new_rule, MAX_PF_NEW_RULE_LEN-1, PF_ADD_RULE_ARGS "\n",
+                ple->proto,
+                spadat->use_src_ip,
+                ple->port,
+                exp_ts
+            );
+
+            if (strlen(cmd_out) + strlen(new_rule) < STANDARD_CMD_OUT_BUFSIZE)
+            {
+                /* We can add the rule to the running policy
+                */
+                strlcat(cmd_out, new_rule, STANDARD_CMD_OUT_BUFSIZE);
+
+                memset(write_cmd, 0x0, CMD_BUFSIZE);
+
+                snprintf(write_cmd, CMD_BUFSIZE-1, "%s " PF_WRITE_ANCHOR_RULES_ARGS,
+                    opts->fw_config->fw_command,
+                    opts->fw_config->anchor
+                );
+
+                if ((pfctl_fd = popen(write_cmd, "w")) == NULL)
+                {
+                    log_msg(LOG_WARNING, "Could not execute command: %s",
+                        write_cmd);
+                    return(-1);
+                }
+
+                if (fwrite(cmd_out, strlen(cmd_out), 1, pfctl_fd) == 1)
+                {
+                    log_msg(LOG_INFO, "Added Rule for %s, %s expires at %u",
+                        spadat->use_src_ip,
+                        spadat->spa_message_remain,
+                        exp_ts
+                    );
+                }
+                else
+                    log_msg(LOG_WARNING, "Could not write rule to pf anchor");
+
+                pclose(pfctl_fd);
+            }
+            else
+            {
+                /* We don't have enough room to add the new firewall rule,
+                 * so throw a warning and bail.  Once some of the existing
+                 * rules are expired the user will once again be able to gain
+                 * access.  Note that we don't expect to really ever hit this
+                 * limit because of STANDARD_CMD_OUT_BUFSIZE is quite a number
+                 * of anchor rules.
+                */
+                log_msg(LOG_WARNING, "Max anchor rules reached, try again later.");
+                return 0;
+            }
+
+            ple = ple->next;
+        }
+
+    }
+    else
+    {
+        /* No other SPA request modes are supported yet.
+        */
+        if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+        {
+            log_msg(LOG_WARNING, "Local NAT requests are not currently supported.");
+        }
+        else if(spadat->message_type == FKO_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+        {
+            log_msg(LOG_WARNING, "Forwarding/NAT requests are not currently supported.");
+        }
+
+        return(-1);
+    }
+
     return(res);
-#endif
-    return 0;
 }
 
 /* Iterate over the configure firewall access chains and purge expired

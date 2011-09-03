@@ -468,7 +468,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
         {
             log_msg(LOG_WARNING, "Forwarding/NAT requests are not currently supported.");
         }
-        
+
         return(-1);
     }
 
