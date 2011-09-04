@@ -355,8 +355,8 @@ main(int argc, char **argv)
         kill(opts.tcp_server_pid, SIGTERM);
 
         /* --DSS XXX: This seems to be necessary if the tcp server
-         *            was restarted byt this program.  We need to 
-         *            investigate an fix this. For now, this works
+         *            was restarted by this program.  We need to
+         *            investigate and fix this. For now, this works
          *            (it is kludgy, but does no harm afaik).
         */
         kill(opts.tcp_server_pid, SIGKILL);
