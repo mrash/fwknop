@@ -32,13 +32,11 @@
 #ifndef FW_UTIL_PF_H
 #define FW_UTIL_PF_H
 
-#define MAX_PF_ANCHOR_LEN 64
 #define MAX_PF_ANCHOR_SEARCH_LEN    (MAX_PF_ANCHOR_LEN+11)   /* room for 'anchor "' string */
 #define MAX_PF_NEW_RULE_LEN 120
 
 /* pf command args
 */
-//pass in quick proto tcp from any to any port = 132 flags S/SA keep state label "_exp_123234345555"
 #define PF_ADD_RULE_ARGS              "pass in quick proto %u from %s to any port %u keep state label _exp_%u"
 #define PF_WRITE_ANCHOR_RULES_ARGS    "-a %s -f -"
 #define PF_LIST_ANCHOR_RULES_ARGS     "-a %s -s rules 2>&1"

@@ -105,9 +105,15 @@ anchor_active(fko_srv_options_t *opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
+    if(!EXTCMD_IS_SUCCESS(res))
+    {
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
+        return 0;
+    }
+
     /* first check for the anchor at the very first rule position
     */
-    if (strncmp(cmd_buf, anchor_search_str, strlen(anchor_search_str)) != 0)
+    if (strncmp(cmd_out, anchor_search_str, strlen(anchor_search_str)) != 0)
     {
         anchor_search_str[0] = '\0';
 
@@ -264,7 +270,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 
             if (strlen(cmd_out) + strlen(new_rule) < STANDARD_CMD_OUT_BUFSIZE)
             {
-                /* We can add the rule to the running policy
+                /* We add the rule to the running policy
                 */
                 strlcat(cmd_out, new_rule, STANDARD_CMD_OUT_BUFSIZE);
 
@@ -289,6 +295,14 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
                         spadat->spa_message_remain,
                         exp_ts
                     );
+
+                    fwc.active_rules++;
+
+                    /* Reset the next expected expire time for this chain if it
+                     * is warranted.
+                    */
+                    if(fwc.next_expire < now || exp_ts < fwc.next_expire)
+                        fwc.next_expire = exp_ts;
                 }
                 else
                     log_msg(LOG_WARNING, "Could not write rule to pf anchor");
@@ -339,18 +353,202 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
 void
 check_firewall_rules(fko_srv_options_t *opts)
 {
-#if 0
-    char             exp_str[12];
-    char             rule_num_str[6];
-    char            *ndx, *rn_start, *rn_end, *tmp_mark;
+    char            exp_str[12];
+    char            anchor_rules_copy[STANDARD_CMD_OUT_BUFSIZE];
+    char            write_cmd[CMD_BUFSIZE];
+    char           *ndx, *tmp_mark, *tmp_ndx, *newline_tmp_ndx;
 
-    int             i, res, rn_offset;
-    time_t          now, rule_exp, min_exp = 0;
+    time_t          now, rule_exp, min_exp=0;
+    int             i=0, res=0, anchor_ndx=0, is_delete=0;
+
+    FILE            *pfctl_fd = NULL;
+
+    /* If we have not yet reached our expected next expire
+       time, continue.
+    */
+    if(fwc.next_expire == 0)
+        return;
 
     time(&now);
 
+    if (fwc.next_expire > now)
+        return;
+
     zero_cmd_buffers();
-#endif
+
+    /* There should be a rule to delete.  Get the current list of
+     * rules and delete the ones that are expired.
+    */
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_LIST_ANCHOR_RULES_ARGS,
+        opts->fw_config->fw_command,
+        opts->fw_config->anchor
+    );
+
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    if(!EXTCMD_IS_SUCCESS(res))
+    {
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
+        return;
+    }
+
+    /* Find the first _exp_ string (if any).
+    */
+    ndx = strstr(cmd_out, "_exp_");
+
+    if(ndx == NULL)
+    {
+        /* we did not find an expected rule.
+        */
+        log_msg(LOG_ERR,
+            "Did not find expire comment in rules list %i.\n", i);
+
+        return;
+    }
+
+    memset(anchor_rules_copy, 0x0, STANDARD_CMD_OUT_BUFSIZE);
+
+    /* Walk the list and process rules as needed.
+    */
+    while (ndx != NULL)
+    {
+        /* Jump forward and extract the timestamp
+        */
+        ndx +=5;
+
+        /* remember this spot for when we look for the next
+         * rule.
+        */
+        tmp_mark = ndx;
+
+        strlcpy(exp_str, ndx, 11);
+        rule_exp = (time_t)atoll(exp_str);
+
+        if(rule_exp <= now)
+        {
+            /* We are going to delete this rule, and because we rebuild the
+             * PF anchor to include all rules that haven't expired, to delete
+             * this rule we just skip to the next one.
+            */
+            log_msg(LOG_INFO, "Deleting rule with expire time of %u.", rule_exp);
+
+            if (fwc.active_rules > 0)
+                fwc.active_rules--;
+
+            is_delete = 1;
+        }
+        else
+        {
+            /* The rule has not expired, so copy it into the anchor string that
+             * lists current rules and will be used to feed
+             * 'pfctl -a <anchor> -f -'.
+            */
+
+            /* back up to the previous newline or the beginning of the rules
+             * output string.
+            */
+            tmp_ndx = ndx;
+            while(--tmp_ndx > cmd_out)
+            {
+                if(*tmp_ndx == '\n')
+                    break;
+            }
+
+            if(*tmp_ndx == '\n')
+            {
+                tmp_ndx++;
+            }
+
+            /* may sure the rule begins with the string "pass", and make sure
+             * it ends with a newline.  Bail if either test fails.
+            */
+            if (strlen(tmp_ndx) <= strlen("pass")
+                || strncmp(tmp_ndx, "pass", strlen("pass")) != 0)
+            {
+                break;
+            }
+
+            newline_tmp_ndx = tmp_ndx;
+            while (*newline_tmp_ndx != '\n' && *newline_tmp_ndx != '\0')
+            {
+                newline_tmp_ndx++;
+            }
+
+            if (*newline_tmp_ndx != '\n')
+                break;
+
+            /* copy the whole rule to the next newline (includes the expiration
+               time).
+            */
+            while (*tmp_ndx != '\n' && *tmp_ndx != '\0'
+                && anchor_ndx < STANDARD_CMD_OUT_BUFSIZE)
+            {
+                anchor_rules_copy[anchor_ndx] = *tmp_ndx;
+                tmp_ndx++;
+                anchor_ndx++;
+            }
+            anchor_rules_copy[anchor_ndx] = '\n';
+            anchor_ndx++;
+
+            /* Track the minimum future rule expire time.
+            */
+            if(rule_exp > now)
+                min_exp = (min_exp < rule_exp) ? min_exp : rule_exp;
+        }
+
+        /* Push our tracking index forward beyond (just processed) _exp_
+         * string so we can continue to the next rule in the list.
+        */
+        ndx = strstr(tmp_mark, "_exp_");
+
+    }
+
+    if (is_delete)
+    {
+        /* We re-instantiate the anchor rules with the new rules string that
+         * has the rule(s) deleted.  If there isn't at least one "pass" rule,
+         * then we just flush the anchor.
+        */
+
+        if (strlen(anchor_rules_copy) > strlen("pass")
+            && strncmp(anchor_rules_copy, "pass", strlen("pass")) == 0)
+        {
+            memset(write_cmd, 0x0, CMD_BUFSIZE);
+
+            snprintf(write_cmd, CMD_BUFSIZE-1, "%s " PF_WRITE_ANCHOR_RULES_ARGS,
+                opts->fw_config->fw_command,
+                opts->fw_config->anchor
+            );
+
+            if ((pfctl_fd = popen(write_cmd, "w")) == NULL)
+            {
+                log_msg(LOG_WARNING, "Could not execute command: %s",
+                    write_cmd);
+                return;
+            }
+
+            if (fwrite(anchor_rules_copy, strlen(anchor_rules_copy), 1, pfctl_fd) != 1)
+            {
+                log_msg(LOG_WARNING, "Could not write rules to pf anchor");
+            }
+            pclose(pfctl_fd);
+        }
+        else
+        {
+            delete_all_anchor_rules(opts);
+        }
+
+    }
+
+    /* Set the next pending expire time accordingly. 0 if there are no
+     * more rules, or whatever the next expected (min_exp) time will be.
+    */
+    if(fwc.active_rules < 1)
+        fwc.next_expire = 0;
+    else if(min_exp)
+        fwc.next_expire = min_exp;
+
+    return;
 }
 
 #endif /* FIREWALL_PF */
