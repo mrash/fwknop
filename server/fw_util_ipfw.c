@@ -525,7 +525,7 @@ check_firewall_rules(fko_srv_options_t *opts)
 
     /* Find the first _exp_ string (if any).
     */
-    ndx = strstr(cmd_out, "_exp_");
+    ndx = strstr(cmd_out, EXPIRE_COMMENT_PREFIX);
 
     if(ndx == NULL)
     {
@@ -543,7 +543,7 @@ check_firewall_rules(fko_srv_options_t *opts)
     while (ndx != NULL) {
         /* Jump forward and extract the timestamp
         */
-        ndx +=5;
+        ndx += strlen(EXPIRE_COMMENT_PREFIX);
 
         /* remember this spot for when we look for the next
          * rule.
@@ -634,7 +634,7 @@ check_firewall_rules(fko_srv_options_t *opts)
         /* Push our tracking index forward beyond (just processed) _exp_
          * string so we can continue to the next rule in the list.
         */
-        ndx = strstr(tmp_mark, "_exp_");
+        ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
     }
 
     /* Set the next pending expire time accordingly. 0 if there are no

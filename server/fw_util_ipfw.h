@@ -40,7 +40,7 @@ enum {
 
 /* ipfw command args
 */
-#define IPFW_ADD_RULE_ARGS           "add %u set %u pass %u from %s to me dst-port %u setup keep-state // _exp_%u"
+#define IPFW_ADD_RULE_ARGS           "add %u set %u pass %u from %s to me dst-port %u setup keep-state // " EXPIRE_COMMENT_PREFIX "%u"
 #define IPFW_ADD_CHECK_STATE_ARGS    "add %u set %u check-state"
 #define IPFW_MOVE_RULE_ARGS          "set move rule %u to %u"
 #define IPFW_MOVE_SET_ARGS           "set move %u to %u"
