@@ -761,13 +761,6 @@ check_firewall_rules(fko_srv_options_t *opts)
     */
     for(i = 0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
-        /* Just in case we somehow lose track and fall out-of-whack,
-         * we be the hero and reset it to zero.
-         *  (poet but don't know it :-o )
-        */
-        if(ch[i].active_rules < 0)
-            ch[i].active_rules = 0;
-
         /* If there are no active rules or we have not yet
          * reached our expected next expire time, continue.
         */
@@ -806,7 +799,9 @@ check_firewall_rules(fko_srv_options_t *opts)
             log_msg(LOG_ERR,
                 "Did not find expire comment in rules list %i.\n", i);
 
-            ch[i].active_rules--;
+            if (ch[i].active_rules > 0)
+                ch[i].active_rules--;
+
             continue;
         }
 
@@ -845,7 +840,9 @@ check_firewall_rules(fko_srv_options_t *opts)
                     log_msg(LOG_ERR,
                         "Rule parse error while finding rule line start in chain %i", i);
 
-                    ch[i].active_rules--;
+                    if (ch[i].active_rules > 0)
+                        ch[i].active_rules--;
+
                     break;
                 }
                 rn_start++;
@@ -859,7 +856,9 @@ check_firewall_rules(fko_srv_options_t *opts)
                     log_msg(LOG_ERR,
                         "Rule parse error while finding rule number in chain %i", i);
 
-                    ch[i].active_rules--;
+                    if (ch[i].active_rules > 0)
+                        ch[i].active_rules--;
+
                     break;
                 }
                  
@@ -884,7 +883,9 @@ check_firewall_rules(fko_srv_options_t *opts)
                     );
 
                     rn_offset++;
-                    ch[i].active_rules--;
+
+                    if (ch[i].active_rules > 0)
+                        ch[i].active_rules--;
                 }
                 else
                     log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 

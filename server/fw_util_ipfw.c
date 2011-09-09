@@ -489,8 +489,6 @@ check_firewall_rules(fko_srv_options_t *opts)
     time_t          now, rule_exp, min_exp = 0;
     unsigned short  curr_rule;
 
-    time(&now);
-
     /* Just in case we somehow lose track and fall out-of-whack.
     */
     if(fwc.active_rules > fwc.max_rules)
@@ -499,7 +497,12 @@ check_firewall_rules(fko_srv_options_t *opts)
     /* If there are no active rules or we have not yet
      * reached our expected next expire time, continue.
     */
-    if(fwc.active_rules == 0 || fwc.next_expire > now)
+    if(fwc.active_rules == 0)
+        return;
+
+    time(&now);
+
+    if (fwc.next_expire > now)
         return;
 
     zero_cmd_buffers();
@@ -534,7 +537,9 @@ check_firewall_rules(fko_srv_options_t *opts)
         log_msg(LOG_ERR,
             "Did not find expire comment in rules list %i.\n", i);
 
-        fwc.active_rules--;
+        if (fwc.active_rules > 0)
+            fwc.active_rules--;
+
         return;
     }
 
@@ -577,7 +582,9 @@ check_firewall_rules(fko_srv_options_t *opts)
                 log_msg(LOG_ERR,
                     "Rule parse error while finding rule line start.");
 
-                fwc.active_rules--;
+                if (fwc.active_rules > 0)
+                    fwc.active_rules--;
+
                 break;
             }
 
@@ -591,7 +598,9 @@ check_firewall_rules(fko_srv_options_t *opts)
                 log_msg(LOG_ERR,
                     "Rule parse error while finding rule number.");
 
-                fwc.active_rules--;
+                if (fwc.active_rules > 0)
+                    fwc.active_rules--;
+
                 break;
             }
              
@@ -617,7 +626,9 @@ check_firewall_rules(fko_srv_options_t *opts)
                     rule_num_str, rule_exp, fwc.expire_set_num
                 );
 
-                fwc.active_rules--;
+                if (fwc.active_rules > 0)
+                    fwc.active_rules--;
+
                 fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
             }
             else
