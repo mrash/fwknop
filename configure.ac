@@ -155,27 +155,7 @@ AC_PROG_LIBTOOL
 case "$host" in
 *-*-linux*)
     ;;
-*-*-freebsd*)
-    # disable read-only relocations and immediate binding protection on FreeBSD
-    # due the following errors (there is probably a solution to this in another
-    # way, please email Michael Rash mbr.at.cipherdyne.org)
-    # gcc: -z: linker input file unused because linking not done
-    # gcc: relro: linker input file unused because linking not done
-    # gcc: -z: linker input file unused because linking not done
-    # gcc: now: linker input file unused because linking not done
-    use_ro_relocations=no
-    use_immediate_binding=no
-    ;;
 *-*-openbsd*)
-    # disable read-only relocations and immediate binding protection on FreeBSD
-    # due the following errors (there is probably a solution to this in another
-    # way, please email Michael Rash mbr.at.cipherdyne.org)
-    # gcc: -z: linker input file unused because linking not done
-    # gcc: relro: linker input file unused because linking not done
-    # gcc: -z: linker input file unused because linking not done
-    # gcc: now: linker input file unused because linking not done
-    use_ro_relocations=no
-    use_immediate_binding=no
     AC_DEFINE_UNQUOTED([PLATFORM_OPENBSD], [1], [Define if you are running on OpenBSD])
     ;;
 esac
@@ -374,9 +354,7 @@ fi
 if test "x$use_ro_relocations" = "xyes"; then
     for t in "-Wl,-z,relro"; do
         AC_MSG_CHECKING(if $CC supports $t)
-        saved_CFLAGS="$CFLAGS"
         saved_LDFLAGS="$LDFLAGS"
-        CFLAGS="$CFLAGS $t -Werror"
         LDFLAGS="$LDFLAGS $t -Werror"
         AC_LINK_IFELSE(
             [AC_LANG_SOURCE([
@@ -384,7 +362,6 @@ if test "x$use_ro_relocations" = "xyes"; then
 int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
              ])],
             [ AC_MSG_RESULT(yes)
-              CFLAGS="$saved_CFLAGS $t"
               LDFLAGS="$saved_LDFLAGS $t"
               AC_MSG_CHECKING(if $t works)
               AC_RUN_IFELSE(
@@ -401,7 +378,6 @@ int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
             ],
             [ AC_MSG_RESULT(no) ]
         )
-        CFLAGS="$saved_CFLAGS"
         LDFLAGS="$saved_LDFLAGS"
     done
 fi
@@ -409,9 +385,7 @@ fi
 if test "x$use_immediate_binding" = "xyes"; then
     for t in "-Wl,-z,now"; do
         AC_MSG_CHECKING(if $CC supports $t)
-        saved_CFLAGS="$CFLAGS"
         saved_LDFLAGS="$LDFLAGS"
-        CFLAGS="$CFLAGS $t -Werror"
         LDFLAGS="$LDFLAGS $t -Werror"
         AC_LINK_IFELSE(
             [AC_LANG_SOURCE([
@@ -419,7 +393,6 @@ if test "x$use_immediate_binding" = "xyes"; then
 int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
              ])],
             [ AC_MSG_RESULT(yes)
-              CFLAGS="$saved_CFLAGS $t"
               LDFLAGS="$saved_LDFLAGS $t"
               AC_MSG_CHECKING(if $t works)
               AC_RUN_IFELSE(
@@ -436,7 +409,6 @@ int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
             ],
             [ AC_MSG_RESULT(no) ]
         )
-        CFLAGS="$saved_CFLAGS"
         LDFLAGS="$saved_LDFLAGS"
     done
 fi
