@@ -30,6 +30,7 @@
  *****************************************************************************
 */
 #include "fwknopd_common.h"
+#include "utils.h"
 #include "log_msg.h"
 
 /* The default log facility (can be overridden via config file directive).
@@ -60,6 +61,7 @@ free_logging(void)
 void
 init_logging(fko_srv_options_t *opts) {
     char                   *my_name = NULL;
+    int                     is_syslog = 0;
 
     /* In case this is a re-init.
     */
@@ -74,6 +76,7 @@ init_logging(fko_srv_options_t *opts) {
     {
         my_name  = opts->config[CONF_SYSLOG_IDENTITY];
         log_name = malloc(strlen(opts->config[CONF_SYSLOG_IDENTITY])+1);
+        is_syslog = 1;
     }
     else
     {
@@ -89,7 +92,10 @@ init_logging(fko_srv_options_t *opts) {
 
     /* Set our name.
     */
-    strcpy(log_name, my_name);
+    if (is_syslog)
+        strlcpy(log_name, my_name, strlen(opts->config[CONF_SYSLOG_IDENTITY])+1);
+    else
+        strlcpy(log_name, my_name, strlen(MY_NAME)+1);
 
     /* If we are running in the foreground, all logging will go to stderr.
     */

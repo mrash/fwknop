@@ -101,7 +101,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
 
     /* Put it together a piece at a time, starting with the rand val.
     */
-    strcpy(tbuf, ctx->rand_val);
+    strlcpy(tbuf, ctx->rand_val, FKO_ENCODE_TMP_BUF_SIZE);
 
     /* Add the base64-encoded username.
     */

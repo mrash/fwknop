@@ -768,7 +768,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     fprintf(stderr, "Memory allocation error for resolve URL.\n");
                     exit(EXIT_FAILURE);
                 }
-                strcpy(options->resolve_url, optarg);
+                strlcpy(options->resolve_url, optarg, strlen(optarg)+1);
                 break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;

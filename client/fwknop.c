@@ -604,7 +604,7 @@ run_last_args(fko_cli_options_t *options)
                         fprintf(stderr, "malloc failure for cmd line arg.\n");
                         exit(EXIT_FAILURE);
                     }
-                    strcpy(argv_new[argc_new], arg_tmp);
+                    strlcpy(argv_new[argc_new], arg_tmp, strlen(arg_tmp)+1);
                     current_arg_ctr = 0;
                     argc_new++;
                 }

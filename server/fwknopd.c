@@ -256,7 +256,7 @@ main(int argc, char **argv)
                 log_msg(LOG_WARNING,
                     "Error opening digest cache file. Incoming digests will not be remembered."
                 );
-                strcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N");
+                strlcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N", 2);
             }
 
             if(opts.verbose)
@@ -405,7 +405,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     if(use_basename && ((ndx = strrchr(filepath, PATH_SEP)) != NULL))
         strlcpy(tmp_path, filepath, (ndx-filepath)+1);
     else
-        strcpy(tmp_path, filepath);
+        strlcpy(tmp_path, filepath, MAX_PATH_LEN);
 
     /* At this point, we should make the path is more than just the
      * PATH_SEP.  If it is not, silently return.

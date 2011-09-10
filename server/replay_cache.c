@@ -105,9 +105,11 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
     /* The new filename is just the original with a trailing '-old'.
     */
 #if USE_FILE_CACHE
-    strcpy(new_file, opts->config[CONF_DIGEST_FILE]);
+    strlcpy(new_file, opts->config[CONF_DIGEST_FILE],
+        strlen(opts->config[CONF_DIGEST_FILE])+5);
 #else
-    strcpy(new_file, opts->config[CONF_DIGEST_DB_FILE]);
+    strlcpy(new_file, opts->config[CONF_DIGEST_DB_FILE],
+        strlen(opts->config[CONF_DIGEST_DB_FILE])+5);
 #endif
     strcat(new_file, "-old");
 
