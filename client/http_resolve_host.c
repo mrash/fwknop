@@ -93,7 +93,7 @@ parse_url(char *res_url, struct url* url)
     }
     else
     {
-        strcpy(url->port, "80");
+        strlcpy(url->port, "80", 3);
         tlen_offset = 0;
     }
 
