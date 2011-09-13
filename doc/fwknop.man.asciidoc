@@ -353,11 +353,11 @@ program parameters at runtime.  It also allows for additional named
 configuration 'stanzas' for setting program parameters for a particular
 invocation.
 
-The *fwkop* client will create this file if it does not exist in the user's
+The *fwknop* client will create this file if it does not exist in the user's
 home directory.  This initial version has some sample directives that are
 commented out.  It is up to the user to edit this file to meet their needs.
 
-The '.fwkoprc' file contains a default configuration area or stanza which
+The '.fwknoprc' file contains a default configuration area or stanza which
 holds global configuration directives that override the program defaults. 
 You can edit this file and create additonal 'named stanzas' that can be
 specified with the *-n* or *--named-config* option. Parameters defined in
