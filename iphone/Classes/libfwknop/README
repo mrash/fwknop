@@ -1,0 +1,11 @@
+README for the libfwknop directory (iphone/Classes/libfwknop)
+===============================================================================
+
+This directory should contain all of the .c and .h files from the fwknop
+main distribution "lib" directory. These are the source files for libfko.
+You can either manually copy the libfko source files to this directory,
+or run the "get_libfko_files.sh script.  Either way, the libfko *.[ch]
+files need to exist in this directory before you attempt to build the Iphone
+fwknop client.
+
+
