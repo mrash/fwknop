@@ -38,7 +38,6 @@
 #
 
 use POSIX;
-use Data::Dumper;
 use Getopt::Long;
 use strict;
 
@@ -326,4 +325,26 @@ sub get_username() {
 }
 
 sub usage() {
+    print <<_HELP_;
+
+Usage: fwknop-launcher-lsof.pl [options]
+
+Options:
+
+    -c,  --config     <file>   - Path to fwknop-launcher.conf config file.
+    -l,  --lsof-cmd   <path>   - Path to lsof command.
+    -f,  --fwknop-cmd <path>   - Path to fwknop client command.
+    -s,  --sleep   <seconds>   - Specify sleep interval (default:
+                                 $sleep_interval seconds)
+    -n   --no-daemon           - Run in foreground mode.
+    -u,  --user   <username>   - Specify username (usually this is not
+                                 needed).
+         --home-dir <dir>      - Path to user's home directory (usually
+                                 this is not needed).
+    -v   --verbose             - Print verbose information to the terminal
+                                 (requires --no-daemon).
+         --help                - Print usage info and exit.
+
+_HELP_
+    exit 0;
 }
