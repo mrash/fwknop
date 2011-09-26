@@ -1,0 +1,413 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1D3623260D0F684500981E51 /* MyAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623250D0F684500981E51 /* MyAppDelegate.m */; };
+		1D60589B0D05DD56006BFB54 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; };
+		1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1D30AB110D05D00D00671497 /* Foundation.framework */; };
+		1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1DF5F4DF0D08C38300B7A737 /* UIKit.framework */; };
+		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
+		ABA422DB0FEEBE4100C83D50 /* FwknopController.m in Sources */ = {isa = PBXBuildFile; fileRef = ABA422DA0FEEBE4100C83D50 /* FwknopController.m */; };
+		D779E41313CAF97A001CF276 /* bridge_fwknop.c in Sources */ = {isa = PBXBuildFile; fileRef = D779E41213CAF97A001CF276 /* bridge_fwknop.c */; };
+		D7E62BE113CBDD3700D44954 /* base64.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BB213CBDD3700D44954 /* base64.c */; };
+		D7E62BE213CBDD3700D44954 /* cipher_funcs.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BB413CBDD3700D44954 /* cipher_funcs.c */; };
+		D7E62BE313CBDD3700D44954 /* digest.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BB613CBDD3700D44954 /* digest.c */; };
+		D7E62BE413CBDD3700D44954 /* fko_client_timeout.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BB913CBDD3700D44954 /* fko_client_timeout.c */; };
+		D7E62BE513CBDD3700D44954 /* fko_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BBC13CBDD3700D44954 /* fko_decode.c */; };
+		D7E62BE613CBDD3700D44954 /* fko_digest.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BBD13CBDD3700D44954 /* fko_digest.c */; };
+		D7E62BE713CBDD3700D44954 /* fko_encode.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BBE13CBDD3700D44954 /* fko_encode.c */; };
+		D7E62BE813CBDD3700D44954 /* fko_encryption.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BBF13CBDD3700D44954 /* fko_encryption.c */; };
+		D7E62BE913CBDD3700D44954 /* fko_error.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC013CBDD3700D44954 /* fko_error.c */; };
+		D7E62BEA13CBDD3700D44954 /* fko_funcs.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC113CBDD3700D44954 /* fko_funcs.c */; };
+		D7E62BEB13CBDD3700D44954 /* fko_message.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC313CBDD3700D44954 /* fko_message.c */; };
+		D7E62BEC13CBDD3700D44954 /* fko_nat_access.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC413CBDD3700D44954 /* fko_nat_access.c */; };
+		D7E62BED13CBDD3700D44954 /* fko_rand_value.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC513CBDD3700D44954 /* fko_rand_value.c */; };
+		D7E62BEE13CBDD3700D44954 /* fko_server_auth.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC613CBDD3700D44954 /* fko_server_auth.c */; };
+		D7E62BEF13CBDD3700D44954 /* fko_timestamp.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC813CBDD3700D44954 /* fko_timestamp.c */; };
+		D7E62BF013CBDD3700D44954 /* fko_user.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BC913CBDD3700D44954 /* fko_user.c */; };
+		D7E62BF213CBDD3700D44954 /* gpgme_funcs.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BCC13CBDD3700D44954 /* gpgme_funcs.c */; };
+		D7E62BF313CBDD3700D44954 /* md5.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BCE13CBDD3700D44954 /* md5.c */; };
+		D7E62BF513CBDD3700D44954 /* rijndael.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BD113CBDD3700D44954 /* rijndael.c */; };
+		D7E62BF613CBDD3700D44954 /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BD313CBDD3700D44954 /* sha1.c */; };
+		D7E62BF713CBDD3700D44954 /* sha2.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BD513CBDD3700D44954 /* sha2.c */; };
+		D7E62BF813CBDD3700D44954 /* strlcat.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BD713CBDD3700D44954 /* strlcat.c */; };
+		D7E62BF913CBDD3700D44954 /* strlcpy.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BD813CBDD3700D44954 /* strlcpy.c */; };
+		D7E62BFA13CBDD3700D44954 /* fwknop_client.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BDA13CBDD3700D44954 /* fwknop_client.c */; };
+		D7E62BFB13CBDD3700D44954 /* send_spa_packet.c in Sources */ = {isa = PBXBuildFile; fileRef = D7E62BDC13CBDD3700D44954 /* send_spa_packet.c */; };
+		D7ED6D4114189DE00070A866 /* lock_57x57.png in Resources */ = {isa = PBXBuildFile; fileRef = D7ED6D4014189DE00070A866 /* lock_57x57.png */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		1D3623240D0F684500981E51 /* MyAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MyAppDelegate.h; sourceTree = "<group>"; };
+		1D3623250D0F684500981E51 /* MyAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MyAppDelegate.m; sourceTree = "<group>"; };
+		1D6058910D05DD3D006BFB54 /* Fwknop.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Fwknop.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1DF5F4DF0D08C38300B7A737 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		288765FC0DF74451002DB57D /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		32CA4F630368D1EE00C91783 /* Fwknop.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Fwknop.pch; sourceTree = "<group>"; };
+		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		ABA422D90FEEBE4100C83D50 /* FwknopController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FwknopController.h; sourceTree = "<group>"; };
+		ABA422DA0FEEBE4100C83D50 /* FwknopController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FwknopController.m; sourceTree = "<group>"; };
+		D779E41213CAF97A001CF276 /* bridge_fwknop.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bridge_fwknop.c; sourceTree = "<group>"; };
+		D7E33C3E1424559A005D6CB6 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		D7E62BB213CBDD3700D44954 /* base64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = base64.c; sourceTree = "<group>"; };
+		D7E62BB313CBDD3700D44954 /* base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base64.h; sourceTree = "<group>"; };
+		D7E62BB413CBDD3700D44954 /* cipher_funcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = cipher_funcs.c; sourceTree = "<group>"; };
+		D7E62BB513CBDD3700D44954 /* cipher_funcs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cipher_funcs.h; sourceTree = "<group>"; };
+		D7E62BB613CBDD3700D44954 /* digest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = digest.c; sourceTree = "<group>"; };
+		D7E62BB713CBDD3700D44954 /* digest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = digest.h; sourceTree = "<group>"; };
+		D7E62BB813CBDD3700D44954 /* fko.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fko.h; sourceTree = "<group>"; };
+		D7E62BB913CBDD3700D44954 /* fko_client_timeout.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_client_timeout.c; sourceTree = "<group>"; };
+		D7E62BBA13CBDD3700D44954 /* fko_common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fko_common.h; sourceTree = "<group>"; };
+		D7E62BBB13CBDD3700D44954 /* fko_context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fko_context.h; sourceTree = "<group>"; };
+		D7E62BBC13CBDD3700D44954 /* fko_decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_decode.c; sourceTree = "<group>"; };
+		D7E62BBD13CBDD3700D44954 /* fko_digest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_digest.c; sourceTree = "<group>"; };
+		D7E62BBE13CBDD3700D44954 /* fko_encode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_encode.c; sourceTree = "<group>"; };
+		D7E62BBF13CBDD3700D44954 /* fko_encryption.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_encryption.c; sourceTree = "<group>"; };
+		D7E62BC013CBDD3700D44954 /* fko_error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_error.c; sourceTree = "<group>"; };
+		D7E62BC113CBDD3700D44954 /* fko_funcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_funcs.c; sourceTree = "<group>"; };
+		D7E62BC213CBDD3700D44954 /* fko_limits.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fko_limits.h; sourceTree = "<group>"; };
+		D7E62BC313CBDD3700D44954 /* fko_message.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_message.c; sourceTree = "<group>"; };
+		D7E62BC413CBDD3700D44954 /* fko_nat_access.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_nat_access.c; sourceTree = "<group>"; };
+		D7E62BC513CBDD3700D44954 /* fko_rand_value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_rand_value.c; sourceTree = "<group>"; };
+		D7E62BC613CBDD3700D44954 /* fko_server_auth.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_server_auth.c; sourceTree = "<group>"; };
+		D7E62BC713CBDD3700D44954 /* fko_state.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fko_state.h; sourceTree = "<group>"; };
+		D7E62BC813CBDD3700D44954 /* fko_timestamp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_timestamp.c; sourceTree = "<group>"; };
+		D7E62BC913CBDD3700D44954 /* fko_user.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fko_user.c; sourceTree = "<group>"; };
+		D7E62BCA13CBDD3700D44954 /* fko_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fko_util.h; sourceTree = "<group>"; };
+		D7E62BCC13CBDD3700D44954 /* gpgme_funcs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = gpgme_funcs.c; sourceTree = "<group>"; };
+		D7E62BCD13CBDD3700D44954 /* gpgme_funcs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gpgme_funcs.h; sourceTree = "<group>"; };
+		D7E62BCE13CBDD3700D44954 /* md5.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = md5.c; sourceTree = "<group>"; };
+		D7E62BCF13CBDD3700D44954 /* md5.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = md5.h; sourceTree = "<group>"; };
+		D7E62BD113CBDD3700D44954 /* rijndael.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rijndael.c; sourceTree = "<group>"; };
+		D7E62BD213CBDD3700D44954 /* rijndael.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rijndael.h; sourceTree = "<group>"; };
+		D7E62BD313CBDD3700D44954 /* sha1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sha1.c; sourceTree = "<group>"; };
+		D7E62BD413CBDD3700D44954 /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
+		D7E62BD513CBDD3700D44954 /* sha2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sha2.c; sourceTree = "<group>"; };
+		D7E62BD613CBDD3700D44954 /* sha2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha2.h; sourceTree = "<group>"; };
+		D7E62BD713CBDD3700D44954 /* strlcat.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = strlcat.c; sourceTree = "<group>"; };
+		D7E62BD813CBDD3700D44954 /* strlcpy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = strlcpy.c; sourceTree = "<group>"; };
+		D7E62BDA13CBDD3700D44954 /* fwknop_client.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fwknop_client.c; sourceTree = "<group>"; };
+		D7E62BDB13CBDD3700D44954 /* fwknop_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fwknop_client.h; sourceTree = "<group>"; };
+		D7E62BDC13CBDD3700D44954 /* send_spa_packet.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = send_spa_packet.c; sourceTree = "<group>"; };
+		D7E62BDD13CBDD3700D44954 /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		D7E62DD913CC12E400D44954 /* bridge_fwknop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bridge_fwknop.h; sourceTree = "<group>"; };
+		D7ED6D4014189DE00070A866 /* lock_57x57.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = lock_57x57.png; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1D60588F0D05DD3D006BFB54 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D60589F0D05DD5A006BFB54 /* Foundation.framework in Frameworks */,
+				1DF5F4E00D08C38300B7A737 /* UIKit.framework in Frameworks */,
+				288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		080E96DDFE201D6D7F000001 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				D7E62BB113CBDD3700D44954 /* libfwknop */,
+				D7E62BD913CBDD3700D44954 /* fwknop */,
+				D7E62BDD13CBDD3700D44954 /* config.h */,
+				D7E62DD913CC12E400D44954 /* bridge_fwknop.h */,
+				1D3623240D0F684500981E51 /* MyAppDelegate.h */,
+				1D3623250D0F684500981E51 /* MyAppDelegate.m */,
+				ABA422D90FEEBE4100C83D50 /* FwknopController.h */,
+				ABA422DA0FEEBE4100C83D50 /* FwknopController.m */,
+				D779E41213CAF97A001CF276 /* bridge_fwknop.c */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		19C28FACFE9D520D11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1D6058910D05DD3D006BFB54 /* Fwknop.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
+			isa = PBXGroup;
+			children = (
+				D779E52B13CB0BEC001CF276 /* lib */,
+				080E96DDFE201D6D7F000001 /* Classes */,
+				29B97315FDCFA39411CA2CEA /* Other Sources */,
+				29B97317FDCFA39411CA2CEA /* Resources */,
+				29B97323FDCFA39411CA2CEA /* Frameworks */,
+				19C28FACFE9D520D11CA2CBB /* Products */,
+			);
+			name = CustomTemplate;
+			sourceTree = "<group>";
+		};
+		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+				32CA4F630368D1EE00C91783 /* Fwknop.pch */,
+				29B97316FDCFA39411CA2CEA /* main.m */,
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		29B97317FDCFA39411CA2CEA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D7ED6D4014189DE00070A866 /* lock_57x57.png */,
+				8D1107310486CEB800E47090 /* Info.plist */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				1DF5F4DF0D08C38300B7A737 /* UIKit.framework */,
+				1D30AB110D05D00D00671497 /* Foundation.framework */,
+				288765FC0DF74451002DB57D /* CoreGraphics.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D779E52B13CB0BEC001CF276 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = lib;
+			sourceTree = "<group>";
+		};
+		D7E62BB113CBDD3700D44954 /* libfwknop */ = {
+			isa = PBXGroup;
+			children = (
+				D7E62BB213CBDD3700D44954 /* base64.c */,
+				D7E62BB313CBDD3700D44954 /* base64.h */,
+				D7E62BB413CBDD3700D44954 /* cipher_funcs.c */,
+				D7E62BB513CBDD3700D44954 /* cipher_funcs.h */,
+				D7E62BB613CBDD3700D44954 /* digest.c */,
+				D7E62BB713CBDD3700D44954 /* digest.h */,
+				D7E62BB813CBDD3700D44954 /* fko.h */,
+				D7E62BB913CBDD3700D44954 /* fko_client_timeout.c */,
+				D7E62BBA13CBDD3700D44954 /* fko_common.h */,
+				D7E62BBB13CBDD3700D44954 /* fko_context.h */,
+				D7E62BBC13CBDD3700D44954 /* fko_decode.c */,
+				D7E62BBD13CBDD3700D44954 /* fko_digest.c */,
+				D7E62BBE13CBDD3700D44954 /* fko_encode.c */,
+				D7E62BBF13CBDD3700D44954 /* fko_encryption.c */,
+				D7E62BC013CBDD3700D44954 /* fko_error.c */,
+				D7E62BC113CBDD3700D44954 /* fko_funcs.c */,
+				D7E62BC213CBDD3700D44954 /* fko_limits.h */,
+				D7E62BC313CBDD3700D44954 /* fko_message.c */,
+				D7E62BC413CBDD3700D44954 /* fko_nat_access.c */,
+				D7E62BC513CBDD3700D44954 /* fko_rand_value.c */,
+				D7E62BC613CBDD3700D44954 /* fko_server_auth.c */,
+				D7E62BC713CBDD3700D44954 /* fko_state.h */,
+				D7E62BC813CBDD3700D44954 /* fko_timestamp.c */,
+				D7E62BC913CBDD3700D44954 /* fko_user.c */,
+				D7E62BCA13CBDD3700D44954 /* fko_util.h */,
+				D7E62BCC13CBDD3700D44954 /* gpgme_funcs.c */,
+				D7E62BCD13CBDD3700D44954 /* gpgme_funcs.h */,
+				D7E62BCE13CBDD3700D44954 /* md5.c */,
+				D7E62BCF13CBDD3700D44954 /* md5.h */,
+				D7E62BD113CBDD3700D44954 /* rijndael.c */,
+				D7E62BD213CBDD3700D44954 /* rijndael.h */,
+				D7E62BD313CBDD3700D44954 /* sha1.c */,
+				D7E62BD413CBDD3700D44954 /* sha1.h */,
+				D7E62BD513CBDD3700D44954 /* sha2.c */,
+				D7E62BD613CBDD3700D44954 /* sha2.h */,
+				D7E62BD713CBDD3700D44954 /* strlcat.c */,
+				D7E62BD813CBDD3700D44954 /* strlcpy.c */,
+				D7E33C3E1424559A005D6CB6 /* config.h */,
+			);
+			path = libfwknop;
+			sourceTree = "<group>";
+		};
+		D7E62BD913CBDD3700D44954 /* fwknop */ = {
+			isa = PBXGroup;
+			children = (
+				D7E62BDA13CBDD3700D44954 /* fwknop_client.c */,
+				D7E62BDB13CBDD3700D44954 /* fwknop_client.h */,
+				D7E62BDC13CBDD3700D44954 /* send_spa_packet.c */,
+			);
+			path = fwknop;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1D6058900D05DD3D006BFB54 /* Fwknop */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "Fwknop" */;
+			buildPhases = (
+				1D60588D0D05DD3D006BFB54 /* Resources */,
+				1D60588E0D05DD3D006BFB54 /* Sources */,
+				1D60588F0D05DD3D006BFB54 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Fwknop;
+			productName = Fwknop;
+			productReference = 1D6058910D05DD3D006BFB54 /* Fwknop.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		29B97313FDCFA39411CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Fwknop" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 29B97314FDCFA39411CA2CEA /* CustomTemplate */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1D6058900D05DD3D006BFB54 /* Fwknop */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1D60588D0D05DD3D006BFB54 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D7ED6D4114189DE00070A866 /* lock_57x57.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1D60588E0D05DD3D006BFB54 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1D60589B0D05DD56006BFB54 /* main.m in Sources */,
+				1D3623260D0F684500981E51 /* MyAppDelegate.m in Sources */,
+				ABA422DB0FEEBE4100C83D50 /* FwknopController.m in Sources */,
+				D779E41313CAF97A001CF276 /* bridge_fwknop.c in Sources */,
+				D7E62BE113CBDD3700D44954 /* base64.c in Sources */,
+				D7E62BE213CBDD3700D44954 /* cipher_funcs.c in Sources */,
+				D7E62BE313CBDD3700D44954 /* digest.c in Sources */,
+				D7E62BE413CBDD3700D44954 /* fko_client_timeout.c in Sources */,
+				D7E62BE513CBDD3700D44954 /* fko_decode.c in Sources */,
+				D7E62BE613CBDD3700D44954 /* fko_digest.c in Sources */,
+				D7E62BE713CBDD3700D44954 /* fko_encode.c in Sources */,
+				D7E62BE813CBDD3700D44954 /* fko_encryption.c in Sources */,
+				D7E62BE913CBDD3700D44954 /* fko_error.c in Sources */,
+				D7E62BEA13CBDD3700D44954 /* fko_funcs.c in Sources */,
+				D7E62BEB13CBDD3700D44954 /* fko_message.c in Sources */,
+				D7E62BEC13CBDD3700D44954 /* fko_nat_access.c in Sources */,
+				D7E62BED13CBDD3700D44954 /* fko_rand_value.c in Sources */,
+				D7E62BEE13CBDD3700D44954 /* fko_server_auth.c in Sources */,
+				D7E62BEF13CBDD3700D44954 /* fko_timestamp.c in Sources */,
+				D7E62BF013CBDD3700D44954 /* fko_user.c in Sources */,
+				D7E62BF213CBDD3700D44954 /* gpgme_funcs.c in Sources */,
+				D7E62BF313CBDD3700D44954 /* md5.c in Sources */,
+				D7E62BF513CBDD3700D44954 /* rijndael.c in Sources */,
+				D7E62BF613CBDD3700D44954 /* sha1.c in Sources */,
+				D7E62BF713CBDD3700D44954 /* sha2.c in Sources */,
+				D7E62BF813CBDD3700D44954 /* strlcat.c in Sources */,
+				D7E62BF913CBDD3700D44954 /* strlcpy.c in Sources */,
+				D7E62BFA13CBDD3700D44954 /* fwknop_client.c in Sources */,
+				D7E62BFB13CBDD3700D44954 /* send_spa_packet.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1D6058940D05DD3E006BFB54 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Fwknop.pch;
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = Fwknop;
+			};
+			name = Debug;
+		};
+		1D6058950D05DD3E006BFB54 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = Fwknop.pch;
+				INFOPLIST_FILE = Info.plist;
+				PRODUCT_NAME = Fwknop;
+			};
+			name = Release;
+		};
+		C01FCF4F08A954540054247B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Don't Code Sign";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				SDKROOT = iphoneos2.2.1;
+			};
+			name = Debug;
+		};
+		C01FCF5008A954540054247B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Don't Code Sign";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "";
+				SDKROOT = iphoneos3.1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "Fwknop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1D6058940D05DD3E006BFB54 /* Debug */,
+				1D6058950D05DD3E006BFB54 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C01FCF4E08A954540054247B /* Build configuration list for PBXProject "Fwknop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C01FCF4F08A954540054247B /* Debug */,
+				C01FCF5008A954540054247B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 29B97313FDCFA39411CA2CEA /* Project object */;
+}

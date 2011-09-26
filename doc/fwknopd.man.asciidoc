@@ -36,12 +36,12 @@ COMMAND-LINE OPTIONS
 --------------------
 *-a, --access-file*='<access-file>'::
     Specify the location of the 'access.conf' file.  If this option is
-    not given, 'fwkopd' will use the compile-time default location (typically
+    not given, 'fwknopd' will use the compile-time default location (typically
     '@sysconfdir@/fwknop/access.conf'.
 
 *-c, --config*='<config-file>'::
     Specify the location of the 'fwknopd.conf' file.  If this option is
-    not given, 'fwkopd' will use the default location (typically
+    not given, 'fwknopd' will use the default location (typically
     '@sysconfdir@/fwknop/fwknopd.conf'.
 
 *-C, --packet-limit*='<n>'::

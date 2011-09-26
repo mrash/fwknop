@@ -188,7 +188,7 @@ modules and has a relatively large footprint in memory.  This C-based
 library eliminates those dependencies and has a much smaller footprint.
 
 @item It's easy
-libfko hides many of the gory details of fwkop's @acronym{SPA} message data
+libfko hides many of the gory details of fwknop's @acronym{SPA} message data
 format, encoding, encrypting, decrypting, decoding, and parsing.  In most
 cases, only a few function calls will be needed create or parse a @acronym{SPA}
 message.
@@ -398,7 +398,7 @@ fields that have a default value.
 @cindex message types
 
 The fwknop system (and subsequently libfko), support a specific set of
-message types.  The message type value is used by fwkop to help determine
+message types.  The message type value is used by fwknop to help determine
 the correct message format and content.  These message types are:
 
 @deftypevar int fko_message_type_t

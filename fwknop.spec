@@ -60,7 +60,7 @@ much more difficult.
 
 %description -n libfko
 The Firewall Knock Operator library, libfko, provides the Single Packet
-Authorization implementation and API for the other fwkop components.
+Authorization implementation and API for the other fwknop components.
 
 %description -n libfko-devel
 This is the libfko development header and API documentation.
