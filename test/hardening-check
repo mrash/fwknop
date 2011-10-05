@@ -1,0 +1,269 @@
+#!/bin/sh
+# Report the hardening characterists of a set of binaries.
+# Copyright (C) 2009, 2010 Kees Cook <kees@debian.org>
+# License: GPLv2 or newer
+
+skip_pie=no
+skip_stackprotector=no
+skip_fortify=no
+skip_relro=no
+skip_bindnow=no
+quiet=no
+while getopts psfrbq opt
+do
+    case "$opt" in
+    p)  skip_pie=yes ;;
+    s)  skip_stackprotector=yes ;;
+    f)  skip_fortify=yes ;;
+    r)  skip_relro=yes ;;
+    b)  skip_bindnow=yes ;;
+    q)  quiet=yes ;;
+    [?])
+        echo >&2 "Usage: $0 [-p] [-s] [-f] [-r] [-b] file ..."
+        echo >&2 " -p   Do not require PIE binary"
+        echo >&2 " -s   Do not require stack protector"
+        echo >&2 " -f   Do not require fortify source"
+        echo >&2 " -r   Do not require RELRO markings"
+        echo >&2 " -b   Do not require BIND_NOW markings"
+        echo >&2 " -q   Only report failures"
+        exit 1 ;;
+    esac
+done
+shift $(( $OPTIND-1 ))
+
+overall=0
+
+rc=0
+report=""
+
+good () {
+    if [ "$quiet" != "yes" ]; then
+        report="$report
+$1"
+    fi
+}
+
+bad () {
+    report="$report
+$1"
+    rc=1
+}
+
+for file in "$@"
+do
+    rc=0
+    report="$file:"
+
+    PROG_REPORT=$(LANG=C readelf -lW "$file")
+    if [ -z "$PROG_REPORT" ]; then rc=1; continue; fi
+    DYN_REPORT=$(LANG=C readelf -dW "$file" 2>/dev/null)
+    RELOC_REPORT=$(LANG=C readelf -sW "$file"  2>/dev/null | \
+        egrep ' FUNC .* UND ' | \
+        sed -re 's/ \([0-9]+\)$//g; s/.* //g; s/@.*//g;')
+
+    # PIE
+    # First, verify this is an executable, not a library.  This seems to be
+    # best seen by checking for the PHDR program header.
+    name=" Position Independent Executable"
+    if echo "$PROG_REPORT" | awk '{print $1}' | grep -q '^PHDR$'; then
+        if echo "$PROG_REPORT" | grep -q '^Elf file type is DYN '; then
+            good "$name: yes"
+        else
+            msg="$name: no, normal executable!"
+            if [ "$skip_pie" = "yes" ]; then
+                good "$msg (ignored)"
+            else
+                bad "$msg"
+            fi
+        fi
+    else
+        if echo "$PROG_REPORT" | grep -q '^Elf file type is DYN '; then
+            good "$name: no, regular shared library (ignored)"
+        else
+            bad "$name: not a known ELF type!?"
+        fi
+    fi
+
+    # Stack-protected
+    name=" Stack protected"
+    if echo "$RELOC_REPORT" | grep -q '^__stack_chk_fail$'; then
+        good "$name: yes"
+    else
+        msg="$name: no, not found!"
+        if [ "$skip_stackprotector" = "yes" ]; then
+            good "$msg (ignored)"
+        else
+            bad "$msg"
+        fi
+    fi
+
+    # Fortified
+    name=" Fortify Source functions"
+    if echo "$RELOC_REPORT" | grep -q '^__.*_chk$'; then
+        good "$name: yes"
+    else
+        msg="$name: no, not found!"
+        if [ "$skip_fortify" = "yes" ]; then
+            good "$msg (ignored)"
+        else
+            bad "$msg"
+        fi
+    fi
+
+    # Format
+    # unfortunately, I haven't thought of a way to test for this after
+    # compilation.  What it really needs is a lintian-like check that
+    # reviews the build logs and looks for the warnings, or that the
+    # argument is changed to use -Werror,format-security to stop the build.
+
+    # RELRO
+    name=" Read-only relocations"
+    if echo "$PROG_REPORT" | awk '{print $1}' | grep -q '^GNU_RELRO$'; then
+        good "$name: yes"
+    else
+        msg="$name: no, not found!"
+        if [ "$skip_relro" = "yes" ]; then
+            good "$msg (ignored)"
+        else
+            bad "$msg"
+        fi
+    fi
+
+    # BIND_NOW
+    name=" Immediate binding"
+    if echo "$DYN_REPORT" | awk '{print $2}' | grep -q '^(BIND_NOW)$'; then
+        good "$name: yes"
+    else
+        msg="$name: no, not found!"
+        if [ "$skip_bindnow" = "yes" ]; then
+            good "$msg (ignored)"
+        else
+            bad "$msg"
+        fi
+    fi
+
+    if [ "$quiet" != "yes" ] || [ $rc -ne 0 ]; then
+        echo "$report"
+    fi
+
+    if [ $rc -ne 0 ]; then
+        overall=$rc
+    fi
+done
+
+exit $overall
+
+:<<=cut
+
+=pod
+
+=head1 NAME
+
+hardening-check - check binaries for security hardening features
+
+=head1 SYNOPSIS
+
+Examine a given set of ELF binaries and check for several security hardening
+features, failing if they are not all found.
+
+=head1 DESCRIPTION
+
+This utility checks a given list of ELF binaries for several security
+hardening features that can be compiled into an executable.  These
+features are:
+
+=over 8
+
+=item B<Position Independent Executable>
+
+This indicates that the executable was built in such a way (PIE) that
+the "text" section of the program can be relocated in memory.  To take
+full advantage of this feature, the executing kernel must support text
+Address Space Layout Randomization (ASLR).
+
+=item B<Stack Protected>
+
+This indicates that the executable was compiled with the L<gcc(1)>
+option B<-fstack-protector>.  The program will be resistant to have its
+stack overflowed.
+
+=item B<Fortify Source functions>
+
+This indicates that the executable was compiled with
+B<-D_FORTIFY_SOURCE=2> and B<-O2> or higher.  This causes certain unsafe
+glibc functions with their safer counterparts (e.g. strncpy instead
+of strcpy).
+
+=item B<Read-only relocations>
+
+This indicates that the executable was build with B<-Wl,-z,relro> to
+have ELF markings (RELRO) that ask the runtime linker to mark any
+regions of the relocation table as "read-only" if they were resolved
+before execution begins.  This reduces the possible areas of memory in
+a program that can be used by an attacker that performs a successful
+memory corruption exploit.
+
+=item B<Immediate binding>
+
+This indicates that the executable was built with B<-Wl,-z,now> to have
+ELF markings (BIND_NOW) that ask the runtime linker to resolve all
+relocations before starting program execution.  When combined with RELRO
+above, this further reduces the regions of memory available to memory
+corruption attacks.
+
+=back
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-p>
+
+No not require that the checked binaries be built as PIE.
+
+=item B<-s>
+
+No not require that the checked binaries be built with the stack protector.
+
+=item B<-f>
+
+No not require that the checked binaries be built with Fority Source.
+
+=item B<-r>
+
+No not require that the checked binaries be built with RELRO.
+
+=item B<-b>
+
+No not require that the checked binaries be built with BIND_NOW.
+
+=item B<-q>
+
+Only report failures.
+
+=back
+
+=head1 RETURN VALUE
+
+When all checked binaries have all checkable hardening features detected,
+this program will finish with an exit code of 0.  If any check fails, the
+exit code with be 1.  Individual checks can be disabled via command line
+options.
+
+=head1 AUTHOR
+
+Kees Cook <kees@debian.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2009 Kees Cook <kees@debian.org>.
+
+This program is free software; you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation; version 2 or later.
+
+=head1 SEE ALSO
+
+L<gcc(1)>, L<hardening-wrapper(1)>
+
+=cut
