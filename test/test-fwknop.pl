@@ -277,14 +277,14 @@ sub binary_exists_fwknopd_server() {
 
 ### check for PIE
 sub pie_binary_fwknop_client() {
-    return 0 unless &run_cmd("./hardening-check $fwknopCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
         $current_test_file);
     return 1;
 }
 
 sub pie_binary_fwknopd_server() {
-    return 0 unless &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
         $current_test_file);
     return 1;
@@ -292,14 +292,14 @@ sub pie_binary_fwknopd_server() {
 
 ### check for stack protection
 sub stack_protected_binary_fwknop_client() {
-    return 0 unless &run_cmd("./hardening-check $fwknopCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
     return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
         $current_test_file);
     return 1;
 }
 
 sub stack_protected_binary_fwknopd_server() {
-    return 0 unless &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
     return 0 if &file_find_regex([qr/Stack\sprotected:\sno/i],
         $current_test_file);
     return 1;
@@ -307,14 +307,14 @@ sub stack_protected_binary_fwknopd_server() {
 
 ### check for fortified source functions
 sub fortify_source_functions_binary_fwknop_client() {
-    return 0 unless &run_cmd("./hardening-check $fwknopCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
         $current_test_file);
     return 1;
 }
 
 sub fortify_source_functions_binary_fwknopd_server() {
-    return 0 unless &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
         $current_test_file);
     return 1;
@@ -322,14 +322,14 @@ sub fortify_source_functions_binary_fwknopd_server() {
 
 ### check for read-only relocations
 sub read_only_relocations_binary_fwknop_client() {
-    return 0 unless &run_cmd("./hardening-check $fwknopCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
         $current_test_file);
     return 1;
 }
 
 sub read_only_relocations_binary_fwknopd_server() {
-    return 0 unless &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
         $current_test_file);
     return 1;
@@ -337,14 +337,14 @@ sub read_only_relocations_binary_fwknopd_server() {
 
 ### check for immediate binding
 sub immediate_binding_binary_fwknop_client() {
-    return 0 unless &run_cmd("./hardening-check $fwknopCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
         $current_test_file);
     return 1;
 }
 
 sub immediate_binding_binary_fwknopd_server() {
-    return 0 unless &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
         $current_test_file);
     return 1;
@@ -369,10 +369,6 @@ sub run_cmd() {
         return 1;
     }
     return 0;
-}
-
-sub pass() {
-    return;
 }
 
 sub dots_print() {
