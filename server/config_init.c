@@ -735,8 +735,8 @@ dump_config(fko_srv_options_t *opts)
 void
 usage(void)
 {
-    fprintf(stderr, "\n%s server version %s\n%s\n\n", MY_NAME, MY_VERSION, MY_DESC);
-    fprintf(stderr,
+    fprintf(stdout, "\n%s server version %s\n%s\n\n", MY_NAME, MY_VERSION, MY_DESC);
+    fprintf(stdout,
       "Usage: fwknopd [options]\n\n"
       " -h, --help              - Print this usage message and exit.\n"
       " -a, --access-file       - Specify an alternate access.conf file.\n"

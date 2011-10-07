@@ -854,8 +854,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
 void
 usage(void)
 {
-    fprintf(stderr, "\n%s client version %s\n%s\n\n", MY_NAME, MY_VERSION, MY_DESC);
-    fprintf(stderr,
+    fprintf(stdout, "\n%s client version %s\n%s\n\n", MY_NAME, MY_VERSION, MY_DESC);
+    fprintf(stdout,
       "Usage: fwknop -A <port list> [-s|-R|-a] -D <spa_server> [options]\n\n"
       " -h, --help                  Print this usage message and exit.\n"
       " -A, --access                Provide a list of ports/protocols to open\n"
@@ -914,7 +914,7 @@ usage(void)
       "                             (md5, sha1, or sha256 (default)).\n"
       " -f, --fw-timeout            Specify SPA server firewall timeout from the\n"
       "                             client side.\n"
-      "     --gpg-encryption        Use GPG encyrption (default is Rijndael).\n"
+      "     --gpg-encryption        Use GPG encryption (default is Rijndael).\n"
       "     --gpg-recipient-key     Specify the recipient GPG key name or ID.\n"
       "     --gpg-signer-key        Specify the signer's GPG key name or ID.\n"
       "     --gpg-home-dir          Specify the GPG home directory.\n"
