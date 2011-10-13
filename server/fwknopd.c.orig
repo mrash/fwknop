@@ -29,8 +29,8 @@
  *****************************************************************************
 */
 #include "fwknopd.h"
-#include "access.h"
 #include "config_init.h"
+#include "access.h"
 #include "process_packet.h"
 #include "pcap_capture.h"
 #include "log_msg.h"
@@ -51,7 +51,7 @@ static pid_t get_running_pid(fko_srv_options_t *opts);
 int
 main(int argc, char **argv)
 {
-    int                 res, last_sig, rp_cache_count;
+    int                 res, last_sig, rpdb_count;
     char               *locale;
     pid_t               old_pid;
 
@@ -76,7 +76,7 @@ main(int argc, char **argv)
                 res = kill(old_pid, SIGTERM);
                 if(res == 0)
                 {
-                    fprintf(stdout, "Killed fwknopd (pid=%i)\n", old_pid);
+                    fprintf(stderr, "Killed fwknopd (pid=%i)\n", old_pid);
                     exit(EXIT_SUCCESS);
                 }
                 else
@@ -99,9 +99,9 @@ main(int argc, char **argv)
             old_pid = write_pid_file(&opts);
 
             if(old_pid > 0)
-                fprintf(stdout, "Detected fwknopd is running (pid=%i).\n", old_pid);
+                fprintf(stderr, "Detected fwknopd is running (pid=%i).\n", old_pid);
             else
-                fprintf(stdout, "No running fwknopd detected.\n");
+                fprintf(stderr, "No running fwknopd detected.\n");
 
             exit(EXIT_SUCCESS);
         }
@@ -117,7 +117,7 @@ main(int argc, char **argv)
                 res = kill(old_pid, SIGHUP);
                 if(res == 0)
                 {
-                    fprintf(stdout, "Sent restart signal to fwknopd (pid=%i)\n", old_pid);
+                    fprintf(stderr, "Sent restart signal to fwknopd (pid=%i)\n", old_pid);
                     exit(EXIT_SUCCESS);
                 }
                 else
@@ -128,7 +128,7 @@ main(int argc, char **argv)
             }
             else
             {
-                fprintf(stdout, "No running fwknopd detected.\n");
+                fprintf(stderr, "No running fwknopd detected.\n");
                 exit(EXIT_FAILURE);
             }
         }
@@ -166,11 +166,7 @@ main(int argc, char **argv)
          * in case it configured to be somewhere other than the run dir.
         */
         check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0);
-#if USE_FILE_CACHE
         check_dir_path((const char *)opts.config[CONF_DIGEST_FILE], "Run", 1);
-#else
-        check_dir_path((const char *)opts.config[CONF_DIGEST_DB_FILE], "Run", 1);
-#endif
 
         /* Process the access.conf file.
         */
@@ -243,30 +239,25 @@ main(int argc, char **argv)
             dump_access_list(&opts);
         }
 
-        /* Initialize the digest cache for replay attack detection (either
-         * with dbm support or with the default simple cache file strategy)
+        /* Initialize the digest cache for replay attack detection
          * if so configured.
         */
         if(strncasecmp(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
         {
-            rp_cache_count = replay_cache_init(&opts);
+            rpdb_count = replay_db_init(&opts);
 
-            if(rp_cache_count < 0)
+            if(rpdb_count < 0)
             {
                 log_msg(LOG_WARNING,
                     "Error opening digest cache file. Incoming digests will not be remembered."
                 );
-                strlcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N", 2);
+                strcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N");
             }
 
             if(opts.verbose)
                 log_msg(LOG_ERR,
                     "Using Digest Cache: '%s' (entry count = %i)",
-#if USE_FILE_CACHE
-                    opts.config[CONF_DIGEST_FILE], rp_cache_count
-#else
-                    opts.config[CONF_DIGEST_DB_FILE], rp_cache_count
-#endif
+                    opts.config[CONF_DIGEST_FILE], rpdb_count
                 );
         }
 
@@ -355,8 +346,8 @@ main(int argc, char **argv)
         kill(opts.tcp_server_pid, SIGTERM);
 
         /* --DSS XXX: This seems to be necessary if the tcp server
-         *            was restarted by this program.  We need to
-         *            investigate and fix this. For now, this works
+         *            was restarted byt this program.  We need to 
+         *            investigate an fix this. For now, this works
          *            (it is kludgy, but does no harm afaik).
         */
         kill(opts.tcp_server_pid, SIGKILL);
@@ -366,11 +357,6 @@ main(int argc, char **argv)
     */
     fw_cleanup();
     free_logging();
-
-#if USE_FILE_CACHE
-    free_replay_list(&opts);
-#endif
-
     free_configs(&opts);
 
     return(0);
@@ -382,7 +368,7 @@ static void
 check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_basename)
 {
     struct stat     st;
-    int             res = 0;
+    int             res;
     char            tmp_path[MAX_PATH_LEN];
     char            *ndx;
 
@@ -405,7 +391,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     if(use_basename && ((ndx = strrchr(filepath, PATH_SEP)) != NULL))
         strlcpy(tmp_path, filepath, (ndx-filepath)+1);
     else
-        strlcpy(tmp_path, filepath, MAX_PATH_LEN);
+        strcpy(tmp_path, filepath);
 
     /* At this point, we should make the path is more than just the
      * PATH_SEP.  If it is not, silently return.
@@ -467,7 +453,7 @@ static int
 make_dir_path(const char *run_dir)
 {
     struct stat     st;
-    int             res = 0, len = 0;
+    int             res, len;
     char            tmp_path[MAX_PATH_LEN];
     char            *ndx;
 

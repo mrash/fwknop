@@ -1,0 +1,39 @@
+--- server/fwknopd.c
++++ server/fwknopd.c
+@@ -51,7 +51,7 @@
+ int
+ main(int argc, char **argv)
+ {
+-    int                 res, last_sig, rp_cache_count;
++    int                 res, last_sig, rpdb_count;
+     char               *locale;
+     pid_t               old_pid;
+ 
+@@ -239,15 +239,14 @@
+             dump_access_list(&opts);
+         }
+ 
+-        /* Initialize the digest cache for replay attack detection (either
+-         * with dbm support or with the default simple cache file strategy
++        /* Initialize the digest cache (replay attack detection dbm)
+          * if so configured.
+         */
+         if(strncasecmp(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+         {
+-            rp_cache_count = replay_cache_init(&opts);
++            rpdb_count = replay_db_init(&opts);
+ 
+-            if(rp_cache_count < 0)
++            if(rpdb_count < 0)
+             {
+                 log_msg(LOG_WARNING,
+                     "Error opening digest cache file. Incoming digests will not be remembered."
+@@ -258,7 +257,7 @@
+             if(opts.verbose)
+                 log_msg(LOG_ERR,
+                     "Using Digest Cache: '%s' (entry count = %i)",
+-                    opts.config[CONF_DIGEST_FILE], rp_cache_count
++                    opts.config[CONF_DIGEST_FILE], rpdb_count
+                 );
+         }
+ 
