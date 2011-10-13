@@ -9,8 +9,12 @@ my $logfile    = 'test.log';
 my $output_dir = 'output';
 my $conf_dir   = 'conf';
 
+my $default_conf        = "$conf_dir/default_fwknopd.conf";
+my $default_access_conf = "$conf_dir/default_access.conf";
+
 my $fwknopCmd  = '../client/.libs/fwknop';
 my $fwknopdCmd = '../server/.libs/fwknopd';
+my $libfko_bin = '../lib/.libs/libfko.so.0.0.3';
 #================== end config ===================
 
 my $passed = 0;
@@ -21,6 +25,7 @@ my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
 my $list_mode = 0;
+my $firewall = '';
 my $loopback_intf = 'lo';  ### default on linux
 my $prepare_results = 0;
 my $current_test_file = '';
@@ -37,6 +42,8 @@ exit 1 unless GetOptions(
     'Prepare-results'   => \$prepare_results,
     'fwknop-path=s'     => \$fwknopCmd,
     'fwknopd-path=s'    => \$fwknopdCmd,
+    'firewall=s'        => \$firewall,
+    'libfko-path=s'     => \$libfko_bin,
     'loopback-intf=s'   => \$loopback_intf,
     'test-include=s'    => \$test_include,
     'include=s'         => \$test_include,  ### synonym
@@ -62,15 +69,8 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'new binary exists',
         'err_msg'  => 'binary not found',
-        'function' => \&binary_exists_fwknop_client,
-        'fatal'    => $YES
-    },
-    {
-        'category' => 'build',
-        'subcategory' => 'server',
-        'detail'   => 'new binary exists',
-        'err_msg'  => 'binary not found',
-        'function' => \&binary_exists_fwknopd_server,
+        'function' => \&binary_exists,
+        'binary'   => $fwknopCmd,
         'fatal'    => $YES
     },
     {
@@ -78,15 +78,8 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'Position Independent Executable (PIE)',
         'err_msg'  => 'non PIE binary (fwknop client)',
-        'function' => \&pie_binary_fwknop_client,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build',
-        'subcategory' => 'server',
-        'detail'   => 'Position Independent Executable (PIE)',
-        'err_msg'  => 'non PIE binary (fwknopd server)',
-        'function' => \&pie_binary_fwknopd_server,,
+        'function' => \&pie_binary,
+        'binary'   => $fwknopCmd,
         'fatal'    => $NO
     },
     {
@@ -94,15 +87,8 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'stack protected binary',
         'err_msg'  => 'non stack protected binary (fwknop client)',
-        'function' => \&stack_protected_binary_fwknop_client,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build',
-        'subcategory' => 'server',
-        'detail'   => 'stack protected binary',
-        'err_msg'  => 'non stack protected binary (fwknopd server)',
-        'function' => \&stack_protected_binary_fwknopd_server,,
+        'function' => \&stack_protected_binary,
+        'binary'   => $fwknopCmd,
         'fatal'    => $NO
     },
     {
@@ -110,15 +96,8 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'fortify source functions',
         'err_msg'  => 'source functions not fortified (fwknop client)',
-        'function' => \&fortify_source_functions_binary_fwknop_client,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build',
-        'subcategory' => 'server',
-        'detail'   => 'fortify source functions',
-        'err_msg'  => 'source functions not fortified (fwknopd server)',
-        'function' => \&fortify_source_functions_binary_fwknopd_server,,
+        'function' => \&fortify_source_functions,
+        'binary'   => $fwknopCmd,
         'fatal'    => $NO
     },
     {
@@ -126,15 +105,8 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'read-only relocations',
         'err_msg'  => 'no read-only relocations (fwknop client)',
-        'function' => \&read_only_relocations_binary_fwknop_client,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build',
-        'subcategory' => 'server',
-        'detail'   => 'read-only relocations',
-        'err_msg'  => 'no read-only relocations (fwknopd server)',
-        'function' => \&read_only_relocations_binary_fwknopd_server,,
+        'function' => \&read_only_relocations,
+        'binary'   => $fwknopCmd,
         'fatal'    => $NO
     },
     {
@@ -142,7 +114,55 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'immediate binding',
         'err_msg'  => 'no immediate binding (fwknop client)',
-        'function' => \&immediate_binding_binary_fwknop_client,
+        'function' => \&immediate_binding,
+        'binary'   => $fwknopCmd,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'build',
+        'subcategory' => 'server',
+        'detail'   => 'new binary exists',
+        'err_msg'  => 'binary not found',
+        'function' => \&binary_exists,
+        'binary'   => $fwknopdCmd,
+        'fatal'    => $YES
+    },
+
+    {
+        'category' => 'build',
+        'subcategory' => 'server',
+        'detail'   => 'Position Independent Executable (PIE)',
+        'err_msg'  => 'non PIE binary (fwknopd server)',
+        'function' => \&pie_binary,
+        'binary'   => $fwknopdCmd,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'build',
+        'subcategory' => 'server',
+        'detail'   => 'stack protected binary',
+        'err_msg'  => 'non stack protected binary (fwknopd server)',
+        'function' => \&stack_protected_binary,
+        'binary'   => $fwknopdCmd,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'build',
+        'subcategory' => 'server',
+        'detail'   => 'fortify source functions',
+        'err_msg'  => 'source functions not fortified (fwknopd server)',
+        'function' => \&fortify_source_functions,
+        'binary'   => $fwknopdCmd,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'build',
+        'subcategory' => 'server',
+        'detail'   => 'read-only relocations',
+        'err_msg'  => 'no read-only relocations (fwknopd server)',
+        'function' => \&read_only_relocations,
+        'binary'   => $fwknopdCmd,
         'fatal'    => $NO
     },
     {
@@ -150,10 +170,129 @@ my @tests = (
         'subcategory' => 'server',
         'detail'   => 'immediate binding',
         'err_msg'  => 'no immediate binding (fwknopd server)',
-        'function' => \&immediate_binding_binary_fwknopd_server,,
+        'function' => \&immediate_binding,
+        'binary'   => $fwknopdCmd,
         'fatal'    => $NO
     },
 
+    {
+        'category' => 'build',
+        'subcategory' => 'libfko',
+        'detail'   => 'new binary exists',
+        'err_msg'  => 'binary not found',
+        'function' => \&binary_exists,
+        'binary'   => $libfko_bin,
+        'fatal'    => $YES
+    },
+    {
+        'category' => 'build',
+        'subcategory' => 'libfko',
+        'detail'   => 'stack protected binary',
+        'err_msg'  => 'non stack protected binary (libfko)',
+        'function' => \&stack_protected_binary,
+        'binary'   => $libfko_bin,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'build',
+        'subcategory' => 'libfko',
+        'detail'   => 'fortify source functions',
+        'err_msg'  => 'source functions not fortified (libfko)',
+        'function' => \&fortify_source_functions,
+        'binary'   => $libfko_bin,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'build',
+        'subcategory' => 'libfko',
+        'detail'   => 'read-only relocations',
+        'err_msg'  => 'no read-only relocations (libfko)',
+        'function' => \&read_only_relocations,
+        'binary'   => $libfko_bin,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'build',
+        'subcategory' => 'libfko',
+        'detail'   => 'immediate binding',
+        'err_msg'  => 'no immediate binding (libfko)',
+        'function' => \&immediate_binding,
+        'binary'   => $libfko_bin,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'preliminaries',
+        'subcategory' => 'client',
+        'detail'   => 'usage info',
+        'err_msg'  => 'could not get usage info',
+        'function' => \&usage_info,
+        'binary'   => $fwknopCmd,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'preliminaries',
+        'subcategory' => 'client',
+        'detail'   => 'getopt() no such argument',
+        'err_msg'  => 'getopt() allowed non-existant argument',
+        'function' => \&no_such_arg,
+        'binary'   => $fwknopCmd,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'preliminaries',
+        'subcategory' => 'client',
+        'detail'   => 'expected code version',
+        'err_msg'  => 'code version mis-match',
+        'function' => \&expected_code_version,
+        'cmdline'  => "$fwknopCmd --version",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'preliminaries',
+        'subcategory' => 'server',
+        'detail'   => 'usage info',
+        'err_msg'  => 'could not get usage info',
+        'function' => \&usage_info,
+        'binary'   => $fwknopdCmd,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'preliminaries',
+        'subcategory' => 'server',
+        'detail'   => 'getopt() no such argument',
+        'err_msg'  => 'getopt() allowed non-existant argument',
+        'function' => \&no_such_arg,
+        'binary'   => $fwknopdCmd,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'preliminaries',
+        'subcategory' => 'server',
+        'detail'   => 'expected code version',
+        'err_msg'  => 'code version mis-match',
+        'function' => \&expected_code_version,
+        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf --version",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'preliminaries',
+        'detail'   => 'collecting system specifics',
+        'err_msg'  => 'could not get complete system specs',
+        'function' => \&specs,
+        'binary'   => $fwknopdCmd,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'basic operations',
+        'detail'   => 'dump config',
+        'err_msg'  => 'could not dump configuration',
+        'function' => \&dump_config,
+        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf --dump-config",
+        'fatal'    => $NO
+    },
     {
         'category' => 'basic operations',
         'detail'   => 'client SPA packet generation',
@@ -168,13 +307,15 @@ my %test_keys = (
     'subcategory' => $OPTIONAL,
     'detail'      => $REQUIRED,
     'function'    => $REQUIRED,
+    'binary'      => $OPTIONAL,
+    'cmdline'     => $OPTIONAL,
     'fatal'       => $OPTIONAL,
 );
 
 ### make sure everything looks as expected before continuing
 &init();
 
-&logr("\n");
+&logr("\n[+] Starting the fwknop test suite (firewall: $firewall)...\n\n");
 
 for my $test_hr (@tests) {
     &run_test($test_hr);
@@ -191,10 +332,6 @@ sub run_test() {
 
     return unless &process_include_exclude($test_hr);
 
-    $executed++;
-
-    $current_test_file = "$output_dir/$executed.test";
-
     my $msg = "[$test_hr->{'category'}]";
     $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
     $msg .= " $test_hr->{'detail'}";
@@ -206,7 +343,10 @@ sub run_test() {
 
     &dots_print($msg);
 
-    if (&{$test_hr->{'function'}}) {
+    $executed++;
+    $current_test_file = "$output_dir/$executed.test";
+
+    if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
         $passed++;
     } else {
@@ -254,6 +394,7 @@ sub generate_basic_spa_packet() {
 
 sub compile_warnings() {
 
+return 1;
     return 0 unless &run_cmd('make -C .. clean', $CREATE);
     return 0 unless &run_cmd('make -C ..', $APPEND);
 
@@ -265,88 +406,131 @@ sub compile_warnings() {
     return 1;
 }
 
-sub binary_exists_fwknop_client() {
-    return 0 unless -e $fwknopCmd and -x $fwknopCmd;
+sub binary_exists() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    return 0 unless -e $test_hr->{'binary'} and -x $test_hr->{'binary'};
     return 1;
 }
 
-sub binary_exists_fwknopd_server() {
-    return 0 unless -e $fwknopdCmd and -x $fwknopdCmd;
+sub expected_code_version() {
+    my $test_hr = shift;
+
+    unless (-e '../VERSION') {
+        &write_test_file("[-] ../VERSION file does not exist.\n", $CREATE);
+        return 0;
+    }
+
+    open F, "< ../VERSION" or die $!;
+    my $line = <F>;
+    close F;
+    if ($line =~ /(\d.*\d)/) {
+        my $version = $1;
+        return 0 unless &run_cmd($test_hr->{'cmdline'}, $APPEND);
+        return 1 if &file_find_regex([qr/$version/], $current_test_file);
+    }
+    return 0;
+}
+
+sub dump_config() {
+    my $test_hr = shift;
+
+    return 0 unless &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 1;
+}
+
+sub usage_info() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    return 0 unless &run_cmd("$test_hr->{'binary'} -h", $CREATE);
+    return 1;
+}
+
+sub no_such_arg() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    return 0 if &run_cmd("$test_hr->{'binary'} --no-such-arg", $CREATE);
     return 1;
 }
 
 ### check for PIE
-sub pie_binary_fwknop_client() {
-    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
-    return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
-        $current_test_file);
-    return 1;
-}
-
-sub pie_binary_fwknopd_server() {
-    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+sub pie_binary() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
         $current_test_file);
     return 1;
 }
 
 ### check for stack protection
-sub stack_protected_binary_fwknop_client() {
-    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
+sub stack_protected_binary() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
     return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
         $current_test_file);
     return 1;
 }
 
-sub stack_protected_binary_fwknopd_server() {
-    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
-    return 0 if &file_find_regex([qr/Stack\sprotected:\sno/i],
-        $current_test_file);
-    return 1;
-}
-
 ### check for fortified source functions
-sub fortify_source_functions_binary_fwknop_client() {
-    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
-    return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
-        $current_test_file);
-    return 1;
-}
-
-sub fortify_source_functions_binary_fwknopd_server() {
-    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+sub fortify_source_functions() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
         $current_test_file);
     return 1;
 }
 
 ### check for read-only relocations
-sub read_only_relocations_binary_fwknop_client() {
-    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
-    return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
-        $current_test_file);
-    return 1;
-}
-
-sub read_only_relocations_binary_fwknopd_server() {
-    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
+sub read_only_relocations() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
         $current_test_file);
     return 1;
 }
 
 ### check for immediate binding
-sub immediate_binding_binary_fwknop_client() {
-    &run_cmd("./hardening-check $fwknopCmd", $CREATE);
+sub immediate_binding() {
+    my $test_hr = shift;
+    return 0 unless $test_hr->{'binary'};
+    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
         $current_test_file);
     return 1;
 }
 
-sub immediate_binding_binary_fwknopd_server() {
-    &run_cmd("./hardening-check $fwknopdCmd", $CREATE);
-    return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
-        $current_test_file);
+sub specs() {
+    my $cmd = '';
+    if ($firewall eq 'iptables') {
+        $cmd = "iptables -v -n -L";
+    } else {
+        $cmd = "ipfw list";
+    }
+    &run_cmd($cmd, $CREATE);
+    for my $cmd (
+        'uname -a',
+        'uptime',
+        'ifconfig -a',
+        'ls -l /etc', 'if [ -e /etc/issue ]; then cat /etc/issue; fi',
+        'if [ `which iptables` ]; then iptables -V; fi',
+        'if [ -e /proc/cpuinfo ]; then cat /proc/cpuinfo; fi',
+        'if [ -e /proc/config.gz ]; then zcat /proc/config.gz; fi',
+        'if [ `which gpg` ]; then gpg --version; fi',
+        'if [ `which tcpdump` ]; then ldd `which tcpdump`; fi',
+        "ldd $fwknopCmd",
+        "ldd $fwknopdCmd",
+        "ldd $libfko_bin",
+        'ls -l /usr/lib/*pcap*',
+        'ls -l /usr/local/lib/*pcap*',
+        'ls -l /usr/lib/*fko*',
+        'ls -l /usr/local/lib/*fko*',
+    ) {
+        &run_cmd($cmd, $APPEND);
+    }
     return 1;
 }
 
@@ -405,6 +589,10 @@ sub init() {
             "UID 0 account) to effectively test fwknop";
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
+    die "[*] default config $default_conf does not exist" unless -e $default_conf;
+    die "[*] default access config $default_access_conf does not exist"
+        unless -e $default_access_conf;
+
     unless (-d $output_dir) {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
     }
@@ -417,16 +605,58 @@ sub init() {
         unlink $logfile or die $!;
     }
 
-    unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
-        ### disable compilation checks
-        push @tests_to_exclude, 'compile';
-    }
-
     if ($test_include) {
         @tests_to_include = split /\s*,\s*/, $test_include;
     }
     if ($test_exclude) {
         @tests_to_exclude = split /\s*,\s*/, $test_exclude;
+    }
+
+    ### make sure no fwknopd instance is currently running
+    die "[*] Please stop the running fwknopd instance."
+        if &is_fwknopd_running();
+
+    unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
+        ### disable compilation checks
+        push @tests_to_exclude, 'build';
+    }
+
+    ### detect the installed firewall
+    &detect_firewall();
+
+    return;
+}
+
+sub is_fwknopd_running() {
+
+    my $cmd = "$fwknopdCmd -c $default_conf -a $default_access_conf --status";
+
+    my $is_running = 1;
+    open C, "$cmd |" or die "[*] Could not execute $cmd: $!";
+    while (<C>) {
+        if (/no\s+running/i) {
+            $is_running = 0;
+            last;
+        }
+    }
+    close C;
+
+    return $is_running;
+}
+
+sub detect_firewall() {
+    unless ($firewall) {
+        for my $fw qw/iptables pf ipfw/ {
+            my $path = &find_command($fw);
+            if ($path) {
+                $firewall = $path;
+                last;
+            }
+        }
+    }
+
+    unless ($firewall) {
+        die "[*] Could not find firewall binary, use --firewall";
     }
 
     return;
@@ -448,23 +678,40 @@ sub file_find_regex() {
         }
     }
     close F;
-    
+
     return $found;
 }
 
 sub find_command() {
     my $cmd = shift;
 
-    my $found = 0;
+    my $path = '';
     open C, "which $cmd |" or die "[*] Could not execute: which $cmd: $!";
     while (<C>) {
-        if (m|/.*$cmd$|) {
-            $found = 1;
+        if (m|^(/.*$cmd)$|) {
+            $path = $1;
             last;
         }
     }
     close C;
-    return $found;
+    return $path;
+}
+
+sub write_test_file() {
+    my ($msg, $file_mode) = @_;
+
+    if ($file_mode == $APPEND) {
+        open F, ">> $current_test_file"
+            or die "[*] Could not open $current_test_file: $!";
+        print F $msg;
+        close F;
+    } else {
+        open F, "> $current_test_file"
+            or die "[*] Could not open $current_test_file: $!";
+        print F $msg;
+        close F;
+    }
+    return;
 }
 
 sub logr() {
