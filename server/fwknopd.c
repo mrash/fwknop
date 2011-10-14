@@ -173,20 +173,6 @@ main(int argc, char **argv)
         check_dir_path((const char *)opts.config[CONF_DIGEST_DB_FILE], "Run", 1);
 #endif
 
-        /* Process the access.conf file.
-        */
-        parse_access_file(&opts);
-
-        /* Show config (including access.conf vars) and exit dump config was
-         * wanted.
-        */
-        if(opts.dump_config == 1)
-        {
-            dump_config(&opts);
-            dump_access_list(&opts);
-            exit(EXIT_SUCCESS);
-        }
-
         /* Initialize the firewall rules handler based on the fwknopd.conf
          * file, but (for iptables firewalls) don't flush any rules or create
          * any chains yet.  This allows us to dump the current firewall rules
@@ -198,6 +184,20 @@ main(int argc, char **argv)
         if(opts.fw_list == 1)
         {
             fw_dump_rules(&opts);
+            exit(EXIT_SUCCESS);
+        }
+
+        /* Process the access.conf file.
+        */
+        parse_access_file(&opts);
+
+        /* Show config (including access.conf vars) and exit dump config was
+         * wanted.
+        */
+        if(opts.dump_config == 1)
+        {
+            dump_config(&opts);
+            dump_access_list(&opts);
             exit(EXIT_SUCCESS);
         }
 
