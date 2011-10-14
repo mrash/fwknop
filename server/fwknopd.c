@@ -63,7 +63,8 @@ main(int argc, char **argv)
         */
         config_init(&opts, argc, argv);
 
-        /* Process any options that do their thing and exit. */
+        /* Process any options that do their thing and exit.
+        */
 
         /* Kill the currently running fwknopd?
         */
@@ -137,30 +138,30 @@ main(int argc, char **argv)
         */
         init_logging(&opts);
 
-#if HAVE_LOCALE_H 
-        /* Set the locale if specified. 
-        */ 
+#if HAVE_LOCALE_H
+        /* Set the locale if specified.
+        */
         if(opts.config[CONF_LOCALE] != NULL
-          && strncasecmp(opts.config[CONF_LOCALE], "NONE", 4) != 0) 
-        { 
-            locale = setlocale(LC_ALL, opts.config[CONF_LOCALE]); 
- 
-            if(locale == NULL) 
-            { 
-                log_msg(LOG_ERR, 
-                    "WARNING: Unable to set locale to '%s'.", 
-                    opts.config[CONF_LOCALE] 
-                ); 
-            } 
-            else 
-            { 
-                if(opts.verbose) 
-                    log_msg(LOG_INFO, 
-                        "Locale set to '%s'.", opts.config[CONF_LOCALE] 
-                    ); 
-            } 
-        } 
-#endif 
+          && strncasecmp(opts.config[CONF_LOCALE], "NONE", 4) != 0)
+        {
+            locale = setlocale(LC_ALL, opts.config[CONF_LOCALE]);
+
+            if(locale == NULL)
+            {
+                log_msg(LOG_ERR,
+                    "WARNING: Unable to set locale to '%s'.",
+                    opts.config[CONF_LOCALE]
+                );
+            }
+            else
+            {
+                if(opts.verbose)
+                    log_msg(LOG_INFO,
+                        "Locale set to '%s'.", opts.config[CONF_LOCALE]
+                    );
+            }
+        }
+#endif
 
         /* Make sure we have a valid run dir and path leading to digest file
          * in case it configured to be somewhere other than the run dir.
@@ -386,7 +387,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     char            tmp_path[MAX_PATH_LEN];
     char            *ndx;
 
-    /* 
+    /*
      * FIXME:  We shouldn't use a hard-coded dir-separator here.
     */
     /* But first make sure we are using an absolute path.
@@ -561,7 +562,7 @@ daemonize_process(fko_srv_options_t *opts)
         fprintf(stderr, "* PID file error. The lock may not be effective.\n");
     }
 
-    /* Chdir to the root of the filesystem 
+    /* Chdir to the root of the filesystem
     */
     if ((chdir("/")) < 0) {
         perror("Could not chdir() to /: ");
@@ -622,7 +623,7 @@ write_pid_file(fko_srv_options_t *opts)
         old_pid = get_running_pid(opts);
         if(old_pid)
             return old_pid;
- 
+
         /* Otherwise, consider it an error.
         */
         perror("Unable read existing PID file: ");
