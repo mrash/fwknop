@@ -6,7 +6,9 @@ use strict;
 
 #==================== config =====================
 my $logfile    = 'test.log';
+my $local_key_file = 'local_spa.key';
 my $output_dir = 'output';
+my $lib_dir    = '../lib/.libs';
 my $conf_dir   = 'conf';
 
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
@@ -14,7 +16,7 @@ my $default_access_conf = "$conf_dir/default_access.conf";
 
 my $fwknopCmd  = '../client/.libs/fwknop';
 my $fwknopdCmd = '../server/.libs/fwknopd';
-my $libfko_bin = '../lib/.libs/libfko.so.0.0.3';
+my $libfko_bin = "$lib_dir/libfko.so.0.0.3";
 #================== end config ===================
 
 my $passed = 0;
@@ -29,6 +31,7 @@ my $firewall = '';
 my $loopback_intf = 'lo';  ### default on linux
 my $prepare_results = 0;
 my $current_test_file = '';
+my $enable_recompilation_warnings_check = 0;
 my $help = 0;
 my $YES = 1;
 my $NO  = 0;
@@ -49,16 +52,23 @@ exit 1 unless GetOptions(
     'include=s'         => \$test_include,  ### synonym
     'test-exclude=s'    => \$test_exclude,
     'exclude=s'         => \$test_exclude,  ### synonym
+    'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'List-mode'         => \$list_mode,
     'help'              => \$help
 );
 
 &usage() if $help;
 
+my $default_client_args = "$fwknopCmd -A tcp/22 -s 127.0.0.2 -D 127.0.0.1 --get-key $local_key_file --verbose";
+
+### point the compiled binaries at the local libary path
+### instead of any installed libfko instance
+$ENV{'LD_LIBRARY_PATH'} = $lib_dir;
+
 ### main array that defines the tests we will run
 my @tests = (
     {
-        'category' => 'build',
+        'category' => 'recompilation',
         'detail'   => 'recompile and look for compilation warnings',
         'err_msg'  => 'compile warnings exist',
         'function' => \&compile_warnings,
@@ -67,14 +77,14 @@ my @tests = (
     {
         'category' => 'build',
         'subcategory' => 'client',
-        'detail'   => 'new binary exists',
+        'detail'   => 'binary exists',
         'err_msg'  => 'binary not found',
         'function' => \&binary_exists,
         'binary'   => $fwknopCmd,
         'fatal'    => $YES
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'Position Independent Executable (PIE)',
         'err_msg'  => 'non PIE binary (fwknop client)',
@@ -83,7 +93,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'stack protected binary',
         'err_msg'  => 'non stack protected binary (fwknop client)',
@@ -92,7 +102,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'fortify source functions',
         'err_msg'  => 'source functions not fortified (fwknop client)',
@@ -101,7 +111,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'read-only relocations',
         'err_msg'  => 'no read-only relocations (fwknop client)',
@@ -110,7 +120,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'immediate binding',
         'err_msg'  => 'no immediate binding (fwknop client)',
@@ -122,7 +132,7 @@ my @tests = (
     {
         'category' => 'build',
         'subcategory' => 'server',
-        'detail'   => 'new binary exists',
+        'detail'   => 'binary exists',
         'err_msg'  => 'binary not found',
         'function' => \&binary_exists,
         'binary'   => $fwknopdCmd,
@@ -130,7 +140,7 @@ my @tests = (
     },
 
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'Position Independent Executable (PIE)',
         'err_msg'  => 'non PIE binary (fwknopd server)',
@@ -139,7 +149,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'stack protected binary',
         'err_msg'  => 'non stack protected binary (fwknopd server)',
@@ -148,7 +158,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'fortify source functions',
         'err_msg'  => 'source functions not fortified (fwknopd server)',
@@ -157,7 +167,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'read-only relocations',
         'err_msg'  => 'no read-only relocations (fwknopd server)',
@@ -166,7 +176,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'immediate binding',
         'err_msg'  => 'no immediate binding (fwknopd server)',
@@ -178,14 +188,14 @@ my @tests = (
     {
         'category' => 'build',
         'subcategory' => 'libfko',
-        'detail'   => 'new binary exists',
+        'detail'   => 'binary exists',
         'err_msg'  => 'binary not found',
         'function' => \&binary_exists,
         'binary'   => $libfko_bin,
         'fatal'    => $YES
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'stack protected binary',
         'err_msg'  => 'non stack protected binary (libfko)',
@@ -194,7 +204,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'fortify source functions',
         'err_msg'  => 'source functions not fortified (libfko)',
@@ -203,7 +213,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'read-only relocations',
         'err_msg'  => 'no read-only relocations (libfko)',
@@ -212,7 +222,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'build',
+        'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'immediate binding',
         'err_msg'  => 'no immediate binding (libfko)',
@@ -295,9 +305,56 @@ my @tests = (
     },
     {
         'category' => 'basic operations',
-        'detail'   => 'client SPA packet generation',
+        'detail'   => 'override config',
+        'err_msg'  => 'could not override configuration',
+        'function' => \&override_config,
+        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf -O $conf_dir/override_fwknopd.conf --dump-config",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '--get-key path validation',
+        'err_msg'  => 'accepted improper --get-key path',
+        'function' => \&non_get_key_path,
+        'cmdline'  => "$fwknopCmd -A tcp/22 -s 127.0.0.2 -D 127.0.0.1 --get-key not/there",
+        'fatal'    => $YES
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'require [-s|-R|-a]',
+        'err_msg'  => 'allowed null allow IP',
+        'function' => \&no_allow_ip,
+        'cmdline'  => "$fwknopCmd -D 127.0.0.1",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '--allow-ip <IP> valid IP',
+        'err_msg'  => 'permitted invalid --allow-ip arg',
+        'function' => \&invalid_allow_ip,
+        'cmdline'  => "$fwknopCmd -A tcp/22 -a invalidIP -D 127.0.0.1",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '-A <proto>/<port> specification',
+        'err_msg'  => 'permitted invalid -A <proto>/<port>',
+        'function' => \&invalid_proto,
+        'cmdline'  => "$fwknopCmd -A invalid/22 -a 127.0.0.2 -D 127.0.0.1",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'generate SPA packet',
         'err_msg'  => 'could not generate SPA packet',
         'function' => \&generate_basic_spa_packet,
+        'cmdline'  => $default_client_args,
         'fatal'    => $YES
     }
 );
@@ -388,13 +445,8 @@ sub process_include_exclude() {
     return 1;
 }
 
-sub generate_basic_spa_packet() {
-    return 1;
-}
-
 sub compile_warnings() {
 
-return 1;
     return 0 unless &run_cmd('make -C .. clean', $CREATE);
     return 0 unless &run_cmd('make -C ..', $APPEND);
 
@@ -434,6 +486,68 @@ sub expected_code_version() {
 
 sub dump_config() {
     my $test_hr = shift;
+
+    return 0 unless &run_cmd($test_hr->{'cmdline'}, $CREATE);
+
+    ### search for one of the config vars (basic check)
+    return 0 unless &file_find_regex([qr/SYSLOG_IDENTITY/],
+        $current_test_file);
+
+    return 1;
+}
+
+sub override_config() {
+    my $test_hr = shift;
+
+    return 0 unless &run_cmd($test_hr->{'cmdline'}, $CREATE);
+
+    ### search for the altered config value
+    return 0 unless &file_find_regex([qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
+        $current_test_file);
+
+    return 1;
+}
+
+sub non_get_key_path() {
+    my $test_hr = shift;
+
+    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 unless &file_find_regex([qr/could\snot\sopen/i],
+        $current_test_file);
+    return 1;
+}
+
+sub no_allow_ip() {
+    my $test_hr = shift;
+
+    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 unless &file_find_regex([qr/must\suse\sone\sof/i],
+        $current_test_file);
+    return 1;
+}
+
+sub invalid_allow_ip() {
+    my $test_hr = shift;
+
+    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 unless &file_find_regex([qr/Invalid\sallow\sIP\saddress/i],
+        $current_test_file);
+    return 1;
+}
+
+sub invalid_proto() {
+    my $test_hr = shift;
+
+    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 unless &file_find_regex([qr/Invalid\sSPA\saccess\smessage/i],
+        $current_test_file);
+    return 1;
+}
+
+sub generate_basic_spa_packet() {
+    my $test_hr = shift;
+
+    &write_key('fwknoptest', $local_key_file);
 
     return 0 unless &run_cmd($test_hr->{'cmdline'}, $CREATE);
     return 1;
@@ -534,6 +648,17 @@ sub specs() {
     return 1;
 }
 
+sub write_key() {
+    my ($key, $file) = @_;
+
+    open K, "> $file" or die "[*] Could not open $file: $!";
+    print K "127.0.0.1: $key\n";
+    print K "localhost: $key\n";
+    print K "some.host.through.proxy.com: $key\n";
+    close K;
+    return;
+}
+
 sub run_cmd() {
     my ($cmd, $file_mode) = @_;
 
@@ -589,6 +714,7 @@ sub init() {
             "UID 0 account) to effectively test fwknop";
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
+    die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
     die "[*] default config $default_conf does not exist" unless -e $default_conf;
     die "[*] default access config $default_access_conf does not exist"
         unless -e $default_access_conf;
@@ -616,9 +742,13 @@ sub init() {
     die "[*] Please stop the running fwknopd instance."
         if &is_fwknopd_running();
 
+    unless ($enable_recompilation_warnings_check) {
+        push @tests_to_exclude, 'recompilation';
+    }
+
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
-        push @tests_to_exclude, 'build';
+        push @tests_to_exclude, 'recompilation';
     }
 
     ### detect the installed firewall
