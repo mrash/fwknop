@@ -619,9 +619,11 @@ sub immediate_binding() {
 
 sub specs() {
     my $cmd = '';
-    if ($firewall eq 'iptables') {
+    if ($firewall =~ m|/iptables$|) {
         $cmd = "iptables -v -n -L";
-    } else {
+    } elsif ($firewall =~ m|/pf$|) {
+        $cmd = "pf -s rules";
+    } elsif ($firewall =~ m|/ipfw$|) {
         $cmd = "ipfw list";
     }
     &run_cmd($cmd, $CREATE);
