@@ -88,7 +88,7 @@ COMMAND-LINE OPTIONS
     will preserve the command line options that were supplied to the
     original *fwknopd* process but will force *fwknopd* to re-read the
     'fwknopd.conf' and 'access.conf' files.  This will also force a
-    flush of the current ``FWKNOP'' Netfilter chain(s).
+    flush of the current ``FWKNOP'' iptables chain(s).
 
 *--rotate-digest-cache*::
     Rotate the digest cache file by renaming it to ``<name>-old'', and
@@ -383,8 +383,9 @@ Defines all knock sequences and access control directives.
 
 DEPENDENCIES
 ------------
-The *fwknopd* daemon requires a functioning Netfilter firewall on the
-underlying operating system.
+The *fwknopd* daemon requires a functioning firewall on the underlying
+operating system.  Supported firewalls as of the fwknop-2.0 release are
+iptables, ipfw, and pf.
 
 
 DIAGNOSTICS
@@ -402,7 +403,7 @@ fwknop(8), iptables(8), libfko docmentation.
 
 AUTHOR
 ------
-Damien Stuart <dstuart@dstuart.org>, 
+Damien Stuart <dstuart@dstuart.org>,
 Michael Rash <mbr@cipherdyne.org>
 
 

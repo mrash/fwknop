@@ -122,7 +122,7 @@ to re\-read the
 \fIfwknopd\&.conf\fR
 and
 \fIaccess\&.conf\fR
-files\&. This will also force a flush of the current \(lqFWKNOP\(rq Netfilter chain(s)\&.
+files\&. This will also force a flush of the current \(lqFWKNOP\(rq iptables chain(s)\&.
 .RE
 .PP
 \fB\-\-rotate\-digest\-cache\fR
@@ -460,7 +460,8 @@ Defines all knock sequences and access control directives\&.
 .RE
 .SH "DEPENDENCIES"
 .sp
-The \fBfwknopd\fR daemon requires a functioning Netfilter firewall on the underlying operating system\&.
+The \fBfwknopd\fR daemon requires a functioning firewall on the underlying operating system\&.
+Supported firewalls as of the fwknop\-2\&.0 release are iptables, ipfw, and pf\&.
 .SH "DIAGNOSTICS"
 .sp
 \fBfwknopd\fR can be run in debug mode by combining the \fB\-f, \-\-foreground\fR and the \fB\-v, \-\-verbose\fR command line options\&. This will disable daemon mode execution, and print verbose information to the screen on stderr as packets are received\&.
