@@ -1,7 +1,7 @@
 /*
  *****************************************************************************
  *
- * File:    fko_mesage.c
+ * File:    fko_message.c
  *
  * Author:  Damien S. Stuart
  *

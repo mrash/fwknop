@@ -73,16 +73,16 @@ fko_errstr(int err_code)
             return("Invalid digest type");
 
         case FKO_ERROR_INVALID_ALLOW_IP:
-            return("Invalid allow IP address in the SPA mesage data");
+            return("Invalid allow IP address in the SPA message data");
 
         case FKO_ERROR_INVALID_SPA_COMMAND_MSG:
-            return("Invalid SPA command mesage format");
+            return("Invalid SPA command message format");
 
         case FKO_ERROR_INVALID_SPA_ACCESS_MSG:
-            return("Invalid SPA access mesage format");
+            return("Invalid SPA access message format");
 
         case FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG:
-            return("Invalid SPA nat_access mesage format");
+            return("Invalid SPA nat_access message format");
 
         case FKO_ERROR_INVALID_ENCRYPTION_TYPE:
             return("Invalid encryption type");

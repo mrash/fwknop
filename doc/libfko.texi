@@ -1212,13 +1212,13 @@ There is no encoded data to process
 @item FKO_ERROR_INVALID_DIGEST_TYPE
 Invalid digest type
 @item FKO_ERROR_INVALID_ALLOW_IP
-Invalid allow IP address in the SPA mesage data
+Invalid allow IP address in the SPA message data
 @item FKO_ERROR_INVALID_SPA_COMMAND_MSG
-Invalid SPA command mesage format
+Invalid SPA command message format
 @item FKO_ERROR_INVALID_SPA_ACCESS_MSG
-Invalid SPA access mesage format
+Invalid SPA access message format
 @item FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG
-Invalid SPA nat_access mesage format
+Invalid SPA nat_access message format
 @item FKO_ERROR_INVALID_ENCRYPTION_TYPE
 Invalid encryption type
 @item FKO_ERROR_WRONG_ENCRYPTION_TYPE
