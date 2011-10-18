@@ -10,6 +10,7 @@ my $local_key_file = 'local_spa.key';
 my $output_dir = 'output';
 my $lib_dir    = '../lib/.libs';
 my $conf_dir   = 'conf';
+my $configure_path = '../configure';
 
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
@@ -27,16 +28,14 @@ my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
 my $list_mode = 0;
-my $firewall = '';
 my $loopback_intf = 'lo';  ### default on linux
 my $prepare_results = 0;
 my $current_test_file = '';
 my $enable_recompilation_warnings_check = 0;
+my $sudo_path = '';
 my $help = 0;
 my $YES = 1;
 my $NO  = 0;
-my $APPEND = 1;
-my $CREATE = 0;
 my $PRINT_LEN = 68;
 my $REQUIRED = 1;
 my $OPTIONAL = 0;
@@ -45,7 +44,6 @@ exit 1 unless GetOptions(
     'Prepare-results'   => \$prepare_results,
     'fwknop-path=s'     => \$fwknopCmd,
     'fwknopd-path=s'    => \$fwknopdCmd,
-    'firewall=s'        => \$firewall,
     'libfko-path=s'     => \$libfko_bin,
     'loopback-intf=s'   => \$loopback_intf,
     'test-include=s'    => \$test_include,
@@ -356,7 +354,45 @@ my @tests = (
         'function' => \&generate_basic_spa_packet,
         'cmdline'  => $default_client_args,
         'fatal'    => $YES
-    }
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'list current fwknopd fw rules',
+        'err_msg'  => 'could not list current fwknopd fw rules',
+        'function' => \&fw_list,
+        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf --fw-list",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'list all current fw rules',
+        'err_msg'  => 'could not list all current fw rules',
+        'function' => \&fw_list_all,
+        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf --fw-list-all",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'flush current firewall rules',
+        'err_msg'  => 'could not flush current fw rules',
+        'function' => \&fw_flush,
+        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf --fw-flush",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'write PID',
+        'err_msg'  => 'did not write PID',
+        'function' => \&fw_flush,
+        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf --fw-flush",
+        'fatal'    => $NO
+    },
+
 );
 
 my %test_keys = (
@@ -372,7 +408,7 @@ my %test_keys = (
 ### make sure everything looks as expected before continuing
 &init();
 
-&logr("\n[+] Starting the fwknop test suite (firewall: $firewall)...\n\n");
+&logr("\n[+] Starting the fwknop test suite...\n\n");
 
 for my $test_hr (@tests) {
     &run_test($test_hr);
@@ -447,13 +483,32 @@ sub process_include_exclude() {
 
 sub compile_warnings() {
 
-    return 0 unless &run_cmd('make -C .. clean', $CREATE);
-    return 0 unless &run_cmd('make -C ..', $APPEND);
+    if ($sudo_path) {
+        my $username = getpwuid((stat($configure_path))[4]);
+        die "[*] Could not determine $configure_path owner"
+            unless $username;
+
+        return 0 unless &run_cmd("$sudo_path -u $username make -C .. clean");
+        return 0 unless &run_cmd("$sudo_path -u $username make -C ..");
+
+    } else {
+
+        return 0 unless &run_cmd('make -C .. clean');
+        return 0 unless &run_cmd('make -C ..');
+
+    }
 
     ### look for compilation warnings - something like:
-
-    ### warning: ‘test’ is used uninitialized in this function
+    ###     warning: ‘test’ is used uninitialized in this function
     return 0 if &file_find_regex([qr/\swarning:\s/], $current_test_file);
+
+    ### the new binaries should exist
+    unless (-e $fwknopCmd and -x $fwknopCmd) {
+        &write_test_file("[-] $fwknopCmd does not exist or not executable.\n");
+    }
+    unless (-e $fwknopdCmd and -x $fwknopdCmd) {
+        &write_test_file("[-] $fwknopdCmd does not exist or not executable.\n");
+    }
 
     return 1;
 }
@@ -469,16 +524,16 @@ sub expected_code_version() {
     my $test_hr = shift;
 
     unless (-e '../VERSION') {
-        &write_test_file("[-] ../VERSION file does not exist.\n", $CREATE);
+        &write_test_file("[-] ../VERSION file does not exist.\n");
         return 0;
     }
 
-    open F, "< ../VERSION" or die $!;
+    open F, '< ../VERSION' or die $!;
     my $line = <F>;
     close F;
     if ($line =~ /(\d.*\d)/) {
         my $version = $1;
-        return 0 unless &run_cmd($test_hr->{'cmdline'}, $APPEND);
+        return 0 unless &run_cmd($test_hr->{'cmdline'});
         return 1 if &file_find_regex([qr/$version/], $current_test_file);
     }
     return 0;
@@ -487,7 +542,7 @@ sub expected_code_version() {
 sub dump_config() {
     my $test_hr = shift;
 
-    return 0 unless &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 unless &run_cmd($test_hr->{'cmdline'});
 
     ### search for one of the config vars (basic check)
     return 0 unless &file_find_regex([qr/SYSLOG_IDENTITY/],
@@ -499,7 +554,7 @@ sub dump_config() {
 sub override_config() {
     my $test_hr = shift;
 
-    return 0 unless &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 unless &run_cmd($test_hr->{'cmdline'});
 
     ### search for the altered config value
     return 0 unless &file_find_regex([qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
@@ -511,7 +566,7 @@ sub override_config() {
 sub non_get_key_path() {
     my $test_hr = shift;
 
-    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 if &run_cmd($test_hr->{'cmdline'});
     return 0 unless &file_find_regex([qr/could\snot\sopen/i],
         $current_test_file);
     return 1;
@@ -520,7 +575,7 @@ sub non_get_key_path() {
 sub no_allow_ip() {
     my $test_hr = shift;
 
-    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 if &run_cmd($test_hr->{'cmdline'});
     return 0 unless &file_find_regex([qr/must\suse\sone\sof/i],
         $current_test_file);
     return 1;
@@ -529,7 +584,7 @@ sub no_allow_ip() {
 sub invalid_allow_ip() {
     my $test_hr = shift;
 
-    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 if &run_cmd($test_hr->{'cmdline'});
     return 0 unless &file_find_regex([qr/Invalid\sallow\sIP\saddress/i],
         $current_test_file);
     return 1;
@@ -538,7 +593,7 @@ sub invalid_allow_ip() {
 sub invalid_proto() {
     my $test_hr = shift;
 
-    return 0 if &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 if &run_cmd($test_hr->{'cmdline'});
     return 0 unless &file_find_regex([qr/Invalid\sSPA\saccess\smessage/i],
         $current_test_file);
     return 1;
@@ -549,21 +604,45 @@ sub generate_basic_spa_packet() {
 
     &write_key('fwknoptest', $local_key_file);
 
-    return 0 unless &run_cmd($test_hr->{'cmdline'}, $CREATE);
+    return 0 unless &run_cmd($test_hr->{'cmdline'});
+    return 0 unless &file_find_regex([qr/final\spacked/i],
+        $current_test_file);
+
+    return 1;
+}
+
+sub fw_list() {
+    my $test_hr = shift;
+
+    return 0 unless &run_cmd($test_hr->{'cmdline'});
+    return 1;
+}
+
+sub fw_list_all() {
+    my $test_hr = shift;
+
+    return 0 unless &run_cmd($test_hr->{'cmdline'});
+    return 1;
+}
+
+sub fw_flush() {
+    my $test_hr = shift;
+
+    return 0 unless &run_cmd($test_hr->{'cmdline'});
     return 1;
 }
 
 sub usage_info() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
-    return 0 unless &run_cmd("$test_hr->{'binary'} -h", $CREATE);
+    return 0 unless &run_cmd("$test_hr->{'binary'} -h");
     return 1;
 }
 
 sub no_such_arg() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
-    return 0 if &run_cmd("$test_hr->{'binary'} --no-such-arg", $CREATE);
+    return 0 if &run_cmd("$test_hr->{'binary'} --no-such-arg");
     return 1;
 }
 
@@ -571,7 +650,7 @@ sub no_such_arg() {
 sub pie_binary() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
-    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
+    &run_cmd("./hardening-check $test_hr->{'binary'}");
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
         $current_test_file);
     return 1;
@@ -581,7 +660,7 @@ sub pie_binary() {
 sub stack_protected_binary() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
-    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
+    &run_cmd("./hardening-check $test_hr->{'binary'}");
     return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
         $current_test_file);
     return 1;
@@ -591,7 +670,7 @@ sub stack_protected_binary() {
 sub fortify_source_functions() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
-    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
+    &run_cmd("./hardening-check $test_hr->{'binary'}");
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
         $current_test_file);
     return 1;
@@ -601,7 +680,7 @@ sub fortify_source_functions() {
 sub read_only_relocations() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
-    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
+    &run_cmd("./hardening-check $test_hr->{'binary'}");
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
         $current_test_file);
     return 1;
@@ -611,22 +690,17 @@ sub read_only_relocations() {
 sub immediate_binding() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
-    &run_cmd("./hardening-check $test_hr->{'binary'}", $CREATE);
+    &run_cmd("./hardening-check $test_hr->{'binary'}");
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
         $current_test_file);
     return 1;
 }
 
 sub specs() {
-    my $cmd = '';
-    if ($firewall =~ m|/iptables$|) {
-        $cmd = "iptables -v -n -L";
-    } elsif ($firewall =~ m|/pf$|) {
-        $cmd = "pf -s rules";
-    } elsif ($firewall =~ m|/ipfw$|) {
-        $cmd = "ipfw list";
-    }
-    &run_cmd($cmd, $CREATE);
+
+     &run_cmd("$fwknopdCmd -c $default_conf -a " .
+        "$default_access_conf --fw-list-all");
+
     for my $cmd (
         'uname -a',
         'uptime',
@@ -645,7 +719,7 @@ sub specs() {
         'ls -l /usr/lib/*fko*',
         'ls -l /usr/local/lib/*fko*',
     ) {
-        &run_cmd($cmd, $APPEND);
+        &run_cmd($cmd);
     }
     return 1;
 }
@@ -662,9 +736,9 @@ sub write_key() {
 }
 
 sub run_cmd() {
-    my ($cmd, $file_mode) = @_;
+    my $cmd = shift;
 
-    if ($file_mode == $APPEND) {
+    if (-e $current_test_file) {
         open F, ">> $current_test_file"
             or die "[*] Could not open $current_test_file: $!";
         print F "CMD: $cmd\n";
@@ -720,6 +794,7 @@ sub init() {
     die "[*] default config $default_conf does not exist" unless -e $default_conf;
     die "[*] default access config $default_access_conf does not exist"
         unless -e $default_access_conf;
+    die "[*] configure script does not exist" unless -e $configure_path;
 
     unless (-d $output_dir) {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
@@ -748,13 +823,12 @@ sub init() {
         push @tests_to_exclude, 'recompilation';
     }
 
+    $sudo_path = &find_command('sudo');
+
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
         push @tests_to_exclude, 'recompilation';
     }
-
-    ### detect the installed firewall
-    &detect_firewall();
 
     return;
 }
@@ -776,24 +850,6 @@ sub is_fwknopd_running() {
     return $is_running;
 }
 
-sub detect_firewall() {
-    unless ($firewall) {
-        for my $fw qw/iptables pf ipfw/ {
-            my $path = &find_command($fw);
-            if ($path) {
-                $firewall = $path;
-                last;
-            }
-        }
-    }
-
-    unless ($firewall) {
-        die "[*] Could not find firewall binary, use --firewall";
-    }
-
-    return;
-}
-
 sub file_find_regex() {
     my ($re_ar, $file) = @_;
 
@@ -804,12 +860,19 @@ sub file_find_regex() {
         my $line = $_;
         for my $re (@$re_ar) {
             if ($line =~ $re) {
+                &write_test_file("[.] find_find_regex() " .
+                    "Matched '$re' with line: $line");
                 $found = 1;
                 last LINE;
             }
         }
     }
     close F;
+
+    unless ($found) {
+        &write_test_file("[.] find_find_regex() Did not " .
+            "match any regex in: '@$re_ar'");
+    }
 
     return $found;
 }
@@ -830,9 +893,9 @@ sub find_command() {
 }
 
 sub write_test_file() {
-    my ($msg, $file_mode) = @_;
+    my $msg = shift;
 
-    if ($file_mode == $APPEND) {
+    if (-e $current_test_file) {
         open F, ">> $current_test_file"
             or die "[*] Could not open $current_test_file: $!";
         print F $msg;
