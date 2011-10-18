@@ -60,6 +60,8 @@ fw_dump_rules(fko_srv_options_t *opts)
 {
     int     res, got_err = 0;
 
+    printf("Listing fwknopd pf rules...\n");
+
     zero_cmd_buffers();
 
     /* Create the list command for active rules
@@ -133,7 +135,7 @@ anchor_active(fko_srv_options_t *opts)
 }
 
 static void
-delete_all_anchor_rules(fko_srv_options_t *opts)
+delete_all_anchor_rules(void)
 {
     int res = 0;
 
@@ -193,6 +195,7 @@ fw_initialize(fko_srv_options_t *opts)
 int
 fw_cleanup(void)
 {
+    delete_all_anchor_rules();
     return(0);
 }
 

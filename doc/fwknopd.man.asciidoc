@@ -63,8 +63,17 @@ COMMAND-LINE OPTIONS
     sent to stderr. This mode is usually used when testing and/or debugging.
 
 *--fw-list*::
-    List all firewall rules that any running *fwknopd* daemon has created
+    List only firewall rules that any running *fwknopd* daemon has created
     and then exit.
+
+*--fw-list-all*::
+    List all firewall rules including those that have nothing to do with
+    *fwknopd*.
+
+*--fw-flush*::
+    Flush any firewall rules created by a running *fwknopd* process.  This
+    option allows the used to easily delete *fwknopd* firewall rules without
+    having to wait for them to be timed out.
 
 *-K, --Kill*::
     Kill the current *fwknopd* process.  This provides a quick and easy

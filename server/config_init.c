@@ -653,6 +653,13 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case FW_LIST:
                 opts->fw_list = 1;
                 break;
+            case FW_LIST_ALL:
+                opts->fw_list = 1;
+                opts->fw_list_all = 1;
+                break;
+            case FW_FLUSH:
+                opts->fw_flush = 1;
+                break;
             case GPG_HOME_DIR:
                 if (is_valid_dir(optarg))
                 {
@@ -718,16 +725,16 @@ dump_config(fko_srv_options_t *opts)
 {
     int i;
 
-    fprintf(stderr, "Current fwknopd config settings:\n");
+    fprintf(stdout, "Current fwknopd config settings:\n");
 
     for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
-        fprintf(stderr, "%3i. %-28s =  '%s'\n",
+        fprintf(stdout, "%3i. %-28s =  '%s'\n",
             i,
             config_map[i],
             (opts->config[i] == NULL) ? "<not set>" : opts->config[i]
         );
 
-    fprintf(stderr, "\n");
+    fprintf(stdout, "\n");
 }
 
 /* Print usage message...

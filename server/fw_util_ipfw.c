@@ -96,42 +96,70 @@ fw_dump_rules(fko_srv_options_t *opts)
 {
     int     res, got_err = 0;
 
-    zero_cmd_buffers();
-
-    /* Create the list command for active rules
-    */
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_RULES_ARGS,
-        opts->fw_config->fw_command,
-        opts->fw_config->active_set_num
-    );
-
-    //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-    printf("\nActive Rules:\n");
-    res = system(cmd_buf);
-
-    /* Expect full success on this */
-    if(! EXTCMD_IS_SUCCESS(res))
+    if (opts->fw_list_all)
     {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
-        got_err++;
+        fprintf(stdout, "Listing all ipfw rules...\n");
+        fflush(stdout);
+
+        zero_cmd_buffers();
+
+        /* Create the list command for all rules
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_ALL_RULES_ARGS,
+            opts->fw_config->fw_command
+        );
+
+        res = system(cmd_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            got_err++;
+        }
     }
-
-    /* Create the list command for expired rules
-    */
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_RULES_ARGS,
-        opts->fw_config->fw_command,
-        opts->fw_config->expire_set_num
-    );
-
-    //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-    printf("\nExpired Rules:\n");
-    res = system(cmd_buf);
-
-    /* Expect full success on this */
-    if(! EXTCMD_IS_SUCCESS(res))
+    else
     {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
-        got_err++;
+        fprintf(stdout, "Listing fwknopd ipfw rules...\n");
+        fflush(stdout);
+
+        zero_cmd_buffers();
+
+        /* Create the list command for active rules
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_RULES_ARGS,
+            opts->fw_config->fw_command,
+            opts->fw_config->active_set_num
+        );
+
+        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
+        printf("\nActive Rules:\n");
+        res = system(cmd_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            got_err++;
+        }
+
+        /* Create the list command for expired rules
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_LIST_RULES_ARGS,
+            opts->fw_config->fw_command,
+            opts->fw_config->expire_set_num
+        );
+
+        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
+        printf("\nExpired Rules:\n");
+        res = system(cmd_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+            got_err++;
+        }
     }
 
     return(got_err);

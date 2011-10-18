@@ -107,6 +107,8 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
 */
 enum {
     FW_LIST         = 0x200,
+    FW_LIST_ALL,
+    FW_FLUSH,
     GPG_HOME_DIR,
     ROTATE_DIGEST_CACHE,
     NOOP /* Just to be a marker for the end */
@@ -129,6 +131,8 @@ static struct option cmd_opts[] =
     {"interface",           1, NULL, 'i'},
     {"kill",                0, NULL, 'K'},
     {"fw-list",             0, NULL, FW_LIST },
+    {"fw-list-all",         0, NULL, FW_LIST_ALL },
+    {"fw-flush",            0, NULL, FW_FLUSH },
     {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
     {"locale",              1, NULL, 'l' },
     {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },

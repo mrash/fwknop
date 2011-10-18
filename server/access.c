@@ -1023,7 +1023,7 @@ dump_access_list(fko_srv_options_t *opts)
 
     acc_stanza_t    *acc = opts->acc_stanzas;
 
-    fprintf(stderr, "Current fwknopd access settings:\n");
+    fprintf(stdout, "Current fwknopd access settings:\n");
 
     if(!acc)
     {
@@ -1033,7 +1033,7 @@ dump_access_list(fko_srv_options_t *opts)
 
     while(acc)
     {
-        fprintf(stderr,
+        fprintf(stdout,
             "SOURCE (%i):  %s\n"
             "==============================================================\n"
             "                 OPEN_PORTS:  %s\n"
@@ -1068,12 +1068,12 @@ dump_access_list(fko_srv_options_t *opts)
             (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id
         );
 
-        fprintf(stderr, "\n");
+        fprintf(stdout, "\n");
 
         acc = acc->next;
     }
 
-    fprintf(stderr, "\n");
+    fprintf(stdout, "\n");
 }
 
 /***EOF***/

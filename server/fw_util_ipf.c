@@ -52,6 +52,9 @@ fw_dump_rules(fko_srv_options_t *opts)
     int     i;
     int     res, got_err = 0;
 
+    fprintf(stdout, "Listing fwknopd ipf rules...\n");
+    fflush(stdout);
+
     zero_cmd_buffers();
 
     /* TODO: Implement or get rid of me */

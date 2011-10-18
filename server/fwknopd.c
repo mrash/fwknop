@@ -181,9 +181,16 @@ main(int argc, char **argv)
         */
         fw_config_init(&opts);
 
-        if(opts.fw_list == 1)
+        if(opts.fw_list == 1 || opts.fw_list_all == 1)
         {
             fw_dump_rules(&opts);
+            exit(EXIT_SUCCESS);
+        }
+
+        if(opts.fw_flush == 1)
+        {
+            fprintf(stdout, "Deleting any existing firewall rules...\n");
+            fw_cleanup();
             exit(EXIT_SUCCESS);
         }
 

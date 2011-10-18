@@ -138,31 +138,67 @@ fw_dump_rules(fko_srv_options_t *opts)
 
     struct fw_chain *ch = opts->fw_config->chain;
 
-    printf("Listing rules in fwknop chains...\n");
-    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+    if (opts->fw_list_all == 1)
     {
+        fprintf(stdout, "Listing all iptables rules in applicable tables...\n");
+        fflush(stdout);
 
-        if(fwc.chain[i].target[0] == '\0')
-            continue;
-
-        zero_cmd_buffers();
-
-        /* Create the list command
-        */
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
-            opts->fw_config->fw_command,
-            ch[i].table,
-            ch[i].to_chain
-        );
-
-        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
-        res = system(cmd_buf);
-
-        /* Expect full success on this */
-        if(! EXTCMD_IS_SUCCESS(res))
+        for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
-            got_err++;
+
+            if(fwc.chain[i].target[0] == '\0')
+                continue;
+
+            zero_cmd_buffers();
+
+            /* Create the list command
+            */
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_ALL_RULES_ARGS,
+                opts->fw_config->fw_command,
+                ch[i].table
+            );
+
+            //printf("(%i) CMD: '%s'\n", i, cmd_buf);
+            res = system(cmd_buf);
+
+            /* Expect full success on this */
+            if(! EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                got_err++;
+            }
+        }
+    }
+    else
+    {
+        fprintf(stdout, "Listing rules in fwknopd iptables chains...\n");
+        fflush(stdout);
+
+        for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+        {
+
+            if(fwc.chain[i].target[0] == '\0')
+                continue;
+
+            zero_cmd_buffers();
+
+            /* Create the list command
+            */
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+                opts->fw_config->fw_command,
+                ch[i].table,
+                ch[i].to_chain
+            );
+
+            //printf("(%i) CMD: '%s'\n", i, cmd_buf);
+            res = system(cmd_buf);
+
+            /* Expect full success on this */
+            if(! EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                got_err++;
+            }
         }
     }
 
@@ -784,7 +820,7 @@ check_firewall_rules(fko_srv_options_t *opts)
 
         if(!EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
             continue;
         }
 

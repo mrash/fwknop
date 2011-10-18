@@ -404,6 +404,8 @@ typedef struct fko_srv_options
     unsigned char   restart;            /* Restart fwknopd flag */
     unsigned char   status;             /* Get fwknopd status flag */
     unsigned char   fw_list;            /* List current firewall rules */
+    unsigned char   fw_list_all;        /* List all current firewall rules */
+    unsigned char   fw_flush;           /* Flush current firewall rules */
     unsigned char   test;               /* Test mode flag */
     unsigned char   verbose;            /* Verbose mode flag */
 
