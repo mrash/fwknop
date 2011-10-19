@@ -62,4 +62,6 @@
 #define CRYPT_OP_ENCRYPT 1
 #define CRYPT_OP_DECRYPT 2
 
+#define PID_BUFLEN 7
+
 #endif  /* FWKNOPD_H */

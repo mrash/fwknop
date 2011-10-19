@@ -590,7 +590,7 @@ write_pid_file(fko_srv_options_t *opts)
 {
     pid_t   old_pid, my_pid;
     int     op_fd, lck_res, num_bytes;
-    char    buf[6]  = {0};
+    char    buf[PID_BUFLEN] = {0};
 
     /* Reset errno (just in case)
     */
@@ -640,7 +640,7 @@ write_pid_file(fko_srv_options_t *opts)
     /* Write our PID to the file
     */
     my_pid = getpid();
-    snprintf(buf, 6, "%i\n", my_pid);
+    snprintf(buf, PID_BUFLEN, "%i\n", my_pid);
 
     if(opts->verbose > 1)
         log_msg(LOG_INFO, "[+] Writing my PID (%i) to the lock file: %s\n",
@@ -667,15 +667,18 @@ static pid_t
 get_running_pid(fko_srv_options_t *opts)
 {
     int     op_fd;
-    char    buf[6]  = {0};
-    pid_t   rpid    = 0;
+    char    buf[PID_BUFLEN] = {0};
+    pid_t   rpid            = 0;
 
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 
     if(op_fd > 0)
     {
-        if (read(op_fd, buf, 6) > 0)
+        if (read(op_fd, buf, PID_BUFLEN) > 0)
+        {
+            buf[PID_BUFLEN-1] = '\0';
             rpid = (pid_t)atoi(buf);
+        }
 
         close(op_fd);
     }
