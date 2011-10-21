@@ -10,10 +10,13 @@ my $local_key_file = 'local_spa.key';
 my $output_dir = 'output';
 my $lib_dir    = '../lib/.libs';
 my $conf_dir   = 'conf';
+my $run_dir    = 'run';
 my $configure_path = '../configure';
 
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
+my $default_digest_file = "$run_dir/digest.cache";
+my $default_pid_file    = "$run_dir/fwknopd.pid";
 
 my $fwknopCmd  = '../client/.libs/fwknop';
 my $fwknopdCmd = '../server/.libs/fwknopd';
@@ -44,8 +47,12 @@ my $help = 0;
 my $YES = 1;
 my $NO  = 0;
 my $PRINT_LEN = 68;
-my $ENFORCE_STOP = 1;
-my $ALLOW_RUN = 2;
+my $FORCE_STOP = 1;
+my $NO_FORCE_STOP = 2;
+my $USE_PREDEF_PKTS = 1;
+my $USE_CLIENT = 2;
+my $REQUIRE_FW_RULE = 1;
+my $NO_FW_RULE = 2;
 my $REQUIRED = 1;
 my $OPTIONAL = 0;
 
@@ -66,7 +73,11 @@ exit 1 unless GetOptions(
 
 &usage() if $help;
 
-my $default_client_args = "$fwknopCmd -A tcp/22 -s $fake_ip -D $loopback_ip --get-key $local_key_file --verbose";
+my $default_client_args = "$fwknopCmd -A tcp/22 -a $fake_ip " .
+    "-D $loopback_ip --get-key $local_key_file --verbose";
+
+my $default_server_conf_args = "-c $default_conf -a $default_access_conf " .
+    "-d $default_digest_file -p $default_pid_file";
 
 ### point the compiled binaries at the local libary path
 ### instead of any installed libfko instance
@@ -317,7 +328,7 @@ my @tests = (
         'detail'   => 'override config',
         'err_msg'  => 'could not override configuration',
         'function' => \&override_config,
-        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf " .
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args " .
             "-O $conf_dir/override_fwknopd.conf --dump-config",
         'fatal'    => $NO
     },
@@ -364,7 +375,7 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'generate SPA packet',
         'err_msg'  => 'could not generate SPA packet',
-        'function' => \&generate_basic_spa_packet,
+        'function' => \&generate_spa_packet,
         'cmdline'  => $default_client_args,
         'fatal'    => $YES
     },
@@ -375,8 +386,7 @@ my @tests = (
         'detail'   => 'list current fwknopd fw rules',
         'err_msg'  => 'could not list current fwknopd fw rules',
         'function' => \&fw_list,
-        'cmdline'  => "$fwknopdCmd -c $default_conf " .
-            "-a $default_access_conf --fw-list",
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args --fw-list",
         'fatal'    => $NO
     },
     {
@@ -385,8 +395,7 @@ my @tests = (
         'detail'   => 'list all current fw rules',
         'err_msg'  => 'could not list all current fw rules',
         'function' => \&fw_list_all,
-        'cmdline'  => "$fwknopdCmd -c $default_conf " .
-            "-a $default_access_conf --fw-list-all",
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args --fw-list-all",
         'fatal'    => $NO
     },
     {
@@ -395,8 +404,38 @@ my @tests = (
         'detail'   => 'flush current firewall rules',
         'err_msg'  => 'could not flush current fw rules',
         'function' => \&fw_flush,
-        'cmdline'  => "$fwknopdCmd -c $default_conf " .
-            "-a $default_access_conf --fw-flush",
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args --fw-flush",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'start',
+        'err_msg'  => 'start error',
+        'function' => \&server_start,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'stop',
+        'err_msg'  => 'stop error',
+        'function' => \&server_stop,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'write PID',
+        'err_msg'  => 'did not write PID',
+        'function' => \&write_pid,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
         'fatal'    => $NO
     },
 
@@ -406,32 +445,33 @@ my @tests = (
         'detail'   => '--packet-limit 1 exit',
         'err_msg'  => 'did not exit after one packet',
         'function' => \&server_packet_limit,
-        'fwknopd_cmdline'  => "$fwknopdCmd -c $default_conf " .
-            "-a $default_access_conf -i $loopback_intf --packet-limit 1 " .
-            "--foreground --verbose",
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --packet-limit 1 --foreground --verbose",
         'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'ignore packets < min SPA len',
+        'detail'   => 'ignore packets < min SPA len (140)',
         'err_msg'  => 'did not ignore small packets',
         'function' => \&server_ignore_small_packets,
-        'fwknopd_cmdline'  => "$fwknopdCmd -c $default_conf " .
-            "-a $default_access_conf -i $loopback_intf --packet-limit 1 " .
-            "--foreground --verbose",
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --packet-limit 1 --foreground --verbose",
         'fatal'    => $NO
     },
 
-#    {
-#        'category' => 'basic operations',
-#        'subcategory' => 'server',
-#        'detail'   => 'write PID',
-#        'err_msg'  => 'did not write PID',
-#        'function' => \&write_pid,
-#        'cmdline'  => "$fwknopdCmd -c $default_conf -a $default_access_conf --fw-flush",
-#        'fatal'    => $NO
-#    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete SPA cycle',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&basic_rijndael_spa,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
+
 
 );
 
@@ -653,7 +693,7 @@ sub invalid_proto() {
     return 1;
 }
 
-sub generate_basic_spa_packet() {
+sub generate_spa_packet() {
     my $test_hr = shift;
 
     &write_key('fwknoptest', $local_key_file);
@@ -664,6 +704,78 @@ sub generate_basic_spa_packet() {
         $current_test_file);
 
     return 1;
+}
+
+sub basic_rijndael_spa() {
+    my $test_hr = shift;
+
+    my $rv = &client_server_interaction($test_hr, [],
+            $USE_CLIENT, $REQUIRE_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_output_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub server_start() {
+    my $test_hr = shift;
+
+    my $rv = &client_server_interaction($test_hr, [],
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
+            $server_output_file)) {
+        $rv = 0;
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_output_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub server_stop() {
+    my $test_hr = shift;
+
+    my $rv = &client_server_interaction($test_hr, [],
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
+            $server_output_file)) {
+        $rv = 0;
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_output_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running, nothing to stop.\n");
+        $rv = 0;
+    }
+
+    return $rv;
+
+    return $rv;
 }
 
 sub server_packet_limit() {
@@ -678,7 +790,8 @@ sub server_packet_limit() {
         },
     );
 
-    my $rv = &client_server_interaction($test_hr, \@packets, $ENFORCE_STOP);
+    my $rv = &client_server_interaction($test_hr, \@packets,
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $FORCE_STOP);
 
     unless (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
             $server_output_file)) {
@@ -701,11 +814,12 @@ sub server_ignore_small_packets() {
             'proto'  => 'udp',
             'port'   => $default_spa_port,
             'dst_ip' => $loopback_ip,
-            'data'   => 'A'x10,
+            'data'   => 'A'x130,  ### < MIN_SPA_DATA_SIZE
         },
     );
 
-    my $rv = &client_server_interaction($test_hr, \@packets, $ALLOW_RUN);
+    my $rv = &client_server_interaction($test_hr, \@packets,
+        $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
 
     if (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
             $server_output_file)) {
@@ -722,7 +836,8 @@ sub server_ignore_small_packets() {
 }
 
 sub client_server_interaction() {
-    my ($test_hr, $pkts_hr, $enforce_stop_flag) = @_;
+    my ($test_hr, $pkts_hr, $spa_client_flag,
+            $fw_rules_flag, $enforce_stop_flag) = @_;
 
     my $rv = 1;
 
@@ -733,10 +848,28 @@ sub client_server_interaction() {
     ### on the loopback interface
     sleep 1;
 
-    ### send the SPA packet to the server
-    &send_packets($pkts_hr);
+    ### send the SPA packet(s) to the server either manually using IO::Socket or
+    ### with the fwknopd client
+    if ($spa_client_flag == $USE_CLIENT) {
+        unless (&generate_spa_packet($test_hr)) {
+            &write_test_file("[-] fwknop client execution error.\n");
+            $rv = 0;
+        }
+    } else {
+        &send_packets($pkts_hr);
+    }
 
-    if ($enforce_stop_flag == $ENFORCE_STOP) {
+    if ($fw_rules_flag == $REQUIRE_FW_RULE) {
+        ### check to see if the SPA packet resulted in a new fw access rule
+        sleep 1;
+        unless (&run_cmd("$fwknopdCmd $default_server_conf_args " .
+                "--fw-list | grep $fake_ip |grep _exp_",
+                $current_test_file)) {
+            $rv = 0;
+        }
+    }
+
+    if ($enforce_stop_flag == $FORCE_STOP) {
         local $SIG{'ALRM'} = sub {die "[*] Sniff packet alarm.\n"};
         ### on some systems and libpcap combinations, it is possible for fwknopd
         ### to not receive packet data, so setting an alarm allows us to recover
@@ -882,8 +1015,7 @@ sub immediate_binding() {
 
 sub specs() {
 
-     &run_cmd("$fwknopdCmd -c $default_conf -a " .
-        "$default_access_conf --fw-list-all",
+     &run_cmd("$fwknopdCmd $default_server_conf_args --fw-list-all",
             $current_test_file);
 
     for my $cmd (
@@ -907,6 +1039,27 @@ sub specs() {
         &run_cmd($cmd, $current_test_file);
     }
     return 1;
+}
+
+sub write_pid() {
+    my $test_hr = shift;
+
+    open F, "> $default_pid_file" or die $!;
+    print F "1\n";
+    close F;
+
+    &server_start($test_hr);
+
+    open F, "< $default_pid_file" or die $!;
+    my $pid = <F>;
+    chomp $pid;
+    close F;
+
+    if ($pid != 1) {
+        return 1;
+    }
+
+    return 0;
 }
 
 sub start_fwknopd() {
@@ -1043,7 +1196,7 @@ sub init() {
 
 sub is_fwknopd_running() {
 
-    my $cmd = "$fwknopdCmd -c $default_conf -a $default_access_conf --status";
+    my $cmd = "$fwknopdCmd $default_server_conf_args --status";
 
     &run_cmd($cmd, $current_test_file);
     return 0 if &file_find_regex([qr/no\s+running/i], $current_test_file);
@@ -1052,7 +1205,7 @@ sub is_fwknopd_running() {
 
 sub stop_fwknopd() {
 
-    my $cmd = "$fwknopdCmd -c $default_conf -a $default_access_conf -K";
+    my $cmd = "$fwknopdCmd $default_server_conf_args -K";
     &run_cmd($cmd, $current_test_file);
 
     sleep 1;
@@ -1069,14 +1222,16 @@ sub file_find_regex() {
     my ($re_ar, $file) = @_;
 
     my $found = 0;
+    my @write_lines = ();
 
     open F, "< $file" or die "[*] Could not open $file: $!";
     LINE: while (<F>) {
         my $line = $_;
+        next LINE if $line =~ /file_file_regex\(\)/;
         for my $re (@$re_ar) {
             if ($line =~ $re) {
-                &write_test_file("[.] find_find_regex() " .
-                    "Matched '$re' with line: $line");
+                push @write_lines, "[.] file_find_regex() " .
+                    "Matched '$re' with line: $line";
                 $found = 1;
                 last LINE;
             }
@@ -1084,7 +1239,11 @@ sub file_find_regex() {
     }
     close F;
 
-    unless ($found) {
+    if ($found) {
+        for my $line (@write_lines) {
+            &write_test_file($line);
+        }
+    } else {
         &write_test_file("[.] find_find_regex() Did not " .
             "match any regex in: '@$re_ar'\n");
     }
