@@ -167,11 +167,6 @@ main(int argc, char **argv)
          * in case it configured to be somewhere other than the run dir.
         */
         check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0);
-#if USE_FILE_CACHE
-        check_dir_path((const char *)opts.config[CONF_DIGEST_FILE], "Run", 1);
-#else
-        check_dir_path((const char *)opts.config[CONF_DIGEST_DB_FILE], "Run", 1);
-#endif
 
         /* Initialize the firewall rules handler based on the fwknopd.conf
          * file, but (for iptables firewalls) don't flush any rules or create
@@ -402,7 +397,7 @@ check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_base
     if(*filepath != PATH_SEP)
     {
         log_msg(LOG_ERR,
-            "Configured %s directory (%s) is not an absolute path.", fp_desc, filepath
+            "Path '%s' is not absolute.", filepath
         );
         exit(EXIT_FAILURE);
     }

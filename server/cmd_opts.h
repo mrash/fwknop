@@ -116,7 +116,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:c:C:Dfhi:Kl:O:P:RSvV"
+#define GETOPTS_OPTION_STRING "a:c:C:d:Dfhi:Kl:O:p:P:RSvV"
 
 /* Our program command-line options...
 */
@@ -125,19 +125,21 @@ static struct option cmd_opts[] =
     {"access-file",         1, NULL, 'a'},
     {"config-file",         1, NULL, 'c'},
     {"packet-limit",        1, NULL, 'C'},
+    {"digest-file",         1, NULL, 'd'},
     {"dump-config",         0, NULL, 'D'},
     {"foreground",          0, NULL, 'f'},
     {"help",                0, NULL, 'h'},
     {"interface",           1, NULL, 'i'},
     {"kill",                0, NULL, 'K'},
+    {"fw-flush",            0, NULL, FW_FLUSH },
     {"fw-list",             0, NULL, FW_LIST },
     {"fw-list-all",         0, NULL, FW_LIST_ALL },
-    {"fw-flush",            0, NULL, FW_FLUSH },
     {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
     {"locale",              1, NULL, 'l' },
     {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },
     {"override-config",     1, NULL, 'O' },
     {"pcap-filter",         1, NULL, 'P'},
+    {"pid-file",            1, NULL, 'p'},
     {"restart",             0, NULL, 'R'},
     {"status",              0, NULL, 'S'},
     {"verbose",             0, NULL, 'v'},

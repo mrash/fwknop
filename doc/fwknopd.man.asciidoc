@@ -37,7 +37,7 @@ COMMAND-LINE OPTIONS
 *-a, --access-file*='<access-file>'::
     Specify the location of the 'access.conf' file.  If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
-    '@sysconfdir@/fwknop/access.conf'.
+    '@sysconfdir@/fwknop/access.conf').
 
 *-c, --config*='<config-file>'::
     Specify the location of the 'fwknopd.conf' file.  If this option is
@@ -47,6 +47,11 @@ COMMAND-LINE OPTIONS
 *-C, --packet-limit*='<n>'::
     Specify the number of candidate SPA packets to process and exit when
     this limit is reached.
+
+*-d, --digest-file*='<digest-file>'::
+    Specify the location of the 'digest.cache' file.  If this option is
+    not given, 'fwknopd' will use the compile-time default location (typically
+    '@localstatedir@/run/fwknop/digest.cache).
 
 *-D, --Dump-config*::
     Dump the configuration values that *fwknopd* derives from the
@@ -86,6 +91,11 @@ COMMAND-LINE OPTIONS
     Override config variable values that are normally read from the
     'fwknopd.conf' file with values from the specified file.  Multiple
     override config files can be given as a comma-separated list.
+
+*-p, --pid-file*='<pid-file>'::
+    Specify the location of the 'fwknopd.pid' file.  If this option is
+    not given, 'fwknopd' will use the compile-time default location (typically
+    '@localstatedir@/run/fwknop/fwknopd.pid).
 
 *-P, --pcap-filter*='<filter>'::
     Specify a Berkeley packet filter statement on the *fwknopd* command

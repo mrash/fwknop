@@ -644,6 +644,13 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'C':
                 opts->packet_ctr_limit = atoi(optarg);
                 break;
+            case 'd':
+#if USE_FILE_CACHE
+                set_config_entry(opts, CONF_DIGEST_FILE, optarg);
+#else
+                set_config_entry(opts, CONF_DIGEST_DB_FILE, optarg);
+#endif
+                break;
             case 'D':
                 opts->dump_config = 1;
                 break;
@@ -679,15 +686,18 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'K':
                 opts->kill = 1;
                 break;
-            case 'l': 
-                set_config_entry(opts, CONF_LOCALE, optarg); 
-                break; 
+            case 'l':
+                set_config_entry(opts, CONF_LOCALE, optarg);
+                break;
             case 'O':
                 /* This was handled earlier */
                 break;
+            case 'p':
+                set_config_entry(opts, CONF_FWKNOP_PID_FILE, optarg);
+                break;
             case 'P':
                 set_config_entry(opts, CONF_PCAP_FILTER, optarg);
-                break; 
+                break;
             case ROTATE_DIGEST_CACHE:
                 opts->rotate_digest_cache = 1;
                 break;
@@ -750,6 +760,7 @@ usage(void)
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
       "                           process and exit when this limit is reached.\n"
+      " -d, --digest-file       - Specify an alternate digest.cache file.\n"
       " -D, --dump-config       - Dump the current fwknop configuration values.\n"
       " -f, --foreground        - Run fwknopd in the foreground (do not become\n"
       "                           a background daemon).\n"
@@ -761,6 +772,7 @@ usage(void)
       "                           default.\n"
       " -O, --override-config   - Specify a file with configuration entries that will\n"
       "                           overide those in fwknopd.conf\n"
+      " -p, --pid-file          - Specify an alternate fwknopd.pid file.\n"
       " -P, --pcap-filter       - Specify a Berkeley packet filter statement to\n"
       "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
