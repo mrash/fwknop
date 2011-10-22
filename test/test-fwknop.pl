@@ -1,17 +1,20 @@
 #!/usr/bin/perl -w
 
 use IO::Socket;
+use Data::Dumper;
 use Getopt::Long 'GetOptions';
 use strict;
 
 #==================== config =====================
-my $logfile    = 'test.log';
+my $logfile        = 'test.log';
 my $local_key_file = 'local_spa.key';
-my $output_dir = 'output';
-my $lib_dir    = '../lib/.libs';
-my $conf_dir   = 'conf';
-my $run_dir    = 'run';
+my $output_dir     = 'output';
+my $lib_dir        = '../lib/.libs';
+my $conf_dir       = 'conf';
+my $run_dir        = 'run';
 my $configure_path = '../configure';
+my $cmd_out_tmp    = 'cmd.out';
+my $server_cmd_tmp = 'server_cmd.out';
 
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
@@ -471,6 +474,17 @@ my @tests = (
             "-i $loopback_intf --foreground --verbose",
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay attack detection',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection_rijndael,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
 
 
 );
@@ -544,12 +558,12 @@ sub process_include_exclude() {
     if (@tests_to_include) {
         my $found = 0;
         for my $test (@tests_to_include) {
-            if ($test_hr->{'category'} =~ /$test)/) {
+            if ($test_hr->{'category'} =~ /$test/) {
                 $found = 1;
                 last;
             }
         }
-        return 1 unless $found;
+        return 0 unless $found;
     }
     if (@tests_to_exclude) {
         my $found = 0;
@@ -572,16 +586,16 @@ sub compile_warnings() {
             unless $username;
 
         return 0 unless &run_cmd("$sudo_path -u $username make -C .. clean",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
         return 0 unless &run_cmd("$sudo_path -u $username make -C ..",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
 
     } else {
 
         return 0 unless &run_cmd('make -C .. clean',
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
         return 0 unless &run_cmd('make -C ..',
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
 
     }
 
@@ -621,7 +635,7 @@ sub expected_code_version() {
     if ($line =~ /(\d.*\d)/) {
         my $version = $1;
         return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
         return 1 if &file_find_regex([qr/$version/], $current_test_file);
     }
     return 0;
@@ -631,7 +645,7 @@ sub dump_config() {
     my $test_hr = shift;
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
 
     ### search for one of the config vars (basic check)
     return 0 unless &file_find_regex([qr/SYSLOG_IDENTITY/],
@@ -644,7 +658,7 @@ sub override_config() {
     my $test_hr = shift;
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
 
     ### search for the altered config value
     return 0 unless &file_find_regex([qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
@@ -657,7 +671,7 @@ sub non_get_key_path() {
     my $test_hr = shift;
 
     return 0 if &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 unless &file_find_regex([qr/could\snot\sopen/i],
         $current_test_file);
     return 1;
@@ -667,7 +681,7 @@ sub no_allow_ip() {
     my $test_hr = shift;
 
     return 0 if &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 unless &file_find_regex([qr/must\suse\sone\sof/i],
         $current_test_file);
     return 1;
@@ -677,7 +691,7 @@ sub invalid_allow_ip() {
     my $test_hr = shift;
 
     return 0 if &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 unless &file_find_regex([qr/Invalid\sallow\sIP\saddress/i],
         $current_test_file);
     return 1;
@@ -687,7 +701,7 @@ sub invalid_proto() {
     my $test_hr = shift;
 
     return 0 if &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 unless &file_find_regex([qr/Invalid\sSPA\saccess\smessage/i],
         $current_test_file);
     return 1;
@@ -699,7 +713,7 @@ sub generate_spa_packet() {
     &write_key('fwknoptest', $local_key_file);
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 unless &file_find_regex([qr/final\spacked/i],
         $current_test_file);
 
@@ -726,16 +740,33 @@ sub basic_rijndael_spa() {
     return $rv;
 }
 
-sub server_start() {
+sub replay_detection_rijndael() {
     my $test_hr = shift;
 
-    my $rv = &client_server_interaction($test_hr, [],
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    ### do a complete SPA cycle and then parse the SPA packet out of the
+    ### current test file and re-send
 
-    unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
-            $server_output_file)) {
-        $rv = 0;
+    return 0 unless &basic_rijndael_spa($test_hr);
+
+    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $current_test_file\n");
+        return 0;
     }
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    my $rv = &client_server_interaction($test_hr, \@packets,
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
@@ -748,6 +779,36 @@ sub server_start() {
         $rv = 0;
     }
 
+    unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
+            $server_output_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub server_start() {
+    my $test_hr = shift;
+
+    my $rv = &client_server_interaction($test_hr, [],
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_output_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
+            $server_output_file)) {
+        $rv = 0;
+    }
+
     return $rv;
 }
 
@@ -756,11 +817,6 @@ sub server_stop() {
 
     my $rv = &client_server_interaction($test_hr, [],
             $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
-
-    unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
-            $server_output_file)) {
-        $rv = 0;
-    }
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
@@ -864,7 +920,7 @@ sub client_server_interaction() {
         sleep 1;
         unless (&run_cmd("$fwknopdCmd $default_server_conf_args " .
                 "--fw-list | grep $fake_ip |grep _exp_",
-                $current_test_file)) {
+                $cmd_out_tmp, $current_test_file)) {
             $rv = 0;
         }
     }
@@ -891,8 +947,38 @@ sub client_server_interaction() {
     return $rv;
 }
 
+sub get_spa_packet_from_file() {
+    my $file = shift;
+
+    my $spa_pkt = '';
+
+    my $found_trigger_line = 0;
+    open F, "< $file" or die "[*] Could not open file $file: $!";
+    while (<F>) {
+        if (/final\spacked/i) {
+            $found_trigger_line = 1;
+            next;
+        }
+        next unless $found_trigger_line;
+
+        ### the next line with non whitespace is the SPA packet
+        if (/(\S+)/) {
+            $spa_pkt = $1;
+            last;
+        }
+    }
+    close F;
+
+    return $spa_pkt;
+}
+
 sub send_packets() {
     my $pkts_ar = shift;
+
+    open F, ">> $current_test_file" or die $!;
+    print F "[+] send_packets(): Sending the following packets...\n";
+    print F Dumper $pkts_ar;
+    close F;
 
     for my $pkt_hr (@$pkts_ar) {
         if ($pkt_hr->{'proto'} eq 'tcp' or $pkt_hr->{'proto'} eq 'udp') {
@@ -922,7 +1008,7 @@ sub fw_list() {
     my $test_hr = shift;
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 1;
 }
 
@@ -930,7 +1016,7 @@ sub fw_list_all() {
     my $test_hr = shift;
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 1;
 }
 
@@ -938,7 +1024,7 @@ sub fw_flush() {
     my $test_hr = shift;
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 1;
 }
 
@@ -946,7 +1032,7 @@ sub usage_info() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     return 0 unless &run_cmd("$test_hr->{'binary'} -h",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 1;
 }
 
@@ -954,7 +1040,7 @@ sub no_such_arg() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     return 0 if &run_cmd("$test_hr->{'binary'} --no-such-arg",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 1;
 }
 
@@ -963,7 +1049,7 @@ sub pie_binary() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
         $current_test_file);
     return 1;
@@ -974,7 +1060,7 @@ sub stack_protected_binary() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
         $current_test_file);
     return 1;
@@ -985,7 +1071,7 @@ sub fortify_source_functions() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
         $current_test_file);
     return 1;
@@ -996,7 +1082,7 @@ sub read_only_relocations() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
         $current_test_file);
     return 1;
@@ -1007,7 +1093,7 @@ sub immediate_binding() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
         $current_test_file);
     return 1;
@@ -1016,7 +1102,7 @@ sub immediate_binding() {
 sub specs() {
 
      &run_cmd("$fwknopdCmd $default_server_conf_args --fw-list-all",
-            $current_test_file);
+            $cmd_out_tmp, $current_test_file);
 
     for my $cmd (
         'uname -a',
@@ -1036,7 +1122,7 @@ sub specs() {
         'ls -l /usr/lib/*fko*',
         'ls -l /usr/local/lib/*fko*',
     ) {
-        &run_cmd($cmd, $current_test_file);
+        &run_cmd($cmd, $cmd_out_tmp, $current_test_file);
     }
     return 1;
 }
@@ -1071,7 +1157,8 @@ sub start_fwknopd() {
     if ($pid == 0) {
 
         ### we are the child, so start fwknopd
-        exit &run_cmd($test_hr->{'fwknopd_cmdline'}, $server_output_file);
+        exit &run_cmd($test_hr->{'fwknopd_cmdline'},
+            $server_cmd_tmp, $server_output_file);
     }
     return $pid;
 }
@@ -1092,12 +1179,13 @@ sub dump_pids() {
         or die "[*] Could not open $current_test_file: $!";
     print C "\n" . localtime() . " [+] PID dump:\n";
     close C;
-    &run_cmd("ps auxww | grep knop |grep -v grep", $current_test_file);
+    &run_cmd("ps auxww | grep knop |grep -v grep",
+        $cmd_out_tmp, $current_test_file);
     return;
 }
 
 sub run_cmd() {
-    my ($cmd, $file) = @_;
+    my ($cmd, $cmd_out, $file) = @_;
 
     if (-e $file) {
         open F, ">> $file"
@@ -1110,7 +1198,17 @@ sub run_cmd() {
         print F "CMD: $cmd\n";
         close F;
     }
-    my $rv = ((system "$cmd >> $file 2>&1") >> 8);
+
+    my $rv = ((system "$cmd > $cmd_out 2>&1") >> 8);
+
+    open C, "< $cmd_out" or die "[*] Could not open $cmd_out: $!";
+    my @cmd_lines = <C>;
+    close C;
+
+    open F, ">> $file" or die "[*] Could not open $file: $!";
+    print F $_ for @cmd_lines;
+    close F;
+
     if ($rv == 0) {
         return 1;
     }
@@ -1152,6 +1250,7 @@ sub init() {
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
+    die "[*] $run_dir directory does not exist." unless -d $run_dir;
     die "[*] default config $default_conf does not exist" unless -e $default_conf;
     die "[*] default access config $default_access_conf does not exist"
         unless -e $default_access_conf;
@@ -1196,25 +1295,21 @@ sub init() {
 
 sub is_fwknopd_running() {
 
-    my $cmd = "$fwknopdCmd $default_server_conf_args --status";
+    &run_cmd("$fwknopdCmd $default_server_conf_args --status",
+        $cmd_out_tmp, $current_test_file);
 
-    &run_cmd($cmd, $current_test_file);
-    return 0 if &file_find_regex([qr/no\s+running/i], $current_test_file);
+    return 0 if &file_find_regex([qr/no\s+running/i], $cmd_out_tmp);
+
     return 1;
 }
 
 sub stop_fwknopd() {
 
-    my $cmd = "$fwknopdCmd $default_server_conf_args -K";
-    &run_cmd($cmd, $current_test_file);
+    &run_cmd("$fwknopdCmd $default_server_conf_args -K",
+        $cmd_out_tmp, $current_test_file);
 
     sleep 1;
 
-    if (&is_fwknopd_running()) {
-        &write_test_file("[*] stop_fwknopd(): Could not stop fwknopd.\n");
-    } else {
-        &write_test_file("[*] stop_fwknopd(): Successfully stopped fwknopd.\n");
-    }
     return;
 }
 
