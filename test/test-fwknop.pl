@@ -60,6 +60,8 @@ my $NO_FW_RULE = 2;
 my $REQUIRED = 1;
 my $OPTIONAL = 0;
 
+my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
+
 exit 1 unless GetOptions(
     'Prepare-results'   => \$prepare_results,
     'fwknop-path=s'     => \$fwknopCmd,
@@ -512,6 +514,15 @@ my @tests = (
     },
     {
         'category' => 'Rijndael SPA ops',
+        'subcategory' => 'server',
+        'detail'   => 'digest cache structure',
+        'err_msg'  => 'improper digest cache structure',
+        'function' => \&digest_cache_structure,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA ops',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -897,6 +908,45 @@ sub replay_detection_rijndael() {
     unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
             $server_test_file)) {
         $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub digest_cache_structure() {
+    my $test_hr = shift;
+    my $rv = 1;
+
+    &run_cmd("file $default_digest_file", $cmd_out_tmp, $current_test_file);
+
+    if (&file_find_regex([qr/ASCII/i], $cmd_out_tmp)) {
+
+        ### the format should be:
+        ### <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>
+        open F, "< $default_digest_file" or
+            die "[*] could not open $default_digest_file: $!";
+        while (<F>) {
+            next if /^#/;
+            next unless /\S/;
+            unless (m|^\S+\s+\d+\s+$ip_re\s+\d+\s+$ip_re\s+\d+\s+\d+|) {
+                &write_test_file("[-] invalid digest.cache line: $_");
+                $rv = 0;
+                last;
+            }
+        }
+        close F;
+    } elsif (&file_find_regex([qr/dbm/i], $cmd_out_tmp)) {
+        &write_test_file("[+] DBM digest file format, " .
+            "assuming this is valid.\n");
+    } else {
+        ### don't know what kind of file the digest.cache is
+        &write_test_file("[-] unrecognized file type for " .
+            "$default_digest_file.\n");
+        $rv = 0;
+    }
+
+    if ($rv) {
+        &write_test_file("[+] valid digest.cache structure.\n");
     }
 
     return $rv;
@@ -1643,7 +1693,6 @@ sub init() {
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
-    die "[*] $run_dir directory does not exist." unless -d $run_dir;
     die "[*] default config $default_conf does not exist" unless -e $default_conf;
     die "[*] default access config $default_access_conf does not exist"
         unless -e $default_access_conf;
@@ -1651,6 +1700,9 @@ sub init() {
 
     unless (-d $output_dir) {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
+    }
+    unless (-d $run_dir) {
+        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
     }
 
     for my $file (glob("$output_dir/*.test")) {
