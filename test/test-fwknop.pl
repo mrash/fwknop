@@ -490,6 +490,18 @@ my @tests = (
     {
         'category' => 'Rijndael SPA ops',
         'subcategory' => 'client+server',
+        'detail'   => "-P bpf SPA over port $non_std_spa_port",
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_over_non_std_port,
+        'cmdline'  => "$default_client_args --server-port $non_std_spa_port",
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose " .
+            qq|-P "udp port $non_std_spa_port"|,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection_rijndael,
@@ -801,6 +813,42 @@ sub basic_rijndael_spa() {
         }
     } else {
         &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub spa_over_non_std_port() {
+    my $test_hr = shift;
+
+    my $rv = &client_server_interaction($test_hr, [],
+            $USE_CLIENT, $REQUIRE_FW_RULE, $NO_FORCE_STOP);
+
+    sleep 2;
+
+    ### the firewall rule should be timed out (3 second timeout
+    ### as defined in the access.conf file
+    if (&is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule not timed out.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule timed out.\n");
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_test_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
+            $server_test_file)) {
         $rv = 0;
     }
 
