@@ -726,6 +726,19 @@ sub basic_rijndael_spa() {
     my $rv = &client_server_interaction($test_hr, [],
             $USE_CLIENT, $REQUIRE_FW_RULE, $NO_FORCE_STOP);
 
+    sleep 2;
+
+    ### the firewall rule should be timed out (3 second timeout
+    ### as defined in the access.conf file
+    if (&run_cmd("$fwknopdCmd $default_server_conf_args " .
+            "--fw-list | grep $fake_ip |grep _exp_",
+            $cmd_out_tmp, $current_test_file)) {
+        &write_test_file("[-] new fw rule not timed out.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule timed out.\n");
+    }
+
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         unless (&file_find_regex([qr/Got\sSIGTERM/],
@@ -921,6 +934,7 @@ sub client_server_interaction() {
         unless (&run_cmd("$fwknopdCmd $default_server_conf_args " .
                 "--fw-list | grep $fake_ip |grep _exp_",
                 $cmd_out_tmp, $current_test_file)) {
+            &write_test_file("[-] new fw rules does not exist.\n");
             $rv = 0;
         }
     }
@@ -1190,12 +1204,12 @@ sub run_cmd() {
     if (-e $file) {
         open F, ">> $file"
             or die "[*] Could not open $file: $!";
-        print F "CMD: $cmd\n";
+        print F localtime() . " CMD: $cmd\n";
         close F;
     } else {
         open F, "> $file"
             or die "[*] Could not open $file: $!";
-        print F "CMD: $cmd\n";
+        print F localtime() . " CMD: $cmd\n";
         close F;
     }
 
