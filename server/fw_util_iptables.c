@@ -867,7 +867,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                     if(*rn_start == '\n')
                         break;
                 }
-                
+
                 if(*rn_start != '\n')
                 {
                     /* This should not happen. But if it does, complain,
@@ -897,7 +897,7 @@ check_firewall_rules(fko_srv_options_t *opts)
 
                     break;
                 }
-                 
+
                 strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
 
                 zero_cmd_buffers();
@@ -908,7 +908,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                     ch[i].to_chain,
                     atoi(rule_num_str) - rn_offset
                 );
- 
+
 
 //fprintf(stderr, "DELETE RULE CMD: %s\n", cmd_buf);
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
