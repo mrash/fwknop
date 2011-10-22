@@ -30,6 +30,7 @@ my $sniff_alarm = 20;
 my $loopback_ip = '127.0.0.1';
 my $fake_ip     = '127.0.0.2';
 my $default_spa_port = 62201;
+my $non_std_spa_port = 12345;
 #================== end config ===================
 
 my $passed = 0;
@@ -462,6 +463,18 @@ my @tests = (
             "-i $loopback_intf --packet-limit 1 --foreground --verbose",
         'fatal'    => $NO
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => '-P bpf filter ignore packet',
+        'err_msg'  => 'filter did not ignore packet',
+        'function' => \&server_bpf_ignore_packet,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --packet-limit 1 --foreground --verbose " .
+            qq|-P "udp port $non_std_spa_port"|,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'Rijndael SPA ops',
@@ -834,6 +847,61 @@ sub replay_detection_rijndael() {
     }
 
     unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub server_bpf_ignore_packet() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    unless (&generate_spa_packet($test_hr)) {
+        &write_test_file("[-] fwknop client execution error.\n");
+        $rv = 0;
+    }
+
+    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $current_test_file\n");
+        return 0;
+    }
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    $rv = &client_server_interaction($test_hr, \@packets,
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule created.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n");
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_test_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
             $server_test_file)) {
         $rv = 0;
     }
