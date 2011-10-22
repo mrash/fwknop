@@ -15,15 +15,20 @@ my $run_dir        = 'run';
 my $configure_path = '../configure';
 my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
+my $gpg_client_home_dir = "$conf_dir/client-gpg";
 
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
+my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
 
 my $fwknopCmd  = '../client/.libs/fwknop';
 my $fwknopdCmd = '../server/.libs/fwknopd';
 my $libfko_bin = "$lib_dir/libfko.so.0.0.3";
+
+my $gpg_server_key = '361BBAD4';
+my $gpg_client_key = '6A3FAD56';
 
 my $sniff_alarm = 20;
 
@@ -566,6 +571,22 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete SPA cycle',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&basic_gpg_spa,
+        'cmdline'  => "$default_client_args --gpg-encryption " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir",
+        'fwknopd_cmdline'  => "$fwknopdCmd -c $default_conf " .
+            "-a $gpg_access_conf -i $loopback_intf --foreground --verbose " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fatal'    => $NO
+    },
+
 );
 
 my %test_keys = (
@@ -800,6 +821,37 @@ sub generate_spa_packet() {
 }
 
 sub basic_rijndael_spa() {
+    my $test_hr = shift;
+
+    my $rv = &client_server_interaction($test_hr, [],
+            $USE_CLIENT, $REQUIRE_FW_RULE, $NO_FORCE_STOP);
+
+    sleep 2;
+
+    ### the firewall rule should be timed out (3 second timeout
+    ### as defined in the access.conf file
+    if (&is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule not timed out.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule timed out.\n");
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_test_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub basic_gpg_spa() {
     my $test_hr = shift;
 
     my $rv = &client_server_interaction($test_hr, [],
@@ -1547,6 +1599,8 @@ sub specs() {
      &run_cmd("$fwknopdCmd $default_server_conf_args --fw-list-all",
             $cmd_out_tmp, $current_test_file);
 
+    my $have_gpgme = 0;
+
     for my $cmd (
         'uname -a',
         'uptime',
@@ -1566,7 +1620,18 @@ sub specs() {
         'ls -l /usr/local/lib/*fko*',
     ) {
         &run_cmd($cmd, $cmd_out_tmp, $current_test_file);
+
+        if ($cmd =~ /^ldd/) {
+            $have_gpgme++ if &file_find_regex([qr/gpgme/], $cmd_out_tmp);
+        }
     }
+
+    ### all three of fwknop/fwknopd/libfko must link against gpgme in order
+    ### to enable gpg tests
+    unless ($have_gpgme == 3) {
+        push @tests_to_exclude, "GPG";
+    }
+
     return 1;
 }
 
