@@ -42,8 +42,8 @@ my @tests_to_exclude = ();
 my $list_mode = 0;
 my $loopback_intf = 'lo';  ### default on linux
 my $prepare_results = 0;
-my $current_test_file  = "$output_dir/init";
-my $server_output_file = '';
+my $current_test_file = "$output_dir/init";
+my $server_test_file  = '';
 my $enable_recompilation_warnings_check = 0;
 my $sudo_path = '';
 my $help = 0;
@@ -485,7 +485,50 @@ my @tests = (
             "-i $loopback_intf --foreground --verbose",
         'fatal'    => $NO
     },
-
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'non-base64 altered SPA data',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&altered_non_base64_spa_data,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'base64 altered SPA data',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&altered_base64_spa_data,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'appended data to SPA pkt',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&appended_spa_data,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'prepended data to SPA pkt',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&prepended_spa_data,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose",
+        'fatal'    => $NO
+    },
 
 );
 
@@ -534,7 +577,7 @@ sub run_test() {
 
     $executed++;
     $current_test_file  = "$output_dir/$executed.test";
-    $server_output_file = "$output_dir/${executed}_fwknopd.test";
+    $server_test_file   = "$output_dir/${executed}_fwknopd.test";
 
     if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
@@ -730,9 +773,7 @@ sub basic_rijndael_spa() {
 
     ### the firewall rule should be timed out (3 second timeout
     ### as defined in the access.conf file
-    if (&run_cmd("$fwknopdCmd $default_server_conf_args " .
-            "--fw-list | grep $fake_ip |grep _exp_",
-            $cmd_out_tmp, $current_test_file)) {
+    if (&is_fw_rule_active()) {
         &write_test_file("[-] new fw rule not timed out.\n");
         $rv = 0;
     } else {
@@ -742,7 +783,7 @@ sub basic_rijndael_spa() {
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $server_output_file)) {
+                $server_test_file)) {
             $rv = 0;
         }
     } else {
@@ -784,7 +825,7 @@ sub replay_detection_rijndael() {
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $server_output_file)) {
+                $server_test_file)) {
             $rv = 0;
         }
     } else {
@@ -793,7 +834,231 @@ sub replay_detection_rijndael() {
     }
 
     unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
-            $server_output_file)) {
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub altered_non_base64_spa_data() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    unless (&generate_spa_packet($test_hr)) {
+        &write_test_file("[-] fwknop client execution error.\n");
+        $rv = 0;
+    }
+
+    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $current_test_file\n");
+        return 0;
+    }
+
+    ### alter one byte (change to a ":")
+    $spa_pkt =~ s|^(.{3}).|$1:|;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    $rv = &client_server_interaction($test_hr, \@packets,
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule created.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n");
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_test_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub altered_base64_spa_data() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    unless (&generate_spa_packet($test_hr)) {
+        &write_test_file("[-] fwknop client execution error.\n");
+        $rv = 0;
+    }
+
+    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $current_test_file\n");
+        return 0;
+    }
+
+    $spa_pkt =~ s|^(.{3}).|AAAA|;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    $rv = &client_server_interaction($test_hr, \@packets,
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule created.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n");
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_test_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub appended_spa_data() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    unless (&generate_spa_packet($test_hr)) {
+        &write_test_file("[-] fwknop client execution error.\n");
+        $rv = 0;
+    }
+
+    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $current_test_file\n");
+        return 0;
+    }
+
+    $spa_pkt .= 'AAAA';
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    $rv = &client_server_interaction($test_hr, \@packets,
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule created.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n");
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_test_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub prepended_spa_data() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    unless (&generate_spa_packet($test_hr)) {
+        &write_test_file("[-] fwknop client execution error.\n");
+        $rv = 0;
+    }
+
+    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $current_test_file\n");
+        return 0;
+    }
+
+    $spa_pkt = 'AAAA' . $spa_pkt;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    $rv = &client_server_interaction($test_hr, \@packets,
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule created.\n");
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n");
+    }
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $server_test_file)) {
+            $rv = 0;
+        }
+    } else {
+        &write_test_file("[-] server is not running.\n");
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
+            $server_test_file)) {
         $rv = 0;
     }
 
@@ -809,7 +1074,7 @@ sub server_start() {
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $server_output_file)) {
+                $server_test_file)) {
             $rv = 0;
         }
     } else {
@@ -818,7 +1083,7 @@ sub server_start() {
     }
 
     unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
-            $server_output_file)) {
+            $server_test_file)) {
         $rv = 0;
     }
 
@@ -834,7 +1099,7 @@ sub server_stop() {
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $server_output_file)) {
+                $server_test_file)) {
             $rv = 0;
         }
     } else {
@@ -863,12 +1128,12 @@ sub server_packet_limit() {
             $USE_PREDEF_PKTS, $NO_FW_RULE, $FORCE_STOP);
 
     unless (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
-            $server_output_file)) {
+            $server_test_file)) {
         $rv = 0;
     }
 
     unless (&file_find_regex([qr/Shutting\sDown\sfwknopd/i],
-            $server_output_file)) {
+            $server_test_file)) {
         $rv = 0;
     }
 
@@ -891,7 +1156,7 @@ sub server_ignore_small_packets() {
         $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
 
     if (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
-            $server_output_file)) {
+            $server_test_file)) {
         $rv = 0;
     }
 
@@ -931,9 +1196,7 @@ sub client_server_interaction() {
     if ($fw_rules_flag == $REQUIRE_FW_RULE) {
         ### check to see if the SPA packet resulted in a new fw access rule
         sleep 1;
-        unless (&run_cmd("$fwknopdCmd $default_server_conf_args " .
-                "--fw-list | grep $fake_ip |grep _exp_",
-                $cmd_out_tmp, $current_test_file)) {
+        unless (&is_fw_rule_active()) {
             &write_test_file("[-] new fw rules does not exist.\n");
             $rv = 0;
         }
@@ -1172,7 +1435,7 @@ sub start_fwknopd() {
 
         ### we are the child, so start fwknopd
         exit &run_cmd($test_hr->{'fwknopd_cmdline'},
-            $server_cmd_tmp, $server_output_file);
+            $server_cmd_tmp, $server_test_file);
     }
     return $pid;
 }
@@ -1305,6 +1568,13 @@ sub init() {
     }
 
     return;
+}
+
+sub is_fw_rule_active() {
+    return 1 if &run_cmd("$fwknopdCmd $default_server_conf_args " .
+            "--fw-list | grep $fake_ip |grep _exp_",
+            $cmd_out_tmp, $current_test_file);
+    return 0;
 }
 
 sub is_fwknopd_running() {
