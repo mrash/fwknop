@@ -87,7 +87,16 @@ exit 1 unless GetOptions(
 my $default_client_args = "$fwknopCmd -A tcp/22 -a $fake_ip " .
     "-D $loopback_ip --get-key $local_key_file --verbose";
 
+my $default_client_gpg_args = "$default_client_args " .
+    "--gpg-recipient-key $gpg_server_key " .
+    "--gpg-signer-key $gpg_client_key " .
+    "--gpg-home-dir $gpg_client_home_dir";
+
 my $default_server_conf_args = "-c $default_conf -a $default_access_conf " .
+    "-d $default_digest_file -p $default_pid_file";
+
+my $default_server_gpg_args = "$fwknopdCmd -c $default_conf " .
+    "-a $gpg_access_conf -i $loopback_intf --foreground --verbose " .
     "-d $default_digest_file -p $default_pid_file";
 
 ### point the compiled binaries at the local libary path
@@ -488,7 +497,7 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'complete SPA cycle',
         'err_msg'  => 'could not complete SPA cycle',
-        'function' => \&basic_rijndael_spa,
+        'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose",
@@ -511,7 +520,7 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
         'err_msg'  => 'could not detect replay attack',
-        'function' => \&replay_detection_rijndael,
+        'function' => \&replay_detection,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose",
@@ -576,14 +585,60 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'complete SPA cycle',
         'err_msg'  => 'could not complete SPA cycle',
-        'function' => \&basic_gpg_spa,
-        'cmdline'  => "$default_client_args --gpg-encryption " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir",
-        'fwknopd_cmdline'  => "$fwknopdCmd -c $default_conf " .
-            "-a $gpg_access_conf -i $loopback_intf --foreground --verbose " .
-            "-d $default_digest_file -p $default_pid_file",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay attack detection',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'non-base64 altered SPA data',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&altered_non_base64_spa_data,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'base64 altered SPA data',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&altered_base64_spa_data,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'appended data to SPA pkt',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&appended_spa_data,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'prepended data to SPA pkt',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&prepended_spa_data,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => $default_server_gpg_args,
         'fatal'    => $NO
     },
 
@@ -820,38 +875,7 @@ sub generate_spa_packet() {
     return 1;
 }
 
-sub basic_rijndael_spa() {
-    my $test_hr = shift;
-
-    my $rv = &client_server_interaction($test_hr, [],
-            $USE_CLIENT, $REQUIRE_FW_RULE, $NO_FORCE_STOP);
-
-    sleep 2;
-
-    ### the firewall rule should be timed out (3 second timeout
-    ### as defined in the access.conf file
-    if (&is_fw_rule_active()) {
-        &write_test_file("[-] new fw rule not timed out.\n");
-        $rv = 0;
-    } else {
-        &write_test_file("[+] new fw rule timed out.\n");
-    }
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
-    }
-
-    return $rv;
-}
-
-sub basic_gpg_spa() {
+sub spa_cycle() {
     my $test_hr = shift;
 
     my $rv = &client_server_interaction($test_hr, [],
@@ -918,13 +942,13 @@ sub spa_over_non_std_port() {
     return $rv;
 }
 
-sub replay_detection_rijndael() {
+sub replay_detection() {
     my $test_hr = shift;
 
     ### do a complete SPA cycle and then parse the SPA packet out of the
     ### current test file and re-send
 
-    return 0 unless &basic_rijndael_spa($test_hr);
+    return 0 unless &spa_cycle($test_hr);
 
     my $spa_pkt = &get_spa_packet_from_file($current_test_file);
 
