@@ -674,11 +674,11 @@ exit 0;
 sub run_test() {
     my $test_hr = shift;
 
-    return unless &process_include_exclude($test_hr);
-
     my $msg = "[$test_hr->{'category'}]";
     $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
     $msg .= " $test_hr->{'detail'}";
+
+    return unless &process_include_exclude($msg);
 
     if ($list_mode) {
         print $msg, "\n";
@@ -707,13 +707,13 @@ sub run_test() {
 }
 
 sub process_include_exclude() {
-    my $test_hr = shift;
+    my $msg = shift;
 
     ### inclusions/exclusions
     if (@tests_to_include) {
         my $found = 0;
         for my $test (@tests_to_include) {
-            if ($test_hr->{'category'} =~ /$test/) {
+            if ($msg =~ /$test/) {
                 $found = 1;
                 last;
             }
@@ -723,7 +723,7 @@ sub process_include_exclude() {
     if (@tests_to_exclude) {
         my $found = 0;
         for my $test (@tests_to_exclude) {
-            if ($test_hr->{'category'} =~ /$test/) {
+            if ($msg =~ /$test/) {
                 $found = 1;
                 last;
             }
