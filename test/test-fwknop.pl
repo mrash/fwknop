@@ -641,6 +641,15 @@ my @tests = (
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fatal'    => $NO
     },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'server',
+        'detail'   => 'digest cache structure',
+        'err_msg'  => 'improper digest cache structure',
+        'function' => \&digest_cache_structure,
+        'fatal'    => $NO
+    },
+
 
 );
 
