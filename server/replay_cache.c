@@ -230,6 +230,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
     char            line_buf[MAX_LINE_LEN] = {0};
     char            src_ip[INET_ADDRSTRLEN+1] = {0};
     char            dst_ip[INET_ADDRSTRLEN+1] = {0};
+    long int        time_tmp;
 
     struct digest_cache_list *digest_elm = NULL;
 
@@ -309,7 +310,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
             &(digest_elm->cache_info.src_port),
             dst_ip,
             &(digest_elm->cache_info.dst_port),
-            &(digest_elm->cache_info.created)) != 7)
+            &time_tmp) != 7)
         {
             if(opts->verbose)
                 fprintf(stderr,
@@ -320,6 +321,8 @@ replay_file_cache_init(fko_srv_options_t *opts)
             free(digest_elm);
             continue;
         }
+        digest_elm->cache_info.created = time_tmp;
+
 
         if (inet_pton(AF_INET, src_ip, &(digest_elm->cache_info.src_ip)) != 1)
         {
