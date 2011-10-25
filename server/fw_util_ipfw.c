@@ -157,7 +157,7 @@ fw_dump_rules(fko_srv_options_t *opts)
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
             got_err++;
         }
     }
