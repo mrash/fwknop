@@ -25,7 +25,7 @@ my $default_pid_file    = "$run_dir/fwknopd.pid";
 
 my $fwknopCmd  = '../client/.libs/fwknop';
 my $fwknopdCmd = '../server/.libs/fwknopd';
-my $libfko_bin = "$lib_dir/libfko.so.0.0.3";
+my $libfko_bin = "$lib_dir/libfko.so";  ### this is a link
 
 my $gpg_server_key = '361BBAD4';
 my $gpg_client_key = '6A3FAD56';
@@ -46,7 +46,7 @@ my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
 my $list_mode = 0;
-my $loopback_intf = 'lo';  ### default on linux
+my $loopback_intf = '';
 my $prepare_results = 0;
 my $current_test_file = "$output_dir/init";
 my $server_test_file  = '';
@@ -83,6 +83,8 @@ exit 1 unless GetOptions(
 );
 
 &usage() if $help;
+
+&identify_loopback_intf();
 
 my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $fwknopCmd -A tcp/22 -a $fake_ip " .
     "-D $loopback_ip --get-key $local_key_file --verbose";
@@ -1770,6 +1772,12 @@ sub dots_print() {
 
 sub init() {
 
+    $|++; ### turn off buffering
+
+    $< == 0 && $> == 0 or
+        die "[*] $0: You must be root (or equivalent ",
+            "UID 0 account) to effectively test fwknop";
+
     ### validate test hashes
     my $hash_num = 0;
     for my $test_hr (@tests) {
@@ -1783,12 +1791,6 @@ sub init() {
         }
         $hash_num++;
     }
-
-    $|++; ### turn off buffering
-
-    $< == 0 && $> == 0 or
-        die "[*] $0: You must be root (or equivalent ",
-            "UID 0 account) to effectively test fwknop";
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
@@ -1836,6 +1838,58 @@ sub init() {
         ### disable compilation checks
         push @tests_to_exclude, 'recompilation';
     }
+
+    return;
+}
+
+sub identify_loopback_intf() {
+    return if $loopback_intf;
+
+    ### Linux:
+
+    ### lo    Link encap:Local Loopback
+    ###       inet addr:127.0.0.1  Mask:255.0.0.0
+    ###       inet6 addr: ::1/128 Scope:Host
+    ###       UP LOOPBACK RUNNING  MTU:16436  Metric:1
+    ###       RX packets:534709 errors:0 dropped:0 overruns:0 frame:0
+    ###       TX packets:534709 errors:0 dropped:0 overruns:0 carrier:0
+    ###       collisions:0 txqueuelen:0
+    ###       RX bytes:101110617 (101.1 MB)  TX bytes:101110617 (101.1 MB)
+
+    ### Freebsd:
+
+    ### lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> metric 0 mtu 16384
+    ###         options=3<RXCSUM,TXCSUM>
+    ###         inet6 fe80::1%lo0 prefixlen 64 scopeid 0x2
+    ###         inet6 ::1 prefixlen 128
+    ###         inet 127.0.0.1 netmask 0xff000000
+    ###         nd6 options=3<PERFORMNUD,ACCEPT_RTADV>
+
+    my $intf = '';
+    my $found_loopback_intf = 0;
+
+    my $cmd = 'ifconfig -a';
+    open C, "$cmd |" or die "[*] (use --loopback <name>) $cmd: $!";
+    while (<C>) {
+        if (/^(\S+?):?\s+.*loopback/i) {
+            $intf = $1;
+            next;
+        }
+        if (/^\S/ and $intf and not $found_loopback_intf) {
+            ### should not happen
+            last;
+        }
+        if ($intf and /\b127\.0\.0\.1\b/) {
+            $found_loopback_intf = 1;
+            last;
+        }
+    }
+    close C;
+
+    die "[*] could not determine loopback interface, use --loopback <name>"
+        unless $found_loopback_intf;
+
+    $loopback_intf = $intf;
 
     return;
 }
