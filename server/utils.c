@@ -34,7 +34,7 @@
 /* Generic hex dump function.
 */
 void
-hex_dump(unsigned char *data, int size)
+hex_dump(const unsigned char *data, const int size)
 {
     int ln, i, j = 0;
     char ascii_str[17] = {0};

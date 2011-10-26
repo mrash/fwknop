@@ -47,7 +47,7 @@ static unsigned char map2[] =
 };
 
 int
-b64_decode(char *in, unsigned char *out, int out_len)
+b64_decode(const char *in, unsigned char *out)
 {
     int i, v;
     unsigned char *dst = out;

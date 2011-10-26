@@ -38,7 +38,7 @@
 /* Take a given string, base64-encode it and append it to the given
  * buffer.
 */
-int
+static int
 append_b64(char* tbuf, char *str)
 {
     int   len = strlen(str);
@@ -92,7 +92,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
         if(ctx->nat_access == NULL || strlen(ctx->nat_access) == 0)
             return(FKO_ERROR_INCOMPLETE_SPA_DATA);
     }
- 
+
     /* Allocate our initial tmp buffer.
     */
     tbuf = calloc(1, FKO_ENCODE_TMP_BUF_SIZE);
@@ -111,7 +111,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
         free(tbuf);
         return(res);
     }
-    
+
     /* Add the timestamp.
     */
     offset = strlen(tbuf);
@@ -136,7 +136,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
     */
     offset = strlen(tbuf);
     sprintf(((char*)tbuf+offset), ":%i:", ctx->message_type);
- 
+
     /* Add the base64-encoded SPA message.
     */
     if((res = append_b64(tbuf, ctx->message)) != FKO_SUCCESS)
@@ -144,7 +144,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
         free(tbuf);
         return(res);
     }
-    
+
     /* If a nat_access message was given, add it to the SPA
      * message.
     */
@@ -157,7 +157,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
                 return(res);
         }
     }
- 
+
     /* If we have a server_auth field set.  Add it here.
      *
     */
@@ -206,7 +206,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Here we can clear the modified flags on the SPA data fields.
     */
     FKO_CLEAR_SPA_DATA_MODIFIED(ctx);
- 
+
     free(tbuf);
 
     return(FKO_SUCCESS);
@@ -222,7 +222,7 @@ fko_get_encoded_data(fko_ctx_t ctx, char **enc_msg)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    *enc_msg = ctx->encoded_msg; 
+    *enc_msg = ctx->encoded_msg;
 
     return(FKO_SUCCESS);
 }

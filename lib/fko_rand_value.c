@@ -58,7 +58,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
     size_t          amt_read;
 #endif
     unsigned long   seed;
-	char           *tmp_buf;
+    char           *tmp_buf;
 
     /* Context must be initialized.
     */
@@ -132,7 +132,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
     ctx->state |= FKO_DATA_MODIFIED;
 
     return(FKO_SUCCESS);
-} 
+}
 
 /* Return the current rand value.
 */

@@ -89,8 +89,8 @@ alarm_handler(int sig)
  * Note: XXX: We are not using the timeout parameter at present. We still need
  *       to implement a reliable timeout mechanism.
 */
-int
-_run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
+static int
+_run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
 {
     FILE   *ipt;
     int     retval = 0;
@@ -379,7 +379,7 @@ _run_extcmd(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeo
 /* Run an external command.  This is wrapper around _run_extcmd()
 */
 int
-run_extcmd(char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
+run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
 {
     return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout);
 }
@@ -387,7 +387,7 @@ run_extcmd(char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
 /* Run an external command as the specified user.  This is wrapper around _run_extcmd()
 */
 int
-run_extcmd_as(uid_t user_uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeout)
+run_extcmd_as(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
 {
     return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout);
 }

@@ -71,8 +71,8 @@ enum {
 
 /* Function prototypes
 */
-int run_extcmd(char *cmd, char *so_buf, size_t so_buf_sz, int timeout);
-int run_extcmd_as(uid_t uid, char *cmd, char *so_buf, size_t so_buf_sz, int timeout);
+int run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout);
+int run_extcmd_as(uid_t uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout);
 
 #endif /* EXTCMD_H */
 

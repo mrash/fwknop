@@ -33,8 +33,8 @@
 
 /* Convert a raw digest into its hex string representation.
 */
-void
-digest_to_hex(char *out, unsigned char *in, size_t size)
+static void
+digest_to_hex(char *out, const unsigned char *in, const size_t size)
 {
     size_t i;
 

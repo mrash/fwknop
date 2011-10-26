@@ -47,7 +47,7 @@ static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
  * daemon to stdout.
 */
 int
-fw_dump_rules(fko_srv_options_t *opts)
+fw_dump_rules(const fko_srv_options_t *opts)
 {
     int     i;
     int     res, got_err = 0;
@@ -82,7 +82,7 @@ fw_config_init(fko_srv_options_t *opts)
 }
 
 void
-fw_initialize(fko_srv_options_t *opts)
+fw_initialize(const fko_srv_options_t *opts)
 {
     int res = 0;
 
@@ -109,7 +109,7 @@ fw_cleanup(void)
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
 {
     /* TODO: Implement me */
 
@@ -156,7 +156,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
  * firewall rules.
 */
 void
-check_firewall_rules(fko_srv_options_t *opts)
+check_firewall_rules(const fko_srv_options_t *opts)
 {
 
     /* TODO: Implement me */

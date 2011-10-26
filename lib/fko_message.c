@@ -44,7 +44,7 @@ int got_allow_ip(const char *msg);
 /* Set the SPA message type.
 */
 int
-fko_set_spa_message_type(fko_ctx_t ctx, short msg_type)
+fko_set_spa_message_type(fko_ctx_t ctx, const short msg_type)
 {
     /* Must be initialized
     */
@@ -137,7 +137,7 @@ fko_set_spa_message(fko_ctx_t ctx, const char *msg)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     return(FKO_SUCCESS);
-} 
+}
 
 /* Return the SPA message data.
 */
@@ -162,7 +162,7 @@ validate_cmd_msg(const char *msg)
     const char   *ndx;
     int     res         = FKO_SUCCESS;
     int     startlen    = strlen(msg);
-    
+
 
     /* Should have a valid allow IP.
     */
@@ -176,7 +176,7 @@ validate_cmd_msg(const char *msg)
     ndx = strchr(msg, ',');
     if(ndx == NULL || (1+(ndx - msg)) >= startlen)
         return(FKO_ERROR_INVALID_SPA_COMMAND_MSG);
-    
+
     return(FKO_SUCCESS);
 }
 
@@ -198,7 +198,7 @@ validate_access_msg(const char *msg)
     ndx = strchr(msg, ',');
     if(ndx == NULL || (1+(ndx - msg)) >= startlen)
         return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
- 
+
     /* Look for a comma to see if this is a multi-part access request.
     */
     do {

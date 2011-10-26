@@ -180,7 +180,7 @@ process_sigs(fko_ctx_t fko_ctx, gpgme_verify_result_t vres)
 /* Get the GPG key for the given name or ID.
 */
 int
-get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, int signer)
+get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, const int signer)
 {
     int             res;
     const char     *name;

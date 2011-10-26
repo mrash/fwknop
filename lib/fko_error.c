@@ -36,7 +36,7 @@
 #endif
 
 const char*
-fko_errstr(int err_code)
+fko_errstr(const int err_code)
 {
     switch (err_code)
     {

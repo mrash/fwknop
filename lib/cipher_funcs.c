@@ -50,10 +50,10 @@
 
 /* Get random data.
 */
-void
-get_random_data(unsigned char *data, size_t len)
+static void
+get_random_data(unsigned char *data, const size_t len)
 {
-	uint32_t		i;
+    uint32_t    i;
 #ifdef WIN32
 	int				rnum;
 	struct _timeb	tb;
@@ -114,8 +114,8 @@ get_random_data(unsigned char *data, size_t len)
  * (iv).  This is is done to be compatible with the data produced via
  * the Perl Crypt::CBC module's use of Rijndael.
 */
-void
-rij_salt_and_iv(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
+static void
+rij_salt_and_iv(RIJNDAEL_context *ctx, const char *pass, const unsigned char *data)
 {
     char            pw_buf[16];
     unsigned char   tmp_buf[64];    /* How big does this need to be? */
@@ -136,7 +136,7 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
     }
     else
         strncpy(pw_buf, pass, 16);
-          
+
     /* If we are decrypting, data will contain the salt. Otherwise,
      * for encryption, we generate a random salt.
     */
@@ -180,8 +180,8 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
 
 /* Initialization entry point.
 */
-void
-rijndael_init(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
+static void
+rijndael_init(RIJNDAEL_context *ctx, const char *pass, const unsigned char *data)
 {
 
     /* Use ECB mode to be compatible with the Crypt::CBC perl module.
@@ -201,7 +201,7 @@ rijndael_init(RIJNDAEL_context *ctx, char *pass, unsigned char *data)
  * module would.
 */
 size_t
-rij_encrypt(unsigned char *in, size_t in_len, char *pass, unsigned char *out)
+rij_encrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];
@@ -255,7 +255,7 @@ rij_encrypt(unsigned char *in, size_t in_len, char *pass, unsigned char *out)
 /* Decrypt the given data.
 */
 size_t
-rij_decrypt(unsigned char *in, size_t in_len, char *pass, unsigned char *out)
+rij_decrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[16];
@@ -307,7 +307,7 @@ rij_decrypt(unsigned char *in, size_t in_len, char *pass, unsigned char *out)
             if(*(pad_s+i) != pad_val)
                 pad_err++;
         }
-            
+
         if(pad_err == 0)
             ondx -= pad_val;
     }

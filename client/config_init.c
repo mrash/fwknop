@@ -36,7 +36,7 @@
 /* Convert a digest_type string to its intger value.
 */
 static int
-digest_strtoint(char *dt_str)
+digest_strtoint(const char *dt_str)
 {
     if(strcasecmp(dt_str, "md5") == 0)
         return(FKO_DIGEST_MD5);
@@ -55,26 +55,26 @@ digest_strtoint(char *dt_str)
 /* Convert a protocol string to its intger value.
 */
 static int
-proto_strtoint(char *pr_str)
+proto_strtoint(const char *pr_str)
 {
-    if (strcasecmp(optarg, "udp") == 0)
+    if (strcasecmp(pr_str, "udp") == 0)
         return(FKO_PROTO_UDP);
-    else if (strcasecmp(optarg, "tcpraw") == 0)
+    else if (strcasecmp(pr_str, "tcpraw") == 0)
         return(FKO_PROTO_TCP_RAW);
-    else if (strcasecmp(optarg, "tcp") == 0)
+    else if (strcasecmp(pr_str, "tcp") == 0)
         return(FKO_PROTO_TCP);
-    else if (strcasecmp(optarg, "icmp") == 0)
+    else if (strcasecmp(pr_str, "icmp") == 0)
         return(FKO_PROTO_ICMP);
-    else if (strcasecmp(optarg, "http") == 0)
+    else if (strcasecmp(pr_str, "http") == 0)
         return(FKO_PROTO_HTTP);
-    else 
+    else
         return(-1);
 }
 
 /* Parse any time offset from the command line
 */
 static int
-parse_time_offset(char *offset_str)
+parse_time_offset(const char *offset_str)
 {
     int i, j;
     int offset      = 0;
@@ -122,7 +122,7 @@ parse_time_offset(char *offset_str)
 }
 
 static int
-create_fwknoprc(char *rcfile)
+create_fwknoprc(const char *rcfile)
 {
     FILE    *rc;
 
@@ -208,11 +208,13 @@ create_fwknoprc(char *rcfile)
         "###EOF###\n"
     );
 
+    fclose(rc);
+
     return(0);
 }
 
 static int
-parse_rc_param(fko_cli_options_t *options, char *var, char * val)
+parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
 {
     int     tmpint;
 

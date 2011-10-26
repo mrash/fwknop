@@ -59,11 +59,11 @@
  *       fw_util_<fw-type>.c files.
 */
 void fw_config_init(fko_srv_options_t *opts);
-void fw_initialize(fko_srv_options_t *opts);
+void fw_initialize(const fko_srv_options_t *opts);
 int fw_cleanup(void);
-void check_firewall_rules(fko_srv_options_t *opts);
-int fw_dump_rules(fko_srv_options_t *opts);
-int process_spa_request(fko_srv_options_t *opts, spa_data_t *spdat);
+void check_firewall_rules(const fko_srv_options_t *opts);
+int fw_dump_rules(const fko_srv_options_t *opts);
+int process_spa_request(const fko_srv_options_t *opts, spa_data_t *spdat);
 
 #endif /* FW_UTIL_H */
 

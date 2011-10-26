@@ -35,7 +35,7 @@
 /* Set the timestamp.
 */
 int
-fko_set_timestamp(fko_ctx_t ctx, int offset)
+fko_set_timestamp(fko_ctx_t ctx, const int offset)
 {
     time_t ts;
 
@@ -48,13 +48,13 @@ fko_set_timestamp(fko_ctx_t ctx, int offset)
 
     if(ts < 0)
         return(FKO_ERROR_INVALID_DATA);
- 
+
     ctx->timestamp = ts;
 
     ctx->state |= FKO_DATA_MODIFIED;
 
     return(FKO_SUCCESS);
-} 
+}
 
 /* Return the current timestamp.
 */

@@ -53,7 +53,7 @@ zero_cmd_buffers(void)
 }
 
 static int
-add_jump_rule(int chain_num)
+add_jump_rule(const int chain_num)
 {
     int res = 0;
 
@@ -81,7 +81,7 @@ add_jump_rule(int chain_num)
 }
 
 static int
-jump_rule_exists(int chain_num)
+jump_rule_exists(const int chain_num)
 {
     int     num, pos = 0;
     char    cmd_buf[CMD_BUFSIZE] = {0};
@@ -131,7 +131,7 @@ jump_rule_exists(int chain_num)
  * daemon to stdout.
 */
 int
-fw_dump_rules(fko_srv_options_t *opts)
+fw_dump_rules(const fko_srv_options_t *opts)
 {
     int     i;
     int     res, got_err = 0;
@@ -308,7 +308,7 @@ create_fw_chains(void)
 
 
 static void
-set_fw_chain_conf(int type, char *conf_str)
+set_fw_chain_conf(const int type, char *conf_str)
 {
     int i, j;
     char tbuf[1024]     = {0};
@@ -338,7 +338,7 @@ set_fw_chain_conf(int type, char *conf_str)
                 tbuf[i++] = *ndx;
         }
         ndx++;
-    } 
+    }
 
     /* Sanity check - j should be the number of chain fields
      * (excluding the type).
@@ -428,7 +428,7 @@ fw_config_init(fko_srv_options_t *opts)
 }
 
 void
-fw_initialize(fko_srv_options_t *opts)
+fw_initialize(const fko_srv_options_t *opts)
 {
     int res;
 
@@ -459,7 +459,7 @@ fw_cleanup(void)
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
 {
     char             nat_ip[16] = {0};
     char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
@@ -780,7 +780,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
  * firewall rules.
 */
 void
-check_firewall_rules(fko_srv_options_t *opts)
+check_firewall_rules(const fko_srv_options_t *opts)
 {
     char             exp_str[12];
     char             rule_num_str[6];

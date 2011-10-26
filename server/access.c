@@ -43,8 +43,8 @@
 
 /* Add an access string entry
 */
-void
-add_acc_string(char **var, char *val)
+static void
+add_acc_string(char **var, const char *val)
 {
     if((*var = strdup(val)) == NULL)
     {
@@ -58,7 +58,7 @@ add_acc_string(char **var, char *val)
 /* Add an access int entry
 */
 static int
-add_acc_int(int *var, char *val)
+add_acc_int(int *var, const char *val)
 {
     return(*var = atoi(val));
 }
@@ -66,7 +66,7 @@ add_acc_int(int *var, char *val)
 /* Add an access bool entry (unsigned char of 1 or 0)
 */
 static unsigned char
-add_acc_bool(unsigned char *var, char *val)
+add_acc_bool(unsigned char *var, const char *val)
 {
     return(*var = (strncasecmp(val, "Y", 1) == 0) ? 1 : 0);
 }
@@ -75,7 +75,7 @@ add_acc_bool(unsigned char *var, char *val)
  * comparisons of incoming source IPs against this mask.
 */
 static void
-add_source_mask(acc_stanza_t *acc, char *ip)
+add_source_mask(acc_stanza_t *acc, const char *ip)
 {
     char                *ndx;
     char                ip_str[16] = {0};
@@ -215,7 +215,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
         *proto = PROTO_TCP;
     else if(strcasecmp(proto_str, "udp") == 0)
         *proto = PROTO_UDP;
-    else 
+    else
     {
         log_msg(LOG_ERR,
             "Invalid protocol in access port entry: %s", pstr);
@@ -275,7 +275,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 /* Add a string list entry to the given acc_string_list.
 */
 static void
-add_string_list_ent(acc_string_list_t **stlist, char *str_str)
+add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
 {
     acc_string_list_t   *last_stlist, *new_stlist, *tmp_stlist;
 
@@ -304,7 +304,7 @@ add_string_list_ent(acc_string_list_t **stlist, char *str_str)
 
         last_stlist->next = new_stlist;
     }
-    
+
     new_stlist->str = strdup(str_str);
 
     if(new_stlist->str == NULL)
@@ -511,7 +511,7 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         */
         if(acc->gpg_remote_id != NULL && strlen(acc->gpg_remote_id))
             expand_acc_string_list(&(acc->gpg_remote_id_list), acc->gpg_remote_id);
- 
+
         acc = acc->next;
     }
 }
@@ -607,8 +607,8 @@ set_acc_defaults(fko_srv_options_t *opts)
 
 /* Perform some sanity checks on an acc stanza data.
 */
-int
-acc_data_is_valid(acc_stanza_t *acc)
+static int
+acc_data_is_valid(const acc_stanza_t *acc)
 {
     if((acc->key == NULL || !strlen(acc->key))
       && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw)))
@@ -774,8 +774,8 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 fprintf(stderr, "Unable to determine UID for CMD_EXEC_USER: %s.\n",
                     errno ? strerror(errno) : "Not a user on this system");
-                exit(EXIT_FAILURE); 
-            } 
+                exit(EXIT_FAILURE);
+            }
 
             curr_acc->cmd_exec_uid = pw->pw_uid;
         }
@@ -908,7 +908,7 @@ acc_check_source(fko_srv_options_t *opts, uint32_t ip)
  * match in the access port_list.
 */
 static int
-compare_port_list(acc_port_list_t *in, acc_port_list_t *ac, int match_any)
+compare_port_list(acc_port_list_t *in, acc_port_list_t *ac, const int match_any)
 {
     int a_cnt = 0;
     int i_cnt = 0;
@@ -1003,7 +1003,7 @@ cleanup_and_bail:
  * Return 1 if we are allowed
 */
 int
-acc_check_gpg_remote_id(acc_stanza_t *acc, char *gpg_id)
+acc_check_gpg_remote_id(acc_stanza_t *acc, const char *gpg_id)
 {
     acc_string_list_t *ndx;
 
@@ -1017,7 +1017,7 @@ acc_check_gpg_remote_id(acc_stanza_t *acc, char *gpg_id)
 /* Dump the configuration
 */
 void
-dump_access_list(fko_srv_options_t *opts)
+dump_access_list(const fko_srv_options_t *opts)
 {
     int             i = 0;
 

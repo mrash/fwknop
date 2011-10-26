@@ -36,16 +36,16 @@
 
 /* prototypes
 */
-char* get_user_pw(fko_cli_options_t *options, int crypt_op);
+static char * get_user_pw(fko_cli_options_t *options, const int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
-void errmsg(char *msg, int err);
+static void errmsg(const char *msg, const int err);
 static void show_last_command(void);
 static void save_args(int argc, char **argv);
 static void run_last_args(fko_cli_options_t *options);
 static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
-static void dump_transmit_options(fko_cli_options_t *options);
+static void dump_transmit_options(const fko_cli_options_t *options);
 
 int resolve_ip_http(fko_cli_options_t *options);
 
@@ -371,7 +371,7 @@ main(int argc, char **argv)
 }
 
 static void
-print_proto(int proto)
+print_proto(const int proto)
 {
     switch (proto) {
         case FKO_PROTO_UDP:
@@ -426,7 +426,7 @@ get_rand_port(fko_ctx_t ctx)
 }
 
 static void
-dump_transmit_options(fko_cli_options_t *options)
+dump_transmit_options(const fko_cli_options_t *options)
 {
     printf("Generating SPA packet:\n    protocol: ");
     print_proto(options->spa_proto),
@@ -450,12 +450,12 @@ ipv4_str_has_port(char *str)
     /* Check format and values.
     */
     if((sscanf(str, "%u.%u.%u.%u,%u", &o1, &o2, &o3, &o4, &p)) == 5
-		&& o1 >= 0 && o1 <= 255
-		&& o2 >= 0 && o2 <= 255
-		&& o3 >= 0 && o3 <= 255
-		&& o4 >= 0 && o4 <= 255
+        && o1 >= 0 && o1 <= 255
+        && o2 >= 0 && o2 <= 255
+        && o3 >= 0 && o3 <= 255
+        && o4 >= 0 && o4 <= 255
         && p  >  0 && p  <  65536)
-	{
+    {
         return 1;
     }
 
@@ -702,8 +702,8 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 
 /* Prompt for and receive a user password.
 */
-char*
-get_user_pw(fko_cli_options_t *options, int crypt_op)
+static char*
+get_user_pw(fko_cli_options_t *options, const int crypt_op)
 {
     char        *pw_ptr = NULL;
     static char *no_pw  = "";
@@ -755,7 +755,7 @@ get_user_pw(fko_cli_options_t *options, int crypt_op)
 /* Display an FKO error message.
 */
 void
-errmsg(char *msg, int err) {
+errmsg(const char *msg, const int err) {
     fprintf(stderr, "%s: %s: Error %i - %s\n",
         MY_NAME, msg, err, fko_errstr(err));
 }

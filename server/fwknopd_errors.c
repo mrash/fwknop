@@ -31,23 +31,10 @@
 #include "fwknopd_common.h"
 #include "fwknopd_errors.h"
 
-/* Attempt to determine the error code type and send the appropriate
- * response. Basically assume it is a libfko error if it is not an fwknopd
- * error code.
-*/
-const char*
-get_errstr(int err_code)
-{
-    if(! IS_FWKNOPD_ERROR(err_code))
-        return(fko_errstr(err_code));
-
-    return(fwknopd_errstr(err_code));
-}
-
 /* Return a string describing the meaning of the given error code.
 */
-const char*
-fwknopd_errstr(int err_code)
+static const char*
+fwknopd_errstr(const int err_code)
 {
     switch (err_code)
     {
@@ -106,5 +93,17 @@ fwknopd_errstr(int err_code)
     return("Undefined/unknown fwknopd Error");
 }
 
+/* Attempt to determine the error code type and send the appropriate
+ * response. Basically assume it is a libfko error if it is not an fwknopd
+ * error code.
+*/
+const char*
+get_errstr(const int err_code)
+{
+    if(! IS_FWKNOPD_ERROR(err_code))
+        return(fko_errstr(err_code));
+
+    return(fwknopd_errstr(err_code));
+}
 
 /***EOF***/

@@ -48,7 +48,7 @@
  * error code value if there is any indication the data is not valid spa data.
 */
 static int
-preprocess_spa_data(fko_srv_options_t *opts, char *src_ip)
+preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
 {
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -344,7 +344,7 @@ incoming_spa(fko_srv_options_t *opts)
         }
 
         if(opts->verbose)
-        log_msg(LOG_INFO, "Incoming SPA data signed by '%s'.", gpg_id);
+            log_msg(LOG_INFO, "Incoming SPA data signed by '%s'.", gpg_id);
 
         if(acc->gpg_remote_id != NULL && !acc_check_gpg_remote_id(acc, gpg_id))
         {
@@ -523,7 +523,7 @@ incoming_spa(fko_srv_options_t *opts)
 
         res = SPA_MSG_ACCESS_DENIED;
 
-        goto clean_and_bail;       
+        goto clean_and_bail;
     }
 
     /* At this point, we can process the SPA request.

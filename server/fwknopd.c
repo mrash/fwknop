@@ -42,11 +42,11 @@
 
 /* Prototypes
 */
-static void check_dir_path(const char *path, const char *path_name, unsigned char use_basename);
+static void check_dir_path(const char *path, const char *path_name, const unsigned char use_basename);
 static int make_dir_path(const char *path);
 static void daemonize_process(fko_srv_options_t *opts);
 static int write_pid_file(fko_srv_options_t *opts);
-static pid_t get_running_pid(fko_srv_options_t *opts);
+static pid_t get_running_pid(const fko_srv_options_t *opts);
 
 int
 main(int argc, char **argv)
@@ -382,7 +382,7 @@ main(int argc, char **argv)
 /* Ensure the specified directory exists.  If not, create it or die.
 */
 static void
-check_dir_path(const char *filepath, const char *fp_desc, unsigned char use_basename)
+check_dir_path(const char *filepath, const char *fp_desc, const unsigned char use_basename)
 {
     struct stat     st;
     int             res = 0;
@@ -659,7 +659,7 @@ write_pid_file(fko_srv_options_t *opts)
 }
 
 static pid_t
-get_running_pid(fko_srv_options_t *opts)
+get_running_pid(const fko_srv_options_t *opts)
 {
     int     op_fd;
     char    buf[PID_BUFLEN] = {0};

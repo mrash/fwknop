@@ -98,10 +98,10 @@ run_tcp_server(fko_srv_options_t *opts)
             strerror(errno));
         exit(EXIT_FAILURE);
     }
-      
+
     /* So that we can re-bind to it without TIME_WAIT problems
     */
-	setsockopt(s_sock, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
+    setsockopt(s_sock, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr));
 
     /* Make our main socket non-blocking so we don't have to be stuck on
      * listening for incoming connections.

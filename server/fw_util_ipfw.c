@@ -92,7 +92,7 @@ ipfw_set_exists(const char *fw_command, const unsigned short set_num)
  * daemon to stdout.
 */
 int
-fw_dump_rules(fko_srv_options_t *opts)
+fw_dump_rules(const fko_srv_options_t *opts)
 {
     int     res, got_err = 0;
 
@@ -189,7 +189,7 @@ fw_config_init(fko_srv_options_t *opts)
 }
 
 void
-fw_initialize(fko_srv_options_t *opts)
+fw_initialize(const fko_srv_options_t *opts)
 {
     int             res = 0;
     unsigned short  curr_rule;
@@ -385,7 +385,7 @@ fw_cleanup(void)
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
 {
     unsigned short   rule_num;
 
@@ -507,7 +507,7 @@ process_spa_request(fko_srv_options_t *opts, spa_data_t *spadat)
  * firewall rules.
 */
 void
-check_firewall_rules(fko_srv_options_t *opts)
+check_firewall_rules(const fko_srv_options_t *opts)
 {
     char            exp_str[12];
     char            rule_num_str[6];
@@ -597,7 +597,7 @@ check_firewall_rules(fko_srv_options_t *opts)
                 if(*rn_start == '\n')
                     break;
             }
-            
+
             if(*rn_start == '\n')
             {
                 rn_start++;
@@ -631,7 +631,7 @@ check_firewall_rules(fko_srv_options_t *opts)
 
                 break;
             }
-             
+
             strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
 
             curr_rule = atoi(rule_num_str);
@@ -689,7 +689,7 @@ check_firewall_rules(fko_srv_options_t *opts)
  * corresponding dynamic rules.
 */
 void
-ipfw_purge_expired_rules(fko_srv_options_t *opts)
+ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 {
     char           *ndx, *co_end;
 

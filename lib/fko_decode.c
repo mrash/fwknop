@@ -93,7 +93,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     ctx->digest = strdup(ndx);
     if(ctx->digest == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
-    
+
     /* Zero out the rest of the encoded_msg bucket...
     */
     bzero((ndx-1), t_size);
@@ -129,7 +129,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
             break;
 
-    } 
+    }
 
     /* We give up here if the computed digest does not match the
      * digest in the message data.
@@ -171,7 +171,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     }
 
     strlcpy(tbuf, ndx, t_size+1);
-    
+
     ctx->username = malloc(t_size+1); /* Yes, more than we need */
     if(ctx->username == NULL)
     {
@@ -179,7 +179,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
-    b64_decode(tbuf, (unsigned char*)ctx->username, t_size);
+    b64_decode(tbuf, (unsigned char*)ctx->username);
 
     /* Extract the timestamp value.
     */
@@ -202,14 +202,14 @@ fko_decode_spa_data(fko_ctx_t ctx)
         free(tbuf);
         return(FKO_ERROR_INVALID_DATA);
     }
- 
+
     ctx->version = malloc(t_size+1);
     if(ctx->version == NULL)
     {
         free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
-    
+
     strlcpy(ctx->version, ndx, t_size+1);
 
     /* Extract the message type value.
@@ -235,7 +235,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     }
 
     strlcpy(tbuf, ndx, t_size+1);
-    
+
     ctx->message = malloc(t_size+1); /* Yes, more than we need */
     if(ctx->message == NULL)
     {
@@ -243,7 +243,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
-    b64_decode(tbuf, (unsigned char*)ctx->message, t_size);
+    b64_decode(tbuf, (unsigned char*)ctx->message);
 
     /* Extract nat_access string if the message_type indicates so.
     */
@@ -260,7 +260,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
         }
 
         strlcpy(tbuf, ndx, t_size+1);
-    
+
         ctx->nat_access = malloc(t_size+1); /* Yes, more than we need */
         if(ctx->nat_access == NULL)
         {
@@ -268,7 +268,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             return(FKO_ERROR_MEMORY_ALLOCATION);
         }
 
-        b64_decode(tbuf, (unsigned char*)ctx->nat_access, t_size);
+        b64_decode(tbuf, (unsigned char*)ctx->nat_access);
     }
 
     /* Now look for a server_auth string.
@@ -285,7 +285,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
           && ctx->message_type != FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
         {
             strlcpy(tbuf, ndx, t_size+1);
-    
+
             ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
             if(ctx->server_auth == NULL)
             {
@@ -293,8 +293,8 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             }
 
-            b64_decode(tbuf, (unsigned char*)ctx->server_auth, t_size);
- 
+            b64_decode(tbuf, (unsigned char*)ctx->server_auth);
+
             /* At this point we should be done.
             */
             free(tbuf);
@@ -306,7 +306,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
             return(FKO_SUCCESS);
         }
- 
+
         /* If we are here then we may still have a server_auth string,
          * or a timeout, or both. So we look for a ':' delimiter.  If
          * it is there we have both, if not we check the message_type
@@ -319,7 +319,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             /* Looks like we have both, so assume this is the 
             */
             strlcpy(tbuf, ndx, t_size+1);
-    
+
             ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
             if(ctx->server_auth == NULL)
             {
@@ -327,11 +327,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             }
 
-            b64_decode(tbuf, (unsigned char*)ctx->server_auth, t_size);
+            b64_decode(tbuf, (unsigned char*)ctx->server_auth);
 
             ndx += t_size + 1;
         }
- 
+
         /* Now we look for a timeout value if one is supposed to be there.
         */
         if(  ctx->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG

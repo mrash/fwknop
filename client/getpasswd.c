@@ -48,12 +48,12 @@ char*
 getpasswd(const char *prompt)
 {
     static char     pwbuf[MAX_PASS_LEN + 1] = {0};
-    char           *ptr;    
+    char           *ptr;
     int             c;
 
 #ifndef WIN32
     FILE           *fp;
-	sigset_t        sig, old_sig;
+    sigset_t        sig, old_sig;
     struct termios  ts, old_ts;
 
     if((fp = fopen(ctermid(NULL), "r+")) == NULL)

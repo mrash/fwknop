@@ -34,7 +34,7 @@
 /* Set the SPA Client Timeout data
 */
 int
-fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout)
+fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
 {
     int     old_msg_type = ctx->message_type;
 
@@ -62,7 +62,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout)
             case FKO_ACCESS_MSG:
                 ctx->message_type = FKO_CLIENT_TIMEOUT_ACCESS_MSG;
                 break;
-            
+
             case FKO_NAT_ACCESS_MSG:
                 ctx->message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
                 break;
@@ -94,7 +94,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, int timeout)
         ctx->state |= FKO_SPA_MSG_TYPE_MODIFIED;
 
     return(FKO_SUCCESS);
-} 
+}
 
 /* Return the SPA message data.
 */

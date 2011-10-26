@@ -34,7 +34,7 @@
 
 /* Prototypes
 */
-void hex_dump(unsigned char *data, int size);
+void hex_dump(const unsigned char *data, const int size);
 size_t strlcat(char *dst, const char *src, size_t siz);
 size_t strlcpy(char *dst, const char *src, size_t siz);
 

@@ -42,8 +42,8 @@
 
 /* Prep and encrypt using Rijndael
 */
-int
-_rijndael_encrypt(fko_ctx_t ctx, char *enc_key)
+static int
+_rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
 {
     char           *plain;
     char           *b64cipher;
@@ -79,7 +79,7 @@ _rijndael_encrypt(fko_ctx_t ctx, char *enc_key)
     strip_b64_eq(b64cipher);
 
     ctx->encrypted_msg = strdup(b64cipher);
-    
+
     /* Clean-up
     */
     free(plain);
@@ -94,11 +94,11 @@ _rijndael_encrypt(fko_ctx_t ctx, char *enc_key)
 
 /* Decode, decrypt, and parse SPA data into the context.
 */
-int
-_rijndael_decrypt(fko_ctx_t ctx, char *dec_key)
+static int
+_rijndael_decrypt(fko_ctx_t ctx, const char *dec_key)
 {
     char           *tbuf;
-	unsigned char  *ndx;
+    unsigned char  *ndx;
     unsigned char  *cipher;
     int             cipher_len, pt_len, i, err = 0;
 
@@ -133,8 +133,8 @@ _rijndael_decrypt(fko_ctx_t ctx, char *dec_key)
     cipher = malloc(strlen(ctx->encrypted_msg));
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
- 
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher, b64_len);
+
+    cipher_len = b64_decode(ctx->encrypted_msg, cipher);
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
@@ -144,7 +144,7 @@ _rijndael_decrypt(fko_ctx_t ctx, char *dec_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     pt_len = rij_decrypt(cipher, cipher_len, dec_key, (unsigned char*)ctx->encoded_msg);
- 
+
     /* Done with cipher...
     */
     free(cipher);
@@ -166,7 +166,7 @@ _rijndael_decrypt(fko_ctx_t ctx, char *dec_key)
 
     if(err > 0 || *ndx != ':')
         return(FKO_ERROR_DECRYPTION_FAILURE);
-    
+
     /* Call fko_decode and return the results.
     */
     return(fko_decode_spa_data(ctx));
@@ -177,8 +177,8 @@ _rijndael_decrypt(fko_ctx_t ctx, char *dec_key)
 
 /* Prep and encrypt using gpgme
 */
-int
-gpg_encrypt(fko_ctx_t ctx, char *enc_key)
+static int
+gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 {
     int             res;
     char           *plain;
@@ -242,8 +242,8 @@ gpg_encrypt(fko_ctx_t ctx, char *enc_key)
 
 /* Prep and decrypt using gpgme
 */
-int
-gpg_decrypt(fko_ctx_t ctx, char *dec_key)
+static int
+gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 {
     char           *tbuf;
     unsigned char  *cipher;
@@ -281,8 +281,8 @@ gpg_decrypt(fko_ctx_t ctx, char *dec_key)
     cipher = malloc(strlen(ctx->encrypted_msg));
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
- 
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher, strlen(ctx->encrypted_msg));
+
+    cipher_len = b64_decode(ctx->encrypted_msg, cipher);
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
@@ -297,7 +297,7 @@ gpg_decrypt(fko_ctx_t ctx, char *dec_key)
     res = gpgme_decrypt(ctx, cipher, cipher_len,
         dec_key,  (unsigned char**)&ctx->encoded_msg, &cipher_len
     );
- 
+
     /* Done with cipher...
     */
     free(cipher);
@@ -319,7 +319,7 @@ gpg_decrypt(fko_ctx_t ctx, char *dec_key)
 /* Set the SPA encryption type.
 */
 int
-fko_set_spa_encryption_type(fko_ctx_t ctx, short encrypt_type)
+fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type)
 {
     /* Must be initialized
     */
@@ -354,7 +354,7 @@ fko_get_spa_encryption_type(fko_ctx_t ctx, short *enc_type)
 /* Encrypt the encoded SPA data.
 */
 int
-fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
+fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
 {
     int             res = 0;
 
@@ -402,7 +402,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, char *enc_key)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 int
-fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
+fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
 {
     int     enc_type, res;
 
@@ -436,7 +436,7 @@ fko_decrypt_spa_data(fko_ctx_t ctx, char *dec_key)
 /* Return the assumed encryption type based on the raw encrypted data.
 */
 int
-fko_encryption_type(char *enc_data)
+fko_encryption_type(const char *enc_data)
 {
     int enc_data_len;
 
@@ -445,8 +445,8 @@ fko_encryption_type(char *enc_data)
     if(enc_data == NULL)
         return(FKO_ENCRYPTION_INVALID_DATA);
 
-    /* Determine type of encryption used.  For know, we are using the
-     * size of the message.  
+    /* Determine type of encryption used.  For now, we are using the
+     * size of the message.
      *
      * XXX: We will want to come up with a more reliable method of
      *      identifying the encryption type.
@@ -472,7 +472,7 @@ fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
 #if HAVE_LIBGPGME
     int             res;
     gpgme_key_t     key     = NULL;
-    
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -524,7 +524,7 @@ fko_set_gpg_exe(fko_ctx_t ctx, const char *gpg_exe)
     if(stat(gpg_exe, &st) != 0)
         return(FKO_ERROR_GPGME_BAD_GPG_EXE);
 
-    if(!S_ISREG(st.st_mode) && !S_ISLNK(st.st_mode)) 
+    if(!S_ISREG(st.st_mode) && !S_ISLNK(st.st_mode))
         return(FKO_ERROR_GPGME_BAD_GPG_EXE);
 
     ctx->gpg_exe = strdup(gpg_exe);
@@ -583,7 +583,7 @@ fko_set_gpg_signer(fko_ctx_t ctx, const char *signer)
 #if HAVE_LIBGPGME
     int             res;
     gpgme_key_t     key     = NULL;
-    
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -653,7 +653,7 @@ fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir)
     if(stat(gpg_home_dir, &st) != 0)
         return(FKO_ERROR_GPGME_BAD_HOME_DIR);
 
-    if(!S_ISDIR(st.st_mode)) 
+    if(!S_ISDIR(st.st_mode))
         return(FKO_ERROR_GPGME_BAD_HOME_DIR);
 
     ctx->gpg_home_dir = strdup(gpg_home_dir);
@@ -686,7 +686,7 @@ fko_get_gpg_home_dir(fko_ctx_t ctx, char **home_dir)
 }
 
 int
-fko_set_gpg_signature_verify(fko_ctx_t ctx, unsigned char val)
+fko_set_gpg_signature_verify(fko_ctx_t ctx, const unsigned char val)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
@@ -720,7 +720,7 @@ fko_get_gpg_signature_verify(fko_ctx_t ctx, unsigned char *val)
 }
 
 int
-fko_set_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char val)
+fko_set_gpg_ignore_verify_error(fko_ctx_t ctx, const unsigned char val)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized

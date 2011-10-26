@@ -80,7 +80,7 @@ fko_set_spa_server_auth(fko_ctx_t ctx, const char *msg)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     return(FKO_SUCCESS);
-} 
+}
 
 /* Return the SPA message data.
 */

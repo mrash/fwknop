@@ -183,12 +183,12 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     /* Put the data in our 1-entry queue.
     */
     strlcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len+1);
-    opts->spa_pkt.packet_data_len = pkt_data_len; 
-    opts->spa_pkt.packet_proto    = proto; 
-    opts->spa_pkt.packet_src_ip   = src_ip; 
-    opts->spa_pkt.packet_dst_ip   = dst_ip; 
-    opts->spa_pkt.packet_src_port = src_port; 
-    opts->spa_pkt.packet_dst_port = dst_port; 
+    opts->spa_pkt.packet_data_len = pkt_data_len;
+    opts->spa_pkt.packet_proto    = proto;
+    opts->spa_pkt.packet_src_ip   = src_ip;
+    opts->spa_pkt.packet_dst_ip   = dst_ip;
+    opts->spa_pkt.packet_src_port = src_port;
+    opts->spa_pkt.packet_dst_port = dst_port;
 
     return;
 }

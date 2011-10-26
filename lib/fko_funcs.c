@@ -64,7 +64,7 @@ fko_new(fko_ctx_t *r_ctx)
         free(ctx);
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
-    
+
     ctx->version = ver;
 
     /* Rand value.
@@ -149,14 +149,14 @@ fko_new(fko_ctx_t *r_ctx)
     *r_ctx = ctx;
 
     return(FKO_SUCCESS);
-} 
+}
 
 /* Initialize an fko context with external (encrypted/encoded) data.
  * This is used to create a context with the purpose of decoding
  * and parsing the provided data into the context data.
 */
 int
-fko_new_with_data(fko_ctx_t *r_ctx, char *enc_msg, char *dec_key)
+fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg, const char *dec_key)
 {
     fko_ctx_t   ctx;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
@@ -261,12 +261,12 @@ fko_destroy(fko_ctx_t ctx)
         {
             gpgme_key_unref(ctx->recipient_key);
         }
-        
+
         if(ctx->signer_key != NULL)
         {
             gpgme_key_unref(ctx->signer_key);
         }
-        
+
         if(ctx->gpg_ctx != NULL)
             gpgme_release(ctx->gpg_ctx);
 
@@ -310,7 +310,7 @@ fko_get_version(fko_ctx_t ctx, char **version)
  * set.
 */
 int
-fko_spa_data_final(fko_ctx_t ctx, char *enc_key)
+fko_spa_data_final(fko_ctx_t ctx, const char *enc_key)
 {
     /* Must be initialized
     */
@@ -335,7 +335,7 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
     if(ctx->encrypted_msg == NULL || (strlen(ctx->encrypted_msg) < 1))
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
-    *spa_data = ctx->encrypted_msg; 
+    *spa_data = ctx->encrypted_msg;
 
     /* Notice we omit the first 10 bytes if Rijndael encryption is
      * used (to eliminate the consistent 'Salted__' string), and
@@ -353,7 +353,7 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 /* Set the fko SPA encrypted data.
 */
 int
-fko_set_spa_data(fko_ctx_t ctx, char *enc_msg)
+fko_set_spa_data(fko_ctx_t ctx, const char *enc_msg)
 {
     /* Must be initialized
     */
@@ -366,7 +366,7 @@ fko_set_spa_data(fko_ctx_t ctx, char *enc_msg)
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    return(FKO_SUCCESS); 
+    return(FKO_SUCCESS);
 }
 
 /***EOF***/

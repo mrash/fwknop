@@ -37,8 +37,8 @@
 /* Take an index and a string value. malloc the space for the value
  * and assign it to the array at the specified index.
 */
-void
-set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
+static void
+set_config_entry(fko_srv_options_t *opts, const int var_ndx, const char *value)
 {
     int space_needed;
 
@@ -77,21 +77,21 @@ set_config_entry(fko_srv_options_t *opts, int var_ndx, char *value)
     }
 
     strlcpy(opts->config[var_ndx], value, space_needed);
- 
+
     return;
 }
 
 /* Given a config parameter name, return its index or -1 if not found.
 */
-int
-config_entry_index(fko_srv_options_t *opts, char *var)
+static int
+config_entry_index(const fko_srv_options_t *opts, const char *var)
 {
     int i;
 
     for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         if(opts->config[i] != NULL && CONF_VAR_IS(var, config_map[i]))
             return(i);
- 
+
     return(-1);
 }
 
@@ -110,7 +110,7 @@ free_configs(fko_srv_options_t *opts)
 /* Parse the config file...
 */
 static void
-parse_config_file(fko_srv_options_t *opts, char *config_file)
+parse_config_file(fko_srv_options_t *opts, const char *config_file)
 {
     FILE           *cfile_ptr;
     unsigned int    numLines = 0;
@@ -731,7 +731,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
 /* Dump the configuration
 */
 void
-dump_config(fko_srv_options_t *opts)
+dump_config(const fko_srv_options_t *opts)
 {
     int i;
 
@@ -782,8 +782,11 @@ usage(void)
       " -S, --status            - Display the status of any running fwknopd process.\n"
       " -v, --verbose           - Set verbose mode.\n"
       " -V, --version           - Print version number.\n"
-      "     --fw-list           - List add firewall rules that fwknop has created\n"
+      "     --fw-list           - List all firewall rules that fwknop has created\n"
       "                           and then exit.\n"
+      "     --fw-list-all       - List all firewall rules in the complete policy,\n"
+      "                           including those that have nothing to with fwknop.\n"
+      "     --fw-flush          - Flush all firewall rules created by fwknop.\n"
       "\n"
     );
 

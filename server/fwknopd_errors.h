@@ -68,9 +68,7 @@ enum {
 
 /* Function prototypes
 */
-const char* fwknopd_errstr(int err_code);
-const char* get_errstr(int err_code);
-
+const char* get_errstr(const int err_code);
 
 #endif /* FWKNOPD_ERRORS_H */
 

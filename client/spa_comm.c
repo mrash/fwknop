@@ -79,8 +79,9 @@ static int is_ip(char *str)
 
 /* Send the SPA data via UDP packet.
 */
-int
-send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *options)
+static int
+send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
+    const fko_cli_options_t *options)
 {
     int     sock, res=0, error;
     struct  addrinfo *result, *rp, hints;
@@ -171,9 +172,10 @@ send_spa_packet_tcp_or_udp(char *spa_data, int sd_len, fko_cli_options_t *option
 
 /* Send the SPA data via raw TCP packet.
 */
-int
-send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
-    struct sockaddr_in *daddr, fko_cli_options_t *options)
+static int
+send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
+    const struct sockaddr_in *saddr, const struct sockaddr_in *daddr,
+    const fko_cli_options_t *options)
 {
 #ifdef WIN32
     fprintf(stderr,
@@ -283,9 +285,10 @@ send_spa_packet_tcp_raw(char *spa_data, int sd_len, struct sockaddr_in *saddr,
 
 /* Send the SPA data via ICMP packet.
 */
-int
-send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
-    struct sockaddr_in *daddr, fko_cli_options_t *options)
+static int
+send_spa_packet_icmp(const char *spa_data, const int sd_len,
+    const struct sockaddr_in *saddr, const struct sockaddr_in *daddr,
+    const fko_cli_options_t *options)
 {
 #ifdef WIN32
     fprintf(stderr, "send_spa_packet_icmp: raw packets are not yet supported.\n");
@@ -379,8 +382,9 @@ send_spa_packet_icmp(char *spa_data, int sd_len, struct sockaddr_in *saddr,
 
 /* Send the SPA data packet via an HTTP request
 */
-int
-send_spa_packet_http(char *spa_data, int sd_len, fko_cli_options_t *options)
+static int
+send_spa_packet_http(const char *spa_data, const int sd_len,
+    fko_cli_options_t *options)
 {
     char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
     char *ndx = options->http_proxy;
@@ -575,7 +579,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 
 /* Function to write SPA packet data to the filesystem
 */
-int write_spa_packet_data(fko_ctx_t ctx, fko_cli_options_t *options)
+int write_spa_packet_data(fko_ctx_t ctx, const fko_cli_options_t *options)
 {
     FILE   *fp;
     char   *spa_data;

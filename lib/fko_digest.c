@@ -37,7 +37,7 @@
 /* Set the SPA digest type.
 */
 int
-fko_set_spa_digest_type(fko_ctx_t ctx, short digest_type)
+fko_set_spa_digest_type(fko_ctx_t ctx, const short digest_type)
 {
     /* Must be initialized
     */
@@ -90,46 +90,46 @@ fko_set_spa_digest(fko_ctx_t ctx)
             md = malloc(MD_HEX_SIZE(MD5_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
-            
+
             md5_base64(md,
                 (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;    
+            break;
 
         case FKO_DIGEST_SHA1:
             md = malloc(MD_HEX_SIZE(SHA1_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
-            
+
             sha1_base64(md,
                 (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;    
+            break;
 
         case FKO_DIGEST_SHA256:
             md = malloc(MD_HEX_SIZE(SHA256_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
-            
+
             sha256_base64(md,
                 (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;    
+            break;
 
         case FKO_DIGEST_SHA384:
             md = malloc(MD_HEX_SIZE(SHA384_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
-            
+
             sha384_base64(md,
                 (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;    
+            break;
 
         case FKO_DIGEST_SHA512:
             md = malloc(MD_HEX_SIZE(SHA512_DIGEST_LENGTH)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
-            
+
             sha512_base64(md,
                 (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;    
+            break;
 
         default:
             return(FKO_ERROR_INVALID_DIGEST_TYPE);
@@ -144,7 +144,7 @@ fko_set_spa_digest(fko_ctx_t ctx)
     ctx->digest = md;
 
     return(FKO_SUCCESS);
-} 
+}
 
 int
 fko_get_spa_digest(fko_ctx_t ctx, char **md)
