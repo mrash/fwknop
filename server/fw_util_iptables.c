@@ -53,7 +53,7 @@ zero_cmd_buffers(void)
 }
 
 static int
-add_jump_rule(const int chain_num)
+add_jump_rule(const fko_srv_options_t *opts, const int chain_num)
 {
     int res = 0;
 
@@ -67,8 +67,11 @@ add_jump_rule(const int chain_num)
         fwc.chain[chain_num].to_chain
     );
 
-    //printf("(%i) CMD: '%s'\n", i, cmd_buf);
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if (opts->verbose)
+        log_msg(LOG_INFO, "add_jump_rule() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
         log_msg(LOG_INFO, "Added jump rule from chain: %s to chain: %s",
@@ -158,8 +161,11 @@ fw_dump_rules(const fko_srv_options_t *opts)
                 ch[i].table
             );
 
-            //printf("(%i) CMD: '%s'\n", i, cmd_buf);
             res = system(cmd_buf);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+                    cmd_buf, res);
 
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
@@ -190,8 +196,11 @@ fw_dump_rules(const fko_srv_options_t *opts)
                 ch[i].to_chain
             );
 
-            //printf("(%i) CMD: '%s'\n", i, cmd_buf);
             res = system(cmd_buf);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+                    cmd_buf, res);
 
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
@@ -208,7 +217,7 @@ fw_dump_rules(const fko_srv_options_t *opts)
 /* Quietly flush and delete all fwknop custom chains.
 */
 static void
-delete_all_chains(void)
+delete_all_chains(const fko_srv_options_t *opts)
 {
     int     i, res;
     int     jump_rule_num;
@@ -232,11 +241,15 @@ delete_all_chains(void)
                 jump_rule_num
             );
 
-            //printf("CMD: '%s'\n", cmd_buf);
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
         }
 
         zero_cmd_buffers();
@@ -253,18 +266,22 @@ delete_all_chains(void)
             fwc.chain[i].to_chain
         );
 
-        //printf("CMD: '%s'\n", cmd_buf);
         res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
     }
 }
 
 /* Create the fwknop custom chains (at least those that are configured).
 */
 static int
-create_fw_chains(void)
+create_fw_chains(const fko_srv_options_t *opts)
 {
     int     i;
     int     res, got_err = 0;
@@ -284,19 +301,22 @@ create_fw_chains(void)
             fwc.chain[i].to_chain
         );
 
-        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
         res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
             got_err++;
         }
 
         /* Then create the jump rule to that chain.
         */
-        res = add_jump_rule(i);
+        res = add_jump_rule(opts, i);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -434,11 +454,11 @@ fw_initialize(const fko_srv_options_t *opts)
 
     /* Flush the chains (just in case) so we can start fresh.
     */
-    delete_all_chains();
+    delete_all_chains(opts);
 
     /* Now create any configured chains.
     */
-    res = create_fw_chains();
+    res = create_fw_chains(opts);
 
     if(res != 0)
     {
@@ -448,9 +468,9 @@ fw_initialize(const fko_srv_options_t *opts)
 }
 
 int
-fw_cleanup(void)
+fw_cleanup(const fko_srv_options_t *opts)
 {
-    delete_all_chains();
+    delete_all_chains(opts);
     return(0);
 }
 
@@ -513,11 +533,11 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
          * required chain
         */
         if(jump_rule_exists(IPT_INPUT_ACCESS) == 0)
-            add_jump_rule(IPT_INPUT_ACCESS);
+            add_jump_rule(opts, IPT_INPUT_ACCESS);
 
         if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
             if(jump_rule_exists(IPT_OUTPUT_ACCESS) == 0)
-                add_jump_rule(IPT_OUTPUT_ACCESS);
+                add_jump_rule(opts, IPT_OUTPUT_ACCESS);
 
         /* Create an access command for each proto/port for the source ip.
         */
@@ -536,9 +556,12 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                 in_chain->target
             );
 
-//--DSS tmp
-//fprintf(stderr, "ADD CMD: %s\n", cmd_buf);
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
@@ -575,9 +598,12 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                     out_chain->target
                 );
 
-//--DSS tmp
-//fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+                if (opts->verbose)
+                    log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                        cmd_buf, res, err_buf);
+
                 if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Added OUTPUT Rule to %s for %s, %s expires at %u",
@@ -632,7 +658,7 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
             /* Make sure the required jump rule exists
             */
             if (jump_rule_exists(IPT_FORWARD_ACCESS) == 0)
-                add_jump_rule(IPT_FORWARD_ACCESS);
+                add_jump_rule(opts, IPT_FORWARD_ACCESS);
 
             zero_cmd_buffers();
 
@@ -648,9 +674,12 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                 fwd_chain->target
             );
 
-//--DSS tmp
-//fprintf(stderr, "ADD OUTPUT CMD: %s\n", cmd_buf);
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added FORWARD Rule to %s for %s, %s expires at %u",
@@ -676,7 +705,7 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
             /* Make sure the required jump rule exists
             */
             if (jump_rule_exists(IPT_DNAT_ACCESS) == 0)
-                add_jump_rule(IPT_DNAT_ACCESS);
+                add_jump_rule(opts, IPT_DNAT_ACCESS);
 
             zero_cmd_buffers();
 
@@ -693,9 +722,12 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                 nat_port
             );
 
-//--DSS tmp
-//fprintf(stderr, "ADD DNAT CMD: %s\n", cmd_buf);
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added DNAT Rule to %s for %s, %s expires at %u",
@@ -753,6 +785,11 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
             );
 
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added Source NAT Rule to %s for %s, %s expires at %u",
@@ -818,13 +855,17 @@ check_firewall_rules(const fko_srv_options_t *opts)
 
         res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
+        if (opts->verbose)
+            log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
         if(!EXTCMD_IS_SUCCESS(res))
         {
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
             continue;
         }
 
-        if(opts->verbose > 2)
+        if(opts->verbose > 1)
             log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
 
         ndx = strstr(cmd_out, EXPIRE_COMMENT_PREFIX);
@@ -856,7 +897,6 @@ check_firewall_rules(const fko_srv_options_t *opts)
             strlcpy(exp_str, ndx, 11);
             rule_exp = (time_t)atoll(exp_str);
 
-//fprintf(stderr, "RULE_EXP=%u, NOW=%u\n", rule_exp, now);
             if(rule_exp <= now)
             {
                 /* Backtrack and get the rule number and delete it.
@@ -910,8 +950,12 @@ check_firewall_rules(const fko_srv_options_t *opts)
                 );
 
 
-//fprintf(stderr, "DELETE RULE CMD: %s\n", cmd_buf);
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+                if (opts->verbose)
+                    log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+                        cmd_buf, res, err_buf);
+
                 if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u.",

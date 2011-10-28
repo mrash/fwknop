@@ -66,7 +66,8 @@ zero_cmd_buffers(void)
 }
 
 static int
-ipfw_set_exists(const char *fw_command, const unsigned short set_num)
+ipfw_set_exists(const fko_srv_options_t *opts,
+    const char *fw_command, const unsigned short set_num)
 {
     int res = 0;
 
@@ -78,6 +79,10 @@ ipfw_set_exists(const char *fw_command, const unsigned short set_num)
     );
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    if (opts->verbose)
+        log_msg(LOG_INFO, "ipfw_set_exists() CMD: '%s' (res: %d)",
+            cmd_buf, res);
 
     if(!EXTCMD_IS_SUCCESS(res))
         return(0);
@@ -111,6 +116,10 @@ fw_dump_rules(const fko_srv_options_t *opts)
 
         res = system(cmd_buf);
 
+        if (opts->verbose)
+            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
+
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
@@ -132,9 +141,12 @@ fw_dump_rules(const fko_srv_options_t *opts)
             opts->fw_config->active_set_num
         );
 
-        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
         printf("\nActive Rules:\n");
         res = system(cmd_buf);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -150,9 +162,12 @@ fw_dump_rules(const fko_srv_options_t *opts)
             opts->fw_config->expire_set_num
         );
 
-        //printf("(%i) CMD: '%s'\n", i, cmd_buf);
         printf("\nExpired Rules:\n");
         res = system(cmd_buf);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -197,7 +212,7 @@ fw_initialize(const fko_srv_options_t *opts)
 
     /* For now, we just call fw_cleanup to start with clean slate.
     */
-    res = fw_cleanup();
+    res = fw_cleanup(opts);
 
     if(res != 0)
     {
@@ -229,6 +244,10 @@ fw_initialize(const fko_srv_options_t *opts)
 
         res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
+        if (opts->verbose)
+            log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
         if(EXTCMD_IS_SUCCESS(res))
         {
             log_msg(LOG_INFO, "Added check-state rule %u to set %u",
@@ -253,11 +272,15 @@ fw_initialize(const fko_srv_options_t *opts)
 
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
+    if (opts->verbose)
+        log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
+
     if(EXTCMD_IS_SUCCESS(res))
         log_msg(LOG_INFO, "Set ipfw set %u to disabled.",
             fwc.expire_set_num);
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
     /* Now read the expire set in case there are existing
      * rules to track.
@@ -271,14 +294,18 @@ fw_initialize(const fko_srv_options_t *opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
+    if (opts->verbose)
+        log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d)",
+            cmd_buf, res);
+
     if(!EXTCMD_IS_SUCCESS(res))
     {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
         return;
     }
 
-    if(opts->verbose > 2)
-        log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "RULES LIST: %s", cmd_out);
 
     /* Find the first "# DISABLED" string (if any).
     */
@@ -320,14 +347,14 @@ fw_initialize(const fko_srv_options_t *opts)
 
 
 int
-fw_cleanup(void)
+fw_cleanup(const fko_srv_options_t *opts)
 {
     int     res, got_err = 0;
 
     zero_cmd_buffers();
 
     if(fwc.active_set_num > 0
-        && ipfw_set_exists(fwc.fw_command, fwc.active_set_num))
+        && ipfw_set_exists(opts, fwc.fw_command, fwc.active_set_num))
     {
         /* Create the set delete command for active rules
         */
@@ -336,8 +363,11 @@ fw_cleanup(void)
             fwc.active_set_num
         );
 
-        //printf("CMD: '%s'\n", cmd_buf);
         res = system(cmd_buf);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "fw_cleanup() CMD: '%s' (res: %d)",
+                cmd_buf, res);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -453,9 +483,12 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                 exp_ts
             );
 
-//--DSS tmp
-//fprintf(stderr, "ADD CMD: %s\n", cmd_buf);
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Added Rule %u for %s, %s expires at %u",
@@ -545,14 +578,18 @@ check_firewall_rules(const fko_srv_options_t *opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
+    if (opts->verbose)
+        log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d)",
+            cmd_buf, res);
+
     if(!EXTCMD_IS_SUCCESS(res))
     {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
         return;
     }
 
-    if(opts->verbose > 2)
-        log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "RULES LIST: %s", cmd_out);
 
     /* Find the first _exp_ string (if any).
     */
@@ -586,7 +623,6 @@ check_firewall_rules(const fko_srv_options_t *opts)
         strlcpy(exp_str, ndx, 11);
         rule_exp = (time_t)atoll(exp_str);
 
-//fprintf(stderr, "RULE_EXP=%u, NOW=%u\n", rule_exp, now);
         if(rule_exp <= now)
         {
             /* Backtrack and get the rule number and delete it.
@@ -646,8 +682,12 @@ check_firewall_rules(const fko_srv_options_t *opts)
                 fwc.expire_set_num
             );
 
-//fprintf(stderr, "MOVE RULE CMD: %s\n", cmd_buf);
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
             if(EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_INFO, "Moved rule %s with expire time of %u to set %u.",
@@ -660,7 +700,7 @@ check_firewall_rules(const fko_srv_options_t *opts)
                 fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
         }
         else
         {
@@ -710,9 +750,13 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
+    if (opts->verbose)
+        log_msg(LOG_INFO, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
+            cmd_buf, res);
+
     if(!EXTCMD_IS_SUCCESS(res))
     {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
         return;
     }
 
@@ -723,8 +767,8 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
     {
         co_end = cmd_out + strlen(cmd_out);
 
-        if(opts->verbose > 2)
-            log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nEXP RULES LIST: %s", res, cmd_buf, cmd_out);
+        if(opts->verbose > 1)
+            log_msg(LOG_INFO, "EXP RULES LIST: %s", cmd_out);
 
         /* Find the "## Dynamic rules" string.
         */
@@ -810,13 +854,17 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 
         res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
+        if (opts->verbose)
+            log_msg(LOG_INFO, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
+
         if(!EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
             continue;
         }
 
-        log_msg(LOG_INFO, "Purged rule %u from set %u", curr_rule, fwc.expire_set_num); 
+        log_msg(LOG_INFO, "Purged rule %u from set %u", curr_rule, fwc.expire_set_num);
 
         fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_FREE;
 

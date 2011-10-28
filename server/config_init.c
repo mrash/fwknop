@@ -745,6 +745,7 @@ dump_config(const fko_srv_options_t *opts)
         );
 
     fprintf(stdout, "\n");
+    fflush(stdout);
 }
 
 /* Print usage message...
@@ -785,7 +786,8 @@ usage(void)
       "     --fw-list           - List all firewall rules that fwknop has created\n"
       "                           and then exit.\n"
       "     --fw-list-all       - List all firewall rules in the complete policy,\n"
-      "                           including those that have nothing to with fwknop.\n"
+      "                           including those that have nothing to do with\n"
+      "                           fwknop.\n"
       "     --fw-flush          - Flush all firewall rules created by fwknop.\n"
       "\n"
     );

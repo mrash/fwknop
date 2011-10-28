@@ -66,7 +66,7 @@ init_logging(fko_srv_options_t *opts) {
     /* In case this is a re-init.
     */
     free_logging();
- 
+
     /* Allocate memory for the log_name and set the my_name to point to the
      * appropriate name. The name should already be set in the config struct
      * but if it is not, fallback to the default as defined by 'MY_NAME'.

@@ -135,7 +135,7 @@ anchor_active(const fko_srv_options_t *opts)
 }
 
 static void
-delete_all_anchor_rules(void)
+delete_all_anchor_rules(const fko_srv_options_t *opts)
 {
     int res = 0;
 
@@ -193,9 +193,9 @@ fw_initialize(const fko_srv_options_t *opts)
 }
 
 int
-fw_cleanup(void)
+fw_cleanup(const fko_srv_options_t *opts)
 {
-    delete_all_anchor_rules();
+    delete_all_anchor_rules(opts);
     return(0);
 }
 

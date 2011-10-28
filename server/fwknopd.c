@@ -185,7 +185,7 @@ main(int argc, char **argv)
         if(opts.fw_flush == 1)
         {
             fprintf(stdout, "Deleting any existing firewall rules...\n");
-            fw_cleanup();
+            fw_cleanup(&opts);
             exit(EXIT_SUCCESS);
         }
 
@@ -367,7 +367,7 @@ main(int argc, char **argv)
 
     /* Other cleanup.
     */
-    fw_cleanup();
+    fw_cleanup(&opts);
     free_logging();
 
 #if USE_FILE_CACHE

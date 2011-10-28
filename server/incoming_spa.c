@@ -326,7 +326,7 @@ incoming_spa(fko_srv_options_t *opts)
     /* At this point, we assume the SPA data is valid.  Now we need to see
      * if it meets our access criteria.
     */
-    if(opts->verbose > 2)
+    if(opts->verbose > 1)
         log_msg(LOG_INFO, "SPA Decode (res=%i):\n%s", res, dump_ctx(ctx));
 
     /* First, if this is a GPG message, and GPG_REMOTE_ID list is not empty,
@@ -498,7 +498,7 @@ incoming_spa(fko_srv_options_t *opts)
             */
             status = WEXITSTATUS(res);
 
-            if(opts->verbose > 2)
+            if(opts->verbose > 1)
                 log_msg(LOG_WARNING,
                     "CMD_EXEC: command returned %i", status);
 

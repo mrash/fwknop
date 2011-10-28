@@ -1074,6 +1074,7 @@ dump_access_list(const fko_srv_options_t *opts)
     }
 
     fprintf(stdout, "\n");
+    fflush(stdout);
 }
 
 /***EOF***/
