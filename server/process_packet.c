@@ -106,7 +106,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
         if(eth_type == 0xAAAA)      /* 802.2 SNAP */
             offset += 5;
     }
-    else /* 802.3 Frame */ 
+    else /* 802.3 Frame */
         offset += 3;
 
     /* Make sure the packet length is still valid.
@@ -167,7 +167,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     else
         return;
 
-    /* 
+    /*
      * Now we have data. For now, we are not checking IP or port values. We
      * are relying on the pcap filter. This may change so we do retain the IP
      * addresses and ports just in case. We just go ahead and queue the
