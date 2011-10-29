@@ -97,6 +97,22 @@ do
         fi
     fi
 
+    if echo "$RELOC_REPORT" | grep -q '^__stack_chk_fail$'; then
+        good "$name: yes"
+    else
+        ### for OpenBSD
+        if echo "$RELOC_REPORT" | grep -q '^__stack_smash_handler$'; then
+            good "$name: yes"
+        else
+            msg="$name: no, not found!"
+            if [ "$skip_stackprotector" = "yes" ]; then
+                good "$msg (ignored)"
+            else
+                bad "$msg"
+            fi
+        fi
+    fi
+
     # Fortified
     name=" Fortify Source functions"
     if echo "$RELOC_REPORT" | grep -q '^__.*_chk$'; then
