@@ -25,7 +25,7 @@ my $default_pid_file    = "$run_dir/fwknopd.pid";
 
 my $fwknopCmd  = '../client/.libs/fwknop';
 my $fwknopdCmd = '../server/.libs/fwknopd';
-my $libfko_bin = "$lib_dir/libfko.so";  ### this is a link
+my $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
 my $gpg_server_key = '361BBAD4';
 my $gpg_client_key = '6A3FAD56';
@@ -746,20 +746,20 @@ sub process_include_exclude() {
 
 sub compile_warnings() {
 
+    ### 'make clean' as root
+    return 0 unless &run_cmd('make -C .. clean',
+        $cmd_out_tmp, $current_test_file);
+
     if ($sudo_path) {
         my $username = getpwuid((stat($configure_path))[4]);
         die "[*] Could not determine $configure_path owner"
             unless $username;
 
-        return 0 unless &run_cmd("$sudo_path -u $username make -C .. clean",
-            $cmd_out_tmp, $current_test_file);
         return 0 unless &run_cmd("$sudo_path -u $username make -C ..",
             $cmd_out_tmp, $current_test_file);
 
     } else {
 
-        return 0 unless &run_cmd('make -C .. clean',
-            $cmd_out_tmp, $current_test_file);
         return 0 unless &run_cmd('make -C ..',
             $cmd_out_tmp, $current_test_file);
 
@@ -783,6 +783,22 @@ sub compile_warnings() {
 sub binary_exists() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
+
+    ### account for different libfko.so paths (e.g. libfko.so.0.3 with no
+    ### libfko.so link on OpenBSD)
+
+    if ($test_hr->{'binary'} =~ /libfko/) {
+        unless (-e $test_hr->{'binary'}) {
+            for my $file (glob("$lib_dir/libfko.so*")) {
+                if (-e $file and -x $file) {
+                    $test_hr->{'binary'} = $file;
+                    $libfko_bin = $file;
+                    last;
+                }
+            }
+        }
+    }
+
     return 0 unless -e $test_hr->{'binary'} and -x $test_hr->{'binary'};
     return 1;
 }
