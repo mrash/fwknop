@@ -23,9 +23,10 @@ my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
 
-my $fwknopCmd  = '../client/.libs/fwknop';
-my $fwknopdCmd = '../server/.libs/fwknopd';
-my $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
+my $fwknopCmd   = '../client/.libs/fwknop';
+my $fwknopdCmd  = '../server/.libs/fwknopd';
+my $libfko_bin  = "$lib_dir/libfko.so";  ### this is usually a link
+my $valgrindCmd = '/usr/bin/valgrind';
 
 my $gpg_server_key = '361BBAD4';
 my $gpg_client_key = '6A3FAD56';
@@ -50,6 +51,8 @@ my $loopback_intf = '';
 my $prepare_results = 0;
 my $current_test_file = "$output_dir/init";
 my $server_test_file  = '';
+my $use_valgrind = 0;
+my $valgrind_str = '';
 my $enable_recompilation_warnings_check = 0;
 my $sudo_path = '';
 my $help = 0;
@@ -79,6 +82,8 @@ exit 1 unless GetOptions(
     'exclude=s'         => \$test_exclude,  ### synonym
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'List-mode'         => \$list_mode,
+    'enable-valgrind'   => \$use_valgrind,
+    'valgrind-path=s'   => \$valgrindCmd,
     'help'              => \$help
 );
 
@@ -86,10 +91,13 @@ exit 1 unless GetOptions(
 
 &identify_loopback_intf();
 
-my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $fwknopCmd -A tcp/22 -a $fake_ip " .
-    "-D $loopback_ip --get-key $local_key_file --verbose --verbose";
+$valgrind_str = "$valgrindCmd --leak-check=full --show-reachable=yes --track-origins=yes" if $use_valgrind;
 
-my $default_client_gpg_args = "LD_LIBRARY_PATH=$lib_dir $default_client_args " .
+my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+    "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+    "$local_key_file --verbose --verbose";
+
+my $default_client_gpg_args = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
@@ -97,7 +105,8 @@ my $default_client_gpg_args = "LD_LIBRARY_PATH=$lib_dir $default_client_args " .
 my $default_server_conf_args = "-c $default_conf -a $default_access_conf " .
     "-d $default_digest_file -p $default_pid_file";
 
-my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd -c $default_conf " .
+my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
+    "$valgrind_str $fwknopdCmd -c $default_conf " .
     "-a $gpg_access_conf -i $loopback_intf --foreground --verbose --verbose " .
     "-d $default_digest_file -p $default_pid_file";
 
@@ -276,8 +285,8 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'usage info',
         'err_msg'  => 'could not get usage info',
-        'function' => \&usage_info,
-        'binary'   => $fwknopCmd,
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd -h",
         'fatal'    => $NO
     },
     {
@@ -285,8 +294,9 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'getopt() no such argument',
         'err_msg'  => 'getopt() allowed non-existant argument',
-        'function' => \&no_such_arg,
-        'binary'   => $fwknopCmd,
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --no-such-arg",
+        'exec_err' => $YES,
         'fatal'    => $NO
     },
     {
@@ -295,7 +305,7 @@ my @tests = (
         'detail'   => 'expected code version',
         'err_msg'  => 'code version mis-match',
         'function' => \&expected_code_version,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopCmd --version",
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --version",
         'fatal'    => $NO
     },
 
@@ -304,8 +314,8 @@ my @tests = (
         'subcategory' => 'server',
         'detail'   => 'usage info',
         'err_msg'  => 'could not get usage info',
-        'function' => \&usage_info,
-        'binary'   => $fwknopdCmd,
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd -h",
         'fatal'    => $NO
     },
     {
@@ -313,8 +323,9 @@ my @tests = (
         'subcategory' => 'server',
         'detail'   => 'getopt() no such argument',
         'err_msg'  => 'getopt() allowed non-existant argument',
-        'function' => \&no_such_arg,
-        'binary'   => $fwknopdCmd,
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd --no-such-arg",
+        'exec_err' => $YES,
         'fatal'    => $NO
     },
     {
@@ -323,7 +334,8 @@ my @tests = (
         'detail'   => 'expected code version',
         'err_msg'  => 'code version mis-match',
         'function' => \&expected_code_version,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd -c $default_conf -a " .
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a " .
             "$default_access_conf --version",
         'fatal'    => $NO
     },
@@ -341,7 +353,8 @@ my @tests = (
         'detail'   => 'dump config',
         'err_msg'  => 'could not dump configuration',
         'function' => \&dump_config,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd -c $default_conf " .
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf " .
             "-a $default_access_conf --dump-config",
         'fatal'    => $NO
     },
@@ -350,7 +363,8 @@ my @tests = (
         'detail'   => 'override config',
         'err_msg'  => 'could not override configuration',
         'function' => \&override_config,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-O $conf_dir/override_fwknopd.conf --dump-config",
         'fatal'    => $NO
     },
@@ -361,7 +375,8 @@ my @tests = (
         'detail'   => '--get-key path validation',
         'err_msg'  => 'accepted improper --get-key path',
         'function' => \&non_get_key_path,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopCmd -A tcp/22 -s $fake_ip " .
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22 -s $fake_ip " .
             "-D $loopback_ip --get-key not/there",
         'fatal'    => $YES
     },
@@ -371,7 +386,8 @@ my @tests = (
         'detail'   => 'require [-s|-R|-a]',
         'err_msg'  => 'allowed null allow IP',
         'function' => \&no_allow_ip,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopCmd -D $loopback_ip",
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -D $loopback_ip",
         'fatal'    => $NO
     },
     {
@@ -380,7 +396,8 @@ my @tests = (
         'detail'   => '--allow-ip <IP> valid IP',
         'err_msg'  => 'permitted invalid --allow-ip arg',
         'function' => \&invalid_allow_ip,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
         'fatal'    => $NO
     },
     {
@@ -389,7 +406,8 @@ my @tests = (
         'detail'   => '-A <proto>/<port> specification',
         'err_msg'  => 'permitted invalid -A <proto>/<port>',
         'function' => \&invalid_proto,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
         'fatal'    => $NO
     },
     {
@@ -407,8 +425,9 @@ my @tests = (
         'subcategory' => 'server',
         'detail'   => 'list current fwknopd fw rules',
         'err_msg'  => 'could not list current fwknopd fw rules',
-        'function' => \&fw_list,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args --fw-list",
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args --fw-list",
         'fatal'    => $NO
     },
     {
@@ -416,8 +435,9 @@ my @tests = (
         'subcategory' => 'server',
         'detail'   => 'list all current fw rules',
         'err_msg'  => 'could not list all current fw rules',
-        'function' => \&fw_list_all,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args --fw-list-all",
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args --fw-list-all",
         'fatal'    => $NO
     },
     {
@@ -425,8 +445,9 @@ my @tests = (
         'subcategory' => 'server',
         'detail'   => 'flush current firewall rules',
         'err_msg'  => 'could not flush current fw rules',
-        'function' => \&fw_flush,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args --fw-flush",
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args --fw-flush",
         'fatal'    => $NO
     },
 
@@ -436,7 +457,8 @@ my @tests = (
         'detail'   => 'start',
         'err_msg'  => 'start error',
         'function' => \&server_start,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -446,7 +468,8 @@ my @tests = (
         'detail'   => 'stop',
         'err_msg'  => 'stop error',
         'function' => \&server_stop,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -456,7 +479,8 @@ my @tests = (
         'detail'   => 'write PID',
         'err_msg'  => 'did not write PID',
         'function' => \&write_pid,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -467,7 +491,8 @@ my @tests = (
         'detail'   => '--packet-limit 1 exit',
         'err_msg'  => 'did not exit after one packet',
         'function' => \&server_packet_limit,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --packet-limit 1 --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -477,7 +502,8 @@ my @tests = (
         'detail'   => 'ignore packets < min SPA len (140)',
         'err_msg'  => 'did not ignore small packets',
         'function' => \&server_ignore_small_packets,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --packet-limit 1 --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -488,7 +514,8 @@ my @tests = (
         'err_msg'  => 'filter did not ignore packet',
         'function' => \&server_bpf_ignore_packet,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --packet-limit 1 --foreground --verbose  --verbose " .
             qq|-P "udp port $non_std_spa_port"|,
         'fatal'    => $NO
@@ -501,7 +528,8 @@ my @tests = (
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -512,7 +540,8 @@ my @tests = (
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_over_non_std_port,
         'cmdline'  => "$default_client_args --server-port $non_std_spa_port",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose " .
             qq|-P "udp port $non_std_spa_port"|,
         'fatal'    => $NO
@@ -524,7 +553,8 @@ my @tests = (
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -544,7 +574,8 @@ my @tests = (
         'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -555,7 +586,8 @@ my @tests = (
         'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_base64_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -566,7 +598,8 @@ my @tests = (
         'err_msg'  => 'allowed improper SPA data',
         'function' => \&appended_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -577,7 +610,8 @@ my @tests = (
         'err_msg'  => 'allowed improper SPA data',
         'function' => \&prepended_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
         'fatal'    => $NO
     },
@@ -651,8 +685,6 @@ my @tests = (
         'function' => \&digest_cache_structure,
         'fatal'    => $NO
     },
-
-
 );
 
 my %test_keys = (
@@ -664,6 +696,7 @@ my %test_keys = (
     'cmdline'         => $OPTIONAL,
     'fwknopd_cmdline' => $OPTIONAL,
     'fatal'           => $OPTIONAL,
+    'exec_err'        => $OPTIONAL,
 );
 
 ### make sure everything looks as expected before continuing
@@ -921,7 +954,7 @@ sub spa_cycle() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -976,7 +1009,7 @@ sub replay_detection() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1070,7 +1103,7 @@ sub server_bpf_ignore_packet() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1128,7 +1161,7 @@ sub altered_non_base64_spa_data() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1180,7 +1213,7 @@ sub altered_base64_spa_data() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1237,7 +1270,7 @@ sub appended_spa_data() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1294,7 +1327,7 @@ sub prepended_spa_data() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1319,7 +1352,7 @@ sub server_start() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1344,7 +1377,7 @@ sub server_stop() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
                 $server_test_file)) {
             $rv = 0;
         }
@@ -1371,7 +1404,12 @@ sub server_packet_limit() {
     );
 
     my $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $FORCE_STOP);
+            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        $rv = 0;
+    }
 
     unless (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
             $server_test_file)) {
@@ -1394,21 +1432,20 @@ sub server_ignore_small_packets() {
             'proto'  => 'udp',
             'port'   => $default_spa_port,
             'dst_ip' => $loopback_ip,
-            'data'   => 'A'x130,  ### < MIN_SPA_DATA_SIZE
+            'data'   => 'A'x120,  ### < MIN_SPA_DATA_SIZE
         },
     );
 
     my $rv = &client_server_interaction($test_hr, \@packets,
         $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
 
-    if (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
+    unless (&file_find_regex([qr/Not\senough\sdata/],
             $server_test_file)) {
         $rv = 0;
     }
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-    } else {
         $rv = 0;
     }
 
@@ -1426,7 +1463,11 @@ sub client_server_interaction() {
 
     ### give fwknopd a chance to parse its config and start sniffing
     ### on the loopback interface
-    sleep 1;
+    if ($use_valgrind) {
+        sleep 3;
+    } else {
+        sleep 2;
+    }
 
     ### send the SPA packet(s) to the server either manually using IO::Socket or
     ### with the fwknopd client
@@ -1441,7 +1482,11 @@ sub client_server_interaction() {
 
     if ($fw_rules_flag == $REQUIRE_FW_RULE) {
         ### check to see if the SPA packet resulted in a new fw access rule
-        sleep 1;
+        if ($use_valgrind) {
+            sleep 3;
+        } else {
+            sleep 1;
+        }
         unless (&is_fw_rule_active()) {
             &write_test_file("[-] new fw rules does not exist.\n");
             $rv = 0;
@@ -1466,7 +1511,10 @@ sub client_server_interaction() {
             }
             $rv = 0;
         }
+    } else {
+        &time_for_valgrind() if $use_valgrind;
     }
+
     return $rv;
 }
 
@@ -1527,43 +1575,16 @@ sub send_packets() {
     return;
 }
 
-sub fw_list() {
+sub generic_exec() {
     my $test_hr = shift;
 
-    return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-    return 1;
-}
-
-sub fw_list_all() {
-    my $test_hr = shift;
-
-    return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-    return 1;
-}
-
-sub fw_flush() {
-    my $test_hr = shift;
-
-    return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-    return 1;
-}
-
-sub usage_info() {
-    my $test_hr = shift;
-    return 0 unless $test_hr->{'binary'};
-    return 0 unless &run_cmd("$test_hr->{'binary'} -h",
-            $cmd_out_tmp, $current_test_file);
-    return 1;
-}
-
-sub no_such_arg() {
-    my $test_hr = shift;
-    return 0 unless $test_hr->{'binary'};
-    return 0 if &run_cmd("$test_hr->{'binary'} --no-such-arg",
-            $cmd_out_tmp, $current_test_file);
+    if ($test_hr->{'exec_err'} eq $YES) {
+        return 0 if &run_cmd($test_hr->{'cmdline'},
+                $cmd_out_tmp, $current_test_file);
+    } else {
+        return 0 unless &run_cmd($test_hr->{'cmdline'},
+                $cmd_out_tmp, $current_test_file);
+    }
     return 1;
 }
 
@@ -1624,7 +1645,7 @@ sub immediate_binding() {
 
 sub specs() {
 
-     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+     &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
             "$default_server_conf_args --fw-list-all",
             $cmd_out_tmp, $current_test_file);
 
@@ -1662,6 +1683,17 @@ sub specs() {
     }
 
     return 1;
+}
+
+sub time_for_valgrind() {
+    my $ctr = 0;
+    while (&run_cmd("ps axuww | grep LD_LIBRARY_PATH | grep valgrind |grep -v perl | grep -v grep",
+            $cmd_out_tmp, $current_test_file)) {
+        $ctr++;
+        last if $ctr == 5;
+        sleep 1;
+    }
+    return;
 }
 
 sub write_pid() {
@@ -1897,6 +1929,8 @@ sub is_fw_rule_active() {
 
 sub is_fwknopd_running() {
 
+    sleep 2 if $use_valgrind;
+
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
         "--status", $cmd_out_tmp, $current_test_file);
 
@@ -1910,7 +1944,11 @@ sub stop_fwknopd() {
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
         "$default_server_conf_args -K", $cmd_out_tmp, $current_test_file);
 
-    sleep 1;
+    if ($use_valgrind) {
+        &time_for_valgrind();
+    } else {
+        sleep 1;
+    }
 
     return;
 }
