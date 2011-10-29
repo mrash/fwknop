@@ -57,6 +57,7 @@ pcap_capture(fko_srv_options_t *opts)
     int                 pcap_errcnt = 0;
     int                 pending_break = 0;
     int                 promisc = 0;
+    int                 set_direction = 1;
     int                 status;
     pid_t               child_pid;
 
@@ -77,16 +78,9 @@ pcap_capture(fko_srv_options_t *opts)
 
     if(pcap == NULL)
     {
-        log_msg(LOG_ERR, "* pcap_open_live error: %s\n", errstr);
+        log_msg(LOG_ERR, "[*] pcap_open_live error: %s\n", errstr);
         exit(EXIT_FAILURE);
     }
-
-    /* We are only interested on seeing packets coming into the interface.
-    */
-    if (pcap_setdirection(pcap, PCAP_D_IN) < 0)
-        if(opts->verbose)
-            log_msg(LOG_WARNING, "* Warning: pcap error on setdirection: %s.",
-                pcap_geterr(pcap));
 
     if (pcap == NULL)
     {
@@ -94,7 +88,7 @@ pcap_capture(fko_srv_options_t *opts)
         exit(EXIT_FAILURE);
     }
 
-    /* Set pcap filters, if any. 
+    /* Set pcap filters, if any.
     */
     if (opts->config[CONF_PCAP_FILTER][0] != '\0')
     {
@@ -129,6 +123,11 @@ pcap_capture(fko_srv_options_t *opts)
         case DLT_LINUX_SLL:
             opts->data_link_offset = 16;
             break;
+#elif defined(__OpenBSD__)
+        case DLT_LOOP:
+            set_direction = 0;
+            opts->data_link_offset = 4;
+            break;
 #endif
         case DLT_NULL:
             opts->data_link_offset = 4;
@@ -137,6 +136,13 @@ pcap_capture(fko_srv_options_t *opts)
             opts->data_link_offset = 0;
             break;
     }
+
+    /* We are only interested on seeing packets coming into the interface.
+    */
+    if (set_direction && (pcap_setdirection(pcap, PCAP_D_IN) < 0))
+        if(opts->verbose)
+            log_msg(LOG_WARNING, "[*] Warning: pcap error on setdirection: %s.",
+                pcap_geterr(pcap));
 
     /* Set our pcap handle nonblocking mode.
      *
