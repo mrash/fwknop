@@ -206,7 +206,7 @@ incoming_spa(fko_srv_options_t *opts)
     */
     res = preprocess_spa_data(opts, spadat.pkt_source_ip);
     if(res != FKO_SUCCESS)
-        return(SPA_MSG_NOT_SPA_DATA);
+        return(res);
 
     log_msg(LOG_INFO, "SPA Packet from IP: %s received.", spadat.pkt_source_ip);
 
@@ -231,7 +231,7 @@ incoming_spa(fko_srv_options_t *opts)
     {
         if(acc->key != NULL)
             res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, acc->key);
-        else 
+        else
         {
             log_msg(LOG_ERR,
                 "No KEY for RIJNDAEL encrypted messages");
