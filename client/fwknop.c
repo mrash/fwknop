@@ -45,10 +45,7 @@ static void run_last_args(fko_cli_options_t *options);
 static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
-static void dump_transmit_options(const fko_cli_options_t *options);
-
 int resolve_ip_http(fko_cli_options_t *options);
-
 
 int
 main(int argc, char **argv)
@@ -274,9 +271,6 @@ main(int argc, char **argv)
     if (options.rand_port)
         options.spa_dst_port = get_rand_port(ctx);
 
-    if (options.verbose)
-        dump_transmit_options(&options);
-
     res = send_spa_packet(ctx, &options);
     if(res < 0)
     {
@@ -370,29 +364,6 @@ main(int argc, char **argv)
     return(EXIT_SUCCESS);
 }
 
-static void
-print_proto(const int proto)
-{
-    switch (proto) {
-        case FKO_PROTO_UDP:
-            printf("udp");
-            break;
-        case FKO_PROTO_TCP_RAW:
-            printf("tcpraw");
-            break;
-        case FKO_PROTO_TCP:
-            printf("tcp");
-            break;
-        case FKO_PROTO_ICMP:
-            printf("icmp");
-            break;
-        case FKO_PROTO_HTTP:
-            printf("http");
-            break;
-    }
-    return;
-}
-
 static int
 get_rand_port(fko_ctx_t ctx)
 {
@@ -423,15 +394,6 @@ get_rand_port(fko_ctx_t ctx)
     }
 
     return port;
-}
-
-static void
-dump_transmit_options(const fko_cli_options_t *options)
-{
-    printf("Generating SPA packet:\n    protocol: ");
-    print_proto(options->spa_proto),
-    printf("\n    port: %d\n", options->spa_dst_port);
-    return;
 }
 
 /* See if the string is of the format "<ipv4 addr>:<port>",

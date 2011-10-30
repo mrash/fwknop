@@ -32,6 +32,39 @@
 #include "spa_comm.h"
 #include "utils.h"
 
+static void
+print_proto(const int proto)
+{
+    switch (proto) {
+        case FKO_PROTO_UDP:
+            printf("udp");
+            break;
+        case FKO_PROTO_TCP_RAW:
+            printf("tcpraw");
+            break;
+        case FKO_PROTO_TCP:
+            printf("tcp");
+            break;
+        case FKO_PROTO_ICMP:
+            printf("icmp");
+            break;
+        case FKO_PROTO_HTTP:
+            printf("http");
+            break;
+    }
+    return;
+}
+
+static void
+dump_transmit_options(const fko_cli_options_t *options)
+{
+    printf("Generating SPA packet:\n    protocol: ");
+    print_proto(options->spa_proto),
+    printf("\n        port: %d\n", options->spa_dst_port);
+    printf("     IP/host: %s\n", options->spa_server_str);
+    return;
+}
+
 /* Function to generate a header checksum.
 */
 unsigned short
@@ -510,6 +543,9 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 #endif
 
     errno = 0;
+
+    if (options->verbose)
+        dump_transmit_options(options);
 
     if (options->spa_proto == FKO_PROTO_TCP || options->spa_proto == FKO_PROTO_UDP)
     {
