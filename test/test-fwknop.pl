@@ -1406,6 +1406,8 @@ sub server_packet_limit() {
     my $rv = &client_server_interaction($test_hr, \@packets,
             $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
 
+    sleep 2;
+
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         $rv = 0;
@@ -1439,13 +1441,15 @@ sub server_ignore_small_packets() {
     my $rv = &client_server_interaction($test_hr, \@packets,
         $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
 
-    unless (&file_find_regex([qr/Not\senough\sdata/],
-            $server_test_file)) {
-        $rv = 0;
-    }
+    sleep 2;
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/Not\senough\sdata/],
+            $server_test_file)) {
         $rv = 0;
     }
 
@@ -1481,14 +1485,15 @@ sub client_server_interaction() {
     }
 
     if ($fw_rules_flag == $REQUIRE_FW_RULE) {
+        my $ctr = 0;
         ### check to see if the SPA packet resulted in a new fw access rule
-        if ($use_valgrind) {
-            sleep 3;
-        } else {
+        while (not &is_fw_rule_active()) {
+            &write_test_file("[-] new fw rule does not exist.\n");
+            $ctr++;
+            last if $ctr == 3;
             sleep 1;
         }
-        unless (&is_fw_rule_active()) {
-            &write_test_file("[-] new fw rules does not exist.\n");
+        if ($ctr == 3) {
             $rv = 0;
         }
     }
@@ -1687,7 +1692,8 @@ sub specs() {
 
 sub time_for_valgrind() {
     my $ctr = 0;
-    while (&run_cmd("ps axuww | grep LD_LIBRARY_PATH | grep valgrind |grep -v perl | grep -v grep",
+    while (&run_cmd("ps axuww | grep LD_LIBRARY_PATH | " .
+            "grep valgrind |grep -v perl | grep -v grep",
             $cmd_out_tmp, $current_test_file)) {
         $ctr++;
         last if $ctr == 5;
