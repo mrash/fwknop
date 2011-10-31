@@ -524,10 +524,52 @@ my @tests = (
     {
         'category' => 'Rijndael SPA ops',
         'subcategory' => 'client+server',
-        'detail'   => 'complete SPA cycle',
+        'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/23 telnet)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/9418 git)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (udp/53 dns)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf --foreground --verbose --verbose",
@@ -619,13 +661,59 @@ my @tests = (
     {
         'category' => 'GnuPG (GPG) SPA ops',
         'subcategory' => 'client+server',
-        'detail'   => 'complete SPA cycle',
+        'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fatal'    => $NO
     },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/23 telnet)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/9418 git)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA ops',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (udp/53 dns)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GnuPG (GPG) SPA ops',
         'subcategory' => 'client+server',
