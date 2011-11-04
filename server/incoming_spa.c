@@ -56,35 +56,24 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
     int      pkt_data_len = spa_pkt->packet_data_len;
     int      i;
 
-    /* At this point, we can reset the packet data length to 0.  This our
+    /* At this point, we can reset the packet data length to 0.  This is our
      * indicator to the rest of the program that we do not have a current
      * spa packet to process (after this one that is).
     */
     spa_pkt->packet_data_len = 0;
 
-    /* Expect the data to be at least the minimum required size.
-    */
-    if(pkt_data_len < MIN_SPA_DATA_SIZE)
-        return(SPA_MSG_LEN_TOO_SMALL);
-
-    /* Detect and parse out SPA data from an HTTP reqest. If the SPA data
+    /* Detect and parse out SPA data from an HTTP request. If the SPA data
      * starts with "GET /" and the user agent starts with "Fwknop", then
      * assume it is a SPA over HTTP request.
     */
-    if(strncasecmp(ndx, "GET /", 5) == 0
+    if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "N", 1) == 0
+      && strncasecmp(ndx, "GET /", 5) == 0
       && strstr(ndx, "User-Agent: Fwknop") != NULL)
     {
         /* This looks like an HTTP request, so let's see if we are
          * configured to accept such request and if so, find the SPA
          * data.
         */
-        if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "N", 1) == 0)
-        {
-            log_msg(LOG_WARNING,
-                "HTTP request from %s detected, but not enabled.", src_ip
-            );
-            return(SPA_MSG_HTTP_NOT_ENABLED);
-        }
 
         /* Now extract, adjust (convert characters translated by the fwknop
          * client), and reset the SPA message itself.
@@ -102,25 +91,16 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
                 *ndx = '+';
             else if(*ndx == '_') /* Convert '_' to '/' */
                 *ndx = '/';
-            /* Make sure it is a valid base64 char. */
-            else if(!(isalnum(*ndx) || *ndx == '/' || *ndx == '+' || *ndx == '='))
-                return(SPA_MSG_NOT_SPA_DATA);
 
             ndx++;
         }
     }
-    else
-    {
-        /* Make sure the data is valid Base64-encoded characters
-        */
-        ndx = (char *)spa_pkt->packet_data;
-        for(i=0; i<pkt_data_len; i++)
-        {
-            if(!(isalnum(*ndx) || *ndx == '/' || *ndx == '+' || *ndx == '='))
-                return(SPA_MSG_NOT_SPA_DATA);
-            ndx++;
-        }
-    }
+
+    /* Require base64-encoded data
+    */
+    if(! is_base64(spa_pkt->packet_data, pkt_data_len))
+        return(SPA_MSG_NOT_SPA_DATA);
+
 
     /* --DSS:  Are there other checks we can do here ??? */
 
@@ -206,7 +186,12 @@ incoming_spa(fko_srv_options_t *opts)
     */
     res = preprocess_spa_data(opts, spadat.pkt_source_ip);
     if(res != FKO_SUCCESS)
+    {
+        if(opts->verbose > 1)
+            log_msg(LOG_INFO, "preprocess_spa_data() returned error %i: '%s' for incoming packet.",
+                res, get_errstr(res));
         return(res);
+    }
 
     log_msg(LOG_INFO, "SPA Packet from IP: %s received.", spadat.pkt_source_ip);
 

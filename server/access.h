@@ -42,6 +42,7 @@ int acc_check_port_access(acc_stanza_t *acc, char *port_str);
 int acc_check_gpg_remote_id(acc_stanza_t *acc, const char *gpg_id);
 void dump_access_list(const fko_srv_options_t *opts);
 void expand_acc_port_list(acc_port_list_t **plist, char *plist_str);
+void free_acc_stanzas(fko_srv_options_t *opts);
 void free_acc_port_list(acc_port_list_t *plist);
 
 #endif /* ACCESS_H */

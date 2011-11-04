@@ -33,7 +33,6 @@
 #include "fwknopd_common.h"
 #include "pcap_capture.h"
 #include "process_packet.h"
-#include "incoming_spa.h"
 #include "sig_handler.h"
 #include "fw_util.h"
 #include "log_msg.h"
@@ -221,24 +220,18 @@ pcap_capture(fko_srv_options_t *opts)
                 got_signal = 0;
         }
 
-        res = pcap_dispatch(pcap, 1, (pcap_handler)&process_packet, (unsigned char *)opts);
+        res = pcap_dispatch(pcap, atoi(opts->config[CONF_PCAP_DISPATCH_COUNT]),
+            (pcap_handler)&process_packet, (unsigned char *)opts);
 
-        /* If there was a packet and it was processed without error, then
-         * keep going.
+        /* Count processed packets
         */
-        if(res > 0 && opts->spa_pkt.packet_data_len > 0)
+        if(res > 0)
         {
-            res = incoming_spa(opts);
-
-            if(res != 0 && opts->verbose > 1)
-                log_msg(LOG_INFO, "incoming_spa returned error %i: '%s' for incoming packet.",
-                    res, get_errstr(res));
-
-            /* Count this packet since it has at least one byte of payload
-             * data - we use this as a comparison for --packet-limit regardless
+            /* Count the set of processed packets (pcap_dispatch() return
+             * value) - we use this as a comparison for --packet-limit regardless
              * of SPA packet validity at this point.
             */
-            opts->packet_ctr++;
+            opts->packet_ctr += res;
             if (opts->packet_ctr_limit && opts->packet_ctr >= opts->packet_ctr_limit)
             {
                 log_msg(LOG_WARNING,
@@ -281,7 +274,7 @@ pcap_capture(fko_srv_options_t *opts)
         check_firewall_rules(opts);
 
 #if FIREWALL_IPFW
-        /* Purge expired rules that no longer have any corresponding 
+        /* Purge expired rules that no longer have any corresponding
          * dynamic rules.
         */
         if(opts->fw_config->total_rules > 0)
@@ -295,7 +288,7 @@ pcap_capture(fko_srv_options_t *opts)
         }
 #endif
 
-        usleep(10000);
+        usleep(atoi(opts->config[CONF_PCAP_LOOP_SLEEP]));
     }
 
     pcap_close(pcap);

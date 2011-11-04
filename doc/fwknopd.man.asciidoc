@@ -146,9 +146,9 @@ FWKNOPD.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~~
 This section list the more prominent configuration variables used by
 *fwknopd*.  It is not a complete list.  There are directives for the type
-of firewall used by *fwknopd* (i.e. _iptables_ or _ipfw_).  You will want
-to make sure to check these to make sure they have appropriate values.  See
-the 'fwknopd.conf' file for the full list and corresponding details.
+of firewall used by *fwknopd* (i.e. _iptables_, _ipfw_, or _pf_).  You will
+want to make sure to check these to make sure they have appropriate values.
+See the 'fwknopd.conf' file for the full list and corresponding details.
 
 *PCAP_INTF* '<interface>'::
     Specify the ethernet interface on which *fwknopd* will sniff packets.
@@ -203,7 +203,7 @@ the 'fwknopd.conf' file for the full list and corresponding details.
     In some situations, internal systems may not have a route back out for
     the source address of the incoming connection, so it is necessary to
     also apply SNAT rules so that the internal systems see the IP of the
-    internal interface where *fwknopd* is running.  
+    internal interface where *fwknopd* is running.
 
 *SNAT_TRANSLATE_IP* '<ip_address>'::
     Specify the IP address for SNAT.  This functionality is only enabled
@@ -238,9 +238,9 @@ the 'fwknopd.conf' file for the full list and corresponding details.
     the '$HOME/.gnupg' directory of the user running *fwknopd* (most
     likely root).
 
-*LOCALE* '<locale>':: 
+*LOCALE* '<locale>'::
     Set the locale (via the LC_ALL variable).  This can be set to override
-    the default system locale. 
+    the default system locale.
 
 *ENABLE_SPA_OVER_HTTP* '<Y/N>'::
     Allow *fwknopd* to acquire SPA data from HTTP requests (generated with
@@ -256,9 +256,23 @@ the 'fwknopd.conf' file for the full list and corresponding details.
      accept incoming TCP request.  This server only accepts the
      request.  It does not otherwise communicate. This is only to allow the
      incoming SPA over TCP packet which is detected via PCAP. The connection
-     is closed after 1 second regardless. 
+     is closed after 1 second regardless.
      Note that fwknopd still only gets its data via pcap, so the filter
      defined by PCAP_FILTER needs to be updated to include this TCP port.
+
+*PCAP_DISPATCH_COUNT* '<count>'::
+    Sets the number of packets that are processed when the *pcap_dispatch()*
+    call is made.  The default is zero, since this allows *fwknopd* to process
+    as many packets as possible in the corresponding callback where the SPA
+    handling routine is called for packets that pass a set of prerequisite
+    checks.  However, if *fwknopd* is running on a platform with an old
+    version of libpcap, it may be necessary to change this value to a positive
+    non-zero integer.  More information can be found in the *pcap_dispatch(3)*
+    man page.
+
+*PCAP_LOOP_SLEEP* '<microseconds'::
+    Sets the number of microseconds to passed as an argument to usleep() in
+    the pcap loop.  The default is 10000, or 1/10th of a second.
 
 *TCPSERV_PORT* '<port>'::
     Set the port number that the ``dummy'' TCP server listens on. This server
@@ -290,7 +304,7 @@ directive starts a new stanza.
     This defines the source address from which the SPA packet will be
     accepted.  The string ``ANY'' is also accepted if a valid SPA packet
     should be honored from any source IP.  Every authorization stanza in
-    'access.conf' definition must start with the ``SOURCE'' keyword. 
+    'access.conf' definition must start with the ``SOURCE'' keyword.
     Networks should be specified in CIDR notation (e.g. ``192.168.10.0/24''),
     and individual IP addresses can be specified as well.  Also, multiple
     IP's and/or networks can be defined as a comma separated list (e.g.

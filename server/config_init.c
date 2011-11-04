@@ -30,6 +30,7 @@
 */
 #include "fwknopd_common.h"
 #include "config_init.h"
+#include "access.h"
 #include "cmd_opts.h"
 #include "utils.h"
 #include "log_msg.h"
@@ -101,6 +102,8 @@ void
 free_configs(fko_srv_options_t *opts)
 {
     int i;
+
+    free_acc_stanzas(opts);
 
     for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         if(opts->config[i] != NULL)
@@ -281,6 +284,18 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_ENABLE_PCAP_PROMISC] == NULL)
         set_config_entry(opts, CONF_ENABLE_PCAP_PROMISC,
             DEF_ENABLE_PCAP_PROMISC);
+
+    /* The packet count argument to pcap_dispatch()
+    */
+    if(opts->config[CONF_PCAP_DISPATCH_COUNT] == NULL)
+        set_config_entry(opts, CONF_PCAP_DISPATCH_COUNT,
+            DEF_PCAP_DISPATCH_COUNT);
+
+    /* Microseconds to sleep between pcap loop iterations
+    */
+    if(opts->config[CONF_PCAP_LOOP_SLEEP] == NULL)
+        set_config_entry(opts, CONF_PCAP_LOOP_SLEEP,
+            DEF_PCAP_LOOP_SLEEP);
 
     /* PCAP Filter.
     */

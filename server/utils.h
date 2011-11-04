@@ -60,6 +60,7 @@
 */
 void hex_dump(const unsigned char *data, const int size);
 char* dump_ctx(fko_ctx_t ctx);
+int is_base64(const unsigned char *buf, unsigned short int len);
 int is_valid_dir(const char *path);
 
 size_t strlcat(char *dst, const char *src, size_t siz);

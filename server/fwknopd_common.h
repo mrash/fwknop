@@ -85,6 +85,8 @@
 #define DEF_INTERFACE                   "eth0"
 #define DEF_ENABLE_PCAP_PROMISC         "N"
 #define DEF_PCAP_FILTER                 "udp port 62201"
+#define DEF_PCAP_DISPATCH_COUNT         "0"
+#define DEF_PCAP_LOOP_SLEEP             "10000" /* a tenth of a second */
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
 #define DEF_MAX_SPA_PACKET_AGE          "120"
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
@@ -162,6 +164,8 @@ enum {
     CONF_PCAP_INTF,
     CONF_ENABLE_PCAP_PROMISC,
     CONF_PCAP_FILTER,
+    CONF_PCAP_DISPATCH_COUNT,
+    CONF_PCAP_LOOP_SLEEP,
     CONF_MAX_SNIFF_BYTES,
     CONF_ENABLE_SPA_PACKET_AGING,
     CONF_MAX_SPA_PACKET_AGE,

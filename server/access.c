@@ -438,12 +438,13 @@ free_acc_string_list(acc_string_list_t *stl)
 /* Free any allocated content of an access stanza.
  *
  * NOTE: If a new access.conf parameter is created, and it is a string
- *       value, it also needs to be added to the list if items to check
+ *       value, it also needs to be added to the list of items to check
  *       and free below.
 */
 static void
 free_acc_stanza_data(acc_stanza_t *acc)
 {
+
     if(acc->source != NULL)
     {
         free(acc->source);
@@ -467,6 +468,9 @@ free_acc_stanza_data(acc_stanza_t *acc)
 
     if(acc->cmd_exec_user != NULL)
         free(acc->cmd_exec_user);
+
+    if(acc->require_username != NULL)
+        free(acc->require_username);
 
     if(acc->gpg_home_dir != NULL)
         free(acc->gpg_home_dir);
@@ -516,11 +520,8 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
     }
 }
 
-/* Take an index and a string value. malloc the space for the value
- * and assign it to the array at the specified index.
-*/
-static void
-acc_stanza_init(fko_srv_options_t *opts)
+void
+free_acc_stanzas(fko_srv_options_t *opts)
 {
     acc_stanza_t    *acc, *last_acc;
 
@@ -537,6 +538,20 @@ acc_stanza_init(fko_srv_options_t *opts)
         free_acc_stanza_data(last_acc);
         free(last_acc);
     }
+
+    return;
+}
+
+/* Wrapper for free_acc_stanzas(), we may put additional initialization
+ * code here.
+*/
+static void
+acc_stanza_init(fko_srv_options_t *opts)
+{
+    /* Free any resources first (in case of reconfig). Assume non-NULL
+     * entry needs to be freed.
+    */
+    free_acc_stanzas(opts);
 
     return;
 }
@@ -828,7 +843,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_string(&(curr_acc->gpg_remote_id), val);
         }
-        else 
+        else
         {
             fprintf(stderr,
                 "*Ignoring unknown access parameter: '%s' in %s\n",
@@ -863,6 +878,7 @@ parse_access_file(fko_srv_options_t *opts)
 
     /* Expand our the expandable fields into their respective data buckets.
     */
+
     expand_acc_ent_lists(opts);
 
     /* Make sure default values are set where needed.

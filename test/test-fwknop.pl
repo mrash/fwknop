@@ -1536,11 +1536,6 @@ sub server_ignore_small_packets() {
         $rv = 0;
     }
 
-    unless (&file_find_regex([qr/Not\senough\sdata/],
-            $server_test_file)) {
-        $rv = 0;
-    }
-
     return $rv;
 }
 

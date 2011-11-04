@@ -36,6 +36,7 @@
 #include "fwknopd_common.h"
 #include "netinet_common.h"
 #include "process_packet.h"
+#include "incoming_spa.h"
 #include "utils.h"
 
 void
@@ -174,13 +175,19 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
      * data.
     */
 
-    /* Truncate the data if it is too long.  This most likely means it is not
-     * a valid SPA packet anyway.
+    /* Expect the data to be at least the minimum required size.  This check
+     * will weed out a lot of things like small TCP ACK's if the user has a
+     * permissive pcap filter
+    */
+    if(pkt_data_len < MIN_SPA_DATA_SIZE)
+        return;
+
+    /* Expect the data to not be too large
     */
     if(pkt_data_len > MAX_SPA_PACKET_LEN)
-        pkt_data_len = MAX_SPA_PACKET_LEN;
+        return;
 
-    /* Put the data in our 1-entry queue.
+    /* Copy the packet for SPA processing
     */
     strlcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len+1);
     opts->spa_pkt.packet_data_len = pkt_data_len;
@@ -189,6 +196,8 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     opts->spa_pkt.packet_dst_ip   = dst_ip;
     opts->spa_pkt.packet_src_port = src_port;
     opts->spa_pkt.packet_dst_port = dst_port;
+
+    incoming_spa(opts);
 
     return;
 }
