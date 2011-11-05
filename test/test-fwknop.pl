@@ -70,6 +70,8 @@ my $OPTIONAL = 0;
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
+my @args_cp = @ARGV;
+
 exit 1 unless GetOptions(
     'Prepare-results'   => \$prepare_results,
     'fwknop-path=s'     => \$fwknopCmd,
@@ -352,7 +354,9 @@ my @tests = (
         'category' => 'basic operations',
         'detail'   => 'dump config',
         'err_msg'  => 'could not dump configuration',
-        'function' => \&dump_config,
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/SYSLOG_IDENTITY/],
+        'exec_err' => $NO,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf " .
             "-a $default_access_conf --dump-config",
@@ -362,7 +366,9 @@ my @tests = (
         'category' => 'basic operations',
         'detail'   => 'override config',
         'err_msg'  => 'could not override configuration',
-        'function' => \&override_config,
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
+        'exec_err' => $NO,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args " .
             "-O $conf_dir/override_fwknopd.conf --dump-config",
@@ -374,7 +380,9 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => '--get-key path validation',
         'err_msg'  => 'accepted improper --get-key path',
-        'function' => \&non_get_key_path,
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/could\snot\sopen/i],
+        'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -s $fake_ip " .
             "-D $loopback_ip --get-key not/there",
@@ -385,7 +393,9 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'require [-s|-R|-a]',
         'err_msg'  => 'allowed null allow IP',
-        'function' => \&no_allow_ip,
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/must\suse\sone\sof/i],
+        'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -D $loopback_ip",
         'fatal'    => $NO
@@ -395,7 +405,9 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => '--allow-ip <IP> valid IP',
         'err_msg'  => 'permitted invalid --allow-ip arg',
-        'function' => \&invalid_allow_ip,
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Invalid\sallow\sIP\saddress/i],
+        'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
         'fatal'    => $NO
@@ -405,7 +417,9 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => '-A <proto>/<port> specification',
         'err_msg'  => 'permitted invalid -A <proto>/<port>',
-        'function' => \&invalid_proto,
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
+        'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
         'fatal'    => $NO
@@ -785,12 +799,15 @@ my %test_keys = (
     'fwknopd_cmdline' => $OPTIONAL,
     'fatal'           => $OPTIONAL,
     'exec_err'        => $OPTIONAL,
+    'postive_output_matches'  => $OPTIONAL,
+    'negative_output_matches' => $OPTIONAL,
 );
 
 ### make sure everything looks as expected before continuing
 &init();
 
 &logr("\n[+] Starting the fwknop test suite...\n\n");
+&logr("   args: @args_cp\n\n");
 
 ### main loop through all of the tests
 for my $test_hr (@tests) {
@@ -823,6 +840,7 @@ sub run_test() {
     $current_test_file  = "$output_dir/$executed.test";
     $server_test_file   = "$output_dir/${executed}_fwknopd.test";
 
+    &write_test_file("[+] TEST: $msg\n");
     if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
         $passed++;
@@ -942,72 +960,6 @@ sub expected_code_version() {
         return 1 if &file_find_regex([qr/$version/], $current_test_file);
     }
     return 0;
-}
-
-sub dump_config() {
-    my $test_hr = shift;
-
-    return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-
-    ### search for one of the config vars (basic check)
-    return 0 unless &file_find_regex([qr/SYSLOG_IDENTITY/],
-        $current_test_file);
-
-    return 1;
-}
-
-sub override_config() {
-    my $test_hr = shift;
-
-    return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-
-    ### search for the altered config value
-    return 0 unless &file_find_regex([qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
-        $current_test_file);
-
-    return 1;
-}
-
-sub non_get_key_path() {
-    my $test_hr = shift;
-
-    return 0 if &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-    return 0 unless &file_find_regex([qr/could\snot\sopen/i],
-        $current_test_file);
-    return 1;
-}
-
-sub no_allow_ip() {
-    my $test_hr = shift;
-
-    return 0 if &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-    return 0 unless &file_find_regex([qr/must\suse\sone\sof/i],
-        $current_test_file);
-    return 1;
-}
-
-sub invalid_allow_ip() {
-    my $test_hr = shift;
-
-    return 0 if &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-    return 0 unless &file_find_regex([qr/Invalid\sallow\sIP\saddress/i],
-        $current_test_file);
-    return 1;
-}
-
-sub invalid_proto() {
-    my $test_hr = shift;
-
-    return 0 if &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
-    return 0 unless &file_find_regex([qr/Invalid\sSPA\saccess\smessage/i],
-        $current_test_file);
-    return 1;
 }
 
 sub generate_spa_packet() {
@@ -1475,8 +1427,6 @@ sub server_stop() {
     }
 
     return $rv;
-
-    return $rv;
 }
 
 sub server_packet_limit() {
@@ -1666,14 +1616,30 @@ sub send_packets() {
 sub generic_exec() {
     my $test_hr = shift;
 
+    my $rv = 1;
+
+    my $exec_rv = &run_cmd($test_hr->{'cmdline'},
+                $cmd_out_tmp, $current_test_file);
+
     if ($test_hr->{'exec_err'} eq $YES) {
-        return 0 if &run_cmd($test_hr->{'cmdline'},
-                $cmd_out_tmp, $current_test_file);
+        $rv = 0 if $exec_rv;
     } else {
-        return 0 unless &run_cmd($test_hr->{'cmdline'},
-                $cmd_out_tmp, $current_test_file);
+        $rv = 0 unless $exec_rv;
     }
-    return 1;
+
+    if ($test_hr->{'positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'positive_output_matches'},
+            $current_test_file);
+    }
+
+    if ($test_hr->{'negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'negative_output_matches'},
+            $current_test_file);
+    }
+
+    return $rv;
 }
 
 ### check for PIE
