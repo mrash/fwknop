@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 
+use File::Copy;
+use File::Path;
 use IO::Socket;
 use Data::Dumper;
 use Getopt::Long 'GetOptions';
@@ -53,6 +55,8 @@ my $current_test_file = "$output_dir/init";
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
+my $saved_last_results = 0;
+my $diff_mode = 0;
 my $enable_recompilation_warnings_check = 0;
 my $sudo_path = '';
 my $help = 0;
@@ -86,6 +90,7 @@ exit 1 unless GetOptions(
     'List-mode'         => \$list_mode,
     'enable-valgrind'   => \$use_valgrind,
     'valgrind-path=s'   => \$valgrindCmd,
+    'diff'              => \$diff_mode,
     'help'              => \$help
 );
 
@@ -803,11 +808,24 @@ my %test_keys = (
     'negative_output_matches' => $OPTIONAL,
 );
 
+if ($diff_mode) {
+    &diff_test_results();
+    exit 0;
+}
+
 ### make sure everything looks as expected before continuing
 &init();
 
-&logr("\n[+] Starting the fwknop test suite...\n\n");
-&logr("   args: @args_cp\n\n");
+&logr("\n[+] Starting the fwknop test suite...\n\n" .
+    "    args: @args_cp\n\n"
+);
+
+### save the results from any previous test suite run
+### so that we can potentially compare them with --diff
+if ($saved_last_results) {
+    &logr("    Saved results from previous run " .
+        "to: ${output_dir}.last/\n\n");
+}
 
 ### main loop through all of the tests
 for my $test_hr (@tests) {
@@ -815,6 +833,8 @@ for my $test_hr (@tests) {
 }
 
 &logr("\n[+] passed/failed/executed: $passed/$failed/$executed tests\n\n");
+
+copy $logfile, "$output_dir/$logfile" or die $!;
 
 exit 0;
 
@@ -881,6 +901,80 @@ sub process_include_exclude() {
         return 0 if $found;
     }
     return 1;
+}
+
+sub diff_test_results() {
+    die "[*] Need results from a previous run before running --diff"
+        unless -d "${output_dir}.last";
+    die "[*] Current results set does not exist." unless -d $output_dir;
+
+    my %current_tests  = ();
+    my %previous_tests = ();
+
+    ### Only diff results for matching tests (parse the logfile to see which
+    ### test numbers match across the two test cycles).
+    &build_results_hash(\%current_tests, $output_dir);
+    &build_results_hash(\%previous_tests, "${output_dir}.last");
+
+    for my $test_msg (keys %current_tests) {
+        my $current_result = $current_tests{$test_msg}{'pass_fail'};
+        my $current_num    = $current_tests{$test_msg}{'num'};
+        if (defined $previous_tests{$test_msg}) {
+            print "[+] Checking: $test_msg\n";
+            my $previous_result = $previous_tests{$test_msg}{'pass_fail'};
+            my $previous_num    = $previous_tests{$test_msg}{'num'};
+            if ($current_result ne $previous_result) {
+                print " DIFF: **$current_result** $test_msg\n";
+            }
+
+            &diff_results($previous_num, $current_num);
+            print "\n";
+        }
+    }
+
+    exit 0;
+}
+
+sub diff_results() {
+    my ($previous_num, $current_num) = @_;
+
+    ### first edit out any valgrind "==354==" prefixes
+    my $search_re = qw/^==\d+==\s/;
+
+    for my $file ("${output_dir}.last/${previous_num}.test",
+        "${output_dir}.last/${previous_num}_fwknopd.test",
+        "${output_dir}/${current_num}.test",
+        "${output_dir}/${current_num}_fwknopd.test",
+    ) {
+        system qq{perl -p -i -e 's|$search_re||' $file} if -e $file;
+    }
+
+    if (-e "${output_dir}.last/${previous_num}.test"
+            and -e "${output_dir}/${current_num}.test") {
+        system "diff -u ${output_dir}.last/${previous_num}.test " .
+            "${output_dir}/${current_num}.test";
+    }
+
+    if (-e "${output_dir}.last/${previous_num}_fwknopd.test"
+            and -e "${output_dir}/${current_num}_fwknopd.test") {
+        system "diff -u ${output_dir}.last/${previous_num}_fwknopd.test " .
+            "${output_dir}/${current_num}_fwknopd.test";
+    }
+
+    return;
+}
+
+sub build_results_hash() {
+    my ($hr, $dir) = @_;
+
+    open F, "< $dir/$logfile" or die $!;
+    while (<F>) {
+        if (/^(.*?)\.\.\..*(pass|fail)\s\((\d+)\)/) {
+            $hr->{$1}{'pass_fail'} = $2;
+            $hr->{$1}{'num'}       = $3;
+        }
+    }
+    return;
 }
 
 sub compile_warnings() {
@@ -1879,7 +1973,26 @@ sub init() {
         unless -e $default_access_conf;
     die "[*] configure script does not exist" unless -e $configure_path;
 
-    unless (-d $output_dir) {
+    if (-d $output_dir) {
+        if (-d "${output_dir}.last") {
+            rmtree "${output_dir}.last"
+                or die "[*] rmtree ${output_dir}.last $!";
+        }
+        mkdir "${output_dir}.last"
+            or die "[*] ${output_dir}.last: $!";
+        for my $file (glob("$output_dir/*.test")) {
+            if ($file =~ m|.*/(.*)|) {
+                copy $file, "${output_dir}.last/$1" or die $!;
+            }
+        }
+        if (-e "$output_dir/init") {
+            copy "$output_dir/init", "${output_dir}.last/init";
+        }
+        if (-e $logfile) {
+            copy $logfile, "${output_dir}.last/$logfile" or die $!;
+        }
+        $saved_last_results = 1;
+    } else {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
     }
     unless (-d $run_dir) {
