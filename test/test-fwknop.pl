@@ -541,7 +541,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -553,7 +553,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -567,7 +567,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -581,7 +581,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -595,7 +595,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => "-P bpf SPA over port $non_std_spa_port",
         'err_msg'  => 'could not complete SPA cycle',
@@ -608,7 +608,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
         'err_msg'  => 'could not detect replay attack',
@@ -620,7 +620,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'err_msg'  => 'improper digest cache structure',
@@ -629,7 +629,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -641,7 +641,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -653,7 +653,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -665,7 +665,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA ops',
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -678,7 +678,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -688,7 +688,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -703,7 +703,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -718,7 +718,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -734,7 +734,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
         'err_msg'  => 'could not detect replay attack',
@@ -745,7 +745,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -755,7 +755,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -765,7 +765,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -775,7 +775,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -785,7 +785,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA ops',
+        'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'err_msg'  => 'improper digest cache structure',
