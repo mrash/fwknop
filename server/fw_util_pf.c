@@ -182,7 +182,7 @@ fw_initialize(const fko_srv_options_t *opts)
     if (! anchor_active(opts))
     {
         fprintf(stderr, "Warning: the fwknop anchor is not active in the pf policy\n");
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Delete any existing rules in the fwknop anchor

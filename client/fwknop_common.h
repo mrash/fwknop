@@ -137,6 +137,8 @@ typedef struct fko_cli_options
 
 extern fko_cli_options_t options;
 
+void free_configs(fko_cli_options_t *opts);
+
 #endif /* FWKNOP_COMMON_H */
 
 /***EOF***/

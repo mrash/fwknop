@@ -87,7 +87,7 @@ init_logging(fko_srv_options_t *opts) {
     if(log_name == NULL)
     {
         fprintf(stderr, "Memory allocation error setting log_name!\n");
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Set our name.

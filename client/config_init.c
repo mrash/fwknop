@@ -453,7 +453,7 @@ process_rc(fko_cli_options_t *options)
         else
             fprintf(stderr, "Unable to open rc file: %s: %s\n",
                 rcfile, strerror(errno));
- 
+
         return;
     }
 
@@ -548,6 +548,7 @@ process_rc(fko_cli_options_t *options)
         }
 
     } /* end while fgets rc */
+    fclose(rc);
 }
 
 /* Sanity and bounds checks for the various options.

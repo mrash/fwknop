@@ -91,7 +91,7 @@ fw_initialize(const fko_srv_options_t *opts)
     if(res != 0)
     {
         fprintf(stderr, "Warning: Errors detected during fwknop custom chain creation.\n");
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 }
 

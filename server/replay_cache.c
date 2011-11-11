@@ -99,7 +99,7 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
     if(new_file == NULL)
     {
         log_msg(LOG_ERR, "rotate_digest_cache_file: Memory allocation error.");
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* The new filename is just the original with a trailing '-old'.

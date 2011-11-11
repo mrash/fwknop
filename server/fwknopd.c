@@ -78,18 +78,18 @@ main(int argc, char **argv)
                 if(res == 0)
                 {
                     fprintf(stdout, "Killed fwknopd (pid=%i)\n", old_pid);
-                    exit(EXIT_SUCCESS);
+                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 }
                 else
                 {
                     perror("Unable to kill fwknop: ");
-                    exit(EXIT_FAILURE);
+                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
             }
             else
             {
                 fprintf(stderr, "No running fwknopd detected.\n");
-                exit(EXIT_FAILURE);
+                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
 
@@ -104,7 +104,7 @@ main(int argc, char **argv)
             else
                 fprintf(stdout, "No running fwknopd detected.\n");
 
-            exit(EXIT_SUCCESS);
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
         /* Restart the currently running fwknopd?
@@ -119,18 +119,18 @@ main(int argc, char **argv)
                 if(res == 0)
                 {
                     fprintf(stdout, "Sent restart signal to fwknopd (pid=%i)\n", old_pid);
-                    exit(EXIT_SUCCESS);
+                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 }
                 else
                 {
                     perror("Unable to send signal to fwknop: ");
-                    exit(EXIT_FAILURE);
+                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
             }
             else
             {
                 fprintf(stdout, "No running fwknopd detected.\n");
-                exit(EXIT_FAILURE);
+                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
 
@@ -179,14 +179,13 @@ main(int argc, char **argv)
         if(opts.fw_list == 1 || opts.fw_list_all == 1)
         {
             fw_dump_rules(&opts);
-            exit(EXIT_SUCCESS);
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
         if(opts.fw_flush == 1)
         {
             fprintf(stdout, "Deleting any existing firewall rules...\n");
-            fw_cleanup(&opts);
-            exit(EXIT_SUCCESS);
+            clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
         }
 
         /* Process the access.conf file.
@@ -200,7 +199,7 @@ main(int argc, char **argv)
         {
             dump_config(&opts);
             dump_access_list(&opts);
-            exit(EXIT_SUCCESS);
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
         /* If we are a new process (just being started), proceed with normal
@@ -225,7 +224,7 @@ main(int argc, char **argv)
                         "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
                     );
 
-                    exit(EXIT_FAILURE);
+                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
                 else if(old_pid < 0)
                 {
@@ -679,6 +678,21 @@ get_running_pid(const fko_srv_options_t *opts)
     }
 
     return(rpid);
+}
+
+void
+clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int exit_status)
+{
+    if(fw_cleanup_flag == FW_CLEANUP)
+        fw_cleanup(opts);
+
+#if USE_FILE_CACHE
+    free_replay_list(opts);
+#endif
+
+    free_logging();
+    free_configs(opts);
+    exit(exit_status);
 }
 
 /***EOF***/

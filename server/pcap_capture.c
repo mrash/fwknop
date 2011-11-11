@@ -78,13 +78,13 @@ pcap_capture(fko_srv_options_t *opts)
     if(pcap == NULL)
     {
         log_msg(LOG_ERR, "[*] pcap_open_live error: %s\n", errstr);
-        exit(EXIT_FAILURE);
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
     if (pcap == NULL)
     {
         log_msg(LOG_ERR, "[*] pcap error: %s", errstr);
-        exit(EXIT_FAILURE);
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Set pcap filters, if any.
@@ -96,7 +96,7 @@ pcap_capture(fko_srv_options_t *opts)
             log_msg(LOG_ERR, "[*] Error compiling pcap filter: %s",
                 pcap_geterr(pcap)
             );
-            exit(EXIT_FAILURE);
+            clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
         }
 
         if(pcap_setfilter(pcap, &fp) == -1)
@@ -104,7 +104,7 @@ pcap_capture(fko_srv_options_t *opts)
             log_msg(LOG_ERR, "[*] Error setting pcap filter: %s",
                 pcap_geterr(pcap)
             );
-            exit(EXIT_FAILURE);
+            clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
         }
 
         log_msg(LOG_INFO, "PCAP filter is: %s", opts->config[CONF_PCAP_FILTER]);
@@ -154,7 +154,7 @@ pcap_capture(fko_srv_options_t *opts)
         log_msg(LOG_ERR, "[*] Error setting pcap nonblocking to %i: %s",
             0, errstr
         );
-        exit(EXIT_FAILURE);
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Initialize our signal handlers. You can check the return value for
@@ -257,7 +257,7 @@ pcap_capture(fko_srv_options_t *opts)
                 log_msg(LOG_ERR, "[*] %i consecutive pcap errors.  Giving up",
                     pcap_errcnt
                 );
-                exit(EXIT_FAILURE);
+                clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
             }
         }
         else if(pending_break == 1 || res == -2)

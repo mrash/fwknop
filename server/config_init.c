@@ -48,7 +48,7 @@ set_config_entry(fko_srv_options_t *opts, const int var_ndx, const char *value)
     if(var_ndx < 0 || var_ndx >= NUMBER_OF_CONFIG_ENTRIES)
     {
         fprintf(stderr, "Index value of %i is not valid\n", var_ndx);
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* If this particular entry was already set (i.e. not NULL), then
@@ -74,7 +74,7 @@ set_config_entry(fko_srv_options_t *opts, const int var_ndx, const char *value)
     if(opts->config[var_ndx] == NULL)
     {
         fprintf(stderr, "*Fatal memory allocation error!\n");
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     strlcpy(opts->config[var_ndx], value, space_needed);
@@ -135,8 +135,7 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
     {
         fprintf(stderr, "[*] Config file: '%s' was not found.\n",
             config_file);
-
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     if ((cfile_ptr = fopen(config_file, "r")) == NULL)
@@ -145,7 +144,7 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
             config_file);
         perror(NULL);
 
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     while ((fgets(conf_line_buf, MAX_LINE_LEN, cfile_ptr)) != NULL)
@@ -498,7 +497,7 @@ validate_options(fko_srv_options_t *opts)
         fprintf(stderr,
             "The -D, -K, -R, and -S options are mutually exclusive.  Pick only one.\n"
         );
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     if(opts->config[CONF_FIREWALL_EXE] == NULL)
@@ -506,7 +505,7 @@ validate_options(fko_srv_options_t *opts)
         fprintf(stderr,
             "No firewall command executable is set. Please check FIREWALL_EXE in fwknopd.conf.\n"
         );
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     return;
@@ -566,7 +565,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
         switch(cmd_arg) {
             case 'h':
                 usage();
-                exit(EXIT_SUCCESS);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 break;
 
         /* Look for configuration file arg.
@@ -692,7 +691,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                     fprintf(stderr,
                         "[*] Directory '%s' could not stat()/does not exist?\n",
                         optarg);
-                    exit(EXIT_FAILURE);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
                 break;
             case 'i':
@@ -727,11 +726,11 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
-                exit(EXIT_SUCCESS);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 break;
             default:
                 usage();
-                exit(EXIT_FAILURE);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
     }
 

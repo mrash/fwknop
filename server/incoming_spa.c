@@ -279,6 +279,7 @@ incoming_spa(fko_srv_options_t *opts)
             /* Now decrypt the data.
             */
             res = fko_decrypt_spa_data(ctx, acc->gpg_decrypt_pw);
+
         }
         else
         {

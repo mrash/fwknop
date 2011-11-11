@@ -431,6 +431,7 @@ free_acc_string_list(acc_string_list_t *stl)
         last_stl = stl;
         stl = last_stl->next;
 
+        free(last_stl->str);
         free(last_stl);
     }
 }
@@ -571,7 +572,7 @@ acc_stanza_add(fko_srv_options_t *opts)
         log_msg(LOG_ERR,
             "Fatal memory allocation error adding access stanza"
         );
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* If this is not the first acc entry, we walk our acc pointer to the
@@ -664,7 +665,7 @@ parse_access_file(fko_srv_options_t *opts)
         fprintf(stderr, "[*] Access file: '%s' was not found.\n",
             opts->config[CONF_ACCESS_FILE]);
 
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
@@ -673,7 +674,7 @@ parse_access_file(fko_srv_options_t *opts)
             opts->config[CONF_ACCESS_FILE]);
         perror(NULL);
 
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Initialize the access list.
@@ -733,7 +734,7 @@ parse_access_file(fko_srv_options_t *opts)
                     fprintf(stderr,
                         "[*] Data error in access file: '%s'\n",
                         opts->config[CONF_ACCESS_FILE]);
-                    exit(EXIT_FAILURE);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
             }
 
@@ -766,7 +767,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
-                exit(EXIT_FAILURE);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key), val);
         }
@@ -789,7 +790,7 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 fprintf(stderr, "Unable to determine UID for CMD_EXEC_USER: %s.\n",
                     errno ? strerror(errno) : "Not a user on this system");
-                exit(EXIT_FAILURE);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
 
             curr_acc->cmd_exec_uid = pw->pw_uid;
@@ -813,7 +814,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'\n",
                     val, curr_acc->source, opts->config[CONF_ACCESS_FILE]);
-                exit(EXIT_FAILURE);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_ID"))
@@ -827,7 +828,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
-                exit(EXIT_FAILURE);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
         }
@@ -863,7 +864,7 @@ parse_access_file(fko_srv_options_t *opts)
         fprintf(stderr,
             "[*] Could not find valid SOURCE stanza in access file: '%s'\n",
             opts->config[CONF_ACCESS_FILE]);
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Sanity check the last stanza
@@ -873,7 +874,7 @@ parse_access_file(fko_srv_options_t *opts)
         fprintf(stderr,
             "[*] Data error in access file: '%s'\n",
             opts->config[CONF_ACCESS_FILE]);
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Expand our the expandable fields into their respective data buckets.

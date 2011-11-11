@@ -95,7 +95,6 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
     if(ctx->username == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-
     return(FKO_SUCCESS);
 }
 

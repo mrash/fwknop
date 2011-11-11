@@ -361,7 +361,16 @@ main(int argc, char **argv)
 
     fko_destroy(ctx);
 
+    free_configs(&options);
+
     return(EXIT_SUCCESS);
+}
+
+void
+free_configs(fko_cli_options_t *opts)
+{
+    if (opts->resolve_url != NULL)
+        free(opts->resolve_url);
 }
 
 static int
