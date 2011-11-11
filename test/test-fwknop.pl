@@ -916,7 +916,8 @@ sub diff_test_results() {
     &build_results_hash(\%current_tests, $output_dir);
     &build_results_hash(\%previous_tests, "${output_dir}.last");
 
-    for my $test_msg (keys %current_tests) {
+    for my $test_msg (sort {$current_tests{$a}{'num'} <=> $current_tests{$b}{'num'}}
+                keys %current_tests) {
         my $current_result = $current_tests{$test_msg}{'pass_fail'};
         my $current_num    = $current_tests{$test_msg}{'num'};
         if (defined $previous_tests{$test_msg}) {
@@ -938,15 +939,19 @@ sub diff_test_results() {
 sub diff_results() {
     my ($previous_num, $current_num) = @_;
 
-    ### first edit out any valgrind "==354==" prefixes
-    my $search_re = qw/^==\d+==\s/;
+    ### edit out any valgrind "==354==" prefixes
+    my $valgrind_search_re = qr/^==\d+==\s/;
+
+    ### remove CMD timestamps
+    my $cmd_search_re = qr/^\S+\s.*?\s\d{4}\sCMD\:/;
 
     for my $file ("${output_dir}.last/${previous_num}.test",
         "${output_dir}.last/${previous_num}_fwknopd.test",
         "${output_dir}/${current_num}.test",
         "${output_dir}/${current_num}_fwknopd.test",
     ) {
-        system qq{perl -p -i -e 's|$search_re||' $file} if -e $file;
+        system qq{perl -p -i -e 's|$valgrind_search_re||' $file} if -e $file;
+        system qq{perl -p -i -e 's|$cmd_search_re|CMD:|' $file} if -e $file;
     }
 
     if (-e "${output_dir}.last/${previous_num}.test"
