@@ -24,6 +24,7 @@ my $default_access_conf = "$conf_dir/default_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
+my $no_source_match_access_conf = "$conf_dir/no_source_match_access.conf";
 
 my $fwknopCmd   = '../client/.libs/fwknop';
 my $fwknopdCmd  = '../server/.libs/fwknopd';
@@ -39,6 +40,8 @@ my $loopback_ip = '127.0.0.1';
 my $fake_ip     = '127.0.0.2';
 my $default_spa_port = 62201;
 my $non_std_spa_port = 12345;
+
+my $spoof_user = 'testuser';
 #================== end config ===================
 
 my $passed = 0;
@@ -63,12 +66,8 @@ my $help = 0;
 my $YES = 1;
 my $NO  = 0;
 my $PRINT_LEN = 68;
-my $FORCE_STOP = 1;
-my $NO_FORCE_STOP = 2;
 my $USE_PREDEF_PKTS = 1;
 my $USE_CLIENT = 2;
-my $REQUIRE_FW_RULE = 1;
-my $NO_FW_RULE = 2;
 my $REQUIRED = 1;
 my $OPTIONAL = 0;
 
@@ -434,7 +433,7 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => 'generate SPA packet',
         'err_msg'  => 'could not generate SPA packet',
-        'function' => \&generate_spa_packet,
+        'function' => \&client_send_spa_packet,
         'cmdline'  => $default_client_args,
         'fatal'    => $YES
     },
@@ -555,6 +554,20 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'IP filtering (tcp/22 ssh)',
+        'err_msg'  => "did not filter $loopback_ip",
+        'function' => \&ip_filtering,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $no_source_match_access_conf " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "-i $loopback_intf --foreground --verbose --verbose",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
@@ -607,6 +620,21 @@ my @tests = (
             qq|-P "udp port $non_std_spa_port"|,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'spoof username (tcp/22)',
+        'err_msg'  => 'could not spoof username',
+        'function' => \&spoof_username,
+        'cmdline'  => "SPOOF_USER=$spoof_user LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf --foreground --verbose --verbose",
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -784,6 +812,17 @@ my @tests = (
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fatal'    => $NO
     },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'spoof username (tcp/22 ssh)',
+        'err_msg'  => 'could not spoof username',
+        'function' => \&spoof_username,
+        'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'server',
@@ -1061,7 +1100,7 @@ sub expected_code_version() {
     return 0;
 }
 
-sub generate_spa_packet() {
+sub client_send_spa_packet() {
     my $test_hr = shift;
 
     &write_key('fwknoptest', $local_key_file);
@@ -1077,30 +1116,10 @@ sub generate_spa_packet() {
 sub spa_cycle() {
     my $test_hr = shift;
 
-    my $rv = &client_server_interaction($test_hr, [],
-            $USE_CLIENT, $REQUIRE_FW_RULE, $NO_FORCE_STOP);
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+            = &client_server_interaction($test_hr, [], $USE_CLIENT);
 
-    sleep 3;
-
-    ### the firewall rule should be timed out (3 second timeout
-    ### as defined in the access.conf file
-    if (&is_fw_rule_active()) {
-        &write_test_file("[-] new fw rule not timed out.\n");
-        $rv = 0;
-    } else {
-        &write_test_file("[+] new fw rule timed out.\n");
-    }
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
-    }
+    $rv = 0 unless $fw_rule_created and $fw_rule_removed;
 
     return $rv;
 }
@@ -1111,6 +1130,40 @@ sub spa_over_non_std_port() {
     my $rv = &spa_cycle($test_hr);
 
     unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub ip_filtering() {
+    my $test_hr = shift;
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+            = &client_server_interaction($test_hr, [], $USE_CLIENT);
+
+    $rv = 0 if $fw_rule_created;
+
+    unless (&file_find_regex([qr/No\saccess\sdata\sfound/],
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub spoof_username() {
+    my $test_hr = shift;
+
+    my $rv = &spa_cycle($test_hr);
+
+    unless (&file_find_regex([qr/Username:\s*$spoof_user/],
+            $current_test_file)) {
+        $rv = 0;
+    }
+
+    unless (&file_find_regex([qr/Username:\s*$spoof_user/],
             $server_test_file)) {
         $rv = 0;
     }
@@ -1143,19 +1196,10 @@ sub replay_detection() {
         },
     );
 
-    my $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
-    }
+    $rv = 0 unless $server_was_stopped;
 
     unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
             $server_test_file)) {
@@ -1208,7 +1252,11 @@ sub server_bpf_ignore_packet() {
     my $test_hr = shift;
 
     my $rv = 1;
-    unless (&generate_spa_packet($test_hr)) {
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n");
         $rv = 0;
     }
@@ -1230,26 +1278,8 @@ sub server_bpf_ignore_packet() {
         },
     );
 
-    $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
-
-    if (&is_fw_rule_active()) {
-        &write_test_file("[-] new fw rule created.\n");
-        $rv = 0;
-    } else {
-        &write_test_file("[+] new fw rule not created.\n");
-    }
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
-    }
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
             $server_test_file)) {
@@ -1263,7 +1293,11 @@ sub altered_non_base64_spa_data() {
     my $test_hr = shift;
 
     my $rv = 1;
-    unless (&generate_spa_packet($test_hr)) {
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n");
         $rv = 0;
     }
@@ -1288,26 +1322,10 @@ sub altered_non_base64_spa_data() {
         },
     );
 
-    $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    if (&is_fw_rule_active()) {
-        &write_test_file("[-] new fw rule created.\n");
-        $rv = 0;
-    } else {
-        &write_test_file("[+] new fw rule not created.\n");
-    }
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
-    }
+    $rv = 0 unless $server_was_stopped;
 
     return $rv;
 }
@@ -1316,7 +1334,11 @@ sub altered_base64_spa_data() {
     my $test_hr = shift;
 
     my $rv = 1;
-    unless (&generate_spa_packet($test_hr)) {
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n");
         $rv = 0;
     }
@@ -1340,25 +1362,16 @@ sub altered_base64_spa_data() {
         },
     );
 
-    $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    if (&is_fw_rule_active()) {
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
         &write_test_file("[-] new fw rule created.\n");
         $rv = 0;
     } else {
         &write_test_file("[+] new fw rule not created.\n");
-    }
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -1373,7 +1386,11 @@ sub appended_spa_data() {
     my $test_hr = shift;
 
     my $rv = 1;
-    unless (&generate_spa_packet($test_hr)) {
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n");
         $rv = 0;
     }
@@ -1397,25 +1414,16 @@ sub appended_spa_data() {
         },
     );
 
-    $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    if (&is_fw_rule_active()) {
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
         &write_test_file("[-] new fw rule created.\n");
         $rv = 0;
     } else {
         &write_test_file("[+] new fw rule not created.\n");
-    }
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -1430,7 +1438,11 @@ sub prepended_spa_data() {
     my $test_hr = shift;
 
     my $rv = 1;
-    unless (&generate_spa_packet($test_hr)) {
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n");
         $rv = 0;
     }
@@ -1454,25 +1466,16 @@ sub prepended_spa_data() {
         },
     );
 
-    $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    if (&is_fw_rule_active()) {
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
         &write_test_file("[-] new fw rule created.\n");
         $rv = 0;
     } else {
         &write_test_file("[+] new fw rule not created.\n");
-    }
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -1486,24 +1489,15 @@ sub prepended_spa_data() {
 sub server_start() {
     my $test_hr = shift;
 
-    my $rv = &client_server_interaction($test_hr, [],
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running.\n");
-        $rv = 0;
-    }
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, [], $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
             $server_test_file)) {
         $rv = 0;
     }
+
+    $rv = 0 unless $server_was_stopped;
 
     return $rv;
 }
@@ -1511,19 +1505,10 @@ sub server_start() {
 sub server_stop() {
     my $test_hr = shift;
 
-    my $rv = &client_server_interaction($test_hr, [],
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, [], $USE_PREDEF_PKTS);
 
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
-            $rv = 0;
-        }
-    } else {
-        &write_test_file("[-] server is not running, nothing to stop.\n");
-        $rv = 0;
-    }
+    $rv = 0 unless $server_was_stopped;
 
     return $rv;
 }
@@ -1540,10 +1525,8 @@ sub server_packet_limit() {
         },
     );
 
-    my $rv = &client_server_interaction($test_hr, \@packets,
-            $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
-
-    sleep 2;
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
@@ -1575,8 +1558,8 @@ sub server_ignore_small_packets() {
         },
     );
 
-    my $rv = &client_server_interaction($test_hr, \@packets,
-        $USE_PREDEF_PKTS, $NO_FW_RULE, $NO_FORCE_STOP);
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     sleep 2;
 
@@ -1589,10 +1572,12 @@ sub server_ignore_small_packets() {
 }
 
 sub client_server_interaction() {
-    my ($test_hr, $pkts_hr, $spa_client_flag,
-            $fw_rules_flag, $enforce_stop_flag) = @_;
+    my ($test_hr, $pkts_hr, $spa_client_flag, $fw_rules_flag) = @_;
 
     my $rv = 1;
+    my $server_was_stopped = 1;
+    my $fw_rule_created = 1;
+    my $fw_rule_removed = 0;
 
     ### start fwknopd to monitor for the SPA packet over the loopback interface
     my $fwknopd_parent_pid = &start_fwknopd($test_hr);
@@ -1608,7 +1593,7 @@ sub client_server_interaction() {
     ### send the SPA packet(s) to the server either manually using IO::Socket or
     ### with the fwknopd client
     if ($spa_client_flag == $USE_CLIENT) {
-        unless (&generate_spa_packet($test_hr)) {
+        unless (&client_send_spa_packet($test_hr)) {
             &write_test_file("[-] fwknop client execution error.\n");
             $rv = 0;
         }
@@ -1616,43 +1601,44 @@ sub client_server_interaction() {
         &send_packets($pkts_hr);
     }
 
-    if ($fw_rules_flag == $REQUIRE_FW_RULE) {
-        my $ctr = 0;
-        ### check to see if the SPA packet resulted in a new fw access rule
-        while (not &is_fw_rule_active()) {
-            &write_test_file("[-] new fw rule does not exist.\n");
-            $ctr++;
-            last if $ctr == 3;
-            sleep 1;
-        }
-        if ($ctr == 3) {
+    ### check to see if the SPA packet resulted in a new fw access rule
+    my $ctr = 0;
+    while (not &is_fw_rule_active()) {
+        &write_test_file("[-] new fw rule does not exist.\n");
+        $ctr++;
+        last if $ctr == 3;
+        sleep 1;
+    }
+    if ($ctr == 3) {
+        $fw_rule_created = 0;
+        $fw_rule_removed = 0;
+    }
+
+    &time_for_valgrind() if $use_valgrind;
+
+    if ($fw_rule_created) {
+        sleep 3;  ### allow time for rule time out.
+        if (&is_fw_rule_active()) {
+            &write_test_file("[-] new fw rule not timed out.\n");
             $rv = 0;
+        } else {
+            &write_test_file("[+] new fw rule timed out.\n");
+            $fw_rule_removed = 1;
         }
     }
 
-    if ($enforce_stop_flag == $FORCE_STOP) {
-        local $SIG{'ALRM'} = sub {die "[*] Sniff packet alarm.\n"};
-        ### on some systems and libpcap combinations, it is possible for fwknopd
-        ### to not receive packet data, so setting an alarm allows us to recover
-        alarm $sniff_alarm;
-        eval {
-            ### fwknopd will exit after receiving the cached packet (--Count 1)
-            waitpid($fwknopd_parent_pid, 0);
-        };
-        alarm 0;
-        if ($@) {
-            &dump_pids();
-            &stop_fwknopd();
-            if (kill 0, $fwknopd_parent_pid) {
-                kill 9, $fwknopd_parent_pid unless kill 15, $fwknopd_parent_pid;
-            }
-            $rv = 0;
+    if (&is_fwknopd_running()) {
+        &stop_fwknopd();
+        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
+                $server_test_file)) {
+            $server_was_stopped = 0;
         }
     } else {
-        &time_for_valgrind() if $use_valgrind;
+        &write_test_file("[-] server is not running.\n");
+        $server_was_stopped = 0;
     }
 
-    return $rv;
+    return ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed);
 }
 
 sub get_spa_packet_from_file() {
