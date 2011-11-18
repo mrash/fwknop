@@ -37,7 +37,7 @@
 /* Function Prototypes
 */
 void parse_access_file(fko_srv_options_t *opts);
-acc_stanza_t* acc_check_source(fko_srv_options_t *opts, uint32_t ip);
+acc_stanza_t* acc_check_source(fko_srv_options_t *opts, const uint32_t ip);
 int acc_check_port_access(acc_stanza_t *acc, char *port_str);
 int acc_check_gpg_remote_id(acc_stanza_t *acc, const char *gpg_id);
 void dump_access_list(const fko_srv_options_t *opts);

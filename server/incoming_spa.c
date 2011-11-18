@@ -175,10 +175,19 @@ incoming_spa(fko_srv_options_t *opts)
     /* Get the access.conf data for the stanza that matches this incoming
      * source IP address.
     */
-    acc_stanza_t   *acc = acc_check_source(opts, spa_pkt->packet_src_ip);
+    acc_stanza_t   *acc = acc_check_source(opts, ntohl(spa_pkt->packet_src_ip));
 
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+
+    if(acc == NULL)
+    {
+        log_msg(LOG_WARNING,
+            "No access data found for source IP: %s", spadat.pkt_source_ip
+        );
+
+        return(SPA_MSG_ACCESS_DENIED);
+    }
 
     /* At this point, we want to validate and (if needed) preprocess the
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
@@ -194,15 +203,6 @@ incoming_spa(fko_srv_options_t *opts)
     }
 
     log_msg(LOG_INFO, "SPA Packet from IP: %s received.", spadat.pkt_source_ip);
-
-    if(acc == NULL)
-    {
-        log_msg(LOG_WARNING,
-            "No access data found for source IP: %s", spadat.pkt_source_ip
-        );
-
-        return(SPA_MSG_ACCESS_DENIED);
-    }
 
     if(opts->verbose > 1)
         log_msg(LOG_INFO, "SPA Packet: '%s'\n", spa_pkt->packet_data);

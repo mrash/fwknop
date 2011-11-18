@@ -25,6 +25,11 @@ my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
 my $no_source_match_access_conf = "$conf_dir/no_source_match_access.conf";
+my $no_subnet_source_match_access_conf = "$conf_dir/no_subnet_source_match_access.conf";
+my $no_multi_source_match_access_conf = "$conf_dir/no_multi_source_match_access.conf";
+my $multi_source_match_access_conf = "$conf_dir/multi_source_match_access.conf";
+my $ip_source_match_access_conf = "$conf_dir/ip_source_match_access.conf";
+my $subnet_source_match_access_conf = "$conf_dir/subnet_source_match_access.conf";
 
 my $fwknopCmd   = '../client/.libs/fwknop';
 my $fwknopdCmd  = '../server/.libs/fwknopd';
@@ -53,8 +58,9 @@ my $test_exclude = '';
 my @tests_to_exclude = ();
 my $list_mode = 0;
 my $loopback_intf = '';
-my $prepare_results = 0;
+my $anonymize_results = 0;
 my $current_test_file = "$output_dir/init";
+my $tarfile = 'test_fwknop.tar.gz';
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
@@ -76,7 +82,7 @@ my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 my @args_cp = @ARGV;
 
 exit 1 unless GetOptions(
-    'Prepare-results'   => \$prepare_results,
+    'Anonymize-results' => \$anonymize_results,
     'fwknop-path=s'     => \$fwknopCmd,
     'fwknopd-path=s'    => \$fwknopdCmd,
     'libfko-path=s'     => \$libfko_bin,
@@ -95,9 +101,15 @@ exit 1 unless GetOptions(
 
 &usage() if $help;
 
+### create an anonymized tar file of test suite results that can be
+### emailed around to assist in debugging fwknop communications
+exit &anonymize_results() if $anonymize_results;
+
 &identify_loopback_intf();
 
 $valgrind_str = "$valgrindCmd --leak-check=full --show-reachable=yes --track-origins=yes" if $use_valgrind;
+
+my $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
 
 my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
@@ -113,7 +125,7 @@ my $default_server_conf_args = "-c $default_conf -a $default_access_conf " .
 
 my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopdCmd -c $default_conf " .
-    "-a $gpg_access_conf -i $loopback_intf --foreground --verbose --verbose " .
+    "-a $gpg_access_conf $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
 ### point the compiled binaries at the local libary path
@@ -476,8 +488,7 @@ my @tests = (
         'err_msg'  => 'start error',
         'function' => \&server_start,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -487,8 +498,7 @@ my @tests = (
         'err_msg'  => 'stop error',
         'function' => \&server_stop,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -498,8 +508,7 @@ my @tests = (
         'err_msg'  => 'did not write PID',
         'function' => \&write_pid,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
 
@@ -510,8 +519,7 @@ my @tests = (
         'err_msg'  => 'did not exit after one packet',
         'function' => \&server_packet_limit,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --packet-limit 1 --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
         'fatal'    => $NO
     },
     {
@@ -521,8 +529,7 @@ my @tests = (
         'err_msg'  => 'did not ignore small packets',
         'function' => \&server_ignore_small_packets,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --packet-limit 1 --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
         'fatal'    => $NO
     },
     {
@@ -533,8 +540,7 @@ my @tests = (
         'function' => \&server_bpf_ignore_packet,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --packet-limit 1 --foreground --verbose  --verbose " .
+            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str " .
             qq|-P "udp port $non_std_spa_port"|,
         'fatal'    => $NO
     },
@@ -547,8 +553,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -560,8 +565,67 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $no_source_match_access_conf " .
-            "-d $default_digest_file -p $default_pid_file " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'subnet filtering (tcp/22 ssh)',
+        'err_msg'  => "did not filter $loopback_ip",
+        'function' => \&ip_filtering,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $no_subnet_source_match_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'IP+subnet filtering (tcp/22 ssh)',
+        'err_msg'  => "did not filter $loopback_ip",
+        'function' => \&ip_filtering,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $no_multi_source_match_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'IP match (tcp/22 ssh)',
+        'err_msg'  => "did not filter $loopback_ip",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $ip_source_match_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'subnet match (tcp/22 ssh)',
+        'err_msg'  => "did not filter $loopback_ip",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $subnet_source_match_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'multi IP/net match (tcp/22 ssh)',
+        'err_msg'  => "did not filter $loopback_ip",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $multi_source_match_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
 
@@ -575,8 +639,7 @@ my @tests = (
             "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -589,8 +652,7 @@ my @tests = (
             "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -603,8 +665,7 @@ my @tests = (
             "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -615,8 +676,7 @@ my @tests = (
         'function' => \&spa_over_non_std_port,
         'cmdline'  => "$default_client_args --server-port $non_std_spa_port",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose " .
+            "$fwknopdCmd $default_server_conf_args $intf_str " .
             qq|-P "udp port $non_std_spa_port"|,
         'fatal'    => $NO
     },
@@ -630,8 +690,7 @@ my @tests = (
             "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
 
@@ -643,8 +702,7 @@ my @tests = (
         'function' => \&replay_detection,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -664,8 +722,7 @@ my @tests = (
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -676,8 +733,7 @@ my @tests = (
         'function' => \&altered_base64_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -688,8 +744,7 @@ my @tests = (
         'function' => \&appended_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
     {
@@ -700,8 +755,7 @@ my @tests = (
         'function' => \&prepended_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-i $loopback_intf --foreground --verbose --verbose",
+            "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
 
@@ -1836,6 +1890,46 @@ sub time_for_valgrind() {
     return;
 }
 
+sub anonymize_results() {
+    my $rv = 0;
+    die "[*] $output_dir does not exist" unless -d $output_dir;
+    die "[*] $logfile does not exist, has $0 been executed?"
+        unless -e $logfile;
+    if (-e $tarfile) {
+        unlink $tarfile or die "[*] Could not unlink $tarfile: $!";
+    }
+
+    ### remove non-loopback IP addresses
+    my $search_re = qr/\b127\.0\.0\.1\b/;
+    system "perl -p -i -e 's|$search_re|00MY1271STR00|g' $output_dir/*.test";
+    $search_re = qr/\b127\.0\.0\.2\b/;
+    system "perl -p -i -e 's|$search_re|00MY1272STR00|g' $output_dir/*.test";
+    $search_re = qr/\b0\.0\.0\.0\b/;
+    system "perl -p -i -e 's|$search_re|00MY0000STR00|g' $output_dir/*.test";
+    $search_re = qr/\b(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}\b/;
+    system "perl -p -i -e 's|$search_re|N.N.N.N|g' $output_dir/*.test";
+    system "perl -p -i -e 's|00MY1271STR00|127.0.0.1|g' $output_dir/*.test";
+    system "perl -p -i -e 's|00MY1272STR00|127.0.0.2|g' $output_dir/*.test";
+    system "perl -p -i -e 's|00MY0000STR00|0.0.0.0|g' $output_dir/*.test";
+
+    ### remove hostname from any uname output
+    $search_re = qr/\suname\s+\-a\s*\n\s*(\S+)\s+\S+/;
+    system "perl -p -i -e 'undef \$/; s|$search_re" .
+        "| uname -a\n\$1 (removed)|s' $output_dir/*.test";
+
+    $search_re = qr/uname=\x27(\S+)\s+\S+/;
+    system "perl -p -i -e 's|$search_re|uname= \$1 (removed)|' $output_dir/*.test";
+
+    ### create tarball
+    system "tar cvfz $tarfile $logfile $output_dir";
+    print "[+] Anonymized test results file: $tarfile\n";
+    if (-e $tarfile) {
+        $rv = 1;
+    }
+    return $rv;
+}
+
+
 sub write_pid() {
     my $test_hr = shift;
 
@@ -1957,12 +2051,22 @@ sub init() {
         $hash_num++;
     }
 
+    if ($use_valgrind) {
+        die "[*] $valgrindCmd exec problem, use --valgrind-path"
+            unless -e $valgrindCmd and -x $valgrindCmd;
+    }
+
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
-    die "[*] default config $default_conf does not exist" unless -e $default_conf;
-    die "[*] default access config $default_access_conf does not exist"
-        unless -e $default_access_conf;
-    die "[*] configure script does not exist" unless -e $configure_path;
+
+    for my $file ($configure_path, $default_conf, $default_access_conf,
+            $no_source_match_access_conf, $ip_source_match_access_conf,
+            $subnet_source_match_access_conf,
+            $no_subnet_source_match_access_conf,
+            $no_multi_source_match_access_conf,
+            $multi_source_match_access_conf) {
+        die "[*] $file does not exist" unless -e $file;
+    }
 
     if (-d $output_dir) {
         if (-d "${output_dir}.last") {

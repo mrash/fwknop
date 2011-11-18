@@ -150,7 +150,7 @@ add_source_mask(acc_stanza_t *acc, const char *ip)
         */
         new_sle->mask  = (0xFFFFFFFF << (32 - mask));
 
-        /* Store our masked address for cpmarisons with future incoming
+        /* Store our masked address for comparisons with future incoming
          * packets.
         */
         new_sle->maddr = ntohl(in.s_addr) & new_sle->mask;
@@ -890,12 +890,31 @@ parse_access_file(fko_srv_options_t *opts)
     return;
 }
 
+static int
+compare_addr_list(acc_int_list_t *source_list, const uint32_t ip)
+{
+    int match = 0;
+
+    while(source_list)
+    {
+        if((ip & source_list->mask) == (source_list->maddr & source_list->mask))
+        {
+            match = 1;
+            break;
+        }
+
+        source_list = source_list->next;
+    }
+
+    return(match);
+}
+
 /* Check an IP address against the list of allowed SOURCE stanzas.
  * return the a pointer to the access stanza that matches first or
  * NULL if no match is found.
 */
 acc_stanza_t*
-acc_check_source(fko_srv_options_t *opts, uint32_t ip)
+acc_check_source(fko_srv_options_t *opts, const uint32_t ip)
 {
     acc_stanza_t    *acc = opts->acc_stanzas;
 
@@ -909,7 +928,7 @@ acc_check_source(fko_srv_options_t *opts, uint32_t ip)
 
     while(acc)
     {
-        if((ip && acc->source_list->mask) == acc->source_list->maddr)
+        if(compare_addr_list(acc->source_list, ip))
             break;
 
         acc = acc->next;
