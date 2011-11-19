@@ -803,6 +803,10 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_bool(&(curr_acc->require_source_address), val);
         }
+        else if(CONF_VAR_IS(var, "REQUIRE_SOURCE"))  /* synonym for REQUIRE_SOURCE_ADDRESS */
+        {
+            add_acc_bool(&(curr_acc->require_source_address), val);
+        }
         else if(CONF_VAR_IS(var, "GPG_HOME_DIR"))
         {
             if (is_valid_dir(val))

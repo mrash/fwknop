@@ -24,6 +24,13 @@ my $default_access_conf = "$conf_dir/default_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
+my $open_ports_access_conf = "$conf_dir/open_ports_access.conf";
+my $multi_gpg_access_conf  = "$conf_dir/multi_gpg_access.conf";
+my $multi_stanzas_access_conf = "$conf_dir/multi_stanzas_access.conf";
+my $mismatch_open_ports_access_conf = "$conf_dir/mismatch_open_ports_access.conf";
+my $require_user_access_conf = "$conf_dir/require_user_access.conf";
+my $mismatch_user_access_conf = "$conf_dir/mismatch_user_access.conf";
+my $require_src_access_conf = "$conf_dir/require_src_access.conf";
 my $no_source_match_access_conf = "$conf_dir/no_source_match_access.conf";
 my $no_subnet_source_match_access_conf = "$conf_dir/no_subnet_source_match_access.conf";
 my $no_multi_source_match_access_conf = "$conf_dir/no_multi_source_match_access.conf";
@@ -38,8 +45,6 @@ my $valgrindCmd = '/usr/bin/valgrind';
 
 my $gpg_server_key = '361BBAD4';
 my $gpg_client_key = '6A3FAD56';
-
-my $sniff_alarm = 20;
 
 my $loopback_ip = '127.0.0.1';
 my $fake_ip     = '127.0.0.2';
@@ -559,6 +564,81 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'OPEN_PORTS (tcp/22 ssh)',
+        'err_msg'  => "improper OPEN_PORTS result",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $open_ports_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'OPEN_PORTS mismatch',
+        'err_msg'  => "SPA packet accepted",
+        'function' => \&open_ports_mismatch,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $mismatch_open_ports_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'require user (tcp/22 ssh)',
+        'err_msg'  => "missed require user criteria",
+        'function' => \&spa_cycle,
+        'cmdline'  => "SPOOF_USER=$spoof_user $default_client_args",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $require_user_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'user mismatch (tcp/22 ssh)',
+        'err_msg'  => "improper user accepted for access",
+        'function' => \&user_mismatch,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $mismatch_user_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'require src (tcp/22 ssh)',
+        'err_msg'  => "fw rule not created",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'mismatch require src (tcp/22 ssh)',
+        'err_msg'  => "fw rule created",
+        'function' => \&require_src_ip_mismatch,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'IP filtering (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
         'function' => \&ip_filtering,
@@ -625,6 +705,18 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $multi_source_match_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'multi access stanzas (tcp/22 ssh)',
+        'err_msg'  => "could not complete SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $multi_stanzas_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -769,6 +861,20 @@ my @tests = (
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fatal'    => $NO
     },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopdCmd -c $default_conf " .
+            "-a $multi_gpg_access_conf $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
@@ -953,7 +1059,8 @@ sub run_test() {
     $current_test_file  = "$output_dir/$executed.test";
     $server_test_file   = "$output_dir/${executed}_fwknopd.test";
 
-    &write_test_file("[+] TEST: $msg\n");
+    &write_test_file("[+] TEST: $msg\n", $current_test_file);
+    $test_hr->{'msg'} = $msg;
     if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
         $passed++;
@@ -1102,10 +1209,12 @@ sub compile_warnings() {
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
-        &write_test_file("[-] $fwknopCmd does not exist or not executable.\n");
+        &write_test_file("[-] $fwknopCmd does not exist or not executable.\n",
+            $current_test_file);
     }
     unless (-e $fwknopdCmd and -x $fwknopdCmd) {
-        &write_test_file("[-] $fwknopdCmd does not exist or not executable.\n");
+        &write_test_file("[-] $fwknopdCmd does not exist or not executable.\n",
+            $current_test_file);
     }
 
     return 1;
@@ -1138,7 +1247,8 @@ sub expected_code_version() {
     my $test_hr = shift;
 
     unless (-e '../VERSION') {
-        &write_test_file("[-] ../VERSION file does not exist.\n");
+        &write_test_file("[-] ../VERSION file does not exist.\n",
+            $current_test_file);
         return 0;
     }
 
@@ -1174,6 +1284,54 @@ sub spa_cycle() {
             = &client_server_interaction($test_hr, [], $USE_CLIENT);
 
     $rv = 0 unless $fw_rule_created and $fw_rule_removed;
+
+    return $rv;
+}
+
+sub open_ports_mismatch() {
+    my $test_hr = shift;
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+            = &client_server_interaction($test_hr, [], $USE_CLIENT);
+
+    $rv = 0 if $fw_rule_created;
+
+    unless (&file_find_regex([qr/One\s+or\s+more\s+requested/],
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub user_mismatch() {
+    my $test_hr = shift;
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+            = &client_server_interaction($test_hr, [], $USE_CLIENT);
+
+    $rv = 0 if $fw_rule_created;
+
+    unless (&file_find_regex([qr/Username\s+in\s+SPA\s+data/],
+            $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub require_src_ip_mismatch() {
+    my $test_hr = shift;
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+            = &client_server_interaction($test_hr, [], $USE_CLIENT);
+
+    $rv = 0 if $fw_rule_created;
+
+    unless (&file_find_regex([qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
+            $server_test_file)) {
+        $rv = 0;
+    }
 
     return $rv;
 }
@@ -1237,7 +1395,8 @@ sub replay_detection() {
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n");
+            "from file: $current_test_file\n",
+            $current_test_file);
         return 0;
     }
 
@@ -1279,7 +1438,8 @@ sub digest_cache_structure() {
             next if /^#/;
             next unless /\S/;
             unless (m|^\S+\s+\d+\s+$ip_re\s+\d+\s+$ip_re\s+\d+\s+\d+|) {
-                &write_test_file("[-] invalid digest.cache line: $_");
+                &write_test_file("[-] invalid digest.cache line: $_",
+                    $current_test_file);
                 $rv = 0;
                 last;
             }
@@ -1287,16 +1447,17 @@ sub digest_cache_structure() {
         close F;
     } elsif (&file_find_regex([qr/dbm/i], $cmd_out_tmp)) {
         &write_test_file("[+] DBM digest file format, " .
-            "assuming this is valid.\n");
+            "assuming this is valid.\n", $current_test_file);
     } else {
         ### don't know what kind of file the digest.cache is
         &write_test_file("[-] unrecognized file type for " .
-            "$default_digest_file.\n");
+            "$default_digest_file.\n", $current_test_file);
         $rv = 0;
     }
 
     if ($rv) {
-        &write_test_file("[+] valid digest.cache structure.\n");
+        &write_test_file("[+] valid digest.cache structure.\n",
+            $current_test_file);
     }
 
     return $rv;
@@ -1311,7 +1472,8 @@ sub server_bpf_ignore_packet() {
     my $fw_rule_removed = 0;
 
     unless (&client_send_spa_packet($test_hr)) {
-        &write_test_file("[-] fwknop client execution error.\n");
+        &write_test_file("[-] fwknop client execution error.\n",
+            $current_test_file);
         $rv = 0;
     }
 
@@ -1319,7 +1481,7 @@ sub server_bpf_ignore_packet() {
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n");
+            "from file: $current_test_file\n", $current_test_file);
         return 0;
     }
 
@@ -1352,7 +1514,8 @@ sub altered_non_base64_spa_data() {
     my $fw_rule_removed = 0;
 
     unless (&client_send_spa_packet($test_hr)) {
-        &write_test_file("[-] fwknop client execution error.\n");
+        &write_test_file("[-] fwknop client execution error.\n",
+            $current_test_file);
         $rv = 0;
     }
 
@@ -1360,7 +1523,7 @@ sub altered_non_base64_spa_data() {
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n");
+            "from file: $current_test_file\n", $current_test_file);
         return 0;
     }
 
@@ -1393,7 +1556,8 @@ sub altered_base64_spa_data() {
     my $fw_rule_removed = 0;
 
     unless (&client_send_spa_packet($test_hr)) {
-        &write_test_file("[-] fwknop client execution error.\n");
+        &write_test_file("[-] fwknop client execution error.\n",
+            $current_test_file);
         $rv = 0;
     }
 
@@ -1401,7 +1565,7 @@ sub altered_base64_spa_data() {
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n");
+            "from file: $current_test_file\n", $current_test_file);
         return 0;
     }
 
@@ -1422,10 +1586,10 @@ sub altered_base64_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n");
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n");
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -1445,7 +1609,8 @@ sub appended_spa_data() {
     my $fw_rule_removed = 0;
 
     unless (&client_send_spa_packet($test_hr)) {
-        &write_test_file("[-] fwknop client execution error.\n");
+        &write_test_file("[-] fwknop client execution error.\n",
+            $current_test_file);
         $rv = 0;
     }
 
@@ -1453,7 +1618,7 @@ sub appended_spa_data() {
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n");
+            "from file: $current_test_file\n", $current_test_file);
         return 0;
     }
 
@@ -1474,10 +1639,10 @@ sub appended_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n");
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n");
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -1497,7 +1662,8 @@ sub prepended_spa_data() {
     my $fw_rule_removed = 0;
 
     unless (&client_send_spa_packet($test_hr)) {
-        &write_test_file("[-] fwknop client execution error.\n");
+        &write_test_file("[-] fwknop client execution error.\n",
+            $current_test_file);
         $rv = 0;
     }
 
@@ -1505,7 +1671,7 @@ sub prepended_spa_data() {
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n");
+            "from file: $current_test_file\n", $current_test_file);
         return 0;
     }
 
@@ -1526,10 +1692,10 @@ sub prepended_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n");
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n");
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -1648,7 +1814,8 @@ sub client_server_interaction() {
     ### with the fwknopd client
     if ($spa_client_flag == $USE_CLIENT) {
         unless (&client_send_spa_packet($test_hr)) {
-            &write_test_file("[-] fwknop client execution error.\n");
+            &write_test_file("[-] fwknop client execution error.\n",
+                $current_test_file);
             $rv = 0;
         }
     } else {
@@ -1658,7 +1825,8 @@ sub client_server_interaction() {
     ### check to see if the SPA packet resulted in a new fw access rule
     my $ctr = 0;
     while (not &is_fw_rule_active()) {
-        &write_test_file("[-] new fw rule does not exist.\n");
+        &write_test_file("[-] new fw rule does not exist.\n",
+            $current_test_file);
         $ctr++;
         last if $ctr == 3;
         sleep 1;
@@ -1673,10 +1841,12 @@ sub client_server_interaction() {
     if ($fw_rule_created) {
         sleep 3;  ### allow time for rule time out.
         if (&is_fw_rule_active()) {
-            &write_test_file("[-] new fw rule not timed out.\n");
+            &write_test_file("[-] new fw rule not timed out.\n",
+                $current_test_file);
             $rv = 0;
         } else {
-            &write_test_file("[+] new fw rule timed out.\n");
+            &write_test_file("[+] new fw rule timed out.\n",
+                $current_test_file);
             $fw_rule_removed = 1;
         }
     }
@@ -1688,7 +1858,8 @@ sub client_server_interaction() {
             $server_was_stopped = 0;
         }
     } else {
-        &write_test_file("[-] server is not running.\n");
+        &write_test_file("[-] server is not running.\n",
+            $current_test_file);
         $server_was_stopped = 0;
     }
 
@@ -1954,6 +2125,8 @@ sub write_pid() {
 sub start_fwknopd() {
     my $test_hr = shift;
 
+    &write_test_file("[+] TEST: $test_hr->{'msg'}\n", $server_test_file);
+
     my $pid = fork();
     die "[*] Could not fork: $!" unless defined $pid;
 
@@ -2059,12 +2232,23 @@ sub init() {
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
 
-    for my $file ($configure_path, $default_conf, $default_access_conf,
-            $no_source_match_access_conf, $ip_source_match_access_conf,
+    for my $file ($configure_path,
+            $default_conf,
+            $default_access_conf,
+            $no_source_match_access_conf,
+            $ip_source_match_access_conf,
             $subnet_source_match_access_conf,
             $no_subnet_source_match_access_conf,
             $no_multi_source_match_access_conf,
-            $multi_source_match_access_conf) {
+            $multi_source_match_access_conf,
+            $open_ports_access_conf,
+            $mismatch_open_ports_access_conf,
+            $require_user_access_conf,
+            $mismatch_user_access_conf,
+            $require_src_access_conf,
+            $multi_gpg_access_conf,
+            $multi_stanzas_access_conf,
+    ) {
         die "[*] $file does not exist" unless -e $file;
     }
 
@@ -2239,11 +2423,11 @@ sub file_find_regex() {
 
     if ($found) {
         for my $line (@write_lines) {
-            &write_test_file($line);
+            &write_test_file($line, $current_test_file);
         }
     } else {
         &write_test_file("[.] find_find_regex() Did not " .
-            "match any regex in: '@$re_ar'\n");
+            "match any regex in: '@$re_ar'\n", $current_test_file);
     }
 
     return $found;
@@ -2265,16 +2449,16 @@ sub find_command() {
 }
 
 sub write_test_file() {
-    my $msg = shift;
+    my ($msg, $file) = @_;
 
-    if (-e $current_test_file) {
-        open F, ">> $current_test_file"
-            or die "[*] Could not open $current_test_file: $!";
+    if (-e $file) {
+        open F, ">> $file"
+            or die "[*] Could not open $file: $!";
         print F $msg;
         close F;
     } else {
-        open F, "> $current_test_file"
-            or die "[*] Could not open $current_test_file: $!";
+        open F, "> $file"
+            or die "[*] Could not open $file: $!";
         print F $msg;
         close F;
     }
