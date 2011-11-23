@@ -585,6 +585,33 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'packet aging (past) (tcp/22 ssh)',
+        'err_msg'  => 'old SPA packet accepted',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args --time-offset-minus 300s",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/SPA\sdata\stime\sdifference/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'packet aging (future) (tcp/22 ssh)',
+        'err_msg'  => 'future SPA packet accepted',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args --time-offset-plus 300s",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/SPA\sdata\stime\sdifference/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'OPEN_PORTS (tcp/22 ssh)',
         'err_msg'  => "improper OPEN_PORTS result",
         'function' => \&spa_cycle,
