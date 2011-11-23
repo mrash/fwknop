@@ -111,6 +111,27 @@ main(int argc, char **argv)
         return(EXIT_FAILURE);
     }
 
+    /* Adjust the SPA timestamp if necessary
+    */
+    if(options.time_offset_plus > 0)
+    {
+        res = fko_set_timestamp(ctx, options.time_offset_plus);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_timestamp", res);
+            return(EXIT_FAILURE);
+        }
+    }
+    if(options.time_offset_minus > 0)
+    {
+        res = fko_set_timestamp(ctx, -options.time_offset_minus);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_timestamp", res);
+            return(EXIT_FAILURE);
+        }
+    }
+
     if(options.server_command[0] != 0x0)
     {
         /* Set the access message to a command that the server will
