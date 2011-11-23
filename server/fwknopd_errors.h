@@ -31,7 +31,7 @@
 #ifndef FWKNOPD_ERRORS_H
 #define FWKNOPD_ERRORS_H
 
-/* SPA message handling status code
+/* SPA message handling status codes
 */
 enum {
     SPA_MSG_SUCCESS = 0,
@@ -47,6 +47,7 @@ enum {
     SPA_MSG_ACCESS_DENIED,
     SPA_MSG_COMMAND_ERROR,
     SPA_MSG_NOT_SUPPORTED,
+    SPA_MSG_NAT_NOT_ENABLED,
     SPA_MSG_ERROR
 };
 

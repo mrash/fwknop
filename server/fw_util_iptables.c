@@ -626,14 +626,9 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
 
             ple = ple->next;
         }
-
-        /* Done with the port list for access rules.
-        */
-        free_acc_port_list(port_list);
-
     }
     /* NAT requests... */
-    else if(  spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+    else if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG  )
@@ -809,6 +804,10 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                 log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
         }
     }
+
+    /* Done with the port list for access rules.
+    */
+    free_acc_port_list(port_list);
 
     return(res);
 }

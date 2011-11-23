@@ -19,6 +19,7 @@ my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
 
+my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
@@ -48,6 +49,7 @@ my $gpg_client_key = '6A3FAD56';
 
 my $loopback_ip = '127.0.0.1';
 my $fake_ip     = '127.0.0.2';
+my $internal_nat_host = '192.168.1.2';
 my $default_spa_port = 62201;
 my $non_std_spa_port = 12345;
 
@@ -73,6 +75,7 @@ my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enable_recompilation_warnings_check = 0;
 my $sudo_path = '';
+my $platform = '';
 my $help = 0;
 my $YES = 1;
 my $NO  = 0;
@@ -81,6 +84,10 @@ my $USE_PREDEF_PKTS = 1;
 my $USE_CLIENT = 2;
 my $REQUIRED = 1;
 my $OPTIONAL = 0;
+my $NEW_RULE_REQUIRED = 1;
+my $REQUIRE_NO_NEW_RULE = 2;
+my $NEW_RULE_REMOVED = 1;
+my $REQUIRE_NO_NEW_REMOVED = 2;
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -559,6 +566,8 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -571,6 +580,8 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $open_ports_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -578,11 +589,13 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'OPEN_PORTS mismatch',
         'err_msg'  => "SPA packet accepted",
-        'function' => \&open_ports_mismatch,
+        'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $mismatch_open_ports_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/One\s+or\s+more\s+requested/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
     {
@@ -595,6 +608,8 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $require_user_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -603,10 +618,13 @@ my @tests = (
         'detail'   => 'user mismatch (tcp/22 ssh)',
         'err_msg'  => "improper user accepted for access",
         'function' => \&user_mismatch,
+        'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $mismatch_user_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Username\s+in\s+SPA\s+data/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
     {
@@ -619,6 +637,8 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -626,13 +646,15 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'mismatch require src (tcp/22 ssh)',
         'err_msg'  => "fw rule created",
-        'function' => \&require_src_ip_mismatch,
+        'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
 
@@ -641,11 +663,13 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'IP filtering (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
-        'function' => \&ip_filtering,
+        'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $no_source_match_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
     {
@@ -653,11 +677,13 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'subnet filtering (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
-        'function' => \&ip_filtering,
+        'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $no_subnet_source_match_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
     {
@@ -665,11 +691,13 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => 'IP+subnet filtering (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
-        'function' => \&ip_filtering,
+        'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $no_multi_source_match_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
     {
@@ -682,6 +710,8 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $ip_source_match_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -694,6 +724,8 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $subnet_source_match_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -706,6 +738,8 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $multi_source_match_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -718,6 +752,37 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $default_conf -a $multi_stanzas_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "non-enabled NAT (tcp/22 ssh)",
+        'err_msg'  => "SPA packet not filtered",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -N $internal_nat_host:22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/requested\sNAT\saccess.*not\senabled/i],
+        'server_conf' => $nat_conf,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT to $internal_nat_host (tcp/22 ssh)",
+        'err_msg'  => "could not complete NAT SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -N $internal_nat_host:22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $nat_conf -a $open_ports_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $nat_conf,
         'fatal'    => $NO
     },
 
@@ -732,6 +797,8 @@ my @tests = (
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -745,6 +812,8 @@ my @tests = (
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -758,6 +827,8 @@ my @tests = (
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -765,11 +836,14 @@ my @tests = (
         'subcategory' => 'client+server',
         'detail'   => "-P bpf SPA over port $non_std_spa_port",
         'err_msg'  => 'could not complete SPA cycle',
-        'function' => \&spa_over_non_std_port,
+        'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --server-port $non_std_spa_port",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str " .
             qq|-P "udp port $non_std_spa_port"|,
+        'server_positive_output_matches' => [qr/PCAP\sfilter.*\s$non_std_spa_port/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -859,6 +933,8 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -872,6 +948,8 @@ my @tests = (
             "$valgrind_str $fwknopdCmd -c $default_conf " .
             "-a $multi_gpg_access_conf $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 
@@ -888,6 +966,8 @@ my @tests = (
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir",
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -903,6 +983,8 @@ my @tests = (
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir",
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
     {
@@ -918,6 +1000,8 @@ my @tests = (
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir",
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 
@@ -1003,8 +1087,13 @@ my %test_keys = (
     'fwknopd_cmdline' => $OPTIONAL,
     'fatal'           => $OPTIONAL,
     'exec_err'        => $OPTIONAL,
-    'postive_output_matches'  => $OPTIONAL,
+    'fw_rule_created' => $OPTIONAL,
+    'fw_rule_removed' => $OPTIONAL,
+    'server_conf'     => $OPTIONAL,
+    'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
+    'server_positive_output_matches' => $OPTIONAL,
+    'server_negative_output_matches' => $OPTIONAL,
 );
 
 if ($diff_mode) {
@@ -1283,83 +1372,28 @@ sub spa_cycle() {
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
             = &client_server_interaction($test_hr, [], $USE_CLIENT);
 
-    $rv = 0 unless $fw_rule_created and $fw_rule_removed;
-
-    return $rv;
-}
-
-sub open_ports_mismatch() {
-    my $test_hr = shift;
-
-    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
-            = &client_server_interaction($test_hr, [], $USE_CLIENT);
-
-    $rv = 0 if $fw_rule_created;
-
-    unless (&file_find_regex([qr/One\s+or\s+more\s+requested/],
-            $server_test_file)) {
-        $rv = 0;
+    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
+        $rv = 0 unless $fw_rule_created;
+    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
+        $rv = 0 if $fw_rule_created;
     }
 
-    return $rv;
-}
-
-sub user_mismatch() {
-    my $test_hr = shift;
-
-    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
-            = &client_server_interaction($test_hr, [], $USE_CLIENT);
-
-    $rv = 0 if $fw_rule_created;
-
-    unless (&file_find_regex([qr/Username\s+in\s+SPA\s+data/],
-            $server_test_file)) {
-        $rv = 0;
+    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
+        $rv = 0 unless $fw_rule_removed;
+    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
+        $rv = 0 if $fw_rule_removed;
     }
 
-    return $rv;
-}
-
-sub require_src_ip_mismatch() {
-    my $test_hr = shift;
-
-    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
-            = &client_server_interaction($test_hr, [], $USE_CLIENT);
-
-    $rv = 0 if $fw_rule_created;
-
-    unless (&file_find_regex([qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
-            $server_test_file)) {
-        $rv = 0;
+    if ($test_hr->{'server_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'server_positive_output_matches'},
+            $server_test_file);
     }
 
-    return $rv;
-}
-
-sub spa_over_non_std_port() {
-    my $test_hr = shift;
-
-    my $rv = &spa_cycle($test_hr);
-
-    unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
-            $server_test_file)) {
-        $rv = 0;
-    }
-
-    return $rv;
-}
-
-sub ip_filtering() {
-    my $test_hr = shift;
-
-    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
-            = &client_server_interaction($test_hr, [], $USE_CLIENT);
-
-    $rv = 0 if $fw_rule_created;
-
-    unless (&file_find_regex([qr/No\saccess\sdata\sfound/],
-            $server_test_file)) {
-        $rv = 0;
+    if ($test_hr->{'server_negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'server_negative_output_matches'},
+            $server_test_file);
     }
 
     return $rv;
@@ -1824,7 +1858,7 @@ sub client_server_interaction() {
 
     ### check to see if the SPA packet resulted in a new fw access rule
     my $ctr = 0;
-    while (not &is_fw_rule_active()) {
+    while (not &is_fw_rule_active($test_hr)) {
         &write_test_file("[-] new fw rule does not exist.\n",
             $current_test_file);
         $ctr++;
@@ -1840,7 +1874,7 @@ sub client_server_interaction() {
 
     if ($fw_rule_created) {
         sleep 3;  ### allow time for rule time out.
-        if (&is_fw_rule_active()) {
+        if (&is_fw_rule_active($test_hr)) {
             &write_test_file("[-] new fw rule not timed out.\n",
                 $current_test_file);
             $rv = 0;
@@ -2234,6 +2268,7 @@ sub init() {
 
     for my $file ($configure_path,
             $default_conf,
+            $nat_conf,
             $default_access_conf,
             $no_source_match_access_conf,
             $ip_source_match_access_conf,
@@ -2311,6 +2346,19 @@ sub init() {
         push @tests_to_exclude, 'recompilation';
     }
 
+    open UNAME, "uname |" or die "[*] Could not execute uname: $!";
+    while (<UNAME>) {
+        if (/linux/i) {
+            $platform = 'linux';
+            last;
+        }
+    }
+    close UNAME;
+
+    unless ($platform eq 'linux') {
+        push @tests_to_exclude, 'NAT';
+    }
+
     return;
 }
 
@@ -2367,9 +2415,17 @@ sub identify_loopback_intf() {
 }
 
 sub is_fw_rule_active() {
+    my $test_hr = shift;
+
+    my $conf_args = $default_server_conf_args;
+
+    if ($test_hr->{'server_conf'}) {
+        $conf_args = "-c $test_hr->{'server_conf'} -a $default_access_conf " .
+            "-d $default_digest_file -p $default_pid_file";
+    }
+
     return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
-            "$default_server_conf_args " .
-            qq{--fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
+            qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
             $cmd_out_tmp, $current_test_file);
     return 0;
 }
@@ -2423,11 +2479,11 @@ sub file_find_regex() {
 
     if ($found) {
         for my $line (@write_lines) {
-            &write_test_file($line, $current_test_file);
+            &write_test_file($line, $file);
         }
     } else {
         &write_test_file("[.] find_find_regex() Did not " .
-            "match any regex in: '@$re_ar'\n", $current_test_file);
+            "match any regex in: '@$re_ar'\n", $file);
     }
 
     return $found;

@@ -441,7 +441,23 @@ incoming_spa(fko_srv_options_t *opts)
         }
     }
 
-    /* Take action based on SPA message type.  */
+    /* Take action based on SPA message type.
+    */
+    if(spadat.message_type == FKO_LOCAL_NAT_ACCESS_MSG
+          || spadat.message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
+          || spadat.message_type == FKO_NAT_ACCESS_MSG
+          || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+    {
+        if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
+        {
+            log_msg(LOG_WARNING,
+                "SPA packet from %s requested NAT access, but is not enabled",
+                spadat.pkt_source_ip
+            );
+            res = SPA_MSG_NAT_NOT_ENABLED;
+            goto clean_and_bail;
+        }
+    }
 
     /* Command messages.
     */
