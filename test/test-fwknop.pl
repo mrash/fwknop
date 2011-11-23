@@ -332,6 +332,17 @@ my @tests = (
     {
         'category' => 'preliminaries',
         'subcategory' => 'client',
+        'detail'   => '--test mode, packet not sent',
+        'err_msg'  => '--test mode, packet sent?',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/test\smode\senabled/],
+        'cmdline'  => "$default_client_args --test",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'preliminaries',
+        'subcategory' => 'client',
         'detail'   => 'expected code version',
         'err_msg'  => 'code version mis-match',
         'function' => \&expected_code_version,
@@ -358,6 +369,7 @@ my @tests = (
         'exec_err' => $YES,
         'fatal'    => $NO
     },
+
     {
         'category' => 'preliminaries',
         'subcategory' => 'server',
