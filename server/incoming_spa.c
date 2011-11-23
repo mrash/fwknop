@@ -379,11 +379,11 @@ incoming_spa(fko_srv_options_t *opts)
     {
         time(&now_ts);
 
-        ts_diff = now_ts - spadat.timestamp;
+        ts_diff = abs(now_ts - spadat.timestamp);
 
         if(ts_diff > atoi(opts->config[CONF_MAX_SPA_PACKET_AGE]))
         {
-            log_msg(LOG_WARNING, "SPA data is too old (%i seconds).",
+            log_msg(LOG_WARNING, "SPA data time difference is too great (%i seconds).",
                 ts_diff);
             res = SPA_MSG_TOO_OLD;
             goto clean_and_bail;
