@@ -617,8 +617,9 @@ incoming_spa(fko_srv_options_t *opts)
          * for others).
         */
         process_spa_request(opts, &spadat);
+        if(ctx != NULL)
+            fko_destroy(ctx);
         break;
-
     }
 
     if(! found_acc_sip)
