@@ -801,7 +801,7 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                     snat_chain->next_expire = exp_ts;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
         }
     }
 

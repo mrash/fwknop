@@ -22,12 +22,15 @@ my $gpg_client_home_dir = "$conf_dir/client-gpg";
 my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
+my $expired_access_conf = "$conf_dir/expired_stanza_access.conf";
+my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
 my $open_ports_access_conf = "$conf_dir/open_ports_access.conf";
 my $multi_gpg_access_conf  = "$conf_dir/multi_gpg_access.conf";
 my $multi_stanzas_access_conf = "$conf_dir/multi_stanzas_access.conf";
+my $multi_stanzas_with_broken_keys_conf = "$conf_dir/multi_stanzas_with_broken_keys.conf";
 my $mismatch_open_ports_access_conf = "$conf_dir/mismatch_open_ports_access.conf";
 my $require_user_access_conf = "$conf_dir/require_user_access.conf";
 my $mismatch_user_access_conf = "$conf_dir/mismatch_user_access.conf";
@@ -119,7 +122,8 @@ exit &anonymize_results() if $anonymize_results;
 
 &identify_loopback_intf();
 
-$valgrind_str = "$valgrindCmd --leak-check=full --show-reachable=yes --track-origins=yes" if $use_valgrind;
+$valgrind_str = "$valgrindCmd --leak-check=full " .
+    "--show-reachable=yes --track-origins=yes" if $use_valgrind;
 
 my $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
 
@@ -608,6 +612,34 @@ my @tests = (
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'expired stanza (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet accepted',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $expired_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'expired epoch stanza (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet accepted',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $expired_epoch_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'Rijndael SPA',
@@ -795,6 +827,21 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'bad/good key stanzas (tcp/22 ssh)',
+        'err_msg'  => "could not complete SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $multi_stanzas_with_broken_keys_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -2322,6 +2369,8 @@ sub init() {
             $require_src_access_conf,
             $multi_gpg_access_conf,
             $multi_stanzas_access_conf,
+            $expired_access_conf,
+            $expired_epoch_access_conf,
     ) {
         die "[*] $file does not exist" unless -e $file;
     }

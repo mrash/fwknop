@@ -280,6 +280,8 @@ typedef struct acc_stanza
     unsigned char       gpg_ignore_sig_error;
     char                *gpg_remote_id;
     acc_string_list_t   *gpg_remote_id_list;
+    time_t              access_expire_time;
+    int                 expired;
     struct acc_stanza   *next;
 } acc_stanza_t;
 

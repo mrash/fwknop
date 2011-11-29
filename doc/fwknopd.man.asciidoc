@@ -175,6 +175,17 @@ See the 'fwknopd.conf' file for the full list and corresponding details.
     synchronization with the *fwknopd* server system (NTP is good).  The
     default age is 120 seconds (two minutes).
 
+*ACCESS_EXPIRE* '<MM/DD/YYYY>'::
+    Defines an expiration date for the access stanza in MM/DD/YYYY format.
+    All SPA packets that match an expired stanza will be ignored.  This
+    parameter is optional.
+
+*ACCESS_EXPIRE_EPOCH* '<seconds>'::
+    Defines an expiration date for the access stanza as the epoch time, and is
+    useful if a more accurate expiration time needs to be given than the day
+    resolution offered by the ACCESS_EXPIRE variable agove.  All SPA packets
+    that match an expired stanza will be ignored.  This parameter is optional.
+
 *ENABLE_DIGEST_PERSISTENCE* '<Y/N>'::
     Track digest sums associated with previous SPA packets processed by
     *fwknopd*.  This allows digest sums to remain persistent across

@@ -33,6 +33,6 @@
 
 /* Prototypes
 */
-int incoming_spa(fko_srv_options_t *opts);
+void incoming_spa(fko_srv_options_t *opts);
 
 #endif  /* INCOMING_SPA_H */

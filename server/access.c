@@ -71,6 +71,65 @@ add_acc_bool(unsigned char *var, const char *val)
     return(*var = (strncasecmp(val, "Y", 1) == 0) ? 1 : 0);
 }
 
+/* Add expiration time - convert date to epoch seconds
+*/
+static void
+add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const char *val)
+{
+    struct tm tm;
+
+    memset(&tm, 0, sizeof(struct tm));
+
+    if (sscanf(val, "%d/%d/%d", &tm.tm_mon, &tm.tm_mday, &tm.tm_year) != 3)
+    {
+
+        log_msg(LOG_ERR,
+            "Fatal invalid epoch seconds value for access stanza expiration time"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(tm.tm_mon > 0)
+        tm.tm_mon -= 1;  /* 0-11 */
+
+    /* number of years since 1900
+    */
+    if(tm.tm_year > 1900)
+        tm.tm_year -= 1900;
+    else
+        if(tm.tm_year < 100)
+            tm.tm_year += 100;
+
+    *access_expire_time = mktime(&tm);
+
+    return;
+}
+
+/* Add expiration time via epoch seconds defined in access.conf
+*/
+static void
+add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, const char *val)
+{
+    char *endptr;
+    unsigned long expire_time = 0;
+
+    errno = 0;
+
+    expire_time = (time_t) strtoul(val, &endptr, 10);
+
+    if (errno == ERANGE || (errno != 0 && expire_time == 0))
+    {
+        log_msg(LOG_ERR,
+            "Fatal invalid epoch seconds value for access stanza expiration time"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    *access_expire_time = (time_t) expire_time;
+
+    return;
+}
+
 /* Take an IP or Subnet/Mask and convert it to mask for later
  * comparisons of incoming source IPs against this mask.
 */
@@ -848,6 +907,14 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_string(&(curr_acc->gpg_remote_id), val);
         }
+        else if(CONF_VAR_IS(var, "ACCESS_EXPIRE"))
+        {
+            add_acc_expire_time(opts, &(curr_acc->access_expire_time), val);
+        }
+        else if(CONF_VAR_IS(var, "ACCESS_EXPIRE_EPOCH"))
+        {
+            add_acc_expire_time_epoch(opts, &(curr_acc->access_expire_time), val);
+        }
         else
         {
             fprintf(stderr,
@@ -894,7 +961,7 @@ parse_access_file(fko_srv_options_t *opts)
     return;
 }
 
-static int
+int
 compare_addr_list(acc_int_list_t *source_list, const uint32_t ip)
 {
     int match = 0;
@@ -911,34 +978,6 @@ compare_addr_list(acc_int_list_t *source_list, const uint32_t ip)
     }
 
     return(match);
-}
-
-/* Check an IP address against the list of allowed SOURCE stanzas.
- * return the a pointer to the access stanza that matches first or
- * NULL if no match is found.
-*/
-acc_stanza_t*
-acc_check_source(fko_srv_options_t *opts, const uint32_t ip)
-{
-    acc_stanza_t    *acc = opts->acc_stanzas;
-
-    if(acc == NULL)
-    {
-        log_msg(LOG_WARNING,
-            "Check access source called with no access stanzas defined."
-        );
-        return(NULL);
-    }
-
-    while(acc)
-    {
-        if(compare_addr_list(acc->source_list, ip))
-            break;
-
-        acc = acc->next;
-    }
-
-    return(acc);
 }
 
 /* Compare the contents of 2 port lists.  Return true on a match.
@@ -1084,6 +1123,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "              CMD_EXEC_USER:  %s\n"
             "           REQUIRE_USERNAME:  %s\n"
             "     REQUIRE_SOURCE_ADDRESS:  %s\n"
+            "              ACCESS_EXPIRE:  %s"  /* asctime() adds a newline */
             "               GPG_HOME_DIR:  %s\n"
             "             GPG_DECRYPT_ID:  %s\n"
             "             GPG_DECRYPT_PW:  <see the access.conf file>\n"
@@ -1100,6 +1140,7 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
+            (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,
             //(acc->gpg_decrypt_pw == NULL) ? "<not set>" : acc->gpg_decrypt_pw,
