@@ -1140,7 +1140,7 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
-            (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>",
+            (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>\n",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,
             //(acc->gpg_decrypt_pw == NULL) ? "<not set>" : acc->gpg_decrypt_pw,
