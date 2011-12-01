@@ -282,7 +282,7 @@ main(int argc, char **argv)
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
             if(atoi(opts.config[CONF_TCPSERV_PORT]) <= 0
-              || atoi(opts.config[CONF_TCPSERV_PORT]) >  65535)
+              || atoi(opts.config[CONF_TCPSERV_PORT]) > MAX_PORT)
             {
                 log_msg(LOG_WARNING,
                     "WARNING: ENABLE_TCP_SERVER is set, but TCPSERV_PORT is not valid. TCP server not started!"

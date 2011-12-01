@@ -479,9 +479,9 @@ fw_cleanup(const fko_srv_options_t *opts)
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_data_t *spadat)
 {
-    char             nat_ip[16] = {0};
+    char             nat_ip[MAX_IPV4_STR_LEN] = {0};
     char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
     char            *ndx;
 
@@ -525,8 +525,8 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
     /* For straight access requests, we currently support multiple proto/port
      * request.
     */
-    if(spadat->message_type == FKO_ACCESS_MSG
-      || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG)
+    if((spadat->message_type == FKO_ACCESS_MSG
+      || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG) && !acc->force_nat)
     {
 
         /* Check to make sure that the jump rules exist for each
@@ -578,7 +578,7 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
                     in_chain->next_expire = exp_ts;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
             /* If we have to make an corresponding OUTPUT rule if out_chain target
             * is not NULL.
@@ -631,19 +631,25 @@ process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
     else if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_NAT_ACCESS_MSG
-      || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG  )
+      || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
+      || acc->force_nat)
     {
         /* Parse out the NAT IP and Port components.
         */
-        ndx = strchr(spadat->nat_access, ',');
-        if(ndx != NULL)
+        if(acc->force_nat)
         {
-            strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
-            nat_port = atoi(ndx+1);
+            strlcpy(nat_ip, acc->force_nat_ip, MAX_IPV4_STR_LEN);
+            nat_port = acc->force_nat_port;
         }
-
-// --DSS temp
-//fprintf(stderr, "NAT IP: '%s', NAT PORT: '%i'\n", nat_ip, nat_port);
+        else
+        {
+            ndx = strchr(spadat->nat_access, ',');
+            if(ndx != NULL)
+            {
+                strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
+                nat_port = atoi(ndx+1);
+            }
+        }
 
         /* Make our FORWARD and NAT rules
         */

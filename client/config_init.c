@@ -240,7 +240,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     else if(CONF_VAR_IS(var, "SPA_SERVER_PORT"))
     {
         tmpint = atoi(val);
-        if(tmpint < 0 || tmpint > 65535)
+        if(tmpint < 0 || tmpint > MAX_PORT)
             return(-1);
         else
             options->spa_dst_port = tmpint;
@@ -249,7 +249,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     else if(CONF_VAR_IS(var, "SPA_SOURCE_PORT"))
     {
         tmpint = atoi(val);
-        if(tmpint < 0 || tmpint > 65535)
+        if(tmpint < 0 || tmpint > MAX_PORT)
             return(-1);
         else
             options->spa_src_port = tmpint;
@@ -277,7 +277,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         else if(strcasecmp(val, "resolve") == 0)
             options->resolve_ip_http = 1;
         else /* Assume IP address */
-            strlcpy(options->allow_ip_str, val, MAX_IP_STR_LEN);
+            strlcpy(options->allow_ip_str, val, MAX_IPV4_STR_LEN);
     }
     /* Time Offset */
     else if(CONF_VAR_IS(var, "TIME_OFFSET"))
@@ -319,7 +319,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     /* Spoof Source IP */
     else if(CONF_VAR_IS(var, "SPOOF_SOURCE_IP"))
     {
-        strlcpy(options->spoof_ip_src_str, val, MAX_IP_STR_LEN);
+        strlcpy(options->spoof_ip_src_str, val, MAX_IPV4_STR_LEN);
     }
     /* ACCESS request */
     else if(CONF_VAR_IS(var, "ACCESS"))
@@ -382,7 +382,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     else if(CONF_VAR_IS(var, "NAT_PORT"))
     {
         tmpint = atoi(val);
-        if(tmpint < 0 || tmpint > 65535)
+        if(tmpint < 0 || tmpint > MAX_PORT)
             return(-1);
         else
             options->nat_port = tmpint;
@@ -673,13 +673,13 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     /* Reset the options index so we can run through them again.
     */
     optind = 0;
- 
+
     while ((cmd_arg = getopt_long(argc, argv,
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
             case 'a':
-                strlcpy(options->allow_ip_str, optarg, MAX_IP_STR_LEN);
+                strlcpy(options->allow_ip_str, optarg, MAX_IPV4_STR_LEN);
                 break;
             case 'A':
                 strlcpy(options->access_str, optarg, MAX_LINE_LEN);
@@ -740,7 +740,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'p':
                 options->spa_dst_port = atoi(optarg);
-                if (options->spa_dst_port < 0 || options->spa_dst_port > 65535)
+                if (options->spa_dst_port < 0 || options->spa_dst_port > MAX_PORT)
                 {
                     fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);
@@ -754,7 +754,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 }
                 break;
             case 'Q':
-                strlcpy(options->spoof_ip_src_str, optarg, MAX_IP_STR_LEN);
+                strlcpy(options->spoof_ip_src_str, optarg, MAX_IPV4_STR_LEN);
                 break;
             case 'r':
                 options->rand_port = 1;
@@ -777,11 +777,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->show_last_command = 1;
                 break;
             case 's':
-                strlcpy(options->allow_ip_str, "0.0.0.0", MAX_IP_STR_LEN);
+                strlcpy(options->allow_ip_str, "0.0.0.0", MAX_IPV4_STR_LEN);
                 break;
             case 'S':
                 options->spa_src_port = atoi(optarg);
-                if (options->spa_src_port < 0 || options->spa_src_port > 65535)
+                if (options->spa_src_port < 0 || options->spa_src_port > MAX_PORT)
                 {
                     fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);
@@ -827,7 +827,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case NAT_PORT:
                 options->nat_port = atoi(optarg);
-                if (options->nat_port < 0 || options->nat_port > 65535)
+                if (options->nat_port < 0 || options->nat_port > MAX_PORT)
                 {
                     fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);

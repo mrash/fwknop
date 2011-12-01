@@ -23,7 +23,10 @@ my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
 my $expired_access_conf = "$conf_dir/expired_stanza_access.conf";
+my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
 my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
+my $invalid_expire_access_conf = "$conf_dir/invalid_expire_access.conf";
+my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
@@ -53,6 +56,7 @@ my $gpg_client_key = '6A3FAD56';
 my $loopback_ip = '127.0.0.1';
 my $fake_ip     = '127.0.0.2';
 my $internal_nat_host = '192.168.1.2';
+my $force_nat_host = '192.168.1.123';
 my $default_spa_port = 62201;
 my $non_std_spa_port = 12345;
 
@@ -629,6 +633,20 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'invalid expire date (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet accepted',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $invalid_expire_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/invalid\sdate\svalue/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'expired epoch stanza (tcp/22 ssh)',
         'err_msg'  => 'SPA packet accepted',
         'function' => \&spa_cycle,
@@ -638,6 +656,20 @@ my @tests = (
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'future expired stanza (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet not accepted',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $future_expired_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 
@@ -866,6 +898,25 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $nat_conf -a $open_ports_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $nat_conf,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "force NAT $force_nat_host (tcp/22 ssh)",
+        'err_msg'  => "could not complete NAT SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $nat_conf -a $force_nat_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i],
+        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $nat_conf,
@@ -932,6 +983,22 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'random SPA port (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -r",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str " .
+            qq|-P "udp"|,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -2371,6 +2438,9 @@ sub init() {
             $multi_stanzas_access_conf,
             $expired_access_conf,
             $expired_epoch_access_conf,
+            $future_expired_access_conf,
+            $invalid_expire_access_conf,
+            $force_nat_access_conf,
     ) {
         die "[*] $file does not exist" unless -e $file;
     }

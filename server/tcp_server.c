@@ -60,7 +60,7 @@ run_tcp_server(fko_srv_options_t *opts)
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
-    char                sipbuf[MAX_IP_STR_LEN];
+    char                sipbuf[MAX_IPV4_STR_LEN];
 
     unsigned short      port = atoi(opts->config[CONF_TCPSERV_PORT]);
 
@@ -196,8 +196,8 @@ run_tcp_server(fko_srv_options_t *opts)
 
         if(opts->verbose)
         {
-            memset(sipbuf, 0x0, MAX_IP_STR_LEN);
-            inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IP_STR_LEN);
+            memset(sipbuf, 0x0, MAX_IPV4_STR_LEN);
+            inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IPV4_STR_LEN);
             log_msg(LOG_INFO, "tcp_server: Got TCP connection from %s.", sipbuf);
         }
 

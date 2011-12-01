@@ -109,11 +109,11 @@ fw_cleanup(void)
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_data_t *spadat)
 {
     /* TODO: Implement me */
 
-    char             nat_ip[16] = {0};
+    char             nat_ip[MAX_IPV4_STR_LEN] = {0};
     char            *ndx;
 
     unsigned int     nat_port = 0;;

@@ -282,6 +282,10 @@ typedef struct acc_stanza
     acc_string_list_t   *gpg_remote_id_list;
     time_t              access_expire_time;
     int                 expired;
+    unsigned char       force_nat;
+    char                *force_nat_ip;
+    char                *force_nat_proto;
+    unsigned int        force_nat_port;
     struct acc_stanza   *next;
 } acc_stanza_t;
 
@@ -386,8 +390,8 @@ typedef struct spa_data
     char           *version;
     short           message_type;
     char           *spa_message;
-    char            spa_message_src_ip[MAX_IP_STR_LEN];
-    char            pkt_source_ip[MAX_IP_STR_LEN];
+    char            spa_message_src_ip[MAX_IPV4_STR_LEN];
+    char            pkt_source_ip[MAX_IPV4_STR_LEN];
     char            spa_message_remain[1024]; /* --DSS FIXME: arbitrary bounds */
     char           *nat_access;
     char           *server_auth;

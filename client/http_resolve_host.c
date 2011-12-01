@@ -78,7 +78,7 @@ parse_url(char *res_url, struct url* url)
     if(e_ndx != NULL)
     {
         port = atoi(e_ndx+1);
-        if(port < 1 || port > 65535)
+        if(port < 1 || port > MAX_PORT)
         {
             fprintf(stderr, "resolve-url port value is invalid.\n");
             return(-1);
@@ -251,7 +251,7 @@ resolve_ip_http(fko_cli_options_t *options)
 	 * Note: We are expecting the content to be just an IP address
 	 *       (possibly followed by whitespace or other not-digit value).
 	*/
-	for(i=0; i<MAX_IP_STR_LEN; i++) {
+	for(i=0; i<MAX_IPV4_STR_LEN; i++) {
 		if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
 			break;
 	}
@@ -269,7 +269,7 @@ resolve_ip_http(fko_cli_options_t *options)
 		&& o3 >= 0 && o3 <= 255
 		&& o4 >= 0 && o4 <= 255)
 	{
-		strlcpy(options->allow_ip_str, ndx, MAX_IP_STR_LEN);
+		strlcpy(options->allow_ip_str, ndx, MAX_IPV4_STR_LEN);
 
 		if(options->verbose)
 			printf("Resolved external IP (via http://%s%s) as: %s\n",

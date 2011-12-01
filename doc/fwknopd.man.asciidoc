@@ -29,7 +29,7 @@ vulnerabilities (both 0-day and unpatched code) much more difficult.
 The main configuration for *fwknopd* is maintained within two files:
 'fwknopd.conf' and 'access.conf'.  The default location for these files
 is determined at package configuration (typically '@sysconfdir@/fwknop')The
-configuration variables within these files are desribed below.
+configuration variables within these files are described below.
 
 
 COMMAND-LINE OPTIONS
@@ -183,7 +183,7 @@ See the 'fwknopd.conf' file for the full list and corresponding details.
 *ACCESS_EXPIRE_EPOCH* '<seconds>'::
     Defines an expiration date for the access stanza as the epoch time, and is
     useful if a more accurate expiration time needs to be given than the day
-    resolution offered by the ACCESS_EXPIRE variable agove.  All SPA packets
+    resolution offered by the ACCESS_EXPIRE variable above.  All SPA packets
     that match an expired stanza will be ignored.  This parameter is optional.
 
 *ENABLE_DIGEST_PERSISTENCE* '<Y/N>'::
@@ -221,7 +221,7 @@ See the 'fwknopd.conf' file for the full list and corresponding details.
     when ``ENABLE_IPT_SNAT'' is set to ``Y'' and by default SNAT rules are
     built with the MASQUERADE target (since then the internal IP does not
     have to be defined here in the 'fwknopd.conf' file), but if you want
-    *fwknopd* to use the SNAT target, you mus also define an IP address with
+    *fwknopd* to use the SNAT target, you must also define an IP address with
     the ``SNAT_TRANSLATE_IP'' variable.
 
 *ENABLE_IPT_OUTPUT* '<Y/N>'::
@@ -306,7 +306,7 @@ is granted to *fwknop* clients that have generated the appropriate
 encrypted message.
 
 The 'access.conf' variables described below provide the access directives
-for the SPA packets with a source (or embeded request) IP that matches an
+for the SPA packets with a source (or embedded request) IP that matches an
 address or network range defined by the ``SOURCE'' variable.  All variables
 following ``SOURCE'' apply to the source 'stanza'.  Each ``SOURCE''
 directive starts a new stanza.
@@ -367,6 +367,14 @@ directive starts a new stanza.
     line argument on the *fwknop* client command line, so either *-R* has
     to be used to automatically resolve the external address (if the
     client behind a NAT) or the client must know the external IP.
+
+*FORCE_NAT*: '<IP> <PORT>'::
+    For any valid SPA packet, force the requested connection to be NAT'd
+    through to the specified (usually internal) IP and port value.  This is
+    useful if there are multiple internal systems running a service such as
+    SSHD, and you want to give transparent access to only one internal system
+    for each stanza in the access.conf file.  This way, multiple external
+    users can each directly access only one internal system per SPA key.
 
 *GPG_HOME_DIR*: '<path>'::
     Define the path to the GnuPG directory to be used by the *fwknopd*
@@ -442,7 +450,7 @@ are received.
 
 SEE ALSO
 --------
-fwknop(8), iptables(8), libfko docmentation.
+fwknop(8), iptables(8), libfko documentation.
 
 
 AUTHOR

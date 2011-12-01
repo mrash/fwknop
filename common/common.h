@@ -104,8 +104,8 @@ enum {
 #define MAX_PORT            65535
 #define MAX_PORT_STR_LEN    6
 #define MAX_PROTO_STR_LEN   6
-#define MAX_IP_STR_LEN      16
-#define MIN_IP_STR_LEN      9
+#define MAX_IPV4_STR_LEN    16
+#define MIN_IPV4_STR_LEN    9
 #define MAX_SERVER_STR_LEN  50
 
 #define MAX_LINE_LEN        1024

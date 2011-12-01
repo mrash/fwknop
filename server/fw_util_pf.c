@@ -204,7 +204,7 @@ fw_cleanup(const fko_srv_options_t *opts)
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(const fko_srv_options_t *opts, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_data_t *spadat)
 {
     char             new_rule[MAX_PF_NEW_RULE_LEN];
     char             write_cmd[CMD_BUFSIZE];

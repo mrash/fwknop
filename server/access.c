@@ -80,11 +80,12 @@ add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const c
 
     memset(&tm, 0, sizeof(struct tm));
 
-    if (sscanf(val, "%d/%d/%d", &tm.tm_mon, &tm.tm_mday, &tm.tm_year) != 3)
+    if (sscanf(val, "%2d/%2d/%4d", &tm.tm_mon, &tm.tm_mday, &tm.tm_year) != 3)
     {
 
         log_msg(LOG_ERR,
-            "Fatal invalid epoch seconds value for access stanza expiration time"
+            "Fatal: invalid date value '%s' (need MM/DD/YYYY) for access stanza expiration time",
+            val
         );
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -120,12 +121,41 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
     if (errno == ERANGE || (errno != 0 && expire_time == 0))
     {
         log_msg(LOG_ERR,
-            "Fatal invalid epoch seconds value for access stanza expiration time"
+            "Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
+            val
         );
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     *access_expire_time = (time_t) expire_time;
+
+    return;
+}
+
+static void
+add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
+{
+    char      ip_str[MAX_IPV4_STR_LEN] = {0};
+
+    if (sscanf(val, "%15s %5u", ip_str, &curr_acc->force_nat_port) != 2)
+    {
+
+        log_msg(LOG_ERR,
+            "Fatal: invalid FORCE_NAT arg '%s', need <IP> <PORT>",
+            val
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if (curr_acc->force_nat_port > MAX_PORT)
+    {
+        log_msg(LOG_ERR,
+            "Fatal: invalid FORCE_NAT port '%d'", curr_acc->force_nat_port);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    curr_acc->force_nat = 1;
+    add_acc_string(&(curr_acc->force_nat_ip), ip_str);
 
     return;
 }
@@ -137,7 +167,7 @@ static void
 add_source_mask(acc_stanza_t *acc, const char *ip)
 {
     char                *ndx;
-    char                ip_str[16] = {0};
+    char                ip_str[MAX_IPV4_STR_LEN] = {0};
     uint32_t            mask;
 
     struct in_addr      in;
@@ -522,6 +552,9 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->restrict_ports);
         free_acc_port_list(acc->rport_list);
     }
+
+    if(acc->force_nat_ip != NULL)
+        free(acc->force_nat_ip);
 
     if(acc->key != NULL)
         free(acc->key);
@@ -914,6 +947,16 @@ parse_access_file(fko_srv_options_t *opts)
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE_EPOCH"))
         {
             add_acc_expire_time_epoch(opts, &(curr_acc->access_expire_time), val);
+        }
+        else if(CONF_VAR_IS(var, "FORCE_NAT"))
+        {
+            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
+            {
+                fprintf(stderr,
+                    "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf\n");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            add_acc_force_nat(opts, curr_acc, val);
         }
         else
         {

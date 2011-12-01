@@ -162,7 +162,7 @@ SPA OPTIONS
     Specify IP address that should be permitted through the destination
     *fwknopd* server firewall (this IP is encrypted within the SPA packet
     itself).  This is useful to prevent a MTIM attack where a SPA packet
-    can be intercepted enroute and sent from a different IP than the
+    can be intercepted en-route and sent from a different IP than the
     original.  Hence, if the *fwknopd* server trusts the source address
     on the  SPA  packet IP header then the attacker gains access. 
     The *-a* option puts the source address within the encrypted SPA
@@ -359,7 +359,7 @@ commented out.  It is up to the user to edit this file to meet their needs.
 
 The '.fwknoprc' file contains a default configuration area or stanza which
 holds global configuration directives that override the program defaults. 
-You can edit this file and create additonal 'named stanzas' that can be
+You can edit this file and create additional 'named stanzas' that can be
 specified with the *-n* or *--named-config* option. Parameters defined in
 the named stanzas will override any matching 'default' stanza directives.
 Note that command-line options will still override any corresponding

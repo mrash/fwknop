@@ -616,7 +616,7 @@ incoming_spa(fko_srv_options_t *opts)
          * access stanza loop (first valid access stanza stops us looking
          * for others).
         */
-        process_spa_request(opts, &spadat);
+        process_spa_request(opts, acc, &spadat);
         if(ctx != NULL)
             fko_destroy(ctx);
         break;
