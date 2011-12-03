@@ -515,6 +515,7 @@ incoming_spa(fko_srv_options_t *opts)
               || spadat.message_type == FKO_NAT_ACCESS_MSG
               || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
         {
+#if FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
             {
                 log_msg(LOG_WARNING,
@@ -527,6 +528,17 @@ incoming_spa(fko_srv_options_t *opts)
                 acc = acc->next;
                 continue;
             }
+#else
+            log_msg(LOG_WARNING,
+                "(stanza #%d) SPA packet from %s requested unsupported NAT access",
+                stanza_num, spadat.pkt_source_ip
+            );
+
+            if(ctx != NULL)
+                fko_destroy(ctx);
+            acc = acc->next;
+            continue;
+#endif
         }
 
         /* Command messages.

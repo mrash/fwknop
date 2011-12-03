@@ -217,7 +217,7 @@ fw_initialize(const fko_srv_options_t *opts)
     if(res != 0)
     {
         fprintf(stderr, "Fatal: Errors detected during ipfw rules initialization.\n");
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     /* Allocate our rule_map array for tracking active (and expired) rules.
@@ -227,7 +227,7 @@ fw_initialize(const fko_srv_options_t *opts)
     if(fwc.rule_map == NULL)
     {
         fprintf(stderr, "Fatal: Memory allocation error in fw_initialize.\n");
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     /* Create a check-state rule if necessary.

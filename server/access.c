@@ -132,6 +132,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
     return;
 }
 
+#if FIREWALL_IPTABLES
 static void
 add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
 {
@@ -159,6 +160,7 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
 
     return;
 }
+#endif
 
 /* Take an IP or Subnet/Mask and convert it to mask for later
  * comparisons of incoming source IPs against this mask.
@@ -950,6 +952,7 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "FORCE_NAT"))
         {
+#if FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
                 fprintf(stderr,
@@ -957,6 +960,11 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_force_nat(opts, curr_acc, val);
+#else
+            fprintf(stderr,
+                "[*] FORCE_NAT not supported.\n");
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
         }
         else
         {
