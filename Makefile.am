@@ -139,6 +139,7 @@ EXTRA_DIST = \
     test/conf/server-gpg/trustdb.gpg \
     test/conf/subnet_source_match_access.conf \
     test/hardening-check \
+    test/local_spa.key \
     test/test-fwknop.pl \
     VERSION \
     win32/config.h \
