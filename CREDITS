@@ -1,0 +1,17 @@
+Jonathan Bennett
+    - Contributed OpenWRT support - see the extras/openwrt/ directory.
+
+Sebastien Jeanquier
+    - Assisted with getting fwknop included in BackTrack Linux - the choice
+      distro for pentation testers.
+
+Ozmart
+    - Suggested the idea for setting an access stanza expiration time.
+    - Suggested the abiliy to have certain incoming connections automatically
+      NAT'd through to specific internal systems.  The result was the FORCE_NAT
+      mode.
+    - Assisted with getting fwknop running under the Pentoo Linux distro.
+
+Max Kastanas
+    - Contributed both an Android and an iPhone fwknop client port - see the
+      top level android/ and iphone/ directories.

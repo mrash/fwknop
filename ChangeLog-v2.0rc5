@@ -1,0 +1,767 @@
+commit 893b89a3eba5fa9945095f8df4460f912fdb0cbc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Dec 3 21:21:29 2011 -0500
+
+    minor compiler warning fix on OpenBSD
+
+commit 860b4527a455d1d50f2b563f4939ee1990b53bd8
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Dec 3 13:10:35 2011 -0500
+
+    minor compile fixes for FreeBSD
+
+commit 9b7c1a8ce69fe51337458cce4e7b5e9cb3d7654b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Nov 30 20:51:19 2011 -0500
+
+    Added FORCE_NAT mode to the access.conf file
+    
+    This commit adds a new configuration variable "FORCE_NAT" to the access.conf
+    file:
+    
+        For any valid SPA packet, force the requested connection to be NAT'd
+        through to the specified (usually internal) IP and port value.  This is
+        useful if there are multiple internal systems running a service such as
+        SSHD, and you want to give transparent access to only one internal system
+        for each stanza in the access.conf file.  This way, multiple external
+        users can each directly access only one internal system per SPA key.
+    
+    This commit also implements a few minor code cleanups.
+
+commit 8585958e6e164d47c3d9dc106d4a15aee18599b9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Nov 28 23:20:11 2011 -0500
+
+    minor newline fix for access.conf output dump
+
+commit 2a1243fee6d618096bc402b5a56ae3c2670b8b50
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Nov 28 23:18:07 2011 -0500
+
+    memory leak bugfix as a follow up to commit b280f5cde0246cdef33dee3f8be66a2bcef77336
+
+commit b280f5cde0246cdef33dee3f8be66a2bcef77336
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Nov 28 22:03:21 2011 -0500
+
+    Added access stanza expiration feature, multiple access stanza bug fix
+    
+    This commit does two major things:
+    
+    1) Two new access.conf variables are added "ACCESS_EXPIRE" and
+    "ACCESS_EXPIRE_EPOCH" to allow access stanzas to be expired without having
+    to modify the access.conf file and restart fwknopd.
+    
+    2) Allow an access stanza that matches the SPA source address to not
+    automatically short circuit other stanzas if there is an error (such as when
+    there are multiple encryption keys involved and an incoming SPA packet is
+    meant for, say, the second stanza and the first therefore doesn't allow
+    proper decryption).
+
+commit 9e884e9759362ce401bf77dab819b24e10caca62
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 22 22:56:48 2011 -0500
+
+    added SPA packet aging tests
+
+commit 72a4353fd850c099816f6e1acb9fad12bcb2ff27
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 22 22:56:36 2011 -0500
+
+    bug fix to exclude SPA packets with timestamps in the future that are too great (old packets were properly excluded already)
+
+commit 644b9e943214ed6ede762af72f395b73ea03faf0
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 22 22:40:26 2011 -0500
+
+    added test for --test mode in the fwknop client
+
+commit 0015da44427bf988372818b26916a6229e9f68ca
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 22 22:34:10 2011 -0500
+
+    bug fix to honor the fwknop client --time-offset-plus and --time-offset-minus options
+
+commit 05b189ff4fe61c7149efcf4f18cada14553e6dbe
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 22 22:13:27 2011 -0500
+
+    added DNAT mode tests, minor memory leak fix in NAT mode, added fwknopd check for ENABLE_IPT_FORWARDING variable before attempting NAT access
+
+commit dd2deec73dc5f0d630ab86e92fe1e0073d692414
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Nov 18 23:23:50 2011 -0500
+
+    added tests for various access.conf variables
+
+commit 63498c9032bfe74bc91de5d6607391e7b7cdfe36
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Nov 17 21:17:50 2011 -0500
+
+    added IP/subnet match tests, added --Anonymize-results mode
+
+commit 34cd0c7a78a62e1df2533641ca08adaaafa2aa7d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 15 21:45:51 2011 -0500
+
+    simplified the client/server interaction code, started on IP filtering tests, added spoof username tests
+
+commit 3d94aaa9205e5703c50635b9007efab485d9b2da
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Nov 10 22:54:25 2011 -0500
+
+    minor test wording consolidation
+
+commit 50b48147c0392cd91f7ad83af56b20d0abbd3c3e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Nov 10 22:33:32 2011 -0500
+
+    This commit fixes two memory leaks and adds a common exit function.
+    
+    The two memory leaks were found with the test suite running in
+    --enable-valgrind mode - here are the relevant error messages:
+    
+    For fwknopd server GPG clean up:
+    
+    ==345== 9 bytes in 1 blocks are definitely lost in loss record 2 of 2
+    ==345==   at 0x4C2815C: malloc (vg_replace_malloc.c:236)
+    ==345==   by 0x52F6B81: strdup (strdup.c:43)
+    ==345==   by 0x10FA57: add_string_list_ent (access.c:308)
+    ==345==   by 0x110513: parse_access_file (access.c:387)
+    ==345==   by 0x10B5FB: main (fwknopd.c:193)
+    
+    For fwknop client rc file processing:
+    
+    ==8045== 568 bytes in 1 blocks are still reachable in loss record 12 of 12
+    ==8045==    at 0x4C2815C: malloc (vg_replace_malloc.c:236)
+    ==8045==    by 0x50A53AA: __fopen_internal (iofopen.c:76)
+    ==8045==    by 0x10C3FF: process_rc (config_init.c:446)
+    ==8045==    by 0x10C8F6: config_init (config_init.c:671)
+    ==8045==    by 0x10AC9E: main (fwknop.c:62)
+    
+    There is also a new clean_exit() function that makes it easier to ensure that
+    resources are deallocated upon existing.
+
+commit 9ebd55f52289d5904fbde3b8838ca92c7271d9e9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Nov 10 22:33:00 2011 -0500
+
+    remove CMD timestamps for --diff mode
+
+commit 9e19b8bc267031900c555c55fc5c1e54b6093461
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 6 13:51:23 2011 -0500
+
+    added --diff mode to the test suite to compare results from one execution to the next
+
+commit a5a3c06ef225c737acbd21c6cedd1a94f1a6c484
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Nov 4 23:46:31 2011 -0400
+
+    consolidated several test functions into a single generic_exec() function
+
+commit f41a26b389605311a21a95a9ad2b23f460ed02ee
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Nov 3 22:15:19 2011 -0400
+
+    Fixed fwknopd memory leak, several other fixes and updates
+    
+    This commit does several things.  First, a memory leak in fwknopd has been
+    fixed by ensuring to free access.conf stanzas.  This bug was found with the
+    new test suite running in --enable-valgrind mode.  Here is what some of the
+    valgrind output looked like to find the leak:
+    
+    ==19217== 11 bytes in 1 blocks are indirectly lost in loss record 3 of 5
+    ==19217==    at 0x4C2815C: malloc (vg_replace_malloc.c:236)
+    ==19217==    by 0x52F6B81: strdup (strdup.c:43)
+    ==19217==    by 0x10FC8B: add_acc_string (access.c:49)
+    ==19217==    by 0x1105C8: parse_access_file (access.c:756)
+    ==19217==    by 0x10B79B: main (fwknopd.c:194)
+    ==19217==
+    ==19217== 16 bytes in 1 blocks are indirectly lost in loss record 4 of 5
+    ==19217==    at 0x4C27480: calloc (vg_replace_malloc.c:467)
+    ==19217==    by 0x10FEC0: add_source_mask (access.c:88)
+    ==19217==    by 0x110100: expand_acc_source (access.c:191)
+    ==19217==    by 0x1104B0: parse_access_file (access.c:500)
+    ==19217==    by 0x10B79B: main (fwknopd.c:194)
+    ==19217==
+    ==19217== 183 (152 direct, 31 indirect) bytes in 1 blocks are definitely lost in loss record 5 of 5
+    ==19217==    at 0x4C27480: calloc (vg_replace_malloc.c:467)
+    ==19217==    by 0x1103E4: parse_access_file (access.c:551)
+    ==19217==    by 0x10B79B: main (fwknopd.c:194)
+    ==19217==
+    ==19217== LEAK SUMMARY:
+    ==19217==    definitely lost: 152 bytes in 1 blocks
+    ==19217==    indirectly lost: 31 bytes in 3 blocks
+    ==19217==      possibly lost: 0 bytes in 0 blocks
+    ==19217==    still reachable: 8 bytes in 1 blocks
+    ==19217==         suppressed: 0 bytes in 0 blocks
+    
+    Second, this commit changes how fwknopd acquires packet data with
+    pcap_dispatch() - packets are now processed within the callback function
+    process_packet() that is provided to pcap_dispatch(), the global packet
+    counter is incremented by the return value from pcap_dispatch() (since this is
+    the number of packets processed per pcap loop), and there are two new
+    fwknopd.conf variables PCAP_DISPATCH_COUNT and PCAP_LOOP_SLEEP to control the
+    number of packets that pcap_dispatch() should process per loop and the number
+    of microseconds that fwknopd should sleep per loop respectively.  Without this
+    change, it was fairly easy to cause fwknopd to miss packets by creating bursts
+    of packets that would all be processed one at time with the usleep() delay
+    between each.  For fwknopd deployed on a busy network and with a permissive
+    pcap filter (i.e. something other than the default that causes fwknopd to look
+    at, say, TCP ACK's), this change should help.
+    
+    Third, the criteria that a packet must reach before data copying into the
+    buffer designed for SPA processing has been tightened.  A packet less than
+    /greater than the minimum/maximum expected sizes is ignored before data is
+    copied, and the base64 check is done as well.
+
+commit 97a8d751c1b02271e812701d4cb938833d36918a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Oct 30 22:14:00 2011 -0400
+
+    added complete SPA cycle tests for tcp ports 23 and 9418 (git), and for udp 53 dns
+
+commit 044ea54d936745e29c856de71818f0497633d531
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 29 23:49:29 2011 -0400
+
+    updated client SPA verbose message to include the server IP/host
+
+commit 8e4b45dd568ef86ba773605662a5d058be714d33
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 29 23:48:42 2011 -0400
+
+    minor looping criteria update for valgrind tests
+
+commit ea3e81787121e56e1a44cc0a5ee3b9ba64c4f5eb
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 29 16:59:57 2011 -0400
+
+    [test-suite] added the ability to run all fwknop tests through valgrind
+
+commit f999e2e6720021328e2f34bf57d05b8081d8ffae
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 29 16:55:28 2011 -0400
+
+    bugfix to return preprocess_spa_data() result properly to calling function
+
+commit b1b830f744b01e0a3f0d4a19b6d38dd51afaae1f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 28 23:01:06 2011 -0400
+
+    update to remove packet direction requirement when sniffing on OpenBSD loopback interfaces
+
+commit cde71b1b274cae5af3b6e986e5ac369d79c0cc3a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 28 23:00:26 2011 -0400
+
+    minor whitespace removal
+
+commit dbbbe60fe4b6908bff56d026d886381c83a44087
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 28 22:59:52 2011 -0400
+
+    added stack protection detection for OpenBSD systems
+
+commit 2e96ece4b074beff06aaca2f51bd90c84bfeeef8
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 28 22:42:27 2011 -0400
+
+    Update to ensure libfko.so path is detected properly on OpenBSD
+
+commit 464dbe95d07657794aaac9e230153ffd84a2ed06
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 27 21:51:55 2011 -0400
+
+    Update to print all firewall commands in --verbose mode
+    
+    This commit makes it easier to determine exactly which commands fwknopd
+    runs in --verbose mode when interacting with the underlying firewall.
+    This commit also adds --verbose --verbose mode to the test suite.
+
+commit 6388e8ac7fab3d89b164862c9e113fed37e9f397
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Oct 25 21:00:40 2011 -0400
+
+    added 'const' to function prototype vars where possible
+    
+    Added the 'const' qualifier to function prototype variables where possible.
+    In addition, reduced some functions to file-scope with 'static' where possible.
+    
+    Also made a few minor changes to remove extra whitespace, and fixed a bug
+    in create_fwknoprc() to ensure the new fwknoprc filehandle is closed.
+
+commit 85377267e299118d5302afde3dfeed426b353879
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Oct 24 21:52:13 2011 -0400
+
+    compiler warning fix for sscanf() on freebsd
+    
+    This commit fixes the following gcc warning on freebsd systems:
+    
+    replay_cache.c: In function 'replay_file_cache_init':
+    replay_cache.c:312: warning: format '%ld' expects type 'long int *', but argument 9 has type 'time_t *'
+
+commit 1c6fc0f3f80e086b43471e756f8249015fe2e4b2
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Oct 24 20:48:56 2011 -0400
+
+    update to detect loopback interface
+
+commit 3299fb25815bcec09b5410d3393ab806f8b78a68
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Oct 24 20:48:20 2011 -0400
+
+    minor whitespace removal
+
+commit c9860811f5de4b28f674d53d16b1bca10f12bed8
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 22:29:27 2011 -0400
+
+    added LD_LIBRARY_PATH to all fwknop/fwknopd commands to make manual command execution easier
+
+commit 50bcc537eea23e9cd269a51e63d9da525c0a91ac
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 22:06:00 2011 -0400
+
+    added digest cache validation after GPG tests
+
+commit 1b8606461cc21108b190f871bf2d8b0929589fce
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 21:54:22 2011 -0400
+
+    minor update to match include/exclude criteria on the whole test message
+
+commit 9e3a4b4c920444df10b6a74eb574a542091adbfc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 21:29:44 2011 -0400
+
+    extended packet validity tests in GPG mode
+
+commit 09e6ed1405436b975cb41c89dc2517f0e73c54bb
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 16:48:30 2011 -0400
+
+    added first GPG complete cycle SPA test
+
+commit 2d9dbe1fca011cd6bf726b86fb21af97da11ce49
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 15:19:54 2011 -0400
+
+    minor whitespace removal
+
+commit e4f4ee78253f1f44c8809173ad2209ba8364e2c5
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 14:25:56 2011 -0400
+
+    added test to validate digest.cache structure
+
+commit 266150218a021894e6dab0a8b4d7525183fe004a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 10:57:25 2011 -0400
+
+    added -P bpf test for complete SPA cycle over non standard SPA port
+
+commit 0ab39a64a5b86babdd0c5f7412fe160bca13cb69
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Oct 22 10:48:37 2011 -0400
+
+    added -P bpf filter test
+
+commit 6848983b474d4571b1434a349d10ac21b278ebda
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 21 23:43:08 2011 -0400
+
+    added Rijndael SPA validity tests
+
+commit 081b58d9510e4bbafb6dd57b4e55a02d7105e43a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 21 23:13:24 2011 -0400
+
+    added rule timeout detection
+
+commit 9b816ed29af1be3a259d9c154418cbe624c2a93f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 21 22:55:45 2011 -0400
+
+    added replay attack detection test
+
+commit 0bda4ee1e5f671c2e64a2b961de2f2ed0f9170a5
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Oct 21 22:54:49 2011 -0400
+
+    minor removal of whitespace
+
+commit caf458ad3fb2ce9408035630869e877f0c97768d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 20 23:33:41 2011 -0400
+
+    added first complete SPA cycle test
+
+commit 44598fd7dd6be8207bae512b8b6e13f08e265d2a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 20 23:31:59 2011 -0400
+
+    Added --digest-file and --pid-file args
+    
+    Added --digest-file and --pid-file args so that the user can easily alter
+    these paths from the command line.
+
+commit 6f699f7e5d28ac1d8e66d66b9cedb3094a35439e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 20 00:06:58 2011 -0400
+
+    added client/server interaction test capability
+
+commit b8571bcc05cc81448b8d52ef8eef71f2eaefa987
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Oct 18 21:28:38 2011 -0400
+
+    Minor PID string length fix
+    
+    Changed PID string length to 7 to accomodate an ending newline and NULL
+    char when writing to the fwknopd .pid file.  Without this fix, with a
+    5 digit PID the trailing newline would be truncated (no room for the
+    ending NULL char).
+
+commit 0e7a0e9a378c5b9605228075718f53012e87cadd
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Oct 17 23:03:28 2011 -0400
+
+    Added --fw-list-all and --fw-flush
+    
+    Added new command line options --fw-list-all and --fw-flush to allow all
+    firewall rules to be displayed including those not created by fwknopd, and
+    allow all firewall rules created by fwknopd to be deleted.
+    
+    Also switched -D config dump output to stdout.
+
+commit e479e776dbd848ba82e65e22b35e7e479a788161
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Oct 17 22:55:01 2011 -0400
+
+    Added usage of sudo for recompilation test
+    
+    The test suite now recompiles fwknop only if the --enable-recompile-check
+    option is used, and if so, uses sudo (if installed) to have the resulting
+    binaries own by the original user (instead of by root).  Also made a couple
+    of API changes to create test output files automatically if they don't
+    exist.
+
+commit 11c240c41b74c110068b8748b28a074ac121608c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 13 22:44:35 2011 -0400
+
+    minor update to allow fw rules to be dumped before parsing the access.conf file
+
+commit e36c833f554f59312c02e5efec0bbc77ab0ee301
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 13 22:02:21 2011 -0400
+
+    minor whitespace fixes
+
+commit 9962dc08088b31d116b7b5d41bf8e3ced8cfa814
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 13 20:59:30 2011 -0400
+
+    minor wording update netfilter -> iptables
+
+commit 45ecc6f39932271f7a70b1fe8dec99dc9d2438c0
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 13 20:41:12 2011 -0400
+
+    minor bugfix to ensure that the proper firewall is used to collect system specs
+
+commit 103cd2a8fb0ebe7919a5647ae90a9425242ca0ae
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 13 20:30:05 2011 -0400
+
+    added the test/conf/ directory for config files use by the test suite
+
+commit 6f0d2c509121de45f470dae4c17b6a7e46ea19d0
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 13 20:29:37 2011 -0400
+
+    minor typo fix
+
+commit 64160a0c57aee0c406be5158836fe10b3f38e3f9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 13 20:29:19 2011 -0400
+
+    started on basic SPA generation, updated to use LD_LIBRARY_PATH for local libfko instance
+
+commit a1f4a65f27b73ebe5744c7ae4bf64a0876032e13
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Oct 12 23:37:28 2011 -0400
+
+    interim commit to add major functionality to the fwknop test suite
+
+commit 4a41ecc9556fedd4bb04206081b4096a2fddaeee
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Oct 12 23:36:51 2011 -0400
+
+    removed
+
+commit 88d8eb03b30a03ebb43a7da33c5f65d2de2c3289
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Oct 12 23:36:04 2011 -0400
+
+    minor update to switch to stdout when exiting with success
+
+commit 41c0be29b7a3ea6a0c859b43e43ccdc3aa5e30ba
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 6 23:02:29 2011 -0400
+
+    switched --help output to stdout from stderr
+
+commit 26f58a705dbdf9a07e430fc2558871d491c27d63
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Oct 6 22:53:27 2011 -0400
+
+    minor update to account for hardening-check return values
+
+commit 1a3e1caffe707e71fd3cf99ffaa4547f7fda017a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Oct 4 23:15:04 2011 -0400
+
+    Initial start on a test suite
+    
+    This commit begins development on a comprehensive test suite for fwknop.
+    The initial tests are focused on compilation correctness and security options
+    as determined by the "hardening-check" script from Kees Cook of the Debian
+    security team.
+
+commit 05f3cec96a03251d1a308d90200c9dc479ae4558
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Sep 25 21:12:30 2011 -0400
+
+    Added --help usage information
+    
+    With the --help command line argument, the following information is printed:
+    
+    $ ./fwknop-launcher-lsof.pl --help
+    
+    Usage: fwknop-launcher-lsof.pl [options]
+    
+    Options:
+    
+        -c,  --config     <file>   - Path to fwknop-launcher.conf config file.
+        -l,  --lsof-cmd   <path>   - Path to lsof command.
+        -f,  --fwknop-cmd <path>   - Path to fwknop client command.
+        -s,  --sleep   <seconds>   - Specify sleep interval (default:
+                                     1 seconds)
+        -n   --no-daemon           - Run in foreground mode.
+        -u,  --user   <username>   - Specify username (usually this is not
+                                     needed).
+             --home-dir <dir>      - Path to user's home directory (usually
+                                     this is not needed).
+        -v   --verbose             - Print verbose information to the terminal
+                                     (requires --no-daemon).
+             --help                - Print usage info and exit.
+
+commit 71ea0c6bfd3be6ff8d95e6f1d1029394e51c07f4
+Merge: 7748423 35ee5a2
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Sep 25 21:02:54 2011 -0400
+
+    Merge branch 'master' into fwknop-launcher
+
+commit 7748423b15958fedfcaeb942f3f26cdc5b40dcde
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Sep 24 22:24:30 2011 -0400
+
+    Added the fwknop lsof launcher under the extras/ directory
+    
+    The fwknop lsof launcher (extras/fwknop-launcher/fwknop-launcher-lsof.pl) is a
+    lightweight daemon that allows the user to not have to manually run the fwknop
+    client when attempting to gain access to a service that is protected by Single
+    Packet Authorization via fwknopd.  This is accomplished by checking the output
+    of lsof to look for pending connections in the SYN_SENT state, which (usually)
+    indicate that a remote firewall is blocking the attempted connection.  At this
+    point, the launcher executes the fwknop client with the --get-key arg (so the
+    user must place the key in the local filesystem) to generate an SPA packet for
+    the attempted connection.  The remote fwknopd daemon will reconfigure the
+    firewall to allow temporary access, and this usually happens fast enough that
+    the original connection attempt will then succeed.
+    
+    The idea for this was originally for a pcap-based connection watcher by
+    Sebastien Jeanquier.
+
+commit 35ee5a202debe2e7c15227f7704753c977281de2
+Merge: 35abc34 668ed90
+Author: Michael Rash <michael.rash@gmail.com>
+Date:   Wed Sep 21 18:10:16 2011 -0700
+
+    Merge pull request #5 from maxkas/master
+    
+    Fwknop client for iPhone devices - contributed by Max Kastanas
+
+commit 668ed9033f601f052fe58ebf87a8eff144b50fcf
+Author: Max Kastanas <max2idea@users.sf.net>
+Date:   Fri Sep 16 22:51:53 2011 -0700
+
+    Codebase of Fwknop client for iOS (iPhone) devices
+
+commit 35abc349ab91ff40f0706a66e9ba50188cb94cb2
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Sep 12 23:04:41 2011 -0400
+
+    minor typo fix: fwkop -> fwknop
+
+commit f693a2721cf499815853639c8dfb924ab4c427cd
+Merge: e07ccdd 87416c0
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Sat Sep 10 11:30:09 2011 -0400
+
+    Merge branch 'master' of https://github.com/mrash/fwknop
+
+commit e07ccdd5508c488a818790c16728ebdc13be284c
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Sat Sep 10 11:25:08 2011 -0400
+
+    Added the cmd_opts.h file to server and client's  Makefile.am so they are included with make dist.
+
+commit 87416c0cdf544ff636ea963bd90f1f22dd7ca49a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Sep 9 22:09:37 2011 -0400
+
+    Replaced all strcpy() calls with strlcpy()
+    
+    OpenBSD especially gives compiler warnings whenever strcpy() is used.  All such
+    calls have been replaced with strlcpy().
+
+commit 0b8c4890758bfd6612780c28041d7b1e3e9f1a15
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Sep 8 23:44:50 2011 -0400
+
+    Added read-only relocations and immediate bindings
+    
+    Commit 4248b2687054b38e79e2ab9eecf71e5b299172f4 removed read-only relocations
+    and immediate bindings for FreeBSD systems (and the same was done for OpenBSD
+    systems too).  This commit adds these security features back in as linker
+    options by only changing LDFLAGS as opposed to also adding the corresponding
+    flags to CFLAGS.  The end result is that the following errors are fixed:
+    
+    gcc: -z: linker input file unused because linking not done
+    gcc: relro: linker input file unused because linking not done
+
+commit c65e25c6568c53d44d0163ebd4889260466bcdfa
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Sep 8 21:33:52 2011 -0400
+
+    Check for active_rules > 0 before decrementing
+    
+    In the fw_config struct the active_rules member is unsigned, so this change
+    ensures that we don't try to decrement it below zero whenever a firewall rule
+    is deleted or an error condition occurs.
+
+commit 88b6d44f1f70daf951cf7e1d237114f96ad30a9a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Sep 8 00:20:20 2011 -0400
+
+    Update to make _exp_ string a #define
+    
+    Replaced all instances of "_exp_" with the #define EXPIRE_COMMENT_PREFIX so
+    that the prefix can easily be changed. so
+    that the prefix can easily be changed. so
+    that the prefix can easily be changed. so
+    that the prefix can easily be changed.
+
+commit 2531896ebf98d80380f462b4fae9e16940206a40
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Sep 7 23:24:18 2011 -0400
+
+    Added the ability to delete PF rules
+    
+    This commit adds the ability to fwknopd to delete PF rules after the SPA timer
+    expires.  The strategy implemented is similar to iptables and ipfw, except
+    that all PF rules are added to an 'anchor', and deleting a specific expired
+    rule is done by listing all rules in the anchor and reinstantiating it via
+    'pfctl -a <anchor> -f -' with the expired rule deleted.  fwknopd uses the
+    "_exp_<expire time>" convention in a PF rule label similarly to how fwknopd
+    interfaces with iptables (via the 'comment' match), and ipfw (via the
+    "//<comment>" feature).
+
+commit f9810904c36c270a5d19111ae7566c6d410bed4a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Sep 3 21:00:12 2011 -0400
+
+    minor comment typo fixes
+
+commit d60dde17b71b898a821a60d9a1166c32436c17c2
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Sep 3 14:50:28 2011 -0400
+
+    PF rules are now added to the fwknop anchor
+    
+    This commit implements the ability to add PF firewall rules to the fwknop
+    anchor after a valid SPA packet is sniffed off the wire.  A subsequent commit
+    will add the ability to delete these rules.
+
+commit 6938f7a6aecb1395f750c56a4e10489d6d060fc9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Aug 28 13:37:23 2011 -0400
+
+    Minor copyright holder update
+    
+    Minor copyright holder update
+
+commit 10ff421e1ef86c1b437645764abe11819a88c292
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Aug 28 13:27:15 2011 -0400
+
+    For PF firewalls implemented a check for an active fwknop anchor
+    
+    This commit ensures that for PF firewalls that the fwknop anchor is active and
+    linked into the running PF policy.  This is accomplished by looking for the
+    string 'anchor "fwknop"' in the output of "pfctl -s rules".  If the anchor
+    exists, then fwknopd will be able to influence traffic via rules added and
+    removed from the fwknop anchor.
+
+commit 5bc5ef4305cafd26ee3faaf5eefb3f6b9f05441e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Aug 27 11:07:19 2011 -0400
+
+    Added --fw-list info to --help
+    
+    Added --fw-list output to usage info when --help is specified from the command
+    line.
+
+commit 0649ef924a8c979fd815c2d2e8416a16aeabeb62
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Aug 27 10:57:17 2011 -0400
+
+    PF support on OpenBSD in progress, fwknop --fw-list now works
+    
+    This is the first commit that has fwknopd interact with the PF firewall on
+    OpenBSD (via fwknopd --fw-list to show any active fwknopd rules).
+
+commit dcf2d94bf675a906c570814d9cd65e2a1bfd2e77
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Aug 24 23:55:36 2011 -0400
+
+    Added autoconf check for pf firewalls
+    
+    On OpenBSD systems fwknop now checks for pf firewalls via autoconf.  The next
+    step will be to fill in support for pf via the C code.
+
+commit 649b7a88c1d6caa0e3760c7694b9d5b5b855dd4c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Aug 24 23:17:45 2011 -0400
+
+    Disabled read-only relocations and immediate binding compiler protections
+    
+    Similarly to FreeBSD systems, gcc throws the following warnings with read-only
+    relcations and immediate binding protections - disbabled for now:
+    
+    gcc: -z: linker input file unused because linking not done
+    gcc: relro: linker input file unused because linking not done
+    gcc: -z: linker input file unused because linking not done
+    gcc: now: linker input file unused because linking not done
+
+commit 47da588003b9bf1645a97823cfa940b8c5a93071
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Aug 22 21:39:28 2011 -0400
+
+    removed 2.0.0 branch specific ChangeLog, ShortLog and diffstat files
