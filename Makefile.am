@@ -49,6 +49,7 @@ EXTRA_DIST = \
     android/project/jni/logutils.h \
     android/project/jni/Android.mk \
     ChangeLog* \
+    CREDITS \
     diffstat* \
     extras/fwknop.init.debian \
     extras/fwknop.init.openwrt \
