@@ -48,6 +48,8 @@ EXTRA_DIST = \
     android/project/jni/libfwknop/get_libfko_files.sh \
     android/project/jni/logutils.h \
     android/project/jni/Android.mk \
+    ChangeLog* \
+    diffstat* \
     extras/fwknop.init.debian \
     extras/fwknop.init.openwrt \
     extras/fwknop.init.redhat \
@@ -55,7 +57,37 @@ EXTRA_DIST = \
     extras/openwrt/package/fwknop/Makefile \
     extras/openwrt/package/fwknop/files/fwknopd.init \
     extras/openwrt/package/gpgme/Makefile \
+    extras/fwknop-launcher/fwknop-launcher-lsof.pl \
+    extras/fwknop-launcher/fwknop-launcher.conf \
     fwknop.spec \
+    iphone/main.m \
+    iphone/Fwknop.xcodeproj \
+    iphone/Fwknop.xcodeproj/project.pbxproj \
+    iphone/Fwknop.xcodeproj/dev.pbxuser \
+    iphone/Fwknop.xcodeproj/dev.mode1v3 \
+    iphone/lock_57x57.png \
+    iphone/Fwknop.pch \
+    iphone/README \
+    iphone/Info.plist \
+    iphone/COPYING \
+    iphone/Classes \
+    iphone/Classes/MyAppDelegate.h \
+    iphone/Classes/fwknop \
+    iphone/Classes/fwknop/send_spa_packet.c \
+    iphone/Classes/fwknop/fwknop_client.c \
+    iphone/Classes/fwknop/fwknop_client.h \
+    iphone/Classes/FwknopController.m \
+    iphone/Classes/config.h \
+    iphone/Classes/FwknopController.h \
+    iphone/Classes/bridge_fwknop.h \
+    iphone/Classes/MyAppDelegate.m \
+    iphone/Classes/libfwknop \
+    iphone/Classes/libfwknop/README \
+    iphone/Classes/libfwknop/config.h \
+    iphone/Classes/libfwknop/fko_common.b \
+    iphone/Classes/libfwknop/get_libfko_files.sh \
+    iphone/Classes/bridge_fwknop.c \
+    iphone/Classes/logutils.h \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \
     perl/FKO/MANIFEST \
@@ -74,6 +106,40 @@ EXTRA_DIST = \
 	python/setup.py \
 	python/fkomodule.c \
 	python/fko.py \
+    ShortLog* \
+    test/conf/client-gpg/pubring.gpg \
+    test/conf/client-gpg/secring.gpg \
+    test/conf/client-gpg/trustdb.gpg \
+    test/conf/default_access.conf \
+    test/conf/default_fwknopd.conf \
+    test/conf/expired_epoch_stanza_access.conf \
+    test/conf/expired_stanza_access.conf \
+    test/conf/force_nat_access.conf \
+    test/conf/future_expired_stanza_access.conf \
+    test/conf/gpg_access.conf \
+    test/conf/invalid_expire_access.conf \
+    test/conf/ip_source_match_access.conf \
+    test/conf/mismatch_open_ports_access.conf \
+    test/conf/mismatch_user_access.conf \
+    test/conf/multi_gpg_access.conf \
+    test/conf/multi_source_match_access.conf \
+    test/conf/multi_stanzas_access.conf \
+    test/conf/multi_stanzas_with_broken_keys.conf \
+    test/conf/nat_fwknopd.conf \
+    test/conf/no_multi_source_match_access.conf \
+    test/conf/no_source_match_access.conf \
+    test/conf/no_subnet_source_match_access.conf \
+    test/conf/open_ports_access.conf \
+    test/conf/override_fwknopd.conf \
+    test/conf/require_src_access.conf \
+    test/conf/require_user_access.conf \
+    test/conf/server-gpg/pubring.gpg \
+    test/conf/server-gpg/secring.gpg \
+    test/conf/server-gpg/trustdb.gpg \
+    test/conf/subnet_source_match_access.conf \
+    test/hardening-check \
+    test/test-fwknop.pl \
+    VERSION \
     win32/config.h \
     win32/fwknop-client.vcproj \
     win32/getopt.c \
