@@ -1,5 +1,11 @@
+ CREDITS                                        |   17 +
  ChangeLog-v2.0.0                               | 3020 ------------------------
+ ChangeLog-v2.0rc5                              |  767 ++++++
+ Makefile.am                                    |   66 +
  ShortLog-v2.0.0                                |  654 -----
+ ShortLog-v2.0rc5                               |  114 +
+ VERSION                                        |    2 +-
+ android/project/jni/config.h                   |    6 +-
  client/Makefile.am                             |    2 +-
  client/config_init.c                           |   59 +-
  client/fwknop.c                                |   84 +-
@@ -12,14 +18,16 @@
  client/utils.h                                 |    2 +-
  common/common.h                                |    4 +-
  common/netinet_common.h                        |   11 +-
- configure.ac                                   |   64 +-
+ configure.ac                                   |   66 +-
  diffstat-v2.0.0                                | 1310 ----------
+ diffstat-v2.0rc5                               |  196 ++
  doc/fwknop.man.asciidoc                        |    8 +-
  doc/fwknopd.man.asciidoc                       |   93 +-
  doc/libfko.texi                                |   12 +-
  extras/fwknop-launcher/fwknop-launcher-lsof.pl |  350 +++
  extras/fwknop-launcher/fwknop-launcher.conf    |   30 +
- fwknop.spec                                    |    6 +-
+ extras/openwrt/package/fwknop/Makefile         |    2 +-
+ fwknop.spec                                    |    8 +-
  iphone/COPYING                                 |  340 +++
  iphone/Classes/FwknopController.h              |   30 +
  iphone/Classes/FwknopController.m              |  309 +++
@@ -130,10 +138,15 @@
  test/conf/subnet_source_match_access.conf      |    3 +
  test/hardening-check                           |  285 +++
  test/test-fwknop.pl                            | 2689 +++++++++++++++++++++
- 132 files changed, 12627 insertions(+), 6170 deletions(-)
+ win32/config.h                                 |    2 +-
+ 141 files changed, 13795 insertions(+), 6178 deletions(-)
+ create mode 100644 CREDITS
  delete mode 100644 ChangeLog-v2.0.0
+ create mode 100644 ChangeLog-v2.0rc5
  delete mode 100644 ShortLog-v2.0.0
+ create mode 100644 ShortLog-v2.0rc5
  delete mode 100644 diffstat-v2.0.0
+ create mode 100644 diffstat-v2.0rc5
  create mode 100755 extras/fwknop-launcher/fwknop-launcher-lsof.pl
  create mode 100644 extras/fwknop-launcher/fwknop-launcher.conf
  create mode 100755 iphone/COPYING

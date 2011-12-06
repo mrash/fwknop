@@ -6,7 +6,7 @@ Damien Stuart (2):
 Max Kastanas (1):
       Codebase of Fwknop client for iOS (iPhone) devices
 
-Michael Rash (85):
+Michael Rash (88):
       removed 2.0.0 branch specific ChangeLog, ShortLog and diffstat files
       Disabled read-only relocations and immediate binding compiler
          protections
@@ -111,4 +111,8 @@ Michael Rash (85):
       Added FORCE_NAT mode to the access.conf file
       minor compile fixes for FreeBSD
       minor compiler warning fix on OpenBSD
+      added CREDITS file, bumped software version, added ChangeLog files
+      added CREDITS file, bumped software version, added ChangeLog files
+      Added various files to Makefile.am so that 'make dist' continues to
+         work
 

@@ -1,3 +1,21 @@
+commit 474a18b57d054939e6f4063d5ef491b4cee4a240
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 22:10:47 2011 -0500
+
+    Added various files to Makefile.am so that 'make dist' continues to work
+
+commit 690fe25fa4201af8f76c28450177581ce14a1459
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 21:14:31 2011 -0500
+
+    added CREDITS file, bumped software version, added ChangeLog files
+
+commit bcba9d6bdef6032a992e64a8bd6bd7604b83b006
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 21:14:14 2011 -0500
+
+    added CREDITS file, bumped software version, added ChangeLog files
+
 commit 893b89a3eba5fa9945095f8df4460f912fdb0cbc
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Sat Dec 3 21:21:29 2011 -0500
