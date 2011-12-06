@@ -1,9 +1,9 @@
  CREDITS                                        |   17 +
  ChangeLog-v2.0.0                               | 3020 ------------------------
- ChangeLog-v2.0rc5                              |  767 ++++++
- Makefile.am                                    |   66 +
+ ChangeLog-v2.0rc5                              |  785 ++++++
+ Makefile.am                                    |   67 +
  ShortLog-v2.0.0                                |  654 -----
- ShortLog-v2.0rc5                               |  114 +
+ ShortLog-v2.0rc5                               |  118 +
  VERSION                                        |    2 +-
  android/project/jni/config.h                   |    6 +-
  client/Makefile.am                             |    2 +-
@@ -20,7 +20,7 @@
  common/netinet_common.h                        |   11 +-
  configure.ac                                   |   66 +-
  diffstat-v2.0.0                                | 1310 ----------
- diffstat-v2.0rc5                               |  196 ++
+ diffstat-v2.0rc5                               |  209 ++
  doc/fwknop.man.asciidoc                        |    8 +-
  doc/fwknopd.man.asciidoc                       |   93 +-
  doc/libfko.texi                                |   12 +-
@@ -139,7 +139,7 @@
  test/hardening-check                           |  285 +++
  test/test-fwknop.pl                            | 2689 +++++++++++++++++++++
  win32/config.h                                 |    2 +-
- 141 files changed, 13795 insertions(+), 6178 deletions(-)
+ 141 files changed, 13831 insertions(+), 6178 deletions(-)
  create mode 100644 CREDITS
  delete mode 100644 ChangeLog-v2.0.0
  create mode 100644 ChangeLog-v2.0rc5

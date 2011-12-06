@@ -1,3 +1,15 @@
+commit 9bcd7cb137103db89400f4f652ab834e05ea5eba
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 22:16:03 2011 -0500
+
+    Added the CREDITS file for 'make dist'
+
+commit 3b2ec921be16db4bcccb4a0bfe13ebdb620a5b31
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 22:11:58 2011 -0500
+
+    change log doc updates
+
 commit 474a18b57d054939e6f4063d5ef491b4cee4a240
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Mon Dec 5 22:10:47 2011 -0500
