@@ -1,9 +1,9 @@
  CREDITS                                        |   17 +
  ChangeLog-v2.0.0                               | 3020 ------------------------
- ChangeLog-v2.0rc5                              |  785 ++++++
- Makefile.am                                    |   67 +
+ ChangeLog-v2.0rc5                              |  797 +++++++
+ Makefile.am                                    |   68 +
  ShortLog-v2.0.0                                |  654 -----
- ShortLog-v2.0rc5                               |  118 +
+ ShortLog-v2.0rc5                               |  120 +
  VERSION                                        |    2 +-
  android/project/jni/config.h                   |    6 +-
  client/Makefile.am                             |    2 +-
@@ -137,9 +137,10 @@
  test/conf/server-gpg/trustdb.gpg               |  Bin 0 -> 1360 bytes
  test/conf/subnet_source_match_access.conf      |    3 +
  test/hardening-check                           |  285 +++
+ test/local_spa.key                             |    3 +
  test/test-fwknop.pl                            | 2689 +++++++++++++++++++++
  win32/config.h                                 |    2 +-
- 141 files changed, 13831 insertions(+), 6178 deletions(-)
+ 142 files changed, 13849 insertions(+), 6178 deletions(-)
  create mode 100644 CREDITS
  delete mode 100644 ChangeLog-v2.0.0
  create mode 100644 ChangeLog-v2.0rc5
@@ -206,4 +207,5 @@
  create mode 100644 test/conf/server-gpg/trustdb.gpg
  create mode 100644 test/conf/subnet_source_match_access.conf
  create mode 100755 test/hardening-check
+ create mode 100644 test/local_spa.key
  create mode 100755 test/test-fwknop.pl

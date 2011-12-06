@@ -6,7 +6,7 @@ Damien Stuart (2):
 Max Kastanas (1):
       Codebase of Fwknop client for iOS (iPhone) devices
 
-Michael Rash (90):
+Michael Rash (93):
       removed 2.0.0 branch specific ChangeLog, ShortLog and diffstat files
       Disabled read-only relocations and immediate binding compiler
          protections
@@ -117,4 +117,7 @@ Michael Rash (90):
          work
       change log doc updates
       Added the CREDITS file for 'make dist'
+      minor addition of the CREDITS file for 'make dist'
+      added local_spa.key file
+      added local_spa.key file
 

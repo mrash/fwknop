@@ -1,3 +1,21 @@
+commit 7a231a3b72758d93b4b9425fd403247aa2018499
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 22:21:31 2011 -0500
+
+    added local_spa.key file
+
+commit 3d0ceccf65010a84dd30fc5e9c567e24f03104ce
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 22:20:39 2011 -0500
+
+    added local_spa.key file
+
+commit 710f98a9b572cd126cd3f662b29244bc0d6e6533
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Dec 5 22:16:38 2011 -0500
+
+    minor addition of the CREDITS file for 'make dist'
+
 commit 9bcd7cb137103db89400f4f652ab834e05ea5eba
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Mon Dec 5 22:16:03 2011 -0500
