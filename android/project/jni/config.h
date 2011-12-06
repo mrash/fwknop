@@ -207,13 +207,13 @@
 #define PACKAGE_NAME "fwknop"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "fwknop 2.0.0rc4"
+#define PACKAGE_STRING "fwknop 2.0rc5"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "fwknop"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "2.0.0rc4"
+#define PACKAGE_VERSION "2.0rc5"
 
 /* The size of `unsigned int', as computed by sizeof. */
 #define SIZEOF_UNSIGNED_INT 4
@@ -247,7 +247,7 @@
 
 
 /* Version number of package */
-#define VERSION "2.0.0rc4"
+#define VERSION "2.0rc5"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

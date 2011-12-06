@@ -1,7 +1,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=fwknopd
-PKG_VERSION:=2.0.0rc4
+PKG_VERSION:=2.0rc5
 PKG_RELEASE:=1
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/fwknop-$(PKG_VERSION)
