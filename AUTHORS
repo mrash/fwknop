@@ -1,6 +1,6 @@
 Package: fwknop
-Maintainer: Damien Stuart <dstuart@dstuart.org>
-Bug reports: dstuart@dstuart.org
+Maintainer: Damien Stuart <dstuart@dstuart.org>, Michael Rash <mbr@cipherdyne.org>
+Bug reports: dstuart@dstuart.org, mbr@cipherdyne.org
 
 
 Mike Rash <mbr@cipherdyne.org>
@@ -11,11 +11,7 @@ Damien Stuart <dstuart@dstuart.org>
  - libfko, fwknop (client)
 
 
- Copyright 2009, Damien Stuart
-
- This file is free software; as a special exception the author gives
- unlimited permission to copy and/or distribute it, with or without
- modifications, as long as this notice is preserved.
+ Copyright 2009-2011, Damien Stuart and Michael Rash
 
  This file is distributed in the hope that it will be useful, but
  WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
