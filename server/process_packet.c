@@ -8,7 +8,7 @@
  * Purpose: Packet parser/decoder for fwknopd server.  Takes the raw packet
  *          data from libpcap and parses/extracts the packet data payload,
  *          then creates an FKO context with that data.  If the context
- *          creation is successfull, it is queued for processing.
+ *          creation is successful, it is queued for processing.
  *
  * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
  *

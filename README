@@ -73,13 +73,12 @@ migrate to this version, there are some things to be aware of:
 
 NOTE FOR DEVELOPERS
 ===================
-If you are pulling this distribution from Subversion, you will need to
-run the "autoreconf -i" the first time after unpacking.  After that, you
-can leave off the "-i" option of "autoreconf" when you want to regenerate
-the configuration.  If, for wome reason, autoreconf does not work for you,
-you can try the "autogen.sh" script in the top of the distribution directory
-in order to generate the autoconf (and other) meta files, and the `configure'
-script.
+If you are pulling this distribution from Subversion, you should run the
+"autogen.sh" script to generate the autoconf files. If you get errors about
+missing directories or files, try running "autogen.sh" again.  After that
+you can run the "autoreconf -i" when you want to regenerate the configuration.
+If, for some reason, autoreconf does not work for you, the "autogen.sh"
+script should suffice.
 
 The fwknop and fwknopd man page nroff sources are included in their
 respective directorys (client and server).  These nroff files are derived

@@ -117,7 +117,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     if(fcntl(s_sock, F_SETFL, sfd_flags) < 0)
     {
-        log_msg(LOG_ERR, "run_tcp_server: fcntl F_SETFL error setting )_NONBLOCK: %s",
+        log_msg(LOG_ERR, "run_tcp_server: fcntl F_SETFL error setting O_NONBLOCK: %s",
             strerror(errno));
         exit(EXIT_FAILURE);
     }

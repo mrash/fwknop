@@ -11,11 +11,12 @@ AC_PREREQ(2.62)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
-m4_define(my_version,   [2.0rc5])
+m4_define(my_version,   [2.0])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
 
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR(config)
 
 AC_CANONICAL_TARGET
@@ -39,104 +40,42 @@ AH_BOTTOM([
 #endif /* FWKNOP_CONFIG_H */
 ])
 
-dnl Decide whether or not to build the client
+dnl FKO_CHECK_COMPILER_ARG([COMPILER FLAG])
 dnl
-want_client=yes
-AC_ARG_ENABLE([client],
-  [AS_HELP_STRING([--disable-client],
-    [Do not build the fwknop client @<:@default is to build@:>@])],
-  [want_client=$enableval],
-  [])
-AM_CONDITIONAL([WANT_CLIENT], [test "$want_client" = yes])
-
-dnl Decide whether or not to build the server
+dnl Macro to check compiler support for the given compiler option.
+dnl Adds to CFLAGS and LDFLAGS if supported.
 dnl
-want_server=yes
-AC_ARG_ENABLE([server],
-  [AS_HELP_STRING([--disable-server],
-    [Do not build the fwknop server @<:@default is to build@:>@])],
-  [want_server=$enableval],
-  [])
-AM_CONDITIONAL([WANT_SERVER], [test "$want_server" = yes])
-
-dnl Decide whether or not to enable the digest-cache
+dnl The structure of this macro was adapted from OpenSSH.
 dnl
-want_digest_cache=yes
-AC_ARG_ENABLE([digest-cache],
-  [AS_HELP_STRING([--disable-digest-cache],
-    [Do not enable the fwknopd digest-cache @<:@default is to build@:>@])],
-  [want_digest_cache=$enableval],
-  [])
-dnl AM_CONDITIONAL([WANT_DIGEST_CACHE], [test "$want_digest_cache" = yes])
-
-dnl Decide whether or not to try to look for gdbm/ndbm (default to just
-dnl use a file-based solution - reduces dependencies)
-dnl
-want_file_cache=yes
-AC_ARG_ENABLE([file-cache],
-  [AS_HELP_STRING([--disable-file-cache],
-    [Replace file cache with gdbm/ndbm @<:@default on@:>@])],
-  [want_file_cache=$enableval],
-  [])
-AS_IF([test "$want_file_cache" = yes], [
-    AC_DEFINE([USE_FILE_CACHE], [1], [Define this to enable non-gdbm/ndbm digest storing (eliminates gdbm/ndbm dependency).])
-])
-
-dnl Decide whether or not to enable all warnings with -Wall
-dnl
-use_wall=yes
-AC_ARG_ENABLE([wall],
-  [AS_HELP_STRING([--disable-wall],
-    [Do not enable all warnings via -Wall @<:@default is on@:>@])],
-  [use_wall=$enableval],
-  [])
-
-
-dnl Decide whether or not to enable -fstack-protector
-dnl
-use_stack_protector=yes
-AC_ARG_ENABLE([stack-protector],
-  [AS_HELP_STRING([--disable-stack-protector],
-    [Do not enable -fstack-protector @<:@default is on@:>@])],
-  [use_stack_protector=$enableval],
-  [])
-
-dnl Decide whether or not to enable Position Independent Executable (PIE)
-dnl support
-dnl
-use_pie=yes
-AC_ARG_ENABLE([pie],
-  [AS_HELP_STRING([--disable-pie],
-    [Do not enable Position Independent Executable support @<:@default is on@:>@])],
-  [use_pie=$enableval],
-  [])
-
-dnl Decide whether or not to enable -D_FORTIFY_SOURCE support
-dnl
-use_fortify_source=yes
-AC_ARG_ENABLE([fortify-source],
-  [AS_HELP_STRING([--disable-fortify-source],
-    [Do not enable -D_FORTIFY_SOURCE support @<:@default is on@:>@])],
-  [use_fortify_source=$enableval],
-  [])
-
-dnl Decide whether or not to use read-only relocations protection
-dnl
-use_ro_relocations=yes
-AC_ARG_ENABLE([ro-relocations],
-  [AS_HELP_STRING([--disable-ro-relocations],
-    [Do not enable read-only relocations protection @<:@default is on@:>@])],
-  [use_ro_relocations=$enableval],
-  [])
-
-dnl Decide whether or not to use immediate binding protection
-dnl
-use_immediate_binding=yes
-AC_ARG_ENABLE([immediate-binding],
-  [AS_HELP_STRING([--disable-immediate-binding],
-    [Do not enable immediate binding protection @<:@default is on@:>@])],
-  [use_immediate_binding=$enableval],
-  [])
+AC_DEFUN([FKO_CHECK_COMPILER_ARG], [
+    saved_CFLAGS="$CFLAGS"
+    saved_LDFLAGS="$LDFLAGS"
+    CFLAGS="$CFLAGS $1 -Werror"
+    LDFLAGS="$LDFLAGS $1 -Werror"
+    AC_MSG_CHECKING([if $CC supports $1])
+    AC_LINK_IFELSE(
+        [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+        ])],
+        [
+            CFLAGS="$saved_CFLAGS $1"
+            LDFLAGS="$saved_LDFLAGS $1"
+            AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+                ])],
+                [AC_MSG_RESULT(yes)],
+                [AC_MSG_RESULT(no)
+                    CFLAGS="$saved_CFLAGS"
+                    LDFLAGS="$saved_LDFLAGS"],
+                [AC_MSG_WARN([cross compiling: cannot test])])
+        ],
+        [AC_MSG_RESULT(no)
+            CFLAGS="$saved_CFLAGS"
+            LDFLAGS="$saved_LDFLAGS"]
+    )])dnl
 
 AC_GNU_SOURCE
 
@@ -149,16 +88,92 @@ AC_PROG_GREP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_RANLIB
 AC_PROG_LIBTOOL
 
-case "$host" in
-*-*-linux*)
-    ;;
-*-*-openbsd*)
-    AC_DEFINE_UNQUOTED([PLATFORM_OPENBSD], [1], [Define if you are running on OpenBSD])
-    ;;
-esac
+dnl Decide whether or not to enable all warnings with -Wall
+dnl
+use_wall=yes
+AC_ARG_ENABLE([wall],
+  [AS_HELP_STRING([--disable-wall],
+    [Do not enable all warnings via -Wall @<:@default is on@:>@])],
+  [use_wall=$enableval],
+  [])
+
+if test "x$use_wall" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-Wall])
+fi
+
+dnl Check for security features offered by the compiler
+
+dnl -fstack-protector-all doesn't always work for some GCC versions
+dnl and/or platforms, so we test if we can.  If it's not supported
+dnl on a given platform gcc will emit a warning so we use -Werror.
+dnl
+dnl Decide whether or not to enable -fstack-protector
+dnl
+use_stack_protector=yes
+AC_ARG_ENABLE([stack-protector],
+  [AS_HELP_STRING([--disable-stack-protector],
+    [Do not enable -fstack-protector @<:@default is on@:>@])],
+  [use_stack_protector=$enableval],
+  [])
+
+if test "x$use_stack_protector" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-fstack-protector-all -fstack-protector])
+fi
+
+dnl Decide whether or not to enable Position Independent Executable (PIE)
+dnl support
+dnl
+use_pie=yes
+AC_ARG_ENABLE([pie],
+  [AS_HELP_STRING([--disable-pie],
+    [Do not enable Position Independent Executable support @<:@default is on@:>@])],
+  [use_pie=$enableval],
+  [])
+
+if test "x$use_pie" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-fPIE -pie])
+fi
+
+dnl Decide whether or not to enable -D_FORTIFY_SOURCE support
+dnl
+use_fortify_source=yes
+AC_ARG_ENABLE([fortify-source],
+  [AS_HELP_STRING([--disable-fortify-source],
+    [Do not enable -D_FORTIFY_SOURCE support @<:@default is on@:>@])],
+  [use_fortify_source=$enableval],
+  [])
+
+if test "x$use_fortify_source" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-D_FORTIFY_SOURCE=2])
+fi
+
+dnl Decide whether or not to use read-only relocations protection
+dnl
+use_ro_relocations=yes
+AC_ARG_ENABLE([ro-relocations],
+  [AS_HELP_STRING([--disable-ro-relocations],
+    [Do not enable read-only relocations protection @<:@default is on@:>@])],
+  [use_ro_relocations=$enableval],
+  [])
+
+if test "x$use_ro_relocations" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-Wl,-z,relro])
+fi
+
+dnl Decide whether or not to use immediate binding protection
+dnl
+use_immediate_binding=yes
+AC_ARG_ENABLE([immediate-binding],
+  [AS_HELP_STRING([--disable-immediate-binding],
+    [Do not enable immediate binding protection @<:@default is on@:>@])],
+  [use_immediate_binding=$enableval],
+  [])
+
+if test "x$use_immediate_binding" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-Wl,-z,now])
+fi
 
 # Checks for header files.
 #
@@ -202,216 +217,56 @@ AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup s
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
-# Add -Wall
-#
-if test "x$use_wall" = "xyes"; then
-    for t in -Wall; do
-        AC_MSG_CHECKING(if $CC supports $t)
-        saved_CFLAGS="$CFLAGS"
-        saved_LDFLAGS="$LDFLAGS"
-        CFLAGS="$CFLAGS $t -Werror"
-        LDFLAGS="$LDFLAGS $t -Werror"
-        AC_LINK_IFELSE(
-            [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-             ])],
-            [ AC_MSG_RESULT(yes)
-              CFLAGS="$saved_CFLAGS $t"
-              LDFLAGS="$saved_LDFLAGS $t"
-              AC_MSG_CHECKING(if $t works)
-              AC_RUN_IFELSE(
-                [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-            ])],
-            [ AC_MSG_RESULT(yes)
-              break ],
-            [ AC_MSG_RESULT(no) ],
-            [ AC_MSG_WARN([cross compiling: cannot test])
-              break ]
-              )
-            ],
-            [ AC_MSG_RESULT(no) ]
-        )
-        CFLAGS="$saved_CFLAGS"
-        LDFLAGS="$saved_LDFLAGS"
-    done
-fi
+case "$host" in
+*-*-linux*)
+    ;;
+*-*-openbsd*)
+    AC_DEFINE_UNQUOTED([PLATFORM_OPENBSD], [1], [Define if you are running on OpenBSD])
+    ;;
+esac
 
-# Check for security features offered by the compiler
-#
+dnl Decide whether or not to build the client
+dnl
+want_client=yes
+AC_ARG_ENABLE([client],
+  [AS_HELP_STRING([--disable-client],
+    [Do not build the fwknop client @<:@default is to build@:>@])],
+  [want_client=$enableval],
+  [])
+AM_CONDITIONAL([WANT_CLIENT], [test "$want_client" = yes])
 
-# Adapted from OpenSSH:
-# -fstack-protector-all doesn't always work for some GCC versions
-# and/or platforms, so we test if we can.  If it's not supported
-# on a given platform gcc will emit a warning so we use -Werror.
-if test "x$use_stack_protector" = "xyes"; then
-    for t in -fstack-protector-all -fstack-protector; do
-        AC_MSG_CHECKING(if $CC supports $t)
-        saved_CFLAGS="$CFLAGS"
-        saved_LDFLAGS="$LDFLAGS"
-        CFLAGS="$CFLAGS $t -Werror"
-        LDFLAGS="$LDFLAGS $t -Werror"
-        AC_LINK_IFELSE(
-            [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-             ])],
-            [ AC_MSG_RESULT(yes)
-              CFLAGS="$saved_CFLAGS $t"
-              LDFLAGS="$saved_LDFLAGS $t"
-              AC_MSG_CHECKING(if $t works)
-              AC_RUN_IFELSE(
-                [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-            ])],
-            [ AC_MSG_RESULT(yes)
-              break ],
-            [ AC_MSG_RESULT(no) ],
-            [ AC_MSG_WARN([cross compiling: cannot test])
-              break ]
-              )
-            ],
-            [ AC_MSG_RESULT(no) ]
-        )
-        CFLAGS="$saved_CFLAGS"
-        LDFLAGS="$saved_LDFLAGS"
-    done
-fi
+dnl Decide whether or not to build the server
+dnl
+want_server=yes
+AC_ARG_ENABLE([server],
+  [AS_HELP_STRING([--disable-server],
+    [Do not build the fwknop server @<:@default is to build@:>@])],
+  [want_server=$enableval],
+  [])
+AM_CONDITIONAL([WANT_SERVER], [test "$want_server" = yes])
 
-if test "x$use_pie" = "xyes"; then
-    for t in "-fPIE -pie"; do
-        AC_MSG_CHECKING(if $CC supports $t)
-        saved_CFLAGS="$CFLAGS"
-        saved_LDFLAGS="$LDFLAGS"
-        CFLAGS="$CFLAGS $t -Werror"
-        LDFLAGS="$LDFLAGS $t -Werror"
-        AC_LINK_IFELSE(
-            [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-             ])],
-            [ AC_MSG_RESULT(yes)
-              CFLAGS="$saved_CFLAGS $t"
-              LDFLAGS="$saved_LDFLAGS $t"
-              AC_MSG_CHECKING(if $t works)
-              AC_RUN_IFELSE(
-                [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-            ])],
-            [ AC_MSG_RESULT(yes)
-              break ],
-            [ AC_MSG_RESULT(no) ],
-            [ AC_MSG_WARN([cross compiling: cannot test])
-              break ]
-              )
-            ],
-            [ AC_MSG_RESULT(no) ]
-        )
-        CFLAGS="$saved_CFLAGS"
-        LDFLAGS="$saved_LDFLAGS"
-    done
-fi
+dnl Decide whether or not to enable the digest-cache
+dnl
+want_digest_cache=yes
+AC_ARG_ENABLE([digest-cache],
+  [AS_HELP_STRING([--disable-digest-cache],
+    [Do not enable the fwknopd digest-cache @<:@default is to build@:>@])],
+  [want_digest_cache=$enableval],
+  [])
+dnl AM_CONDITIONAL([WANT_DIGEST_CACHE], [test "$want_digest_cache" = yes])
 
-if test "x$use_fortify_source" = "xyes"; then
-    for t in "-D_FORTIFY_SOURCE=2"; do
-        AC_MSG_CHECKING(if $CC supports $t)
-        saved_CFLAGS="$CFLAGS"
-        saved_LDFLAGS="$LDFLAGS"
-        CFLAGS="$CFLAGS $t -Werror"
-        LDFLAGS="$LDFLAGS $t -Werror"
-        AC_LINK_IFELSE(
-            [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-             ])],
-            [ AC_MSG_RESULT(yes)
-              CFLAGS="$saved_CFLAGS $t"
-              LDFLAGS="$saved_LDFLAGS $t"
-              AC_MSG_CHECKING(if $t works)
-              AC_RUN_IFELSE(
-                [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-            ])],
-            [ AC_MSG_RESULT(yes)
-              break ],
-            [ AC_MSG_RESULT(no) ],
-            [ AC_MSG_WARN([cross compiling: cannot test])
-              break ]
-              )
-            ],
-            [ AC_MSG_RESULT(no) ]
-        )
-        CFLAGS="$saved_CFLAGS"
-        LDFLAGS="$saved_LDFLAGS"
-    done
-fi
-
-if test "x$use_ro_relocations" = "xyes"; then
-    for t in "-Wl,-z,relro"; do
-        AC_MSG_CHECKING(if $CC supports $t)
-        saved_LDFLAGS="$LDFLAGS"
-        LDFLAGS="$LDFLAGS $t -Werror"
-        AC_LINK_IFELSE(
-            [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-             ])],
-            [ AC_MSG_RESULT(yes)
-              LDFLAGS="$saved_LDFLAGS $t"
-              AC_MSG_CHECKING(if $t works)
-              AC_RUN_IFELSE(
-                [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-            ])],
-            [ AC_MSG_RESULT(yes)
-              break ],
-            [ AC_MSG_RESULT(no) ],
-            [ AC_MSG_WARN([cross compiling: cannot test])
-              break ]
-              )
-            ],
-            [ AC_MSG_RESULT(no) ]
-        )
-        LDFLAGS="$saved_LDFLAGS"
-    done
-fi
-
-if test "x$use_immediate_binding" = "xyes"; then
-    for t in "-Wl,-z,now"; do
-        AC_MSG_CHECKING(if $CC supports $t)
-        saved_LDFLAGS="$LDFLAGS"
-        LDFLAGS="$LDFLAGS $t -Werror"
-        AC_LINK_IFELSE(
-            [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-             ])],
-            [ AC_MSG_RESULT(yes)
-              LDFLAGS="$saved_LDFLAGS $t"
-              AC_MSG_CHECKING(if $t works)
-              AC_RUN_IFELSE(
-                [AC_LANG_SOURCE([
-#include <stdio.h>
-int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
-            ])],
-            [ AC_MSG_RESULT(yes)
-              break ],
-            [ AC_MSG_RESULT(no) ],
-            [ AC_MSG_WARN([cross compiling: cannot test])
-              break ]
-              )
-            ],
-            [ AC_MSG_RESULT(no) ]
-        )
-        LDFLAGS="$saved_LDFLAGS"
-    done
-fi
+dnl Decide whether or not to try to look for gdbm/ndbm (default to just
+dnl use a file-based solution - reduces dependencies)
+dnl
+want_file_cache=yes
+AC_ARG_ENABLE([file-cache],
+  [AS_HELP_STRING([--disable-file-cache],
+    [Replace file cache with gdbm/ndbm @<:@default on@:>@])],
+  [want_file_cache=$enableval],
+  [])
+AS_IF([test "$want_file_cache" = yes], [
+    AC_DEFINE([USE_FILE_CACHE], [1], [Define this to enable non-gdbm/ndbm digest storing (eliminates gdbm/ndbm dependency).])
+])
 
 # Check for 3rd-party libs
 #

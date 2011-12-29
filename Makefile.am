@@ -1,3 +1,4 @@
+ACLOCAL_AMFLAGS = -I m4
 
 if WANT_CLIENT
   CLIENT_DIR = client
@@ -38,7 +39,6 @@ EXTRA_DIST = \
     android/project/nbproject/private/config.properties \
     android/project/nbproject/genfiles.properties \
     android/project/build.properties \
-    android/project/assets \
     android/project/AndroidManifest.xml \
     android/project/jni/fwknop/fwknop_client.c \
     android/project/jni/fwknop/fwknop_client.h \
