@@ -1447,7 +1447,7 @@ sub compile_warnings() {
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
-    return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*input\sfile/], $current_test_file);
+    return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/], $current_test_file);
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
