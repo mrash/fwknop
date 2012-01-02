@@ -77,6 +77,36 @@ int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
             LDFLAGS="$saved_LDFLAGS"]
     )])dnl
 
+dnl FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([COMPILER FLAG])
+dnl
+dnl Macro to check compiler support for the given compiler option.
+dnl Adds to LDFLAGS only if supported.
+dnl
+AC_DEFUN([FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY], [
+    saved_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS $1 -Werror"
+    AC_MSG_CHECKING([if $CC supports $1])
+    AC_LINK_IFELSE(
+        [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+        ])],
+        [
+            LDFLAGS="$saved_LDFLAGS $1"
+            AC_RUN_IFELSE(
+                [AC_LANG_SOURCE([
+#include <stdio.h>
+int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
+                ])],
+                [AC_MSG_RESULT(yes)],
+                [AC_MSG_RESULT(no)
+                    LDFLAGS="$saved_LDFLAGS"],
+                [AC_MSG_WARN([cross compiling: cannot test])])
+        ],
+        [AC_MSG_RESULT(no)
+            LDFLAGS="$saved_LDFLAGS"]
+    )])dnl
+
 AC_GNU_SOURCE
 
 AC_PROG_CC
@@ -159,7 +189,7 @@ AC_ARG_ENABLE([ro-relocations],
   [])
 
 if test "x$use_ro_relocations" = "xyes"; then
-    FKO_CHECK_COMPILER_ARG([-Wl,-z,relro])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-Wl,-z,relro])
 fi
 
 dnl Decide whether or not to use immediate binding protection
@@ -172,7 +202,7 @@ AC_ARG_ENABLE([immediate-binding],
   [])
 
 if test "x$use_immediate_binding" = "xyes"; then
-    FKO_CHECK_COMPILER_ARG([-Wl,-z,now])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-Wl,-z,now])
 fi
 
 # Checks for header files.
