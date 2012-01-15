@@ -204,9 +204,9 @@ size_t
 rij_encrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
-    unsigned char       plaintext[16];
-    unsigned char       mixtext[16];
-    unsigned char       ciphertext[16];
+    unsigned char       plaintext[RIJNDAEL_BLOCKSIZE];
+    unsigned char       mixtext[RIJNDAEL_BLOCKSIZE];
+    unsigned char       ciphertext[RIJNDAEL_BLOCKSIZE];
     int                 i, pad_val;
 
     unsigned char      *ondx = out;
@@ -238,12 +238,12 @@ rij_encrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *o
         for(; i < sizeof(plaintext); i++)
             plaintext[i] = pad_val;
 
-        for(i=0; i< 16; i++)
+        for(i=0; i<RIJNDAEL_BLOCKSIZE; i++)
             mixtext[i] = plaintext[i] ^ ctx.iv[i];
 
-        block_encrypt(&ctx, mixtext, 16, ciphertext, ctx.iv);
+        block_encrypt(&ctx, mixtext, RIJNDAEL_BLOCKSIZE, ciphertext, ctx.iv);
 
-        memcpy(ctx.iv, ciphertext, 16);
+        memcpy(ctx.iv, ciphertext, RIJNDAEL_BLOCKSIZE);
 
         for(i=0; i<sizeof(ciphertext); i++)
             *ondx++ = ciphertext[i];
@@ -258,9 +258,9 @@ size_t
 rij_decrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
 {
     RIJNDAEL_context    ctx;
-    unsigned char       plaintext[16];
-    unsigned char       mixtext[16];
-    unsigned char       ciphertext[16];
+    unsigned char       plaintext[RIJNDAEL_BLOCKSIZE];
+    unsigned char       mixtext[RIJNDAEL_BLOCKSIZE];
+    unsigned char       ciphertext[RIJNDAEL_BLOCKSIZE];
     int                 i, pad_val, pad_err = 0;
     unsigned char      *pad_s;
     unsigned char      *ondx = out;
@@ -283,12 +283,12 @@ rij_decrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *o
             in_len--;
         }
 
-        block_decrypt(&ctx, ciphertext, 16, mixtext, ctx.iv);
+        block_decrypt(&ctx, ciphertext, RIJNDAEL_BLOCKSIZE, mixtext, ctx.iv);
 
         for(i=0; i<sizeof(ciphertext); i++)
             plaintext[i] = mixtext[i] ^ ctx.iv[i];
 
-        memcpy(ctx.iv, ciphertext, 16);
+        memcpy(ctx.iv, ciphertext, RIJNDAEL_BLOCKSIZE);
 
         for(i=0; i<sizeof(plaintext); i++)
             *ondx++ = plaintext[i];
@@ -298,7 +298,7 @@ rij_decrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *o
     */
     pad_val = *(ondx-1);
 
-    if(pad_val >= 0 && pad_val <= 16)
+    if(pad_val >= 0 && pad_val <= RIJNDAEL_BLOCKSIZE)
     {
         pad_s = ondx - pad_val;
 
