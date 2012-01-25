@@ -1,5 +1,5 @@
 :man source: Fwknop Client
-:man manual: Fwknop Client 
+:man manual: Fwknop Client
 
 FWKNOP(8)
 =========
@@ -38,7 +38,7 @@ sequence on the server to break port knocking authentication.
 SPA packets can easily be spoofed as well (this is a good thing in this
 context), and this makes it possible to make it appear as though, say,
 www.yahoo.com is trying to authenticate to a target system but in reality
-the actual connection will come from a seemingly unrelated IP.  
+the actual connection will come from a seemingly unrelated IP.
 
 Authorization packets are either encrypted with the 'Rijndael' block cipher
 or via 'GnuPG' and associated asymmetric ciphers.  If the symmetric encryption
@@ -161,10 +161,10 @@ SPA OPTIONS
 *-a, --allow-ip*='<IP-address>'::
     Specify IP address that should be permitted through the destination
     *fwknopd* server firewall (this IP is encrypted within the SPA packet
-    itself).  This is useful to prevent a MTIM attack where a SPA packet
+    itself).  This is useful to prevent a MITM attack where a SPA packet
     can be intercepted en-route and sent from a different IP than the
     original.  Hence, if the *fwknopd* server trusts the source address
-    on the  SPA  packet IP header then the attacker gains access. 
+    on the  SPA  packet IP header then the attacker gains access.
     The *-a* option puts the source address within the encrypted SPA
     packet, and so thwarts this attack.  The *-a* option is also
     useful to specify the IP that will be granted access when the
@@ -197,6 +197,15 @@ SPA OPTIONS
     Specify the message digest algorithm to use in the SPA data.  Choices
     are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*, and *SHA512*.
 
+*-M, --encryption-mode*='<mode>'::
+    Specify the encryption mode when AES is used.  The default (for now) is
+    ECB mode in order to remain backwards compatible with pre-2.0 versions of
+    fwknop which relied on the Crypt::CBC perl module.  This will be changed
+    in an upcoming version of fwknop to use the more secure CBC mode.  In the
+    meantime, it is recommend to use this option to specify CBC mode (use the
+    string "CBC" as the argument), and then also use the ENCRYPTION_MODE
+    variable in the 'access.conf' file on the server.
+
 *-N, --nat-access*='<internalIP:forwardPort>'::
     The *fwknopd* server offers the ability to provide SPA access through
     an iptables firewall to an internal service by interfacing with the
@@ -205,7 +214,7 @@ SPA OPTIONS
     client can request that the server port forward an external port to an
     internal IP, i.e. ``+--NAT-access 192.168.10.2,55000+''.  In this case,
     access will be granted to 192.168.10.2 via port 55000 to whatever
-    service is requested via the *--access* argument (usually tcp/22). 
+    service is requested via the *--access* argument (usually tcp/22).
     Hence, after sending such an SPA packet, one would then do
     ``ssh -p 55000 user@host'' and the connection would be forwarded on
     through to the internal 192.168.10.2 system automatically.  Note that
@@ -404,6 +413,10 @@ description and its matching command-line option(s):
     Set a value to apply to the timestamp in the SPA packet.  This can
     be either a positive or negative value ('--time-offset-plus/minus').
 
+*ENCRYPTION_MODE*::
+    Specify the encryption mode when AES is used.  This variable is a synonym
+    for the '--encryption-mode' command line argument.
+
 *USE_GPG*::
     Set to 'Y' to specify the use of GPG for encryption ('--gpg-encryption').
 
@@ -552,7 +565,7 @@ More information on Single Packet Authorization can be found in the paper
 
 AUTHORS
 -------
-Damien Stuart <dstuart@dstuart.org>, 
+Damien Stuart <dstuart@dstuart.org>,
 Michael Rash <mbr@cipherdyne.org>
 
 CONTRIBUTORS

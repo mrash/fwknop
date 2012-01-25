@@ -252,6 +252,23 @@ main(int argc, char **argv)
                 return(EXIT_FAILURE);
             }
         }
+
+        res = fko_set_spa_encryption_mode(ctx, FKO_ENC_MODE_ASYMMETRIC);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_spa_encryption_mode", res);
+            return(EXIT_FAILURE);
+        }
+    }
+
+    if(options.encryption_mode && !options.use_gpg)
+    {
+        res = fko_set_spa_encryption_mode(ctx, options.encryption_mode);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_spa_encryption_mode", res);
+            return(EXIT_FAILURE);
+        }
     }
 
     /* Set Digest type.
@@ -328,10 +345,17 @@ main(int argc, char **argv)
          * an empty context, populate it with the encrypted data, set our
          * options, then decode it.
         */
-        res = fko_new_with_data(&ctx2, spa_data, NULL);
+        res = fko_new_with_data(&ctx2, spa_data, NULL, ctx->encryption_mode);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
+            return(EXIT_FAILURE);
+        }
+
+        res = fko_set_spa_encryption_mode(ctx2, ctx->encryption_mode);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_spa_encryption_mode", res);
             return(EXIT_FAILURE);
         }
 
@@ -770,6 +794,7 @@ display_ctx(fko_ctx_t ctx)
     time_t      timestamp       = 0;
     short       msg_type        = -1;
     short       digest_type     = -1;
+    int         encryption_mode = -1;
     int         client_timeout  = -1;
 
     /* Should be checking return values, but this is temp code. --DSS
@@ -784,6 +809,7 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_server_auth(ctx, &server_auth);
     fko_get_spa_client_timeout(ctx, &client_timeout);
     fko_get_spa_digest_type(ctx, &digest_type);
+    fko_get_spa_encryption_mode(ctx, &encryption_mode);
     fko_get_encoded_data(ctx, &enc_data);
     fko_get_spa_digest(ctx, &spa_digest);
     fko_get_spa_data(ctx, &spa_data);
@@ -798,7 +824,8 @@ display_ctx(fko_ctx_t ctx)
     printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
     printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
     printf(" Client Timeout: %u\n", client_timeout);
-    printf("    Digest Type: %u\n", digest_type);
+    printf("    Digest Type: %d\n", digest_type);
+    printf("Encryption Mode: %d\n", encryption_mode);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("\nSPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
     printf("\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n", spa_data);

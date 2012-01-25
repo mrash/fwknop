@@ -35,6 +35,7 @@
 */
 enum {
     FKO_DIGEST_NAME     = 0x100,
+    ENCRYPTION_MODE,
     NAT_LOCAL,
     NAT_PORT,
     NAT_RAND_PORT,
@@ -55,7 +56,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:n:N:p:P:Q:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:M:n:N:p:P:Q:rRsS:Tu:U:vV"
 
 /* Our program command-line options...
 */
@@ -69,6 +70,7 @@ static struct option cmd_opts[] =
     {"server-cmd",          1, NULL, 'C'},
     {"digest-type",         1, NULL, FKO_DIGEST_NAME},
     {"destination",         1, NULL, 'D'},
+    {"encryption-mode",     1, NULL, ENCRYPTION_MODE},
     {"fw-timeout",          1, NULL, 'f'},
     {"gpg-encryption",      0, NULL, 'g'},
     {"gpg-recipient-key",   1, NULL, GPG_RECIP_KEY },

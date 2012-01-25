@@ -47,8 +47,10 @@
 */
 #define PREDICT_ENCSIZE(x) (1+(x>>4)+(x&0xf?1:0))<<4
 
-size_t rij_encrypt(unsigned char *in, size_t len, const char *key, unsigned char *out);
-size_t rij_decrypt(unsigned char *in, size_t len, const char *key, unsigned char *out);
+size_t rij_encrypt(unsigned char *in, size_t len,
+    const char *key, unsigned char *out, int encryption_mode);
+size_t rij_decrypt(unsigned char *in, size_t len,
+    const char *key, unsigned char *out, int encryption_mode);
 
 #endif /* CIPHER_FUNCS_H */
 

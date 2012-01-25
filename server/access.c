@@ -132,6 +132,27 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
     return;
 }
 
+/* Convert an encryption_mode string to its integer value.
+*/
+static int
+enc_mode_strtoint(const char *enc_mode_str)
+{
+    if(strcasecmp(enc_mode_str, "cbc") == 0)
+        return(FKO_ENC_MODE_CBC);
+    else if(strcasecmp(enc_mode_str, "ecb") == 0)
+        return(FKO_ENC_MODE_ECB);
+    else if(strcasecmp(enc_mode_str, "cfb") == 0)
+        return(FKO_ENC_MODE_CFB);
+    else if(strcasecmp(enc_mode_str, "pcbc") == 0)
+        return(FKO_ENC_MODE_PCBC);
+    else if(strcasecmp(enc_mode_str, "ofb") == 0)
+        return(FKO_ENC_MODE_OFB);
+    else if(strcasecmp(enc_mode_str, "ctr") == 0)
+        return(FKO_ENC_MODE_CTR);
+    else
+        return(-1);
+}
+
 #if FIREWALL_IPTABLES
 static void
 add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
@@ -708,8 +729,15 @@ set_acc_defaults(fko_srv_options_t *opts)
 
         /* set default gpg keyring path if necessary
         */
-        if(acc->gpg_decrypt_pw != NULL && acc->gpg_home_dir == NULL)
-            add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]);
+        if(acc->gpg_decrypt_pw != NULL)
+        {
+            acc->encryption_mode = FKO_ENC_MODE_ASYMMETRIC;
+            if(acc->gpg_home_dir == NULL)
+                add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]);
+        }
+
+        if (acc->encryption_mode == FKO_ENC_MODE_UNKNOWN)
+            acc->encryption_mode = FKO_DEFAULT_ENC_MODE;
 
         acc = acc->next;
     }
@@ -869,6 +897,16 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_int(&(curr_acc->fw_access_timeout), val);
         }
+        else if(CONF_VAR_IS(var, "ENCRYPTION_MODE"))
+        {
+            if((curr_acc->encryption_mode = enc_mode_strtoint(val)) < 0)
+            {
+                fprintf(stderr,
+                    "[*] Unrecognized ENCRYPTION_MODE '%s', use {cbc,ecb}\n",
+                    val);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
         else if(CONF_VAR_IS(var, "ENABLE_CMD_EXEC"))
         {
             add_acc_bool(&(curr_acc->enable_cmd_exec), val);
@@ -1005,7 +1043,6 @@ parse_access_file(fko_srv_options_t *opts)
     expand_acc_ent_lists(opts);
 
     /* Make sure default values are set where needed.
-     * a default value.
     */
     set_acc_defaults(opts);
 

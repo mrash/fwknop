@@ -242,7 +242,8 @@ incoming_spa(fko_srv_options_t *opts)
         if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
         {
             if(acc->key != NULL)
-                res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, acc->key);
+                res = fko_new_with_data(&ctx,
+                    (char *)spa_pkt->packet_data, acc->key, acc->encryption_mode);
             else
             {
                 log_msg(LOG_ERR,
@@ -260,7 +261,8 @@ incoming_spa(fko_srv_options_t *opts)
             */
             if(acc->gpg_decrypt_pw != NULL)
             {
-                res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL);
+                res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
+                        acc->encryption_mode);
                 if(res != FKO_SUCCESS)
                 {
                     log_msg(LOG_WARNING,

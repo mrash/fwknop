@@ -116,7 +116,8 @@ typedef struct fko_cli_options
     unsigned int spa_dst_port;
     unsigned int spa_src_port; /* only used with --source-port */
 
-    unsigned int digest_type;
+    short digest_type;
+    int encryption_mode;
 
     /* Various command-line flags */
     unsigned char   verbose; /* --verbose mode */

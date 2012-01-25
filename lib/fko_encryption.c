@@ -66,7 +66,8 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     cipher_len = rij_encrypt(
-        (unsigned char*)plain, strlen(plain), (char*)enc_key, cipher
+        (unsigned char*)plain, strlen(plain), (char*)enc_key, cipher,
+        ctx->encryption_mode
     );
 
     /* Now make a bucket for the base64-encoded version and populate it.
@@ -95,7 +96,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 static int
-_rijndael_decrypt(fko_ctx_t ctx, const char *dec_key)
+_rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int encryption_mode)
 {
     char           *tbuf;
     unsigned char  *ndx;
@@ -143,7 +144,8 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key)
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    pt_len = rij_decrypt(cipher, cipher_len, dec_key, (unsigned char*)ctx->encoded_msg);
+    pt_len = rij_decrypt(cipher, cipher_len, dec_key,
+                (unsigned char*)ctx->encoded_msg, encryption_mode);
 
     /* Done with cipher...
     */
@@ -351,6 +353,41 @@ fko_get_spa_encryption_type(fko_ctx_t ctx, short *enc_type)
     return(FKO_SUCCESS);
 }
 
+/* Set the SPA encryption mode.
+*/
+int
+fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(encrypt_mode < 0 || encrypt_mode >= FKO_LAST_ENC_MODE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    ctx->encryption_mode = encrypt_mode;
+
+    ctx->state |= FKO_ENCRYPT_MODE_MODIFIED;
+
+    return(FKO_SUCCESS);
+}
+
+/* Return the SPA encryption mode.
+*/
+int
+fko_get_spa_encryption_mode(fko_ctx_t ctx, int *enc_mode)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *enc_mode = ctx->encryption_mode;
+
+    return(FKO_SUCCESS);
+}
+
 /* Encrypt the encoded SPA data.
 */
 int
@@ -425,7 +462,7 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
     else if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
     {
         ctx->encryption_type = FKO_ENCRYPTION_RIJNDAEL;
-        res = _rijndael_decrypt(ctx, dec_key);
+        res = _rijndael_decrypt(ctx, dec_key, ctx->encryption_mode);
     }
     else
         return(FKO_ERROR_INVALID_DATA);

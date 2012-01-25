@@ -181,12 +181,13 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *pass, const unsigned char *da
 /* Initialization entry point.
 */
 static void
-rijndael_init(RIJNDAEL_context *ctx, const char *pass, const unsigned char *data)
+rijndael_init(RIJNDAEL_context *ctx, const char *pass,
+    const unsigned char *data, int encryption_mode)
 {
 
     /* Use ECB mode to be compatible with the Crypt::CBC perl module.
     */
-    ctx->mode = MODE_ECB;
+    ctx->mode = encryption_mode;
 
     /* Generate the salt and initialization vector.
     */
@@ -201,7 +202,8 @@ rijndael_init(RIJNDAEL_context *ctx, const char *pass, const unsigned char *data
  * module would.
 */
 size_t
-rij_encrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
+rij_encrypt(unsigned char *in, size_t in_len,
+    const char *pass, unsigned char *out, int encryption_mode)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[RIJNDAEL_BLOCKSIZE];
@@ -211,7 +213,7 @@ rij_encrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *o
 
     unsigned char      *ondx = out;
 
-    rijndael_init(&ctx, pass, NULL);
+    rijndael_init(&ctx, pass, NULL, encryption_mode);
 
     /* Prepend the salt...
     */
@@ -255,7 +257,8 @@ rij_encrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *o
 /* Decrypt the given data.
 */
 size_t
-rij_decrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *out)
+rij_decrypt(unsigned char *in, size_t in_len,
+    const char *pass, unsigned char *out, int encryption_mode)
 {
     RIJNDAEL_context    ctx;
     unsigned char       plaintext[RIJNDAEL_BLOCKSIZE];
@@ -265,7 +268,7 @@ rij_decrypt(unsigned char *in, size_t in_len, const char *pass, unsigned char *o
     unsigned char      *pad_s;
     unsigned char      *ondx = out;
 
-    rijndael_init(&ctx, pass, in);
+    rijndael_init(&ctx, pass, in, encryption_mode);
 
     /* Remove the salt from the input.
     */

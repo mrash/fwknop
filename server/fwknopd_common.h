@@ -282,6 +282,7 @@ typedef struct acc_stanza
     acc_string_list_t   *gpg_remote_id_list;
     time_t              access_expire_time;
     int                 expired;
+    int                 encryption_mode;
     unsigned char       force_nat;
     char                *force_nat_ip;
     char                *force_nat_proto;

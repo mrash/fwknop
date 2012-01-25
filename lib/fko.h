@@ -33,6 +33,8 @@
 
 #include <time.h>
 
+#include "rijndael.h"   /* For encryption modes */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -90,6 +92,20 @@ typedef enum {
     FKO_ENCRYPTION_GPG,
     FKO_LAST_ENCRYPTION_TYPE /* Always leave this as the last one */
 } fko_encryption_type_t;
+
+/* Symmetric encryption modes derived from rijndael.h
+*/
+typedef enum {
+    FKO_ENC_MODE_UNKNOWN = 0,
+    FKO_ENC_MODE_ECB  = MODE_ECB,
+    FKO_ENC_MODE_CBC  = MODE_CBC,
+    FKO_ENC_MODE_CFB  = MODE_CFB,
+    FKO_ENC_MODE_PCBC = MODE_PCBC,
+    FKO_ENC_MODE_OFB  = MODE_OFB,
+    FKO_ENC_MODE_CTR  = MODE_CTR,
+    FKO_ENC_MODE_ASYMMETRIC,  /* placeholder when GPG is used */
+    FKO_LAST_ENC_MODE /* Always leave this as the last one */
+} fko_encryption_mode_t;
 
 /* FKO ERROR_CODES
  *
@@ -160,6 +176,7 @@ typedef enum {
 #define FKO_DEFAULT_MSG_TYPE    FKO_ACCESS_MSG
 #define FKO_DEFAULT_DIGEST      FKO_DIGEST_SHA256
 #define FKO_DEFAULT_ENCRYPTION  FKO_ENCRYPTION_RIJNDAEL
+#define FKO_DEFAULT_ENC_MODE    MODE_ECB
 
 /* The context holds the global state and config options, as
  * well as some intermediate results during processing. This
@@ -189,7 +206,8 @@ enum {
 /* General api calls
 */
 DLL_API int fko_new(fko_ctx_t *ctx);
-DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char *enc_msg, const char *dec_key);
+DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char *enc_msg, const char *dec_key,
+    int encryption_mode);
 DLL_API void fko_destroy(fko_ctx_t ctx);
 DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char *enc_key);
 
@@ -207,6 +225,7 @@ DLL_API int fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout);
 DLL_API int fko_set_spa_digest_type(fko_ctx_t ctx, const short digest_type);
 DLL_API int fko_set_spa_digest(fko_ctx_t ctx);
 DLL_API int fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type);
+DLL_API int fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode);
 DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char *enc_msg);
 
 /* Data processing and misc utility functions
@@ -235,6 +254,7 @@ DLL_API int fko_get_spa_client_timeout(fko_ctx_t ctx, int *client_timeout);
 DLL_API int fko_get_spa_digest_type(fko_ctx_t ctx, short *spa_digest_type);
 DLL_API int fko_get_spa_digest(fko_ctx_t ctx, char **spa_digest);
 DLL_API int fko_get_spa_encryption_type(fko_ctx_t ctx, short *spa_enc_type);
+DLL_API int fko_get_spa_encryption_mode(fko_ctx_t ctx, int *spa_enc_mode);
 DLL_API int fko_get_spa_data(fko_ctx_t ctx, char **spa_data);
 
 DLL_API int fko_get_version(fko_ctx_t ctx, char **version);

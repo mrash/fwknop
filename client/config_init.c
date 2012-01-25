@@ -33,9 +33,9 @@
 #include "cmd_opts.h"
 #include "utils.h"
 
-/* Convert a digest_type string to its intger value.
+/* Convert a digest_type string to its integer value.
 */
-static int
+static short
 digest_strtoint(const char *dt_str)
 {
     if(strcasecmp(dt_str, "md5") == 0)
@@ -52,7 +52,28 @@ digest_strtoint(const char *dt_str)
         return(-1);
 }
 
-/* Convert a protocol string to its intger value.
+/* Convert an encryption_mode string to its integer value.
+*/
+static int
+enc_mode_strtoint(const char *enc_mode_str)
+{
+    if(strcasecmp(enc_mode_str, "cbc") == 0)
+        return(FKO_ENC_MODE_CBC);
+    else if(strcasecmp(enc_mode_str, "ecb") == 0)
+        return(FKO_ENC_MODE_ECB);
+    else if(strcasecmp(enc_mode_str, "cfb") == 0)
+        return(FKO_ENC_MODE_CFB);
+    else if(strcasecmp(enc_mode_str, "pcbc") == 0)
+        return(FKO_ENC_MODE_PCBC);
+    else if(strcasecmp(enc_mode_str, "ofb") == 0)
+        return(FKO_ENC_MODE_OFB);
+    else if(strcasecmp(enc_mode_str, "ctr") == 0)
+        return(FKO_ENC_MODE_CTR);
+    else
+        return(-1);
+}
+
+/* Convert a protocol string to its integer value.
 */
 static int
 proto_strtoint(const char *pr_str)
@@ -289,6 +310,15 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         }
         else
             options->time_offset_plus = parse_time_offset(val);
+    }
+    /* symmetric encryption mode */
+    else if(CONF_VAR_IS(var, "ENCRYPTION_MODE"))
+    {
+        tmpint = enc_mode_strtoint(val);
+        if(tmpint < 0)
+            return(-1);
+        else
+            options->encryption_mode = tmpint;
     }
     /* Use GPG ? */
     else if(CONF_VAR_IS(var, "USE_GPG"))
@@ -724,7 +754,19 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case FKO_DIGEST_NAME:
                 if((options->digest_type = digest_strtoint(optarg)) < 0)
                 {
-                    fprintf(stderr, "* Invalid digest type: %s\n", optarg);
+                    fprintf(stderr,
+                        "* Invalid digest type: %s, use {md5,sha1,sha256,sha384,sha512}\n",
+                    optarg);
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case 'M':
+            case ENCRYPTION_MODE:
+                if((options->encryption_mode = enc_mode_strtoint(optarg)) < 0)
+                {
+                    fprintf(stderr,
+                        "* Invalid encryption mode: %s, use {cbc,ecb}\n",
+                    optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;

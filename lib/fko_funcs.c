@@ -133,6 +133,18 @@ fko_new(fko_ctx_t *r_ctx)
         return res;
     }
 
+    /* Default Encryption Mode (Rijndael in EBC mode for backwards
+     * compatibility - it recommended to change this to CBC mode)
+    */
+    ctx->initval = FKO_CTX_INITIALIZED;
+    res = fko_set_spa_encryption_mode(ctx, FKO_DEFAULT_ENC_MODE);
+    ctx->initval = 0;
+    if(res != FKO_SUCCESS)
+    {
+        fko_destroy(ctx);
+        return res;
+    }
+
 #if HAVE_LIBGPGME
     /* Set gpg signature verify on.
     */
@@ -156,7 +168,8 @@ fko_new(fko_ctx_t *r_ctx)
  * and parsing the provided data into the context data.
 */
 int
-fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg, const char *dec_key)
+fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
+    const char *dec_key, int encryption_mode)
 {
     fko_ctx_t   ctx;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
@@ -174,13 +187,23 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg, const char *dec_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
+    /* Default Encryption Mode (Rijndael in CBC mode)
+    */
+    ctx->initval = FKO_CTX_INITIALIZED;
+    res = fko_set_spa_encryption_mode(ctx, encryption_mode);
+    ctx->initval = 0;
+    if(res != FKO_SUCCESS)
+    {
+        fko_destroy(ctx);
+        return res;
+    }
+
     /* Consider it initialized here.
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     FKO_SET_CTX_INITIALIZED(ctx);
 
-    /* If a decryption password is provided, go ahead and decrypt and
-     * decode.
+    /* If a decryption key is provided, go ahead and decrypt and decode.
     */
     if(dec_key != NULL)
     {

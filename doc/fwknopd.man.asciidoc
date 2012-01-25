@@ -344,6 +344,15 @@ directive starts a new stanza.
     ``FW_ACCESS_TIMEOUT'' is not set then the default timeout of 30 seconds
     will automatically be set.
 
+*ENCRYPTION_MODE*: '<mode>'::
+    Specify the encryption mode when AES is used.  The default (for now) is
+    ECB mode in order to remain backwards compatible with pre-2.0 versions of
+    fwknop which relied on the Crypt::CBC perl module.  This will be changed
+    in an upcoming version of fwknop to use the more secure CBC mode.  In the
+    meantime, it is recommend to use this option to specify CBC mode (use the
+    string "CBC" as the argument), and then also use '--encryption-mode'
+    command line argument on the *fwknop* client.
+
 *ENABLE_CMD_EXEC*: '<Y/N>'::
     This instructs *fwknopd* to accept complete commands that are contained
     within an authorization packet.  Any such command will be executed on

@@ -63,6 +63,7 @@ struct fko_context {
     /* FKO SPA user-settable message encoding types */
     short  digest_type;
     short  encryption_type;
+    int    encryption_mode;
 
     /* Computed or predefined data */
     char           *version;
