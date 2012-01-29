@@ -156,7 +156,7 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *pass, const unsigned char *da
     /* Now generate the key and initialization vector.
      * (again it is the perl Crypt::CBC way, with a touch of
      * fwknop).
-    */ 
+    */
     memcpy(tmp_buf+16, pw_buf, 16);
     memcpy(tmp_buf+32, ctx->salt, 8);
 
@@ -185,7 +185,8 @@ rijndael_init(RIJNDAEL_context *ctx, const char *pass,
     const unsigned char *data, int encryption_mode)
 {
 
-    /* Use ECB mode to be compatible with the Crypt::CBC perl module.
+    /* The default (set in fko.h) is ECB mode to be compatible with the
+     * Crypt::CBC perl module.
     */
     ctx->mode = encryption_mode;
 

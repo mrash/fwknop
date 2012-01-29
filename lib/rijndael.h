@@ -40,7 +40,7 @@
 #include "fko_common.h"
 
 /* Other block sizes and key lengths are possible, but in the context of
- * the ssh protocols, 256 bits is the default. 
+ * the ssh protocols, 256 bits is the default.
  */
 #define RIJNDAEL_BLOCKSIZE 16
 #define RIJNDAEL_KEYSIZE   32
@@ -74,7 +74,7 @@ typedef struct {
  * bits).  If a value other than these three is specified, the key will be
  * truncated to the closest value less than the key size specified, e.g.
  * specifying 7 will use only the first 6 bytes of the key given.  DO NOT
- * PASS A VALUE LESS THAN 16 TO KEYSIZE! 
+ * PASS A VALUE LESS THAN 16 TO KEYSIZE!
  */
 void
 rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const uint8_t *key);
@@ -103,7 +103,7 @@ rijndael_encrypt(RIJNDAEL_context *context,
  *
  * Before this function can be used, rijndael_setup() must be used in order
  * to set up the key schedule required for the decryption algorithm.
- * 
+ *
  * This function always decrypts 16 bytes of ciphertext to 16 bytes of
  * plaintext.  The memory areas of the plaintext and the ciphertext can
  * overlap.
