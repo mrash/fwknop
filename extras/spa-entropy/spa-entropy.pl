@@ -26,7 +26,7 @@ my $help = 0;
 
 my $use_openssl = 0;
 my $openssl_salt = '0000000000000000';
-my $openssl_mode = '-aes-256-cbc';
+my $openssl_mode = 'aes-256-ecb';
 
 my %min_max_entropy = (
     'min' => {
@@ -136,7 +136,7 @@ sub read_data() {
 
             unlink $enc_file if -e $enc_file;
 
-            system "openssl enc $openssl_mode -a -S $openssl_salt " .
+            system "openssl enc -$openssl_mode -a -S $openssl_salt " .
                 "-in ptext.tmp -out ptext.enc -k fwknoptest000000";
 
             my $base64_enc_data = '';
