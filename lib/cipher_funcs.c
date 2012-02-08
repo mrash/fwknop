@@ -207,50 +207,28 @@ rij_encrypt(unsigned char *in, size_t in_len,
     const char *pass, unsigned char *out, int encryption_mode)
 {
     RIJNDAEL_context    ctx;
-    unsigned char       plaintext[RIJNDAEL_BLOCKSIZE];
-    unsigned char       mixtext[RIJNDAEL_BLOCKSIZE];
-    unsigned char       ciphertext[RIJNDAEL_BLOCKSIZE];
     int                 i, pad_val;
-
     unsigned char      *ondx = out;
 
     rijndael_init(&ctx, pass, NULL, encryption_mode);
 
-    /* Prepend the salt...
+    /* Prepend the salt to the ciphertext...
     */
     memcpy(ondx, "Salted__", 8);
     ondx+=8;
     memcpy(ondx, ctx.salt, 8);
     ondx+=8;
 
-    /* Now iterate of the input data and encrypt in 16-byte chunks.
+    /* Add padding to the original plaintext to ensure that it is a
+     * multiple of the Rijndael block size
     */
-    while(in_len)
-    {
-        for(i=0; i<sizeof(plaintext); i++)
-        {
-            if(in_len < 1)
-                break;
+    pad_val = RIJNDAEL_BLOCKSIZE - (in_len % RIJNDAEL_BLOCKSIZE);
+    for (i = in_len; i < in_len+pad_val; i++)
+        in[i] = pad_val;
 
-            plaintext[i] = *in++;
-            in_len--;
-        }
+    block_encrypt(&ctx, in, in_len+pad_val, ondx, ctx.iv);
 
-        pad_val = sizeof(plaintext) - i;
-
-        for(; i < sizeof(plaintext); i++)
-            plaintext[i] = pad_val;
-
-        for(i=0; i<RIJNDAEL_BLOCKSIZE; i++)
-            mixtext[i] = plaintext[i] ^ ctx.iv[i];
-
-        block_encrypt(&ctx, mixtext, RIJNDAEL_BLOCKSIZE, ciphertext, ctx.iv);
-
-        memcpy(ctx.iv, ciphertext, RIJNDAEL_BLOCKSIZE);
-
-        for(i=0; i<sizeof(ciphertext); i++)
-            *ondx++ = ciphertext[i];
-    }
+    ondx += in_len+pad_val;
 
     return(ondx - out);
 }
@@ -262,41 +240,21 @@ rij_decrypt(unsigned char *in, size_t in_len,
     const char *pass, unsigned char *out, int encryption_mode)
 {
     RIJNDAEL_context    ctx;
-    unsigned char       plaintext[RIJNDAEL_BLOCKSIZE];
-    unsigned char       mixtext[RIJNDAEL_BLOCKSIZE];
-    unsigned char       ciphertext[RIJNDAEL_BLOCKSIZE];
     int                 i, pad_val, pad_err = 0;
     unsigned char      *pad_s;
     unsigned char      *ondx = out;
 
     rijndael_init(&ctx, pass, in, encryption_mode);
 
-    /* Remove the salt from the input.
+    /* Remove the first block since it contains the salt (it was consumed
+     * by the rijndael_init() function above).
     */
     in_len -= 16;
     memmove(in, in+16, in_len);
 
-    while(in_len)
-    {
-        for(i=0; i<sizeof(ciphertext); i++)
-        {
-            if(in_len < 1)
-                break;
+    block_decrypt(&ctx, in, in_len, out, ctx.iv);
 
-            ciphertext[i] = *in++;
-            in_len--;
-        }
-
-        block_decrypt(&ctx, ciphertext, RIJNDAEL_BLOCKSIZE, mixtext, ctx.iv);
-
-        for(i=0; i<sizeof(ciphertext); i++)
-            plaintext[i] = mixtext[i] ^ ctx.iv[i];
-
-        memcpy(ctx.iv, ciphertext, RIJNDAEL_BLOCKSIZE);
-
-        for(i=0; i<sizeof(plaintext); i++)
-            *ondx++ = plaintext[i];
-    }
+    ondx += in_len;
 
     /* Find and remove padding.
     */

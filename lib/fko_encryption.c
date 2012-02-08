@@ -45,47 +45,49 @@
 static int
 _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
 {
-    char           *plain;
-    char           *b64cipher;
-    unsigned char  *cipher;
+    char           *plaintext;
+    char           *b64ciphertext;
+    unsigned char  *ciphertext;
     int             cipher_len;
 
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plain = malloc(strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2);
-    if(plain == NULL)
+    plaintext = calloc(1, strlen(ctx->encoded_msg)
+                    + strlen(ctx->digest) + RIJNDAEL_BLOCKSIZE + 2);
+
+    if(plaintext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
+    sprintf(plaintext, "%s:%s", ctx->encoded_msg, ctx->digest);
 
     /* Make a bucket for the encrypted version and populate it.
     */
-    cipher = malloc(strlen(plain) + 32); /* Plus padding for salt and Block */
-    if(cipher == NULL)
+    ciphertext = calloc(1, strlen(plaintext) + 32); /* Plus padding for salt and Block */
+    if(ciphertext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     cipher_len = rij_encrypt(
-        (unsigned char*)plain, strlen(plain), (char*)enc_key, cipher,
+        (unsigned char*)plaintext, strlen(plaintext), (char*)enc_key, ciphertext,
         ctx->encryption_mode
     );
 
     /* Now make a bucket for the base64-encoded version and populate it.
     */
-    b64cipher = malloc(((cipher_len / 3) * 4) + 8);
-    if(b64cipher == NULL)
+    b64ciphertext = malloc(((cipher_len / 3) * 4) + 8);
+    if(b64ciphertext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    b64_encode(cipher, b64cipher, cipher_len);
-    strip_b64_eq(b64cipher);
+    b64_encode(ciphertext, b64ciphertext, cipher_len);
+    strip_b64_eq(b64ciphertext);
 
-    ctx->encrypted_msg = strdup(b64cipher);
+    ctx->encrypted_msg = strdup(b64ciphertext);
 
     /* Clean-up
     */
-    free(plain);
-    free(cipher);
-    free(b64cipher);
+    free(plaintext);
+    free(ciphertext);
+    free(b64ciphertext);
 
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);

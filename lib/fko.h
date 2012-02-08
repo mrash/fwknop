@@ -176,7 +176,7 @@ typedef enum {
 #define FKO_DEFAULT_MSG_TYPE    FKO_ACCESS_MSG
 #define FKO_DEFAULT_DIGEST      FKO_DIGEST_SHA256
 #define FKO_DEFAULT_ENCRYPTION  FKO_ENCRYPTION_RIJNDAEL
-#define FKO_DEFAULT_ENC_MODE    MODE_ECB
+#define FKO_DEFAULT_ENC_MODE    MODE_CBC
 
 /* The context holds the global state and config options, as
  * well as some intermediate results during processing. This
