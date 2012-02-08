@@ -22,7 +22,7 @@ my $gpg_client_home_dir = "$conf_dir/client-gpg";
 my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
-my $cbc_mode_access_conf = "$conf_dir/cbc_mode_access.conf";
+my $ecb_mode_access_conf = "$conf_dir/ecb_mode_access.conf";
 my $expired_access_conf = "$conf_dir/expired_stanza_access.conf";
 my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
 my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
@@ -926,12 +926,12 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'CBC mode (tcp/22 ssh)',
+        'detail'   => 'ECB mode (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -M cbc",
+        'cmdline'  => "$default_client_args -M ecb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $cbc_mode_access_conf " .
+            "$fwknopdCmd -c $default_conf -a $ecb_mode_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
