@@ -827,7 +827,11 @@ display_ctx(fko_ctx_t ctx)
     printf("    Digest Type: %d\n", digest_type);
     printf("Encryption Mode: %d\n", encryption_mode);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
-    printf("\nSPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
+    printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
+
+    if (enc_data != NULL && spa_digest != NULL)
+        printf("      Plaintext: %s:%s\n", enc_data, spa_digest);
+
     printf("\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n", spa_data);
 }
 
