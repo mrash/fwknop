@@ -21,6 +21,7 @@ my $min_len = 0;
 my $lib_dir = '../../lib/.libs';
 my $fwknop_client_path = '../../client/.libs/fwknop';
 my $enc_mode = 'ecb';
+my $enable_fwknop_client_gpg = 0;
 my $spa_key_file = 'local_spa.key';
 my $help = 0;
 
@@ -51,6 +52,7 @@ die "[*] See '$0 -h' for usage information" unless (GetOptions(
     'prefix=s'          => \$prefix,
     'run-fwknop-client' => \$run_fwknop_client,
     'enc-mode=s'        => \$enc_mode,
+    'gpg'               => \$enable_fwknop_client_gpg,
     'lib-dir=s'         => \$lib_dir,
     'Client-path=s'     => \$fwknop_client_path,
     'use-pw-entropy'    => \$use_pw_entropy,
@@ -214,8 +216,16 @@ sub run_fwknop_client() {
     }
 
     my $cmd = "LD_LIBRARY_PATH=$lib_dir $fwknop_client_path -A tcp/22 " .
-        "-a 127.0.0.2 -D 127.0.0.1 --get-key $spa_key_file -M $enc_mode " .
-        "-B $file_to_measure -b -v --test 2> /dev/null";
+        "-a 127.0.0.2 -D 127.0.0.1 --get-key $spa_key_file " .
+        "-B $file_to_measure -b -v --test";
+
+    if ($enable_fwknop_client_gpg) {
+        $cmd .= ' --gpg-recipient-key 361BBAD4 --gpg-signer-key 6A3FAD56 ' .
+            '--gpg-home-dir ../../test/conf/client-gpg';
+    } else {
+        $cmd .= " -M $enc_mode";
+    }
+    $cmd .= " 2> /dev/null";
 
     print "[+] Running fwknop client via the following command:\n\n$cmd\n\n";
 
@@ -266,11 +276,18 @@ sub build_data_slices() {
 
 sub run_gnuplot() {
     open F, "> $prefix.gnu" or die $!;
+
+    my $yrange = '[0:10]';
+    if ($max > 10) {
+        my $rmax = ($max/10) + $max;
+        $yrange = "[0:$rmax]";
+    }
     print F <<_GNUPLOT_;
-set title "entropy measurement"
+set title "cross-packet SPA entropy"
 set terminal gif nocrop enhanced
 set output "$prefix.gif"
 set grid
+set yrange $yrange
 plot '$prefix.dat' using 1:2 with lines title 'min: $min, max: $max'
 _GNUPLOT_
     close F;
