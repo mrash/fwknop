@@ -5,14 +5,11 @@
 
 use MIME::Base64;
 use IPC::Open2;
-use Data::Password::Entropy;
 use Getopt::Long 'GetOptions';
 use strict;
 
 my $use_ent = 1;
-my $use_pw_entropy = 0;
 my $base64_decode = 1;
-my $no_base64_decode = 0;
 my $packets = 0;
 my $prefix = 'entropy';
 my $file_to_measure = '';
@@ -47,7 +44,7 @@ my @cross_pkt_data = ();
 Getopt::Long::Configure('no_ignore_case');
 die "[*] See '$0 -h' for usage information" unless (GetOptions(
     'file-to-measure=s' => \$file_to_measure,
-    'no-base64-decode'  => \$no_base64_decode,
+    'base64-decode'     => \$base64_decode,
     'count=i'           => \$packets,
     'prefix=s'          => \$prefix,
     'run-fwknop-client' => \$run_fwknop_client,
@@ -55,7 +52,6 @@ die "[*] See '$0 -h' for usage information" unless (GetOptions(
     'gpg'               => \$enable_fwknop_client_gpg,
     'lib-dir=s'         => \$lib_dir,
     'Client-path=s'     => \$fwknop_client_path,
-    'use-pw-entropy'    => \$use_pw_entropy,
     'use-openssl'       => \$use_openssl,
     'openssl-salt=s'    => \$openssl_salt,
     'openssl-mode=s'    => \$openssl_mode,
@@ -63,8 +59,6 @@ die "[*] See '$0 -h' for usage information" unless (GetOptions(
 ));
 &usage() if $help;
 
-$base64_decode = 0 if $no_base64_decode;
-$use_ent = 0 if $use_pw_entropy;
 die "[*] Must execute --run-fwknop-client in --use-openssl mode"
     if $use_openssl and not $run_fwknop_client;
 
@@ -277,11 +271,7 @@ sub build_data_slices() {
 sub run_gnuplot() {
     open F, "> $prefix.gnu" or die $!;
 
-    my $yrange = '[0:10]';
-    if ($max > 10) {
-        my $rmax = ($max/10) + $max;
-        $yrange = "[0:$rmax]";
-    }
+    my $yrange = '[0:8]';
     print F <<_GNUPLOT_;
 set title "cross-packet SPA entropy"
 set terminal gif nocrop enhanced
@@ -303,28 +293,23 @@ sub get_entropy() {
 
     my $entropy = '';
 
-    if ($use_ent) {
-        my $pid = open2(\*CHLD_OUT, \*CHLD_IN, 'ent');
+    my $pid = open2(\*CHLD_OUT, \*CHLD_IN, 'ent');
 
-        print CHLD_IN $data;
-        close CHLD_IN;
+    print CHLD_IN $data;
+    close CHLD_IN;
 
-        while (<CHLD_OUT>) {
-            ### Entropy = 5.637677 bits per byte.
-            if (/Entropy\s=\s(\d\S+)/) {
-                $entropy = $1;
-                last;
-            }
+    while (<CHLD_OUT>) {
+        ### Entropy = 5.637677 bits per byte.
+        if (/Entropy\s=\s(\d\S+)/) {
+            $entropy = $1;
+            last;
         }
-
-        close CHLD_OUT;
-
-        waitpid( $pid, 0 );
-        my $child_exit_status = $? >> 8;
-
-    } else {
-        $entropy = password_entropy($data);
     }
+
+    close CHLD_OUT;
+
+    waitpid $pid, 0;
+    my $child_exit_status = $? >> 8;
 
     return $entropy;
 }
