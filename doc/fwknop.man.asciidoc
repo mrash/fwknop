@@ -198,13 +198,11 @@ SPA OPTIONS
     are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*, and *SHA512*.
 
 *-M, --encryption-mode*='<mode>'::
-    Specify the encryption mode when AES is used.  The default (for now) is
-    ECB mode in order to remain backwards compatible with pre-2.0 versions of
-    fwknop which relied on the Crypt::CBC perl module.  This will be changed
-    in an upcoming version of fwknop to use the more secure CBC mode.  In the
-    meantime, it is recommend to use this option to specify CBC mode (use the
-    string "CBC" as the argument), and then also use the ENCRYPTION_MODE
-    variable in the 'access.conf' file on the server.
+    Specify the encryption mode when AES is used for encrypting SPA packets.
+    The default is CBC mode, but others can be chosen such as CFB or OFB
+    as long as this is also specified in the 'access.conf' file on the
+    server side via the ENCRYPTION_MODE variable.  In general, it is
+    recommended to not use this argument and just use the default.
 
 *-N, --nat-access*='<internalIP:forwardPort>'::
     The *fwknopd* server offers the ability to provide SPA access through

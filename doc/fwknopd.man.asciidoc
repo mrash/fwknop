@@ -345,13 +345,9 @@ directive starts a new stanza.
     will automatically be set.
 
 *ENCRYPTION_MODE*: '<mode>'::
-    Specify the encryption mode when AES is used.  The default (for now) is
-    ECB mode in order to remain backwards compatible with pre-2.0 versions of
-    fwknop which relied on the Crypt::CBC perl module.  This will be changed
-    in an upcoming version of fwknop to use the more secure CBC mode.  In the
-    meantime, it is recommend to use this option to specify CBC mode (use the
-    string "CBC" as the argument), and then also use '--encryption-mode'
-    command line argument on the *fwknop* client.
+    Specify the encryption mode when AES is used.  The default is CBC mode,
+    but other modes can be selected such as OFB and CFB.  In general, it is
+    recommended to not use this variable and leave it as the default.
 
 *ENABLE_CMD_EXEC*: '<Y/N>'::
     This instructs *fwknopd* to accept complete commands that are contained
