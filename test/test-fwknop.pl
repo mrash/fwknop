@@ -23,6 +23,9 @@ my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
 my $ecb_mode_access_conf = "$conf_dir/ecb_mode_access.conf";
+my $ctr_mode_access_conf = "$conf_dir/ctr_mode_access.conf";
+my $cfb_mode_access_conf = "$conf_dir/cfb_mode_access.conf";
+my $ofb_mode_access_conf = "$conf_dir/ofb_mode_access.conf";
 my $expired_access_conf = "$conf_dir/expired_stanza_access.conf";
 my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
 my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
@@ -936,6 +939,66 @@ my @tests = (
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'CFB mode (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -M cfb",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $cfb_mode_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_negative_output_matches' => [qr/Decryption\sfailed/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'CTR mode (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -M ctr",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $ctr_mode_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_negative_output_matches' => [qr/Decryption\sfailed/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'OFB mode (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -M ofb",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $ofb_mode_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_negative_output_matches' => [qr/Decryption\sfailed/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'mode mismatch (tcp/22 ssh)',
+        'err_msg'  => 'server accepted mismatch enc mode',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -M ecb",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $default_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Decryption\sfailed/i],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
 

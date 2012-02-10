@@ -64,7 +64,7 @@ enc_mode_strtoint(const char *enc_mode_str)
     else if(strcasecmp(enc_mode_str, "cfb") == 0)
         return(FKO_ENC_MODE_CFB);
     else if(strcasecmp(enc_mode_str, "pcbc") == 0)
-        return(FKO_ENC_MODE_PCBC);
+        return(-1); /* not supported yet */
     else if(strcasecmp(enc_mode_str, "ofb") == 0)
         return(FKO_ENC_MODE_OFB);
     else if(strcasecmp(enc_mode_str, "ctr") == 0)
