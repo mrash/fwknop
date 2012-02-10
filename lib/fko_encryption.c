@@ -139,6 +139,15 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int encryption_mode)
 
     cipher_len = b64_decode(ctx->encrypted_msg, cipher);
 
+    /* Since we're using AES, make sure the incoming data is a multiple of
+     * the blocksize
+    */
+    if((cipher_len % RIJNDAEL_BLOCKSIZE) != 0)
+    {
+        free(cipher);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
     */

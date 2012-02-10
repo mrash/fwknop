@@ -249,8 +249,8 @@ rij_decrypt(unsigned char *in, size_t in_len,
     /* Remove the first block since it contains the salt (it was consumed
      * by the rijndael_init() function above).
     */
-    in_len -= 16;
-    memmove(in, in+16, in_len);
+    in_len -= RIJNDAEL_BLOCKSIZE;
+    memmove(in, in+RIJNDAEL_BLOCKSIZE, in_len);
 
     block_decrypt(&ctx, in, in_len, out, ctx.iv);
 
