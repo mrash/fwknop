@@ -1,6 +1,14 @@
 #!/usr/bin/perl -w
 #
+# File: spa-entropy.pl
+#
+# Purpose: To measure cross-packet SPA entropy on a byte by byte slice basis
+#          and produce gunplot graphs.  This is useful to measure SPA packet
+#          randomness after encryption.
+#
 # Author: Michael Rash <mbr@cipherdyne.org>
+#
+# License: GPL v2
 #
 
 use MIME::Base64;
