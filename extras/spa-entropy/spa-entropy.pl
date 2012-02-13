@@ -36,11 +36,11 @@ my $openssl_mode = 'aes-256-cbc';
 
 my %min_max_entropy = (
     'min' => {
-        'val' => 0,
+        'val' => -1,
         'pos' => 0,
     },
     'max' => {
-        'val' => 0,
+        'val' => -1,
         'pos' => 0,
     }
 );
@@ -87,8 +87,8 @@ for my $str (@cross_pkt_data) {
 #    print F "$pos $entropy\n";
     print F "$pos $entropy   ### " . &hex_dump($str) . "\n";
 
-    if ($min_max_entropy{'min'}{'val'} == 0
-            and $min_max_entropy{'max'}{'val'} == 0) {
+    if ($min_max_entropy{'min'}{'val'} == -1
+            and $min_max_entropy{'max'}{'val'} == -1) {
         $min_max_entropy{'min'}{'val'} = $entropy;
         $min_max_entropy{'min'}{'pos'} = $pos;
         $min_max_entropy{'max'}{'val'} = $entropy;
