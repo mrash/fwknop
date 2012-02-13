@@ -27,7 +27,7 @@ my $lib_dir = '../../lib/.libs';
 my $fwknop_client_path = '../../client/.libs/fwknop';
 my $enc_mode = 'cbc';
 my $enable_fwknop_client_gpg = 0;
-my $spa_key_file = 'local_spa.key';
+my $spa_key_file = '../../test/local_spa.key';
 my $help = 0;
 
 my $use_openssl = 0;
