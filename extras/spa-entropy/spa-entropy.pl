@@ -25,14 +25,14 @@ my $run_fwknop_client = 0;
 my $min_len = 0;
 my $lib_dir = '../../lib/.libs';
 my $fwknop_client_path = '../../client/.libs/fwknop';
-my $enc_mode = 'ecb';
+my $enc_mode = 'cbc';
 my $enable_fwknop_client_gpg = 0;
 my $spa_key_file = 'local_spa.key';
 my $help = 0;
 
 my $use_openssl = 0;
 my $openssl_salt = '0000000000000000';
-my $openssl_mode = 'aes-256-ecb';
+my $openssl_mode = 'aes-256-cbc';
 
 my %min_max_entropy = (
     'min' => {
@@ -107,8 +107,8 @@ for my $str (@cross_pkt_data) {
 }
 close F;
 
-my $min = $min_max_entropy{'min'}{'val'};
-my $max = $min_max_entropy{'max'}{'val'};
+my $min = sprintf "%.2f", $min_max_entropy{'min'}{'val'};
+my $max = sprintf "%.2f", $min_max_entropy{'max'}{'val'};
 
 print "[+] Min entropy: $min at byte: $min_max_entropy{'min'}{'pos'}\n";
 print "[+] Max entropy: $max at byte: $min_max_entropy{'max'}{'pos'}\n";
@@ -176,15 +176,30 @@ sub read_data() {
         if ($base64_decode) {
             if (&is_base64($_)) {
                 my $base64_str = $_;
-                ### base64-encoded "Salted__" prefix
-                unless ($base64_str =~ /^U2FsdGVkX1/) {
-                    $base64_str = 'U2FsdGVkX1' . $base64_str;
+
+                if ($enable_fwknop_client_gpg) {
+                    unless ($base64_str =~ /^hQ/) {
+                        $base64_str = 'hQ' . $base64_str;
+                    }
+                } else {
+                    ### base64-encoded "Salted__" prefix
+                    unless ($base64_str =~ /^U2FsdGVkX1/) {
+                        $base64_str = 'U2FsdGVkX1' . $base64_str;
+                    }
                 }
+
                 my ($equals_rv, $equals_padding) = &base64_equals_padding($base64_str);
                 if ($equals_padding) {
                     $base64_str .= $equals_padding;
                 }
-                push @encrypted_data, decode_base64($base64_str);
+                my $str = decode_base64($base64_str);
+
+                if ($enable_fwknop_client_gpg) {
+                    $str =~ s/^\x85\x02//;
+                } else {
+                    $str =~ s/^Salted__//;
+                }
+                push @encrypted_data, $str;
             } else {
                 push @encrypted_data, $_;
             }
@@ -279,14 +294,17 @@ sub build_data_slices() {
 sub run_gnuplot() {
     open F, "> $prefix.gnu" or die $!;
 
-    my $yrange = '[0:8]';
+    my $enc_str = $enc_mode;
+    $enc_str = 'gpg' if $enable_fwknop_client_gpg;
+
+    my $yrange = '[0:9]';
     print F <<_GNUPLOT_;
-set title "cross-packet SPA entropy"
+set title "SPA slice entropy (encryption mode: $enc_str)"
 set terminal gif nocrop enhanced
 set output "$prefix.gif"
 set grid
 set yrange $yrange
-plot '$prefix.dat' using 1:2 with lines title 'min: $min, max: $max'
+plot '$prefix.dat' using 1:2 with lines title 'min: $min \\@ byte: $min_max_entropy{'min'}{'pos'}, max: $max \\@ byte: $min_max_entropy{'max'}{'pos'}'
 _GNUPLOT_
     close F;
 
