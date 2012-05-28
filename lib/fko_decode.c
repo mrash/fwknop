@@ -40,15 +40,13 @@ int
 fko_decode_spa_data(fko_ctx_t ctx)
 {
     char       *tbuf, *ndx;
-    int         edata_size, t_size;
+    int         t_size;
 
     /* Check for required data.
     */
     if(ctx->encoded_msg == NULL
       || strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_INVALID_DATA);
-
-    edata_size = strlen(ctx->encoded_msg);
 
     /* Move the Digest to its place in the context.
     */
