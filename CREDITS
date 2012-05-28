@@ -15,3 +15,6 @@ Ozmart
 Max Kastanas
     - Contributed both an Android and an iPhone fwknop client port - see the
       top level android/ and iphone/ directories.
+
+Ted Wynnychenko
+    - Helped test fwknop PF support on OpenBSD.
