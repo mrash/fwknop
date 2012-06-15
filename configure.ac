@@ -120,6 +120,20 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 
+dnl Decide whether or not to build binaries with profiling coverage support
+dnl
+want_profile_coverage=no
+AC_ARG_ENABLE([profile-coverage],
+  [AS_HELP_STRING([--enable-profile-coverage],
+    [Build fwknop binaries with profile coverage support @<:@default is to disable@:>@])],
+  [want_profile_coverage=$enableval],
+  [])
+
+if test "x$want_profile_coverage" = "xyes"; then
+    CFLAGS="-g -O0"
+    FKO_CHECK_COMPILER_ARG([-fprofile-arcs -ftest-coverage -fno-inline])
+fi
+
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
 use_wall=yes

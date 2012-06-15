@@ -4,6 +4,7 @@ use File::Copy;
 use File::Path;
 use IO::Socket;
 use Data::Dumper;
+use Cwd;
 use Getopt::Long 'GetOptions';
 use strict;
 
@@ -85,7 +86,9 @@ my $valgrind_str = '';
 my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enable_recompilation_warnings_check = 0;
+my $enable_profile_coverage_check = 0;
 my $sudo_path = '';
+my $gcov_path = '';
 my $platform = '';
 my $help = 0;
 my $YES = 1;
@@ -115,6 +118,7 @@ exit 1 unless GetOptions(
     'test-exclude=s'    => \$test_exclude,
     'exclude=s'         => \$test_exclude,  ### synonym
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
+    'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'List-mode'         => \$list_mode,
     'enable-valgrind'   => \$use_valgrind,
     'valgrind-path=s'   => \$valgrindCmd,
@@ -1307,6 +1311,14 @@ my @tests = (
         'function' => \&digest_cache_structure,
         'fatal'    => $NO
     },
+
+    {
+        'category' => 'profile coverage',
+        'detail'   => 'gcov profile coverage',
+        'err_msg'  => 'profile coverage failed',
+        'function' => \&profile_coverage,
+        'fatal'    => $NO
+    },
 );
 
 my %test_keys = (
@@ -1526,7 +1538,8 @@ sub compile_warnings() {
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
-    return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/], $current_test_file);
+    return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
+        $current_test_file);
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
@@ -1536,6 +1549,32 @@ sub compile_warnings() {
     unless (-e $fwknopdCmd and -x $fwknopdCmd) {
         &write_test_file("[-] $fwknopdCmd does not exist or not executable.\n",
             $current_test_file);
+    }
+
+    return 1;
+}
+
+sub profile_coverage() {
+
+    ### check for any *.gcno files - if they don't exist, then fwknop was
+    ### not compiled with profile support
+    unless (glob('../client/*.gcno') and glob('../server/*.gcno')) {
+        &write_test_file("[-] ../client/*.gcno and " .
+            "../server/*.gcno files do not exist.\n", $current_test_file);
+        return 0;
+    }
+
+    my $curr_dir = getcwd() or die $!;
+
+    ### gcov -b ../client/*.gcno
+    for my $dir ('../client', '../server', '../lib/.libs') {
+        next unless -d $dir;
+        chdir $dir or die $!;
+        system "$gcov_path -b -u *.gcno > /dev/null 2>&1";
+        chdir $curr_dir or die $!;
+
+        &run_cmd(qq|grep "called 0 returned" $dir/*.gcov|,
+                $cmd_out_tmp, $current_test_file);
     }
 
     return 1;
@@ -2576,11 +2615,28 @@ sub init() {
         push @tests_to_exclude, 'recompilation';
     }
 
+    unless ($enable_profile_coverage_check) {
+        push @tests_to_exclude, 'profile coverage';
+    }
+
     $sudo_path = &find_command('sudo');
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
         push @tests_to_exclude, 'recompilation';
+    }
+
+    $gcov_path = &find_command('gcov');
+
+    if ($gcov_path) {
+        if ($enable_profile_coverage_check) {
+            for my $extension ('*.gcov', '*.gcda') {
+                ### remove profile output from any previous run
+                system qq{find .. -name $extension | xargs rm 2> /dev/null};
+            }
+        }
+    } else {
+        push @tests_to_exclude, 'profile coverage';
     }
 
     open UNAME, "uname |" or die "[*] Could not execute uname: $!";
@@ -2764,5 +2820,9 @@ sub logr() {
     open F, ">> $logfile" or die $!;
     print F $msg;
     close F;
+    return;
+}
+
+sub usage() {
     return;
 }
