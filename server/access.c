@@ -187,7 +187,7 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
  * comparisons of incoming source IPs against this mask.
 */
 static void
-add_source_mask(acc_stanza_t *acc, const char *ip)
+add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
 {
     char                *ndx;
     char                ip_str[MAX_IPV4_STR_LEN] = {0};
@@ -202,7 +202,7 @@ add_source_mask(acc_stanza_t *acc, const char *ip)
         log_msg(LOG_ERR,
             "Fatal memory allocation error adding stanza source_list entry"
         );
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* If this is not the first entry, we walk our pointer to the
@@ -249,13 +249,9 @@ add_source_mask(acc_stanza_t *acc, const char *ip)
         if(inet_aton(ip_str, &in) == 0)
         {
             log_msg(LOG_ERR,
-                "Error parsing IP to int for: %s", ip_str
+                "Fatal error parsing IP to int for: %s", ip_str
             );
-
-            free(new_sle);
-            new_sle = NULL;
-
-            return;
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
 
         /* Store our mask converted from CIDR to a 32-bit value.
@@ -272,7 +268,7 @@ add_source_mask(acc_stanza_t *acc, const char *ip)
 /* Expand the access SOURCE string to a list of masks.
 */
 void
-expand_acc_source(acc_stanza_t *acc)
+expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
 {
     char           *ndx, *start;
     char            buf[32];
@@ -289,7 +285,7 @@ expand_acc_source(acc_stanza_t *acc)
                 start++;
 
             strlcpy(buf, start, (ndx-start)+1);
-            add_source_mask(acc, buf);
+            add_source_mask(opts, acc, buf);
             start = ndx+1;
         }
     }
@@ -300,7 +296,7 @@ expand_acc_source(acc_stanza_t *acc)
         start++;
 
     strlcpy(buf, start, (ndx-start)+1);
-    add_source_mask(acc, buf);
+    add_source_mask(opts, acc, buf);
 }
 
 static int
@@ -617,7 +613,7 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
     {
         /* Expand the source string to 32-bit integer masks foreach entry.
         */
-        expand_acc_source(acc);
+        expand_acc_source(opts, acc);
 
         /* Now expand the open_ports string.
         */
