@@ -31,6 +31,7 @@ my $expired_access_conf = "$conf_dir/expired_stanza_access.conf";
 my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
 my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
 my $invalid_expire_access_conf = "$conf_dir/invalid_expire_access.conf";
+my $invalid_source_access_conf = "$conf_dir/invalid_source_access.conf";
 my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
@@ -621,6 +622,20 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/SPA\sdata\stime\sdifference/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'invalid SOURCE (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet accepted',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $invalid_source_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Fatal\serror\sparsing\sIP\sto\sint/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
