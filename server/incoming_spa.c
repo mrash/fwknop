@@ -257,7 +257,7 @@ incoming_spa(fko_srv_options_t *opts)
         else if(enc_type == FKO_ENCRYPTION_GPG)
         {
             /* For GPG we create the new context without decrypting on the fly
-             * so we can set some  GPG parameters first.
+             * so we can set some GPG parameters first.
             */
             if(acc->gpg_decrypt_pw != NULL)
             {
