@@ -94,6 +94,7 @@ my $platform = '';
 my $help = 0;
 my $YES = 1;
 my $NO  = 0;
+my $IGNORE = 2;
 my $PRINT_LEN = 68;
 my $USE_PREDEF_PKTS = 1;
 my $USE_CLIENT = 2;
@@ -142,7 +143,7 @@ my $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
 
 my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
-    "$local_key_file --verbose --verbose";
+    "$local_key_file --no-save-args --verbose --verbose";
 
 my $default_client_gpg_args = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
@@ -432,6 +433,18 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'show last args',
+        'err_msg'  => 'could not show last args',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Could\snot|Last\sfwknop/i],
+        'exec_err' => $IGNORE,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd --show-last",
+        'fatal'    => $NO
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -2253,9 +2266,9 @@ sub generic_exec() {
 
     if ($test_hr->{'exec_err'} eq $YES) {
         $rv = 0 if $exec_rv;
-    } else {
+    } elsif ($test_hr->{'exec_err'} eq $NO) {
         $rv = 0 unless $exec_rv;
-    }
+    } ### else it must be $IGNORE so ignore the $exec_rv value
 
     if ($test_hr->{'positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
