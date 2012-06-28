@@ -50,7 +50,7 @@
 
 /* Get random data.
 */
-static void
+void
 get_random_data(unsigned char *data, const size_t len)
 {
     uint32_t    i;

@@ -164,7 +164,7 @@ is_valid_dir(const char *path)
  * encoding set
 */
 int
-is_base64(const unsigned char *buf, unsigned short int len)
+is_base64(const unsigned char *buf, const unsigned short int len)
 {
     unsigned short int  i;
     int                 rv = 1;

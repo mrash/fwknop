@@ -242,8 +242,25 @@ incoming_spa(fko_srv_options_t *opts)
         if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
         {
             if(acc->key != NULL)
+            {
                 res = fko_new_with_data(&ctx,
                     (char *)spa_pkt->packet_data, acc->key, acc->encryption_mode);
+            }
+            else if (acc->key_base64 != NULL)
+            {
+                if ((acc->key = strdup(acc->key_base64)) == NULL)
+                {
+                    log_msg(LOG_ERR,
+                        "Fatal memory allocation error copying key_base64 -> key: %s",
+                        acc->key_base64
+                    );
+                    exit(EXIT_FAILURE);
+                }
+                memset(acc->key, 0x0, strlen(acc->key_base64));
+                fko_base64_decode(acc->key_base64, (unsigned char *) acc->key);
+                res = fko_new_with_data(&ctx,
+                    (char *)spa_pkt->packet_data, acc->key, acc->encryption_mode);
+            }
             else
             {
                 log_msg(LOG_ERR,

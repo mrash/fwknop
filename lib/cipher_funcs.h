@@ -47,6 +47,7 @@
 */
 #define PREDICT_ENCSIZE(x) (1+(x>>4)+(x&0xf?1:0))<<4
 
+void get_random_data(unsigned char *data, const size_t len);
 size_t rij_encrypt(unsigned char *in, size_t len,
     const char *key, unsigned char *out, int encryption_mode);
 size_t rij_decrypt(unsigned char *in, size_t len,

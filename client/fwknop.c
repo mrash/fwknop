@@ -36,7 +36,7 @@
 
 /* prototypes
 */
-static char * get_user_pw(fko_cli_options_t *options, const int crypt_op);
+static char *get_user_pw(fko_cli_options_t *options, const int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
 static void show_last_command(void);
@@ -79,9 +79,20 @@ main(int argc, char **argv)
         return(EXIT_FAILURE);
     }
 
+    /* Generate Rijndael + HMAC keys from /dev/random (base64
+     * encoded) and exit.
+    */
+    if(options.key_gen)
+    {
+        fko_key_gen(options.key_base64, options.hmac_key_base64);
+        printf("KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n", options.key_base64, options.hmac_key_base64);
+        return(EXIT_SUCCESS);
+    }
+
     /* Display version info and exit.
     */
-    if (options.version) {
+    if(options.version)
+    {
         fko_get_version(ctx, &version);
 
         fprintf(stdout, "fwknop client %s, FKO protocol version %s\n",
@@ -737,6 +748,15 @@ get_user_pw(fko_cli_options_t *options, const int crypt_op)
     if (options->get_key_file[0] != 0x0)
     {
         pw_ptr = getpasswd_file(options->get_key_file, options->spa_server_str);
+    }
+    else if (options->have_key)
+    {
+        pw_ptr = options->key;
+    }
+    else if (options->have_base64_key)
+    {
+        fko_base64_decode(options->key_base64, (unsigned char *) options->key);
+        pw_ptr = options->key;
     }
     else if (options->use_gpg)
     {

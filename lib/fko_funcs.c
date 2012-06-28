@@ -31,6 +31,7 @@
 #include "fko_common.h"
 #include "fko.h"
 #include "cipher_funcs.h"
+#include "base64.h"
 
 /* Initialize an fko context.
 */
@@ -311,6 +312,40 @@ fko_destroy(fko_ctx_t ctx)
     }
 
     free(ctx);
+}
+
+/* Generate Rijndael and HMAC keys from /dev/random and base-64
+ * encode them
+*/
+int
+fko_key_gen(char *key_base64, char *hmac_key_base64)
+{
+    unsigned char key[RIJNDAEL_MAX_KEYSIZE];
+    unsigned char hmac_key[RIJNDAEL_MAX_KEYSIZE];
+
+    get_random_data(key, RIJNDAEL_MAX_KEYSIZE);
+    get_random_data(hmac_key, RIJNDAEL_MAX_KEYSIZE);
+
+    b64_encode(key, key_base64, RIJNDAEL_MAX_KEYSIZE);
+    b64_encode(hmac_key, hmac_key_base64, RIJNDAEL_MAX_KEYSIZE);
+
+    return(FKO_SUCCESS);
+}
+
+/* Provide an FKO wrapper around base64 encode/decode functions
+*/
+int
+fko_base64_encode(unsigned char *in, char *out, int in_len)
+{
+    b64_encode(in, out, in_len);
+    return(FKO_SUCCESS);
+}
+
+int
+fko_base64_decode(const char *in, unsigned char *out)
+{
+    b64_decode(in, out);
+    return(FKO_SUCCESS);
 }
 
 /* Return the fko version

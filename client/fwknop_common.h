@@ -55,7 +55,7 @@
 #define TIME_OFFSET_DAYS        86400
 
 /* For resolving the allow IP via HTTP and sending SPA packets over
- * HTTP -  http://www.whatismyip.com/automation/n09230945.asp 
+ * HTTP -  http://www.whatismyip.com/automation/n09230945.asp
     #define HTTP_RESOLVE_HOST          "www.whatismyip.com"
     #define HTTP_RESOLVE_URL           "/automation/n09230945.asp"
   * --DSS Note: The whatismyip.com site has some usage restrictions.
@@ -70,6 +70,7 @@
 #define MAX_HOSTNAME_LEN            70
 #define MAX_URL_HOST_LEN            256
 #define MAX_URL_PATH_LEN            1024
+#define MAX_KEY_LEN                 128
 
 /* fwknop client configuration parameters and values
 */
@@ -77,6 +78,8 @@ typedef struct fko_cli_options
 {
     char config_file[MAX_PATH_LEN];
     char access_str[MAX_PATH_LEN];
+    char rc_file[MAX_PATH_LEN];
+    char key_gen_file[MAX_PATH_LEN];
     char server_command[MAX_LINE_LEN];
     char get_key_file[MAX_PATH_LEN];
     char save_packet_file[MAX_PATH_LEN];
@@ -92,6 +95,15 @@ typedef struct fko_cli_options
     char gpg_recipient_key[MAX_GPG_KEY_ID];
     char gpg_signer_key[MAX_GPG_KEY_ID];
     char gpg_home_dir[MAX_PATH_LEN];
+
+    /* Encryption keys read from a .fwknoprc stanza
+    */
+    char key[MAX_KEY_LEN+1];
+    char key_base64[MAX_KEY_LEN+1];
+    char hmac_key_base64[MAX_KEY_LEN+1];
+    int  have_key;
+    int  have_base64_key;
+    int  have_hmac_base64_key;
 
     /* NAT access
     */
@@ -128,6 +140,7 @@ typedef struct fko_cli_options
     int             time_offset_plus;
     int             time_offset_minus;
     int             fw_timeout;
+    int             key_gen;
 
     char            use_rc_stanza[MAX_LINE_LEN];
     unsigned char   got_named_stanza;

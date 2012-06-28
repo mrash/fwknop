@@ -367,6 +367,39 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         if(val[0] == 'y' || val[0] == 'Y')
             options->rand_port = 1;
     }
+    /* Rijndael key */
+    else if(CONF_VAR_IS(var, "KEY"))
+    {
+        strlcpy(options->key, val, MAX_KEY_LEN);
+        options->have_key = 1;
+    }
+    /* Rijndael key (base-64 encoded) */
+    else if(CONF_VAR_IS(var, "KEY_BASE64"))
+    {
+        if (! is_base64((unsigned char *) val, strlen(val)))
+        {
+            fprintf(stderr,
+                "KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                val);
+            exit(EXIT_FAILURE);
+        }
+        strlcpy(options->key_base64, val, MAX_KEY_LEN);
+        options->have_base64_key = 1;
+    }
+    /* HMAC key */
+    else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
+    {
+        if (! is_base64((unsigned char *) val, strlen(val)))
+        {
+            fprintf(stderr,
+                "HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                val);
+            exit(EXIT_FAILURE);
+        }
+        strlcpy(options->hmac_key_base64, val, MAX_KEY_LEN);
+        options->have_hmac_base64_key = 1;
+    }
+
     /* Key file */
     else if(CONF_VAR_IS(var, "KEY_FILE"))
     {
@@ -437,38 +470,45 @@ process_rc(fko_cli_options_t *options)
 
     char    *ndx, *emark, *homedir;
 
-#ifdef WIN32
-    homedir = getenv("USERPROFILE");
-#else
-    homedir = getenv("HOME");
-#endif
-
-    if(homedir == NULL)
-    {
-        fprintf(stderr, "Warning: Unable to determine HOME directory.\n"
-            " No .fwknoprc file processed.\n");
-        return;
-    }
-
     memset(rcfile, 0x0, MAX_PATH_LEN);
 
-    strlcpy(rcfile, homedir, MAX_PATH_LEN);
-
-    rcf_offset = strlen(rcfile);
-
-    /* Sanity check the path to .fwknoprc.
-     * The preceeding path plus the path separator and '.fwknoprc' = 11
-     * cannot exceed MAX_PATH_LEN.
-    */
-    if(rcf_offset > (MAX_PATH_LEN - 11))
+    if(options->rc_file[0] == 0x0)
     {
-        fprintf(stderr, "Warning: Path to .fwknoprc file is too long.\n"
-            " No .fwknoprc file processed.\n");
-        return;
-    }
+#ifdef WIN32
+        homedir = getenv("USERPROFILE");
+#else
+        homedir = getenv("HOME");
+#endif
 
-    rcfile[rcf_offset] = PATH_SEP;
-    strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
+        if(homedir == NULL)
+        {
+            fprintf(stderr, "Warning: Unable to determine HOME directory.\n"
+                " No .fwknoprc file processed.\n");
+            return;
+        }
+
+        strlcpy(rcfile, homedir, MAX_PATH_LEN);
+
+        rcf_offset = strlen(rcfile);
+
+        /* Sanity check the path to .fwknoprc.
+         * The preceeding path plus the path separator and '.fwknoprc' = 11
+         * cannot exceed MAX_PATH_LEN.
+        */
+        if(rcf_offset > (MAX_PATH_LEN - 11))
+        {
+            fprintf(stderr, "Warning: Path to .fwknoprc file is too long.\n"
+                " No .fwknoprc file processed.\n");
+            return;
+        }
+
+        rcfile[rcf_offset] = PATH_SEP;
+        strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
+    }
+    else
+    {
+        strlcpy(rcfile, options->rc_file, MAX_PATH_LEN);
+    }
 
     /* Open the rc file for reading, if it does not exist, then create
      * an initial .fwknoprc file with defaults and go on.
@@ -545,6 +585,13 @@ process_rc(fko_cli_options_t *options)
         if((ndx = strrchr(var, ':')) != NULL)
             *ndx = '\0';
 
+        /* Even though sscanf should automatically add a terminating
+         * NULL byte, an assumption is made that the input arrays are
+         * big enough, so we'll force a terminating NULL byte regardless
+        */
+        var[MAX_LINE_LEN-1] = 0x0;
+        val[MAX_LINE_LEN-1] = 0x0;
+
         if(options->verbose > 3)
             fprintf(stderr,
                 "RC FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
@@ -590,6 +637,7 @@ validate_options(fko_cli_options_t *options)
      * the version, and must use one of [-s|-R|-a].
     */
     if(!options->test
+        && !options->key_gen
         && !options->version
         && !options->show_last_command
         && !options->run_last_command)
@@ -677,7 +725,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     */
     set_defaults(options);
 
-    /* First pass over cmd_line args to see if a named-stanza in the 
+    /* First pass over cmd_line args to see if a named-stanza in the
      * rc file is used.
     */
     while ((cmd_arg = getopt_long(argc, argv,
@@ -689,6 +737,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'n':
                 options->no_save_args = 1;
                 strlcpy(options->use_rc_stanza, optarg, MAX_LINE_LEN);
+                break;
+            case RC_FILE_PATH:
+                strlcpy(options->rc_file, optarg, MAX_PATH_LEN);
                 break;
             case 'v':
                 options->verbose++;
@@ -747,6 +798,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->spa_proto = FKO_PROTO_HTTP;
                 strlcpy(options->http_proxy, optarg, MAX_PATH_LEN);
                 break;
+            case 'k':
+                options->key_gen = 1;
+                break;
             case 'l':
                 options->run_last_command = 1;
                 break;
@@ -797,6 +851,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IPV4_STR_LEN);
+                break;
+            case RC_FILE_PATH:
+                strlcpy(options->rc_file, optarg, MAX_PATH_LEN);
                 break;
             case 'r':
                 options->rand_port = 1;

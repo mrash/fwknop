@@ -40,14 +40,12 @@
 #include "fwknop_common.h"
 #include "getpasswd.h"
 
-#define MAX_PASS_LEN    128
-
 /* Function for accepting password input from users
 */
 char*
 getpasswd(const char *prompt)
 {
-    static char     pwbuf[MAX_PASS_LEN + 1] = {0};
+    static char     pwbuf[MAX_KEY_LEN + 1] = {0};
     char           *ptr;
     int             c;
 
@@ -109,7 +107,7 @@ getpasswd(const char *prompt)
 	while((c = getc(fp)) != EOF && c != '\n')
 	{
 #endif
-        if(ptr < &pwbuf[MAX_PASS_LEN])
+        if(ptr < &pwbuf[MAX_KEY_LEN])
             *ptr++ = c;
 	}
 
@@ -146,7 +144,7 @@ getpasswd_file(const char *pw_file, const char *server_str)
     FILE           *pwfile_ptr;
     unsigned int    numLines = 0, i = 0, found_dst;
 
-    static char     pwbuf[MAX_PASS_LEN + 1]     = {0};
+    static char     pwbuf[MAX_KEY_LEN + 1]      = {0};
     char            conf_line_buf[MAX_LINE_LEN] = {0};
     char            tmp_char_buf[MAX_LINE_LEN]  = {0};
     char           *lptr;

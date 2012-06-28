@@ -35,6 +35,7 @@
 /* Prototypes
 */
 void hex_dump(const unsigned char *data, const int size);
+int is_base64(const unsigned char *buf, const unsigned short int len);
 size_t strlcat(char *dst, const char *src, size_t siz);
 size_t strlcpy(char *dst, const char *src, size_t siz);
 

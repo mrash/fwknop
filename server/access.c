@@ -578,6 +578,12 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->key != NULL)
         free(acc->key);
 
+    if(acc->key_base64 != NULL)
+        free(acc->key_base64);
+
+    if(acc->hmac_key_base64 != NULL)
+        free(acc->hmac_key_base64);
+
     if(acc->cmd_exec_user != NULL)
         free(acc->cmd_exec_user);
 
@@ -744,6 +750,7 @@ static int
 acc_data_is_valid(const acc_stanza_t *acc)
 {
     if((acc->key == NULL || !strlen(acc->key))
+      && (acc->key_base64 == NULL || !strlen(acc->key_base64))
       && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw)))
     {
         fprintf(stderr,
@@ -826,6 +833,13 @@ parse_access_file(fko_srv_options_t *opts)
         if((ndx = strrchr(var, ':')) != NULL)
             *ndx = '\0';
 
+        /* Even though sscanf should automatically add a terminating
+         * NULL byte, an assumption is made that the input arrays are
+         * big enough, so we'll force a terminating NULL byte regardless
+        */
+        var[MAX_LINE_LEN-1] = 0x0;
+        val[MAX_LINE_LEN-1] = 0x0;
+
         /*
         */
         if(opts->verbose > 3)
@@ -887,6 +901,42 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key), val);
+        }
+        else if(CONF_VAR_IS(var, "KEY_BASE64"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                fprintf(stderr,
+                    "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            if (! is_base64((unsigned char *) val, strlen(val)))
+            {
+                fprintf(stderr,
+                    "KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                    val);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            add_acc_string(&(curr_acc->key_base64), val);
+        }
+        else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                fprintf(stderr,
+                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            if (! is_base64((unsigned char *) val, strlen(val)))
+            {
+                fprintf(stderr,
+                    "HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                    val);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            add_acc_string(&(curr_acc->hmac_key_base64), val);
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {

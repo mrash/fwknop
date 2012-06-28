@@ -107,7 +107,7 @@ b64_encode(unsigned char *in, char *out, int in_len)
     return(dst - out);
 }
 
-/* Strip trailing equals ("=") charcters from a base64-encode
+/* Strip trailing equals ("=") charcters from a base64-encoded
  * message digest.
 */
 void

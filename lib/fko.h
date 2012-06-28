@@ -232,6 +232,9 @@ DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char *enc_msg);
 */
 DLL_API const char* fko_errstr(const int err_code);
 DLL_API int fko_encryption_type(const char *enc_data);
+DLL_API int fko_key_gen(char *key_base64, char *hmac_key_base64);
+DLL_API int fko_base64_encode(unsigned char *in, char *out, int in_len);
+DLL_API int fko_base64_decode(const char *in, unsigned char *out);
 
 DLL_API int fko_encode_spa_data(fko_ctx_t ctx);
 DLL_API int fko_decode_spa_data(fko_ctx_t ctx);

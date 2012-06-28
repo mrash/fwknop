@@ -43,6 +43,7 @@ enum {
     TIME_OFFSET_PLUS,
     NO_SAVE_ARGS,
     SHOW_LAST_ARGS,
+    RC_FILE_PATH,
     RESOLVE_URL,
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
@@ -56,7 +57,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:lm:M:n:N:p:P:Q:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:kK:lm:M:n:N:p:P:Q:rRsS:Tu:U:vV"
 
 /* Our program command-line options...
 */
@@ -80,6 +81,8 @@ static struct option cmd_opts[] =
     {"get-key",             1, NULL, 'G'},
     {"help",                0, NULL, 'h'},
     {"http-proxy",          1, NULL, 'H'},
+    {"key-gen",             0, NULL, 'k'},
+    {"key-gen-file",        1, NULL, 'K'},
     {"last-cmd",            0, NULL, 'l'},
     {"nat-access",          1, NULL, 'N'},
     {"named-config",        1, NULL, 'n'},
@@ -89,6 +92,7 @@ static struct option cmd_opts[] =
     {"server-port",         1, NULL, 'p'},
     {"server-proto",        1, NULL, 'P'},
     {"spoof-src",           1, NULL, 'Q'},
+    {"rc-file",             1, NULL, RC_FILE_PATH},
     {"rand-port",           0, NULL, 'r'},
     {"resolve-ip-http",     0, NULL, 'R'},
     {"resolve-url",         1, NULL, RESOLVE_URL},

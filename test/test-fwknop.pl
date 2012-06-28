@@ -23,6 +23,7 @@ my $gpg_client_home_dir = "$conf_dir/client-gpg";
 my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
 my $default_conf        = "$conf_dir/default_fwknopd.conf";
 my $default_access_conf = "$conf_dir/default_access.conf";
+my $base64_key_access_conf = "$conf_dir/base64_key_access.conf";
 my $ecb_mode_access_conf = "$conf_dir/ecb_mode_access.conf";
 my $ctr_mode_access_conf = "$conf_dir/ctr_mode_access.conf";
 my $cfb_mode_access_conf = "$conf_dir/cfb_mode_access.conf";
@@ -36,6 +37,10 @@ my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
+my $tmp_rc_file         = "$run_dir/fwknoprc";
+my $rc_file_default_key    = "$conf_dir/fwknoprc_with_default_key";
+my $rc_file_default_base64_key = "$conf_dir/fwknoprc_with_default_base64_key";
+my $rc_file_named_key    = "$conf_dir/fwknoprc_with_named_key";
 my $open_ports_access_conf = "$conf_dir/open_ports_access.conf";
 my $multi_gpg_access_conf  = "$conf_dir/multi_gpg_access.conf";
 my $multi_stanzas_access_conf = "$conf_dir/multi_stanzas_access.conf";
@@ -145,7 +150,16 @@ my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
     "$local_key_file --no-save-args --verbose --verbose";
 
+my $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
+    "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+    "--no-save-args --verbose --verbose";
+
 my $default_client_gpg_args = "$default_client_args " .
+    "--gpg-recipient-key $gpg_server_key " .
+    "--gpg-signer-key $gpg_client_key " .
+    "--gpg-home-dir $gpg_client_home_dir";
+
+my $default_client_gpg_args_no_get_key = "$default_client_args_no_get_key " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
@@ -612,6 +626,82 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'create rc file (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args --rc-file $tmp_rc_file",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => "rc file created",
+        'err_msg'  => "rc file $tmp_rc_file does not exist",
+        'function' => \&rc_file_exists,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'rc file default key (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $rc_file_default_key",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'rc file base64 key (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $rc_file_default_base64_key",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $base64_key_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'rc file named key (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $rc_file_named_key -n testssh",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'rc file invalid stanza (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet generated/accepted',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $rc_file_named_key -n invalidstanza",
+        'positive_output_matches' => [qr/Named\sconfiguration.*not\sfound/],
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -1204,6 +1294,32 @@ my @tests = (
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'rc file default key (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_get_key " .
+            "--rc-file $rc_file_default_key",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'rc file named key (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_get_key " .
+            "--rc-file $rc_file_named_key -n testssh",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
@@ -1681,6 +1797,18 @@ sub spa_cycle() {
         $rv = 0 unless $fw_rule_removed;
     } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
         $rv = 0 if $fw_rule_removed;
+    }
+
+    if ($test_hr->{'client_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'client_positive_output_matches'},
+            $current_test_file);
+    }
+
+    if ($test_hr->{'client_negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'client_negative_output_matches'},
+            $current_test_file);
     }
 
     if ($test_hr->{'server_positive_output_matches'}) {
@@ -2256,6 +2384,24 @@ sub send_packets() {
     return;
 }
 
+sub rc_file_exists() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    if (-e $tmp_rc_file) {
+        $rv = 0 unless &file_find_regex([qr/This\sfile\scontains/],
+            $tmp_rc_file);
+    } else {
+        &write_test_file("[-] $tmp_rc_file does not exist.\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+
 sub generic_exec() {
     my $test_hr = shift;
 
@@ -2622,6 +2768,9 @@ sub init() {
     }
     if (-e "$output_dir/init") {
         unlink "$output_dir/init" or die $!;
+    }
+    if (-e $tmp_rc_file) {
+        unlink $tmp_rc_file or die $!;
     }
 
     if (-e $logfile) {
