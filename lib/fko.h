@@ -34,6 +34,7 @@
 #include <time.h>
 
 #include "rijndael.h"   /* For encryption modes */
+#include "digest.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,6 +83,19 @@ typedef enum {
     FKO_DIGEST_SHA512,
     FKO_LAST_DIGEST_TYPE /* Always leave this as the last one */
 } fko_digest_type_t;
+
+/* Supported hmac digest types...
+*/
+typedef enum {
+    FKO_HMAC_INVALID_DATA = -1,
+    FKO_HMAC_UNKNOWN = 0,
+    FKO_HMAC_MD5,
+    FKO_HMAC_SHA1,
+    FKO_HMAC_SHA256,
+    FKO_HMAC_SHA384,
+    FKO_HMAC_SHA512,
+    FKO_LAST_HMAC_MODE /* Always leave this as the last one */
+} fko_hmac_mode_t;
 
 /* Supported encryption types...
 */
@@ -133,6 +147,7 @@ typedef enum {
     FKO_ERROR_DECRYPTION_SIZE,
     FKO_ERROR_DECRYPTION_FAILURE,
     FKO_ERROR_DIGEST_VERIFICATION_FAILED,
+    FKO_ERROR_UNSUPPORTED_HMAC_MODE,
     FKO_ERROR_UNSUPPORTED_FEATURE,
     FKO_ERROR_UNKNOWN,
 
@@ -206,10 +221,11 @@ enum {
 /* General api calls
 */
 DLL_API int fko_new(fko_ctx_t *ctx);
-DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char *enc_msg, const char *dec_key,
-    int encryption_mode);
+DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char *enc_msg,
+    const char *dec_key, int encryption_mode, const char *hmac_key);
 DLL_API void fko_destroy(fko_ctx_t ctx);
-DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char *enc_key);
+DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char *enc_key,
+    const char *hmac_key);
 
 
 /* Set context data functions
@@ -227,6 +243,7 @@ DLL_API int fko_set_spa_digest(fko_ctx_t ctx);
 DLL_API int fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type);
 DLL_API int fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode);
 DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char *enc_msg);
+DLL_API int fko_set_hmac_mode(fko_ctx_t ctx, const short hmac_mode);
 
 /* Data processing and misc utility functions
 */
@@ -240,6 +257,9 @@ DLL_API int fko_encode_spa_data(fko_ctx_t ctx);
 DLL_API int fko_decode_spa_data(fko_ctx_t ctx);
 DLL_API int fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key);
 DLL_API int fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key);
+DLL_API int fko_verify_hmac(fko_ctx_t ctx, const char *hmac_key);
+DLL_API int fko_calculate_hmac(fko_ctx_t ctx, const char *hmac_key);
+DLL_API int fko_get_hmac_data(fko_ctx_t ctx, char **enc_data);
 
 DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
 

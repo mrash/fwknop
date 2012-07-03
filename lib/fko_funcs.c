@@ -32,6 +32,7 @@
 #include "fko.h"
 #include "cipher_funcs.h"
 #include "base64.h"
+#include "digest.h"
 
 /* Initialize an fko context.
 */
@@ -170,7 +171,7 @@ fko_new(fko_ctx_t *r_ctx)
 */
 int
 fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
-    const char *dec_key, int encryption_mode)
+    const char *dec_key, int encryption_mode, const char *hmac_key)
 {
     fko_ctx_t   ctx;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
@@ -192,6 +193,18 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_mode(ctx, encryption_mode);
+    ctx->initval = 0;
+    if(res != FKO_SUCCESS)
+    {
+        fko_destroy(ctx);
+        return res;
+    }
+
+    /* Check HMAC if the access stanza had an HMAC key
+    */
+    ctx->initval = FKO_CTX_INITIALIZED;
+    if(hmac_key != NULL)
+        res = fko_verify_hmac(ctx, hmac_key);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
@@ -268,6 +281,9 @@ fko_destroy(fko_ctx_t ctx)
         if(ctx->encrypted_msg != NULL)
             free(ctx->encrypted_msg);
 
+        if(ctx->msg_hmac != NULL)
+            free(ctx->msg_hmac);
+
 #if HAVE_LIBGPGME
         if(ctx->gpg_exe != NULL)
             free(ctx->gpg_exe);
@@ -321,13 +337,13 @@ int
 fko_key_gen(char *key_base64, char *hmac_key_base64)
 {
     unsigned char key[RIJNDAEL_MAX_KEYSIZE];
-    unsigned char hmac_key[RIJNDAEL_MAX_KEYSIZE];
+    unsigned char hmac_key[SHA256_BLOCK_LENGTH];
 
     get_random_data(key, RIJNDAEL_MAX_KEYSIZE);
-    get_random_data(hmac_key, RIJNDAEL_MAX_KEYSIZE);
+    get_random_data(hmac_key, SHA256_BLOCK_LENGTH);
 
     b64_encode(key, key_base64, RIJNDAEL_MAX_KEYSIZE);
-    b64_encode(hmac_key, hmac_key_base64, RIJNDAEL_MAX_KEYSIZE);
+    b64_encode(hmac_key, hmac_key_base64, SHA256_BLOCK_LENGTH);
 
     return(FKO_SUCCESS);
 }
@@ -368,14 +384,45 @@ fko_get_version(fko_ctx_t ctx, char **version)
  * set.
 */
 int
-fko_spa_data_final(fko_ctx_t ctx, const char *enc_key)
+fko_spa_data_final(fko_ctx_t ctx, const char *enc_key, const char *hmac_key)
 {
+    char   *tbuf;
+    int     res = 0, data_with_hmac_len = 0;
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    return(fko_encrypt_spa_data(ctx, enc_key));
+    res = fko_encrypt_spa_data(ctx, enc_key);
+
+    /* Now calculate hmac if so configured
+    */
+    if (res == FKO_SUCCESS &&
+            ctx->hmac_mode != FKO_HMAC_UNKNOWN && hmac_key != NULL)
+    {
+        res = fko_calculate_hmac(ctx, hmac_key);
+
+        if (res == FKO_SUCCESS)
+        {
+            /* Now that we have the hmac, append it to the
+             * encrypted data (which has already been base64-encoded
+             * and the trailing '=' chars stripped off).
+            */
+            data_with_hmac_len
+                = strlen(ctx->encrypted_msg)+1+strlen(ctx->msg_hmac)+1;
+
+            tbuf = realloc(ctx->encrypted_msg, data_with_hmac_len);
+            if (tbuf == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            strlcat(tbuf, ctx->msg_hmac, data_with_hmac_len);
+
+            ctx->encrypted_msg = tbuf;
+        }
+    }
+
+    return res;
 }
 
 /* Return the fko SPA encrypted data.

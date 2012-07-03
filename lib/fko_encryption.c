@@ -114,7 +114,7 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int encryption_mode)
     {
         /* We need to realloc space for the salt.
         */
-        tbuf = realloc(ctx->encrypted_msg, b64_len + 12);
+        tbuf = realloc(ctx->encrypted_msg, b64_len + strlen(B64_RIJNDAEL_SALT)+1);
         if(tbuf == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -198,6 +198,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     char           *b64cipher;
     unsigned char  *cipher = NULL;
     size_t          cipher_len;
+    char           *empty_key = "";
 
     /* First make sure we have a recipient key set.
     */
@@ -213,10 +214,20 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 
     sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
 
-    res = gpgme_encrypt(ctx,
-        (unsigned char*)plain, strlen(plain),
-        enc_key, &cipher, &cipher_len
-    );
+    if (enc_key != NULL)
+    {
+        res = gpgme_encrypt(ctx,
+            (unsigned char*)plain, strlen(plain),
+            enc_key, &cipher, &cipher_len
+        );
+    }
+    else
+    {
+        res = gpgme_encrypt(ctx,
+            (unsigned char*)plain, strlen(plain),
+            empty_key, &cipher, &cipher_len
+        );
+    }
 
     /* --DSS XXX: Better parsing of what went wrong would be nice :)
     */

@@ -938,6 +938,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case TIME_OFFSET_MINUS:
                 options->time_offset_minus = parse_time_offset(optarg);
                 break;
+            case USE_HMAC:
+                options->use_hmac = 1;
+                break;
             default:
                 usage();
                 exit(EXIT_FAILURE);

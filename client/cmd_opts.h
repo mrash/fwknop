@@ -45,6 +45,7 @@ enum {
     SHOW_LAST_ARGS,
     RC_FILE_PATH,
     RESOLVE_URL,
+    USE_HMAC,
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
@@ -103,6 +104,7 @@ static struct option cmd_opts[] =
     {"time-offset-plus",    1, NULL, TIME_OFFSET_PLUS},
     {"time-offset-minus",   1, NULL, TIME_OFFSET_MINUS},
     {"user-agent",          1, NULL, 'u'},
+    {"use-hmac",            0, NULL, USE_HMAC},
     {"spoof-user",          1, NULL, 'U'},
     {"verbose",             0, NULL, 'v'},
     {"version",             0, NULL, 'V'},

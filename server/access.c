@@ -581,6 +581,9 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->key_base64 != NULL)
         free(acc->key_base64);
 
+    if(acc->hmac_key != NULL)
+        free(acc->hmac_key);
+
     if(acc->hmac_key_base64 != NULL)
         free(acc->hmac_key_base64);
 

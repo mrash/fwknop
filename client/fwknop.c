@@ -36,7 +36,8 @@
 
 /* prototypes
 */
-static char *get_user_pw(fko_cli_options_t *options, const int crypt_op);
+static void get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
+    char *key, char *hmac_key, const int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
 static void show_last_command(void);
@@ -46,6 +47,8 @@ static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
 int resolve_ip_http(fko_cli_options_t *options);
+static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
+    unsigned int exit_status);
 
 int
 main(int argc, char **argv)
@@ -53,7 +56,9 @@ main(int argc, char **argv)
     fko_ctx_t           ctx, ctx2;
     int                 res;
     char               *spa_data, *version;
-    char                access_buf[MAX_LINE_LEN];
+    char                access_buf[MAX_LINE_LEN] = {0};
+    char                key[MAX_KEY_LEN+1]       = {0};
+    char                hmac_key[MAX_KEY_LEN+1]  = {0};
 
     fko_cli_options_t   options;
 
@@ -294,9 +299,13 @@ main(int argc, char **argv)
         }
     }
 
+    /* Acquire the necessary encryption/hmac keys
+    */
+    get_keys(ctx, &options, key, hmac_key, CRYPT_OP_ENCRYPT);
+
     /* Finalize the context data (encrypt and encode the SPA data)
     */
-    res = fko_spa_data_final(ctx, get_user_pw(&options, CRYPT_OP_ENCRYPT));
+    res = fko_spa_data_final(ctx, key, hmac_key);
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_spa_data_final", res);
@@ -304,7 +313,7 @@ main(int argc, char **argv)
         if(IS_GPG_ERROR(res))
             fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errstr(ctx));
 
-        return(EXIT_FAILURE);
+        clean_exit(ctx, &options, EXIT_FAILURE);
     }
 
     /* Display the context data.
@@ -356,7 +365,8 @@ main(int argc, char **argv)
          * an empty context, populate it with the encrypted data, set our
          * options, then decode it.
         */
-        res = fko_new_with_data(&ctx2, spa_data, NULL, ctx->encryption_mode);
+        res = fko_new_with_data(&ctx2, spa_data, NULL,
+            ctx->encryption_mode, hmac_key);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -385,9 +395,21 @@ main(int argc, char **argv)
             }
         }
 
-        res = fko_decrypt_spa_data(
-            ctx2, get_user_pw(&options, CRYPT_OP_DECRYPT)
-        );
+        get_keys(ctx2, &options, key, hmac_key, CRYPT_OP_DECRYPT);
+
+        /* Verify HMAC first
+        */
+        if(options.use_hmac)
+            res = fko_verify_hmac(ctx2, hmac_key);
+
+        /* Decrypt
+        */
+        if(options.use_hmac)
+        {
+            /* check fko_verify_hmac() return value */
+        }
+        else
+            res = fko_decrypt_spa_data(ctx2, key);
 
         if(res != FKO_SUCCESS)
         {
@@ -415,9 +437,7 @@ main(int argc, char **argv)
         fko_destroy(ctx2);
     }
 
-    fko_destroy(ctx);
-
-    free_configs(&options);
+    clean_exit(ctx, &options, EXIT_SUCCESS);
 
     return(EXIT_SUCCESS);
 }
@@ -729,11 +749,14 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 
 /* Prompt for and receive a user password.
 */
-static char*
-get_user_pw(fko_cli_options_t *options, const int crypt_op)
+static void
+get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
+    char *key, char *hmac_key, const int crypt_op)
 {
-    char        *pw_ptr = NULL;
-    static char *no_pw  = "";
+    int use_hmac = 0, res = 0;
+
+    memset(key, 0x0, MAX_KEY_LEN+1);
+    memset(hmac_key, 0x0, MAX_KEY_LEN+1);
 
     /* First of all if we are using GPG and GPG_AGENT
      * then there is no password to return.
@@ -741,51 +764,86 @@ get_user_pw(fko_cli_options_t *options, const int crypt_op)
     if(options->use_gpg
       && (options->use_gpg_agent
            || (crypt_op == CRYPT_OP_ENCRYPT && options->gpg_signer_key == NULL)))
-        return(no_pw);
+        return;
 
-    /* If --get-key file was specified grab the key/password from it.
-    */
-    if (options->get_key_file[0] != 0x0)
-    {
-        pw_ptr = getpasswd_file(options->get_key_file, options->spa_server_str);
-    }
-    else if (options->have_key)
-    {
-        pw_ptr = options->key;
-    }
+    if (options->have_key)
+        strlcpy(key, options->key, MAX_KEY_LEN+1);
     else if (options->have_base64_key)
     {
         fko_base64_decode(options->key_base64, (unsigned char *) options->key);
-        pw_ptr = options->key;
-    }
-    else if (options->use_gpg)
-    {
-        if(crypt_op == CRYPT_OP_DECRYPT)
-            pw_ptr = getpasswd("Enter passphrase for secret key: ");
-        else if(options->gpg_signer_key && strlen(options->gpg_signer_key))
-            pw_ptr = getpasswd("Enter passphrase for signing: ");
-        else
-            pw_ptr = no_pw;
+        memcpy(key, options->key, RIJNDAEL_MAX_KEYSIZE);
     }
     else
     {
-        if(crypt_op == CRYPT_OP_ENCRYPT)
-            pw_ptr = getpasswd("Enter encryption password: ");
-        else if(crypt_op == CRYPT_OP_DECRYPT)
-            pw_ptr = getpasswd("Enter decryption password: ");
+        /* If --get-key file was specified grab the key/password from it.
+        */
+        if (options->get_key_file[0] != 0x0)
+        {
+            strlcpy(key, getpasswd_file(options->get_key_file,
+                options->spa_server_str), MAX_KEY_LEN+1);
+        }
+        else if (options->use_gpg)
+        {
+            if(crypt_op == CRYPT_OP_DECRYPT)
+                strlcpy(key, getpasswd("Enter passphrase for secret key: "),
+                    MAX_KEY_LEN+1);
+            else if(options->gpg_signer_key && strlen(options->gpg_signer_key))
+                strlcpy(key, getpasswd("Enter passphrase for signing: "),
+                    MAX_KEY_LEN+1);
+        }
         else
-            pw_ptr = getpasswd("Enter password: ");
+        {
+            if(crypt_op == CRYPT_OP_ENCRYPT)
+                strlcpy(key, getpasswd("Enter encryption key: "),
+                    MAX_KEY_LEN+1);
+            else if(crypt_op == CRYPT_OP_DECRYPT)
+                strlcpy(key, getpasswd("Enter decryption key: "),
+                    MAX_KEY_LEN+1);
+            else
+                strlcpy(key, getpasswd("Enter key: "),
+                    MAX_KEY_LEN+1);
+        }
     }
 
-    /* Empty password is allowed, NULL password is not.
-    */
-    if (pw_ptr == NULL)
+
+    if (options->have_hmac_key)
     {
-        fprintf(stderr, "Received no password data, exiting.\n");
-        exit(EXIT_FAILURE);
+        strlcpy(hmac_key, options->hmac_key, MAX_KEY_LEN+1);
+        use_hmac = 1;
+    }
+    else if (options->have_hmac_base64_key)
+    {
+        fko_base64_decode(options->hmac_key_base64, (unsigned char *) options->hmac_key);
+        memcpy(hmac_key, options->hmac_key, SHA256_BLOCK_LENGTH);
+        use_hmac = 1;
+    }
+    else if (options->use_hmac)
+    {
+        /* If --get-key file was specified grab the key/password from it.
+        */
+#if 0
+        if (options->get_key_file[0] != 0x0)
+        {
+            key = getpasswd_file(options->get_key_file, options->spa_server_str);
+        }
+        else
+        {
+#endif
+        strlcpy(hmac_key, getpasswd("Enter HMAC key: "), MAX_KEY_LEN+1);
+        use_hmac = 1;
     }
 
-    return pw_ptr;
+    if (use_hmac)
+    {
+        res = fko_set_hmac_mode(ctx, FKO_HMAC_SHA256);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_hmac_mode", res);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return;
 }
 
 /* Display an FKO error message.
@@ -794,6 +852,16 @@ void
 errmsg(const char *msg, const int err) {
     fprintf(stderr, "%s: %s: Error %i - %s\n",
         MY_NAME, msg, err, fko_errstr(err));
+}
+
+/* free up memory and exist
+*/
+static void
+clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts, unsigned int exit_status)
+{
+    free_configs(opts);
+    fko_destroy(ctx);
+    exit(exit_status);
 }
 
 /* Show the fields of the FKO context.
@@ -808,6 +876,7 @@ display_ctx(fko_ctx_t ctx)
     char       *nat_access      = NULL;
     char       *server_auth     = NULL;
     char       *enc_data        = NULL;
+    char       *hmac_data       = NULL;
     char       *spa_digest      = NULL;
     char       *spa_data        = NULL;
 
@@ -831,6 +900,7 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_digest_type(ctx, &digest_type);
     fko_get_spa_encryption_mode(ctx, &encryption_mode);
     fko_get_encoded_data(ctx, &enc_data);
+    fko_get_hmac_data(ctx, &hmac_data);
     fko_get_spa_digest(ctx, &spa_digest);
     fko_get_spa_data(ctx, &spa_data);
 
@@ -848,6 +918,7 @@ display_ctx(fko_ctx_t ctx)
     printf("Encryption Mode: %d\n", encryption_mode);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
+    printf("    HMAC-SHA256: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
 
     if (enc_data != NULL && spa_digest != NULL)
         printf("      Plaintext: %s:%s\n", enc_data, spa_digest);

@@ -87,6 +87,7 @@ typedef struct fko_cli_options
     int  show_last_command;
     int  run_last_command;
     int  no_save_args;
+    int  use_hmac;
     char spa_server_str[MAX_SERVER_STR_LEN];  /* may be a hostname */
     char allow_ip_str[MAX_IPV4_STR_LEN];
     char spoof_ip_src_str[MAX_IPV4_STR_LEN];
@@ -100,9 +101,11 @@ typedef struct fko_cli_options
     */
     char key[MAX_KEY_LEN+1];
     char key_base64[MAX_KEY_LEN+1];
+    char hmac_key[MAX_KEY_LEN+1];
     char hmac_key_base64[MAX_KEY_LEN+1];
     int  have_key;
     int  have_base64_key;
+    int  have_hmac_key;
     int  have_hmac_base64_key;
 
     /* NAT access

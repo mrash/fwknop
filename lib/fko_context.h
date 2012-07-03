@@ -64,6 +64,7 @@ struct fko_context {
     short  digest_type;
     short  encryption_type;
     int    encryption_mode;
+    short  hmac_mode;
 
     /* Computed or predefined data */
     char           *version;
@@ -72,6 +73,7 @@ struct fko_context {
     /* Computed processed data (encodings, etc.) */
     char           *encoded_msg;
     char           *encrypted_msg;
+    char           *msg_hmac;
 
     /* State info */
     unsigned short  state;

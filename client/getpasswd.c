@@ -205,9 +205,9 @@ getpasswd_file(const char *pw_file, const char *server_str)
     fclose(pwfile_ptr);
 
     if (pwbuf[0] == '\0') {
-        fprintf(stderr, "Could not get password for IP: %s from: %s\n",
+        fprintf(stderr, "Could not get password for destination: %s from: %s\n",
             server_str, pw_file);
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     return pwbuf;

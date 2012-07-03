@@ -40,7 +40,9 @@ my $default_pid_file    = "$run_dir/fwknopd.pid";
 my $tmp_rc_file         = "$run_dir/fwknoprc";
 my $rc_file_default_key    = "$conf_dir/fwknoprc_with_default_key";
 my $rc_file_default_base64_key = "$conf_dir/fwknoprc_with_default_base64_key";
-my $rc_file_named_key    = "$conf_dir/fwknoprc_with_named_key";
+my $rc_file_named_key    = "$conf_dir/fwknoprc_named_key";
+my $rc_file_invalid_base64_key = "$conf_dir/fwknoprc_invalid_base64_key";
+my $rc_file_hmac_base64_key    = "$conf_dir/fwknoprc_default_hmac_base64_key";
 my $open_ports_access_conf = "$conf_dir/open_ports_access.conf";
 my $multi_gpg_access_conf  = "$conf_dir/multi_gpg_access.conf";
 my $multi_stanzas_access_conf = "$conf_dir/multi_stanzas_access.conf";
@@ -692,13 +694,35 @@ my @tests = (
     },
     {
         'category' => 'Rijndael SPA',
-        'subcategory' => 'client+server',
+        'subcategory' => 'client',
+        'detail'   => 'rc file hmac base64 key (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet not generated',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $rc_file_hmac_base64_key",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
         'detail'   => 'rc file invalid stanza (tcp/22 ssh)',
         'err_msg'  => 'SPA packet generated/accepted',
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $rc_file_named_key -n invalidstanza",
         'positive_output_matches' => [qr/Named\sconfiguration.*not\sfound/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
+        'detail'   => 'rc file invalid base64 key (tcp/22 ssh)',
+        'err_msg'  => 'SPA packet generated/accepted',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $rc_file_invalid_base64_key -n testssh",
+        'positive_output_matches' => [qr/look\slike\sbase64\-encoded/],
         'fatal'    => $NO
     },
 
