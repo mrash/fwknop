@@ -110,6 +110,64 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
     return(FKO_SUCCESS);
 }
 
+/* For replay attack detection
+*/
+static int
+get_raw_digest(char **digest, char *pkt_data)
+{
+    fko_ctx_t    ctx = NULL;
+    char        *tmp_digest = NULL;
+    int          res = FKO_SUCCESS;
+
+    /* initialize an FKO context with no decryption key just so
+     * we can get the outer message digest
+    */
+    res = fko_new_with_data(&ctx, (char *)pkt_data, NULL);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error initializing FKO context from SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_FKO_CTX_ERROR);
+    }
+
+    res = fko_set_raw_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error setting digest type for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    res = fko_set_raw_spa_digest(ctx);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error setting digest for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    res = fko_get_raw_spa_digest(ctx, &tmp_digest);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    *digest = strdup(tmp_digest);
+
+    if (digest == NULL)
+        return SPA_MSG_ERROR;
+
+    fko_destroy(ctx);
+    return res;
+}
+
+
 /* Popluate a spa_data struct from an initialized (and populated) FKO context.
 */
 static int
@@ -178,9 +236,10 @@ incoming_spa(fko_srv_options_t *opts)
     */
     fko_ctx_t       ctx = NULL;
 
-    char            *spa_ip_demark, *gpg_id;
+    char            *spa_ip_demark, *gpg_id, *raw_digest = NULL;
     time_t          now_ts;
-    int             res, status, ts_diff, enc_type, found_acc_sip=0, stanza_num=0;
+    int             res, status, ts_diff, enc_type, stanza_num=0;
+    int             added_replay_digest = 0;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -213,7 +272,17 @@ incoming_spa(fko_srv_options_t *opts)
         if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
             /* Check for a replay attack
             */
-            if (is_replay(opts, spa_pkt->packet_data) != SPA_MSG_SUCCESS)
+            res = get_raw_digest(&raw_digest, (char *)spa_pkt->packet_data);
+            if(res != FKO_SUCCESS)
+            {
+                if (raw_digest != NULL)
+                    free(raw_digest);
+                return;
+            }
+            if (raw_digest == NULL)
+                return;
+
+            if (is_replay(opts, raw_digest) != SPA_MSG_SUCCESS)
                 return;
     }
     else
@@ -239,8 +308,6 @@ incoming_spa(fko_srv_options_t *opts)
             acc = acc->next;
             continue;
         }
-
-        found_acc_sip = 1;
 
         log_msg(LOG_INFO, "(stanza #%d) SPA Packet from IP: %s received with access source match",
             stanza_num, spadat.pkt_source_ip);
@@ -366,7 +433,7 @@ incoming_spa(fko_srv_options_t *opts)
             continue;
         }
 
-        /* Do we have a valid FKO context?
+        /* Do we have a valid FKO context?  Did the SPA decrypt properly?
         */
         if(res != FKO_SUCCESS)
         {
@@ -381,6 +448,23 @@ incoming_spa(fko_srv_options_t *opts)
                 fko_destroy(ctx);
             acc = acc->next;
             continue;
+        }
+
+        /* Add this SPA packet into the replay detection cache
+        */
+        if (! added_replay_digest)
+        {
+            res = add_replay(opts, raw_digest);
+            if (res != SPA_MSG_SUCCESS)
+            {
+                log_msg(LOG_WARNING, "(stanza #%d) Could not add digest to replay cache",
+                    stanza_num);
+                if(ctx != NULL)
+                    fko_destroy(ctx);
+                acc = acc->next;
+                continue;
+            }
+            added_replay_digest = 1;
         }
 
         /* At this point, we assume the SPA data is valid.  Now we need to see
@@ -656,12 +740,8 @@ incoming_spa(fko_srv_options_t *opts)
         break;
     }
 
-    if(! found_acc_sip)
-    {
-        log_msg(LOG_WARNING,
-            "No access data found for source IP: %s", spadat.pkt_source_ip
-        );
-    }
+    if (raw_digest != NULL)
+        free(raw_digest);
 
     return;
 }
