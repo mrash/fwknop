@@ -152,6 +152,22 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
     return(res);
 }
 
+/* Check for access.conf stanza SOURCE match based on SPA packet
+ * source IP
+*/
+static int
+is_src_match(acc_stanza_t *acc, const uint32_t ip)
+{
+    while (acc)
+    {
+        if(compare_addr_list(acc->source_list, ip))
+            return 1;
+
+        acc = acc->next;
+    }
+    return 0;
+}
+
 /* Process the SPA packet data
 */
 void
@@ -192,6 +208,26 @@ incoming_spa(fko_srv_options_t *opts)
         return;
     }
 
+    if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
+    {
+        if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+            /* Check for a replay attack
+            */
+            if (is_replay(opts, spa_pkt->packet_data) != SPA_MSG_SUCCESS)
+                return;
+    }
+    else
+    {
+        log_msg(LOG_WARNING,
+            "No access data found for source IP: %s", spadat.pkt_source_ip
+        );
+        return;
+    }
+
+    /* Now that we know there is a matching access.conf stanza and the
+     * incoming SPA packet is not a replay, see if we should grant any
+     * access
+    */
     while(acc)
     {
         stanza_num++;
@@ -380,20 +416,6 @@ incoming_spa(fko_srv_options_t *opts)
                 log_msg(LOG_WARNING,
                     "(stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
                     stanza_num, gpg_id);
-                if(ctx != NULL)
-                    fko_destroy(ctx);
-                acc = acc->next;
-                continue;
-            }
-        }
-
-        /* Check for replays if so configured.
-        */
-        if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
-        {
-            res = replay_check(opts, ctx);
-            if(res != 0) /* non-zero means we have seen this packet before. */
-            {
                 if(ctx != NULL)
                     fko_destroy(ctx);
                 acc = acc->next;

@@ -77,6 +77,61 @@
 #define DATE_LEN 18
 #define MAX_DIGEST_SIZE 64
 
+static int
+get_raw_digest(char **digest, char *pkt_data)
+{
+    fko_ctx_t    ctx = NULL;
+    char        *tmp_digest = NULL;
+    int          res = FKO_SUCCESS;
+
+    /* initialize an FKO context with no decryption key just so
+     * we can get the outer message digest
+    */
+    res = fko_new_with_data(&ctx, (char *)pkt_data, NULL);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error initializing FKO context from SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_FKO_CTX_ERROR);
+    }
+
+    res = fko_set_raw_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error setting digest type for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    res = fko_set_raw_spa_digest(ctx);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error setting digest for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    res = fko_get_raw_spa_digest(ctx, &tmp_digest);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    *digest = strdup(tmp_digest);
+
+    if (digest == NULL)
+        return SPA_MSG_ERROR;
+
+    fko_destroy(ctx);
+    return res;
+}
+
 /* Rotate the digest file by simply renaming it.
 */
 static void
@@ -424,23 +479,23 @@ replay_db_cache_init(fko_srv_options_t *opts)
  * 0 for no match, and -1 on error.
 */
 int
-replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
+is_replay(fko_srv_options_t *opts, unsigned char *pkt_data)
 {
 #ifdef NO_DIGEST_CACHE
     return(-1);
 #else
 
 #if USE_FILE_CACHE
-    return replay_check_file_cache(opts, ctx);
+    return is_replay_file_cache(opts, pkt_data);
 #else
-    return replay_check_dbm_cache(opts, ctx);
+    return is_replay_dbm_cache(opts, pkt_data);
 #endif
 #endif /* NO_DIGEST_CACHE */
 }
 
 #if USE_FILE_CACHE
 int
-replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
+is_replay_file_cache(fko_srv_options_t *opts, unsigned char *pkt_data)
 {
     char       *digest = NULL;
     char        src_ip[INET_ADDRSTRLEN+1] = {0};
@@ -450,14 +505,17 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     struct digest_cache_list *digest_list_ptr = NULL, *digest_elm = NULL;
 
-    res = fko_get_spa_digest(ctx, &digest);
+    res = get_raw_digest(&digest, (char *)pkt_data);
+
     if(res != FKO_SUCCESS)
     {
-        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
-            fko_errstr(res));
-
-        return(SPA_MSG_DIGEST_ERROR);
+        if (digest != NULL)
+            free(digest);
+        return res;
     }
+
+    if (digest == NULL)
+        return SPA_MSG_ERROR;
 
     digest_len = strlen(digest);
 
@@ -471,6 +529,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
             replay_warning(opts, &(digest_list_ptr->cache_info));
 
+            free(digest);
             return(SPA_MSG_REPLAY);
         }
     }
@@ -484,6 +543,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
         log_msg(LOG_WARNING, "Error calloc() returned NULL for digest cache element",
             fko_errstr(SPA_MSG_ERROR));
 
+        free(digest);
         return(SPA_MSG_ERROR);
     }
     if ((digest_elm->cache_info.digest = calloc(1, digest_len+1)) == NULL)
@@ -491,6 +551,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
         log_msg(LOG_WARNING, "Error calloc() returned NULL for digest cache string",
             fko_errstr(SPA_MSG_ERROR));
         free(digest_elm);
+        free(digest);
         return(SPA_MSG_ERROR);
     }
 
@@ -513,6 +574,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
     {
         log_msg(LOG_WARNING, "Could not open digest cache: %s",
             opts->config[CONF_DIGEST_FILE]);
+        free(digest);
         return(SPA_MSG_DIGEST_CACHE_ERROR);
     }
 
@@ -531,13 +593,14 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     fclose(digest_file_ptr);
 
+    free(digest);
     return(SPA_MSG_SUCCESS);
 }
 #endif /* USE_FILE_CACHE */
 
 #if !USE_FILE_CACHE
 int
-replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
+is_replay_dbm_cache(fko_srv_options_t *opts, unsigned char *pkt_data)
 {
 #ifdef NO_DIGEST_CACHE
     return 0;
@@ -550,19 +613,22 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 #endif
     datum       db_key, db_ent;
 
-    char       *digest;
+    char       *digest = NULL;
     int         digest_len, res;
 
     digest_cache_info_t dc_info;
 
-    res = fko_get_spa_digest(ctx, &digest);
+    res = get_raw_digest(&digest, (char *)pkt_data);
+
     if(res != FKO_SUCCESS)
     {
-        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
-            fko_errstr(res));
-
-        return(SPA_MSG_DIGEST_ERROR);
+        if (digest != NULL)
+            free(digest);
+        return res;
     }
+
+    if (digest == NULL)
+        return SPA_MSG_ERROR;
 
     digest_len = strlen(digest);
 
@@ -586,6 +652,7 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
             MY_DBM_STRERROR(errno)
         );
 
+        free(digest);
         return(SPA_MSG_DIGEST_CACHE_ERROR);
     }
 
@@ -639,6 +706,7 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
     MY_DBM_CLOSE(rpdb);
 
+    free(digest);
     return(res);
 #endif /* NO_DIGEST_CACHE */
 }
