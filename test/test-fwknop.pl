@@ -27,6 +27,7 @@ my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
 my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
 my $invalid_expire_access_conf = "$conf_dir/invalid_expire_access.conf";
 my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
+my $dual_key_usage_access_conf = "$conf_dir/dual_key_usage_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
@@ -586,6 +587,25 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'dual usage access key (tcp/80 http)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $dual_key_usage_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        ### check for the first stanza that does not allow tcp/80 - the
+        ### second stanza allows this
+        'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
