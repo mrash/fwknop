@@ -33,6 +33,7 @@ my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
 my $invalid_expire_access_conf = "$conf_dir/invalid_expire_access.conf";
 my $invalid_source_access_conf = "$conf_dir/invalid_source_access.conf";
 my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
+my $dual_key_usage_access_conf = "$conf_dir/dual_key_usage_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
@@ -76,7 +77,11 @@ my $test_include = '';
 my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
+my %valgrind_flagged_fcns = ();
+my %valgrind_flagged_fcns_unique = ();
 my $list_mode = 0;
+my $diff_dir1 = '';
+my $diff_dir2 = '';
 my $loopback_intf = '';
 my $anonymize_results = 0;
 my $current_test_file = "$output_dir/init";
@@ -123,7 +128,10 @@ exit 1 unless GetOptions(
     'List-mode'         => \$list_mode,
     'enable-valgrind'   => \$use_valgrind,
     'valgrind-path=s'   => \$valgrindCmd,
+    'output-dir=s'      => \$output_dir,
     'diff'              => \$diff_mode,
+    'diff-dir1=s'       => \$diff_dir1,
+    'diff-dir2=s'       => \$diff_dir2,
     'help'              => \$help
 );
 
@@ -595,6 +603,25 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'dual usage access key (tcp/80 http)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $default_conf -a $dual_key_usage_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        ### check for the first stanza that does not allow tcp/80 - the
+        ### second stanza allows this
+        'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
@@ -1317,7 +1344,6 @@ my @tests = (
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fatal'    => $NO
     },
-
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'server',
@@ -1335,6 +1361,18 @@ my @tests = (
         'fatal'    => $NO
     },
 );
+
+if ($use_valgrind) {
+    push @tests,
+        {
+            'category' => 'valgrind output',
+            'subcategory' => 'flagged functions',
+            'detail'   => '',
+            'err_msg'  => 'could not parse flagged functions',
+            'function' => \&parse_valgrind_flagged_functions,
+            'fatal'    => $NO
+        };
+}
 
 my %test_keys = (
     'category'        => $REQUIRED,
@@ -1431,7 +1469,8 @@ sub process_include_exclude() {
     if (@tests_to_include) {
         my $found = 0;
         for my $test (@tests_to_include) {
-            if ($msg =~ /$test/) {
+            if ($msg =~ /$test/ or ($use_valgrind
+                    and $msg =~ /valgrind\soutput/)) {
                 $found = 1;
                 last;
             }
@@ -1452,17 +1491,21 @@ sub process_include_exclude() {
 }
 
 sub diff_test_results() {
+
+    $diff_dir1 = "${output_dir}.last" unless $diff_dir2;
+    $diff_dir2 = $output_dir unless $diff_dir1;
+
     die "[*] Need results from a previous run before running --diff"
-        unless -d "${output_dir}.last";
-    die "[*] Current results set does not exist." unless -d $output_dir;
+        unless -d $diff_dir2;
+    die "[*] Current results set does not exist." unless -d $diff_dir1;
 
     my %current_tests  = ();
     my %previous_tests = ();
 
     ### Only diff results for matching tests (parse the logfile to see which
     ### test numbers match across the two test cycles).
-    &build_results_hash(\%current_tests, $output_dir);
-    &build_results_hash(\%previous_tests, "${output_dir}.last");
+    &build_results_hash(\%current_tests, $diff_dir1);
+    &build_results_hash(\%previous_tests, $diff_dir2);
 
     for my $test_msg (sort {$current_tests{$a}{'num'} <=> $current_tests{$b}{'num'}}
                 keys %current_tests) {
@@ -1493,25 +1536,25 @@ sub diff_results() {
     ### remove CMD timestamps
     my $cmd_search_re = qr/^\S+\s.*?\s\d{4}\sCMD\:/;
 
-    for my $file ("${output_dir}.last/${previous_num}.test",
-        "${output_dir}.last/${previous_num}_fwknopd.test",
-        "${output_dir}/${current_num}.test",
-        "${output_dir}/${current_num}_fwknopd.test",
+    for my $file ("$diff_dir1/${previous_num}.test",
+        "$diff_dir1/${previous_num}_fwknopd.test",
+        "$diff_dir2/${current_num}.test",
+        "$diff_dir2/${current_num}_fwknopd.test",
     ) {
         system qq{perl -p -i -e 's|$valgrind_search_re||' $file} if -e $file;
         system qq{perl -p -i -e 's|$cmd_search_re|CMD:|' $file} if -e $file;
     }
 
-    if (-e "${output_dir}.last/${previous_num}.test"
-            and -e "${output_dir}/${current_num}.test") {
-        system "diff -u ${output_dir}.last/${previous_num}.test " .
-            "${output_dir}/${current_num}.test";
+    if (-e "$diff_dir1/${previous_num}.test"
+            and -e "$diff_dir2/${current_num}.test") {
+        system "diff -u $diff_dir1/${previous_num}.test " .
+            "$diff_dir2/${current_num}.test";
     }
 
-    if (-e "${output_dir}.last/${previous_num}_fwknopd.test"
-            and -e "${output_dir}/${current_num}_fwknopd.test") {
-        system "diff -u ${output_dir}.last/${previous_num}_fwknopd.test " .
-            "${output_dir}/${current_num}_fwknopd.test";
+    if (-e "$diff_dir1/${previous_num}_fwknopd.test"
+            and -e "$diff_dir2/${current_num}_fwknopd.test") {
+        system "diff -u $diff_dir1/${previous_num}_fwknopd.test " .
+            "$diff_dir2/${current_num}_fwknopd.test";
     }
 
     return;
@@ -2722,6 +2765,42 @@ sub identify_loopback_intf() {
     return;
 }
 
+sub parse_valgrind_flagged_functions() {
+    for my $file (glob("$output_dir/*.test")) {
+        my $type = 'server';
+        $type = 'client' if $file =~ /\d\.test/;
+        open F, "< $file" or die $!;
+        while (<F>) {
+            ### ==30969==    by 0x4E3983A: fko_set_username (fko_user.c:65)
+            if (/^==.*\sby\s\S+\:\s(\S+)\s(.*)/) {
+                $valgrind_flagged_fcns{$type}{"$1 $2"}++;
+                $valgrind_flagged_fcns_unique{$type}{$1}++;
+            }
+        }
+        close F;
+    }
+
+    open F, ">> $current_test_file" or die $!;
+    for my $type ('client', 'server') {
+        print F "\n[+] fwknop $type functions (unique view):\n";
+        next unless defined $valgrind_flagged_fcns_unique{$type};
+        for my $fcn (sort {$valgrind_flagged_fcns_unique{$type}{$b}
+                <=> $valgrind_flagged_fcns_unique{$type}{$a}}
+                keys %{$valgrind_flagged_fcns_unique{$type}}) {
+            printf F "    %5d : %s\n", $valgrind_flagged_fcns_unique{$type}{$fcn}, $fcn;
+        }
+        print F "\n[+] fwknop $type functions (with call line numbers):\n";
+        for my $fcn (sort {$valgrind_flagged_fcns{$type}{$b}
+                <=> $valgrind_flagged_fcns{$type}{$a}} keys %{$valgrind_flagged_fcns{$type}}) {
+            printf F "    %5d : %s\n", $valgrind_flagged_fcns{$type}{$fcn}, $fcn;
+        }
+        next unless defined $valgrind_flagged_fcns{$type};
+
+    }
+    close F;
+    return 1;
+}
+
 sub is_fw_rule_active() {
     my $test_hr = shift;
 
@@ -2839,5 +2918,42 @@ sub logr() {
 }
 
 sub usage() {
-    return;
+    print <<_HELP_;
+
+[+] $0 <options>
+
+    -A   --Anonymize-results      - Prepare anonymized results at:
+                                    $tarfile
+    --diff                        - Compare the results of one test run to
+                                    another.  By default this compares output
+                                    in ${output_dir}.last to $output_dir
+    --diff-dir1=<path>            - Left hand side of diff directory path,
+                                    default is: ${output_dir}.last
+    --diff-dir2=<path>            - Right hand side of diff directory path,
+                                    default is: $output_dir
+    --include=<regex>             - Specify a regex to be used over test
+                                    names that must match.
+    --exclude=<regex>             - Specify a regex to be used over test
+                                    names that must not match.
+    --enable-recompile            - Recompile fwknop sources and look for
+                                    compilation warnings.
+    --enable-valgrind             - Run every test underneath valgrind.
+    --List                        - List test names.
+    --loopback-intf=<intf>        - Specify loopback interface name (default
+                                    depends on the OS where the test suite
+                                    is executed).
+    --output-dir=<path>           - Path to output directory, default is:
+                                    $output_dir
+    --fwknop-path=<path>          - Path to fwknop binary, default is:
+                                    $fwknopCmd
+    --fwknopd-path=<path>         - Path to fwknopd binary, default is:
+                                    $fwknopdCmd
+    --libfko-path=<path>          - Path to libfko, default is:
+                                    $libfko_bin
+    --valgrind-path=<path>        - Path to valgrind, default is:
+                                    $valgrindCmd
+    -h   --help                   - Display usage on STDOUT and exit.
+
+_HELP_
+    exit 0;
 }
