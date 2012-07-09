@@ -71,7 +71,8 @@ my $test_include = '';
 my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
-my %valgrind_suspect_functions = ();
+my %valgrind_flagged_fcns = ();
+my %valgrind_flagged_fcns_unique = ();
 my $list_mode = 0;
 my $diff_dir1 = '';
 my $diff_dir2 = '';
@@ -1259,10 +1260,10 @@ if ($use_valgrind) {
     push @tests,
         {
             'category' => 'valgrind output',
-            'subcategory' => 'suspect functions',
+            'subcategory' => 'flagged functions',
             'detail'   => '',
-            'err_msg'  => 'could not parse suspect functions',
-            'function' => \&parse_valgrind_suspect_functions,
+            'err_msg'  => 'could not parse flagged functions',
+            'function' => \&parse_valgrind_flagged_functions,
             'fatal'    => $NO
         };
 }
@@ -2614,15 +2615,16 @@ sub identify_loopback_intf() {
     return;
 }
 
-sub parse_valgrind_suspect_functions() {
+sub parse_valgrind_flagged_functions() {
     for my $file (glob("$output_dir/*.test")) {
         my $type = 'server';
         $type = 'client' if $file =~ /\d\.test/;
         open F, "< $file" or die $!;
         while (<F>) {
             ### ==30969==    by 0x4E3983A: fko_set_username (fko_user.c:65)
-            if (/^==.*\sby\s\S+\:\s(.*)/) {
-                $valgrind_suspect_functions{$type}{$1}++;
+            if (/^==.*\sby\s\S+\:\s(\S+)\s(.*)/) {
+                $valgrind_flagged_fcns{$type}{"$1 $2"}++;
+                $valgrind_flagged_fcns_unique{$type}{$1}++;
             }
         }
         close F;
@@ -2630,13 +2632,20 @@ sub parse_valgrind_suspect_functions() {
 
     open F, ">> $current_test_file" or die $!;
     for my $type ('client', 'server') {
-        print F "[+] fwknop $type functions:\n";
-        next unless defined $valgrind_suspect_functions{$type};
-        for my $fcn (sort {$valgrind_suspect_functions{$type}{$b}
-                <=> $valgrind_suspect_functions{$type}{$a}} keys %{$valgrind_suspect_functions{$type}}) {
-            printf F "    %5d : %s\n", $valgrind_suspect_functions{$type}{$fcn}, $fcn;
+        print F "\n[+] fwknop $type functions (unique view):\n";
+        next unless defined $valgrind_flagged_fcns_unique{$type};
+        for my $fcn (sort {$valgrind_flagged_fcns_unique{$type}{$b}
+                <=> $valgrind_flagged_fcns_unique{$type}{$a}}
+                keys %{$valgrind_flagged_fcns_unique{$type}}) {
+            printf F "    %5d : %s\n", $valgrind_flagged_fcns_unique{$type}{$fcn}, $fcn;
         }
-        print F "\n";
+        print F "\n[+] fwknop $type functions (with call line numbers):\n";
+        for my $fcn (sort {$valgrind_flagged_fcns{$type}{$b}
+                <=> $valgrind_flagged_fcns{$type}{$a}} keys %{$valgrind_flagged_fcns{$type}}) {
+            printf F "    %5d : %s\n", $valgrind_flagged_fcns{$type}{$fcn}, $fcn;
+        }
+        next unless defined $valgrind_flagged_fcns{$type};
+
     }
     close F;
     return 1;
