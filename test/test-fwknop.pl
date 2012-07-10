@@ -1492,8 +1492,8 @@ sub process_include_exclude() {
 
 sub diff_test_results() {
 
-    $diff_dir1 = "${output_dir}.last" unless $diff_dir2;
-    $diff_dir2 = $output_dir unless $diff_dir1;
+    $diff_dir1 = "${output_dir}.last" unless $diff_dir1;
+    $diff_dir2 = $output_dir unless $diff_dir2;
 
     die "[*] Need results from a previous run before running --diff"
         unless -d $diff_dir2;

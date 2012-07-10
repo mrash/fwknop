@@ -113,6 +113,7 @@ EXTRA_DIST = \
     test/conf/client-gpg/trustdb.gpg \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
+    test/conf/dual_key_usage_access.conf \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
     test/conf/force_nat_access.conf \
