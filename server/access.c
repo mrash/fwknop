@@ -49,7 +49,31 @@ add_acc_string(char **var, const char *val)
     if((*var = strdup(val)) == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error adding access list entry: %s", var
+            "Fatal memory allocation error adding access list entry: %s", *var
+        );
+        exit(EXIT_FAILURE);
+    }
+}
+
+/* Decode base64 encoded string into access entry
+*/
+static void
+add_acc_b64_string(char **var, int *len, const char *val)
+{
+    if((*var = strdup(val)) == NULL)
+    {
+        log_msg(LOG_ERR,
+            "Fatal memory allocation error adding access list entry: %s", *var
+        );
+        exit(EXIT_FAILURE);
+    }
+    memset(*var, 0x0, strlen(val));
+    *len = fko_base64_decode(val, (unsigned char *) *var);
+
+    if (*len < 0)
+    {
+        log_msg(LOG_ERR,
+            "base64 decoding returned error for: %s", *var
         );
         exit(EXIT_FAILURE);
     }
@@ -752,9 +776,8 @@ set_acc_defaults(fko_srv_options_t *opts)
 static int
 acc_data_is_valid(const acc_stanza_t *acc)
 {
-    if((acc->key == NULL || !strlen(acc->key))
-      && (acc->key_base64 == NULL || !strlen(acc->key_base64))
-      && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw)))
+    if(acc->key_len < 0 || ((acc->key == NULL && acc->key_base64 == NULL)
+      && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw))))
     {
         fprintf(stderr,
             "[*] No keys found for access stanza source: '%s'\n", acc->source
@@ -904,6 +927,7 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key), val);
+            curr_acc->key_len = strlen(curr_acc->key);
         }
         else if(CONF_VAR_IS(var, "KEY_BASE64"))
         {
@@ -922,6 +946,8 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key_base64), val);
+            add_acc_b64_string(&(curr_acc->key),
+                &(curr_acc->key_len), curr_acc->key_base64);
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
         {
@@ -940,6 +966,8 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->hmac_key_base64), val);
+            add_acc_b64_string(&(curr_acc->hmac_key),
+                &curr_acc->hmac_key_len, curr_acc->hmac_key_base64);
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {

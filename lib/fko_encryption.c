@@ -43,7 +43,7 @@
 /* Prep and encrypt using Rijndael
 */
 static int
-_rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
+_rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
 {
     char           *plaintext;
     char           *b64ciphertext;
@@ -68,8 +68,9 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     cipher_len = rij_encrypt(
-        (unsigned char*)plaintext, strlen(plaintext), (char*)enc_key, ciphertext,
-        ctx->encryption_mode
+        (unsigned char*)plaintext, strlen(plaintext),
+        (char*)enc_key, enc_key_len,
+        ciphertext, ctx->encryption_mode
     );
 
     /* Now make a bucket for the base64-encoded version and populate it.
@@ -98,7 +99,8 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 static int
-_rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int encryption_mode)
+_rijndael_decrypt(fko_ctx_t ctx,
+    const char *dec_key, const int key_len, int encryption_mode)
 {
     char           *tbuf;
     unsigned char  *ndx;
@@ -155,7 +157,7 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int encryption_mode)
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    pt_len = rij_decrypt(cipher, cipher_len, dec_key,
+    pt_len = rij_decrypt(cipher, cipher_len, dec_key, key_len,
                 (unsigned char*)ctx->encoded_msg, encryption_mode);
 
     /* Done with cipher...
@@ -413,7 +415,7 @@ fko_get_spa_encryption_mode(fko_ctx_t ctx, int *enc_mode)
 /* Encrypt the encoded SPA data.
 */
 int
-fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
+fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
 {
     int             res = 0;
 
@@ -445,7 +447,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
     /* Encrypt according to type and return...
     */
     if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
-        res = _rijndael_encrypt(ctx, enc_key);
+        res = _rijndael_encrypt(ctx, enc_key, enc_key_len);
     else if(ctx->encryption_type == FKO_ENCRYPTION_GPG)
 #if HAVE_LIBGPGME
         res = gpg_encrypt(ctx, enc_key);
@@ -461,7 +463,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 int
-fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
+fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key, const int key_len)
 {
     int     enc_type, res;
 
@@ -484,7 +486,8 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key)
     else if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
     {
         ctx->encryption_type = FKO_ENCRYPTION_RIJNDAEL;
-        res = _rijndael_decrypt(ctx, dec_key, ctx->encryption_mode);
+        res = _rijndael_decrypt(ctx,
+            dec_key, key_len, ctx->encryption_mode);
     }
     else
         return(FKO_ERROR_INVALID_DATA);

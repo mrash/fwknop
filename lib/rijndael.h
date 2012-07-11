@@ -63,7 +63,7 @@ typedef struct {
   int nrounds;			/* number of rounds to use for our key size */
   int mode;			    /* encryption mode */
   /* Added by DSS */
-  uint8_t key[32];
+  uint8_t key[RIJNDAEL_MAX_KEYSIZE];
   uint8_t iv[16];
   uint8_t salt[8];
 } RIJNDAEL_context;
@@ -77,7 +77,8 @@ typedef struct {
  * PASS A VALUE LESS THAN 16 TO KEYSIZE!
  */
 void
-rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const uint8_t *key);
+rijndael_setup(RIJNDAEL_context *ctx,
+    const size_t keysize, const uint8_t *key);
 
 /*
  * rijndael_encrypt()

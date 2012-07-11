@@ -171,7 +171,9 @@ fko_new(fko_ctx_t *r_ctx)
 */
 int
 fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
-    const char *dec_key, int encryption_mode, const char *hmac_key)
+    const char *dec_key, const int dec_key_len,
+    int encryption_mode, const char *hmac_key,
+    const int hmac_key_len)
 {
     fko_ctx_t   ctx;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
@@ -204,7 +206,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     if(hmac_key != NULL)
-        res = fko_verify_hmac(ctx, hmac_key);
+        res = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
@@ -221,7 +223,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
     */
     if(dec_key != NULL)
     {
-        res = fko_decrypt_spa_data(ctx, dec_key);
+        res = fko_decrypt_spa_data(ctx, dec_key, dec_key_len);
 
         if(res != FKO_SUCCESS)
         {
@@ -330,7 +332,7 @@ fko_destroy(fko_ctx_t ctx)
     free(ctx);
 }
 
-/* Generate Rijndael and HMAC keys from /dev/random and base-64
+/* Generate Rijndael and HMAC keys from /dev/random and base64
  * encode them
 */
 int
@@ -353,15 +355,13 @@ fko_key_gen(char *key_base64, char *hmac_key_base64)
 int
 fko_base64_encode(unsigned char *in, char *out, int in_len)
 {
-    b64_encode(in, out, in_len);
-    return(FKO_SUCCESS);
+    return b64_encode(in, out, in_len);
 }
 
 int
 fko_base64_decode(const char *in, unsigned char *out)
 {
-    b64_decode(in, out);
-    return(FKO_SUCCESS);
+    return b64_decode(in, out);
 }
 
 /* Return the fko version
@@ -384,7 +384,9 @@ fko_get_version(fko_ctx_t ctx, char **version)
  * set.
 */
 int
-fko_spa_data_final(fko_ctx_t ctx, const char *enc_key, const char *hmac_key)
+fko_spa_data_final(fko_ctx_t ctx,
+    const char *enc_key, const int enc_key_len,
+    const char *hmac_key, const int hmac_key_len)
 {
     char   *tbuf;
     int     res = 0, data_with_hmac_len = 0;
@@ -394,14 +396,14 @@ fko_spa_data_final(fko_ctx_t ctx, const char *enc_key, const char *hmac_key)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    res = fko_encrypt_spa_data(ctx, enc_key);
+    res = fko_encrypt_spa_data(ctx, enc_key, enc_key_len);
 
     /* Now calculate hmac if so configured
     */
     if (res == FKO_SUCCESS &&
             ctx->hmac_mode != FKO_HMAC_UNKNOWN && hmac_key != NULL)
     {
-        res = fko_calculate_hmac(ctx, hmac_key);
+        res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
 
         if (res == FKO_SUCCESS)
         {

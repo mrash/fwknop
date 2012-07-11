@@ -37,7 +37,8 @@
 /* prototypes
 */
 static void get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
-    char *key, char *hmac_key, const int crypt_op);
+    char *key, int *key_len, char *hmac_key,
+    int *hmac_key_len, const int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
 static void show_last_command(void);
@@ -59,6 +60,7 @@ main(int argc, char **argv)
     char                access_buf[MAX_LINE_LEN] = {0};
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
+    int                 key_len = 0, hmac_key_len = 0;
 
     fko_cli_options_t   options;
 
@@ -301,11 +303,12 @@ main(int argc, char **argv)
 
     /* Acquire the necessary encryption/hmac keys
     */
-    get_keys(ctx, &options, key, hmac_key, CRYPT_OP_ENCRYPT);
+    get_keys(ctx, &options, key, &key_len,
+        hmac_key, &hmac_key_len, CRYPT_OP_ENCRYPT);
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
-    res = fko_spa_data_final(ctx, key, hmac_key);
+    res = fko_spa_data_final(ctx, key, key_len, hmac_key, hmac_key_len);
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_spa_data_final", res);
@@ -366,7 +369,7 @@ main(int argc, char **argv)
          * options, then decode it.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            ctx->encryption_mode, hmac_key);
+            0, ctx->encryption_mode, hmac_key, hmac_key_len);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -395,12 +398,13 @@ main(int argc, char **argv)
             }
         }
 
-        get_keys(ctx2, &options, key, hmac_key, CRYPT_OP_DECRYPT);
+        get_keys(ctx2, &options, key, &key_len,
+            hmac_key, &hmac_key_len, CRYPT_OP_DECRYPT);
 
         /* Verify HMAC first
         */
         if(options.use_hmac)
-            res = fko_verify_hmac(ctx2, hmac_key);
+            res = fko_verify_hmac(ctx2, hmac_key, hmac_key_len);
 
         /* Decrypt
         */
@@ -409,7 +413,7 @@ main(int argc, char **argv)
             /* check fko_verify_hmac() return value */
         }
         else
-            res = fko_decrypt_spa_data(ctx2, key);
+            res = fko_decrypt_spa_data(ctx2, key, key_len);
 
         if(res != FKO_SUCCESS)
         {
@@ -751,7 +755,8 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 */
 static void
 get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
-    char *key, char *hmac_key, const int crypt_op)
+    char *key, int *key_len, char *hmac_key,
+    int *hmac_key_len, const int crypt_op)
 {
     int use_hmac = 0, res = 0;
 
@@ -767,10 +772,14 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         return;
 
     if (options->have_key)
+    {
         strlcpy(key, options->key, MAX_KEY_LEN+1);
+        *key_len = strlen(key);
+    }
     else if (options->have_base64_key)
     {
-        fko_base64_decode(options->key_base64, (unsigned char *) options->key);
+        *key_len = fko_base64_decode(options->key_base64,
+                (unsigned char *) options->key);
         memcpy(key, options->key, RIJNDAEL_MAX_KEYSIZE);
     }
     else
@@ -781,15 +790,22 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         {
             strlcpy(key, getpasswd_file(options->get_key_file,
                 options->spa_server_str), MAX_KEY_LEN+1);
+            *key_len = strlen(key);
         }
         else if (options->use_gpg)
         {
             if(crypt_op == CRYPT_OP_DECRYPT)
+            {
                 strlcpy(key, getpasswd("Enter passphrase for secret key: "),
                     MAX_KEY_LEN+1);
+                *key_len = strlen(key);
+            }
             else if(options->gpg_signer_key && strlen(options->gpg_signer_key))
+            {
                 strlcpy(key, getpasswd("Enter passphrase for signing: "),
                     MAX_KEY_LEN+1);
+                *key_len = strlen(key);
+            }
         }
         else
         {
@@ -802,6 +818,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             else
                 strlcpy(key, getpasswd("Enter key: "),
                     MAX_KEY_LEN+1);
+            *key_len = strlen(key);
         }
     }
 
@@ -809,11 +826,13 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     if (options->have_hmac_key)
     {
         strlcpy(hmac_key, options->hmac_key, MAX_KEY_LEN+1);
+        *hmac_key_len = strlen(hmac_key);
         use_hmac = 1;
     }
     else if (options->have_hmac_base64_key)
     {
-        fko_base64_decode(options->hmac_key_base64, (unsigned char *) options->hmac_key);
+        *hmac_key_len = fko_base64_decode(options->hmac_key_base64,
+            (unsigned char *) options->hmac_key);
         memcpy(hmac_key, options->hmac_key, SHA256_BLOCK_LENGTH);
         use_hmac = 1;
     }
@@ -830,6 +849,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         {
 #endif
         strlcpy(hmac_key, getpasswd("Enter HMAC key: "), MAX_KEY_LEN+1);
+        *hmac_key_len = strlen(hmac_key);
         use_hmac = 1;
     }
 

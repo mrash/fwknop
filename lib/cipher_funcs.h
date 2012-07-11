@@ -49,9 +49,11 @@
 
 void get_random_data(unsigned char *data, const size_t len);
 size_t rij_encrypt(unsigned char *in, size_t len,
-    const char *key, unsigned char *out, int encryption_mode);
+    const char *key, const int key_len,
+    unsigned char *out, int encryption_mode);
 size_t rij_decrypt(unsigned char *in, size_t len,
-    const char *key, unsigned char *out, int encryption_mode);
+    const char *key, const int key_len,
+    unsigned char *out, int encryption_mode);
 
 #endif /* CIPHER_FUNCS_H */
 

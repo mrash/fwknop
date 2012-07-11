@@ -115,27 +115,27 @@ get_random_data(unsigned char *data, const size_t len)
  * the Perl Crypt::CBC module's use of Rijndael.
 */
 static void
-rij_salt_and_iv(RIJNDAEL_context *ctx, const char *pass, const unsigned char *data)
+rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
+        const int key_len, const unsigned char *data)
 {
-    char            pw_buf[16];
+    char            pw_buf[RIJNDAEL_MIN_KEYSIZE];
     unsigned char   tmp_buf[64];    /* How big does this need to be? */
     unsigned char   kiv_buf[48];    /* Key and IV buffer */
     unsigned char   md5_buf[16];    /* Buffer for computed md5 hash */
 
     size_t          kiv_len = 0;
-    size_t          plen = strlen(pass);
 
-    /* First make pw 16 bytes (pad with "0" (ascii 0x30)) or truncate.
+    /* First make pw 32 bytes (pad with "0" (ascii 0x30)) or truncate.
      * Note: pw_buf was initialized with '0' chars (again, not the value
      *       0, but the digit '0' character).
     */
-    if(plen < 16)
+    if(key_len < RIJNDAEL_MIN_KEYSIZE)
     {
-        memcpy(pw_buf, pass, plen);
-        memset(pw_buf+plen, '0', 16 - plen);
+        memcpy(pw_buf, key, key_len);
+        memset(pw_buf+key_len, '0', RIJNDAEL_MIN_KEYSIZE - key_len);
     }
     else
-        strncpy(pw_buf, pass, 16);
+        memcpy(pw_buf, key, RIJNDAEL_MIN_KEYSIZE);
 
     /* If we are decrypting, data will contain the salt. Otherwise,
      * for encryption, we generate a random salt.
@@ -157,7 +157,7 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *pass, const unsigned char *da
      * (again it is the perl Crypt::CBC way, with a touch of
      * fwknop).
     */
-    memcpy(tmp_buf+16, pw_buf, 16);
+    memcpy(tmp_buf+RIJNDAEL_MIN_KEYSIZE, pw_buf, RIJNDAEL_MIN_KEYSIZE);
     memcpy(tmp_buf+32, ctx->salt, 8);
 
     while(kiv_len < sizeof(kiv_buf))
@@ -181,8 +181,9 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *pass, const unsigned char *da
 /* Initialization entry point.
 */
 static void
-rijndael_init(RIJNDAEL_context *ctx, const char *pass,
-    const unsigned char *data, int encryption_mode)
+rijndael_init(RIJNDAEL_context *ctx, const char *key,
+    const int key_len, const unsigned char *data,
+    int encryption_mode)
 {
 
     /* The default (set in fko.h) is ECB mode to be compatible with the
@@ -192,11 +193,11 @@ rijndael_init(RIJNDAEL_context *ctx, const char *pass,
 
     /* Generate the salt and initialization vector.
     */
-    rij_salt_and_iv(ctx, pass, data);
+    rij_salt_and_iv(ctx, key, key_len, data);
 
-    /* Intialize our rinjdael context.
+    /* Intialize our Rijndael context.
     */
-    rijndael_setup(ctx, 32, ctx->key);
+    rijndael_setup(ctx, RIJNDAEL_MAX_KEYSIZE, ctx->key);
 }
 
 /* Take a chunk of data, encrypt it in the same way the perl Crypt::CBC
@@ -204,13 +205,14 @@ rijndael_init(RIJNDAEL_context *ctx, const char *pass,
 */
 size_t
 rij_encrypt(unsigned char *in, size_t in_len,
-    const char *pass, unsigned char *out, int encryption_mode)
+    const char *key, const int key_len,
+    unsigned char *out, int encryption_mode)
 {
     RIJNDAEL_context    ctx;
     int                 i, pad_val;
     unsigned char      *ondx = out;
 
-    rijndael_init(&ctx, pass, NULL, encryption_mode);
+    rijndael_init(&ctx, key, key_len, NULL, encryption_mode);
 
     /* Prepend the salt to the ciphertext...
     */
@@ -237,14 +239,15 @@ rij_encrypt(unsigned char *in, size_t in_len,
 */
 size_t
 rij_decrypt(unsigned char *in, size_t in_len,
-    const char *pass, unsigned char *out, int encryption_mode)
+    const char *key, const int key_len,
+    unsigned char *out, int encryption_mode)
 {
     RIJNDAEL_context    ctx;
     int                 i, pad_val, pad_err = 0;
     unsigned char      *pad_s;
     unsigned char      *ondx = out;
 
-    rijndael_init(&ctx, pass, in, encryption_mode);
+    rijndael_init(&ctx, key, key_len, in, encryption_mode);
 
     /* Remove the first block since it contains the salt (it was consumed
      * by the rijndael_init() function above).

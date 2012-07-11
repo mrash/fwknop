@@ -303,13 +303,13 @@ inv_mix_column(uint32_t *a, uint32_t *b)
 }
 
 void
-rijndael_setup(RIJNDAEL_context *ctx, size_t keysize, const uint8_t *key)
+rijndael_setup(RIJNDAEL_context *ctx, const size_t keysize, const uint8_t *key)
 {
     int nk, nr, i, lastkey;
     uint32_t temp, rcon;
 
     /* Truncate keysizes to the valid key sizes provided by Rijndael */
-    if (keysize >= 32) {
+    if (keysize >= RIJNDAEL_MAX_KEYSIZE) {
         nk = 8;
         nr = 14;
     } else if (keysize >= 24) {

@@ -267,8 +267,10 @@ typedef struct acc_stanza
     char                *restrict_ports;
     acc_port_list_t     *rport_list;
     char                *key;
+    int                 key_len;
     char                *key_base64;
     char                *hmac_key;
+    int                 hmac_key_len;
     char                *hmac_key_base64;
     int                 fw_access_timeout;
     unsigned char       enable_cmd_exec;

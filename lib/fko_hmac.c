@@ -33,7 +33,8 @@
 #include "hmac.h"
 #include "base64.h"
 
-int fko_verify_hmac(fko_ctx_t ctx, const char *hmac_key)
+int fko_verify_hmac(fko_ctx_t ctx,
+    const char *hmac_key, const int hmac_key_len)
 {
     /* Must be initialized
     */
@@ -80,7 +81,8 @@ fko_set_hmac_mode(fko_ctx_t ctx, const short hmac_mode)
     return(FKO_SUCCESS);
 }
 
-int fko_calculate_hmac(fko_ctx_t ctx, const char *hmac_key)
+int fko_calculate_hmac(fko_ctx_t ctx,
+    const char *hmac_key, const int hmac_key_len)
 {
     unsigned char hmac[SHA256_DIGEST_STRING_LENGTH] = {0};
     char *hmac_base64 = NULL;
@@ -99,7 +101,8 @@ int fko_calculate_hmac(fko_ctx_t ctx, const char *hmac_key)
     if (hmac_base64 == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    hmac_sha256(ctx->encrypted_msg, strlen(ctx->encrypted_msg), hmac, hmac_key);
+    hmac_sha256(ctx->encrypted_msg,
+        strlen(ctx->encrypted_msg), hmac, hmac_key);
 
     b64_encode(hmac, hmac_base64, SHA256_DIGEST_LENGTH);
     strip_b64_eq(hmac_base64);
