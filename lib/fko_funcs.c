@@ -277,6 +277,9 @@ fko_destroy(fko_ctx_t ctx)
         if(ctx->digest != NULL)
             free(ctx->digest);
 
+        if(ctx->raw_digest != NULL)
+            free(ctx->raw_digest);
+
         if(ctx->encoded_msg != NULL)
             free(ctx->encoded_msg);
 

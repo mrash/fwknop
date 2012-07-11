@@ -36,8 +36,9 @@
 
 /* Set the SPA digest type.
 */
-int
-fko_set_spa_digest_type(fko_ctx_t ctx, const short digest_type)
+static int
+set_spa_digest_type(fko_ctx_t ctx,
+    short *digest_type_field, const short digest_type)
 {
     /* Must be initialized
     */
@@ -47,11 +48,23 @@ fko_set_spa_digest_type(fko_ctx_t ctx, const short digest_type)
     if(digest_type < 1 || digest_type >= FKO_LAST_DIGEST_TYPE)
         return(FKO_ERROR_INVALID_DATA);
 
-    ctx->digest_type = digest_type;
+    *digest_type_field = digest_type;
 
     ctx->state |= FKO_DIGEST_TYPE_MODIFIED;
 
     return(FKO_SUCCESS);
+}
+
+int
+fko_set_spa_digest_type(fko_ctx_t ctx, const short digest_type)
+{
+    return set_spa_digest_type(ctx, &ctx->digest_type, digest_type);
+}
+
+int
+fko_set_raw_spa_digest_type(fko_ctx_t ctx, const short raw_digest_type)
+{
+    return set_spa_digest_type(ctx, &ctx->raw_digest_type, raw_digest_type);
 }
 
 /* Return the SPA digest type.
@@ -69,11 +82,91 @@ fko_get_spa_digest_type(fko_ctx_t ctx, short *digest_type)
     return(FKO_SUCCESS);
 }
 
+/* Return the SPA digest type.
+*/
 int
-fko_set_spa_digest(fko_ctx_t ctx)
+fko_get_raw_spa_digest_type(fko_ctx_t ctx, short *raw_digest_type)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *raw_digest_type = ctx->raw_digest_type;
+
+    return(FKO_SUCCESS);
+}
+
+static int
+set_digest(char *data, char **digest, short digest_type)
 {
     char    *md = NULL;
 
+    switch(digest_type)
+    {
+        case FKO_DIGEST_MD5:
+            md = malloc(MD_HEX_SIZE(MD5_DIGEST_LENGTH)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            md5_base64(md,
+                (unsigned char*)data, strlen(data));
+            break;
+
+        case FKO_DIGEST_SHA1:
+            md = malloc(MD_HEX_SIZE(SHA1_DIGEST_LENGTH)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            sha1_base64(md,
+                (unsigned char*)data, strlen(data));
+            break;
+
+        case FKO_DIGEST_SHA256:
+            md = malloc(MD_HEX_SIZE(SHA256_DIGEST_LENGTH)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            sha256_base64(md,
+                (unsigned char*)data, strlen(data));
+            break;
+
+        case FKO_DIGEST_SHA384:
+            md = malloc(MD_HEX_SIZE(SHA384_DIGEST_LENGTH)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            sha384_base64(md,
+                (unsigned char*)data, strlen(data));
+            break;
+
+        case FKO_DIGEST_SHA512:
+            md = malloc(MD_HEX_SIZE(SHA512_DIGEST_LENGTH)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            sha512_base64(md,
+                (unsigned char*)data, strlen(data));
+            break;
+
+        default:
+            return(FKO_ERROR_INVALID_DIGEST_TYPE);
+    }
+
+    /* Just in case this is a subsquent call to this function.  We
+     * do not want to be leaking memory.
+    */
+    if(*digest != NULL)
+        free(*digest);
+
+    *digest = md;
+
+    return(FKO_SUCCESS);
+}
+
+int
+fko_set_spa_digest(fko_ctx_t ctx)
+{
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -84,66 +177,25 @@ fko_set_spa_digest(fko_ctx_t ctx)
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
-    switch(ctx->digest_type)
-    {
-        case FKO_DIGEST_MD5:
-            md = malloc(MD_HEX_SIZE(MD5_DIGEST_LENGTH)+1);
-            if(md == NULL)
-                return(FKO_ERROR_MEMORY_ALLOCATION);
+    return set_digest(ctx->encoded_msg,
+        &ctx->digest, ctx->digest_type);
+}
 
-            md5_base64(md,
-                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;
-
-        case FKO_DIGEST_SHA1:
-            md = malloc(MD_HEX_SIZE(SHA1_DIGEST_LENGTH)+1);
-            if(md == NULL)
-                return(FKO_ERROR_MEMORY_ALLOCATION);
-
-            sha1_base64(md,
-                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;
-
-        case FKO_DIGEST_SHA256:
-            md = malloc(MD_HEX_SIZE(SHA256_DIGEST_LENGTH)+1);
-            if(md == NULL)
-                return(FKO_ERROR_MEMORY_ALLOCATION);
-
-            sha256_base64(md,
-                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;
-
-        case FKO_DIGEST_SHA384:
-            md = malloc(MD_HEX_SIZE(SHA384_DIGEST_LENGTH)+1);
-            if(md == NULL)
-                return(FKO_ERROR_MEMORY_ALLOCATION);
-
-            sha384_base64(md,
-                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;
-
-        case FKO_DIGEST_SHA512:
-            md = malloc(MD_HEX_SIZE(SHA512_DIGEST_LENGTH)+1);
-            if(md == NULL)
-                return(FKO_ERROR_MEMORY_ALLOCATION);
-
-            sha512_base64(md,
-                (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
-            break;
-
-        default:
-            return(FKO_ERROR_INVALID_DIGEST_TYPE);
-    }
-
-    /* Just in case this is a subsquent call to this function.  We
-     * do not want to be leaking memory.
+int
+fko_set_raw_spa_digest(fko_ctx_t ctx)
+{
+    /* Must be initialized
     */
-    if(ctx->digest != NULL)
-        free(ctx->digest);
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    ctx->digest = md;
+    /* Must have encoded message data to start with.
+    */
+    if(ctx->encrypted_msg == NULL)
+        return(FKO_ERROR_MISSING_ENCODED_DATA);
 
-    return(FKO_SUCCESS);
+    return set_digest(ctx->encrypted_msg,
+        &ctx->raw_digest, ctx->raw_digest_type);
 }
 
 int
@@ -155,6 +207,19 @@ fko_get_spa_digest(fko_ctx_t ctx, char **md)
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
     *md = ctx->digest;
+
+    return(FKO_SUCCESS);
+}
+
+int
+fko_get_raw_spa_digest(fko_ctx_t ctx, char **md)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *md = ctx->raw_digest;
 
     return(FKO_SUCCESS);
 }
