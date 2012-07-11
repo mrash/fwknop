@@ -122,7 +122,8 @@ get_raw_digest(char **digest, char *pkt_data)
     /* initialize an FKO context with no decryption key just so
      * we can get the outer message digest
     */
-    res = fko_new_with_data(&ctx, (char *)pkt_data, NULL, FKO_DEFAULT_ENC_MODE);
+    res = fko_new_with_data(&ctx, (char *)pkt_data, NULL, 0,
+            FKO_DEFAULT_ENC_MODE, NULL, 0);
     if(res != FKO_SUCCESS)
     {
         log_msg(LOG_WARNING, "Error initializing FKO context from SPA data: %s",
