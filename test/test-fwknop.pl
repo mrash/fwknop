@@ -1510,15 +1510,21 @@ sub binary_exists() {
     return 0 unless $test_hr->{'binary'};
 
     ### account for different libfko.so paths (e.g. libfko.so.0.3 with no
-    ### libfko.so link on OpenBSD)
+    ### libfko.so link on OpenBSD, and libfko.dylib path on Mac OS X)
 
     if ($test_hr->{'binary'} =~ /libfko/) {
         unless (-e $test_hr->{'binary'}) {
-            for my $file (glob("$lib_dir/libfko.so*")) {
-                if (-e $file and -x $file) {
-                    $test_hr->{'binary'} = $file;
-                    $libfko_bin = $file;
-                    last;
+            my $file = "$lib_dir/libfko.dylib";
+            if (-e $file) {
+                $test_hr->{'binary'} = $file;
+                $libfko_bin = $file;
+            } else {
+                for my $f (glob("$lib_dir/libfko.so*")) {
+                    if (-e $f and -x $f) {
+                        $test_hr->{'binary'} = $f;
+                        $libfko_bin = $f;
+                        last;
+                    }
                 }
             }
         }
