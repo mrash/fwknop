@@ -420,44 +420,45 @@ replay_db_cache_init(fko_srv_options_t *opts)
 #endif /* USE_FILE_CACHE */
 
 /* Take an fko context, pull the digest and use it as the key to check the
- * replay db (digest cache). Returns 1 if there was a match (a replay),
- * 0 for no match, and -1 on error.
+ * replay db (digest cache).
 */
 int
-replay_check(fko_srv_options_t *opts, fko_ctx_t ctx)
+is_replay(fko_srv_options_t *opts, char *digest)
 {
 #ifdef NO_DIGEST_CACHE
     return(-1);
 #else
 
 #if USE_FILE_CACHE
-    return replay_check_file_cache(opts, ctx);
+    return is_replay_file_cache(opts, digest);
 #else
-    return replay_check_dbm_cache(opts, ctx);
+    return is_replay_dbm_cache(opts, digest);
+#endif
+#endif /* NO_DIGEST_CACHE */
+}
+
+int
+add_replay(fko_srv_options_t *opts, char *digest)
+{
+#ifdef NO_DIGEST_CACHE
+    return(-1);
+#else
+
+#if USE_FILE_CACHE
+    return add_replay_file_cache(opts, digest);
+#else
+    return add_replay_dbm_cache(opts, digest);
 #endif
 #endif /* NO_DIGEST_CACHE */
 }
 
 #if USE_FILE_CACHE
 int
-replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
+is_replay_file_cache(fko_srv_options_t *opts, char *digest)
 {
-    char       *digest = NULL;
-    char        src_ip[INET_ADDRSTRLEN+1] = {0};
-    char        dst_ip[INET_ADDRSTRLEN+1] = {0};
-    int         res = 0, digest_len = 0;
-    FILE       *digest_file_ptr = NULL;
+    int         digest_len = 0;
 
-    struct digest_cache_list *digest_list_ptr = NULL, *digest_elm = NULL;
-
-    res = fko_get_spa_digest(ctx, &digest);
-    if(res != FKO_SUCCESS)
-    {
-        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
-            fko_errstr(res));
-
-        return(SPA_MSG_DIGEST_ERROR);
-    }
+    struct digest_cache_list *digest_list_ptr = NULL;
 
     digest_len = strlen(digest);
 
@@ -474,11 +475,21 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
             return(SPA_MSG_REPLAY);
         }
     }
+    return(SPA_MSG_SUCCESS);
+}
 
-    /* If we make it here, then this is a new SPA packet that needs to be
-     * added to the cache.  We've already decrypted the data, so we know that
-     * the contents are valid.
-    */
+int
+add_replay_file_cache(fko_srv_options_t *opts, char *digest)
+{
+    FILE       *digest_file_ptr = NULL;
+    int         digest_len = 0;
+    char        src_ip[INET_ADDRSTRLEN+1] = {0};
+    char        dst_ip[INET_ADDRSTRLEN+1] = {0};
+
+    struct digest_cache_list *digest_elm = NULL;
+
+    digest_len = strlen(digest);
+
     if ((digest_elm = calloc(1, sizeof(struct digest_cache_list))) == NULL)
     {
         log_msg(LOG_WARNING, "Error calloc() returned NULL for digest cache element",
@@ -537,7 +548,7 @@ replay_check_file_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
 #if !USE_FILE_CACHE
 int
-replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
+is_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 {
 #ifdef NO_DIGEST_CACHE
     return 0;
@@ -550,19 +561,10 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 #endif
     datum       db_key, db_ent;
 
-    char       *digest;
-    int         digest_len, res;
+    char       *digest = NULL;
+    int         digest_len, res = SPA_MSG_SUCCESS;
 
     digest_cache_info_t dc_info;
-
-    res = fko_get_spa_digest(ctx, &digest);
-    if(res != FKO_SUCCESS)
-    {
-        log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
-            fko_errstr(res));
-
-        return(SPA_MSG_DIGEST_ERROR);
-    }
 
     digest_len = strlen(digest);
 
@@ -609,9 +611,65 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 #ifdef HAVE_LIBGDBM
         free(db_ent.dptr);
 #endif
-
         res = SPA_MSG_REPLAY;
-    } else {
+    }
+
+    MY_DBM_CLOSE(rpdb);
+
+    return(res);
+#endif /* NO_DIGEST_CACHE */
+}
+
+int
+add_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
+{
+#ifdef NO_DIGEST_CACHE
+    return 0;
+#else
+
+#ifdef HAVE_LIBGDBM
+    GDBM_FILE   rpdb;
+#elif HAVE_LIBNDBM
+    DBM        *rpdb;
+#endif
+    datum       db_key, db_ent;
+
+    char       *digest = NULL;
+    int         digest_len, res = SPA_MSG_SUCCESS;
+
+    digest_cache_info_t dc_info;
+
+    digest_len = strlen(digest);
+
+    db_key.dptr = digest;
+    db_key.dsize = digest_len;
+
+    /* Check the db for the key
+    */
+#ifdef HAVE_LIBGDBM
+    rpdb = gdbm_open(
+         opts->config[CONF_DIGEST_DB_FILE], 512, GDBM_WRCREAT, S_IRUSR|S_IWUSR, 0
+    );
+#elif HAVE_LIBNDBM
+    rpdb = dbm_open(opts->config[CONF_DIGEST_DB_FILE], O_RDWR, 0);
+#endif
+
+    if(!rpdb)
+    {
+        log_msg(LOG_WARNING, "Error opening digest_cache: '%s': %s",
+            opts->config[CONF_DIGEST_DB_FILE],
+            MY_DBM_STRERROR(errno)
+        );
+
+        return(SPA_MSG_DIGEST_CACHE_ERROR);
+    }
+
+    db_ent = MY_DBM_FETCH(rpdb, db_key);
+
+    /* If the datum is null, we have a new entry.
+    */
+    if(db_ent.dptr == NULL)
+    {
         /* This is a new SPA packet that needs to be added to the cache.
         */
         dc_info.src_ip   = opts->spa_pkt.packet_src_ip;
@@ -636,12 +694,14 @@ replay_check_dbm_cache(fko_srv_options_t *opts, fko_ctx_t ctx)
 
         res = SPA_MSG_SUCCESS;
     }
+    else
+        res = SPA_MSG_DIGEST_CACHE_ERROR;
 
     MY_DBM_CLOSE(rpdb);
 
     return(res);
 #endif /* NO_DIGEST_CACHE */
-}
+
 #endif /* USE_FILE_CACHE */
 
 #if USE_FILE_CACHE

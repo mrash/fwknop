@@ -91,17 +91,16 @@ static int
 anchor_active(const fko_srv_options_t *opts)
 {
     int    res = 0;
-    char  *ndx = NULL;
     char   anchor_search_str[MAX_PF_ANCHOR_SEARCH_LEN] = {0};
 
     /* Build our anchor search string
     */
-    snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\" ",
-        "anchor \"", opts->fw_config->anchor);
+    snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s\n",
+        opts->fw_config->anchor);
 
     zero_cmd_buffers();
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_LIST_ALL_RULES_ARGS,
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " PF_ANCHOR_CHECK_ARGS,
         opts->fw_config->fw_command
     );
 
@@ -113,23 +112,11 @@ anchor_active(const fko_srv_options_t *opts)
         return 0;
     }
 
-    /* first check for the anchor at the very first rule position
+    /* Check to see if the anchor exists and is linked into the main policy
     */
-    if (strncmp(cmd_out, anchor_search_str, strlen(anchor_search_str)) != 0)
-    {
-        anchor_search_str[0] = '\0';
 
-        /* look for the anchor in the middle of the rule set, but make sure
-         * it appears only after a newline
-        */
-        snprintf(anchor_search_str, MAX_PF_ANCHOR_SEARCH_LEN-1, "%s%s\" ",
-            "\nanchor \"", opts->fw_config->anchor);
-
-        ndx = strstr(cmd_out, anchor_search_str);
-
-        if(ndx == NULL)
-            return 0;
-    }
+    if(strstr(cmd_out, anchor_search_str) == NULL)
+        return 0;
 
     return 1;
 }

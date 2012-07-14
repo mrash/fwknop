@@ -33,7 +33,7 @@
 #include "cmd_opts.h"
 #include "utils.h"
 
-/* Convert a digest_type string to its intger value.
+/* Convert a digest_type string to its integer value.
 */
 static int
 digest_strtoint(const char *dt_str)

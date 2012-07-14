@@ -15,3 +15,12 @@ Ozmart
 Max Kastanas
     - Contributed both an Android and an iPhone fwknop client port - see the
       top level android/ and iphone/ directories.
+
+Ted Wynnychenko
+    - Helped test fwknop PF support on OpenBSD.
+
+Andy Rowland
+    - Reported a bug where the same encryption key used for two stanzas in the
+      access.conf file would result in access requests that matched the second
+      stanza to always be treated as a replay attack.  This has been fixed for
+      the fwknop-2.0.1 release.
