@@ -24,9 +24,9 @@ URL:		http://www.cipherdyne.org/fwknop/
 Source0:	fwknop-%{version}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:	gpg, gpgme-devel, libpcap-devel, gdbm-devel
+BuildRequires:	gpg, gpgme-devel, libpcap-devel, gdbm-devel, iptables
 
-Requires:	libfko
+Requires:	libfko, iptables
 
 
 %package -n libfko

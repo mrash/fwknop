@@ -137,6 +137,7 @@ process_sigs(fko_ctx_t fko_ctx, gpgme_verify_result_t vres)
         */
         fgs->summary    = sig->summary;
         fgs->status     = sig->status;
+        fgs->validity   = sig->validity;
 
         /* Grab the signature fingerprint.
         */
@@ -168,7 +169,7 @@ process_sigs(fko_ctx_t fko_ctx, gpgme_verify_result_t vres)
     */
     fgs = fko_ctx->gpg_sigs;
 
-    if(fgs->status != GPG_ERR_NO_ERROR) {
+    if(fgs->status != GPG_ERR_NO_ERROR || fgs->validity < 3) {
         fko_ctx->gpg_err = fgs->status;
 
         return(FKO_ERROR_GPGME_BAD_SIGNATURE);
