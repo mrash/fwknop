@@ -45,13 +45,22 @@ enum {
 #define IPFW_MOVE_RULE_ARGS          "set move rule %u to %u"
 #define IPFW_MOVE_SET_ARGS           "set move %u to %u"
 #define IPFW_DISABLE_SET_ARGS        "set disable %u"
-#define IPFW_DEL_RULE_ARGS           "set %u delete %u"
-#define IPFW_DEL_RULE_SET_ARGS       "delete set %u"
-#define IPFW_LIST_RULES_ARGS         "-d -S -T set %u list"
 #define IPFW_LIST_ALL_RULES_ARGS     "list"
-#define IPFW_LIST_SET_RULES_ARGS     "set %u list"
-#define IPFW_LIST_EXP_SET_RULES_ARGS "-S set %u list"
-#define IPFW_LIST_SET_DYN_RULES_ARGS "-d set %u list"
+#define IPFW_DEL_RULE_SET_ARGS       "delete set %u"
+
+#ifdef __APPLE__
+    #define IPFW_DEL_RULE_ARGS           "delete %u" //--DSS diff args
+    #define IPFW_LIST_RULES_ARGS         "-d -S -T list | grep 'set %u'"
+    #define IPFW_LIST_SET_RULES_ARGS     "-S list | grep 'set %u'"
+    #define IPFW_LIST_EXP_SET_RULES_ARGS "-S list | grep 'set %u'"
+    #define IPFW_LIST_SET_DYN_RULES_ARGS "-d list | grep 'set %u'"
+#else
+  #define IPFW_DEL_RULE_ARGS           "set %u delete %u"
+  #define IPFW_LIST_RULES_ARGS         "-d -S -T set %u list"
+  #define IPFW_LIST_SET_RULES_ARGS     "set %u list"
+  #define IPFW_LIST_EXP_SET_RULES_ARGS "-S set %u list"
+  #define IPFW_LIST_SET_DYN_RULES_ARGS "-d set %u list"
+#endif
 
 void ipfw_purge_expired_rules(const fko_srv_options_t *opts);
 
