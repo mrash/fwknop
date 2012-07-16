@@ -27,6 +27,7 @@ my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
 my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
 my $invalid_expire_access_conf = "$conf_dir/invalid_expire_access.conf";
 my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
+my $local_nat_fwknopd_conf = "$conf_dir/local_nat_fwknopd.conf";
 my $dual_key_usage_access_conf = "$conf_dir/dual_key_usage_access.conf";
 my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
 my $default_digest_file = "$run_dir/digest.cache";
@@ -931,7 +932,6 @@ my @tests = (
         'server_conf' => $nat_conf,
         'fatal'    => $NO
     },
-
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -949,7 +949,24 @@ my @tests = (
         'server_conf' => $nat_conf,
         'fatal'    => $NO
     },
-
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "local NAT $force_nat_host (tcp/22 ssh)",
+        'err_msg'  => "could not complete NAT SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args --nat-local",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $local_nat_fwknopd_conf -a $force_nat_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i,
+            qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
+        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $nat_conf,
+        'fatal'    => $NO
+    },
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -1490,7 +1507,8 @@ sub compile_warnings() {
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
-    return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/], $current_test_file);
+    return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
+        $current_test_file);
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
@@ -2089,7 +2107,7 @@ sub client_server_interaction() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
                 $server_test_file)) {
             $server_was_stopped = 0;
         }
@@ -2702,34 +2720,37 @@ sub stop_fwknopd() {
 sub file_find_regex() {
     my ($re_ar, $file) = @_;
 
-    my $found = 0;
+    my $found_all_regexs = 1;
     my @write_lines = ();
+    my @file_lines = ();
 
     open F, "< $file" or die "[*] Could not open $file: $!";
-    LINE: while (<F>) {
-        my $line = $_;
-        next LINE if $line =~ /file_file_regex\(\)/;
-        for my $re (@$re_ar) {
-            if ($line =~ $re) {
-                push @write_lines, "[.] file_find_regex() " .
-                    "Matched '$re' with line: $line";
-                $found = 1;
-                last LINE;
-            }
-        }
+    while (<F>) {
+        push @file_lines, $_;
     }
     close F;
 
-    if ($found) {
-        for my $line (@write_lines) {
-            &write_test_file($line, $file);
+    for my $re (@$re_ar) {
+        my $matched = 0;
+        for my $line (@file_lines) {
+            if ($line =~ $re) {
+                push @write_lines, "[.] file_find_regex() " .
+                    "Matched '$re' with line: $line";
+                $matched = 1;
+            }
         }
-    } else {
-        &write_test_file("[.] find_find_regex() Did not " .
-            "match any regex in: '@$re_ar'\n", $file);
+        unless ($matched) {
+            push @write_lines, "[.] file_find_regex() " .
+                "Did not match any regex in '@$re_ar' in file: $file\n";
+            $found_all_regexs = 0;
+        }
     }
 
-    return $found;
+    for my $line (@write_lines) {
+        &write_test_file($line, $file);
+    }
+
+    return $found_all_regexs;
 }
 
 sub find_command() {

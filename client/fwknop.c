@@ -664,22 +664,19 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
     {
         message_type = FKO_COMMAND_MSG;
     }
+    else if(options->nat_local)
+    {
+        if (options->fw_timeout >= 0)
+            message_type = FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG;
+        else
+            message_type = FKO_LOCAL_NAT_ACCESS_MSG;
+    }
     else if(options->nat_access_str[0] != 0x0)
     {
-        if (options->nat_local)
-        {
-            if (options->fw_timeout >= 0)
-                message_type = FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG;
-            else
-                message_type = FKO_LOCAL_NAT_ACCESS_MSG;
-        }
+        if (options->fw_timeout >= 0)
+            message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
         else
-        {
-            if (options->fw_timeout >= 0)
-                message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
-            else
-                message_type = FKO_NAT_ACCESS_MSG;
-        }
+            message_type = FKO_NAT_ACCESS_MSG;
     }
     else
     {
