@@ -2734,13 +2734,13 @@ sub file_find_regex() {
         my $matched = 0;
         for my $line (@file_lines) {
             if ($line =~ $re) {
-                push @write_lines, "[.] file_find_regex() " .
+                push @write_lines, "[+] file_find_regex() " .
                     "Matched '$re' with line: $line";
                 $matched = 1;
             }
         }
         unless ($matched) {
-            push @write_lines, "[.] file_find_regex() " .
+            push @write_lines, "[-] file_find_regex() " .
                 "Did not match any regex in '@$re_ar' in file: $file\n";
             $found_all_regexs = 0;
         }
