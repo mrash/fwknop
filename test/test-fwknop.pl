@@ -101,6 +101,8 @@ my $NEW_RULE_REQUIRED = 1;
 my $REQUIRE_NO_NEW_RULE = 2;
 my $NEW_RULE_REMOVED = 1;
 my $REQUIRE_NO_NEW_REMOVED = 2;
+my $MATCH_ANY = 1;
+my $MATCH_ALL = 2;
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -1529,7 +1531,7 @@ sub compile_warnings() {
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
     return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
-        $current_test_file);
+        $MATCH_ANY, $current_test_file);
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
@@ -1589,7 +1591,8 @@ sub expected_code_version() {
         my $version = $1;
         return 0 unless &run_cmd($test_hr->{'cmdline'},
             $cmd_out_tmp, $current_test_file);
-        return 1 if &file_find_regex([qr/$version/], $current_test_file);
+        return 1 if &file_find_regex([qr/$version/],
+            $MATCH_ALL, $current_test_file);
     }
     return 0;
 }
@@ -1602,7 +1605,7 @@ sub client_send_spa_packet() {
     return 0 unless &run_cmd($test_hr->{'cmdline'},
             $cmd_out_tmp, $current_test_file);
     return 0 unless &file_find_regex([qr/final\spacked/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
 
     return 1;
 }
@@ -1628,13 +1631,13 @@ sub spa_cycle() {
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $server_test_file);
+            $MATCH_ALL, $server_test_file);
     }
 
     if ($test_hr->{'server_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'server_negative_output_matches'},
-            $server_test_file);
+            $MATCH_ANY, $server_test_file);
     }
 
     return $rv;
@@ -1646,12 +1649,12 @@ sub spoof_username() {
     my $rv = &spa_cycle($test_hr);
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $current_test_file)) {
+            $MATCH_ALL, $current_test_file)) {
         $rv = 0;
     }
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1690,7 +1693,7 @@ sub replay_detection() {
     $rv = 0 unless $server_was_stopped;
 
     unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1703,7 +1706,7 @@ sub digest_cache_structure() {
 
     &run_cmd("file $default_digest_file", $cmd_out_tmp, $current_test_file);
 
-    if (&file_find_regex([qr/ASCII/i], $cmd_out_tmp)) {
+    if (&file_find_regex([qr/ASCII/i], $MATCH_ALL, $cmd_out_tmp)) {
 
         ### the format should be:
         ### <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>
@@ -1720,7 +1723,7 @@ sub digest_cache_structure() {
             }
         }
         close F;
-    } elsif (&file_find_regex([qr/dbm/i], $cmd_out_tmp)) {
+    } elsif (&file_find_regex([qr/dbm/i], $MATCH_ALL, $cmd_out_tmp)) {
         &write_test_file("[+] DBM digest file format, " .
             "assuming this is valid.\n", $current_test_file);
     } else {
@@ -1773,7 +1776,7 @@ sub server_bpf_ignore_packet() {
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1868,7 +1871,7 @@ sub altered_base64_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1921,7 +1924,7 @@ sub appended_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1974,7 +1977,7 @@ sub prepended_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1988,7 +1991,7 @@ sub server_start() {
         = &client_server_interaction($test_hr, [], $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -2029,12 +2032,12 @@ sub server_packet_limit() {
     }
 
     unless (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
     unless (&file_find_regex([qr/Shutting\sDown\sfwknopd/i],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -2129,7 +2132,7 @@ sub client_server_interaction() {
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $server_test_file)) {
+                $MATCH_ALL, $server_test_file)) {
             $server_was_stopped = 0;
         }
     } else {
@@ -2215,13 +2218,13 @@ sub generic_exec() {
     if ($test_hr->{'positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'positive_output_matches'},
-            $current_test_file);
+            $MATCH_ALL, $current_test_file);
     }
 
     if ($test_hr->{'negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'negative_output_matches'},
-            $current_test_file);
+            $MATCH_ANY, $current_test_file);
     }
 
     return $rv;
@@ -2234,7 +2237,7 @@ sub pie_binary() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2245,7 +2248,7 @@ sub stack_protected_binary() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2256,7 +2259,7 @@ sub fortify_source_functions() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2267,7 +2270,7 @@ sub read_only_relocations() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2278,7 +2281,7 @@ sub immediate_binding() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2311,7 +2314,8 @@ sub specs() {
         &run_cmd($cmd, $cmd_out_tmp, $current_test_file);
 
         if ($cmd =~ /^ldd/) {
-            $have_gpgme++ if &file_find_regex([qr/gpgme/], $cmd_out_tmp);
+            $have_gpgme++ if &file_find_regex([qr/gpgme/],
+                $MATCH_ALL, $cmd_out_tmp);
         }
     }
 
@@ -2719,7 +2723,8 @@ sub is_fwknopd_running() {
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
         "--status", $cmd_out_tmp, $current_test_file);
 
-    return 0 if &file_find_regex([qr/no\s+running/i], $cmd_out_tmp);
+    return 0 if &file_find_regex([qr/no\s+running/i],
+            $MATCH_ALL, $cmd_out_tmp);
 
     return 1;
 }
@@ -2739,9 +2744,10 @@ sub stop_fwknopd() {
 }
 
 sub file_find_regex() {
-    my ($re_ar, $file) = @_;
+    my ($re_ar, $match_style, $file) = @_;
 
     my $found_all_regexs = 1;
+    my $found_single_match = 0;
     my @write_lines = ();
     my @file_lines = ();
 
@@ -2755,13 +2761,14 @@ sub file_find_regex() {
         my $matched = 0;
         for my $line (@file_lines) {
             if ($line =~ $re) {
-                push @write_lines, "[+] file_find_regex() " .
+                push @write_lines, "[.] file_find_regex() " .
                     "Matched '$re' with line: $line";
                 $matched = 1;
+                $found_single_match = 1;
             }
         }
         unless ($matched) {
-            push @write_lines, "[-] file_find_regex() " .
+            push @write_lines, "[.] file_find_regex() " .
                 "Did not match any regex in '@$re_ar' in file: $file\n";
             $found_all_regexs = 0;
         }
@@ -2769,6 +2776,10 @@ sub file_find_regex() {
 
     for my $line (@write_lines) {
         &write_test_file($line, $file);
+    }
+
+    if ($match_style == $MATCH_ANY) {
+        return $found_single_match;
     }
 
     return $found_all_regexs;
