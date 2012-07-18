@@ -970,6 +970,27 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => "local NAT non-FORCE_NAT (tcp/22 ssh)",
+        'err_msg'  => "could not complete NAT SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose --nat-local --nat-port 22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $local_nat_fwknopd_conf -a $default_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/to\:$fake_ip\:22/i,
+            qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
+        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $nat_conf,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,

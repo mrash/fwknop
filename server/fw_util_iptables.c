@@ -693,13 +693,10 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
         }
-
-        /* Make our FORWARD and NAT rules
-        */
-        if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
+        else if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
         {
-
-            /* Make sure the required jump rule exists
+            /* Make our FORWARD and NAT rules, and make sure the
+             * required jump rule exists
             */
             if (jump_rule_exists(IPT_FORWARD_ACCESS) == 0)
                 add_jump_rule(opts, IPT_FORWARD_ACCESS);
