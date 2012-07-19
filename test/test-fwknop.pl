@@ -981,7 +981,7 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $local_nat_fwknopd_conf -a $default_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$fake_ip\:22/i,
+        'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
         'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -2769,7 +2769,8 @@ sub file_find_regex() {
         }
         unless ($matched) {
             push @write_lines, "[.] file_find_regex() " .
-                "Did not match any regex in '@$re_ar' in file: $file\n";
+                "Did not match regex '$re' from regexs: '@$re_ar' " .
+                "within file: $file\n";
             $found_all_regexs = 0;
         }
     }
