@@ -2723,10 +2723,10 @@ sub is_fwknopd_running() {
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
         "--status", $cmd_out_tmp, $current_test_file);
 
-    return 0 if &file_find_regex([qr/no\s+running/i],
+    return 1 if &file_find_regex([qr/Detected\sfwknopd\sis\srunning/i],
             $MATCH_ALL, $cmd_out_tmp);
 
-    return 1;
+    return 0;
 }
 
 sub stop_fwknopd() {
