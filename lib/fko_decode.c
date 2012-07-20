@@ -5,7 +5,7 @@
  *
  * Author:  Damien S. Stuart
  *
- * Purpose: Decrypt and decode an FKO SPA message.
+ * Purpose: Decode an FKO SPA message after decryption.
  *
  * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -34,13 +34,13 @@
 #include "base64.h"
 #include "digest.h"
 
-/* Decrypt the encoded SPA data.
+/* Decode the encoded SPA data.
 */
 int
 fko_decode_spa_data(fko_ctx_t ctx)
 {
-    char       *tbuf, *ndx;
-    int         t_size;
+    char       *tbuf, *ndx, *tmp;
+    int         t_size, i;
 
     /* Check for required data.
     */
@@ -48,13 +48,21 @@ fko_decode_spa_data(fko_ctx_t ctx)
       || strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_INVALID_DATA);
 
-    /* Move the Digest to its place in the context.
+    /* Make sure there are enough fields in the SPA packet
+     * delimited with ':' chars
     */
-    ndx = strrchr(ctx->encoded_msg, ':'); /* Find the last : in the data */
-    if(ndx == NULL)
-        return(FKO_ERROR_INVALID_DATA);
+    ndx = ctx->encoded_msg;
+    for (i=0; i < MAX_SPA_FIELDS; i++)
+    {
+        if ((tmp = strchr(ndx, ':')) == NULL)
+            break;
 
-    ndx++;
+        ndx = tmp;
+        ndx++;
+    }
+
+    if (i < MIN_SPA_FIELDS)
+        return(FKO_ERROR_INVALID_DATA);
 
     t_size = strlen(ndx);
 
@@ -132,7 +140,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     /* We give up here if the computed digest does not match the
      * digest in the message data.
     */
-    if(strcmp(ctx->digest, tbuf))
+    if(strncmp(ctx->digest, tbuf, t_size))
     {
         free(tbuf);
         return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
@@ -168,6 +176,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_INVALID_DATA);
     }
 
+    if (t_size > MAX_SPA_USERNAME_SIZE)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
     strlcpy(tbuf, ndx, t_size+1);
 
     ctx->username = malloc(t_size+1); /* Yes, more than we need */
@@ -188,6 +202,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_INVALID_DATA);
     }
 
+    if (t_size > MAX_SPA_TIMESTAMP_SIZE)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
     strlcpy(tbuf, ndx, t_size+1);
 
     ctx->timestamp = (unsigned int)atoi(tbuf);
@@ -196,6 +216,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
     */
     ndx += t_size + 1;
     if((t_size = strcspn(ndx, ":")) < 1)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
+    if (t_size > MAX_SPA_VERSION_SIZE)
     {
         free(tbuf);
         return(FKO_ERROR_INVALID_DATA);
@@ -219,6 +245,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_INVALID_DATA);
     }
 
+    if (t_size > MAX_SPA_MESSAGE_TYPE_SIZE)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
     strlcpy(tbuf, ndx, t_size+1);
 
     ctx->message_type = (unsigned int)atoi(tbuf);
@@ -227,6 +259,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
     */
     ndx += t_size + 1;
     if((t_size = strcspn(ndx, ":")) < 1)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
+    if (t_size > MAX_SPA_MESSAGE_SIZE)
     {
         free(tbuf);
         return(FKO_ERROR_INVALID_DATA);
@@ -257,6 +295,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
             return(FKO_ERROR_INVALID_DATA);
         }
 
+        if (t_size > MAX_SPA_MESSAGE_SIZE)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
+
         strlcpy(tbuf, ndx, t_size+1);
 
         ctx->nat_access = malloc(t_size+1); /* Yes, more than we need */
@@ -274,6 +318,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
     ndx += t_size + 1;
     if((t_size = strlen(ndx)) > 0)
     {
+        if (t_size > MAX_SPA_MESSAGE_SIZE)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
+
         /* There is data, but what is it?
          * If the message_type does not have a timeout, assume it is a
          * server_auth field.
@@ -314,6 +364,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
         {
             t_size = strcspn(ndx, ":");
 
+            if (t_size > MAX_SPA_MESSAGE_SIZE)
+            {
+                free(tbuf);
+                return(FKO_ERROR_INVALID_DATA);
+            }
+
             /* Looks like we have both, so assume this is the 
             */
             strlcpy(tbuf, ndx, t_size+1);
@@ -337,6 +393,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
           || ctx->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
         {
             if((t_size = strlen(ndx)) < 1)
+            {
+                free(tbuf);
+                return(FKO_ERROR_INVALID_DATA);
+            }
+            if (t_size > MAX_SPA_MESSAGE_SIZE)
             {
                 free(tbuf);
                 return(FKO_ERROR_INVALID_DATA);
