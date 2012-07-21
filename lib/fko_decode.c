@@ -281,6 +281,14 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     b64_decode(tbuf, (unsigned char*)ctx->message);
 
+    /* Require a message similar to: 1.2.3.4,tcp/22
+    */
+    if(validate_access_msg(ctx->message) != FKO_SUCCESS)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
     /* Extract nat_access string if the message_type indicates so.
     */
     if(  ctx->message_type == FKO_NAT_ACCESS_MSG

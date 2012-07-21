@@ -9,8 +9,10 @@ fwknop-2.0.1 (07//2012):
       digest list right after the first access.conf stanza match, so when SPA
       packet data matched the second access.conf stanza a matching replay
       digest would already be there.
+    - Added SPA message validation calls to fko decoding routines to help
+      ensure that SPA messages conform to expected values.
     - Bug fix for PF firewalls: updated the PF anchor check to not rely on
-      listing the PF policy - use 'pfctl -s Anchor' instead.
+      listing the PF policy - fwknopd now uses 'pfctl -s Anchor' instead.
     - [test suite] Added parsing of valgrind output to produce a listing of
       functions that have been flagged - this assists in the development
       process to ensure that fwknop is not leaking memory.

@@ -103,10 +103,10 @@ EXTRA_DIST = \
     perl/FKO/lib/FKO.pm \
     perl/FKO/lib/FKO_Constants.pl \
     perl/FKO/Changes \
-	python/README \
-	python/setup.py \
-	python/fkomodule.c \
-	python/fko.py \
+    python/README \
+    python/setup.py \
+    python/fkomodule.c \
+    python/fko.py \
     ShortLog* \
     test/conf/client-gpg/pubring.gpg \
     test/conf/client-gpg/secring.gpg \

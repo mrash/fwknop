@@ -48,6 +48,9 @@
 #define MIN_SPA_FIELDS                6
 #define MAX_SPA_FIELDS               10
 
+#define MAX_IPV4_STR_LEN             16
+#define MIN_IPV4_STR_LEN              7
+
 /* Misc.
 */
 #define FKO_ENCODE_TMP_BUF_SIZE    1024

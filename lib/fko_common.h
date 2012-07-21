@@ -120,6 +120,7 @@
 #include "fko_limits.h"
 #include "fko_state.h"
 #include "fko_context.h"
+#include "fko_message.h"
 
 /* Try to cover for those that do not have bzero.
 */

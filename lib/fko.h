@@ -32,6 +32,7 @@
 #define FKO_H 1
 
 #include <time.h>
+#include "fko_limits.h"
 
 #ifdef __cplusplus
 extern "C" {
