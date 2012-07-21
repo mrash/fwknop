@@ -19,33 +19,36 @@ my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
 
-my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
-my $default_conf        = "$conf_dir/default_fwknopd.conf";
-my $default_access_conf = "$conf_dir/default_access.conf";
-my $expired_access_conf = "$conf_dir/expired_stanza_access.conf";
-my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
-my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
-my $invalid_expire_access_conf = "$conf_dir/invalid_expire_access.conf";
-my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
-my $local_nat_fwknopd_conf = "$conf_dir/local_nat_fwknopd.conf";
-my $dual_key_usage_access_conf = "$conf_dir/dual_key_usage_access.conf";
-my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
+my %cf = (
+    'nat'                  => "$conf_dir/nat_fwknopd.conf",
+    'def'                  => "$conf_dir/default_fwknopd.conf",
+    'def_access'           => "$conf_dir/default_access.conf",
+    'exp_access'           => "$conf_dir/expired_stanza_access.conf",
+    'future_exp_access'    => "$conf_dir/future_expired_stanza_access.conf",
+    'exp_epoch_access'     => "$conf_dir/expired_epoch_stanza_access.conf",
+    'invalid_exp_access'   => "$conf_dir/invalid_expire_access.conf",
+    'force_nat_access'     => "$conf_dir/force_nat_access.conf",
+    'local_nat'            => "$conf_dir/local_nat_fwknopd.conf",
+    'dual_key_access'      => "$conf_dir/dual_key_usage_access.conf",
+    'gpg_access'           => "$conf_dir/gpg_access.conf",
+    'open_ports_access'    => "$conf_dir/open_ports_access.conf",
+    'multi_gpg_access'     => "$conf_dir/multi_gpg_access.conf",
+    'multi_stanza_access'  => "$conf_dir/multi_stanzas_access.conf",
+    'broken_keys_access'   => "$conf_dir/multi_stanzas_with_broken_keys.conf",
+    'open_ports_mismatch'  => "$conf_dir/mismatch_open_ports_access.conf",
+    'require_user_access'  => "$conf_dir/require_user_access.conf",
+    'user_mismatch_access' => "$conf_dir/mismatch_user_access.conf",
+    'require_src_access'   => "$conf_dir/require_src_access.conf",
+    'no_src_match'         => "$conf_dir/no_source_match_access.conf",
+    'no_subnet_match'      => "$conf_dir/no_subnet_source_match_access.conf",
+    'no_multi_src'         => "$conf_dir/no_multi_source_match_access.conf",
+    'multi_src_access'     => "$conf_dir/multi_source_match_access.conf",
+    'ip_src_match'         => "$conf_dir/ip_source_match_access.conf",
+    'subnet_src_match'     => "$conf_dir/ip_source_match_access.conf",
+);
+
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
-my $open_ports_access_conf = "$conf_dir/open_ports_access.conf";
-my $multi_gpg_access_conf  = "$conf_dir/multi_gpg_access.conf";
-my $multi_stanzas_access_conf = "$conf_dir/multi_stanzas_access.conf";
-my $multi_stanzas_with_broken_keys_conf = "$conf_dir/multi_stanzas_with_broken_keys.conf";
-my $mismatch_open_ports_access_conf = "$conf_dir/mismatch_open_ports_access.conf";
-my $require_user_access_conf = "$conf_dir/require_user_access.conf";
-my $mismatch_user_access_conf = "$conf_dir/mismatch_user_access.conf";
-my $require_src_access_conf = "$conf_dir/require_src_access.conf";
-my $no_source_match_access_conf = "$conf_dir/no_source_match_access.conf";
-my $no_subnet_source_match_access_conf = "$conf_dir/no_subnet_source_match_access.conf";
-my $no_multi_source_match_access_conf = "$conf_dir/no_multi_source_match_access.conf";
-my $multi_source_match_access_conf = "$conf_dir/multi_source_match_access.conf";
-my $ip_source_match_access_conf = "$conf_dir/ip_source_match_access.conf";
-my $subnet_source_match_access_conf = "$conf_dir/subnet_source_match_access.conf";
 
 my $fwknopCmd   = '../client/.libs/fwknop';
 my $fwknopdCmd  = '../server/.libs/fwknopd';
@@ -151,12 +154,12 @@ my $default_client_gpg_args = "$default_client_args " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
 
-my $default_server_conf_args = "-c $default_conf -a $default_access_conf " .
+my $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
     "-d $default_digest_file -p $default_pid_file";
 
 my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
-    "$valgrind_str $fwknopdCmd -c $default_conf " .
-    "-a $gpg_access_conf $intf_str " .
+    "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+    "-a $cf{'gpg_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
 ### point the compiled binaries at the local libary path
@@ -396,8 +399,8 @@ my @tests = (
         'err_msg'  => 'code version mis-match',
         'function' => \&expected_code_version,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a " .
-            "$default_access_conf --version",
+            "$fwknopdCmd -c $cf{'def'} -a " .
+            "$cf{'def_access'} --version",
         'fatal'    => $NO
     },
     {
@@ -417,8 +420,8 @@ my @tests = (
         'positive_output_matches' => [qr/SYSLOG_IDENTITY/],
         'exec_err' => $NO,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf " .
-            "-a $default_access_conf --dump-config",
+            "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'def_access'} --dump-config",
         'fatal'    => $NO
     },
     {
@@ -611,7 +614,7 @@ my @tests = (
             "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $dual_key_usage_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'dual_key_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         ### check for the first stanza that does not allow tcp/80 - the
         ### second stanza allows this
@@ -654,7 +657,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $expired_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'exp_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -668,7 +671,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $invalid_expire_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'invalid_exp_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/invalid\sdate\svalue/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -682,7 +685,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $expired_epoch_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'exp_epoch_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -696,7 +699,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $future_expired_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'future_exp_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -711,7 +714,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $open_ports_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'open_ports_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -725,7 +728,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $mismatch_open_ports_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'open_ports_mismatch'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/One\s+or\s+more\s+requested/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -739,7 +742,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_args",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $require_user_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_user_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -754,7 +757,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $mismatch_user_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'user_mismatch_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Username\s+in\s+SPA\s+data/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -768,7 +771,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -784,7 +787,7 @@ my @tests = (
             "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -799,7 +802,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $no_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -813,7 +816,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $no_subnet_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_subnet_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -827,7 +830,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $no_multi_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_multi_src'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -841,7 +844,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $ip_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'ip_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -855,7 +858,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $subnet_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'subnet_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -869,7 +872,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $multi_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'multi_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -883,7 +886,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $multi_stanzas_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'multi_stanza_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -897,7 +900,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $multi_stanzas_with_broken_keys_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'broken_keys_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -914,7 +917,7 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/requested\sNAT\saccess.*not\senabled/i],
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
@@ -926,12 +929,12 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $nat_conf -a $open_ports_access_conf " .
+            "$fwknopdCmd -c $cf{'nat'} -a $cf{'open_ports_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
     {
@@ -942,13 +945,13 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $nat_conf -a $force_nat_access_conf " .
+            "$fwknopdCmd -c $cf{'nat'} -a $cf{'force_nat_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i],
         'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
     {
@@ -959,14 +962,14 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --nat-local",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $local_nat_fwknopd_conf -a $force_nat_access_conf " .
+            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
         'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
     {
@@ -979,14 +982,14 @@ my @tests = (
             "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose --nat-local --nat-port 22",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $local_nat_fwknopd_conf -a $default_access_conf " .
+            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
         'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
 
@@ -1165,8 +1168,8 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $default_conf " .
-            "-a $multi_gpg_access_conf $intf_str " .
+            "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'multi_gpg_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -2511,30 +2514,8 @@ sub init() {
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
 
-    for my $file ($configure_path,
-            $default_conf,
-            $nat_conf,
-            $default_access_conf,
-            $no_source_match_access_conf,
-            $ip_source_match_access_conf,
-            $subnet_source_match_access_conf,
-            $no_subnet_source_match_access_conf,
-            $no_multi_source_match_access_conf,
-            $multi_source_match_access_conf,
-            $open_ports_access_conf,
-            $mismatch_open_ports_access_conf,
-            $require_user_access_conf,
-            $mismatch_user_access_conf,
-            $require_src_access_conf,
-            $multi_gpg_access_conf,
-            $multi_stanzas_access_conf,
-            $expired_access_conf,
-            $expired_epoch_access_conf,
-            $future_expired_access_conf,
-            $invalid_expire_access_conf,
-            $force_nat_access_conf,
-    ) {
-        die "[*] $file does not exist" unless -e $file;
+    for my $name (keys %cf) {
+        die "[*] $cf{$name} does not exist" unless -e $cf{$name};
     }
 
     if (-d $output_dir) {
@@ -2607,6 +2588,10 @@ sub init() {
 
     unless ($platform eq 'linux') {
         push @tests_to_exclude, 'NAT';
+    }
+
+    if (-e $default_digest_file) {
+        unlink $default_digest_file;
     }
 
     return;
@@ -2706,7 +2691,7 @@ sub is_fw_rule_active() {
     my $conf_args = $default_server_conf_args;
 
     if ($test_hr->{'server_conf'}) {
-        $conf_args = "-c $test_hr->{'server_conf'} -a $default_access_conf " .
+        $conf_args = "-c $test_hr->{'server_conf'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file";
     }
 
