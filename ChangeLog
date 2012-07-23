@@ -19,6 +19,7 @@ fwknop-2.0.1 (07//2012):
     - [test suite] Bug fix on Mac OS X systems to account for libfko.dylib path
       instead of libfko.so.  This fixes the existence check for libfko.
     - [test suite] Added tests for --nat-local mode.
+    - [client] Fixed several minor memory leaks caught by valgrind.
     - Minor gcc warning fix: fko_decode.c:43:17: warning: variable ‘edata_size’
       set but not used [-Wunused-but-set-variable].
 
