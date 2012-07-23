@@ -50,13 +50,13 @@ fko_set_spa_server_auth(fko_ctx_t ctx, const char *msg)
 
     /* Gotta have a valid string.
     */
-    if(msg == NULL || strlen(msg) == 0)
+    if(msg == NULL || strnlen(msg, MAX_SPA_SERVER_AUTH_SIZE) == 0)
         return(FKO_ERROR_INVALID_DATA);
 
     /* --DSS XXX: Bail out for now.  But consider just
      *            truncating in the future...
     */
-    if(strlen(msg) > MAX_SPA_SERVER_AUTH_SIZE)
+    if(strnlen(msg, MAX_SPA_SERVER_AUTH_SIZE) == MAX_SPA_SERVER_AUTH_SIZE)
         return(FKO_ERROR_DATA_TOO_LARGE);
 
     /* --DSS TODO: ???

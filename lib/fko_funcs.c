@@ -335,7 +335,8 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 
     /* We expect to have encrypted data to process.  If not, we bail.
     */
-    if(ctx->encrypted_msg == NULL || (strlen(ctx->encrypted_msg) < 1))
+    if(ctx->encrypted_msg == NULL
+            || (strnlen(ctx->encrypted_msg, MAX_SPA_ENCRYPTED_SIZE) < 1))
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
     *spa_data = ctx->encrypted_msg;

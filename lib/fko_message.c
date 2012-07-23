@@ -152,8 +152,10 @@ validate_cmd_msg(const char *msg)
 {
     const char   *ndx;
     int     res         = FKO_SUCCESS;
-    int     startlen    = strlen(msg);
+    int     startlen    = strnlen(msg, MAX_SPA_CMD_LEN);
 
+    if(startlen == MAX_SPA_CMD_LEN)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Should have a valid allow IP.
     */
@@ -176,7 +178,10 @@ validate_access_msg(const char *msg)
 {
     const char   *ndx;
     int     res         = FKO_SUCCESS;
-    int     startlen    = strlen(msg);
+    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
+
+    if(startlen == MAX_SPA_MESSAGE_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Should have a valid allow IP.
     */
@@ -203,9 +208,11 @@ validate_access_msg(const char *msg)
 int
 validate_proto_port_spec(const char *msg)
 {
-    int     startlen    = strlen(msg);
-
+    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
     const char   *ndx   = msg;
+
+    if(startlen == MAX_SPA_MESSAGE_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Now check for proto/port string.  Currenly we only allow protos
      * 'tcp', 'udp', and 'icmp'.
