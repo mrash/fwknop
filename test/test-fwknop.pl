@@ -1919,13 +1919,13 @@ sub spa_cycle() {
     if ($test_hr->{'client_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'client_positive_output_matches'},
-            $current_test_file);
+            $MATCH_ALL, $current_test_file);
     }
 
     if ($test_hr->{'client_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'client_negative_output_matches'},
-            $current_test_file);
+            $MATCH_ANY, $current_test_file);
     }
 
     if ($test_hr->{'server_positive_output_matches'}) {
@@ -2508,7 +2508,7 @@ sub rc_file_exists() {
 
     if (-e $tmp_rc_file) {
         $rv = 0 unless &file_find_regex([qr/This\sfile\scontains/],
-            $tmp_rc_file);
+            $MATCH_ALL, $tmp_rc_file);
     } else {
         &write_test_file("[-] $tmp_rc_file does not exist.\n",
             $current_test_file);
