@@ -139,6 +139,7 @@ EXTRA_DIST = \
     test/conf/server-gpg/secring.gpg \
     test/conf/server-gpg/trustdb.gpg \
     test/conf/subnet_source_match_access.conf \
+    test/conf/local_nat_fwknopd.conf \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
