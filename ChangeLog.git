@@ -1,0 +1,589 @@
+commit 8e26cca9f3c9edf6bc47101e88eff34f8d460f7d (HEAD, refs/heads/master, refs/heads/fwknop-2.0.1)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 22:53:38 2012 -0400
+
+    removed diffstat and ShortLog from 'make dist' target
+
+ Makefile.am |    2 --
+ 1 file changed, 2 deletions(-)
+
+commit cab2ea9083b0124e4dba73b9b3eea267a757a2c0
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 22:40:47 2012 -0400
+
+    bumped version to 2.0.1
+
+ ChangeLog                                      |    2 +-
+ README                                         |    2 +-
+ android/project/jni/config.h                   |    6 +++---
+ extras/fwknop-launcher/fwknop-launcher-lsof.pl |    2 +-
+ fwknop.spec                                    |    2 +-
+ iphone/Classes/config.h                        |    6 +++---
+ 6 files changed, 10 insertions(+), 10 deletions(-)
+
+commit 9fe6dc7d6f427dd36251132e95c6e9572b4a1984
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 21:58:14 2012 -0400
+
+    bumped version to fwknop-2.0.1
+
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit a980a029a7cdeab5ae5fa6d37ceee5336435e3fc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 21:54:49 2012 -0400
+
+    removed diffstat and ShortLog files in favor of ChangeLog.git for each release
+
+ ShortLog-v2.0 |  453 ------------------
+ diffstat-v2.0 | 1434 ---------------------------------------------------------
+ 2 files changed, 1887 deletions(-)
+
+commit 3c533de7e475bec57e00d5bc12de9ad27e6b52a9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 21:49:25 2012 -0400
+
+    updated Debian init script (contributed by Franck Joncourt)
+
+ CREDITS                   |    4 ++++
+ ChangeLog                 |    2 ++
+ extras/fwknop.init.debian |   48 ++++++++++++++++++++++++++-------------------
+ 3 files changed, 34 insertions(+), 20 deletions(-)
+
+commit 62445d0d03eb1c08ce296c72e53686b5500f3bdb (tag: refs/tags/fwknop-2.0.1-pre5)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 21:32:24 2012 -0400
+
+    add test/conf/local_nat_fwknopd.conf for 'make dist'
+
+ Makefile.am |    1 +
+ 1 file changed, 1 insertion(+)
+
+commit e68c561c404cddbcb33549958f45f79f457d329a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 21:24:29 2012 -0400
+
+    bumped version to fwknop-2.0.1-pre5
+
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 24dccb34ecf4c70416e49a0cb1816e798e46528d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 21:23:23 2012 -0400
+
+    [client] fix memory leak when unable to open --get-key file
+
+ client/fwknop.c    |   12 +++++++-----
+ client/getpasswd.c |   18 ++++++++++--------
+ client/getpasswd.h |    2 +-
+ 3 files changed, 18 insertions(+), 14 deletions(-)
+
+commit 5387242ce99bf705d1f30d63a1b5b7cdfdcf517a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 23 21:13:30 2012 -0400
+
+    PCAP_LOOP_SLEEP bug fix to 1/10th of a second
+    
+    [server] Updated PCAP_LOOP_SLEEP default to 1/10th of a second (in
+    microseconds).  This was supposed to be the default anyway, but C
+    Anthony Risinger reported a bug where fwknopd was consuming more
+    resources than necessary, and the cause was PCAP_LOOP_SLEEP set by
+    default to 1/100th of a second - this has been fixed.
+
+ CREDITS                 |    4 ++++
+ ChangeLog               |   15 ++++++++++-----
+ server/config_init.h    |    2 +-
+ server/fwknopd.conf     |    4 ++--
+ server/fwknopd_common.h |    2 +-
+ 5 files changed, 18 insertions(+), 9 deletions(-)
+
+commit 6255bff95f5f5d72a2582dcb9bc4e27fc5620db4 (refs/remotes/origin/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 22 23:13:39 2012 -0400
+
+    replace strlen() calls with strnlen() and appropriate maximums
+
+ lib/fko_decode.c      |    8 ++++++--
+ lib/fko_encode.c      |    8 ++++----
+ lib/fko_funcs.c       |    3 ++-
+ lib/fko_limits.h      |    3 +++
+ lib/fko_message.c     |   15 +++++++++++----
+ lib/fko_nat_access.c  |    4 ++--
+ lib/fko_rand_value.c  |    4 ++--
+ lib/fko_server_auth.c |    4 ++--
+ 8 files changed, 32 insertions(+), 17 deletions(-)
+
+commit 335abdd545cc9bfd76b17fa5fde84d1d14419452
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 22 23:13:01 2012 -0400
+
+    use LOGNAME env var before cuserid() since we're already looking for SPOOF_USER
+
+ lib/fko_user.c |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
+
+commit 049545b459ea856ec775a2640354d486029fd698
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 22 23:09:32 2012 -0400
+
+    [client] Fixed several minor memory leaks caught by valgrind
+    
+    This commit fixes memory leaks like the following in the fwknop client:
+    
+    HEAP SUMMARY:
+        in use at exit: 300 bytes in 11 blocks
+      total heap usage: 100 allocs, 89 frees, 16,583 bytes allocated
+    
+    16 bytes in 1 blocks are indirectly lost in loss record 1 of 11
+       at 0x4C2B6CD: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+       by 0x5146C59: __nss_lookup_function (nsswitch.c:456)
+       by 0x5C3D63E: ???
+       by 0x50FF3FC: getpwuid_r@@GLIBC_2.2.5 (getXXbyYY_r.c:256)
+       by 0x508938E: cuserid (cuserid.c:37)
+       by 0x4E3983A: fko_set_username (fko_user.c:65)
+       by 0x4E38D5C: fko_new (fko_funcs.c:84)
+       by 0x10A824: main (fwknop.c:75)
+    
+    16 bytes in 1 blocks are indirectly lost in loss record 2 of 11
+       at 0x4C2B6CD: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+       by 0x5146C59: __nss_lookup_function (nsswitch.c:456)
+       by 0x5C3D658: ???
+       by 0x50FF3FC: getpwuid_r@@GLIBC_2.2.5 (getXXbyYY_r.c:256)
+       by 0x508938E: cuserid (cuserid.c:37)
+       by 0x4E3983A: fko_set_username (fko_user.c:65)
+       by 0x4E38D5C: fko_new (fko_funcs.c:84)
+       by 0x10A824: main (fwknop.c:75)
+    
+    16 bytes in 1 blocks are indirectly lost in loss record 3 of 11
+       at 0x4C2B6CD: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+       by 0x5146C59: __nss_lookup_function (nsswitch.c:456)
+       by 0x5C3D672: ???
+       by 0x50FF3FC: getpwuid_r@@GLIBC_2.2.5 (getXXbyYY_r.c:256)
+       by 0x508938E: cuserid (cuserid.c:37)
+       by 0x4E3983A: fko_set_username (fko_user.c:65)
+       by 0x4E38D5C: fko_new (fko_funcs.c:84)
+       by 0x10A824: main (fwknop.c:75)
+    
+    16 bytes in 1 blocks are indirectly lost in loss record 4 of 11
+       at 0x4C2B6CD: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+       by 0x5146C59: __nss_lookup_function (nsswitch.c:456)
+       by 0x5C3D68C: ???
+       by 0x50FF3FC: getpwuid_r@@GLIBC_2.2.5 (getXXbyYY_r.c:256)
+       by 0x508938E: cuserid (cuserid.c:37)
+       by 0x4E3983A: fko_set_username (fko_user.c:65)
+       by 0x4E38D5C: fko_new (fko_funcs.c:84)
+       by 0x10A824: main (fwknop.c:75)
+
+ ChangeLog       |    1 +
+ client/fwknop.c |   27 +++++++++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
+
+commit 5ef07c73e2a6bcecbc3c9914340cc63c266f816b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Jul 21 15:32:15 2012 -0400
+
+    Better SPA message validation upon SPA decrypt/decode.
+    
+    Added SPA message validation calls to fko decoding routines to help
+    ensure that SPA messages conform to expected values.
+
+ ChangeLog             |    4 +++-
+ Makefile.am           |    8 ++++----
+ common/common.h       |    2 --
+ lib/Makefile.am       |    4 ++--
+ lib/fko.h             |    1 +
+ lib/fko_common.h      |    1 +
+ lib/fko_decode.c      |    8 ++++++++
+ lib/fko_limits.h      |    3 +++
+ lib/fko_message.c     |   13 ++-----------
+ lib/fko_message.h     |   45 +++++++++++++++++++++++++++++++++++++++++++++
+ server/incoming_spa.c |   16 +++++++++++++++-
+ 11 files changed, 84 insertions(+), 21 deletions(-)
+
+commit 4c25aa17f355acfa835ae7f57d66b7cbda1326cf
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Jul 20 21:16:13 2012 -0400
+
+    [test suite] minor filename update -> use config files for fwknopd in a hash
+
+ test/test-fwknop.pl |  159 +++++++++++++++++++++++----------------------------
+ 1 file changed, 72 insertions(+), 87 deletions(-)
+
+commit 4c7923413ed2f327ebc4875dcde98a04865e80d9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Jul 19 22:34:45 2012 -0400
+
+    Implemented server-side bounds checking on inccoming SPA data.
+    
+    Enhanced the libfko decoding routine to include bounds checking on decrypted
+    SPA data.  This includes verifying the number of fields within incoming SPA
+    data (colon separated) along with verifying string lengths of each field.
+
+ lib/fko_decode.c     |   81 +++++++++++++++++++++++++++++++++++++++++++-------
+ lib/fko_encryption.c |    3 +-
+ lib/fko_limits.h     |    5 ++++
+ 3 files changed, 78 insertions(+), 11 deletions(-)
+
+commit 8f500fd67f3600539e438527f6dac920bdf25765
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Jul 18 23:20:09 2012 -0400
+
+    added some integer bounds checking for fwknopd.conf variables
+
+ server/config_init.c |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ server/config_init.h |   16 +++++++++++++++
+ 2 files changed, 70 insertions(+)
+
+commit 65b2acd8f5f1a20665ce324acb39a0061f07682f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Jul 18 23:17:27 2012 -0400
+
+    minor update to print FORCE_NAT settings when access stanzas are printed
+
+ server/access.c |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+commit 15c76b25cd2191468c78fcb0f7555c3a6e4b6238
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Jul 18 23:00:58 2012 -0400
+
+    minor pcap_capture update to not call atoi() against PCAP_LOOP_SLEEP for every sleep interval
+
+ server/pcap_capture.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+commit c0aa346890e86ef3ddc4464280daa466bede8018
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Jul 18 22:55:56 2012 -0400
+
+    [test suite] minor hostname bugfix to get 'local NAT' test to work
+
+ test/test-fwknop.pl |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit 72aaeb893e46b4425b44a848b500732ca061a93a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Jul 18 22:32:16 2012 -0400
+
+    [test suite] better fwknopd is running check
+
+ test/test-fwknop.pl |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 8ed741dd48ea1fbb462dd7849c3944570e46a309
+Merge: 71fc4fe d49e44d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Jul 17 22:20:36 2012 -0400
+
+    Merge branch 'master' of github.com:mrash/fwknop
+
+commit 71fc4fe7fe9ec735e926e12ebd91b9475e7d8a74
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Jul 17 21:55:13 2012 -0400
+
+    [test suite] file_find_regex() postive vs. negative match styles
+    
+    Positive match style requires all regex's to be found, whereas negative match
+    style only requires seeing one regex.
+
+ test/test-fwknop.pl |   71 +++++++++++++++++++++++++++++----------------------
+ 1 file changed, 41 insertions(+), 30 deletions(-)
+
+commit 6c73e160d9cd4bbee314b38c0edc48691b7ccf01
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Jul 17 21:50:29 2012 -0400
+
+    Ensure that INPUT rules are added in --nat-local mode
+    
+    This change ensures that INPUT rules are added when the fwknop client is used to
+    request access to a local service with --nat-local mode.
+
+ ChangeLog                 |    1 +
+ server/fw_util_iptables.c |    9 +++------
+ test/test-fwknop.pl       |   21 +++++++++++++++++++++
+ 3 files changed, 25 insertions(+), 6 deletions(-)
+
+commit 981059452b472bb0cd3a6a9254e3cfb396668e4c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 16 22:05:15 2012 -0400
+
+    minor file_find_regex() logging prefix update
+
+ test/test-fwknop.pl |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 1b9f8475218d981b5958eb74b75db4dbd31d3611
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 16 21:43:28 2012 -0400
+
+    [test suite] added local_nat_fwknopd.conf file for local NAT tests
+
+ test/conf/local_nat_fwknopd.conf |    6 ++++++
+ 1 file changed, 6 insertions(+)
+
+commit de7aa3b619f05f9c7df7e943d899e973fa8ac904
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 15 21:32:14 2012 -0400
+
+    Add INPUT ACCEPT rule for --nat-local connections
+    
+    When using the --nat-local argument on the fwknop client command line, the
+    fwknopd server needs to add an INPUT ACCEPT rule for the requested access
+    since the incoming connection is destined for a local socket.  Added test
+    suite support to test --nat-local access.
+    
+    [test suite] Minor bug fix to ensure that all file_find_regex() calls return
+    true if all regex's are matched and false if any regex does not match data in
+    the specified file.
+
+ client/fwknop.c           |   23 ++++++++---------
+ server/fw_util_iptables.c |   43 ++++++++++++++++++++++++++++++++
+ test/test-fwknop.pl       |   61 ++++++++++++++++++++++++++++++---------------
+ 3 files changed, 94 insertions(+), 33 deletions(-)
+
+commit d49e44dad02ba275688d06eab58cc3ec4b77a8f8 (tag: refs/tags/fwknop-2.0.1-pre4)
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Sat Jul 14 22:10:37 2012 -0400
+
+    Forgot to update the VERSION file.
+
+ VERSION |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit d5568cb1a168f625a2839bc181daed9fd8b6685d
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Sat Jul 14 20:54:05 2012 -0400
+
+    Bumped version to 2.0.1-pre4
+
+ configure.ac |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 2a5bc7ed1456e0c63a87e89c8837be555c33211d
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Sat Jul 14 18:22:42 2012 -0400
+
+    Added tweaks to ipfw command for Mac OS X
+
+ server/fw_util_ipfw.c |    2 ++
+ server/fw_util_ipfw.h |   21 +++++++++++++++------
+ server/pcap_capture.h |    2 +-
+ 3 files changed, 18 insertions(+), 7 deletions(-)
+
+commit f06c775654fb2cbb11ef56c881e24b013d5c5527
+Merge: 283e213 c57f4a8
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Sat Jul 14 10:14:05 2012 -0400
+
+    Merge branch 'master' of ssh://github.com/mrash/fwknop
+
+commit 283e213a610106c26cdace82b22eb93f2aa2db72
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Sat Jul 14 10:13:26 2012 -0400
+
+    Added gpg validity check. Tweak to rpm spec file.
+
+ fwknop.spec       |    4 ++--
+ lib/fko_context.h |    1 +
+ lib/gpgme_funcs.c |    3 ++-
+ 3 files changed, 5 insertions(+), 3 deletions(-)
+
+commit c57f4a82b7cb6cf638dcb7caa764894e7b359a97 (tag: refs/tags/fwknop-2.0.1-pre3)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Jul 12 22:19:41 2012 -0400
+
+    bumped version to fwknop-2.0.1-pre3
+
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 3b26157a40359227ac7f7a35878e5e3b9b140693
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Jul 12 22:18:39 2012 -0400
+
+    added libfko.dylib test suite fix note to the ChangeLog
+
+ ChangeLog |    2 ++
+ 1 file changed, 2 insertions(+)
+
+commit e250776107d09352765b04cc74113c0bfe3a17de
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Jul 12 22:11:35 2012 -0400
+
+    [test suite] Bug fix to account for libfko.dylib extension
+    
+    Richard Haas reported the test suite failing on Mac OS X systems with the
+    existence check for the libfko library.  Damien Stuart advised that the library
+    has a different extention '.dylib' on Mac OS X, so this change accounts for the
+    difference.
+
+ test/test-fwknop.pl |   18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
+
+commit 86fde0d60378c1b4d9ef1aa5895b98ba769ccfc7 (tag: refs/tags/fwknop-2.0.1-pre2)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 9 22:58:35 2012 -0400
+
+    bumped version to 2.0.1-pre2
+
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit 2f9368b4d9ca9513aa1280a47f7ac9f872b2b9ac
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 9 22:39:13 2012 -0400
+
+    added valgrind parsing note
+
+ ChangeLog |    3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 4d3914014817bce7684d41220de41294ceb6bf94
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 9 22:05:57 2012 -0400
+
+    [test suite] minor directory path bug fix for --diff mode
+
+ test/test-fwknop.pl |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit e2c34d46fec799c3bdbf08f286ddb5f9e2f90e9c (tag: refs/tags/fwknop-2.0.1-pre1)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 9 21:29:49 2012 -0400
+
+    switched back to older ChangeLog format which is more readable
+
+ ChangeLog | 7592 +------------------------------------------------------------
+ 1 file changed, 46 insertions(+), 7546 deletions(-)
+
+commit 06d8f118aa6cce3a528ecca6df5037d9dfbb154c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 9 16:32:10 2012 -0400
+
+    bumped version to 2.0.1-pre1
+
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit b5c6b48cff0bccf320254c08d6aa93564c954f8d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 9 16:30:26 2012 -0400
+
+    added dual_key_usage_access.conf to Makefile.am for 'make dist' target
+
+ Makefile.am |    1 +
+ 1 file changed, 1 insertion(+)
+
+commit bc2e41fd472b7709897b89264853e2941de74652
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 8 21:21:36 2012 -0400
+
+    added unique function names to --enable-valgrind suspect functions test
+
+ test/test-fwknop.pl |   35 ++++++++++++++++++++++-------------
+ 1 file changed, 22 insertions(+), 13 deletions(-)
+
+commit 9497044f24831cb39f61768d9eb900eeeb6976dd
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 8 15:30:35 2012 -0400
+
+    added new test in --enable-valgrind mode to collect suspect functions
+
+ test/test-fwknop.pl |  127 +++++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 109 insertions(+), 18 deletions(-)
+
+commit be4193d734850fe60f14a26b547525ea0b9ce1e9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 8 08:36:30 2012 -0400
+
+    Only cache replay digests for SPA packets that decrypt
+    
+    This change ensures that we only cache replay digests for those SPA packets
+    that actually decrypt.  Not doing this would have allowed an attacker to
+    potentially fill up digest cache space with digests for garbage packets.
+
+ server/incoming_spa.c |  104 ++++++++++++++++++++++---
+ server/replay_cache.c |  204 ++++++++++++++++++++++++-------------------------
+ server/replay_cache.h |    9 ++-
+ 3 files changed, 196 insertions(+), 121 deletions(-)
+
+commit 6b3e5ef3c235e4c4721ca0d6b5f9861489cc3e5c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 8 08:35:50 2012 -0400
+
+    Added a test for a dual-usage key in access.conf
+
+ test/conf/dual_key_usage_access.conf |    9 +++++++++
+ test/test-fwknop.pl                  |   20 ++++++++++++++++++++
+ 2 files changed, 29 insertions(+)
+
+commit ba3b7d1d11d681549f1bb27e0af1307499fad0d5
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Jul 7 21:31:30 2012 -0400
+
+    Bug fix for multi-stanza key use and replay attack detection
+    
+    This commit fixes a bug where the same encryption key used for two stanzas in
+    the access.conf file would result in access requests that matched the second
+    stanza to always be treated as a replay attack.  This has been fixed for
+    the fwknop-2.0.1 release, and was reported by Andy Rowland.  Now the fwknopd
+    server computes the SHA256 digest of raw incoming payload data before
+    decryption, and compares this against all previous hashes.  Previous to this
+    commit, fwknopd would add a new hash to the replay digest list right after
+    the first access.conf stanza match, so when SPA packet data matched the
+    second access.conf stanza a matching replay digest would already be there.
+
+ CREDITS               |    6 +++
+ client/config_init.c  |    2 +-
+ lib/fko.h             |    4 ++
+ lib/fko_context.h     |    6 +++
+ lib/fko_digest.c      |  103 ++++++++++++++++++++++++++++++++++++++++---------
+ lib/fko_funcs.c       |    3 ++
+ server/incoming_spa.c |   50 +++++++++++++++++-------
+ server/replay_cache.c |  100 +++++++++++++++++++++++++++++++++++++++--------
+ server/replay_cache.h |    6 +--
+ 9 files changed, 227 insertions(+), 53 deletions(-)
+
+commit fcf40b5e6d18edf6f8d6e3cd7b526be1947c4a76
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon May 28 14:22:33 2012 -0400
+
+    gcc warning fix fox: fko_decode.c:43:17: warning: variable ‘edata_size’ set but not used [-Wunused-but-set-variable]
+
+ lib/fko_decode.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+commit 8a73e6dee88f9d416fc028fe2e26bfa37b984cb5
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon May 28 14:19:52 2012 -0400
+
+    updated PF anchor check to not rely on listing the PF policy
+
+ server/fw_util_pf.c |   25 ++++++-------------------
+ server/fw_util_pf.h |    2 +-
+ 2 files changed, 7 insertions(+), 20 deletions(-)
+
+commit 5c26c0abaabc582b466076dd1a0ec928274b88a5
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon May 28 14:18:34 2012 -0400
+
+    added Ted Wynnychenko for OpenBSD PF testing
+
+ CREDITS |    3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 7e8e48412ff985461095a09874059e955145d513
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jan 15 15:57:45 2012 -0500
+
+    convert Rijndael blocksize values '16' to use RIJNDAEL_BLOCKSIZE macro
+
+ lib/cipher_funcs.c |   24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
