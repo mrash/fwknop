@@ -34,6 +34,6 @@
 /* Prototypes
 */
 char* getpasswd(const char *prompt);
-char* getpasswd_file(const char *pw_file, const char *server_str);
+char* getpasswd_file(fko_ctx_t ctx, const fko_cli_options_t *options);
 
 #endif  /* GETPASSWD_H */

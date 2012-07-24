@@ -141,7 +141,7 @@ getpasswd(const char *prompt)
 /* Function for accepting password input from from a file
 */
 char*
-getpasswd_file(const char *pw_file, const char *server_str)
+getpasswd_file(fko_ctx_t ctx, const fko_cli_options_t *options)
 {
     FILE           *pwfile_ptr;
     unsigned int    numLines = 0, i = 0, found_dst;
@@ -151,10 +151,11 @@ getpasswd_file(const char *pw_file, const char *server_str)
     char            tmp_char_buf[MAX_LINE_LEN]  = {0};
     char           *lptr;
 
-    if ((pwfile_ptr = fopen(pw_file, "r")) == NULL)
+    if ((pwfile_ptr = fopen(options->get_key_file, "r")) == NULL)
     {
-        fprintf(stderr, "Could not open config file: %s\n", pw_file);
-        exit(1);
+        fprintf(stderr, "Could not open config file: %s\n", options->get_key_file);
+        fko_destroy(ctx);
+        exit(EXIT_FAILURE);
     }
 
     while ((fgets(conf_line_buf, MAX_LINE_LEN, pwfile_ptr)) != NULL)
@@ -178,8 +179,8 @@ getpasswd_file(const char *pw_file, const char *server_str)
         * reference the matching one for the SPA server we are contacting
         */
         found_dst = 1;
-        for (i=0; i < strlen(server_str); i++)
-            if (*lptr++ != server_str[i])
+        for (i=0; i < strlen(options->spa_server_str); i++)
+            if (*lptr++ != options->spa_server_str[i])
                 found_dst = 0;
 
         if (! found_dst)
@@ -208,8 +209,9 @@ getpasswd_file(const char *pw_file, const char *server_str)
 
     if (pwbuf[0] == '\0') {
         fprintf(stderr, "Could not get password for IP: %s from: %s\n",
-            server_str, pw_file);
-        exit(1);
+            options->spa_server_str, options->get_key_file);
+        fko_destroy(ctx);
+        exit(EXIT_FAILURE);
     }
 
     return pwbuf;

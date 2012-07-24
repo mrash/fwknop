@@ -36,7 +36,8 @@
 
 /* prototypes
 */
-static char * get_user_pw(fko_cli_options_t *options, const int crypt_op);
+static char * get_user_pw(fko_ctx_t ctx,
+        fko_cli_options_t *options, const int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
 static void show_last_command(void);
@@ -284,7 +285,7 @@ main(int argc, char **argv)
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
-    res = fko_spa_data_final(ctx, get_user_pw(&options, CRYPT_OP_ENCRYPT));
+    res = fko_spa_data_final(ctx, get_user_pw(ctx, &options, CRYPT_OP_ENCRYPT));
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_spa_data_final", res);
@@ -374,7 +375,7 @@ main(int argc, char **argv)
         }
 
         res = fko_decrypt_spa_data(
-            ctx2, get_user_pw(&options, CRYPT_OP_DECRYPT)
+            ctx2, get_user_pw(ctx2, &options, CRYPT_OP_DECRYPT)
         );
 
         if(res != FKO_SUCCESS)
@@ -719,7 +720,7 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 /* Prompt for and receive a user password.
 */
 static char*
-get_user_pw(fko_cli_options_t *options, const int crypt_op)
+get_user_pw(fko_ctx_t ctx, fko_cli_options_t *options, const int crypt_op)
 {
     char        *pw_ptr = NULL;
     static char *no_pw  = "";
@@ -736,7 +737,7 @@ get_user_pw(fko_cli_options_t *options, const int crypt_op)
     */
     if (options->get_key_file[0] != 0x0)
     {
-        pw_ptr = getpasswd_file(options->get_key_file, options->spa_server_str);
+        pw_ptr = getpasswd_file(ctx, options);
     }
     else if (options->use_gpg)
     {
@@ -762,6 +763,7 @@ get_user_pw(fko_cli_options_t *options, const int crypt_op)
     if (pw_ptr == NULL)
     {
         fprintf(stderr, "Received no password data, exiting.\n");
+        fko_destroy(ctx);
         exit(EXIT_FAILURE);
     }
 
