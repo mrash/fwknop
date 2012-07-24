@@ -24,3 +24,7 @@ Andy Rowland
       access.conf file would result in access requests that matched the second
       stanza to always be treated as a replay attack.  This has been fixed for
       the fwknop-2.0.1 release.
+
+C Anthony Risinger
+    - Caught a bug where the default PCAP_LOOP_SLEEP value was 1/100th of a
+      second instead of the intended default of 1/10th of a second.

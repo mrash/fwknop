@@ -36,7 +36,7 @@
 
 /* For integer variable range checking
 */
-#define RCHK_MAX_PCAP_LOOP_SLEEP            100000  /* microseconds */
+#define RCHK_MAX_PCAP_LOOP_SLEEP            10000000  /* microseconds, 10 seconds */
 #define RCHK_MAX_SPA_PACKET_AGE             100000  /* seconds, can disable */
 #define RCHK_MAX_SNIFF_BYTES                1514
 #define RCHK_MAX_TCPSERV_PORT               65535
