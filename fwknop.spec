@@ -13,7 +13,7 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.0
+Version:	2.0.1
 Epoch:      1
 Release:	1%{?dist}
 Summary:	Firewall Knock Operator client.  An implementation of Single Packet Authorization.

@@ -22,7 +22,7 @@ employ.  It also can be used by other programs that need SPA functonality
 
 This first version of the C implementation is planned to be compatible
 with legacy Perl-based fwknop version 1.9.x. However, it was decided to
-start the version number at 2.0.0 to differentiate it from the current
+start the version number at 2.0 to differentiate it from the current
 Perl implementation.
 
 

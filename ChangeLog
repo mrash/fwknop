@@ -1,4 +1,4 @@
-fwknop-2.0.1 (07//2012):
+fwknop-2.0.1 (07/23/2012):
     - [server] Bug fix where the same encryption key used for two stanzas in
       the access.conf file would result in access requests that matched the
       second stanza to always be treated as a replay attack.  This has been
