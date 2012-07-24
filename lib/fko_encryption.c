@@ -170,7 +170,8 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key, int encryption_mode)
 
     /* At this point we can check the data to see if we have a good
      * decryption by ensuring the first field (16-digit random decimal
-     * value) is valid and is followed by a colon.
+     * value) is valid and is followed by a colon.  Additional checks
+     * are made in fko_decode_spa_data().
     */
     ndx = (unsigned char *)ctx->encoded_msg;
     for(i=0; i<FKO_RAND_VAL_SIZE; i++)

@@ -43,13 +43,13 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
 
     /* Gotta have a valid string.
     */
-    if(msg == NULL || strlen(msg) == 0)
+    if(msg == NULL || strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == 0)
         return(FKO_ERROR_INVALID_DATA);
 
     /* --DSS XXX: Bail out for now.  But consider just
      *            truncating in the future...
     */
-    if(strlen(msg) > MAX_SPA_NAT_ACCESS_SIZE)
+    if(strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == MAX_SPA_NAT_ACCESS_SIZE)
         return(FKO_ERROR_DATA_TOO_LARGE);
 
     /* Just in case this is a subsquent call to this function.  We

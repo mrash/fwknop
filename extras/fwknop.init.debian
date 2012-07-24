@@ -1,11 +1,15 @@
 #! /bin/sh
+
 ### BEGIN INIT INFO
-# Provides:          fwknop-c-server
-# Required-Start:    $remote_fs
-# Required-Stop:     $remote_fs
+# Provides:          fwknop-server
+# Required-Start:    $local_fs $remote_fs $syslog $network
+# Required-Stop:     $local_fs $remote_fs $syslog $network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: FireWall KNock OPerator (fwknop)
+# Short-Description: start and stop fwknopd
+# Description: Fwknop implements an authorization scheme known as \
+#              Single Packet Authorization (SPA) for Linux systems \
+#              running iptables.
 ### END INIT INFO
 
 # Author: Franck Joncourt <franck@debian.org>
@@ -15,10 +19,18 @@ DESC="FireWall KNock OPerator"
 NAME=fwknopd
 DAEMON=/usr/sbin/$NAME
 PIDDIR=/var/run/fwknop
-SCRIPTNAME=/etc/init.d/fwknop-c-server
+SCRIPTNAME=/etc/init.d/fwknop-server
 
 # Exit if the package is not installed
 [ -x "$DAEMON" ] || exit 0
+
+# Load user options to pass to fwknopd daemon
+START_DAEMON="no"
+DAEMON_ARGS=""
+[ -r /etc/default/fwknop-server ] && . /etc/default/fwknop-server
+
+# Exit if the dameon must not be started
+[ "$START_DAEMON" = "yes" ] || exit 0
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -66,8 +78,6 @@ do_start()
 {
 	local retval
 
-        echo -n "Starting $DESC: $NAME "
-
         mkdir -p $PIDDIR
         chmod 755 $PIDDIR
 
@@ -77,26 +87,28 @@ do_start()
 
 	# Try to start fwknopd
 	if [ "$retval"  = "0" ]; then
-		start-stop-daemon --start --quiet --pidfile $PIDDIR/$NAME --exec $DAEMON
+		start-stop-daemon --start --quiet --pidfile $PIDDIR/$NAME --exec $DAEMON -- $DAEMON_ARGS
 		retval="$?"
 	fi
 
 	# Handle return status codes
 	case "$retval" in
 		0)	 
-			log_success_msg
 			;;
 		6)	
-			log_failure_msg "You are missing the configuration file $ConfFile."
+			log_action_msg "You are missing the configuration file $ConfFile." || true
 			;;
 		9)	
 			retval=0
 			;;
 		*)
 			retval=1
-			log_failure_msg "Unable to start the daemon."
+			log_action_msg "Unable to start the daemon." || true
 			;;
 	esac
+
+       log_daemon_msg "Starting $DESC" "$NAME" || true
+       log_end_msg $retval || true
 
 	return $retval
 }
@@ -116,16 +128,12 @@ do_stop()
 	local pid pidfile
 	local process_list="fwknopd"
 
-	echo -n "Stopping $DESC:"
-
 	# For each process
 	for process in $process_list; do
 
 		pidfile="$PIDDIR/$process.pid"
 		status="0"
 		kill_status="1"
-
-		echo -n " $process"
 
 		# Try to kill the process associated to the pid
 		if [ -r "$pidfile" ]; then
@@ -151,12 +159,12 @@ do_stop()
 	done
 
 
-	if [ "$retval" = "0" ]; then
-		log_success_msg
-	else
-		echo -n " "
-		log_failure_msg "One or more process could not be stopped."
+	if [ "$retval" != "0" ]; then
+		log_action_msg "The process could not be stopped" || true
 	fi
+
+        log_daemon_msg "Stopping $DESC" "$NAME" || true
+        log_end_msg $retval || true
 
 	return $retval
 }

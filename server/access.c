@@ -1206,6 +1206,9 @@ dump_access_list(const fko_srv_options_t *opts)
             "              CMD_EXEC_USER:  %s\n"
             "           REQUIRE_USERNAME:  %s\n"
             "     REQUIRE_SOURCE_ADDRESS:  %s\n"
+            "             FORCE_NAT (ip):  %s\n"
+            "          FORCE_NAT (proto):  %s\n"
+            "           FORCE_NAT (port):  %d\n"
             "              ACCESS_EXPIRE:  %s"  /* asctime() adds a newline */
             "               GPG_HOME_DIR:  %s\n"
             "             GPG_DECRYPT_ID:  %s\n"
@@ -1223,6 +1226,9 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
+            acc->force_nat ? acc->force_nat_ip : "<not set>",
+            acc->force_nat && acc->force_nat_proto != NULL ? acc->force_nat_proto : "<not set>",
+            acc->force_nat ? acc->force_nat_port : 0,
             (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>\n",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,

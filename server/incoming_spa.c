@@ -571,7 +571,21 @@ incoming_spa(fko_srv_options_t *opts)
             continue;
         }
 
-        strlcpy(spadat.spa_message_src_ip, spadat.spa_message, (spa_ip_demark-spadat.spa_message)+1);
+        strlcpy(spadat.spa_message_src_ip,
+            spadat.spa_message, (spa_ip_demark-spadat.spa_message)+1);
+
+        if(strnlen(spadat.spa_message_src_ip,
+                MIN_IPV4_STR_LEN) < MIN_IPV4_STR_LEN)
+        {
+            log_msg(LOG_WARNING, "(stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
+                stanza_num, fko_errstr(res));
+
+            if(ctx != NULL)
+                fko_destroy(ctx);
+            acc = acc->next;
+            break;
+        }
+
         strlcpy(spadat.spa_message_remain, spa_ip_demark+1, 1024);
 
         /* If use source IP was requested (embedded IP of 0.0.0.0), make sure it

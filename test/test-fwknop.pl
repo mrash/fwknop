@@ -20,37 +20,41 @@ my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
 
-my $nat_conf            = "$conf_dir/nat_fwknopd.conf";
-my $default_conf        = "$conf_dir/default_fwknopd.conf";
-my $default_access_conf = "$conf_dir/default_access.conf";
-my $ecb_mode_access_conf = "$conf_dir/ecb_mode_access.conf";
-my $ctr_mode_access_conf = "$conf_dir/ctr_mode_access.conf";
-my $cfb_mode_access_conf = "$conf_dir/cfb_mode_access.conf";
-my $ofb_mode_access_conf = "$conf_dir/ofb_mode_access.conf";
-my $expired_access_conf = "$conf_dir/expired_stanza_access.conf";
-my $future_expired_access_conf = "$conf_dir/future_expired_stanza_access.conf";
-my $expired_epoch_access_conf = "$conf_dir/expired_epoch_stanza_access.conf";
-my $invalid_expire_access_conf = "$conf_dir/invalid_expire_access.conf";
-my $invalid_source_access_conf = "$conf_dir/invalid_source_access.conf";
-my $force_nat_access_conf = "$conf_dir/force_nat_access.conf";
-my $dual_key_usage_access_conf = "$conf_dir/dual_key_usage_access.conf";
-my $gpg_access_conf     = "$conf_dir/gpg_access.conf";
+my %cf = (
+    'nat'                  => "$conf_dir/nat_fwknopd.conf",
+    'def'                  => "$conf_dir/default_fwknopd.conf",
+    'def_access'           => "$conf_dir/default_access.conf",
+    'exp_access'           => "$conf_dir/expired_stanza_access.conf",
+    'future_exp_access'    => "$conf_dir/future_expired_stanza_access.conf",
+    'exp_epoch_access'     => "$conf_dir/expired_epoch_stanza_access.conf",
+    'invalid_exp_access'   => "$conf_dir/invalid_expire_access.conf",
+    'force_nat_access'     => "$conf_dir/force_nat_access.conf",
+    'local_nat'            => "$conf_dir/local_nat_fwknopd.conf",
+    'dual_key_access'      => "$conf_dir/dual_key_usage_access.conf",
+    'gpg_access'           => "$conf_dir/gpg_access.conf",
+    'open_ports_access'    => "$conf_dir/open_ports_access.conf",
+    'multi_gpg_access'     => "$conf_dir/multi_gpg_access.conf",
+    'multi_stanza_access'  => "$conf_dir/multi_stanzas_access.conf",
+    'broken_keys_access'   => "$conf_dir/multi_stanzas_with_broken_keys.conf",
+    'ecb_mode_access'      => "$conf_dir/ecb_mode_access.conf",
+    'ctr_mode_access'      => "$conf_dir/ctr_mode_access.conf",
+    'cfb_mode_access'      => "$conf_dir/cfb_mode_access.conf",
+    'ofb_mode_access'      => "$conf_dir/ofb_mode_access.conf",
+    'open_ports_mismatch'  => "$conf_dir/mismatch_open_ports_access.conf",
+    'require_user_access'  => "$conf_dir/require_user_access.conf",
+    'user_mismatch_access' => "$conf_dir/mismatch_user_access.conf",
+    'require_src_access'   => "$conf_dir/require_src_access.conf",
+    'invalid_src_access'   => "$conf_dir/invalid_source_access.conf",
+    'no_src_match'         => "$conf_dir/no_source_match_access.conf",
+    'no_subnet_match'      => "$conf_dir/no_subnet_source_match_access.conf",
+    'no_multi_src'         => "$conf_dir/no_multi_source_match_access.conf",
+    'multi_src_access'     => "$conf_dir/multi_source_match_access.conf",
+    'ip_src_match'         => "$conf_dir/ip_source_match_access.conf",
+    'subnet_src_match'     => "$conf_dir/ip_source_match_access.conf",
+);
+
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
-my $open_ports_access_conf = "$conf_dir/open_ports_access.conf";
-my $multi_gpg_access_conf  = "$conf_dir/multi_gpg_access.conf";
-my $multi_stanzas_access_conf = "$conf_dir/multi_stanzas_access.conf";
-my $multi_stanzas_with_broken_keys_conf = "$conf_dir/multi_stanzas_with_broken_keys.conf";
-my $mismatch_open_ports_access_conf = "$conf_dir/mismatch_open_ports_access.conf";
-my $require_user_access_conf = "$conf_dir/require_user_access.conf";
-my $mismatch_user_access_conf = "$conf_dir/mismatch_user_access.conf";
-my $require_src_access_conf = "$conf_dir/require_src_access.conf";
-my $no_source_match_access_conf = "$conf_dir/no_source_match_access.conf";
-my $no_subnet_source_match_access_conf = "$conf_dir/no_subnet_source_match_access.conf";
-my $no_multi_source_match_access_conf = "$conf_dir/no_multi_source_match_access.conf";
-my $multi_source_match_access_conf = "$conf_dir/multi_source_match_access.conf";
-my $ip_source_match_access_conf = "$conf_dir/ip_source_match_access.conf";
-my $subnet_source_match_access_conf = "$conf_dir/subnet_source_match_access.conf";
 
 my $fwknopCmd   = '../client/.libs/fwknop';
 my $fwknopdCmd  = '../server/.libs/fwknopd';
@@ -108,6 +112,8 @@ my $NEW_RULE_REQUIRED = 1;
 my $REQUIRE_NO_NEW_RULE = 2;
 my $NEW_RULE_REMOVED = 1;
 my $REQUIRE_NO_NEW_REMOVED = 2;
+my $MATCH_ANY = 1;
+my $MATCH_ALL = 2;
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -157,12 +163,12 @@ my $default_client_gpg_args = "$default_client_args " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
 
-my $default_server_conf_args = "-c $default_conf -a $default_access_conf " .
+my $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
     "-d $default_digest_file -p $default_pid_file";
 
 my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
-    "$valgrind_str $fwknopdCmd -c $default_conf " .
-    "-a $gpg_access_conf $intf_str " .
+    "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+    "-a $cf{'gpg_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
 ### point the compiled binaries at the local libary path
@@ -402,8 +408,8 @@ my @tests = (
         'err_msg'  => 'code version mis-match',
         'function' => \&expected_code_version,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a " .
-            "$default_access_conf --version",
+            "$fwknopdCmd -c $cf{'def'} -a " .
+            "$cf{'def_access'} --version",
         'fatal'    => $NO
     },
     {
@@ -423,8 +429,8 @@ my @tests = (
         'positive_output_matches' => [qr/SYSLOG_IDENTITY/],
         'exec_err' => $NO,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf " .
-            "-a $default_access_conf --dump-config",
+            "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'def_access'} --dump-config",
         'fatal'    => $NO
     },
     {
@@ -617,7 +623,7 @@ my @tests = (
             "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $dual_key_usage_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'dual_key_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         ### check for the first stanza that does not allow tcp/80 - the
         ### second stanza allows this
@@ -660,7 +666,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $invalid_source_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'invalid_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Fatal\serror\sparsing\sIP\sto\sint/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -674,7 +680,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $expired_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'exp_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -688,7 +694,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $invalid_expire_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'invalid_exp_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/invalid\sdate\svalue/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -702,7 +708,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $expired_epoch_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'exp_epoch_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -716,7 +722,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $future_expired_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'future_exp_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -731,7 +737,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $open_ports_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'open_ports_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -745,7 +751,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $mismatch_open_ports_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'open_ports_mismatch'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/One\s+or\s+more\s+requested/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -759,7 +765,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_args",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $require_user_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_user_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -774,7 +780,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $mismatch_user_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'user_mismatch_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Username\s+in\s+SPA\s+data/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -788,7 +794,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -804,7 +810,7 @@ my @tests = (
             "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $require_src_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -819,7 +825,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $no_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -833,7 +839,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $no_subnet_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_subnet_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -847,7 +853,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $no_multi_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_multi_src'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -861,7 +867,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $ip_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'ip_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -875,7 +881,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $subnet_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'subnet_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -889,7 +895,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $multi_source_match_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'multi_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -903,7 +909,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $multi_stanzas_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'multi_stanza_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -917,7 +923,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $multi_stanzas_with_broken_keys_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'broken_keys_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -934,7 +940,7 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/requested\sNAT\saccess.*not\senabled/i],
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
@@ -946,15 +952,14 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $nat_conf -a $open_ports_access_conf " .
+            "$fwknopdCmd -c $cf{'nat'} -a $cf{'open_ports_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
-
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -963,13 +968,51 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $nat_conf -a $force_nat_access_conf " .
+            "$fwknopdCmd -c $cf{'nat'} -a $cf{'force_nat_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i],
         'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $nat_conf,
+        'server_conf' => $cf{'nat'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "local NAT $force_nat_host (tcp/22 ssh)",
+        'err_msg'  => "could not complete NAT SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args --nat-local",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i,
+            qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
+        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'nat'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "local NAT non-FORCE_NAT (tcp/22 ssh)",
+        'err_msg'  => "could not complete NAT SPA cycle",
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose --nat-local --nat-port 22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
+            qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
+        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
     {
@@ -980,7 +1023,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ecb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $ecb_mode_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'ecb_mode_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -995,7 +1038,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M cfb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $cfb_mode_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'cfb_mode_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -1010,7 +1053,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ctr",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $ctr_mode_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'ctr_mode_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -1025,7 +1068,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ofb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $ofb_mode_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'ofb_mode_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -1041,7 +1084,7 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ecb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $default_conf -a $default_access_conf " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -1223,8 +1266,8 @@ my @tests = (
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $default_conf " .
-            "-a $multi_gpg_access_conf $intf_str " .
+            "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'multi_gpg_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -1597,7 +1640,7 @@ sub compile_warnings() {
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
     return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
-        $current_test_file);
+        $MATCH_ANY, $current_test_file);
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
@@ -1643,15 +1686,21 @@ sub binary_exists() {
     return 0 unless $test_hr->{'binary'};
 
     ### account for different libfko.so paths (e.g. libfko.so.0.3 with no
-    ### libfko.so link on OpenBSD)
+    ### libfko.so link on OpenBSD, and libfko.dylib path on Mac OS X)
 
     if ($test_hr->{'binary'} =~ /libfko/) {
         unless (-e $test_hr->{'binary'}) {
-            for my $file (glob("$lib_dir/libfko.so*")) {
-                if (-e $file and -x $file) {
-                    $test_hr->{'binary'} = $file;
-                    $libfko_bin = $file;
-                    last;
+            my $file = "$lib_dir/libfko.dylib";
+            if (-e $file) {
+                $test_hr->{'binary'} = $file;
+                $libfko_bin = $file;
+            } else {
+                for my $f (glob("$lib_dir/libfko.so*")) {
+                    if (-e $f and -x $f) {
+                        $test_hr->{'binary'} = $f;
+                        $libfko_bin = $f;
+                        last;
+                    }
                 }
             }
         }
@@ -1677,7 +1726,8 @@ sub expected_code_version() {
         my $version = $1;
         return 0 unless &run_cmd($test_hr->{'cmdline'},
             $cmd_out_tmp, $current_test_file);
-        return 1 if &file_find_regex([qr/$version/], $current_test_file);
+        return 1 if &file_find_regex([qr/$version/],
+            $MATCH_ALL, $current_test_file);
     }
     return 0;
 }
@@ -1690,7 +1740,7 @@ sub client_send_spa_packet() {
     return 0 unless &run_cmd($test_hr->{'cmdline'},
             $cmd_out_tmp, $current_test_file);
     return 0 unless &file_find_regex([qr/final\spacked/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
 
     return 1;
 }
@@ -1716,13 +1766,13 @@ sub spa_cycle() {
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $server_test_file);
+            $MATCH_ALL, $server_test_file);
     }
 
     if ($test_hr->{'server_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'server_negative_output_matches'},
-            $server_test_file);
+            $MATCH_ANY, $server_test_file);
     }
 
     return $rv;
@@ -1734,12 +1784,12 @@ sub spoof_username() {
     my $rv = &spa_cycle($test_hr);
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $current_test_file)) {
+            $MATCH_ALL, $current_test_file)) {
         $rv = 0;
     }
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1778,7 +1828,7 @@ sub replay_detection() {
     $rv = 0 unless $server_was_stopped;
 
     unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1791,7 +1841,7 @@ sub digest_cache_structure() {
 
     &run_cmd("file $default_digest_file", $cmd_out_tmp, $current_test_file);
 
-    if (&file_find_regex([qr/ASCII/i], $cmd_out_tmp)) {
+    if (&file_find_regex([qr/ASCII/i], $MATCH_ALL, $cmd_out_tmp)) {
 
         ### the format should be:
         ### <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>
@@ -1808,7 +1858,7 @@ sub digest_cache_structure() {
             }
         }
         close F;
-    } elsif (&file_find_regex([qr/dbm/i], $cmd_out_tmp)) {
+    } elsif (&file_find_regex([qr/dbm/i], $MATCH_ALL, $cmd_out_tmp)) {
         &write_test_file("[+] DBM digest file format, " .
             "assuming this is valid.\n", $current_test_file);
     } else {
@@ -1861,7 +1911,7 @@ sub server_bpf_ignore_packet() {
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1956,7 +2006,7 @@ sub altered_base64_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -2009,7 +2059,7 @@ sub appended_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -2062,7 +2112,7 @@ sub prepended_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -2076,7 +2126,7 @@ sub server_start() {
         = &client_server_interaction($test_hr, [], $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -2117,12 +2167,12 @@ sub server_packet_limit() {
     }
 
     unless (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
     unless (&file_find_regex([qr/Shutting\sDown\sfwknopd/i],
-            $server_test_file)) {
+            $MATCH_ALL, $server_test_file)) {
         $rv = 0;
     }
 
@@ -2216,8 +2266,8 @@ sub client_server_interaction() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/, qr/^Terminated/],
-                $server_test_file)) {
+        unless (&file_find_regex([qr/Got\sSIGTERM/],
+                $MATCH_ALL, $server_test_file)) {
             $server_was_stopped = 0;
         }
     } else {
@@ -2303,13 +2353,13 @@ sub generic_exec() {
     if ($test_hr->{'positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'positive_output_matches'},
-            $current_test_file);
+            $MATCH_ALL, $current_test_file);
     }
 
     if ($test_hr->{'negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'negative_output_matches'},
-            $current_test_file);
+            $MATCH_ANY, $current_test_file);
     }
 
     return $rv;
@@ -2322,7 +2372,7 @@ sub pie_binary() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2333,7 +2383,7 @@ sub stack_protected_binary() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2344,7 +2394,7 @@ sub fortify_source_functions() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2355,7 +2405,7 @@ sub read_only_relocations() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2366,7 +2416,7 @@ sub immediate_binding() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
-        $current_test_file);
+        $MATCH_ALL, $current_test_file);
     return 1;
 }
 
@@ -2399,7 +2449,8 @@ sub specs() {
         &run_cmd($cmd, $cmd_out_tmp, $current_test_file);
 
         if ($cmd =~ /^ldd/) {
-            $have_gpgme++ if &file_find_regex([qr/gpgme/], $cmd_out_tmp);
+            $have_gpgme++ if &file_find_regex([qr/gpgme/],
+                $MATCH_ALL, $cmd_out_tmp);
         }
     }
 
@@ -2595,30 +2646,8 @@ sub init() {
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
 
-    for my $file ($configure_path,
-            $default_conf,
-            $nat_conf,
-            $default_access_conf,
-            $no_source_match_access_conf,
-            $ip_source_match_access_conf,
-            $subnet_source_match_access_conf,
-            $no_subnet_source_match_access_conf,
-            $no_multi_source_match_access_conf,
-            $multi_source_match_access_conf,
-            $open_ports_access_conf,
-            $mismatch_open_ports_access_conf,
-            $require_user_access_conf,
-            $mismatch_user_access_conf,
-            $require_src_access_conf,
-            $multi_gpg_access_conf,
-            $multi_stanzas_access_conf,
-            $expired_access_conf,
-            $expired_epoch_access_conf,
-            $future_expired_access_conf,
-            $invalid_expire_access_conf,
-            $force_nat_access_conf,
-    ) {
-        die "[*] $file does not exist" unless -e $file;
+    for my $name (keys %cf) {
+        die "[*] $cf{$name} does not exist" unless -e $cf{$name};
     }
 
     if (-d $output_dir) {
@@ -2708,6 +2737,10 @@ sub init() {
 
     unless ($platform eq 'linux') {
         push @tests_to_exclude, 'NAT';
+    }
+
+    if (-e $default_digest_file) {
+        unlink $default_digest_file;
     }
 
     return;
@@ -2807,7 +2840,7 @@ sub is_fw_rule_active() {
     my $conf_args = $default_server_conf_args;
 
     if ($test_hr->{'server_conf'}) {
-        $conf_args = "-c $test_hr->{'server_conf'} -a $default_access_conf " .
+        $conf_args = "-c $test_hr->{'server_conf'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file";
     }
 
@@ -2824,9 +2857,10 @@ sub is_fwknopd_running() {
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
         "--status", $cmd_out_tmp, $current_test_file);
 
-    return 0 if &file_find_regex([qr/no\s+running/i], $cmd_out_tmp);
+    return 1 if &file_find_regex([qr/Detected\sfwknopd\sis\srunning/i],
+            $MATCH_ALL, $cmd_out_tmp);
 
-    return 1;
+    return 0;
 }
 
 sub stop_fwknopd() {
@@ -2844,36 +2878,46 @@ sub stop_fwknopd() {
 }
 
 sub file_find_regex() {
-    my ($re_ar, $file) = @_;
+    my ($re_ar, $match_style, $file) = @_;
 
-    my $found = 0;
+    my $found_all_regexs = 1;
+    my $found_single_match = 0;
     my @write_lines = ();
+    my @file_lines = ();
 
     open F, "< $file" or die "[*] Could not open $file: $!";
-    LINE: while (<F>) {
-        my $line = $_;
-        next LINE if $line =~ /file_file_regex\(\)/;
-        for my $re (@$re_ar) {
-            if ($line =~ $re) {
-                push @write_lines, "[.] file_find_regex() " .
-                    "Matched '$re' with line: $line";
-                $found = 1;
-                last LINE;
-            }
-        }
+    while (<F>) {
+        push @file_lines, $_;
     }
     close F;
 
-    if ($found) {
-        for my $line (@write_lines) {
-            &write_test_file($line, $file);
+    for my $re (@$re_ar) {
+        my $matched = 0;
+        for my $line (@file_lines) {
+            if ($line =~ $re) {
+                push @write_lines, "[.] file_find_regex() " .
+                    "Matched '$re' with line: $line";
+                $matched = 1;
+                $found_single_match = 1;
+            }
         }
-    } else {
-        &write_test_file("[.] find_find_regex() Did not " .
-            "match any regex in: '@$re_ar'\n", $file);
+        unless ($matched) {
+            push @write_lines, "[.] file_find_regex() " .
+                "Did not match regex '$re' from regexs: '@$re_ar' " .
+                "within file: $file\n";
+            $found_all_regexs = 0;
+        }
     }
 
-    return $found;
+    for my $line (@write_lines) {
+        &write_test_file($line, $file);
+    }
+
+    if ($match_style == $MATCH_ANY) {
+        return $found_single_match;
+    }
+
+    return $found_all_regexs;
 }
 
 sub find_command() {

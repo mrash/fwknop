@@ -50,7 +50,6 @@ EXTRA_DIST = \
     android/project/jni/Android.mk \
     ChangeLog* \
     CREDITS \
-    diffstat* \
     extras/fwknop.init.debian \
     extras/fwknop.init.openwrt \
     extras/fwknop.init.redhat \
@@ -103,11 +102,10 @@ EXTRA_DIST = \
     perl/FKO/lib/FKO.pm \
     perl/FKO/lib/FKO_Constants.pl \
     perl/FKO/Changes \
-	python/README \
-	python/setup.py \
-	python/fkomodule.c \
-	python/fko.py \
-    ShortLog* \
+    python/README \
+    python/setup.py \
+    python/fkomodule.c \
+    python/fko.py \
     test/conf/client-gpg/pubring.gpg \
     test/conf/client-gpg/secring.gpg \
     test/conf/client-gpg/trustdb.gpg \
@@ -139,6 +137,7 @@ EXTRA_DIST = \
     test/conf/server-gpg/secring.gpg \
     test/conf/server-gpg/trustdb.gpg \
     test/conf/subnet_source_match_access.conf \
+    test/conf/local_nat_fwknopd.conf \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \

@@ -1,5 +1,5 @@
-fwknop-2.0.1 (07//2012):
-    - Bug fix where the same encryption key used for two stanzas in
+fwknop-2.0.1 (07/23/2012):
+    - [server] Bug fix where the same encryption key used for two stanzas in
       the access.conf file would result in access requests that matched the
       second stanza to always be treated as a replay attack.  This has been
       fixed for the fwknop-2.0.1 release, and was reported by Andy Rowland. Now
@@ -9,13 +9,26 @@ fwknop-2.0.1 (07//2012):
       digest list right after the first access.conf stanza match, so when SPA
       packet data matched the second access.conf stanza a matching replay
       digest would already be there.
+    - [server] Updated PCAP_LOOP_SLEEP default to 1/10th of a second (in
+      microseconds).  This was supposed to be the default anyway, but C
+      Anthony Risinger reported a bug where fwknopd was consuming more
+      resources than necessary, and the cause was PCAP_LOOP_SLEEP set by
+      default to 1/100th of a second - this has been fixed.
+    - [libfko] Added SPA message validation calls to fko decoding routines to
+      help ensure that SPA messages conform to expected values.
     - Bug fix for PF firewalls: updated the PF anchor check to not rely on
-      listing the PF policy - use 'pfctl -s Anchor' instead.
+      listing the PF policy - fwknopd now uses 'pfctl -s Anchor' instead.
     - [test suite] Added parsing of valgrind output to produce a listing of
       functions that have been flagged - this assists in the development
       process to ensure that fwknop is not leaking memory.
-    - Minor gcc warning fix: fko_decode.c:43:17: warning: variable ‘edata_size’
-      set but not used [-Wunused-but-set-variable].
+    - [test suite] Bug fix on Mac OS X systems to account for libfko.dylib path
+      instead of libfko.so.  This fixes the existence check for libfko.
+    - [test suite] Added tests for --nat-local mode.
+    - [client] Fixed several minor memory leaks caught by valgrind.
+    - [libfko] Minor gcc warning fix: fko_decode.c:43:17: warning: variable
+      ‘edata_size’ set but not used [-Wunused-but-set-variable].
+    - Updated fwknopd init script for Debian systems (contributed by Franck
+      Joncourt).
 
 fwknop-2.0 (01/02/2012):
     - This is the first production release that has been completely re-written

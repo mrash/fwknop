@@ -18,7 +18,7 @@
 #
 # Author: Michael Rash (mbr@cipherdyne.org)
 #
-# Version: 2.0
+# Version: 2.0.1
 #
 # Copyright (C) 2011 Michael Rash (mbr@cipherdyne.org)
 #

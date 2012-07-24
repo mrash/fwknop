@@ -36,7 +36,8 @@
 
 /* prototypes
 */
-static char * get_user_pw(fko_cli_options_t *options, const int crypt_op);
+static char * get_user_pw(fko_ctx_t ctx,
+        fko_cli_options_t *options, const int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
 static void show_last_command(void);
@@ -87,6 +88,7 @@ main(int argc, char **argv)
         fprintf(stdout, "fwknop client %s, FKO protocol version %s\n",
             MY_VERSION, version);
 
+        fko_destroy(ctx);
         return(EXIT_SUCCESS);
     }
 
@@ -98,6 +100,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_client_timeout", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
     }
@@ -108,6 +111,7 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_set_spa_message_type", res);
+        fko_destroy(ctx);
         return(EXIT_FAILURE);
     }
 
@@ -119,6 +123,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_timestamp", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
     }
@@ -128,6 +133,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_timestamp", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
     }
@@ -147,7 +153,10 @@ main(int argc, char **argv)
         */
         if (options.resolve_ip_http)
             if(resolve_ip_http(&options) < 0)
+            {
+                fko_destroy(ctx);
                 return(EXIT_FAILURE);
+            }
 
         /* Set a message string by combining the allow IP and the
          * port/protocol.  The fwknopd server allows no port/protocol
@@ -169,6 +178,7 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_set_spa_message", res);
+        fko_destroy(ctx);
         return(EXIT_FAILURE);
     }
 
@@ -180,6 +190,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_nat_access_str", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
     }
@@ -192,6 +203,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_username", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
     }
@@ -212,6 +224,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_type", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
 
@@ -225,6 +238,7 @@ main(int argc, char **argv)
             if(res != FKO_SUCCESS)
             {
                 errmsg("fko_set_gpg_home_dir", res);
+                fko_destroy(ctx);
                 return(EXIT_FAILURE);
             }
         }
@@ -236,6 +250,7 @@ main(int argc, char **argv)
 
             if(IS_GPG_ERROR(res))
                 fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errstr(ctx));
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
 
@@ -249,6 +264,7 @@ main(int argc, char **argv)
                 if(IS_GPG_ERROR(res))
                     fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errstr(ctx));
 
+                fko_destroy(ctx);
                 return(EXIT_FAILURE);
             }
         }
@@ -279,13 +295,14 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_digest_type", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
     }
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
-    res = fko_spa_data_final(ctx, get_user_pw(&options, CRYPT_OP_ENCRYPT));
+    res = fko_spa_data_final(ctx, get_user_pw(ctx, &options, CRYPT_OP_ENCRYPT));
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_spa_data_final", res);
@@ -293,6 +310,7 @@ main(int argc, char **argv)
         if(IS_GPG_ERROR(res))
             fprintf(stderr, "GPG ERR: %s\n", fko_gpg_errstr(ctx));
 
+        fko_destroy(ctx);
         return(EXIT_FAILURE);
     }
 
@@ -313,6 +331,7 @@ main(int argc, char **argv)
     if(res < 0)
     {
         fprintf(stderr, "send_spa_packet: packet not sent.\n");
+        fko_destroy(ctx);
         return(EXIT_FAILURE);
     }
     else
@@ -334,6 +353,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_data", res);
+            fko_destroy(ctx);
             return(EXIT_FAILURE);
         }
 
@@ -349,6 +369,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
+            fko_destroy(ctx);
+            fko_destroy(ctx2);
             return(EXIT_FAILURE);
         }
 
@@ -369,13 +391,15 @@ main(int argc, char **argv)
                 if(res != FKO_SUCCESS)
                 {
                     errmsg("fko_set_gpg_home_dir", res);
+                    fko_destroy(ctx);
+                    fko_destroy(ctx2);
                     return(EXIT_FAILURE);
                 }
             }
         }
 
         res = fko_decrypt_spa_data(
-            ctx2, get_user_pw(&options, CRYPT_OP_DECRYPT)
+            ctx2, get_user_pw(ctx2, &options, CRYPT_OP_DECRYPT)
         );
 
         if(res != FKO_SUCCESS)
@@ -392,9 +416,13 @@ main(int argc, char **argv)
                  debugging purposes. */
                 fprintf(stderr, "GPG ERR: %s\n%s\n", fko_gpg_errstr(ctx2),
                     "No access to recipient private key?\n");
+                fko_destroy(ctx);
+                fko_destroy(ctx2);
                 return(EXIT_SUCCESS);
             }
 
+            fko_destroy(ctx);
+            fko_destroy(ctx2);
             return(EXIT_FAILURE);
         }
 
@@ -688,22 +716,19 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
     {
         message_type = FKO_COMMAND_MSG;
     }
+    else if(options->nat_local)
+    {
+        if (options->fw_timeout >= 0)
+            message_type = FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG;
+        else
+            message_type = FKO_LOCAL_NAT_ACCESS_MSG;
+    }
     else if(options->nat_access_str[0] != 0x0)
     {
-        if (options->nat_local)
-        {
-            if (options->fw_timeout >= 0)
-                message_type = FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG;
-            else
-                message_type = FKO_LOCAL_NAT_ACCESS_MSG;
-        }
+        if (options->fw_timeout >= 0)
+            message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
         else
-        {
-            if (options->fw_timeout >= 0)
-                message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
-            else
-                message_type = FKO_NAT_ACCESS_MSG;
-        }
+            message_type = FKO_NAT_ACCESS_MSG;
     }
     else
     {
@@ -719,7 +744,7 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 /* Prompt for and receive a user password.
 */
 static char*
-get_user_pw(fko_cli_options_t *options, const int crypt_op)
+get_user_pw(fko_ctx_t ctx, fko_cli_options_t *options, const int crypt_op)
 {
     char        *pw_ptr = NULL;
     static char *no_pw  = "";
@@ -736,7 +761,7 @@ get_user_pw(fko_cli_options_t *options, const int crypt_op)
     */
     if (options->get_key_file[0] != 0x0)
     {
-        pw_ptr = getpasswd_file(options->get_key_file, options->spa_server_str);
+        pw_ptr = getpasswd_file(ctx, options);
     }
     else if (options->use_gpg)
     {
@@ -762,6 +787,7 @@ get_user_pw(fko_cli_options_t *options, const int crypt_op)
     if (pw_ptr == NULL)
     {
         fprintf(stderr, "Received no password data, exiting.\n");
+        fko_destroy(ctx);
         exit(EXIT_FAILURE);
     }
 

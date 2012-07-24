@@ -650,13 +650,53 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 nat_port = atoi(ndx+1);
             }
         }
-
-        /* Make our FORWARD and NAT rules
-        */
-        if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
+    
+        if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG)
         {
+            /* Need to add an ACCEPT rule into the INPUT chain
+            */
+            zero_cmd_buffers();
 
-            /* Make sure the required jump rule exists
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_RULE_ARGS,
+                opts->fw_config->fw_command,
+                in_chain->table,
+                in_chain->to_chain,
+                fst_proto,
+                spadat->use_src_ip,
+                nat_port,
+                exp_ts,
+                in_chain->target
+            );
+
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+            if (opts->verbose)
+                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
+
+            if(EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
+                    in_chain->to_chain, spadat->use_src_ip,
+                    spadat->spa_message_remain, exp_ts
+                );
+
+                in_chain->active_rules++;
+
+                /* Reset the next expected expire time for this chain if it
+                * is warranted.
+                */
+                if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
+                    in_chain->next_expire = exp_ts;
+            }
+            else
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+        }
+        else if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
+        {
+            /* Make our FORWARD and NAT rules, and make sure the
+             * required jump rule exists
             */
             if (jump_rule_exists(IPT_FORWARD_ACCESS) == 0)
                 add_jump_rule(opts, IPT_FORWARD_ACCESS);

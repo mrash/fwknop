@@ -41,6 +41,7 @@ struct fko_gpg_sig {
     struct fko_gpg_sig *next;
     gpgme_sigsum_t      summary;
     gpgme_error_t       status;
+    gpgme_validity_t    validity;
     char               *fpr;
 };
 

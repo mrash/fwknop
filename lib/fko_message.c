@@ -32,15 +32,6 @@
 #include "fko_common.h"
 #include "fko.h"
 
-/* SPA message format validation functions.
- * (These called from the spa_message function here only).
-*/
-int validate_cmd_msg(const char *msg);
-int validate_access_msg(const char *msg);
-int validate_proto_port_spec(const char *msg);
-int validate_nat_access_msg(const char *msg);
-int got_allow_ip(const char *msg);
-
 /* Set the SPA message type.
 */
 int
@@ -90,13 +81,13 @@ fko_set_spa_message(fko_ctx_t ctx, const char *msg)
 
     /* Gotta have a valid string.
     */
-    if(msg == NULL || strlen(msg) == 0)
+    if(msg == NULL || strnlen(msg, MAX_SPA_MESSAGE_SIZE) == 0)
         return(FKO_ERROR_INVALID_DATA);
 
     /* --DSS XXX: Bail out for now.  But consider just
      *            truncating in the future...
     */
-    if(strlen(msg) > MAX_SPA_MESSAGE_SIZE)
+    if(strnlen(msg, MAX_SPA_MESSAGE_SIZE) == MAX_SPA_MESSAGE_SIZE)
         return(FKO_ERROR_DATA_TOO_LARGE);
 
     /* Basic message type and format checking...
@@ -161,8 +152,10 @@ validate_cmd_msg(const char *msg)
 {
     const char   *ndx;
     int     res         = FKO_SUCCESS;
-    int     startlen    = strlen(msg);
+    int     startlen    = strnlen(msg, MAX_SPA_CMD_LEN);
 
+    if(startlen == MAX_SPA_CMD_LEN)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Should have a valid allow IP.
     */
@@ -185,7 +178,10 @@ validate_access_msg(const char *msg)
 {
     const char   *ndx;
     int     res         = FKO_SUCCESS;
-    int     startlen    = strlen(msg);
+    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
+
+    if(startlen == MAX_SPA_MESSAGE_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Should have a valid allow IP.
     */
@@ -212,9 +208,11 @@ validate_access_msg(const char *msg)
 int
 validate_proto_port_spec(const char *msg)
 {
-    int     startlen    = strlen(msg);
-
+    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
     const char   *ndx   = msg;
+
+    if(startlen == MAX_SPA_MESSAGE_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Now check for proto/port string.  Currenly we only allow protos
      * 'tcp', 'udp', and 'icmp'.
