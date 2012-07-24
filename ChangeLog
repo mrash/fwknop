@@ -27,6 +27,8 @@ fwknop-2.0.1 (07//2012):
     - [client] Fixed several minor memory leaks caught by valgrind.
     - [libfko] Minor gcc warning fix: fko_decode.c:43:17: warning: variable
       ‘edata_size’ set but not used [-Wunused-but-set-variable].
+    - Updated fwknopd init script for Debian systems (contributed by Franck
+      Joncourt).
 
 fwknop-2.0 (01/02/2012):
     - This is the first production release that has been completely re-written
