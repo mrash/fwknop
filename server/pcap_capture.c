@@ -58,11 +58,14 @@ pcap_capture(fko_srv_options_t *opts)
     int                 promisc = 0;
     int                 set_direction = 1;
     int                 status;
+    int                 useconds;
     pid_t               child_pid;
 
 #if FIREWALL_IPFW
     time_t              now;
 #endif
+
+    useconds = atoi(opts->config[CONF_PCAP_LOOP_SLEEP]);
 
     /* Set promiscuous mode if ENABLE_PCAP_PROMISC is set to 'Y'.
     */
@@ -288,7 +291,7 @@ pcap_capture(fko_srv_options_t *opts)
         }
 #endif
 
-        usleep(atoi(opts->config[CONF_PCAP_LOOP_SLEEP]));
+        usleep(useconds);
     }
 
     pcap_close(pcap);

@@ -35,6 +35,21 @@
 #include "utils.h"
 #include "log_msg.h"
 
+/* Check to see if an integer variable has a value that is within a
+ * specific range
+*/
+static void
+range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
+{
+    if (low > atoi(val) || high < atoi(val))
+    {
+        fprintf(stderr, "[*] var %s value '%s' not in the range %d-%d",
+            var, val, low, high);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+    return;
+}
+
 /* Take an index and a string value. malloc the space for the value
  * and assign it to the array at the specified index.
 */
@@ -108,6 +123,40 @@ free_configs(fko_srv_options_t *opts)
     for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         if(opts->config[i] != NULL)
             free(opts->config[i]);
+}
+
+static void
+validate_int_var_ranges(fko_srv_options_t *opts)
+{
+    range_check(opts, "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
+        1, RCHK_MAX_PCAP_LOOP_SLEEP);
+    range_check(opts, "MAX_SPA_PACKET_AGE", opts->config[CONF_MAX_SPA_PACKET_AGE],
+        1, RCHK_MAX_SPA_PACKET_AGE);
+    range_check(opts, "MAX_SNIFF_BYTES", opts->config[CONF_MAX_SNIFF_BYTES],
+        1, RCHK_MAX_SNIFF_BYTES);
+    range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
+        1, RCHK_MAX_TCPSERV_PORT);
+
+#if FIREWALL_IPFW
+    range_check(opts, "IPFW_START_RULE_NUM", opts->config[CONF_IPFW_START_RULE_NUM],
+        0, RCHK_MAX_IPFW_START_RULE_NUM);
+    range_check(opts, "IPFW_MAX_RULES", opts->config[CONF_IPFW_MAX_RULES],
+        1, RCHK_MAX_IPFW_MAX_RULES);
+    range_check(opts, "IPFW_ACTIVE_SET_NUM", opts->config[CONF_IPFW_ACTIVE_SET_NUM],
+        0, RCHK_MAX_IPFW_SET_NUM);
+    range_check(opts, "IPFW_EXPIRE_SET_NUM", opts->config[CONF_IPFW_EXPIRE_SET_NUM],
+        0, RCHK_MAX_IPFW_SET_NUM);
+    range_check(opts, "IPFW_EXPIRE_PURGE_INTERVAL",
+        opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL],
+        1, RCHK_MAX_IPFW_PURGE_INTERVAL);
+
+#elif FIREWALL_PF
+    range_check(opts, "PF_EXPIRE_INTERVAL", opts->config[CONF_PF_EXPIRE_INTERVAL],
+        1, RCHK_MAX_PF_EXPIRE_INTERVAL);
+
+#endif /* FIREWALL type */
+
+    return;
 }
 
 /* Parse the config file...
@@ -481,6 +530,11 @@ validate_options(fko_srv_options_t *opts)
     */
     if(opts->config[CONF_SYSLOG_FACILITY] == NULL)
         set_config_entry(opts, CONF_SYSLOG_FACILITY, DEF_SYSLOG_FACILITY);
+
+
+    /* Validate integer variable ranges
+    */
+    validate_int_var_ranges(opts);
 
     /* Some options just trigger some output of information, or trigger an
      * external function, but do not actually start fwknopd.  If any of those

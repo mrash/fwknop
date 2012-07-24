@@ -50,7 +50,7 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
     /* If spoof_user was not passed in, check for a SPOOF_USER enviroment
      * variable.  If it is set, use its value.
     */
-    if(spoof_user != NULL && strlen(spoof_user))
+    if(spoof_user != NULL && strnlen(spoof_user, MAX_SPA_USERNAME_SIZE))
         username = (char*)spoof_user;
     else
         username = getenv("SPOOF_USER");
@@ -59,28 +59,29 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
     */
     if(username == NULL)
     {
+        /* Since we've already tried looking at an env variable, try
+         * LOGNAME next (and the cuserid() man page recommends this)
+        */
+        if((username = getenv("LOGNAME")) == NULL)
+        {
 #ifdef _XOPEN_SOURCE
-        /* cuserid will return the effective user (i.e. su or setuid).
-        */
-        username = cuserid(NULL);
+            /* cuserid will return the effective user (i.e. su or setuid).
+            */
+            username = cuserid(NULL);
 #else
-        username = getlogin();
+            username = getlogin();
 #endif
-
-        /* If we did not get a name using the above methods, try the
-         * LOGNAME or USER environment variables. If none of those work,
-         * then we fallback to NO_USER.
-        */
-        if(username == NULL)
-            if((username = getenv("LOGNAME")) == NULL)
-                if((username = getenv("USER")) == NULL)
-                    username = strdup("NO_USER");
+            /* if we still didn't get a username, fall back
+            */
+            if((username = getenv("USER")) == NULL)
+                username = strdup("NO_USER");
+        }
     }
 
     /* Truncate the username if it is too long.
     */
-    if(strlen(username) > MAX_SPA_USERNAME_SIZE)
-        *(username + MAX_SPA_USERNAME_SIZE) = '\0';
+    if(strnlen(username, MAX_SPA_USERNAME_SIZE) == MAX_SPA_USERNAME_SIZE)
+        *(username + MAX_SPA_USERNAME_SIZE - 1) = '\0';
 
     /* Just in case this is a subsquent call to this function.  We
      * do not want to be leaking memory.

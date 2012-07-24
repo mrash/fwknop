@@ -80,16 +80,16 @@ fko_encode_spa_data(fko_ctx_t ctx)
      *             (at leaset expand the error reporting for the missing
      *             data).
     */
-    if(  ctx->username == NULL || strlen(ctx->username) == 0
-      || ctx->version  == NULL || strlen(ctx->version)  == 0
-      || ctx->message  == NULL || strlen(ctx->message)  == 0)
+    if(  ctx->username == NULL || strnlen(ctx->username, MAX_SPA_USERNAME_SIZE) == 0
+      || ctx->version  == NULL || strnlen(ctx->version, MAX_SPA_VERSION_SIZE)  == 0
+      || ctx->message  == NULL || strnlen(ctx->message, MAX_SPA_MESSAGE_SIZE)  == 0)
     {
         return(FKO_ERROR_INCOMPLETE_SPA_DATA);
     }
 
     if(ctx->message_type == FKO_NAT_ACCESS_MSG)
     {
-        if(ctx->nat_access == NULL || strlen(ctx->nat_access) == 0)
+        if(ctx->nat_access == NULL || strnlen(ctx->nat_access, MAX_SPA_MESSAGE_SIZE) == 0)
             return(FKO_ERROR_INCOMPLETE_SPA_DATA);
     }
 

@@ -1,13 +1,13 @@
 /*
  *****************************************************************************
  *
- * File:    getpasswd.h
+ * File:    fko_message.h
  *
- * Author:  Damien Stuart (dstuart@dstuart.org)
+ * Author:  Michael Rash
  *
- * Purpose: Header file for getpasswd.c.
+ * Purpose: Provide validation functions for SPA messages
  *
- * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2012 Michael Rash (mbr@cipherdyne.org)
  *
  *  License (GNU Public License):
  *
@@ -28,12 +28,18 @@
  *
  *****************************************************************************
 */
-#ifndef GETPASSWD_H
-#define GETPASSWD_H
 
-/* Prototypes
+#ifndef FKO_MESSAGE_H
+#define FKO_MESSAGE_H 1
+
+/* SPA message format validation functions.
 */
-char* getpasswd(const char *prompt);
-char* getpasswd_file(fko_ctx_t ctx, const fko_cli_options_t *options);
+int validate_cmd_msg(const char *msg);
+int validate_access_msg(const char *msg);
+int validate_proto_port_spec(const char *msg);
+int validate_nat_access_msg(const char *msg);
+int got_allow_ip(const char *msg);
 
-#endif  /* GETPASSWD_H */
+#endif /* FKO_MESSAGE_H */
+
+/***EOF***/

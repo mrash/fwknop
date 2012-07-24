@@ -41,7 +41,7 @@
  * mode to on unless it is a FreeBSD system. --DSS XXX: What we really need
  * to do is figure out what the difference is and address it correctly.
 */
-#if defined(__FreeBSD__)
+#if defined(__FreeBSD__) || defined(__APPLE__)
     #define DEF_PCAP_NONBLOCK 0
 #else
     #define DEF_PCAP_NONBLOCK 1

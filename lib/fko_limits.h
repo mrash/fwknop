@@ -35,13 +35,24 @@
 
 /* Define some limits (--DSS XXX: These sizes need to be reviewed)
 */
+#define MAX_SPA_ENCRYPTED_SIZE     1500
+#define MAX_SPA_CMD_LEN            1400
 #define MAX_SPA_USERNAME_SIZE        64
 #define MAX_SPA_MESSAGE_SIZE        256
 #define MAX_SPA_NAT_ACCESS_SIZE     128
 #define MAX_SPA_SERVER_AUTH_SIZE     64
+#define MAX_SPA_TIMESTAMP_SIZE       12
+#define MAX_SPA_VERSION_SIZE          8 /* 12.34.56 */
+#define MAX_SPA_MESSAGE_TYPE_SIZE     2
 
 #define MIN_SPA_ENCODED_MSG_SIZE     36 /* Somewhat arbitrary */
+#define MAX_SPA_ENCODED_MSG_SIZE       MAX_SPA_ENCRYPTED_SIZE
 #define MIN_GNUPG_MSG_SIZE          400
+#define MIN_SPA_FIELDS                6
+#define MAX_SPA_FIELDS               10
+
+#define MAX_IPV4_STR_LEN             16
+#define MIN_IPV4_STR_LEN              7
 
 /* Misc.
 */

@@ -848,7 +848,9 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_DEL_RULE_ARGS,
             opts->fw_config->fw_command,
+#ifndef __APPLE__
             fwc.expire_set_num,
+#endif
             curr_rule
         );
 
