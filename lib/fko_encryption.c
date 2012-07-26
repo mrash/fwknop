@@ -53,7 +53,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plaintext = calloc(1, strlen(ctx->encoded_msg)
+    plaintext = calloc(1, ctx->encoded_msg_len
                     + strlen(ctx->digest) + RIJNDAEL_BLOCKSIZE + 2);
 
     if(plaintext == NULL)
@@ -219,7 +219,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plain = malloc(strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2);
+    plain = malloc(ctx->encoded_msg_len + strlen(ctx->digest) + 2);
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -484,8 +484,6 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key, const int key_len)
      * some data validation.
     */
     enc_type = fko_encryption_type(ctx->encrypted_msg);
-
-    //strlen(ctx->encrypted_msg) <  MIN_SPA_ENCODED_MSG_SIZE)
 
     if(enc_type == FKO_ENCRYPTION_GPG)
     {
