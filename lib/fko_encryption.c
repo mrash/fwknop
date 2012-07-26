@@ -170,6 +170,14 @@ _rijndael_decrypt(fko_ctx_t ctx,
     if(pt_len < (cipher_len - 32))
         return(FKO_ERROR_DECRYPTION_SIZE);
 
+    if(ctx->encoded_msg == NULL || pt_len < MIN_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    if(pt_len == MAX_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    ctx->encoded_msg_len = pt_len;
+
     /* At this point we can check the data to see if we have a good
      * decryption by ensuring the first field (16-digit random decimal
      * value) is valid and is followed by a colon.  Additional checks
@@ -275,7 +283,7 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     char           *tbuf;
     unsigned char  *cipher;
     size_t          cipher_len;
-    int             res;
+    int             res, pt_len;
 
     int             b64_len = strlen(ctx->encrypted_msg);
 
@@ -322,7 +330,7 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     */
 
     res = gpgme_decrypt(ctx, cipher, cipher_len,
-        dec_key,  (unsigned char**)&ctx->encoded_msg, &cipher_len
+        dec_key, (unsigned char**)&ctx->encoded_msg, &cipher_len
     );
 
     /* Done with cipher...
@@ -332,9 +340,15 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     if(res != FKO_SUCCESS)
         return(res);
 
-    /* XXX: We could put some kind of sanity check  of the decrypted
-     *      data here
-    */
+    pt_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
+
+    if(ctx->encoded_msg == NULL || pt_len < MIN_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    if(pt_len == MAX_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    ctx->encoded_msg_len = pt_len;
 
     /* Call fko_decode and return the results.
     */
@@ -440,10 +454,8 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
      * check for a somewhat arbitrary minimum length for the encoded
      * data.
     */
-    if(strlen(ctx->encoded_msg) < MIN_SPA_ENCODED_MSG_SIZE)
-    {
+    if(ctx->encoded_msg_len < MIN_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
-    }
 
     /* Encrypt according to type and return...
     */

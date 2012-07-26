@@ -101,6 +101,12 @@ static int
 set_digest(char *data, char **digest, short digest_type)
 {
     char    *md = NULL;
+    int     data_len;
+
+    data_len = strnlen(data, MAX_SPA_ENCODED_MSG_SIZE);
+
+    if(data_len == MAX_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
 
     switch(digest_type)
     {
@@ -110,7 +116,7 @@ set_digest(char *data, char **digest, short digest_type)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             md5_base64(md,
-                (unsigned char*)data, strlen(data));
+                (unsigned char*)data, data_len);
             break;
 
         case FKO_DIGEST_SHA1:
@@ -119,7 +125,7 @@ set_digest(char *data, char **digest, short digest_type)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha1_base64(md,
-                (unsigned char*)data, strlen(data));
+                (unsigned char*)data, data_len);
             break;
 
         case FKO_DIGEST_SHA256:
@@ -128,7 +134,7 @@ set_digest(char *data, char **digest, short digest_type)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha256_base64(md,
-                (unsigned char*)data, strlen(data));
+                (unsigned char*)data, data_len);
             break;
 
         case FKO_DIGEST_SHA384:
@@ -137,7 +143,7 @@ set_digest(char *data, char **digest, short digest_type)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha384_base64(md,
-                (unsigned char*)data, strlen(data));
+                (unsigned char*)data, data_len);
             break;
 
         case FKO_DIGEST_SHA512:
@@ -146,7 +152,7 @@ set_digest(char *data, char **digest, short digest_type)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha512_base64(md,
-                (unsigned char*)data, strlen(data));
+                (unsigned char*)data, data_len);
             break;
 
         default:

@@ -79,6 +79,7 @@ struct fko_context {
 
     /* Computed processed data (encodings, etc.) */
     char           *encoded_msg;
+    int             encoded_msg_len;
     char           *encrypted_msg;
     char           *msg_hmac;
 

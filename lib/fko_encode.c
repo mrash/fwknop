@@ -195,6 +195,11 @@ fko_encode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
+    ctx->encoded_msg_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
+
+    if(ctx->encoded_msg_len == MAX_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
     /* At this point we can compute the digest for this SPA data.
     */
     if((res = fko_set_spa_digest(ctx)) != FKO_SUCCESS)

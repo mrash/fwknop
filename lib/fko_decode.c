@@ -42,14 +42,8 @@ fko_decode_spa_data(fko_ctx_t ctx)
     char       *tbuf, *ndx, *tmp;
     int         t_size, i;
 
-    /* Check for required data.
-    */
-    if(ctx->encoded_msg == NULL || strnlen(ctx->encoded_msg,
-            MAX_SPA_ENCODED_MSG_SIZE) < MIN_SPA_ENCODED_MSG_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
-
-    if(strnlen(ctx->encoded_msg,
-            MAX_SPA_ENCODED_MSG_SIZE) == MAX_SPA_ENCODED_MSG_SIZE)
+    if (ctx->encoded_msg_len < MIN_SPA_ENCODED_MSG_SIZE
+            || ctx->encoded_msg_len > MAX_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_INVALID_DATA);
 
     /* Make sure there are enough fields in the SPA packet
@@ -68,7 +62,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if (i < MIN_SPA_FIELDS)
         return(FKO_ERROR_INVALID_DATA);
 
-    t_size = strlen(ndx);
+    t_size = strnlen(ndx, SHA512_B64_LENGTH+1);
 
     switch(t_size)
     {
@@ -96,6 +90,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
             return(FKO_ERROR_INVALID_DIGEST_TYPE);
     }
 
+    if (ctx->encoded_msg_len - t_size < 0)
+        return(FKO_ERROR_INVALID_DATA);
+
     /* Copy the digest into the context and terminate the encoded data
      * at that point so the original digest is not part of the
      * encoded string.
@@ -107,6 +104,8 @@ fko_decode_spa_data(fko_ctx_t ctx)
     /* Zero out the rest of the encoded_msg bucket...
     */
     bzero((ndx-1), t_size);
+
+    ctx->encoded_msg_len -= t_size+1;
 
     /* Make a tmp bucket for processing base64 encoded data and
      * other general use.
@@ -120,23 +119,23 @@ fko_decode_spa_data(fko_ctx_t ctx)
     switch(ctx->digest_type)
     {
         case FKO_DIGEST_MD5:
-            md5_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            md5_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
 
         case FKO_DIGEST_SHA1:
-            sha1_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            sha1_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
 
         case FKO_DIGEST_SHA256:
-            sha256_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            sha256_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
 
         case FKO_DIGEST_SHA384:
-            sha384_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            sha384_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
 
         case FKO_DIGEST_SHA512:
-            sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, strlen(ctx->encoded_msg));
+            sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
 
     }
