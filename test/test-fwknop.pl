@@ -79,6 +79,8 @@ my $default_spa_port = 62201;
 my $non_std_spa_port = 12345;
 
 my $spoof_user = 'testuser';
+
+my $valgrind_cov_dir = 'valgrind-coverage';
 #================== end config ===================
 
 my $passed = 0;
@@ -95,7 +97,7 @@ my $diff_dir1 = '';
 my $diff_dir2 = '';
 my $loopback_intf = '';
 my $anonymize_results = 0;
-my $current_test_file = "$output_dir/init";
+my $curr_test_file = "$output_dir/init";
 my $tarfile = 'test_fwknop.tar.gz';
 my $server_test_file  = '';
 my $use_valgrind = 0;
@@ -1638,10 +1640,10 @@ sub run_test() {
     &dots_print($msg);
 
     $executed++;
-    $current_test_file  = "$output_dir/$executed.test";
-    $server_test_file   = "$output_dir/${executed}_fwknopd.test";
+    $curr_test_file   = "$output_dir/$executed.test";
+    $server_test_file = "$output_dir/${executed}_fwknopd.test";
 
-    &write_test_file("[+] TEST: $msg\n", $current_test_file);
+    &write_test_file("[+] TEST: $msg\n", $curr_test_file);
     $test_hr->{'msg'} = $msg;
     if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
@@ -1695,36 +1697,64 @@ sub diff_test_results() {
         unless -d $diff_dir2;
     die "[*] Current results set does not exist." unless -d $diff_dir1;
 
-    my %current_tests  = ();
-    my %previous_tests = ();
+    my %curr_tests  = ();
+    my %prev_tests = ();
 
     ### Only diff results for matching tests (parse the logfile to see which
     ### test numbers match across the two test cycles).
-    &build_results_hash(\%current_tests, $diff_dir1);
-    &build_results_hash(\%previous_tests, $diff_dir2);
+    &build_results_hash(\%curr_tests, $diff_dir1);
+    &build_results_hash(\%prev_tests, $diff_dir2);
 
-    for my $test_msg (sort {$current_tests{$a}{'num'} <=> $current_tests{$b}{'num'}}
-                keys %current_tests) {
-        my $current_result = $current_tests{$test_msg}{'pass_fail'};
-        my $current_num    = $current_tests{$test_msg}{'num'};
-        if (defined $previous_tests{$test_msg}) {
-            print "[+] Checking: $test_msg\n";
-            my $previous_result = $previous_tests{$test_msg}{'pass_fail'};
-            my $previous_num    = $previous_tests{$test_msg}{'num'};
-            if ($current_result ne $previous_result) {
-                print " DIFF: **$current_result** $test_msg\n";
+    for my $test_msg (sort {$curr_tests{$a}{'num'} <=> $curr_tests{$b}{'num'}}
+                keys %curr_tests) {
+        my $curr_result = $curr_tests{$test_msg}{'pass_fail'};
+        my $curr_num    = $curr_tests{$test_msg}{'num'};
+        if (defined $prev_tests{$test_msg}) {
+            print "[+] Diff check: $test_msg\n";
+            my $prev_result = $prev_tests{$test_msg}{'pass_fail'};
+            my $prev_num    = $prev_tests{$test_msg}{'num'};
+            if ($curr_result ne $prev_result) {
+                print " ** Verdict diff: current: $curr_result, ",
+                    "previous: $prev_result $test_msg\n";
             }
 
-            &diff_results($previous_num, $current_num);
+            &diff_results($prev_num, $curr_num, $diff_dir1, $diff_dir2);
+
             print "\n";
         }
+    }
+
+    if (-d "$diff_dir1/$valgrind_cov_dir"
+            and -d "$diff_dir2/$valgrind_cov_dir") {
+        &diff_valgrind_results(\%curr_tests, \%prev_tests)
     }
 
     exit 0;
 }
 
+sub diff_valgrind_results() {
+    my ($curr_tests_hr, $prev_tests_hr) = @_;
+
+    print "\n\n\n[+] Valgrind differences:\n\n";
+    for my $test_msg (sort {$curr_tests_hr->{$a}->{'num'} <=> $curr_tests_hr->{$b}->{'num'}}
+                keys %$curr_tests_hr) {
+        my $curr_num = $curr_tests_hr->{$test_msg}->{'num'};
+        if (defined $prev_tests_hr->{$test_msg}) {
+            print "[+] Valgrind diff check: $test_msg\n";
+            my $prev_result = $prev_tests_hr->{$test_msg}->{'pass_fail'};
+            my $prev_num    = $prev_tests_hr->{$test_msg}->{'num'};
+            &diff_results($prev_num, $curr_num,
+                "$diff_dir1/$valgrind_cov_dir", "$diff_dir2/$valgrind_cov_dir");
+
+            print "\n";
+        }
+    }
+
+    return;
+}
+
 sub diff_results() {
-    my ($previous_num, $current_num) = @_;
+    my ($prev_num, $curr_num, $dir1, $dir2) = @_;
 
     ### edit out any valgrind "==354==" prefixes
     my $valgrind_search_re = qr/^==\d+==\s/;
@@ -1732,25 +1762,25 @@ sub diff_results() {
     ### remove CMD timestamps
     my $cmd_search_re = qr/^\S+\s.*?\s\d{4}\sCMD\:/;
 
-    for my $file ("$diff_dir1/${previous_num}.test",
-        "$diff_dir1/${previous_num}_fwknopd.test",
-        "$diff_dir2/${current_num}.test",
-        "$diff_dir2/${current_num}_fwknopd.test",
+    for my $file ("$dir1/${prev_num}.test",
+        "$dir1/${prev_num}_fwknopd.test",
+        "$dir2/${curr_num}.test",
+        "$dir2/${curr_num}_fwknopd.test",
     ) {
         system qq{perl -p -i -e 's|$valgrind_search_re||' $file} if -e $file;
         system qq{perl -p -i -e 's|$cmd_search_re|CMD:|' $file} if -e $file;
     }
 
-    if (-e "$diff_dir1/${previous_num}.test"
-            and -e "$diff_dir2/${current_num}.test") {
-        system "diff -u $diff_dir1/${previous_num}.test " .
-            "$diff_dir2/${current_num}.test";
+    if (-e "$dir1/${prev_num}.test"
+            and -e "$dir2/${curr_num}.test") {
+        system "diff -u $dir1/${prev_num}.test " .
+            "$dir2/${curr_num}.test";
     }
 
-    if (-e "$diff_dir1/${previous_num}_fwknopd.test"
-            and -e "$diff_dir2/${current_num}_fwknopd.test") {
-        system "diff -u $diff_dir1/${previous_num}_fwknopd.test " .
-            "$diff_dir2/${current_num}_fwknopd.test";
+    if (-e "$dir1/${prev_num}_fwknopd.test"
+            and -e "$dir2/${curr_num}_fwknopd.test") {
+        system "diff -u $dir1/${prev_num}_fwknopd.test " .
+            "$dir2/${curr_num}_fwknopd.test";
     }
 
     return;
@@ -1773,7 +1803,7 @@ sub compile_warnings() {
 
     ### 'make clean' as root
     return 0 unless &run_cmd('make -C .. clean',
-        $cmd_out_tmp, $current_test_file);
+        $cmd_out_tmp, $curr_test_file);
 
     if ($sudo_path) {
         my $username = getpwuid((stat($configure_path))[4]);
@@ -1781,28 +1811,28 @@ sub compile_warnings() {
             unless $username;
 
         return 0 unless &run_cmd("$sudo_path -u $username make -C ..",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
 
     } else {
 
         return 0 unless &run_cmd('make -C ..',
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
 
     }
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
     return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
-        $MATCH_ANY, $current_test_file);
+        $MATCH_ANY, $curr_test_file);
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
         &write_test_file("[-] $fwknopCmd does not exist or not executable.\n",
-            $current_test_file);
+            $curr_test_file);
     }
     unless (-e $fwknopdCmd and -x $fwknopdCmd) {
         &write_test_file("[-] $fwknopdCmd does not exist or not executable.\n",
-            $current_test_file);
+            $curr_test_file);
     }
 
     return 1;
@@ -1814,7 +1844,7 @@ sub profile_coverage() {
     ### not compiled with profile support
     unless (glob('../client/*.gcno') and glob('../server/*.gcno')) {
         &write_test_file("[-] ../client/*.gcno and " .
-            "../server/*.gcno files do not exist.\n", $current_test_file);
+            "../server/*.gcno files do not exist.\n", $curr_test_file);
         return 0;
     }
 
@@ -1828,7 +1858,7 @@ sub profile_coverage() {
         chdir $curr_dir or die $!;
 
         &run_cmd(qq|grep "called 0 returned" $dir/*.gcov|,
-                $cmd_out_tmp, $current_test_file);
+                $cmd_out_tmp, $curr_test_file);
     }
 
     return 1;
@@ -1868,7 +1898,7 @@ sub expected_code_version() {
 
     unless (-e '../VERSION') {
         &write_test_file("[-] ../VERSION file does not exist.\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -1878,9 +1908,9 @@ sub expected_code_version() {
     if ($line =~ /(\d.*\d)/) {
         my $version = $1;
         return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
         return 1 if &file_find_regex([qr/$version/],
-            $MATCH_ALL, $current_test_file);
+            $MATCH_ALL, $curr_test_file);
     }
     return 0;
 }
@@ -1891,9 +1921,9 @@ sub client_send_spa_packet() {
     &write_key('fwknoptest', $local_key_file);
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0 unless &file_find_regex([qr/final\spacked/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
 
     return 1;
 }
@@ -1919,13 +1949,13 @@ sub spa_cycle() {
     if ($test_hr->{'client_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'client_positive_output_matches'},
-            $MATCH_ALL, $current_test_file);
+            $MATCH_ALL, $curr_test_file);
     }
 
     if ($test_hr->{'client_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'client_negative_output_matches'},
-            $MATCH_ANY, $current_test_file);
+            $MATCH_ANY, $curr_test_file);
     }
 
     if ($test_hr->{'server_positive_output_matches'}) {
@@ -1949,7 +1979,7 @@ sub spoof_username() {
     my $rv = &spa_cycle($test_hr);
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $MATCH_ALL, $current_test_file)) {
+            $MATCH_ALL, $curr_test_file)) {
         $rv = 0;
     }
 
@@ -1969,12 +1999,12 @@ sub replay_detection() {
 
     return 0 unless &spa_cycle($test_hr);
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n",
-            $current_test_file);
+            "from file: $curr_test_file\n",
+            $curr_test_file);
         return 0;
     }
 
@@ -2004,7 +2034,7 @@ sub digest_cache_structure() {
     my $test_hr = shift;
     my $rv = 1;
 
-    &run_cmd("file $default_digest_file", $cmd_out_tmp, $current_test_file);
+    &run_cmd("file $default_digest_file", $cmd_out_tmp, $curr_test_file);
 
     if (&file_find_regex([qr/ASCII/i], $MATCH_ALL, $cmd_out_tmp)) {
 
@@ -2017,7 +2047,7 @@ sub digest_cache_structure() {
             next unless /\S/;
             unless (m|^\S+\s+\d+\s+$ip_re\s+\d+\s+$ip_re\s+\d+\s+\d+|) {
                 &write_test_file("[-] invalid digest.cache line: $_",
-                    $current_test_file);
+                    $curr_test_file);
                 $rv = 0;
                 last;
             }
@@ -2025,17 +2055,17 @@ sub digest_cache_structure() {
         close F;
     } elsif (&file_find_regex([qr/dbm/i], $MATCH_ALL, $cmd_out_tmp)) {
         &write_test_file("[+] DBM digest file format, " .
-            "assuming this is valid.\n", $current_test_file);
+            "assuming this is valid.\n", $curr_test_file);
     } else {
         ### don't know what kind of file the digest.cache is
         &write_test_file("[-] unrecognized file type for " .
-            "$default_digest_file.\n", $current_test_file);
+            "$default_digest_file.\n", $curr_test_file);
         $rv = 0;
     }
 
     if ($rv) {
         &write_test_file("[+] valid digest.cache structure.\n",
-            $current_test_file);
+            $curr_test_file);
     }
 
     return $rv;
@@ -2051,15 +2081,15 @@ sub server_bpf_ignore_packet() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -2093,15 +2123,15 @@ sub altered_non_base64_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -2135,15 +2165,15 @@ sub altered_base64_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -2164,10 +2194,10 @@ sub altered_base64_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -2188,15 +2218,15 @@ sub appended_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -2217,10 +2247,10 @@ sub appended_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -2241,15 +2271,15 @@ sub prepended_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -2270,10 +2300,10 @@ sub prepended_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -2393,7 +2423,7 @@ sub client_server_interaction() {
     if ($spa_client_flag == $USE_CLIENT) {
         unless (&client_send_spa_packet($test_hr)) {
             &write_test_file("[-] fwknop client execution error.\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         }
     } else {
@@ -2404,7 +2434,7 @@ sub client_server_interaction() {
     my $ctr = 0;
     while (not &is_fw_rule_active($test_hr)) {
         &write_test_file("[-] new fw rule does not exist.\n",
-            $current_test_file);
+            $curr_test_file);
         $ctr++;
         last if $ctr == 3;
         sleep 1;
@@ -2420,11 +2450,11 @@ sub client_server_interaction() {
         sleep 3;  ### allow time for rule time out.
         if (&is_fw_rule_active($test_hr)) {
             &write_test_file("[-] new fw rule not timed out.\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] new fw rule timed out.\n",
-                $current_test_file);
+                $curr_test_file);
             $fw_rule_removed = 1;
         }
     }
@@ -2437,7 +2467,7 @@ sub client_server_interaction() {
         }
     } else {
         &write_test_file("[-] server is not running.\n",
-            $current_test_file);
+            $curr_test_file);
         $server_was_stopped = 0;
     }
 
@@ -2472,7 +2502,7 @@ sub get_spa_packet_from_file() {
 sub send_packets() {
     my $pkts_ar = shift;
 
-    open F, ">> $current_test_file" or die $!;
+    open F, ">> $curr_test_file" or die $!;
     print F "[+] send_packets(): Sending the following packets...\n";
     print F Dumper $pkts_ar;
     close F;
@@ -2511,7 +2541,7 @@ sub rc_file_exists() {
             $MATCH_ALL, $tmp_rc_file);
     } else {
         &write_test_file("[-] $tmp_rc_file does not exist.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -2525,7 +2555,7 @@ sub generic_exec() {
     my $rv = 1;
 
     my $exec_rv = &run_cmd($test_hr->{'cmdline'},
-                $cmd_out_tmp, $current_test_file);
+                $cmd_out_tmp, $curr_test_file);
 
     if ($test_hr->{'exec_err'} eq $YES) {
         $rv = 0 if $exec_rv;
@@ -2536,13 +2566,13 @@ sub generic_exec() {
     if ($test_hr->{'positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'positive_output_matches'},
-            $MATCH_ALL, $current_test_file);
+            $MATCH_ALL, $curr_test_file);
     }
 
     if ($test_hr->{'negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'negative_output_matches'},
-            $MATCH_ANY, $current_test_file);
+            $MATCH_ANY, $curr_test_file);
     }
 
     return $rv;
@@ -2553,9 +2583,9 @@ sub pie_binary() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 1;
 }
 
@@ -2564,9 +2594,9 @@ sub stack_protected_binary() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 1;
 }
 
@@ -2575,9 +2605,9 @@ sub fortify_source_functions() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 1;
 }
 
@@ -2586,9 +2616,9 @@ sub read_only_relocations() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 1;
 }
 
@@ -2597,9 +2627,9 @@ sub immediate_binding() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 1;
 }
 
@@ -2607,7 +2637,7 @@ sub specs() {
 
      &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
             "$default_server_conf_args --fw-list-all",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
 
     my $have_gpgme = 0;
 
@@ -2629,7 +2659,7 @@ sub specs() {
         'ls -l /usr/lib/*fko*',
         'ls -l /usr/local/lib/*fko*',
     ) {
-        &run_cmd($cmd, $cmd_out_tmp, $current_test_file);
+        &run_cmd($cmd, $cmd_out_tmp, $curr_test_file);
 
         if ($cmd =~ /^ldd/) {
             $have_gpgme++ if &file_find_regex([qr/gpgme/],
@@ -2650,7 +2680,7 @@ sub time_for_valgrind() {
     my $ctr = 0;
     while (&run_cmd("ps axuww | grep LD_LIBRARY_PATH | " .
             "grep valgrind |grep -v perl | grep -v grep",
-            $cmd_out_tmp, $current_test_file)) {
+            $cmd_out_tmp, $curr_test_file)) {
         $ctr++;
         last if $ctr == 5;
         sleep 1;
@@ -2748,12 +2778,12 @@ sub write_key() {
 }
 
 sub dump_pids() {
-    open C, ">> $current_test_file"
-        or die "[*] Could not open $current_test_file: $!";
+    open C, ">> $curr_test_file"
+        or die "[*] Could not open $curr_test_file: $!";
     print C "\n" . localtime() . " [+] PID dump:\n";
     close C;
     &run_cmd("ps auxww | grep knop |grep -v grep",
-        $cmd_out_tmp, $current_test_file);
+        $cmd_out_tmp, $curr_test_file);
     return;
 }
 
@@ -2838,13 +2868,7 @@ sub init() {
             rmtree "${output_dir}.last"
                 or die "[*] rmtree ${output_dir}.last $!";
         }
-        mkdir "${output_dir}.last"
-            or die "[*] ${output_dir}.last: $!";
-        for my $file (glob("$output_dir/*.test")) {
-            if ($file =~ m|.*/(.*)|) {
-                copy $file, "${output_dir}.last/$1" or die $!;
-            }
-        }
+        move $output_dir, "${output_dir}.last" or die $!;
         if (-e "$output_dir/init") {
             copy "$output_dir/init", "${output_dir}.last/init";
         }
@@ -2852,7 +2876,9 @@ sub init() {
             copy $logfile, "${output_dir}.last/$logfile" or die $!;
         }
         $saved_last_results = 1;
-    } else {
+    }
+
+    unless (-d $output_dir) {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
     }
     unless (-d $run_dir) {
@@ -2985,21 +3011,59 @@ sub identify_loopback_intf() {
 }
 
 sub parse_valgrind_flagged_functions() {
+
     for my $file (glob("$output_dir/*.test")) {
+
         my $type = 'server';
         $type = 'client' if $file =~ /\d\.test/;
+
+        my $filename = $1 if $file =~ m|.*/(.*)|;
+        my %file_scope_flagged_fcns = ();
+        my %file_scope_flagged_fcns_unique = ();
+        my $test_title = '';
+
         open F, "< $file" or die $!;
         while (<F>) {
             ### ==30969==    by 0x4E3983A: fko_set_username (fko_user.c:65)
             if (/^==.*\sby\s\S+\:\s(\S+)\s(.*)/) {
                 $valgrind_flagged_fcns{$type}{"$1 $2"}++;
                 $valgrind_flagged_fcns_unique{$type}{$1}++;
+                $file_scope_flagged_fcns{"$1 $2"}++;
+                $file_scope_flagged_fcns_unique{$1}++;
+            } elsif (/TEST:\s/) {
+                $test_title = $_;
             }
         }
         close F;
+
+        ### write out flagged fcns for this file
+        mkdir "$output_dir/$valgrind_cov_dir"
+            unless -d "$output_dir/$valgrind_cov_dir";
+
+        if ($filename) {
+            open F, "> $output_dir/$valgrind_cov_dir/$filename"
+                or die "[*] Could not open file $output_dir/$valgrind_cov_dir/$filename: $!";
+            print F $test_title;
+            if (keys %file_scope_flagged_fcns_unique) {
+                print F "\n[+] fwknop functions (unique view):\n";
+                for my $fcn (sort {$file_scope_flagged_fcns_unique{$b}
+                        <=> $file_scope_flagged_fcns_unique{$a}}
+                        keys %file_scope_flagged_fcns_unique) {
+                    printf F "    %5d : %s\n", $file_scope_flagged_fcns_unique{$fcn}, $fcn;
+                }
+            }
+            if (keys %file_scope_flagged_fcns) {
+                print F "\n[+] fwknop functions (with call line numbers):\n";
+                for my $fcn (sort {$file_scope_flagged_fcns{$b}
+                        <=> $file_scope_flagged_fcns{$a}} keys %file_scope_flagged_fcns) {
+                    printf F "    %5d : %s\n", $file_scope_flagged_fcns{$fcn}, $fcn;
+                }
+            }
+            close F;
+        }
     }
 
-    open F, ">> $current_test_file" or die $!;
+    open F, ">> $curr_test_file" or die $!;
     for my $type ('client', 'server') {
         print F "\n[+] fwknop $type functions (unique view):\n";
         next unless defined $valgrind_flagged_fcns_unique{$type};
@@ -3032,7 +3096,7 @@ sub is_fw_rule_active() {
 
     return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
             qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0;
 }
 
@@ -3041,7 +3105,7 @@ sub is_fwknopd_running() {
     sleep 2 if $use_valgrind;
 
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
-        "--status", $cmd_out_tmp, $current_test_file);
+        "--status", $cmd_out_tmp, $curr_test_file);
 
     return 1 if &file_find_regex([qr/Detected\sfwknopd\sis\srunning/i],
             $MATCH_ALL, $cmd_out_tmp);
@@ -3052,7 +3116,7 @@ sub is_fwknopd_running() {
 sub stop_fwknopd() {
 
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
-        "$default_server_conf_args -K", $cmd_out_tmp, $current_test_file);
+        "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
 
     if ($use_valgrind) {
         &time_for_valgrind();
