@@ -50,6 +50,12 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     unsigned char  *ciphertext;
     int             cipher_len;
 
+    if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
+        return(FKO_ERROR_INVALID_DATA);
+
+    if (! is_valid_digest_len(ctx->digest_len))
+        return(FKO_ERROR_INVALID_DATA);
+
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
@@ -170,10 +176,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
     if(pt_len < (cipher_len - 32))
         return(FKO_ERROR_DECRYPTION_SIZE);
 
-    if(ctx->encoded_msg == NULL || pt_len < MIN_SPA_ENCODED_MSG_SIZE)
+    if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_INVALID_DATA);
 
-    if(pt_len == MAX_SPA_ENCODED_MSG_SIZE)
+    if(! is_valid_encoded_msg_len(pt_len))
         return(FKO_ERROR_INVALID_DATA);
 
     ctx->encoded_msg_len = pt_len;
@@ -210,6 +216,12 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     unsigned char  *cipher = NULL;
     size_t          cipher_len;
     char           *empty_key = "";
+
+    if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
+        return(FKO_ERROR_INVALID_DATA);
+
+    if (! is_valid_digest_len(ctx->digest_len))
+        return(FKO_ERROR_INVALID_DATA);
 
     /* First make sure we have a recipient key set.
     */
@@ -342,10 +354,10 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 
     pt_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
-    if(ctx->encoded_msg == NULL || pt_len < MIN_SPA_ENCODED_MSG_SIZE)
+    if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_INVALID_DATA);
 
-    if(pt_len == MAX_SPA_ENCODED_MSG_SIZE)
+    if(! is_valid_encoded_msg_len(pt_len))
         return(FKO_ERROR_INVALID_DATA);
 
     ctx->encoded_msg_len = pt_len;
@@ -454,7 +466,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
      * check for a somewhat arbitrary minimum length for the encoded
      * data.
     */
-    if(ctx->encoded_msg_len < MIN_SPA_ENCODED_MSG_SIZE)
+    if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
     /* Encrypt according to type and return...

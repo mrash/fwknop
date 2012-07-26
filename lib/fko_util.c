@@ -1,13 +1,13 @@
 /*
  *****************************************************************************
  *
- * File:    fko_util.h
+ * File:    fko_util.c
  *
- * Author:  Damien S. Stuart
+ * Author:  Michael Rash
  *
- * Purpose: Header for utility functions used by libfko
+ * Purpose: Set/Get the current username.
  *
- * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2012 Michael Rash (mbr@cipherdyne.org)
  *
  *  License (GNU Public License):
  *
@@ -28,19 +28,40 @@
  *
  *****************************************************************************
 */
-#ifndef FKO_UTIL_H
-#define FKO_UTIL_H 1
-
 #include "fko_common.h"
+#include "fko.h"
 
-/* Function prototypes
+/* Validate encoded message length
 */
-int is_valid_encoded_msg_len(const int len);
-int is_valid_digest_len(const int len);
+int
+is_valid_encoded_msg_len(const int len)
+{
+    if(len < MIN_SPA_ENCODED_MSG_SIZE || len >= MAX_SPA_ENCODED_MSG_SIZE)
+        return(0);
 
-size_t strlcat(char *dst, const char *src, size_t siz);
-size_t strlcpy(char *dst, const char *src, size_t siz);
+    return(1);
+}
 
-#endif /* FKO_UTIL_H */
+/* Validate digest length
+*/
+int
+is_valid_digest_len(const int len)
+{
+    switch(len)
+    {
+        case MD5_B64_LENGTH:
+            break;
+        case SHA1_B64_LENGTH:
+            break;
+        case SHA256_B64_LENGTH:
+            break;
+        case SHA384_B64_LENGTH:
+            break;
+        case SHA512_B64_LENGTH:
+            break;
+        default:
+            return(0);
+    }
 
-/***EOF***/
+    return(1);
+}

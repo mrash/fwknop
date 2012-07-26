@@ -42,8 +42,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     char       *tbuf, *ndx, *tmp;
     int         t_size, i;
 
-    if (ctx->encoded_msg_len < MIN_SPA_ENCODED_MSG_SIZE
-            || ctx->encoded_msg_len > MAX_SPA_ENCODED_MSG_SIZE)
+    if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
     /* Make sure there are enough fields in the SPA packet
