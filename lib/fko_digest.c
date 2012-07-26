@@ -98,7 +98,7 @@ fko_get_raw_spa_digest_type(fko_ctx_t ctx, short *raw_digest_type)
 }
 
 static int
-set_digest(char *data, char **digest, short digest_type)
+set_digest(char *data, char **digest, short digest_type, int *digest_len)
 {
     char    *md = NULL;
     int     data_len;
@@ -117,6 +117,7 @@ set_digest(char *data, char **digest, short digest_type)
 
             md5_base64(md,
                 (unsigned char*)data, data_len);
+            *digest_len = MD5_B64_LENGTH;
             break;
 
         case FKO_DIGEST_SHA1:
@@ -126,6 +127,7 @@ set_digest(char *data, char **digest, short digest_type)
 
             sha1_base64(md,
                 (unsigned char*)data, data_len);
+            *digest_len = SHA1_B64_LENGTH;
             break;
 
         case FKO_DIGEST_SHA256:
@@ -135,6 +137,7 @@ set_digest(char *data, char **digest, short digest_type)
 
             sha256_base64(md,
                 (unsigned char*)data, data_len);
+            *digest_len = SHA256_B64_LENGTH;
             break;
 
         case FKO_DIGEST_SHA384:
@@ -144,6 +147,7 @@ set_digest(char *data, char **digest, short digest_type)
 
             sha384_base64(md,
                 (unsigned char*)data, data_len);
+            *digest_len = SHA384_B64_LENGTH;
             break;
 
         case FKO_DIGEST_SHA512:
@@ -153,6 +157,7 @@ set_digest(char *data, char **digest, short digest_type)
 
             sha512_base64(md,
                 (unsigned char*)data, data_len);
+            *digest_len = SHA512_B64_LENGTH;
             break;
 
         default:
@@ -183,8 +188,8 @@ fko_set_spa_digest(fko_ctx_t ctx)
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
-    return set_digest(ctx->encoded_msg,
-        &ctx->digest, ctx->digest_type);
+    return set_digest(ctx->encoded_msg, &ctx->digest,
+        ctx->digest_type, &ctx->digest_len);
 }
 
 int
@@ -200,8 +205,8 @@ fko_set_raw_spa_digest(fko_ctx_t ctx)
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
-    return set_digest(ctx->encrypted_msg,
-        &ctx->raw_digest, ctx->raw_digest_type);
+    return set_digest(ctx->encrypted_msg, &ctx->raw_digest,
+        ctx->raw_digest_type, &ctx->raw_digest_len);
 }
 
 int

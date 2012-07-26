@@ -70,12 +70,14 @@ struct fko_context {
     /* Computed or predefined data */
     char           *version;
     char           *digest;
+    int             digest_len;
 
     /* Digest of raw encrypted/base64 data - this is used
      * for replay attack detection
     */
     char           *raw_digest;
     short           raw_digest_type;
+    int             raw_digest_len;
 
     /* Computed processed data (encodings, etc.) */
     char           *encoded_msg;

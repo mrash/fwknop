@@ -54,7 +54,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
      * and populate it appropriately.
     */
     plaintext = calloc(1, ctx->encoded_msg_len
-                    + strlen(ctx->digest) + RIJNDAEL_BLOCKSIZE + 2);
+                    + ctx->digest_len + RIJNDAEL_BLOCKSIZE + 2);
 
     if(plaintext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -219,7 +219,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plain = malloc(ctx->encoded_msg_len + strlen(ctx->digest) + 2);
+    plain = malloc(ctx->encoded_msg_len + ctx->digest_len + 2);
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
