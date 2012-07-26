@@ -92,6 +92,7 @@ my $test_exclude = '';
 my @tests_to_exclude = ();
 my %valgrind_flagged_fcns = ();
 my %valgrind_flagged_fcns_unique = ();
+my $test_limit = 0;
 my $list_mode = 0;
 my $diff_dir1 = '';
 my $diff_dir2 = '';
@@ -142,6 +143,7 @@ exit 1 unless GetOptions(
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'List-mode'         => \$list_mode,
+    'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$use_valgrind,
     'valgrind-path=s'   => \$valgrindCmd,
     'output-dir=s'      => \$output_dir,
@@ -1665,6 +1667,9 @@ if ($saved_last_results) {
 ### main loop through all of the tests
 for my $test_hr (@tests) {
     &run_test($test_hr);
+    if ($test_limit > 0) {
+        last if $executed >= $test_limit;
+    }
 }
 
 &logr("\n[+] passed/failed/executed: $passed/$failed/$executed tests\n\n");
@@ -3285,6 +3290,7 @@ sub usage() {
                                     compilation warnings.
     --enable-valgrind             - Run every test underneath valgrind.
     --List                        - List test names.
+    --test-limit=<num>            - Limit the number of tests that will run.
     --loopback-intf=<intf>        - Specify loopback interface name (default
                                     depends on the OS where the test suite
                                     is executed).
