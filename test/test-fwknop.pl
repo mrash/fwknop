@@ -3029,7 +3029,7 @@ sub init() {
 
     for my $file (glob("$output_dir/*.test"), "$output_dir/init",
             $tmp_rc_file, $logfile, $key_gen_file) {
-        next unless -d $file;
+        next unless -e $file;
         unlink $file or die "[*] Could not unlink($file)";
     }
 
