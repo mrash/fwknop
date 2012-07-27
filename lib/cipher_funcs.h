@@ -39,7 +39,10 @@
  * We identify them here so we can remove and reinsert when needed.
 */
 #define B64_RIJNDAEL_SALT "U2FsdGVkX1"
+#define B64_RIJNDAEL_SALT_STR_LEN 10
+
 #define B64_GPG_PREFIX "hQ"
+#define B64_GPG_PREFIX_STR_LEN 2
 
 /* Provide the predicted encrypted data size for given input data based
  * on a 16-byte block size (for Rijndael implementation,this also accounts

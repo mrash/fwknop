@@ -113,35 +113,33 @@ _rijndael_decrypt(fko_ctx_t ctx,
     unsigned char  *cipher;
     int             cipher_len, pt_len, i, err = 0;
 
-    int             b64_len = strlen(ctx->encrypted_msg);
-
     /* Now see if we need to add the "Salted__" string to the front of the
      * encrypted data.
     */
-    if(strncmp(ctx->encrypted_msg, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT)))
+    if(strncmp(ctx->encrypted_msg, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN))
     {
         /* We need to realloc space for the salt.
         */
-        tbuf = realloc(ctx->encrypted_msg, b64_len + strlen(B64_RIJNDAEL_SALT)+1);
+        tbuf = realloc(ctx->encrypted_msg, ctx->encrypted_msg_len + B64_RIJNDAEL_SALT_STR_LEN+1);
         if(tbuf == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
-        memmove(tbuf+strlen(B64_RIJNDAEL_SALT), tbuf, b64_len);
+        memmove(tbuf+B64_RIJNDAEL_SALT_STR_LEN, tbuf, ctx->encrypted_msg_len);
 
-        ctx->encrypted_msg = memcpy(tbuf, B64_RIJNDAEL_SALT, strlen(B64_RIJNDAEL_SALT));
+        ctx->encrypted_msg = memcpy(tbuf, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN);
 
-        /* Adjust b64_len for added SALT value and Make sure we are still
-         * a properly NULL-terminated string (Ubuntu was one system for
-         * which this was an issue).
+        /* Adjust the encoded msg len for added SALT value and Make sure we are still
+         * a properly NULL-terminated string (Ubuntu was one system for which this was
+         * an issue).
         */
-        b64_len += strlen(B64_RIJNDAEL_SALT);
-        tbuf[b64_len] = '\0';
+        ctx->encrypted_msg_len += B64_RIJNDAEL_SALT_STR_LEN;
+        tbuf[ctx->encrypted_msg_len] = '\0';
     }
 
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.
     */
-    cipher = malloc(strlen(ctx->encrypted_msg));
+    cipher = malloc(ctx->encrypted_msg_len);
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -297,35 +295,33 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     size_t          cipher_len;
     int             res, pt_len;
 
-    int             b64_len = strlen(ctx->encrypted_msg);
-
     /* Now see if we need to add the "hQ" string to the front of the
      * base64-encoded-GPG-encrypted data.
     */
-    if(strncmp(ctx->encrypted_msg, B64_GPG_PREFIX, strlen(B64_GPG_PREFIX)))
+    if(strncmp(ctx->encrypted_msg, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN))
     {
         /* We need to realloc space for the GPG prefix of hQ.
         */
-        tbuf = realloc(ctx->encrypted_msg, b64_len + 12);
+        tbuf = realloc(ctx->encrypted_msg, ctx->encrypted_msg_len + 12);
         if(tbuf == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
-        memmove(tbuf+strlen(B64_GPG_PREFIX), tbuf, b64_len);
+        memmove(tbuf+B64_GPG_PREFIX_STR_LEN, tbuf, ctx->encrypted_msg_len);
 
-        ctx->encrypted_msg = memcpy(tbuf, B64_GPG_PREFIX, strlen(B64_GPG_PREFIX));
+        ctx->encrypted_msg = memcpy(tbuf, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN);
 
-        /* Adjust b64_len for added SALT value and Make sure we are still
+        /* Adjust encrypted msg length for GnuPG prefix and make sure we are still
          * a properly NULL-terminated string (Ubuntu was one system for
          * which this was an issue).
         */
-        b64_len += strlen(B64_GPG_PREFIX);
-        tbuf[b64_len] = '\0';
+        ctx->encrypted_msg_len += B64_GPG_PREFIX_STR_LEN;
+        tbuf[ctx->encrypted_msg_len] = '\0';
     }
 
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.
     */
-    cipher = malloc(strlen(ctx->encrypted_msg));
+    cipher = malloc(ctx->encrypted_msg_len);
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -530,13 +526,10 @@ fko_encryption_type(const char *enc_data)
     if(enc_data == NULL)
         return(FKO_ENCRYPTION_INVALID_DATA);
 
-    /* Determine type of encryption used.  For now, we are using the
-     * size of the message.
-     *
-     * XXX: We will want to come up with a more reliable method of
-     *      identifying the encryption type.
-    */
-    enc_data_len = strlen(enc_data);
+    enc_data_len = strnlen(enc_data, MAX_SPA_ENCODED_MSG_SIZE);
+
+    if(! is_valid_encoded_msg_len(enc_data_len))
+        return(FKO_ENCRYPTION_UNKNOWN);
 
     if(enc_data_len >= MIN_GNUPG_MSG_SIZE)
         return(FKO_ENCRYPTION_GPG);

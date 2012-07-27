@@ -177,14 +177,25 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
 {
     fko_ctx_t   ctx;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
+    int         enc_msg_len;
 
     ctx = calloc(1, sizeof *ctx);
     if(ctx == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
+    enc_msg_len = strnlen(enc_msg, MAX_SPA_ENCODED_MSG_SIZE);
+
+    if(! is_valid_encoded_msg_len(enc_msg_len))
+    {
+        free(ctx);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+    
     /* First, add the data to the context.
     */
-    ctx->encrypted_msg = strdup(enc_msg);
+    ctx->encrypted_msg     = strdup(enc_msg);
+    ctx->encrypted_msg_len = enc_msg_len;
+
     if(ctx->encrypted_msg == NULL)
     {
         free(ctx);
@@ -454,9 +465,9 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
      * prefix
     */
     if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
-        *spa_data += strlen(B64_RIJNDAEL_SALT);
+        *spa_data += B64_RIJNDAEL_SALT_STR_LEN;
     else if(ctx->encryption_type == FKO_ENCRYPTION_GPG)
-        *spa_data += strlen(B64_GPG_PREFIX);
+        *spa_data += B64_GPG_PREFIX_STR_LEN;
 
     return(FKO_SUCCESS);
 }

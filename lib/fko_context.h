@@ -83,6 +83,7 @@ struct fko_context {
     char           *encoded_msg;
     int             encoded_msg_len;
     char           *encrypted_msg;
+    int             encrypted_msg_len;
     char           *msg_hmac;
 
     /* State info */
