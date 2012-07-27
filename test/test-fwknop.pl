@@ -92,6 +92,7 @@ my $test_exclude = '';
 my @tests_to_exclude = ();
 my %valgrind_flagged_fcns = ();
 my %valgrind_flagged_fcns_unique = ();
+my $uniq_keys = 100;
 my $test_limit = 0;
 my $list_mode = 0;
 my $diff_dir1 = '';
@@ -816,11 +817,13 @@ my @tests = (
             "--rc-file $cf{'rc_file_hmac_b64_key'}",
         'fatal'    => $NO
     },
+
+    ### --key-gen tests
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client',
         'detail'   => '--key-gen',
-        'err_msg'  => 'SPA packet not generated',
+        'err_msg'  => 'keys not generated',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$valgrind_str $fwknopCmd --key-gen",
@@ -830,8 +833,18 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client',
+        'detail'   => "--key-gen $uniq_keys key uniqueness",
+        'err_msg'  => 'keys not generated',
+        'function' => \&key_gen_uniqueness,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopCmd --key-gen",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
         'detail'   => '--key-gen to file',
-        'err_msg'  => 'SPA packet not generated',
+        'err_msg'  => 'keys not generated',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$valgrind_str $fwknopCmd --key-gen --key-gen-file $key_gen_file",
@@ -839,6 +852,7 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    ### rc file tests
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client',
@@ -2680,6 +2694,32 @@ sub generic_exec() {
     }
 
     return $rv;
+}
+
+sub key_gen_uniqueness() {
+    my $test_hr = shift;
+
+    my %rijndael_keys = ();
+    my %hmac_keys     = ();
+
+    ### collect key information
+    my $found_dup = 0;
+    for (my $i=0; $i < $uniq_keys; $i++) {
+        open CMD, "$test_hr->{'cmdline'} | " or die $!;
+        while (<CMD>) {
+            if (/^KEY_BASE64\:\s+(\S+)/) {
+                $found_dup = 1 if defined $rijndael_keys{$1};
+                $rijndael_keys{$1} = '';
+            } elsif (/^HMAC_KEY_BASE64\:\s+(\S+)/) {
+                $found_dup = 1 if defined $hmac_keys{$1};
+                $hmac_keys{$1} = '';
+            }
+        }
+        close CMD;
+        last if $found_dup;
+    }
+
+    return ! $found_dup;
 }
 
 ### check for PIE
