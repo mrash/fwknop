@@ -41,8 +41,11 @@
 static int
 append_b64(char* tbuf, char *str)
 {
-    int   len = strlen(str);
+    int   len = strnlen(str, MAX_SPA_ENCODED_MSG_SIZE);
     char *bs;
+
+    if(len >= MAX_SPA_ENCODED_MSG_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
 
     bs = malloc(((len/3)*4)+8);
     if(bs == NULL)
