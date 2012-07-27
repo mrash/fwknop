@@ -801,6 +801,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'k':
                 options->key_gen = 1;
                 break;
+            case 'K':
+                options->key_gen = 1;
+                strlcpy(options->key_gen_file, optarg, MAX_PATH_LEN);
+                break;
             case 'l':
                 options->run_last_command = 1;
                 break;
@@ -1008,6 +1012,9 @@ usage(void)
       "                             line args as the last time it was executed\n"
       "                             (args are read from the ~/.fwknop.run file).\n"
       " -G, --get-key               Load an encryption key/password from a file.\n"
+      " -k, --key-gen               Generate SPA Rijndael + HMAC keys.\n"
+      " -K, --key-gen-file          Write generated Rijndael + HMAC keys to a\n"
+      "                             file\n"
       " -r, --rand-port             Send the SPA packet over a randomly assigned\n"
       "                             port (requires a broader pcap filter on the\n"
       "                             server side than the default of udp 62201).\n"

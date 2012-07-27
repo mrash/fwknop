@@ -100,6 +100,7 @@ my $loopback_intf = '';
 my $anonymize_results = 0;
 my $curr_test_file = "$output_dir/init";
 my $tarfile = 'test_fwknop.tar.gz';
+my $key_gen_file = "$output_dir/key_gen";
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
@@ -813,6 +814,28 @@ my @tests = (
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
+        'detail'   => '--key-gen',
+        'err_msg'  => 'SPA packet not generated',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopCmd --key-gen",
+        'positive_output_matches' => [qr/BASE64/, qw/HMAC/, qw/KEY/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
+        'detail'   => '--key-gen to file',
+        'err_msg'  => 'SPA packet not generated',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopCmd --key-gen --key-gen-file $key_gen_file",
+        'positive_output_matches' => [qr/Wrote.*\skeys/],
         'fatal'    => $NO
     },
 
@@ -2959,25 +2982,15 @@ sub init() {
         $saved_last_results = 1;
     }
 
-    unless (-d $output_dir) {
-        mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
-    }
-    unless (-d $run_dir) {
-        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+    for my $dir ($output_dir, $run_dir) {
+        next if -d $dir;
+        mkdir $dir or die "[*] Could not mkdir $dir: $!";
     }
 
-    for my $file (glob("$output_dir/*.test")) {
+    for my $file (glob("$output_dir/*.test"), "$output_dir/init",
+            $tmp_rc_file, $logfile, $key_gen_file) {
+        next unless -d $file;
         unlink $file or die "[*] Could not unlink($file)";
-    }
-    if (-e "$output_dir/init") {
-        unlink "$output_dir/init" or die $!;
-    }
-    if (-e $tmp_rc_file) {
-        unlink $tmp_rc_file or die $!;
-    }
-
-    if (-e $logfile) {
-        unlink $logfile or die $!;
     }
 
     if ($test_include) {

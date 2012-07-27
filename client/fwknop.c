@@ -61,6 +61,7 @@ main(int argc, char **argv)
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
     int                 key_len = 0, hmac_key_len = 0;
+    FILE               *key_gen_file_ptr = NULL;
 
     fko_cli_options_t   options;
 
@@ -92,7 +93,25 @@ main(int argc, char **argv)
     if(options.key_gen)
     {
         fko_key_gen(options.key_base64, options.hmac_key_base64);
-        printf("KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n", options.key_base64, options.hmac_key_base64);
+
+        if(options.key_gen_file != NULL && options.key_gen_file[0] != '\0')
+        {
+            if ((key_gen_file_ptr = fopen(options.key_gen_file, "w")) == NULL)
+            {
+                fprintf(stderr, "Unable to create key gen file: %s: %s\n",
+                    options.key_gen_file, strerror(errno));
+                return(EXIT_FAILURE);
+            }
+            fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
+                options.key_base64, options.hmac_key_base64);
+            fclose(key_gen_file_ptr);
+            printf("[+] Wrote Rijndael and HMAC keys to: %s\n",
+                options.key_gen_file);
+        }
+        else
+        {
+            printf("KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n", options.key_base64, options.hmac_key_base64);
+        }
         return(EXIT_SUCCESS);
     }
 
