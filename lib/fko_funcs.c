@@ -426,7 +426,7 @@ fko_spa_data_final(fko_ctx_t ctx,
              * and the trailing '=' chars stripped off).
             */
             data_with_hmac_len
-                = strlen(ctx->encrypted_msg)+1+strlen(ctx->msg_hmac)+1;
+                = ctx->encrypted_msg_len+1+ctx->msg_hmac_len+1;
 
             tbuf = realloc(ctx->encrypted_msg, data_with_hmac_len);
             if (tbuf == NULL)

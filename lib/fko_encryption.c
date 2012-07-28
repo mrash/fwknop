@@ -88,7 +88,8 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     b64_encode(ciphertext, b64ciphertext, cipher_len);
     strip_b64_eq(b64ciphertext);
 
-    ctx->encrypted_msg = strdup(b64ciphertext);
+    ctx->encrypted_msg     = strdup(b64ciphertext);
+    ctx->encrypted_msg_len = strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     /* Clean-up
     */
@@ -98,6 +99,9 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
 
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    if(! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
+        return(FKO_ERROR_INVALID_DATA);
 
     return(FKO_SUCCESS);
 }
@@ -271,7 +275,8 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     b64_encode(cipher, b64cipher, cipher_len);
     strip_b64_eq(b64cipher);
 
-    ctx->encrypted_msg = strdup(b64cipher);
+    ctx->encrypted_msg     = strdup(b64cipher);
+    ctx->encrypted_msg_len = strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     /* Clean-up
     */
@@ -281,6 +286,9 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    if(! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
+        return(FKO_ERROR_INVALID_DATA);
 
     return(FKO_SUCCESS);
 }

@@ -102,14 +102,18 @@ int fko_calculate_hmac(fko_ctx_t ctx,
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     hmac_sha256(ctx->encrypted_msg,
-        strlen(ctx->encrypted_msg), hmac, hmac_key);
+        ctx->encrypted_msg_len, hmac, hmac_key);
 
     b64_encode(hmac, hmac_base64, SHA256_DIGEST_LENGTH);
     strip_b64_eq(hmac_base64);
 
-    ctx->msg_hmac = strdup(hmac_base64);
+    ctx->msg_hmac     = strdup(hmac_base64);
+    ctx->msg_hmac_len = strnlen(ctx->msg_hmac, SHA512_DIGEST_STRING_LENGTH);
 
     free(hmac_base64);
+
+    if(! is_valid_digest_len(ctx->msg_hmac_len))
+        return(FKO_ERROR_INVALID_DATA);
 
     return FKO_SUCCESS;
 }
