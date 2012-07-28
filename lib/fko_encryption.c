@@ -49,6 +49,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     char           *b64ciphertext;
     unsigned char  *ciphertext;
     int             cipher_len;
+    int             pt_len;
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
@@ -56,25 +57,29 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if (! is_valid_digest_len(ctx->digest_len))
         return(FKO_ERROR_INVALID_DATA);
 
+    pt_len = ctx->encoded_msg_len + ctx->digest_len + RIJNDAEL_BLOCKSIZE + 2;
+
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plaintext = calloc(1, ctx->encoded_msg_len
-                    + ctx->digest_len + RIJNDAEL_BLOCKSIZE + 2);
+    plaintext = calloc(1, pt_len);
 
     if(plaintext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    sprintf(plaintext, "%s:%s", ctx->encoded_msg, ctx->digest);
+    pt_len = snprintf(plaintext, pt_len+1, "%s:%s", ctx->encoded_msg, ctx->digest);
+
+    if(! is_valid_pt_msg_len(pt_len))
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Make a bucket for the encrypted version and populate it.
     */
-    ciphertext = calloc(1, strlen(plaintext) + 32); /* Plus padding for salt and Block */
+    ciphertext = calloc(1, pt_len + 32); /* Plus padding for salt and Block */
     if(ciphertext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     cipher_len = rij_encrypt(
-        (unsigned char*)plaintext, strlen(plaintext),
+        (unsigned char*)plaintext, pt_len,
         (char*)enc_key, enc_key_len,
         ciphertext, ctx->encryption_mode
     );
@@ -214,6 +219,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 {
     int             res;
     char           *plain;
+    int             pt_len;
     char           *b64cipher;
     unsigned char  *cipher = NULL;
     size_t          cipher_len;
@@ -230,6 +236,8 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     if(ctx->gpg_recipient == NULL)
         return(FKO_ERROR_MISSING_GPG_KEY_DATA);
 
+    pt_len = ctx->encoded_msg_len + ctx->digest_len + 2;
+
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
@@ -237,19 +245,20 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
+    pt_len = snprintf(plain, pt_len+1, "%s:%s", ctx->encoded_msg, ctx->digest);
+
+    if(! is_valid_pt_msg_len(pt_len))
+        return(FKO_ERROR_INVALID_DATA);
 
     if (enc_key != NULL)
     {
-        res = gpgme_encrypt(ctx,
-            (unsigned char*)plain, strlen(plain),
+        res = gpgme_encrypt(ctx, (unsigned char*)plain, pt_len,
             enc_key, &cipher, &cipher_len
         );
     }
     else
     {
-        res = gpgme_encrypt(ctx,
-            (unsigned char*)plain, strlen(plain),
+        res = gpgme_encrypt(ctx, (unsigned char*)plain, pt_len,
             empty_key, &cipher, &cipher_len
         );
     }

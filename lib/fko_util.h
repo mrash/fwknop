@@ -36,6 +36,7 @@
 /* Function prototypes
 */
 int is_valid_encoded_msg_len(const int len);
+int is_valid_pt_msg_len(const int len);
 int is_valid_digest_len(const int len);
 
 size_t strlcat(char *dst, const char *src, size_t siz);

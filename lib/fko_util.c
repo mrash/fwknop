@@ -42,6 +42,17 @@ is_valid_encoded_msg_len(const int len)
     return(1);
 }
 
+/* Validate plaintext input size
+*/
+int
+is_valid_pt_msg_len(const int len)
+{
+    if(len < MIN_SPA_PLAINTEXT_MSG_SIZE || len >= MAX_SPA_PLAINTEXT_MSG_SIZE)
+        return(0);
+
+    return(1);
+}
+
 /* Validate digest length
 */
 int
