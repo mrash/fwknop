@@ -165,6 +165,7 @@ get_raw_digest(char **digest, char *pkt_data)
         return SPA_MSG_ERROR;
 
     fko_destroy(ctx);
+
     return res;
 }
 
@@ -284,7 +285,10 @@ incoming_spa(fko_srv_options_t *opts)
                 return;
 
             if (is_replay(opts, raw_digest) != SPA_MSG_SUCCESS)
+            {
+                free(raw_digest);
                 return;
+            }
     }
     else
     {
