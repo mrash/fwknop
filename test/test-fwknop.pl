@@ -1675,18 +1675,6 @@ my @tests = (
     },
 );
 
-if ($use_valgrind) {
-    push @tests,
-        {
-            'category' => 'valgrind output',
-            'subcategory' => 'flagged functions',
-            'detail'   => '',
-            'err_msg'  => 'could not parse flagged functions',
-            'function' => \&parse_valgrind_flagged_functions,
-            'fatal'    => $NO
-        };
-}
-
 my %test_keys = (
     'category'        => $REQUIRED,
     'subcategory'     => $OPTIONAL,
@@ -1731,6 +1719,19 @@ for my $test_hr (@tests) {
     if ($test_limit > 0) {
         last if $executed >= $test_limit;
     }
+}
+
+if ($use_valgrind) {
+    &run_test(
+        {
+            'category' => 'valgrind output',
+            'subcategory' => 'flagged functions',
+            'detail'   => '',
+            'err_msg'  => 'could not parse flagged functions',
+            'function' => \&parse_valgrind_flagged_functions,
+            'fatal'    => $NO
+        }
+    );
 }
 
 &logr("\n[+] passed/failed/executed: $passed/$failed/$executed tests\n\n");
