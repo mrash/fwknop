@@ -62,6 +62,20 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
     */
     spa_pkt->packet_data_len = 0;
 
+    /* Ignore any SPA packets that contain the Rijndael or GnuPG prefixes
+     * since an attacker might have tacked them on to a previously seen
+     * SPA packet in an attempt to get past the replay check.  And, we're
+     * no worse off since a legitimate SPA packet that happens to include
+     * a prefix after the outer one is stripped off won't decrypt properly
+     * anyway because libfko would not add a new one.
+    */
+    if(strncmp(ndx, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) == 0)
+        return(SPA_MSG_BAD_DATA);
+
+    if(pkt_data_len > MIN_GNUPG_MSG_SIZE
+            && strncmp(ndx, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) == 0)
+        return(SPA_MSG_BAD_DATA);
+
     /* Detect and parse out SPA data from an HTTP request. If the SPA data
      * starts with "GET /" and the user agent starts with "Fwknop", then
      * assume it is a SPA over HTTP request.

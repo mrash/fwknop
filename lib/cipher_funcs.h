@@ -35,12 +35,6 @@
 #include "rijndael.h"
 #include "gpgme_funcs.h"
 
-/* Define the consistent prefixes or salt on some ecryption schemes.
- * We identify them here so we can remove and reinsert when needed.
-*/
-#define B64_RIJNDAEL_SALT "U2FsdGVkX1"
-#define B64_GPG_PREFIX "hQ"
-
 /* Provide the predicted encrypted data size for given input data based
  * on a 16-byte block size (for Rijndael implementation,this also accounts
  * for the 16-byte salt as well).

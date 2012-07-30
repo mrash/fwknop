@@ -1092,6 +1092,20 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay detection (Rijndael prefix)',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'U2FsdGVkX1',
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
         'fatal'    => $NO
     },
     {
@@ -1236,6 +1250,20 @@ my @tests = (
         'function' => \&replay_detection,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay detection (GnuPG prefix)',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'hQ',
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
         'fatal'    => $NO
     },
 
@@ -1324,10 +1352,13 @@ my %test_keys = (
     'fw_rule_created' => $OPTIONAL,
     'fw_rule_removed' => $OPTIONAL,
     'server_conf'     => $OPTIONAL,
+    'pkt_prefix'      => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
     'server_negative_output_matches' => $OPTIONAL,
+    'replay_positive_output_matches' => $OPTIONAL,
+    'replay_negative_output_matches' => $OPTIONAL,
 );
 
 if ($diff_mode) {
@@ -1681,6 +1712,10 @@ sub replay_detection() {
         return 0;
     }
 
+    if ($test_hr->{'pkt_prefix'}) {
+        $spa_pkt = $test_hr->{'pkt_prefix'} . $spa_pkt;
+    }
+
     my @packets = (
         {
             'proto'  => 'udp',
@@ -1695,9 +1730,16 @@ sub replay_detection() {
 
     $rv = 0 unless $server_was_stopped;
 
-    unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
-            $MATCH_ALL, $server_test_file)) {
-        $rv = 0;
+    if ($test_hr->{'replay_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'replay_positive_output_matches'},
+            $MATCH_ALL, $server_test_file);
+    }
+
+    if ($test_hr->{'replay_negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'replay_negative_output_matches'},
+            $MATCH_ANY, $server_test_file);
     }
 
     return $rv;
