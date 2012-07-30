@@ -74,7 +74,11 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
             /* if we still didn't get a username, fall back
             */
             if((username = getenv("USER")) == NULL)
+            {
                 username = strdup("NO_USER");
+                if(username == NULL)
+                    return(FKO_ERROR_MEMORY_ALLOCATION);
+            }
         }
     }
 
