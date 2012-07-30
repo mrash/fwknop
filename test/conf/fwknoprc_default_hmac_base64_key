@@ -47,7 +47,7 @@
 #GPG_SIGNER          <signer ID>
 #GPG_RECIPIENT       <recipient ID>
 KEY_BASE64:          wzNP62oPPgEc+kXDPQLHPOayQBuNbYUTPP+QrErNDmg=
-HMAC_KEY_BASE64:     zJgtsaMr5TSCDczX9MHAaePq3ADu0qN1ehlOQFUS0tc=
+HMAC_KEY_BASE64:     Yh+xizBnl6FotC5ec7FanVGClRMlsOAPh2u6eovnerfBVKwaVKzjGoblFMHMc593TNyi0dWn4opLoTIV9q/ttg==
 
 # User-provided named stanzas:
 

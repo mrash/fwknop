@@ -24,6 +24,7 @@ my %cf = (
     'nat'                     => "$conf_dir/nat_fwknopd.conf",
     'def'                     => "$conf_dir/default_fwknopd.conf",
     'def_access'              => "$conf_dir/default_access.conf",
+    'hmac_access'             => "$conf_dir/hmac_access.conf",
     'exp_access'              => "$conf_dir/expired_stanza_access.conf",
     'future_exp_access'       => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'        => "$conf_dir/expired_epoch_stanza_access.conf",
@@ -664,7 +665,7 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'complete cycle sha1 (tcp/22 ssh)',
+        'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha1",
@@ -677,7 +678,7 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'complete cycle sha256 (tcp/22 ssh)',
+        'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha256",
@@ -690,7 +691,7 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'complete cycle sha384 (tcp/22 ssh)',
+        'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha384",
@@ -703,7 +704,7 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'complete cycle sha512 (tcp/22 ssh)',
+        'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha512",
@@ -810,11 +811,26 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client',
-        'detail'   => 'rc file hmac base64 key (tcp/22 ssh)',
+        'detail'   => 'rc file HMAC base64 key (tcp/22 ssh)',
         'err_msg'  => 'SPA packet not generated',
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle + HMAC (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 

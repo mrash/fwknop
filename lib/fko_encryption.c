@@ -117,7 +117,6 @@ static int
 _rijndael_decrypt(fko_ctx_t ctx,
     const char *dec_key, const int key_len, int encryption_mode)
 {
-    char           *tbuf;
     unsigned char  *ndx;
     unsigned char  *cipher;
     int             cipher_len, pt_len, i, err = 0;
@@ -125,25 +124,8 @@ _rijndael_decrypt(fko_ctx_t ctx,
     /* Now see if we need to add the "Salted__" string to the front of the
      * encrypted data.
     */
-    if(strncmp(ctx->encrypted_msg, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN))
-    {
-        /* We need to realloc space for the salt.
-        */
-        tbuf = realloc(ctx->encrypted_msg, ctx->encrypted_msg_len + B64_RIJNDAEL_SALT_STR_LEN+1);
-        if(tbuf == NULL)
-            return(FKO_ERROR_MEMORY_ALLOCATION);
-
-        memmove(tbuf+B64_RIJNDAEL_SALT_STR_LEN, tbuf, ctx->encrypted_msg_len);
-
-        ctx->encrypted_msg = memcpy(tbuf, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN);
-
-        /* Adjust the encoded msg len for added SALT value and Make sure we are still
-         * a properly NULL-terminated string (Ubuntu was one system for which this was
-         * an issue).
-        */
-        ctx->encrypted_msg_len += B64_RIJNDAEL_SALT_STR_LEN;
-        tbuf[ctx->encrypted_msg_len] = '\0';
-    }
+    if(! ctx->added_salted_str)
+        add_salted_str(ctx);
 
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.

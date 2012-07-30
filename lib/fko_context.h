@@ -86,6 +86,7 @@ struct fko_context {
     int             encrypted_msg_len;
     char           *msg_hmac;
     int             msg_hmac_len;
+    int             added_salted_str;
 
     /* State info */
     unsigned short  state;

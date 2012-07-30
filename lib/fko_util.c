@@ -76,3 +76,5 @@ is_valid_digest_len(const int len)
 
     return(1);
 }
+
+/***EOF***/

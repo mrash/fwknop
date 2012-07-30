@@ -30,20 +30,72 @@
 */
 #include "fko_common.h"
 #include "fko.h"
+#include "cipher_funcs.h"
 #include "hmac.h"
 #include "base64.h"
 
 int fko_verify_hmac(fko_ctx_t ctx,
     const char *hmac_key, const int hmac_key_len)
 {
+    char    *hmac_digest_from_data = NULL;
+    char    *tbuf = NULL;
+    int      res = FKO_SUCCESS;
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-    {
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if (! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
+        return(FKO_ERROR_INVALID_DATA);
+
+    /* Get digest value
+    */
+    hmac_digest_from_data = strndup((ctx->encrypted_msg
+            + ctx->encrypted_msg_len - SHA256_B64_LENGTH), SHA256_B64_LENGTH);
+
+    if(hmac_digest_from_data == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    /* Now we chop the HMAC digest off of the encrypted msg
+    */
+    tbuf = strndup(ctx->encrypted_msg, ctx->encrypted_msg_len - SHA256_B64_LENGTH);
+    if(tbuf == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    free(ctx->encrypted_msg);
+
+    ctx->encrypted_msg      = tbuf;
+    ctx->encrypted_msg_len -= SHA256_B64_LENGTH;
+
+    /* See if we need to add the "Salted__" string to the front of the
+     * encrypted data.
+    */
+    if(! ctx->added_salted_str)
+        res = add_salted_str(ctx);
+
+    if (res != FKO_SUCCESS)
+        return(res);
+
+    /* Calculate the HMAC from the encrypted data and then
+     * compare
+    */
+    res = fko_set_hmac_mode(ctx, FKO_HMAC_SHA256);
+    if(res == FKO_SUCCESS)
+    {
+        res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
+
+        if(res == FKO_SUCCESS)
+        {
+            if(strncmp(hmac_digest_from_data,
+                    ctx->msg_hmac, SHA256_B64_LENGTH) != 0)
+            {
+                res = FKO_ERROR_INVALID_DATA;
+            }
+        }
     }
 
-    return FKO_SUCCESS;
+    return(res);
 }
 
 /* Return the fko HMAC data
