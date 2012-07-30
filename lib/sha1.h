@@ -45,7 +45,7 @@
 #endif
 
 #define SHA1_BLOCKSIZE      64
-#define SHA1_DIGEST_LENGTH  20
+#define SHA1_DIGEST_LEN     20
 
 typedef struct {
     uint32_t    digest[8];
@@ -58,6 +58,6 @@ typedef struct {
 */
 void sha1_init(SHA1_INFO *sha1_info);
 void sha1_update(SHA1_INFO *sha1_info, uint8_t *buffer, int count);
-void sha1_final(uint8_t digest[SHA1_DIGEST_LENGTH], SHA1_INFO *sha1_info);
+void sha1_final(uint8_t digest[SHA1_DIGEST_LEN], SHA1_INFO *sha1_info);
 
 #endif /* SHA1_H */

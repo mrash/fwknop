@@ -61,27 +61,27 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if (i < MIN_SPA_FIELDS)
         return(FKO_ERROR_INVALID_DATA);
 
-    t_size = strnlen(ndx, SHA512_B64_LENGTH+1);
+    t_size = strnlen(ndx, SHA512_B64_LEN+1);
 
     switch(t_size)
     {
-        case MD5_B64_LENGTH:
+        case MD5_B64_LEN:
             ctx->digest_type = FKO_DIGEST_MD5;
             break;
 
-        case SHA1_B64_LENGTH:
+        case SHA1_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA1;
             break;
 
-        case SHA256_B64_LENGTH:
+        case SHA256_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA256;
             break;
 
-        case SHA384_B64_LENGTH:
+        case SHA384_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA384;
             break;
 
-        case SHA512_B64_LENGTH:
+        case SHA512_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA512;
             break;
 

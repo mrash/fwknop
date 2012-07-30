@@ -52,21 +52,21 @@ int fko_verify_hmac(fko_ctx_t ctx,
     /* Get digest value
     */
     hmac_digest_from_data = strndup((ctx->encrypted_msg
-            + ctx->encrypted_msg_len - SHA256_B64_LENGTH), SHA256_B64_LENGTH);
+            + ctx->encrypted_msg_len - SHA256_B64_LEN), SHA256_B64_LEN);
 
     if(hmac_digest_from_data == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     /* Now we chop the HMAC digest off of the encrypted msg
     */
-    tbuf = strndup(ctx->encrypted_msg, ctx->encrypted_msg_len - SHA256_B64_LENGTH);
+    tbuf = strndup(ctx->encrypted_msg, ctx->encrypted_msg_len - SHA256_B64_LEN);
     if(tbuf == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     free(ctx->encrypted_msg);
 
     ctx->encrypted_msg      = tbuf;
-    ctx->encrypted_msg_len -= SHA256_B64_LENGTH;
+    ctx->encrypted_msg_len -= SHA256_B64_LEN;
 
     /* See if we need to add the "Salted__" string to the front of the
      * encrypted data.
@@ -88,7 +88,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
         if(res == FKO_SUCCESS)
         {
             if(strncmp(hmac_digest_from_data,
-                    ctx->msg_hmac, SHA256_B64_LENGTH) != 0)
+                    ctx->msg_hmac, SHA256_B64_LEN) != 0)
             {
                 res = FKO_ERROR_INVALID_DATA;
             }
@@ -136,7 +136,7 @@ fko_set_hmac_mode(fko_ctx_t ctx, const short hmac_mode)
 int fko_calculate_hmac(fko_ctx_t ctx,
     const char *hmac_key, const int hmac_key_len)
 {
-    unsigned char hmac[SHA256_DIGEST_STRING_LENGTH] = {0};
+    unsigned char hmac[SHA256_DIGEST_STR_LEN] = {0};
     char *hmac_base64 = NULL;
 
     /* Must be initialized
@@ -149,18 +149,18 @@ int fko_calculate_hmac(fko_ctx_t ctx,
     if(ctx->hmac_mode != FKO_HMAC_SHA256)
         return(FKO_ERROR_UNSUPPORTED_HMAC_MODE);
 
-    hmac_base64 = calloc(1, MD_HEX_SIZE(SHA256_DIGEST_LENGTH)+1);
+    hmac_base64 = calloc(1, MD_HEX_SIZE(SHA256_DIGEST_LEN)+1);
     if (hmac_base64 == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     hmac_sha256(ctx->encrypted_msg,
         ctx->encrypted_msg_len, hmac, hmac_key);
 
-    b64_encode(hmac, hmac_base64, SHA256_DIGEST_LENGTH);
+    b64_encode(hmac, hmac_base64, SHA256_DIGEST_LEN);
     strip_b64_eq(hmac_base64);
 
     ctx->msg_hmac     = strdup(hmac_base64);
-    ctx->msg_hmac_len = strnlen(ctx->msg_hmac, SHA512_DIGEST_STRING_LENGTH);
+    ctx->msg_hmac_len = strnlen(ctx->msg_hmac, SHA512_DIGEST_STR_LEN);
 
     free(hmac_base64);
 

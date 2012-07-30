@@ -37,7 +37,7 @@
 
 #include "fko_common.h"
 
-#define MD5_DIGEST_LENGTH 16
+#define MD5_DIGEST_LEN 16
 
 typedef struct _MD5Context {
         uint32_t buf[4];

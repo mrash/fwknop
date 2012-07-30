@@ -353,13 +353,13 @@ int
 fko_key_gen(char *key_base64, char *hmac_key_base64)
 {
     unsigned char key[RIJNDAEL_MAX_KEYSIZE];
-    unsigned char hmac_key[SHA256_BLOCK_LENGTH];
+    unsigned char hmac_key[SHA256_BLOCK_LEN];
 
     get_random_data(key, RIJNDAEL_MAX_KEYSIZE);
-    get_random_data(hmac_key, SHA256_BLOCK_LENGTH);
+    get_random_data(hmac_key, SHA256_BLOCK_LEN);
 
     b64_encode(key, key_base64, RIJNDAEL_MAX_KEYSIZE);
-    b64_encode(hmac_key, hmac_key_base64, SHA256_BLOCK_LENGTH);
+    b64_encode(hmac_key, hmac_key_base64, SHA256_BLOCK_LEN);
 
     return(FKO_SUCCESS);
 }

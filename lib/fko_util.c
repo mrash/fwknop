@@ -60,15 +60,15 @@ is_valid_digest_len(const int len)
 {
     switch(len)
     {
-        case MD5_B64_LENGTH:
+        case MD5_B64_LEN:
             break;
-        case SHA1_B64_LENGTH:
+        case SHA1_B64_LEN:
             break;
-        case SHA256_B64_LENGTH:
+        case SHA256_B64_LEN:
             break;
-        case SHA384_B64_LENGTH:
+        case SHA384_B64_LEN:
             break;
-        case SHA512_B64_LENGTH:
+        case SHA512_B64_LEN:
             break;
         default:
             return(0);

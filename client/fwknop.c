@@ -874,7 +874,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         *hmac_key_len = fko_base64_decode(options->hmac_key_base64,
             (unsigned char *) options->hmac_key);
-        memcpy(hmac_key, options->hmac_key, SHA256_BLOCK_LENGTH);
+        memcpy(hmac_key, options->hmac_key, SHA256_BLOCK_LEN);
         use_hmac = 1;
     }
     else if (options->use_hmac)

@@ -43,11 +43,11 @@
 
 /* Predefined base64 encoded digest sizes.
 */
-#define MD5_B64_LENGTH      22
-#define SHA1_B64_LENGTH     27
-#define SHA256_B64_LENGTH   43
-#define SHA384_B64_LENGTH   64
-#define SHA512_B64_LENGTH   86
+#define MD5_B64_LEN      22
+#define SHA1_B64_LEN     27
+#define SHA256_B64_LEN   43
+#define SHA384_B64_LEN   64
+#define SHA512_B64_LEN   86
 
 void md5(unsigned char* out, unsigned char* in, size_t size);
 void md5_hex(char* out, unsigned char* in, size_t size);

@@ -37,8 +37,8 @@ typedef struct {
     SHA256_CTX ctx_inside;
     SHA256_CTX ctx_outside;
 
-    unsigned char block_inner_pad[SHA256_BLOCK_LENGTH];
-    unsigned char block_outer_pad[SHA256_BLOCK_LENGTH];
+    unsigned char block_inner_pad[SHA256_BLOCK_LEN];
+    unsigned char block_outer_pad[SHA256_BLOCK_LEN];
 } hmac_sha256_ctx;
 
 void hmac_sha256(const char *msg, const unsigned int msg_len,

@@ -111,53 +111,53 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
     switch(digest_type)
     {
         case FKO_DIGEST_MD5:
-            md = malloc(MD_HEX_SIZE(MD5_DIGEST_LENGTH)+1);
+            md = malloc(MD_HEX_SIZE(MD5_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             md5_base64(md,
                 (unsigned char*)data, data_len);
-            *digest_len = MD5_B64_LENGTH;
+            *digest_len = MD5_B64_LEN;
             break;
 
         case FKO_DIGEST_SHA1:
-            md = malloc(MD_HEX_SIZE(SHA1_DIGEST_LENGTH)+1);
+            md = malloc(MD_HEX_SIZE(SHA1_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha1_base64(md,
                 (unsigned char*)data, data_len);
-            *digest_len = SHA1_B64_LENGTH;
+            *digest_len = SHA1_B64_LEN;
             break;
 
         case FKO_DIGEST_SHA256:
-            md = malloc(MD_HEX_SIZE(SHA256_DIGEST_LENGTH)+1);
+            md = malloc(MD_HEX_SIZE(SHA256_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha256_base64(md,
                 (unsigned char*)data, data_len);
-            *digest_len = SHA256_B64_LENGTH;
+            *digest_len = SHA256_B64_LEN;
             break;
 
         case FKO_DIGEST_SHA384:
-            md = malloc(MD_HEX_SIZE(SHA384_DIGEST_LENGTH)+1);
+            md = malloc(MD_HEX_SIZE(SHA384_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha384_base64(md,
                 (unsigned char*)data, data_len);
-            *digest_len = SHA384_B64_LENGTH;
+            *digest_len = SHA384_B64_LEN;
             break;
 
         case FKO_DIGEST_SHA512:
-            md = malloc(MD_HEX_SIZE(SHA512_DIGEST_LENGTH)+1);
+            md = malloc(MD_HEX_SIZE(SHA512_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
             sha512_base64(md,
                 (unsigned char*)data, data_len);
-            *digest_len = SHA512_B64_LENGTH;
+            *digest_len = SHA512_B64_LEN;
             break;
 
         default:
