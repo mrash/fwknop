@@ -194,6 +194,14 @@ typedef enum {
 #define FKO_DEFAULT_ENCRYPTION  FKO_ENCRYPTION_RIJNDAEL
 #define FKO_DEFAULT_ENC_MODE    MODE_CBC
 
+/* Define the consistent prefixes or salt on some encryption schemes.
+*/
+#define B64_RIJNDAEL_SALT "U2FsdGVkX1"
+#define B64_RIJNDAEL_SALT_STR_LEN 10
+
+#define B64_GPG_PREFIX "hQ"
+#define B64_GPG_PREFIX_STR_LEN 2
+
 /* The context holds the global state and config options, as
  * well as some intermediate results during processing. This
  * is an opaque pointer.

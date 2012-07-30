@@ -1454,6 +1454,18 @@ my @tests = (
     },
     {
         'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay detection (Rijndael prefix)',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'U2FsdGVkX1'
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'err_msg'  => 'improper digest cache structure',
@@ -1622,6 +1634,19 @@ my @tests = (
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fatal'    => $NO
     },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay detection (GnuPG prefix)',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'hQ'
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fatal'    => $NO
+    },
+
 
     {
         'category' => 'GnuPG (GPG) SPA',
@@ -1704,6 +1729,7 @@ my %test_keys = (
     'fw_rule_created' => $OPTIONAL,
     'fw_rule_removed' => $OPTIONAL,
     'server_conf'     => $OPTIONAL,
+    'pkt_prefix'      => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
@@ -2141,6 +2167,10 @@ sub replay_detection() {
             "from file: $curr_test_file\n",
             $curr_test_file);
         return 0;
+    }
+
+    if ($test_hr->{'pkt_prefix'}) {
+        $spa_pkt = $test_hr->{'pkt_prefix'} . $spa_pkt;
     }
 
     my @packets = (
