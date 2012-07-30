@@ -1458,7 +1458,7 @@ my @tests = (
         'detail'   => 'replay detection (Rijndael prefix)',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
-        'pkt_prefix' => 'U2FsdGVkX1'
+        'pkt_prefix' => 'U2FsdGVkX1',
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
@@ -1640,7 +1640,7 @@ my @tests = (
         'detail'   => 'replay detection (GnuPG prefix)',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
-        'pkt_prefix' => 'hQ'
+        'pkt_prefix' => 'hQ',
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
