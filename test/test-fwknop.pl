@@ -87,6 +87,7 @@ my $tarfile = 'test_fwknop.tar.gz';
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
+my $enable_client_ip_resolve_test = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enable_recompilation_warnings_check = 0;
@@ -122,6 +123,7 @@ exit 1 unless GetOptions(
     'test-exclude=s'    => \$test_exclude,
     'exclude=s'         => \$test_exclude,  ### synonym
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
+    'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'List-mode'         => \$list_mode,
     'enable-valgrind'   => \$use_valgrind,
     'valgrind-path=s'   => \$valgrindCmd,
@@ -147,6 +149,10 @@ my $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
 
 my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+    "$local_key_file --verbose --verbose";
+
+my $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+    "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
     "$local_key_file --verbose --verbose";
 
 my $default_client_gpg_args = "$default_client_args " .
@@ -604,6 +610,21 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP resolve (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => $client_ip_resolve_args,
+        'no_ip_check' => 1,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -1353,6 +1374,7 @@ my %test_keys = (
     'fw_rule_removed' => $OPTIONAL,
     'server_conf'     => $OPTIONAL,
     'pkt_prefix'      => $OPTIONAL,
+    'no_ip_check'     => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
@@ -2612,6 +2634,10 @@ sub init() {
         push @tests_to_exclude, 'recompilation';
     }
 
+    unless ($enable_client_ip_resolve_test) {
+        push @tests_to_exclude, 'IP resolve';
+    }
+
     $sudo_path = &find_command('sudo');
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
@@ -2737,9 +2763,16 @@ sub is_fw_rule_active() {
             "-d $default_digest_file -p $default_pid_file";
     }
 
-    return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
-            qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
-            $cmd_out_tmp, $current_test_file);
+    if ($test_hr->{'no_ip_check'}) {
+        return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+                qq{$conf_args --fw-list | grep -v "# DISABLED" |grep _exp_},
+                $cmd_out_tmp, $current_test_file);
+    } else {
+        return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+                qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
+                $cmd_out_tmp, $current_test_file);
+    }
+
     return 0;
 }
 
