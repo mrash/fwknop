@@ -446,7 +446,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
     {
         snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
             "GET /%s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
-            "Host: %s\r\nConnection: Keep-Alive\r\n\r\n",
+            "Host: %s\r\nConnection: close\r\n\r\n",
             spa_data_copy,
             options->http_user_agent,
             options->spa_server_str  /* hostname or IP */
@@ -479,7 +479,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
 
         snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
             "GET http://%s/%s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
-            "Host: %s\r\nConnection: Keep-Alive\r\n\r\n",
+            "Host: %s\r\nConnection: close\r\n\r\n",
             options->spa_server_str,
             spa_data_copy,
             options->http_user_agent,

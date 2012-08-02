@@ -170,7 +170,7 @@ resolve_ip_http(fko_cli_options_t *options)
     */
     snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
         "GET %s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
-        "Host: %s\r\nConnection: Keep-Alive\r\n\r\n",
+        "Host: %s\r\nConnection: close\r\n\r\n",
         url.path,
         options->http_user_agent,
         url.host
