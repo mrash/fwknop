@@ -32,3 +32,7 @@ C Anthony Risinger
 Franck Joncourt
     - fwknop Debian package maintainer.
     - Contributed a new Debian init script.
+
+Jonathan Schulz
+    - Submitted patches to change HTTP connection type to 'close' for -R mode
+      in the client and fix a bug for recv() calls against returned HTTP data.
