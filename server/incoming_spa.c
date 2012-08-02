@@ -70,11 +70,11 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
      * anyway because libfko would not add a new one.
     */
     if(strncmp(ndx, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) == 0)
-        return(SPA_MSG_NOT_SPA_DATA);
+        return(SPA_MSG_BAD_DATA);
 
     if(pkt_data_len > MIN_GNUPG_MSG_SIZE
             && strncmp(ndx, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) == 0)
-        return(SPA_MSG_NOT_SPA_DATA);
+        return(SPA_MSG_BAD_DATA);
 
     /* Detect and parse out SPA data from an HTTP request. If the SPA data
      * starts with "GET /" and the user agent starts with "Fwknop", then

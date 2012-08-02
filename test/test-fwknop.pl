@@ -106,6 +106,7 @@ my $key_gen_file = "$output_dir/key_gen";
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
+my $enable_client_ip_resolve_test = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enable_recompilation_warnings_check = 0;
@@ -145,6 +146,7 @@ exit 1 unless GetOptions(
     'exclude=s'         => \$test_exclude,  ### synonym
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
+    'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$use_valgrind,
@@ -176,6 +178,10 @@ my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
 my $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     "--no-save-args --verbose --verbose";
+
+my $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+    "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
+    "$local_key_file --verbose --verbose";
 
 my $default_client_gpg_args = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
@@ -652,6 +658,21 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'client IP resolve (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => $client_ip_resolve_args,
+        'no_ip_check' => 1,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
@@ -662,6 +683,7 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -725,6 +747,7 @@ my @tests = (
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -1450,6 +1473,20 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay detection (Rijndael prefix)',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'U2FsdGVkX1',
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
         'fatal'    => $NO
     },
     {
@@ -1632,6 +1669,20 @@ my @tests = (
         'function' => \&replay_detection,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay detection (GnuPG prefix)',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'hQ',
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
         'fatal'    => $NO
     },
     {
@@ -1730,10 +1781,13 @@ my %test_keys = (
     'fw_rule_removed' => $OPTIONAL,
     'server_conf'     => $OPTIONAL,
     'pkt_prefix'      => $OPTIONAL,
+    'no_ip_check'     => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
     'server_negative_output_matches' => $OPTIONAL,
+    'replay_positive_output_matches' => $OPTIONAL,
+    'replay_negative_output_matches' => $OPTIONAL,
 );
 
 if ($diff_mode) {
@@ -2187,9 +2241,16 @@ sub replay_detection() {
 
     $rv = 0 unless $server_was_stopped;
 
-    unless (&file_find_regex([qr/Replay\sdetected\sfrom\ssource\sIP/i],
-            $MATCH_ALL, $server_test_file)) {
-        $rv = 0;
+    if ($test_hr->{'replay_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'replay_positive_output_matches'},
+            $MATCH_ALL, $server_test_file);
+    }
+
+    if ($test_hr->{'replay_negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'replay_negative_output_matches'},
+            $MATCH_ANY, $server_test_file);
     }
 
     return $rv;
@@ -3099,6 +3160,10 @@ sub init() {
         push @tests_to_exclude, 'profile coverage';
     }
 
+    unless ($enable_client_ip_resolve_test) {
+        push @tests_to_exclude, 'IP resolve';
+    }
+
     $sudo_path = &find_command('sudo');
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
@@ -3275,9 +3340,16 @@ sub is_fw_rule_active() {
             "-d $default_digest_file -p $default_pid_file";
     }
 
-    return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
-            qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
-            $cmd_out_tmp, $curr_test_file);
+    if ($test_hr->{'no_ip_check'}) {
+        return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+                qq{$conf_args --fw-list | grep -v "# DISABLED" |grep _exp_},
+                $cmd_out_tmp, $curr_test_file);
+    } else {
+        return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+                qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
+                $cmd_out_tmp, $curr_test_file);
+    }
+
     return 0;
 }
 
