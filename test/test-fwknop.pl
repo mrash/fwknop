@@ -856,6 +856,32 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'altered HMAC (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&altered_hmac_spa_data,  ### alter HMAC itself
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'altered pkt HMAC (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&altered_pkt_hmac_spa_data,  ### alter SPA payload
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
 
     ### --key-gen tests
     {
@@ -2404,6 +2430,114 @@ sub altered_base64_spa_data() {
     }
 
     $spa_pkt =~ s|^(.{3}).|AAAA|;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
+    }
+
+    unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub altered_hmac_spa_data() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    unless (&client_send_spa_packet($test_hr)) {
+        &write_test_file("[-] fwknop client execution error.\n",
+            $curr_test_file);
+        $rv = 0;
+    }
+
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $curr_test_file\n", $curr_test_file);
+        return 0;
+    }
+
+    ### alter the HMAC region of the SPA packet
+    $spa_pkt =~ s|(.{5})$|AAAAA|;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
+    }
+
+    unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub altered_pkt_hmac_spa_data() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    unless (&client_send_spa_packet($test_hr)) {
+        &write_test_file("[-] fwknop client execution error.\n",
+            $curr_test_file);
+        $rv = 0;
+    }
+
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
+
+    unless ($spa_pkt) {
+        &write_test_file("[-] could not get SPA packet " .
+            "from file: $curr_test_file\n", $curr_test_file);
+        return 0;
+    }
+
+    ### alter the SPA packet region before the HMAC
+    $spa_pkt =~ s|^(.{5})|AAAAA|;
 
     my @packets = (
         {
