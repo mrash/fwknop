@@ -190,7 +190,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
         free(ctx);
         return(FKO_ERROR_INVALID_DATA);
     }
-    
+
     /* First, add the data to the context.
     */
     ctx->encrypted_msg     = strdup(enc_msg);
@@ -216,7 +216,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
     /* Check HMAC if the access stanza had an HMAC key
     */
     ctx->initval = FKO_CTX_INITIALIZED;
-    if(hmac_key != NULL)
+    if(hmac_key_len > 0 && hmac_key != NULL)
         res = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
     ctx->initval = 0;
     if(res != FKO_SUCCESS)
