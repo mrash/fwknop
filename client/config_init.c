@@ -381,7 +381,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             fprintf(stderr,
                 "KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                 val);
-            exit(EXIT_FAILURE);
+            return(-1);
         }
         strlcpy(options->key_base64, val, MAX_KEY_LEN);
         options->have_base64_key = 1;
@@ -394,7 +394,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             fprintf(stderr,
                 "HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                 val);
-            exit(EXIT_FAILURE);
+            return(-1);
         }
         strlcpy(options->hmac_key_base64, val, MAX_KEY_LEN);
         options->have_hmac_base64_key = 1;
@@ -460,7 +460,7 @@ static void
 process_rc(fko_cli_options_t *options)
 {
     FILE    *rc;
-    int     line_num = 0;
+    int     line_num = 0, do_exit = 0;
     int     rcf_offset;
     char    line[MAX_LINE_LEN];
     char    rcfile[MAX_PATH_LEN];
@@ -611,21 +611,30 @@ process_rc(fko_cli_options_t *options)
         if(strcasecmp(curr_stanza, "default") == 0)
         {
             if(parse_rc_param(options, var, val) < 0)
+            {
                 fprintf(stderr, "Parameter error in %s, line %i: var=%s, val=%s\n",
                     rcfile, line_num, var, val);
+                do_exit = 1;
+            }
         }
         else if(options->use_rc_stanza[0] != '\0'
           && strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
         {
             options->got_named_stanza = 1;
             if(parse_rc_param(options, var, val) < 0)
+            {
                 fprintf(stderr,
                     "Parameter error in %s, stanza: %s, line %i: var=%s, val=%s\n",
                     rcfile, curr_stanza, line_num, var, val);
+                do_exit = 1;
+            }
         }
 
     } /* end while fgets rc */
     fclose(rc);
+
+    if(do_exit)
+        exit(EXIT_FAILURE);
 }
 
 /* Sanity and bounds checks for the various options.
