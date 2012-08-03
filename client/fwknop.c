@@ -78,15 +78,6 @@ main(int argc, char **argv)
     else if (!options.no_save_args)
         save_args(argc, argv);
 
-    /* Intialize the context
-    */
-    res = fko_new(&ctx);
-    if(res != FKO_SUCCESS)
-    {
-        errmsg("fko_new", res);
-        return(EXIT_FAILURE);
-    }
-
     /* Generate Rijndael + HMAC keys from /dev/random (base64
      * encoded) and exit.
     */
@@ -113,6 +104,15 @@ main(int argc, char **argv)
             printf("KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n", options.key_base64, options.hmac_key_base64);
         }
         return(EXIT_SUCCESS);
+    }
+
+    /* Intialize the context
+    */
+    res = fko_new(&ctx);
+    if(res != FKO_SUCCESS)
+    {
+        errmsg("fko_new", res);
+        return(EXIT_FAILURE);
     }
 
     /* Display version info and exit.
@@ -419,6 +419,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_mode", res);
+            fko_destroy(ctx);
+            fko_destroy(ctx2);
             return(EXIT_FAILURE);
         }
 
