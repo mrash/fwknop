@@ -61,7 +61,10 @@ int fko_verify_hmac(fko_ctx_t ctx,
     */
     tbuf = strndup(ctx->encrypted_msg, ctx->encrypted_msg_len - SHA256_B64_LEN);
     if(tbuf == NULL)
+    {
+        free(hmac_digest_from_data);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
 
     free(ctx->encrypted_msg);
 
@@ -75,7 +78,10 @@ int fko_verify_hmac(fko_ctx_t ctx,
         res = add_salted_str(ctx);
 
     if (res != FKO_SUCCESS)
+    {
+        free(hmac_digest_from_data);
         return(res);
+    }
 
     /* Calculate the HMAC from the encrypted data and then
      * compare
@@ -95,6 +101,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
         }
     }
 
+    free(hmac_digest_from_data);
     return(res);
 }
 
