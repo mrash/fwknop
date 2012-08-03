@@ -876,7 +876,7 @@ my @tests = (
         'err_msg'  => 'keys not generated',
         'function' => \&key_gen_uniqueness,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopCmd --key-gen",
+            "$fwknopCmd --key-gen",   ### no valgrind string (too slow for 100 client exec's)
         'fatal'    => $NO
     },
     {
