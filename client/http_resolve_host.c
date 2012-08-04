@@ -132,6 +132,7 @@ int
 resolve_ip_http(fko_cli_options_t *options)
 {
     int     sock, res, error, http_buf_len, i;
+    int     bytes_read = 0, position = 0;
     int     o1, o2, o3, o4;
     struct  addrinfo *result, *rp, hints;
     struct  url url;
@@ -228,7 +229,17 @@ resolve_ip_http(fko_cli_options_t *options)
         );
     }
 
-    res = recv(sock, http_response, HTTP_MAX_RESPONSE_LEN, 0);
+    do
+    {
+        memset(http_buf, 0, sizeof(http_buf));
+        bytes_read = recv(sock, http_buf, sizeof(http_buf), 0);
+        if ( bytes_read > 0 ) {
+            memcpy(&http_response[position], http_buf, bytes_read);
+            position += bytes_read;
+        }
+    }
+    while ( bytes_read > 0 );
+
     http_response[HTTP_MAX_RESPONSE_LEN-1] = '\0';
 
 #ifdef WIN32
