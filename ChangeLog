@@ -1,3 +1,41 @@
+fwknop-2.0.2 (08//2012):
+    - [client] In IP resolution mode (-R) changed HTTP connection type to
+      'close' since there is no need for connection persistence, and indeed the
+      client expects to just get the IP and the connection to be closed.
+      Jonathan Schulz submitted a patch for this.
+    - [client] Bug fix to ensure that all data is read via recv() from a
+      remote webserver IP resolution mode (-R).  Previously IP resolution
+      could fail if HTTP headers were transferred separately from the data
+      (for whatever reason).  Jonathan Schulz submitted a patch for this.
+    - [server] Replay attack bug fix to ensure that an attacker cannot force a
+      replay attack by intercepting an SPA packet and the replaying it with the
+      base64 version of "Salted__" (for Rindael) or the "hQ" prefix (for
+      GnuPG).  This is an important fix.  The following comment was added into
+      the fwknopd code:
+
+      /* Ignore any SPA packets that contain the Rijndael or GnuPG prefixes
+       * since an attacker might have tacked them on to a previously seen
+       * SPA packet in an attempt to get past the replay check.  And, we're
+       * no worse off since a legitimate SPA packet that happens to include
+       * a prefix after the outer one is stripped off won't decrypt properly
+       * anyway because libfko would not add a new one.
+      */
+
+    - [server] Fixed a memory leak bug in the replay attack detection code.
+      The leak was found with the test suite in --enable-valgrind mode, and
+      here is the valgrind trace that exposed it:
+
+      44 bytes in 1 blocks are definitely lost in loss record 2 of 2
+         at 0x482BE68: malloc (in
+         /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
+         by 0x490EA50: strdup (strdup.c:43)
+         by 0x10CD69: incoming_spa (incoming_spa.c:162)
+         by 0x10E000: process_packet (process_packet.c:200)
+         by 0x4862E63: ??? (in /usr/lib/i386-linux-gnu/libpcap.so.1.1.1)
+         by 0x4865667: pcap_dispatch (in /usr/lib/i386-linux-gnu/libpcap.so.1.1.1)
+         by 0x10DABF: pcap_capture (pcap_capture.c:226)
+         by 0x10A798: main (fwknopd.c:299)
+
 fwknop-2.0.1 (07/23/2012):
     - [server] Bug fix where the same encryption key used for two stanzas in
       the access.conf file would result in access requests that matched the
