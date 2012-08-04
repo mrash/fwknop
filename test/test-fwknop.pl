@@ -107,6 +107,7 @@ my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
 my $enable_client_ip_resolve_test = 0;
+my $enable_all = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enable_recompilation_warnings_check = 0;
@@ -150,6 +151,7 @@ exit 1 unless GetOptions(
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$use_valgrind,
+    'enable-all'        => \$enable_all,
     'valgrind-path=s'   => \$valgrindCmd,
     'output-dir=s'      => \$output_dir,
     'diff'              => \$diff_mode,
@@ -159,6 +161,12 @@ exit 1 unless GetOptions(
 );
 
 &usage() if $help;
+
+if ($enable_all) {
+    $use_valgrind = 1;
+    $enable_recompilation_warnings_check = 1;
+    $enable_client_ip_resolve_test = 1;
+}
 
 ### create an anonymized tar file of test suite results that can be
 ### emailed around to assist in debugging fwknop communications
