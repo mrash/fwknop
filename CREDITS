@@ -36,3 +36,8 @@ Franck Joncourt
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode
       in the client and fix a bug for recv() calls against returned HTTP data.
+
+Aldan Beaubien
+    - Reported an issue with the Morpheus client sending SPA packets with NULL
+      IP addresses, and code was added to fwknopd to better validate incoming
+      SPA data as a result of this report.
