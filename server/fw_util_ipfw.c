@@ -258,7 +258,7 @@ fw_initialize(const fko_srv_options_t *opts)
             fwc.rule_map[0] = RULE_ACTIVE;
         }
         else
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
     }
 
     /* Make sure our expire set is disabled.
@@ -277,7 +277,7 @@ fw_initialize(const fko_srv_options_t *opts)
             cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
-        log_msg(LOG_INFO, "Set ipfw set %u to disabled.",
+        log_msg(LOG_INFO, "Set ipfw expire set %u to disabled.",
             fwc.expire_set_num);
     else
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
@@ -389,7 +389,7 @@ fw_cleanup(const fko_srv_options_t *opts)
             fwc.fw_command,
             fwc.expire_set_num
         );
-   
+
         //printf("CMD: '%s'\n", cmd_buf);
         res = system(cmd_buf);
 

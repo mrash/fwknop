@@ -132,6 +132,7 @@ int
 resolve_ip_http(fko_cli_options_t *options)
 {
     int     sock, res, error, http_buf_len, i;
+    int     bytes_read = 0, position = 0;
     int     o1, o2, o3, o4;
     struct  addrinfo *result, *rp, hints;
     struct  url url;
@@ -228,7 +229,17 @@ resolve_ip_http(fko_cli_options_t *options)
         );
     }
 
-    res = recv(sock, http_response, HTTP_MAX_RESPONSE_LEN, 0);
+    do
+    {
+        memset(http_buf, 0x0, sizeof(http_buf));
+        bytes_read = recv(sock, http_buf, sizeof(http_buf), 0);
+        if ( bytes_read > 0 ) {
+            memcpy(&http_response[position], http_buf, bytes_read);
+            position += bytes_read;
+        }
+    }
+    while ( bytes_read > 0 );
+
     http_response[HTTP_MAX_RESPONSE_LEN-1] = '\0';
 
 #ifdef WIN32
@@ -237,49 +248,49 @@ resolve_ip_http(fko_cli_options_t *options)
     close(sock);
 #endif
 
-	/* Move to the end of the HTTP header and to the start of the content.
-	*/
-	ndx = strstr(http_response, "\r\n\r\n");
-	if(ndx == NULL)
-	{
-		fprintf(stderr, "Did not find the end of HTTP header.\n");
-        return(-1);
-	}
-	ndx += 4;
-
-	/* Walk along the content to try to find the end of the IP address.
-	 * Note: We are expecting the content to be just an IP address
-	 *       (possibly followed by whitespace or other not-digit value).
-	*/
-	for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-		if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
-			break;
-	}
-
-	/* Terminate at the first non-digit and non-dot.
-	*/
-	*(ndx+i) = '\0';
-
-	/* Now that we have what we think is an IP address string.  We make
-	 * sure the format and values are sane.
+    /* Move to the end of the HTTP header and to the start of the content.
     */
-	if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
-		&& o1 >= 0 && o1 <= 255
-		&& o2 >= 0 && o2 <= 255
-		&& o3 >= 0 && o3 <= 255
-		&& o4 >= 0 && o4 <= 255)
-	{
-		strlcpy(options->allow_ip_str, ndx, MAX_IPV4_STR_LEN);
+    ndx = strstr(http_response, "\r\n\r\n");
+    if(ndx == NULL)
+    {
+        fprintf(stderr, "Did not find the end of HTTP header.\n");
+        return(-1);
+    }
+    ndx += 4;
 
-		if(options->verbose)
-			printf("Resolved external IP (via http://%s%s) as: %s\n",
-                url.host,
-                url.path,
-				options->allow_ip_str);
+    /* Walk along the content to try to find the end of the IP address.
+     * Note: We are expecting the content to be just an IP address
+     *       (possibly followed by whitespace or other not-digit value).
+     */
+    for(i=0; i<MAX_IPV4_STR_LEN; i++) {
+        if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
+            break;
+    }
 
-		return(0);
-	}
-	else
+    /* Terminate at the first non-digit and non-dot.
+    */
+    *(ndx+i) = '\0';
+
+    /* Now that we have what we think is an IP address string.  We make
+     * sure the format and values are sane.
+     */
+    if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
+            && o1 >= 0 && o1 <= 255
+            && o2 >= 0 && o2 <= 255
+            && o3 >= 0 && o3 <= 255
+            && o4 >= 0 && o4 <= 255)
+    {
+        strlcpy(options->allow_ip_str, ndx, MAX_IPV4_STR_LEN);
+
+        if(options->verbose)
+            printf("Resolved external IP (via http://%s%s) as: %s\n",
+                    url.host,
+                    url.path,
+                    options->allow_ip_str);
+
+        return(0);
+    }
+    else
     {
         fprintf(stderr, "Invalid IP (%s) in HTTP response.\n", ndx);
         return(-1);
