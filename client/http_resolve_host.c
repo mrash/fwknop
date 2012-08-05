@@ -231,7 +231,7 @@ resolve_ip_http(fko_cli_options_t *options)
 
     do
     {
-        memset(http_buf, 0, sizeof(http_buf));
+        memset(http_buf, 0x0, sizeof(http_buf));
         bytes_read = recv(sock, http_buf, sizeof(http_buf), 0);
         if ( bytes_read > 0 ) {
             memcpy(&http_response[position], http_buf, bytes_read);
