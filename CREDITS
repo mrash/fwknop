@@ -41,3 +41,10 @@ Aldan Beaubien
     - Reported an issue with the Morpheus client sending SPA packets with NULL
       IP addresses, and code was added to fwknopd to better validate incoming
       SPA data as a result of this report.
+
+Geoff Carstairs
+    - Suggested a way to redirect valid connection requests to a specific
+      internal service via NAT, configurable by each stanza in access.conf.
+      This allows for better access control for multple users requiring access
+      to multiple internal systems, in a manner that is transparent to the
+      user.  The result was the FORCE_NAT mode.
