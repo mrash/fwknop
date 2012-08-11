@@ -43,7 +43,7 @@ range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
 {
     if (low > atoi(val) || high < atoi(val))
     {
-        fprintf(stderr, "[*] var %s value '%s' not in the range %d-%d",
+        fprintf(stderr, "[*] var %s value '%s' not in the range %d-%d\n",
             var, val, low, high);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -149,6 +149,19 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     range_check(opts, "IPFW_EXPIRE_PURGE_INTERVAL",
         opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL],
         1, RCHK_MAX_IPFW_PURGE_INTERVAL);
+
+    /* Make sure the active and expire sets are not identical whenever
+     * they are non-zero
+    */
+    if((opts->config[CONF_IPFW_ACTIVE_SET_NUM] > 0
+            && opts->config[CONF_IPFW_EXPIRE_SET_NUM] > 0)
+            && (opts->config[CONF_IPFW_ACTIVE_SET_NUM]
+                == opts->config[CONF_IPFW_EXPIRE_SET_NUM]))
+    {
+        fprintf(stderr,
+                "[*] Cannot set identical ipfw active and expire sets.\n");
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
 
 #elif FIREWALL_PF
     range_check(opts, "PF_EXPIRE_INTERVAL", opts->config[CONF_PF_EXPIRE_INTERVAL],
@@ -446,6 +459,17 @@ validate_options(fko_srv_options_t *opts)
             DEF_IPT_MASQUERADE_ACCESS);
 
 #elif FIREWALL_IPFW
+
+    /* Flush ipfw rules at init.
+    */
+    if(opts->config[CONF_FLUSH_IPFW_AT_INIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_IPFW_AT_INIT, DEF_FLUSH_IPFW_AT_INIT);
+
+    /* Flush ipfw rules at exit.
+    */
+    if(opts->config[CONF_FLUSH_IPFW_AT_EXIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_IPFW_AT_EXIT, DEF_FLUSH_IPFW_AT_EXIT);
+
     /* Set IPFW start rule number.
     */
     if(opts->config[CONF_IPFW_START_RULE_NUM] == NULL)

@@ -440,7 +440,7 @@ incoming_spa(fko_srv_options_t *opts)
             else
             {
                 log_msg(LOG_ERR,
-                    "(stanza #%d) No GPG_DECRYPT_PW for GPG encrypted messages",
+                    "(stanza #%d) No GPG_DECRYPT_PW for GPG encrypted messages, set GPG_ALLOW_NO_PW",
                     stanza_num
                 );
                 acc = acc->next;

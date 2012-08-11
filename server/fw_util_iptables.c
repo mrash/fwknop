@@ -454,7 +454,8 @@ fw_initialize(const fko_srv_options_t *opts)
 
     /* Flush the chains (just in case) so we can start fresh.
     */
-    delete_all_chains(opts);
+    if(strncasecmp(opts->config[CONF_FLUSH_IPT_AT_INIT], "Y", 1) == 0)
+        delete_all_chains(opts);
 
     /* Now create any configured chains.
     */
@@ -470,6 +471,9 @@ fw_initialize(const fko_srv_options_t *opts)
 int
 fw_cleanup(const fko_srv_options_t *opts)
 {
+    if(strncasecmp(opts->config[CONF_FLUSH_IPT_AT_EXIT], "N", 1) == 0)
+        return(0);
+
     delete_all_chains(opts);
     return(0);
 }
@@ -650,7 +654,7 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 nat_port = atoi(ndx+1);
             }
         }
-    
+
         if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG)
         {
             /* Need to add an ACCEPT rule into the INPUT chain

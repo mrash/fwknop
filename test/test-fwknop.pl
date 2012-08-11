@@ -19,6 +19,7 @@ my $configure_path = '../configure';
 my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
+my $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 
 my %cf = (
     'nat'                     => "$conf_dir/nat_fwknopd.conf",
@@ -33,6 +34,7 @@ my %cf = (
     'local_nat'               => "$conf_dir/local_nat_fwknopd.conf",
     'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
     'gpg_access'              => "$conf_dir/gpg_access.conf",
+    'gpg_no_pw_access'        => "$conf_dir/gpg_no_pw_access.conf",
     'open_ports_access'       => "$conf_dir/open_ports_access.conf",
     'multi_gpg_access'        => "$conf_dir/multi_gpg_access.conf",
     'multi_stanza_access'     => "$conf_dir/multi_stanzas_access.conf",
@@ -196,6 +198,10 @@ my $default_client_gpg_args = "$default_client_args " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
 
+my $default_client_gpg_args_no_homedir = "$default_client_args " .
+    "--gpg-recipient-key $gpg_server_key " .
+    "--gpg-signer-key $gpg_client_key ";
+
 my $default_client_gpg_args_no_get_key = "$default_client_args_no_get_key " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key " .
@@ -207,6 +213,11 @@ my $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
 my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_access'} $intf_str " .
+    "-d $default_digest_file -p $default_pid_file";
+
+my $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
+    "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+    "-a $cf{'gpg_no_pw_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
 ### point the compiled binaries at the local libary path
@@ -1586,6 +1597,171 @@ my @tests = (
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'multi_gpg_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/23 telnet)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/9418 git)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (udp/53 dns)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay attack detection',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'replay detection (GnuPG prefix)',
+        'err_msg'  => 'could not detect replay attack',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'hQ',
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'non-base64 altered SPA data',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&altered_non_base64_spa_data,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'base64 altered SPA data',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&altered_base64_spa_data,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'appended data to SPA pkt',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&appended_spa_data,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'prepended data to SPA pkt',
+        'err_msg'  => 'allowed improper SPA data',
+        'function' => \&prepended_spa_data,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'spoof username (tcp/22 ssh)',
+        'err_msg'  => 'could not spoof username',
+        'function' => \&spoof_username,
+        'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
         'fatal'    => $NO
     },
 
