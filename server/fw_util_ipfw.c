@@ -212,7 +212,8 @@ fw_initialize(const fko_srv_options_t *opts)
 
     /* For now, we just call fw_cleanup to start with clean slate.
     */
-    res = fw_cleanup(opts);
+    if(strncasecmp(opts->config[CONF_FLUSH_IPFW_AT_INIT], "Y", 1) == 0)
+        res = fw_cleanup(opts);
 
     if(res != 0)
     {
@@ -261,26 +262,30 @@ fw_initialize(const fko_srv_options_t *opts)
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
     }
 
-    /* Make sure our expire set is disabled.
-    */
-    zero_cmd_buffers();
+    if(fwc.expire_set_num > 0
+            && (strncasecmp(opts->config[CONF_FLUSH_IPFW_AT_INIT], "Y", 1) == 0))
+    {
+        /* Make sure our expire set is disabled.
+        */
+        zero_cmd_buffers();
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_DISABLE_SET_ARGS,
-        fwc.fw_command,
-        fwc.expire_set_num
-    );
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_DISABLE_SET_ARGS,
+            fwc.fw_command,
+            fwc.expire_set_num
+        );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
-            cmd_buf, res, err_buf);
+        if (opts->verbose)
+            log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
 
-    if(EXTCMD_IS_SUCCESS(res))
-        log_msg(LOG_INFO, "Set ipfw expire set %u to disabled.",
-            fwc.expire_set_num);
-    else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        if(EXTCMD_IS_SUCCESS(res))
+            log_msg(LOG_INFO, "Set ipfw expire set %u to disabled.",
+                fwc.expire_set_num);
+        else
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+    }
 
     /* Now read the expire set in case there are existing
      * rules to track.
@@ -350,6 +355,13 @@ int
 fw_cleanup(const fko_srv_options_t *opts)
 {
     int     res, got_err = 0;
+
+    if(strncasecmp(opts->config[CONF_FLUSH_IPFW_AT_EXIT], "N", 1) == 0)
+    {
+        if(fwc.rule_map != NULL)
+            free(fwc.rule_map);
+        return(0);
+    }
 
     zero_cmd_buffers();
 
