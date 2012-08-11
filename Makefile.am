@@ -109,6 +109,15 @@ EXTRA_DIST = \
     test/conf/client-gpg/pubring.gpg \
     test/conf/client-gpg/secring.gpg \
     test/conf/client-gpg/trustdb.gpg \
+    test/conf/client-gpg-no-pw/pubring.gpg \
+    test/conf/client-gpg-no-pw/secring.gpg \
+    test/conf/client-gpg-no-pw/trustdb.gpg \
+    test/conf/server-gpg/pubring.gpg \
+    test/conf/server-gpg/secring.gpg \
+    test/conf/server-gpg/trustdb.gpg \
+    test/conf/server-gpg-no-pw/pubring.gpg \
+    test/conf/server-gpg-no-pw/secring.gpg \
+    test/conf/server-gpg-no-pw/trustdb.gpg \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
@@ -133,9 +142,6 @@ EXTRA_DIST = \
     test/conf/override_fwknopd.conf \
     test/conf/require_src_access.conf \
     test/conf/require_user_access.conf \
-    test/conf/server-gpg/pubring.gpg \
-    test/conf/server-gpg/secring.gpg \
-    test/conf/server-gpg/trustdb.gpg \
     test/conf/subnet_source_match_access.conf \
     test/conf/local_nat_fwknopd.conf \
     test/hardening-check \

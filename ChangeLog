@@ -1,4 +1,16 @@
 fwknop-2.0.2 (08//2012):
+    - [server] For GPG mode, added a new access.conf variable
+      "GPG_ALLOW_NO_PW" to make it possible to leverage a server-side GPG key
+      pair that has no associated password.  This comes in handy when a system
+      requires the user to leverage gpg-agent / pinentry which can present a
+      problem in automated environments as required by the fwknopd server.
+      Now, it might seem like a problem to remove the passphrase from a GPG
+      key pair, but it's important to note that simply doing this is little
+      worse than storing the passphrase in the clear on disk anyway in the
+      access.conf file.  Further, this link helps provide additional detail:
+
+      http://www.gnupg.org/faq/GnuPG-FAQ.html#how-can-i-use-gnupg-in-an-automated-environment
+
     - [client] In IP resolution mode (-R) changed HTTP connection type to
       'close' since there is no need for connection persistence, and indeed the
       client expects to just get the IP and the connection to be closed.
@@ -7,6 +19,14 @@ fwknop-2.0.2 (08//2012):
       remote webserver IP resolution mode (-R).  Previously IP resolution
       could fail if HTTP headers were transferred separately from the data
       (for whatever reason).  Jonathan Schulz submitted a patch for this.
+    - [server] Bug fix to implement FLUSH_IPT_AT_INIT and FLUSH_IPT_AT_EXIT
+      functionality.  These are enabled by default, and now iptables rules
+      added by fwknopd can be made persistant by setting these variables to
+      "N" in the fwknopd.conf file (this is not a recommended setting
+      however).
+      [server] Added FLUSH_IPFW_AT_INIT and FLUSH_IPFW_AT_EXIT for ipfw
+      firewalls to emulate the corresponding functionality that is implemented
+      for iptables firewalls.  This was suggested by Jonathan Schulz.
     - [server] Replay attack bug fix to ensure that an attacker cannot force a
       replay attack by intercepting an SPA packet and the replaying it with the
       base64 version of "Salted__" (for Rindael) or the "hQ" prefix (for
@@ -35,6 +55,9 @@ fwknop-2.0.2 (08//2012):
          by 0x4865667: pcap_dispatch (in /usr/lib/i386-linux-gnu/libpcap.so.1.1.1)
          by 0x10DABF: pcap_capture (pcap_capture.c:226)
          by 0x10A798: main (fwknopd.c:299)
+
+    - [test suite] Added GPG tests for keyrings that have no associated
+      passphrases.
 
 fwknop-2.0.1 (07/23/2012):
     - [server] Bug fix where the same encryption key used for two stanzas in

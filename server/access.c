@@ -46,6 +46,9 @@
 static void
 add_acc_string(char **var, const char *val)
 {
+    if(*var != NULL)
+        free(*var);
+
     if((*var = strdup(val)) == NULL)
     {
         log_msg(LOG_ERR,
@@ -395,6 +398,9 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
 
         last_stlist->next = new_stlist;
     }
+
+    if(new_stlist->str != NULL)
+        free(new_stlist->str);
 
     new_stlist->str = strdup(str_str);
 
@@ -929,6 +935,13 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
+        }
+        else if(CONF_VAR_IS(var, "GPG_ALLOW_NO_PW"))
+        {
+            if(curr_acc->gpg_decrypt_pw != NULL && curr_acc->gpg_decrypt_pw[0] != '\0')
+                free(curr_acc->gpg_decrypt_pw);
+
+            add_acc_string(&(curr_acc->gpg_decrypt_pw), "");
         }
         else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
         {
