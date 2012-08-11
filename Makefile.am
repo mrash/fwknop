@@ -126,6 +126,7 @@ EXTRA_DIST = \
     test/conf/force_nat_access.conf \
     test/conf/future_expired_stanza_access.conf \
     test/conf/gpg_access.conf \
+    test/conf/gpg_no_pw_access.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/mismatch_open_ports_access.conf \
