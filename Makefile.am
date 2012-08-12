@@ -50,6 +50,7 @@ EXTRA_DIST = \
     android/project/jni/Android.mk \
     ChangeLog* \
     CREDITS \
+    todo.org \
     extras/fwknop.init.debian \
     extras/fwknop.init.openwrt \
     extras/fwknop.init.redhat \

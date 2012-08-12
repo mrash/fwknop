@@ -1,0 +1,10 @@
+* fwknop tasks
+  This is the main todo org mode file for the fwknop project
+** fwknopd iptables comment match detection
+   Hank Leininger suggested that fwknopd do better detection for the iptables
+   comment match since it is required for the expiration of SPA rules.
+** Include files for access.conf
+   Hank Leininger suggested that the main access.conf file have an option to
+   include other files in which access stanzas can be specified.  This makes
+   it easy to wrap additional controls around access information particularly
+   in multi-user environments.
