@@ -62,6 +62,8 @@ fwknop-2.0.2 (08//2012):
       match exists to ensure the proper environment for fwknopd operations.
       This check is controlled by the new ENABLE_IPT_COMMENT_CHECK variable,
       and was suggested by Hank Leininger.
+    - [server] 'make install' fix to ensure restrictive permissions on the
+      /etc/fwknop/ directory and /etc/fwknop/* files.
 
 fwknop-2.0.1 (07/23/2012):
     - [server] Bug fix where the same encryption key used for two stanzas in

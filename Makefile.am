@@ -169,3 +169,6 @@ dist-hook:
 	rm -f $(distdir)/client/fwknop.8
 	rm -f $(distdir)/server/fwknopd.8
 
+install-exec-hook:
+	chmod 500 $(sysconfdir)/fwknop
+	chmod 700 $(sysconfdir)/fwknop/*
