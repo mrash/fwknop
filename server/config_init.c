@@ -458,6 +458,12 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_IPT_MASQUERADE_ACCESS,
             DEF_IPT_MASQUERADE_ACCESS);
 
+    /* Check for the iptables 'comment' match at init time
+    */
+    if(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_COMMENT_CHECK,
+            DEF_ENABLE_IPT_COMMENT_CHECK);
+
 #elif FIREWALL_IPFW
 
     /* Flush ipfw rules at init.

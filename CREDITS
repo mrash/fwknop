@@ -48,3 +48,8 @@ Geoff Carstairs
       This allows for better access control for multple users requiring access
       to multiple internal systems, in a manner that is transparent to the
       user.  The result was the FORCE_NAT mode.
+
+Hank Leininger
+    - For iptables firewalls, suggested a check for the 'comment' match to
+      ensure the local environment will properly support fwknopd operations.
+      The result is the new ENABLE_IPT_COMMENT_CHECK functionality.

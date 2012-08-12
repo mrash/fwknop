@@ -1,6 +1,9 @@
 * fwknop tasks
   This is the main todo org mode file for the fwknop project
-** fwknopd iptables comment match detection
+** COMPLETED
+   This bucket is for completed tasks.
+*** fwknopd iptables comment match detection
+    :CLOSED: <2012-08-12 Sun>
    Hank Leininger suggested that fwknopd do better detection for the iptables
    comment match since it is required for the expiration of SPA rules.
 ** Include files for access.conf

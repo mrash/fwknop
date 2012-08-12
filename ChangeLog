@@ -58,6 +58,10 @@ fwknop-2.0.2 (08//2012):
 
     - [test suite] Added GPG tests for keyrings that have no associated
       passphrases.
+    - [server] Implemented a new check to ensure that the iptables 'comment'
+      match exists to ensure the proper environment for fwknopd operations.
+      This check is controlled by the new ENABLE_IPT_COMMENT_CHECK variable,
+      and was suggested by Hank Leininger.
 
 fwknop-2.0.1 (07/23/2012):
     - [server] Bug fix where the same encryption key used for two stanzas in

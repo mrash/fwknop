@@ -53,6 +53,70 @@ zero_cmd_buffers(void)
 }
 
 static int
+comment_match_exists(const fko_srv_options_t *opts)
+{
+    int               res = 1;
+    char             *ndx = NULL;
+    struct fw_chain  *in_chain  = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
+
+    zero_cmd_buffers();
+
+    /* Add a harmless rule to the iptables OUTPUT chain that uses the comment
+     * match and make sure it exists.  If not, return zero.  Otherwise, delete
+     * the rule and return true.
+    */
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_TMP_COMMENT_ARGS,
+        opts->fw_config->fw_command,
+        in_chain->table,
+        in_chain->to_chain,
+        1,   /* first rule */
+        in_chain->target
+    );
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if (opts->verbose)
+        log_msg(LOG_INFO, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+        opts->fw_config->fw_command,
+        in_chain->table,
+        in_chain->to_chain
+    );
+
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+
+    if(!EXTCMD_IS_SUCCESS(res))
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
+
+    ndx = strstr(cmd_out, TMP_COMMENT);
+    if(ndx == NULL)
+        res = 0;  /* did not find the tmp comment */
+    else
+        res = 1;
+
+    if(res == 1)
+    {
+        /* Delete the tmp comment rule
+        */
+        zero_cmd_buffers();
+
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
+            opts->fw_config->fw_command,
+            in_chain->table,
+            in_chain->to_chain,
+            1
+        );
+        run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    }
+
+    return res;
+}
+
+static int
 add_jump_rule(const fko_srv_options_t *opts, const int chain_num)
 {
     int res = 0;
@@ -205,7 +269,7 @@ fw_dump_rules(const fko_srv_options_t *opts)
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
             {
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
                 got_err++;
             }
         }
@@ -464,6 +528,15 @@ fw_initialize(const fko_srv_options_t *opts)
     if(res != 0)
     {
         fprintf(stderr, "Warning: Errors detected during fwknop custom chain creation.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    /* Make sure that the 'comment' match is available
+    */
+    if((strncasecmp(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK], "Y", 1) == 0)
+            && (comment_match_exists(opts) != 1))
+    {
+        fprintf(stderr, "Warning: Could not use the 'comment' match.\n");
         exit(EXIT_FAILURE);
     }
 }
