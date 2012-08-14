@@ -93,6 +93,7 @@ my $enable_client_ip_resolve_test = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enable_recompilation_warnings_check = 0;
+my $enable_make_distcheck = 0;
 my $sudo_path = '';
 my $platform = '';
 my $help = 0;
@@ -126,6 +127,7 @@ exit 1 unless GetOptions(
     'exclude=s'         => \$test_exclude,  ### synonym
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
+    'enable-distcheck'  => \$enable_make_distcheck,
     'List-mode'         => \$list_mode,
     'enable-valgrind'   => \$use_valgrind,
     'valgrind-path=s'   => \$valgrindCmd,
@@ -190,6 +192,13 @@ my @tests = (
         'detail'   => 'recompile and look for compilation warnings',
         'err_msg'  => 'compile warnings exist',
         'function' => \&compile_warnings,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'make distcheck',
+        'detail'   => 'ensure proper distribution creation',
+        'err_msg'  => 'could not create proper tarball',
+        'function' => \&make_distcheck,
         'fatal'    => $NO
     },
     {
@@ -1778,6 +1787,21 @@ sub compile_warnings() {
     return 1;
 }
 
+sub make_distcheck() {
+
+    ### 'make clean' as root
+    return 0 unless &run_cmd('make -C .. distcheck',
+        $cmd_out_tmp, $current_test_file);
+
+    ### look for compilation warnings - something like:
+    ###     warning: ‘test’ is used uninitialized in this function
+    return 1 if &file_find_regex([qr/archives\sready\sfor\sdistribution/],
+        $MATCH_ALL, $current_test_file);
+
+    return 0;
+}
+
+
 sub binary_exists() {
     my $test_hr = shift;
     return 0 unless $test_hr->{'binary'};
@@ -2808,6 +2832,10 @@ sub init() {
 
     unless ($enable_recompilation_warnings_check) {
         push @tests_to_exclude, 'recompilation';
+    }
+
+    unless ($enable_make_distcheck) {
+        push @tests_to_exclude, 'distcheck';
     }
 
     unless ($enable_client_ip_resolve_test) {
