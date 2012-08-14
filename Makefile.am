@@ -48,7 +48,8 @@ EXTRA_DIST = \
     android/project/jni/libfwknop/get_libfko_files.sh \
     android/project/jni/logutils.h \
     android/project/jni/Android.mk \
-    ChangeLog* \
+    ChangeLog \
+    ChangeLog.git \
     CREDITS \
     todo.org \
     extras/fwknop.init.debian \
@@ -169,6 +170,40 @@ dist-hook:
 	rm -f $(distdir)/client/fwknop.8
 	rm -f $(distdir)/server/fwknopd.8
 
+uninstall-local:
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then \
+		rm -f $(sysconfdir)/fwknop/fwknopd.conf; \
+	fi
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf.inst; then \
+		rm -f $(sysconfdir)/fwknop/fwknopd.conf.inst; \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf; then \
+		rm -f $(sysconfdir)/fwknop/access.conf; \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf.inst; then \
+		rm -f $(sysconfdir)/fwknop/access.conf.inst; \
+	fi
+
 install-exec-hook:
-	chmod 500 $(sysconfdir)/fwknop
-	chmod 700 $(sysconfdir)/fwknop/*
+	if test -d $(sysconfdir)/fwknop; then \
+		chmod 700 $(sysconfdir)/fwknop; \
+	fi
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then :; \
+	else \
+		if test -f $(sysconfdir)/fwknop/fwknopd.conf.inst; then \
+			mv $(sysconfdir)/fwknop/fwknopd.conf.inst $(sysconfdir)/fwknop/fwknopd.conf; \
+		fi \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf; then :; \
+	else \
+		if test -f $(sysconfdir)/fwknop/access.conf.inst; then \
+			mv $(sysconfdir)/fwknop/access.conf.inst $(sysconfdir)/fwknop/access.conf; \
+		fi \
+	fi
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then \
+		chmod 600 $(sysconfdir)/fwknop/fwknopd.conf; \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf; then \
+		chmod 600 $(sysconfdir)/fwknop/access.conf; \
+	fi
+

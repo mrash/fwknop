@@ -63,7 +63,10 @@ fwknop-2.0.2 (08//2012):
       This check is controlled by the new ENABLE_IPT_COMMENT_CHECK variable,
       and was suggested by Hank Leininger.
     - [server] 'make install' fix to ensure restrictive permissions on the
-      /etc/fwknop/ directory and /etc/fwknop/* files.
+      /etc/fwknop/ directory and /etc/fwknop/* files.  Also updated the 'make
+      install' step to not overwrite any existing config files in /etc/fwknop/
+      and instead install new copies from the source tree at
+      /etc/fwknop/fwknopd.conf.inst and /etc/fwknop/access.conf.inst
 
 fwknop-2.0.1 (07/23/2012):
     - [server] Bug fix where the same encryption key used for two stanzas in
