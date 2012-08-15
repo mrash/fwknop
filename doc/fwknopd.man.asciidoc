@@ -403,6 +403,16 @@ directive starts a new stanza.
     ``GPG_DECRYPT_ID'' above.  This is a required field for gpg-based
     authentication.
 
+*GPG_ALLOW_NO_PW*: '<Y/N>'::
+    Allow *fwknopd* to leverage a GnuPG key pair that does not have an
+    associated password.  While this may sound like a controversial deployment
+    mode, in automated environments it makes sense because "there is usually no
+    way to store a password more securely than on the secret keyring itself"
+    according to: ``http://www.gnupg.org/faq/GnuPG-FAQ.html#how-can-i-use-gnupg-in-an-automated-environment''.
+    Using this feature and removing the passphrase from a GnuPG key pair is
+    useful in some environments where libgpgme is forced to use gpg-agent
+    and/or pinentry to collect a passphrase.
+
 *GPG_REQUIRE_SIG*: '<Y/N>'::
     With this setting set to 'Y',  fwknopd check all GPG-encrypted SPA
     messages for a signature (signed by the sender's key).  If the incoming
