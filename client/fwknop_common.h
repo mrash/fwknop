@@ -63,10 +63,11 @@
   *             for now.
 */
 #define HTTP_RESOLVE_HOST           "www.cipherdyne.org"
+#define HTTP_BACKUP_RESOLVE_HOST    "www.cipherdyne.com"
 #define HTTP_RESOLVE_URL            "/cgi-bin/myip"
 #define HTTP_MAX_REQUEST_LEN        2000
 #define HTTP_MAX_RESPONSE_LEN       2000
-#define HTTP_MAX_USER_AGENT_LEN     50
+#define HTTP_MAX_USER_AGENT_LEN     100
 #define MAX_HOSTNAME_LEN            70
 #define MAX_URL_HOST_LEN            256
 #define MAX_URL_PATH_LEN            1024

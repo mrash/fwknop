@@ -19,6 +19,8 @@ fwknop-2.0.2 (08//2012):
       remote webserver IP resolution mode (-R).  Previously IP resolution
       could fail if HTTP headers were transferred separately from the data
       (for whatever reason).  Jonathan Schulz submitted a patch for this.
+    - [client] Added backup check against a cipherdyne.com 'myip' cgi instance
+      in -R mode if the normal check against cipherdyne.org fails.
     - [server] Bug fix to implement FLUSH_IPT_AT_INIT and FLUSH_IPT_AT_EXIT
       functionality.  These are enabled by default, and now iptables rules
       added by fwknopd can be made persistant by setting these variables to

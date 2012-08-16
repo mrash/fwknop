@@ -152,11 +152,13 @@ main(int argc, char **argv)
          * if this fails, consider it fatal.
         */
         if (options.resolve_ip_http)
+        {
             if(resolve_ip_http(&options) < 0)
             {
                 fko_destroy(ctx);
                 return(EXIT_FAILURE);
             }
+        }
 
         /* Set a message string by combining the allow IP and the
          * port/protocol.  The fwknopd server allows no port/protocol
