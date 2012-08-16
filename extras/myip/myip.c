@@ -14,9 +14,16 @@ int main(void)
     char *ip_str = NULL;
 
     if ((ip_str = getenv("REMOTE_ADDR")) != NULL)
-        printf("Content-Type: text/html;\r\n\r\n%s\r\n", ip_str);
+        fprintf(stdout,
+            "Pragma: no-cache\r\n"
+            "Content-Type: text/plain\r\n\r\n%s\r\n",
+            ip_str
+        );
     else
-        printf("Content-Type: text/html;\r\n\r\nNULL\r\n");
+        fprintf(stdout,
+            "Pragma: no-cache\r\n"
+            "Content-Type: text/plain\r\n\r\nNULL\r\n"
+        );
 
     return 0;
 }
