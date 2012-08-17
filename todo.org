@@ -23,17 +23,23 @@
    page.
 ** Use assert() in various places
    Use assert() to validate expected values wherever possible.
-** For Ubuntu systems, have fwknopd managed by upstart
+** [server] For Ubuntu systems, have fwknopd managed by upstart
    fwknopd can benefit from upstart management and monitoring on Ubuntu
    systems.
-** Include files for access.conf
+** [server] Include files for access.conf
    Hank Leininger suggested that the main access.conf file have an option to
    include other files in which access stanzas can be specified.  This makes
    it easy to wrap additional controls around access information particularly
    in multi-user environments.
-** Remove lib check for test suite when running in --enable-recompile mode
+** [test suite] Remove lib check for test suite when running in --enable-recompile mode
    When creating a release tarball under 'make dist', the test suite performs
    a check for existing lib/ directory even under --enable-recompile.
-** ipfw active/expire sets cannot be the same
+** [server] ipfw active/expire sets cannot be the same
    Add a check to ensure that active and expire sets are not the same value in
    fwknopd.conf, and add a corresponding test in the test suite.
+** [test suite] SPA packet fuzzer
+   Add a series of patches to the fwknop client that break how it produces SPA
+   data in subtle ways in order to ensure proper validation by fwknopd.
+** [test suite] backwards compatibility tests
+   The test suite should have the ability to test backwards compatibility
+   between fwknop versions.
