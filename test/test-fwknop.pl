@@ -30,6 +30,7 @@ my %cf = (
     'invalid_exp_access'   => "$conf_dir/invalid_expire_access.conf",
     'force_nat_access'     => "$conf_dir/force_nat_access.conf",
     'local_nat'            => "$conf_dir/local_nat_fwknopd.conf",
+    'ipfw_active_expire'   => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
     'dual_key_access'      => "$conf_dir/dual_key_usage_access.conf",
     'gpg_access'           => "$conf_dir/gpg_access.conf",
     'gpg_no_pw_access'     => "$conf_dir/gpg_no_pw_access.conf",
@@ -110,6 +111,10 @@ my $NEW_RULE_REMOVED = 1;
 my $REQUIRE_NO_NEW_REMOVED = 2;
 my $MATCH_ANY = 1;
 my $MATCH_ALL = 2;
+my $LINUX   = 1;
+my $FREEBSD = 2;
+my $MACOSX  = 3;
+my $OPENBSD = 4;
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -1160,6 +1165,22 @@ my @tests = (
 
     {
         'category' => 'Rijndael SPA',
+        'subcategory' => 'server',
+        'detail'   => 'ipfw active/expire sets not equal',
+        'err_msg'  => 'allowed active/expire sets to be the same',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'ipfw_active_expire'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Cannot\sset\sidentical\sipfw\sactive\sand\sexpire\ssets/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -1644,7 +1665,7 @@ sub process_include_exclude() {
     if (@tests_to_include) {
         my $found = 0;
         for my $test (@tests_to_include) {
-            if ($msg =~ /$test/ or ($use_valgrind
+            if ($msg =~ $test or ($use_valgrind
                     and $msg =~ /valgrind\soutput/)) {
                 $found = 1;
                 last;
@@ -1655,7 +1676,7 @@ sub process_include_exclude() {
     if (@tests_to_exclude) {
         my $found = 0;
         for my $test (@tests_to_exclude) {
-            if ($msg =~ /$test/) {
+            if ($msg =~ $test) {
                 $found = 1;
                 last;
             }
@@ -2589,7 +2610,7 @@ sub specs() {
     ### all three of fwknop/fwknopd/libfko must link against gpgme in order
     ### to enable gpg tests
     unless ($have_gpgme == 3) {
-        push @tests_to_exclude, "GPG";
+        push @tests_to_exclude, qr/GPG/;
     }
 
     return 1;
@@ -2820,10 +2841,14 @@ sub init() {
     }
 
     if ($test_include) {
-        @tests_to_include = split /\s*,\s*/, $test_include;
+        for my $re (split /\s*,\s*/, $test_include) {
+            push @tests_to_include, qr/$re/;
+        }
     }
     if ($test_exclude) {
-        @tests_to_exclude = split /\s*,\s*/, $test_exclude;
+        for my $re (split /\s*,\s*/, $test_exclude) {
+            push @tests_to_exclude, qr/$re/;
+        }
     }
 
     ### make sure no fwknopd instance is currently running
@@ -2831,35 +2856,41 @@ sub init() {
         if &is_fwknopd_running();
 
     unless ($enable_recompilation_warnings_check) {
-        push @tests_to_exclude, 'recompilation';
+        push @tests_to_exclude, qr/recompilation/;
     }
 
     unless ($enable_make_distcheck) {
-        push @tests_to_exclude, 'distcheck';
+        push @tests_to_exclude, qr/distcheck/;
     }
 
     unless ($enable_client_ip_resolve_test) {
-        push @tests_to_exclude, 'IP resolve';
+        push @tests_to_exclude, qr/IP resolve/;
     }
 
     $sudo_path = &find_command('sudo');
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
-        push @tests_to_exclude, 'recompilation';
+        push @tests_to_exclude, qr/recompilation/;
     }
 
     open UNAME, "uname |" or die "[*] Could not execute uname: $!";
     while (<UNAME>) {
         if (/linux/i) {
-            $platform = 'linux';
+            $platform = $LINUX;
+            last;
+        } elsif (/freebsd/i) {
+            $platform = $FREEBSD;
             last;
         }
     }
     close UNAME;
 
-    unless ($platform eq 'linux') {
-        push @tests_to_exclude, 'NAT';
+    unless ($platform eq $LINUX) {
+        push @tests_to_exclude, qr/NAT/;
+    }
+    unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
+        push @tests_to_exclude, qr|active/expire sets|;
     }
 
     if (-e $default_digest_file) {
