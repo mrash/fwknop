@@ -139,6 +139,7 @@ EXTRA_DIST = \
     test/conf/multi_stanzas_access.conf \
     test/conf/multi_stanzas_with_broken_keys.conf \
     test/conf/nat_fwknopd.conf \
+    test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/no_multi_source_match_access.conf \
     test/conf/no_source_match_access.conf \
     test/conf/no_subnet_source_match_access.conf \
