@@ -153,10 +153,10 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     /* Make sure the active and expire sets are not identical whenever
      * they are non-zero
     */
-    if((opts->config[CONF_IPFW_ACTIVE_SET_NUM] > 0
-            && opts->config[CONF_IPFW_EXPIRE_SET_NUM] > 0)
-            && (opts->config[CONF_IPFW_ACTIVE_SET_NUM]
-                == opts->config[CONF_IPFW_EXPIRE_SET_NUM]))
+    if((atoi(opts->config[CONF_IPFW_ACTIVE_SET_NUM]) > 0
+            && atoi(opts->config[CONF_IPFW_EXPIRE_SET_NUM]) > 0)
+            && atoi(opts->config[CONF_IPFW_ACTIVE_SET_NUM])
+                == atoi(opts->config[CONF_IPFW_EXPIRE_SET_NUM]))
     {
         fprintf(stderr,
                 "[*] Cannot set identical ipfw active and expire sets.\n");

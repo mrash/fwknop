@@ -1174,8 +1174,7 @@ my @tests = (
             "$fwknopdCmd -c $cf{'ipfw_active_expire'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Cannot\sset\sidentical\sipfw\sactive\sand\sexpire\ssets/],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
 
