@@ -285,6 +285,7 @@ incoming_spa(fko_srv_options_t *opts)
     if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
     {
         if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+        {
             /* Check for a replay attack
             */
             res = get_raw_digest(&raw_digest, (char *)spa_pkt->packet_data);
@@ -302,6 +303,7 @@ incoming_spa(fko_srv_options_t *opts)
                 free(raw_digest);
                 return;
             }
+        }
     }
     else
     {
