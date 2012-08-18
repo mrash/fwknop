@@ -6,6 +6,9 @@
     :CLOSED: <2012-08-16 Thu>
     Add a check to ensure that active and expire sets are not the same value in
     fwknopd.conf, and add a corresponding test in the test suite.
+*** Release fwknop-2.0.2
+    :CLOSED: <2012-08-18 Sat>
+    Make the fwknop-2.0.2 release.
 *** Update fwknopd man page for GPG_ALLOW_NO_PW
     :CLOSED: <2012-08-14 Tue>
 *** Preserve existing configs under 'make install'
@@ -22,6 +25,9 @@
 *** Set restrictive permissions on /etc/fwknop/ directory and /etc/fwknop/* files
     :CLOSED: <2012-08-12 Sun>
     Current default permissions on /etc/fwknop/ and /etc/fwknop/* are too lax.
+** Add 'enable' to ipfw active set at init time
+   Currently fwknopd does not do a check to ensure that the active set is
+   enabled at init time ('ipfw set enable 1').
 ** Update fwknopd man page to include IPFW* vars
    None of the ipfw variables are currently documented in the fwknopd man
    page.
