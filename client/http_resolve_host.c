@@ -124,6 +124,9 @@ try_url(struct url *url, fko_cli_options_t *options)
 
     freeaddrinfo(result);
 
+    if(options->verbose > 1)
+        printf("\nHTTP request: %s\n", http_buf);
+
     res = send(sock, http_buf, http_buf_len, 0);
 
     if(res < 0)
@@ -143,6 +146,8 @@ try_url(struct url *url, fko_cli_options_t *options)
         memset(http_buf, 0x0, sizeof(http_buf));
         bytes_read = recv(sock, http_buf, sizeof(http_buf), 0);
         if ( bytes_read > 0 ) {
+            if(position + bytes_read >= HTTP_MAX_RESPONSE_LEN)
+                break;
             memcpy(&http_response[position], http_buf, bytes_read);
             position += bytes_read;
         }
@@ -156,6 +161,9 @@ try_url(struct url *url, fko_cli_options_t *options)
 #else
     close(sock);
 #endif
+
+    if(options->verbose > 1)
+        printf("\nHTTP response: %s\n", http_response);
 
     /* Move to the end of the HTTP header and to the start of the content.
     */
@@ -190,9 +198,6 @@ try_url(struct url *url, fko_cli_options_t *options)
             && o4 >= 0 && o4 <= 255)
     {
         strlcpy(options->allow_ip_str, ndx, MAX_IPV4_STR_LEN);
-
-        if(options->verbose > 1)
-            printf("\nHTTP response: %s\n", http_response);
 
         if(options->verbose)
             printf("\n[+] Resolved external IP (via http://%s%s) as: %s\n",
@@ -256,6 +261,11 @@ parse_url(char *res_url, struct url* url)
         tlen_offset = 0;
     }
 
+    /* Get rid of any trailing slash
+    */
+    if(res_url[strlen(res_url)-1] == '/')
+        res_url[strlen(res_url)-1] = '\0';
+
     e_ndx = strchr(s_ndx, '/');
     if(e_ndx == NULL)
         tlen = strlen(s_ndx)+1;
@@ -282,7 +292,11 @@ parse_url(char *res_url, struct url* url)
         strlcpy(url->path, e_ndx, MAX_URL_PATH_LEN);
     }
     else
-        *(url->path) = '\0';
+    {
+        /* default to "GET /" if there isn't a more specific URL
+        */
+        strlcpy(url->path, "/", MAX_URL_PATH_LEN);
+    }
 
     return(0);
 }
