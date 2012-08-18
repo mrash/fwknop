@@ -28,7 +28,7 @@ fwknopddir        = @sysconfdir@/fwknop
 
 dist_man_MANS     = fwknopd.8
 
-dist_fwknopd_DATA = fwknopd.conf access.conf
+dist_fwknopd_DATA = fwknopd.conf.inst access.conf.inst
 
 EXTRA_DIST        = fwknopd.8.in
 
@@ -44,4 +44,3 @@ fwknopd.8: $(top_srcdir)/server/fwknopd.8.in
 
 clean-local:
 	rm -f fwknopd.8
-

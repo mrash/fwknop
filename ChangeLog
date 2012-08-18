@@ -19,6 +19,8 @@ fwknop-2.0.2 (08//2012):
       remote webserver IP resolution mode (-R).  Previously IP resolution
       could fail if HTTP headers were transferred separately from the data
       (for whatever reason).  Jonathan Schulz submitted a patch for this.
+    - [client] Added backup check against a cipherdyne.com 'myip' cgi instance
+      in -R mode if the normal check against cipherdyne.org fails.
     - [server] Bug fix to implement FLUSH_IPT_AT_INIT and FLUSH_IPT_AT_EXIT
       functionality.  These are enabled by default, and now iptables rules
       added by fwknopd can be made persistant by setting these variables to
@@ -58,6 +60,15 @@ fwknop-2.0.2 (08//2012):
 
     - [test suite] Added GPG tests for keyrings that have no associated
       passphrases.
+    - [server] Implemented a new check to ensure that the iptables 'comment'
+      match exists to ensure the proper environment for fwknopd operations.
+      This check is controlled by the new ENABLE_IPT_COMMENT_CHECK variable,
+      and was suggested by Hank Leininger.
+    - [server] 'make install' fix to ensure restrictive permissions on the
+      /etc/fwknop/ directory and /etc/fwknop/* files.  Also updated the 'make
+      install' step to not overwrite any existing config files in /etc/fwknop/
+      and instead install new copies from the source tree at
+      /etc/fwknop/fwknopd.conf.inst and /etc/fwknop/access.conf.inst
 
 fwknop-2.0.1 (07/23/2012):
     - [server] Bug fix where the same encryption key used for two stanzas in

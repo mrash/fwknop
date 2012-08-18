@@ -392,6 +392,8 @@ incoming_spa(fko_srv_options_t *opts)
                         "(stanza #%d) Error creating fko context (before decryption): %s",
                         stanza_num, fko_errstr(res)
                     );
+                    if(ctx != NULL)
+                        fko_destroy(ctx);
                     acc = acc->next;
                     continue;
                 }
@@ -406,6 +408,8 @@ incoming_spa(fko_srv_options_t *opts)
                             "(stanza #%d) Error setting GPG keyring path to %s: %s",
                             stanza_num, acc->gpg_home_dir, fko_errstr(res)
                         );
+                        if(ctx != NULL)
+                            fko_destroy(ctx);
                         acc = acc->next;
                         continue;
                     }

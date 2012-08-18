@@ -37,6 +37,7 @@
 #define STANDARD_CMD_OUT_BUFSIZE    4096
 
 #define EXPIRE_COMMENT_PREFIX "_exp_"
+#define TMP_COMMENT "__TMPCOMMENT__"
 
 #if FIREWALL_IPTABLES
   #include "fw_util_iptables.h"

@@ -40,6 +40,7 @@
 #define IPT_ADD_FWD_RULE_ARGS   "-t %s -A %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s 2>&1"
 #define IPT_ADD_DNAT_RULE_ARGS  "-t %s -A %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i 2>&1"
 #define IPT_ADD_SNAT_RULE_ARGS  "-t %s -A %s -p %i -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s 2>&1"
+#define IPT_TMP_COMMENT_ARGS    "-t %s -I %s %i -s 127.0.0.2 -m comment --comment " TMP_COMMENT " -j %s 2>&1"
 #define IPT_DEL_RULE_ARGS       "-t %s -D %s %i 2>&1"
 #define IPT_NEW_CHAIN_ARGS      "-t %s -N %s 2>&1"
 #define IPT_FLUSH_CHAIN_ARGS    "-t %s -F %s 2>&1"

@@ -48,11 +48,14 @@ EXTRA_DIST = \
     android/project/jni/libfwknop/get_libfko_files.sh \
     android/project/jni/logutils.h \
     android/project/jni/Android.mk \
-    ChangeLog* \
+    ChangeLog \
+    ChangeLog.git \
     CREDITS \
+    todo.org \
     extras/fwknop.init.debian \
     extras/fwknop.init.openwrt \
     extras/fwknop.init.redhat \
+    extras/myip/myip.c \
     extras/openwrt/README.openwrt \
     extras/openwrt/package/fwknop/Makefile \
     extras/openwrt/package/fwknop/files/fwknopd.init \
@@ -126,6 +129,7 @@ EXTRA_DIST = \
     test/conf/force_nat_access.conf \
     test/conf/future_expired_stanza_access.conf \
     test/conf/gpg_access.conf \
+    test/conf/gpg_no_pw_access.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/mismatch_open_ports_access.conf \
@@ -135,6 +139,7 @@ EXTRA_DIST = \
     test/conf/multi_stanzas_access.conf \
     test/conf/multi_stanzas_with_broken_keys.conf \
     test/conf/nat_fwknopd.conf \
+    test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/no_multi_source_match_access.conf \
     test/conf/no_source_match_access.conf \
     test/conf/no_subnet_source_match_access.conf \
@@ -166,4 +171,41 @@ EXTRA_DIST = \
 dist-hook:
 	rm -f $(distdir)/client/fwknop.8
 	rm -f $(distdir)/server/fwknopd.8
+
+uninstall-local:
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then \
+		rm -f $(sysconfdir)/fwknop/fwknopd.conf; \
+	fi
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf.inst; then \
+		rm -f $(sysconfdir)/fwknop/fwknopd.conf.inst; \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf; then \
+		rm -f $(sysconfdir)/fwknop/access.conf; \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf.inst; then \
+		rm -f $(sysconfdir)/fwknop/access.conf.inst; \
+	fi
+
+install-exec-hook:
+	if test -d $(sysconfdir)/fwknop; then \
+		chmod 700 $(sysconfdir)/fwknop; \
+	fi
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then :; \
+	else \
+		if test -f $(sysconfdir)/fwknop/fwknopd.conf.inst; then \
+			mv $(sysconfdir)/fwknop/fwknopd.conf.inst $(sysconfdir)/fwknop/fwknopd.conf; \
+		fi \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf; then :; \
+	else \
+		if test -f $(sysconfdir)/fwknop/access.conf.inst; then \
+			mv $(sysconfdir)/fwknop/access.conf.inst $(sysconfdir)/fwknop/access.conf; \
+		fi \
+	fi
+	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then \
+		chmod 600 $(sysconfdir)/fwknop/fwknopd.conf; \
+	fi
+	if test -f $(sysconfdir)/fwknop/access.conf; then \
+		chmod 600 $(sysconfdir)/fwknop/access.conf; \
+	fi
 
