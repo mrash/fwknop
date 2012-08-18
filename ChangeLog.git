@@ -1,4 +1,177 @@
-commit 8fafd4b80bf215da311dc2b53f33b0e4cd269944 (HEAD, refs/heads/master)
+commit f7e84da340a8f154edc27bcac9bb576bf35c220b (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Aug 18 15:03:04 2012 -0400
+
+    fwknop-2.0.2 release
+
+ ChangeLog    |    2 +-
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ todo.org     |    6 ++++++
+ 4 files changed, 9 insertions(+), 3 deletions(-)
+
+commit 38feb8d7b953ad1b2e4e2ff23d6b8113a6b1bcff (refs/remotes/origin/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Aug 17 21:02:24 2012 -0400
+
+    Better --resolve-url handling
+    
+    Chop any trailing '/' char, be more careful about handling incoming large HTTP
+    responses, print the HTTP request and response in --verbose --verbose mode.
+
+ client/http_resolve_host.c |   22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
+
+commit 760162a40a0796b25a9dba1e00e2e171d3505986
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Aug 16 22:30:09 2012 -0400
+
+    ipfw active/expire test bug fix (atoi() for config vars)
+
+ server/config_init.c |    8 ++++----
+ test/test-fwknop.pl  |    3 +--
+ 2 files changed, 5 insertions(+), 6 deletions(-)
+
+commit 2c55773bdbcf473fac1cec6a4c0765a9b38a9db2
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Aug 16 22:19:39 2012 -0400
+
+    added test/conf/ipfw_active_expire_equal_fwknopd.conf file
+
+ Makefile.am |    1 +
+ 1 file changed, 1 insertion(+)
+
+commit 3afd1aa762f1aa66bef9cdf875aea4b8bb23e567
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Aug 16 22:16:36 2012 -0400
+
+    [server] ipfw active/expire sets cannot be the same
+
+ test/conf/ipfw_active_expire_equal_fwknopd.conf |    6 +++
+ test/test-fwknop.pl                             |   55 ++++++++++++++++++-----
+ todo.org                                        |    7 +--
+ 3 files changed, 53 insertions(+), 15 deletions(-)
+
+commit fda5759b2b045aaa96ee1fa6d14fb3c17fe0fd01
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Aug 16 21:18:11 2012 -0400
+
+    todo.org notes update
+
+ todo.org |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+commit 3af8e4c51769495a702a28bd630abf37162ada6c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Aug 15 22:49:29 2012 -0400
+
+    [client] Added cipherdyne.com backup check in -R mode.
+    
+    Added backup check against a cipherdyne.com 'myip' cgi instance in -R mode if
+    the normal check against cipherdyne.org fails.
+
+ ChangeLog                  |    2 +
+ client/fwknop.c            |    2 +
+ client/fwknop_common.h     |    3 +-
+ client/http_resolve_host.c |  225 ++++++++++++++++++++++++--------------------
+ 4 files changed, 131 insertions(+), 101 deletions(-)
+
+commit a646a024d98f660f32991baa532bcbae1eceec60
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Aug 15 22:46:49 2012 -0400
+
+    added 'Pragma: no-cache' header
+
+ extras/myip/myip.c |   11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+commit 419fbafa0442caa1e9bd071bf4b178082fcc4a54
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Aug 14 22:52:24 2012 -0400
+
+    added extras/myip/myip.c
+
+ Makefile.am |    1 +
+ 1 file changed, 1 insertion(+)
+
+commit 37950df66f40e04cb428519f313f4697a198de45
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Aug 14 22:35:02 2012 -0400
+
+    bumped version to fwknop-2.0.2-pre3
+
+ VERSION      |    2 +-
+ configure.ac |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit c272339707229fa23d65e303d2ef7b163d855ec6
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Aug 14 22:34:03 2012 -0400
+
+    todo.org notes update
+
+ todo.org |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+commit 7ae45ecad109ebf9dc21c2d8a966e05b6c5c5b78
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Aug 14 22:31:03 2012 -0400
+
+    Added GPG_ALLOW_NO_PW to the fwknopd man page
+
+ doc/fwknopd.man.asciidoc |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+commit 66187a22af035425ded6df60dbf9f50cdab53938
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Aug 14 22:21:34 2012 -0400
+
+    minor defensive fko_destroy() calls in two error condition blocks
+
+ server/incoming_spa.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+commit dfe6679c5750b577ae3e923ecbd140d935628864
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Aug 14 21:51:00 2012 -0400
+
+    Added the extras/myip/ directory for client IP resolution code
+    
+    The myip.c file is deployed at http://www.cipherdyne.org/cgi-bin/myip
+    for fwknop client IP resolution.
+
+ extras/myip/myip.c |   22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+commit 385396b845c87997ce5b3506ae9e56c0184007a6
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Aug 13 22:53:29 2012 -0400
+
+    Added --enable-distcheck for 'make distcheck' verification
+
+ test/test-fwknop.pl |   28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+commit 863838d0ba54c666150d98c643c7cc0456404e18
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Aug 13 22:39:03 2012 -0400
+
+    [server] Preserve any existing config files in /etc/fwknop/
+    
+    Updated the 'make install' step to not overwrite any existing config files in
+    /etc/fwknop/ and instead install new copies from the source tree at
+    /etc/fwknop/fwknopd.conf.inst and /etc/fwknop/access.conf.inst
+
+ ChangeLog                |    5 +-
+ ChangeLog.git            |  313 ++++++++++++++++++++++++++++++++++++++++++++++
+ Makefile.am              |   41 +++++-
+ server/Makefile.am       |    3 +-
+ server/access.conf.inst  |    1 +
+ server/fwknopd.conf.inst |    1 +
+ todo.org                 |    8 ++
+ 7 files changed, 366 insertions(+), 6 deletions(-)
+
+commit 8fafd4b80bf215da311dc2b53f33b0e4cd269944
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Sun Aug 12 19:57:11 2012 -0400
 
@@ -77,7 +250,7 @@ Date:   Sat Aug 11 09:21:49 2012 -0400
  configure.ac |    2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
-commit 27ccfe35d36c7ba1d94734fb21a46c77aaf30719 (refs/remotes/origin/master)
+commit 27ccfe35d36c7ba1d94734fb21a46c77aaf30719
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Fri Aug 10 21:52:09 2012 -0400
 

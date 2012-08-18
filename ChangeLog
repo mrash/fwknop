@@ -1,4 +1,4 @@
-fwknop-2.0.2 (08//2012):
+fwknop-2.0.2 (08/18/2012):
     - [server] For GPG mode, added a new access.conf variable
       "GPG_ALLOW_NO_PW" to make it possible to leverage a server-side GPG key
       pair that has no associated password.  This comes in handy when a system
