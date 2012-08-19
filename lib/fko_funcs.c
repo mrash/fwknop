@@ -206,24 +206,24 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_mode(ctx, encryption_mode);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
         return res;
     }
+    ctx->initval = 0;
 
     /* Check HMAC if the access stanza had an HMAC key
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     if(hmac_key_len > 0 && hmac_key != NULL)
         res = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
         return res;
     }
+    ctx->initval = 0;
 
     /* Consider it initialized here.
     */
