@@ -4,7 +4,8 @@
 #
 # Purpose: To measure cross-packet SPA entropy on a byte by byte slice basis
 #          and produce gunplot graphs.  This is useful to measure SPA packet
-#          randomness after encryption.
+#          randomness after encryption and verify that it high as one would
+#          expect.
 #
 # Author: Michael Rash <mbr@cipherdyne.org>
 #
@@ -26,7 +27,12 @@ my $min_len = 0;
 my $lib_dir = '../../lib/.libs';
 my $fwknop_client_path = '../../client/.libs/fwknop';
 my $enc_mode = 'cbc';
+my $hmac_mode = 0;
+my $hmac_key_file = '../../test/conf/fwknoprc_default_hmac_base64_key';
 my $enable_fwknop_client_gpg = 0;
+my $gpg_recipient = '361BBAD4';
+my $gpg_signer    = '6A3FAD56';
+my $gpg_home_dir  = '../../test/conf/client-gpg';
 my $spa_key_file = '../../test/local_spa.key';
 my $help = 0;
 
@@ -57,7 +63,11 @@ die "[*] See '$0 -h' for usage information" unless (GetOptions(
     'prefix=s'          => \$prefix,
     'run-fwknop-client' => \$run_fwknop_client,
     'enc-mode=s'        => \$enc_mode,
-    'gpg'               => \$enable_fwknop_client_gpg,
+    'gpg-mode'          => \$enable_fwknop_client_gpg,
+    'gpg-recip=s'       => \$gpg_recipient,
+    'gpg-signer=s'      => \$gpg_signer,
+    'gpg-home=s'        => \$gpg_home_dir,
+    'hmac-mode'         => \$hmac_mode,
     'lib-dir=s'         => \$lib_dir,
     'Client-path=s'     => \$fwknop_client_path,
     'use-openssl'       => \$use_openssl,
@@ -233,12 +243,18 @@ sub run_fwknop_client() {
     }
 
     my $cmd = "LD_LIBRARY_PATH=$lib_dir $fwknop_client_path -A tcp/22 " .
-        "-a 127.0.0.2 -D 127.0.0.1 --get-key $spa_key_file " .
-        "-B $file_to_measure -b -v --test";
+        "-a 127.0.0.2 -D 127.0.0.1 -B $file_to_measure -b -v --test";
+
+    if ($hmac_mode) {
+        $cmd .= " --rc-file $hmac_key_file";
+    } else {
+        $cmd .= " --get-key $spa_key_file";
+    }
 
     if ($enable_fwknop_client_gpg) {
-        $cmd .= ' --gpg-recipient-key 361BBAD4 --gpg-signer-key 6A3FAD56 ' .
-            '--gpg-home-dir ../../test/conf/client-gpg';
+        $cmd .= " --gpg-recipient-key $gpg_recipient " .
+            "--gpg-signer-key $gpg_signer " .
+            "--gpg-home-dir $gpg_home_dir";
     } else {
         $cmd .= " -M $enc_mode";
     }
