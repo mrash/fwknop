@@ -48,6 +48,7 @@ my %cf = (
     'multi_src_access'     => "$conf_dir/multi_source_match_access.conf",
     'ip_src_match'         => "$conf_dir/ip_source_match_access.conf",
     'subnet_src_match'     => "$conf_dir/ip_source_match_access.conf",
+    'disable_aging'        => "$conf_dir/disable_aging_fwknopd.conf",
 );
 
 my $default_digest_file = "$run_dir/digest.cache";
@@ -508,7 +509,7 @@ my @tests = (
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
-        'detail'   => '-A <proto>/<port> specification',
+        'detail'   => '-A <proto>/<port> specification (proto)',
         'err_msg'  => 'permitted invalid -A <proto>/<port>',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
@@ -517,6 +518,19 @@ my @tests = (
             "$fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
         'fatal'    => $NO
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '-A <proto>/<port> specification (port)',
+        'err_msg'  => 'permitted invalid -A <proto>/<port>',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
+        'exec_err' => $YES,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -1072,6 +1086,52 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/60001)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'multi port (tcp/60001,udp/60001)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'multi port (tcp/22,udp/53,tcp/1234)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
@@ -1154,6 +1214,64 @@ my @tests = (
         'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
         'fatal'    => $NO
     },
+
+    ### fuzzing tests
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'overly long port value',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&overly_long_port,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'overly long proto value',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&overly_long_proto,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'negative port value',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&negative_port,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'null port value',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&null_port,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'null proto value',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&null_proto,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'server',
@@ -1287,6 +1405,24 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'GPG (no pw) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/60001)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GPG (no pw) SPA',
         'subcategory' => 'client+server',
@@ -1450,6 +1586,24 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle (tcp/60001)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose " .
+            "--gpg-recipient-key $gpg_server_key " .
+            "--gpg-signer-key $gpg_client_key " .
+            "--gpg-home-dir $gpg_client_home_dir",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
@@ -2112,6 +2266,261 @@ sub altered_non_base64_spa_data() {
     return $rv;
 }
 
+sub null_proto() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    ### this packet was generated with a modified fwknop client via the
+    ### following command line:
+    #
+    # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A /22 \
+    # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key \
+    # --verbose --verbose
+    #
+    my $spa_pkt =
+        '/JT14qxh9P4iy+CuUZahThaQjoEuL2zd46a+jL6sTrBZJSa6faUX4dH5fte/4ZJv+9f' .
+        'd/diWYKAUvdQ4DydPGlR7mwQa2W+obKpqrsTBz7D4054z6ATAOGpCtifakEVl1XRc2+' .
+        'hW04WpY8mdUNu9i+PrfPr7/KxqU';
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+    }
+
+    unless (&file_find_regex([qr/Args\scontain\sinvalid\sdata/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub null_port() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    ### this packet was generated with a modified fwknop client via the
+    ### following command line:
+    #
+    # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/ \
+    # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key \
+    # --verbose --verbose
+    #
+    my $spa_pkt =
+        '94nu7hvq6V/3A27GzjHwfPnPCQfs44ySlraIFYHOAqy5YqjkrBS67nH35tX55N1BrYZ' .
+        '07zvcT03keUhLE1Uo7Wme1nE7BfTOG5stmIK1UQI85sL52//lDHu+xCqNcL7GUKbVRz' .
+        'ekw+EUscVvUkrsRcVtSvOm+fCNo';
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+    }
+
+    unless (&file_find_regex([qr/Args\scontain\sinvalid\sdata/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub negative_port() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    ### this packet was generated with a modified fwknop client via the
+    ### following command line:
+    #
+    # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A \
+    # tcp/-33 -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key \
+    # --verbose --verbose
+    #
+    my $spa_pkt =
+        '/weoc+pEuQknZo8ImWTQBB+/PwSJ2/TcrmFoSkxpRXX4+jlUxoJakHrioxh8rhLmAD9' .
+        '8E4lMnq+EbM2XYdhs2alpZ5bovAFojMsYRWwr/BvRO4Um4Fmo9z9sY3DR477TXNYXBR' .
+        'iGXWxSL4u+AWSSePK3qiiYoRQVw';
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+    }
+
+    unless (&file_find_regex([qr/Args\scontain\sinvalid\sdata/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub overly_long_proto() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    ### this packet was generated with a modified fwknop client via the
+    ### following command line:
+    #
+    # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A \
+    # "tcp`perl -e '{print "A"x"28"}'`/1" -a 127.0.0.2 -D 127.0.0.1 \
+    # --get-key local_spa.key --verbose --verbose
+    #
+    # This problem was found by Fernando Arnaboldi of IOActive and exploits
+    # a buffer overflow in the fwknopd servers prior to 2.0.3 from
+    # authenticated clients.
+    #
+    my $spa_pkt =
+        '/im5MiJQmOdzqrdWXv+AjEtAm/HsLrdaTFcSw3ZskqpGOdDIrSCz3VXbFfv7qDkc5Y4' .
+        'q/k1mRXl9SGzpug87U5dZSyCdAr30z7/2kUFEPTGOQBi/x+L1t1pvdkm4xg13t09ldm' .
+        '5OD8KiV6qzqLOvN4ULJjvvJJWBZ9qvo/f2Q9Wf67g2KHiwS6EeCINAuMoUw/mNRQMa4' .
+        'oGnOXu3/DeWHJAwtSeh7EAr4';
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+    }
+
+    unless (&file_find_regex([qr/Args\scontain\sinvalid\sdata/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub overly_long_port() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    ### this packet was generated with a modified fwknop client via the
+    ### following command line:
+    #
+    # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A \
+    # "tcp/`perl -e '{print "1"x"40"}'`" -a 127.0.0.2 -D 127.0.0.1 \
+    # --get-key local_spa.key --verbose --verbose
+    #
+    # This problem was found by Fernando Arnaboldi of IOActive and exploits
+    # a buffer overflow in the fwknopd servers prior to 2.0.3 from
+    # authenticated clients.
+    #
+    my $spa_pkt =
+        '+JzxeTGlc6lwwzbJSrYChKx8bonWBIPajwGfEtGOaoglcMLbTY/GGXo/nxqiN1LykFS' .
+        'lDFXgrkyx2emJ7NGzYqQPUYZxLdZRocR9aRIptvXLLIPBcIpJASi/TUiJlw7CDFMcj0' .
+        'ptSBJJUZi0tozpKHETp3AgqfzyOy5FNs38aZsV5/sDl3Pt+kF7fTZJ+YLbmYY4yCUz2' .
+        'ZUYoCaJ7X78ULyJTi5eT7nug';
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+    }
+
+    unless (&file_find_regex([qr/Args\scontain\sinvalid\sdata/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
 sub altered_base64_spa_data() {
     my $test_hr = shift;
 
@@ -2357,7 +2766,7 @@ sub server_ignore_small_packets() {
 }
 
 sub client_server_interaction() {
-    my ($test_hr, $pkts_hr, $spa_client_flag, $fw_rules_flag) = @_;
+    my ($test_hr, $pkts_hr, $spa_client_flag) = @_;
 
     my $rv = 1;
     my $server_was_stopped = 1;

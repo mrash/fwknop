@@ -34,6 +34,8 @@
 #define PROTO_TCP   6
 #define PROTO_UDP   17
 
+#define ACCESS_BUF_LEN  32
+
 /* Function Prototypes
 */
 void parse_access_file(fko_srv_options_t *opts);
@@ -41,7 +43,7 @@ int compare_addr_list(acc_int_list_t *source_list, const uint32_t ip);
 int acc_check_port_access(acc_stanza_t *acc, char *port_str);
 int acc_check_gpg_remote_id(acc_stanza_t *acc, const char *gpg_id);
 void dump_access_list(const fko_srv_options_t *opts);
-void expand_acc_port_list(acc_port_list_t **plist, char *plist_str);
+int expand_acc_port_list(acc_port_list_t **plist, char *plist_str);
 void free_acc_stanzas(fko_srv_options_t *opts);
 void free_acc_port_list(acc_port_list_t *plist);
 
