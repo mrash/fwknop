@@ -1241,6 +1241,17 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'FUZZING',
+        'detail'   => 'overly long IP value',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&overly_long_ip,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'FUZZING',
         'detail'   => 'negative port value',
         'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&negative_port,
@@ -2383,6 +2394,62 @@ sub negative_port() {
         '/weoc+pEuQknZo8ImWTQBB+/PwSJ2/TcrmFoSkxpRXX4+jlUxoJakHrioxh8rhLmAD9' .
         '8E4lMnq+EbM2XYdhs2alpZ5bovAFojMsYRWwr/BvRO4Um4Fmo9z9sY3DR477TXNYXBR' .
         'iGXWxSL4u+AWSSePK3qiiYoRQVw';
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+    }
+
+    unless (&file_find_regex([qr/Args\scontain\sinvalid\sdata/],
+            $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub overly_long_ip() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    ### this packet was generated with a modified fwknop client via the
+    ### following command line:
+    #
+    # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/22 \
+    # -a `perl -e '{print "1"x"136"}'`.0.0.1 -D 127.0.0.1 \
+    # --get-key local_spa.key --verbose --verbose
+    #
+    # This problem was found by Fernando Arnaboldi of IOActive and exploits
+    # a condition in which pre-2.0.3 fwknopd servers fail to properly validate
+    # allow IP addresses from malicious authenticated clients.
+    #
+    my $spa_pkt =
+        '93f2rhsXLmBoPicWvYTqrbp+6lNqvWDc8dzmX2s3settwjBGRAXm33TB9agibEphrBu' .
+        '3d+7DEsivZLDS6Kz0JwdjX7t0J9c8es+DVNjlLnPtVNcxhs+2kUzimNrgysIXQRJ+GF' .
+        'GbhdxiXCqdy1vWxWpdoaZmY/CeGIkpoFJFPbJhCRLLX25UMvMF2wXj02MpI4d3t1/6W' .
+        'DM3taM3kZsiFv6HxFjAhIEuQ1oAg2OgRGXkDmT3jDNZMHUm0d4Ahm9LonG7RbOxq/B0' .
+        'qUvY8lkymbwvjelVok7Lvlc06cRhN4zm32D4V05g0vQS3PlX9C+mgph9DeAPVX+D8iZ' .
+        '8lGrxcPSfbCOW61k0MP+q1EhLZkc1qAm5g2+2cLNZcoBNEdh3yj8OTPZJyBVw';
 
     my @packets = (
         {

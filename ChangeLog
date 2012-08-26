@@ -7,6 +7,10 @@ fwknop-2.0.3 (08//2012):
       both the fwknopd server code along with libfko now perform stronger input
       validation of access request data.  These vulnerabilities affect
       pre-2.0.3 fwknop releases.
+    - [server] Fernando Arnaboldi from IOActive found a condition in which
+      the server did not properly validate allow IP addresses from malicious
+      authenticated clients.  This has been fixed with stronger allow IP
+      validation.
     - [test suite] Added a new fuzzing capability to ensure proper server-side
       input validation.  Fuzzing data is constructed with modified fwknop
       client code that is designed to emulate malicious behavior.

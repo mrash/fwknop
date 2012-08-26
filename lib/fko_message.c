@@ -266,23 +266,31 @@ int
 got_allow_ip(const char *msg)
 {
     const char *ndx     = msg;
-    int         dot_cnt = 0;
+    int         dot_ctr = 0, char_ctr = 0;
     int         res     = FKO_SUCCESS;
 
     while(*ndx != ',' && *ndx != '\0')
     {
+        char_ctr++;
+        if(char_ctr >= MAX_IPV4_STR_LEN)
+        {
+            res = FKO_ERROR_INVALID_ALLOW_IP;
+            break;
+        }
         if(*ndx == '.')
-            dot_cnt++;
+            dot_ctr++;
         else if(isdigit(*ndx) == 0)
         {
             res = FKO_ERROR_INVALID_ALLOW_IP;
             break;
         }
-
         ndx++;
     }
 
-    if(dot_cnt != 3)
+    if (char_ctr < MIN_IPV4_STR_LEN)
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+
+    if(dot_ctr != 3)
         res = FKO_ERROR_INVALID_ALLOW_IP;
 
     return(res);

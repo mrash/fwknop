@@ -58,3 +58,5 @@ Fernando Arnaboldi (IOActive)
     - Found important buffer overflow conditions for authenticated SPA clients
       in the fwknopd server (pre-2.0.3).  These findings enabled fixes to be
       developed along with a new fuzzing capability in the test suite.
+    - Found a condition in which an overly long IP from malicious authenticated
+      clients is not properly validated by the fwknopd server (pre-2.0.3).
