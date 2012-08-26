@@ -763,8 +763,9 @@ set_acc_defaults(fko_srv_options_t *opts)
 static int
 acc_data_is_valid(const acc_stanza_t *acc)
 {
-    if((acc->key == NULL || !strlen(acc->key))
+    if(((acc->key == NULL || !strlen(acc->key))
       && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw)))
+      || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0))
     {
         fprintf(stderr,
             "[*] No keys found for access stanza source: '%s'\n", acc->source
@@ -907,6 +908,7 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key), val);
+            add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {
@@ -972,13 +974,18 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
+            add_acc_bool(&(curr_acc->use_gpg), "Y");
         }
         else if(CONF_VAR_IS(var, "GPG_ALLOW_NO_PW"))
         {
-            if(curr_acc->gpg_decrypt_pw != NULL && curr_acc->gpg_decrypt_pw[0] != '\0')
-                free(curr_acc->gpg_decrypt_pw);
-
-            add_acc_string(&(curr_acc->gpg_decrypt_pw), "");
+            add_acc_bool(&(curr_acc->gpg_allow_no_pw), val);
+            if(curr_acc->gpg_allow_no_pw == 1)
+            {
+                add_acc_bool(&(curr_acc->use_gpg), "Y");
+                if(curr_acc->gpg_decrypt_pw != NULL && curr_acc->gpg_decrypt_pw[0] != '\0')
+                    free(curr_acc->gpg_decrypt_pw);
+                add_acc_string(&(curr_acc->gpg_decrypt_pw), "");
+            }
         }
         else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
         {
