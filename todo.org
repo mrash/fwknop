@@ -50,3 +50,13 @@
 ** [test suite] backwards compatibility tests
    The test suite should have the ability to test backwards compatibility
    between fwknop versions.
+** For Linux/Unix - a GNOME or KDE GUI app for the fwknop client.
+   Although there is currently a functioning web proxy that can serve as a
+   UI via a browser, it would be nice to have native GNOME and KDE GUI
+   wrappers for the fwknop client.
+** For Windows - VB and/or C# class wrappers around libfko.dll
+   Extend Windows support with VB and/or C# class wrappers around the
+   libfko.dll
+** Ruby bindings to libfko
+   Perl and Python bindings already exist for libfko, so add Ruby to this list
+   as well.
