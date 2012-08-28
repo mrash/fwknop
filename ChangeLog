@@ -1,4 +1,6 @@
 fwknop-2.0.3 (08//2012):
+    - Fixed RPM builds by including the $(DESTDIR) prefix for uninstall-local
+      and install-exec-hook stages in Makefile.am.
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
       execution vulnerabilities for malicious fwknop clients that manage to
       get past the authentication stage (so a such a client must be in
