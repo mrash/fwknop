@@ -60,3 +60,10 @@
 ** Ruby bindings to libfko
    Perl and Python bindings already exist for libfko, so add Ruby to this list
    as well.
+** [client] Update to not send SPA packet if Ctrl-C is used
+   The client currently sends an SPA packet when an encryption key is
+   requested but the user tries to exit out with Ctrl-C.
+** Add --disable-gpg arg to the autoconf configure script
+   There needs to be a way to easily disable libgpgme usage even if it is
+   installed - this could be done with a new --disablegpg argument to the
+   configure script.
