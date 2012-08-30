@@ -806,6 +806,8 @@ parse_access_file(fko_srv_options_t *opts)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
+    verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]);
+
     if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open access file: %s\n",

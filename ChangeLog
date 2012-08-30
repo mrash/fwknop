@@ -13,6 +13,14 @@ fwknop-2.0.3 (08//2012):
       the server did not properly validate allow IP addresses from malicious
       authenticated clients.  This has been fixed with stronger allow IP
       validation.
+    - [client+server] Fernando Arnaboldi from IOActive found that strict
+      filesystem permissions for various fwknop files are not verified.  Added
+      warnings whenever permissions are not strict enough, and ensured that
+      files created by the fwknop client and server are only set to user
+      read/write.
+    - [client] Fernando Arnaboldi from IOActive found a local buffer overflow
+      in --last processing with a maliciously constructed ~/.fwknop.run file.
+      This has been fixed with proper validation of .fwknop.run arguments.
     - [test suite] Added a new fuzzing capability to ensure proper server-side
       input validation.  Fuzzing data is constructed with modified fwknop
       client code that is designed to emulate malicious behavior.

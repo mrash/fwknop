@@ -28,8 +28,6 @@
  *
  *****************************************************************************
 */
-#include <stdio.h>
-#include <string.h>
 #include "utils.h"
 
 /* Generic hex dump function.
@@ -69,5 +67,69 @@ hex_dump(const unsigned char *data, const int size)
     }
 }
 
+int
+set_file_perms(const char *file)
+{
+    int res = 0;
+
+    res = chmod(file, S_IRUSR | S_IWUSR);
+
+    if(res != 0)
+    {
+        fprintf(stderr,
+            "[-] unable to chmod file %s to user read/write (0600, -rw-------): %s\n",
+            file,
+            strerror(errno)
+        );
+    }
+    return res;
+}
+
+int
+verify_file_perms_ownership(const char *file)
+{
+#if HAVE_STAT
+    struct stat st;
+
+    /* Every file that the fwknop client deals with should be owned
+     * by the user and permissions set to 600 (user read/write)
+    */
+    if((stat(file, &st)) != 0)
+    {
+        fprintf(stderr, "[-] unable to run stat() against file: %s: %s\n",
+            file, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    /* Make sure it is a regular file or symbolic link
+    */
+    if(S_ISREG(st.st_mode) != 1 && S_ISLNK(st.st_mode) != 1)
+    {
+        fprintf(stderr,
+            "[-] file: %s is not a regular file or symbolic link.\n",
+            file
+        );
+        return 0;
+    }
+
+    if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
+    {
+        fprintf(stderr,
+            "[-] file: %s permissions should only be user read/write (0600, -rw-------)\n",
+            file
+        );
+        return 0;
+    }
+
+    if(st.st_uid != getuid())
+    {
+        fprintf(stderr, "[-] file: %s not owned by current effective user id.\n",
+            file);
+        return 0;
+    }
+#endif
+
+    return 1;
+}
 
 /***EOF***/

@@ -147,17 +147,85 @@ dump_ctx(fko_ctx_t ctx)
 int
 is_valid_dir(const char *path)
 {
-    struct stat     st;
+#if HAVE_STAT
+    struct stat st;
 
     /* If we are unable to stat the given dir, then return with error.
     */
     if(stat(path, &st) != 0)
-        return(0);
+    {
+        fprintf(stderr, "[-] unable to run stat() directory: %s: %s\n",
+            path, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
 
     if(!S_ISDIR(st.st_mode))
         return(0);
+#endif /* HAVE_STAT */
 
     return(1);
+}
+
+int
+set_file_perms(const char *file)
+{
+    int res = 0;
+
+    res = chmod(file, S_IRUSR | S_IWUSR);
+
+    if(res != 0)
+    {
+        fprintf(stderr, "[-] unable to chmod file %s to user read/write: %s\n",
+            file, strerror(errno));
+    }
+    return res;
+}
+
+int
+verify_file_perms_ownership(const char *file)
+{
+#if HAVE_STAT
+    struct stat st;
+
+    /* Every file that the fwknop client deals with should be owned
+     * by the user and permissions set to 600 (user read/write)
+    */
+    if((stat(file, &st)) != 0)
+    {
+        fprintf(stderr, "[-] unable to run stat() against file: %s: %s\n",
+            file, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    /* Make sure it is a regular file
+    */
+    if(S_ISREG(st.st_mode) != 1 && S_ISLNK(st.st_mode) != 1)
+    {
+        fprintf(stderr,
+            "[-] file: %s is not a regular file or symbolic link.\n",
+            file
+        );
+        return 0;
+    }
+
+    if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
+    {
+        fprintf(stderr,
+            "[-] file: %s permissions should only be user read/write (0600, -rw-------)\n",
+            file
+        );
+        return 0;
+    }
+
+    if(st.st_uid != getuid())
+    {
+        fprintf(stderr, "[-] file: %s not owned by current effective user id\n",
+            file);
+        return 0;
+    }
+#endif
+
+    return 1;
 }
 
 /* Determine if a buffer contains only characters from the base64

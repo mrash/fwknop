@@ -124,9 +124,9 @@ parse_time_offset(const char *offset_str)
 static int
 create_fwknoprc(const char *rcfile)
 {
-    FILE    *rc;
+    FILE    *rc = NULL;
 
-    fprintf(stderr, "Creating initial rc file: %s.\n", rcfile);
+    fprintf(stdout, "[*] Creating initial rc file: %s.\n", rcfile);
 
     if ((rc = fopen(rcfile, "w")) == NULL)
     {
@@ -188,7 +188,7 @@ create_fwknoprc(const char *rcfile)
         "# User-provided named stanzas:\n"
         "\n"
         "# Example for a destination server of 192.168.1.20 to open access to \n"
-        "# SSH for an IP that is resoved exteranlly, and one with a NAT request\n"
+        "# SSH for an IP that is resolved externally, and one with a NAT request\n"
         "# for a specific source IP that maps port 8088 on the server\n"
         "# to port 88 on 192.168.1.55 with timeout.\n"
         "#\n"
@@ -209,6 +209,8 @@ create_fwknoprc(const char *rcfile)
     );
 
     fclose(rc);
+
+    set_file_perms(rcfile);
 
     return(0);
 }
@@ -439,6 +441,13 @@ process_rc(fko_cli_options_t *options)
 
     rcfile[rcf_offset] = PATH_SEP;
     strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
+
+    /* Check rc file permissions - if anything other than user read/write,
+     * then don't process it.  This change was made to help ensure that the
+     * client consumes a proper rc file with strict permissions set (thanks
+     * to Fernando Arnaboldi from IOActive for pointing this out).
+    */
+    verify_file_perms_ownership(rcfile);
 
     /* Open the rc file for reading, if it does not exist, then create
      * an initial .fwknoprc file with defaults and go on.

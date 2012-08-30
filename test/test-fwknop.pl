@@ -3096,7 +3096,26 @@ sub run_cmd() {
         close F;
     }
 
-    my $rv = ((system "$cmd > $cmd_out 2>&1") >> 8);
+    ### copy original file descriptors (credit: Perl Cookbook)
+    open OLDOUT, ">&STDOUT";
+    open OLDERR, ">&STDERR";
+
+    ### redirect command output
+    open STDOUT, "> $cmd_out" or die "[*] Could not redirect stdout: $!";
+    open STDERR, ">&STDOUT"   or die "[*] Could not dup stdout: $!";
+
+    my $rv = ((system $cmd) >> 8);
+
+    close STDOUT or die "[*] Could not close STDOUT: $!";
+    close STDERR or die "[*] Could not close STDERR: $!";
+
+    ### restore original filehandles
+    open STDERR, ">&OLDERR" or die "[*] Could not restore stderr: $!";
+    open STDOUT, ">&OLDOUT" or die "[*] Could not restore stdout: $!";
+
+    ### close the old copies
+    close OLDOUT or die "[*] Could not close OLDOUT: $!";
+    close OLDERR or die "[*] Could not close OLDERR: $!";
 
     open C, "< $cmd_out" or die "[*] Could not open $cmd_out: $!";
     my @cmd_lines = <C>;
