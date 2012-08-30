@@ -652,6 +652,20 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'permissions check cycle (tcp/22)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&permissions_check,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/permissions\sshould\sonly\sbe\suser/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'client IP resolve (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
@@ -2203,6 +2217,26 @@ sub client_send_spa_packet() {
     return 1;
 }
 
+sub permissions_check() {
+    my $test_hr = shift;
+
+    my $rv = 0;
+    chmod 0777, $cf{'def'} or die $!;
+    chmod 0777, $cf{'def_access'} or die $!;
+
+    $rv = &spa_cycle($test_hr);
+
+    chmod 0600, $cf{'def'} or die $!;
+    chmod 0600, $cf{'def_access'} or die $!;
+
+    if ($test_hr->{'server_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'server_positive_output_matches'},
+            $MATCH_ALL, $server_test_file);
+    }
+    return $rv;
+}
+
 sub spa_cycle() {
     my $test_hr = shift;
 
@@ -3174,6 +3208,7 @@ sub init() {
 
     for my $name (keys %cf) {
         die "[*] $cf{$name} does not exist" unless -e $cf{$name};
+        chmod 0600, $cf{$name} or die "[*] Could not chmod 0600 $cf{$name}";
     }
 
     if (-d $output_dir) {
@@ -3198,9 +3233,11 @@ sub init() {
     } else {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
     }
-    unless (-d $run_dir) {
-        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+
+    if (-d $run_dir) {
+        rmtree $run_dir or die $!;
     }
+    mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
 
     for my $file (glob("$output_dir/*.test")) {
         unlink $file or die "[*] Could not unlink($file)";
