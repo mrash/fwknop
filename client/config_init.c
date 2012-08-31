@@ -88,6 +88,11 @@ parse_time_offset(const char *offset_str)
         if (isdigit(offset_str[i])) {
             offset_digits[j] = offset_str[i];
             j++;
+            if(j >= MAX_TIME_STR_LEN)
+            {
+                fprintf(stderr, "Invalid time offset: %s", offset_str);
+                exit(EXIT_FAILURE);
+            }
         } else if (offset_str[i] == 'm' || offset_str[i] == 'M') {
             offset_type = TIME_OFFSET_MINUTES;
             break;

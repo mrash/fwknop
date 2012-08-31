@@ -147,7 +147,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
         hints.ai_protocol = IPPROTO_TCP;
     }
 
-    sprintf(port_str, "%d", options->spa_dst_port);
+    snprintf(port_str, MAX_PORT_STR_LEN, "%d", options->spa_dst_port);
 
     error = getaddrinfo(options->spa_server_str, port_str, &hints, &result);
 

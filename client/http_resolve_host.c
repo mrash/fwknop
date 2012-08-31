@@ -46,9 +46,9 @@
 
 struct url
 {
-    char    port[6];
-    char    host[256];
-    char    path[1024];
+    char    port[MAX_PORT_STR_LEN];
+    char    host[MAX_URL_HOST_LEN+1];
+    char    path[MAX_URL_PATH_LEN+1];
 };
 
 static int
