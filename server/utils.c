@@ -154,7 +154,7 @@ is_valid_dir(const char *path)
     */
     if(stat(path, &st) != 0)
     {
-        fprintf(stderr, "[-] unable to run stat() directory: %s: %s\n",
+        fprintf(stderr, "[-] unable to stat() directory: %s: %s\n",
             path, strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -192,7 +192,7 @@ verify_file_perms_ownership(const char *file)
     */
     if((stat(file, &st)) != 0)
     {
-        fprintf(stderr, "[-] unable to run stat() against file: %s: %s\n",
+        fprintf(stderr, "[-] unable to stat() file: %s: %s\n",
             file, strerror(errno));
         exit(EXIT_FAILURE);
     }
