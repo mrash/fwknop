@@ -33,6 +33,7 @@
 
 #include <time.h>
 #include "fko_limits.h"
+#include "fko_message.h"
 
 #ifdef __cplusplus
 extern "C" {

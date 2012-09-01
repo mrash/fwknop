@@ -28,6 +28,7 @@
  *
  *****************************************************************************
 */
+#include "fwknop_common.h"
 #include "utils.h"
 
 /* Generic hex dump function.
