@@ -558,14 +558,13 @@ show_last_command(void)
     exit(EXIT_FAILURE);
 #endif
 
-    verify_file_perms_ownership(args_save_file);
-
     if (get_save_file(args_save_file)) {
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
             fprintf(stderr, "Could not open args file: %s\n",
                 args_save_file);
             exit(EXIT_FAILURE);
         }
+        verify_file_perms_ownership(args_save_file);
         if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
             printf("Last fwknop client command line: %s", args_str);
         } else {
@@ -603,14 +602,13 @@ run_last_args(fko_cli_options_t *options)
 
     if (get_save_file(args_save_file))
     {
-        verify_file_perms_ownership(args_save_file);
-
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
         {
             fprintf(stderr, "Could not open args file: %s\n",
                 args_save_file);
             exit(EXIT_FAILURE);
         }
+        verify_file_perms_ownership(args_save_file);
         if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL)
         {
             args_str[MAX_LINE_LEN-1] = '\0';
