@@ -582,7 +582,8 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
 
     /* Parse and expand our access message.
     */
-    expand_acc_port_list(&port_list, spadat->spa_message_remain);
+    if(expand_acc_port_list(&port_list, spadat->spa_message_remain) != 1)
+        return res;
 
     /* Start at the top of the proto-port list...
     */

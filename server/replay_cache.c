@@ -261,10 +261,14 @@ replay_file_cache_init(fko_srv_options_t *opts)
         fprintf(digest_file_ptr,
             "# <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>\n");
         fclose(digest_file_ptr);
+
+        set_file_perms(opts->config[CONF_DIGEST_FILE]);
         return(0);
     }
 
-    /* File exist, and we have access - create in-memory digest cache
+    verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE]);
+
+    /* File exists, and we have access - create in-memory digest cache
     */
     if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "r")) == NULL)
     {

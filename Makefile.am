@@ -13,7 +13,7 @@ SUBDIRS = \
     common \
     $(CLIENT_DIR) \
     $(SERVER_DIR) \
-    doc 
+    doc
 
 EXTRA_DIST = \
     android/COPYING \
@@ -149,6 +149,7 @@ EXTRA_DIST = \
     test/conf/require_user_access.conf \
     test/conf/subnet_source_match_access.conf \
     test/conf/local_nat_fwknopd.conf \
+    test/conf/disable_aging_fwknopd.conf \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
@@ -173,39 +174,38 @@ dist-hook:
 	rm -f $(distdir)/server/fwknopd.8
 
 uninstall-local:
-	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then \
-		rm -f $(sysconfdir)/fwknop/fwknopd.conf; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; then \
+		rm -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; \
 	fi
-	if test -f $(sysconfdir)/fwknop/fwknopd.conf.inst; then \
-		rm -f $(sysconfdir)/fwknop/fwknopd.conf.inst; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf.inst; then \
+		rm -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf.inst; \
 	fi
-	if test -f $(sysconfdir)/fwknop/access.conf; then \
-		rm -f $(sysconfdir)/fwknop/access.conf; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf; then \
+		rm -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf; \
 	fi
-	if test -f $(sysconfdir)/fwknop/access.conf.inst; then \
-		rm -f $(sysconfdir)/fwknop/access.conf.inst; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf.inst; then \
+		rm -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf.inst; \
 	fi
 
 install-exec-hook:
-	if test -d $(sysconfdir)/fwknop; then \
-		chmod 700 $(sysconfdir)/fwknop; \
+	if test -d $(DESTDIR)$(sysconfdir)/fwknop; then \
+		chmod 700 $(DESTDIR)$(sysconfdir)/fwknop; \
 	fi
-	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then :; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; then :; \
 	else \
-		if test -f $(sysconfdir)/fwknop/fwknopd.conf.inst; then \
-			mv $(sysconfdir)/fwknop/fwknopd.conf.inst $(sysconfdir)/fwknop/fwknopd.conf; \
+		if test -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf.inst; then \
+			mv $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf.inst $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; \
 		fi \
 	fi
-	if test -f $(sysconfdir)/fwknop/access.conf; then :; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf; then :; \
 	else \
-		if test -f $(sysconfdir)/fwknop/access.conf.inst; then \
-			mv $(sysconfdir)/fwknop/access.conf.inst $(sysconfdir)/fwknop/access.conf; \
+		if test -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf.inst; then \
+			mv $(DESTDIR)$(sysconfdir)/fwknop/access.conf.inst $(DESTDIR)$(sysconfdir)/fwknop/access.conf; \
 		fi \
 	fi
-	if test -f $(sysconfdir)/fwknop/fwknopd.conf; then \
-		chmod 600 $(sysconfdir)/fwknop/fwknopd.conf; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; then \
+		chmod 600 $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; \
 	fi
-	if test -f $(sysconfdir)/fwknop/access.conf; then \
-		chmod 600 $(sysconfdir)/fwknop/access.conf; \
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf; then \
+		chmod 600 $(DESTDIR)$(sysconfdir)/fwknop/access.conf; \
 	fi
-

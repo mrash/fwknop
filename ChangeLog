@@ -1,3 +1,30 @@
+fwknop-2.0.3 (08//2012):
+    - Fixed RPM builds by including the $(DESTDIR) prefix for uninstall-local
+      and install-exec-hook stages in Makefile.am.
+    - [server] Fernando Arnaboldi from IOActive found several DoS/code
+      execution vulnerabilities for malicious fwknop clients that manage to
+      get past the authentication stage (so a such a client must be in
+      possession of a valid access.conf encryption key).  These vulnerbilities
+      manifested themselves in the handling of malformed access requests, and
+      both the fwknopd server code along with libfko now perform stronger input
+      validation of access request data.  These vulnerabilities affect
+      pre-2.0.3 fwknop releases.
+    - [server] Fernando Arnaboldi from IOActive found a condition in which
+      the server did not properly validate allow IP addresses from malicious
+      authenticated clients.  This has been fixed with stronger allow IP
+      validation.
+    - [client+server] Fernando Arnaboldi from IOActive found that strict
+      filesystem permissions for various fwknop files are not verified.  Added
+      warnings whenever permissions are not strict enough, and ensured that
+      files created by the fwknop client and server are only set to user
+      read/write.
+    - [client] Fernando Arnaboldi from IOActive found a local buffer overflow
+      in --last processing with a maliciously constructed ~/.fwknop.run file.
+      This has been fixed with proper validation of .fwknop.run arguments.
+    - [test suite] Added a new fuzzing capability to ensure proper server-side
+      input validation.  Fuzzing data is constructed with modified fwknop
+      client code that is designed to emulate malicious behavior.
+
 fwknop-2.0.2 (08/18/2012):
     - [server] For GPG mode, added a new access.conf variable
       "GPG_ALLOW_NO_PW" to make it possible to leverage a server-side GPG key

@@ -51,6 +51,8 @@ int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     unsigned int exit_status);
 
+#define MAX_CMDLINE_ARGS    50  /* should be way more than enough */
+
 int
 main(int argc, char **argv)
 {
@@ -640,6 +642,7 @@ show_last_command(void)
                 args_save_file);
             exit(EXIT_FAILURE);
         }
+        verify_file_perms_ownership(args_save_file);
         if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
             printf("Last fwknop client command line: %s", args_str);
         } else {
@@ -665,7 +668,7 @@ run_last_args(fko_cli_options_t *options)
     char            args_save_file[MAX_PATH_LEN] = {0};
     char            args_str[MAX_LINE_LEN] = {0};
     char            arg_tmp[MAX_LINE_LEN]  = {0};
-    char           *argv_new[200];  /* should be way more than enough */
+    char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
 
 
 #ifdef WIN32
@@ -677,6 +680,8 @@ run_last_args(fko_cli_options_t *options)
 
     if (get_save_file(args_save_file))
     {
+        verify_file_perms_ownership(args_save_file);
+
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
         {
             fprintf(stderr, "Could not open args file: %s\n",
@@ -701,12 +706,17 @@ run_last_args(fko_cli_options_t *options)
                     argv_new[argc_new] = malloc(strlen(arg_tmp)+1);
                     if (argv_new[argc_new] == NULL)
                     {
-                        fprintf(stderr, "malloc failure for cmd line arg.\n");
+                        fprintf(stderr, "[*] malloc failure for cmd line arg.\n");
                         exit(EXIT_FAILURE);
                     }
                     strlcpy(argv_new[argc_new], arg_tmp, strlen(arg_tmp)+1);
                     current_arg_ctr = 0;
                     argc_new++;
+                    if(argc_new >= MAX_CMDLINE_ARGS)
+                    {
+                        fprintf(stderr, "[*] max command line args exceeded.\n");
+                        exit(EXIT_FAILURE);
+                    }
                 }
             }
         }
@@ -739,7 +749,6 @@ save_args(int argc, char **argv)
     return;
 #endif
 
-
     if (get_save_file(args_save_file)) {
         if ((args_file_ptr = fopen(args_save_file, "w")) == NULL) {
             fprintf(stderr, "Could not open args file: %s\n",
@@ -758,6 +767,9 @@ save_args(int argc, char **argv)
         fprintf(args_file_ptr, "%s\n", args_str);
         fclose(args_file_ptr);
     }
+
+    set_file_perms(args_save_file);
+
     return;
 }
 

@@ -363,7 +363,7 @@ incoming_spa(fko_srv_options_t *opts)
         */
         enc_type = fko_encryption_type((char *)spa_pkt->packet_data);
 
-        if(enc_type == FKO_ENCRYPTION_RIJNDAEL)
+        if(acc->use_rijndael && enc_type == FKO_ENCRYPTION_RIJNDAEL)
         {
             if (acc->key == NULL)
             {
@@ -379,12 +379,12 @@ incoming_spa(fko_srv_options_t *opts)
                 acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
                 acc->hmac_key_len);
         }
-        else if(enc_type == FKO_ENCRYPTION_GPG)
+        else if(acc->use_gpg && enc_type == FKO_ENCRYPTION_GPG)
         {
             /* For GPG we create the new context without decrypting on the fly
              * so we can set some GPG parameters first.
             */
-            if(acc->gpg_decrypt_pw != NULL)
+            if(acc->gpg_decrypt_pw != NULL || acc->gpg_allow_no_pw)
             {
                 res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
                         0, acc->encryption_mode, NULL, 0);
@@ -443,19 +443,11 @@ incoming_spa(fko_srv_options_t *opts)
                 res = fko_decrypt_spa_data(ctx, acc->gpg_decrypt_pw, 0);
 
             }
-            else
-            {
-                log_msg(LOG_ERR,
-                    "(stanza #%d) No GPG_DECRYPT_PW for GPG encrypted messages, set GPG_ALLOW_NO_PW",
-                    stanza_num
-                );
-                acc = acc->next;
-                continue;
-            }
         }
         else
         {
-            log_msg(LOG_ERR, "(stanza #%d) Unable to determing encryption type. Got type=%i.",
+            log_msg(LOG_ERR,
+                "(stanza #%d) No stanza encryption mode match for encryption type: %i.",
                 stanza_num, enc_type);
             acc = acc->next;
             continue;

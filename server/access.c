@@ -213,7 +213,7 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
 /* Take an IP or Subnet/Mask and convert it to mask for later
  * comparisons of incoming source IPs against this mask.
 */
-static void
+static int
 add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
 {
     char                *ndx;
@@ -278,7 +278,11 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
             log_msg(LOG_ERR,
                 "Fatal error parsing IP to int for: %s", ip_str
             );
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+
+            free(new_sle);
+            new_sle = NULL;
+
+            return 0;
         }
 
         /* Store our mask converted from CIDR to a 32-bit value.
@@ -290,15 +294,17 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         */
         new_sle->maddr = ntohl(in.s_addr) & new_sle->mask;
     }
+    return 1;
 }
 
 /* Expand the access SOURCE string to a list of masks.
 */
-void
+static int
 expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
 {
     char           *ndx, *start;
-    char            buf[32];
+    char            buf[ACCESS_BUF_LEN];
+    int             res = 1;
 
     start = acc->source;
 
@@ -311,8 +317,15 @@ expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
             while(isspace(*start))
                 start++;
 
+            if(((ndx-start)+1) >= ACCESS_BUF_LEN)
+                return 0;
+
             strlcpy(buf, start, (ndx-start)+1);
-            add_source_mask(opts, acc, buf);
+
+            res = add_source_mask(opts, acc, buf);
+            if(res == 0)
+                return res;
+
             start = ndx+1;
         }
     }
@@ -322,15 +335,21 @@ expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
     while(isspace(*start))
         start++;
 
+    if(((ndx-start)+1) >= ACCESS_BUF_LEN)
+        return 0;
+
     strlcpy(buf, start, (ndx-start)+1);
-    add_source_mask(opts, acc, buf);
+
+    res = add_source_mask(opts, acc, buf);
+
+    return res;
 }
 
 static int
 parse_proto_and_port(char *pstr, int *proto, int *port)
 {
     char    *ndx;
-    char    proto_str[32];
+    char    proto_str[ACCESS_BUF_LEN];
 
     /* Parse the string into its components.
     */
@@ -342,9 +361,23 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
         return(-1);
     }
 
-    strlcpy(proto_str, pstr,  (ndx - pstr)+1);
+    if(((ndx - pstr)+1) >= ACCESS_BUF_LEN)
+    {
+        log_msg(LOG_ERR,
+            "Parse error on access port entry: %s", pstr);
+        return(-1);
+    }
+
+    strlcpy(proto_str, pstr, (ndx - pstr)+1);
 
     *port = atoi(ndx+1);
+
+    if((*port < 0) || (*port > MAX_PORT))
+    {
+        log_msg(LOG_ERR,
+            "Invalid port in access request: %s", pstr);
+        return(-1);
+    }
 
     if(strcasecmp(proto_str, "tcp") == 0)
         *proto = PROTO_TCP;
@@ -354,7 +387,6 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
     {
         log_msg(LOG_ERR,
             "Invalid protocol in access port entry: %s", pstr);
-
         return(-1);
     }
 
@@ -457,15 +489,15 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
 
 /* Expand a proto/port access string to a list of access proto-port struct.
 */
-void
+int
 expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
 {
     char           *ndx, *start;
-    char            buf[32];
+    char            buf[ACCESS_BUF_LEN];
 
     start = plist_str;
 
-    for(ndx = start; *ndx; ndx++)
+    for(ndx = start; *ndx != '\0'; ndx++)
     {
         if(*ndx == ',')
         {
@@ -473,6 +505,9 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
             */
             while(isspace(*start))
                 start++;
+
+            if(((ndx-start)+1) >= ACCESS_BUF_LEN)
+                return 0;
 
             strlcpy(buf, start, (ndx-start)+1);
             add_port_list_ent(plist, buf);
@@ -485,9 +520,14 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
     while(isspace(*start))
         start++;
 
+    if(((ndx-start)+1) >= ACCESS_BUF_LEN)
+        return 0;
+
     strlcpy(buf, start, (ndx-start)+1);
 
     add_port_list_ent(plist, buf);
+
+    return 1;
 }
 
 /* Expand a comma-separated string into a simple acc_string_list.
@@ -652,7 +692,11 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
     {
         /* Expand the source string to 32-bit integer masks foreach entry.
         */
-        expand_acc_source(opts, acc);
+        if(expand_acc_source(opts, acc) == 0)
+        {
+            acc = acc->next;
+            continue;
+        }
 
         /* Now expand the open_ports string.
         */
@@ -782,8 +826,9 @@ set_acc_defaults(fko_srv_options_t *opts)
 static int
 acc_data_is_valid(const acc_stanza_t *acc)
 {
-    if(acc->key_len < 0 || ((acc->key == NULL && acc->key_base64 == NULL)
-      && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw))))
+    if(((acc->key == NULL || !strlen(acc->key))
+      && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw)))
+      || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0))
     {
         fprintf(stderr,
             "[*] No keys found for access stanza source: '%s'\n", acc->source
@@ -823,6 +868,8 @@ parse_access_file(fko_srv_options_t *opts)
 
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
+
+    verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]);
 
     if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
     {
@@ -934,6 +981,7 @@ parse_access_file(fko_srv_options_t *opts)
             }
             add_acc_string(&(curr_acc->key), val);
             curr_acc->key_len = strlen(curr_acc->key);
+            add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
         else if(CONF_VAR_IS(var, "KEY_BASE64"))
         {
@@ -954,6 +1002,7 @@ parse_access_file(fko_srv_options_t *opts)
             add_acc_string(&(curr_acc->key_base64), val);
             add_acc_b64_string(&(curr_acc->key),
                 &(curr_acc->key_len), curr_acc->key_base64);
+            add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
         {
@@ -1049,13 +1098,18 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
+            add_acc_bool(&(curr_acc->use_gpg), "Y");
         }
         else if(CONF_VAR_IS(var, "GPG_ALLOW_NO_PW"))
         {
-            if(curr_acc->gpg_decrypt_pw != NULL && curr_acc->gpg_decrypt_pw[0] != '\0')
-                free(curr_acc->gpg_decrypt_pw);
-
-            add_acc_string(&(curr_acc->gpg_decrypt_pw), "");
+            add_acc_bool(&(curr_acc->gpg_allow_no_pw), val);
+            if(curr_acc->gpg_allow_no_pw == 1)
+            {
+                add_acc_bool(&(curr_acc->use_gpg), "Y");
+                if(curr_acc->gpg_decrypt_pw != NULL && curr_acc->gpg_decrypt_pw[0] != '\0')
+                    free(curr_acc->gpg_decrypt_pw);
+                add_acc_string(&(curr_acc->gpg_decrypt_pw), "");
+            }
         }
         else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
         {
@@ -1199,9 +1253,9 @@ compare_port_list(acc_port_list_t *in, acc_port_list_t *ac, const int match_any)
 int
 acc_check_port_access(acc_stanza_t *acc, char *port_str)
 {
-    int             res     = 1;
+    int             res = 1, ctr = 0;
 
-    char            buf[32];
+    char            buf[ACCESS_BUF_LEN];
     char           *ndx, *start;
 
     acc_port_list_t *o_pl   = acc->oport_list;
@@ -1214,14 +1268,34 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
     /* Create our own internal port_list from the incoming SPA data
      * for comparison.
     */
-    for(ndx = start; *ndx; ndx++)
+    for(ndx = start; *ndx != '\0'; ndx++)
     {
         if(*ndx == ',')
         {
+            if((ctr >= ACCESS_BUF_LEN)
+                    || (((ndx-start)+1) >= ACCESS_BUF_LEN))
+            {
+                log_msg(LOG_ERR,
+                    "Unable to create acc_port_list from incoming data: %s",
+                    port_str
+                );
+                return(0);
+            }
             strlcpy(buf, start, (ndx-start)+1);
             add_port_list_ent(&in_pl, buf);
             start = ndx+1;
+            ctr = 0;
         }
+        ctr++;
+    }
+    if((ctr >= ACCESS_BUF_LEN)
+            || (((ndx-start)+1) >= ACCESS_BUF_LEN))
+    {
+        log_msg(LOG_ERR,
+            "Unable to create acc_port_list from incoming data: %s",
+            port_str
+        );
+        return(0);
     }
     strlcpy(buf, start, (ndx-start)+1);
     add_port_list_ent(&in_pl, buf);

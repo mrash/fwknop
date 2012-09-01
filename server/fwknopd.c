@@ -496,10 +496,22 @@ make_dir_path(const char *run_dir)
             if(stat(tmp_path, &st) != 0)
             {
                 if(errno == ENOENT)
+                {
                     res = mkdir(tmp_path, S_IRWXU);
+                    if(res != 0)
+                        return res;
 
-                if(res != 0)
-                    return res;
+                    /* run stat() against the component since we just
+                     * created it
+                    */
+                    if(stat(tmp_path, &st) != 0)
+                    {
+                        log_msg(LOG_ERR,
+                            "Could not create component: %s of %s\n\n", tmp_path, run_dir
+                        );
+                        return(ENOTDIR);
+                    }
+                }
             }
 
             if(! S_ISDIR(st.st_mode))
@@ -664,10 +676,12 @@ get_running_pid(const fko_srv_options_t *opts)
     char    buf[PID_BUFLEN] = {0};
     pid_t   rpid            = 0;
 
+
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 
     if(op_fd > 0)
     {
+        verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]);
         if (read(op_fd, buf, PID_BUFLEN) > 0)
         {
             buf[PID_BUFLEN-1] = '\0';

@@ -200,6 +200,8 @@ validate_access_msg(const char *msg)
     do {
         ndx++;
         res = validate_proto_port_spec(ndx);
+        if(res != FKO_SUCCESS)
+            break;
     } while((ndx = strchr(ndx, ',')));
 
     return(res);
@@ -208,14 +210,13 @@ validate_access_msg(const char *msg)
 int
 validate_proto_port_spec(const char *msg)
 {
-    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
+    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE), port_str_len = 0;
     const char   *ndx   = msg;
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
         return(FKO_ERROR_INVALID_DATA);
 
-    /* Now check for proto/port string.  Currenly we only allow protos
-     * 'tcp', 'udp', and 'icmp'.
+    /* Now check for proto/port string.
     */
     if(strncmp(ndx, "tcp", 3)
       && strncmp(ndx, "udp", 3)
@@ -224,19 +225,25 @@ validate_proto_port_spec(const char *msg)
         return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
 
     ndx = strchr(ndx, '/');
-    if(ndx == NULL || (1+(ndx - msg)) >= startlen)
+    if(ndx == NULL || ((1+(ndx - msg)) > MAX_PROTO_STR_LEN))
         return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
 
-    /* Skip over the ',' and make sure we only have digits.
+    /* Skip over the '/' and make sure we only have digits.
     */
     ndx++;
-    while(*ndx != '\0')
+
+    /* Must have at least one digit for the port number
+    */
+    if(isdigit(*ndx) == 0)
+        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+
+    while(*ndx != '\0' && *ndx != ',')
     {
-        if(isdigit(*ndx) == 0)
+        port_str_len++;
+        if((isdigit(*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN))
             return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
         ndx++;
     }
-
     return(FKO_SUCCESS);
 }
 
@@ -259,23 +266,31 @@ int
 got_allow_ip(const char *msg)
 {
     const char *ndx     = msg;
-    int         dot_cnt = 0;
+    int         dot_ctr = 0, char_ctr = 0;
     int         res     = FKO_SUCCESS;
 
     while(*ndx != ',' && *ndx != '\0')
     {
+        char_ctr++;
+        if(char_ctr >= MAX_IPV4_STR_LEN)
+        {
+            res = FKO_ERROR_INVALID_ALLOW_IP;
+            break;
+        }
         if(*ndx == '.')
-            dot_cnt++;
+            dot_ctr++;
         else if(isdigit(*ndx) == 0)
         {
             res = FKO_ERROR_INVALID_ALLOW_IP;
             break;
         }
-
         ndx++;
     }
 
-    if(dot_cnt != 3)
+    if (char_ctr < MIN_IPV4_STR_LEN)
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+
+    if(dot_ctr != 3)
         res = FKO_ERROR_INVALID_ALLOW_IP;
 
     return(res);

@@ -278,6 +278,7 @@ typedef struct acc_stanza
     char                *hmac_key;
     int                 hmac_key_len;
     char                *hmac_key_base64;
+    unsigned char       use_rijndael;
     int                 fw_access_timeout;
     unsigned char       enable_cmd_exec;
     char                *cmd_exec_user;
@@ -289,6 +290,8 @@ typedef struct acc_stanza
     char                *gpg_decrypt_pw;
     unsigned char       gpg_require_sig;
     unsigned char       gpg_ignore_sig_error;
+    unsigned char       use_gpg;
+    unsigned char       gpg_allow_no_pw;
     char                *gpg_remote_id;
     acc_string_list_t   *gpg_remote_id_list;
     time_t              access_expire_time;

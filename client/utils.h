@@ -31,11 +31,24 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <errno.h>
+
+#if HAVE_CONFIG_H
+  #include "config.h"
+#endif
 
 /* Prototypes
 */
 void hex_dump(const unsigned char *data, const int size);
 int is_base64(const unsigned char *buf, const unsigned short int len);
+int set_file_perms(const char *file);
+int verify_file_perms_ownership(const char *file);
+
 size_t strlcat(char *dst, const char *src, size_t siz);
 size_t strlcpy(char *dst, const char *src, size_t siz);
 
