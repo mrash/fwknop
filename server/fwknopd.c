@@ -677,11 +677,12 @@ get_running_pid(const fko_srv_options_t *opts)
     pid_t   rpid            = 0;
 
 
+    verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]);
+
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 
     if(op_fd > 0)
     {
-        verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]);
         if (read(op_fd, buf, PID_BUFLEN) > 0)
         {
             buf[PID_BUFLEN-1] = '\0';

@@ -448,7 +448,7 @@ process_rc(fko_cli_options_t *options)
     strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
 
     /* Check rc file permissions - if anything other than user read/write,
-     * then don't process it.  This change was made to help ensure that the
+     * then throw a warning.  This change was made to help ensure that the
      * client consumes a proper rc file with strict permissions set (thanks
      * to Fernando Arnaboldi from IOActive for pointing this out).
     */
