@@ -501,6 +501,12 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
             while(isspace(*start))
                 start++;
 
+            if(((ndx-start)+1) >= 1024)
+            {
+                fprintf(stderr, "Fatal str->list too long");
+                exit(EXIT_FAILURE);
+            }
+
             strlcpy(buf, start, (ndx-start)+1);
             add_string_list_ent(stlist, buf);
             start = ndx+1;
@@ -511,6 +517,12 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
     */
     while(isspace(*start))
         start++;
+
+    if(((ndx-start)+1) >= 1024)
+    {
+        fprintf(stderr, "Fatal str->list too long");
+        exit(EXIT_FAILURE);
+    }
 
     strlcpy(buf, start, (ndx-start)+1);
 
