@@ -57,7 +57,8 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
+    snprintf(plain, strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2,
+            "%s:%s", ctx->encoded_msg, ctx->digest);
 
     /* Make a bucket for the encrypted version and populate it.
     */
@@ -199,7 +200,8 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    sprintf(plain, "%s:%s", ctx->encoded_msg, ctx->digest);
+    snprintf(plain, strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2,
+            "%s:%s", ctx->encoded_msg, ctx->digest);
 
     res = gpgme_encrypt(ctx,
         (unsigned char*)plain, strlen(plain),
