@@ -29,6 +29,7 @@
  *
  *****************************************************************************
 */
+#include "fko_message.h"
 #include "fko_common.h"
 #include "fko.h"
 
@@ -265,12 +266,17 @@ validate_nat_access_msg(const char *msg)
 int
 got_allow_ip(const char *msg)
 {
-    const char *ndx     = msg;
-    int         dot_ctr = 0, char_ctr = 0;
-    int         res     = FKO_SUCCESS;
+    const char         *ndx     = msg;
+    char                ip_str[MAX_IPV4_STR_LEN];
+    int                 dot_ctr = 0, char_ctr = 0;
+    int                 res     = FKO_SUCCESS;
+#if HAVE_SYS_SOCKET_H
+    struct in_addr      in;
+#endif
 
     while(*ndx != ',' && *ndx != '\0')
     {
+        ip_str[char_ctr] = *ndx;
         char_ctr++;
         if(char_ctr >= MAX_IPV4_STR_LEN)
         {
@@ -287,11 +293,24 @@ got_allow_ip(const char *msg)
         ndx++;
     }
 
-    if (char_ctr < MIN_IPV4_STR_LEN)
+    if(char_ctr < MAX_IPV4_STR_LEN)
+        ip_str[char_ctr] = '\0';
+    else
         res = FKO_ERROR_INVALID_ALLOW_IP;
 
-    if(dot_ctr != 3)
+    if ((res == FKO_SUCCESS) && (char_ctr < MIN_IPV4_STR_LEN))
         res = FKO_ERROR_INVALID_ALLOW_IP;
+
+    if((res == FKO_SUCCESS) && dot_ctr != 3)
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+
+#if HAVE_SYS_SOCKET_H
+    /* Stronger IP validation now that we have a candidate that looks
+     * close enough
+    */
+    if((res == FKO_SUCCESS) && (inet_aton(ip_str, &in) == 0))
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+#endif
 
     return(res);
 }

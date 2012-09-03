@@ -32,6 +32,11 @@
 #ifndef FKO_MESSAGE_H
 #define FKO_MESSAGE_H 1
 
+#if HAVE_SYS_SOCKET_H
+  #include <sys/socket.h>
+#endif
+#include <arpa/inet.h>
+
 #define MAX_PROTO_STR_LEN   4  /* tcp, udp, icmp for now */
 #define MAX_PORT_STR_LEN    5
 
