@@ -49,6 +49,9 @@ my %cf = (
     'ip_src_match'            => "$conf_dir/ip_source_match_access.conf",
     'subnet_src_match'        => "$conf_dir/ip_source_match_access.conf",
     'disable_aging'           => "$conf_dir/disable_aging_fwknopd.conf",
+    'fuzz_source'             => "$conf_dir/fuzzing_source_access.conf",
+    'fuzz_open_ports'         => "$conf_dir/fuzzing_open_ports_access.conf",
+    'fuzz_restrict_ports'     => "$conf_dir/fuzzing_restrict_ports_access.conf",
 );
 
 my $default_digest_file = "$run_dir/digest.cache";
@@ -1446,6 +1449,45 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'FUZZING',
+        'subcategory' => 'server',
+        'detail'   => 'invalid SOURCE access.conf',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_source'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'positive_output_matches' => [qr/Fatal\sinvalid/],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'FUZZING',
+        'subcategory' => 'server',
+        'detail'   => 'invalid OPEN_PORTS access.conf',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_open_ports'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'positive_output_matches' => [qr/Fatal\sinvalid/],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'FUZZING',
+        'subcategory' => 'server',
+        'detail'   => 'invalid RESTRICT_PORTS access.conf',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_restrict_ports'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'positive_output_matches' => [qr/Fatal\sinvalid/],
+        'exec_err' => $YES,
         'fatal'    => $NO
     },
 

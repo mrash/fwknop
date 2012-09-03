@@ -21,6 +21,10 @@ fwknop-2.0.3 (08//2012):
     - [client] Fernando Arnaboldi from IOActive found a local buffer overflow
       in --last processing with a maliciously constructed ~/.fwknop.run file.
       This has been fixed with proper validation of .fwknop.run arguments.
+    - [server] Fernando Arnaboldi from IOActive found several conditions in
+      which the server did not properly throw out maliciously constructed
+      variables in the access.conf file.  This has been fixed along with new
+      fuzzing tests in the test suite.
     - [test suite] Added a new fuzzing capability to ensure proper server-side
       input validation.  Fuzzing data is constructed with modified fwknop
       client code that is designed to emulate malicious behavior.

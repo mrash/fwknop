@@ -60,3 +60,9 @@ Fernando Arnaboldi (IOActive)
       developed along with a new fuzzing capability in the test suite.
     - Found a condition in which an overly long IP from malicious authenticated
       clients is not properly validated by the fwknopd server (pre-2.0.3).
+    - Found a local buffer overflow in --last processing with a maliciously
+      constructed ~/.fwknop.run file.  This has been fixed with proper
+      validation of .fwknop.run arguments.
+    - Found several conditions in which the server did not properly throw out
+      maliciously constructed variables in the access.conf file.  This has been
+      fixed along with new fuzzing tests in the test suite.
