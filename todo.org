@@ -9,6 +9,9 @@
 *** Release fwknop-2.0.2
     :CLOSED: <2012-08-18 Sat>
     Make the fwknop-2.0.2 release.
+*** Release fwknop-2.0.3
+    :CLOSED: <2012-09-03 Mon>
+    Make the fwknop-2.0.3 release.
 *** Update fwknopd man page for GPG_ALLOW_NO_PW
     :CLOSED: <2012-08-14 Tue>
 *** Preserve existing configs under 'make install'

@@ -1,6 +1,4 @@
-fwknop-2.0.3 (08//2012):
-    - Fixed RPM builds by including the $(DESTDIR) prefix for uninstall-local
-      and install-exec-hook stages in Makefile.am.
+fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
       execution vulnerabilities for malicious fwknop clients that manage to
       get past the authentication stage (so a such a client must be in
@@ -28,6 +26,8 @@ fwknop-2.0.3 (08//2012):
     - [test suite] Added a new fuzzing capability to ensure proper server-side
       input validation.  Fuzzing data is constructed with modified fwknop
       client code that is designed to emulate malicious behavior.
+    - Fixed RPM builds by including the $(DESTDIR) prefix for uninstall-local
+      and install-exec-hook stages in Makefile.am.
 
 fwknop-2.0.2 (08/18/2012):
     - [server] For GPG mode, added a new access.conf variable
