@@ -29,8 +29,8 @@
  *
  *****************************************************************************
 */
-#include "fko_message.h"
 #include "fko_common.h"
+#include "fko_message.h"
 #include "fko.h"
 
 /* Set the SPA message type.

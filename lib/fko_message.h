@@ -32,8 +32,13 @@
 #ifndef FKO_MESSAGE_H
 #define FKO_MESSAGE_H 1
 
-#if HAVE_SYS_SOCKET_H
-  #include <sys/socket.h>
+#if PLATFORM_OPENBSD
+  #include <sys/types.h>
+  #include <netinet/in.h>
+#else
+  #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+  #endif
 #endif
 #include <arpa/inet.h>
 
