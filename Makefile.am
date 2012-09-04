@@ -150,6 +150,9 @@ EXTRA_DIST = \
     test/conf/subnet_source_match_access.conf \
     test/conf/local_nat_fwknopd.conf \
     test/conf/disable_aging_fwknopd.conf \
+    test/conf/fuzzing_source_access.conf \
+    test/conf/fuzzing_open_ports_access.conf \
+    test/conf/fuzzing_restrict_ports_access.conf \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \

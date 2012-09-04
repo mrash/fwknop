@@ -232,24 +232,6 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    /* If this is not the first entry, we walk our pointer to the
-     * end of the list.
-    */
-    if(acc->source_list == NULL)
-    {
-        acc->source_list = new_sle;
-    }
-    else
-    {
-        tmp_sle = acc->source_list;
-
-        do {
-            last_sle = tmp_sle;
-        } while((tmp_sle = tmp_sle->next));
-
-        last_sle->next = new_sle;
-    }
-
     /* Convert the IP data into the appropriate mask
     */
     if(strcasecmp(ip, "ANY") == 0)
@@ -264,12 +246,27 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         */
         if((ndx = strchr(ip, '/')) != NULL)
         {
+            if(((ndx-ip)) >= MAX_IPV4_STR_LEN)
+            {
+                log_msg(LOG_ERR, "Error parsing string to IP");
+                free(new_sle);
+                new_sle = NULL;
+                return 0;
+            }
+
             mask = atoi(ndx+1);
             strlcpy(ip_str, ip, (ndx-ip)+1);
         }
         else
         {
             mask = 32;
+            if(strnlen(ip, MAX_IPV4_STR_LEN+1) >= MAX_IPV4_STR_LEN)
+            {
+                log_msg(LOG_ERR, "Error parsing string to IP");
+                free(new_sle);
+                new_sle = NULL;
+                return 0;
+            }
             strlcpy(ip_str, ip, strlen(ip)+1);
         }
 
@@ -294,6 +291,25 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         */
         new_sle->maddr = ntohl(in.s_addr) & new_sle->mask;
     }
+
+    /* If this is not the first entry, we walk our pointer to the
+     * end of the list.
+    */
+    if(acc->source_list == NULL)
+    {
+        acc->source_list = new_sle;
+    }
+    else
+    {
+        tmp_sle = acc->source_list;
+
+        do {
+            last_sle = tmp_sle;
+        } while((tmp_sle = tmp_sle->next));
+
+        last_sle->next = new_sle;
+    }
+
     return 1;
 }
 
@@ -396,7 +412,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
 /* Take a proto/port string and convert it to appropriate integer values
  * for comparisons of incoming SPA requests.
 */
-static void
+static int
 add_port_list_ent(acc_port_list_t **plist, char *port_str)
 {
     int                 proto_int, port;
@@ -407,7 +423,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
      * are no problems with the incoming string.
     */
     if(parse_proto_and_port(port_str, &proto_int, &port) != 0)
-        return;
+        return 0;
 
     if((new_plist = calloc(1, sizeof(acc_port_list_t))) == NULL)
     {
@@ -437,6 +453,8 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 
     new_plist->proto = proto_int;
     new_plist->port  = port;
+
+    return 1;
 }
 
 /* Add a string list entry to the given acc_string_list.
@@ -510,7 +528,10 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
                 return 0;
 
             strlcpy(buf, start, (ndx-start)+1);
-            add_port_list_ent(plist, buf);
+
+            if(add_port_list_ent(plist, buf) == 0)
+                return 0;
+
             start = ndx+1;
         }
     }
@@ -525,14 +546,15 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
 
     strlcpy(buf, start, (ndx-start)+1);
 
-    add_port_list_ent(plist, buf);
+    if(add_port_list_ent(plist, buf) == 0)
+        return 0;
 
     return 1;
 }
 
 /* Expand a comma-separated string into a simple acc_string_list.
 */
-static void
+static int
 expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
 {
     char           *ndx, *start;
@@ -549,6 +571,9 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
             while(isspace(*start))
                 start++;
 
+            if(((ndx-start)+1) >= 1024)
+                return 0;
+
             strlcpy(buf, start, (ndx-start)+1);
             add_string_list_ent(stlist, buf);
             start = ndx+1;
@@ -560,9 +585,14 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
     while(isspace(*start))
         start++;
 
+    if(((ndx-start)+1) >= 1024)
+        return 0;
+
     strlcpy(buf, start, (ndx-start)+1);
 
     add_string_list_ent(stlist, buf);
+
+    return 1;
 }
 
 /* Free the acc source_list
@@ -694,17 +724,29 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         */
         if(expand_acc_source(opts, acc) == 0)
         {
-            acc = acc->next;
-            continue;
+            log_msg(LOG_ERR, "Fatal invalid SOURCE in access stanza");
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
 
         /* Now expand the open_ports string.
         */
         if(acc->open_ports != NULL && strlen(acc->open_ports))
-            expand_acc_port_list(&(acc->oport_list), acc->open_ports);
+        {
+            if(expand_acc_port_list(&(acc->oport_list), acc->open_ports) == 0)
+            {
+                log_msg(LOG_ERR, "Fatal invalid OPEN_PORTS in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
 
         if(acc->restrict_ports != NULL && strlen(acc->restrict_ports))
-            expand_acc_port_list(&(acc->rport_list), acc->restrict_ports);
+        {
+            if(expand_acc_port_list(&(acc->rport_list), acc->restrict_ports) == 0)
+            {
+                log_msg(LOG_ERR, "Fatal invalid RESTRICT_PORTS in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
 
         /* Expand the GPG_REMOTE_ID string.
         */
@@ -1182,7 +1224,6 @@ parse_access_file(fko_srv_options_t *opts)
 
     /* Expand our the expandable fields into their respective data buckets.
     */
-
     expand_acc_ent_lists(opts);
 
     /* Make sure default values are set where needed.
@@ -1282,7 +1323,12 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
                 return(0);
             }
             strlcpy(buf, start, (ndx-start)+1);
-            add_port_list_ent(&in_pl, buf);
+            if(add_port_list_ent(&in_pl, buf) == 0)
+            {
+                log_msg(LOG_ERR, "Invalid proto/port string");
+                return 0;
+            }
+
             start = ndx+1;
             ctr = 0;
         }
@@ -1298,7 +1344,11 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
         return(0);
     }
     strlcpy(buf, start, (ndx-start)+1);
-    add_port_list_ent(&in_pl, buf);
+    if(add_port_list_ent(&in_pl, buf) == 0)
+    {
+        log_msg(LOG_ERR, "Invalid proto/port string");
+        return 0;
+    }
 
     if(in_pl == NULL)
     {

@@ -184,17 +184,26 @@ set_file_perms(const char *file)
 int
 verify_file_perms_ownership(const char *file)
 {
+    int res = 1;
 #if HAVE_STAT
     struct stat st;
 
-    /* Every file that the fwknop client deals with should be owned
+    /* Every file that fwknopd deals with should be owned
      * by the user and permissions set to 600 (user read/write)
     */
     if((stat(file, &st)) != 0)
     {
-        fprintf(stderr, "[-] unable to stat() file: %s: %s\n",
-            file, strerror(errno));
-        exit(EXIT_FAILURE);
+        /* if the path doesn't exist, just return, but otherwise something
+         * went wrong
+        */
+        if(errno == ENOENT)
+        {
+            return 0;
+        } else {
+            fprintf(stderr, "[-] stat() against file: %s returned: %s\n",
+                file, strerror(errno));
+            exit(EXIT_FAILURE);
+        }
     }
 
     /* Make sure it is a regular file
@@ -205,7 +214,7 @@ verify_file_perms_ownership(const char *file)
             "[-] file: %s is not a regular file or symbolic link.\n",
             file
         );
-        return 0;
+        res = 0;
     }
 
     if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
@@ -214,18 +223,18 @@ verify_file_perms_ownership(const char *file)
             "[-] file: %s permissions should only be user read/write (0600, -rw-------)\n",
             file
         );
-        return 0;
+        res = 0;
     }
 
     if(st.st_uid != getuid())
     {
         fprintf(stderr, "[-] file: %s not owned by current effective user id\n",
             file);
-        return 0;
+        res = 0;
     }
 #endif
 
-    return 1;
+    return res;
 }
 
 /* Determine if a buffer contains only characters from the base64

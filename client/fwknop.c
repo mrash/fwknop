@@ -637,6 +637,7 @@ show_last_command(void)
 #endif
 
     if (get_save_file(args_save_file)) {
+        verify_file_perms_ownership(args_save_file);
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
             fprintf(stderr, "Could not open args file: %s\n",
                 args_save_file);
@@ -681,7 +682,6 @@ run_last_args(fko_cli_options_t *options)
     if (get_save_file(args_save_file))
     {
         verify_file_perms_ownership(args_save_file);
-
         if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
         {
             fprintf(stderr, "Could not open args file: %s\n",
