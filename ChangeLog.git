@@ -1,486 +1,311 @@
-commit f7e84da340a8f154edc27bcac9bb576bf35c220b (HEAD, refs/heads/master)
+commit 40ac28df21fab384f1389607eed78f6d35159206 (HEAD, refs/heads/master)
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 18 15:03:04 2012 -0400
+Date:   Mon Sep 3 22:23:48 2012 -0400
 
-    fwknop-2.0.2 release
+    bump version to 2.0.3
 
- ChangeLog    |    2 +-
- VERSION      |    2 +-
- configure.ac |    2 +-
- todo.org     |    6 ++++++
- 4 files changed, 9 insertions(+), 3 deletions(-)
-
-commit 38feb8d7b953ad1b2e4e2ff23d6b8113a6b1bcff (refs/remotes/origin/master)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 17 21:02:24 2012 -0400
-
-    Better --resolve-url handling
-    
-    Chop any trailing '/' char, be more careful about handling incoming large HTTP
-    responses, print the HTTP request and response in --verbose --verbose mode.
-
- client/http_resolve_host.c |   22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
-
-commit 760162a40a0796b25a9dba1e00e2e171d3505986
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 16 22:30:09 2012 -0400
-
-    ipfw active/expire test bug fix (atoi() for config vars)
-
- server/config_init.c |    8 ++++----
- test/test-fwknop.pl  |    3 +--
- 2 files changed, 5 insertions(+), 6 deletions(-)
-
-commit 2c55773bdbcf473fac1cec6a4c0765a9b38a9db2
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 16 22:19:39 2012 -0400
-
-    added test/conf/ipfw_active_expire_equal_fwknopd.conf file
-
- Makefile.am |    1 +
- 1 file changed, 1 insertion(+)
-
-commit 3afd1aa762f1aa66bef9cdf875aea4b8bb23e567
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 16 22:16:36 2012 -0400
-
-    [server] ipfw active/expire sets cannot be the same
-
- test/conf/ipfw_active_expire_equal_fwknopd.conf |    6 +++
- test/test-fwknop.pl                             |   55 ++++++++++++++++++-----
- todo.org                                        |    7 +--
- 3 files changed, 53 insertions(+), 15 deletions(-)
-
-commit fda5759b2b045aaa96ee1fa6d14fb3c17fe0fd01
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 16 21:18:11 2012 -0400
-
-    todo.org notes update
-
- todo.org |   14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-commit 3af8e4c51769495a702a28bd630abf37162ada6c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Aug 15 22:49:29 2012 -0400
-
-    [client] Added cipherdyne.com backup check in -R mode.
-    
-    Added backup check against a cipherdyne.com 'myip' cgi instance in -R mode if
-    the normal check against cipherdyne.org fails.
-
- ChangeLog                  |    2 +
- client/fwknop.c            |    2 +
- client/fwknop_common.h     |    3 +-
- client/http_resolve_host.c |  225 ++++++++++++++++++++++++--------------------
- 4 files changed, 131 insertions(+), 101 deletions(-)
-
-commit a646a024d98f660f32991baa532bcbae1eceec60
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Aug 15 22:46:49 2012 -0400
-
-    added 'Pragma: no-cache' header
-
- extras/myip/myip.c |   11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-commit 419fbafa0442caa1e9bd071bf4b178082fcc4a54
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 14 22:52:24 2012 -0400
-
-    added extras/myip/myip.c
-
- Makefile.am |    1 +
- 1 file changed, 1 insertion(+)
-
-commit 37950df66f40e04cb428519f313f4697a198de45
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 14 22:35:02 2012 -0400
-
-    bumped version to fwknop-2.0.2-pre3
-
- VERSION      |    2 +-
- configure.ac |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-commit c272339707229fa23d65e303d2ef7b163d855ec6
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 14 22:34:03 2012 -0400
-
-    todo.org notes update
-
- todo.org |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-commit 7ae45ecad109ebf9dc21c2d8a966e05b6c5c5b78
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 14 22:31:03 2012 -0400
-
-    Added GPG_ALLOW_NO_PW to the fwknopd man page
-
- doc/fwknopd.man.asciidoc |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-commit 66187a22af035425ded6df60dbf9f50cdab53938
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 14 22:21:34 2012 -0400
-
-    minor defensive fko_destroy() calls in two error condition blocks
-
- server/incoming_spa.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-commit dfe6679c5750b577ae3e923ecbd140d935628864
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 14 21:51:00 2012 -0400
-
-    Added the extras/myip/ directory for client IP resolution code
-    
-    The myip.c file is deployed at http://www.cipherdyne.org/cgi-bin/myip
-    for fwknop client IP resolution.
-
- extras/myip/myip.c |   22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
-
-commit 385396b845c87997ce5b3506ae9e56c0184007a6
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Aug 13 22:53:29 2012 -0400
-
-    Added --enable-distcheck for 'make distcheck' verification
-
- test/test-fwknop.pl |   28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
-
-commit 863838d0ba54c666150d98c643c7cc0456404e18
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Aug 13 22:39:03 2012 -0400
-
-    [server] Preserve any existing config files in /etc/fwknop/
-    
-    Updated the 'make install' step to not overwrite any existing config files in
-    /etc/fwknop/ and instead install new copies from the source tree at
-    /etc/fwknop/fwknopd.conf.inst and /etc/fwknop/access.conf.inst
-
- ChangeLog                |    5 +-
- ChangeLog.git            |  313 ++++++++++++++++++++++++++++++++++++++++++++++
- Makefile.am              |   41 +++++-
- server/Makefile.am       |    3 +-
- server/access.conf.inst  |    1 +
- server/fwknopd.conf.inst |    1 +
- todo.org                 |    8 ++
- 7 files changed, 366 insertions(+), 6 deletions(-)
-
-commit 8fafd4b80bf215da311dc2b53f33b0e4cd269944
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 12 19:57:11 2012 -0400
-
-    [server] 'make install' permissions fix
-    
-    Set restrictive permissions on /etc/fwknop/ directory and /etc/fwknop/* files.
-    Current default permissions on /etc/fwknop/ and /etc/fwknop/* are too lax.
-
- ChangeLog   |    2 ++
- Makefile.am |    3 +++
- todo.org    |    5 +++--
- 3 files changed, 8 insertions(+), 2 deletions(-)
-
-commit 543de16613b89723ef1350df3e59df126586800e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 12 15:44:13 2012 -0400
-
-    [server] iptables 'comment' match check
-    
-    Implemented a new check to ensure that the iptables 'comment' match exists to
-    ensure the proper environment for fwknopd operations.  This check is controlled
-    by the new ENABLE_IPT_COMMENT_CHECK variable, and was suggested by Hank
-    Leininger.
-
- CREDITS                   |    5 +++
- ChangeLog                 |    4 +++
- server/cmd_opts.h         |    1 +
- server/config_init.c      |    6 ++++
- server/fw_util.h          |    1 +
- server/fw_util_iptables.c |   75 ++++++++++++++++++++++++++++++++++++++++++++-
- server/fw_util_iptables.h |    1 +
- server/fwknopd.conf       |    9 ++++++
- server/fwknopd_common.h   |   26 ++++++++--------
- todo.org                  |    5 ++-
- 10 files changed, 119 insertions(+), 14 deletions(-)
-
-commit a087b11887ff4fffb4057198e559d448b016ac0e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 12 15:23:38 2012 -0400
-
-    todo update
-
- todo.org |    8 ++++++++
- 1 file changed, 8 insertions(+)
-
-commit a686d96d444ab739742e31967153b2bf02b62f0d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 12 09:29:51 2012 -0400
-
-    Added todo.org org mode file
-    
-    The todo.org mode file was built with vim and the VimOrganizer project:
-    
-    https://github.com/hsitz/VimOrganizer
-
- Makefile.am |    1 +
- todo.org    |   10 ++++++++++
- 2 files changed, 11 insertions(+)
-
-commit dc23c640bb2f757a2121ea0a83d18648dcaec32f (tag: refs/tags/fwknop-2.0.2-pre2)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 11 09:33:54 2012 -0400
-
-    added gpg_no_pw_access.conf file for no password gpg tests
-
- Makefile.am |    1 +
- 1 file changed, 1 insertion(+)
-
-commit 72229b5f46084e9cfca36bb2e1ba23c4b7f09b66
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 11 09:21:49 2012 -0400
-
-    bumped version to fwknop-2.0.2-pre2
-
- VERSION      |    2 +-
- configure.ac |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-commit 27ccfe35d36c7ba1d94734fb21a46c77aaf30719
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 10 21:52:09 2012 -0400
-
-    [server] Added GPG_ALLOW_NO_PW variable and associated test suite support
-    
-    For GPG mode, added a new access.conf variable "GPG_ALLOW_NO_PW" to make it
-    possible to leverage a server-side GPG key pair that has no associated
-    password.  This comes in handy when a system requires the user to leverage
-    gpg-agent / pinentry which can present a problem in automated environments as
-    required by the fwknopd server.  Now, it might seem like a problem to remove
-    the passphrase from a GPG key pair, but it's important to note that simply
-    doing this is little worse than storing the passphrase in the clear on disk
-    anyway in the access.conf file.  Further, this link help provides additional
-    detail:
-    
-    http://www.gnupg.org/faq/GnuPG-FAQ.html#how-can-i-use-gnupg-in-an-automated-environment
-
- ChangeLog                              |   23 +++++
- Makefile.am                            |   12 ++-
- server/access.c                        |   13 +++
- server/incoming_spa.c                  |    2 +-
- test/conf/client-gpg-no-pw/pubring.gpg |  Bin 0 -> 2480 bytes
- test/conf/client-gpg-no-pw/secring.gpg |  Bin 0 -> 1274 bytes
- test/conf/client-gpg-no-pw/trustdb.gpg |  Bin 0 -> 1360 bytes
- test/conf/gpg_no_pw_access.conf        |    7 ++
- test/conf/server-gpg-no-pw/pubring.gpg |  Bin 0 -> 2480 bytes
- test/conf/server-gpg-no-pw/secring.gpg |  Bin 0 -> 1276 bytes
- test/conf/server-gpg-no-pw/trustdb.gpg |  Bin 0 -> 1360 bytes
- test/test-fwknop.pl                    |  176 ++++++++++++++++++++++++++++++++
- 12 files changed, 229 insertions(+), 4 deletions(-)
-
-commit 0af3bd0ee10768f6838aafe9fdc66187e5be9ee4
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 10 21:48:02 2012 -0400
-
-    [server] Added FLUSH_IPFW_AT_INIT and FLUSH_IPFW_AT_EXIT
-    
-    Added FLUSH_IPFW_AT_INIT and FLUSH_IPFW_AT_EXIT for ipfw firewalls to emulate
-    the corresponding functionality that is implemented for iptables firewalls.
-    
-    Bug fix for ipfw firewalls to ensure that if the ipfw expire set is zero, then
-    do not disable this set whenever the FLUSH_IPFW* variables are enabled.
-    
-    These changes were suggested by Jonathan Schulz.
-
- server/cmd_opts.h       |    2 +
- server/config_init.c    |   26 +++++++++++-
- server/fw_util_ipfw.c   |   46 ++++++++++++--------
- server/fwknopd.conf     |  108 ++++++++++++++++++++++++++---------------------
- server/fwknopd_common.h |    4 ++
- 5 files changed, 121 insertions(+), 65 deletions(-)
-
-commit c6f3fde5371c1be48d8e1bc7e17dde89e19d02fc
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 10 21:43:49 2012 -0400
-
-    bug fix to implement FLUSH_IPT_AT_INIT and FLUSH_IPT_AT_EXIT functionality
-
- server/fw_util_iptables.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-commit fbdae500641b4ab46bc54dbf2e509eae2625dc44
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Aug 8 21:27:33 2012 -0400
-
-    added Geoff Carstairs for the FORCE_NAT idea
-
- CREDITS |    7 +++++++
- 1 file changed, 7 insertions(+)
-
-commit fd3044012843dfcaa9ab4f9030c70732f29a3b90
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 5 14:07:42 2012 -0400
-
-    added Aldan Beaubien for reporting the Morpheus NULL IP problem
-
- CREDITS |    5 +++++
- 1 file changed, 5 insertions(+)
-
-commit e70739d2117a229e842d3a1bc43f1cf2a6fab46e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 5 13:05:55 2012 -0400
-
-    minor whitespace update
-
- server/fw_util_ipfw.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-commit f6ac4484c95f443dfce9c6b7dafbff8126ade9ad
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 5 13:05:30 2012 -0400
-
-    minor memset value update 0 -> 0x0 to conform to other memset() calls
-
- client/http_resolve_host.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 4cde31584fb9afed499b5951b7ae88b7765808c3 (tag: refs/tags/fwknop-2.0.2-pre1)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 3 22:16:22 2012 -0400
-
-    bumped version to 2.0.2-pre1
-
+ ChangeLog                    |    6 +++---
  VERSION                      |    2 +-
  android/project/jni/config.h |    6 +++---
  configure.ac                 |    2 +-
  fwknop.spec                  |    2 +-
  iphone/Classes/config.h      |    6 +++---
  lib/fko.h                    |    2 +-
- 6 files changed, 10 insertions(+), 10 deletions(-)
+ todo.org                     |    3 +++
+ 8 files changed, 16 insertions(+), 13 deletions(-)
 
-commit 79a947603a7c2bc4636d33834ca0b9fdd033a894
+commit 8d26cc90ee76ba95d58ee18d90431a9883a2a89a
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 3 22:08:14 2012 -0400
+Date:   Mon Sep 3 22:18:59 2012 -0400
 
-    added changes for the 2.0.2 release (so far)
+    include file compilation fix for OpenBSD relative to inet_aton() IP verification
 
- ChangeLog |   38 ++++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ lib/fko_message.c |    2 +-
+ lib/fko_message.h |    9 +++++++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-commit 29512bd8ec16f47db568694ec172075412ca115d
+commit b05d229bb15cb77a17a28a146b8b0dc61afa4aa9
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 3 21:49:03 2012 -0400
+Date:   Mon Sep 3 09:09:35 2012 -0400
 
-    [client] -R http recv() read until close (Jonathan Schulz)
+    sprintf() -> snprintf() calls
+
+ lib/fko_encryption.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+commit e2c0ac4821773eb335e36ad6cd35830b8d97c75a (refs/remotes/origin/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Sep 3 00:21:46 2012 -0400
+
+    [server] Strong access.conf validation
     
-    Applied patch from Jonathan Schulz to ensure that the fwknop client reads all
-    data from a remote webserver when resolving the client IP address in -R mode.
-    Jonathan indicated that some webservers would transfer HTTP headers and data
-    separately, and a single recv() would therefore fail to get the necessary IP
-    information.
+    Fernando Arnaboldi from IOActive found several conditions in
+    which the server did not properly throw out maliciously constructed
+    variables in the access.conf file.  This has been fixed along with new
+    fuzzing tests in the test suite.
 
- client/http_resolve_host.c |   13 ++++++++++++-
- 1 file changed, 12 insertions(+), 1 deletion(-)
+ CREDITS                          |    6 ++
+ ChangeLog                        |    4 ++
+ Makefile.am                      |    3 +
+ server/access.c                  |  114 +++++++++++++++++++++++++-------------
+ test/conf/open_ports_access.conf |    4 +-
+ test/test-fwknop.pl              |   42 ++++++++++++++
+ 6 files changed, 133 insertions(+), 40 deletions(-)
 
-commit 7c1db891061dba5cdc29fb8cfe0c88e0a4a408dd
+commit 263fa01f2af1d336961df320f1c7a9ea84ddac9a
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 3 21:30:24 2012 -0400
+Date:   Mon Sep 3 00:21:32 2012 -0400
 
-    minor white space fix tabs->spaces
+    added inet_aton() call for IP strong IP validation (credit: Fernando Arnaboldi)
 
- client/http_resolve_host.c |   82 ++++++++++++++++++++++----------------------
- 1 file changed, 41 insertions(+), 41 deletions(-)
+ lib/fko_message.c                            |   29 +++++++++++++++++++++-----
+ lib/fko_message.h                            |    5 +++++
+ test/conf/fuzzing_open_ports_access.conf     |    4 ++++
+ test/conf/fuzzing_restrict_ports_access.conf |    5 +++++
+ test/conf/fuzzing_source_access.conf         |    4 ++++
+ 5 files changed, 42 insertions(+), 5 deletions(-)
 
-commit 7061b7bd3ecb1de6ae151b6b85af9251d46e32c6
+commit ffe4d3b162bbfea143704461aab4244cc4acdfcf
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Aug 1 23:40:34 2012 -0400
+Date:   Sun Sep 2 15:53:54 2012 -0400
 
-    added Jonathan Schulz
+    minor spacing update to make merges into hmac_master easier
 
- CREDITS |    4 ++++
- 1 file changed, 4 insertions(+)
+ test/test-fwknop.pl |   56 +++++++++++++++++++++++++--------------------------
+ 1 file changed, 28 insertions(+), 28 deletions(-)
 
-commit 84e036f95b6b239c95c696b884c3989fc30af338
+commit 86b403dadb90c30deb51b3530e8ebbb791531615
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Aug 1 23:27:34 2012 -0400
+Date:   Sat Sep 1 23:37:03 2012 -0400
 
-    Change HTTP connection type to 'close' in -R mode
-    
-    Applied patch from Jonathan Schulz to change the HTTP connection type to
-    'close' for the client in -R mode.
+    fixed potential buffer overflow discovered by Fernando Arnaboldi of IOActive
 
- client/http_resolve_host.c |    2 +-
- client/spa_comm.c          |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ server/access.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-commit 5fd3343ca9ae8cce9e39d8a4ccb0efb41ae78128
+commit e3a78a175c664ee51de1fb8086deb96a1d017ac3
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Aug 1 22:30:02 2012 -0400
+Date:   Sat Sep 1 21:55:52 2012 -0400
 
-    added client IP resolution test with complete SPA->SSH cycle
+    verify_file_perms_ownership() to just return if the file doesn't exist
 
- test/test-fwknop.pl |   39 ++++++++++++++++++++++++++++++++++++---
- 1 file changed, 36 insertions(+), 3 deletions(-)
+ client/config_init.c |    2 +-
+ client/fwknop.c      |    4 ++--
+ client/utils.c       |   23 ++++++++++++++++-------
+ server/fwknopd.c     |    3 ++-
+ server/utils.c       |   25 +++++++++++++++++--------
+ 5 files changed, 38 insertions(+), 19 deletions(-)
 
-commit 016098a2543126f2fa01b3f4057646f0ad2842c5
+commit 1548cbafc886af802b639913bb10e6a746222478
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Jul 29 23:31:15 2012 -0400
+Date:   Fri Aug 31 23:05:05 2012 -0400
 
-    Replay attack bug fix (encryption prefixes)
-    
-    Ensure that an attacker cannot force a replay attack by intercepting an
-    SPA packet and the replaying it with the base64 version of "Salted__"
-    (for Rindael) or the "hQ" prefix (for GnuPG).  This is an important fix.
-    The following comment was added into the fwknopd code:
-    
-    /* Ignore any SPA packets that contain the Rijndael or GnuPG prefixes
-     * since an attacker might have tacked them on to a previously seen
-     * SPA packet in an attempt to get past the replay check.  And, we're
-     * no worse off since a legitimate SPA packet that happens to include
-     * a prefix after the outer one is stripped off won't decrypt properly
-     * anyway because libfko would not add a new one.
-    */
-    
-    Conflicts:
-    
-    	lib/cipher_funcs.h
+    get MAX_PORT_STR_LEN constant from fko_message.h
 
- lib/cipher_funcs.h    |    6 ------
- lib/fko.h             |    8 ++++++++
- server/incoming_spa.c |   14 ++++++++++++++
- test/test-fwknop.pl   |   48 +++++++++++++++++++++++++++++++++++++++++++++---
- 4 files changed, 67 insertions(+), 9 deletions(-)
+ client/spa_comm.c |    4 ++--
+ client/utils.c    |    1 +
+ common/common.h   |    2 --
+ lib/fko.h         |    1 +
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-commit c0e53482fa766f1c89d18931e35ebca6297f8018
+commit dafcfbc488f1e713ef6cfa9e86571a2b14e649d8
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Jul 29 21:31:44 2012 -0400
+Date:   Fri Aug 31 23:00:45 2012 -0400
 
-    [libfko] minor memory leak fix for user detection (corner case)
+    bug fix to make sure to verify file permissions/ownership on files that actually exist
 
- lib/fko_user.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ client/fwknop.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-commit 060fbb607f25ea2cd511d4cd548dc419d8eb3884
+commit b567514a6c722886fef5044a44abfc1514eff032
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Jul 28 00:08:30 2012 -0400
+Date:   Fri Aug 31 22:59:44 2012 -0400
 
-    [server] replay attack detection memory leak bug fix
-    
-    This commit fixes the following memory leak found with valgrind:
-    
-    44 bytes in 1 blocks are definitely lost in loss record 2 of 2
-       at 0x482BE68: malloc (in /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so)
-       by 0x490EA50: strdup (strdup.c:43)
-       by 0x10CD69: incoming_spa (incoming_spa.c:162)
-       by 0x10E000: process_packet (process_packet.c:200)
-       by 0x4862E63: ??? (in /usr/lib/i386-linux-gnu/libpcap.so.1.1.1)
-       by 0x4865667: pcap_dispatch (in /usr/lib/i386-linux-gnu/libpcap.so.1.1.1)
-       by 0x10DABF: pcap_capture (pcap_capture.c:226)
-       by 0x10A798: main (fwknopd.c:299)
+    Added fko_context.h file to lib/Makefile.am
 
- server/incoming_spa.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ lib/Makefile.am |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit d7393318189ace0a154823b359eb746aa0b36d94
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Aug 30 23:38:54 2012 -0400
+
+    implemented a couple of minor stronger bounds checks
+
+ client/config_init.c       |    5 +++++
+ client/http_resolve_host.c |    6 +++---
+ client/spa_comm.c          |    2 +-
+ 3 files changed, 9 insertions(+), 4 deletions(-)
+
+commit 2584521c67952855ba20c7c61b701a34ba57615c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Aug 30 21:43:53 2012 -0400
+
+    Run verify_file_perms_ownership() on fwknop.pid only if it exists
+    
+    Two bugs are fixed with this commit: verify permissions/ownership on the
+    fwknop.pid file only if it exists, and ensure to ru-run stat() on any directory
+    component if we're creating a directory.
+
+ server/fwknopd.c |   20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
+
+commit 406e33ccc0836796a53c88f7fe118d292adf0a25
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Aug 30 21:43:07 2012 -0400
+
+    minor comment update
+
+ server/utils.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 4832312e6de8401ac6fdbe63014ef7f186cf33cb
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Aug 29 23:12:56 2012 -0400
+
+    added filesystem permissions test
+
+ test/test-fwknop.pl |   41 +++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 39 insertions(+), 2 deletions(-)
+
+commit a60f05ad44e824f6230b22f8976399340cb535dc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Aug 29 22:21:43 2012 -0400
+
+    file permissions and client buffer overflow fix
+    
+    - [client+server] Fernando Arnaboldi from IOActive found that strict
+    filesystem permissions for various fwknop files are not verified.  Added
+    warnings whenever permissions are not strict enough, and ensured that
+    files created by the fwknop client and server are only set to user
+    read/write.
+    - [client] Fernando Arnaboldi from IOActive found a local buffer overflow
+    in --last processing with a maliciously constructed ~/.fwknop.run file.
+    This has been fixed with proper validation of .fwknop.run arguments.
+
+ ChangeLog             |    8 ++++++
+ client/config_init.c  |   15 ++++++++---
+ client/fwknop.c       |   19 ++++++++++---
+ client/utils.c        |   66 +++++++++++++++++++++++++++++++++++++++++++--
+ client/utils.h        |   13 +++++++++
+ configure.ac          |    2 +-
+ server/access.c       |    2 ++
+ server/config_init.c  |    2 ++
+ server/fwknopd.c      |    2 ++
+ server/replay_cache.c |    6 ++++-
+ server/utils.c        |   72 +++++++++++++++++++++++++++++++++++++++++++++++--
+ server/utils.h        |    2 ++
+ test/test-fwknop.pl   |   21 ++++++++++++++-
+ 13 files changed, 217 insertions(+), 13 deletions(-)
+
+commit 186a424353a2e795e69f399f079a901e7dc8f24b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Aug 28 21:28:57 2012 -0400
+
+    Added Ctrl-C and --disable-gpg notes
+
+ todo.org |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+commit 098ae417fe91aefe501e9268aacd228374d0906d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Aug 27 22:30:27 2012 -0400
+
+    migrated TODO tasks to the todo.org file
+
+ TODO     |   41 -----------------------------------------
+ todo.org |   10 ++++++++++
+ 2 files changed, 10 insertions(+), 41 deletions(-)
+
+commit 89dfa2c1fb06776646f99f722f21d47620f66695
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Aug 27 21:20:02 2012 -0400
+
+    minor ChangeLog update for the RPM build change
+
+ ChangeLog |    2 ++
+ 1 file changed, 2 insertions(+)
+
+commit c5b229c5c87657197b0c814ff22127d870b55753
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Aug 27 21:16:59 2012 -0400
+
+    Added $DESTDIR prefix in uninstall-local and install-exec-hook to fix RPM builds
+
+ Makefile.am |   43 +++++++++++++++++++++----------------------
+ 1 file changed, 21 insertions(+), 22 deletions(-)
+
+commit e8386dbe6c959365da5c08396e09c27901faed56
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Aug 26 15:47:24 2012 -0400
+
+    added encryption mode flags for each access stanza
+
+ server/access.c         |   17 ++++++++++++-----
+ server/fwknopd_common.h |    3 +++
+ server/incoming_spa.c   |   18 +++++-------------
+ 3 files changed, 20 insertions(+), 18 deletions(-)
+
+commit 557cd6615b9cab21a9208390f5af070c66fd257d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Aug 26 15:46:54 2012 -0400
+
+    consolidatd fuzzing functions within a single 'fuzzer' function
+
+ test/test-fwknop.pl |  449 +++++++++++++++++++--------------------------------
+ 1 file changed, 164 insertions(+), 285 deletions(-)
+
+commit f4c16bc47fc24a96b63105556b62d61c1ba7d799
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Aug 25 23:08:55 2012 -0400
+
+    [server] Stronger IP validation based on a bug found by Fernando Arnaboldi from IOActive
+    
+    This commit fixes a condition in which the server did not properly validate
+    allow IP addresses from malicious authenticated clients.  This has been fixed
+    with stronger allow IP validation.
+
+ CREDITS             |    2 ++
+ ChangeLog           |    4 +++
+ lib/fko_message.c   |   16 +++++++++---
+ test/test-fwknop.pl |   67 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 85 insertions(+), 4 deletions(-)
+
+commit d46ba1c027a11e45821ba897a4928819bccc8f22
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Aug 24 22:12:19 2012 -0400
+
+    (Fernando Arnaboldi, IOActive) Found and fixed several DoS/code execution vulns for authenticated clients
+    
+    - [server] Fernando Arnaboldi from IOActive found several DoS/code
+    execution vulnerabilities for malicious fwknop clients that manage to
+    get past the authentication stage (so a such a client must be in
+    possession of a valid access.conf encryption key).  These vulnerbilities
+    manifested themselves in the handling of malformed access requests, and
+    both the fwknopd server code along with libfko now perform stronger input
+    validation of access request data.  These vulnerabilities affect
+    pre-2.0.3 fwknop releases.
+    - [test suite] Added a new fuzzing capability to ensure proper server-side
+    input validation.  Fuzzing data is constructed with modified fwknop
+    client code that is designed to emulate malicious behavior.
+
+ CREDITS                              |    5 +
+ ChangeLog                            |   13 ++
+ Makefile.am                          |    1 +
+ lib/fko_message.c                    |   23 +-
+ lib/fko_message.h                    |    3 +
+ server/access.c                      |   89 ++++++--
+ server/access.h                      |    4 +-
+ server/fw_util_iptables.c            |    3 +-
+ test/conf/disable_aging_fwknopd.conf |    5 +
+ test/test-fwknop.pl                  |  413 +++++++++++++++++++++++++++++++++-
+ 10 files changed, 531 insertions(+), 28 deletions(-)
+
+commit b0bf7f369918989bae364730c8952258aac693c6
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Aug 18 16:30:34 2012 -0400
+
+    minor paren's syntax bug fix
+
+ server/incoming_spa.c |    2 ++
+ 1 file changed, 2 insertions(+)
