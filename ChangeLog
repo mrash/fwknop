@@ -2,7 +2,7 @@ fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
       execution vulnerabilities for malicious fwknop clients that manage to
       get past the authentication stage (so a such a client must be in
-      possession of a valid access.conf encryption key).  These vulnerbilities
+      possession of a valid access.conf encryption key).  These vulnerabilities
       manifested themselves in the handling of malformed access requests, and
       both the fwknopd server code along with libfko now perform stronger input
       validation of access request data.  These vulnerabilities affect
@@ -54,7 +54,7 @@ fwknop-2.0.2 (08/18/2012):
       in -R mode if the normal check against cipherdyne.org fails.
     - [server] Bug fix to implement FLUSH_IPT_AT_INIT and FLUSH_IPT_AT_EXIT
       functionality.  These are enabled by default, and now iptables rules
-      added by fwknopd can be made persistant by setting these variables to
+      added by fwknopd can be made persistent by setting these variables to
       "N" in the fwknopd.conf file (this is not a recommended setting
       however).
       [server] Added FLUSH_IPFW_AT_INIT and FLUSH_IPFW_AT_EXIT for ipfw
@@ -62,7 +62,7 @@ fwknop-2.0.2 (08/18/2012):
       for iptables firewalls.  This was suggested by Jonathan Schulz.
     - [server] Replay attack bug fix to ensure that an attacker cannot force a
       replay attack by intercepting an SPA packet and the replaying it with the
-      base64 version of "Salted__" (for Rindael) or the "hQ" prefix (for
+      base64 version of "Salted__" (for Rijndael) or the "hQ" prefix (for
       GnuPG).  This is an important fix.  The following comment was added into
       the fwknopd code:
 
@@ -129,7 +129,7 @@ fwknop-2.0.1 (07/23/2012):
     - [test suite] Added tests for --nat-local mode.
     - [client] Fixed several minor memory leaks caught by valgrind.
     - [libfko] Minor gcc warning fix: fko_decode.c:43:17: warning: variable
-      ‘edata_size’ set but not used [-Wunused-but-set-variable].
+      'edata_size' set but not used [-Wunused-but-set-variable].
     - Updated fwknopd init script for Debian systems (contributed by Franck
       Joncourt).
 
