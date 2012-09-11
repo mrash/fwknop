@@ -1,3 +1,9 @@
+fwknop-2.0.4 (09/20/2012):
+    - [server] (Vlad Glagolev) Submitted a patch to fix ndbm/gdbm usage when
+      --disable-file-cache is used for the autoconf configure script.  This
+      functionality was broken in be4193d734850fe60f14a26b547525ea0b9ce1e9
+      through improper handling of #define macros from --disable-file-cache.
+
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
       execution vulnerabilities for malicious fwknop clients that manage to

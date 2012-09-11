@@ -138,7 +138,6 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
     char        created[DATE_LEN];
 
 #if ! USE_FILE_CACHE
-    char        last_ip[INET_ADDRSTRLEN+1] = {0};
     char        first[DATE_LEN], last[DATE_LEN];
 #endif
 
@@ -375,9 +374,10 @@ replay_db_cache_init(fko_srv_options_t *opts)
     GDBM_FILE   rpdb;
 #elif HAVE_LIBNDBM
     DBM        *rpdb;
+    datum       db_ent;
 #endif
 
-    datum       db_key, db_ent, db_next_key;
+    datum       db_key, db_next_key;
     int         db_count = 0;
 
 #ifdef HAVE_LIBGDBM
@@ -565,10 +565,7 @@ is_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 #endif
     datum       db_key, db_ent;
 
-    char       *digest = NULL;
     int         digest_len, res = SPA_MSG_SUCCESS;
-
-    digest_cache_info_t dc_info;
 
     digest_len = strlen(digest);
 
@@ -638,7 +635,6 @@ add_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 #endif
     datum       db_key, db_ent;
 
-    char       *digest = NULL;
     int         digest_len, res = SPA_MSG_SUCCESS;
 
     digest_cache_info_t dc_info;
@@ -705,7 +701,7 @@ add_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 
     return(res);
 #endif /* NO_DIGEST_CACHE */
-
+}
 #endif /* USE_FILE_CACHE */
 
 #if USE_FILE_CACHE
