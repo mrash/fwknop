@@ -29,6 +29,7 @@ my %cf = (
     'exp_epoch_access'        => "$conf_dir/expired_epoch_stanza_access.conf",
     'invalid_exp_access'      => "$conf_dir/invalid_expire_access.conf",
     'force_nat_access'        => "$conf_dir/force_nat_access.conf",
+    'cmd_access'              => "$conf_dir/cmd_access.conf",
     'local_nat'               => "$conf_dir/local_nat_fwknopd.conf",
     'ipfw_active_expire'      => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
     'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
@@ -73,6 +74,7 @@ my $default_spa_port = 62201;
 my $non_std_spa_port = 12345;
 
 my $spoof_user = 'testuser';
+my $cmd_exec_test_file = '/tmp/fwknoptest';
 #================== end config ===================
 
 my $passed = 0;
@@ -1491,6 +1493,24 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    ### command execution tests
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'command execution',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cmd_exec_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            qq|$fwknopCmd --server-cmd "echo fwknoptest > $cmd_exec_test_file" | .
+            "-a $fake_ip -D $loopback_ip --get-key $local_key_file " .
+            "--verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'cmd_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'server',
@@ -2324,6 +2344,20 @@ sub spoof_username() {
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
             $MATCH_ALL, $server_test_file)) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub spa_cmd_exec_cycle() {
+    my $test_hr = shift;
+
+    my $rv = &spa_cycle($test_hr);
+
+    if (-e $cmd_exec_test_file) {
+        unlink $cmd_exec_test_file;
+    } else {
         $rv = 0;
     }
 
@@ -3248,6 +3282,7 @@ sub init() {
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
     die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
 
+    unlink $cmd_exec_test_file if -e $cmd_exec_test_file;
     for my $name (keys %cf) {
         die "[*] $cf{$name} does not exist" unless -e $cf{$name};
         chmod 0600, $cf{$name} or die "[*] Could not chmod 0600 $cf{$name}";

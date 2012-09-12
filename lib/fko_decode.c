@@ -259,6 +259,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     ctx->message_type = (unsigned int)atoi(tbuf);
 
+    if(ctx->message_type < 0 || ctx->message_type >= FKO_LAST_MSG_TYPE)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
     /* Extract the SPA message string.
     */
     ndx += t_size + 1;
@@ -285,12 +291,25 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     b64_decode(tbuf, (unsigned char*)ctx->message);
 
-    /* Require a message similar to: 1.2.3.4,tcp/22
-    */
-    if(validate_access_msg(ctx->message) != FKO_SUCCESS)
+    if(ctx->message_type == FKO_COMMAND_MSG)
     {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        /* Require a message similar to: 1.2.3.4,<command>
+        */
+        if(validate_cmd_msg(ctx->message) != FKO_SUCCESS)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
+    }
+    else
+    {
+        /* Require a message similar to: 1.2.3.4,tcp/22
+        */
+        if(validate_access_msg(ctx->message) != FKO_SUCCESS)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
     }
 
     /* Extract nat_access string if the message_type indicates so.

@@ -72,3 +72,6 @@ Vlad Glagolev
       used for the autoconf configure script.  This functionality was broken in
       be4193d734850fe60f14a26b547525ea0b9ce1e9 through improper handling of
       #define macros from --disable-file-cache.
+    - Submitted a patch to fix command exec mode under SPA message type
+      validity test.  Support for command exec mode was also added to the test
+      suite.
