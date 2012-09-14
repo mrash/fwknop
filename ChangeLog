@@ -6,6 +6,8 @@ fwknop-2.0.4 (09/20/2012):
     - [server] (Vlad Glagolev) Submitted a patch to fix command exec mode
       under SPA message type validity test.  Support for command exec mode was
       also added to the test suite.
+    - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.3, and this has
+      been checked in under extras/openbsd/.
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
