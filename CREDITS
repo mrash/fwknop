@@ -75,3 +75,5 @@ Vlad Glagolev
     - Submitted a patch to fix command exec mode under SPA message type
       validity test.  Support for command exec mode was also added to the test
       suite.
+    - Submitted an OpenBSD port for fwknop-2.0.3, and this has been checked in
+      under extras/openbsd/.
