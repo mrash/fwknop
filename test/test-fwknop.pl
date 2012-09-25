@@ -3101,6 +3101,9 @@ sub anonymize_results() {
         unlink $tarfile or die "[*] Could not unlink $tarfile: $!";
     }
 
+    print "[+] Anonymizing all IP addresses and hostnames ",
+        "from $output_dir files...\n";
+
     ### remove non-loopback IP addresses
     my $search_re = qr/\b127\.0\.0\.1\b/;
     system "perl -p -i -e 's|$search_re|00MY1271STR00|g' $output_dir/*.test";
@@ -3123,6 +3126,7 @@ sub anonymize_results() {
     system "perl -p -i -e 's|$search_re|uname= \$1 (removed)|' $output_dir/*.test";
 
     ### create tarball
+    print "    Creating tar file: $tarfile\n";
     system "tar cvfz $tarfile $logfile $output_dir";
     print "[+] Anonymized test results file: $tarfile\n";
     if (-e $tarfile) {
