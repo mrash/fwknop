@@ -568,8 +568,8 @@ Nomad at the BlackHat Briefings of 2005 (see: 'http://www.nmrc.org').
 
 BUGS
 ----
-Send  bug  reports  to dstuart@dstuart.org.  Suggestions and/or comments
-are always welcome as well.
+Send  bug  reports  to dstuart@dstuart.org or mbr@cipherdyne.org.  Suggestions
+and/or comments are always welcome as well.
 
 DISTRIBUTION
 ------------
