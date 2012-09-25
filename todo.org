@@ -70,3 +70,6 @@
    There needs to be a way to easily disable libgpgme usage even if it is
    installed - this could be done with a new --disablegpg argument to the
    configure script.
+** [test suite] client/server only tests
+   When only the client or server is being installed on a system, the test
+   suite should be able to run only the relevant tests.
