@@ -1,4 +1,7 @@
 fwknop-2.0.4 (09/20/2012):
+    - [server] Added upstart config at extras/upstart/fwknop.conf.  This
+      allows the fwknopd to easily be managed with upstart via commands like
+      "service fwknop start" and "service fwknop stop".
     - [server] (Vlad Glagolev) Submitted a patch to fix ndbm/gdbm usage when
       --disable-file-cache is used for the autoconf configure script.  This
       functionality was broken in be4193d734850fe60f14a26b547525ea0b9ce1e9
