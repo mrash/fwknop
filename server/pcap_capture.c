@@ -72,6 +72,9 @@ pcap_capture(fko_srv_options_t *opts)
     if(opts->config[CONF_ENABLE_PCAP_PROMISC][0] == 'Y')
         promisc = 1;
 
+    log_msg(LOG_INFO, "Sniffing interface: %s",
+        opts->config[CONF_PCAP_INTF]);
+
     pcap = pcap_open_live(
         opts->config[CONF_PCAP_INTF],
         atoi(opts->config[CONF_MAX_SNIFF_BYTES]),
@@ -110,7 +113,7 @@ pcap_capture(fko_srv_options_t *opts)
             clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
         }
 
-        log_msg(LOG_INFO, "PCAP filter is: %s", opts->config[CONF_PCAP_FILTER]);
+        log_msg(LOG_INFO, "PCAP filter is: '%s'", opts->config[CONF_PCAP_FILTER]);
 
         pcap_freecode(&fp);
     }
