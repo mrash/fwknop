@@ -2,6 +2,12 @@
   This is the main todo org mode file for the fwknop project
 ** COMPLETED
    This bucket is for completed tasks.
+*** [server] For Ubuntu systems, have fwknopd managed by upstart
+    :CLOSED: <2012-09-27 Thu>
+    fwknopd can benefit from upstart management and monitoring on Ubuntu
+    systems.
+    - Added the extras/upstart/fwknop.conf file so that standard upstart
+    commands like "service fwknop start" can be issued.
 *** [server] ipfw active/expire sets cannot be the same
     :CLOSED: <2012-08-16 Thu>
     Add a check to ensure that active and expire sets are not the same value in
@@ -36,9 +42,6 @@
    page.
 ** Use assert() in various places
    Use assert() to validate expected values wherever possible.
-** [server] For Ubuntu systems, have fwknopd managed by upstart
-   fwknopd can benefit from upstart management and monitoring on Ubuntu
-   systems.
 ** [server] Include files for access.conf
    Hank Leininger suggested that the main access.conf file have an option to
    include other files in which access stanzas can be specified.  This makes
