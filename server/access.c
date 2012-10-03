@@ -806,7 +806,8 @@ static int
 acc_data_is_valid(const acc_stanza_t *acc)
 {
     if(((acc->key == NULL || !strlen(acc->key))
-      && (acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw)))
+      && ((acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw))
+          && acc->gpg_allow_no_pw == 0))
       || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0))
     {
         fprintf(stderr,

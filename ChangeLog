@@ -11,6 +11,8 @@ fwknop-2.0.4 (09/20/2012):
       also added to the test suite.
     - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.3, and this has
       been checked in under extras/openbsd/.
+    - [server] Bug fix to allow GPG_ALLOW_NO_PW to result in not also having
+      to specify a Rijndael key.
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code

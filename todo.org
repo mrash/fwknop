@@ -34,6 +34,10 @@
 *** Set restrictive permissions on /etc/fwknop/ directory and /etc/fwknop/* files
     :CLOSED: <2012-08-12 Sun>
     Current default permissions on /etc/fwknop/ and /etc/fwknop/* are too lax.
+*** [server] access.c parsing: allow no KEY variable if GPG keys are used.
+    :CLOSED: <2012-10-02 Tue>
+    The access.c parsing code currently throws an error if there is not KEY
+    variable in an access stanza even if GPG_ALLOW_NO_PW is set.
 ** Add 'enable' to ipfw active set at init time
    Currently fwknopd does not do a check to ensure that the active set is
    enabled at init time ('ipfw set enable 1').
@@ -76,3 +80,6 @@
 ** [test suite] client/server only tests
    When only the client or server is being installed on a system, the test
    suite should be able to run only the relevant tests.
+** [server] Add access variable to require particular IP's even when REQUIRE_SOURCE is used
+   The SOURCE variable only applies to the IP header.  Add analogous filtering
+   for the allow IP that is encrypted within an SPA payload.
