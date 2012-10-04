@@ -57,7 +57,9 @@ digest_strtoint(const char *dt_str)
 static int
 proto_strtoint(const char *pr_str)
 {
-    if (strcasecmp(pr_str, "udp") == 0)
+    if (strcasecmp(pr_str, "udpraw") == 0)
+        return(FKO_PROTO_UDP_RAW);
+    else if (strcasecmp(pr_str, "udp") == 0)
         return(FKO_PROTO_UDP);
     else if (strcasecmp(pr_str, "tcpraw") == 0)
         return(FKO_PROTO_TCP_RAW);

@@ -35,6 +35,8 @@ my %cf = (
     'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
     'gpg_access'              => "$conf_dir/gpg_access.conf",
     'gpg_no_pw_access'        => "$conf_dir/gpg_no_pw_access.conf",
+    'tcp_pcap_filter'         => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
+    'icmp_pcap_filter'        => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
     'open_ports_access'       => "$conf_dir/open_ports_access.conf",
     'multi_gpg_access'        => "$conf_dir/multi_gpg_access.conf",
     'multi_stanza_access'     => "$conf_dir/multi_stanzas_access.conf",
@@ -74,6 +76,7 @@ my $default_spa_port = 62201;
 my $non_std_spa_port = 12345;
 
 my $spoof_user = 'testuser';
+my $spoof_ip   = '1.2.3.4';
 my $cmd_exec_test_file = '/tmp/fwknoptest';
 #================== end config ===================
 
@@ -813,6 +816,53 @@ my @tests = (
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
+
+    ### spoof the source IP on the SPA packet
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "udpraw spoof src IP (tcp/22 ssh)",
+        'err_msg'  => "could not spoof source IP",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -P udpraw -Q $spoof_ip",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "tcpraw spoof src IP (tcp/22 ssh)",
+        'err_msg'  => "could not spoof source IP",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -P tcpraw -Q $spoof_ip",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'tcp_pcap_filter'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "icmp spoof src IP (tcp/22 ssh)",
+        'err_msg'  => "could not spoof source IP",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -P icmp -Q $spoof_ip",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'icmp_pcap_filter'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',

@@ -240,11 +240,11 @@ SPA OPTIONS
     over UDP port 62201.
 
 *-P, --server-proto*='<protocol>'::
-    Set the protocol (udp, tcp, http, tcpraw, or icmp) for the outgoing SPA
-    packet.  Note: The *tcpraw* and *icmp* modes use raw sockets and thus
-    require root access to run.  Also note: The *tcp* mode expects to establish
-    a TCP connection to the server before sending the SPA packet.  This is
-    not normally done, but is useful for compatibility with the Tor for
+    Set the protocol (udp, tcp, http, udpraw, tcpraw, or icmp) for the outgoing
+    SPA packet.  Note: The *udpraw*, *tcpraw*, and *icmp* modes use raw sockets
+    and thus require root access to run.  Also note: The *tcp* mode expects to
+    establish a TCP connection to the server before sending the SPA packet.
+    This is not normally done, but is useful for compatibility with the Tor for
     strong anonymity; see 'http://tor.eff.org/'.  In this case, the
     *fwknopd* server will need to be configured to listen on the target TCP
     port (which is 62201 by default).

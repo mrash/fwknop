@@ -13,6 +13,12 @@ fwknop-2.0.4 (09/20/2012):
       been checked in under extras/openbsd/.
     - [server] Bug fix to allow GPG_ALLOW_NO_PW to result in not also having
       to specify a Rijndael key.
+    - [client] Added '-P udpraw' to allow the client to send SPA packets over
+      UDP with a spoofed source IP address.  This is in addition to the
+      original 'tcpraw' and 'icmp' protocols that also support a spoofed
+      source IP.
+    - [server] Bug fix to accept SPA packets over ICMP if the fwknop client
+      is executed with '-P icmp' and the user has the required privileges.
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code

@@ -89,6 +89,7 @@
 
 enum {
     FKO_PROTO_UDP,
+    FKO_PROTO_UDP_RAW,
     FKO_PROTO_TCP,
     FKO_PROTO_TCP_RAW,
     FKO_PROTO_ICMP,

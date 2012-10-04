@@ -316,6 +316,105 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
 #endif /* !WIN32 */
 }
 
+/* Send the SPA data via raw UDP packet.
+*/
+static int
+send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
+    const struct sockaddr_in *saddr, const struct sockaddr_in *daddr,
+    const fko_cli_options_t *options)
+{
+#ifdef WIN32
+    fprintf(stderr,
+        "send_spa_packet_udp_raw: raw packets are not yet supported.\n");
+    return(-1);
+#else
+    int  sock, res = 0;
+    char pkt_data[2048] = {0}; /* Should be enough for our purposes */
+
+    struct iphdr  *iph  = (struct iphdr *) pkt_data;
+    struct udphdr *udph = (struct udphdr *) (pkt_data + sizeof (struct iphdr));
+
+    int hdrlen = sizeof(struct iphdr) + sizeof(struct udphdr);
+
+    /* Values for setsockopt.
+    */
+    int         one     = 1;
+    const int  *so_val  = &one;
+
+    if (options->test)
+    {
+        fprintf(stderr,
+            "test mode enabled, SPA packet not actually sent.\n");
+        return res;
+    }
+
+    sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+    if (sock < 0)
+    {
+        perror("send_spa_packet_udp_raw: create socket: ");
+        return(sock);
+    }
+
+    /* Put the spa data in place.
+    */
+    memcpy((pkt_data + hdrlen), spa_data, sd_len);
+
+    /* Construct our own header by filling in the ip/udp header values,
+     * starting with the IP header values.
+    */
+    iph->ihl        = 5;
+    iph->version    = 4;
+    iph->tos        = 0;
+    /* Total size is header plus payload */
+    iph->tot_len    = hdrlen + sd_len;
+    /* The value here does not matter */
+    iph->id         = random() & 0xffff;
+    iph->frag_off   = 0;
+    iph->ttl        = 255;
+    iph->protocol   = IPPROTO_UDP;
+    iph->check      = 0;
+    iph->saddr      = saddr->sin_addr.s_addr;
+    iph->daddr      = daddr->sin_addr.s_addr;
+
+    /* Now the UDP header values.
+    */
+    udph->source    = saddr->sin_port;
+    udph->dest      = daddr->sin_port;
+    udph->check     = 0;
+    udph->len       = sd_len + sizeof(struct udphdr);
+
+    /* No we can compute our checksum.
+    */
+    iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
+
+    /* Make sure the kernel knows the header is included in the data so it
+     * doesn't try to insert its own header into the packet.
+    */
+    if (setsockopt (sock, IPPROTO_IP, IP_HDRINCL, so_val, sizeof(one)) < 0)
+        perror("send_spa_packet_udp_raw: setsockopt HDRINCL: ");
+
+    res = sendto (sock, pkt_data, iph->tot_len, 0,
+        (struct sockaddr *)daddr, sizeof(*daddr));
+
+    if(res < 0)
+    {
+        perror("send_spa_packet_udp_raw: sendto error: ");
+    }
+    else if(res != sd_len + hdrlen) /* account for the header ?*/
+    {
+        fprintf(stderr,
+            "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            res, sd_len
+        );
+    }
+
+    close(sock);
+
+    return(res);
+
+#endif /* !WIN32 */
+}
+
 /* Send the SPA data via ICMP packet.
 */
 static int
@@ -378,7 +477,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
 
     /* Now the ICMP header values.
     */
-    icmph->type     = ICMP_ECHOREPLY; /* Make it an echo reply */
+    icmph->type     = ICMP_ECHO; /* Make it an echo reply */
     icmph->code     = 0;
     icmph->checksum = 0;
 
@@ -556,6 +655,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         res = send_spa_packet_http(spa_data, sd_len, options);
     }
     else if (options->spa_proto == FKO_PROTO_TCP_RAW
+            || options->spa_proto == FKO_PROTO_UDP_RAW
             || options->spa_proto == FKO_PROTO_ICMP)
     {
         memset(&saddr, 0, sizeof(saddr));
@@ -596,6 +696,10 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         if (options->spa_proto == FKO_PROTO_TCP_RAW)
         {
             res = send_spa_packet_tcp_raw(spa_data, sd_len, &saddr, &daddr, options);
+        }
+        else if (options->spa_proto == FKO_PROTO_UDP_RAW)
+        {
+            res = send_spa_packet_udp_raw(spa_data, sd_len, &saddr, &daddr, options);
         }
         else
         {
