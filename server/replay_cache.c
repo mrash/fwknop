@@ -168,17 +168,17 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
     strftime(created, DATE_LEN, "%D %H:%M:%S", localtime(&(digest_info->created)));
 
     log_msg(LOG_WARNING,
-        "Replay detected from source IP: %s\n"
-        "        Destination proto/port: %d/%d\n"
-        "            Original source IP: %s\n"
-        "       Original dst proto/port: %d/%d\n"
+        "Replay detected from source IP: %s, "
+        "Destination proto/port: %d/%d, "
+        "Original source IP: %s, "
+        "Original dst proto/port: %d/%d, "
 #if USE_FILE_CACHE
-        "                 Entry created: %s\n",
+        "Entry created: %s",
 #else
-        "                 Entry created: %s\n"
-        "                  First replay: %s\n"
-        "                   Last replay: %s\n"
-        "                  Replay count: %i\n",
+        "Entry created: %s, "
+        "First replay: %s, "
+        "Last replay: %s, "
+        "Replay count: %i",
 #endif
         src_ip,
         opts->spa_pkt.packet_proto,
