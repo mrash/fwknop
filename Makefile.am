@@ -156,6 +156,7 @@ EXTRA_DIST = \
     test/conf/fuzzing_restrict_ports_access.conf \
     test/conf/tcp_pcap_filter_fwknopd.conf \
     test/conf/icmp_pcap_filter_fwknopd.conf \
+    test/conf/tcp_server_fwknopd.conf \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
