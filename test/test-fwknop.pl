@@ -35,6 +35,7 @@ my %cf = (
     'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
     'gpg_access'              => "$conf_dir/gpg_access.conf",
     'gpg_no_pw_access'        => "$conf_dir/gpg_no_pw_access.conf",
+    'tcp_server'              => "$conf_dir/tcp_server_fwknopd.conf",
     'tcp_pcap_filter'         => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
     'icmp_pcap_filter'        => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
     'open_ports_access'       => "$conf_dir/open_ports_access.conf",
@@ -860,6 +861,23 @@ my @tests = (
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
+        'fatal'    => $NO
+    },
+
+    ### SPA over TCP (not really "single" packet auth since a TCP connection
+    ### is established)
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => "SPA over TCP connection",
+        'err_msg'  => "could not send/process SPA packet over TCP connection",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -P tcp",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'tcp_server'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 
