@@ -477,7 +477,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
 
     /* Now the ICMP header values.
     */
-    icmph->type     = ICMP_ECHO; /* Make it an echo reply */
+    icmph->type     = ICMP_ECHOREPLY; /* Make it an echo reply */
     icmph->code     = 0;
     icmph->checksum = 0;
 
