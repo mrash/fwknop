@@ -260,6 +260,8 @@ fw_dump_rules(const fko_srv_options_t *opts)
                 ch[i].to_chain
             );
 
+            fprintf(stdout, "\n");
+            fflush(stdout);
             res = system(cmd_buf);
 
             if (opts->verbose)
