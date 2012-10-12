@@ -16,6 +16,7 @@ my @libdirs = qw(
     /usr/local/lib/fko
     /opt/fko/lib64
     /opt/fko/lib
+    ../../lib/.libs
 );
 
 check_lib_or_exit(
@@ -30,9 +31,9 @@ WriteMakefile(
     ($] >= 5.005 ?
       (ABSTRACT_FROM  => 'lib/FKO.pm',
        AUTHOR         => 'Damien S. Stuart <dstuart@dstuart.org>') : ()),
-    LIBS              => ['-lfko'],
+    LIBS              => ['-L../../lib/.libs -lfko'],
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => '-I.',
+    INC               => '-I. -I../../lib',
 	# Un-comment this if you add C files to link with later:
     # OBJECT            => '$(O_FILES)', # link all the C files too
 );

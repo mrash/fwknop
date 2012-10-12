@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 
+use Cwd;
 use File::Copy;
 use File::Path;
 use IO::Socket;
@@ -78,6 +79,7 @@ my $non_std_spa_port = 12345;
 
 my $spoof_user = 'testuser';
 my $spoof_ip   = '1.2.3.4';
+my $perl_mod_fko_dir = 'FKO';
 my $cmd_exec_test_file = '/tmp/fwknoptest';
 #================== end config ===================
 
@@ -103,8 +105,10 @@ my $valgrind_str = '';
 my $enable_client_ip_resolve_test = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
+my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_make_distcheck = 0;
+my $enable_perl_module_checks = 0;
 my $sudo_path = '';
 my $platform = '';
 my $help = 0;
@@ -140,6 +144,7 @@ exit 1 unless GetOptions(
     'include=s'         => \$test_include,  ### synonym
     'test-exclude=s'    => \$test_exclude,
     'exclude=s'         => \$test_exclude,  ### synonym
+    'enable-perl-module-checks' => \$enable_perl_module_checks,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
@@ -1648,6 +1653,41 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    ### perl module checks
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'compile/install',
+        'detail'   => 'to: ./FKO',
+        'err_msg'  => 'could not install FKO module',
+        'function' => \&perl_fko_module_compile_install,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'create/destroy FKO object',
+        'err_msg'  => 'could not create/destroy FKO object',
+        'function' => \&perl_fko_module_new_object,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'create/destroy 1000 FKO objects',
+        'err_msg'  => 'could not create/destroy FKO object',
+        'function' => \&perl_fko_module_new_objects_1000,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'compatibility',
+        'detail'   => 'client FKO -> C server',
+        'err_msg'  => 'invalid SPA packet data',
+        'function' => \&perl_fko_module_client_compatibility,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GPG (no pw) SPA',
         'subcategory' => 'client+server',
@@ -2416,6 +2456,140 @@ sub spoof_username() {
     }
 
     return $rv;
+}
+
+sub perl_fko_module_compile_install() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    if (-d $perl_mod_fko_dir) {
+        rmtree $perl_mod_fko_dir or die $!;
+    }
+    mkdir $perl_mod_fko_dir or die "[*] Could not mkdir $perl_mod_fko_dir: $!";
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '../perl/FKO' or die $!;
+
+    &run_cmd("make clean", $cmd_out_tmp,
+            "../../test/$current_test_file");
+    &run_cmd("perl Makefile.PL PREFIX=../../test/$perl_mod_fko_dir " .
+        "LIB=../../test/$perl_mod_fko_dir", $cmd_out_tmp,
+        "../../test/$current_test_file");
+    &run_cmd('make', $cmd_out_tmp,
+        "../../test/$current_test_file");
+    &run_cmd('make install', $cmd_out_tmp,
+        "../../test/$current_test_file");
+
+    chdir $curr_pwd or die $!;
+
+    my $mod_paths_ar = &get_mod_paths();
+
+    if ($#$mod_paths_ar > -1) {  ### FKO/ exists
+        push @$mod_paths_ar, @INC;
+        splice @INC, 0, $#$mod_paths_ar+1, @$mod_paths_ar;
+    }
+
+    eval { require FKO };
+    if ($@) {
+        &write_test_file("[-] could not 'require FKO' module: $@\n",
+            $current_test_file);
+        $rv = 0;
+
+        ### disable remaining perl module checks
+        push @tests_to_exclude, qr/perl FKO module/;
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_new_object() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    if ($fko_obj) {
+        $fko_obj->destroy();
+    } else {
+        &write_test_file("[-] error FKO->new(): " . FKO->error_str,
+            $current_test_file);
+
+        ### disable remaining perl module checks
+        push @tests_to_exclude, qr/perl FKO module/;
+
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_new_objects_1000() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for (my $i=0; $i < 1000; $i++) {
+        $fko_obj = FKO->new();
+
+        if ($fko_obj) {
+            $fko_obj->destroy();
+        } else {
+            &write_test_file("[-] error FKO->new(): " . FKO->error_str,
+                $current_test_file);
+
+            ### disable remaining perl module checks
+            push @tests_to_exclude, qr/perl FKO module/;
+
+            $rv = 0;
+            last;
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_client_compatibility() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO->error_str,
+            $current_test_file);
+        $rv = 0;
+    }
+
+    $fko_obj->version();
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub get_mod_paths() {
+
+    my @paths = ();
+
+    opendir D, $perl_mod_fko_dir
+        or die "[*] Could not open $perl_mod_fko_dir: $!";
+    my @dirs = readdir D;
+    closedir D;
+
+    push @paths, $perl_mod_fko_dir;
+
+    for my $dir (@dirs) {
+        ### get directories like "FKO/x86_64-linux"
+        next unless -d "$perl_mod_fko_dir/$dir";
+        push @paths, "$perl_mod_fko_dir/$dir"
+            if $dir =~ m|linux| or $dir =~ m|thread|
+                or (-d "$perl_mod_fko_dir/$dir/auto");
+    }
+    return \@paths;
 }
 
 sub spa_cmd_exec_cycle() {
@@ -3424,6 +3598,10 @@ sub init() {
 
     unless ($enable_client_ip_resolve_test) {
         push @tests_to_exclude, qr/IP resolve/;
+    }
+
+    unless ($enable_perl_module_checks) {
+        push @tests_to_exclude, qr/perl FKO module/;
     }
 
     $sudo_path = &find_command('sudo');
