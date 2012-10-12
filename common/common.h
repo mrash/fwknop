@@ -104,6 +104,9 @@ enum {
 #define MIN_HIGH_PORT       10000  /* sensible minimum for SPA dest port */
 #define MAX_PORT            65535
 #define MAX_SERVER_STR_LEN  50
+#define MAX_ICMP_TYPE       40
+#define MAX_ICMP_CODE       15
+#define RAW_SPA_TTL         255
 
 #define MAX_LINE_LEN        1024
 #define MAX_PATH_LEN        1024

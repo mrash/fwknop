@@ -316,6 +316,14 @@ SPA OPTIONS
     on the fwknopd server (*--spoof-src* mode requires that the *fwknop*
     client is executed as root).
 
+*--icmp-type*='<type>'::
+    In *-P icmp* mode, specify the ICMP type value that will be set in the
+    SPA packet ICMP header.  The default is echo reply.
+
+*--icmp-code*='<code>'::
+    In *-P icmp* mode, specify the ICMP code value that will be set in the
+    SPA packet ICMP header.  The default is zero.
+
 
 GPG-RELATED OPTIONS
 -------------------

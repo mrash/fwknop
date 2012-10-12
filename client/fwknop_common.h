@@ -117,6 +117,9 @@ typedef struct fko_cli_options
     unsigned int spa_dst_port;
     unsigned int spa_src_port; /* only used with --source-port */
 
+    int spa_icmp_type;  /* only used in '-P icmp' mode */
+    int spa_icmp_code;  /* only used in '-P icmp' mode */
+
     unsigned int digest_type;
 
     /* Various command-line flags */

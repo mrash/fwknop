@@ -257,7 +257,7 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
     /* The value here does not matter */
     iph->id         = random() & 0xffff;
     iph->frag_off   = 0;
-    iph->ttl        = 255;
+    iph->ttl        = RAW_SPA_TTL;
     iph->protocol   = IPPROTO_TCP;
     iph->check      = 0;
     iph->saddr      = saddr->sin_addr.s_addr;
@@ -370,7 +370,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
     /* The value here does not matter */
     iph->id         = random() & 0xffff;
     iph->frag_off   = 0;
-    iph->ttl        = 255;
+    iph->ttl        = RAW_SPA_TTL;
     iph->protocol   = IPPROTO_UDP;
     iph->check      = 0;
     iph->saddr      = saddr->sin_addr.s_addr;
@@ -469,7 +469,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
     /* The value here does not matter */
     iph->id         = random() & 0xffff;
     iph->frag_off   = 0;
-    iph->ttl        = 255;
+    iph->ttl        = RAW_SPA_TTL;
     iph->protocol   = IPPROTO_ICMP;
     iph->check      = 0;
     iph->saddr      = saddr->sin_addr.s_addr;
@@ -477,9 +477,15 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
 
     /* Now the ICMP header values.
     */
-    icmph->type     = ICMP_ECHOREPLY; /* Make it an echo reply */
-    icmph->code     = 0;
+    icmph->type     = options->spa_icmp_type;
+    icmph->code     = options->spa_icmp_code;
     icmph->checksum = 0;
+
+    if(icmph->type == ICMP_ECHO && icmph->code == 0)
+    {
+        icmph->un.echo.id       = htons(random() & 0xffff);
+        icmph->un.echo.sequence = htons(1);
+    }
 
     /* No we can compute our checksum.
     */

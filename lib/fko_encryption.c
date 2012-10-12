@@ -53,11 +53,11 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key)
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plain = malloc(strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2);
+    plain = malloc(strlen(ctx->encoded_msg) + strlen(ctx->digest) + 4);
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    snprintf(plain, strlen(ctx->encoded_msg) + strlen(ctx->digest) + 2,
+    snprintf(plain, strlen(ctx->encoded_msg) + strlen(ctx->digest) + 4,
             "%s:%s", ctx->encoded_msg, ctx->digest);
 
     /* Make a bucket for the encrypted version and populate it.

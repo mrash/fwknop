@@ -49,6 +49,8 @@ enum {
     GPG_SIGNER_KEY,
     GPG_HOME_DIR,
     GPG_AGENT,
+    SPA_ICMP_TYPE,
+    SPA_ICMP_CODE,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -78,6 +80,8 @@ static struct option cmd_opts[] =
     {"get-key",             1, NULL, 'G'},
     {"help",                0, NULL, 'h'},
     {"http-proxy",          1, NULL, 'H'},
+    {"icmp-type",           1, NULL, SPA_ICMP_TYPE },
+    {"icmp-code",           1, NULL, SPA_ICMP_CODE },
     {"last-cmd",            0, NULL, 'l'},
     {"nat-access",          1, NULL, 'N'},
     {"named-config",        1, NULL, 'n'},

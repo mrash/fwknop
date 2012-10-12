@@ -83,3 +83,10 @@
 ** [server] Add access variable to require particular IP's even when REQUIRE_SOURCE is used
    The SOURCE variable only applies to the IP header.  Add analogous filtering
    for the allow IP that is encrypted within an SPA payload.
+** [client] Add --icmp-type and --icmp-code args
+   For SPA packets sent over ICMP via raw socket, allow the user to specify
+   the ICMP type and code.
+** [client] Fix 'Could not set destination IP.' in hostname resolution in '-P icmp' mode
+   It seems that hostname resolution is not working when SPA packets are 
+   spoofed.  Here is the command line to trigger the problem:
+   # fwknop -A tcp/22 -a 127.0.0.2 -D <host> --verbose --verbose -P icmp --icmp-type 8 --icmp-code 0 -Q 1.2.3.4

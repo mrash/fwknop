@@ -23,6 +23,11 @@ fwknop-2.0.4 (09/20/2012):
       against libfko in the local directory (if it exists) so that it doesn't
       have to have libfko completely installed in /usr/lib/.  This allows the
       test suite to run FKO tests without installing libfko.
+    - [client] Added --icmp-type and --icmp-code arguments so the user can
+      control the icmp type/code combination for spoofed SPA packets ('-P
+      icmp') mode.
+    - [client] Updated default TTL value to 64 for spoofed SPA packets.  This
+      closer to more OS default TTL values than the previous 255.
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code

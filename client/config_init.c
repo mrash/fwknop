@@ -29,6 +29,7 @@
  ******************************************************************************
 */
 #include "fwknop_common.h"
+#include "netinet_common.h"
 #include "config_init.h"
 #include "cmd_opts.h"
 #include "utils.h"
@@ -644,6 +645,8 @@ set_defaults(fko_cli_options_t *options)
     options->spa_dst_port = FKO_DEFAULT_PORT;
     options->fw_timeout   = -1;
 
+    options->spa_icmp_type = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
+    options->spa_icmp_code = 0;               /* only used in '-P icmp' mode */
     return;
 }
 
@@ -732,6 +735,22 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'H':
                 options->spa_proto = FKO_PROTO_HTTP;
                 strlcpy(options->http_proxy, optarg, MAX_PATH_LEN);
+                break;
+            case SPA_ICMP_TYPE:
+                options->spa_icmp_type = atoi(optarg);
+                if (options->spa_icmp_type < 0 || options->spa_icmp_type > MAX_ICMP_TYPE)
+                {
+                    fprintf(stderr, "Unrecognized icmp type value: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case SPA_ICMP_CODE:
+                options->spa_icmp_code = atoi(optarg);
+                if (options->spa_icmp_code < 0 || options->spa_icmp_code > MAX_ICMP_CODE)
+                {
+                    fprintf(stderr, "Unrecognized icmp code value: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 'l':
                 options->run_last_command = 1;
