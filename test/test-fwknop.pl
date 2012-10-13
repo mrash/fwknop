@@ -1693,6 +1693,54 @@ my @tests = (
         'function' => \&perl_fko_module_new_objects_1000,
         'fatal'    => $NO
     },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko version',
+        'err_msg'  => 'could not get libfko version',
+        'function' => \&perl_fko_module_version,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko get random data',
+        'err_msg'  => 'could not get libfko random data',
+        'function' => \&perl_fko_module_rand,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko get/set username',
+        'err_msg'  => 'could not get libfko username',
+        'function' => \&perl_fko_module_user,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko timestamp',
+        'err_msg'  => 'could not get libfko timestamp',
+        'function' => \&perl_fko_module_timestamp,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko get/set msg types',
+        'err_msg'  => 'could not get/set libfko msg types',
+        'function' => \&perl_fko_module_msg_types,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko get/set msg',
+        'err_msg'  => 'could not get/set libfko msg',
+        'function' => \&perl_fko_module_msg,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'perl FKO module',
@@ -2529,7 +2577,7 @@ sub perl_fko_module_new_object() {
     if ($fko_obj) {
         $fko_obj->destroy();
     } else {
-        &write_test_file("[-] error FKO->new(): " . FKO->error_str,
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
             $current_test_file);
 
         ### disable remaining perl module checks
@@ -2552,7 +2600,7 @@ sub perl_fko_module_new_objects_1000() {
         if ($fko_obj) {
             $fko_obj->destroy();
         } else {
-            &write_test_file("[-] error FKO->new(): " . FKO->error_str,
+            &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
                 $current_test_file);
 
             ### disable remaining perl module checks
@@ -2566,6 +2614,344 @@ sub perl_fko_module_new_objects_1000() {
     return $rv;
 }
 
+sub perl_fko_module_version() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    my $version = $fko_obj->version();
+
+    if ($version) {
+        &write_test_file("[+] got version(): $version\n",
+            $current_test_file);
+    } else {
+        &write_test_file("[-] could not get version()\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub perl_fko_module_rand() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    my $rand_value = $fko_obj->rand_value();
+
+    if ($rand_value) {
+        &write_test_file("[+] got rand_value(): $rand_value\n",
+            $current_test_file);
+    } else {
+        &write_test_file("[-] could not get rand_value()\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub perl_fko_module_user() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    my $username = $fko_obj->username();
+
+    if ($username) {
+        &write_test_file("[+] got username(): $username\n",
+            $current_test_file);
+    } else {
+        &write_test_file("[-] could not get username()\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    ### set the username and check it
+    my $status = $fko_obj->username('test');
+
+    if ($status == FKO->FKO_SUCCESS and $fko_obj->username() eq 'test') {
+        &write_test_file("[+] get/set username(): test\n",
+            $current_test_file);
+    } else {
+        &write_test_file("[-] could not get/set username(): test " .
+            FKO::error_str() . "\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    for my $bogus_user (
+        'A'x1000,
+        "-1",
+        -1,
+        pack('a', ""),
+        '123%123'
+    ) {
+
+        ### set the username to something bogus and make sure libfko rejects it
+        $status = $fko_obj->username($bogus_user);
+
+        if ($status == FKO->FKO_SUCCESS and $fko_obj->username() eq $bogus_user) {
+            &write_test_file("[-] libfko allowed bogus username(): $bogus_user " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+        } else {
+            &write_test_file("[+] libfko threw out bogus username(): $bogus_user\n",
+                $current_test_file);
+        }
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub perl_fko_module_timestamp() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    my $timestamp = $fko_obj->timestamp();
+
+    if ($timestamp) {
+        &write_test_file("[+] got timestamp(): $timestamp\n",
+            $current_test_file);
+    } else {
+        &write_test_file("[-] could not get timestamp()\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub perl_fko_module_msg_types() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    my $msg_type = -1;
+
+    ### default
+    $msg_type = $fko_obj->spa_message_type();
+
+    if ($msg_type > -1) {
+        &write_test_file("[+] got default spa_message_type(): $msg_type\n",
+            $current_test_file);
+    } else {
+        &write_test_file("[-] could not get default spa_message_type()\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    for my $type (
+        FKO->FKO_ACCESS_MSG,
+        FKO->FKO_COMMAND_MSG,
+        FKO->FKO_LOCAL_NAT_ACCESS_MSG,
+        FKO->FKO_NAT_ACCESS_MSG,
+        FKO->FKO_CLIENT_TIMEOUT_ACCESS_MSG,
+        FKO->FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG,
+        FKO->FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG,
+    ) {
+
+        ### set message type and then see if it matches
+        my $status = $fko_obj->spa_message_type($type);
+
+        if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_message_type() == $type) {
+            &write_test_file("[+] get/set spa_message_type(): $type\n",
+                $current_test_file);
+        } else {
+            &write_test_file("[-] could not get/set spa_message_type(): $type " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+            last;
+        }
+    }
+
+    for my $bogus_type (
+        -1,
+        255,
+    ) {
+
+        ### set message type and then see if it matches
+        my $status = $fko_obj->spa_message_type($bogus_type);
+
+        if ($status == FKO->FKO_SUCCESS) {
+            &write_test_file("[-] libfko allowed bogus spa_message_type(): $bogus_type " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+        } else {
+            &write_test_file("[+] libfko rejected bogus spa_message_type(): $bogus_type\n",
+                $current_test_file);
+        }
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub perl_fko_module_msg() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    for my $msg (
+        '1.2.3.4,tcp/22',
+        '1.2.3.4,udp/53',
+        '123.123.123.123,tcp/12345',
+        '123.123.123.123,udp/12345'
+    ) {
+
+        ### set message and then see if it matches
+        my $status = $fko_obj->spa_message($msg);
+
+        if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_message() eq $msg) {
+            &write_test_file("[+] get/set spa_message(): $msg\n",
+                $current_test_file);
+        } else {
+            &write_test_file("[-] could not get/set spa_message(): $msg " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+            last;
+        }
+    }
+
+    for my $bogus_msg (@{&bogus_access_messages()}) {
+
+        ### set message type and then see if it matches
+        my $status = $fko_obj->spa_message($bogus_msg);
+
+        if ($status == FKO->FKO_SUCCESS) {
+            &write_test_file("[-] libfko allowed bogus " .
+                "spa_message(): $bogus_msg, got: " . $fko_obj->spa_message() . ' ' .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+        } else {
+            &write_test_file("[+] libfko rejected bogus spa_message(): $bogus_msg\n",
+                $current_test_file);
+        }
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub bogus_access_messages() {
+    my @msgs = (
+        '1.2.3.4,tcp/2a2',
+        '1.2.3.4,tcp/22,',
+        '1.2.3.4,tcp/123456',
+        '1.2.3.4,tcp/123456' . '9'x100,
+        '1.2.3.4,tcp//22',
+        '1.2.3.4,tcp/22/',
+        'a23.123.123.123,tcp/12345',
+        -1,
+        1,
+        'A',
+        0x0,
+        'A'x1000,
+        '/'x1000,
+        '%'x1000,
+        ':'x1000,
+        pack('a', ""),
+        '1.1.1.p/12345',
+        '1.1.1.2,,,,12345',
+        '1.1.1.2,12345',
+        '1.1.1.2,icmp/123',
+        ',,,',
+        '----',
+        '1.3.4.5.5',
+        '1.3.4.5,' . '/'x100,
+        '1.3.4.5,' . '/'x100 . '22',
+        '1.2.3.4,rcp/22',
+        '1.2.3.4,udp/-1',
+        '1.2.3.4,tcp/-1',
+        '1.2.3.4,icmp/-1',
+        '1.2.3' . pack('a', "") . '.4,tcp/22',
+        '1.2.3.' . pack('a', "") . '4,tcp/22',
+        '1.2.3.4' . pack('a', "") . ',tcp/22',
+        '1.2.3.4,' . pack('a', "") . 'tcp/22',
+        '1.2.3.4,t' . pack('a', "") . 'cp/22',
+        '1.2.3.4,tc' . pack('a', "") . 'p/22',
+        '1.2.3.4,tcp' . pack('a', "") . '/22',
+        '1.2.3.4,tcp/' . pack('a', "") . '22',
+        '123.123.123' . pack('a', "") . '.123,tcp/22',
+        '123.123.123.' . pack('a', "") . '123,tcp/22',
+        '123.123.123.1' . pack('a', "") . '23,tcp/22',
+        '123.123.123.12' . pack('a', "") . '3,tcp/22',
+        '123.123.123.123' . pack('a', "") . ',tcp/22',
+        '123.123.123.123,' . pack('a', "") . 'tcp/22',
+        '123.123.123.123,t' . pack('a', "") . 'cp/22',
+        '123.123.123.123,tc' . pack('a', "") . 'p/22',
+        '123.123.123.123,tcp' . pack('a', "") . '/22',
+        '123.123.123.123,tcp/' . pack('a', "") . '22',
+        '1.2.3.4,t' . pack('a', "") . 'cp/22'
+    );
+    return \@msgs;
+}
+
 sub perl_fko_module_client_compatibility() {
     my $test_hr = shift;
 
@@ -2574,12 +2960,10 @@ sub perl_fko_module_client_compatibility() {
     $fko_obj = FKO->new();
 
     unless ($fko_obj) {
-        &write_test_file("[-] error FKO->new(): " . FKO->error_str,
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
             $current_test_file);
-        $rv = 0;
+        return 0;
     }
-
-    $fko_obj->version();
 
     $fko_obj->destroy();
 
