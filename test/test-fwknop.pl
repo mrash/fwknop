@@ -1736,9 +1736,17 @@ my @tests = (
     {
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
-        'detail'   => 'libfko get/set msg',
-        'err_msg'  => 'could not get/set libfko msg',
-        'function' => \&perl_fko_module_msg,
+        'detail'   => 'libfko get/set access msgs',
+        'err_msg'  => 'could not get/set libfko access msgs',
+        'function' => \&perl_fko_module_access_msgs,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko get/set cmd msgs',
+        'err_msg'  => 'could not get/set libfko cmd msgs',
+        'function' => \&perl_fko_module_cmd_msgs,
         'fatal'    => $NO
     },
 
@@ -2841,7 +2849,7 @@ sub perl_fko_module_msg_types() {
     return $rv;
 }
 
-sub perl_fko_module_msg() {
+sub perl_fko_module_access_msgs() {
     my $test_hr = shift;
 
     my $rv = 1;
@@ -2854,12 +2862,7 @@ sub perl_fko_module_msg() {
         return 0;
     }
 
-    for my $msg (
-        '1.2.3.4,tcp/22',
-        '1.2.3.4,udp/53',
-        '123.123.123.123,tcp/12345',
-        '123.123.123.123,udp/12345'
-    ) {
+    for my $msg (@{valid_access_messages()}) {
 
         ### set message and then see if it matches
         my $status = $fko_obj->spa_message($msg);
@@ -2898,8 +2901,91 @@ sub perl_fko_module_msg() {
     return $rv;
 }
 
+sub perl_fko_module_cmd_msgs() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    $fko_obj->spa_message_type(FKO->FKO_COMMAND_MSG);
+
+    for my $msg (@{valid_cmd_messages()}) {
+
+        ### set message and then see if it matches
+        my $status = $fko_obj->spa_message($msg);
+
+        if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_message() eq $msg) {
+            &write_test_file("[+] get/set spa_message(): $msg\n",
+                $current_test_file);
+        } else {
+            &write_test_file("[-] could not get/set spa_message(): $msg " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+            last;
+        }
+    }
+
+    for my $bogus_msg (@{&bogus_cmd_messages()}) {
+
+        ### set message type and then see if it matches
+        my $status = $fko_obj->spa_message($bogus_msg);
+
+        if ($status == FKO->FKO_SUCCESS) {
+            &write_test_file("[-] libfko allowed bogus " .
+                "spa_message(): $bogus_msg, got: " . $fko_obj->spa_message() . ' ' .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+        } else {
+            &write_test_file("[+] libfko rejected bogus spa_message(): $bogus_msg\n",
+                $current_test_file);
+        }
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub valid_access_messages() {
+    my @msgs = (
+        '1.2.3.4,tcp/22',
+        '123.123.123.123,tcp/12345',
+        '1.2.3.4,udp/53',
+        '123.123.123.123,udp/12345',
+#        '123.123.123.123,icmp/1'
+    );
+    return \@msgs;
+}
+
+sub valid_cmd_messages() {
+    my @msgs = (
+        '1.2.3.4,cat /etc/hosts',
+        '123.123.123.123,cat /etc/hosts',
+        '123.123.123.123,echo blah > /some/file',
+        '1.1.1.1,echo blah > /some/file',
+        '1.1.1.1,' . 'A'x10,
+        '1.1.1.1,' . 'A'x10 . ':',
+    );
+    return \@msgs;
+}
+
 sub bogus_access_messages() {
     my @msgs = (
+        '1.2.3.4',
+        '1.2.3.4.',
+        '123.123.123.123',
+        '923.123.123.123',
+        '123.123.123.123.',
+        '999.999.999.999',
         '1.2.3.4,tcp/2a2',
         '1.2.3.4,tcp/22,',
         '1.2.3.4,tcp/123456',
@@ -2907,6 +2993,8 @@ sub bogus_access_messages() {
         '1.2.3.4,tcp//22',
         '1.2.3.4,tcp/22/',
         'a23.123.123.123,tcp/12345',
+        '999.999.999.999,tcp/22',
+        '999.1.1.1,tcp/22',
         -1,
         1,
         'A',
@@ -2948,6 +3036,34 @@ sub bogus_access_messages() {
         '123.123.123.123,tcp' . pack('a', "") . '/22',
         '123.123.123.123,tcp/' . pack('a', "") . '22',
         '1.2.3.4,t' . pack('a', "") . 'cp/22'
+    );
+    return \@msgs;
+}
+
+sub bogus_cmd_messages() {
+    my @msgs = (
+        ### must start with a valid IP, so test this
+        -1,
+        1,
+        'A',
+        0x0,
+        'A'x1000,
+        '/'x1000,
+        '%'x1000,
+        ':'x1000,
+        pack('a', ""),
+        ',,,',
+        '----',
+        '1.3.4.5.5',
+        '999.3.4.5',
+        '1.,',
+        '1.2.,',
+        '1.2.3.,',
+        '1.2.3.4',
+        '123.123.123.123',
+        '1.2.3.4,',
+        '1.2.3.4.',
+        '123.123.123.123,' . 'A'x1000,
     );
     return \@msgs;
 }
