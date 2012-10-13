@@ -1749,6 +1749,14 @@ my @tests = (
         'function' => \&perl_fko_module_cmd_msgs,
         'fatal'    => $NO
     },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko get/set client timeout',
+        'err_msg'  => 'could not get/set libfko client timeout',
+        'function' => \&perl_fko_module_client_timeout,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'perl FKO module',
@@ -2766,6 +2774,55 @@ sub perl_fko_module_timestamp() {
         &write_test_file("[-] could not get timestamp()\n",
             $current_test_file);
         $rv = 0;
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
+sub perl_fko_module_client_timeout() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+   my $valid_timeout = 30;
+    my $status = $fko_obj->spa_client_timeout($valid_timeout);
+
+    if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_client_timeout() == $valid_timeout) {
+        &write_test_file("[+] got spa_client_timeout(): $valid_timeout\n",
+            $current_test_file);
+    } else {
+        &write_test_file("[-] could not get spa_client_timeout()\n",
+            $current_test_file);
+        $rv = 0;
+    }
+
+    for my $bogus_client_timeout (
+        -1,
+        -10000,
+    ) {
+
+        ### set message timeout and then see if it matches
+        my $status = $fko_obj->spa_client_timeout($bogus_client_timeout);
+
+        if ($status == FKO->FKO_SUCCESS) {
+            &write_test_file("[-] libfko allowed bogus spa_client_timeout(): $bogus_client_timeout " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+        } else {
+            &write_test_file("[+] libfko rejected bogus spa_client_timeout(): $bogus_client_timeout\n",
+                $current_test_file);
+        }
     }
 
     $fko_obj->destroy();
