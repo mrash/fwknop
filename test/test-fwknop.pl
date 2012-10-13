@@ -2961,6 +2961,8 @@ sub valid_access_messages() {
         '123.123.123.123,tcp/12345',
         '1.2.3.4,udp/53',
         '123.123.123.123,udp/12345',
+        '123.123.123.123,udp/12345,tcp/12345',
+        '1.1.1.1,udp/1,tcp/1,tcp/2,udp/3,tcp/4,tcp/12345',
 #        '123.123.123.123,icmp/1'
     );
     return \@msgs;
@@ -3035,7 +3037,17 @@ sub bogus_access_messages() {
         '123.123.123.123,tc' . pack('a', "") . 'p/22',
         '123.123.123.123,tcp' . pack('a', "") . '/22',
         '123.123.123.123,tcp/' . pack('a', "") . '22',
-        '1.2.3.4,t' . pack('a', "") . 'cp/22'
+        '1.2.3.4,t' . pack('a', "") . 'cp/22',
+        '1.1.1.1,udp/1,tap/1,tcp/2,udp/3,tcp/4,tcp/12345',
+        '1.1.1.1,udp/1,tcp/-11,tcp/2,udp/3,tcp/4,tcp/12345',
+        '1.1.1.1,udp/1,tcp/1,tcp/2udp/3,tcp/4,tcp/12345',
+        '1.1.1.1,udp/1,tcp/1,tcp/2,udp/3,tcp/4,tcp////12345',
+        '1.1.1.1,udp/1,tcp/1,tcp/2udp/3,tcp/4,tcp////12345',
+        '1.1.1.1,udp/1,tcp/1,tcp/2udp/3,tcp/4,tcp////12345',
+        '1.1.1.1,udp/1,tcp/1,tcp/2udp/3*tcp/4,tcp////12345',
+        '1.1.1.1,udp/1,tcp/1,tcp/2udp/3,tcb/4,tcp////12345',
+        '1.1.1.1,udp/1,tcp/1tcp/2udp/3,tcp/4,tcp////12345',
+        '123.123.123.123udp/1,tcp/1,tcp/2udp/3,tcp/4,tcp////12345////////////',
     );
     return \@msgs;
 }
