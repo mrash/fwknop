@@ -54,6 +54,7 @@ my %cf = (
     'ip_src_match'            => "$conf_dir/ip_source_match_access.conf",
     'subnet_src_match'        => "$conf_dir/ip_source_match_access.conf",
     'disable_aging'           => "$conf_dir/disable_aging_fwknopd.conf",
+    'disable_aging_nat'       => "$conf_dir/disable_aging_nat_fwknopd.conf",
     'fuzz_source'             => "$conf_dir/fuzzing_source_access.conf",
     'fuzz_open_ports'         => "$conf_dir/fuzzing_open_ports_access.conf",
     'fuzz_restrict_ports'     => "$conf_dir/fuzzing_restrict_ports_access.conf",
@@ -1106,6 +1107,17 @@ my @tests = (
     },
     {
         'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
+        'detail'   => "NAT bogus IP validation",
+        'err_msg'  => "could not complete NAT SPA cycle",
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args -N 999.1.1.1:22",
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
         'detail'   => "force NAT $force_nat_host (tcp/22 ssh)",
         'err_msg'  => "could not complete NAT SPA cycle",
@@ -1114,8 +1126,8 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'nat'} -a $cf{'force_nat_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i],
-        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'server_positive_output_matches' => [qr/\sto\:$force_nat_host\:22/i],
+        'server_negative_output_matches' => [qr/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
@@ -1542,6 +1554,30 @@ my @tests = (
         'fatal'    => $NO
     },
     {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'invalid NAT IP',
+        'err_msg'  => 'server crashed or did not detect error condition',
+        'function' => \&fuzzer,
+        ### this packet was generated with a modified fwknop client via the
+        ### following command line:
+        #
+        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/22 \
+        # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key --verbose \
+        # --verbose -N 999.1.1.1:22
+        'fuzzing_pkt' =>
+            '/v/kYVOqw+NCkg8CNEphPPvH3dOAECWjqiF+NNYnK7yKHer/Gy8wCVNa/Rr/Wnm' .
+            'siApB3jrXEfyEY3yebJV+PHoYIYC3+4Trt2jxw0m+6iR231Ywhw1JetIPwsv7iQ' .
+            'ATvSTpZ+qiaoN0PPfy0+7yM6KlaQIu7bfG5E2a6VJTqTZ1qYz3H7QaJfbAtOD8j' .
+            'yEkDgP5+f49xrRA',
+        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging_nat'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+
+    {
         'category' => 'FUZZING',
         'subcategory' => 'server',
         'detail'   => 'invalid SOURCE access.conf',
@@ -1739,6 +1775,14 @@ my @tests = (
         'detail'   => 'libfko get/set access msgs',
         'err_msg'  => 'could not get/set libfko access msgs',
         'function' => \&perl_fko_module_access_msgs,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'basic ops',
+        'detail'   => 'libfko get/set NAT access msgs',
+        'err_msg'  => 'could not get/set libfko NAT access msgs',
+        'function' => \&perl_fko_module_nat_access_msgs,
         'fatal'    => $NO
     },
     {
@@ -2958,6 +3002,60 @@ sub perl_fko_module_access_msgs() {
     return $rv;
 }
 
+sub perl_fko_module_nat_access_msgs() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    $fko_obj = FKO->new();
+
+    unless ($fko_obj) {
+        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+            $current_test_file);
+        return 0;
+    }
+
+    $fko_obj->spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
+
+    for my $msg (@{valid_nat_access_messages()}) {
+
+        ### set message and then see if it matches
+        my $status = $fko_obj->spa_nat_access($msg);
+
+        if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_nat_access() eq $msg) {
+            &write_test_file("[+] get/set spa_nat_access(): $msg\n",
+                $current_test_file);
+        } else {
+            &write_test_file("[-] could not get/set spa_nat_access(): $msg " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+            last;
+        }
+    }
+
+    for my $bogus_msg (@{&bogus_nat_access_messages()}, @{&valid_access_messages()}) {
+
+        ### set message type and then see if it matches
+        my $status = $fko_obj->spa_nat_access($bogus_msg);
+
+        if ($status == FKO->FKO_SUCCESS) {
+            &write_test_file("[-] libfko allowed bogus " .
+                "spa_nat_access(): $bogus_msg, got: " . $fko_obj->spa_nat_access() . ' ' .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+        } else {
+            &write_test_file("[+] libfko rejected bogus spa_nat_access(): $bogus_msg\n",
+                $current_test_file);
+        }
+    }
+
+    $fko_obj->destroy();
+
+    return $rv;
+}
+
 sub perl_fko_module_cmd_msgs() {
     my $test_hr = shift;
 
@@ -3025,6 +3123,14 @@ sub valid_access_messages() {
     return \@msgs;
 }
 
+sub valid_nat_access_messages() {
+    my @msgs = (
+        '1.2.3.4,22',
+        '123.123.123.123,12345',
+    );
+    return \@msgs;
+}
+
 sub valid_cmd_messages() {
     my @msgs = (
         '1.2.3.4,cat /etc/hosts',
@@ -3038,6 +3144,15 @@ sub valid_cmd_messages() {
 }
 
 sub bogus_access_messages() {
+    my @msgs = ();
+
+    push @msgs, @{&bogus_nat_access_messages()};
+    push @msgs, '1.1.1.2,12345',
+    push @msgs, @{&valid_nat_access_messages()};
+    return \@msgs;
+}
+
+sub bogus_nat_access_messages() {
     my @msgs = (
         '1.2.3.4',
         '1.2.3.4.',
@@ -3065,7 +3180,6 @@ sub bogus_access_messages() {
         pack('a', ""),
         '1.1.1.p/12345',
         '1.1.1.2,,,,12345',
-        '1.1.1.2,12345',
         '1.1.1.2,icmp/123',
         ',,,',
         '----',

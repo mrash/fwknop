@@ -17,6 +17,8 @@ fwknop-2.0.4 (09/20/2012):
       UDP with a spoofed source IP address.  This is in addition to the
       original 'tcpraw' and 'icmp' protocols that also support a spoofed
       source IP.
+    - [libfko] Added validation of NAT access strings in the various NAT
+      modes.
     - [server] Bug fix to accept SPA packets over ICMP if the fwknop client
       is executed with '-P icmp' and the user has the required privileges.
     - Applied patch from Franck Joncourt to have the perl FKO module link

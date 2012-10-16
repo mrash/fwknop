@@ -36,6 +36,8 @@
 int
 fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
 {
+    int res = FKO_SUCCESS;
+
     /* Context must be initialized.
     */
     if(!CTX_INITIALIZED(ctx))
@@ -51,6 +53,9 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
     */
     if(strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == MAX_SPA_NAT_ACCESS_SIZE)
         return(FKO_ERROR_DATA_TOO_LARGE);
+
+    if((res = validate_nat_access_msg(msg)) != FKO_SUCCESS)
+        return(res);
 
     /* Just in case this is a subsquent call to this function.  We
      * do not want to be leaking memory.

@@ -342,6 +342,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
         }
 
         b64_decode(tbuf, (unsigned char*)ctx->nat_access);
+
+        if(validate_nat_access_msg(ctx->nat_access) != FKO_SUCCESS)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
     }
 
     /* Now look for a server_auth string.
