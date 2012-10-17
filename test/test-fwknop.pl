@@ -1801,6 +1801,22 @@ my @tests = (
         'function' => \&perl_fko_module_client_timeout,
         'fatal'    => $NO
     },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'encrypt/decrypt',
+        'detail'   => 'libfko complete cycle',
+        'err_msg'  => 'could not finish complete cycle',
+        'function' => \&perl_fko_module_complete_cycle,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'encrypt/decrypt',
+        'detail'   => 'complete cycle (mod reuse)',
+        'err_msg'  => 'could not finish complete cycle',
+        'function' => \&perl_fko_module_complete_cycle_module_reuse,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'perl FKO module',
@@ -2756,26 +2772,25 @@ sub perl_fko_module_user() {
         $rv = 0;
     }
 
-    ### set the username and check it
-    my $status = $fko_obj->username('test');
+    my $status = 0;
 
-    if ($status == FKO->FKO_SUCCESS and $fko_obj->username() eq 'test') {
-        &write_test_file("[+] get/set username(): test\n",
-            $current_test_file);
-    } else {
-        &write_test_file("[-] could not get/set username(): test " .
-            FKO::error_str() . "\n",
-            $current_test_file);
-        $rv = 0;
+    for my $user (@{&valid_usernames()}) {
+
+        ### set the username and check it
+        $status = $fko_obj->username($user);
+
+        if ($status == FKO->FKO_SUCCESS and $fko_obj->username() eq $user) {
+            &write_test_file("[+] get/set username(): $user\n",
+                $current_test_file);
+        } else {
+            &write_test_file("[-] could not get/set username(): $user " .
+                FKO::error_str() . "\n",
+                $current_test_file);
+            $rv = 0;
+        }
     }
 
-    for my $bogus_user (
-        'A'x1000,
-        "-1",
-        -1,
-        pack('a', ""),
-        '123%123'
-    ) {
+    for my $bogus_user (@{&bogus_usernames()}) {
 
         ### set the username to something bogus and make sure libfko rejects it
         $status = $fko_obj->username($bogus_user);
@@ -2901,15 +2916,7 @@ sub perl_fko_module_msg_types() {
         $rv = 0;
     }
 
-    for my $type (
-        FKO->FKO_ACCESS_MSG,
-        FKO->FKO_COMMAND_MSG,
-        FKO->FKO_LOCAL_NAT_ACCESS_MSG,
-        FKO->FKO_NAT_ACCESS_MSG,
-        FKO->FKO_CLIENT_TIMEOUT_ACCESS_MSG,
-        FKO->FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG,
-        FKO->FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG,
-    ) {
+    for my $type (@{&valid_spa_message_types()}) {
 
         ### set message type and then see if it matches
         my $status = $fko_obj->spa_message_type($type);
@@ -2926,10 +2933,7 @@ sub perl_fko_module_msg_types() {
         }
     }
 
-    for my $bogus_type (
-        -1,
-        255,
-    ) {
+    for my $bogus_type (@{&bogus_spa_message_types()}) {
 
         ### set message type and then see if it matches
         my $status = $fko_obj->spa_message_type($bogus_type);
@@ -3110,6 +3114,92 @@ sub perl_fko_module_cmd_msgs() {
     return $rv;
 }
 
+sub valid_usernames() {
+    my @users = (
+        'test',
+        'root',
+        'mbr',
+        'test-test',
+        'someuser',
+        'someUser',
+        'USER',
+        'USER001',
+        '00001'
+    );
+    return \@users;
+}
+
+sub bogus_usernames() {
+    my @users = (
+        'A'x1000,
+        "-1",
+        -1,
+        pack('a', ""),
+        '123%123',
+        '123.123',
+        '-user',
+        '-User',
+        ',User'
+    );
+    return \@users;
+}
+
+sub valid_encryption_keys() {
+    my @keys = (
+        'testtest',
+        '12341234',
+        '1',
+        '1234',
+        'a',
+        '$',
+        '!@#$%',
+        'asdfasdfsafsdaf',
+    );
+    return \@keys;
+}
+
+sub valid_spa_digest_types() {
+    my @types = (
+        FKO->FKO_DIGEST_MD5,
+        FKO->FKO_DIGEST_SHA1,
+        FKO->FKO_DIGEST_SHA256,
+        FKO->FKO_DIGEST_SHA384,
+        FKO->FKO_DIGEST_SHA512
+    );
+    return \@types;
+}
+
+sub bogus_spa_digest_types() {
+    my @types = (
+        -1,
+        -2,
+        255,
+    );
+    return \@types;
+}
+
+sub valid_spa_message_types() {
+    my @types = (
+        FKO->FKO_ACCESS_MSG,
+        FKO->FKO_COMMAND_MSG,
+        FKO->FKO_LOCAL_NAT_ACCESS_MSG,
+        FKO->FKO_NAT_ACCESS_MSG,
+        FKO->FKO_CLIENT_TIMEOUT_ACCESS_MSG,
+        FKO->FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG,
+        FKO->FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG,
+    );
+    return \@types;
+}
+
+sub bogus_spa_message_types() {
+    my @types = (
+        -1,
+        -2,
+        255,
+    );
+    return \@types;
+}
+
 sub valid_access_messages() {
     my @msgs = (
         '1.2.3.4,tcp/22',
@@ -3249,6 +3339,109 @@ sub bogus_cmd_messages() {
         '123.123.123.123,' . 'A'x1000,
     );
     return \@msgs;
+}
+
+sub perl_fko_module_complete_cycle() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $user (@{valid_usernames()}) {
+            for my $digest_type (@{valid_spa_digest_types()}) {
+                for my $key (@{valid_encryption_keys()}) {
+
+                    &write_test_file("[+] msg: $msg, user: $user, " .
+                        "digest type: $digest_type, key: $key\n",
+                        $current_test_file);
+
+                    $fko_obj = FKO->new();
+                    unless ($fko_obj) {
+                        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                            $current_test_file);
+                        return 0;
+                    }
+
+                    $fko_obj->spa_message($msg);
+                    $fko_obj->username($user);
+                    $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+                    $fko_obj->digest_type($digest_type);
+                    $fko_obj->spa_data_final($key);
+
+                    my $encrypted_msg = $fko_obj->spa_data();
+
+                    $fko_obj->destroy();
+
+                    ### now get new object for decryption
+                    $fko_obj = FKO->new();
+                    unless ($fko_obj) {
+                        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                            $current_test_file);
+                        return 0;
+                    }
+                    $fko_obj->spa_data($encrypted_msg);
+                    $fko_obj->decrypt_spa_data($key);
+
+                    if ($msg ne $fko_obj->spa_message()) {
+                        &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
+                            $current_test_file);
+                        $rv = 0;
+                    }
+
+                    $fko_obj->destroy();
+                }
+            }
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_complete_cycle_module_reuse() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $user (@{valid_usernames()}) {
+            for my $digest_type (@{valid_spa_digest_types()}) {
+                for my $key (@{valid_encryption_keys()}) {
+
+                    &write_test_file("[+] msg: $msg, user: $user, " .
+                        "digest type: $digest_type, key: $key\n",
+                        $current_test_file);
+
+                    $fko_obj = FKO->new();
+                    unless ($fko_obj) {
+                        &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                            $current_test_file);
+                        return 0;
+                    }
+
+                    $fko_obj->spa_message($msg);
+                    $fko_obj->username($user);
+                    $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+                    $fko_obj->digest_type($digest_type);
+                    $fko_obj->spa_data_final($key);
+
+                    my $encrypted_msg = $fko_obj->spa_data();
+
+                    $fko_obj->spa_data($encrypted_msg);
+                    $fko_obj->decrypt_spa_data($key);
+
+                    if ($msg ne $fko_obj->spa_message()) {
+                        &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
+                            $current_test_file);
+                        $rv = 0;
+                    }
+
+                    $fko_obj->destroy();
+                }
+            }
+        }
+    }
+
+    return $rv;
 }
 
 sub perl_fko_module_client_compatibility() {
