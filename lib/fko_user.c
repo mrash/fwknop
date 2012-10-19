@@ -41,7 +41,7 @@ int
 fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 {
     char   *username = NULL;
-    int     i;
+    int     res = FKO_SUCCESS;
 
     /* Must be initialized
     */
@@ -88,14 +88,8 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
     if(strnlen(username, MAX_SPA_USERNAME_SIZE) == MAX_SPA_USERNAME_SIZE)
         *(username + MAX_SPA_USERNAME_SIZE - 1) = '\0';
 
-    /* Make sure it is just alpha-numeric chars and dashes
-    */
-    if(isalnum(username[0]) == 0)
-        return(FKO_ERROR_INVALID_DATA);
-
-    for (i=1; i < strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
-        if((isalnum(username[i]) == 0) && username[i] != '-')
-            return(FKO_ERROR_INVALID_DATA);
+    if((res = validate_username(username)) != FKO_SUCCESS)
+        return res;
 
     /* Just in case this is a subsquent call to this function.  We
      * do not want to be leaking memory.
@@ -126,6 +120,26 @@ fko_get_username(fko_ctx_t ctx, char **username)
     *username = ctx->username;
 
     return(FKO_SUCCESS);
+}
+
+int
+validate_username(const char *username)
+{
+    int i;
+
+    if(username == NULL || strnlen(username, MAX_SPA_USERNAME_SIZE) == 0)
+        return(FKO_ERROR_INVALID_DATA);
+
+    /* Make sure it is just alpha-numeric chars and dashes
+    */
+    if(isalnum(username[0]) == 0)
+        return(FKO_ERROR_INVALID_DATA);
+
+    for (i=1; i < strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
+        if((isalnum(username[i]) == 0) && username[i] != '-')
+            return(FKO_ERROR_INVALID_DATA);
+
+    return FKO_SUCCESS;
 }
 
 /***EOF***/

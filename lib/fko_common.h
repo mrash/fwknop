@@ -121,6 +121,7 @@
 #include "fko_state.h"
 #include "fko_context.h"
 #include "fko_message.h"
+#include "fko_user.h"
 
 /* Try to cover for those that do not have bzero.
 */

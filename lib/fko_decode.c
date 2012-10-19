@@ -196,6 +196,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
     }
 
     b64_decode(tbuf, (unsigned char*)ctx->username);
+    if(validate_username(ctx->username) != FKO_SUCCESS)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
 
     /* Extract the timestamp value.
     */
