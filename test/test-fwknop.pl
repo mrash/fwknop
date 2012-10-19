@@ -100,6 +100,8 @@ my $loopback_intf = '';
 my $anonymize_results = 0;
 my $current_test_file = "$output_dir/init";
 my $tarfile = 'test_fwknop.tar.gz';
+my $bogus_pkts_file = 'bogus_spa_pkts';
+my $fuzzing_key = 'testtest';
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
@@ -110,6 +112,7 @@ my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
+my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
 my $sudo_path = '';
 my $platform = '';
 my $help = 0;
@@ -146,6 +149,7 @@ exit 1 unless GetOptions(
     'test-exclude=s'    => \$test_exclude,
     'exclude=s'         => \$test_exclude,  ### synonym
     'enable-perl-module-checks' => \$enable_perl_module_checks,
+    'enable-perl-module-pkt-generation' => \$enable_perl_module_fuzzing_spa_pkt_generation,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
@@ -1715,6 +1719,14 @@ my @tests = (
     },
     {
         'category' => 'perl FKO module',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'generate invalid SPA pkts',
+        'err_msg'  => 'could not generate invalid SPA pkts',
+        'function' => \&perl_fko_module_assume_patches_generate_bogus_spa_packets,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'create/destroy FKO object',
         'err_msg'  => 'could not create/destroy FKO object',
@@ -1817,6 +1829,14 @@ my @tests = (
         'function' => \&perl_fko_module_complete_cycle_module_reuse,
         'fatal'    => $NO
     },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'bogus data',
+        'detail'   => 'server side bogus pkt tests',
+        'err_msg'  => 'server accepted bogus pkts',
+        'function' => \&perl_fko_module_full_bogus_packets,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'perl FKO module',
@@ -1827,6 +1847,7 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    ### no password GPG testing
     {
         'category' => 'GPG (no pw) SPA',
         'subcategory' => 'client+server',
@@ -2292,6 +2313,10 @@ sub run_test() {
         if ($test_hr->{'fatal'} eq $YES) {
             die "[*] required test failed, exiting.";
         }
+    }
+
+    if ($enable_perl_module_fuzzing_spa_pkt_generation) {
+        exit 0 if $msg =~ /perl FKO module.*FUZZING/;
     }
 
     return;
@@ -2824,15 +2849,31 @@ sub perl_fko_module_timestamp() {
         return 0;
     }
 
-    my $timestamp = $fko_obj->timestamp();
+    my $curr_time = $fko_obj->timestamp();
 
-    if ($timestamp) {
-        &write_test_file("[+] got timestamp(): $timestamp\n",
+    if ($curr_time) {
+        &write_test_file("[+] got current timestamp(): $curr_time\n",
             $current_test_file);
     } else {
         &write_test_file("[-] could not get timestamp()\n",
             $current_test_file);
         $rv = 0;
+    }
+
+    for my $offset (@{&valid_offsets()}) {
+
+        $fko_obj->timestamp($offset);
+
+        my $spa_timestamp = $fko_obj->timestamp();
+
+        if (abs($spa_timestamp - $curr_time) < (abs($offset) + 10)) {
+            &write_test_file("[+] set valid timestamp() offset: $offset\n",
+                $current_test_file);
+        } else {
+            &write_test_file("[-] timestamp() offset: $offset not accepted.\n",
+                $current_test_file);
+            $rv = 0;
+        }
     }
 
     $fko_obj->destroy();
@@ -2865,10 +2906,7 @@ sub perl_fko_module_client_timeout() {
         $rv = 0;
     }
 
-    for my $bogus_client_timeout (
-        -1,
-        -10000,
-    ) {
+    for my $bogus_client_timeout (@{&bogus_client_timeouts()}) {
 
         ### set message timeout and then see if it matches
         my $status = $fko_obj->spa_client_timeout($bogus_client_timeout);
@@ -3114,6 +3152,25 @@ sub perl_fko_module_cmd_msgs() {
     return $rv;
 }
 
+sub valid_offsets() {
+    my @offsets = (
+        9999999,
+        10,
+        -10,
+        -999999,
+    );
+    return \@offsets;
+}
+
+sub bogus_client_timeouts() {
+    my @timeouts = (
+        -1,
+        -10,
+        -10000,
+    );
+    return \@timeouts;
+}
+
 sub valid_usernames() {
     my @users = (
         'test',
@@ -3137,9 +3194,12 @@ sub bogus_usernames() {
         pack('a', ""),
         '123%123',
         '123.123',
+        '123$123',
         '-user',
         '-User',
-        ',User'
+        ',User',
+        'part1 part2',
+        'a:b'
     );
     return \@users;
 }
@@ -3438,6 +3498,190 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     $fko_obj->destroy();
                 }
             }
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_assume_patches_generate_bogus_spa_packets() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    USER: for my $user (@{&bogus_usernames()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        $fko_obj->spa_message('1.2.3.4,tcp/22');
+        my $status = $fko_obj->username($user);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### bogus data
+            &write_test_file("[-] Bogus user: $user triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next USER;
+        }
+        $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        &write_test_file("[+] Bogus user: $user, SPA packet: "
+            . $fko_obj->spa_data() . "\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    MSG: for my $msg (@{&bogus_access_messages()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        my $status = $fko_obj->spa_message($msg);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### bogus data
+            &write_test_file("[-] Bogus access_msg: $msg triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next MSG;
+        }
+        $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        &write_test_file("[+] Bogus access_msg: $msg, SPA packet: "
+            . $fko_obj->spa_data() . "\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    NAT_MSG: for my $nat_msg (@{&bogus_nat_access_messages()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        $fko_obj->spa_message('1.2.3.4,tcp/22');
+        my $status = $fko_obj->spa_nat_access($nat_msg);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### bogus data
+            &write_test_file("[-] Bogus NAT_access_msg: $nat_msg triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next NAT_MSG;
+        }
+        $fko_obj->spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        &write_test_file("[+] Bogus NAT_access_msg: $nat_msg, SPA packet: "
+            . $fko_obj->spa_data() . "\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    CMD: for my $msg (@{&bogus_cmd_messages()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        my $status = $fko_obj->spa_message($msg);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### bogus data
+            &write_test_file("[-] Bogus cmd_msg: $msg triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next CMD;
+        }
+        $fko_obj->spa_message_type(FKO->FKO_COMMAND_MSG);
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        &write_test_file("[+] Bogus cmd_msg: $msg, SPA packet: "
+            . $fko_obj->spa_data() . "\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    TYPE: for my $type (@{&bogus_spa_message_types()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        $fko_obj->spa_message('1.2.3.4,tcp/22');
+        my $status = $fko_obj->spa_message_type($type);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### bogus data
+            &write_test_file("[-] Bogus msg_type: $type triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next TYPE;
+        }
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        &write_test_file("[+] Bogus msg_type: $type, SPA packet: "
+            . $fko_obj->spa_data() . "\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_full_bogus_packets() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    my %bogus_spa_packets = ();
+
+    open F, "< $bogus_pkts_file" or die $!;
+    while (<F>) {
+        if (/Bogus\s(\S+)\:\s(.*),\sSPA\spacket\:\s(\S+)/) {
+            $bogus_spa_packets{$1}{$2} = $3;
+        }
+    }
+    close F;
+
+    for my $field (keys %bogus_spa_packets) {
+        for my $field_val (keys %{$bogus_spa_packets{$field}}) {
+
+            my $encrypted_spa_pkt = $bogus_spa_packets{$field}{$field_val};
+
+            ### now get new object for decryption
+            $fko_obj = FKO->new();
+            unless ($fko_obj) {
+                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                    $current_test_file);
+                return 0;
+            }
+            $fko_obj->spa_data($encrypted_spa_pkt);
+
+            my $status = $fko_obj->decrypt_spa_data($fuzzing_key);
+
+            if ($status == FKO->FKO_SUCCESS) {
+                &write_test_file("[-] Accepted bogus $field $field_val SPA packet.\n",
+                    $current_test_file);
+                $rv = 0;
+            }
+
+            $fko_obj->destroy();
         }
     }
 
@@ -4493,6 +4737,12 @@ sub init() {
 
     unless ($enable_perl_module_checks) {
         push @tests_to_exclude, qr/perl FKO module/;
+    }
+
+    if ($enable_perl_module_fuzzing_spa_pkt_generation) {
+        push @tests_to_include, qr/perl FKO module/;
+    } else {
+        push @tests_to_exclude, qr/perl FKO module.*FUZZING/;
     }
 
     $sudo_path = &find_command('sudo');
