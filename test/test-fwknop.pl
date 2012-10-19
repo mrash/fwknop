@@ -100,7 +100,7 @@ my $loopback_intf = '';
 my $anonymize_results = 0;
 my $current_test_file = "$output_dir/init";
 my $tarfile = 'test_fwknop.tar.gz';
-my $bogus_pkts_file = 'bogus_spa_pkts';
+my $bogus_pkts_file = 'bogus_spa_packets';
 my $fuzzing_key = 'testtest';
 my $server_test_file  = '';
 my $use_valgrind = 0;
@@ -3653,7 +3653,7 @@ sub perl_fko_module_full_bogus_packets() {
 
     open F, "< $bogus_pkts_file" or die $!;
     while (<F>) {
-        if (/Bogus\s(\S+)\:\s(.*),\sSPA\spacket\:\s(\S+)/) {
+        if (/Bogus\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
             $bogus_spa_packets{$1}{$2} = $3;
         }
     }
@@ -3679,6 +3679,9 @@ sub perl_fko_module_full_bogus_packets() {
                 &write_test_file("[-] Accepted bogus $field $field_val SPA packet.\n",
                     $current_test_file);
                 $rv = 0;
+            } else {
+                &write_test_file("[+] Rejected bogus $field $field_val SPA packet.\n",
+                    $current_test_file);
             }
 
             $fko_obj->destroy();
