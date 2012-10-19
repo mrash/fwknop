@@ -15,7 +15,7 @@ my $output_dir     = 'output';
 my $lib_dir        = '../lib/.libs';
 my $conf_dir       = 'conf';
 my $run_dir        = 'run';
-my $configure_path = '../configure';
+my $configure_path = 'configure';
 my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
@@ -2435,29 +2435,46 @@ sub build_results_hash() {
 
 sub compile_warnings() {
 
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '..' or die $!;
+
     ### 'make clean' as root
-    return 0 unless &run_cmd('make -C .. clean',
-        $cmd_out_tmp, $current_test_file);
+    unless (&run_cmd('make clean', $cmd_out_tmp,
+            "test/$current_test_file")) {
+        chdir $curr_pwd or die $!;
+        return 0;
+    }
 
     if ($sudo_path) {
         my $username = getpwuid((stat($configure_path))[4]);
         die "[*] Could not determine $configure_path owner"
             unless $username;
 
-        return 0 unless &run_cmd("$sudo_path -u $username make -C ..",
-            $cmd_out_tmp, $current_test_file);
+        unless (&run_cmd("$sudo_path -u $username make",
+                $cmd_out_tmp, "test/$current_test_file")) {
+            chdir $curr_pwd or die $!;
+            return 0;
+        }
 
     } else {
 
-        return 0 unless &run_cmd('make -C ..',
-            $cmd_out_tmp, $current_test_file);
-
+        unless (&run_cmd('make', $cmd_out_tmp,
+                "test/$current_test_file")) {
+            chdir $curr_pwd or die $!;
+            return 0;
+        }
     }
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
-    return 0 if &file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
-        $MATCH_ANY, $current_test_file);
+    if (&file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
+            $MATCH_ANY, "test/$current_test_file")) {
+        chdir $curr_pwd or die $!;
+        return 0;
+    }
+
+    chdir $curr_pwd or die $!;
 
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
