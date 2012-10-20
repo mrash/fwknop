@@ -1,0 +1,104 @@
+diff --git a/lib/fko_message.c b/lib/fko_message.c
+index 7d8237b..e627b0c 100644
+--- a/lib/fko_message.c
++++ b/lib/fko_message.c
+@@ -120,8 +120,8 @@ fko_set_spa_message_type(fko_ctx_t ctx, const short msg_type)
+     if(!CTX_INITIALIZED(ctx))
+         return FKO_ERROR_CTX_NOT_INITIALIZED;
+ 
+-    if(msg_type < 0 || msg_type >= FKO_LAST_MSG_TYPE)
+-        return(FKO_ERROR_INVALID_DATA);
++//    if(msg_type < 0 || msg_type >= FKO_LAST_MSG_TYPE)
++//        return(FKO_ERROR_INVALID_DATA);
+ 
+     ctx->message_type = msg_type;
+ 
+@@ -159,14 +159,14 @@ fko_set_spa_message(fko_ctx_t ctx, const char *msg)
+ 
+     /* Gotta have a valid string.
+     */
+-    if(msg == NULL || strnlen(msg, MAX_SPA_MESSAGE_SIZE) == 0)
+-        return(FKO_ERROR_INVALID_DATA);
++//    if(msg == NULL || strnlen(msg, MAX_SPA_MESSAGE_SIZE) == 0)
++//        return(FKO_ERROR_INVALID_DATA);
+ 
+     /* --DSS XXX: Bail out for now.  But consider just
+      *            truncating in the future...
+     */
+-    if(strnlen(msg, MAX_SPA_MESSAGE_SIZE) == MAX_SPA_MESSAGE_SIZE)
+-        return(FKO_ERROR_DATA_TOO_LARGE);
++//    if(strnlen(msg, MAX_SPA_MESSAGE_SIZE) == MAX_SPA_MESSAGE_SIZE)
++ //       return(FKO_ERROR_DATA_TOO_LARGE);
+ 
+     /* Basic message type and format checking...
+     */
+@@ -175,8 +175,8 @@ fko_set_spa_message(fko_ctx_t ctx, const char *msg)
+     else
+         res = validate_access_msg(msg);
+ 
+-    if(res != FKO_SUCCESS)
+-        return(res);
++//    if(res != FKO_SUCCESS)
++//        return(res);
+ 
+     /* Just in case this is a subsquent call to this function.  We
+      * do not want to be leaking memory.
+@@ -278,6 +278,8 @@ validate_nat_access_msg(const char *msg)
+     int     res         = FKO_SUCCESS;
+     int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
+ 
++    return res;
++
+     if(startlen == MAX_SPA_MESSAGE_SIZE)
+         return(FKO_ERROR_INVALID_DATA);
+ 
+diff --git a/lib/fko_nat_access.c b/lib/fko_nat_access.c
+index 03a7cad..47a0fe4 100644
+--- a/lib/fko_nat_access.c
++++ b/lib/fko_nat_access.c
+@@ -45,17 +45,17 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
+ 
+     /* Gotta have a valid string.
+     */
+-    if(msg == NULL || strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == 0)
+-        return(FKO_ERROR_INVALID_DATA);
++//    if(msg == NULL || strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == 0)
++//        return(FKO_ERROR_INVALID_DATA);
+ 
+     /* --DSS XXX: Bail out for now.  But consider just
+      *            truncating in the future...
+     */
+-    if(strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == MAX_SPA_NAT_ACCESS_SIZE)
+-        return(FKO_ERROR_DATA_TOO_LARGE);
++//    if(strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == MAX_SPA_NAT_ACCESS_SIZE)
++//        return(FKO_ERROR_DATA_TOO_LARGE);
+ 
+-    if((res = validate_nat_access_msg(msg)) != FKO_SUCCESS)
+-        return(res);
++//    if((res = validate_nat_access_msg(msg)) != FKO_SUCCESS)
++//        return(res);
+ 
+     /* Just in case this is a subsquent call to this function.  We
+      * do not want to be leaking memory.
+diff --git a/lib/fko_user.c b/lib/fko_user.c
+index 0c909dd..7f0f7eb 100644
+--- a/lib/fko_user.c
++++ b/lib/fko_user.c
+@@ -90,12 +90,12 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
+ 
+     /* Make sure it is just alpha-numeric chars and dashes
+     */
+-    if(isalnum(username[0]) == 0)
+-        return(FKO_ERROR_INVALID_DATA);
++ //   if(isalnum(username[0]) == 0)
++//        return(FKO_ERROR_INVALID_DATA);
+ 
+-    for (i=1; i < strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
+-        if((isalnum(username[i]) == 0) && username[i] != '-')
+-            return(FKO_ERROR_INVALID_DATA);
++//    for (i=1; i < strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
++//        if((isalnum(username[i]) == 0) && username[i] != '-')
++//            return(FKO_ERROR_INVALID_DATA);
+ 
+     /* Just in case this is a subsquent call to this function.  We
+      * do not want to be leaking memory.

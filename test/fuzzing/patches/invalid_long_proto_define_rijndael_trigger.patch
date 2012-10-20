@@ -1,0 +1,13 @@
+diff --git a/lib/fko.h b/lib/fko.h
+index 4910b17..fd869a4 100644
+--- a/lib/fko.h
++++ b/lib/fko.h
+@@ -54,7 +54,7 @@ extern "C" {
+ 
+ /* General params
+ */
+-#define FKO_PROTOCOL_VERSION "2.0.2" /* The fwknop protocol version */
++#define FKO_PROTOCOL_VERSION "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* The fwknop protocol version */
+ 
+ /* Supported FKO Message types...
+ */
