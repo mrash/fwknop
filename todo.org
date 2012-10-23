@@ -42,6 +42,41 @@
     :CLOSED: <2012-10-02 Tue>
     The access.c parsing code currently throws an error if there is not KEY
     variable in an access stanza even if GPG_ALLOW_NO_PW is set.
+** Fix MIPS compilation error
+   Franck Joncourt reported the following bug compiling fwknop MIPS via
+   http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=689064
+
+   libtool: link: gcc -g -O2 -Wformat -Werror=format-security -Wall -g -O2 
+   -Wl,-z -Wl,relro -Wl,-z -Wl,now -Wall -fstack-protector-all 
+   -fstack-protector -fPIE -pie -D_FORTIFY_SOURCE=2 -Wl,-z -Wl,relro -Wl,-z 
+   -Wl,now -o .libs/fwknop fwknop-fwknop.o fwknop-config_init.o 
+   fwknop-spa_comm.o fwknop-utils.o fwknop-http_resolve_host.o 
+   fwknop-getpasswd.o  ../lib/.libs/libfko.so
+   /usr/bin/ld: fwknop-fwknop.o: relocation R_MIPS_26 against `getenv' can not 
+   be used when making a shared object; recompile with -fPIC
+   fwknop-fwknop.o: could not read symbols: Bad value
+   collect2: ld returned 1 exit status
+   make[4]: *** [fwknop] Error 1
+   make[4]: Leaving directory 
+   `/build/buildd2-fwknop_2.0.3-1-mips-MZ2TL7/fwknop-2.0.3/client'
+   make[3]: *** [all-recursive] Error 1
+   make[3]: Leaving directory 
+   `/build/buildd2-fwknop_2.0.3-1-mips-MZ2TL7/fwknop-2.0.3'
+   make[2]: *** [all] Error 2
+   make[2]: Leaving directory 
+   `/build/buildd2-fwknop_2.0.3-1-mips-MZ2TL7/fwknop-2.0.3'
+   make[1]: *** [override_dh_auto_build] Error 2
+   make[1]: Leaving directory 
+   `/build/buildd2-fwknop_2.0.3-1-mips-MZ2TL7/fwknop-2.0.3'
+   make: *** [build-arch] Error 2
+
+** [server] Add access variable to require particular IP's even when REQUIRE_SOURCE is used
+   The SOURCE variable only applies to the IP header.  Add analogous filtering
+   for the allow IP that is encrypted within an SPA payload.
+** [client] Fix 'Could not set destination IP.' in hostname resolution in '-P icmp' mode
+   It seems that hostname resolution is not working when SPA packets are
+   spoofed.  Here is the command line to trigger the problem:
+   # fwknop -A tcp/22 -a 127.0.0.2 -D <host> --verbose --verbose -P icmp --icmp-type 8 --icmp-code 0 -Q 1.2.3.4
 ** Add 'enable' to ipfw active set at init time
    Currently fwknopd does not do a check to ensure that the active set is
    enabled at init time ('ipfw set enable 1').
@@ -84,10 +119,4 @@
 ** [test suite] client/server only tests
    When only the client or server is being installed on a system, the test
    suite should be able to run only the relevant tests.
-** [server] Add access variable to require particular IP's even when REQUIRE_SOURCE is used
-   The SOURCE variable only applies to the IP header.  Add analogous filtering
-   for the allow IP that is encrypted within an SPA payload.
-** [client] Fix 'Could not set destination IP.' in hostname resolution in '-P icmp' mode
-   It seems that hostname resolution is not working when SPA packets are 
-   spoofed.  Here is the command line to trigger the problem:
-   # fwknop -A tcp/22 -a 127.0.0.2 -D <host> --verbose --verbose -P icmp --icmp-type 8 --icmp-code 0 -Q 1.2.3.4
+
