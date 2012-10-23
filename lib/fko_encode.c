@@ -80,7 +80,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
      *             (at leaset expand the error reporting for the missing
      *             data).
     */
-    if(  ctx->username == NULL || strnlen(ctx->username, MAX_SPA_USERNAME_SIZE) == 0
+    if(  validate_username(ctx->username) != FKO_SUCCESS
       || ctx->version  == NULL || strnlen(ctx->version, MAX_SPA_VERSION_SIZE)  == 0
       || ctx->message  == NULL || strnlen(ctx->message, MAX_SPA_MESSAGE_SIZE)  == 0)
     {
