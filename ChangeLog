@@ -21,6 +21,11 @@ fwknop-2.0.4 (09/20/2012):
       modes.
     - [libfko] Restricted usernames embedded in SPA packets to be
       alpha-numeric along with "-" chars.
+    - [client+server] Applied patch from Franck Joncourt to remove unnecessary
+      chmod() call when creating client rc file and server replay cache file.
+      The permissions are now set appropriately via open(), and at the same
+      time this patch fixes a potential race condition since the previous code
+      used fopen() followed by chmod().
     - [server] Bug fix to accept SPA packets over ICMP if the fwknop client
       is executed with '-P icmp' and the user has the required privileges.
     - [test suite] Applied patch from Franck Joncourt to have the perl FKO

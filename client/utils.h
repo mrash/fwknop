@@ -45,7 +45,6 @@
 /* Prototypes
 */
 void hex_dump(const unsigned char *data, const int size);
-int set_file_perms(const char *file);
 int verify_file_perms_ownership(const char *file);
 
 size_t strlcat(char *dst, const char *src, size_t siz);

@@ -37,6 +37,8 @@
 #include "fwknopd_errors.h"
 #include "utils.h"
 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <time.h>
 
 #if HAVE_LIBGDBM
@@ -230,6 +232,8 @@ replay_file_cache_init(fko_srv_options_t *opts)
     char            src_ip[INET_ADDRSTRLEN+1] = {0};
     char            dst_ip[INET_ADDRSTRLEN+1] = {0};
     long int        time_tmp;
+    int             digest_file_fd = -1;
+    char            digest_header[] = "# <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>\n";
 
     struct digest_cache_list *digest_elm = NULL;
 
@@ -252,17 +256,25 @@ replay_file_cache_init(fko_srv_options_t *opts)
         /* the file does not exist yet, so it will be created when the first
          * successful SPA packet digest is written to disk
         */
-        if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "w")) == NULL)
+        digest_file_fd = open(opts->config[CONF_DIGEST_FILE], O_WRONLY|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+        if (digest_file_fd == -1)
         {
-            log_msg(LOG_WARNING, "Could not open digest cache: %s",
-                opts->config[CONF_DIGEST_FILE]);
+            log_msg(LOG_WARNING, "Could not create digest cache: %s: %s",
+                opts->config[CONF_DIGEST_FILE], strerror(errno));
+            return(-1);
         }
-        fprintf(digest_file_ptr,
-            "# <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>\n");
-        fclose(digest_file_ptr);
+        else
+        {
+            if(write(digest_file_fd, digest_header, strlen(digest_header))
+                    != strlen(digest_header)) {
+                log_msg(LOG_WARNING,
+                    "Did not write expected number of bytes to digest cache: %s\n",
+                    opts->config[CONF_DIGEST_FILE]);
+            }
+            close(digest_file_fd);
 
-        set_file_perms(opts->config[CONF_DIGEST_FILE]);
-        return(0);
+            return(0);
+        }
     }
 
     verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE]);

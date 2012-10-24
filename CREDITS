@@ -36,6 +36,11 @@ Franck Joncourt
       the local directory (if it exists) so that it doesn't have to have libfko
       completely installed in /usr/lib/.  This allows the test suite to run FKO
       tests without installing libfko.
+    - Contributed a patch to remove unnecessary chmod() call when creating
+      client rc file and server replay cache file.  The permissions are now set
+      appropriately via open(), and at the same time this patch fixes a
+      potential race condition since the previous code used fopen() followed by
+      chmod().
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode

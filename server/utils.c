@@ -167,21 +167,6 @@ is_valid_dir(const char *path)
 }
 
 int
-set_file_perms(const char *file)
-{
-    int res = 0;
-
-    res = chmod(file, S_IRUSR | S_IWUSR);
-
-    if(res != 0)
-    {
-        fprintf(stderr, "[-] unable to chmod file %s to user read/write: %s\n",
-            file, strerror(errno));
-    }
-    return res;
-}
-
-int
 verify_file_perms_ownership(const char *file)
 {
     int res = 1;

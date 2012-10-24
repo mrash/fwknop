@@ -33,6 +33,8 @@
 #include "config_init.h"
 #include "cmd_opts.h"
 #include "utils.h"
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /* Convert a digest_type string to its integer value.
 */
@@ -132,13 +134,28 @@ parse_time_offset(const char *offset_str)
 static int
 create_fwknoprc(const char *rcfile)
 {
-    FILE    *rc = NULL;
+    FILE *rc = NULL;
+    int   rcfile_fd = -1;
 
     fprintf(stdout, "[*] Creating initial rc file: %s.\n", rcfile);
 
+    /* Try to create the initial rcfile with user read/write rights only.
+     * If the rcfile already exists, an error is returned */
+    rcfile_fd = open(rcfile, O_WRONLY|O_CREAT|O_EXCL , S_IRUSR|S_IWUSR);
+
+    // If an error occured ...
+    if (rcfile_fd == -1) {
+            fprintf(stderr, "Unable to create initial rc file: %s: %s\n",
+                rcfile, strerror(errno));
+            return(-1);
+    }
+
+    // Free the rcfile descriptor
+    close(rcfile_fd);
+
     if ((rc = fopen(rcfile, "w")) == NULL)
     {
-        fprintf(stderr, "Unable to create rc file: %s: %s\n",
+        fprintf(stderr, "Unable to write default setup to rcfile: %s: %s\n",
             rcfile, strerror(errno));
         return(-1);
     }
@@ -217,8 +234,6 @@ create_fwknoprc(const char *rcfile)
     );
 
     fclose(rc);
-
-    set_file_perms(rcfile);
 
     return(0);
 }
