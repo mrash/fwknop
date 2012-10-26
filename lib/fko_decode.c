@@ -195,7 +195,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
-    b64_decode(tbuf, (unsigned char*)ctx->username);
+    if(b64_decode(tbuf, (unsigned char*)ctx->username) < 0)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
     if(validate_username(ctx->username) != FKO_SUCCESS)
     {
         free(tbuf);
@@ -294,7 +298,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
-    b64_decode(tbuf, (unsigned char*)ctx->message);
+    if(b64_decode(tbuf, (unsigned char*)ctx->message) < 0)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
 
     if(ctx->message_type == FKO_COMMAND_MSG)
     {
@@ -346,7 +354,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
             return(FKO_ERROR_MEMORY_ALLOCATION);
         }
 
-        b64_decode(tbuf, (unsigned char*)ctx->nat_access);
+        if(b64_decode(tbuf, (unsigned char*)ctx->nat_access) < 0)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
 
         if(validate_nat_access_msg(ctx->nat_access) != FKO_SUCCESS)
         {
@@ -383,7 +395,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             }
 
-            b64_decode(tbuf, (unsigned char*)ctx->server_auth);
+            if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
+            {
+                free(tbuf);
+                return(FKO_ERROR_INVALID_DATA);
+            }
 
             /* At this point we should be done.
             */
@@ -423,7 +439,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             }
 
-            b64_decode(tbuf, (unsigned char*)ctx->server_auth);
+            if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
+            {
+                free(tbuf);
+                return(FKO_ERROR_INVALID_DATA);
+            }
 
             ndx += t_size + 1;
         }

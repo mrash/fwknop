@@ -135,7 +135,8 @@ _rijndael_decrypt(fko_ctx_t ctx, const char *dec_key)
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher);
+    if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
@@ -285,7 +286,8 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher);
+    if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.

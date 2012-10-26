@@ -1,4 +1,4 @@
-fwknop-2.0.4 (09/20/2012):
+fwknop-2.0.4 (11//2012):
     - [server] Added upstart config at extras/upstart/fwknop.conf.  This
       allows the fwknopd to easily be managed with upstart via commands like
       "service fwknop start" and "service fwknop stop".
@@ -17,6 +17,12 @@ fwknop-2.0.4 (09/20/2012):
       UDP with a spoofed source IP address.  This is in addition to the
       original 'tcpraw' and 'icmp' protocols that also support a spoofed
       source IP.
+    - [libfko] Bug fix to check b64_decode() return value to ensure that
+      non-base64 encoded data is never used.  Even though other validation
+      routines checked decoded results, it is important to discard invalid
+      data as early as possible.  Note too that such invalid data would only
+      be provided to b64_decode() after proper decryption, so the client must
+      provide authentic SPA data.
     - [libfko] Added validation of NAT access strings in the various NAT
       modes.
     - [libfko] Restricted usernames embedded in SPA packets to be
