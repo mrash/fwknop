@@ -105,6 +105,7 @@ my $fuzzing_pkts_append = 0;
 my $fuzzing_key = 'testtest';
 my $fuzzing_num_pkts = 0;
 my $fuzzing_test_tag = '';
+my $fuzzing_class = 'bogus data';
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
@@ -157,6 +158,7 @@ exit 1 unless GetOptions(
     'fuzzing-pkts-file=s' => \$fuzzing_pkts_file,
     'fuzzing-pkts-append' => \$fuzzing_pkts_append,
     'fuzzing-test-tag=s'  => \$fuzzing_test_tag,
+    'fuzzing-class=s'     => \$fuzzing_class,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
@@ -1735,6 +1737,15 @@ my @tests = (
     },
     {
         'category' => 'perl FKO module',
+        'subcategory' => 'FUZZING',
+        'detail'   => 'generate invalid encoded pkts',
+        'err_msg'  => 'could not generate invalid SPA pkts',
+        'function' => \&perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'create/destroy FKO object',
         'err_msg'  => 'could not create/destroy FKO object',
@@ -2324,8 +2335,8 @@ sub run_test() {
     }
 
     if ($enable_perl_module_fuzzing_spa_pkt_generation) {
-        if ($msg =~ /perl FKO module.*FUZZING/) {
-            print "\n[+] Wrote $fuzzing_num_pkts fuzzing SPA " .
+       if ($msg =~ /perl FKO module.*FUZZING/) {
+            print "\n[+] Wrote $fuzzing_num_pkts fuzzing SPA ",
                 "packets to $fuzzing_pkts_file.tmp...\n\n";
             exit 0;
         }
@@ -2889,7 +2900,7 @@ sub perl_fko_module_timestamp() {
         $rv = 0;
     }
 
-    for my $offset (@{&valid_offsets()}) {
+    for my $offset (@{&valid_time_offsets()}) {
 
         $fko_obj->timestamp($offset);
 
@@ -3181,7 +3192,7 @@ sub perl_fko_module_cmd_msgs() {
     return $rv;
 }
 
-sub valid_offsets() {
+sub valid_time_offsets() {
     my @offsets = (
         9999999,
         10,
@@ -3717,6 +3728,191 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
     return $rv;
 }
 
+sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
+    my $test_hr = shift;
+
+    ### this function assumes the lib/fko_encode.c has been patched to mess
+    ### with final encoded SPA packet data just before encryption
+
+    my $rv = 1;
+
+    my @fuzzing_pkts = ();
+
+    USER: for my $user (@{&valid_usernames()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        $fko_obj->spa_message('1.2.3.4,tcp/22');
+        my $status = $fko_obj->username($user);
+        if ($status != FKO->FKO_SUCCESS) {
+            &write_test_file("[-] Invalid_encoding user: $user triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next USER;
+        }
+        $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        my $fuzzing_str = '[+] Invalid_encoding user: '
+            . $fuzzing_test_tag
+            . "$user, SPA packet: "
+            . ($fko_obj->spa_data() || '(NULL)');
+        $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
+
+        push @fuzzing_pkts, $fuzzing_str;
+        &write_test_file("$fuzzing_str\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    MSG: for my $msg (@{&valid_access_messages()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        my $status = $fko_obj->spa_message($msg);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### fuzzing data
+            &write_test_file("[-] Invalid_encoding access_msg: $msg triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next MSG;
+        }
+        $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        my $fuzzing_str = '[+] Invalid_encoding access_msg: '
+            . $fuzzing_test_tag
+            . "$msg, SPA packet: "
+            . ($fko_obj->spa_data() || '(NULL)');
+        $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
+
+        push @fuzzing_pkts, $fuzzing_str;
+        &write_test_file("$fuzzing_str\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    NAT_MSG: for my $nat_msg (@{&valid_nat_access_messages()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        $fko_obj->spa_message('1.2.3.4,tcp/22');
+        my $status = $fko_obj->spa_nat_access($nat_msg);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### fuzzing data
+            &write_test_file("[-] Invalid_encoding NAT_access_msg: $nat_msg triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next NAT_MSG;
+        }
+        $fko_obj->spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        my $fuzzing_str = '[+] Invalid_encoding NAT_access_msg: '
+            . $fuzzing_test_tag
+            . "$nat_msg, SPA packet: "
+            . ($fko_obj->spa_data() || '(NULL)');
+        $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
+
+        push @fuzzing_pkts, $fuzzing_str;
+        &write_test_file("$fuzzing_str\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    CMD: for my $msg (@{&valid_cmd_messages()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        $fko_obj->spa_message_type(FKO->FKO_COMMAND_MSG);
+        my $status = $fko_obj->spa_message($msg);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### fuzzing data
+            &write_test_file("[-] Invalid_encoding cmd_msg: $msg triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next CMD;
+        }
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        my $fuzzing_str = '[+] Invalid_encoding cmd_msg: '
+            . $fuzzing_test_tag
+            . "$msg, SPA packet: "
+            . ($fko_obj->spa_data() || '(NULL)');
+        $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
+
+        push @fuzzing_pkts, $fuzzing_str;
+        &write_test_file("$fuzzing_str\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    TYPE: for my $type (@{&valid_spa_message_types()}) {
+
+        $fko_obj = FKO->new();
+        unless ($fko_obj) {
+            die "[*] error FKO->new(): " . FKO::error_str();
+        }
+        $fko_obj->spa_message('1.2.3.4,tcp/22');
+        my $status = $fko_obj->spa_message_type($type);
+        if ($status != FKO->FKO_SUCCESS) {
+            ### we expect that a patch has been applied to libfko to allow
+            ### fuzzing data
+            &write_test_file("[-] Invalid_encoding msg_type: $type triggered a libfko error\n",
+                $current_test_file);
+            $fko_obj->destroy();
+            $rv = 0;
+            next TYPE;
+        }
+        $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
+        $fko_obj->spa_data_final($fuzzing_key);
+
+        my $fuzzing_str = '[+] Invalid_encoding msg_type: '
+            . $fuzzing_test_tag
+            . "$type, SPA packet: "
+            . ($fko_obj->spa_data() || '(NULL)');
+        $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
+
+        push @fuzzing_pkts, $fuzzing_str;
+        &write_test_file("$fuzzing_str\n", $current_test_file);
+
+        $fko_obj->destroy();
+    }
+
+    if ($fuzzing_pkts_append) {
+        open F, ">> $fuzzing_pkts_file.tmp" or die $!;
+    } else {
+        open F, "> $fuzzing_pkts_file.tmp" or die $!;
+    }
+    for my $pkt (@fuzzing_pkts) {
+        print F $pkt, "\n";
+    }
+    close F;
+
+    $fuzzing_num_pkts = $#fuzzing_pkts+1;
+
+    return $rv;
+}
+
 sub perl_fko_module_full_fuzzing_packets() {
     my $test_hr = shift;
 
@@ -3726,38 +3922,38 @@ sub perl_fko_module_full_fuzzing_packets() {
 
     open F, "< $fuzzing_pkts_file" or die $!;
     while (<F>) {
-        if (/Bogus\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
-            $fuzzing_spa_packets{$1}{$2} = $3;
+        if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
+            push @{$fuzzing_spa_packets{$1}{$2}}, $3;
         }
     }
     close F;
 
     for my $field (keys %fuzzing_spa_packets) {
         for my $field_val (keys %{$fuzzing_spa_packets{$field}}) {
+            for my $encrypted_spa_pkt (@{$fuzzing_spa_packets{$field}{$field_val}}) {
 
-            my $encrypted_spa_pkt = $fuzzing_spa_packets{$field}{$field_val};
+                ### now get new object for decryption
+                $fko_obj = FKO->new();
+                unless ($fko_obj) {
+                    &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                        $current_test_file);
+                    return 0;
+                }
+                $fko_obj->spa_data($encrypted_spa_pkt);
 
-            ### now get new object for decryption
-            $fko_obj = FKO->new();
-            unless ($fko_obj) {
-                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                    $current_test_file);
-                return 0;
+                my $status = $fko_obj->decrypt_spa_data($fuzzing_key);
+
+                if ($status == FKO->FKO_SUCCESS) {
+                    &write_test_file("[-] Accepted fuzzing $field $field_val SPA packet.\n",
+                        $current_test_file);
+                    $rv = 0;
+                } else {
+                    &write_test_file("[+] Rejected fuzzing $field $field_val SPA packet.\n",
+                        $current_test_file);
+                }
+
+                $fko_obj->destroy();
             }
-            $fko_obj->spa_data($encrypted_spa_pkt);
-
-            my $status = $fko_obj->decrypt_spa_data($fuzzing_key);
-
-            if ($status == FKO->FKO_SUCCESS) {
-                &write_test_file("[-] Accepted fuzzing $field $field_val SPA packet.\n",
-                    $current_test_file);
-                $rv = 0;
-            } else {
-                &write_test_file("[+] Rejected fuzzing $field $field_val SPA packet.\n",
-                    $current_test_file);
-            }
-
-            $fko_obj->destroy();
         }
     }
 
@@ -4831,6 +5027,11 @@ sub init() {
 
     if ($enable_perl_module_fuzzing_spa_pkt_generation) {
         push @tests_to_include, qr/perl FKO module/;
+        if ($fuzzing_class eq 'bogus data') {
+            push @tests_to_exclude, qr/perl FKO module.*FUZZING.*invalid encoded/;
+        } else {
+            push @tests_to_exclude, qr/perl FKO module.*FUZZING.*invalid SPA/;
+        }
     } else {
         push @tests_to_exclude, qr/perl FKO module.*FUZZING/;
     }
