@@ -1,0 +1,13 @@
+diff --git a/lib/fko_encode.c b/lib/fko_encode.c
+index c92d421..204dde5 100644
+--- a/lib/fko_encode.c
++++ b/lib/fko_encode.c
+@@ -105,7 +105,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
+ 
+     /* Add the base64-encoded username.
+     */
+-    strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
++//    strlcat(tbuf, ":", FKO_ENCODE_TMP_BUF_SIZE);
+     if((res = append_b64(tbuf, ctx->username)) != FKO_SUCCESS)
+     {
+         free(tbuf);
