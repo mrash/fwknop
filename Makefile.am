@@ -158,13 +158,19 @@ EXTRA_DIST = \
     test/conf/tcp_pcap_filter_fwknopd.conf \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/tcp_server_fwknopd.conf \
-    test/fuzzing/tcp_server_fwknopd.conf \
-    test/fuzzing/patches/invalid_long_proto_define_enc_mode_trigger.patch \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
+    test/fuzzing/patches/encoding_rm_colon1.patch \
+    test/fuzzing/patches/encoding_rm_colon2.patch \
+    test/fuzzing/patches/encoding_rm_colon3.patch \
+    test/fuzzing/patches/encoding_rm_colon4.patch \
+    test/fuzzing/patches/encoding_rm_colon5.patch \
+    test/fuzzing/patches/extra_timestamp_digit.patch \
     test/fuzzing/patches/invalid_access_format.patch \
-    test/fuzzing/patches/long_ip.patch \
+    test/fuzzing/patches/invalid_long_proto_define_enc_mode_trigger.patch \
     test/fuzzing/patches/invalid_long_proto_define_rijndael_trigger.patch \
-    test/fuzzing/bogus_spa_packets \
+    test/fuzzing/patches/long_ip.patch \
+    test/fuzzing/patches/non_b64_user_char.patch \
+    test/fuzzing/fuzzing_spa_packets \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
