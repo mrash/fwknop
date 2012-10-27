@@ -1,0 +1,12 @@
+diff --git a/lib/fko_encode.c b/lib/fko_encode.c
+index c92d421..7dbb953 100644
+--- a/lib/fko_encode.c
++++ b/lib/fko_encode.c
+@@ -144,6 +144,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
+         free(tbuf);
+         return(res);
+     }
++    tbuf[strlen(tbuf)-2] = 0x2a;
+ 
+     /* If a nat_access message was given, add it to the SPA
+      * message.
