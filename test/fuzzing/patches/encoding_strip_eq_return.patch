@@ -1,0 +1,12 @@
+diff --git a/lib/base64.c b/lib/base64.c
+index 824a519..952b106 100644
+--- a/lib/base64.c
++++ b/lib/base64.c
+@@ -115,6 +115,7 @@ strip_b64_eq(char *data)
+ {
+     char *ndx;
+ 
++    return;
+     if((ndx = strchr(data, '=')) != NULL)
+         *ndx = '\0';
+ }
