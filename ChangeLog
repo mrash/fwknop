@@ -49,6 +49,9 @@ fwknop-2.0.4 (11//2012):
       icmp') mode.
     - [client] Updated default TTL value to 64 for spoofed SPA packets.  This
       is closer to more OS default TTL values than the previous 255.
+    - Updated build CFLAGS and LDFLAGS to conform to the Debian
+      hardening-includes file for PIE support (e.g. '-fPIE' for CFLAGS and
+      '-fPIE -pie' for LDFLAGS).
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
