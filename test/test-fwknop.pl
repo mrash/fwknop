@@ -4634,56 +4634,56 @@ sub generic_exec() {
 ### check for PIE
 sub pie_binary() {
     my $test_hr = shift;
-    return 0 unless $test_hr->{'binary'};
+    return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
-    return 0 if &file_find_regex([qr/Position\sIndependent.*:\sno/i],
+    return 1 if &file_find_regex([qr/Position\sIndependent.*:\syes/i],
         $MATCH_ALL, $current_test_file);
-    return 1;
+    return 0;
 }
 
 ### check for stack protection
 sub stack_protected_binary() {
     my $test_hr = shift;
-    return 0 unless $test_hr->{'binary'};
+    return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
-    return 0 if &file_find_regex([qr/Stack\sprotected.*:\sno/i],
+    return 1 if &file_find_regex([qr/Stack\sprotected.*:\syes/i],
         $MATCH_ALL, $current_test_file);
-    return 1;
+    return 0;
 }
 
 ### check for fortified source functions
 sub fortify_source_functions() {
     my $test_hr = shift;
-    return 0 unless $test_hr->{'binary'};
+    return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
-    return 0 if &file_find_regex([qr/Fortify\sSource\sfunctions:\sno/i],
+    return 1 if &file_find_regex([qr/Fortify\sSource\sfunctions:\syes/i],
         $MATCH_ALL, $current_test_file);
-    return 1;
+    return 0;
 }
 
 ### check for read-only relocations
 sub read_only_relocations() {
     my $test_hr = shift;
-    return 0 unless $test_hr->{'binary'};
+    return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
-    return 0 if &file_find_regex([qr/Read.only\srelocations:\sno/i],
+    return 1 if &file_find_regex([qr/Read.only\srelocations:\syes/i],
         $MATCH_ALL, $current_test_file);
-    return 1;
+    return 0;
 }
 
 ### check for immediate binding
 sub immediate_binding() {
     my $test_hr = shift;
-    return 0 unless $test_hr->{'binary'};
+    return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $current_test_file);
-    return 0 if &file_find_regex([qr/Immediate\sbinding:\sno/i],
+    return 1 if &file_find_regex([qr/Immediate\sbinding:\syes/i],
         $MATCH_ALL, $current_test_file);
-    return 1;
+    return 0;
 }
 
 sub specs() {
