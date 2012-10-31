@@ -125,12 +125,12 @@ dnl
 use_wall=yes
 AC_ARG_ENABLE([wall],
   [AS_HELP_STRING([--disable-wall],
-    [Do not enable all warnings via -Wall @<:@default is on@:>@])],
+    [Do not enable warnings via -Wall -Wformat -Wformat-security @<:@default is on@:>@])],
   [use_wall=$enableval],
   [])
 
 if test "x$use_wall" = "xyes"; then
-    FKO_CHECK_COMPILER_ARG([-Wall])
+    FKO_CHECK_COMPILER_ARG([-Wall -Wformat -Wformat-security])
 fi
 
 dnl Check for security features offered by the compiler
