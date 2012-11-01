@@ -52,6 +52,9 @@ fwknop-2.0.4 (11//2012):
     - Updated build CFLAGS and LDFLAGS to conform to the Debian
       hardening-includes file for PIE support (e.g. '-fPIE' for CFLAGS and
       '-fPIE -pie' for LDFLAGS).
+    - [client+server] Added --disable-gpg to the autoconf ./configure script
+      via configure.ac.  This makes it easy to not have fwknop/fwknopd
+      link against libgpgme even if it is installed on the local system.
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code

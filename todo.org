@@ -2,6 +2,12 @@
   This is the main todo org mode file for the fwknop project
 ** COMPLETED
    This bucket is for completed tasks.
+*** Add --disable-gpg arg to the autoconf configure script
+    :CLOSED: <2012-10-31 Wed>
+    There needs to be a way to easily disable libgpgme usage even if it is
+    installed - this could be done with a new --disable-gpg argument to the
+    configure script.
+    - Added --disable-gpg to the autoconf configure script (via configure.ac)
 *** [client] Add --icmp-type and --icmp-code args
     :CLOSED: <2012-10-11 Thu>
     For SPA packets sent over ICMP via raw socket, allow the user to specify
@@ -112,10 +118,6 @@
 ** [client] Update to not send SPA packet if Ctrl-C is used
    The client currently sends an SPA packet when an encryption key is
    requested but the user tries to exit out with Ctrl-C.
-** Add --disable-gpg arg to the autoconf configure script
-   There needs to be a way to easily disable libgpgme usage even if it is
-   installed - this could be done with a new --disablegpg argument to the
-   configure script.
 ** [test suite] client/server only tests
    When only the client or server is being installed on a system, the test
    suite should be able to run only the relevant tests.
