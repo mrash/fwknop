@@ -16,4 +16,4 @@ libfko_la_LDFLAGS   = -version-info 0:3:0 $(GPGME_LIBS)
 
 AM_CPPFLAGS         = $(GPGME_CFLAGS)
 
-include_HEADERS     = fko.h
+include_HEADERS     = fko.h fko_limits.h fko_message.h

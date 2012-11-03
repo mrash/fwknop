@@ -130,6 +130,8 @@ fi
 %files -n libfko-devel
 %defattr(-,root,root,-)
 %attr(0644,root,root) %{_includedir}/fko.h
+%attr(0644,root,root) %{_includedir}/fko_limits.h
+%attr(0644,root,root) %{_includedir}/fko_message.h
 %attr(0644,root,root) %{_infodir}/libfko.info*
 
 %files server
@@ -141,6 +143,9 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Sat Nov  3 2012 Tomoyuki Kano <tomo@appletz.jp> - 1:2.0.3-1
+- Added missing include files.
+
 * Thu Jul 15 2010 Damien Stuart <dstuart@dstuart.org>
 - Fixed some misplaced depenencies (moved gpgpme from server to libfko).
 
