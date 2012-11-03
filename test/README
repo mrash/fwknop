@@ -1,0 +1,17 @@
+
+This directory contains the fwknop test suite.  After compiling the fwknop
+sources in the parent directory of test/ the test suite can be executed.  One
+of the most comprehensive ways of executing the test suite is as follows:
+
+# ./run-test-suite.sh --enable-all
+
+This mode enables IP resolution tests, so you will need Internet access in this
+case.  If this is not possible or desirable, then another comprehensive testing
+mode can be achieved with:
+
+# ./run-test-suite.sh --enable-recompile --enable-perl-module-checks --enable-distcheck
+
+Additional detail on the test suite (including --diff and --enable-valgrind
+modes) may be found in the fwknop tutorial available here:
+
+http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html#3.5

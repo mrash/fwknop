@@ -184,6 +184,8 @@ EXTRA_DIST = \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
+    test/run-test-suite.sh \
+    test/README \
     VERSION \
     win32/config.h \
     win32/fwknop-client.vcproj \
