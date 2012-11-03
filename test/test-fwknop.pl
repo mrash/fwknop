@@ -2476,8 +2476,11 @@ sub compile_warnings() {
 
         unless (&run_cmd("$sudo_path -u $username make",
                 $cmd_out_tmp, "test/$current_test_file")) {
-            chdir $curr_pwd or die $!;
-            return 0;
+            unless (&run_cmd('make', $cmd_out_tmp,
+                    "test/$current_test_file")) {
+                chdir $curr_pwd or die $!;
+                return 0;
+            }
         }
 
     } else {
