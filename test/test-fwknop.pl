@@ -41,6 +41,7 @@ my %cf = (
     'icmp_pcap_filter'        => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
     'open_ports_access'       => "$conf_dir/open_ports_access.conf",
     'multi_gpg_access'        => "$conf_dir/multi_gpg_access.conf",
+    'multi_gpg_no_pw_access'  => "$conf_dir/multi_gpg_no_pw_access.conf",
     'multi_stanza_access'     => "$conf_dir/multi_stanzas_access.conf",
     'broken_keys_access'      => "$conf_dir/multi_stanzas_with_broken_keys.conf",
     'open_ports_mismatch'     => "$conf_dir/mismatch_open_ports_access.conf",
@@ -1890,7 +1891,7 @@ my @tests = (
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
-            "-a $cf{'multi_gpg_access'} $intf_str " .
+            "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,

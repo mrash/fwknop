@@ -137,6 +137,7 @@ EXTRA_DIST = \
     test/conf/mismatch_open_ports_access.conf \
     test/conf/mismatch_user_access.conf \
     test/conf/multi_gpg_access.conf \
+    test/conf/multi_gpg_no_pw_access.conf \
     test/conf/multi_source_match_access.conf \
     test/conf/multi_stanzas_access.conf \
     test/conf/multi_stanzas_with_broken_keys.conf \
