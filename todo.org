@@ -48,6 +48,12 @@
     :CLOSED: <2012-10-02 Tue>
     The access.c parsing code currently throws an error if there is not KEY
     variable in an access stanza even if GPG_ALLOW_NO_PW is set.
+** [server] Add the ability to process pcap files offline
+   Leverage pcap_open_offline() to process pcap files from disk instead of
+   sniffing the network live.
+** [server] Add PF NAT support for OpenBSD systems
+   fwknopd already supports various NAT modes on iptables, but it should be
+   extended to support NAT on PF firewalls.
 ** Fix MIPS compilation error
    Franck Joncourt reported the following bug compiling fwknop MIPS via
    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=689064
@@ -75,6 +81,9 @@
    make[1]: Leaving directory 
    `/build/buildd2-fwknop_2.0.3-1-mips-MZ2TL7/fwknop-2.0.3'
    make: *** [build-arch] Error 2
+
+   Update: the problem appears to be caused by manually specifying the CFLAGS
+   variable while not also specifying the LDFLAGS variable.
 
 ** [server] Add access variable to require particular IP's even when REQUIRE_SOURCE is used
    The SOURCE variable only applies to the IP header.  Add analogous filtering
@@ -122,3 +131,5 @@
    When only the client or server is being installed on a system, the test
    suite should be able to run only the relevant tests.
 
+** Implement SPA over IPv6
+   It is important to eventually fully support SPA over IPv6.
