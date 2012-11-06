@@ -120,6 +120,8 @@ my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
 my $sudo_path = '';
+my $killall_path = '';
+my $pinentry_fail = 0;
 my $platform = '';
 my $help = 0;
 my $YES = 1;
@@ -2051,6 +2053,18 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    
+    ### GPG testing (with passwords associated with keys) - first check to
+    ### see if pinentry is required and disable remaining GPG tests if so
+    {
+        'category' => 'GnuPG (GPG) SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'pinentry not required',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&gpg_pinentry_check,
+        'cmdline'  => $default_client_gpg_args,
+        'fatal'    => $NO
+    },
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
@@ -2296,6 +2310,15 @@ for my $test_hr (@tests) {
 &logr("\n[+] passed/failed/executed: $passed/$failed/$executed tests\n\n");
 
 copy $logfile, "$output_dir/$logfile" or die $!;
+
+if ($pinentry_fail) {
+    if ($killall_path) {
+        ### kill all gpg processes in the fwknop client
+        ### process group (this will kill the test suite
+        ### too, but we're already done)
+        system "$killall_path -g fwknop";
+    }
+}
 
 exit 0;
 
@@ -2661,6 +2684,32 @@ sub spoof_username() {
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
             $MATCH_ALL, $server_test_file)) {
         $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub gpg_pinentry_check() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    my $pid;
+    if ($pid = fork()) {
+        local $SIG{'ALRM'} = sub {die "[*] External script timeout.\n"};
+        alarm 5;  ### running the client should be fast
+        eval {
+            waitpid($pid, 0);
+        };
+        alarm 0;
+        if ($@) {
+            $rv = 0;
+            push @tests_to_exclude, qr/GPG/;
+            $pinentry_fail = 1;
+        }
+    } else {
+        die "[*] Could not run the fwknop client: $!" unless defined $pid;
+        exec qq{$test_hr->{'cmdline'} > /dev/null 2>&1 };
     }
 
     return $rv;
@@ -5040,7 +5089,8 @@ sub init() {
         push @tests_to_exclude, qr/perl FKO module.*FUZZING/;
     }
 
-    $sudo_path = &find_command('sudo');
+    $sudo_path    = &find_command('sudo');
+    $killall_path = &find_command('killall');
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
