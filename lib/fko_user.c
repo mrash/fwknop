@@ -130,13 +130,14 @@ validate_username(const char *username)
     if(username == NULL || strnlen(username, MAX_SPA_USERNAME_SIZE) == 0)
         return(FKO_ERROR_INVALID_DATA);
 
-    /* Make sure it is just alpha-numeric chars and dashes
+    /* Make sure it is just alpha-numeric chars, dashes, and underscores
     */
     if(isalnum(username[0]) == 0)
         return(FKO_ERROR_INVALID_DATA);
 
     for (i=1; i < strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
-        if((isalnum(username[i]) == 0) && username[i] != '-')
+        if((isalnum(username[i]) == 0)
+                && username[i] != '-' && username[i] != '_')
             return(FKO_ERROR_INVALID_DATA);
 
     return FKO_SUCCESS;
