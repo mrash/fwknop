@@ -13,6 +13,8 @@ fwknop-2.0.4 (11//2012):
       been checked in under the extras/openbsd/ directory.
     - [server] Bug fix to allow GPG_ALLOW_NO_PW to result in not also having
       to specify a Rijndael key.
+    - [Android] Added new .properties files to allow the fwknop client to
+      build and function properly on the latest Android release (4.1.2).
     - [client] Added '-P udpraw' to allow the client to send SPA packets over
       UDP with a spoofed source IP address.  This is in addition to the
       original 'tcpraw' and 'icmp' protocols that also support a spoofed
