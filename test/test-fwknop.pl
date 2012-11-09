@@ -20,6 +20,7 @@ my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
 my $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
+my $replay_pcap_file = "$conf_dir/spa_replay.pcap";
 
 my %cf = (
     'nat'                     => "$conf_dir/nat_fwknopd.conf",
@@ -129,6 +130,7 @@ my $NO  = 0;
 my $PRINT_LEN = 68;
 my $USE_PREDEF_PKTS = 1;
 my $USE_CLIENT = 2;
+my $USE_PCAP_FILE = 3;
 my $REQUIRED = 1;
 my $OPTIONAL = 0;
 my $NEW_RULE_REQUIRED = 1;
@@ -1186,6 +1188,25 @@ my @tests = (
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
+        'fatal'    => $NO
+    },
+
+    ### --pcap-file
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => '--pcap-file processing',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&process_pcap_file_directly,
+        'cmdline'  => '',
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args " .
+            "--pcap-file $replay_pcap_file --foreground --verbose --verbose " .
+            "--verbose",
+        'server_positive_output_matches' => [qr/Replay\sdetected/i,
+            qr/candidate\sSPA/, qr/0x0000\:\s+2b/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 
@@ -4243,6 +4264,46 @@ sub altered_non_base64_spa_data() {
     return $rv;
 }
 
+sub process_pcap_file_directly() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, [], $USE_PCAP_FILE);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
+        $rv = 0 unless $fw_rule_created;
+    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
+        $rv = 0 if $fw_rule_created;
+    }
+
+    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
+        $rv = 0 unless $fw_rule_removed;
+    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
+        $rv = 0 if $fw_rule_removed;
+    }
+
+    if ($test_hr->{'server_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'server_positive_output_matches'},
+            $MATCH_ALL, $server_test_file);
+    }
+
+    if ($test_hr->{'server_negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'server_negative_output_matches'},
+            $MATCH_ANY, $server_test_file);
+    }
+
+    return $rv;
+}
+
 sub fuzzer() {
     my $test_hr = shift;
 
@@ -4552,8 +4613,10 @@ sub client_server_interaction() {
                 $current_test_file);
             $rv = 0;
         }
-    } else {
+    } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
         &send_packets($pkts_hr);
+    } else {
+        ### pcap file mode, nothing to do
     }
 
     ### check to see if the SPA packet resulted in a new fw access rule

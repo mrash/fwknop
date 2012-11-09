@@ -102,6 +102,12 @@ COMMAND-LINE OPTIONS
     line.  This overrides the value of the PCAP_FILTER variable taken
     from the 'fwknopd.conf' file.
 
+*--pcap-file*='<pcap-file>'::
+    This option instructs *fwknopd* to read packet data from a pcap file
+    instead of sniffing an interface directly.  This mode is usually used for
+    debugging purposes, and will disable SPA packet age checking unless it is
+    manually enabled in the 'fwknop.conf' file.
+
 *-R, --Restart*::
     Restart the currently running *fwknopd* processes.  This option
     will preserve the command line options that were supplied to the

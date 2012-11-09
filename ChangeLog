@@ -58,6 +58,9 @@ fwknop-2.0.4 (11//2012):
     - [test suite] For GnuPG tests that require a passphrase associated with
       a gpg key, added a pinentry check to see if the local gpg engine
       requires it.  If so, the gpg test that require a key are excluded since.
+    - [server] Added a new '--pcap-file <file>' option to allow pcap files to
+      be processed directly by fwknopd instead of sniffing an interface.  This
+      feature is mostly intended for debugging purposes.
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code

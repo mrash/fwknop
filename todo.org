@@ -2,6 +2,11 @@
   This is the main todo org mode file for the fwknop project
 ** COMPLETED
    This bucket is for completed tasks.
+*** [server] Add the ability to process pcap files offline
+    :CLOSED: <2012-11-08 Thu>
+    Leverage pcap_open_offline() to process pcap files from disk instead of
+    sniffing the network live.
+    - Added a new '--pcap-file <file>' option for this purpose.
 *** Add --disable-gpg arg to the autoconf configure script
     :CLOSED: <2012-10-31 Wed>
     There needs to be a way to easily disable libgpgme usage even if it is
@@ -48,9 +53,6 @@
     :CLOSED: <2012-10-02 Tue>
     The access.c parsing code currently throws an error if there is not KEY
     variable in an access stanza even if GPG_ALLOW_NO_PW is set.
-** [server] Add the ability to process pcap files offline
-   Leverage pcap_open_offline() to process pcap files from disk instead of
-   sniffing the network live.
 ** [server] Add PF NAT support for OpenBSD systems
    fwknopd already supports various NAT modes on iptables, but it should be
    extended to support NAT on PF firewalls.

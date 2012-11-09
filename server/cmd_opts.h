@@ -42,6 +42,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "OVERRIDE_CONFIG",
     //"FIREWALL_TYPE",
     "PCAP_INTF",
+    "PCAP_FILE",
     "ENABLE_PCAP_PROMISC",
     "PCAP_FILTER",
     "PCAP_DISPATCH_COUNT",
@@ -115,6 +116,7 @@ enum {
     FW_LIST_ALL,
     FW_FLUSH,
     GPG_HOME_DIR,
+    PCAP_FILE,
     ROTATE_DIGEST_CACHE,
     NOOP /* Just to be a marker for the end */
 };
@@ -143,6 +145,7 @@ static struct option cmd_opts[] =
     {"locale",              1, NULL, 'l' },
     {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },
     {"override-config",     1, NULL, 'O' },
+    {"pcap-file",           1, NULL, PCAP_FILE },
     {"pcap-filter",         1, NULL, 'P'},
     {"pid-file",            1, NULL, 'p'},
     {"restart",             0, NULL, 'R'},
