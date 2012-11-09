@@ -533,7 +533,7 @@ process_rc(fko_cli_options_t *options)
             continue;
         }
 
-        if(sscanf(line, "%s %[^;\n\r#]", var, val) != 2)
+        if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)
         {
             fprintf(stderr,
                 "*Invalid entry in %s at line %i.\n - '%s'",
