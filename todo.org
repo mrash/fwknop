@@ -2,6 +2,11 @@
   This is the main todo org mode file for the fwknop project
 ** COMPLETED
    This bucket is for completed tasks.
+*** [client] Update to not send SPA packet if Ctrl-C is used
+    :CLOSED: <2012-11-08 Thu>
+    The client currently sends an SPA packet when an encryption key is
+    requested but the user tries to exit out with Ctrl-C.
+    - Completed by Franck Joncourt.
 *** [server] Add the ability to process pcap files offline
     :CLOSED: <2012-11-08 Thu>
     Leverage pcap_open_offline() to process pcap files from disk instead of
@@ -126,9 +131,6 @@
 ** Ruby bindings to libfko
    Perl and Python bindings already exist for libfko, so add Ruby to this list
    as well.
-** [client] Update to not send SPA packet if Ctrl-C is used
-   The client currently sends an SPA packet when an encryption key is
-   requested but the user tries to exit out with Ctrl-C.
 ** [test suite] client/server only tests
    When only the client or server is being installed on a system, the test
    suite should be able to run only the relevant tests.

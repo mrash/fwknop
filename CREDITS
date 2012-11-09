@@ -41,6 +41,8 @@ Franck Joncourt
       appropriately via open(), and at the same time this patch fixes a
       potential race condition since the previous code used fopen() followed by
       chmod().
+    - Contributed a patch to allow the fwknop client to be stopped with Ctrl-C
+      before sending an SPA packet on the wire.
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode

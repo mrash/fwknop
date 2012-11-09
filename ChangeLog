@@ -29,6 +29,9 @@ fwknop-2.0.4 (11//2012):
       modes.
     - [libfko] Restricted usernames embedded in SPA packets to be
       alpha-numeric along with "-" chars.
+    - [client] (Franck Joncourt) Contributed a patch to allow the fwknop
+      client to be stopped during the password entry prompt with Ctrl-C before
+      any SPA packet is sent on the wire.
     - [client+server] Applied patch from Franck Joncourt to remove unnecessary
       chmod() call when creating client rc file and server replay cache file.
       The permissions are now set appropriately via open(), and at the same
