@@ -376,7 +376,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key)
     if(ctx->encoded_msg == NULL || FKO_IS_SPA_DATA_MODIFIED(ctx))
         res = fko_encode_spa_data(ctx);
 
-    if(res)
+    if(res != FKO_SUCCESS)
         return(res);
 
     /* Croak on invalid encoded message as well. At present this is a
