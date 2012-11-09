@@ -44,23 +44,39 @@ Based on fwknop C implementation by Damien Stuart
 2. Setup
 
     a. Untar the tar.gz file:
-        tar -zxf Fwknop-0.9.tar.gz
+        tar -zxf fwknop-2.0.4.tar.gz
 
     b. Update the properties files with the path to the sdk and ndk tools:
         .../fwknop-android/project/build.properties
             sdk.dir=/home/yourname/tools/android-sdk-linux_86
             ndk.dir=/home/yourname/tools/android-ndk-r5
 
+       If you are running Android-4.1.2 or later, then these paths should look
+       more like:
+            sdk.dir=/home/yourname/tools/android-sdk-linux
+            ndk.dir=/home/yourname/tools/android-ndk-r8b
+
     c. Include the Android SDK platform directory in your user PATH variable
-        export PATH=$PATH:/home/dev/tools/android-sdk-linux_86/platforms-tools
+        export PATH=$PATH:/home/yourname/tools/android-sdk-linux_86/platforms-tools
+
+       For Android-4.1.2:
+        export PATH=$PATH:/home/yourname/android-sdk-linux/tools: \
+        /home/yourname/android-ndk-r8b:/home/yourname/android-sdk-linux/platform-tools
 
     d. Create a new Android device, in a command shell type: "android".
         This will start the android SDK and AVD Manager
         Under Virtual Devices create an AVD device and name it as "Android2.1"
 
+       For Android-4.1.2 name the new AVD device "Android_fwknop"
+
     e. Update (if needed) project file with the right virtual device as above:
         .../fwknop-android/project/nbproject/project.properties
             platform.active=Android2.1
+
+       For Android-4.1.2 use the .../fwknop-android/project/nbproject/project-4.1.2.properties
+       file (you might want to replace the project.properties file with this it).
+       Also for Android-4.1.2 users, you will probably want to replace the
+       build.properties file with the build-4.1.2.properties file.
 
     f. The relevant fwknop android C code can be found under the
        ".../project/jni" directory:
