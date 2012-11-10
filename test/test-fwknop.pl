@@ -108,6 +108,8 @@ my $fuzzing_key = 'testtest';
 my $fuzzing_num_pkts = 0;
 my $fuzzing_test_tag = '';
 my $fuzzing_class = 'bogus data';
+my %fuzzing_spa_packets = ();
+my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
@@ -1875,7 +1877,7 @@ my @tests = (
     {
         'category' => 'perl FKO module',
         'subcategory' => 'fuzzing data',
-        'detail'   => 'server side fuzzing pkt tests',
+        'detail'   => 'server fuzzing REPLPKTS',
         'err_msg'  => 'server accepted fuzzing pkts',
         'function' => \&perl_fko_module_full_fuzzing_packets,
         'fatal'    => $NO
@@ -2351,6 +2353,8 @@ sub run_test() {
     my $msg = "[$test_hr->{'category'}]";
     $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
     $msg .= " $test_hr->{'detail'}";
+
+    $msg =~ s/REPLPKTS/*[$total_fuzzing_pkts]* pkts/;
 
     return unless &process_include_exclude($msg);
 
@@ -3994,16 +3998,6 @@ sub perl_fko_module_full_fuzzing_packets() {
 
     my $rv = 1;
 
-    my %fuzzing_spa_packets = ();
-
-    open F, "< $fuzzing_pkts_file" or die $!;
-    while (<F>) {
-        if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
-            push @{$fuzzing_spa_packets{$1}{$2}}, $3;
-        }
-    }
-    close F;
-
     for my $field (keys %fuzzing_spa_packets) {
         for my $field_val (keys %{$fuzzing_spa_packets{$field}}) {
             for my $encrypted_spa_pkt (@{$fuzzing_spa_packets{$field}{$field_val}}) {
@@ -5139,7 +5133,16 @@ sub init() {
         push @tests_to_exclude, qr/IP resolve/;
     }
 
-    unless ($enable_perl_module_checks) {
+    if ($enable_perl_module_checks) {
+        open F, "< $fuzzing_pkts_file" or die $!;
+        while (<F>) {
+            if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
+                push @{$fuzzing_spa_packets{$1}{$2}}, $3;
+                $total_fuzzing_pkts++;
+            }
+        }
+        close F;
+    } else {
         push @tests_to_exclude, qr/perl FKO module/;
     }
 
