@@ -148,6 +148,35 @@ add_jump_rule(const fko_srv_options_t *opts, const int chain_num)
 }
 
 static int
+chain_exists(const fko_srv_options_t *opts, const int chain_num)
+{
+    int res = 0;
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHAIN_EXISTS_ARGS,
+        fwc.fw_command,
+        fwc.chain[chain_num].table,
+        fwc.chain[chain_num].to_chain
+    );
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if (opts->verbose)
+        log_msg(LOG_INFO, "chain_exists() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
+
+    if(EXTCMD_IS_SUCCESS(res))
+        log_msg(LOG_INFO, "'%s' table '%s' chain exists",
+            fwc.chain[chain_num].table,
+            fwc.chain[chain_num].to_chain);
+    else
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+    return res;
+}
+
+static int
 jump_rule_exists(const int chain_num)
 {
     int     num, pos = 0;
@@ -344,49 +373,59 @@ delete_all_chains(const fko_srv_options_t *opts)
     }
 }
 
+static int
+create_chain(const fko_srv_options_t *opts, const int chain_num)
+{
+    int res = 0;
+
+    zero_cmd_buffers();
+
+    /* Create the custom chain.
+    */
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
+        fwc.fw_command,
+        fwc.chain[chain_num].table,
+        fwc.chain[chain_num].to_chain
+    );
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if (opts->verbose)
+        log_msg(LOG_INFO, "create_chain() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
+
+    /* Expect full success on this */
+    if(! EXTCMD_IS_SUCCESS(res))
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+    return res;
+}
+
 /* Create the fwknop custom chains (at least those that are configured).
 */
 static int
 create_fw_chains(const fko_srv_options_t *opts)
 {
-    int     i;
-    int     res, got_err = 0;
+    int     i, got_err = 0;
 
     for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
 
-        zero_cmd_buffers();
-
-        /* Create the custom chain.
-        */
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
-            fwc.fw_command,
-            fwc.chain[i].table,
-            fwc.chain[i].to_chain
-        );
-
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-        if (opts->verbose)
-            log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",
-                cmd_buf, res, err_buf);
-
-        /* Expect full success on this */
-        if(! EXTCMD_IS_SUCCESS(res))
+        if(chain_exists(opts, i) == 0)
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
-            got_err++;
+
+            /* Create the chain
+            */
+            if(! EXTCMD_IS_SUCCESS(create_chain(opts, i)))
+                got_err++;
+
+            /* Then create the jump rule to that chain.
+            */
+            if(! EXTCMD_IS_SUCCESS(add_jump_rule(opts, i)))
+                got_err++;
         }
-
-        /* Then create the jump rule to that chain.
-        */
-        res = add_jump_rule(opts, i);
-
-        /* Expect full success on this */
-        if(! EXTCMD_IS_SUCCESS(res))
-            got_err++;
     }
 
     return(got_err);
@@ -612,12 +651,20 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
         /* Check to make sure that the jump rules exist for each
          * required chain
         */
+        if(chain_exists(opts, IPT_INPUT_ACCESS) == 0)
+            create_chain(opts, IPT_INPUT_ACCESS);
+
         if(jump_rule_exists(IPT_INPUT_ACCESS) == 0)
             add_jump_rule(opts, IPT_INPUT_ACCESS);
 
         if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
+        {
+            if(chain_exists(opts, IPT_OUTPUT_ACCESS) == 0)
+                create_chain(opts, IPT_OUTPUT_ACCESS);
+
             if(jump_rule_exists(IPT_OUTPUT_ACCESS) == 0)
                 add_jump_rule(opts, IPT_OUTPUT_ACCESS);
+        }
 
         /* Create an access command for each proto/port for the source ip.
         */
@@ -776,8 +823,11 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
         else if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
         {
             /* Make our FORWARD and NAT rules, and make sure the
-             * required jump rule exists
+             * required chain and jump rule exists
             */
+            if(chain_exists(opts, IPT_FORWARD_ACCESS) == 0)
+                create_chain(opts, IPT_FORWARD_ACCESS);
+
             if (jump_rule_exists(IPT_FORWARD_ACCESS) == 0)
                 add_jump_rule(opts, IPT_FORWARD_ACCESS);
 
@@ -823,8 +873,11 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
         if(dnat_chain->to_chain != NULL && strlen(dnat_chain->to_chain))
         {
 
-            /* Make sure the required jump rule exists
+            /* Make sure the required chain and jump rule exists
             */
+            if(chain_exists(opts, IPT_DNAT_ACCESS) == 0)
+                create_chain(opts, IPT_DNAT_ACCESS);
+
             if (jump_rule_exists(IPT_DNAT_ACCESS) == 0)
                 add_jump_rule(opts, IPT_DNAT_ACCESS);
 

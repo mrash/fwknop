@@ -66,6 +66,12 @@ fwknop-2.0.4 (11//2012):
     - [server] Added a new '--pcap-file <file>' option to allow pcap files to
       be processed directly by fwknopd instead of sniffing an interface.  This
       feature is mostly intended for debugging purposes.
+    - [server] Added chain_exists() check to SPA rule creation so that if any
+      of the fwknop chains are deleted out from under fwknopd they will be
+      recreated on the fly.  This mitigates scenarios where fwknopd might be
+      started before a system level firewall policy is applied due to init
+      script ordering, or if an iptables policy is re-applied without
+      restarting fwknopd.
 
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
