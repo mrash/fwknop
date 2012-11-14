@@ -154,7 +154,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
         if((res = append_b64(tbuf, ctx->nat_access)) != FKO_SUCCESS)
         {
             free(tbuf);
-                return(res);
+            return(res);
         }
     }
 
@@ -167,7 +167,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
         if((res = append_b64(tbuf, ctx->server_auth)) != FKO_SUCCESS)
         {
             free(tbuf);
-                return(res);
+            return(res);
         }
     }
 
