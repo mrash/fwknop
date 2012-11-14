@@ -2354,7 +2354,7 @@ sub run_test() {
     $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
     $msg .= " $test_hr->{'detail'}";
 
-    $msg =~ s/REPLPKTS/*[$total_fuzzing_pkts]* pkts/;
+    $msg =~ s/REPLPKTS/-->$total_fuzzing_pkts<-- pkts/;
 
     return unless &process_include_exclude($msg);
 
