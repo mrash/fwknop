@@ -1,4 +1,4 @@
-fwknop-2.0.4 (11//2012):
+fwknop-2.0.4 (11/15/2012):
     - [server] Added upstart config at extras/upstart/fwknop.conf.  This
       allows the fwknopd to easily be managed with upstart via commands like
       "service fwknop start" and "service fwknop stop".
