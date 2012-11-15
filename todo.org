@@ -94,6 +94,10 @@
    variable in an access stanza even if GPG_ALLOW_NO_PW is set.
 * TODO
   This bucket is for new tasks.
+** Fix gcc warnings on OpenBSD
+   :<2012-11-14 Wed>
+   Current fwknop code issues compilation warnings like the following on
+   OpenBSD:  /root/src/fwknop-2.0.3/server/utils.c:117: warning: sprintf() is often misused, please use snprintf()
 ** [server] Add PF NAT support for OpenBSD systems
    fwknopd already supports various NAT modes on iptables, but it should be
    extended to support NAT on PF firewalls.
