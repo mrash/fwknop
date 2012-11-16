@@ -34,6 +34,7 @@ my %cf = (
     'cmd_access'              => "$conf_dir/cmd_access.conf",
     'local_nat'               => "$conf_dir/local_nat_fwknopd.conf",
     'ipfw_active_expire'      => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
+    'android_access'          => "$conf_dir/android_access.conf",
     'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
     'gpg_access'              => "$conf_dir/gpg_access.conf",
     'gpg_no_pw_access'        => "$conf_dir/gpg_no_pw_access.conf",
@@ -84,6 +85,7 @@ my $spoof_user = 'testuser';
 my $spoof_ip   = '1.2.3.4';
 my $perl_mod_fko_dir = 'FKO';
 my $cmd_exec_test_file = '/tmp/fwknoptest';
+my $default_key = 'fwknoptest';
 #================== end config ===================
 
 my $passed = 0;
@@ -100,7 +102,7 @@ my $diff_dir1 = '';
 my $diff_dir2 = '';
 my $loopback_intf = '';
 my $anonymize_results = 0;
-my $current_test_file = "$output_dir/init";
+my $curr_test_file = "$output_dir/init";
 my $tarfile = 'test_fwknop.tar.gz';
 my $fuzzing_pkts_file = 'fuzzing/fuzzing_spa_packets';
 my $fuzzing_pkts_append = 0;
@@ -514,7 +516,7 @@ my @tests = (
         'positive_output_matches' => [qr/could\snot\sopen/i],
         'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -s $fake_ip " .
+            "$fwknopCmd -A tcp/22 -a $fake_ip " .
             "-D $loopback_ip --get-key not/there",
         'fatal'    => $YES
     },
@@ -982,6 +984,22 @@ my @tests = (
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'allow -s (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'no_ip_check' => 1,
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'Rijndael SPA',
@@ -1371,6 +1389,93 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
+        'fatal'    => $NO
+    },
+
+    ### backwards compatibility tests
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client->server backwards compatibility',
+        'detail'   => 'v2.0',
+        'err_msg'  => 'backwards compatibility failed',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '9ptGrLs8kVGVludcXFy17opvThEYzTeaT7RVlCN66W/G9QZs9BBevEQ0xxI8eCn' .
+            'KPDM+Bu9g0XwmCEVxxg+4jwBwtbCxVt9t5aSR29EVWZ6UAOwLkunK3t4FYBy1tL' .
+            '55krFt+1B2TtNSAH005kyDEZEOIGoY9Q/iU',
+        'server_positive_output_matches' => [qr/Removed\srule/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client->server backwards compatibility',
+        'detail'   => 'v2.0.1',
+        'err_msg'  => 'backwards compatibility failed',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+uAD6hlS2BHuaCtVKIGyIsB/4U8USqcP9o4aT6FvBuPKORwTV8byyzv6bzZYINs4' .
+            'Voq3QvBbIwkXJ63/oU+XxvP5R+DBLEnh3e/NHPFK6NB0WT2dujVyVxwBfvvWjIqW' .
+            'Hhro2tH34nqfTRIpevfLTMx7r+N8ZQ4V8',
+        'server_positive_output_matches' => [qr/Removed\srule/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client->server backwards compatibility',
+        'detail'   => 'v2.0.2',
+        'err_msg'  => 'backwards compatibility failed',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+mS70t2A2YmV50KgwDyy6nYLwzQ7AUO8pA/eatm7g9xc83xy1z7VOXeAYrgAOWy' .
+            'Ksk30QvkwHtPhl7I0oDz1bO+2K2JbDbyc0KBBzVNMLgJcuYgEpOXPkX2XhcTsgQ' .
+            'Vw2/Va/aUjvEvNPtwuipQS6DLTzOw/qy+/g',
+        'server_positive_output_matches' => [qr/Removed\srule/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client->server backwards compatibility',
+        'detail'   => 'v2.0.3',
+        'err_msg'  => 'backwards compatibility failed',
+        'function' => \&backwards_compatibility,
+        'pkt' =>
+            '+8OtxmTJPgQmrXZ7hAqTopLBC/thqHNuPHTfR234pFuQOCZUikPe0inHmjfnQFnP' .
+            'Sop/Iy6v+BCn9D+QD7eT7JI6BIoKp14K+8iNgKaNw1BdfgF1XDulpkNEdyG0fXz5' .
+            'M+GledHfz2d49aYThoQ2Cr8Iw1ycViawY',
+        'server_positive_output_matches' => [qr/Removed\srule/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'Android compatibility',
+        'detail'   => 'v4.1.2',
+        'err_msg'  => 'Android compatibility failed',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+59hIQhS1RlmqYLXNM/hPxtBAQTB5y3UKZq13O+r6qmg+APdQ+HQ' .
+            'OI7d4QCsp14s8KJpW8qBzZ/n0aZCFCFdZnvdZeJJVboQu4jo' .
+            'QFKZ8mmKwR/5DIO7k3qrXYGxYP0bnHYsih0HIE6CzSHlBGSf' .
+            'DJR92YhjYtL4Q',
+        'server_positive_output_matches' => [qr/Removed\srule/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'android_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
 
@@ -1889,6 +1994,10 @@ my @tests = (
         'detail'   => 'client FKO -> C server',
         'err_msg'  => 'invalid SPA packet data',
         'function' => \&perl_fko_module_client_compatibility,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 
@@ -2366,10 +2475,10 @@ sub run_test() {
     &dots_print($msg);
 
     $executed++;
-    $current_test_file  = "$output_dir/$executed.test";
-    $server_test_file   = "$output_dir/${executed}_fwknopd.test";
+    $curr_test_file   = "$output_dir/$executed.test";
+    $server_test_file = "$output_dir/${executed}_fwknopd.test";
 
-    &write_test_file("[+] TEST: $msg\n", $current_test_file);
+    &write_test_file("[+] TEST: $msg\n", $curr_test_file);
     $test_hr->{'msg'} = $msg;
     if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
@@ -2513,7 +2622,7 @@ sub compile_warnings() {
 
     ### 'make clean' as root
     unless (&run_cmd('make clean', $cmd_out_tmp,
-            "test/$current_test_file")) {
+            "test/$curr_test_file")) {
         chdir $curr_pwd or die $!;
         return 0;
     }
@@ -2524,9 +2633,9 @@ sub compile_warnings() {
             unless $username;
 
         unless (&run_cmd("$sudo_path -u $username make",
-                $cmd_out_tmp, "test/$current_test_file")) {
+                $cmd_out_tmp, "test/$curr_test_file")) {
             unless (&run_cmd('make', $cmd_out_tmp,
-                    "test/$current_test_file")) {
+                    "test/$curr_test_file")) {
                 chdir $curr_pwd or die $!;
                 return 0;
             }
@@ -2535,7 +2644,7 @@ sub compile_warnings() {
     } else {
 
         unless (&run_cmd('make', $cmd_out_tmp,
-                "test/$current_test_file")) {
+                "test/$curr_test_file")) {
             chdir $curr_pwd or die $!;
             return 0;
         }
@@ -2544,7 +2653,7 @@ sub compile_warnings() {
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
     if (&file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
-            $MATCH_ANY, "test/$current_test_file")) {
+            $MATCH_ANY, "test/$curr_test_file")) {
         chdir $curr_pwd or die $!;
         return 0;
     }
@@ -2554,11 +2663,11 @@ sub compile_warnings() {
     ### the new binaries should exist
     unless (-e $fwknopCmd and -x $fwknopCmd) {
         &write_test_file("[-] $fwknopCmd does not exist or not executable.\n",
-            $current_test_file);
+            $curr_test_file);
     }
     unless (-e $fwknopdCmd and -x $fwknopdCmd) {
         &write_test_file("[-] $fwknopdCmd does not exist or not executable.\n",
-            $current_test_file);
+            $curr_test_file);
     }
 
     return 1;
@@ -2568,12 +2677,12 @@ sub make_distcheck() {
 
     ### 'make clean' as root
     return 0 unless &run_cmd('make -C .. distcheck',
-        $cmd_out_tmp, $current_test_file);
+        $cmd_out_tmp, $curr_test_file);
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
     return 1 if &file_find_regex([qr/archives\sready\sfor\sdistribution/],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
 
     return 0;
 }
@@ -2613,7 +2722,7 @@ sub expected_code_version() {
 
     unless (-e '../VERSION') {
         &write_test_file("[-] ../VERSION file does not exist.\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -2623,9 +2732,9 @@ sub expected_code_version() {
     if ($line =~ /(\d.*\d)/) {
         my $version = $1;
         return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
         return 1 if &file_find_regex([qr/$version/],
-            $MATCH_ALL, $current_test_file);
+            $MATCH_ALL, $curr_test_file);
     }
     return 0;
 }
@@ -2633,12 +2742,12 @@ sub expected_code_version() {
 sub client_send_spa_packet() {
     my $test_hr = shift;
 
-    &write_key('fwknoptest', $local_key_file);
+    &write_key($default_key, $local_key_file);
 
     return 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 0 unless &file_find_regex([qr/final\spacked/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
 
     return 1;
 }
@@ -2702,7 +2811,7 @@ sub spoof_username() {
     my $rv = &spa_cycle($test_hr);
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $MATCH_ALL, $current_test_file)) {
+            $MATCH_ALL, $curr_test_file)) {
         $rv = 0;
     }
 
@@ -2755,14 +2864,14 @@ sub perl_fko_module_compile_install() {
     chdir '../perl/FKO' or die $!;
 
     &run_cmd("make clean", $cmd_out_tmp,
-            "../../test/$current_test_file");
+            "../../test/$curr_test_file");
     &run_cmd("perl Makefile.PL PREFIX=../../test/$perl_mod_fko_dir " .
         "LIB=../../test/$perl_mod_fko_dir", $cmd_out_tmp,
-        "../../test/$current_test_file");
+        "../../test/$curr_test_file");
     &run_cmd('make', $cmd_out_tmp,
-        "../../test/$current_test_file");
+        "../../test/$curr_test_file");
     &run_cmd('make install', $cmd_out_tmp,
-        "../../test/$current_test_file");
+        "../../test/$curr_test_file");
 
     chdir $curr_pwd or die $!;
 
@@ -2776,7 +2885,7 @@ sub perl_fko_module_compile_install() {
     eval { require FKO };
     if ($@) {
         &write_test_file("[-] could not 'require FKO' module: $@\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
 
         ### disable remaining perl module checks
@@ -2797,7 +2906,7 @@ sub perl_fko_module_new_object() {
         $fko_obj->destroy();
     } else {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
 
         ### disable remaining perl module checks
         push @tests_to_exclude, qr/perl FKO module/;
@@ -2820,7 +2929,7 @@ sub perl_fko_module_new_objects_1000() {
             $fko_obj->destroy();
         } else {
             &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
 
             ### disable remaining perl module checks
             push @tests_to_exclude, qr/perl FKO module/;
@@ -2842,7 +2951,7 @@ sub perl_fko_module_version() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -2850,10 +2959,10 @@ sub perl_fko_module_version() {
 
     if ($version) {
         &write_test_file("[+] got version(): $version\n",
-            $current_test_file);
+            $curr_test_file);
     } else {
         &write_test_file("[-] could not get version()\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -2871,7 +2980,7 @@ sub perl_fko_module_rand() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -2879,10 +2988,10 @@ sub perl_fko_module_rand() {
 
     if ($rand_value) {
         &write_test_file("[+] got rand_value(): $rand_value\n",
-            $current_test_file);
+            $curr_test_file);
     } else {
         &write_test_file("[-] could not get rand_value()\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -2900,7 +3009,7 @@ sub perl_fko_module_user() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -2908,10 +3017,10 @@ sub perl_fko_module_user() {
 
     if ($username) {
         &write_test_file("[+] got username(): $username\n",
-            $current_test_file);
+            $curr_test_file);
     } else {
         &write_test_file("[-] could not get username()\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -2924,11 +3033,11 @@ sub perl_fko_module_user() {
 
         if ($status == FKO->FKO_SUCCESS and $fko_obj->username() eq $user) {
             &write_test_file("[+] get/set username(): $user\n",
-                $current_test_file);
+                $curr_test_file);
         } else {
             &write_test_file("[-] could not get/set username(): $user " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         }
     }
@@ -2941,11 +3050,11 @@ sub perl_fko_module_user() {
         if ($status == FKO->FKO_SUCCESS and $fko_obj->username() eq $fuzzing_user) {
             &write_test_file("[-] libfko allowed fuzzing username(): $fuzzing_user " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] libfko threw out fuzzing username(): $fuzzing_user\n",
-                $current_test_file);
+                $curr_test_file);
         }
     }
 
@@ -2963,7 +3072,7 @@ sub perl_fko_module_timestamp() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -2971,10 +3080,10 @@ sub perl_fko_module_timestamp() {
 
     if ($curr_time) {
         &write_test_file("[+] got current timestamp(): $curr_time\n",
-            $current_test_file);
+            $curr_test_file);
     } else {
         &write_test_file("[-] could not get timestamp()\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -2986,10 +3095,10 @@ sub perl_fko_module_timestamp() {
 
         if (abs($spa_timestamp - $curr_time) < (abs($offset) + 10)) {
             &write_test_file("[+] set valid timestamp() offset: $offset\n",
-                $current_test_file);
+                $curr_test_file);
         } else {
             &write_test_file("[-] timestamp() offset: $offset not accepted.\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         }
     }
@@ -3008,7 +3117,7 @@ sub perl_fko_module_client_timeout() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -3017,10 +3126,10 @@ sub perl_fko_module_client_timeout() {
 
     if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_client_timeout() == $valid_timeout) {
         &write_test_file("[+] got spa_client_timeout(): $valid_timeout\n",
-            $current_test_file);
+            $curr_test_file);
     } else {
         &write_test_file("[-] could not get spa_client_timeout()\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -3032,11 +3141,11 @@ sub perl_fko_module_client_timeout() {
         if ($status == FKO->FKO_SUCCESS) {
             &write_test_file("[-] libfko allowed fuzzing spa_client_timeout(): $fuzzing_client_timeout " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] libfko rejected fuzzing spa_client_timeout(): $fuzzing_client_timeout\n",
-                $current_test_file);
+                $curr_test_file);
         }
     }
 
@@ -3054,7 +3163,7 @@ sub perl_fko_module_msg_types() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -3065,10 +3174,10 @@ sub perl_fko_module_msg_types() {
 
     if ($msg_type > -1) {
         &write_test_file("[+] got default spa_message_type(): $msg_type\n",
-            $current_test_file);
+            $curr_test_file);
     } else {
         &write_test_file("[-] could not get default spa_message_type()\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -3079,11 +3188,11 @@ sub perl_fko_module_msg_types() {
 
         if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_message_type() == $type) {
             &write_test_file("[+] get/set spa_message_type(): $type\n",
-                $current_test_file);
+                $curr_test_file);
         } else {
             &write_test_file("[-] could not get/set spa_message_type(): $type " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
             last;
         }
@@ -3097,11 +3206,11 @@ sub perl_fko_module_msg_types() {
         if ($status == FKO->FKO_SUCCESS) {
             &write_test_file("[-] libfko allowed fuzzing spa_message_type(): $fuzzing_type " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] libfko rejected fuzzing spa_message_type(): $fuzzing_type\n",
-                $current_test_file);
+                $curr_test_file);
         }
     }
 
@@ -3119,7 +3228,7 @@ sub perl_fko_module_access_msgs() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -3130,11 +3239,11 @@ sub perl_fko_module_access_msgs() {
 
         if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_message() eq $msg) {
             &write_test_file("[+] get/set spa_message(): $msg\n",
-                $current_test_file);
+                $curr_test_file);
         } else {
             &write_test_file("[-] could not get/set spa_message(): $msg " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
             last;
         }
@@ -3149,11 +3258,11 @@ sub perl_fko_module_access_msgs() {
             &write_test_file("[-] libfko allowed fuzzing " .
                 "spa_message(): $fuzzing_msg, got: " . $fko_obj->spa_message() . ' ' .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] libfko rejected fuzzing spa_message(): $fuzzing_msg\n",
-                $current_test_file);
+                $curr_test_file);
         }
     }
 
@@ -3171,7 +3280,7 @@ sub perl_fko_module_nat_access_msgs() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -3184,11 +3293,11 @@ sub perl_fko_module_nat_access_msgs() {
 
         if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_nat_access() eq $msg) {
             &write_test_file("[+] get/set spa_nat_access(): $msg\n",
-                $current_test_file);
+                $curr_test_file);
         } else {
             &write_test_file("[-] could not get/set spa_nat_access(): $msg " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
             last;
         }
@@ -3203,11 +3312,11 @@ sub perl_fko_module_nat_access_msgs() {
             &write_test_file("[-] libfko allowed fuzzing " .
                 "spa_nat_access(): $fuzzing_msg, got: " . $fko_obj->spa_nat_access() . ' ' .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] libfko rejected fuzzing spa_nat_access(): $fuzzing_msg\n",
-                $current_test_file);
+                $curr_test_file);
         }
     }
 
@@ -3225,7 +3334,7 @@ sub perl_fko_module_cmd_msgs() {
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
@@ -3238,11 +3347,11 @@ sub perl_fko_module_cmd_msgs() {
 
         if ($status == FKO->FKO_SUCCESS and $fko_obj->spa_message() eq $msg) {
             &write_test_file("[+] get/set spa_message(): $msg\n",
-                $current_test_file);
+                $curr_test_file);
         } else {
             &write_test_file("[-] could not get/set spa_message(): $msg " .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
             last;
         }
@@ -3257,11 +3366,11 @@ sub perl_fko_module_cmd_msgs() {
             &write_test_file("[-] libfko allowed fuzzing " .
                 "spa_message(): $fuzzing_msg, got: " . $fko_obj->spa_message() . ' ' .
                 FKO::error_str() . "\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] libfko rejected fuzzing spa_message(): $fuzzing_msg\n",
-                $current_test_file);
+                $curr_test_file);
         }
     }
 
@@ -3533,12 +3642,12 @@ sub perl_fko_module_complete_cycle() {
 
                     &write_test_file("[+] msg: $msg, user: $user, " .
                         "digest type: $digest_type, key: $key\n",
-                        $current_test_file);
+                        $curr_test_file);
 
                     $fko_obj = FKO->new();
                     unless ($fko_obj) {
                         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                            $current_test_file);
+                            $curr_test_file);
                         return 0;
                     }
 
@@ -3556,7 +3665,7 @@ sub perl_fko_module_complete_cycle() {
                     $fko_obj = FKO->new();
                     unless ($fko_obj) {
                         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                            $current_test_file);
+                            $curr_test_file);
                         return 0;
                     }
                     $fko_obj->spa_data($encrypted_msg);
@@ -3564,7 +3673,7 @@ sub perl_fko_module_complete_cycle() {
 
                     if ($msg ne $fko_obj->spa_message()) {
                         &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
-                            $current_test_file);
+                            $curr_test_file);
                         $rv = 0;
                     }
 
@@ -3589,12 +3698,12 @@ sub perl_fko_module_complete_cycle_module_reuse() {
 
                     &write_test_file("[+] msg: $msg, user: $user, " .
                         "digest type: $digest_type, key: $key\n",
-                        $current_test_file);
+                        $curr_test_file);
 
                     $fko_obj = FKO->new();
                     unless ($fko_obj) {
                         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                            $current_test_file);
+                            $curr_test_file);
                         return 0;
                     }
 
@@ -3611,7 +3720,7 @@ sub perl_fko_module_complete_cycle_module_reuse() {
 
                     if ($msg ne $fko_obj->spa_message()) {
                         &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
-                            $current_test_file);
+                            $curr_test_file);
                         $rv = 0;
                     }
 
@@ -3643,7 +3752,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Bogus user: $user triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next USER;
@@ -3659,7 +3768,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3675,7 +3784,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Bogus access_msg: $msg triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next MSG;
@@ -3691,7 +3800,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3708,7 +3817,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Bogus NAT_access_msg: $nat_msg triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next NAT_MSG;
@@ -3724,7 +3833,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3740,7 +3849,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Bogus cmd_msg: $msg triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next CMD;
@@ -3756,7 +3865,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3773,7 +3882,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Bogus msg_type: $type triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next TYPE;
@@ -3788,7 +3897,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3828,7 +3937,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         my $status = $fko_obj->username($user);
         if ($status != FKO->FKO_SUCCESS) {
             &write_test_file("[-] Invalid_encoding user: $user triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next USER;
@@ -3844,7 +3953,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3860,7 +3969,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Invalid_encoding access_msg: $msg triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next MSG;
@@ -3876,7 +3985,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3893,7 +4002,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Invalid_encoding NAT_access_msg: $nat_msg triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next NAT_MSG;
@@ -3909,7 +4018,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3926,7 +4035,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Invalid_encoding cmd_msg: $msg triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next CMD;
@@ -3941,7 +4050,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -3958,7 +4067,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             ### we expect that a patch has been applied to libfko to allow
             ### fuzzing data
             &write_test_file("[-] Invalid_encoding msg_type: $type triggered a libfko error\n",
-                $current_test_file);
+                $curr_test_file);
             $fko_obj->destroy();
             $rv = 0;
             next TYPE;
@@ -3973,7 +4082,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         $fuzzing_str =~ s/[^\x20-\x7e]{1,}/(NA)/g;
 
         push @fuzzing_pkts, $fuzzing_str;
-        &write_test_file("$fuzzing_str\n", $current_test_file);
+        &write_test_file("$fuzzing_str\n", $curr_test_file);
 
         $fko_obj->destroy();
     }
@@ -4006,7 +4115,7 @@ sub perl_fko_module_full_fuzzing_packets() {
                 $fko_obj = FKO->new();
                 unless ($fko_obj) {
                     &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                        $current_test_file);
+                        $curr_test_file);
                     return 0;
                 }
                 $fko_obj->spa_data($encrypted_spa_pkt);
@@ -4015,11 +4124,11 @@ sub perl_fko_module_full_fuzzing_packets() {
 
                 if ($status == FKO->FKO_SUCCESS) {
                     &write_test_file("[-] Accepted fuzzing $field $field_val SPA packet.\n",
-                        $current_test_file);
+                        $curr_test_file);
                     $rv = 0;
                 } else {
                     &write_test_file("[+] Rejected fuzzing $field $field_val SPA packet.\n",
-                        $current_test_file);
+                        $curr_test_file);
                 }
 
                 $fko_obj->destroy();
@@ -4033,17 +4142,46 @@ sub perl_fko_module_full_fuzzing_packets() {
 sub perl_fko_module_client_compatibility() {
     my $test_hr = shift;
 
-    my $rv = 1;
-
     $fko_obj = FKO->new();
 
     unless ($fko_obj) {
         &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-            $current_test_file);
+            $curr_test_file);
         return 0;
     }
 
+    $fko_obj->spa_message("$fake_ip,tcp/22");
+    $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+    $fko_obj->spa_data_final($default_key);
+    my $spa_pkt = $fko_obj->spa_data();
     $fko_obj->destroy();
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        },
+    );
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[+] new fw rule created.\n", $curr_test_file);
+    } else {
+        &write_test_file("[-] new fw rule not created.\n", $curr_test_file);
+        $rv = 0;
+    }
+
+    if ($test_hr->{'server_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'server_positive_output_matches'},
+            $MATCH_ALL, $server_test_file);
+    }
 
     return $rv;
 }
@@ -4091,12 +4229,12 @@ sub replay_detection() {
 
     return 0 unless &spa_cycle($test_hr);
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n",
-            $current_test_file);
+            "from file: $curr_test_file\n",
+            $curr_test_file);
         return 0;
     }
 
@@ -4137,7 +4275,7 @@ sub digest_cache_structure() {
     my $test_hr = shift;
     my $rv = 1;
 
-    &run_cmd("file $default_digest_file", $cmd_out_tmp, $current_test_file);
+    &run_cmd("file $default_digest_file", $cmd_out_tmp, $curr_test_file);
 
     if (&file_find_regex([qr/ASCII/i], $MATCH_ALL, $cmd_out_tmp)) {
 
@@ -4150,7 +4288,7 @@ sub digest_cache_structure() {
             next unless /\S/;
             unless (m|^\S+\s+\d+\s+$ip_re\s+\d+\s+$ip_re\s+\d+\s+\d+|) {
                 &write_test_file("[-] invalid digest.cache line: $_",
-                    $current_test_file);
+                    $curr_test_file);
                 $rv = 0;
                 last;
             }
@@ -4158,17 +4296,17 @@ sub digest_cache_structure() {
         close F;
     } elsif (&file_find_regex([qr/dbm/i], $MATCH_ALL, $cmd_out_tmp)) {
         &write_test_file("[+] DBM digest file format, " .
-            "assuming this is valid.\n", $current_test_file);
+            "assuming this is valid.\n", $curr_test_file);
     } else {
         ### don't know what kind of file the digest.cache is
         &write_test_file("[-] unrecognized file type for " .
-            "$default_digest_file.\n", $current_test_file);
+            "$default_digest_file.\n", $curr_test_file);
         $rv = 0;
     }
 
     if ($rv) {
         &write_test_file("[+] valid digest.cache structure.\n",
-            $current_test_file);
+            $curr_test_file);
     }
 
     return $rv;
@@ -4184,15 +4322,15 @@ sub server_bpf_ignore_packet() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -4226,15 +4364,15 @@ sub altered_non_base64_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -4254,6 +4392,44 @@ sub altered_non_base64_spa_data() {
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     $rv = 0 unless $server_was_stopped;
+
+    return $rv;
+}
+
+sub backwards_compatibility() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $test_hr->{'pkt'},
+        },
+    );
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[+] new fw rule created.\n", $curr_test_file);
+    } else {
+        &write_test_file("[-] new fw rule not created.\n", $curr_test_file);
+        $rv = 0;
+    }
+
+    if ($test_hr->{'server_positive_output_matches'}) {
+        $rv = 0 unless &file_find_regex(
+            $test_hr->{'server_positive_output_matches'},
+            $MATCH_ALL, $server_test_file);
+    }
 
     return $rv;
 }
@@ -4321,10 +4497,10 @@ sub fuzzer() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
     }
 
     if ($test_hr->{'server_positive_output_matches'}) {
@@ -4346,15 +4522,15 @@ sub altered_base64_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -4375,10 +4551,10 @@ sub altered_base64_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -4399,15 +4575,15 @@ sub appended_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -4428,10 +4604,10 @@ sub appended_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -4452,15 +4628,15 @@ sub prepended_spa_data() {
 
     unless (&client_send_spa_packet($test_hr)) {
         &write_test_file("[-] fwknop client execution error.\n",
-            $current_test_file);
+            $curr_test_file);
         $rv = 0;
     }
 
-    my $spa_pkt = &get_spa_packet_from_file($current_test_file);
+    my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
     unless ($spa_pkt) {
         &write_test_file("[-] could not get SPA packet " .
-            "from file: $current_test_file\n", $current_test_file);
+            "from file: $curr_test_file\n", $curr_test_file);
         return 0;
     }
 
@@ -4481,10 +4657,10 @@ sub prepended_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     if ($fw_rule_created) {
-        &write_test_file("[-] new fw rule created.\n", $current_test_file);
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
         $rv = 0;
     } else {
-        &write_test_file("[+] new fw rule not created.\n", $current_test_file);
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
@@ -4604,7 +4780,7 @@ sub client_server_interaction() {
     if ($spa_client_flag == $USE_CLIENT) {
         unless (&client_send_spa_packet($test_hr)) {
             &write_test_file("[-] fwknop client execution error.\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         }
     } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
@@ -4617,7 +4793,7 @@ sub client_server_interaction() {
     my $ctr = 0;
     while (not &is_fw_rule_active($test_hr)) {
         &write_test_file("[-] new fw rule does not exist.\n",
-            $current_test_file);
+            $curr_test_file);
         $ctr++;
         last if $ctr == 3;
         sleep 1;
@@ -4633,11 +4809,11 @@ sub client_server_interaction() {
         sleep 3;  ### allow time for rule time out.
         if (&is_fw_rule_active($test_hr)) {
             &write_test_file("[-] new fw rule not timed out.\n",
-                $current_test_file);
+                $curr_test_file);
             $rv = 0;
         } else {
             &write_test_file("[+] new fw rule timed out.\n",
-                $current_test_file);
+                $curr_test_file);
             $fw_rule_removed = 1;
         }
     }
@@ -4650,7 +4826,7 @@ sub client_server_interaction() {
         }
     } else {
         &write_test_file("[-] server is not running.\n",
-            $current_test_file);
+            $curr_test_file);
         $server_was_stopped = 0;
     }
 
@@ -4685,7 +4861,7 @@ sub get_spa_packet_from_file() {
 sub send_packets() {
     my $pkts_ar = shift;
 
-    open F, ">> $current_test_file" or die $!;
+    open F, ">> $curr_test_file" or die $!;
     print F "[+] send_packets(): Sending the following packets...\n";
     print F Dumper $pkts_ar;
     close F;
@@ -4720,7 +4896,7 @@ sub generic_exec() {
     my $rv = 1;
 
     my $exec_rv = &run_cmd($test_hr->{'cmdline'},
-                $cmd_out_tmp, $current_test_file);
+                $cmd_out_tmp, $curr_test_file);
 
     if ($test_hr->{'exec_err'} eq $YES) {
         $rv = 0 if $exec_rv;
@@ -4731,13 +4907,13 @@ sub generic_exec() {
     if ($test_hr->{'positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'positive_output_matches'},
-            $MATCH_ALL, $current_test_file);
+            $MATCH_ALL, $curr_test_file);
     }
 
     if ($test_hr->{'negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'negative_output_matches'},
-            $MATCH_ANY, $current_test_file);
+            $MATCH_ANY, $curr_test_file);
     }
 
     return $rv;
@@ -4748,9 +4924,9 @@ sub pie_binary() {
     my $test_hr = shift;
     return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Position\sIndependent.*:\syes/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 0;
 }
 
@@ -4759,9 +4935,9 @@ sub stack_protected_binary() {
     my $test_hr = shift;
     return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Stack\sprotected.*:\syes/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 0;
 }
 
@@ -4770,9 +4946,9 @@ sub fortify_source_functions() {
     my $test_hr = shift;
     return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Fortify\sSource\sfunctions:\syes/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 0;
 }
 
@@ -4781,9 +4957,9 @@ sub read_only_relocations() {
     my $test_hr = shift;
     return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Read.only\srelocations:\syes/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 0;
 }
 
@@ -4792,9 +4968,9 @@ sub immediate_binding() {
     my $test_hr = shift;
     return 0 unless -e $test_hr->{'binary'};
     &run_cmd("./hardening-check $test_hr->{'binary'}",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Immediate\sbinding:\syes/i],
-        $MATCH_ALL, $current_test_file);
+        $MATCH_ALL, $curr_test_file);
     return 0;
 }
 
@@ -4802,7 +4978,7 @@ sub specs() {
 
      &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
             "$default_server_conf_args --fw-list-all",
-            $cmd_out_tmp, $current_test_file);
+            $cmd_out_tmp, $curr_test_file);
 
     my $have_gpgme = 0;
 
@@ -4824,7 +5000,7 @@ sub specs() {
         'ls -l /usr/lib/*fko*',
         'ls -l /usr/local/lib/*fko*',
     ) {
-        &run_cmd($cmd, $cmd_out_tmp, $current_test_file);
+        &run_cmd($cmd, $cmd_out_tmp, $curr_test_file);
 
         if ($cmd =~ /^ldd/) {
             $have_gpgme++ if &file_find_regex([qr/gpgme/],
@@ -4845,7 +5021,7 @@ sub time_for_valgrind() {
     my $ctr = 0;
     while (&run_cmd("ps axuww | grep LD_LIBRARY_PATH | " .
             "grep valgrind |grep -v perl | grep -v grep",
-            $cmd_out_tmp, $current_test_file)) {
+            $cmd_out_tmp, $curr_test_file)) {
         $ctr++;
         last if $ctr == 5;
         sleep 1;
@@ -4947,12 +5123,12 @@ sub write_key() {
 }
 
 sub dump_pids() {
-    open C, ">> $current_test_file"
-        or die "[*] Could not open $current_test_file: $!";
+    open C, ">> $curr_test_file"
+        or die "[*] Could not open $curr_test_file: $!";
     print C "\n" . localtime() . " [+] PID dump:\n";
     close C;
     &run_cmd("ps auxww | grep knop |grep -v grep",
-        $cmd_out_tmp, $current_test_file);
+        $cmd_out_tmp, $curr_test_file);
     return;
 }
 
@@ -5258,7 +5434,7 @@ sub parse_valgrind_flagged_functions() {
         close F;
     }
 
-    open F, ">> $current_test_file" or die $!;
+    open F, ">> $curr_test_file" or die $!;
     for my $type ('client', 'server') {
         print F "\n[+] fwknop $type functions (unique view):\n";
         next unless defined $valgrind_flagged_fcns_unique{$type};
@@ -5292,11 +5468,11 @@ sub is_fw_rule_active() {
     if ($test_hr->{'no_ip_check'}) {
         return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" |grep _exp_},
-                $cmd_out_tmp, $current_test_file);
+                $cmd_out_tmp, $curr_test_file);
     } else {
         return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
-                $cmd_out_tmp, $current_test_file);
+                $cmd_out_tmp, $curr_test_file);
     }
 
     return 0;
@@ -5307,7 +5483,7 @@ sub is_fwknopd_running() {
     sleep 2 if $use_valgrind;
 
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
-        "--status", $cmd_out_tmp, $current_test_file);
+        "--status", $cmd_out_tmp, $curr_test_file);
 
     return 1 if &file_find_regex([qr/Detected\sfwknopd\sis\srunning/i],
             $MATCH_ALL, $cmd_out_tmp);
@@ -5318,7 +5494,7 @@ sub is_fwknopd_running() {
 sub stop_fwknopd() {
 
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
-        "$default_server_conf_args -K", $cmd_out_tmp, $current_test_file);
+        "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
 
     if ($use_valgrind) {
         &time_for_valgrind();
