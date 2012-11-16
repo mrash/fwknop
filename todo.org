@@ -1,5 +1,9 @@
 * COMPLETED
   This bucket is for completed tasks.
+** [test suite] Remove lib check for test suite when running in --enable-recompile mode
+   :CLOSED: <2012-11-15 Thu>
+   When creating a release tarball under 'make dist', the test suite performs
+   a check for existing lib/ directory even under --enable-recompile.
 ** Fix MIPS compilation error
    :CLOSED: <2012-11-09 Fri>
    Franck Joncourt reported the following bug compiling fwknop MIPS via
@@ -121,9 +125,6 @@
    include other files in which access stanzas can be specified.  This makes
    it easy to wrap additional controls around access information particularly
    in multi-user environments.
-** [test suite] Remove lib check for test suite when running in --enable-recompile mode
-   When creating a release tarball under 'make dist', the test suite performs
-   a check for existing lib/ directory even under --enable-recompile.
 ** [test suite] SPA packet fuzzer
    Add a series of patches to the fwknop client that break how it produces SPA
    data in subtle ways in order to ensure proper validation by fwknopd.

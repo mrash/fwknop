@@ -5221,7 +5221,10 @@ sub init() {
     }
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
-    die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
+
+    unless ($enable_recompilation_warnings_check) {
+        die "[*] $lib_dir directory does not exist." unless -d $lib_dir;
+    }
 
     unlink $cmd_exec_test_file if -e $cmd_exec_test_file;
     for my $name (keys %cf) {
