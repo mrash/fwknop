@@ -72,13 +72,16 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 #else
             username = getlogin();
 #endif
-            /* if we still didn't get a username, fall back
+            /* if we still didn't get a username, continue falling back
             */
-            if((username = getenv("USER")) == NULL)
-            {
-                username = strdup("NO_USER");
-                if(username == NULL)
-                    return(FKO_ERROR_MEMORY_ALLOCATION);
+			if(username == NULL)
+			{
+                if((username = getenv("USER")) == NULL)
+				{
+					username = strdup("NO_USER");
+					if(username == NULL)
+						return(FKO_ERROR_MEMORY_ALLOCATION);
+				}
             }
         }
     }
@@ -135,7 +138,7 @@ validate_username(const char *username)
     if(isalnum(username[0]) == 0)
         return(FKO_ERROR_INVALID_DATA);
 
-    for (i=1; i < strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
+    for (i=1; i < (int)strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
         if((isalnum(username[i]) == 0)
                 && username[i] != '-' && username[i] != '_')
             return(FKO_ERROR_INVALID_DATA);

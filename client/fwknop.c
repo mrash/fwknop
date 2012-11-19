@@ -532,11 +532,14 @@ get_save_file(char *args_save_file)
     char *homedir = NULL;
     int rv = 0;
 
+#ifdef WIN32
+    homedir = getenv("USERPROFILE");
+#else
     homedir = getenv("HOME");
-
+#endif
     if (homedir != NULL) {
-        snprintf(args_save_file, MAX_PATH_LEN, "%s%s%s",
-            homedir, "/", ".fwknop.run");
+        snprintf(args_save_file, MAX_PATH_LEN, "%s%c%s",
+            homedir, PATH_SEP, ".fwknop.run");
         rv = 1;
     }
 
@@ -551,14 +554,6 @@ show_last_command(void)
     char args_save_file[MAX_PATH_LEN];
     char args_str[MAX_LINE_LEN] = "";
     FILE *args_file_ptr = NULL;
-
-#ifdef WIN32
-    /* Not sure what the right thing is here on Win32, just exit
-     * for now.
-    */
-    fprintf(stderr, "--show-last not implemented on Win32 yet.");
-    exit(EXIT_FAILURE);
-#endif
 
     if (get_save_file(args_save_file)) {
         verify_file_perms_ownership(args_save_file);
@@ -593,14 +588,6 @@ run_last_args(fko_cli_options_t *options)
     char            args_str[MAX_LINE_LEN] = {0};
     char            arg_tmp[MAX_LINE_LEN]  = {0};
     char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
-
-
-#ifdef WIN32
-    /* Not sure what the right thing is here on Win32, just return
-     * for now.
-    */
-    return;
-#endif
 
     if (get_save_file(args_save_file))
     {
@@ -663,13 +650,6 @@ save_args(int argc, char **argv)
     char args_save_file[MAX_PATH_LEN];
     char args_str[MAX_LINE_LEN] = "";
     int i = 0, args_str_len = 0, args_file_fd = -1;
-
-#ifdef WIN32
-    /* Not sure what the right thing is here on Win32, just return
-     * for now.
-    */
-    return;
-#endif
 
     if (get_save_file(args_save_file)) {
         args_file_fd = open(args_save_file, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);

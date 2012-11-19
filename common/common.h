@@ -58,6 +58,10 @@
   #include <unistd.h>
 #endif
 
+#ifdef HAVE_SYS_STAT_H
+  #include <sys/stat.h>
+#endif
+
 #if HAVE_NETINET_IN_H
   #include <netinet/in.h>
 #endif
@@ -70,11 +74,24 @@
   #include <time.h>
 #endif
 
+/* Some hoops for accommodating Windows
+*/
 #ifdef WIN32
+  #include <io.h>
   #define strcasecmp	_stricmp
   #define strncasecmp	_strnicmp
   #define snprintf		_snprintf
   #define unlink		_unlink
+  #define open			_open
+  #define close			_close
+  #define write			_write
+  #define O_WRONLY		_O_WRONLY
+  #define O_RDONLY		_O_RDONLY
+  #define O_RDWR		_O_RDWR
+  #define O_CREAT		_O_CREAT 
+  #define O_EXCL		_O_EXCL
+  #define S_IRUSR		_S_IREAD
+  #define S_IWUSR		_S_IWRITE
   #define PATH_SEP      '\\'
 #else
   #include <signal.h>
