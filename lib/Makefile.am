@@ -12,8 +12,8 @@ libfko_source_files = \
 
 libfko_la_SOURCES   = $(libfko_source_files)
 
-libfko_la_LDFLAGS   = -version-info 0:3:0 $(GPGME_LIBS)
+libfko_la_LDFLAGS   = -version-info 0:4:0 $(GPGME_LIBS)
 
-AM_CPPFLAGS         = $(GPGME_CFLAGS)
+AM_CPPFLAGS         = $(GPGME_CFLAGS) -I $(top_srcdir)/common
 
 include_HEADERS     = fko.h fko_limits.h fko_message.h

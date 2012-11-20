@@ -967,6 +967,8 @@ usage(void)
       "                             (md5, sha1, or sha256 (default)).\n"
       " -f, --fw-timeout            Specify SPA server firewall timeout from the\n"
       "                             client side.\n"
+      "     --icmp-type             Set the ICMP type (used with '-P icmp')\n"
+      "     --icmp-code             Set the ICMP code (used with '-P icmp')\n"
       "     --gpg-encryption        Use GPG encryption (default is Rijndael).\n"
       "     --gpg-recipient-key     Specify the recipient GPG key name or ID.\n"
       "     --gpg-signer-key        Specify the signer's GPG key name or ID.\n"

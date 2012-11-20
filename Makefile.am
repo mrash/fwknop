@@ -122,6 +122,7 @@ EXTRA_DIST = \
     test/conf/server-gpg-no-pw/pubring.gpg \
     test/conf/server-gpg-no-pw/secring.gpg \
     test/conf/server-gpg-no-pw/trustdb.gpg \
+    test/conf/android_access.conf \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
@@ -163,7 +164,6 @@ EXTRA_DIST = \
     test/conf/tcp_server_fwknopd.conf \
     test/conf/spa_replay.pcap \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
-    test/fuzzing/patches/encoding_append_b64_modified_byte \
     test/fuzzing/patches/encoding_append_b64_modified_byte_eq.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte.patch \
     test/fuzzing/patches/encoding_extra_colon1.patch \

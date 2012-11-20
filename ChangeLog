@@ -1,4 +1,8 @@
 fwknop-2.0.4 (11/15/2012):
+    - [client] Misc fixes and the addition of save_args and last command 
+      (.fwknop.last) support on the Windows platform.
+    - [client] Fixed bug in username determination code where a valid value
+      could be overrwritten in certain circumstances.
     - [server] Added upstart config at extras/upstart/fwknop.conf.  This
       allows the fwknopd to easily be managed with upstart via commands like
       "service fwknop start" and "service fwknop stop".
