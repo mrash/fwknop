@@ -61,9 +61,6 @@ fwknop-2.0.4 (11/15/2012):
     - Updated build CFLAGS and LDFLAGS to conform to the Debian
       hardening-includes file for PIE support (e.g. '-fPIE' for CFLAGS and
       '-fPIE -pie' for LDFLAGS).
-    - [client+server] Added --disable-gpg to the autoconf ./configure script
-      via configure.ac.  This makes it easy to not have fwknop/fwknopd
-      link against libgpgme even if it is installed on the local system.
     - [test suite] For GnuPG tests that require a passphrase associated with
       a gpg key, added a pinentry check to see if the local gpg engine
       requires it.  If so, the gpg test that require a key are excluded since.

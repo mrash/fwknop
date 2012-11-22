@@ -299,78 +299,64 @@ AS_IF([test "$want_file_cache" = yes], [
     AC_DEFINE([USE_FILE_CACHE], [1], [Define this to enable non-gdbm/ndbm digest storing (eliminates gdbm/ndbm dependency).])
 ])
 
+# Check for 3rd-party libs
+#
+AC_ARG_WITH([gpgme],
+  [AS_HELP_STRING([--with-gpgme],
+    [support for gpg encryption using libgpgme @<:@default=check@:>@])],
+  [],
+  [with_gpgme=check])
+
+have_gpgme=yes
+AS_IF([test "x$with_gpgme" != xno],
+  [AM_PATH_GPGME([],
+    [AC_DEFINE([HAVE_LIBGPGME], [1], [Define if you have libgpgme])],
+    [if test "x$with_gpgme" != xcheck; then
+       AC_MSG_FAILURE(
+         [--with-gpgme was given, but test for gpgme failed])
+     else
+       have_gpgme=no
+     fi
+    ], [have_gpgme=no])], [have_gpgme=no])
+
 dnl Add various common way to sbin dir to the path (just in case)
-APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
-
-dnl Decide whether or not to enable gpg support
-dnl
-use_gpg=yes
-AC_ARG_ENABLE([gpg],
-  [AS_HELP_STRING([--disable-gpg],
-    [Do not enable gpg support via libgpgme @<:@default is on@:>@])],
-  [use_gpg=$enableval],
-  [])
-
-if test "x$use_gpg" = "xyes"; then
-
-    # Check for 3rd-party libs
-    #
-    AC_ARG_WITH([gpgme],
-      [AS_HELP_STRING([--with-gpgme],
-        [support for gpg encryption using libgpgme @<:@default=check@:>@])],
-      [],
-      [with_gpgme=check])
-
-    have_gpgme=yes
-    AS_IF([test "x$with_gpgme" != xno],
-      [AM_PATH_GPGME([],
-        [AC_DEFINE([HAVE_LIBGPGME], [1], [Define if you have libgpgme])],
-        [if test "x$with_gpgme" != xcheck; then
-           AC_MSG_FAILURE(
-             [--with-gpgme was given, but test for gpgme failed])
-         else
-           have_gpgme=no
-         fi
-        ], [have_gpgme=no])], [have_gpgme=no])
+  APP_PATH=$PATH$PATH_SEPARATOR/sbin$PATH_SEPARATOR/usr/sbin$PATH_SEPARATOR/usr/local/sbin
 
 dnl Check for gpg (not gpg2)
 dnl
-    AC_ARG_WITH([gpg],
-      [AS_HELP_STRING([--with-gpg=/path/to/gpg],
-        [Specify path to the gpg executable that gpgme will use @<:@default=check path@:>@])],
-      [
-          AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
-            [AC_MSG_ERROR([--with-gpg requires an argument specifying a path to gpg])],
-            [ GPG_EXE=$withval ]
-          )
-      ],
-      [
-          AC_PATH_PROG(GPG_EXE, [gpg], [], [$APP_PATH])
-      ]
-    )
-    AS_IF([test "x$GPG_EXE" != x],
-      [
-        AC_DEFINE_UNQUOTED([GPG_EXE], ["$GPG_EXE"], [Path to gpg executable])
-        gpg_exe=$GPG_EXE
-      ], [ gpg_exe="(not found)"]
-    )
+AC_ARG_WITH([gpg],
+  [AS_HELP_STRING([--with-gpg=/path/to/gpg],
+    [Specify path to the gpg executable that gpgme will use @<:@default=check path@:>@])],
+  [
+      AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+        [AC_MSG_ERROR([--with-gpg requires an argument specifying a path to gpg])],
+        [ GPG_EXE=$withval ]
+      )
+  ],
+  [
+      AC_PATH_PROG(GPG_EXE, [gpg], [], [$APP_PATH])
+  ]
+)
+AS_IF([test "x$GPG_EXE" != x],
+  [
+    AC_DEFINE_UNQUOTED([GPG_EXE], ["$GPG_EXE"], [Path to gpg executable])
+    gpg_exe=$GPG_EXE
+  ], [ gpg_exe="(not found)"]
+)
 
-    if [test "$have_gpgme" = "yes" ]; then
-    case "$host" in
-    *-*-linux*)
-        ;;
-    *-*-freebsd*)
-        if [ test "x$CPPFLAGS" = "x" ] ; then
-            CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
-        fi
-        if [ test "x$LDFLAGS" = "x" ] ; then
-            LDFLAGS="-L/usr/local/lib"
-        fi
-        ;;
-    esac
+if [test "$have_gpgme" = "yes" ]; then
+case "$host" in
+*-*-linux*)
+    ;;
+*-*-freebsd*)
+    if [ test "x$CPPFLAGS" = "x" ] ; then
+        CPPFLAGS="-I/usr/local/include -I/usr/local/include/gpgme"
     fi
-    else
-        have_gpgme=no
+    if [ test "x$LDFLAGS" = "x" ] ; then
+        LDFLAGS="-L/usr/local/lib"
+    fi
+    ;;
+esac
 fi
 
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
