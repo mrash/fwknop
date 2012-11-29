@@ -32,9 +32,6 @@
 #ifndef FKO_MESSAGE_H
 #define FKO_MESSAGE_H 1
 
-#include "common.h"
-#include "netinet_common.h"
-
 #define MAX_PROTO_STR_LEN   4  /* tcp, udp, icmp for now */
 #define MAX_PORT_STR_LEN    5
 

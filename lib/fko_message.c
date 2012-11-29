@@ -33,6 +33,12 @@
 #include "fko_message.h"
 #include "fko.h"
 
+/* for inet_aton() IP validation
+*/
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 static int
 have_allow_ip(const char *msg)
 {
