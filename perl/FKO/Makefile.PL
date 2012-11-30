@@ -33,7 +33,7 @@ WriteMakefile(
        AUTHOR         => 'Damien S. Stuart <dstuart@dstuart.org>') : ()),
     LIBS              => ['-L../../lib/.libs -lfko'],
     DEFINE            => '', # e.g., '-DHAVE_SOMETHING'
-    INC               => '-I. -I../../lib',
+    INC               => '-I. -I../../lib -I../../common',
 	# Un-comment this if you add C files to link with later:
     # OBJECT            => '$(O_FILES)', # link all the C files too
 );
