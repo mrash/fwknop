@@ -101,6 +101,9 @@
 /* Define to 1 if you have the `strndup' function. */
 #define HAVE_STRNDUP 1
 
+/* Define to 1 if you have the `strnlen' function. */
+#define HAVE_STRNLEN 1
+ 
 /* Define to 1 if you have the `strrchr' function. */
 #define HAVE_STRRCHR 1
 

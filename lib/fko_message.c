@@ -33,11 +33,13 @@
 #include "fko_message.h"
 #include "fko.h"
 
-/* for inet_aton() IP validation
-*/
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
+#ifndef WIN32
+  /* for inet_aton() IP validation
+  */
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+#endif
 
 static int
 have_allow_ip(const char *msg)

@@ -147,6 +147,12 @@ enum {
     x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
 )
 
+/* Work-around for not having strnlen
+*/
+#if !HAVE_STRNLEN
+  #define strnlen(s, l) (strlen(s) < l ? strlen(s) : l)
+#endif
+
 #endif /* _COMMON_H */
 
 /***EOF***/
