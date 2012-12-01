@@ -130,8 +130,6 @@ fi
 %files -n libfko-devel
 %defattr(-,root,root,-)
 %attr(0644,root,root) %{_includedir}/fko.h
-%attr(0644,root,root) %{_includedir}/fko_limits.h
-%attr(0644,root,root) %{_includedir}/fko_message.h
 %attr(0644,root,root) %{_infodir}/libfko.info*
 
 %files server
@@ -143,6 +141,10 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Sat Dec  1 2012 <dstuart@dstuart.org> - 2.0.4-1
+- Removed uneeded include files (which had been added to address an issue that
+  has since been fixed).
+
 * Thu Nov 15 2012 <mbr@cipherdyne.org>
 - fwknop-2.0.4 release.
 

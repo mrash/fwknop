@@ -179,8 +179,8 @@ is($f1->spa_message(), '1.1.1.1,udp/111', 'verify spa message');
 
 # 91-92 - Nat Access
 #
-ok($f1->spa_nat_access('1.2.1.1,udp/211') == 0, 'set nat_access message');
-is($f1->spa_nat_access(), '1.2.1.1,udp/211', 'verify nat_access message');
+ok($f1->spa_nat_access('1.2.1.1,211') == 0, 'set nat_access message');
+is($f1->spa_nat_access(), '1.2.1.1,211', 'verify nat_access message');
 
 # 93-94 - Server Auth
 #

@@ -232,7 +232,7 @@ validate_cmd_msg(const char *msg)
     /* Should always have a valid allow IP regardless of message type
     */
     if((res = have_allow_ip(msg)) != FKO_SUCCESS)
-        return(res);
+        return(FKO_ERROR_INVALID_SPA_COMMAND_MSG);
 
     /* Commands are fairly free-form so all we can really verify is
      * there is something at all. Get past the IP and comma, and make
@@ -292,7 +292,7 @@ validate_nat_access_msg(const char *msg)
     /* Should always have a valid allow IP regardless of message type
     */
     if((res = have_allow_ip(msg)) != FKO_SUCCESS)
-        return(res);
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
 
     /* Position ourselves beyond the allow IP and make sure we have
      * a single port value
@@ -304,7 +304,7 @@ validate_nat_access_msg(const char *msg)
     ndx++;
 
     if((res = have_port(ndx)) != FKO_SUCCESS)
-        return(res);
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
 
     if(msg[startlen-1] == ',')
         return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);

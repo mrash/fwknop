@@ -99,6 +99,7 @@
 #endif
 
 #include "fko.h"
+#include "fko_limits.h"
 
 /* Get our program version from VERSION (defined in config.h).
 */
