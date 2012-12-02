@@ -38,6 +38,7 @@ int validate_cmd_msg(const char *msg);
 int validate_access_msg(const char *msg);
 int validate_nat_access_msg(const char *msg);
 int validate_proto_port_spec(const char *msg);
+int got_allow_ip(const char *msg);
 
 #endif /* FKO_MESSAGE_H */
 
