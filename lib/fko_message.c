@@ -93,12 +93,6 @@ have_allow_ip(const char *msg)
     return(res);
 }
 
-int
-got_allow_ip(const char *msg)
-{
-    return have_allow_ip(msg);
-}
-
 static int
 have_port(const char *msg)
 {
