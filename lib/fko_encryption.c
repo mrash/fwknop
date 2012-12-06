@@ -660,6 +660,8 @@ fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir)
     if( !wordexp(gpg_home_dir, &expanded_form, WRDE_SHOWERR) ){
         gpg_home_dir = strdup(expanded_form.we_wordv[0]);
         wordfree(&expanded_form);
+    } else {
+        gpg_home_dir = strdup(gpg_home_dir);
     }
 
     /* If we are unable to stat the given dir, then return with error.
