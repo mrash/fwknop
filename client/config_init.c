@@ -321,6 +321,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         if(val[0] == 'y' || val[0] == 'Y')
             options->use_gpg = 1;
     }
+    /* Use GPG Agent ? */
+    else if(CONF_VAR_IS(var, "USE_GPG_AGENT"))
+    {
+        if(val[0] == 'y' || val[0] == 'Y')
+            options->use_gpg_agent = 1;
+    }
     /* GPG Recipient */
     else if(CONF_VAR_IS(var, "GPG_RECIPIENT"))
     {
