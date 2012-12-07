@@ -2652,7 +2652,7 @@ sub compile_warnings() {
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
-    if (&file_find_regex([qr/\swarning:\s/, qr/gcc\:.*\sunused/],
+    if (&file_find_regex([qr/\swarning:\s/i, qr/gcc\:.*\sunused/],
             $MATCH_ANY, "test/$curr_test_file")) {
         chdir $curr_pwd or die $!;
         return 0;
