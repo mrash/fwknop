@@ -12,7 +12,7 @@ libfko_source_files = \
 
 libfko_la_SOURCES   = $(libfko_source_files)
 
-libfko_la_LDFLAGS   = -version-info 0:4:0 $(GPGME_LIBS)
+libfko_la_LDFLAGS   = -version-info 0:4:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
 
 AM_CPPFLAGS         = $(GPGME_CFLAGS) -I $(top_srcdir)/common
 
