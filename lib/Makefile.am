@@ -11,8 +11,8 @@ libfko_source_files = \
     gpgme_funcs.h
 
 libfko_la_SOURCES   = $(libfko_source_files)
-libfko_la_LIBADD    = libfko_util.a
-libfko_la_LDFLAGS   = -version-info 0:4:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
+libfko_la_LIBADD    = strlcpy.lo strlcat.lo
+libfko_la_LDFLAGS   = -version-info 1:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
 
 noinst_LIBRARIES         = libfko_util.a
 libfko_util_source_files = strlcpy.c strlcat.c fko_util.h

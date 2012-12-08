@@ -57,7 +57,7 @@ main(int argc, char **argv)
 {
     fko_ctx_t           ctx, ctx2;
     int                 res;
-    char               *spa_data, *version;
+    char               *spa_data;
     char                access_buf[MAX_LINE_LEN];
 
     fko_cli_options_t   options;
@@ -75,6 +75,14 @@ main(int argc, char **argv)
     else if (!options.no_save_args)
         save_args(argc, argv);
 
+    /* Display version info and exit.
+    */
+    if (options.version) {
+        fprintf(stdout, "fwknop client %s, FKO protocol version %s\n",
+            MY_VERSION, FKO_PROTOCOL_VERSION);
+        return(EXIT_SUCCESS);
+    }
+
     /* Intialize the context
     */
     res = fko_new(&ctx);
@@ -82,18 +90,6 @@ main(int argc, char **argv)
     {
         errmsg("fko_new", res);
         return(EXIT_FAILURE);
-    }
-
-    /* Display version info and exit.
-    */
-    if (options.version) {
-        fko_get_version(ctx, &version);
-
-        fprintf(stdout, "fwknop client %s, FKO protocol version %s\n",
-            MY_VERSION, version);
-
-        fko_destroy(ctx);
-        return(EXIT_SUCCESS);
     }
 
     /* Set client timeout
