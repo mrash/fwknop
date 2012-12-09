@@ -30,13 +30,13 @@ Requires:	libfko, iptables
 
 
 %package -n libfko
-Version:	0.0.4
+Version:	1.0.0
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	0.0.4
+Version:	1.0.0
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
 Requires:	libfko
@@ -141,6 +141,10 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Sun Dec  9 2012 <mbr@cipherdyne.org> - 2.0.4-1
+- Bumped libfko and libfko-devel version to 1.0.0.
+- fwknop-2.0.4 release.
+
 * Sat Dec  1 2012 <dstuart@dstuart.org> - 2.0.4-1
 - Removed uneeded include files (which had been added to address an issue that
   has since been fixed).
