@@ -1,4 +1,4 @@
-fwknop-2.0.4 (11/15/2012):
+fwknop-2.0.4 (12/09/2012):
     - [client] Misc fixes and the addition of save_args and last command 
       (.fwknop.last) support on the Windows platform.
     - [client] Fixed bug in username determination code where a valid value
