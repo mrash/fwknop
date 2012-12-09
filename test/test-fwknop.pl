@@ -2863,15 +2863,23 @@ sub perl_fko_module_compile_install() {
 
     chdir '../perl/FKO' or die $!;
 
-    &run_cmd("make clean", $cmd_out_tmp,
-            "../../test/$curr_test_file");
+    &run_cmd("make clean", $cmd_out_tmp, "../../test/$curr_test_file")
+        if -e 'Makefile' or -e 'Makefile.old';
+
     &run_cmd("perl Makefile.PL PREFIX=../../test/$perl_mod_fko_dir " .
         "LIB=../../test/$perl_mod_fko_dir", $cmd_out_tmp,
         "../../test/$curr_test_file");
-    &run_cmd('make', $cmd_out_tmp,
-        "../../test/$curr_test_file");
-    &run_cmd('make install', $cmd_out_tmp,
-        "../../test/$curr_test_file");
+
+    &run_cmd('make', $cmd_out_tmp, "../../test/$curr_test_file");
+
+    if (&file_find_regex([qr/rerun\sthe\smake\scommand/],
+            $MATCH_ALL, "../../test/$curr_test_file")) {
+        &run_cmd('touch Makefile.PL', $cmd_out_tmp, "../../test/$curr_test_file");
+        &run_cmd('touch Makefile', $cmd_out_tmp, "../../test/$curr_test_file");
+        &run_cmd('make', $cmd_out_tmp, "../../test/$curr_test_file");
+    }
+
+    &run_cmd('make install', $cmd_out_tmp, "../../test/$curr_test_file");
 
     chdir $curr_pwd or die $!;
 
