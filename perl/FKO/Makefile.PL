@@ -1,5 +1,5 @@
 use lib 'inc';
-use Devel::CheckLib;
+#use Devel::CheckLib;  ### maybe use for CPAN distribution?
 use 5.008008;
 use ExtUtils::MakeMaker;
 
@@ -19,10 +19,11 @@ my @libdirs = qw(
     ../../lib/.libs
 );
 
-check_lib_or_exit(
-    lib     => [qw( fko )],
-    libpath => \@libdirs
-);
+### uncomment for CPAN distribution?
+#check_lib_or_exit(
+#    lib     => [qw( fko )],
+#    libpath => \@libdirs
+#);
 
 WriteMakefile(
     NAME              => 'FKO',
