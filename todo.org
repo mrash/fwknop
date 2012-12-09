@@ -1,5 +1,7 @@
 * COMPLETED
   This bucket is for completed tasks.
+** Release fwknop-2.0.4
+   :CLOSED: <2012-12-09 Sun>
 ** [test suite] Remove lib check for test suite when running in --enable-recompile mode
    :CLOSED: <2012-11-15 Thu>
    When creating a release tarball under 'make dist', the test suite performs
