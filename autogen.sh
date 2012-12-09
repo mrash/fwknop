@@ -12,7 +12,14 @@ fi
 if [ ! -d config ]; then
 	mkdir config
 fi
-libtoolize --automake --copy --force
+if which libtoolize &> /dev/null ; then
+  libtoolize --automake --copy --force
+elif which glibtoolize &> /dev/null ; then
+  glibtoolize --automake --copy --force
+else
+  echo 'No libtoolize or glibtoolize found'
+  exit
+fi
 aclocal -I config
 autoheader
 automake --add-missing --copy

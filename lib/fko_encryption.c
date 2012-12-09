@@ -32,6 +32,7 @@
 #include "fko.h"
 #include "cipher_funcs.h"
 #include "base64.h"
+#include <wordexp.h>
 
 #if HAVE_LIBGPGME
   #include "gpgme_funcs.h"
@@ -653,6 +654,16 @@ fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    /* Ensure we're working with the expanded path
+    */
+    wordexp_t expanded_form;
+    if( !wordexp(gpg_home_dir, &expanded_form, WRDE_SHOWERR) ){
+        gpg_home_dir = strdup(expanded_form.we_wordv[0]);
+        wordfree(&expanded_form);
+    } else {
+        gpg_home_dir = strdup(gpg_home_dir);
+    }
+
     /* If we are unable to stat the given dir, then return with error.
     */
     if(stat(gpg_home_dir, &st) != 0)
@@ -662,6 +673,7 @@ fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir)
         return(FKO_ERROR_GPGME_BAD_HOME_DIR);
 
     ctx->gpg_home_dir = strdup(gpg_home_dir);
+    free(gpg_home_dir);
     if(ctx->gpg_home_dir == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
