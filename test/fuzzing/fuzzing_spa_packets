@@ -2,7 +2,6 @@
 [+] Bogus user: -1, SPA packet: /Z94ZfHSwY7u8ufEsED5sYe+e9l44ZOxWoLkm6e1/QPMWXj4QJfYA1wlOl385AxUwEnyuLuC38QHBDv5M1ZqBTyv3t/9UdqT5Bq2N6rxgXC6e4NzBrUoeeH7bkHscLpdB6gDVMn1cyjyrbZ/jED7NrE5aW5KOcZ/U
 [+] Bogus user: -1, SPA packet: /S25N5Bu+ToHbapiZgVKsWxuk6LE0dc7tgemw7W47zLY0fFPFESXfSyCfh5vg6CYuYyfS8YTSfwPrNFzX5OwrtUaZYC4azyNYu3E4xcwMIc1RE9aIGHzNqfh67r6yZWbIPupRywQgm6GD7nHUKI2WvxErTcz6bpAA
 [+] Bogus user: 123%123, SPA packet: +n5kjwTx5kl+2PyvzzpfwD6M4zniEmue51cHJWpA32s834S7tw42Lb1x0+S4n/HTDxZpMmblpggyLqmr/yI03KGiwOZ3LaDxcTJhMHesS/z3qLMotAeqtriK8i8yhGviLhX+QbWaq2lS0Y2DoxwvvIybx0dn9yywI
-[+] Bogus user: 123.123, SPA packet: +t7XKJliWTSo0viQ6Na2D1SrT/xTDKpHiue+OHBOQCizkemU00xOTRJPhRMO5+7AwDPSEjp9mTTSQxyijgZjjISGaprxSIKx9y3q5cHzSawNnWEBf1Hkc0JARVmBmzIpyGSjf5CGfGHr26qOCpnXpjtW4k7EzmRxY
 [+] Bogus user: 123$123, SPA packet: 89rJDUt4QkBwukV5Rxb9r795kYgUXvkrbATOiuWmxrScpCncoSXNUQPb1s4QJYStqAuWnVyHeJS/e6QPAarvugb+VgjkqoOQV/12G7sakLRH6NTfllfbjxjjKJLeYUSF67b0RbrHTfPpK9whrhzLVvh1vMz+xc3Ic
 [+] Bogus user: -user, SPA packet: /mBtL5vIuZP6Lk0LSAdjsdBBQKjlI8xcIzdYQeQ0i5Rmee+o2xU/sSrxt3F1lel8qgSdXxRM3wNNBs5LXvY5YKDHH+qRF01nyl0ZxN2djDHay0bR1ySwaU0971OdfUZh+mCeTSa5hLNjORh71Q0TK+38EBFKmVaX4
 [+] Bogus user: -User, SPA packet: /pBXG3nk5g8WvOtVemNGuixBiVIokXdytLMerk85hWlmUPwIXJWllP2VJYGgU0luOwvsl9erg/VvFtq+w5dWGdfLCXoBfqJtuTIUBgCB/EZmSmCnzshKgLkdgOXqBj9upNMuVtWr/CkSjoqC/JYuUsnjovK6cYuhY
@@ -1016,7 +1015,6 @@
 [+] Bogus user: no_colon_6_-1, SPA packet: 95ojjMywG+mgRykG2Eqb/78V2MUGwq/8+Dia2s/st7rZdjxMWdOB9Fxyh4e7B2rYp7qtGiFnOovZLUp1/hAc65tjKpPeXoXQ+Jc4FAan+RfnPNsbpiUoQHW/hTNoIRQCfifhpS+nrg0/rAv9YL7/Xz9lonIRWCknc
 [+] Bogus user: no_colon_6_-1, SPA packet: 8MdmzYIB/LYOFmvwwKRNyh8ApPHAdMLhP2yfxTa5CK30I85WJXmktQtp264CZAT6CqBEEsTOeZJGO/jEgouMAsRhCYrGRyh55DNipEGFCQVbuunHmukcS9Lx4HqZWY962YPy0NRQHzjmLbYZaakeZLzChHFVQetow
 [+] Bogus user: no_colon_6_123%123, SPA packet: +QgkL5+d53iOA4+NlgS733e1gTnL4/wRTsO3MnaBA8yAlwCMPOpOHbWuIuvbStT3yewvL5/a04hRvkZlnw1UM83owGwNCklNPlhhKVrCtwTUucpT4bMhwYbDBVOcP292xyTxRnHmZpSKVvEkocVzvsRkF9K4txIbs
-[+] Bogus user: no_colon_6_123.123, SPA packet: /43NB5qcNcwE1ow8Zg0hTNcZtuJPo7/lEeywjyO651FZ5mwoFzQ0aBaLZEtBKbih3Q6FElPTiFjrItH/JIjI0dRVpsrMDWScqln5oLeFGmIakcUPRVtQSaugx88bYVQU6lT5lq83xfbxlqNX0aTWLpP8GoQfvJS0Q
 [+] Bogus user: no_colon_6_123$123, SPA packet: +KMdQ8y2hJ1ED0ft7tzgS8LLzxfKigEaGXJ7boA4K5efrSO37I7fXm7D8Y/5hLrG99Dlfjt8iE5dyAapPx3mFyE973YHu5S0cv7JbpqBcJuprSzOHat87Av5qeBG0RE0n13tw/IzHI5RgqeKYf9P8omiugGsRlbJ4
 [+] Bogus user: no_colon_6_-user, SPA packet: +3MdEluwm+5oI0DbAtdDl8V9H4RSbsUhx4UO3nA+fltjuDyjniBmQlJlbad+SAOxrcXiF8/g0XR2MCmcv7yT5S1/Nq7vV2StnJFcSBf3kcM3M4peqZp3sb1MlC0MBGuaX7BD2aOCIFFQZbuhnXISFhBcicP+cpRzY
 [+] Bogus user: no_colon_6_-User, SPA packet: 8WnYEMIunt5Ca8R793Q+d50rO1I5WDMtVKrih1aVXwVzzG9xH6YXRCcpVKg6ZZV9H2c+vyiThFGvMipDGD6ZzWbxfg2hOiulQ+K3b4XAQM7vl8PTu/T7E5ep4psD0zQ9DfzHm3Ojv/ZRAxCzbJXc5A1eMdYcxo40c
@@ -1185,7 +1183,6 @@
 [+] Bogus user: no_colon_7_-1, SPA packet: +3XfCBjPSR5FSeMlFt976I/buOaQNrcJD3zo+l2sMHmoVY/02gZjVj3u0QKGjLiU71SsTDeXeOdC8PkbNKqA6hzFigJ7cunbe/7xWi9kemSi9Ud84cAIAbCCqhh+dUhNmFaLcvmjIXmDLMAExBZflCMAhJzHjb6IQ
 [+] Bogus user: no_colon_7_-1, SPA packet: /WOUWzuLwoqr1xKRQmkcveyk+A85aoACFAu1wjfMNanoC9qskMJGaxTp3Zf10iDg4UEhPfwUq5XCfstZBocBZUZ8a9wCi35fnFslLLm+/hlxUnNkHN4xjv5CT3imIxIiSarKDelCUfYTALs/Rig8E9urGn+OMPAgU
 [+] Bogus user: no_colon_7_123%123, SPA packet: /OZ91S/vNO2GYpIEfS0zJib1ccZ3tfxQ6dz38yZxrAN4tLruvTHC5ksx6GSUD31/pu5vdiT9pu+lP6HoghHZ+AtLiGr/UEHdwubRV11/H2RKq6Ev6JQs+4X2hv+x1VHKYdNCjZSmpaAElU3eBMgVLSrAsWSXy+S3Q
-[+] Bogus user: no_colon_7_123.123, SPA packet: 8aovr2G5KF7ZxN0TX5mGyfXmDAH2LLkqTRaPrSDcbItV5GiwRc8eyYXxRviy2AJ1IU5GhEdS1D8uRywAOLh+IznPBZhFdmuQVLHLAmcebwLW6//BnexYpfZPb7UKo+F8TxR4NlGP4sdT3gyqfpEkakrM3sFLion1U
 [+] Bogus user: no_colon_7_123$123, SPA packet: 8Jt+rUz3cCdHtyaOKLtVdx07apUzmT44odxf+Q1MKhLOGlwnpXWL6/ejMEZz5BKU2/ybDm0AifLoqRtBHUttIjVPyx4wWTjr/WK+3Zhl783a7hHTvcTlka//VynzN8/rBKUIA6dMETrlQO1TpuW41lPziuGwCjczI
 [+] Bogus user: no_colon_7_-user, SPA packet: 9y43GvDRQ5+8//1Rh1aVIvN8r6BVcdF5FRf45E5IHeqQOZQqPcXjZMJcFNYG4OAizFt+f1rzk0Abat9tRbkjJCe/tvOybAm50Bx18IlN3gp0HsUzi5rdjqY/RBtaKMAbj5GapKeT7UrPFb19EjnAmmmLGW4sl+ED8
 [+] Bogus user: no_colon_7_-User, SPA packet: /bbUXJIn3CGVI7h0hliFSmlbT/flU25MKhd2RRjF/bHTChdVLt8Q1A/NceHVNCCOB+3hpsfU7kxmTF3+VweaE09s8bkcs5S4H/13ooETqLp6bdSDIWiKDAV84OzosJUnyyeNhEzadnJiH5Lj1kAKn+iOlxCRxHg40
@@ -1523,7 +1520,6 @@
 [+] Bogus user: extra_timestamp_digit_-1, SPA packet: 9avjKfoNgP2mpAtZijmWpNrpDCJvX574BJ4lzxgyvVOLcxMm6PmDwNhmD+BJtz9kf/nMfilPFaehCOmdbzOOhmzkGYIdpMyqmjcmheO3S0lxRxY3bQ+ITzkwJnT89T639oEcadjjbR9jTkB48W4aUTxu6FZwBsWCc
 [+] Bogus user: extra_timestamp_digit_-1, SPA packet: 8EWbVXHsqjMrxoTQz1s52g0so7hdXObpM50Yygz6wwN5D8PuZ/PKo7nFhJnxylEmewuEyTB2XrMlU6WOBK9Wnbdqs5LRUDJXl5QaNFsXYBEVs/hmBkP6LWjpU6lLyujIsCELm3ACKS3mCyFy0VvvB+Q1O0wpxJV2M
 [+] Bogus user: extra_timestamp_digit_123%123, SPA packet: +5rdTQ/0VQwd8x88JEPeyTJGVrIebNqyyNpH1B4+aN8CbmUUVgvTRI7ysIkRXOXyWL8nlJqR77rMiBKj36GFnm0vwf9TEws+OzKiI3T9vQLr84/5GBSHlsmcbuSOd6mPXkUI8ZqDZsNx7wKkO0zQJ2x7EfgG1nOwk
-[+] Bogus user: extra_timestamp_digit_123.123, SPA packet: 8CItTEoMS/jgIG0VjnhfyyXkZJd/khoA6Zyuf28+M+gVjPItS40XE6GIcBcZWzrCP4EeRJ9C2AuLNCvhjco4tsJYKTC31VvbhRfnp7Z/PYsdwOWeu8YmQtmP9FaSYBcpraLpYrGK8Wla4sg1CYw4Ff4aGDBs/Inms
 [+] Bogus user: extra_timestamp_digit_123$123, SPA packet: 9qqiMByuSi3cojJgs4pfJ4pbTRTmWVpSB6+E9/J9EZRt4414SVMmiDXhhEfRB69yCco3x+1qzbU62N36Emof8LXemI8qsNDpAV3PJP2BoSS3LAcganjf3Juz+4Zri4hqJ705YHu71TtX3PGZ5YvvHC2L4xlXA7nhc
 [+] Bogus user: extra_timestamp_digit_-user, SPA packet: 9ZbMqZJn2wewaWX2XGCUPbdbaeHXAcKq4pUjMH2DNh2i5JFu1TDUT4sVkptW/8CfKZAyzL4G0zP4mjY1tx70ivau80qzsz+xpJug343wpUwS/9EHq6FYMsUjjQRUx6fvN7vSl+TJzHsNCrjha8NBQM1Gi/gUOjqTo
 [+] Bogus user: extra_timestamp_digit_-User, SPA packet: /kDvwn7XLWqxHtp6/TDzntBVUe3K0+YDLSPRnm+1ri5NALWI/xKbGUqXMoUyaKVu9srUkIcDoCHZxdZqGEVV2KiU11odPAQw80vXDdcjX29gNuAqli+xV7vWDxTewk05Wef+WCke4DflkUjn53m64oBaJwtRkspBA

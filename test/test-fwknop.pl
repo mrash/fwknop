@@ -3421,7 +3421,6 @@ sub fuzzing_usernames() {
         -1,
 #        pack('a', ""),
         '123%123',
-        '123.123',
         '123$123',
         '-user',
         '_user',
