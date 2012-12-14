@@ -1,2 +1,0 @@
-@comment $OpenBSD$
-@lib lib/libfko.so.${LIBfko_VERSION}

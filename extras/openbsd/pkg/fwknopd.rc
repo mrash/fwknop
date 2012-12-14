@@ -1,9 +1,0 @@
-#!/bin/sh
-#
-# $OpenBSD$
-
-daemon="${TRUEPREFIX}/sbin/fwknopd"
-
-. /etc/rc.d/rc.subr
-
-rc_cmd $1
