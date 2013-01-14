@@ -6,7 +6,7 @@ fwknop_SOURCES      = fwknop.c fwknop.h config_init.c config_init.h \
 
 fwknop_CPPFLAGS     = -I $(top_srcdir)/lib -I $(top_srcdir)/common
 
-fwknop_LDADD        = $(top_builddir)/lib/libfko.la $(top_builddir)/lib/libfko_util.a
+fwknop_LDADD        = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
 
 dist_man_MANS       = fwknop.8
 
