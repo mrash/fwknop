@@ -592,6 +592,66 @@ fw_cleanup(const fko_srv_options_t *opts)
     return(0);
 }
 
+static int
+rule_exists(const fko_srv_options_t *opts, const char *fw_chain, const char *fw_rule)
+{
+    int     rule_exists = 0;
+    int     res = 0;
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -C %s %s", opts->fw_config->fw_command, fw_chain, fw_rule);
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if (opts->verbose)
+        log_msg(LOG_INFO, "rule_exists() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
+
+    if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
+    {
+        rule_exists = 0;
+        log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s does not exist.", fw_rule, fw_chain);
+    }
+    else
+    {
+        rule_exists = 1;
+        if (opts->verbose)
+            log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s already exist.", fw_rule, fw_chain);
+    }
+
+    return rule_exists;
+}
+
+static int create_rule(const fko_srv_options_t *opts, const char *fw_chain, const char *fw_rule)
+{
+    int res;
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -A %s %s", opts->fw_config->fw_command, fw_chain, fw_rule);
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+    if (opts->verbose)
+        log_msg(LOG_INFO, "create_rule() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
+
+    if(EXTCMD_IS_SUCCESS(res))
+    {
+        res = 0;
+        if (opts->verbose)
+            log_msg(LOG_INFO, "create_rule() Rule: '%s' added to %s", fw_rule, fw_chain);
+    }
+    else
+    {
+        res = 1;
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+    }
+
+    return res;
+}
+
 /****************************************************************************/
 
 /* Rule Processing - Create an access request...
@@ -602,6 +662,7 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
     char             nat_ip[MAX_IPV4_STR_LEN] = {0};
     char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
     char            *ndx;
+    char             rule_buf[CMD_BUFSIZE];
 
     unsigned int     nat_port = 0;
 
@@ -670,12 +731,10 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
         */
         while(ple != NULL)
         {
-            zero_cmd_buffers();
+            memset(rule_buf, 0, CMD_BUFSIZE);
 
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_RULE_ARGS,
-                opts->fw_config->fw_command,
+            snprintf(rule_buf, CMD_BUFSIZE-1, IPT_RULE_ARGS,
                 in_chain->table,
-                in_chain->to_chain,
                 ple->proto,
                 spadat->use_src_ip,
                 ple->port,
@@ -683,41 +742,34 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 in_chain->target
             );
 
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-            if (opts->verbose)
-                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
-
-            if(EXTCMD_IS_SUCCESS(res))
+            if(rule_exists(opts, in_chain->to_chain, rule_buf) == 0)
             {
-                log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
-                    in_chain->to_chain, spadat->use_src_ip,
-                    spadat->spa_message_remain, exp_ts
-                );
+                if (create_rule(opts, in_chain->to_chain, rule_buf) == 0)
+                {
+                    log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
+                        in_chain->to_chain, spadat->use_src_ip,
+                        spadat->spa_message_remain, exp_ts
+                    );
 
-                in_chain->active_rules++;
+                    in_chain->active_rules++;
 
-                /* Reset the next expected expire time for this chain if it
-                * is warranted.
-                */
-                if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
-                    in_chain->next_expire = exp_ts;
+                    /* Reset the next expected expire time for this chain if it
+                    * is warranted.
+                    */
+                    if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
+                        in_chain->next_expire = exp_ts;
+                }
             }
-            else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
             /* If we have to make an corresponding OUTPUT rule if out_chain target
             * is not NULL.
             */
             if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
             {
-                zero_cmd_buffers();
+                memset(rule_buf, 0, CMD_BUFSIZE);
 
-                snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_OUT_RULE_ARGS,
-                    opts->fw_config->fw_command,
+                snprintf(rule_buf, CMD_BUFSIZE-1, IPT_OUT_RULE_ARGS,
                     out_chain->table,
-                    out_chain->to_chain,
                     ple->proto,
                     spadat->use_src_ip,
                     ple->port,
@@ -725,30 +777,24 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                     out_chain->target
                 );
 
-                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-                if (opts->verbose)
-                    log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
-                        cmd_buf, res, err_buf);
-
-                if(EXTCMD_IS_SUCCESS(res))
+                if(rule_exists(opts, out_chain->to_chain, rule_buf) == 0)
                 {
-                    log_msg(LOG_INFO, "Added OUTPUT Rule to %s for %s, %s expires at %u",
-                        out_chain->to_chain, spadat->use_src_ip,
-                        spadat->spa_message_remain, exp_ts
-                    );
+                    if (create_rule(opts, out_chain->to_chain, rule_buf) == 0)
+                    {
+                        log_msg(LOG_INFO, "Rule in %s for %s, %s expires at %u, does not exist.",
+                            out_chain->to_chain, spadat->use_src_ip,
+                            spadat->spa_message_remain, exp_ts
+                        );
 
-                    out_chain->active_rules++;
+                        out_chain->active_rules++;
 
-                    /* Reset the next expected expire time for this chain if it
-                    * is warranted.
-                    */
-                    if(out_chain->next_expire < now || exp_ts < out_chain->next_expire)
-                        out_chain->next_expire = exp_ts;
+                        /* Reset the next expected expire time for this chain if it
+                        * is warranted.
+                        */
+                        if(out_chain->next_expire < now || exp_ts < out_chain->next_expire)
+                            out_chain->next_expire = exp_ts;
+                    }
                 }
-                else
-                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
-
             }
 
             ple = ple->next;
@@ -780,14 +826,10 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
 
         if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG)
         {
-            /* Need to add an ACCEPT rule into the INPUT chain
-            */
-            zero_cmd_buffers();
+            memset(rule_buf, 0, CMD_BUFSIZE);
 
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_RULE_ARGS,
-                opts->fw_config->fw_command,
+            snprintf(rule_buf, CMD_BUFSIZE-1, IPT_RULE_ARGS,
                 in_chain->table,
-                in_chain->to_chain,
                 fst_proto,
                 spadat->use_src_ip,
                 nat_port,
@@ -795,29 +837,24 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 in_chain->target
             );
 
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-            if (opts->verbose)
-                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
-
-            if(EXTCMD_IS_SUCCESS(res))
+            if(rule_exists(opts, in_chain->to_chain, rule_buf) == 0)
             {
-                log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
-                    in_chain->to_chain, spadat->use_src_ip,
-                    spadat->spa_message_remain, exp_ts
-                );
+                if (create_rule(opts, in_chain->to_chain, rule_buf) == 0)
+                {
+                    log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
+                        in_chain->to_chain, spadat->use_src_ip,
+                        spadat->spa_message_remain, exp_ts
+                    );
 
-                in_chain->active_rules++;
+                    in_chain->active_rules++;
 
-                /* Reset the next expected expire time for this chain if it
-                * is warranted.
-                */
-                if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
-                    in_chain->next_expire = exp_ts;
+                    /* Reset the next expected expire time for this chain if it
+                    * is warranted.
+                    */
+                    if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
+                        in_chain->next_expire = exp_ts;
+                }
             }
-            else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
         }
         else if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
@@ -831,12 +868,10 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
             if (jump_rule_exists(IPT_FORWARD_ACCESS) == 0)
                 add_jump_rule(opts, IPT_FORWARD_ACCESS);
 
-            zero_cmd_buffers();
+            memset(rule_buf, 0, CMD_BUFSIZE);
 
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_FWD_RULE_ARGS,
-                opts->fw_config->fw_command,
+            snprintf(rule_buf, CMD_BUFSIZE-1, IPT_FWD_RULE_ARGS,
                 fwd_chain->table,
-                fwd_chain->to_chain,
                 fst_proto,
                 spadat->use_src_ip,
                 nat_ip,
@@ -845,34 +880,28 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 fwd_chain->target
             );
 
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-            if (opts->verbose)
-                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
-
-            if(EXTCMD_IS_SUCCESS(res))
+            if(rule_exists(opts, fwd_chain->to_chain, rule_buf) == 0)
             {
-                log_msg(LOG_INFO, "Added FORWARD Rule to %s for %s, %s expires at %u",
-                    fwd_chain->to_chain, spadat->use_src_ip,
-                    spadat->spa_message_remain, exp_ts
-                );
+                if (create_rule(opts, fwd_chain->to_chain, rule_buf) == 0)
+                {
+                    log_msg(LOG_INFO, "Added FORWARD Rule to %s for %s, %s expires at %u",
+                        fwd_chain->to_chain, spadat->use_src_ip,
+                        spadat->spa_message_remain, exp_ts
+                    );
 
-                fwd_chain->active_rules++;
+                    fwd_chain->active_rules++;
 
-                /* Reset the next expected expire time for this chain if it
-                * is warranted.
-                */
-                if(fwd_chain->next_expire < now || exp_ts < fwd_chain->next_expire)
-                    fwd_chain->next_expire = exp_ts;
+                    /* Reset the next expected expire time for this chain if it
+                    * is warranted.
+                    */
+                    if(fwd_chain->next_expire < now || exp_ts < fwd_chain->next_expire)
+                        fwd_chain->next_expire = exp_ts;
+                }
             }
-            else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
         }
 
         if(dnat_chain->to_chain != NULL && strlen(dnat_chain->to_chain))
         {
-
             /* Make sure the required chain and jump rule exists
             */
             if(chain_exists(opts, IPT_DNAT_ACCESS) == 0)
@@ -881,12 +910,10 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
             if (jump_rule_exists(IPT_DNAT_ACCESS) == 0)
                 add_jump_rule(opts, IPT_DNAT_ACCESS);
 
-            zero_cmd_buffers();
+            memset(rule_buf, 0, CMD_BUFSIZE);
 
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_DNAT_RULE_ARGS,
-                opts->fw_config->fw_command,
+            snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_RULE_ARGS,
                 dnat_chain->table,
-                dnat_chain->to_chain,
                 fst_proto,
                 spadat->use_src_ip,
                 fst_port,
@@ -896,37 +923,30 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 nat_port
             );
 
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-            if (opts->verbose)
-                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
-
-            if(EXTCMD_IS_SUCCESS(res))
+            if(rule_exists(opts, dnat_chain->to_chain, rule_buf) == 0)
             {
-                log_msg(LOG_INFO, "Added DNAT Rule to %s for %s, %s expires at %u",
-                    dnat_chain->to_chain, spadat->use_src_ip,
-                    spadat->spa_message_remain, exp_ts
-                );
+                if (create_rule(opts, dnat_chain->to_chain, rule_buf) == 0)
+                {
+                    log_msg(LOG_INFO, "Added DNAT Rule to %s for %s, %s expires at %u",
+                        dnat_chain->to_chain, spadat->use_src_ip,
+                        spadat->spa_message_remain, exp_ts
+                    );
 
-                dnat_chain->active_rules++;
+                    dnat_chain->active_rules++;
 
-                /* Reset the next expected expire time for this chain if it
-                * is warranted.
-                */
-                if(dnat_chain->next_expire < now || exp_ts < dnat_chain->next_expire)
-                    dnat_chain->next_expire = exp_ts;
+                    /* Reset the next expected expire time for this chain if it
+                    * is warranted.
+                    */
+                    if(dnat_chain->next_expire < now || exp_ts < dnat_chain->next_expire)
+                        dnat_chain->next_expire = exp_ts;
+                }
             }
-            else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
         }
 
         /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
         */
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
         {
-            zero_cmd_buffers();
-
             /* Setup some parameter depending on whether we are using SNAT
              * or MASQUERADE.
             */
@@ -946,10 +966,10 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                     "--to-ports %i", fst_port);
             }
 
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_SNAT_RULE_ARGS,
-                opts->fw_config->fw_command,
+            memset(rule_buf, 0, CMD_BUFSIZE);
+
+            snprintf(rule_buf, CMD_BUFSIZE-1, IPT_SNAT_RULE_ARGS,
                 snat_chain->table,
-                snat_chain->to_chain,
                 fst_proto,
                 nat_ip,
                 nat_port,
@@ -958,29 +978,24 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
                 snat_target
             );
 
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-            if (opts->verbose)
-                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
-
-            if(EXTCMD_IS_SUCCESS(res))
+            if(rule_exists(opts, snat_chain->to_chain, rule_buf) == 0)
             {
-                log_msg(LOG_INFO, "Added Source NAT Rule to %s for %s, %s expires at %u",
-                    snat_chain->to_chain, spadat->use_src_ip,
-                    spadat->spa_message_remain, exp_ts
-                );
+                if(create_rule(opts, snat_chain->to_chain, rule_buf) == 0)
+                {
+                    log_msg(LOG_INFO, "Added Source NAT Rule to %s for %s, %s expires at %u",
+                        snat_chain->to_chain, spadat->use_src_ip,
+                        spadat->spa_message_remain, exp_ts
+                    );
 
-                snat_chain->active_rules++;
+                    snat_chain->active_rules++;
 
-                /* Reset the next expected expire time for this chain if it
-                * is warranted.
-                */
-            if(snat_chain->next_expire < now || exp_ts < snat_chain->next_expire)
-                    snat_chain->next_expire = exp_ts;
+                    /* Reset the next expected expire time for this chain if it
+                    * is warranted.
+                    */
+                    if(snat_chain->next_expire < now || exp_ts < snat_chain->next_expire)
+                            snat_chain->next_expire = exp_ts;
+                }
             }
-            else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
         }
     }
 
