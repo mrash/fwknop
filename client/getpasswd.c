@@ -40,10 +40,25 @@
 #include "fwknop_common.h"
 #include "getpasswd.h"
 
-/* Function for accepting password input from users
-*/
+#define MAX_PASS_LEN    128         ///< Maximum number of chars an encryption key or a password can contain
+
+#define PW_BREAK_CHAR   0x03        ///< Ascii code for the Ctrl-C char
+#define PW_BS_CHAR      0x08        ///< Ascii code for the backspace char
+#define PW_LF_CHAR      0x0A        ///< Ascii code for the \n char
+#define PW_CR_CHAR      0x0D        ///< Ascii code for the \r char
+#define PW_CLEAR_CHAR   0x15        ///< Ascii code for the Ctrl-U char
+
+/**
+ * Function for accepting password input from users
+ *
+ * The functions reads chars from the terminal and store them in a buffer of chars.
+ *
+ * @return NULL if a problem occured or the user killed the terminal (Ctrl-C)\n
+ *         otherwise the password - empty password is accepted.
+ */
 char*
-getpasswd(const char *prompt)
+getpasswd(
+    const char *prompt)     ///< String displayed on the terminal to prompt the user for a password or an encryption key
 {
     static char     pwbuf[MAX_KEY_LEN + 1] = {0};
     char           *ptr;
@@ -61,18 +76,21 @@ getpasswd(const char *prompt)
 
     /* Setup blocks for SIGINT and SIGTSTP and save the original signal
      * mask.
-    */
+     */
     sigemptyset(&sig);
     sigaddset(&sig, SIGINT);
     sigaddset(&sig, SIGTSTP);
     sigprocmask(SIG_BLOCK, &sig, &old_sig);
 
-    /* Save current tty state for later restoration after we disable echo
-     * of characters to the tty.
-    */
+    /*
+     * Save current tty state for later restoration after we :
+     *   - disable echo of characters to the tty
+     *   - disable signal generation
+     *   - disable cannonical mode (input read line by line mode)
+     */
     tcgetattr(fileno(fp), &ts);
     old_ts = ts;
-    ts.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+    ts.c_lflag &= ~(ECHO | ICANON | ISIG);
     tcsetattr(fileno(fp), TCSAFLUSH, &ts);
 
     fputs(prompt, fp);
@@ -81,59 +99,66 @@ getpasswd(const char *prompt)
     /* Read in the password.
     */
     ptr = pwbuf;
+
 #ifdef WIN32
-	_cputs(prompt);
-    while((c = _getch()) != '\r')
-	{
-		/* Handle a backspace without backing up too far.
-		*/
-		if(c == '\b')
-		{
-			if(ptr != pwbuf)
-				*ptr--;
-
-			continue;
-		}
-
-		/* Handle a Ctrl-U to clear the password entry and start over
-		 * (like it works under Unix).
-	    */
-		if(c == 0x15)
-		{
-			ptr = pwbuf;
-			continue;
-		}
+    _cputs(prompt);
+    while((c = _getch()) != PW_CR_CHAR)
 #else
-	while((c = getc(fp)) != EOF && c != '\n')
-	{
+    while( ((c = getc(fp)) != EOF) && (c != PW_LF_CHAR) && (c != PW_BREAK_CHAR) )
 #endif
-        if(ptr < &pwbuf[MAX_KEY_LEN])
-            *ptr++ = c;
-	}
+    {
+        /* Handle a backspace without backing up too far.
+         */
+        if (c == PW_BS_CHAR)
+        {
+            if (ptr != pwbuf)
+                ptr--;
+        }
 
-	/* Null terminate the password.
-    */
-    *ptr = 0;
+        /* Handle a Ctrl-U to clear the password entry and start over
+         */
+        else if (c == PW_CLEAR_CHAR)
+            ptr = pwbuf;
+
+        /* Store data in the buffer and check for a possible overflow
+         */
+        else if (ptr < &pwbuf[MAX_PASS_LEN])
+            *ptr++ = c;
+    }
+
+    /* If a Ctrl-C char has been detected we set an error
+     */
+    if (c == PW_BREAK_CHAR)
+        ptr = NULL;
+
+    /* Otherwise we make the password as a NULL terminated string and point
+     * to the start of the password in order to be returned by the function.
+     */
+    else
+    {
+        *ptr = '\0';
+        ptr = pwbuf;
+    }
 
 #ifndef WIN32
     /* we can go ahead and echo out a newline.
     */
-    putc('\n', fp);
+    putc(PW_LF_CHAR, fp);
 
-	/* Restore our tty state and signal handlers.
+    /* Restore our tty state and signal handlers.
     */
     tcsetattr(fileno(fp), TCSAFLUSH, &old_ts);
     sigprocmask(SIG_BLOCK, &old_sig, NULL);
 
     fclose(fp);
 #else
-	/* In Windows, it would be a CR-LF
-	*/
-	_putch('\r');
-	_putch('\n');
+    /* In Windows, it would be a CR-LF
+     */
+    _putch(PW_CR_CHAR);
+    _putch(PW_LF_CHAR);
 #endif
 
-    return(pwbuf);
+    return (ptr);
 }
 
 /* Function for accepting password input from from a file

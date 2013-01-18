@@ -47,6 +47,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     struct iphdr        *iph_p;
     struct tcphdr       *tcph_p;
     struct udphdr       *udph_p;
+    struct icmphdr      *icmph_p;
 
     unsigned char       *pkt_data;
     unsigned short      pkt_data_len;
@@ -58,8 +59,8 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     unsigned int        src_ip;
     unsigned int        dst_ip;
 
-    unsigned short      src_port;
-    unsigned short      dst_port;
+    unsigned short      src_port = 0;
+    unsigned short      dst_port = 0;
 
     unsigned short      eth_type;
 
@@ -165,6 +166,16 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
         pkt_data = ((unsigned char*)(udph_p + 1));
         pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
     }
+    else if (proto == IPPROTO_ICMP)
+    {
+        /* Process ICMP packet
+        */
+        icmph_p = (struct icmphdr*)((unsigned char*)iph_p + (ip_hdr_words << 2));
+
+        pkt_data = ((unsigned char*)(icmph_p + 1));
+        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+    }
+
     else
         return;
 

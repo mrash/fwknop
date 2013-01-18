@@ -57,6 +57,7 @@ pcap_capture(fko_srv_options_t *opts)
     int                 pending_break = 0;
     int                 promisc = 0;
     int                 set_direction = 1;
+    int                 pcap_file_mode = 0;
     int                 status;
     int                 useconds;
     pid_t               child_pid;
@@ -72,22 +73,39 @@ pcap_capture(fko_srv_options_t *opts)
     if(opts->config[CONF_ENABLE_PCAP_PROMISC][0] == 'Y')
         promisc = 1;
 
-    pcap = pcap_open_live(
-        opts->config[CONF_PCAP_INTF],
-        atoi(opts->config[CONF_MAX_SNIFF_BYTES]),
-        promisc, 100, errstr
-    );
+    if(opts->config[CONF_PCAP_FILE] != NULL
+            && opts->config[CONF_PCAP_FILE][0] != '\0')
+        pcap_file_mode = 1;
 
-    if(pcap == NULL)
-    {
-        log_msg(LOG_ERR, "[*] pcap_open_live error: %s\n", errstr);
-        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+    if(pcap_file_mode == 1) {
+        log_msg(LOG_INFO, "Reading pcap file: %s",
+            opts->config[CONF_PCAP_FILE]);
+
+        pcap = pcap_open_offline(opts->config[CONF_PCAP_FILE], errstr);
+
+        if(pcap == NULL)
+        {
+            log_msg(LOG_ERR, "[*] pcap_open_offline() error: %s\n",
+                    errstr);
+            clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+        }
     }
-
-    if (pcap == NULL)
+    else
     {
-        log_msg(LOG_ERR, "[*] pcap error: %s", errstr);
-        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+        log_msg(LOG_INFO, "Sniffing interface: %s",
+            opts->config[CONF_PCAP_INTF]);
+
+        pcap = pcap_open_live(
+            opts->config[CONF_PCAP_INTF],
+            atoi(opts->config[CONF_MAX_SNIFF_BYTES]),
+            promisc, 100, errstr
+        );
+
+        if(pcap == NULL)
+        {
+            log_msg(LOG_ERR, "[*] pcap_open_live() error: %s\n", errstr);
+            clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+        }
     }
 
     /* Set pcap filters, if any.
@@ -110,7 +128,7 @@ pcap_capture(fko_srv_options_t *opts)
             clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
         }
 
-        log_msg(LOG_INFO, "PCAP filter is: %s", opts->config[CONF_PCAP_FILTER]);
+        log_msg(LOG_INFO, "PCAP filter is: '%s'", opts->config[CONF_PCAP_FILTER]);
 
         pcap_freecode(&fp);
     }
@@ -141,7 +159,8 @@ pcap_capture(fko_srv_options_t *opts)
 
     /* We are only interested on seeing packets coming into the interface.
     */
-    if (set_direction && (pcap_setdirection(pcap, PCAP_D_IN) < 0))
+    if (set_direction && (pcap_file_mode == 0)
+            && (pcap_setdirection(pcap, PCAP_D_IN) < 0))
         if(opts->verbose)
             log_msg(LOG_WARNING, "[*] Warning: pcap error on setdirection: %s.",
                 pcap_geterr(pcap));
@@ -150,9 +169,10 @@ pcap_capture(fko_srv_options_t *opts)
      *
      * NOTE: This is simply set to 0 for now until we find a need
      *       to actually use this mode (which when set on a FreeBSD
-     *       system, it silently breaks the packet capture). 
+     *       system, it silently breaks the packet capture).
     */
-    if((pcap_setnonblock(pcap, DEF_PCAP_NONBLOCK, errstr)) == -1)
+    if((pcap_file_mode == 0)
+            && (pcap_setnonblock(pcap, DEF_PCAP_NONBLOCK, errstr)) == -1)
     {
         log_msg(LOG_ERR, "[*] Error setting pcap nonblocking to %i: %s",
             0, errstr
@@ -230,6 +250,9 @@ pcap_capture(fko_srv_options_t *opts)
         */
         if(res > 0)
         {
+            if(opts->foreground == 1 && opts->verbose > 2)
+                log_msg(LOG_INFO, "pcap_dispatch() processed: %d packets", res);
+
             /* Count the set of processed packets (pcap_dispatch() return
              * value) - we use this as a comparison for --packet-limit regardless
              * of SPA packet validity at this point.

@@ -1,0 +1,40 @@
+diff --git a/lib/fko_message.c b/lib/fko_message.c
+index 9148c2d..8ac1aca 100644
+--- a/lib/fko_message.c
++++ b/lib/fko_message.c
+@@ -221,12 +221,12 @@ validate_proto_port_spec(const char *msg)
+     if(strncmp(ndx, "tcp", 3)
+       && strncmp(ndx, "udp", 3)
+       && strncmp(ndx, "icmp", 4)
+-      && strncmp(ndx, "none", 4))
+-        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
++      && strncmp(ndx, "none", 4));
++//        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+ 
+     ndx = strchr(ndx, '/');
+-    if(ndx == NULL || ((1+(ndx - msg)) > MAX_PROTO_STR_LEN))
+-        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
++    if(ndx == NULL || ((1+(ndx - msg)) > MAX_PROTO_STR_LEN));
++//        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+ 
+     /* Skip over the '/' and make sure we only have digits.
+     */
+@@ -234,14 +234,14 @@ validate_proto_port_spec(const char *msg)
+ 
+     /* Must have at least one digit for the port number
+     */
+-    if(isdigit(*ndx) == 0)
+-        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
++    if(isdigit(*ndx) == 0);
++//        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+ 
+     while(*ndx != '\0' && *ndx != ',')
+     {
+         port_str_len++;
+-        if((isdigit(*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN))
+-            return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
++        if((isdigit(*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN));
++//            return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+         ndx++;
+     }
+     return(FKO_SUCCESS);

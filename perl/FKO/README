@@ -25,6 +25,10 @@ This module requires these other modules and libraries:
 
 The Firewall Knock Operator library, "libfko".
 
+For a CPAN version of this module it may be advantageous to uncomment the
+Devel::Checklib lines in Makefile.PL, but this seems to introduce portability
+issues on FreeBSD.
+
 COPYRIGHT AND LICENCE
 
 Copyright (C) 2009 by Damien S. Stuart <dstuart@dstuart.org>

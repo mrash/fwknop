@@ -29,9 +29,12 @@
  ******************************************************************************
 */
 #include "fwknop_common.h"
+#include "netinet_common.h"
 #include "config_init.h"
 #include "cmd_opts.h"
 #include "utils.h"
+#include <sys/stat.h>
+#include <fcntl.h>
 
 /* Convert a digest_type string to its integer value.
 */
@@ -78,7 +81,9 @@ enc_mode_strtoint(const char *enc_mode_str)
 static int
 proto_strtoint(const char *pr_str)
 {
-    if (strcasecmp(pr_str, "udp") == 0)
+    if (strcasecmp(pr_str, "udpraw") == 0)
+        return(FKO_PROTO_UDP_RAW);
+    else if (strcasecmp(pr_str, "udp") == 0)
         return(FKO_PROTO_UDP);
     else if (strcasecmp(pr_str, "tcpraw") == 0)
         return(FKO_PROTO_TCP_RAW);
@@ -150,13 +155,28 @@ parse_time_offset(const char *offset_str)
 static int
 create_fwknoprc(const char *rcfile)
 {
-    FILE    *rc = NULL;
+    FILE *rc = NULL;
+    int   rcfile_fd = -1;
 
     fprintf(stdout, "[*] Creating initial rc file: %s.\n", rcfile);
 
+    /* Try to create the initial rcfile with user read/write rights only.
+     * If the rcfile already exists, an error is returned */
+    rcfile_fd = open(rcfile, O_WRONLY|O_CREAT|O_EXCL , S_IRUSR|S_IWUSR);
+
+    // If an error occured ...
+    if (rcfile_fd == -1) {
+            fprintf(stderr, "Unable to create initial rc file: %s: %s\n",
+                rcfile, strerror(errno));
+            return(-1);
+    }
+
+    // Free the rcfile descriptor
+    close(rcfile_fd);
+
     if ((rc = fopen(rcfile, "w")) == NULL)
     {
-        fprintf(stderr, "Unable to create rc file: %s: %s\n",
+        fprintf(stderr, "Unable to write default setup to rcfile: %s: %s\n",
             rcfile, strerror(errno));
         return(-1);
     }
@@ -235,8 +255,6 @@ create_fwknoprc(const char *rcfile)
     );
 
     fclose(rc);
-
-    set_file_perms(rcfile);
 
     return(0);
 }
@@ -332,6 +350,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     {
         if(val[0] == 'y' || val[0] == 'Y')
             options->use_gpg = 1;
+    }
+    /* Use GPG Agent ? */
+    else if(CONF_VAR_IS(var, "USE_GPG_AGENT"))
+    {
+        if(val[0] == 'y' || val[0] == 'Y')
+            options->use_gpg_agent = 1;
     }
     /* GPG Recipient */
     else if(CONF_VAR_IS(var, "GPG_RECIPIENT"))
@@ -585,7 +609,7 @@ process_rc(fko_cli_options_t *options)
             continue;
         }
 
-        if(sscanf(line, "%s %[^;\n\r#]", var, val) != 2)
+        if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)
         {
             fprintf(stderr,
                 "*Invalid entry in %s at line %i.\n - '%s'",
@@ -729,6 +753,8 @@ set_defaults(fko_cli_options_t *options)
     options->spa_dst_port = FKO_DEFAULT_PORT;
     options->fw_timeout   = -1;
 
+    options->spa_icmp_type = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
+    options->spa_icmp_code = 0;               /* only used in '-P icmp' mode */
     return;
 }
 
@@ -827,6 +853,21 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'K':
                 options->key_gen = 1;
                 strlcpy(options->key_gen_file, optarg, MAX_PATH_LEN);
+            case SPA_ICMP_TYPE:
+                options->spa_icmp_type = atoi(optarg);
+                if (options->spa_icmp_type < 0 || options->spa_icmp_type > MAX_ICMP_TYPE)
+                {
+                    fprintf(stderr, "Unrecognized icmp type value: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case SPA_ICMP_CODE:
+                options->spa_icmp_code = atoi(optarg);
+                if (options->spa_icmp_code < 0 || options->spa_icmp_code > MAX_ICMP_CODE)
+                {
+                    fprintf(stderr, "Unrecognized icmp code value: %s\n", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case 'l':
                 options->run_last_command = 1;
@@ -1049,6 +1090,8 @@ usage(void)
       "                             (md5, sha1, or sha256 (default)).\n"
       " -f, --fw-timeout            Specify SPA server firewall timeout from the\n"
       "                             client side.\n"
+      "     --icmp-type             Set the ICMP type (used with '-P icmp')\n"
+      "     --icmp-code             Set the ICMP code (used with '-P icmp')\n"
       "     --gpg-encryption        Use GPG encryption (default is Rijndael).\n"
       "     --gpg-recipient-key     Specify the recipient GPG key name or ID.\n"
       "     --gpg-signer-key        Specify the signer's GPG key name or ID.\n"

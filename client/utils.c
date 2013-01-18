@@ -28,6 +28,7 @@
  *
  *****************************************************************************
 */
+#include "common.h"
 #include "fwknop_common.h"
 #include "utils.h"
 
@@ -87,24 +88,6 @@ is_base64(const unsigned char *buf, const unsigned short int len)
     }
 
     return rv;
-}
-
-int
-set_file_perms(const char *file)
-{
-    int res = 0;
-
-    res = chmod(file, S_IRUSR | S_IWUSR);
-
-    if(res != 0)
-    {
-        fprintf(stderr,
-            "[-] unable to chmod file %s to user read/write (0600, -rw-------): %s\n",
-            file,
-            strerror(errno)
-        );
-    }
-    return res;
 }
 
 int

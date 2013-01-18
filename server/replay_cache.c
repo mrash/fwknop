@@ -37,6 +37,8 @@
 #include "fwknopd_errors.h"
 #include "utils.h"
 
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <time.h>
 
 #if HAVE_LIBGDBM
@@ -138,7 +140,6 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
     char        created[DATE_LEN];
 
 #if ! USE_FILE_CACHE
-    char        last_ip[INET_ADDRSTRLEN+1] = {0};
     char        first[DATE_LEN], last[DATE_LEN];
 #endif
 
@@ -169,17 +170,17 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
     strftime(created, DATE_LEN, "%D %H:%M:%S", localtime(&(digest_info->created)));
 
     log_msg(LOG_WARNING,
-        "Replay detected from source IP: %s\n"
-        "        Destination proto/port: %d/%d\n"
-        "            Original source IP: %s\n"
-        "       Original dst proto/port: %d/%d\n"
+        "Replay detected from source IP: %s, "
+        "Destination proto/port: %d/%d, "
+        "Original source IP: %s, "
+        "Original dst proto/port: %d/%d, "
 #if USE_FILE_CACHE
-        "                 Entry created: %s\n",
+        "Entry created: %s",
 #else
-        "                 Entry created: %s\n"
-        "                  First replay: %s\n"
-        "                   Last replay: %s\n"
-        "                  Replay count: %i\n",
+        "Entry created: %s, "
+        "First replay: %s, "
+        "Last replay: %s, "
+        "Replay count: %i",
 #endif
         src_ip,
         opts->spa_pkt.packet_proto,
@@ -231,6 +232,8 @@ replay_file_cache_init(fko_srv_options_t *opts)
     char            src_ip[INET_ADDRSTRLEN+1] = {0};
     char            dst_ip[INET_ADDRSTRLEN+1] = {0};
     long int        time_tmp;
+    int             digest_file_fd = -1;
+    char            digest_header[] = "# <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>\n";
 
     struct digest_cache_list *digest_elm = NULL;
 
@@ -253,17 +256,25 @@ replay_file_cache_init(fko_srv_options_t *opts)
         /* the file does not exist yet, so it will be created when the first
          * successful SPA packet digest is written to disk
         */
-        if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "w")) == NULL)
+        digest_file_fd = open(opts->config[CONF_DIGEST_FILE], O_WRONLY|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+        if (digest_file_fd == -1)
         {
-            log_msg(LOG_WARNING, "Could not open digest cache: %s",
-                opts->config[CONF_DIGEST_FILE]);
+            log_msg(LOG_WARNING, "Could not create digest cache: %s: %s",
+                opts->config[CONF_DIGEST_FILE], strerror(errno));
+            return(-1);
         }
-        fprintf(digest_file_ptr,
-            "# <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>\n");
-        fclose(digest_file_ptr);
+        else
+        {
+            if(write(digest_file_fd, digest_header, strlen(digest_header))
+                    != strlen(digest_header)) {
+                log_msg(LOG_WARNING,
+                    "Did not write expected number of bytes to digest cache: %s\n",
+                    opts->config[CONF_DIGEST_FILE]);
+            }
+            close(digest_file_fd);
 
-        set_file_perms(opts->config[CONF_DIGEST_FILE]);
-        return(0);
+            return(0);
+        }
     }
 
     verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE]);
@@ -375,9 +386,10 @@ replay_db_cache_init(fko_srv_options_t *opts)
     GDBM_FILE   rpdb;
 #elif HAVE_LIBNDBM
     DBM        *rpdb;
+    datum       db_ent;
 #endif
 
-    datum       db_key, db_ent, db_next_key;
+    datum       db_key, db_next_key;
     int         db_count = 0;
 
 #ifdef HAVE_LIBGDBM
@@ -565,10 +577,7 @@ is_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 #endif
     datum       db_key, db_ent;
 
-    char       *digest = NULL;
     int         digest_len, res = SPA_MSG_SUCCESS;
-
-    digest_cache_info_t dc_info;
 
     digest_len = strlen(digest);
 
@@ -638,7 +647,6 @@ add_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 #endif
     datum       db_key, db_ent;
 
-    char       *digest = NULL;
     int         digest_len, res = SPA_MSG_SUCCESS;
 
     digest_cache_info_t dc_info;
@@ -705,7 +713,7 @@ add_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 
     return(res);
 #endif /* NO_DIGEST_CACHE */
-
+}
 #endif /* USE_FILE_CACHE */
 
 #if USE_FILE_CACHE

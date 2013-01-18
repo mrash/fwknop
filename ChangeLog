@@ -1,8 +1,88 @@
+fwknop-2.0.5 (//2013):
+    - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.4, and this has
+      been checked in under the extras/openbsd/fwknop-2.0.4 directory.
+
+fwknop-2.0.4 (12/09/2012):
+    - [client] Misc fixes and the addition of save_args and last command 
+      (.fwknop.last) support on the Windows platform.
+    - [client] Fixed bug in username determination code where a valid value
+      could be overrwritten in certain circumstances.
+    - [server] Added upstart config at extras/upstart/fwknop.conf.  This
+      allows the fwknopd to easily be managed with upstart via commands like
+      "service fwknop start" and "service fwknop stop".
+    - [server] (Vlad Glagolev) Submitted a patch to fix ndbm/gdbm usage when
+      --disable-file-cache is used for the autoconf configure script.  This
+      functionality was broken in be4193d734850fe60f14a26b547525ea0b9ce1e9
+      through improper handling of #define macros from --disable-file-cache.
+    - [server] (Vlad Glagolev) Submitted a patch to fix command exec mode
+      under SPA message type validity test.  Support for command exec mode was
+      also added to the test suite.
+    - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.3, and this has
+      been checked in under the extras/openbsd/ directory.
+    - [server] Bug fix to allow GPG_ALLOW_NO_PW to result in not also having
+      to specify a Rijndael key.
+    - [Android] Added new .properties files to allow the fwknop client to
+      build and function properly on the latest Android release (4.1.2).
+    - [client] Added '-P udpraw' to allow the client to send SPA packets over
+      UDP with a spoofed source IP address.  This is in addition to the
+      original 'tcpraw' and 'icmp' protocols that also support a spoofed
+      source IP.
+    - [libfko] Bug fix to check b64_decode() return value to ensure that
+      non-base64 encoded data is never used.  Even though other validation
+      routines checked decoded results, it is important to discard invalid
+      data as early as possible.  Note too that such invalid data would only
+      be provided to b64_decode() after proper decryption, so the client must
+      provide authentic SPA data.
+    - [libfko] Added validation of NAT access strings in the various NAT
+      modes.
+    - [libfko] Restricted usernames embedded in SPA packets to be
+      alpha-numeric along with "-" chars.
+    - [client] (Franck Joncourt) Contributed a patch to allow the fwknop
+      client to be stopped during the password entry prompt with Ctrl-C before
+      any SPA packet is sent on the wire.
+    - [client+server] Applied patch from Franck Joncourt to remove unnecessary
+      chmod() call when creating client rc file and server replay cache file.
+      The permissions are now set appropriately via open(), and at the same
+      time this patch fixes a potential race condition since the previous code
+      used fopen() followed by chmod().
+    - [server] Bug fix to accept SPA packets over ICMP if the fwknop client
+      is executed with '-P icmp' and the user has the required privileges.
+    - [test suite] Applied patch from Franck Joncourt to have the perl FKO
+      module link against libfko in the local directory (if it exists) so that
+      it doesn't have to have libfko completely installed in the /usr/lib/
+      directory.  This allows the test suite to run FKO tests without
+      installing libfko.
+    - [test suite] Significant update to include a set of fuzzing SPA packets
+      that are built using a patched version of libfko.  These packets are
+      located in the test/fuzzing/bogus_spa_packets file, and are designed to
+      ensure proper validation of SPA packet data.  This validation is
+      performed in --enable-perl-module-checks mode via the perl FKO module.
+    - [client] Added --icmp-type and --icmp-code arguments so the user can
+      control the icmp type/code combination for spoofed SPA packets ('-P
+      icmp') mode.
+    - [client] Updated default TTL value to 64 for spoofed SPA packets.  This
+      is closer to more OS default TTL values than the previous 255.
+    - Updated build CFLAGS and LDFLAGS to conform to the Debian
+      hardening-includes file for PIE support (e.g. '-fPIE' for CFLAGS and
+      '-fPIE -pie' for LDFLAGS).
+    - [test suite] For GnuPG tests that require a passphrase associated with
+      a gpg key, added a pinentry check to see if the local gpg engine
+      requires it.  If so, the gpg test that require a key are excluded since.
+    - [server] Added a new '--pcap-file <file>' option to allow pcap files to
+      be processed directly by fwknopd instead of sniffing an interface.  This
+      feature is mostly intended for debugging purposes.
+    - [server] Added chain_exists() check to SPA rule creation so that if any
+      of the fwknop chains are deleted out from under fwknopd they will be
+      recreated on the fly.  This mitigates scenarios where fwknopd might be
+      started before a system level firewall policy is applied due to init
+      script ordering, or if an iptables policy is re-applied without
+      restarting fwknopd.
+
 fwknop-2.0.3 (09/03/2012):
     - [server] Fernando Arnaboldi from IOActive found several DoS/code
       execution vulnerabilities for malicious fwknop clients that manage to
       get past the authentication stage (so a such a client must be in
-      possession of a valid access.conf encryption key).  These vulnerbilities
+      possession of a valid access.conf encryption key).  These vulnerabilities
       manifested themselves in the handling of malformed access requests, and
       both the fwknopd server code along with libfko now perform stronger input
       validation of access request data.  These vulnerabilities affect
@@ -54,7 +134,7 @@ fwknop-2.0.2 (08/18/2012):
       in -R mode if the normal check against cipherdyne.org fails.
     - [server] Bug fix to implement FLUSH_IPT_AT_INIT and FLUSH_IPT_AT_EXIT
       functionality.  These are enabled by default, and now iptables rules
-      added by fwknopd can be made persistant by setting these variables to
+      added by fwknopd can be made persistent by setting these variables to
       "N" in the fwknopd.conf file (this is not a recommended setting
       however).
       [server] Added FLUSH_IPFW_AT_INIT and FLUSH_IPFW_AT_EXIT for ipfw
@@ -62,7 +142,7 @@ fwknop-2.0.2 (08/18/2012):
       for iptables firewalls.  This was suggested by Jonathan Schulz.
     - [server] Replay attack bug fix to ensure that an attacker cannot force a
       replay attack by intercepting an SPA packet and the replaying it with the
-      base64 version of "Salted__" (for Rindael) or the "hQ" prefix (for
+      base64 version of "Salted__" (for Rijndael) or the "hQ" prefix (for
       GnuPG).  This is an important fix.  The following comment was added into
       the fwknopd code:
 
@@ -129,7 +209,7 @@ fwknop-2.0.1 (07/23/2012):
     - [test suite] Added tests for --nat-local mode.
     - [client] Fixed several minor memory leaks caught by valgrind.
     - [libfko] Minor gcc warning fix: fko_decode.c:43:17: warning: variable
-      ‘edata_size’ set but not used [-Wunused-but-set-variable].
+      'edata_size' set but not used [-Wunused-but-set-variable].
     - Updated fwknopd init script for Debian systems (contributed by Franck
       Joncourt).
 

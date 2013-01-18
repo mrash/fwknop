@@ -33,6 +33,91 @@
 #include "fko_message.h"
 #include "fko.h"
 
+#ifndef WIN32
+  /* for inet_aton() IP validation
+  */
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+#endif
+
+static int
+have_allow_ip(const char *msg)
+{
+    const char         *ndx     = msg;
+    char                ip_str[MAX_IPV4_STR_LEN];
+    int                 dot_ctr = 0, char_ctr = 0;
+    int                 res     = FKO_SUCCESS;
+#if HAVE_SYS_SOCKET_H
+    struct in_addr      in;
+#endif
+
+    while(*ndx != ',' && *ndx != '\0')
+    {
+        ip_str[char_ctr] = *ndx;
+        char_ctr++;
+        if(char_ctr >= MAX_IPV4_STR_LEN)
+        {
+            res = FKO_ERROR_INVALID_ALLOW_IP;
+            break;
+        }
+        if(*ndx == '.')
+            dot_ctr++;
+        else if(isdigit(*ndx) == 0)
+        {
+            res = FKO_ERROR_INVALID_ALLOW_IP;
+            break;
+        }
+        ndx++;
+    }
+
+    if(char_ctr < MAX_IPV4_STR_LEN)
+        ip_str[char_ctr] = '\0';
+    else
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+
+    if ((res == FKO_SUCCESS) && (char_ctr < MIN_IPV4_STR_LEN))
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+
+    if((res == FKO_SUCCESS) && dot_ctr != 3)
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+
+#if HAVE_SYS_SOCKET_H
+    /* Stronger IP validation now that we have a candidate that looks
+     * close enough
+    */
+    if((res == FKO_SUCCESS) && (inet_aton(ip_str, &in) == 0))
+        res = FKO_ERROR_INVALID_ALLOW_IP;
+#endif
+
+    return(res);
+}
+
+static int
+have_port(const char *msg)
+{
+    const char         *ndx  = msg;
+    int     startlen         = strnlen(msg, MAX_SPA_MESSAGE_SIZE), port_str_len = 0;
+
+    if(startlen == MAX_SPA_MESSAGE_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    /* Must have at least one digit for the port number
+    */
+    if(isdigit(*ndx) == 0)
+        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+
+    while(*ndx != '\0' && *ndx != ',')
+    {
+        port_str_len++;
+        if((isdigit(*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN))
+            return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+        ndx++;
+    }
+
+    return FKO_SUCCESS;
+}
+
 /* Set the SPA message type.
 */
 int
@@ -93,24 +178,10 @@ fko_set_spa_message(fko_ctx_t ctx, const char *msg)
 
     /* Basic message type and format checking...
     */
-    switch(ctx->message_type)
-    {
-        case FKO_COMMAND_MSG:
-            res = validate_cmd_msg(msg);
-            break;
-
-        case FKO_ACCESS_MSG:
-        case FKO_CLIENT_TIMEOUT_ACCESS_MSG:
-            res = validate_access_msg(msg);
-            break;
-
-        case FKO_NAT_ACCESS_MSG:
-        case FKO_LOCAL_NAT_ACCESS_MSG:
-        case FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG:
-        case FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG:
-            res = validate_nat_access_msg(msg);
-            break;
-    }
+    if(ctx->message_type == FKO_COMMAND_MSG)
+        res = validate_cmd_msg(msg);
+    else
+        res = validate_access_msg(msg);
 
     if(res != FKO_SUCCESS)
         return(res);
@@ -158,10 +229,10 @@ validate_cmd_msg(const char *msg)
     if(startlen == MAX_SPA_CMD_LEN)
         return(FKO_ERROR_INVALID_DATA);
 
-    /* Should have a valid allow IP.
+    /* Should always have a valid allow IP regardless of message type
     */
-    if((res = got_allow_ip(msg)) != FKO_SUCCESS)
-        return(res);
+    if((res = have_allow_ip(msg)) != FKO_SUCCESS)
+        return(FKO_ERROR_INVALID_SPA_COMMAND_MSG);
 
     /* Commands are fairly free-form so all we can really verify is
      * there is something at all. Get past the IP and comma, and make
@@ -184,9 +255,9 @@ validate_access_msg(const char *msg)
     if(startlen == MAX_SPA_MESSAGE_SIZE)
         return(FKO_ERROR_INVALID_DATA);
 
-    /* Should have a valid allow IP.
+    /* Should always have a valid allow IP regardless of message type
     */
-    if((res = got_allow_ip(msg)) != FKO_SUCCESS)
+    if((res = have_allow_ip(msg)) != FKO_SUCCESS)
         return(res);
 
     /* Position ourselves beyond the allow IP and make sure we are
@@ -209,9 +280,42 @@ validate_access_msg(const char *msg)
 }
 
 int
+validate_nat_access_msg(const char *msg)
+{
+    const char   *ndx;
+    int     res         = FKO_SUCCESS;
+    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
+
+    if(startlen == MAX_SPA_MESSAGE_SIZE)
+        return(FKO_ERROR_INVALID_DATA);
+
+    /* Should always have a valid allow IP regardless of message type
+    */
+    if((res = have_allow_ip(msg)) != FKO_SUCCESS)
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
+
+    /* Position ourselves beyond the allow IP and make sure we have
+     * a single port value
+    */
+    ndx = strchr(msg, ',');
+    if(ndx == NULL || (1+(ndx - msg)) >= startlen)
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
+
+    ndx++;
+
+    if((res = have_port(ndx)) != FKO_SUCCESS)
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
+
+    if(msg[startlen-1] == ',')
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
+
+    return(res);
+}
+
+int
 validate_proto_port_spec(const char *msg)
 {
-    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE), port_str_len = 0;
+    int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
     const char   *ndx   = msg;
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
@@ -233,86 +337,7 @@ validate_proto_port_spec(const char *msg)
     */
     ndx++;
 
-    /* Must have at least one digit for the port number
-    */
-    if(isdigit(*ndx) == 0)
-        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
-
-    while(*ndx != '\0' && *ndx != ',')
-    {
-        port_str_len++;
-        if((isdigit(*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN))
-            return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
-        ndx++;
-    }
-    return(FKO_SUCCESS);
-}
-
-int
-validate_nat_access_msg(const char *msg)
-{
-    int res = FKO_SUCCESS;
-
-    /* Should have a valid access message.
-    */
-    if((res = validate_access_msg(msg)) != FKO_SUCCESS)
-        return(res);
-
-    // --DSS TODO: XXX: Put nat_access validation code here
-
-    return(FKO_SUCCESS);
-}
-
-int
-got_allow_ip(const char *msg)
-{
-    const char         *ndx     = msg;
-    char                ip_str[MAX_IPV4_STR_LEN];
-    int                 dot_ctr = 0, char_ctr = 0;
-    int                 res     = FKO_SUCCESS;
-#if HAVE_SYS_SOCKET_H
-    struct in_addr      in;
-#endif
-
-    while(*ndx != ',' && *ndx != '\0')
-    {
-        ip_str[char_ctr] = *ndx;
-        char_ctr++;
-        if(char_ctr >= MAX_IPV4_STR_LEN)
-        {
-            res = FKO_ERROR_INVALID_ALLOW_IP;
-            break;
-        }
-        if(*ndx == '.')
-            dot_ctr++;
-        else if(isdigit(*ndx) == 0)
-        {
-            res = FKO_ERROR_INVALID_ALLOW_IP;
-            break;
-        }
-        ndx++;
-    }
-
-    if(char_ctr < MAX_IPV4_STR_LEN)
-        ip_str[char_ctr] = '\0';
-    else
-        res = FKO_ERROR_INVALID_ALLOW_IP;
-
-    if ((res == FKO_SUCCESS) && (char_ctr < MIN_IPV4_STR_LEN))
-        res = FKO_ERROR_INVALID_ALLOW_IP;
-
-    if((res == FKO_SUCCESS) && dot_ctr != 3)
-        res = FKO_ERROR_INVALID_ALLOW_IP;
-
-#if HAVE_SYS_SOCKET_H
-    /* Stronger IP validation now that we have a candidate that looks
-     * close enough
-    */
-    if((res == FKO_SUCCESS) && (inet_aton(ip_str, &in) == 0))
-        res = FKO_ERROR_INVALID_ALLOW_IP;
-#endif
-
-    return(res);
+    return have_port(ndx);
 }
 
 /***EOF***/

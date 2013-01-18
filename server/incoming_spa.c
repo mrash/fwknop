@@ -255,7 +255,7 @@ incoming_spa(fko_srv_options_t *opts)
     char            *spa_ip_demark, *gpg_id, *raw_digest = NULL;
     time_t          now_ts;
     int             res, status, ts_diff, enc_type, stanza_num=0;
-    int             added_replay_digest = 0;
+    int             added_replay_digest = 0, pkt_data_len=0;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -274,6 +274,7 @@ incoming_spa(fko_srv_options_t *opts)
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
      * try to eliminate obvious non-spa packets).
     */
+    pkt_data_len = spa_pkt->packet_data_len;
     res = preprocess_spa_data(opts, spadat.pkt_source_ip);
     if(res != FKO_SUCCESS)
     {
@@ -281,6 +282,12 @@ incoming_spa(fko_srv_options_t *opts)
             log_msg(LOG_INFO, "preprocess_spa_data() returned error %i: '%s' for incoming packet.",
                 res, get_errstr(res));
         return;
+    }
+
+    if(opts->foreground == 1 && opts->verbose > 2)
+    {
+        printf("[+] candidate SPA packet payload:\n");
+        hex_dump(spa_pkt->packet_data, pkt_data_len);
     }
 
     if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))

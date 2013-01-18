@@ -337,7 +337,8 @@ validate_options(fko_srv_options_t *opts)
 
     /* Set remaining require CONF_ vars if they are not already set.  */
 
-    /* PCAP capture interface.
+    /* PCAP capture interface - note that if '-r <pcap file>' is specified
+     * on the command line, then this will override the pcap interface setting.
     */
     if(opts->config[CONF_PCAP_INTF] == NULL)
         set_config_entry(opts, CONF_PCAP_INTF, DEF_INTERFACE);
@@ -365,11 +366,21 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_PCAP_FILTER] == NULL)
         set_config_entry(opts, CONF_PCAP_FILTER, DEF_PCAP_FILTER);
 
-    /* Enable SPA packet aging.
+    /* Enable SPA packet aging unless we're getting packet data
+     * directly from a pcap file
     */
     if(opts->config[CONF_ENABLE_SPA_PACKET_AGING] == NULL)
-        set_config_entry(opts, CONF_ENABLE_SPA_PACKET_AGING,
-            DEF_ENABLE_SPA_PACKET_AGING);
+    {
+        if(opts->config[CONF_PCAP_FILE] == NULL)
+        {
+            set_config_entry(opts, CONF_ENABLE_SPA_PACKET_AGING,
+                DEF_ENABLE_SPA_PACKET_AGING);
+        }
+        else
+        {
+            set_config_entry(opts, CONF_ENABLE_SPA_PACKET_AGING, "N");
+        }
+    }
 
     /* SPA packet age.
     */
@@ -797,6 +808,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case 'P':
                 set_config_entry(opts, CONF_PCAP_FILTER, optarg);
+                break;
+            case PCAP_FILE:
+                set_config_entry(opts, CONF_PCAP_FILE, optarg);
                 break;
             case ROTATE_DIGEST_CACHE:
                 opts->rotate_digest_cache = 1;

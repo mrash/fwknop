@@ -329,7 +329,9 @@ resolve_ip_http(fko_cli_options_t *options)
             */
             strlcpy(url.host, HTTP_BACKUP_RESOLVE_HOST, MAX_URL_HOST_LEN);
 
+#ifndef WIN32
             sleep(2);
+#endif
             res = try_url(&url, options);
         }
     }

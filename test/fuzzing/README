@@ -1,0 +1,48 @@
+
+### Generating new fuzzing SPA packets:
+
+- Apply a patch or set of patches to libfko to ignore error conditions and
+  recompile.
+- Run the test suite as follows to generate new fuzzing SPA packets:
+
+    # ./test-fwknop.pl --enable-perl-module-pkt-gen
+
+      [+] Starting the fwknop test suite...
+
+          args: --enable-perl-module-pkt-gen
+
+          Saved results from previous run to: output.last/
+
+      [perl FKO module] [compile/install] to: ./FKO.......................pass (1)
+      [perl FKO module] [FUZZING] generate invalid SPA pkts...............pass (2)
+
+      [+] Wrote 169 fuzzing SPA packets to fuzzing/fuzzing_spa_packets.tmp...
+
+- Review the packet data in the fuzzing_spa_packets.tmp file, and move to
+  fuzzing/fuzzing_spa_packets if acceptable.
+- Reverse the fuzzing patch mentioned above and recompile.
+- Now send the packets through libfko as follows:
+
+    # ./test-fwknop.pl --enable-perl-module-checks --include "perl FKO"
+
+- If there is another patch to apply, then add a fuzzing tag so that the
+  packets can easily be differentiated and appended to the official
+  "fuzzing_spa_packets" file.  Note that adding the --fuzzing-class argument
+  assumes that a patch has been applied to lib/fko_encode.c to manipulate SPA
+  packet data after the various user-supplied data has been provided (and this
+  data itself is valid - it is the encoding itself that the patch is supposed
+  to mess with).  If the --fuzzing-class arg is left off, then the user fields
+  are built using invalid data.
+
+    # ./test-fwknop.pl --enable-perl-module-pkt-gen  --fuzzing-test-tag "encoded_non_digit_rand_val"  --fuzzing-class encoding
+
+      [+] Starting the fwknop test suite...
+
+          args: --enable-perl-module-pkt-gen --fuzzing-test-tag encoded_non_digit_rand_val --fuzzing-class encoding
+
+          Saved results from previous run to: output.last/
+
+      [perl FKO module] [compile/install] to: ./FKO.......................pass (1)
+      [perl FKO module] [FUZZING] generate invalid encoded pkts...........pass (2)
+
+      [+] Wrote 30 fuzzing SPA packets to fuzzing/fuzzing_spa_packets.tmp...

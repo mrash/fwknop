@@ -52,6 +52,7 @@ EXTRA_DIST = \
     ChangeLog.git \
     CREDITS \
     todo.org \
+    extras/upstart/fwknop.conf \
     extras/fwknop.init.debian \
     extras/fwknop.init.openwrt \
     extras/fwknop.init.redhat \
@@ -121,6 +122,7 @@ EXTRA_DIST = \
     test/conf/server-gpg-no-pw/pubring.gpg \
     test/conf/server-gpg-no-pw/secring.gpg \
     test/conf/server-gpg-no-pw/trustdb.gpg \
+    test/conf/android_access.conf \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
@@ -128,6 +130,7 @@ EXTRA_DIST = \
     test/conf/expired_stanza_access.conf \
     test/conf/force_nat_access.conf \
     test/conf/future_expired_stanza_access.conf \
+    test/conf/cmd_access.conf \
     test/conf/gpg_access.conf \
     test/conf/gpg_no_pw_access.conf \
     test/conf/invalid_expire_access.conf \
@@ -135,6 +138,7 @@ EXTRA_DIST = \
     test/conf/mismatch_open_ports_access.conf \
     test/conf/mismatch_user_access.conf \
     test/conf/multi_gpg_access.conf \
+    test/conf/multi_gpg_no_pw_access.conf \
     test/conf/multi_source_match_access.conf \
     test/conf/multi_stanzas_access.conf \
     test/conf/multi_stanzas_with_broken_keys.conf \
@@ -150,12 +154,40 @@ EXTRA_DIST = \
     test/conf/subnet_source_match_access.conf \
     test/conf/local_nat_fwknopd.conf \
     test/conf/disable_aging_fwknopd.conf \
+    test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/fuzzing_source_access.conf \
     test/conf/fuzzing_open_ports_access.conf \
     test/conf/fuzzing_restrict_ports_access.conf \
+    test/conf/tcp_pcap_filter_fwknopd.conf \
+    test/conf/icmp_pcap_filter_fwknopd.conf \
+    test/conf/tcp_server_fwknopd.conf \
+    test/conf/spa_replay.pcap \
+    test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
+    test/fuzzing/patches/encoding_append_b64_modified_byte_eq.patch \
+    test/fuzzing/patches/encoding_append_b64_modified_byte.patch \
+    test/fuzzing/patches/encoding_extra_colon1.patch \
+    test/fuzzing/patches/encoding_extra_colon2.patch \
+    test/fuzzing/patches/encoding_extra_colon3.patch \
+    test/fuzzing/patches/encoding_non_b64_access_msg.patch \
+    test/fuzzing/patches/encoding_non_digit_rand_val.patch \
+    test/fuzzing/patches/encoding_rm_colon1.patch \
+    test/fuzzing/patches/encoding_rm_colon2.patch \
+    test/fuzzing/patches/encoding_rm_colon3.patch \
+    test/fuzzing/patches/encoding_rm_colon4.patch \
+    test/fuzzing/patches/encoding_rm_colon5.patch \
+    test/fuzzing/patches/encoding_strip_eq_return.patch \
+    test/fuzzing/patches/extra_timestamp_digit.patch \
+    test/fuzzing/patches/invalid_access_format.patch \
+    test/fuzzing/patches/invalid_long_proto_define_enc_mode_trigger.patch \
+    test/fuzzing/patches/invalid_long_proto_define_rijndael_trigger.patch \
+    test/fuzzing/patches/long_ip.patch \
+    test/fuzzing/patches/non_b64_user_char.patch \
+    test/fuzzing/fuzzing_spa_packets \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
+    test/run-test-suite.sh \
+    test/README \
     VERSION \
     win32/config.h \
     win32/fwknop-client.vcproj \

@@ -58,6 +58,9 @@
 #define MAX_IPV4_STR_LEN             16
 #define MIN_IPV4_STR_LEN              7
 
+#define MAX_PROTO_STR_LEN   		  4  /* tcp, udp, icmp for now */
+#define MAX_PORT_STR_LEN    		  5
+
 /* Misc.
 */
 #define FKO_ENCODE_TMP_BUF_SIZE    1024

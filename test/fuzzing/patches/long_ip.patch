@@ -1,0 +1,13 @@
+diff --git a/lib/fko_limits.h b/lib/fko_limits.h
+index 7efba4b..e2621a6 100644
+--- a/lib/fko_limits.h
++++ b/lib/fko_limits.h
+@@ -51,7 +51,7 @@
+ #define MIN_SPA_FIELDS                6
+ #define MAX_SPA_FIELDS               10
+ 
+-#define MAX_IPV4_STR_LEN             16
++#define MAX_IPV4_STR_LEN             1000
+ #define MIN_IPV4_STR_LEN              7
+ 
+ /* Misc.

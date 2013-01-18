@@ -41,6 +41,7 @@ int
 fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 {
     char   *username = NULL;
+    int     res = FKO_SUCCESS;
 
     /* Must be initialized
     */
@@ -71,13 +72,16 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 #else
             username = getlogin();
 #endif
-            /* if we still didn't get a username, fall back
+            /* if we still didn't get a username, continue falling back
             */
-            if((username = getenv("USER")) == NULL)
-            {
-                username = strdup("NO_USER");
-                if(username == NULL)
-                    return(FKO_ERROR_MEMORY_ALLOCATION);
+			if(username == NULL)
+			{
+                if((username = getenv("USER")) == NULL)
+				{
+					username = strdup("NO_USER");
+					if(username == NULL)
+						return(FKO_ERROR_MEMORY_ALLOCATION);
+				}
             }
         }
     }
@@ -86,6 +90,9 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
     */
     if(strnlen(username, MAX_SPA_USERNAME_SIZE) == MAX_SPA_USERNAME_SIZE)
         *(username + MAX_SPA_USERNAME_SIZE - 1) = '\0';
+
+    if((res = validate_username(username)) != FKO_SUCCESS)
+        return res;
 
     /* Just in case this is a subsquent call to this function.  We
      * do not want to be leaking memory.
@@ -116,6 +123,27 @@ fko_get_username(fko_ctx_t ctx, char **username)
     *username = ctx->username;
 
     return(FKO_SUCCESS);
+}
+
+int
+validate_username(const char *username)
+{
+    int i;
+
+    if(username == NULL || strnlen(username, MAX_SPA_USERNAME_SIZE) == 0)
+        return(FKO_ERROR_INVALID_DATA);
+
+    /* Make sure it is just alpha-numeric chars, dashes, dots, and underscores
+    */
+    if(isalnum(username[0]) == 0)
+        return(FKO_ERROR_INVALID_DATA);
+
+    for (i=1; i < (int)strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
+        if((isalnum(username[i]) == 0)
+                && username[i] != '-' && username[i] != '_' && username[i] != '.')
+            return(FKO_ERROR_INVALID_DATA);
+
+    return FKO_SUCCESS;
 }
 
 /***EOF***/

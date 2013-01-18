@@ -1,0 +1,14 @@
+--- lib/fko_decode.c.orig	Wed Sep  5 06:04:48 2012
++++ lib/fko_decode.c	Sat Sep  8 15:11:00 2012
+@@ -285,9 +285,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
+ 
+     b64_decode(tbuf, (unsigned char*)ctx->message);
+ 
+-    /* Require a message similar to: 1.2.3.4,tcp/22
++    /* Require a message similar to: 1.2.3.4,tcp/22 (if it's not command message)
+     */
+-    if(validate_access_msg(ctx->message) != FKO_SUCCESS)
++    if(ctx->message_type != FKO_COMMAND_MSG && validate_access_msg(ctx->message) != FKO_SUCCESS)
+     {
+         free(tbuf);
+         return(FKO_ERROR_INVALID_DATA);

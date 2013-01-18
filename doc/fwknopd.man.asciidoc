@@ -102,6 +102,12 @@ COMMAND-LINE OPTIONS
     line.  This overrides the value of the PCAP_FILTER variable taken
     from the 'fwknopd.conf' file.
 
+*--pcap-file*='<pcap-file>'::
+    This option instructs *fwknopd* to read packet data from a pcap file
+    instead of sniffing an interface directly.  This mode is usually used for
+    debugging purposes, and will disable SPA packet age checking unless it is
+    manually enabled in the 'fwknop.conf' file.
+
 *-R, --Restart*::
     Restart the currently running *fwknopd* processes.  This option
     will preserve the command line options that were supplied to the
@@ -371,7 +377,8 @@ directive starts a new stanza.
     encrypted data.  This makes it impossible to use the *-s* command
     line argument on the *fwknop* client command line, so either *-R* has
     to be used to automatically resolve the external address (if the
-    client behind a NAT) or the client must know the external IP.
+    client behind a NAT) or the client must know the external IP and set it
+    via the *-a* argument.
 
 *FORCE_NAT*: '<IP> <PORT>'::
     For any valid SPA packet, force the requested connection to be NAT'd
@@ -403,7 +410,7 @@ directive starts a new stanza.
     For more information on using fwknop with GnuPG keys, see the
     following link: ``http://www.cipherdyne.org/fwknop/docs/gpghowto.html''.
 
-*GPG DECRYPT_PW*: '<decrypt password>'::
+*GPG_DECRYPT_PW*: '<decrypt password>'::
     Specify the decryption password for the gpg key defined by the
     ``GPG_DECRYPT_ID'' above.  This is a required field for gpg-based
     authentication.
@@ -488,8 +495,8 @@ Nomad at the BlackHat Briefings of 2005 (see: 'http://www.nmrc.org').
 
 BUGS
 ----
-Send bug reports to dstuart@dstuart.org.  Suggestions and/or comments
-are always welcome as well.
+Send bug reports to dstuart@dstuart.org or mbr@cipherdyne.org.  Suggestions
+and/or comments are always welcome as well.
 
 
 DISTRIBUTION

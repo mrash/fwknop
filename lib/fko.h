@@ -32,8 +32,6 @@
 #define FKO_H 1
 
 #include <time.h>
-#include "fko_limits.h"
-#include "fko_message.h"
 
 #include "rijndael.h"   /* For encryption modes */
 #include "digest.h"
@@ -58,7 +56,7 @@ extern "C" {
 
 /* General params
 */
-#define FKO_PROTOCOL_VERSION "2.0.3" /* The fwknop protocol version */
+#define FKO_PROTOCOL_VERSION "2.0.4" /* The fwknop protocol version */
 
 /* Supported FKO Message types...
 */

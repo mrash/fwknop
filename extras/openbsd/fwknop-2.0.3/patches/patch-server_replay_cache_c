@@ -1,0 +1,27 @@
+--- server/replay_cache.c.orig	Wed Sep  5 06:04:48 2012
++++ server/replay_cache.c	Sat Sep  8 09:46:56 2012
+@@ -565,7 +565,6 @@ is_replay_dbm_cache(fko_srv_options_t *opts, char *dig
+ #endif
+     datum       db_key, db_ent;
+ 
+-    char       *digest = NULL;
+     int         digest_len, res = SPA_MSG_SUCCESS;
+ 
+     digest_cache_info_t dc_info;
+@@ -638,7 +637,6 @@ add_replay_dbm_cache(fko_srv_options_t *opts, char *di
+ #endif
+     datum       db_key, db_ent;
+ 
+-    char       *digest = NULL;
+     int         digest_len, res = SPA_MSG_SUCCESS;
+ 
+     digest_cache_info_t dc_info;
+@@ -705,7 +703,7 @@ add_replay_dbm_cache(fko_srv_options_t *opts, char *di
+ 
+     return(res);
+ #endif /* NO_DIGEST_CACHE */
+-
++}
+ #endif /* USE_FILE_CACHE */
+ 
+ #if USE_FILE_CACHE

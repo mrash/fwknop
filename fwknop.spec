@@ -13,8 +13,8 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.0.3
-Epoch:      1
+Version:	2.0.4
+Epoch:		1
 Release:	1%{?dist}
 Summary:	Firewall Knock Operator client.  An implementation of Single Packet Authorization.
 
@@ -30,13 +30,13 @@ Requires:	libfko, iptables
 
 
 %package -n libfko
-Version:	0.0.3
+Version:	1.0.0
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	0.0.3
+Version:	1.0.0
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
 Requires:	libfko
@@ -141,6 +141,20 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Sun Dec  9 2012 <mbr@cipherdyne.org> - 2.0.4-1
+- Bumped libfko and libfko-devel version to 1.0.0.
+- fwknop-2.0.4 release.
+
+* Sat Dec  1 2012 <dstuart@dstuart.org> - 2.0.4-1
+- Removed uneeded include files (which had been added to address an issue that
+  has since been fixed).
+
+* Thu Nov 15 2012 <mbr@cipherdyne.org>
+- fwknop-2.0.4 release.
+
+* Sat Nov  3 2012 Tomoyuki Kano <tomo@appletz.jp> - 1:2.0.3-1
+- Added missing include files.
+
 * Thu Jul 15 2010 Damien Stuart <dstuart@dstuart.org>
 - Fixed some misplaced depenencies (moved gpgpme from server to libfko).
 

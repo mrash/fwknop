@@ -1,0 +1,13 @@
+diff --git a/lib/fko_encode.c b/lib/fko_encode.c
+index c92d421..020ec15 100644
+--- a/lib/fko_encode.c
++++ b/lib/fko_encode.c
+@@ -59,6 +59,8 @@ append_b64(char* tbuf, char *str)
+ 
+     free(bs);
+ 
++    tbuf[1] = 0x10;
++
+     return(FKO_SUCCESS);
+ }
+ 

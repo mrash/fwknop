@@ -134,7 +134,8 @@ _rijndael_decrypt(fko_ctx_t ctx,
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher);
+    if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Since we're using AES, make sure the incoming data is a multiple of
      * the blocksize
@@ -324,7 +325,8 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    cipher_len = b64_decode(ctx->encrypted_msg, cipher);
+    if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
@@ -454,7 +456,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if(ctx->encoded_msg == NULL || FKO_IS_SPA_DATA_MODIFIED(ctx))
         res = fko_encode_spa_data(ctx);
 
-    if(res)
+    if(res != FKO_SUCCESS)
         return(res);
 
     /* Croak on invalid encoded message as well. At present this is a

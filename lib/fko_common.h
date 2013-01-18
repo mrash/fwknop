@@ -57,13 +57,29 @@
 #endif
 
 #ifdef WIN32
+  #include <io.h>
+  #define strcasecmp  _stricmp
+  #define strncasecmp _strnicmp
+  #define snprintf    _snprintf
+  #define strdup      _strdup
+  #define unlink      _unlink
+  #define open        _open
+  #define close       _close
+  #define write       _write
+  #define O_WRONLY    _O_WRONLY
+  #define O_RDONLY    _O_RDONLY
+  #define O_RDWR      _O_RDWR
+  #define O_CREAT     _O_CREAT 
+  #define O_EXCL      _O_EXCL
+  #define S_IRUSR     _S_IREAD
+  #define S_IWUSR     _S_IWRITE
+  #define PATH_SEP    '\\'
+
   /* These are needed for the digest code under windows.
   */
   typedef unsigned __int8   uint8_t;
   typedef unsigned __int32	uint32_t;
   typedef unsigned __int64	uint64_t;
-
-  #define strdup _strdup
 #else
   #if HAVE_STDINT_H
     #include <stdint.h>
@@ -121,11 +137,18 @@
 #include "fko_state.h"
 #include "fko_context.h"
 #include "fko_message.h"
+#include "fko_user.h"
 
 /* Try to cover for those that do not have bzero.
 */
 #if !HAVE_BZERO && HAVE_MEMSET
-# define bzero(buf, bytes)      ((void) memset (buf, 0, bytes))
+ #define bzero(buf, bytes)      ((void) memset (buf, 0, bytes))
+#endif
+
+/* Work-around for not having strnlen
+*/
+#if !HAVE_STRNLEN
+  #define strnlen(s, l) (strlen(s) < l ? strlen(s) : l)
 #endif
 
 #endif /* FKO_COMMON_H */

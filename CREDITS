@@ -32,6 +32,17 @@ C Anthony Risinger
 Franck Joncourt
     - fwknop Debian package maintainer.
     - Contributed a new Debian init script.
+    - Contributed a patch to have the perl FKO module link against libfko in
+      the local directory (if it exists) so that it doesn't have to have libfko
+      completely installed in /usr/lib/.  This allows the test suite to run FKO
+      tests without installing libfko.
+    - Contributed a patch to remove unnecessary chmod() call when creating
+      client rc file and server replay cache file.  The permissions are now set
+      appropriately via open(), and at the same time this patch fixes a
+      potential race condition since the previous code used fopen() followed by
+      chmod().
+    - Contributed a patch to allow the fwknop client to be stopped with Ctrl-C
+      before sending an SPA packet on the wire.
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode
@@ -66,3 +77,18 @@ Fernando Arnaboldi (IOActive)
     - Found several conditions in which the server did not properly throw out
       maliciously constructed variables in the access.conf file.  This has been
       fixed along with new fuzzing tests in the test suite.
+
+Vlad Glagolev
+    - Submitted a patch to fix ndbm/gdbm usage when --disable-file-cache is
+      used for the autoconf configure script.  This functionality was broken in
+      be4193d734850fe60f14a26b547525ea0b9ce1e9 through improper handling of
+      #define macros from --disable-file-cache.
+    - Submitted a patch to fix command exec mode under SPA message type
+      validity test.  Support for command exec mode was also added to the test
+      suite.
+    - Submitted an OpenBSD port for fwknop-2.0.3, and this has been checked in
+      under extras/openbsd/.
+
+Sean Greven
+    - Created a port of fwknop for FreeBSD:
+http://portsmon.freebsd.org/portoverview.py?category=security&portname=fwknop

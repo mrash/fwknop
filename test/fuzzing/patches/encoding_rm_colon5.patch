@@ -1,0 +1,13 @@
+diff --git a/lib/fko_encode.c b/lib/fko_encode.c
+index c92d421..6363a52 100644
+--- a/lib/fko_encode.c
++++ b/lib/fko_encode.c
+@@ -135,7 +135,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
+     /* Add the message type value.
+     */
+     offset = strlen(tbuf);
+-    sprintf(((char*)tbuf+offset), ":%i:", ctx->message_type);
++    sprintf(((char*)tbuf+offset), ":%i", ctx->message_type);
+ 
+     /* Add the base64-encoded SPA message.
+     */

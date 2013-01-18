@@ -11,7 +11,7 @@ AC_PREREQ(2.62)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
-m4_define(my_version,   [2.0.3])
+m4_define(my_version,   [2.0.4])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
@@ -21,7 +21,7 @@ AC_CONFIG_AUX_DIR(config)
 
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE([tar-ustar -Wall -Werror foreign])
+AM_INIT_AUTOMAKE
 
 dnl AM_MAINTAINER_MODE
 
@@ -139,12 +139,12 @@ dnl
 use_wall=yes
 AC_ARG_ENABLE([wall],
   [AS_HELP_STRING([--disable-wall],
-    [Do not enable all warnings via -Wall @<:@default is on@:>@])],
+    [Do not enable warnings via -Wall -Wformat -Wformat-security @<:@default is on@:>@])],
   [use_wall=$enableval],
   [])
 
 if test "x$use_wall" = "xyes"; then
-    FKO_CHECK_COMPILER_ARG([-Wall])
+    FKO_CHECK_COMPILER_ARG([-Wall -Wformat -Wformat-security])
 fi
 
 dnl Check for security features offered by the compiler
@@ -177,7 +177,8 @@ AC_ARG_ENABLE([pie],
   [])
 
 if test "x$use_pie" = "xyes"; then
-    FKO_CHECK_COMPILER_ARG([-fPIE -pie])
+    FKO_CHECK_COMPILER_ARG([-fPIE])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-pie])
 fi
 
 dnl Decide whether or not to enable -D_FORTIFY_SOURCE support

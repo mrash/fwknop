@@ -247,11 +247,11 @@ SPA OPTIONS
     over UDP port 62201.
 
 *-P, --server-proto*='<protocol>'::
-    Set the protocol (udp, tcp, http, tcpraw, or icmp) for the outgoing SPA
-    packet.  Note: The *tcpraw* and *icmp* modes use raw sockets and thus
-    require root access to run.  Also note: The *tcp* mode expects to establish
-    a TCP connection to the server before sending the SPA packet.  This is
-    not normally done, but is useful for compatibility with the Tor for
+    Set the protocol (udp, tcp, http, udpraw, tcpraw, or icmp) for the outgoing
+    SPA packet.  Note: The *udpraw*, *tcpraw*, and *icmp* modes use raw sockets
+    and thus require root access to run.  Also note: The *tcp* mode expects to
+    establish a TCP connection to the server before sending the SPA packet.
+    This is not normally done, but is useful for compatibility with the Tor for
     strong anonymity; see 'http://tor.eff.org/'.  In this case, the
     *fwknopd* server will need to be configured to listen on the target TCP
     port (which is 62201 by default).
@@ -322,6 +322,14 @@ SPA OPTIONS
     the *fwknop* client to satisfy any non-root *REQUIRE_USERNAME* keyword
     on the fwknopd server (*--spoof-src* mode requires that the *fwknop*
     client is executed as root).
+
+*--icmp-type*='<type>'::
+    In *-P icmp* mode, specify the ICMP type value that will be set in the
+    SPA packet ICMP header.  The default is echo reply.
+
+*--icmp-code*='<code>'::
+    In *-P icmp* mode, specify the ICMP code value that will be set in the
+    SPA packet ICMP header.  The default is zero.
 
 
 GPG-RELATED OPTIONS
@@ -579,8 +587,8 @@ Nomad at the BlackHat Briefings of 2005 (see: 'http://www.nmrc.org').
 
 BUGS
 ----
-Send  bug  reports  to dstuart@dstuart.org.  Suggestions and/or comments
-are always welcome as well.
+Send  bug  reports  to dstuart@dstuart.org or mbr@cipherdyne.org.  Suggestions
+and/or comments are always welcome as well.
 
 DISTRIBUTION
 ------------

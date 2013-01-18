@@ -1,0 +1,13 @@
+diff --git a/lib/fko_encode.c b/lib/fko_encode.c
+index c92d421..a7ad779 100644
+--- a/lib/fko_encode.c
++++ b/lib/fko_encode.c
+@@ -115,7 +115,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
+     /* Add the timestamp.
+     */
+     offset = strlen(tbuf);
+-    sprintf(((char*)tbuf+offset), ":%u:", (unsigned int) ctx->timestamp);
++    sprintf(((char*)tbuf+offset), ":%u1:", (unsigned int) ctx->timestamp);
+ 
+     /* Add the version string.
+     */

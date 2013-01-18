@@ -45,6 +45,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
+    /* Make sure there are no non-ascii printable chars
+    */
+    for (i=0; i < (int)strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE); i++)
+        if(isprint(ctx->encoded_msg[i]) == 0)
+            return(FKO_ERROR_INVALID_DATA);
+
     /* Make sure there are enough fields in the SPA packet
      * delimited with ':' chars
     */
@@ -193,7 +199,16 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
-    b64_decode(tbuf, (unsigned char*)ctx->username);
+    if(b64_decode(tbuf, (unsigned char*)ctx->username) < 0)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+    if(validate_username(ctx->username) != FKO_SUCCESS)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
 
     /* Extract the timestamp value.
     */
@@ -257,6 +272,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     ctx->message_type = (unsigned int)atoi(tbuf);
 
+    if(ctx->message_type < 0 || ctx->message_type >= FKO_LAST_MSG_TYPE)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
+
     /* Extract the SPA message string.
     */
     ndx += t_size + 1;
@@ -281,14 +302,31 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
 
-    b64_decode(tbuf, (unsigned char*)ctx->message);
-
-    /* Require a message similar to: 1.2.3.4,tcp/22
-    */
-    if(validate_access_msg(ctx->message) != FKO_SUCCESS)
+    if(b64_decode(tbuf, (unsigned char*)ctx->message) < 0)
     {
         free(tbuf);
         return(FKO_ERROR_INVALID_DATA);
+    }
+
+    if(ctx->message_type == FKO_COMMAND_MSG)
+    {
+        /* Require a message similar to: 1.2.3.4,<command>
+        */
+        if(validate_cmd_msg(ctx->message) != FKO_SUCCESS)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
+    }
+    else
+    {
+        /* Require a message similar to: 1.2.3.4,tcp/22
+        */
+        if(validate_access_msg(ctx->message) != FKO_SUCCESS)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
     }
 
     /* Extract nat_access string if the message_type indicates so.
@@ -320,7 +358,17 @@ fko_decode_spa_data(fko_ctx_t ctx)
             return(FKO_ERROR_MEMORY_ALLOCATION);
         }
 
-        b64_decode(tbuf, (unsigned char*)ctx->nat_access);
+        if(b64_decode(tbuf, (unsigned char*)ctx->nat_access) < 0)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
+
+        if(validate_nat_access_msg(ctx->nat_access) != FKO_SUCCESS)
+        {
+            free(tbuf);
+            return(FKO_ERROR_INVALID_DATA);
+        }
     }
 
     /* Now look for a server_auth string.
@@ -351,7 +399,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             }
 
-            b64_decode(tbuf, (unsigned char*)ctx->server_auth);
+            if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
+            {
+                free(tbuf);
+                return(FKO_ERROR_INVALID_DATA);
+            }
 
             /* At this point we should be done.
             */
@@ -391,7 +443,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
             }
 
-            b64_decode(tbuf, (unsigned char*)ctx->server_auth);
+            if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
+            {
+                free(tbuf);
+                return(FKO_ERROR_INVALID_DATA);
+            }
 
             ndx += t_size + 1;
         }

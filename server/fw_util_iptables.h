@@ -44,6 +44,7 @@
 #define IPT_DEL_RULE_ARGS       "-t %s -D %s %i 2>&1"
 #define IPT_NEW_CHAIN_ARGS      "-t %s -N %s 2>&1"
 #define IPT_FLUSH_CHAIN_ARGS    "-t %s -F %s 2>&1"
+#define IPT_CHAIN_EXISTS_ARGS   "-t %s -L %s -n 2>&1"
 #define IPT_DEL_CHAIN_ARGS      "-t %s -X %s 2>&1"
 #define IPT_ADD_JUMP_RULE_ARGS  "-t %s -I %s %i -j %s 2>&1"
 #define IPT_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n 2>&1"

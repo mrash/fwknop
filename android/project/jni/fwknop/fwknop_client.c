@@ -33,7 +33,7 @@
 char *
 fko_errmsg(char *msg, int res) {
     static char err_msg[MSG_BUFSIZE+1] = {0};
-    snprintf(err_msg, MSG_BUFSIZE, "Error: %s: %i", msg, fko_errstr(res));
+    snprintf(err_msg, MSG_BUFSIZE, "Error: %s: %s", msg, fko_errstr(res));
     return(err_msg);
 }
 

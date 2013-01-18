@@ -58,6 +58,10 @@
   #include <unistd.h>
 #endif
 
+#ifdef HAVE_SYS_STAT_H
+  #include <sys/stat.h>
+#endif
+
 #if HAVE_NETINET_IN_H
   #include <netinet/in.h>
 #endif
@@ -70,11 +74,24 @@
   #include <time.h>
 #endif
 
+/* Some hoops for accommodating Windows
+*/
 #ifdef WIN32
+  #include <io.h>
   #define strcasecmp	_stricmp
   #define strncasecmp	_strnicmp
   #define snprintf		_snprintf
   #define unlink		_unlink
+  #define open			_open
+  #define close			_close
+  #define write			_write
+  #define O_WRONLY		_O_WRONLY
+  #define O_RDONLY		_O_RDONLY
+  #define O_RDWR		_O_RDWR
+  #define O_CREAT		_O_CREAT 
+  #define O_EXCL		_O_EXCL
+  #define S_IRUSR		_S_IREAD
+  #define S_IWUSR		_S_IWRITE
   #define PATH_SEP      '\\'
 #else
   #include <signal.h>
@@ -82,6 +99,7 @@
 #endif
 
 #include "fko.h"
+#include "fko_limits.h"
 
 /* Get our program version from VERSION (defined in config.h).
 */
@@ -89,6 +107,7 @@
 
 enum {
     FKO_PROTO_UDP,
+    FKO_PROTO_UDP_RAW,
     FKO_PROTO_TCP,
     FKO_PROTO_TCP_RAW,
     FKO_PROTO_ICMP,
@@ -103,6 +122,9 @@ enum {
 #define MIN_HIGH_PORT       10000  /* sensible minimum for SPA dest port */
 #define MAX_PORT            65535
 #define MAX_SERVER_STR_LEN  50
+#define MAX_ICMP_TYPE       40
+#define MAX_ICMP_CODE       15
+#define RAW_SPA_TTL         255
 
 #define MAX_LINE_LEN        1024
 #define MAX_PATH_LEN        1024
@@ -125,6 +147,12 @@ enum {
 #define IS_EMPTY_LINE(x) ( \
     x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
 )
+
+/* Work-around for not having strnlen
+*/
+#if !HAVE_STRNLEN
+  #define strnlen(s, l) (strlen(s) < l ? strlen(s) : l)
+#endif
 
 #endif /* _COMMON_H */
 
