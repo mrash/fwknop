@@ -44,14 +44,18 @@ _init_ctx()
     RETVAL
 
 fko_ctx_t
-_init_ctx_with_data(data, key)
+_init_ctx_with_data(enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len)
     INPUT:
-    char*   data;
-    char*   key;
+    char*   enc_msg;
+    char*   dec_key;
+    int     dec_key_len;
+    int     enc_mode;
+    char*   hmac_key;
+    int     hmac_key_len;
     INIT:
     fko_ctx_t ctx;
     CODE:
-    g_ec = fko_new_with_data(&ctx, data, key);
+    g_ec = fko_new_with_data(&ctx, enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len);
     if(g_ec == 0)
         RETVAL = ctx;
     else
@@ -66,7 +70,7 @@ _init_ctx_with_data_only(data)
     INIT:
     fko_ctx_t ctx;
     CODE:
-    g_ec = fko_new_with_data(&ctx, data, NULL);
+    g_ec = fko_new_with_data(&ctx, data, NULL, 0, 0, NULL, 0);
     if(g_ec == 0)
         RETVAL = ctx;
     else
@@ -547,32 +551,37 @@ _get_encoded_data(ctx, val)
     RETVAL
 
 int
-_spa_data_final(ctx, enc_key)
+_spa_data_final(ctx, enc_key, enc_key_len, hmac_key, hmac_key_len)
     INPUT:
     fko_ctx_t ctx;
     char*   enc_key;
+    int     enc_key_len;
+    char*   hmac_key;
+    int     hmac_key_len;
     CODE:
-    RETVAL = fko_spa_data_final(ctx, enc_key);
+    RETVAL = fko_spa_data_final(ctx, enc_key, enc_key_len, hmac_key, hmac_key_len);
     OUTPUT:
     RETVAL
 
 int
-_decrypt_spa_data(ctx, dec_key)
+_decrypt_spa_data(ctx, dec_key, dec_key_len)
     INPUT:
     fko_ctx_t ctx;
     char*   dec_key;
+    int     dec_key_len;
     CODE:
-    RETVAL = fko_decrypt_spa_data(ctx, dec_key);
+    RETVAL = fko_decrypt_spa_data(ctx, dec_key, dec_key_len);
     OUTPUT:
     RETVAL
 
 int
-_encrypt_spa_data(ctx, enc_key)
+_encrypt_spa_data(ctx, enc_key, enc_key_len)
     INPUT:
     fko_ctx_t ctx;
     char*   enc_key;
+    int     enc_key_len;
     CODE:
-    RETVAL = fko_encrypt_spa_data(ctx, enc_key);
+    RETVAL = fko_encrypt_spa_data(ctx, enc_key, enc_key_len);
     OUTPUT:
     RETVAL
 
