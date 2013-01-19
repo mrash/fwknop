@@ -101,7 +101,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
 {
     int     sock, res=0, error;
     struct  addrinfo *result, *rp, hints;
-    char    port_str[MAX_PORT_STR_LEN];
+    char    port_str[MAX_PORT_STR_LEN+1];
 
     if (options->test)
     {
@@ -130,7 +130,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
         hints.ai_protocol = IPPROTO_TCP;
     }
 
-    snprintf(port_str, MAX_PORT_STR_LEN, "%d", options->spa_dst_port);
+    snprintf(port_str, MAX_PORT_STR_LEN+1, "%d", options->spa_dst_port);
 
     error = getaddrinfo(options->spa_server_str, port_str, &hints, &result);
 
