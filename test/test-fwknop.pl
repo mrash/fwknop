@@ -1856,6 +1856,22 @@ my @tests = (
     },
     {
         'category' => 'Rijndael SPA',
+        'subcategory' => 'client->server backwards compatibility',
+        'detail'   => 'v2.0.4',
+        'err_msg'  => 'backwards compatibility failed',
+        'function' => \&backwards_compatibility,
+        'pkt' =>
+            '8Xm8U5vQ03T88UTCWbwO3t/aL6euZ8IgVbNdDVz3Bn6HkTcBqxcME95U/G3bCH' .
+            'vQznpnGb05Md4ZgexHZGzZdSwsP8iVtcZdsgCBfeO4Eqs8OaSMjJVF8SQ+Jmhu' .
+            'XZMcWgMsIzhpprJ7JX41DrWd0OtBnE3rVwsN0',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
         'subcategory' => 'Android compatibility',
         'detail'   => 'v4.1.2',
         'err_msg'  => 'Android compatibility failed',
