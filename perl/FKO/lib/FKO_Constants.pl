@@ -31,6 +31,16 @@ our @DIGEST_TYPES = qw(
     FKO_DIGEST_SHA512
 );
 
+# HMAC digest types tag list.
+#
+our @HMAC_DIGEST_TYPES = qw(
+    FKO_HMAC_MD5
+    FKO_HMAC_SHA1
+    FKO_HMAC_SHA256
+    FKO_HMAC_SHA384
+    FKO_HMAC_SHA512
+);
+
 # Encryption types tag list.
 #
 our @ENCRYPTION_TYPES = qw(
@@ -60,6 +70,7 @@ our @ERROR_CODES = qw(
     FKO_ERROR_DECRYPTION_SIZE
     FKO_ERROR_DECRYPTION_FAILURE
     FKO_ERROR_DIGEST_VERIFICATION_FAILED
+    FKO_ERROR_UNSUPPORTED_HMAC_MODE
     FKO_ERROR_UNSUPPORTED_FEATURE
     FKO_ERROR_UNKNOWN
     GPGME_ERR_START
@@ -108,6 +119,13 @@ use constant {
     FKO_DIGEST_SHA256   => 3,
     FKO_DIGEST_SHA384   => 4,
     FKO_DIGEST_SHA512   => 5,
+
+    # HMAC digest types
+    FKO_HMAC_MD5        => 1,
+    FKO_HMAC_SHA1       => 2,
+    FKO_HMAC_SHA256     => 3,
+    FKO_HMAC_SHA384     => 4,
+    FKO_HMAC_SHA512     => 5,
 
     # Encryption types
     FKO_ENCRYPTION_RIJNDAEL => 1,

@@ -453,8 +453,8 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 
     /* We expect to have encrypted data to process.  If not, we bail.
     */
-    if(ctx->encrypted_msg == NULL
-            || (strnlen(ctx->encrypted_msg, MAX_SPA_ENCRYPTED_SIZE) < 1))
+    if(ctx->encrypted_msg == NULL || ! is_valid_encoded_msg_len(
+                strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE)))
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
     *spa_data = ctx->encrypted_msg;
@@ -477,14 +477,23 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 int
 fko_set_spa_data(fko_ctx_t ctx, const char *enc_msg)
 {
+    int         enc_msg_len;
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
+    enc_msg_len = strnlen(enc_msg, MAX_SPA_ENCODED_MSG_SIZE);
+
+    if(! is_valid_encoded_msg_len(enc_msg_len))
+        return(FKO_ERROR_INVALID_DATA);
+
     /* First, add the data to the context.
     */
     ctx->encrypted_msg = strdup(enc_msg);
+    ctx->encrypted_msg_len = enc_msg_len;
+
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 

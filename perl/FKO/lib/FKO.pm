@@ -25,6 +25,7 @@ our @ISA = qw(Exporter);
 our (
     @MSG_TYPES,
     @DIGEST_TYPES,
+    @HMAC_DIGEST_TYPES,
     @ENCRYPTION_TYPES,
     @ERROR_CODES
 );
@@ -36,16 +37,18 @@ require "FKO_Constants.pl";
 our %EXPORT_TAGS = (
     'message_types' => \@MSG_TYPES,
     'digest_types' => \@DIGEST_TYPES,
+    'hmac_digest_types' => \@HMAC_DIGEST_TYPES,
     'encryption_types' => \@ENCRYPTION_TYPES,
     'errors' => \@ERROR_CODES,
     'types' => [
         @MSG_TYPES,
         @DIGEST_TYPES,
+        @HMAC_DIGEST_TYPES,
         @ENCRYPTION_TYPES
     ],
     'all' => [
         @MSG_TYPES,
-        @DIGEST_TYPES,
+        @HMAC_DIGEST_TYPES,
         @ENCRYPTION_TYPES,
         @ERROR_CODES
     ]
@@ -63,9 +66,10 @@ XSLoader::load('FKO', $VERSION);
 # Constructor.
 #
 sub new {
-    my $class   = shift;
-    my $data    = shift;
-    my $dc_pw   = shift;
+    my $class     = shift;
+    my $data      = shift;
+    my $dc_pw     = shift;
+    my $dc_pw_len = shift;
     my $res;
 
     my $ctx;
@@ -75,7 +79,7 @@ sub new {
     #
     if($data) {
         if(defined($dc_pw)) {
-            $ctx = _init_ctx_with_data($data, $dc_pw);
+            $ctx = _init_ctx_with_data($data, $dc_pw, $dc_pw_len);
         } else {
             $ctx = _init_ctx_with_data_only($data);
         }
@@ -421,24 +425,29 @@ sub encoded_data {
 }
 
 sub spa_data_final {
-    my $self = shift;
-    my $key  = shift || '';
+    my $self     = shift;
+    my $key      = shift || '';
+    my $key_len  = shift || 0;
+    my $hmac_key = shift || '';
+    my $hmac_key_len  = shift || 0;
 
-    return FKO::_spa_data_final($self->{_ctx}, $key)
+    return FKO::_spa_data_final($self->{_ctx}, $key, $key_len, $hmac_key, $hmac_key_len);
 }
 
 sub encrypt_spa_data {
-    my $self = shift;
-    my $key  = shift || '';
+    my $self    = shift;
+    my $key     = shift || '';
+    my $key_len = shift || 0;
 
-    return FKO::_encrypt_spa_data($self->{_ctx}, $key)
+    return FKO::_encrypt_spa_data($self->{_ctx}, $key, $key_len)
 }
 
 sub decrypt_spa_data {
-    my $self = shift;
-    my $key  = shift || '';
+    my $self    = shift;
+    my $key     = shift || '';
+    my $key_len = shift || 0;
 
-    return FKO::_decrypt_spa_data($self->{_ctx}, $key)
+    return FKO::_decrypt_spa_data($self->{_ctx}, $key, $key_len)
 }
 
 sub encode_spa_data {
@@ -715,7 +724,6 @@ The SHA384 message digest algorithm. This is the I<libfko> default.
 The SHA512 message digest algorithm. This is the I<libfko> default.
 
 =back
- 
 
 =item B<spa_message_type( )>
 

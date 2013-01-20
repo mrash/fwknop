@@ -4201,7 +4201,7 @@ sub perl_fko_module_complete_cycle() {
                     $fko_obj->username($user);
                     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
                     $fko_obj->digest_type($digest_type);
-                    $fko_obj->spa_data_final($key);
+                    $fko_obj->spa_data_final($key, length($key), '', 0);
 
                     my $encrypted_msg = $fko_obj->spa_data();
 
@@ -4215,7 +4215,7 @@ sub perl_fko_module_complete_cycle() {
                         return 0;
                     }
                     $fko_obj->spa_data($encrypted_msg);
-                    $fko_obj->decrypt_spa_data($key);
+                    $fko_obj->decrypt_spa_data($key, length($key));
 
                     if ($msg ne $fko_obj->spa_message()) {
                         &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
@@ -4257,7 +4257,7 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     $fko_obj->username($user);
                     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
                     $fko_obj->digest_type($digest_type);
-                    $fko_obj->spa_data_final($key);
+                    $fko_obj->spa_data_final($key, length($key), '', 0);
 
                     my $encrypted_msg = $fko_obj->spa_data();
 
@@ -4305,7 +4305,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Bogus user: '
             . $fuzzing_test_tag
@@ -4337,7 +4337,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Bogus access_msg: '
             . $fuzzing_test_tag
@@ -4370,7 +4370,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Bogus NAT_access_msg: '
             . $fuzzing_test_tag
@@ -4402,7 +4402,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_COMMAND_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Bogus cmd_msg: '
             . $fuzzing_test_tag
@@ -4434,7 +4434,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
             next TYPE;
         }
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Bogus msg_type: '
             . $fuzzing_test_tag
@@ -4490,7 +4490,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Invalid_encoding user: '
             . $fuzzing_test_tag
@@ -4522,7 +4522,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Invalid_encoding access_msg: '
             . $fuzzing_test_tag
@@ -4555,7 +4555,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Invalid_encoding NAT_access_msg: '
             . $fuzzing_test_tag
@@ -4587,7 +4587,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             next CMD;
         }
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Invalid_encoding cmd_msg: '
             . $fuzzing_test_tag
@@ -4619,7 +4619,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             next TYPE;
         }
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key);
+        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
 
         my $fuzzing_str = '[+] Invalid_encoding msg_type: '
             . $fuzzing_test_tag
@@ -4698,7 +4698,7 @@ sub perl_fko_module_client_compatibility() {
 
     $fko_obj->spa_message("$fake_ip,tcp/22");
     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
-    $fko_obj->spa_data_final($default_key);
+    $fko_obj->spa_data_final($default_key, length($default_key), '', 0);
     my $spa_pkt = $fko_obj->spa_data();
     $fko_obj->destroy();
 

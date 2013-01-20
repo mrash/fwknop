@@ -70,7 +70,7 @@ _init_ctx_with_data_only(data)
     INIT:
     fko_ctx_t ctx;
     CODE:
-    g_ec = fko_new_with_data(&ctx, data, NULL, 0, 0, NULL, 0);
+    g_ec = fko_new_with_data(&ctx, data, NULL, 0, FKO_ENCRYPTION_RIJNDAEL, NULL, 0);
     if(g_ec == 0)
         RETVAL = ctx;
     else
@@ -105,7 +105,7 @@ _error_str(err_code)
     RETVAL = fko_errstr(err_code);
     OUTPUT:
     RETVAL
- 
+
 const char*
 _gpg_error_str(ctx)
     INPUT:
@@ -114,7 +114,7 @@ _gpg_error_str(ctx)
     RETVAL = fko_gpg_errstr(ctx);
     OUTPUT:
     RETVAL
- 
+
 int
 _set_digest_type(ctx, digest_type)
     INPUT:
@@ -124,7 +124,7 @@ _set_digest_type(ctx, digest_type)
     RETVAL = fko_set_spa_digest_type(ctx, digest_type);
     OUTPUT:
     RETVAL
- 
+
 int
 _get_digest_type(ctx, val)
     INPUT:
@@ -145,7 +145,7 @@ _set_encryption_type(ctx, encryption_type)
     RETVAL = fko_set_spa_encryption_type(ctx, encryption_type);
     OUTPUT:
     RETVAL
- 
+
 int
 _get_encryption_type(ctx, val)
     INPUT:
@@ -155,6 +155,16 @@ _get_encryption_type(ctx, val)
     RETVAL = fko_get_spa_encryption_type(ctx, &val);
     OUTPUT:
     val
+    RETVAL
+
+int
+_set_hmac_mode(ctx, hmac_mode)
+    INPUT:
+    fko_ctx_t ctx;
+    short    hmac_mode;
+    CODE:
+    RETVAL = fko_set_hmac_mode(ctx, hmac_mode);
+    OUTPUT:
     RETVAL
 
 int
@@ -187,7 +197,7 @@ _set_username(ctx, username)
     RETVAL = fko_set_username(ctx, username);
     OUTPUT:
     RETVAL
- 
+
 int
 _get_username(ctx, val)
     INPUT:
@@ -208,7 +218,7 @@ _set_spa_message_type(ctx, spa_message_type)
     RETVAL = fko_set_spa_message_type(ctx, spa_message_type);
     OUTPUT:
     RETVAL
- 
+
 int
 _get_spa_message_type(ctx, val)
     INPUT:
@@ -229,7 +239,7 @@ _set_timestamp(ctx, offset)
     RETVAL = fko_set_timestamp(ctx, offset);
     OUTPUT:
     RETVAL
- 
+
 int
 _get_timestamp(ctx, val)
     INPUT:
