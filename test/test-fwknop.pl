@@ -1786,6 +1786,20 @@ my @tests = (
         'fatal'    => $NO
     },
 
+    ### ensure iptables rules are not duplicate for identical access requests
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables rules not duplicated',
+        'err_msg'  => 'iptables rules duplicated',
+        'function' => \&iptables_rules_not_duplicated,
+        'cmdline'  => "$default_client_args --test",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_negative_output_matches' => [qr/^2\s+ACCEPT\s.*$fake_ip/],
+        'fatal'    => $NO
+    },
+
     ### backwards compatibility tests
     {
         'category' => 'Rijndael SPA',
@@ -4858,6 +4872,52 @@ sub digest_cache_structure() {
     return $rv;
 }
 
+sub iptables_rules_not_duplicated() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    my @packets = ();
+
+    for (my $i=0; $i < 3; $i++) {
+        unless (&client_send_spa_packet($test_hr)) {
+            &write_test_file("[-] fwknop client execution error.\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+        my $spa_pkt = &get_spa_packet_from_file($cmd_out_tmp);
+
+        unless ($spa_pkt) {
+            &write_test_file("[-] could not get SPA packet " .
+                "from file: $curr_test_file\n", $curr_test_file);
+            return 0;
+        }
+
+        push @packets,
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $spa_pkt,
+        };
+        $i++;
+    }
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    if ($test_hr->{'server_negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'server_negative_output_matches'},
+            $MATCH_ANY, $server_test_file);
+    }
+
+    return $rv;
+}
+
 sub server_bpf_ignore_packet() {
     my $test_hr = shift;
 
@@ -6067,6 +6127,7 @@ sub init() {
 
     unless ($platform eq $LINUX) {
         push @tests_to_exclude, qr/NAT/;
+        push @tests_to_exclude, qr/iptables/;
     }
     unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
         push @tests_to_exclude, qr|active/expire sets|;
