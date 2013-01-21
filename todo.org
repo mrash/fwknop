@@ -98,8 +98,17 @@
    :CLOSED: <2012-10-02 Tue>
    The access.c parsing code currently throws an error if there is not KEY
    variable in an access stanza even if GPG_ALLOW_NO_PW is set.
+* IN PROGRESS
+  This bucket is for tasks that are currently being worked on.
+** [test suite] SPA packet fuzzer
+   Add a series of patches to the fwknop client that break how it produces SPA
+   data in subtle ways in order to ensure proper validation by fwknopd.
 * TODO
   This bucket is for new tasks.
+** Update all docs to include HMAC information (#17)
+   :<2013-01-20 Sun>
+** Add HMAC support to the perl FKO module (#16)
+   :<2013-01-20 Sun>
 ** Fix gcc warnings on OpenBSD
    :<2012-11-14 Wed>
    Current fwknop code issues compilation warnings like the following on
@@ -127,9 +136,6 @@
    include other files in which access stanzas can be specified.  This makes
    it easy to wrap additional controls around access information particularly
    in multi-user environments.
-** [test suite] SPA packet fuzzer
-   Add a series of patches to the fwknop client that break how it produces SPA
-   data in subtle ways in order to ensure proper validation by fwknopd.
 ** [test suite] backwards compatibility tests
    The test suite should have the ability to test backwards compatibility
    between fwknop versions.
@@ -146,5 +152,5 @@
 ** [test suite] client/server only tests
    When only the client or server is being installed on a system, the test
    suite should be able to run only the relevant tests.
-** Implement SPA over IPv6
+** Implement SPA over IPv6 (#1)
    It is important to eventually fully support SPA over IPv6.

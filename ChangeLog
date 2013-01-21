@@ -1,4 +1,6 @@
-fwknop-2.0.5 (//2013):
+fwknop-2.5 (//2013):
+    - Major release of new functionality - HMAC SHA-256 support in the
+      encrypt-then-authenticate model.
     - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.4, and this has
       been checked in under the extras/openbsd/fwknop-2.0.4 directory.
 
