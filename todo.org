@@ -105,6 +105,11 @@
    data in subtle ways in order to ensure proper validation by fwknopd.
 * TODO
   This bucket is for new tasks.
+** Rijndael keys are limited to 16 characters (#18)
+   :<2013-01-20 Sun>
+   Michael T. Dean reported that fwknop-2.x code limits Rijndael keys to 16
+   chars whereas it should accept keys up to RIJNDAEL_MAX_KEYSIZE chars in
+   length (32 chars).
 ** Update all docs to include HMAC information (#17)
    :<2013-01-20 Sun>
 ** Add HMAC support to the perl FKO module (#16)
