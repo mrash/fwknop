@@ -44,6 +44,9 @@
  */
 #define RIJNDAEL_BLOCKSIZE 16
 #define RIJNDAEL_KEYSIZE   32
+#define RIJNDAEL_MIN_KEYSIZE 16
+#define RIJNDAEL_MAX_KEYSIZE 32
+#define SALT_LEN 8
 
 #define     MODE_ECB        1    /*  Are we ciphering in ECB mode?   */
 #define     MODE_CBC        2    /*  Are we ciphering in CBC mode?   */
@@ -54,9 +57,6 @@
 
 /* Allow keys of size 128 <= bits <= 256 */
 
-#define RIJNDAEL_MIN_KEYSIZE 16
-#define RIJNDAEL_MAX_KEYSIZE 32
-
 typedef struct {
   uint32_t keys[60];		/* maximum size of key schedule */
   uint32_t ikeys[60];		/* inverse key schedule */
@@ -64,8 +64,8 @@ typedef struct {
   int mode;			    /* encryption mode */
   /* Added by DSS */
   uint8_t key[RIJNDAEL_MAX_KEYSIZE];
-  uint8_t iv[16];
-  uint8_t salt[8];
+  uint8_t iv[RIJNDAEL_BLOCKSIZE];
+  uint8_t salt[SALT_LEN];
 } RIJNDAEL_context;
 
 /* This basically performs Rijndael's key scheduling algorithm, as it's the

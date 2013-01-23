@@ -2410,6 +2410,14 @@ my @tests = (
     {
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
+        'detail'   => 'truncated keys',
+        'err_msg'  => 'allowed truncated keys to decrypt SPA data',
+        'function' => \&perl_fko_module_rijndael_truncated_keys,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'encrypt/decrypt',
         'detail'   => 'complete cycle (mod reuse)',
         'err_msg'  => 'could not finish complete cycle',
         'function' => \&perl_fko_module_complete_cycle_module_reuse,
@@ -4188,6 +4196,83 @@ sub fuzzing_cmd_messages() {
         '123.123.123.123,' . 'A'x1000,
     );
     return \@msgs;
+}
+
+sub perl_fko_module_rijndael_truncated_keys() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}[0]) {
+        for my $user (@{valid_usernames()}[0]) {
+            for my $digest_type (@{valid_spa_digest_types()}[0]) {
+
+                my $key = '1';
+                for (my $i=2; $i <= 32; $i++) {
+
+                    $key .= $i % 10;
+
+                    if (length($key) < 16 and $key =~ /0$/) {
+                        ### word around the trailing zero problem for now
+                        $key =~ s/0$/X/;
+                    }
+
+                    &write_test_file("[+] key: $key (" . length($key) . " bytes)\n",
+                        $curr_test_file);
+                    for (my $j=1; $j < length($key); $j++) {
+
+                        &write_test_file("    msg: $msg, user: $user, " .
+                            "digest type: $digest_type\n",
+                            $curr_test_file);
+
+                        $fko_obj = FKO->new();
+                        unless ($fko_obj) {
+                            &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                                $curr_test_file);
+                            return 0;
+                        }
+
+                        $fko_obj->spa_message($msg);
+                        $fko_obj->username($user);
+                        $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+                        $fko_obj->digest_type($digest_type);
+                        $fko_obj->spa_data_final($key, length($key), '', 0);
+
+                        my $encrypted_msg = $fko_obj->spa_data();
+
+                        $fko_obj->destroy();
+
+                        ### now get new object for decryption
+                        $fko_obj = FKO->new();
+                        unless ($fko_obj) {
+                            &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                                $curr_test_file);
+                            return 0;
+                        }
+                        $fko_obj->spa_data($encrypted_msg);
+                        my $truncated_key = $key;
+                        $truncated_key =~ s/^(.{$j}).*/$1/;
+                        if ($fko_obj->decrypt_spa_data($truncated_key,
+                                length($truncated_key)) == FKO->FKO_SUCCESS) {
+                            &write_test_file("[-] $msg decrypt success with truncated key " .
+                                "($key -> $truncated_key)\n",
+                                $curr_test_file);
+                            $rv = 0;
+                        } else {
+                            &write_test_file("[+] $msg decrypt rejected truncated " .
+                                "key ($key -> $truncated_key)\n",
+                                $curr_test_file);
+                        }
+
+                        $fko_obj->destroy();
+                    }
+                    &write_test_file("\n", $curr_test_file);
+                }
+            }
+        }
+    }
+
+    return $rv;
 }
 
 sub perl_fko_module_complete_cycle() {

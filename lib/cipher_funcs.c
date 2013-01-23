@@ -118,11 +118,12 @@ static void
 rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
         const int key_len, const unsigned char *data)
 {
-    char            pw_buf[RIJNDAEL_MIN_KEYSIZE];
+    char            pw_buf[RIJNDAEL_MAX_KEYSIZE];
     unsigned char   tmp_buf[64];    /* How big does this need to be? */
-    unsigned char   kiv_buf[48];    /* Key and IV buffer */
-    unsigned char   md5_buf[16];    /* Buffer for computed md5 hash */
+    unsigned char   kiv_buf[RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE]; /* Key and IV buffer */
+    unsigned char   md5_buf[MD5_DIGEST_LEN]; /* Buffer for computed md5 hash */
 
+    int             final_key_len = RIJNDAEL_MIN_KEYSIZE;
     size_t          kiv_len = 0;
 
     /* First make pw 32 bytes (pad with "0" (ascii 0x30)) or truncate.
@@ -135,7 +136,10 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
         memset(pw_buf+key_len, '0', RIJNDAEL_MIN_KEYSIZE - key_len);
     }
     else
-        memcpy(pw_buf, key, RIJNDAEL_MIN_KEYSIZE);
+    {
+        memcpy(pw_buf, key, key_len);
+        final_key_len = key_len;
+    }
 
     /* If we are decrypting, data will contain the salt. Otherwise,
      * for encryption, we generate a random salt.
@@ -144,38 +148,38 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
     {
         /* Pull the salt from the data
         */
-        memcpy(ctx->salt, (data+8), 8);
+        memcpy(ctx->salt, (data+SALT_LEN), SALT_LEN);
     }
     else
     {
         /* Generate a random 8-byte salt.
         */
-        get_random_data(ctx->salt, 8);
+        get_random_data(ctx->salt, SALT_LEN);
     }
 
     /* Now generate the key and initialization vector.
      * (again it is the perl Crypt::CBC way, with a touch of
      * fwknop).
     */
-    memcpy(tmp_buf+RIJNDAEL_MIN_KEYSIZE, pw_buf, RIJNDAEL_MIN_KEYSIZE);
-    memcpy(tmp_buf+32, ctx->salt, 8);
+    memcpy(tmp_buf+MD5_DIGEST_LEN, pw_buf, final_key_len);
+    memcpy(tmp_buf+MD5_DIGEST_LEN+final_key_len, ctx->salt, SALT_LEN);
 
     while(kiv_len < sizeof(kiv_buf))
     {
         if(kiv_len == 0)
-            md5(md5_buf, tmp_buf+16, 24);
+            md5(md5_buf, tmp_buf+MD5_DIGEST_LEN, final_key_len+SALT_LEN);
         else
-            md5(md5_buf, tmp_buf, 40);
+            md5(md5_buf, tmp_buf, MD5_DIGEST_LEN+final_key_len+SALT_LEN);
 
-        memcpy(tmp_buf, md5_buf, 16);
+        memcpy(tmp_buf, md5_buf, MD5_DIGEST_LEN);
 
-        memcpy(kiv_buf + kiv_len, md5_buf, 16);
+        memcpy(kiv_buf + kiv_len, md5_buf, MD5_DIGEST_LEN);
 
-        kiv_len += 16;
+        kiv_len += MD5_DIGEST_LEN;
     }
 
-    memcpy(ctx->key, kiv_buf,    32);
-    memcpy(ctx->iv,  kiv_buf+32, 16);
+    memcpy(ctx->key, kiv_buf, RIJNDAEL_MAX_KEYSIZE);
+    memcpy(ctx->iv,  kiv_buf+RIJNDAEL_MAX_KEYSIZE, RIJNDAEL_BLOCKSIZE);
 }
 
 /* Initialization entry point.
@@ -216,10 +220,10 @@ rij_encrypt(unsigned char *in, size_t in_len,
 
     /* Prepend the salt to the ciphertext...
     */
-    memcpy(ondx, "Salted__", 8);
-    ondx+=8;
-    memcpy(ondx, ctx.salt, 8);
-    ondx+=8;
+    memcpy(ondx, "Salted__", SALT_LEN);
+    ondx+=SALT_LEN;
+    memcpy(ondx, ctx.salt, SALT_LEN);
+    ondx+=SALT_LEN;
 
     /* Add padding to the original plaintext to ensure that it is a
      * multiple of the Rijndael block size

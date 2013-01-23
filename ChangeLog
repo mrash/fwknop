@@ -1,6 +1,17 @@
 fwknop-2.5 (//2013):
     - Major release of new functionality - HMAC SHA-256 support in the
       encrypt-then-authenticate model.
+    - [libfko] Significant bug fix to honor the full encryption key length for
+      user-supplied Rijndael keys > 16 bytes long.  Previous to this bug fix,
+      only the first 16 bytes of a key were actually used in the encryption/
+      decryption process even if the supplied key was longer.  The result was
+      a weakening of expected security for users that had keys > 16 bytes,
+      although this is probably not too common.  Note that "passphrase" is
+      perhaps technically a better word for "user-supplied key" in this
+      context since Rijndael in CBC mode derives a real encryption/decryption
+      key from the passphrase through a series of applications of md5 against
+      the passphrase and a random salt.  This issue was reported by Michael T.
+      Dean.  Closes issue #18 on github.
     - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.4, and this has
       been checked in under the extras/openbsd/fwknop-2.0.4 directory.
 
