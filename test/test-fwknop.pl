@@ -19,6 +19,7 @@ my $run_dir        = 'run';
 my $configure_path = 'configure';
 my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
+my $data_tmp       = 'data.tmp';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
 my $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 my $replay_pcap_file = "$conf_dir/spa_replay.pcap";
@@ -145,9 +146,14 @@ my $enable_profile_coverage_check = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
+my $enable_openssl_compatibility_tests = 0;
+my $openssl_success_ctr = 0;
+my $openssl_failure_ctr = 0;
+my $openssl_ctr = 0;
 my $sudo_path = '';
 my $gcov_path = '';
 my $killall_path = '';
+my $openssl_path = '';
 my $pinentry_fail = 0;
 my $platform = '';
 my $help = 0;
@@ -166,6 +172,8 @@ my $NEW_RULE_REMOVED = 1;
 my $REQUIRE_NO_NEW_REMOVED = 2;
 my $MATCH_ANY = 1;
 my $MATCH_ALL = 2;
+my $REQUIRE_SUCCESS = 0;
+my $REQUIRE_FAILURE = 1;
 my $LINUX   = 1;
 my $FREEBSD = 2;
 my $MACOSX  = 3;
@@ -195,6 +203,7 @@ exit 1 unless GetOptions(
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
+    'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$use_valgrind,
@@ -2921,6 +2930,11 @@ for my $test_hr (@tests) {
     }
 }
 
+if ($enable_openssl_compatibility_tests) {
+    &logr("\n[+] OpenSSL tests passed/failed/executed: " .
+        "$openssl_success_ctr/$openssl_failure_ctr/$openssl_ctr tests\n");
+}
+
 if ($use_valgrind) {
     &run_test(
         {
@@ -3291,14 +3305,52 @@ sub expected_code_version() {
 sub client_send_spa_packet() {
     my $test_hr = shift;
 
+    my $rv = 1;
+
     &write_key($default_key, $local_key_file);
 
-    return 0 unless &run_cmd($test_hr->{'cmdline'},
+    $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
             $cmd_out_tmp, $curr_test_file);
-    return 0 unless &file_find_regex([qr/final\spacked/i],
+    $rv = 0 unless &file_find_regex([qr/final\spacked/i],
         $MATCH_ALL, $curr_test_file);
 
-    return 1;
+    if ($enable_openssl_compatibility_tests) {
+
+        ### extract the SPA packet from the cmd tmp file before
+        ### openssl command execution overwrites it
+        my $encoded_msg = '';
+        my $digest = '';
+        my $enc_mode = 0;
+        my $is_hmac_mode = 1;
+        open F, "< $cmd_out_tmp" or die $!;
+        while (<F>) {
+            if (/^\s+Encoded\sData\:\s+(\S+)/) {
+                $encoded_msg = $1;
+            } elsif (/Data\sDigest\:\s(\S+)/) {
+                $digest = $1;
+            } elsif (/Encryption\sMode\:\s+(\d+)/) {
+                $enc_mode = $1;
+            } elsif (/HMAC\:\s\<NULL\>/) {
+                $is_hmac_mode = 0;
+            }
+        }
+        close F;
+
+        $encoded_msg .= ":$digest";
+
+        my $ssl_test_flag = $REQUIRE_SUCCESS;
+        $ssl_test_flag = $REQUIRE_FAILURE if $enc_mode != 2;  ### CBC mode
+        $ssl_test_flag = $REQUIRE_FAILURE if $is_hmac_mode;
+
+        my $encrypted_msg = &get_spa_packet_from_file($cmd_out_tmp);
+
+        unless (&openssl_verification($encrypted_msg,
+                $encoded_msg, '', $default_key, $ssl_test_flag)) {
+            $rv = 0;
+        }
+    }
+
+    return $rv;
 }
 
 sub permissions_check() {
@@ -4242,6 +4294,13 @@ sub perl_fko_module_rijndael_truncated_keys() {
 
                         $fko_obj->destroy();
 
+                        if ($enable_openssl_compatibility_tests) {
+                            unless (&openssl_verification($encrypted_msg,
+                                    '', $msg, $key, $REQUIRE_SUCCESS)) {
+                                $rv = 0;
+                            }
+                        }
+
                         ### now get new object for decryption
                         $fko_obj = FKO->new();
                         unless ($fko_obj) {
@@ -4265,6 +4324,13 @@ sub perl_fko_module_rijndael_truncated_keys() {
                         }
 
                         $fko_obj->destroy();
+
+                        if ($enable_openssl_compatibility_tests) {
+                            unless (&openssl_verification($encrypted_msg,
+                                    '', $msg, $truncated_key, $REQUIRE_FAILURE)) {
+                                $rv = 0;
+                            }
+                        }
                     }
                     &write_test_file("\n", $curr_test_file);
                 }
@@ -4323,6 +4389,13 @@ sub perl_fko_module_complete_cycle() {
                     }
 
                     $fko_obj->destroy();
+
+                    if ($enable_openssl_compatibility_tests) {
+                        unless (&openssl_verification($encrypted_msg,
+                                '', $msg, $key, $REQUIRE_SUCCESS)) {
+                            $rv = 0;
+                        }
+                    }
                 }
             }
         }
@@ -4361,7 +4434,7 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     my $encrypted_msg = $fko_obj->spa_data();
 
                     $fko_obj->spa_data($encrypted_msg);
-                    $fko_obj->decrypt_spa_data($key);
+                    $fko_obj->decrypt_spa_data($key, length($key));
 
                     if ($msg ne $fko_obj->spa_message()) {
                         &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
@@ -4370,6 +4443,13 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     }
 
                     $fko_obj->destroy();
+
+                    if ($enable_openssl_compatibility_tests) {
+                        unless (&openssl_verification($encrypted_msg,
+                                '', $msg, $key, $REQUIRE_SUCCESS)) {
+                            $rv = 0;
+                        }
+                    }
                 }
             }
         }
@@ -4765,7 +4845,7 @@ sub perl_fko_module_full_fuzzing_packets() {
                 }
                 $fko_obj->spa_data($encrypted_spa_pkt);
 
-                my $status = $fko_obj->decrypt_spa_data($fuzzing_key);
+                my $status = $fko_obj->decrypt_spa_data($fuzzing_key, length($fuzzing_key));
 
                 if ($status == FKO->FKO_SUCCESS) {
                     &write_test_file("[-] Accepted fuzzing $field $field_val SPA packet.\n",
@@ -5817,6 +5897,141 @@ sub immediate_binding() {
     return 0;
 }
 
+sub openssl_verification() {
+    my ($encrypted_msg, $encoded_msg, $access_msg, $key, $rv_flag) = @_;
+    my $rv = 1;
+
+    &write_test_file("[+] OpenSSL verification, (encoded msg: " .
+        "$encoded_msg) (access: $access_msg), key: $key, $encrypted_msg\n",
+        $curr_test_file);
+
+    ### transform encrypted message into the format that openssl expects
+    $encrypted_msg = 'U2FsdGVkX1' . $encrypted_msg
+        unless $encrypted_msg =~ /^U2FsdGVkX1/;
+
+    my $len_remainder = length($encrypted_msg) % 4;
+    if ($len_remainder > 0) {
+        for (my $i=0; $i < 4-$len_remainder; $i++) {
+            $encrypted_msg .= '=';
+        }
+    }
+
+    $encrypted_msg =~ s|(.{76})|$1\n|g;
+
+    open F, "> $data_tmp" or die $!;
+    print F $encrypted_msg, "\n";
+    close F;
+
+    $rv = &run_cmd("$openssl_path enc -d -a -aes-256-cbc " .
+        "-pass pass:$key -in $data_tmp",
+        $cmd_out_tmp, $curr_test_file);
+
+    if ($rv) {
+        if ($rv_flag == $REQUIRE_FAILURE) {
+            &write_test_file("[-] OpenSSL expected decryption failure, " .
+                "but did not get decryption error\n",
+                $curr_test_file);
+            $rv = 0;
+        } else {
+            ### 2868244741993914:dGVzdA:2358972093:2.0.4:1:MS4yLjMANCx0YAAvMjI:vPFqXEA6SnzP2ScsIWAxhg
+
+            ### make sure the access message checks out, or the entire
+            ### decrypted (but not decoded) packet if we were passed the
+            ### encoded version
+            my $decrypted_msg = '';
+            my $decrypted_access_msg = '';
+            my $decoded_msg = '';
+            open F, "< $cmd_out_tmp" or die $!;
+            while (<F>) {
+                if (/^(?:\S+?\:){5}(\S+?)\:/) {
+                    $decrypted_access_msg = $1;
+                    $decrypted_msg = $_;
+                }
+            }
+            close F;
+
+            $decrypted_msg =~ s/\n//;
+
+            my $decryption_success = 0;
+
+            unless ($encoded_msg) {
+                my $len_remainder = length($decrypted_access_msg) % 4;
+                if ($len_remainder > 0) {
+                    for (my $i=0; $i < 4-$len_remainder; $i++) {
+                        $decrypted_access_msg .= '=';
+                    }
+                }
+                $decoded_msg = decode_base64($decrypted_access_msg);
+            }
+
+            if ($encoded_msg) {
+                $decryption_success = 1 if $encoded_msg eq $decrypted_msg;
+            } else {
+                $decryption_success = 1 if $access_msg eq $decoded_msg;
+            }
+
+            if ($decryption_success) {
+                &write_test_file("[+] OpenSSL access message " .
+                    "match in decrypted data\n",
+                    $curr_test_file);
+                ### now check the exit status of re-encrypting the data
+                unless (&run_cmd("$openssl_path enc " .
+                        "-e -a -aes-256-cbc -pass pass:$key -in $data_tmp",
+                        $cmd_out_tmp, $curr_test_file)) {
+
+                    &write_test_file("[-] OpenSSL could not re-encrypt\n",
+                        $curr_test_file);
+                    $rv = 0;
+                }
+            } else {
+                &write_test_file("[-] OpenSSL access message " .
+                    "mis-match in decrypted data\n",
+                    $curr_test_file);
+                $rv = 0;
+            }
+        }
+    } else {
+        if ($rv_flag == $REQUIRE_SUCCESS) {
+            &write_test_file("[-] OpenSSL bad decryption exit status\n",
+                $curr_test_file);
+        } else {
+            &write_test_file("[+] OpenSSL did not decrypt bogus " .
+                "key/data combination\n",
+                $curr_test_file);
+        }
+    }
+
+    if ($rv) {
+        if ($rv_flag == $REQUIRE_SUCCESS) {
+            &write_test_file("[+] OpenSSL test success (expected " .
+                "encryption/decryption success)\n",
+                $curr_test_file);
+            $openssl_success_ctr++;
+        } else {
+            &write_test_file("[-] OpenSSL test failure (expected " .
+                "encryption/decryption success)\n",
+                $curr_test_file);
+            $openssl_failure_ctr++;
+            $rv = 0;
+        }
+    } else {
+        if ($rv_flag == $REQUIRE_SUCCESS) {
+            &write_test_file("[-] OpenSSL test failure (expected " .
+                "encryption/decryption success)\n",
+                $curr_test_file);
+            $openssl_failure_ctr++;
+        } else {
+            &write_test_file("[+] OpenSSL test success (expected " .
+                "encryption/decryption failure)\n",
+                $curr_test_file);
+            $openssl_success_ctr++;
+            $rv = 1;
+        }
+    }
+    $openssl_ctr++;
+    return $rv;
+}
+
 sub specs() {
 
      &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
@@ -6016,7 +6231,13 @@ sub run_cmd() {
     close C;
 
     open F, ">> $file" or die "[*] Could not open $file: $!";
-    print F $_ for @cmd_lines;
+    for (@cmd_lines) {
+        if (/\n/) {
+            print F $_;
+        } else {
+            print F $_, "\n";
+        }
+    }
     close F;
 
     if ($rv == 0) {
@@ -6128,6 +6349,14 @@ sub init() {
         $enable_make_distcheck = 1;
         $enable_client_ip_resolve_test = 1;
         $enable_perl_module_checks = 1;
+        $enable_openssl_compatibility_tests = 1;
+    }
+
+    if ($enable_openssl_compatibility_tests) {
+        $openssl_path = &find_command('openssl');
+        die "[*] openssl command not found." unless $openssl_path;
+        require MIME::Base64;
+        MIME::Base64->import(qw(decode_base64));
     }
 
     $enable_perl_module_checks = 1

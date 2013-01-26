@@ -116,24 +116,38 @@ get_random_data(unsigned char *data, const size_t len)
 */
 static void
 rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
-        const int key_len, const unsigned char *data)
+        const int key_len, const unsigned char *data, const int legacy_enc_mode)
 {
     char            pw_buf[RIJNDAEL_MAX_KEYSIZE];
-    unsigned char   tmp_buf[64];    /* How big does this need to be? */
+    unsigned char   tmp_buf[MD5_DIGEST_LEN+RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE];
     unsigned char   kiv_buf[RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE]; /* Key and IV buffer */
     unsigned char   md5_buf[MD5_DIGEST_LEN]; /* Buffer for computed md5 hash */
 
-    int             final_key_len = RIJNDAEL_MIN_KEYSIZE;
+    int             final_key_len = 0;
     size_t          kiv_len = 0;
 
-    /* First make pw 32 bytes (pad with "0" (ascii 0x30)) or truncate.
-     * Note: pw_buf was initialized with '0' chars (again, not the value
-     *       0, but the digit '0' character).
-    */
-    if(key_len < RIJNDAEL_MIN_KEYSIZE)
+    if(legacy_enc_mode == 1)
     {
-        memcpy(pw_buf, key, key_len);
-        memset(pw_buf+key_len, '0', RIJNDAEL_MIN_KEYSIZE - key_len);
+        /* First make pw 32 bytes (pad with "0" (ascii 0x30)) or truncate.
+         * Note: pw_buf was initialized with '0' chars (again, not the value
+         *       0, but the digit '0' character).
+         *
+         * This maintains compatibility with the old perl code if absolutely
+         * necessary in some scenarios, but is not recommended to use since it
+         * breaks compatibility with how OpenSSL implements AES.  This code
+         * will be removed altogether in a future version of fwknop.
+        */
+        if(key_len < RIJNDAEL_MIN_KEYSIZE)
+        {
+            memcpy(pw_buf, key, key_len);
+            memset(pw_buf+key_len, '0', RIJNDAEL_MIN_KEYSIZE - key_len);
+            final_key_len = RIJNDAEL_MIN_KEYSIZE;
+        }
+        else
+        {
+            memcpy(pw_buf, key, key_len);
+            final_key_len = key_len;
+        }
     }
     else
     {
@@ -190,22 +204,21 @@ rijndael_init(RIJNDAEL_context *ctx, const char *key,
     int encryption_mode)
 {
 
-    /* The default (set in fko.h) is ECB mode to be compatible with the
-     * Crypt::CBC perl module.
+    /* The default (set in fko.h) is CBC mode
     */
     ctx->mode = encryption_mode;
 
     /* Generate the salt and initialization vector.
     */
-    rij_salt_and_iv(ctx, key, key_len, data);
+    rij_salt_and_iv(ctx, key, key_len, data, 0);
 
     /* Intialize our Rijndael context.
     */
     rijndael_setup(ctx, RIJNDAEL_MAX_KEYSIZE, ctx->key);
 }
 
-/* Take a chunk of data, encrypt it in the same way the perl Crypt::CBC
- * module would.
+/* Take a chunk of data, encrypt it in the same way OpenSSL would
+ * (with a default of AES in CBC mode).
 */
 size_t
 rij_encrypt(unsigned char *in, size_t in_len,

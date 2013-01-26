@@ -113,6 +113,21 @@
   This bucket is for new tasks.
 ** Handle Rijndael keys with a trailing zero char
    :<2013-01-21 Mon>
+
+   fwknop should maintain compatibility with OpenSSL in its usage of Rijndael
+   in CBC mode.  As of fwknop-2.0.4, backwards compatibility is maintained
+   with the older perl versions, and this implies that '0' chars are tacked
+   onto the end of user-supplied passphrases for those that are less than 16
+   bytes long.  When trying to decrypt SPA packets with OpenSSL, this results
+   in the following error for passphrases < 16 bytes:
+
+   bad decrypt
+   140636380620448:error:06065064:digital envelope 
+   routines:EVP_DecryptFinal_ex:bad decrypt:evp_enc.c:539:
+
+   For SPA packets encrypted with a passphrase > 16 bytes, OpenSSL is able to
+   decrypt them properly.
+
 ** Update all docs to include HMAC information (#17)
    :<2013-01-20 Sun>
 ** Add HMAC support to the perl FKO module (#16)
