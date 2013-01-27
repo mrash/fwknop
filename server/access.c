@@ -176,6 +176,8 @@ enc_mode_strtoint(const char *enc_mode_str)
         return(FKO_ENC_MODE_OFB);
     else if(strcasecmp(enc_mode_str, "ctr") == 0)
         return(FKO_ENC_MODE_CTR);
+    else if(strcasecmp(enc_mode_str, "legacy") == 0)
+        return(FKO_ENC_MODE_CBC_LEGACY_IV);
     else
         return(-1);
 }

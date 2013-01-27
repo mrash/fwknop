@@ -12,6 +12,9 @@ fwknop-2.5 (//2013):
       key from the passphrase through a series of applications of md5 against
       the passphrase and a random salt.  This issue was reported by Michael T.
       Dean.  Closes issue #18 on github.
+    - [libfko] Added the ability to maintain backwards compatibility with the
+      now deprecated "zero padding" strategy in AES mode that was a hold over
+      from the old perl fwknop implementation.
     - [test suite] Added --enable-openssl-checks to send all SPA packets
       encrypted via libfko through the OpenSSL library to ensure that the
       libfko usage of AES is always compatible with OpenSSL.  This ensures

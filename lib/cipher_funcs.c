@@ -116,7 +116,7 @@ get_random_data(unsigned char *data, const size_t len)
 */
 static void
 rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
-        const int key_len, const unsigned char *data, const int legacy_enc_mode)
+        const int key_len, const unsigned char *data, const int mode_flag)
 {
     char            pw_buf[RIJNDAEL_MAX_KEYSIZE];
     unsigned char   tmp_buf[MD5_DIGEST_LEN+RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE];
@@ -131,16 +131,15 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
     memset(kiv_buf, 0x00, RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE);
     memset(md5_buf, 0x00, MD5_DIGEST_LEN);
 
-    if(legacy_enc_mode == 1)
+    if(mode_flag == FKO_ENC_MODE_CBC_LEGACY_IV)
     {
-        /* First make pw 32 bytes (pad with "0" (ascii 0x30)) or truncate.
-         * Note: pw_buf was initialized with '0' chars (again, not the value
-         *       0, but the digit '0' character).
+        /* Pad the pw with '0' chars up to the minimum Rijndael key size.
          *
          * This maintains compatibility with the old perl code if absolutely
          * necessary in some scenarios, but is not recommended to use since it
-         * breaks compatibility with how OpenSSL implements AES.  This code
-         * will be removed altogether in a future version of fwknop.
+         * breaks compatibility with how OpenSSL implements AES and introduces
+         * other problems.  This code will be removed altogether in a future
+         * version of fwknop.
         */
         if(key_len < RIJNDAEL_MIN_KEYSIZE)
         {
@@ -211,11 +210,14 @@ rijndael_init(RIJNDAEL_context *ctx, const char *key,
 
     /* The default (set in fko.h) is CBC mode
     */
-    ctx->mode = encryption_mode;
+    if(encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV)
+        ctx->mode = FKO_ENC_MODE_CBC;
+    else
+        ctx->mode = encryption_mode;
 
     /* Generate the salt and initialization vector.
     */
-    rij_salt_and_iv(ctx, key, key_len, data, 0);
+    rij_salt_and_iv(ctx, key, key_len, data, encryption_mode);
 
     /* Intialize our Rijndael context.
     */

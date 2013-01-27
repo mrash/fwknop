@@ -118,6 +118,7 @@ typedef enum {
     FKO_ENC_MODE_OFB  = MODE_OFB,
     FKO_ENC_MODE_CTR  = MODE_CTR,
     FKO_ENC_MODE_ASYMMETRIC,  /* placeholder when GPG is used */
+    FKO_ENC_MODE_CBC_LEGACY_IV,  /* for the old zero-padding strategy */
     FKO_LAST_ENC_MODE /* Always leave this as the last one */
 } fko_encryption_mode_t;
 

@@ -40,8 +40,10 @@ my %cf = (
     'local_nat'               => "$conf_dir/local_nat_fwknopd.conf",
     'ipfw_active_expire'      => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
     'android_access'          => "$conf_dir/android_access.conf",
+    'android_legacy_iv_access' => "$conf_dir/android_legacy_iv_access.conf",
     'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
     'gpg_access'              => "$conf_dir/gpg_access.conf",
+    'legacy_iv_access'        => "$conf_dir/legacy_iv_access.conf",
     'gpg_no_pw_access'        => "$conf_dir/gpg_no_pw_access.conf",
     'tcp_server'              => "$conf_dir/tcp_server_fwknopd.conf",
     'tcp_pcap_filter'         => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
@@ -1635,7 +1637,8 @@ my @tests = (
         'function' => \&process_pcap_file_directly,
         'cmdline'  => '',
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
+            "-d $default_digest_file -p $default_pid_file " .
             "--pcap-file $replay_pcap_file --foreground --verbose --verbose " .
             "--verbose",
         'server_positive_output_matches' => [qr/Replay\sdetected/i,
@@ -1835,7 +1838,7 @@ my @tests = (
             '55krFt+1B2TtNSAH005kyDEZEOIGoY9Q/iU',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -1852,7 +1855,7 @@ my @tests = (
             'Hhro2tH34nqfTRIpevfLTMx7r+N8ZQ4V8',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -1869,7 +1872,7 @@ my @tests = (
             'Vw2/Va/aUjvEvNPtwuipQS6DLTzOw/qy+/g',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -1885,7 +1888,7 @@ my @tests = (
             'M+GledHfz2d49aYThoQ2Cr8Iw1ycViawY',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -1901,7 +1904,7 @@ my @tests = (
             'XZMcWgMsIzhpprJ7JX41DrWd0OtBnE3rVwsN0',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -1919,7 +1922,7 @@ my @tests = (
             'DJR92YhjYtL4Q',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'android_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'android_legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -1949,7 +1952,7 @@ my @tests = (
             'ZUYoCaJ7X78ULyJTi5eT7nug',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -1977,7 +1980,7 @@ my @tests = (
             'oGnOXu3/DeWHJAwtSeh7EAr4',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -2007,7 +2010,7 @@ my @tests = (
             '8lGrxcPSfbCOW61k0MP+q1EhLZkc1qAm5g2+2cLNZcoBNEdh3yj8OTPZJyBVw',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -2030,7 +2033,7 @@ my @tests = (
             'iGXWxSL4u+AWSSePK3qiiYoRQVw',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -2053,7 +2056,7 @@ my @tests = (
             'ekw+EUscVvUkrsRcVtSvOm+fCNo',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -2086,7 +2089,7 @@ my @tests = (
             'rPAEnw',
         'server_positive_output_matches' => [qr/No\sstanza\sencryption\smode\smatch/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -2115,7 +2118,7 @@ my @tests = (
             'MKY',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -2139,7 +2142,7 @@ my @tests = (
             'hW04WpY8mdUNu9i+PrfPr7/KxqU',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -2162,7 +2165,7 @@ my @tests = (
             'yEkDgP5+f49xrRA',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging_nat'} -a $cf{'def_access'} " .
+            "$fwknopdCmd -c $cf{'disable_aging_nat'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fatal'    => $NO
     },
@@ -3328,7 +3331,8 @@ sub client_send_spa_packet() {
     $rv = 0 unless &file_find_regex([qr/final\spacked/i],
         $MATCH_ALL, $curr_test_file);
 
-    if ($enable_openssl_compatibility_tests) {
+    if ($enable_openssl_compatibility_tests
+            and $test_hr->{'detail'} !~ /iptables.*not\sduplicated/) {
 
         ### extract the SPA packet from the cmd tmp file before
         ### openssl command execution overwrites it
