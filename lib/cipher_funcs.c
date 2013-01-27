@@ -126,6 +126,11 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
     int             final_key_len = 0;
     size_t          kiv_len = 0;
 
+    memset(pw_buf,  0x00, RIJNDAEL_MAX_KEYSIZE);
+    memset(tmp_buf, 0x00, MD5_DIGEST_LEN+RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE);
+    memset(kiv_buf, 0x00, RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE);
+    memset(md5_buf, 0x00, MD5_DIGEST_LEN);
+
     if(legacy_enc_mode == 1)
     {
         /* First make pw 32 bytes (pad with "0" (ascii 0x30)) or truncate.
