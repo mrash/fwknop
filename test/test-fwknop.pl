@@ -4870,6 +4870,7 @@ sub perl_fko_module_full_fuzzing_packets() {
                         $curr_test_file);
                     return 0;
                 }
+                $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV);
                 $fko_obj->spa_data($encrypted_spa_pkt);
 
                 my $status = $fko_obj->decrypt_spa_data($fuzzing_key, length($fuzzing_key));

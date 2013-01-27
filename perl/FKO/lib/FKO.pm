@@ -27,6 +27,7 @@ our (
     @DIGEST_TYPES,
     @HMAC_DIGEST_TYPES,
     @ENCRYPTION_TYPES,
+    @ENCRYPTION_MODES,
     @ERROR_CODES
 );
 
@@ -39,6 +40,7 @@ our %EXPORT_TAGS = (
     'digest_types' => \@DIGEST_TYPES,
     'hmac_digest_types' => \@HMAC_DIGEST_TYPES,
     'encryption_types' => \@ENCRYPTION_TYPES,
+    'encryption_modes' => \@ENCRYPTION_MODES,
     'errors' => \@ERROR_CODES,
     'types' => [
         @MSG_TYPES,
@@ -50,6 +52,7 @@ our %EXPORT_TAGS = (
         @MSG_TYPES,
         @HMAC_DIGEST_TYPES,
         @ENCRYPTION_TYPES,
+        @ENCRYPTION_MODES,
         @ERROR_CODES
     ]
 );
@@ -172,6 +175,19 @@ sub encryption_type {
 
     $val = -1;
     $self->{_err} = FKO::_get_encryption_type($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub encryption_mode {
+    my $self = shift;
+    my $val  = shift;
+
+    return FKO::_set_encryption_mode($self->{_ctx}, $val)
+        if(defined($val));
+
+    $val = -1;
+    $self->{_err} = FKO::_get_encryption_mode($self->{_ctx}, $val);
 
     return($self->_check_return_val($val));
 }

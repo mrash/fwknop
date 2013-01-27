@@ -48,6 +48,19 @@ our @ENCRYPTION_TYPES = qw(
     FKO_ENCRYPTION_GPG
 );
 
+# Encryption modes tag list.
+#
+our @ENCRYPTION_MODES = qw(
+    FKO_ENC_MODE_ECB
+    FKO_ENC_MODE_CBC
+    FKO_ENC_MODE_CFB
+    FKO_ENC_MODE_PCBC
+    FKO_ENC_MODE_OFB
+    FKO_ENC_MODE_CTR
+    FKO_ENC_MODE_ASYMMETRIC
+    FKO_ENC_MODE_CBC_LEGACY_IV
+);
+
 # Error codes tag list.
 #
 our @ERROR_CODES = qw(
@@ -130,6 +143,16 @@ use constant {
     # Encryption types
     FKO_ENCRYPTION_RIJNDAEL => 1,
     FKO_ENCRYPTION_GPG      => 2,
+
+    # Encryption modes
+    FKO_ENC_MODE_ECB           => 1,
+    FKO_ENC_MODE_CBC           => 2,
+    FKO_ENC_MODE_CFB           => 3,
+    FKO_ENC_MODE_PCBC          => 4,
+    FKO_ENC_MODE_OFB           => 5,
+    FKO_ENC_MODE_CTR           => 6,
+    FKO_ENC_MODE_ASYMMETRIC    => 7,
+    FKO_ENC_MODE_CBC_LEGACY_IV => 8,
 
     # FKO error codes
     FKO_SUCCESS                                   => 0,

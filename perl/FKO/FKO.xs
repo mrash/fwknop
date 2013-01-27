@@ -158,6 +158,27 @@ _get_encryption_type(ctx, val)
     RETVAL
 
 int
+_set_encryption_mode(ctx, encryption_mode)
+    INPUT:
+    fko_ctx_t ctx;
+    short    encryption_mode;
+    CODE:
+    RETVAL = fko_set_spa_encryption_mode(ctx, encryption_mode);
+    OUTPUT:
+    RETVAL
+
+int
+_get_encryption_mode(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    short val
+    CODE:
+    RETVAL = fko_get_spa_encryption_mode(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
 _set_hmac_mode(ctx, hmac_mode)
     INPUT:
     fko_ctx_t ctx;
