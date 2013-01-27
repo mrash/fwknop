@@ -20,6 +20,8 @@ my $configure_path = 'configure';
 my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $data_tmp       = 'data.tmp';
+my $key_tmp        = 'key.tmp';
+my $enc_save_tmp   = 'openssl_save.enc';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
 my $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 my $replay_pcap_file = "$conf_dir/spa_replay.pcap";
@@ -203,6 +205,7 @@ exit 1 unless GetOptions(
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
+    'enable-dist-check' => \$enable_make_distcheck,  ### synonym
     'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
@@ -886,6 +889,7 @@ my @tests = (
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $tmp_rc_file,
         'fatal'    => $NO
     },
     {
@@ -908,6 +912,7 @@ my @tests = (
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_def_key'},
         'fatal'    => $NO
     },
     {
@@ -923,6 +928,7 @@ my @tests = (
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_def_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -937,6 +943,7 @@ my @tests = (
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_named_key'},
         'fatal'    => $NO
     },
     {
@@ -947,6 +954,7 @@ my @tests = (
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -975,6 +983,7 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -988,6 +997,7 @@ my @tests = (
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
 
@@ -1035,6 +1045,7 @@ my @tests = (
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $cf{'rc_file_named_key'} -n invalidstanza",
         'positive_output_matches' => [qr/Named\sconfiguration.*not\sfound/],
+        'key_file' => $cf{'rc_file_named_key'},
         'fatal'    => $NO
     },
     {
@@ -1046,6 +1057,7 @@ my @tests = (
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $cf{'rc_file_invalid_b64_key'} -n testssh",
         'positive_output_matches' => [qr/look\slike\sbase64\-encoded/],
+        'key_file' => $cf{'rc_file_invalide_b64_key'},
         'fatal'    => $NO
     },
 
@@ -2638,7 +2650,6 @@ my @tests = (
         'fatal'    => $NO
     },
 
-    
     ### GPG testing (with passwords associated with keys) - first check to
     ### see if pinentry is required and disable remaining GPG tests if so
     {
@@ -2673,6 +2684,7 @@ my @tests = (
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_def_key'},
         'fatal'    => $NO
     },
     {
@@ -2686,6 +2698,7 @@ my @tests = (
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_named_key'},
         'fatal'    => $NO
     },
     {
@@ -2889,6 +2902,7 @@ my %test_keys = (
     'cmdline'         => $OPTIONAL,
     'fwknopd_cmdline' => $OPTIONAL,
     'fatal'           => $OPTIONAL,
+    'key_file'        => $OPTIONAL,
     'exec_err'        => $OPTIONAL,
     'fw_rule_created' => $OPTIONAL,
     'fw_rule_removed' => $OPTIONAL,
@@ -3330,7 +3344,7 @@ sub client_send_spa_packet() {
                 $digest = $1;
             } elsif (/Encryption\sMode\:\s+(\d+)/) {
                 $enc_mode = $1;
-            } elsif (/HMAC\:\s\<NULL\>/) {
+            } elsif (/^\s+HMAC.*\:\s\<NULL\>/) {
                 $is_hmac_mode = 0;
             }
         }
@@ -3344,8 +3358,20 @@ sub client_send_spa_packet() {
 
         my $encrypted_msg = &get_spa_packet_from_file($cmd_out_tmp);
 
+        my $key = '';
+        if ($test_hr->{'key_file'}) {
+            open F, "< $test_hr->{'key_file'}" or die $!;
+            while (<F>) {
+                if (/^KEY_BASE64\s+(\S+)/) {
+                    $key = decode_base64($1);
+                }
+            }
+            close F;
+        }
+        $key = $default_key unless $key;
+
         unless (&openssl_verification($encrypted_msg,
-                $encoded_msg, '', $default_key, $ssl_test_flag)) {
+                $encoded_msg, '', $key, $ssl_test_flag)) {
             $rv = 0;
         }
     }
@@ -4260,21 +4286,16 @@ sub perl_fko_module_rijndael_truncated_keys() {
             for my $digest_type (@{valid_spa_digest_types()}[0]) {
 
                 my $key = '1';
-                for (my $i=2; $i <= 32; $i++) {
+                for (my $i=20; $i <= 32; $i++) {
 
                     $key .= $i % 10;
 
-                    if (length($key) < 16 and $key =~ /0$/) {
-                        ### word around the trailing zero problem for now
-                        $key =~ s/0$/X/;
-                    }
-
-                    &write_test_file("[+] key: $key (" . length($key) . " bytes)\n",
+                    &write_test_file("\n\n[+] ------ KEY: $key (" . length($key) . " bytes)\n",
                         $curr_test_file);
                     for (my $j=1; $j < length($key); $j++) {
 
-                        &write_test_file("    msg: $msg, user: $user, " .
-                            "digest type: $digest_type\n",
+                        &write_test_file("\n    MSG: $msg, user: $user, " .
+                            "digest type: $digest_type (orig key: $key)\n",
                             $curr_test_file);
 
                         $fko_obj = FKO->new();
@@ -4311,6 +4332,8 @@ sub perl_fko_module_rijndael_truncated_keys() {
                         $fko_obj->spa_data($encrypted_msg);
                         my $truncated_key = $key;
                         $truncated_key =~ s/^(.{$j}).*/$1/;
+                        &write_test_file("    Trying truncated key: $truncated_key\n",
+                            $curr_test_file);
                         if ($fko_obj->decrypt_spa_data($truncated_key,
                                 length($truncated_key)) == FKO->FKO_SUCCESS) {
                             &write_test_file("[-] $msg decrypt success with truncated key " .
@@ -5899,10 +5922,15 @@ sub immediate_binding() {
 
 sub openssl_verification() {
     my ($encrypted_msg, $encoded_msg, $access_msg, $key, $rv_flag) = @_;
+
     my $rv = 1;
 
+    my $rv_str = 'REQUIRE_SUCCESS';
+    $rv_str = 'REQUIRE_FAILURE' if $rv_flag == $REQUIRE_FAILURE;
+
     &write_test_file("[+] OpenSSL verification, (encoded msg: " .
-        "$encoded_msg) (access: $access_msg), key: $key, $encrypted_msg\n",
+        "$encoded_msg) (access: $access_msg), key: $key, " .
+        "encrypted+encoded msg: $encrypted_msg, $rv_str\n",
         $curr_test_file);
 
     ### transform encrypted message into the format that openssl expects
@@ -5922,17 +5950,55 @@ sub openssl_verification() {
     print F $encrypted_msg, "\n";
     close F;
 
+    open F, "> $key_tmp" or die $!;
+    print F $key;
+    close F;
+
     $rv = &run_cmd("$openssl_path enc -d -a -aes-256-cbc " .
-        "-pass pass:$key -in $data_tmp",
+        "-pass file:$key_tmp -in $data_tmp",
         $cmd_out_tmp, $curr_test_file);
 
     if ($rv) {
         if ($rv_flag == $REQUIRE_FAILURE) {
-            &write_test_file("[-] OpenSSL expected decryption failure, " .
-                "but did not get decryption error\n",
+            &write_test_file("[.] OpenSSL decryption did not generate " .
+                "error code exit status\n",
                 $curr_test_file);
             $rv = 0;
+
+            ### make absolutely certain that the decrypted data does not contain
+            ### a valid access message
+            my $decrypted_msg = '';
+            my $decrypted_access_msg = '';
+            open F, "< $cmd_out_tmp" or die $!;
+            while (<F>) {
+                if (/^(?:\S+?\:){5}(\S+?)\:/) {
+                    $decrypted_access_msg = $1;
+                    $decrypted_msg = $_;
+                }
+            }
+            close F;
+
+            if ($decrypted_msg) {
+                if ($encoded_msg and $encoded_msg eq $decrypted_msg) {
+                    &write_test_file("[-] OpenSSL DECRYPTED msg with truncated key!\n",
+                        $curr_test_file);
+                    $rv = 1;
+                }
+            }
+
+            if ($decrypted_access_msg) {
+                my $decoded_msg = decode_base64($decrypted_access_msg);
+                if ($decoded_msg) {
+                    if ($access_msg and $access_msg eq $decoded_msg) {
+                        &write_test_file("[-] OpenSSL DECRYPTED msg with truncated key!\n",
+                            $curr_test_file);
+                        $rv = 1;
+                    }
+                }
+            }
+
         } else {
+
             ### 2868244741993914:dGVzdA:2358972093:2.0.4:1:MS4yLjMANCx0YAAvMjI:vPFqXEA6SnzP2ScsIWAxhg
 
             ### make sure the access message checks out, or the entire
@@ -5976,13 +6042,16 @@ sub openssl_verification() {
                     $curr_test_file);
                 ### now check the exit status of re-encrypting the data
                 unless (&run_cmd("$openssl_path enc " .
-                        "-e -a -aes-256-cbc -pass pass:$key -in $data_tmp",
+                        "-e -a -aes-256-cbc -pass file:$key_tmp -in " .
+                        "$data_tmp -out $enc_save_tmp",
                         $cmd_out_tmp, $curr_test_file)) {
 
                     &write_test_file("[-] OpenSSL could not re-encrypt\n",
                         $curr_test_file);
+
                     $rv = 0;
                 }
+
             } else {
                 &write_test_file("[-] OpenSSL access message " .
                     "mis-match in decrypted data\n",
@@ -6009,7 +6078,7 @@ sub openssl_verification() {
             $openssl_success_ctr++;
         } else {
             &write_test_file("[-] OpenSSL test failure (expected " .
-                "encryption/decryption success)\n",
+                "encryption/decryption failure)\n",
                 $curr_test_file);
             $openssl_failure_ctr++;
             $rv = 0;
