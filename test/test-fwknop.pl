@@ -2455,7 +2455,6 @@ my @tests = (
         'function' => \&perl_fko_module_full_fuzzing_packets,
         'fatal'    => $NO
     },
-
     {
         'category' => 'perl FKO module',
         'subcategory' => 'compatibility',
@@ -2464,6 +2463,35 @@ my @tests = (
         'function' => \&perl_fko_module_client_compatibility,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'compatibility',
+        'detail'   => 'FKO -> C invalid legacy IV',
+        'err_msg'  => 'invalid SPA packet data',
+        'function' => \&perl_fko_module_client_compatibility,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "$intf_str",
+        'server_positive_output_matches' => [qr/Decryption failed/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'compatibility',
+        'detail'   => 'FKO -> C valid legacy IV',
+        'err_msg'  => 'invalid SPA packet data',
+        'function' => \&perl_fko_module_client_compatibility,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "$intf_str",
+        'set_legacy_iv' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
@@ -2912,6 +2940,7 @@ my %test_keys = (
     'server_conf'     => $OPTIONAL,
     'pkt_prefix'      => $OPTIONAL,
     'no_ip_check'     => $OPTIONAL,
+    'set_legacy_iv'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
@@ -4905,6 +4934,8 @@ sub perl_fko_module_client_compatibility() {
 
     $fko_obj->spa_message("$fake_ip,tcp/22");
     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+    $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
+        if $test_hr->{'set_legacy_iv'};
     $fko_obj->spa_data_final($default_key, length($default_key), '', 0);
     my $spa_pkt = $fko_obj->spa_data();
     $fko_obj->destroy();
@@ -4923,11 +4954,16 @@ sub perl_fko_module_client_compatibility() {
 
     $rv = 0 unless $server_was_stopped;
 
-    if ($fw_rule_created) {
-        &write_test_file("[+] new fw rule created.\n", $curr_test_file);
-    } else {
-        &write_test_file("[-] new fw rule not created.\n", $curr_test_file);
-        $rv = 0;
+    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
+        $rv = 0 unless $fw_rule_created;
+    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
+        $rv = 0 if $fw_rule_created;
+    }
+
+    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
+        $rv = 0 unless $fw_rule_removed;
+    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
+        $rv = 0 if $fw_rule_removed;
     }
 
     if ($test_hr->{'server_positive_output_matches'}) {
