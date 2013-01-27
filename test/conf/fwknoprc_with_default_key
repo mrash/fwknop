@@ -51,7 +51,7 @@ KEY                 fwknoptest
 # User-provided named stanzas:
 
 # Example for a destination server of 192.168.1.20 to open access to 
-# SSH for an IP that is resoved exteranlly, and one with a NAT request
+# SSH for an IP that is resoved externally, and one with a NAT request
 # for a specific source IP that maps port 8088 on the server
 # to port 88 on 192.168.1.55 with timeout.
 #
