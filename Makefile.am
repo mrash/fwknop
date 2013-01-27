@@ -123,18 +123,34 @@ EXTRA_DIST = \
     test/conf/server-gpg-no-pw/secring.gpg \
     test/conf/server-gpg-no-pw/trustdb.gpg \
     test/conf/android_access.conf \
+    test/conf/android_legacy_iv_access.conf \
+    test/conf/base64_key_access.conf \
+    test/conf/cfb_mode_access.conf \
+    test/conf/cmd_access.conf \
+    test/conf/ctr_mode_access.conf \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
+    test/conf/disable_aging_fwknopd.conf \
+    test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
+    test/conf/ecb_mode_access.conf \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
     test/conf/force_nat_access.conf \
     test/conf/future_expired_stanza_access.conf \
-    test/conf/cmd_access.conf \
+    test/conf/fuzzing_open_ports_access.conf \
+    test/conf/fuzzing_restrict_ports_access.conf \
+    test/conf/fuzzing_source_access.conf \
     test/conf/gpg_access.conf \
     test/conf/gpg_no_pw_access.conf \
+    test/conf/hmac_access.conf \
+    test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
+    test/conf/invalid_source_access.conf \
+    test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
+    test/conf/legacy_iv_access.conf \
+    test/conf/local_nat_fwknopd.conf \
     test/conf/mismatch_open_ports_access.conf \
     test/conf/mismatch_user_access.conf \
     test/conf/multi_gpg_access.conf \
@@ -143,23 +159,16 @@ EXTRA_DIST = \
     test/conf/multi_stanzas_access.conf \
     test/conf/multi_stanzas_with_broken_keys.conf \
     test/conf/nat_fwknopd.conf \
-    test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/no_multi_source_match_access.conf \
     test/conf/no_source_match_access.conf \
     test/conf/no_subnet_source_match_access.conf \
+    test/conf/ofb_mode_access.conf \
     test/conf/open_ports_access.conf \
     test/conf/override_fwknopd.conf \
     test/conf/require_src_access.conf \
     test/conf/require_user_access.conf \
     test/conf/subnet_source_match_access.conf \
-    test/conf/local_nat_fwknopd.conf \
-    test/conf/disable_aging_fwknopd.conf \
-    test/conf/disable_aging_nat_fwknopd.conf \
-    test/conf/fuzzing_source_access.conf \
-    test/conf/fuzzing_open_ports_access.conf \
-    test/conf/fuzzing_restrict_ports_access.conf \
     test/conf/tcp_pcap_filter_fwknopd.conf \
-    test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/tcp_server_fwknopd.conf \
     test/conf/spa_replay.pcap \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
