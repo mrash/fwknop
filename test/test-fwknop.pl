@@ -154,6 +154,9 @@ my $enable_openssl_compatibility_tests = 0;
 my $openssl_success_ctr = 0;
 my $openssl_failure_ctr = 0;
 my $openssl_ctr = 0;
+my $fuzzing_success_ctr = 0;
+my $fuzzing_failure_ctr = 0;
+my $fuzzing_ctr = 0;
 my $sudo_path = '';
 my $gcov_path = '';
 my $killall_path = '';
@@ -2976,11 +2979,6 @@ for my $test_hr (@tests) {
     }
 }
 
-if ($enable_openssl_compatibility_tests) {
-    &logr("\n[+] OpenSSL tests passed/failed/executed: " .
-        "$openssl_success_ctr/$openssl_failure_ctr/$openssl_ctr tests\n");
-}
-
 if ($use_valgrind) {
     &run_test(
         {
@@ -2994,7 +2992,15 @@ if ($use_valgrind) {
     );
 }
 
-&logr("\n[+] passed/failed/executed: $passed/$failed/$executed tests\n\n");
+if ($enable_openssl_compatibility_tests) {
+    &logr("\n[+] $openssl_success_ctr/$openssl_failure_ctr/$openssl_ctr " .
+        "OpenSSL tests passed/failed/executed\n");
+}
+if ($fuzzing_ctr > 0) {
+    &logr("[+] $fuzzing_success_ctr/$fuzzing_failure_ctr/$fuzzing_ctr " .
+        "Fuzzing tests passed/failed/executed\n");
+}
+&logr("[+] $passed/$failed/$executed tests passed/failed/executed\n\n");
 
 copy $logfile, "$output_dir/$logfile" or die $!;
 
@@ -4908,10 +4914,13 @@ sub perl_fko_module_full_fuzzing_packets() {
                     &write_test_file("[-] Accepted fuzzing $field $field_val SPA packet.\n",
                         $curr_test_file);
                     $rv = 0;
+                    $fuzzing_failure_ctr++;
                 } else {
                     &write_test_file("[+] Rejected fuzzing $field $field_val SPA packet.\n",
                         $curr_test_file);
+                    $fuzzing_success_ctr++;
                 }
+                $fuzzing_ctr++;
 
                 $fko_obj->destroy();
             }
@@ -5343,6 +5352,13 @@ sub fuzzer() {
             $test_hr->{'server_positive_output_matches'},
             $MATCH_ALL, $server_test_file);
     }
+
+    if ($rv) {
+        $fuzzing_success_ctr++;
+    } else {
+        $fuzzing_failure_ctr++;
+    }
+    $fuzzing_ctr++;
 
     return $rv;
 }
