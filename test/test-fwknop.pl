@@ -2432,6 +2432,16 @@ my @tests = (
         'detail'   => 'libfko complete cycle',
         'err_msg'  => 'could not finish complete cycle',
         'function' => \&perl_fko_module_complete_cycle,
+        'set_legacy_iv' => $NO,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'encrypt/decrypt',
+        'detail'   => 'libfko complete cycle (lIV)',
+        'err_msg'  => 'could not finish complete cycle',
+        'function' => \&perl_fko_module_complete_cycle,
+        'set_legacy_iv' => $YES,
         'fatal'    => $NO
     },
     {
@@ -2448,16 +2458,37 @@ my @tests = (
         'detail'   => 'complete cycle (mod reuse)',
         'err_msg'  => 'could not finish complete cycle',
         'function' => \&perl_fko_module_complete_cycle_module_reuse,
+        'set_legacy_iv' => $NO,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'encrypt/decrypt',
+        'detail'   => 'complete cycle (mod reuse, lIV)',
+        'err_msg'  => 'could not finish complete cycle',
+        'function' => \&perl_fko_module_complete_cycle_module_reuse,
+        'set_legacy_iv' => $YES,
         'fatal'    => $NO
     },
     {
         'category' => 'perl FKO module',
         'subcategory' => 'fuzzing data',
-        'detail'   => 'server fuzzing REPLPKTS',
+        'detail'   => 'legacy IV REPLPKTS',
         'err_msg'  => 'server accepted fuzzing pkts',
         'function' => \&perl_fko_module_full_fuzzing_packets,
+        'set_legacy_iv' => $YES,
         'fatal'    => $NO
     },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'fuzzing data',
+        'detail'   => 'non-legacy IV REPLPKTS',
+        'err_msg'  => 'server accepted fuzzing pkts',
+        'function' => \&perl_fko_module_full_fuzzing_packets,
+        'set_legacy_iv' => $NO,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'perl FKO module',
         'subcategory' => 'compatibility',
@@ -2992,8 +3023,9 @@ if ($use_valgrind) {
     );
 }
 
+&logr("\n");
 if ($enable_openssl_compatibility_tests) {
-    &logr("\n[+] $openssl_success_ctr/$openssl_failure_ctr/$openssl_ctr " .
+    &logr("[+] $openssl_success_ctr/$openssl_failure_ctr/$openssl_ctr " .
         "OpenSSL tests passed/failed/executed\n");
 }
 if ($fuzzing_ctr > 0) {
@@ -4428,6 +4460,8 @@ sub perl_fko_module_complete_cycle() {
                     $fko_obj->username($user);
                     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
                     $fko_obj->digest_type($digest_type);
+                    $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
+                        if $test_hr->{'set_legacy_iv'} eq $YES;
                     $fko_obj->spa_data_final($key, length($key), '', 0);
 
                     my $encrypted_msg = $fko_obj->spa_data();
@@ -4491,6 +4525,8 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     $fko_obj->username($user);
                     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
                     $fko_obj->digest_type($digest_type);
+                    $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
+                        if $test_hr->{'set_legacy_iv'} eq $YES;
                     $fko_obj->spa_data_final($key, length($key), '', 0);
 
                     my $encrypted_msg = $fko_obj->spa_data();
@@ -4507,8 +4543,10 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     $fko_obj->destroy();
 
                     if ($enable_openssl_compatibility_tests) {
+                        my $flag = $REQUIRE_SUCCESS;
+                        $flag = $REQUIRE_FAILURE if $test_hr->{'set_legacy_iv'} eq $YES;
                         unless (&openssl_verification($encrypted_msg,
-                                '', $msg, $key, $REQUIRE_SUCCESS)) {
+                                '', $msg, $key, $flag)) {
                             $rv = 0;
                         }
                     }
@@ -4905,7 +4943,8 @@ sub perl_fko_module_full_fuzzing_packets() {
                         $curr_test_file);
                     return 0;
                 }
-                $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV);
+                $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
+                    if $test_hr->{'set_legacy_iv'} eq $YES;
                 $fko_obj->spa_data($encrypted_spa_pkt);
 
                 my $status = $fko_obj->decrypt_spa_data($fuzzing_key, length($fuzzing_key));
@@ -4944,7 +4983,7 @@ sub perl_fko_module_client_compatibility() {
     $fko_obj->spa_message("$fake_ip,tcp/22");
     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
     $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
-        if $test_hr->{'set_legacy_iv'};
+        if $test_hr->{'set_legacy_iv'} eq $YES;
     $fko_obj->spa_data_final($default_key, length($default_key), '', 0);
     my $spa_pkt = $fko_obj->spa_data();
     $fko_obj->destroy();
