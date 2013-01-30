@@ -4476,6 +4476,8 @@ sub perl_fko_module_complete_cycle() {
                         return 0;
                     }
                     $fko_obj->spa_data($encrypted_msg);
+                    $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
+                        if $test_hr->{'set_legacy_iv'} eq $YES;
                     $fko_obj->decrypt_spa_data($key, length($key));
 
                     if ($msg ne $fko_obj->spa_message()) {
@@ -4487,8 +4489,10 @@ sub perl_fko_module_complete_cycle() {
                     $fko_obj->destroy();
 
                     if ($enable_openssl_compatibility_tests) {
+                        my $flag = $REQUIRE_SUCCESS;
+                        $flag = $REQUIRE_FAILURE if $test_hr->{'set_legacy_iv'} eq $YES;
                         unless (&openssl_verification($encrypted_msg,
-                                '', $msg, $key, $REQUIRE_SUCCESS)) {
+                                '', $msg, $key, $flag)) {
                             $rv = 0;
                         }
                     }
