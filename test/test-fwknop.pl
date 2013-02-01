@@ -1802,7 +1802,7 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'replay detection (Rijndael prefix)',
+        'detail'   => 'detect replay #1 (Rijndael prefix)',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'U2FsdGVkX1',
@@ -2234,7 +2234,7 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'replay detection (Rijndael prefix)',
+        'detail'   => 'detect replay #2 (Rijndael prefix)',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'U2FsdGVkX1',
@@ -2647,7 +2647,7 @@ my @tests = (
     {
         'category' => 'GPG (no pw) SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'replay detection (GnuPG prefix)',
+        'detail'   => 'detect replay #1 (GnuPG prefix)',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
@@ -2866,7 +2866,7 @@ my @tests = (
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'replay detection (GnuPG prefix)',
+        'detail'   => 'detect replay #2 (GnuPG prefix)',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
@@ -2879,7 +2879,7 @@ my @tests = (
     {
         'category' => 'GnuPG (GPG) SPA',
         'subcategory' => 'client+server',
-        'detail'   => 'replay detection (GnuPG prefix)',
+        'detail'   => 'detect replay #3 (GnuPG prefix)',
         'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
@@ -6506,6 +6506,19 @@ sub init() {
     if ($test_exclude) {
         for my $re (split /\s*,\s*/, $test_exclude) {
             push @tests_to_exclude, qr/$re/;
+        }
+    }
+
+    ### make sure test message strings are unique across all tests
+    my %uniq_test_msgs = ();
+    for my $test_hr (@tests) {
+        my $msg = "[$test_hr->{'category'}]";
+        $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
+        $msg .= " $test_hr->{'detail'}";
+        if (defined $uniq_test_msgs{$msg}) {
+            die "[*] Duplicate test message: $msg\n";
+        } else {
+            $uniq_test_msgs{$msg} = '';
         }
     }
 
