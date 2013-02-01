@@ -1813,7 +1813,7 @@ my @tests = (
         'fatal'    => $NO
     },
 
-    ### ensure iptables rules are not duplicate for identical access requests
+    ### ensure iptables rules are not duplicated for identical access requests
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -5190,11 +5190,23 @@ sub iptables_rules_not_duplicated() {
     ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    if ($test_hr->{'server_negative_output_matches'}) {
-        $rv = 0 if &file_find_regex(
-            $test_hr->{'server_negative_output_matches'},
-            $MATCH_ANY, $server_test_file);
+    ### make sure there aren't two iptables rule with the same creation time
+    my $time_stamp = 0;
+    open F, "< $server_test_file" or die $!;
+    while (<F>) {
+        ### 1    ACCEPT    tcp  --  127.0.0.2    0.0.0.0/0   tcp dpt:22 /* _exp_1359688354 */
+        if (m|^\d+\s+.*$fake_ip\s+.*_exp_(\d+)|) {
+            $time_stamp = $1;
+            next;
+        }
+        if ($time_stamp) {
+            if (/^2\s+.*$fake_ip\s+.*_exp_$time_stamp/) {
+                $rv = 0;
+                last;
+            }
+        }
     }
+    close F;
 
     return $rv;
 }
