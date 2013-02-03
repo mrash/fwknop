@@ -119,6 +119,7 @@ my $test_exclude = '';
 my @tests_to_exclude = ();
 my %valgrind_flagged_fcns = ();
 my %valgrind_flagged_fcns_unique = ();
+my $previous_valgrind_coverage_dir = '';
 my $uniq_keys = 100;
 my $test_limit = 0;
 my $list_mode = 0;
@@ -140,6 +141,7 @@ my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
 my $use_valgrind = 0;
 my $valgrind_str = '';
+my %prev_valgrind_cov = ();
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
 my $saved_last_results = 0;
@@ -217,6 +219,9 @@ exit 1 unless GetOptions(
     'enable-valgrind'   => \$use_valgrind,
     'enable-all'        => \$enable_all,
     'valgrind-path=s'   => \$valgrindCmd,
+    ### can set the following to "output.last/valgrind-coverage" if
+    ### a full test suite run has already been executed with --enable-valgrind
+    'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
     'output-dir=s'      => \$output_dir,
     'diff'              => \$diff_mode,
     'diff-dir1=s'       => \$diff_dir1,
@@ -6700,7 +6705,62 @@ sub identify_loopback_intf() {
     return;
 }
 
+sub import_previous_valgrind_coverage_info() {
+
+    if ($previous_valgrind_coverage_dir) {
+        die "[*] $previous_valgrind_coverage_dir does not exist"
+            unless -d $previous_valgrind_coverage_dir;
+    } else {
+        ### try the previous output.last/valgrind-coverage dir first
+        $previous_valgrind_coverage_dir = "${output_dir}.last/$valgrind_cov_dir";
+
+        unless (-d $previous_valgrind_coverage_dir) {
+            my $os = 'linux';
+            $os = 'freebsd' if $platform == $FREEBSD;
+            $previous_valgrind_coverage_dir = "valgrind-coverage/$os";
+        }
+    }
+
+    return unless -d $previous_valgrind_coverage_dir;
+
+    for my $file (glob("$previous_valgrind_coverage_dir/*.test")) {
+
+        my $test_title = '';
+
+        my $type = 'server';
+        $type = 'client' if $file =~ /\d\.test/;
+        my $found = 0;
+
+        open F, "< $file" or die $!;
+        while (<F>) {
+            if (/TEST\:\s/) {
+                $test_title = $_;
+                chomp $test_title;
+                next;
+            }
+            ### stop after the unique functions view
+            last if /with\scall\sline\snumbers/;
+            if ($test_title) {
+                if (/^\s+(\d+)\s\:\s(.*)/) {
+                    $prev_valgrind_cov{$type}{$test_title}{$2} = $1;
+                    $found = 1;
+                }
+            }
+        }
+        close F;
+    }
+
+    return;
+}
+
 sub parse_valgrind_flagged_functions() {
+
+    my $rv = 1;
+
+    &import_previous_valgrind_coverage_info();
+
+    mkdir "$output_dir/$valgrind_cov_dir"
+        unless -d "$output_dir/$valgrind_cov_dir";
 
     for my $file (glob("$output_dir/*.test")) {
 
@@ -6720,20 +6780,21 @@ sub parse_valgrind_flagged_functions() {
                 $valgrind_flagged_fcns_unique{$type}{$1}++;
                 $file_scope_flagged_fcns{"$1 $2"}++;
                 $file_scope_flagged_fcns_unique{$1}++;
-            } elsif (/TEST:\s/) {
+            } elsif (/TEST\:\s/) {
                 $test_title = $_;
+                chomp $test_title;
             }
         }
         close F;
 
-        ### write out flagged fcns for this file
-        mkdir "$output_dir/$valgrind_cov_dir"
-            unless -d "$output_dir/$valgrind_cov_dir";
+        next if $test_title =~ /valgrind\soutput/;
 
+        ### write out flagged fcns for this file
         if ($filename) {
             open F, "> $output_dir/$valgrind_cov_dir/$filename"
                 or die "[*] Could not open file $output_dir/$valgrind_cov_dir/$filename: $!";
-            print F $test_title;
+            print F $test_title, "\n";
+
             if (keys %file_scope_flagged_fcns_unique) {
                 print F "\n[+] fwknop functions (unique view):\n";
                 for my $fcn (sort {$file_scope_flagged_fcns_unique{$b}
@@ -6750,6 +6811,44 @@ sub parse_valgrind_flagged_functions() {
                 }
             }
             close F;
+
+            my $new_flagged_fcns = 0;
+
+            ### look for differences in flagged functions between the two
+            ### test runs
+            for my $fcn (sort {$file_scope_flagged_fcns_unique{$b}
+                    <=> $file_scope_flagged_fcns_unique{$a}}
+                    keys %file_scope_flagged_fcns_unique) {
+                if (defined $prev_valgrind_cov{$type}
+                        and defined $prev_valgrind_cov{$type}{$test_title}
+                        and defined $prev_valgrind_cov{$type}{$test_title}{$fcn}) {
+                    my $prev_calls = $prev_valgrind_cov{$type}{$test_title}{$fcn};
+                    my $curr_calls = $file_scope_flagged_fcns_unique{$fcn};
+                    if ($prev_calls != $curr_calls) {
+                        open F, ">> $curr_test_file" or die $!;
+                        print F "[-] $filename ($type) '$test_title' --> Larger number of flagged calls to " .
+                            "$fcn (current: $curr_calls, previous: $prev_calls)\n";
+                        close F;
+                        $new_flagged_fcns = 1;
+                    }
+                } else {
+                    open F, ">> $curr_test_file" or die $!;
+                    print F "[-] $filename ($type) '$test_title' --> NEW valgrind flagged function: $fcn\n";
+                    close F;
+                    $new_flagged_fcns = 1;
+                }
+            }
+
+            if ($new_flagged_fcns) {
+                open F, ">> $curr_test_file" or die $!;
+                print F "[-] $filename New and/or greater number of valgrind flagged function calls\n";
+                close F;
+                $rv = 0;
+            } else {
+                open F, ">> $curr_test_file" or die $!;
+                print F "[+] $filename No new or greater number of valgrind flagged function calls\n";
+                close F;
+            }
         }
     }
 
@@ -6771,7 +6870,7 @@ sub parse_valgrind_flagged_functions() {
 
     }
     close F;
-    return 1;
+    return $rv;
 }
 
 sub is_fw_rule_active() {
@@ -6913,55 +7012,60 @@ sub usage() {
 
 [+] $0 <options>
 
-    -A   --Anonymize-results      - Prepare anonymized results at:
-                                    $tarfile
-    --diff                        - Compare the results of one test run to
-                                    another.  By default this compares output
-                                    in ${output_dir}.last to $output_dir
-    --diff-dir1=<path>            - Left hand side of diff directory path,
-                                    default is: ${output_dir}.last
-    --diff-dir2=<path>            - Right hand side of diff directory path,
-                                    default is: $output_dir
-    --include=<regex>             - Specify a regex to be used over test
-                                    names that must match.
-    --exclude=<regex>             - Specify a regex to be used over test
-                                    names that must not match.
-    --enable-recompile            - Recompile fwknop sources and look for
-                                    compilation warnings.
-    --enable-valgrind             - Run every test underneath valgrind.
-    --enable-ip-resolve           - Enable client IP resolution (-R) test -
-                                    this requires internet access.
-    --enable-distcheck            - Enable 'make dist' check.
-    --enable-perl-module-checks   - Run a series of tests against libfko via
-                                    the perl FKO module.
-    --enable-perl-module-pkt-gen  - Generate a series of fuzzing packets via
-                                    the perl FKO module (assumes a patched
-                                    libfko code to accept fuzzing values). The
-                                    generated packets are placed in:
-                                    $fuzzing_pkts_file
-    --enable-all                  - Enable tests that aren't enabled by
-                                    default, except that --enable-valgrind
-                                    must also be set if valgrind mode is
-                                    desired.
-    --fuzzing-pkts-file <file>    - Specify path to fuzzing packet file.
-    --fuzzing-pkts-append         - When generating new fuzzing packets,
-                                    append them to the fuzzing packets file.
-    --List                        - List test names.
-    --test-limit=<num>            - Limit the number of tests that will run.
-    --loopback-intf=<intf>        - Specify loopback interface name (default
-                                    depends on the OS where the test suite
-                                    is executed).
-    --output-dir=<path>           - Path to output directory, default is:
-                                    $output_dir
-    --fwknop-path=<path>          - Path to fwknop binary, default is:
-                                    $fwknopCmd
-    --fwknopd-path=<path>         - Path to fwknopd binary, default is:
-                                    $fwknopdCmd
-    --libfko-path=<path>          - Path to libfko, default is:
-                                    $libfko_bin
-    --valgrind-path=<path>        - Path to valgrind, default is:
-                                    $valgrindCmd
-    -h   --help                   - Display usage on STDOUT and exit.
+    -A   --Anonymize-results       - Prepare anonymized results at:
+                                     $tarfile
+    --diff                         - Compare the results of one test run to
+                                     another.  By default this compares output
+                                     in ${output_dir}.last to $output_dir
+    --diff-dir1=<path>             - Left hand side of diff directory path,
+                                     default is: ${output_dir}.last
+    --diff-dir2=<path>             - Right hand side of diff directory path,
+                                     default is: $output_dir
+    --include=<regex>              - Specify a regex to be used over test
+                                     names that must match.
+    --exclude=<regex>              - Specify a regex to be used over test
+                                     names that must not match.
+    --enable-recompile             - Recompile fwknop sources and look for
+                                     compilation warnings.
+    --enable-valgrind              - Run every test underneath valgrind.
+    --enable-ip-resolve            - Enable client IP resolution (-R) test -
+                                     this requires internet access.
+    --enable-distcheck             - Enable 'make dist' check.
+    --enable-perl-module-checks    - Run a series of tests against libfko via
+                                     the perl FKO module.
+    --enable-perl-module-pkt-gen   - Generate a series of fuzzing packets via
+                                     the perl FKO module (assumes a patched
+                                     libfko code to accept fuzzing values).
+                                     The generated packets are placed in:
+                                     $fuzzing_pkts_file
+    --enable-openssl-checks        - Enable tests to verify that Rijndael
+                                     cipher usage is compatible with openssl.
+    --enable-all                   - Enable tests that aren't enabled by
+                                     default, except that --enable-valgrind
+                                     must also be set if valgrind mode is
+                                     desired.
+    --fuzzing-pkts-file <file>     - Specify path to fuzzing packet file.
+    --fuzzing-pkts-append          - When generating new fuzzing packets,
+                                     append them to the fuzzing packets file.
+    --List                         - List test names.
+    --test-limit=<num>             - Limit the number of tests that will run.
+    --loopback-intf=<intf>         - Specify loopback interface name (default
+                                     depends on the OS where the test suite
+                                     is executed).
+    --output-dir=<path>            - Path to output directory, default is:
+                                     $output_dir
+    --fwknop-path=<path>           - Path to fwknop binary, default is:
+                                     $fwknopCmd
+    --fwknopd-path=<path>          - Path to fwknopd binary, default is:
+                                     $fwknopdCmd
+    --libfko-path=<path>           - Path to libfko, default is:
+                                     $libfko_bin
+    --valgrind-path=<path>         - Path to valgrind, default is:
+                                     $valgrindCmd
+    --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
+                                     directory (can set to
+                                     "output.last/valgrind-coverage").
+    -h   --help                    - Display usage on STDOUT and exit.
 
 _HELP_
     exit 0;
