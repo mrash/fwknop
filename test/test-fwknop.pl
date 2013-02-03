@@ -6748,6 +6748,10 @@ sub import_previous_valgrind_coverage_info() {
             }
         }
         close F;
+
+        unless ($found) {
+            $prev_valgrind_cov{$type}{$test_title}{'NO_FLAGGED_FCNS'} = '';
+        }
     }
 
     return;
@@ -6820,22 +6824,24 @@ sub parse_valgrind_flagged_functions() {
                     <=> $file_scope_flagged_fcns_unique{$a}}
                     keys %file_scope_flagged_fcns_unique) {
                 if (defined $prev_valgrind_cov{$type}
-                        and defined $prev_valgrind_cov{$type}{$test_title}
-                        and defined $prev_valgrind_cov{$type}{$test_title}{$fcn}) {
-                    my $prev_calls = $prev_valgrind_cov{$type}{$test_title}{$fcn};
-                    my $curr_calls = $file_scope_flagged_fcns_unique{$fcn};
-                    if ($prev_calls != $curr_calls) {
+                        and defined $prev_valgrind_cov{$type}{$test_title}) {
+                    ### we're looking at a matching test results file at this point
+                    if (defined $prev_valgrind_cov{$type}{$test_title}{$fcn}) {
+                        my $prev_calls = $prev_valgrind_cov{$type}{$test_title}{$fcn};
+                        my $curr_calls = $file_scope_flagged_fcns_unique{$fcn};
+                        if ($curr_calls > $prev_calls) {
+                            open F, ">> $curr_test_file" or die $!;
+                            print F "[-] $filename ($type) '$test_title' --> Larger number of flagged calls to " .
+                                "$fcn (current: $curr_calls, previous: $prev_calls)\n";
+                            close F;
+                            $new_flagged_fcns = 1;
+                        }
+                    } else {
                         open F, ">> $curr_test_file" or die $!;
-                        print F "[-] $filename ($type) '$test_title' --> Larger number of flagged calls to " .
-                            "$fcn (current: $curr_calls, previous: $prev_calls)\n";
+                        print F "[-] $filename ($type) '$test_title' --> NEW valgrind flagged function: $fcn\n";
                         close F;
                         $new_flagged_fcns = 1;
                     }
-                } else {
-                    open F, ">> $curr_test_file" or die $!;
-                    print F "[-] $filename ($type) '$test_title' --> NEW valgrind flagged function: $fcn\n";
-                    close F;
-                    $new_flagged_fcns = 1;
                 }
             }
 
