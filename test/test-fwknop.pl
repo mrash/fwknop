@@ -765,6 +765,19 @@ my @tests = (
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
+        'detail'   => 'rotate digest file',
+        'err_msg'  => 'could not rotate digest file',
+        'function' => \&rotate_digest_file,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str --rotate-digest-cache",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client+server',
         'detail'   => 'permissions check cycle (tcp/22)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&permissions_check,
@@ -3472,6 +3485,26 @@ sub permissions_check() {
             $test_hr->{'server_positive_output_matches'},
             $MATCH_ALL, $server_test_file);
     }
+    return $rv;
+}
+
+sub rotate_digest_file() {
+    my $test_hr = shift;
+    my $rv = 1;
+
+    $rv = &spa_cycle($test_hr);
+
+    if (-e "${default_digest_file}-old") {
+        ### put the file back in place
+        move "${default_digest_file}-old", $default_digest_file;
+        &write_test_file("[+] digest cache file was rotated.\n",
+            $curr_test_file);
+    } else {
+        &write_test_file("[-] rotated digest cache file does not exist.\n",
+            $curr_test_file);
+        $rv = 0;
+    }
+
     return $rv;
 }
 
@@ -6646,8 +6679,10 @@ sub init() {
         push @tests_to_exclude, qr|active/expire sets|;
     }
 
-    if (-e $default_digest_file) {
-        unlink $default_digest_file;
+    for my $file ($default_digest_file, "${default_digest_file}-old") {
+        if (-e $file) {
+            unlink $file;
+        }
     }
 
     return;
@@ -6762,6 +6797,19 @@ sub parse_valgrind_flagged_functions() {
     my $rv = 1;
 
     &import_previous_valgrind_coverage_info();
+
+    if (%prev_valgrind_cov) {
+        &write_test_file("[+] Imported previous valgrind data from: " .
+            "$previous_valgrind_coverage_dir\n", $curr_test_file);
+    } else {
+        if (-d $previous_valgrind_coverage_dir) {
+            &write_test_file("[-] Did not import previous valgrind data " .
+                "from: $previous_valgrind_coverage_dir\n", $curr_test_file);
+        } else {
+            &write_test_file("[-] Previous valgrind data dir does not exist: " .
+                "from: $previous_valgrind_coverage_dir\n", $curr_test_file);
+        }
+    }
 
     mkdir "$output_dir/$valgrind_cov_dir"
         unless -d "$output_dir/$valgrind_cov_dir";

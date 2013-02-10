@@ -109,11 +109,14 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
 #if USE_FILE_CACHE
     strlcpy(new_file, opts->config[CONF_DIGEST_FILE],
         strlen(opts->config[CONF_DIGEST_FILE])+5);
+    strlcat(new_file, "-old",
+            strlen(opts->config[CONF_DIGEST_FILE])+5);
 #else
     strlcpy(new_file, opts->config[CONF_DIGEST_DB_FILE],
         strlen(opts->config[CONF_DIGEST_DB_FILE])+5);
+    strlcat(new_file, "-old",
+            strlen(opts->config[CONF_DIGEST_DB_FILE])+5);
 #endif
-    strcat(new_file, "-old");
 
 #if USE_FILE_CACHE
     res = rename(opts->config[CONF_DIGEST_FILE], new_file);
@@ -130,6 +133,9 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
 #endif
         );
 #endif /* NO_DIGEST_CACHE */
+
+    if(new_file != NULL)
+        free(new_file);
 }
 
 static void
