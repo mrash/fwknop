@@ -1,0 +1,69 @@
+* 2.5
+** HMAC support
+   Usage of an HMAC will be optional and not the default in order to remain
+   backwards compatible with older non-HMAC capable versions of fwknop.  The
+   libfko API will change though, so backwards compatibility will be
+   maintained in the sense that an SPA packet produced by the fwknop-2.5
+   client can be decrypted by a pre-2.5 server, but pre-2.5 code cannot use
+   the libfko 2.5 code and vice versa.
+** OpenSSL compatibility by default for AES usage
+   The legacy way of generating salt + IV will be available through server
+   access.conf variable support and a client command line argument.  This will
+   allow users to upgrade and not break backwards compatibility from a raw SPA
+   communications perspective.
+** Key generation support
+   Allow encryption and HMAC keys to be automatically generated and stored.
+   This allows stronger keys to be used than normal user-provided passwords.
+** Key lengths passed to encryption routines - C strings not required
+   Specify encryption and HMAC key lengths via explicitly passing their length
+   to crypto routines.  This allows random data to be used for key information
+   from the key generation code, and does not force libfko to guess at key
+   length by the existence of a NULL char (which can now be part of a key).
+* 2.6
+** Privilege separation support
+   Only two areas of fwknopd need to run as root: packet acquisition and
+   firewall rule adjustment.  Everything else should run as non-privileged 
+   user.
+** UDP listener support (no pcap dependency)
+   Since nmap cannot tell the difference between a filtered or open UDP server
+   when nothing is sent back in response to a probe (no UDP server is ever
+   obligated to return anything out of necessity), there is room for a mode of
+   operation where fwknopd binds to a UDP port and uses it to acquire SPA
+   packet data.  The advantage of this approach is that a fwknopd would not
+   need to link against libpcap and can run as an unprivileged user except for
+   the code that must adjust the firewall rule set.
+** libcap-ng support
+   libcap-ng provides a way to drop privileges for certain operations, and
+   fwknopd should support this.
+** OpenBSD PF NAT support
+   Extend fwknopd's NAT capabilities into the PF world.
+** Optional OpenSSL direct usage for crypto operations
+   This would introduce a dependency on the OpenSSL library, but some users
+   may prefer this.  Usage of OpenSSL would cause current crypto code to not
+   be compiled in via autoconf #defines.
+** Build an Amazon fwknopd AMI
+   Create an Amazon AMI with fwknopd loaded and a default configuration that
+   supports SNAT+DNAT so that other Amazon VPC instances can be reached
+   through this host with SPA.
+* 2.7
+** Full IPv6 support
+   While updating the client to send SPA packets over IPv6 will be relatively
+   easy and some code has already been included for this, the fwknopd side
+   will be harder.
+** SELinux + AppArmor policy support
+   Both SELinux and AppArmor implement a Mandatory Access Control (MAC) layer
+   within the kernel, and the fwknop sources should include policies to
+   leverage these tools.
+** See what we can do for GPG support on Windows and other platforms (Android)
+   This one may be a long shot.
+* 2.8
+** Optional pthreads support
+   This should be an optional feature gated by autoconf #defines, and not
+   enabled by default.  For users that want this, it would make for a cleaner
+   way to implement firewall rules on the server side.
+** User interfaces: GNOME, KDE, Windows
+   Implement viable user interfaces for SPA packet creation.
+** Ruby bindings for libfko
+   Extend interpreted language support to Ruby.
+** ipfw NAT support
+   Extend fwknopd's NAT capabilities into the ipfw world.
