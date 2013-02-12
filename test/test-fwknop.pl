@@ -16,12 +16,12 @@ my $output_dir     = 'output';
 my $lib_dir        = '../lib/.libs';
 my $conf_dir       = 'conf';
 my $run_dir        = 'run';
-my $configure_path = 'configure';
 my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
 my $data_tmp       = 'data.tmp';
 my $key_tmp        = 'key.tmp';
 my $enc_save_tmp   = 'openssl_save.enc';
+my $test_suite_path = 'test-fwknop.pl';
 my $gpg_client_home_dir = "$conf_dir/client-gpg";
 my $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 my $replay_pcap_file = "$conf_dir/spa_replay.pcap";
@@ -3267,8 +3267,8 @@ sub compile_warnings() {
     }
 
     if ($sudo_path) {
-        my $username = getpwuid((stat($configure_path))[4]);
-        die "[*] Could not determine $configure_path owner"
+        my $username = getpwuid((stat("test/$test_suite_path"))[4]);
+        die "[*] Could not determine test/$test_suite_path owner"
             unless $username;
 
         unless (&run_cmd("$sudo_path -u $username make",
