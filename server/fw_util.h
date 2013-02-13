@@ -59,12 +59,13 @@
  *       They should be implemented in each of the corresponding
  *       fw_util_<fw-type>.c files.
 */
-void fw_config_init(fko_srv_options_t *opts);
-void fw_initialize(const fko_srv_options_t *opts);
-int fw_cleanup(const fko_srv_options_t *opts);
-void check_firewall_rules(const fko_srv_options_t *opts);
-int fw_dump_rules(const fko_srv_options_t *opts);
-int process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_data_t *spdat);
+void fw_config_init(fko_srv_options_t * const opts);
+void fw_initialize(const fko_srv_options_t * const opts);
+int fw_cleanup(const fko_srv_options_t * const opts);
+void check_firewall_rules(const fko_srv_options_t * const opts);
+int fw_dump_rules(const fko_srv_options_t * const opts);
+int process_spa_request(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc, spa_data_t * const spadat);
 
 #endif /* FW_UTIL_H */
 

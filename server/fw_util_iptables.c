@@ -53,7 +53,7 @@ zero_cmd_buffers(void)
 }
 
 static int
-comment_match_exists(const fko_srv_options_t *opts)
+comment_match_exists(const fko_srv_options_t * const opts)
 {
     int               res = 1;
     char             *ndx = NULL;
@@ -117,7 +117,7 @@ comment_match_exists(const fko_srv_options_t *opts)
 }
 
 static int
-add_jump_rule(const fko_srv_options_t *opts, const int chain_num)
+add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 {
     int res = 0;
 
@@ -148,7 +148,7 @@ add_jump_rule(const fko_srv_options_t *opts, const int chain_num)
 }
 
 static int
-chain_exists(const fko_srv_options_t *opts, const int chain_num)
+chain_exists(const fko_srv_options_t * const opts, const int chain_num)
 {
     int res = 0;
 
@@ -227,7 +227,7 @@ jump_rule_exists(const int chain_num)
  * daemon to stdout.
 */
 int
-fw_dump_rules(const fko_srv_options_t *opts)
+fw_dump_rules(const fko_srv_options_t * const opts)
 {
     int     i;
     int     res, got_err = 0;
@@ -312,7 +312,7 @@ fw_dump_rules(const fko_srv_options_t *opts)
 /* Quietly flush and delete all fwknop custom chains.
 */
 static void
-delete_all_chains(const fko_srv_options_t *opts)
+delete_all_chains(const fko_srv_options_t * const opts)
 {
     int     i, res;
     int     jump_rule_num;
@@ -374,7 +374,7 @@ delete_all_chains(const fko_srv_options_t *opts)
 }
 
 static int
-create_chain(const fko_srv_options_t *opts, const int chain_num)
+create_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
     int res = 0;
 
@@ -404,7 +404,7 @@ create_chain(const fko_srv_options_t *opts, const int chain_num)
 /* Create the fwknop custom chains (at least those that are configured).
 */
 static int
-create_fw_chains(const fko_srv_options_t *opts)
+create_fw_chains(const fko_srv_options_t * const opts)
 {
     int     i, got_err = 0;
 
@@ -431,17 +431,22 @@ create_fw_chains(const fko_srv_options_t *opts)
     return(got_err);
 }
 
-
 static void
-set_fw_chain_conf(const int type, char *conf_str)
+set_fw_chain_conf(const int type, const char * const conf_str)
 {
     int i, j;
     char tbuf[1024]     = {0};
-    char *ndx           = conf_str;
+    const char *ndx     = conf_str;
 
     char *chain_fields[FW_NUM_CHAIN_FIELDS];
 
     struct fw_chain *chain = &(fwc.chain[type]);
+
+    if(conf_str == NULL)
+    {
+        fprintf(stderr, "[*] NULL conf_str.\n");
+        exit(EXIT_FAILURE);
+    }
 
     chain->type = type;
 
@@ -497,7 +502,7 @@ set_fw_chain_conf(const int type, char *conf_str)
 }
 
 void
-fw_config_init(fko_srv_options_t *opts)
+fw_config_init(fko_srv_options_t * const opts)
 {
 
     memset(&fwc, 0x0, sizeof(struct fw_config));
@@ -553,7 +558,7 @@ fw_config_init(fko_srv_options_t *opts)
 }
 
 void
-fw_initialize(const fko_srv_options_t *opts)
+fw_initialize(const fko_srv_options_t * const opts)
 {
     int res;
 
@@ -583,7 +588,7 @@ fw_initialize(const fko_srv_options_t *opts)
 }
 
 int
-fw_cleanup(const fko_srv_options_t *opts)
+fw_cleanup(const fko_srv_options_t * const opts)
 {
     if(strncasecmp(opts->config[CONF_FLUSH_IPT_AT_EXIT], "N", 1) == 0)
         return(0);
@@ -593,7 +598,8 @@ fw_cleanup(const fko_srv_options_t *opts)
 }
 
 static int
-rule_exists(const fko_srv_options_t *opts, const char *fw_chain, const char *fw_rule)
+rule_exists(const fko_srv_options_t * const opts,
+        const char * const fw_chain, const char * const fw_rule)
 {
     int     rule_exists = 0;
     int     res = 0;
@@ -623,7 +629,8 @@ rule_exists(const fko_srv_options_t *opts, const char *fw_chain, const char *fw_
     return rule_exists;
 }
 
-static int create_rule(const fko_srv_options_t *opts, const char *fw_chain, const char *fw_rule)
+static int create_rule(const fko_srv_options_t * const opts,
+        const char * const fw_chain, const char * const fw_rule)
 {
     int res;
 
@@ -657,7 +664,8 @@ static int create_rule(const fko_srv_options_t *opts, const char *fw_chain, cons
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
     char             nat_ip[MAX_IPV4_STR_LEN] = {0};
     char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
@@ -667,15 +675,15 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
     unsigned int     nat_port = 0;
 
     acc_port_list_t *port_list = NULL;
-    acc_port_list_t *ple;
+    acc_port_list_t *ple = NULL;
 
     unsigned int    fst_proto;
     unsigned int    fst_port;
 
-    struct fw_chain *in_chain   = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
-    struct fw_chain *out_chain  = &(opts->fw_config->chain[IPT_OUTPUT_ACCESS]);
-    struct fw_chain *fwd_chain  = &(opts->fw_config->chain[IPT_FORWARD_ACCESS]);
-    struct fw_chain *dnat_chain = &(opts->fw_config->chain[IPT_DNAT_ACCESS]);
+    struct fw_chain * const in_chain   = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
+    struct fw_chain * const out_chain  = &(opts->fw_config->chain[IPT_OUTPUT_ACCESS]);
+    struct fw_chain * const fwd_chain  = &(opts->fw_config->chain[IPT_FORWARD_ACCESS]);
+    struct fw_chain * const dnat_chain = &(opts->fw_config->chain[IPT_DNAT_ACCESS]);
     struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
     int             res = 0;
@@ -1010,7 +1018,7 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
  * firewall rules.
 */
 void
-check_firewall_rules(const fko_srv_options_t *opts)
+check_firewall_rules(const fko_srv_options_t * const opts)
 {
     char             exp_str[12];
     char             rule_num_str[6];

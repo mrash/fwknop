@@ -170,9 +170,9 @@ fko_new(fko_ctx_t *r_ctx)
  * and parsing the provided data into the context data.
 */
 int
-fko_new_with_data(fko_ctx_t *r_ctx, const char *enc_msg,
-    const char *dec_key, const int dec_key_len,
-    int encryption_mode, const char *hmac_key,
+fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
+    const char * const dec_key, const int dec_key_len,
+    int encryption_mode, const char * const hmac_key,
     const int hmac_key_len)
 {
     fko_ctx_t   ctx;
@@ -350,7 +350,7 @@ fko_destroy(fko_ctx_t ctx)
  * encode them
 */
 int
-fko_key_gen(char *key_base64, char *hmac_key_base64)
+fko_key_gen(char * const key_base64, char * const hmac_key_base64)
 {
     unsigned char key[RIJNDAEL_MAX_KEYSIZE];
     unsigned char hmac_key[SHA256_BLOCK_LEN];
@@ -367,13 +367,13 @@ fko_key_gen(char *key_base64, char *hmac_key_base64)
 /* Provide an FKO wrapper around base64 encode/decode functions
 */
 int
-fko_base64_encode(unsigned char *in, char *out, int in_len)
+fko_base64_encode(unsigned char * const in, char * const out, int in_len)
 {
     return b64_encode(in, out, in_len);
 }
 
 int
-fko_base64_decode(const char *in, unsigned char *out)
+fko_base64_decode(const char * const in, unsigned char *out)
 {
     return b64_decode(in, out);
 }
@@ -399,8 +399,8 @@ fko_get_version(fko_ctx_t ctx, char **version)
 */
 int
 fko_spa_data_final(fko_ctx_t ctx,
-    const char *enc_key, const int enc_key_len,
-    const char *hmac_key, const int hmac_key_len)
+    const char * const enc_key, const int enc_key_len,
+    const char * const hmac_key, const int hmac_key_len)
 {
     char   *tbuf;
     int     res = 0, data_with_hmac_len = 0;
@@ -475,7 +475,7 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 /* Set the fko SPA encrypted data.
 */
 int
-fko_set_spa_data(fko_ctx_t ctx, const char *enc_msg)
+fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg)
 {
     int         enc_msg_len;
 

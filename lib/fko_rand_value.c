@@ -48,7 +48,7 @@
 /* Set/Generate the SPA data random value string.
 */
 int
-fko_set_rand_value(fko_ctx_t ctx, const char *new_val)
+fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
 {
 #ifdef WIN32
 	struct _timeb	tb;

@@ -34,7 +34,7 @@
 /* Set the SPA Nat Access data
 */
 int
-fko_set_spa_nat_access(fko_ctx_t ctx, const char *msg)
+fko_set_spa_nat_access(fko_ctx_t ctx, const char * const msg)
 {
     int res = FKO_SUCCESS;
 

@@ -156,7 +156,7 @@ fko_get_spa_message_type(fko_ctx_t ctx, short *msg_type)
 /* Set the SPA MESSAGE data
 */
 int
-fko_set_spa_message(fko_ctx_t ctx, const char *msg)
+fko_set_spa_message(fko_ctx_t ctx, const char * const msg)
 {
     int res = FKO_ERROR_UNKNOWN;
 

@@ -38,7 +38,7 @@
 /* Get or Set the username for the fko context spa data.
 */
 int
-fko_set_username(fko_ctx_t ctx, const char *spoof_user)
+fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
 {
     char   *username = NULL;
     int     res = FKO_SUCCESS;
@@ -74,14 +74,14 @@ fko_set_username(fko_ctx_t ctx, const char *spoof_user)
 #endif
             /* if we still didn't get a username, continue falling back
             */
-			if(username == NULL)
-			{
+            if(username == NULL)
+            {
                 if((username = getenv("USER")) == NULL)
-				{
-					username = strdup("NO_USER");
-					if(username == NULL)
-						return(FKO_ERROR_MEMORY_ALLOCATION);
-				}
+                {
+                    username = strdup("NO_USER");
+                    if(username == NULL)
+                        return(FKO_ERROR_MEMORY_ALLOCATION);
+                }
             }
         }
     }

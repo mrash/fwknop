@@ -202,14 +202,6 @@ typedef enum {
 #define B64_GPG_PREFIX "hQ"
 #define B64_GPG_PREFIX_STR_LEN 2
 
-/* Define the consistent prefixes or salt on some encryption schemes.
-*/
-#define B64_RIJNDAEL_SALT "U2FsdGVkX1"
-#define B64_RIJNDAEL_SALT_STR_LEN 10
-
-#define B64_GPG_PREFIX "hQ"
-#define B64_GPG_PREFIX_STR_LEN 2
-
 /* The context holds the global state and config options, as
  * well as some intermediate results during processing. This
  * is an opaque pointer.
@@ -238,23 +230,23 @@ enum {
 /* General api calls
 */
 DLL_API int fko_new(fko_ctx_t *ctx);
-DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char *enc_msg,
-    const char *dec_key, const int dec_key_len, int encryption_mode,
-    const char *hmac_key, const int hmac_key_len);
+DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char * const enc_msg,
+    const char * const dec_key, const int dec_key_len, int encryption_mode,
+    const char * const hmac_key, const int hmac_key_len);
 DLL_API void fko_destroy(fko_ctx_t ctx);
-DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char *enc_key,
-    const int enc_key_len, const char *hmac_key, const int hmac_key_len);
+DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char * const enc_key,
+    const int enc_key_len, const char * const hmac_key, const int hmac_key_len);
 
 
 /* Set context data functions
 */
-DLL_API int fko_set_rand_value(fko_ctx_t ctx, const char *val);
-DLL_API int fko_set_username(fko_ctx_t ctx, const char *spoof_user);
+DLL_API int fko_set_rand_value(fko_ctx_t ctx, const char * const val);
+DLL_API int fko_set_username(fko_ctx_t ctx, const char * const spoof_user);
 DLL_API int fko_set_timestamp(fko_ctx_t ctx, const int offset);
 DLL_API int fko_set_spa_message_type(fko_ctx_t ctx, const short msg_type);
-DLL_API int fko_set_spa_message(fko_ctx_t ctx, const char *msg_string);
-DLL_API int fko_set_spa_nat_access(fko_ctx_t ctx, const char *nat_access);
-DLL_API int fko_set_spa_server_auth(fko_ctx_t ctx, const char *server_auth);
+DLL_API int fko_set_spa_message(fko_ctx_t ctx, const char * const msg_string);
+DLL_API int fko_set_spa_nat_access(fko_ctx_t ctx, const char * const nat_access);
+DLL_API int fko_set_spa_server_auth(fko_ctx_t ctx, const char * const server_auth);
 DLL_API int fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout);
 DLL_API int fko_set_spa_digest_type(fko_ctx_t ctx, const short digest_type);
 DLL_API int fko_set_spa_digest(fko_ctx_t ctx);
@@ -262,26 +254,26 @@ DLL_API int fko_set_raw_spa_digest_type(fko_ctx_t ctx, const short raw_digest_ty
 DLL_API int fko_set_raw_spa_digest(fko_ctx_t ctx);
 DLL_API int fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type);
 DLL_API int fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode);
-DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char *enc_msg);
+DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg);
 DLL_API int fko_set_hmac_mode(fko_ctx_t ctx, const short hmac_mode);
 
 /* Data processing and misc utility functions
 */
 DLL_API const char* fko_errstr(const int err_code);
-DLL_API int fko_encryption_type(const char *enc_data);
-DLL_API int fko_key_gen(char *key_base64, char *hmac_key_base64);
-DLL_API int fko_base64_encode(unsigned char *in, char *out, int in_len);
-DLL_API int fko_base64_decode(const char *in, unsigned char *out);
+DLL_API int fko_encryption_type(const char * const enc_data);
+DLL_API int fko_key_gen(char * const key_base64, char * const hmac_key_base64);
+DLL_API int fko_base64_encode(unsigned char * const in, char * const out, int in_len);
+DLL_API int fko_base64_decode(const char * const in, unsigned char *out);
 
 DLL_API int fko_encode_spa_data(fko_ctx_t ctx);
 DLL_API int fko_decode_spa_data(fko_ctx_t ctx);
-DLL_API int fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key,
+DLL_API int fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key,
     const int enc_key_len);
-DLL_API int fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key,
+DLL_API int fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key,
     const int dec_key_len);
-DLL_API int fko_verify_hmac(fko_ctx_t ctx, const char *hmac_key,
+DLL_API int fko_verify_hmac(fko_ctx_t ctx, const char * const hmac_key,
     const int hmac_key_len);
-DLL_API int fko_calculate_hmac(fko_ctx_t ctx, const char *hmac_key,
+DLL_API int fko_calculate_hmac(fko_ctx_t ctx, const char * const hmac_key,
     const int hmac_key_len);
 DLL_API int fko_get_hmac_data(fko_ctx_t ctx, char **enc_data);
 
@@ -309,14 +301,14 @@ DLL_API int fko_get_spa_data(fko_ctx_t ctx, char **spa_data);
 DLL_API int fko_get_version(fko_ctx_t ctx, char **version);
 
 /* GPG-related functions */
-DLL_API int fko_set_gpg_exe(fko_ctx_t ctx, const char *gpg_exe);
+DLL_API int fko_set_gpg_exe(fko_ctx_t ctx, const char * const gpg_exe);
 DLL_API int fko_get_gpg_exe(fko_ctx_t ctx, char **gpg_exe);
 
-DLL_API int fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip);
+DLL_API int fko_set_gpg_recipient(fko_ctx_t ctx, const char * const recip);
 DLL_API int fko_get_gpg_recipient(fko_ctx_t ctx, char **recip);
-DLL_API int fko_set_gpg_signer(fko_ctx_t ctx, const char *signer);
+DLL_API int fko_set_gpg_signer(fko_ctx_t ctx, const char * const signer);
 DLL_API int fko_get_gpg_signer(fko_ctx_t ctx, char **signer);
-DLL_API int fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir);
+DLL_API int fko_set_gpg_home_dir(fko_ctx_t ctx, const char * const gpg_home_dir);
 DLL_API int fko_get_gpg_home_dir(fko_ctx_t ctx, char **gpg_home_dir);
 
 DLL_API const char* fko_gpg_errstr(fko_ctx_t ctx);
@@ -324,21 +316,21 @@ DLL_API const char* fko_gpg_errstr(fko_ctx_t ctx);
 DLL_API int fko_set_gpg_signature_verify(fko_ctx_t ctx,
     const unsigned char val);
 DLL_API int fko_get_gpg_signature_verify(fko_ctx_t ctx,
-    unsigned char *val);
+    unsigned char * const val);
 DLL_API int fko_set_gpg_ignore_verify_error(fko_ctx_t ctx,
     const unsigned char val);
 DLL_API int fko_get_gpg_ignore_verify_error(fko_ctx_t ctx,
-    unsigned char *val);
+    unsigned char * const val);
 
 DLL_API int fko_get_gpg_signature_id(fko_ctx_t ctx, char **sig_id);
 DLL_API int fko_get_gpg_signature_fpr(fko_ctx_t ctx, char **sig_fpr);
 DLL_API int fko_get_gpg_signature_summary(fko_ctx_t ctx, int *sigsum);
 DLL_API int fko_get_gpg_signature_status(fko_ctx_t ctx, int *sigstat);
 
-DLL_API int fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id,
-    unsigned char *result);
-DLL_API int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char *fpr,
-    unsigned char *result);
+DLL_API int fko_gpg_signature_id_match(fko_ctx_t ctx, const char * const id,
+    unsigned char * const result);
+DLL_API int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char * const fpr,
+    unsigned char * const result);
 
 #ifdef __cplusplus
 }

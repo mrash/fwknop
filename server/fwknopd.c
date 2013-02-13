@@ -42,9 +42,10 @@
 
 /* Prototypes
 */
-static void check_dir_path(const char *path, const char *path_name, const unsigned char use_basename);
-static int make_dir_path(const char *path);
-static void daemonize_process(fko_srv_options_t *opts);
+static void check_dir_path(const char * const path,
+        const char * const path_name, const unsigned char use_basename);
+static int make_dir_path(const char * const path);
+static void daemonize_process(fko_srv_options_t * const opts);
 static int write_pid_file(fko_srv_options_t *opts);
 static pid_t get_running_pid(const fko_srv_options_t *opts);
 
@@ -381,7 +382,7 @@ main(int argc, char **argv)
 /* Ensure the specified directory exists.  If not, create it or die.
 */
 static void
-check_dir_path(const char *filepath, const char *fp_desc, const unsigned char use_basename)
+check_dir_path(const char * const filepath, const char * const fp_desc, const unsigned char use_basename)
 {
     struct stat     st;
     int             res = 0;
@@ -466,7 +467,7 @@ check_dir_path(const char *filepath, const char *fp_desc, const unsigned char us
 }
 
 static int
-make_dir_path(const char *run_dir)
+make_dir_path(const char * const run_dir)
 {
     struct stat     st;
     int             res = 0, len = 0;
@@ -535,7 +536,7 @@ make_dir_path(const char *run_dir)
  * and close unneeded standard filehandles.
 */
 static void
-daemonize_process(fko_srv_options_t *opts)
+daemonize_process(fko_srv_options_t * const opts)
 {
     pid_t pid, old_pid;
 

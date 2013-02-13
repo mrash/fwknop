@@ -35,7 +35,7 @@
 #include "base64.h"
 
 int fko_verify_hmac(fko_ctx_t ctx,
-    const char *hmac_key, const int hmac_key_len)
+    const char * const hmac_key, const int hmac_key_len)
 {
     char    *hmac_digest_from_data = NULL;
     char    *tbuf = NULL;
@@ -141,7 +141,7 @@ fko_set_hmac_mode(fko_ctx_t ctx, const short hmac_mode)
 }
 
 int fko_calculate_hmac(fko_ctx_t ctx,
-    const char *hmac_key, const int hmac_key_len)
+    const char * const hmac_key, const int hmac_key_len)
 {
     unsigned char hmac[SHA256_DIGEST_STR_LEN] = {0};
     char *hmac_base64 = NULL;

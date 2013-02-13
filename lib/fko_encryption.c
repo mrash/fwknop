@@ -439,7 +439,7 @@ fko_get_spa_encryption_mode(fko_ctx_t ctx, int *enc_mode)
 /* Encrypt the encoded SPA data.
 */
 int
-fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
+fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key, const int enc_key_len)
 {
     int             res = 0;
 
@@ -485,7 +485,7 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
 /* Decode, decrypt, and parse SPA data into the context.
 */
 int
-fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key, const int key_len)
+fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key, const int key_len)
 {
     int     enc_type, res;
 
@@ -518,7 +518,7 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char *dec_key, const int key_len)
 /* Return the assumed encryption type based on the raw encrypted data.
 */
 int
-fko_encryption_type(const char *enc_data)
+fko_encryption_type(const char * const enc_data)
 {
     int enc_data_len;
 
@@ -587,7 +587,7 @@ fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
 /* Set the GPG home dir.
 */
 int
-fko_set_gpg_exe(fko_ctx_t ctx, const char *gpg_exe)
+fko_set_gpg_exe(fko_ctx_t ctx, const char * const gpg_exe)
 {
 #if HAVE_LIBGPGME
     struct stat     st;
@@ -657,7 +657,7 @@ fko_get_gpg_recipient(fko_ctx_t ctx, char **recipient)
 /* Set the GPG signer key name.
 */
 int
-fko_set_gpg_signer(fko_ctx_t ctx, const char *signer)
+fko_set_gpg_signer(fko_ctx_t ctx, const char * const signer)
 {
 #if HAVE_LIBGPGME
     int             res;
@@ -717,7 +717,7 @@ fko_get_gpg_signer(fko_ctx_t ctx, char **signer)
 /* Set the GPG home dir.
 */
 int
-fko_set_gpg_home_dir(fko_ctx_t ctx, const char *gpg_home_dir)
+fko_set_gpg_home_dir(fko_ctx_t ctx, const char * const gpg_home_dir)
 {
 #if HAVE_LIBGPGME
     struct stat     st;
@@ -782,7 +782,7 @@ fko_set_gpg_signature_verify(fko_ctx_t ctx, const unsigned char val)
 }
 
 int
-fko_get_gpg_signature_verify(fko_ctx_t ctx, unsigned char *val)
+fko_get_gpg_signature_verify(fko_ctx_t ctx, unsigned char * const val)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
@@ -816,7 +816,7 @@ fko_set_gpg_ignore_verify_error(fko_ctx_t ctx, const unsigned char val)
 }
 
 int
-fko_get_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char *val)
+fko_get_gpg_ignore_verify_error(fko_ctx_t ctx, unsigned char * const val)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
@@ -962,7 +962,8 @@ fko_get_gpg_signature_status(fko_ctx_t ctx, int *sigstat)
 }
 
 int
-fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id, unsigned char *result)
+fko_gpg_signature_id_match(fko_ctx_t ctx, const char * const id,
+        unsigned char * const result)
 {
 #if HAVE_LIBGPGME
     char *curr_id;
@@ -998,7 +999,8 @@ fko_gpg_signature_id_match(fko_ctx_t ctx, const char *id, unsigned char *result)
 }
 
 int
-fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char *id, unsigned char *result)
+fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char * const id,
+        unsigned char * const result)
 {
 #if HAVE_LIBGPGME
     /* Must be initialized
