@@ -1,0 +1,15 @@
+This directory is used to collect information on which functions in the fwknop
+sources are never called when the test suite is executed.  This assumes that
+fwknop has been compiled with test coverage support like this:
+
+$ CFLAGS="-O0 -fprofile-arcs -ftest-coverage" LDFLAGS="-fprofile-arcs" ./configure --prefix=/usr --sysconfdir=/etc
+$ make
+
+Or, just do:
+
+$ ./configure --enable-profile-coverage --prefix=/usr --sysconfdir=/etc
+
+Then the test suite can be executed with the --enable-profile-coverage-check
+argument so that functions that are never called can be seen:
+
+# ./test-fwknop.pl --enable-profile-coverage-check
