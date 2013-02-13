@@ -2966,14 +2966,6 @@ my @tests = (
         'function' => \&digest_cache_structure,
         'fatal'    => $NO
     },
-
-    {
-        'category' => 'profile coverage',
-        'detail'   => 'gcov profile coverage',
-        'err_msg'  => 'profile coverage failed',
-        'function' => \&profile_coverage,
-        'fatal'    => $NO
-    },
 );
 
 my %test_keys = (
@@ -3026,6 +3018,18 @@ for my $test_hr (@tests) {
     if ($test_limit > 0) {
         last if $executed >= $test_limit;
     }
+}
+
+if ($enable_profile_coverage_check) {
+    &run_test(
+        {
+            'category' => 'profile coverage',
+            'detail'   => 'gcov profile coverage',
+            'err_msg'  => 'profile coverage failed',
+            'function' => \&profile_coverage,
+            'fatal'    => $NO
+        },
+    );
 }
 
 if ($use_valgrind) {
@@ -3121,8 +3125,10 @@ sub process_include_exclude() {
     if (@tests_to_include) {
         my $found = 0;
         for my $test (@tests_to_include) {
-            if ($msg =~ $test or ($use_valgrind
-                    and $msg =~ /valgrind\soutput/)) {
+            if ($msg =~ $test
+                    or ($use_valgrind and $msg =~ /valgrind\soutput/)
+                    or ($enable_profile_coverage_check and $msg =~ /profile\scoverage/)
+            ) {
                 $found = 1;
                 last;
             }
@@ -6604,10 +6610,6 @@ sub init() {
 
     unless ($enable_make_distcheck) {
         push @tests_to_exclude, qr/distcheck/;
-    }
-
-    unless ($enable_profile_coverage_check) {
-        push @tests_to_exclude, qr/profile coverage/;
     }
 
     unless ($enable_client_ip_resolve_test) {
