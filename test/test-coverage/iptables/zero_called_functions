@@ -1,44 +1,26 @@
 [+] TEST: [profile coverage] gcov profile coverage
-CMD: grep "called 0 returned" ../client/*.gcov
-../client/config_init.c.gcov:function digest_strtoint called 0 returned 0% blocks executed 0%
-../client/config_init.c.gcov:function proto_strtoint called 0 returned 0% blocks executed 0%
-../client/config_init.c.gcov:function create_fwknoprc called 0 returned 0% blocks executed 0%
-../client/config_init.c.gcov:function parse_rc_param called 0 returned 0% blocks executed 0%
-../client/fwknop.c.gcov:function show_last_command called 0 returned 0% blocks executed 0%
+Tue Feb 12 20:17:47 2013 CMD: grep "called 0 returned" ../client/*.gcov
 ../client/fwknop.c.gcov:function run_last_args called 0 returned 0% blocks executed 0%
 ../client/getpasswd.c.gcov:function getpasswd called 0 returned 0% blocks executed 0%
 ../client/http_resolve_host.c.gcov:function parse_url called 0 returned 0% blocks executed 0%
-../client/http_resolve_host.c.gcov:function resolve_ip_http called 0 returned 0% blocks executed 0%
-../client/spa_comm.c.gcov:function chksum called 0 returned 0% blocks executed 0%
-../client/spa_comm.c.gcov:function send_spa_packet_tcp_raw called 0 returned 0% blocks executed 0%
-../client/spa_comm.c.gcov:function send_spa_packet_icmp called 0 returned 0% blocks executed 0%
 ../client/spa_comm.c.gcov:function send_spa_packet_http called 0 returned 0% blocks executed 0%
 ../client/spa_comm.c.gcov:function write_spa_packet_data called 0 returned 0% blocks executed 0%
 ../client/utils.c.gcov:function hex_dump called 0 returned 0% blocks executed 0%
-CMD: grep "called 0 returned" ../server/*.gcov
+Tue Feb 12 20:17:47 2013 CMD: grep "called 0 returned" ../server/*.gcov
 ../server/access.c.gcov:function acc_check_gpg_remote_id called 0 returned 0% blocks executed 0%
 ../server/config_init.c.gcov:function config_entry_index called 0 returned 0% blocks executed 0%
 ../server/extcmd.c.gcov:function run_extcmd_as called 0 returned 0% blocks executed 0%
 ../server/fwknopd.c.gcov:function make_dir_path called 0 returned 0% blocks executed 0%
 ../server/fwknopd.c.gcov:function daemonize_process called 0 returned 0% blocks executed 0%
 ../server/log_msg.c.gcov:function set_log_facility called 0 returned 0% blocks executed 0%
-../server/replay_cache.c.gcov:function rotate_digest_cache_file called 0 returned 0% blocks executed 0%
-../server/tcp_server.c.gcov:function run_tcp_server called 0 returned 0% blocks executed 0%
-../server/utils.c.gcov:function hex_dump called 0 returned 0% blocks executed 0%
-CMD: grep "called 0 returned" ../lib/.libs/*.gcov
+Tue Feb 12 20:17:47 2013 CMD: grep "called 0 returned" ../lib/.libs/*.gcov
 ../lib/.libs/digest.c.gcov:function digest_to_hex called 0 returned 0% blocks executed 0%
 ../lib/.libs/digest.c.gcov:function md5_hex called 0 returned 0% blocks executed 0%
-../lib/.libs/digest.c.gcov:function md5_base64 called 0 returned 0% blocks executed 0%
-../lib/.libs/digest.c.gcov:function sha1 called 0 returned 0% blocks executed 0%
 ../lib/.libs/digest.c.gcov:function sha1_hex called 0 returned 0% blocks executed 0%
-../lib/.libs/digest.c.gcov:function sha1_base64 called 0 returned 0% blocks executed 0%
 ../lib/.libs/digest.c.gcov:function sha256_hex called 0 returned 0% blocks executed 0%
-../lib/.libs/digest.c.gcov:function sha384 called 0 returned 0% blocks executed 0%
 ../lib/.libs/digest.c.gcov:function sha384_hex called 0 returned 0% blocks executed 0%
-../lib/.libs/digest.c.gcov:function sha384_base64 called 0 returned 0% blocks executed 0%
-../lib/.libs/digest.c.gcov:function sha512 called 0 returned 0% blocks executed 0%
 ../lib/.libs/digest.c.gcov:function sha512_hex called 0 returned 0% blocks executed 0%
-../lib/.libs/digest.c.gcov:function sha512_base64 called 0 returned 0% blocks executed 0%
+../lib/.libs/fko_digest.c.gcov:function fko_get_raw_spa_digest_type called 0 returned 0% blocks executed 0%
 ../lib/.libs/fko_encryption.c.gcov:function fko_get_spa_encryption_type called 0 returned 0% blocks executed 0%
 ../lib/.libs/fko_encryption.c.gcov:function fko_set_gpg_exe called 0 returned 0% blocks executed 0%
 ../lib/.libs/fko_encryption.c.gcov:function fko_get_gpg_exe called 0 returned 0% blocks executed 0%
@@ -53,27 +35,13 @@ CMD: grep "called 0 returned" ../lib/.libs/*.gcov
 ../lib/.libs/fko_encryption.c.gcov:function fko_get_gpg_signature_status called 0 returned 0% blocks executed 0%
 ../lib/.libs/fko_encryption.c.gcov:function fko_gpg_signature_id_match called 0 returned 0% blocks executed 0%
 ../lib/.libs/fko_encryption.c.gcov:function fko_gpg_signature_fpr_match called 0 returned 0% blocks executed 0%
-../lib/.libs/fko_funcs.c.gcov:function fko_set_spa_data called 0 returned 0% blocks executed 0%
-../lib/.libs/fko_message.c.gcov:function validate_cmd_msg called 0 returned 0% blocks executed 0%
+../lib/.libs/fko_funcs.c.gcov:function fko_base64_encode called 0 returned 0% blocks executed 0%
 ../lib/.libs/fko_server_auth.c.gcov:function fko_set_spa_server_auth called 0 returned 0% blocks executed 0%
 ../lib/.libs/gpgme.h.gcov:function gpgme_err_code called 0 returned 0% blocks executed 0%
 ../lib/.libs/gpgme_funcs.c.gcov:function process_sigs called 0 returned 0% blocks executed 0%
-../lib/.libs/sha1.c.gcov:function sha1_transform called 0 returned 0% blocks executed 0%
-../lib/.libs/sha1.c.gcov:function sha1_init called 0 returned 0% blocks executed 0%
-../lib/.libs/sha1.c.gcov:function sha1_update called 0 returned 0% blocks executed 0%
-../lib/.libs/sha1.c.gcov:function sha1_transform_and_copy called 0 returned 0% blocks executed 0%
-../lib/.libs/sha1.c.gcov:function sha1_final called 0 returned 0% blocks executed 0%
 ../lib/.libs/sha2.c.gcov:function SHA256_End called 0 returned 0% blocks executed 0%
 ../lib/.libs/sha2.c.gcov:function SHA256_Data called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA512_Init called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA512_Transform called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA512_Update called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA512_Last called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA512_Final called 0 returned 0% blocks executed 0%
 ../lib/.libs/sha2.c.gcov:function SHA512_End called 0 returned 0% blocks executed 0%
 ../lib/.libs/sha2.c.gcov:function SHA512_Data called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA384_Init called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA384_Update called 0 returned 0% blocks executed 0%
-../lib/.libs/sha2.c.gcov:function SHA384_Final called 0 returned 0% blocks executed 0%
 ../lib/.libs/sha2.c.gcov:function SHA384_End called 0 returned 0% blocks executed 0%
 ../lib/.libs/sha2.c.gcov:function SHA384_Data called 0 returned 0% blocks executed 0%
