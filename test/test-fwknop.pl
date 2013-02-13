@@ -84,6 +84,7 @@ my %cf = (
 my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
 my $tmp_rc_file         = "$run_dir/fwknoprc";
+my $tmp_pkt_file        = "$run_dir/tmp_spa.pkt";
 
 my $fwknopCmd   = '../client/.libs/fwknop';
 my $fwknopdCmd  = '../server/.libs/fwknopd';
@@ -775,6 +776,16 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
+        'detail'   => "--save-packet $tmp_pkt_file",
+        'err_msg'  => 'could not run SPA client',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args --save-packet $tmp_pkt_file",
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael SPA',
         'subcategory' => 'client+server',
@@ -5965,6 +5976,16 @@ sub rc_file_exists() {
     return $rv;
 }
 
+sub client_save_spa_pkt() {
+    my $test_hr = shift;
+
+    my $rv = &generic_exec($test_hr);
+
+    unless (-e $tmp_pkt_file) {
+        $rv = 0;
+    }
+    return $rv;
+}
 
 sub generic_exec() {
     my $test_hr = shift;
@@ -6549,7 +6570,7 @@ sub init() {
     }
 
     for my $file (glob("$output_dir/*.test"), "$output_dir/init",
-            $tmp_rc_file, $logfile, $key_gen_file) {
+            $tmp_rc_file, $tmp_pkt_file, $logfile, $key_gen_file) {
         next unless -e $file;
         unlink $file or die "[*] Could not unlink($file)";
     }
