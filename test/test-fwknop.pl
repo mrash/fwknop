@@ -85,6 +85,7 @@ my $default_digest_file = "$run_dir/digest.cache";
 my $default_pid_file    = "$run_dir/fwknopd.pid";
 my $tmp_rc_file         = "$run_dir/fwknoprc";
 my $tmp_pkt_file        = "$run_dir/tmp_spa.pkt";
+my $tmp_args_file       = "$run_dir/args.save";
 
 my $fwknopCmd   = '../client/.libs/fwknop';
 my $fwknopdCmd  = '../server/.libs/fwknopd';
@@ -781,8 +782,22 @@ my @tests = (
         'subcategory' => 'client',
         'detail'   => "--save-packet $tmp_pkt_file",
         'err_msg'  => 'could not run SPA client',
+        'function' => \&client_save_spa_pkt,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --save-args-file $tmp_args_file --verbose " .
+            "--verbose --save-packet $tmp_pkt_file",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael SPA',
+        'subcategory' => 'client',
+        'detail'   => "--last-cmd",
+        'err_msg'  => 'could not run last args',
         'function' => \&generic_exec,
-        'cmdline'  => "$default_client_args --save-packet $tmp_pkt_file",
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
+            "--verbose --verbose",
         'fatal'    => $NO
     },
 
@@ -6570,7 +6585,8 @@ sub init() {
     }
 
     for my $file (glob("$output_dir/*.test"), "$output_dir/init",
-            $tmp_rc_file, $tmp_pkt_file, $logfile, $key_gen_file) {
+            $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
+            $logfile, $key_gen_file) {
         next unless -e $file;
         unlink $file or die "[*] Could not unlink($file)";
     }
@@ -6837,7 +6853,7 @@ sub parse_valgrind_flagged_functions() {
     mkdir "$output_dir/$valgrind_cov_dir"
         unless -d "$output_dir/$valgrind_cov_dir";
 
-    for my $file (glob("$output_dir/*.test")) {
+    FILE: for my $file (glob("$output_dir/*.test")) {
 
         my $type = 'server';
         $type = 'client' if $file =~ /\d\.test/;
@@ -6858,11 +6874,12 @@ sub parse_valgrind_flagged_functions() {
             } elsif (/TEST\:\s/) {
                 $test_title = $_;
                 chomp $test_title;
+                last if $test_title =~ /valgrind\soutput/;
             }
         }
         close F;
 
-        next if $test_title =~ /valgrind\soutput/;
+        next FILE if $test_title =~ /valgrind\soutput/;
 
         ### write out flagged fcns for this file
         if ($filename) {

@@ -60,7 +60,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:f:gG:hH:kK:lm:M:n:N:p:P:Q:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:E:f:gG:hH:kK:lm:M:n:N:p:P:Q:rRsS:Tu:U:vV"
 
 /* Our program command-line options...
 */
@@ -74,6 +74,7 @@ static struct option cmd_opts[] =
     {"server-cmd",          1, NULL, 'C'},
     {"digest-type",         1, NULL, FKO_DIGEST_NAME},
     {"destination",         1, NULL, 'D'},
+    {"save-args-file",      1, NULL, 'E'},
     {"encryption-mode",     1, NULL, ENCRYPTION_MODE},
     {"fw-timeout",          1, NULL, 'f'},
     {"gpg-encryption",      0, NULL, 'g'},

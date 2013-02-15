@@ -87,6 +87,7 @@ typedef struct fko_cli_options
     int  save_packet_file_append;
     int  show_last_command;
     int  run_last_command;
+    char args_save_file[MAX_PATH_LEN];
     int  no_save_args;
     int  use_hmac;
     char spa_server_str[MAX_SERVER_STR_LEN];  /* may be a hostname */

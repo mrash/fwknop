@@ -43,9 +43,12 @@ static void get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     int *hmac_key_len, const int crypt_op);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
-static void show_last_command(void);
-static void save_args(int argc, char **argv);
-static void run_last_args(fko_cli_options_t *options);
+static void prev_exec(fko_cli_options_t *options, int argc, char **argv);
+static int get_save_file(char *args_save_file);
+static void show_last_command(const char * const args_save_file);
+static void save_args(int argc, char **argv, const char * const args_save_file);
+static void run_last_args(fko_cli_options_t *options,
+        const char * const args_save_file);
 static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
 static int get_rand_port(fko_ctx_t ctx);
@@ -73,14 +76,9 @@ main(int argc, char **argv)
     */
     config_init(&options, argc, argv);
 
-    /* Handle options that don't require a libfko context
+    /* Handle previous execution arguments if required
     */
-    if(options.run_last_command)
-        run_last_args(&options);
-    else if(options.show_last_command)
-        show_last_command();
-    else if (!options.no_save_args)
-        save_args(argc, argv);
+    prev_exec(&options, argc, argv);
 
     /* Generate Rijndael + HMAC keys from /dev/random (base64
      * encoded) and exit.
@@ -604,6 +602,134 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options)
     return fko_set_spa_nat_access(ctx, nat_access_buf);
 }
 
+static void
+prev_exec(fko_cli_options_t *options, int argc, char **argv)
+{
+    char       args_save_file[MAX_PATH_LEN] = {0};
+
+    if(options->args_save_file != NULL && options->args_save_file[0] != 0x0)
+    {
+        strlcpy(args_save_file, options->args_save_file, MAX_PATH_LEN);
+    }
+    else
+    {
+        if (get_save_file(args_save_file) != 1)
+        {
+            fprintf(stderr, "Unable to determine args save file\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if(options->run_last_command)
+        run_last_args(options, args_save_file);
+    else if(options->show_last_command)
+        show_last_command(args_save_file);
+    else if (!options->no_save_args)
+        save_args(argc, argv, args_save_file);
+
+    return;
+}
+
+/* Show the last command that was executed
+*/
+static void
+show_last_command(const char * const args_save_file)
+{
+    char args_str[MAX_LINE_LEN] = "";
+    FILE *args_file_ptr = NULL;
+
+    verify_file_perms_ownership(args_save_file);
+    if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
+        fprintf(stderr, "Could not open args file: %s\n",
+            args_save_file);
+        exit(EXIT_FAILURE);
+    }
+
+    if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
+        printf("Last fwknop client command line: %s", args_str);
+    } else {
+        printf("Could not read line from file: %s\n", args_save_file);
+    }
+    fclose(args_file_ptr);
+
+    exit(EXIT_SUCCESS);
+}
+
+/* Get the command line arguments from the previous invocation
+*/
+static void
+run_last_args(fko_cli_options_t *options, const char * const args_save_file)
+{
+    FILE           *args_file_ptr = NULL;
+
+    int             current_arg_ctr = 0;
+    int             argc_new = 0;
+    int             i = 0;
+
+    char            args_str[MAX_LINE_LEN] = {0};
+    char            arg_tmp[MAX_LINE_LEN]  = {0};
+    char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
+
+    verify_file_perms_ownership(args_save_file);
+    if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
+    {
+        fprintf(stderr, "Could not open args file: %s\n",
+                args_save_file);
+        exit(EXIT_FAILURE);
+    }
+    if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL)
+    {
+        args_str[MAX_LINE_LEN-1] = '\0';
+        if (options->verbose)
+            printf("Executing: %s\n", args_str);
+        for (i=0; i < (int)strlen(args_str); i++)
+        {
+            if (!isspace(args_str[i]))
+            {
+                arg_tmp[current_arg_ctr] = args_str[i];
+                current_arg_ctr++;
+            }
+            else
+            {
+                arg_tmp[current_arg_ctr] = '\0';
+                argv_new[argc_new] = malloc(strlen(arg_tmp)+1);
+                if (argv_new[argc_new] == NULL)
+                {
+                    fprintf(stderr, "[*] malloc failure for cmd line arg.\n");
+                    exit(EXIT_FAILURE);
+                }
+                strlcpy(argv_new[argc_new], arg_tmp, strlen(arg_tmp)+1);
+                current_arg_ctr = 0;
+                argc_new++;
+                if(argc_new >= MAX_CMDLINE_ARGS)
+                {
+                    fprintf(stderr, "[*] max command line args exceeded.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+        }
+    }
+    fclose(args_file_ptr);
+
+    /* Reset the options index so we can run through them again.
+    */
+    optind = 0;
+
+    config_init(options, argc_new, argv_new);
+
+    /* Since we passed in our own copies, free up malloc'd memory
+    */
+    for (i=0; i < argc_new; i++)
+    {
+        if(argv_new[i] == NULL)
+            break;
+        else
+            free(argv_new[i]);
+    }
+
+    return;
+}
+
 static int
 get_save_file(char *args_save_file)
 {
@@ -624,137 +750,37 @@ get_save_file(char *args_save_file)
     return rv;
 }
 
-/* Show the last command that was executed
-*/
-static void
-show_last_command(void)
-{
-    char args_save_file[MAX_PATH_LEN];
-    char args_str[MAX_LINE_LEN] = "";
-    FILE *args_file_ptr = NULL;
-
-    if (get_save_file(args_save_file)) {
-        verify_file_perms_ownership(args_save_file);
-        if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
-            fprintf(stderr, "Could not open args file: %s\n",
-                args_save_file);
-            exit(EXIT_FAILURE);
-        }
-        verify_file_perms_ownership(args_save_file);
-        if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
-            printf("Last fwknop client command line: %s", args_str);
-        } else {
-            printf("Could not read line from file: %s\n", args_save_file);
-        }
-        fclose(args_file_ptr);
-    }
-
-    exit(EXIT_SUCCESS);
-}
-
-/* Get the command line arguments from the previous invocation
-*/
-static void
-run_last_args(fko_cli_options_t *options)
-{
-    FILE           *args_file_ptr = NULL;
-
-    int             current_arg_ctr = 0;
-    int             argc_new = 0;
-    int             i = 0;
-
-    char            args_save_file[MAX_PATH_LEN] = {0};
-    char            args_str[MAX_LINE_LEN] = {0};
-    char            arg_tmp[MAX_LINE_LEN]  = {0};
-    char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
-
-    if (get_save_file(args_save_file))
-    {
-        verify_file_perms_ownership(args_save_file);
-        if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
-        {
-            fprintf(stderr, "Could not open args file: %s\n",
-                args_save_file);
-            exit(EXIT_FAILURE);
-        }
-        if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL)
-        {
-            args_str[MAX_LINE_LEN-1] = '\0';
-            if (options->verbose)
-                printf("Executing: %s\n", args_str);
-            for (i=0; i < (int)strlen(args_str); i++)
-            {
-                if (!isspace(args_str[i]))
-                {
-                    arg_tmp[current_arg_ctr] = args_str[i];
-                    current_arg_ctr++;
-                }
-                else
-                {
-                    arg_tmp[current_arg_ctr] = '\0';
-                    argv_new[argc_new] = malloc(strlen(arg_tmp)+1);
-                    if (argv_new[argc_new] == NULL)
-                    {
-                        fprintf(stderr, "[*] malloc failure for cmd line arg.\n");
-                        exit(EXIT_FAILURE);
-                    }
-                    strlcpy(argv_new[argc_new], arg_tmp, strlen(arg_tmp)+1);
-                    current_arg_ctr = 0;
-                    argc_new++;
-                    if(argc_new >= MAX_CMDLINE_ARGS)
-                    {
-                        fprintf(stderr, "[*] max command line args exceeded.\n");
-                        exit(EXIT_FAILURE);
-                    }
-                }
-            }
-        }
-        fclose(args_file_ptr);
-
-        /* Reset the options index so we can run through them again.
-        */
-        optind = 0;
-
-        config_init(options, argc_new, argv_new);
-    }
-
-    return;
-}
-
 /* Save our command line arguments
 */
 static void
-save_args(int argc, char **argv)
+save_args(int argc, char **argv, const char * const args_save_file)
 {
-    char args_save_file[MAX_PATH_LEN];
     char args_str[MAX_LINE_LEN] = "";
     int i = 0, args_str_len = 0, args_file_fd = -1;
 
-    if (get_save_file(args_save_file)) {
-        args_file_fd = open(args_save_file, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
-        if (args_file_fd == -1) {
-            fprintf(stderr, "Could not open args file: %s\n",
-                args_save_file);
-            exit(EXIT_FAILURE);
-        }
-        else {
-            for (i=0; i < argc; i++) {
-                args_str_len += strlen(argv[i]);
-                if (args_str_len >= MAX_PATH_LEN) {
-                    fprintf(stderr, "argument string too long, exiting.\n");
-                    exit(EXIT_FAILURE);
-                }
-                strlcat(args_str, argv[i], MAX_PATH_LEN);
-                strlcat(args_str, " ", MAX_PATH_LEN);
+    args_file_fd = open(args_save_file, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
+    if (args_file_fd == -1) {
+        fprintf(stderr, "Could not open args file: %s\n",
+            args_save_file);
+        exit(EXIT_FAILURE);
+    }
+    else {
+        for (i=0; i < argc; i++) {
+            args_str_len += strlen(argv[i]);
+            if (args_str_len >= MAX_PATH_LEN) {
+                fprintf(stderr, "argument string too long, exiting.\n");
+                exit(EXIT_FAILURE);
             }
-            strlcat(args_str, "\n", MAX_PATH_LEN);
-            if(write(args_file_fd, args_str, strlen(args_str))
-                    != strlen(args_str)) {
-                fprintf(stderr,
-                "warning, did not write expected number of bytes to args save file\n");
-            }
-            close(args_file_fd);
+            strlcat(args_str, argv[i], MAX_PATH_LEN);
+            strlcat(args_str, " ", MAX_PATH_LEN);
         }
+        strlcat(args_str, "\n", MAX_PATH_LEN);
+        if(write(args_file_fd, args_str, strlen(args_str))
+                != strlen(args_str)) {
+            fprintf(stderr,
+            "warning, did not write expected number of bytes to args save file\n");
+        }
+        close(args_file_fd);
     }
     return;
 }

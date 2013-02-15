@@ -764,7 +764,7 @@ set_defaults(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int                 cmd_arg, index;
+    int       cmd_arg, index;
 
     /* Zero out options and opts_track.
     */
@@ -786,6 +786,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'n':
                 options->no_save_args = 1;
                 strlcpy(options->use_rc_stanza, optarg, MAX_LINE_LEN);
+                break;
+            case 'E':
+                strlcpy(options->args_save_file, optarg, MAX_PATH_LEN);
                 break;
             case RC_FILE_PATH:
                 strlcpy(options->rc_file, optarg, MAX_PATH_LEN);
@@ -825,6 +828,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'D':
                 strlcpy(options->spa_server_str, optarg, MAX_SERVER_STR_LEN);
+                break;
+            case 'E':
+                strlcpy(options->args_save_file, optarg, MAX_PATH_LEN);
                 break;
             case 'f':
                 options->fw_timeout = atoi(optarg);
