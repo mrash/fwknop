@@ -141,6 +141,14 @@ GENERAL OPTIONS
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
 
+*-E, --save-args-file*='<file>'::
+    Save command line arguments to a specified file path.  Without this
+    option, and when '--no-save-args' is not also specified, then the default
+    save args path is '~/.fwknop.run'.
+
+*--no-save-args*::
+    Do not save the command line arguments given when *fwknop* is executed.
+
 *-T, --test*::
     Test mode.  Generate the SPA packet data, but do not send it.  Instead,
     print a break-down of the SPA data fields, then run the data through
