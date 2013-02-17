@@ -943,7 +943,7 @@ errmsg(const char *msg, const int err) {
         MY_NAME, msg, err, fko_errstr(err));
 }
 
-/* free up memory and exist
+/* free up memory and exit
 */
 static void
 clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts, unsigned int exit_status)
