@@ -56,7 +56,7 @@ zero_cmd_buffers(void)
  * daemon to stdout.
 */
 int
-fw_dump_rules(const fko_srv_options_t *opts)
+fw_dump_rules(const fko_srv_options_t * const opts)
 {
     int     res, got_err = 0;
 
@@ -143,7 +143,7 @@ delete_all_anchor_rules(const fko_srv_options_t *opts)
 }
 
 void
-fw_config_init(fko_srv_options_t *opts)
+fw_config_init(fko_srv_options_t * const opts)
 {
     memset(&fwc, 0x0, sizeof(struct fw_config));
 
@@ -163,7 +163,7 @@ fw_config_init(fko_srv_options_t *opts)
 }
 
 void
-fw_initialize(const fko_srv_options_t *opts)
+fw_initialize(const fko_srv_options_t * const opts)
 {
 
     if (! anchor_active(opts))
@@ -180,7 +180,7 @@ fw_initialize(const fko_srv_options_t *opts)
 }
 
 int
-fw_cleanup(const fko_srv_options_t *opts)
+fw_cleanup(const fko_srv_options_t * const opts)
 {
     delete_all_anchor_rules(opts);
     return(0);
@@ -191,7 +191,8 @@ fw_cleanup(const fko_srv_options_t *opts)
 /* Rule Processing - Create an access request...
 */
 int
-process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_data_t *spadat)
+process_spa_request(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
     char             new_rule[MAX_PF_NEW_RULE_LEN];
     char             write_cmd[CMD_BUFSIZE];
@@ -341,7 +342,7 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
  * firewall rules.
 */
 void
-check_firewall_rules(const fko_srv_options_t *opts)
+check_firewall_rules(const fko_srv_options_t * const opts)
 {
     char            exp_str[12];
     char            anchor_rules_copy[STANDARD_CMD_OUT_BUFSIZE];
