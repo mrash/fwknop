@@ -165,6 +165,12 @@ EXTRA_DIST = \
     test/conf/no_subnet_source_match_access.conf \
     test/conf/ofb_mode_access.conf \
     test/conf/open_ports_access.conf \
+    test/conf/fwknoprc_default_hmac_base64_key \
+    test/conf/fwknoprc_invalid_base64_key \
+    test/conf/fwknoprc_named_key \
+    test/conf/fwknoprc_with_default_base64_key \
+    test/conf/fwknoprc_with_default_key \
+    test/conf/fwknoprc_with_named_key \
     test/conf/override_fwknopd.conf \
     test/conf/require_src_access.conf \
     test/conf/require_user_access.conf \
