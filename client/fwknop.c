@@ -508,6 +508,8 @@ static int
 get_rand_port(fko_ctx_t ctx)
 {
     char *rand_val = NULL;
+    char  port_str[6];
+    int   tmpint, is_err;
     int   port     = 0;
     int   res      = 0;
 
@@ -515,21 +517,35 @@ get_rand_port(fko_ctx_t ctx)
     if(res != FKO_SUCCESS)
     {
         errmsg("get_rand_port(), fko_get_rand_value", res);
+        fko_destroy(ctx);
+        exit(EXIT_FAILURE);
+    }
+
+    strlcpy(port_str, rand_val, 6);
+
+    tmpint = strtol_wrapper(port_str, 0, 0, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr,
+            "[*] get_rand_port(), could not convert rand_val str '%s', to integer",
+            rand_val);
+        fko_destroy(ctx);
         exit(EXIT_FAILURE);
     }
 
     /* Convert to a random value between 1024 and 65535
     */
-    port = (MIN_HIGH_PORT + (abs(atoi(rand_val)) % (MAX_PORT - MIN_HIGH_PORT)));
+    port = (MIN_HIGH_PORT + (tmpint % (MAX_PORT - MIN_HIGH_PORT)));
 
     /* Force libfko to calculate a new random value since we don't want to
-     * given anyone a hint (via the port value) about the contents of the
+     * give anyone a hint (via the port value) about the contents of the
      * encrypted SPA data.
     */
     res = fko_set_rand_value(ctx, NULL);
     if(res != FKO_SUCCESS)
     {
         errmsg("get_rand_port(), fko_get_rand_value", res);
+        fko_destroy(ctx);
         exit(EXIT_FAILURE);
     }
 

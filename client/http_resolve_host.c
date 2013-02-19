@@ -219,7 +219,7 @@ static int
 parse_url(char *res_url, struct url* url)
 {
     char *s_ndx, *e_ndx;
-    int  tlen, tlen_offset, port;
+    int  tlen, tlen_offset, port, is_err;
 
     /* https is not supported.
     */
@@ -241,8 +241,8 @@ parse_url(char *res_url, struct url* url)
     e_ndx = strchr(s_ndx, ':');
     if(e_ndx != NULL)
     {
-        port = atoi(e_ndx+1);
-        if(port < 1 || port > MAX_PORT)
+        port = strtol_wrapper(e_ndx+1, 1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+        if(is_err != FKO_SUCCESS)
         {
             fprintf(stderr, "resolve-url port value is invalid.\n");
             return(-1);

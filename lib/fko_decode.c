@@ -40,7 +40,7 @@ int
 fko_decode_spa_data(fko_ctx_t ctx)
 {
     char       *tbuf, *ndx, *tmp;
-    int         t_size, i;
+    int         t_size, i, is_err;
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
@@ -227,7 +227,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     strlcpy(tbuf, ndx, t_size+1);
 
-    ctx->timestamp = (unsigned int)atoi(tbuf);
+    ctx->timestamp = (unsigned int) strtol_wrapper(tbuf,
+            0, 0, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA);
+    }
 
     /* Extract the version string.
     */
@@ -270,9 +276,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     strlcpy(tbuf, ndx, t_size+1);
 
-    ctx->message_type = (unsigned int)atoi(tbuf);
-
-    if(ctx->message_type < 0 || ctx->message_type >= FKO_LAST_MSG_TYPE)
+    ctx->message_type = strtol_wrapper(tbuf, 0,
+            FKO_LAST_MSG_TYPE, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
     {
         free(tbuf);
         return(FKO_ERROR_INVALID_DATA);
@@ -477,7 +483,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_INVALID_DATA);
             }
 
-            ctx->client_timeout = (unsigned int)atoi(ndx);
+            ctx->client_timeout = (unsigned int) strtol_wrapper(ndx, 0,
+                    (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                free(tbuf);
+                return(FKO_ERROR_INVALID_DATA);
+            }
         }
     }
 

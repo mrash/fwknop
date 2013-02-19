@@ -52,7 +52,7 @@ static pid_t get_running_pid(const fko_srv_options_t *opts);
 int
 main(int argc, char **argv)
 {
-    int                 res, last_sig, rp_cache_count;
+    int                 res, last_sig, rp_cache_count, is_err;
     char               *locale;
     pid_t               old_pid;
 
@@ -282,16 +282,18 @@ main(int argc, char **argv)
         */
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
-            if(atoi(opts.config[CONF_TCPSERV_PORT]) <= 0
-              || atoi(opts.config[CONF_TCPSERV_PORT]) > MAX_PORT)
+
+            strtol_wrapper(opts.config[CONF_TCPSERV_PORT],
+                    1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+            if(is_err == FKO_SUCCESS)
+            {
+                run_tcp_server(&opts);
+            }
+            else
             {
                 log_msg(LOG_WARNING,
                     "WARNING: ENABLE_TCP_SERVER is set, but TCPSERV_PORT is not valid. TCP server not started!"
                 );
-            }
-            else
-            {
-                run_tcp_server(&opts);
             }
         }
 
@@ -673,7 +675,7 @@ write_pid_file(fko_srv_options_t *opts)
 static pid_t
 get_running_pid(const fko_srv_options_t *opts)
 {
-    int     op_fd;
+    int     op_fd, is_err;
     char    buf[PID_BUFLEN] = {0};
     pid_t   rpid            = 0;
 
@@ -687,7 +689,12 @@ get_running_pid(const fko_srv_options_t *opts)
         if (read(op_fd, buf, PID_BUFLEN) > 0)
         {
             buf[PID_BUFLEN-1] = '\0';
-            rpid = (pid_t)atoi(buf);
+            /* max pid value is configurable on Linux
+            */
+            rpid = (pid_t) strtol_wrapper(buf, 0, (2 << 31),
+                    NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+                rpid = 0;
         }
 
         close(op_fd);

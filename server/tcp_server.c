@@ -56,14 +56,21 @@ run_tcp_server(fko_srv_options_t *opts)
 {
     pid_t               pid, ppid;
     int                 s_sock, c_sock, sfd_flags, clen, selval;
-    int                 reuse_addr = 1;
+    int                 reuse_addr = 1, is_err;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
     char                sipbuf[MAX_IPV4_STR_LEN];
 
-    unsigned short      port = atoi(opts->config[CONF_TCPSERV_PORT]);
+    unsigned short      port;
 
+    port = strtol_wrapper(opts->config[CONF_TCPSERV_PORT],
+            0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] Invalid max TCPSERV_PORT value.\n");
+        exit(EXIT_FAILURE);
+    }
     log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.", port);
 
     /* Fork off a child process to run the command and provide its outputs.

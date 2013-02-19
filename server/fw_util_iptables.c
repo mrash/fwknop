@@ -434,7 +434,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
 static void
 set_fw_chain_conf(const int type, const char * const conf_str)
 {
-    int i, j;
+    int i, j, is_err;
     char tbuf[1024]     = {0};
     const char *ndx     = conf_str;
 
@@ -491,14 +491,27 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     strlcpy(chain->from_chain, chain_fields[2], MAX_CHAIN_NAME_LEN);
 
     /* Pull and set Jump_rule_position */
-    chain->jump_rule_pos = atoi(chain_fields[3]);
+    chain->jump_rule_pos = strtol_wrapper(chain_fields[3],
+            0, (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid jump rule position in Line: %s\n",
+            conf_str);
+        exit(EXIT_FAILURE);
+    }
 
     /* Pull and set To_chain */
     strlcpy(chain->to_chain, chain_fields[4], MAX_CHAIN_NAME_LEN);
 
-    /* Pull and set Jump_rule_position */
-    chain->rule_pos = atoi(chain_fields[5]);
-
+    /* Pull and set to_chain rule position */
+    chain->rule_pos = strtol_wrapper(chain_fields[5],
+            0, (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid to_chain rule position in Line: %s\n",
+            conf_str);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void
@@ -686,7 +699,7 @@ process_spa_request(const fko_srv_options_t * const opts,
     struct fw_chain * const dnat_chain = &(opts->fw_config->chain[IPT_DNAT_ACCESS]);
     struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
-    int             res = 0;
+    int             res = 0, is_err;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -804,7 +817,6 @@ process_spa_request(const fko_srv_options_t * const opts,
                     }
                 }
             }
-
             ple = ple->next;
         }
     }
@@ -828,7 +840,13 @@ process_spa_request(const fko_srv_options_t * const opts,
             if(ndx != NULL)
             {
                 strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
-                nat_port = atoi(ndx+1);
+                nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    log_msg(LOG_INFO, "Invalid NAT port in SPA message");
+                    free_acc_port_list(port_list);
+                    return res;
+                }
             }
         }
 
@@ -1024,7 +1042,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char             rule_num_str[6];
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i, res, rn_offset;
+    int             i, res, rn_offset, rule_num, is_err;
     time_t          now, rule_exp, min_exp = 0;
 
     struct fw_chain *ch = opts->fw_config->chain;
@@ -1141,15 +1159,27 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
                 strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
 
+                rule_num = strtol_wrapper(rule_num_str, rn_offset, (2 << 15),
+                        NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    log_msg(LOG_ERR,
+                        "Rule parse error while finding rule number in chain %i", i);
+
+                    if (ch[i].active_rules > 0)
+                        ch[i].active_rules--;
+
+                    break;
+                }
+
                 zero_cmd_buffers();
 
                 snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
                     opts->fw_config->fw_command,
                     ch[i].table,
                     ch[i].to_chain,
-                    atoi(rule_num_str) - rn_offset
+                    rule_num - rn_offset
                 );
-
 
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 

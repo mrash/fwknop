@@ -41,12 +41,16 @@
 static void
 range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
 {
-    if (low > atoi(val) || high < atoi(val))
+    int     is_err;
+
+    strtol_wrapper(val, low, high, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
     {
         fprintf(stderr, "[*] var %s value '%s' not in the range %d-%d\n",
             var, val, low, high);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
+
     return;
 }
 
@@ -128,6 +132,8 @@ free_configs(fko_srv_options_t *opts)
 static void
 validate_int_var_ranges(fko_srv_options_t *opts)
 {
+    int     is_err = FKO_SUCCESS;
+
     range_check(opts, "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
         1, RCHK_MAX_PCAP_LOOP_SLEEP);
     range_check(opts, "MAX_SPA_PACKET_AGE", opts->config[CONF_MAX_SPA_PACKET_AGE],
@@ -153,10 +159,14 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     /* Make sure the active and expire sets are not identical whenever
      * they are non-zero
     */
-    if((atoi(opts->config[CONF_IPFW_ACTIVE_SET_NUM]) > 0
-            && atoi(opts->config[CONF_IPFW_EXPIRE_SET_NUM]) > 0)
-            && atoi(opts->config[CONF_IPFW_ACTIVE_SET_NUM])
-                == atoi(opts->config[CONF_IPFW_EXPIRE_SET_NUM]))
+    if((strtol_wrapper(opts->config[CONF_IPFW_ACTIVE_SET_NUM],
+                    0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err) > 0
+            && strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_SET_NUM],
+                0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err) > 0)
+            && strtol_wrapper(opts->config[CONF_IPFW_ACTIVE_SET_NUM],
+                0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err)
+                == strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_SET_NUM],
+                    0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err))
     {
         fprintf(stderr,
                 "[*] Cannot set identical ipfw active and expire sets.\n");
@@ -168,6 +178,12 @@ validate_int_var_ranges(fko_srv_options_t *opts)
         1, RCHK_MAX_PF_EXPIRE_INTERVAL);
 
 #endif /* FIREWALL type */
+
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr, "[*] invalid integer conversion error.\n");
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
 
     return;
 }
@@ -631,7 +647,7 @@ set_preconfig_entries(fko_srv_options_t *opts)
 void
 config_init(fko_srv_options_t *opts, int argc, char **argv)
 {
-    int             cmd_arg, index;
+    int             cmd_arg, index, is_err;
     unsigned char   got_conf_file = 0, got_override_config = 0;
 
     char            override_file[MAX_LINE_LEN];
@@ -753,7 +769,15 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 /* This was handled earlier */
                 break;
             case 'C':
-                opts->packet_ctr_limit = atoi(optarg);
+                opts->packet_ctr_limit = strtol_wrapper(optarg,
+                        0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    fprintf(stderr,
+                        "[*] invalid -C packet count limit '%s'\n",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
                 break;
             case 'd':
 #if USE_FILE_CACHE

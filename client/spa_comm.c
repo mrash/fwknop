@@ -509,11 +509,12 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
 {
     char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
     char *ndx = options->http_proxy;
-    int  i, proxy_port = 0;
+    int  i, proxy_port = 0, is_err;
 
     spa_data_copy = malloc(sd_len+1);
     if (spa_data_copy == NULL)
     {
+        fprintf(stderr, "[*] Fatal, could not allocate memory.\n");
         exit(EXIT_FAILURE);
     }
     memcpy(spa_data_copy, spa_data, sd_len+1);
@@ -557,7 +558,12 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
         if(ndx)
         {
             *ndx = '\0';
-            proxy_port = atoi(ndx+1);
+            proxy_port = strtol_wrapper(ndx+1, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                fprintf(stderr, "proxy port value is invalid.\n");
+                return 0;
+            }
         }
 
         /* If we have a valid port value, use it.

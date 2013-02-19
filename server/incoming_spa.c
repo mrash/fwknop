@@ -256,6 +256,8 @@ incoming_spa(fko_srv_options_t *opts)
     time_t          now_ts;
     int             res, status, ts_diff, enc_type, stanza_num=0;
     int             added_replay_digest = 0, pkt_data_len=0;
+    int             is_err;
+    int             conf_pkt_age = 0;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -288,6 +290,17 @@ incoming_spa(fko_srv_options_t *opts)
     {
         printf("[+] candidate SPA packet payload:\n");
         hex_dump(spa_pkt->packet_data, pkt_data_len);
+    }
+
+    if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
+    {
+        conf_pkt_age = strtol_wrapper(opts->config[CONF_MAX_SPA_PACKET_AGE],
+                0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+        if(is_err != FKO_SUCCESS)
+        {
+            log_msg(LOG_ERR, "[*] invalid MAX_SPA_PACKET_AGE\n");
+            return;
+        }
     }
 
     if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
@@ -568,7 +581,7 @@ incoming_spa(fko_srv_options_t *opts)
 
             ts_diff = abs(now_ts - spadat.timestamp);
 
-            if(ts_diff > atoi(opts->config[CONF_MAX_SPA_PACKET_AGE]))
+            if(ts_diff > conf_pkt_age)
             {
                 log_msg(LOG_WARNING, "(stanza #%d) SPA data time difference is too great (%i seconds).",
                     stanza_num, ts_diff);

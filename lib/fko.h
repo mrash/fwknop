@@ -202,6 +202,11 @@ typedef enum {
 #define B64_GPG_PREFIX "hQ"
 #define B64_GPG_PREFIX_STR_LEN 2
 
+/* Specify whether libfko is allowed to call exit()
+*/
+#define EXIT_UPON_ERR 1
+#define NO_EXIT_UPON_ERR 0
+
 /* The context holds the global state and config options, as
  * well as some intermediate results during processing. This
  * is an opaque pointer.

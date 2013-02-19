@@ -60,13 +60,30 @@ pcap_capture(fko_srv_options_t *opts)
     int                 pcap_file_mode = 0;
     int                 status;
     int                 useconds;
+    int                 pcap_dispatch_count;
+    int                 max_sniff_bytes;
+    int                 is_err;
     pid_t               child_pid;
 
 #if FIREWALL_IPFW
     time_t              now;
 #endif
 
-    useconds = atoi(opts->config[CONF_PCAP_LOOP_SLEEP]);
+    useconds = strtol_wrapper(opts->config[CONF_PCAP_LOOP_SLEEP],
+            0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid PCAP_LOOP_SLEEP_value\n");
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    max_sniff_bytes = strtol_wrapper(opts->config[CONF_MAX_SNIFF_BYTES],
+            0, (2 << 14), NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid MAX_SNIFF_BYTES\n");
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+    }
 
     /* Set promiscuous mode if ENABLE_PCAP_PROMISC is set to 'Y'.
     */
@@ -95,10 +112,8 @@ pcap_capture(fko_srv_options_t *opts)
         log_msg(LOG_INFO, "Sniffing interface: %s",
             opts->config[CONF_PCAP_INTF]);
 
-        pcap = pcap_open_live(
-            opts->config[CONF_PCAP_INTF],
-            atoi(opts->config[CONF_MAX_SNIFF_BYTES]),
-            promisc, 100, errstr
+        pcap = pcap_open_live(opts->config[CONF_PCAP_INTF],
+            max_sniff_bytes, promisc, 100, errstr
         );
 
         if(pcap == NULL)
@@ -180,6 +195,14 @@ pcap_capture(fko_srv_options_t *opts)
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
+    pcap_dispatch_count = strtol_wrapper(opts->config[CONF_PCAP_DISPATCH_COUNT],
+            0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid PCAP_DISPATCH_COUNT\n");
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+    }
+
     /* Initialize our signal handlers. You can check the return value for
      * the number of signals that were *not* set.  Those that were not set
      * will be listed in the log/stderr output.
@@ -222,7 +245,6 @@ pcap_capture(fko_srv_options_t *opts)
             got_sigchld = 0;
         }
 
-
         /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
         */
         if(got_signal != 0)
@@ -243,7 +265,7 @@ pcap_capture(fko_srv_options_t *opts)
                 got_signal = 0;
         }
 
-        res = pcap_dispatch(pcap, atoi(opts->config[CONF_PCAP_DISPATCH_COUNT]),
+        res = pcap_dispatch(pcap, pcap_dispatch_count,
             (pcap_handler)&process_packet, (unsigned char *)opts);
 
         /* Count processed packets

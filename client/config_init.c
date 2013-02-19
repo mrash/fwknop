@@ -106,6 +106,7 @@ parse_time_offset(const char *offset_str)
     int offset      = 0;
     int offset_type = TIME_OFFSET_SECONDS;
     int os_len      = strlen(offset_str);
+    int is_err;
 
     char offset_digits[MAX_TIME_STR_LEN];
 
@@ -138,12 +139,7 @@ parse_time_offset(const char *offset_str)
         exit(EXIT_FAILURE);
     }
 
-    offset = atoi(offset_digits);
-
-    if (offset < 0) {
-        fprintf(stderr, "Invalid time offset: %s", offset_str);
-        exit(EXIT_FAILURE);
-    }
+    offset = strtol_wrapper(offset_digits, 0, (2 << 15), EXIT_UPON_ERR, &is_err);
 
     /* Apply the offset_type value
     */
@@ -262,7 +258,7 @@ create_fwknoprc(const char *rcfile)
 static int
 parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
 {
-    int     tmpint;
+    int     tmpint, is_err;
 
     /* Digest Type */
     if(CONF_VAR_IS(var, "DIGEST_TYPE"))
@@ -285,29 +281,30 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     /* Server port */
     else if(CONF_VAR_IS(var, "SPA_SERVER_PORT"))
     {
-        tmpint = atoi(val);
-        if(tmpint < 0 || tmpint > MAX_PORT)
-            return(-1);
-        else
+        tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+        if(is_err == FKO_SUCCESS)
             options->spa_dst_port = tmpint;
+        else
+            return(-1);
     }
     /* Source port */
     else if(CONF_VAR_IS(var, "SPA_SOURCE_PORT"))
     {
-        tmpint = atoi(val);
-        if(tmpint < 0 || tmpint > MAX_PORT)
-            return(-1);
-        else
+        tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+        if(is_err == FKO_SUCCESS)
             options->spa_src_port = tmpint;
+        else
+            return(-1);
     }
     /* Firewall rule timeout */
     else if(CONF_VAR_IS(var, "FW_TIMEOUT"))
     {
-        tmpint = atoi(val);
-        if(tmpint < 0)
-            return(-1);
-        else
+        tmpint = strtol_wrapper(val, 0, (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+        if(is_err == FKO_SUCCESS)
             options->fw_timeout = tmpint;
+        else
+            return(-1);
+
     }
     /* Allow IP */
     else if(CONF_VAR_IS(var, "ALLOW_IP"))
@@ -475,11 +472,11 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     /* NAT port */
     else if(CONF_VAR_IS(var, "NAT_PORT"))
     {
-        tmpint = atoi(val);
-        if(tmpint < 0 || tmpint > MAX_PORT)
-            return(-1);
-        else
+        tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+        if(is_err == FKO_SUCCESS)
             options->nat_port = tmpint;
+        else
+            return(-1);
     }
 
     return(0);
@@ -764,7 +761,7 @@ set_defaults(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int       cmd_arg, index;
+    int       cmd_arg, index, is_err;
 
     /* Zero out options and opts_track.
     */
@@ -833,8 +830,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->args_save_file, optarg, MAX_PATH_LEN);
                 break;
             case 'f':
-                options->fw_timeout = atoi(optarg);
-                if (options->fw_timeout < 0) {
+                options->fw_timeout = strtol_wrapper(optarg, 0,
+                        (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
                     fprintf(stderr, "--fw-timeout must be >= 0\n");
                     exit(EXIT_FAILURE);
                 }
@@ -860,16 +859,18 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->key_gen = 1;
                 strlcpy(options->key_gen_file, optarg, MAX_PATH_LEN);
             case SPA_ICMP_TYPE:
-                options->spa_icmp_type = atoi(optarg);
-                if (options->spa_icmp_type < 0 || options->spa_icmp_type > MAX_ICMP_TYPE)
+                options->spa_icmp_type = strtol_wrapper(optarg, 0,
+                        MAX_ICMP_TYPE, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
                 {
                     fprintf(stderr, "Unrecognized icmp type value: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
                 break;
             case SPA_ICMP_CODE:
-                options->spa_icmp_code = atoi(optarg);
-                if (options->spa_icmp_code < 0 || options->spa_icmp_code > MAX_ICMP_CODE)
+                options->spa_icmp_code = strtol_wrapper(optarg, 0,
+                        MAX_ICMP_CODE, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
                 {
                     fprintf(stderr, "Unrecognized icmp code value: %s\n", optarg);
                     exit(EXIT_FAILURE);
@@ -909,8 +910,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->nat_access_str, optarg, MAX_LINE_LEN);
                 break;
             case 'p':
-                options->spa_dst_port = atoi(optarg);
-                if (options->spa_dst_port < 0 || options->spa_dst_port > MAX_PORT)
+                options->spa_dst_port = strtol_wrapper(optarg, 0,
+                        MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
                 {
                     fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);
@@ -953,8 +955,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->allow_ip_str, "0.0.0.0", MAX_IPV4_STR_LEN);
                 break;
             case 'S':
-                options->spa_src_port = atoi(optarg);
-                if (options->spa_src_port < 0 || options->spa_src_port > MAX_PORT)
+                options->spa_src_port = strtol_wrapper(optarg, 0,
+                        MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
                 {
                     fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);
@@ -999,8 +1002,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->nat_rand_port = 1;
                 break;
             case NAT_PORT:
-                options->nat_port = atoi(optarg);
-                if (options->nat_port < 0 || options->nat_port > MAX_PORT)
+                options->nat_port = strtol_wrapper(optarg, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
                 {
                     fprintf(stderr, "Unrecognized port: %s\n", optarg);
                     exit(EXIT_FAILURE);

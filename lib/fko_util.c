@@ -5,7 +5,7 @@
  *
  * Author:  Michael Rash
  *
- * Purpose: Set/Get the current username.
+ * Purpose: Provide a set of common utility functions that fwknop can use.
  *
  * Copyright 2012 Michael Rash (mbr@cipherdyne.org)
  *
@@ -30,6 +30,7 @@
 */
 #include "fko_common.h"
 #include "fko.h"
+#include <errno.h>
 
 /* Validate encoded message length
 */
@@ -75,6 +76,55 @@ is_valid_digest_len(const int len)
     }
 
     return(1);
+}
+
+int
+strtol_wrapper(const char * const str, const int min,
+    const int max, const int exit_upon_err, int *err)
+{
+    int val;
+
+    errno = 0;
+    *err = FKO_SUCCESS;
+
+    val = strtol(str, (char **) NULL, 10);
+
+    if ((errno == ERANGE || (errno != 0 && val == 0)))
+    {
+        *err = errno;
+        if(exit_upon_err == EXIT_UPON_ERR)
+        {
+            perror("strtol");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    if(val < min)
+    {
+        *err = FKO_ERROR_INVALID_DATA;
+        if(exit_upon_err == EXIT_UPON_ERR)
+        {
+            fprintf(stderr, "[*] Value %d out of range %d - %d\n",
+                val, min, max);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* allow max==0 to be an exception where we don't care about the
+     * maximum - note that the ERANGE check is still in place above
+    */
+    if((max > 0) && (val > max))
+    {
+        *err = FKO_ERROR_INVALID_DATA;
+        if(exit_upon_err == EXIT_UPON_ERR)
+        {
+            fprintf(stderr, "[*] Value %d out of range %d - %d\n",
+                val, min, max);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return val;
 }
 
 /***EOF***/

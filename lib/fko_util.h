@@ -38,6 +38,8 @@
 int is_valid_encoded_msg_len(const int len);
 int is_valid_pt_msg_len(const int len);
 int is_valid_digest_len(const int len);
+int strtol_wrapper(const char * const str, const int min,
+    const int max, const int exit_upon_err, int *is_err);
 
 size_t strlcat(char *dst, const char *src, size_t siz);
 size_t strlcpy(char *dst, const char *src, size_t siz);
