@@ -236,8 +236,10 @@ exit 1 unless GetOptions(
 if ($enable_all) {
     $use_valgrind = 1;
     $enable_recompilation_warnings_check = 1;
-    $enable_client_ip_resolve_test = 1;
     $enable_make_distcheck = 1;
+    $enable_client_ip_resolve_test = 1;
+    $enable_perl_module_checks = 1;
+    $enable_openssl_compatibility_tests = 1;
 }
 
 ### create an anonymized tar file of test suite results that can be
@@ -6618,14 +6620,6 @@ sub init() {
     ### make sure no fwknopd instance is currently running
     die "[*] Please stop the running fwknopd instance."
         if &is_fwknopd_running();
-
-    if ($enable_all) {
-        $enable_recompilation_warnings_check = 1;
-        $enable_make_distcheck = 1;
-        $enable_client_ip_resolve_test = 1;
-        $enable_perl_module_checks = 1;
-        $enable_openssl_compatibility_tests = 1;
-    }
 
     if ($enable_openssl_compatibility_tests) {
         $openssl_path = &find_command('openssl');
