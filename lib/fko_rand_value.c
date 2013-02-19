@@ -72,6 +72,9 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
         if(strnlen(new_val, FKO_RAND_VAL_SIZE+1) != FKO_RAND_VAL_SIZE)
             return(FKO_ERROR_INVALID_DATA);
 
+        if(ctx->rand_val != NULL)
+            free(ctx->rand_val);
+
         ctx->rand_val = strdup(new_val);
         if(ctx->rand_val == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -110,6 +113,9 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
 #endif
 
     srand(seed);
+
+    if(ctx->rand_val != NULL)
+        free(ctx->rand_val);
 
     ctx->rand_val = malloc(FKO_RAND_VAL_SIZE+1);
     if(ctx->rand_val == NULL)
