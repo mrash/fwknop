@@ -82,14 +82,6 @@ add_acc_b64_string(char **var, int *len, const char *val)
     }
 }
 
-/* Add an access int entry
-*/
-static int
-add_acc_int(int *var, const char *val)
-{
-    return(*var = atoi(val));
-}
-
 /* Add an access bool entry (unsigned char of 1 or 0)
 */
 static unsigned char
@@ -221,6 +213,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
     char                *ndx;
     char                ip_str[MAX_IPV4_STR_LEN] = {0};
     uint32_t            mask;
+    int                 is_err;
 
     struct in_addr      in;
 
@@ -256,7 +249,16 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
                 return 0;
             }
 
-            mask = atoi(ndx+1);
+            mask = strtol_wrapper(ndx+1, 0, 0, NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                fprintf(stderr,
+                    "[*] Invalid IP mask str '%s'.", ndx+1);
+                free(new_sle);
+                new_sle = NULL;
+                return 0;
+            }
+
             strlcpy(ip_str, ip, (ndx-ip)+1);
         }
         else
@@ -368,6 +370,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
 {
     char    *ndx;
     char    proto_str[ACCESS_BUF_LEN];
+    int     is_err;
 
     /* Parse the string into its components.
     */
@@ -388,9 +391,8 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
 
     strlcpy(proto_str, pstr, (ndx - pstr)+1);
 
-    *port = atoi(ndx+1);
-
-    if((*port < 0) || (*port > MAX_PORT))
+    *port = strtol_wrapper(ndx+1, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR,
             "Invalid port in access request: %s", pstr);
@@ -891,7 +893,7 @@ parse_access_file(fko_srv_options_t *opts)
 {
     FILE           *file_ptr;
     char           *ndx;
-    int             got_source = 0;
+    int             got_source = 0, is_err;
     unsigned int    num_lines = 0;
 
     char            access_line_buf[MAX_LINE_LEN] = {0};
@@ -1071,7 +1073,14 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {
-            add_acc_int(&(curr_acc->fw_access_timeout), val);
+            curr_acc->fw_access_timeout = strtol_wrapper(val, 0,
+                    (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                fprintf(stderr,
+                    "[*] FW_ACCESS_TIMEOUT value not in range.");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "ENCRYPTION_MODE"))
         {

@@ -34,7 +34,9 @@
 #define PROTO_TCP   6
 #define PROTO_UDP   17
 
-#define ACCESS_BUF_LEN  32
+/* Allow strings as large as 123.123.123.123/255.255.255.255
+*/
+#define ACCESS_BUF_LEN  33
 
 /* Function Prototypes
 */
