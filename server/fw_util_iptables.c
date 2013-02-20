@@ -492,7 +492,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 
     /* Pull and set Jump_rule_position */
     chain->jump_rule_pos = strtol_wrapper(chain_fields[3],
-            0, (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+            0, RCHK_MAX_IPT_RULE_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] invalid jump rule position in Line: %s\n",
@@ -505,7 +505,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 
     /* Pull and set to_chain rule position */
     chain->rule_pos = strtol_wrapper(chain_fields[5],
-            0, (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+            0, RCHK_MAX_IPT_RULE_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] invalid to_chain rule position in Line: %s\n",
@@ -1159,7 +1159,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
                 strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
 
-                rule_num = strtol_wrapper(rule_num_str, rn_offset, (2 << 15),
+                rule_num = strtol_wrapper(rule_num_str, rn_offset, RCHK_MAX_IPT_RULE_NUM,
                         NO_EXIT_UPON_ERR, &is_err);
                 if(is_err != FKO_SUCCESS)
                 {

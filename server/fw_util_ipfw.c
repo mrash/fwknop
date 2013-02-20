@@ -183,6 +183,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 void
 fw_config_init(fko_srv_options_t * const opts)
 {
+    int         is_err;
 
     memset(&fwc, 0x0, sizeof(struct fw_config));
 
@@ -190,11 +191,51 @@ fw_config_init(fko_srv_options_t * const opts)
     */
     strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], MAX_PATH_LEN);
 
-    fwc.start_rule_num = atoi(opts->config[CONF_IPFW_START_RULE_NUM]);
-    fwc.max_rules      = atoi(opts->config[CONF_IPFW_MAX_RULES]);
-    fwc.active_set_num = atoi(opts->config[CONF_IPFW_ACTIVE_SET_NUM]);
-    fwc.expire_set_num = atoi(opts->config[CONF_IPFW_EXPIRE_SET_NUM]);
-    fwc.purge_interval = atoi(opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL]);
+    fwc.start_rule_num = strtol_wrapper(opts->config[CONF_IPFW_START_RULE_NUM],
+            0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].\n",
+                opts->config[CONF_IPFW_START_RULE_NUM], 0, RCHK_MAX_IPFW_MAX_RULES);
+        exit(EXIT_FAILURE);
+    }
+
+    fwc.max_rules = strtol_wrapper(opts->config[CONF_IPFW_MAX_RULES],
+            0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].\n",
+                opts->config[CONF_IPFW_MAX_RULES], 0, RCHK_MAX_IPFW_MAX_RULES);
+        exit(EXIT_FAILURE);
+    }
+
+    fwc.active_set_num = strtol_wrapper(opts->config[CONF_IPFW_ACTIVE_SET_NUM],
+            0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].\n",
+                opts->config[CONF_IPFW_ACTIVE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
+        exit(EXIT_FAILURE);
+    }
+
+    fwc.expire_set_num = strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_SET_NUM],
+            0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].\n",
+                opts->config[CONF_IPFW_EXPIRE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
+        exit(EXIT_FAILURE);
+    }
+
+    fwc.purge_interval = strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL],
+            0, RCHK_MAX_IPFW_PURGE_INTERVAL, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].\n",
+                opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL], 0,
+                RCHK_MAX_IPFW_PURGE_INTERVAL);
+        exit(EXIT_FAILURE);
+    }
 
     /* Let us find it via our opts struct as well.
     */
@@ -206,7 +247,7 @@ fw_config_init(fko_srv_options_t * const opts)
 void
 fw_initialize(const fko_srv_options_t * const opts)
 {
-    int             res = 0;
+    int             res = 0, is_err;
     unsigned short  curr_rule;
     char           *ndx;
 
@@ -332,13 +373,16 @@ fw_initialize(const fko_srv_options_t * const opts)
 
         if(isdigit(*ndx))
         {
-            curr_rule = atoi(ndx);
+            curr_rule = strtol_wrapper(ndx, 0, -1, NO_EXIT_UPON_ERR, &is_err);
 
-            if(curr_rule >= fwc.start_rule_num
-              && curr_rule < fwc.start_rule_num + fwc.max_rules)
+            if(is_err == FKO_SUCCESS)
             {
-                fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
-                fwc.total_rules++;
+                if(curr_rule >= fwc.start_rule_num
+                  && curr_rule < fwc.start_rule_num + fwc.max_rules)
+                {
+                    fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
+                    fwc.total_rules++;
+                }
             }
         }
         else
@@ -349,7 +393,6 @@ fw_initialize(const fko_srv_options_t * const opts)
         ndx = strstr(ndx, "# DISABLED ");
     }
 }
-
 
 int
 fw_cleanup(const fko_srv_options_t * const opts)
@@ -559,7 +602,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char            rule_num_str[6];
     char           *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i=0, res=0;
+    int             i=0, res=0, is_err;
     time_t          now, rule_exp, min_exp = 0;
     unsigned short  curr_rule;
 
@@ -683,37 +726,44 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
             strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
 
-            curr_rule = atoi(rule_num_str);
+            curr_rule = strtol_wrapper(rule_num_str, 0, -1, NO_EXIT_UPON_ERR, &is_err);
 
-            zero_cmd_buffers();
-
-            /* Move the rule to the expired rules set.
-            */
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_MOVE_RULE_ARGS,
-                opts->fw_config->fw_command,
-                curr_rule,
-                fwc.expire_set_num
-            );
-
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-
-            if (opts->verbose)
-                log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
-
-            if(EXTCMD_IS_SUCCESS(res))
+            if(is_err == FKO_SUCCESS)
             {
-                log_msg(LOG_INFO, "Moved rule %s with expire time of %u to set %u.",
-                    rule_num_str, rule_exp, fwc.expire_set_num
+                zero_cmd_buffers();
+
+                /* Move the rule to the expired rules set.
+                */
+                snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPFW_MOVE_RULE_ARGS,
+                    opts->fw_config->fw_command,
+                    curr_rule,
+                    fwc.expire_set_num
                 );
 
-                if (fwc.active_rules > 0)
-                    fwc.active_rules--;
+                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-                fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
+                if (opts->verbose)
+                    log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+                        cmd_buf, res, err_buf);
+
+                if(EXTCMD_IS_SUCCESS(res))
+                {
+                    log_msg(LOG_INFO, "Moved rule %s with expire time of %u to set %u.",
+                        rule_num_str, rule_exp, fwc.expire_set_num
+                    );
+
+                    if (fwc.active_rules > 0)
+                        fwc.active_rules--;
+
+                    fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_EXPIRED;
+                }
+                else
+                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
             }
             else
+            {
                 log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            }
         }
         else
         {
@@ -745,9 +795,7 @@ void
 ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 {
     char           *ndx, *co_end;
-
-    int             i, res;
-
+    int             i, res, is_err;
     unsigned short  curr_rule;
 
     /* First, we get the current active dynamic rules for the expired rule
@@ -825,11 +873,14 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
             */
             if(isdigit(*ndx))
             {
-                curr_rule = atoi(ndx);
+                curr_rule = strtol_wrapper(ndx, 0, -1, NO_EXIT_UPON_ERR, &is_err);
 
-                if(curr_rule >= fwc.start_rule_num
-                  && curr_rule < fwc.start_rule_num + fwc.max_rules)
-                    fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_TMP_MARKED;
+                if(is_err == FKO_SUCCESS)
+                {
+                    if(curr_rule >= fwc.start_rule_num
+                      && curr_rule < fwc.start_rule_num + fwc.max_rules)
+                        fwc.rule_map[curr_rule - fwc.start_rule_num] = RULE_TMP_MARKED;
+                }
             }
 
             ndx = strchr(ndx, '\n');

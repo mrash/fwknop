@@ -558,10 +558,12 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
         if(ndx)
         {
             *ndx = '\0';
-            proxy_port = strtol_wrapper(ndx+1, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+            proxy_port = strtol_wrapper(ndx+1, 1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
             {
-                fprintf(stderr, "proxy port value is invalid.\n");
+                fprintf(stderr,
+                    "[-] proxy port value is invalid, must be in [%d-%d]\n",
+                    1, MAX_PORT);
                 return 0;
             }
         }

@@ -770,7 +770,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case 'C':
                 opts->packet_ctr_limit = strtol_wrapper(optarg,
-                        0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+                        0, (2 << 30), NO_EXIT_UPON_ERR, &is_err);
                 if(is_err != FKO_SUCCESS)
                 {
                     fprintf(stderr,

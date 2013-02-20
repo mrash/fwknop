@@ -34,22 +34,6 @@
 #include <getopt.h>
 #include <sys/stat.h>
 
-/* For integer variable range checking
-*/
-#define RCHK_MAX_PCAP_LOOP_SLEEP            10000000  /* microseconds, 10 seconds */
-#define RCHK_MAX_SPA_PACKET_AGE             100000  /* seconds, can disable */
-#define RCHK_MAX_SNIFF_BYTES                1514
-#define RCHK_MAX_TCPSERV_PORT               65535
-
-#if FIREWALL_IPFW
-  #define RCHK_MAX_IPFW_START_RULE_NUM      65535
-  #define RCHK_MAX_IPFW_MAX_RULES           10000
-  #define RCHK_MAX_IPFW_SET_NUM             31
-  #define RCHK_MAX_IPFW_PURGE_INTERVAL      65535
-#elif FIREWALL_PF
-  #define RCHK_MAX_PF_EXPIRE_INTERVAL       65535
-#endif
-
 /* Function Prototypes
 */
 void config_init(fko_srv_options_t *opts, int argc, char **argv);

@@ -70,7 +70,7 @@ pcap_capture(fko_srv_options_t *opts)
 #endif
 
     useconds = strtol_wrapper(opts->config[CONF_PCAP_LOOP_SLEEP],
-            0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+            0, RCHK_MAX_PCAP_LOOP_SLEEP, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] invalid PCAP_LOOP_SLEEP_value\n");
@@ -78,7 +78,7 @@ pcap_capture(fko_srv_options_t *opts)
     }
 
     max_sniff_bytes = strtol_wrapper(opts->config[CONF_MAX_SNIFF_BYTES],
-            0, (2 << 14), NO_EXIT_UPON_ERR, &is_err);
+            0, RCHK_MAX_SNIFF_BYTES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] invalid MAX_SNIFF_BYTES\n");
@@ -196,7 +196,7 @@ pcap_capture(fko_srv_options_t *opts)
     }
 
     pcap_dispatch_count = strtol_wrapper(opts->config[CONF_PCAP_DISPATCH_COUNT],
-            0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+            0, RCHK_MAX_PCAP_DISPATCH_COUNT, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] invalid PCAP_DISPATCH_COUNT\n");

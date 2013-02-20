@@ -100,6 +100,15 @@
 
 #define DEF_FW_ACCESS_TIMEOUT           30
 
+/* For integer variable range checking
+*/
+#define RCHK_MAX_PCAP_LOOP_SLEEP        (2 << 22)
+#define RCHK_MAX_SPA_PACKET_AGE         100000  /* seconds, can disable */
+#define RCHK_MAX_SNIFF_BYTES            (2 << 14)
+#define RCHK_MAX_TCPSERV_PORT           ((2 << 16) - 1)
+#define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
+#define RCHK_MAX_FW_TIMEOUT             (2 << 22)
+
 /* Iptables-specific defines
 */
 #if FIREWALL_IPTABLES
@@ -118,6 +127,8 @@
   #define DEF_IPT_SNAT_ACCESS           "SNAT, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
   #define DEF_IPT_MASQUERADE_ACCESS     "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
 
+  #define RCHK_MAX_IPT_RULE_NUM         (2 << 15)
+
 /* Ipfw-specific defines
 */
 #elif FIREWALL_IPFW
@@ -125,16 +136,23 @@
   #define DEF_FLUSH_IPFW_AT_INIT         "Y"
   #define DEF_FLUSH_IPFW_AT_EXIT         "Y"
   #define DEF_IPFW_START_RULE_NUM        "10000"
-  #define DEF_IPFW_MAX_RULES             "1000"
+  #define DEF_IPFW_MAX_RULES             "65535"
   #define DEF_IPFW_ACTIVE_SET_NUM        "1"
   #define DEF_IPFW_EXPIRE_SET_NUM        "2"
   #define DEF_IPFW_EXPIRE_PURGE_INTERVAL "30"
   #define DEF_IPFW_ADD_CHECK_STATE       "N"
 
+  #define RCHK_MAX_IPFW_START_RULE_NUM   ((2 << 16) - 1)
+  #define RCHK_MAX_IPFW_MAX_RULES        ((2 << 16) - 1)
+  #define RCHK_MAX_IPFW_SET_NUM          ((2 << 5) - 1)
+  #define RCHK_MAX_IPFW_PURGE_INTERVAL   ((2 << 16) - 1)
+
 #elif FIREWALL_PF
 
-  #define DEF_PF_ANCHOR_NAME "fwknop"
-  #define DEF_PF_EXPIRE_INTERVAL "30"
+  #define DEF_PF_ANCHOR_NAME             "fwknop"
+  #define DEF_PF_EXPIRE_INTERVAL         "30"
+
+  #define RCHK_MAX_PF_EXPIRE_INTERVAL    ((2 << 16) - 1)
 
 #elif FIREWALL_IPF
 

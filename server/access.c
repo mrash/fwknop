@@ -249,7 +249,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
                 return 0;
             }
 
-            mask = strtol_wrapper(ndx+1, 0, 0, NO_EXIT_UPON_ERR, &is_err);
+            mask = strtol_wrapper(ndx+1, 0, -1, NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
             {
                 fprintf(stderr,
@@ -395,7 +395,8 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR,
-            "Invalid port in access request: %s", pstr);
+            "Invalid port '%s' in access request, must be in [%d,%d]",
+            pstr, 0, MAX_PORT);
         return(-1);
     }
 
@@ -1074,7 +1075,7 @@ parse_access_file(fko_srv_options_t *opts)
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {
             curr_acc->fw_access_timeout = strtol_wrapper(val, 0,
-                    (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+                    RCHK_MAX_FW_TIMEOUT, NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
             {
                 fprintf(stderr,

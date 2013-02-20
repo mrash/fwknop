@@ -225,7 +225,7 @@ parse_url(char *res_url, struct url* url)
     */
     if(strncasecmp(res_url, "https", 5) == 0)
     {
-        fprintf(stderr, "https is not yet supported for http-resolve-ip.\n");
+        fprintf(stderr, "[*] https is not yet supported for http-resolve-ip.\n");
         return(-1);
     }
 
@@ -244,7 +244,9 @@ parse_url(char *res_url, struct url* url)
         port = strtol_wrapper(e_ndx+1, 1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err != FKO_SUCCESS)
         {
-            fprintf(stderr, "resolve-url port value is invalid.\n");
+            fprintf(stderr,
+                "[*] resolve-url port value is invalid, must be in [%d-%d]\n",
+                1, MAX_PORT);
             return(-1);
         }
 

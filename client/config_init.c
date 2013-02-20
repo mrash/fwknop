@@ -139,7 +139,8 @@ parse_time_offset(const char *offset_str)
         exit(EXIT_FAILURE);
     }
 
-    offset = strtol_wrapper(offset_digits, 0, (2 << 15), EXIT_UPON_ERR, &is_err);
+    offset = strtol_wrapper(offset_digits, 0, (2 << 15),
+            EXIT_UPON_ERR, &is_err);
 
     /* Apply the offset_type value
     */
@@ -831,10 +832,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'f':
                 options->fw_timeout = strtol_wrapper(optarg, 0,
-                        (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+                        (2 << 16), NO_EXIT_UPON_ERR, &is_err);
                 if(is_err != FKO_SUCCESS)
                 {
-                    fprintf(stderr, "--fw-timeout must be >= 0\n");
+                    fprintf(stderr, "--fw-timeout must be within [%d-%d]\n",
+                            0, (2 << 16));
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -858,12 +860,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'K':
                 options->key_gen = 1;
                 strlcpy(options->key_gen_file, optarg, MAX_PATH_LEN);
+                break;
             case SPA_ICMP_TYPE:
                 options->spa_icmp_type = strtol_wrapper(optarg, 0,
                         MAX_ICMP_TYPE, NO_EXIT_UPON_ERR, &is_err);
                 if(is_err != FKO_SUCCESS)
                 {
-                    fprintf(stderr, "Unrecognized icmp type value: %s\n", optarg);
+                    fprintf(stderr, "Invalid icmp type '%s', must be in [%d-%d]\n",
+                            optarg, 0, MAX_ICMP_TYPE);
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -872,7 +876,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                         MAX_ICMP_CODE, NO_EXIT_UPON_ERR, &is_err);
                 if(is_err != FKO_SUCCESS)
                 {
-                    fprintf(stderr, "Unrecognized icmp code value: %s\n", optarg);
+                    fprintf(stderr, "Invalid icmp code '%s', must be in [%d-%d]\n",
+                            optarg, 0, MAX_ICMP_CODE);
                     exit(EXIT_FAILURE);
                 }
                 break;
@@ -911,12 +916,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'p':
                 options->spa_dst_port = strtol_wrapper(optarg, 0,
-                        MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
-                if(is_err != FKO_SUCCESS)
-                {
-                    fprintf(stderr, "Unrecognized port: %s\n", optarg);
-                    exit(EXIT_FAILURE);
-                }
+                        MAX_PORT, EXIT_UPON_ERR, &is_err);
                 break;
             case 'P':
                 if((options->spa_proto = proto_strtoint(optarg)) < 0)
@@ -956,12 +956,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'S':
                 options->spa_src_port = strtol_wrapper(optarg, 0,
-                        MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
-                if(is_err != FKO_SUCCESS)
-                {
-                    fprintf(stderr, "Unrecognized port: %s\n", optarg);
-                    exit(EXIT_FAILURE);
-                }
+                        MAX_PORT, EXIT_UPON_ERR, &is_err);
                 break;
             case 'T':
                 options->test = 1;
@@ -1002,12 +997,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->nat_rand_port = 1;
                 break;
             case NAT_PORT:
-                options->nat_port = strtol_wrapper(optarg, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
-                if(is_err != FKO_SUCCESS)
-                {
-                    fprintf(stderr, "Unrecognized port: %s\n", optarg);
-                    exit(EXIT_FAILURE);
-                }
+                options->nat_port = strtol_wrapper(optarg, 0,
+                        MAX_PORT, EXIT_UPON_ERR, &is_err);
                 break;
             case TIME_OFFSET_PLUS:
                 options->time_offset_plus = parse_time_offset(optarg);

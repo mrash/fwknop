@@ -295,7 +295,7 @@ incoming_spa(fko_srv_options_t *opts)
     if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
     {
         conf_pkt_age = strtol_wrapper(opts->config[CONF_MAX_SPA_PACKET_AGE],
-                0, (2 << 31), NO_EXIT_UPON_ERR, &is_err);
+                0, RCHK_MAX_SPA_PACKET_AGE, NO_EXIT_UPON_ERR, &is_err);
         if(is_err != FKO_SUCCESS)
         {
             log_msg(LOG_ERR, "[*] invalid MAX_SPA_PACKET_AGE\n");

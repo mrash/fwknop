@@ -95,6 +95,8 @@ strtol_wrapper(const char * const str, const int min,
         if(exit_upon_err == EXIT_UPON_ERR)
         {
             perror("strtol");
+            fprintf(stderr, "[*] Value %d out of range %d - %d\n",
+                val, min, max);
             exit(EXIT_FAILURE);
         }
     }
@@ -110,10 +112,10 @@ strtol_wrapper(const char * const str, const int min,
         }
     }
 
-    /* allow max==0 to be an exception where we don't care about the
+    /* allow max == -1 to be an exception where we don't care about the
      * maximum - note that the ERANGE check is still in place above
     */
-    if((max > 0) && (val > max))
+    if((max >= 0) && (val > max))
     {
         *err = FKO_ERROR_INVALID_DATA;
         if(exit_upon_err == EXIT_UPON_ERR)

@@ -691,7 +691,7 @@ get_running_pid(const fko_srv_options_t *opts)
             buf[PID_BUFLEN-1] = '\0';
             /* max pid value is configurable on Linux
             */
-            rpid = (pid_t) strtol_wrapper(buf, 0, (2 << 31),
+            rpid = (pid_t) strtol_wrapper(buf, 0, (2 << 30),
                     NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
                 rpid = 0;

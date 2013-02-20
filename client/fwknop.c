@@ -523,7 +523,7 @@ get_rand_port(fko_ctx_t ctx)
 
     strlcpy(port_str, rand_val, 6);
 
-    tmpint = strtol_wrapper(port_str, 0, 0, NO_EXIT_UPON_ERR, &is_err);
+    tmpint = strtol_wrapper(port_str, 0, -1, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         fprintf(stderr,

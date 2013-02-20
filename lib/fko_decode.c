@@ -228,7 +228,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     strlcpy(tbuf, ndx, t_size+1);
 
     ctx->timestamp = (unsigned int) strtol_wrapper(tbuf,
-            0, 0, NO_EXIT_UPON_ERR, &is_err);
+            0, -1, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         free(tbuf);
