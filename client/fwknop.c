@@ -61,7 +61,7 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
 int
 main(int argc, char **argv)
 {
-    fko_ctx_t           ctx, ctx2;
+    fko_ctx_t           ctx = NULL, ctx2 = NULL;
     int                 res;
     char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN] = {0};
@@ -103,7 +103,8 @@ main(int argc, char **argv)
         }
         else
         {
-            printf("KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n", options.key_base64, options.hmac_key_base64);
+            printf("KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
+                    options.key_base64, options.hmac_key_base64);
         }
         return(EXIT_SUCCESS);
     }
