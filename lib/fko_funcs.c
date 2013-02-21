@@ -160,6 +160,9 @@ fko_new(fko_ctx_t *r_ctx)
 
     FKO_SET_CTX_INITIALIZED(ctx);
 
+    if(r_ctx != NULL)
+        fko_destroy(*r_ctx);
+
     *r_ctx = ctx;
 
     return(FKO_SUCCESS);
