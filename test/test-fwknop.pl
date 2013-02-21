@@ -141,7 +141,7 @@ my $fuzzing_class = 'bogus data';
 my %fuzzing_spa_packets = ();
 my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
-my $use_valgrind = 0;
+my $enable_valgrind = 0;
 my $valgrind_str = '';
 my %prev_valgrind_cov = ();
 my $enable_client_ip_resolve_test = 0;
@@ -164,6 +164,7 @@ my $fuzzing_ctr = 0;
 my $sudo_path = '';
 my $gcov_path = '';
 my $killall_path = '';
+my $pgrep_path   = '';
 my $openssl_path = '';
 my $pinentry_fail = 0;
 my $platform = '';
@@ -218,7 +219,7 @@ exit 1 unless GetOptions(
     'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
-    'enable-valgrind'   => \$use_valgrind,
+    'enable-valgrind'   => \$enable_valgrind,
     'enable-all'        => \$enable_all,
     'valgrind-path=s'   => \$valgrindCmd,
     ### can set the following to "output.last/valgrind-coverage" if
@@ -234,7 +235,7 @@ exit 1 unless GetOptions(
 &usage() if $help;
 
 if ($enable_all) {
-    $use_valgrind = 1;
+    $enable_valgrind = 1;
     $enable_recompilation_warnings_check = 1;
     $enable_make_distcheck = 1;
     $enable_client_ip_resolve_test = 1;
@@ -249,7 +250,7 @@ exit &anonymize_results() if $anonymize_results;
 &identify_loopback_intf();
 
 $valgrind_str = "$valgrindCmd --leak-check=full " .
-    "--show-reachable=yes --track-origins=yes" if $use_valgrind;
+    "--show-reachable=yes --track-origins=yes" if $enable_valgrind;
 
 my $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
 
@@ -3060,7 +3061,7 @@ if ($enable_profile_coverage_check) {
     );
 }
 
-if ($use_valgrind) {
+if ($enable_valgrind) {
     &run_test(
         {
             'category' => 'valgrind output',
@@ -3135,6 +3136,15 @@ sub run_test() {
         }
     }
 
+    if ($enable_valgrind) {
+        if ($killall_path and $pgrep_path) {
+            for my $cmd ('memcheck', 'valgrind') {
+                system "$pgrep_path > /dev/null $cmd " .
+                    "&& $killall_path -g -r $cmd > /dev/null 2>&1";
+            }
+        }
+    }
+
     if ($enable_perl_module_fuzzing_spa_pkt_generation) {
        if ($msg =~ /perl FKO module.*FUZZING/) {
             print "\n[+] Wrote $fuzzing_num_pkts fuzzing SPA ",
@@ -3154,7 +3164,7 @@ sub process_include_exclude() {
         my $found = 0;
         for my $test (@tests_to_include) {
             if ($msg =~ $test
-                    or ($use_valgrind and $msg =~ /valgrind\soutput/)
+                    or ($enable_valgrind and $msg =~ /valgrind\soutput/)
                     or ($enable_profile_coverage_check and $msg =~ /profile\scoverage/)
             ) {
                 $found = 1;
@@ -5855,7 +5865,7 @@ sub client_server_interaction() {
 
     ### give fwknopd a chance to parse its config and start sniffing
     ### on the loopback interface
-    if ($use_valgrind) {
+    if ($enable_valgrind) {
         sleep 3;
     } else {
         sleep 2;
@@ -5889,7 +5899,7 @@ sub client_server_interaction() {
         $fw_rule_removed = 0;
     }
 
-    &time_for_valgrind() if $use_valgrind;
+    &time_for_valgrind() if $enable_valgrind;
 
     if ($fw_rule_created) {
         sleep 3;  ### allow time for rule time out.
@@ -6542,7 +6552,7 @@ sub init() {
         $hash_num++;
     }
 
-    if ($use_valgrind) {
+    if ($enable_valgrind) {
         die "[*] $valgrindCmd exec problem, use --valgrind-path"
             unless -e $valgrindCmd and -x $valgrindCmd;
     }
@@ -6673,6 +6683,7 @@ sub init() {
 
     $sudo_path    = &find_command('sudo');
     $killall_path = &find_command('killall');
+    $pgrep_path   = &find_command('pgrep');
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
@@ -6986,7 +6997,7 @@ sub is_fw_rule_active() {
 
 sub is_fwknopd_running() {
 
-    sleep 2 if $use_valgrind;
+    sleep 2 if $enable_valgrind;
 
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
         "--status", $cmd_out_tmp, $curr_test_file);
@@ -7002,7 +7013,7 @@ sub stop_fwknopd() {
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
         "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
 
-    if ($use_valgrind) {
+    if ($enable_valgrind) {
         &time_for_valgrind();
     } else {
         sleep 1;
