@@ -93,6 +93,9 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     b64_encode(ciphertext, b64ciphertext, cipher_len);
     strip_b64_eq(b64ciphertext);
 
+    if(ctx->encrypted_msg != NULL)
+        free(ctx->encrypted_msg);
+
     ctx->encrypted_msg     = strdup(b64ciphertext);
     ctx->encrypted_msg_len = strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
@@ -266,6 +269,9 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 
     b64_encode(cipher, b64cipher, cipher_len);
     strip_b64_eq(b64cipher);
+
+    if(ctx->encrypted_msg != NULL)
+        free(ctx->encrypted_msg);
 
     ctx->encrypted_msg     = strdup(b64cipher);
     ctx->encrypted_msg_len = strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE);
@@ -560,6 +566,9 @@ fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
     if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
+    if(ctx->gpg_recipient != NULL)
+        free(ctx->gpg_recipient);
+
     ctx->gpg_recipient = strdup(recip);
     if(ctx->gpg_recipient == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -605,6 +614,9 @@ fko_set_gpg_exe(fko_ctx_t ctx, const char * const gpg_exe)
 
     if(!S_ISREG(st.st_mode) && !S_ISLNK(st.st_mode))
         return(FKO_ERROR_GPGME_BAD_GPG_EXE);
+
+    if(ctx->gpg_exe != NULL)
+        free(ctx->gpg_exe);
 
     ctx->gpg_exe = strdup(gpg_exe);
     if(ctx->gpg_exe == NULL)
@@ -671,6 +683,9 @@ fko_set_gpg_signer(fko_ctx_t ctx, const char * const signer)
     if(ctx->encryption_type != FKO_ENCRYPTION_GPG)
         return(FKO_ERROR_WRONG_ENCRYPTION_TYPE);
 
+    if(ctx->gpg_signer != NULL)
+        free(ctx->gpg_signer);
+
     ctx->gpg_signer = strdup(signer);
     if(ctx->gpg_signer == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -734,6 +749,9 @@ fko_set_gpg_home_dir(fko_ctx_t ctx, const char * const gpg_home_dir)
 
     if(!S_ISDIR(st.st_mode))
         return(FKO_ERROR_GPGME_BAD_HOME_DIR);
+
+    if(ctx->gpg_home_dir != NULL)
+        free(ctx->gpg_home_dir);
 
     ctx->gpg_home_dir = strdup(gpg_home_dir);
     if(ctx->gpg_home_dir == NULL)
