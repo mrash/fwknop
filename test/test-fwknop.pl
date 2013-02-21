@@ -144,6 +144,7 @@ my $server_test_file  = '';
 my $enable_valgrind = 0;
 my $valgrind_str = '';
 my %prev_valgrind_cov = ();
+my $fko_wrapper_dir = 'fko-wrapper';
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
 my $saved_last_results = 0;
@@ -3064,6 +3065,16 @@ if ($enable_profile_coverage_check) {
 if ($enable_valgrind) {
     &run_test(
         {
+            'category' => 'valgrind',
+            'subcategory' => 'fko-wrapper',
+            'detail'   => 'multiple libfko calls',
+            'err_msg'  => 'could not compile/execute fko-wrapper',
+            'function' => \&compile_execute_fko_wrapper,
+            'fatal'    => $NO
+        }
+    );
+    &run_test(
+        {
             'category' => 'valgrind output',
             'subcategory' => 'flagged functions',
             'detail'   => '',
@@ -3388,8 +3399,6 @@ sub make_distcheck() {
     return 0 unless &run_cmd('make -C .. distcheck',
         $cmd_out_tmp, $curr_test_file);
 
-    ### look for compilation warnings - something like:
-    ###     warning: ‘test’ is used uninitialized in this function
     return 1 if &file_find_regex([qr/archives\sready\sfor\sdistribution/],
         $MATCH_ALL, $curr_test_file);
 
@@ -6834,6 +6843,64 @@ sub import_previous_valgrind_coverage_info() {
     }
 
     return;
+}
+
+sub compile_execute_fko_wrapper() {
+    my $rv = 1;
+
+    unless (-d $fko_wrapper_dir) {
+        &write_test_file("[-] fko wrapper directory " .
+            "$fko_wrapper_dir does not exist.\n", $curr_test_file);
+        return 0;
+    }
+
+    chdir $fko_wrapper_dir or die $!;
+
+    ### 'make clean' as root
+    unless (&run_cmd('make clean', "../$cmd_out_tmp",
+            "../$curr_test_file")) {
+        chdir '..' or die $!;
+        return 0;
+    }
+
+    if ($sudo_path) {
+        my $username = getpwuid((stat("../$test_suite_path"))[4]);
+        die "[*] Could not determine ../$test_suite_path owner"
+            unless $username;
+
+        unless (&run_cmd("$sudo_path -u $username make",
+                "../$cmd_out_tmp", "../$curr_test_file")) {
+            unless (&run_cmd('make', "../$cmd_out_tmp",
+                    "../$curr_test_file")) {
+                chdir '..' or die $!;
+                return 0;
+            }
+        }
+
+    } else {
+
+        unless (&run_cmd('make', "../$cmd_out_tmp",
+                "../$curr_test_file")) {
+            chdir '..' or die $!;
+            return 0;
+        }
+    }
+
+    unless (-e 'fko_wrapper' and -e 'run_valgrind.sh') {
+        &write_test_file("[-] fko_wrapper or run_valgrind.sh does not exist.\n",
+            "../$curr_test_file");
+        chdir '..' or die $!;
+        return 0;
+    }
+
+    &run_cmd('./run_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
+
+    $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
+        $MATCH_ALL, "../$curr_test_file");
+
+    chdir '..' or die $!;
+
+    return $rv;
 }
 
 sub parse_valgrind_flagged_functions() {
