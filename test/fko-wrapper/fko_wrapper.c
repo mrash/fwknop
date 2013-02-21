@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include "fko_common.h"
+#include "common.h"
 #include "fko_limits.h"
 #include "fwknop.h"
 #include "fko.h"
@@ -10,6 +13,7 @@ int main(void) {
 
     fko_ctx_t  ctx = NULL;
     int        i;
+    char       *spa_data;
 
     for (i=0; i<5; i++) {
         /* call fko_new() several times without also calling fko_destroy() */
@@ -52,11 +56,16 @@ int main(void) {
     }
 
     for (i=0; i<5; i++) {
-        printf("fko_set_spa_encryption_type(FKO_ENCRYPTION_GPG): %d\n",
-                fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG));
+        printf("fko_set_spa_encryption_type(FKO_ENCRYPTION_RIJNDAEL): %d\n",
+                fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_RIJNDAEL));
     }
 
     if (ENABLE_GPG_TESTS) {
+        for (i=0; i<5; i++) {
+            printf("fko_set_spa_encryption_type(FKO_ENCRYPTION_GPG): %d\n",
+                    fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_GPG));
+        }
+
         for (i=0; i<5; i++) {
             printf("fko_set_gpg_home_dir(/home/mbr/.gnupg): %d\n",
                     fko_set_gpg_home_dir(ctx, "/home/mbr/.gnupg"));
@@ -66,6 +75,22 @@ int main(void) {
             printf("fko_set_gpg_recipient(1234asdf): %d\n",
                 fko_set_gpg_recipient(ctx, "1234asdf"));
         }
+    }
+
+    for (i=0; i<5; i++) {
+        printf("fko_set_spa_digest_type(FKO_DEFAULT_DIGEST): %d\n",
+                fko_set_spa_digest_type(ctx, FKO_DEFAULT_DIGEST));
+    }
+
+    for (i=0; i<5; i++) {
+        printf("fko_spa_data_final(testtest, 8, NULL, 0): %d\n",
+                fko_spa_data_final(ctx, "testtest", 8, NULL, 0));
+    }
+
+    for (i=0; i<5; i++) {
+        printf("fko_get_spa_data(): %d\n",
+                fko_get_spa_data(ctx, &spa_data));
+        printf("    %s\n", spa_data);
     }
 
     fko_destroy(ctx);
