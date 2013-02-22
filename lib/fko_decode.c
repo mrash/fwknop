@@ -98,6 +98,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if (ctx->encoded_msg_len - t_size < 0)
         return(FKO_ERROR_INVALID_DATA);
 
+    if(ctx->digest != NULL)
+        free(ctx->digest);
+
     /* Copy the digest into the context and terminate the encoded data
      * at that point so the original digest is not part of the
      * encoded string.
@@ -142,7 +145,6 @@ fko_decode_spa_data(fko_ctx_t ctx)
         case FKO_DIGEST_SHA512:
             sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
-
     }
 
     /* We give up here if the computed digest does not match the
@@ -165,6 +167,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
         free(tbuf);
         return(FKO_ERROR_INVALID_DATA);
     }
+
+    if(ctx->rand_val != NULL)
+        free(ctx->rand_val);
 
     ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
     if(ctx->rand_val == NULL)
@@ -191,6 +196,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
     }
 
     strlcpy(tbuf, ndx, t_size+1);
+
+    if(ctx->username != NULL)
+        free(ctx->username);
 
     ctx->username = malloc(t_size+1); /* Yes, more than we need */
     if(ctx->username == NULL)
@@ -250,6 +258,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
         return(FKO_ERROR_INVALID_DATA);
     }
 
+    if(ctx->version != NULL)
+        free(ctx->version);
+
     ctx->version = malloc(t_size+1);
     if(ctx->version == NULL)
     {
@@ -300,6 +311,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
     }
 
     strlcpy(tbuf, ndx, t_size+1);
+
+    if(ctx->message != NULL)
+        free(ctx->message);
 
     ctx->message = malloc(t_size+1); /* Yes, more than we need */
     if(ctx->message == NULL)
@@ -357,6 +371,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
         strlcpy(tbuf, ndx, t_size+1);
 
+        if(ctx->nat_access != NULL)
+            free(ctx->nat_access);
+
         ctx->nat_access = malloc(t_size+1); /* Yes, more than we need */
         if(ctx->nat_access == NULL)
         {
@@ -397,6 +414,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
           && ctx->message_type != FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
         {
             strlcpy(tbuf, ndx, t_size+1);
+
+            if(ctx->server_auth != NULL)
+                free(ctx->server_auth);
 
             ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
             if(ctx->server_auth == NULL)
@@ -441,6 +461,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
             /* Looks like we have both, so assume this is the 
             */
             strlcpy(tbuf, ndx, t_size+1);
+
+            if(ctx->server_auth != NULL)
+                free(ctx->server_auth);
 
             ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
             if(ctx->server_auth == NULL)

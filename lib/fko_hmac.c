@@ -166,6 +166,9 @@ int fko_calculate_hmac(fko_ctx_t ctx,
     b64_encode(hmac, hmac_base64, SHA256_DIGEST_LEN);
     strip_b64_eq(hmac_base64);
 
+    if(ctx->msg_hmac != NULL)
+        free(ctx->msg_hmac);
+
     ctx->msg_hmac     = strdup(hmac_base64);
     ctx->msg_hmac_len = strnlen(ctx->msg_hmac, SHA512_DIGEST_STR_LEN);
 

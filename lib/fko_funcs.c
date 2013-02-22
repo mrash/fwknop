@@ -160,9 +160,6 @@ fko_new(fko_ctx_t *r_ctx)
 
     FKO_SET_CTX_INITIALIZED(ctx);
 
-    if(r_ctx != NULL)
-        fko_destroy(*r_ctx);
-
     *r_ctx = ctx;
 
     return(FKO_SUCCESS);
@@ -193,6 +190,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         free(ctx);
         return(FKO_ERROR_INVALID_DATA);
     }
+
+    if(ctx->encrypted_msg != NULL)
+        free(ctx->encrypted_msg);
 
     /* First, add the data to the context.
     */
@@ -491,6 +491,9 @@ fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg)
 
     if(! is_valid_encoded_msg_len(enc_msg_len))
         return(FKO_ERROR_INVALID_DATA);
+
+    if(ctx->encrypted_msg != NULL)
+        free(ctx->encrypted_msg);
 
     /* First, add the data to the context.
     */

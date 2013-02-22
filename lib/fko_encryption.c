@@ -149,6 +149,9 @@ _rijndael_decrypt(fko_ctx_t ctx,
         return(FKO_ERROR_INVALID_DATA);
     }
 
+    if(ctx->encoded_msg != NULL)
+        free(ctx->encoded_msg);
+
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
     */
