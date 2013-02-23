@@ -94,7 +94,7 @@ Vlad Glagolev
 
 Sean Greven
     - Created a port of fwknop for FreeBSD:
-http://portsmon.freebsd.org/portoverview.py?category=security&portname=fwknop
+      http://portsmon.freebsd.org/portoverview.py?category=security&portname=fwknop
 
 Michael T. Dean
     - Reported the Rijndael key truncation issue for user-supplied keys
