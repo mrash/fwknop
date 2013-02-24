@@ -417,7 +417,7 @@ dnl
       AS_IF([ test "x$withval" = xno ], [],
         AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
           [AC_MSG_ERROR([--with-iptables requires an argument specifying a path to iptables])],
-          [ IPTABLES_EXE=$withval ]
+          [ FORCE_IPTABLES_EXE=$withval ]
         )
       )
     ],
@@ -435,7 +435,7 @@ dnl
       AS_IF([ test "x$withval" = xno ], [],
         AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
           [AC_MSG_ERROR([--with-ipfw requires an argument specifying a path to ipfw])],
-          [ IPFW_EXE=$withval ]
+          [ FORCE_IPFW_EXE=$withval ]
         )
       )
     ],
@@ -453,7 +453,7 @@ dnl
       AS_IF([ test "x$withval" = xno ], [],
         AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
           [AC_MSG_ERROR([--with-pf requires an argument specifying a path to pf])],
-          [ PF_EXE=$withval ]
+          [ FORCE_PF_EXE=$withval ]
         )
       )
     ],
@@ -471,7 +471,7 @@ dnl
       AS_IF([ test "x$withval" = xno ], [],
         AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
           [AC_MSG_ERROR([--with-ipf requires an argument specifying a path to ipf])],
-          [ IPF_EXE=$withval ]
+          [ FORCE_IPF_EXE=$withval ]
         )
       )
     ],
@@ -479,6 +479,31 @@ dnl
       AC_PATH_PROG(IPF_EXE, [ipf], [], [$APP_PATH])
     ]
   )
+
+dnl If a firewall was forced. set the appropriate _EXE var and clear the others.
+dnl
+  AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
+    IPTABLES_EXE="$FORCE_IPTABLES_EXE"    
+  ],[
+    AS_IF([test "x$FORCE_IPFW_EXE" != x], [
+      IPFW_EXE="$FORCE_IPFW_EXE"    
+      IPTABLES_EXE=""    
+    ],[
+      AS_IF([test "x$FORCE_PF_EXE" != x], [
+        PF_EXE="$FORCE_PF_EXE"    
+        IPFW_EXE=""    
+        IPTABLES_EXE=""    
+      ],[
+        AS_IF([test "x$FORCE_IPF_EXE" != x], [
+          IPF_EXE="$FORCE_IPF_EXE"    
+          PF_EXE=""    
+          IPFW_EXE=""    
+          IPTABLES_EXE=""    
+        ]
+      ]
+    ]
+  ]
+  ))))
 
 dnl Determine which firewall exe we use (if we have one).
 dnl If iptables was found or specified, it wins, then we fallback to ipfw,
