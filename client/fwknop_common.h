@@ -152,6 +152,7 @@ typedef struct fko_cli_options
 
     char            use_rc_stanza[MAX_LINE_LEN];
     unsigned char   got_named_stanza;
+    unsigned char   save_rc_stanza;
 
     //char            config_file[MAX_PATH_LEN];
 

@@ -27,7 +27,10 @@
  *  USA
  *
  ******************************************************************************
-*/
+ */
+
+/* FIXME: Finish save capability. */
+
 #include "fwknop_common.h"
 #include "netinet_common.h"
 #include "config_init.h"
@@ -36,23 +39,119 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-/* Convert a digest_type string to its integer value.
-*/
-static short
-digest_strtoint(const char *dt_str)
+#define RC_PARAM_TEMPLATE           "%-24s    %s\n"             /*!< Template to define param = val in a rc file */
+#define FWKNOP_CLI_ARG_BM(x)        ((uint32_t)(1 << (x)))      /*!< Bitmask command line arg */
+#define FWKNOPRC_OFLAGS             (O_WRONLY|O_CREAT|O_EXCL)   /*!< O_flags used to create an fwknoprc file with the open function */
+#define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
+
+enum
 {
-    if(strcasecmp(dt_str, "md5") == 0)
-        return(FKO_DIGEST_MD5);
-    else if(strcasecmp(dt_str, "sha1") == 0)
-        return(FKO_DIGEST_SHA1);
-    else if(strcasecmp(dt_str, "sha256") == 0)
-        return(FKO_DIGEST_SHA256);
-    else if(strcasecmp(dt_str, "sha384") == 0)
-        return(FKO_DIGEST_SHA384);
-    else if(strcasecmp(dt_str, "sha512") == 0)
-        return(FKO_DIGEST_SHA512);
+    FWKNOP_CLI_ARG_DIGEST_TYPE = 0,
+    FWKNOP_CLI_ARG_SPA_SERVER_PROTO,
+    FWKNOP_CLI_ARG_SPA_SERVER_PORT,
+    FWKNOP_CLI_ARG_SPA_SOURCE_PORT,
+    FWKNOP_CLI_ARG_FW_TIMEOUT,
+    FWKNOP_CLI_ARG_ALLOW_IP,
+    FWKNOP_CLI_ARG_TIME_OFFSET,
+    FWKNOP_CLI_ARG_ENCRYPTION_MODE,
+    FWKNOP_CLI_ARG_USE_GPG,
+    FWKNOP_CLI_ARG_USE_GPG_AGENT,
+    FWKNOP_CLI_ARG_GPG_RECIPIENT,
+    FWKNOP_CLI_ARG_GPG_SIGNER,
+    FWKNOP_CLI_ARG_GPG_HOMEDIR,
+    FWKNOP_CLI_ARG_SPOOF_USER,
+    FWKNOP_CLI_ARG_SPOOF_SOURCE_IP,
+    FWKNOP_CLI_ARG_ACCESS,
+    FWKNOP_CLI_ARG_SPA_SERVER,
+    FWKNOP_CLI_ARG_RAND_PORT,
+    FWKNOP_CLI_ARG_KEY_FILE,
+    FWKNOP_CLI_ARG_NAT_ACCESS,
+    FWKNOP_CLI_ARG_HTTP_USER_AGENT,
+    FWKNOP_CLI_ARG_RESOLVE_URL,
+    FWKNOP_CLI_ARG_NAT_LOCAL,
+    FWKNOP_CLI_ARG_NAT_RAND_PORT,
+    FWKNOP_CLI_ARG_NAT_PORT,
+    FWKNOP_CLI_ARG_NB
+} fwknop_cli_arg_t;
+
+const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
+{
+    "DIGEST_TYPE",
+    "SPA_SERVER_PROTO",
+    "SPA_SERVER_PORT",
+    "SPA_SOURCE_PORT",
+    "FW_TIMEOUT",
+    "ALLOW_IP",
+    "TIME_OFFSET",
+    "ENCRYPTION_MODE",
+    "USE_GPG",
+    "USE_GPG_AGENT",
+    "GPG_RECIPIENT",
+    "GPG_SIGNER",
+    "GPG_HOMEDIR",
+    "SPOOF_USER",
+    "SPOOF_SOURCE_IP",
+    "ACCESS",
+    "SPA_SERVER",
+    "RAND_PORT",
+    "KEY_FILE",
+    "NAT_ACCESS",
+    "HTTP_USER_AGENT",
+    "RESOLVE_URL",
+    "NAT_LOCAL",
+    "NAT_RAND_PORT",
+    "NAT_PORT"
+};
+
+/**
+ * \brief Lookup a section in a line and fetch it.
+ *
+ * This function parses a NULL terminated string in order to find a section,
+ * something like [mysection]. If it succeeds, the stanza is retrieved.
+ *
+ * \param line String containing a line from the rc file to check for a section
+ * \param line_size size of the line buffer
+ * \param rc_section String to store the section found
+ * \param rc_section_size Size of the rc_section buffer
+ *
+ * \return 0 if a section was found, 1 otherwise
+ */
+static int
+lookup_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t rc_section_size)
+{
+    char    *ndx, *emark;
+    char    buf[MAX_LINE_LEN];
+    int     section_not_found = 1;
+
+    /* FIXME : we may want to remove unwanted whitespaces before processing */
+    if (line_size < sizeof(buf))
+    {
+        memset (buf, 0, sizeof(buf));
+        strlcpy(buf, line, line_size);
+
+        ndx = buf;
+
+        if(*ndx == '[')
+        {
+            ndx++;
+            emark = strchr(ndx, ']');
+            if(emark != NULL)
+            {
+                *emark = '\0';
+                memset(rc_section, 0, rc_section_size);
+                strlcpy(rc_section, ndx, rc_section_size);
+                section_not_found = 0;
+            }
+            else
+            {
+            }
+        }
+    }
     else
-        return(-1);
+    {
+    }
+
+    return section_not_found;
 }
 
 /* Convert an encryption_mode string to its integer value.
@@ -76,7 +175,114 @@ enc_mode_strtoint(const char *enc_mode_str)
         return(-1);
 }
 
-/* Convert a protocol string to its integer value.
+/**
+ * \brief Return an encryption mode string according to an enc_mode integer value
+ *
+ * This function checks if the encryption mode integer is valid, and write the
+ * encryption mode string associated.
+ *
+ * \param enc_mode Encryption mode inetger value (FKO_ENC_MODE_CBC, FKO_ENC_MODE_ECB ...)
+ * \param enc_mode_str Buffer to write the encryption mode string
+ * \param enc_mode_size size of the encryption mode string buffer
+ *
+ * \return 1 if the encryption mode integer value is not supported, 0 otherwise
+ */
+static unsigned short
+enc_mode_inttostr(unsigned int enc_mode, char* enc_mode_str, size_t enc_mode_size)
+{
+    unsigned short enc_mode_not_valid = 0;
+
+    memset(enc_mode_str, 0, enc_mode_size);
+
+    switch (enc_mode)
+    {
+        case FKO_ENC_MODE_CBC :
+            strlcpy(enc_mode_str, "CBC", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_ECB :
+            strlcpy(enc_mode_str, "ECB", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_CFB :
+            strlcpy(enc_mode_str, "CFB", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_OFB :
+            strlcpy(enc_mode_str, "OFB", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_CTR :
+            strlcpy(enc_mode_str, "CTR", enc_mode_size);
+            break;
+        default:
+            enc_mode_not_valid = 1;
+            break;
+    }
+
+    return enc_mode_not_valid;
+}
+
+/* Convert a digest_type string to its integer value.
+*/
+static short
+digest_strtoint(const char *dt_str)
+{
+    if(strcasecmp(dt_str, "md5") == 0)
+        return(FKO_DIGEST_MD5);
+    else if(strcasecmp(dt_str, "sha1") == 0)
+        return(FKO_DIGEST_SHA1);
+    else if(strcasecmp(dt_str, "sha256") == 0)
+        return(FKO_DIGEST_SHA256);
+    else if(strcasecmp(dt_str, "sha384") == 0)
+        return(FKO_DIGEST_SHA384);
+    else if(strcasecmp(dt_str, "sha512") == 0)
+        return(FKO_DIGEST_SHA512);
+    else
+        return(-1);
+}
+
+/**
+ * \brief Return a digest string according to a digest integer value
+ *
+ * This function checks the digest integer is valid, and write the digest
+ * string associated.
+ *
+ * \param digest Digest inetger value (FKO_DIGEST_MD5, FKO_DIGEST_SHA1 ...)
+ * \param digest_str Buffer to write the digest string
+ * \param digest_size size of the digest string buffer
+ *
+ * \return 1 if the digest integer value is not supported, 0 otherwise
+ */
+static unsigned short
+digest_inttostr(unsigned int digest, char* digest_str, size_t digest_size)
+{
+    unsigned short digest_not_valid = 0;
+
+    memset(digest_str, 0, digest_size);
+
+    switch (digest)
+    {
+        case FKO_DIGEST_MD5:
+            strlcpy(digest_str, "MD5", digest_size);
+            break;
+        case FKO_DIGEST_SHA1:
+            strlcpy(digest_str, "SHA1", digest_size);
+            break;
+        case FKO_DIGEST_SHA256:
+            strlcpy(digest_str, "SHA256", digest_size);
+            break;
+        case FKO_DIGEST_SHA384:
+            strlcpy(digest_str, "SHA384", digest_size);
+            break;
+        case FKO_DIGEST_SHA512:
+            strlcpy(digest_str, "SHA512", digest_size);
+            break;
+        default:
+            digest_not_valid = 1;
+            break;
+    }
+
+    return digest_not_valid;
+}
+
+/* Convert a protocol string to its intger value.
 */
 static int
 proto_strtoint(const char *pr_str)
@@ -95,6 +301,50 @@ proto_strtoint(const char *pr_str)
         return(FKO_PROTO_HTTP);
     else
         return(-1);
+}
+
+/**
+ * \brief Return a prototype string according to a prototype integer value
+ *
+ * This function checks the prototype integer is valid, and write the prototype
+ * string associated.
+ *
+ * \param proto Prototype inetger value (UDP_RAW, UDP, TCPRAW...)
+ * \param proto_str Buffer to write the prototype string
+ * \param proto_size size of the prototype string buffer
+ *
+ * \return 1 if the digest integer value is not supported, 0 otherwise
+ */
+static int
+proto_inttostr(unsigned int proto, char* pr_str, size_t pr_size)
+{
+    uint8_t proto_not_valid = 0;
+
+    memset(pr_str, 0, pr_size);
+
+    switch (proto)
+    {
+        case FKO_PROTO_UDP_RAW:
+            strlcpy(pr_str, "UDPRAW", pr_size);
+            break;
+        case FKO_PROTO_UDP:
+            strlcpy(pr_str, "UDP", pr_size);
+            break;
+        case FKO_PROTO_TCP_RAW:
+            strlcpy(pr_str, "TCPRAW", pr_size);
+            break;
+        case FKO_PROTO_TCP:
+            strlcpy(pr_str, "TCP", pr_size);
+            break;
+        case FKO_PROTO_ICMP:
+            strlcpy(pr_str, "ICMP", pr_size);
+            break;
+        default:
+            proto_not_valid = 1;
+            break;
+    }
+
+    return proto_not_valid;
 }
 
 /* Parse any time offset from the command line
@@ -159,7 +409,7 @@ create_fwknoprc(const char *rcfile)
 
     /* Try to create the initial rcfile with user read/write rights only.
      * If the rcfile already exists, an error is returned */
-    rcfile_fd = open(rcfile, O_WRONLY|O_CREAT|O_EXCL , S_IRUSR|S_IWUSR);
+    rcfile_fd = open(rcfile, FWKNOPRC_OFLAGS ,FWKNOPRC_MODE);
 
     // If an error occured ...
     if (rcfile_fd == -1) {
@@ -483,6 +733,135 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     return(0);
 }
 
+/**
+ * \brief Write a cli parameter to a file handle
+ *
+ * This function writes into a file handle a command line parameter
+ *
+ * \param fhandle File handle to write the new parameter to
+ * \param arg_ndx Argument index
+ * \param options FKO command line option structure
+ */
+static void
+add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
+{
+    char    val[MAX_LINE_LEN]  = {0};
+
+    if (arg_ndx >= FWKNOP_CLI_ARG_NB)
+        return;
+
+    if (fhandle == NULL)
+        return;
+
+    /* Zero the val buffer */
+    memset(val, 0, sizeof(val));
+
+    /* Selecty the argument to add and store its string value into val */
+    switch (arg_ndx)
+    {
+        case FWKNOP_CLI_ARG_DIGEST_TYPE :
+            digest_inttostr(options->digest_type, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_SPA_SERVER_PROTO :
+            proto_inttostr(options->spa_proto, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_SPA_SERVER_PORT :
+            strlcpy(val, options->spa_server_str, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_SPA_SOURCE_PORT :
+            snprintf(val, sizeof(val)-1, "%d", options->spa_src_port);
+            break;
+        case FWKNOP_CLI_ARG_FW_TIMEOUT :
+            snprintf(val, sizeof(val)-1, "%d", options->fw_timeout);
+            break;
+        case FWKNOP_CLI_ARG_ALLOW_IP :
+            strlcpy(val, options->allow_ip_str, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_TIME_OFFSET :
+            if (options->time_offset_minus != 0)
+                snprintf(val, sizeof(val)-1, "%d", options->time_offset_minus);
+            else if (options->time_offset_plus != 0)
+                snprintf(val, sizeof(val)-1, "%d", options->time_offset_minus);
+            else
+            {
+            }
+            break;
+        case FWKNOP_CLI_ARG_ENCRYPTION_MODE :
+            enc_mode_inttostr(options->encryption_mode, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_USE_GPG :
+            if (options->use_gpg == 0)
+                strlcpy(val, "N", sizeof(val));
+            else
+                strlcpy(val, "Y", sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_USE_GPG_AGENT :
+            if (options->use_gpg_agent == 0)
+                strlcpy(val, "N", sizeof(val));
+            else
+                strlcpy(val, "Y", sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_GPG_RECIPIENT :
+            strlcpy(val, options->gpg_recipient_key, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_GPG_SIGNER :
+            strlcpy(val, options->gpg_signer_key, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_GPG_HOMEDIR :
+            strlcpy(val, options->gpg_home_dir, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_SPOOF_USER :
+            strlcpy(val, options->spoof_user, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_SPOOF_SOURCE_IP :
+            strlcpy(val, options->spoof_ip_src_str, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_ACCESS :
+            strlcpy(val, options->access_str, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_SPA_SERVER :
+            strlcpy(val, options->spa_server_str, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_RAND_PORT :
+            snprintf(val, sizeof(val)-1, "%d", options->rand_port);
+            break;
+        case FWKNOP_CLI_ARG_KEY_FILE :
+            strlcpy(val, options->get_key_file, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_NAT_ACCESS :
+            strlcpy(val, options->nat_access_str, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_HTTP_USER_AGENT :
+            strlcpy(val, options->http_user_agent, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_RESOLVE_URL :
+            if (options->resolve_url != NULL)
+                strlcpy(val, options->resolve_url, sizeof(val));
+            else
+            {
+            }
+            break;
+        case FWKNOP_CLI_ARG_NAT_LOCAL :
+            snprintf(val, sizeof(val)-1, "%d", options->nat_local);
+            break;
+        case FWKNOP_CLI_ARG_NAT_RAND_PORT :
+            snprintf(val, sizeof(val)-1, "%d", options->nat_rand_port);
+            break;
+        case FWKNOP_CLI_ARG_NAT_PORT :
+            snprintf(val, sizeof(val)-1, "%d", options->nat_port);
+            break;
+        default:
+            fprintf(stderr, "Warning from add_rc_param() : Bad command line argument %u", arg_ndx);
+            return;
+    }
+
+    if(options->verbose > 3)
+        fprintf(stderr, "Updating param (%u) %s to %s\n",
+                arg_ndx, fwknop_cli_key_tab[arg_ndx], val);
+
+    fprintf(fhandle, RC_PARAM_TEMPLATE, fwknop_cli_key_tab[arg_ndx], val);
+}
+
 /* Process (create if necessary) the users ~/.fwknoprc file.
 */
 static void
@@ -673,6 +1052,175 @@ process_rc(fko_cli_options_t *options)
         exit(EXIT_FAILURE);
 }
 
+/**
+ * \brief Update the user rc file with the new parameters for a selected stanza.
+ *
+ * This function writes the new configuration in a temporary file and renames it
+ * as the new rc file afterwards. All of the previous parameters for the
+ * selected stanza are removed and replaced by the arguments from the command
+ * line.
+ *
+ * \param options structure containing all of the fko settings
+ * \param args_bitmask command line argument bitmask
+ */
+static void
+update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
+{
+    FILE        *rc;
+    FILE        *rc_update;
+    int         rcf_offset;
+    int         stanza_found = 0;
+    int         stanza_updated = 0;
+    char        line[MAX_LINE_LEN];
+    char        rcfile[MAX_PATH_LEN];
+    char        rcfile_update[MAX_PATH_LEN];
+    char        curr_stanza[MAX_LINE_LEN] = {0};
+    char        *homedir;
+    uint16_t    arg_ndx = 0;
+    int         rcfile_fd = -1;
+
+#ifdef WIN32
+    homedir = getenv("USERPROFILE");
+#else
+    homedir = getenv("HOME");
+#endif
+
+    if(homedir == NULL)
+    {
+        fprintf(stderr, "update_rc() : Unable to determine HOME directory.\n"
+            " No .fwknoprc file processed.\n");
+        return;
+    }
+
+    memset(rcfile, 0, MAX_PATH_LEN);
+    memset(rcfile_update, 0, MAX_PATH_LEN);
+
+    strlcpy(rcfile, homedir, MAX_PATH_LEN);
+
+    rcf_offset = strlen(rcfile);
+
+    /* Sanity check the path to .fwknoprc.
+     * The preceeding path plus the path separator and '.fwknoprc' = 11
+     * cannot exceed MAX_PATH_LEN.
+    */
+    if(rcf_offset > (MAX_PATH_LEN - 11))
+    {
+        fprintf(stderr, "update_rc() : Path to .fwknoprc file is too long.\n"
+            " No .fwknoprc file processed.\n");
+        return;
+    }
+
+    rcfile[rcf_offset] = PATH_SEP;
+    strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
+
+    strlcpy(rcfile_update, rcfile, MAX_PATH_LEN);
+    strlcat(rcfile_update, ".updated", MAX_PATH_LEN);
+
+    /* Create a new temporary rc file */
+    rcfile_fd = open(rcfile_update, FWKNOPRC_OFLAGS, FWKNOPRC_MODE);
+    if (rcfile_fd == -1)
+    {
+            fprintf(stderr, "update_rc() : Unable to create initial rc file: %s: %s\n",
+                rcfile_update, strerror(errno));
+            return;
+    }
+    close(rcfile_fd);
+
+    /* Open the current rcfile and a temporary one respectively in read and
+     * write mode */
+    if ((rc = fopen(rcfile, "r")) == NULL)
+    {
+        fprintf(stderr, "update_rc() : Unable to open rc file: %s: %s\n",
+            rcfile, strerror(errno));
+    }
+
+    if ((rc_update = fopen(rcfile_update, "w")) == NULL)
+    {
+        fprintf(stderr, "update_rc() : Unable to open rc file: %s: %s\n",
+            rcfile_update, strerror(errno));
+    }
+
+    /* Go though the file line by line */
+    stanza_found = 0;
+    while ((fgets(line, MAX_LINE_LEN, rc)) != NULL)
+    {
+        line[MAX_LINE_LEN-1] = '\0';
+
+        /* If we find a section... */
+        if(lookup_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 0)
+        {
+            /* and this is the one we are looking for, we add the new settings */
+            if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
+            {
+                stanza_found = 1;
+                fprintf(rc_update, "%s", line);
+
+                if(options->verbose > 3)
+                    fprintf(stderr, "Updating %s stanza\n", curr_stanza);
+
+                for (arg_ndx=0 ; arg_ndx<FWKNOP_CLI_ARG_NB ; arg_ndx++)
+                {
+                    if (FWKNOP_CLI_ARG_BM(arg_ndx) & args_bitmask)
+                        add_rc_param(rc_update, arg_ndx, options);
+                }
+
+                stanza_updated = 1;
+
+                continue;
+            }
+            /* otherwise we disable the stanza since it is another section */
+            else
+              stanza_found = 0;
+        }
+
+        /* For the current section we do not add previous settings until we
+         * find an empty line*/
+        if (stanza_found)
+        {
+            if (!IS_EMPTY_LINE(line[0]))
+                continue;
+            else
+                stanza_found = 0;
+        }
+
+        /* Add the line to the new rcfile */
+        fprintf(rc_update, "%s", line);
+    }
+
+    /* If the stanza has not been found, we append the settings to the file,
+     * othewise we already updated it earlier. */
+    if (stanza_updated == 0)
+    {
+        fprintf(rc_update, "[%s]\n", options->use_rc_stanza);
+
+        if(options->verbose > 3)
+            fprintf(stderr, "Updating %s stanza\n", curr_stanza);
+
+        for (arg_ndx=0 ; arg_ndx<FWKNOP_CLI_ARG_NB ; arg_ndx++)
+        {
+            if (FWKNOP_CLI_ARG_BM(arg_ndx) & args_bitmask)
+                add_rc_param(rc_update, arg_ndx, options);
+        }
+    }
+
+    /* Close file handles */
+    fclose(rc);
+    fclose(rc_update);
+
+    /* Renamed the temporary file as the new rc file */
+    if (remove(rcfile) != 0)
+    {
+        fprintf(stderr, "update_rc() : Unable to remove %s to %s : %s\n",
+            rcfile_update, rcfile, strerror(errno));
+    }
+
+    if (rename(rcfile_update, rcfile) != 0)
+    {
+        fprintf(stderr, "update_rc() : Unable to rename %s to %s\n",
+            rcfile_update, rcfile);
+    }
+}
+
 /* Sanity and bounds checks for the various options.
 */
 static void
@@ -762,7 +1310,9 @@ set_defaults(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int       cmd_arg, index, is_err;
+    int         cmd_arg, index, is_err;
+    uint32_t    cli_arg_bitmask = 0;
+    char        user_input = 0;
 
     /* Zero out options and opts_track.
     */
@@ -783,6 +1333,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
             case 'n':
                 options->no_save_args = 1;
+                options->save_rc_stanza= 1;
                 strlcpy(options->use_rc_stanza, optarg, MAX_LINE_LEN);
                 break;
             case 'E':
@@ -811,9 +1362,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         switch(cmd_arg) {
             case 'a':
                 strlcpy(options->allow_ip_str, optarg, MAX_IPV4_STR_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ALLOW_IP);
                 break;
             case 'A':
                 strlcpy(options->access_str, optarg, MAX_LINE_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ACCESS);
                 break;
             case 'b':
                 options->save_packet_file_append = 1;
@@ -826,6 +1379,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'D':
                 strlcpy(options->spa_server_str, optarg, MAX_SERVER_STR_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER);
                 break;
             case 'E':
                 strlcpy(options->args_save_file, optarg, MAX_PATH_LEN);
@@ -839,13 +1393,16 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                             0, (2 << 16));
                     exit(EXIT_FAILURE);
                 }
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_FW_TIMEOUT);
                 break;
             case 'g':
             case GPG_ENCRYPTION:
                 options->use_gpg = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
                 break;
             case 'G':
                 strlcpy(options->get_key_file, optarg, MAX_PATH_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_FILE);
                 break;
             case 'h':
                 usage();
@@ -893,6 +1450,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     optarg);
                     exit(EXIT_FAILURE);
                 }
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_DIGEST_TYPE);
                 break;
             case 'M':
             case ENCRYPTION_MODE:
@@ -903,6 +1461,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     optarg);
                     exit(EXIT_FAILURE);
                 }
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ENCRYPTION_MODE);
                 break;
             case NO_SAVE_ARGS:
                 options->no_save_args = 1;
@@ -913,10 +1472,12 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'N':
                 strlcpy(options->nat_access_str, optarg, MAX_LINE_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_ACCESS);
                 break;
             case 'p':
                 options->spa_dst_port = strtol_wrapper(optarg, 0,
                         MAX_PORT, EXIT_UPON_ERR, &is_err);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER_PORT);
                 break;
             case 'P':
                 if((options->spa_proto = proto_strtoint(optarg)) < 0)
@@ -924,15 +1485,18 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     fprintf(stderr, "Unrecognized protocol: %s\n", optarg);
                     exit(EXIT_FAILURE);
                 }
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER_PROTO);
                 break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, MAX_IPV4_STR_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPOOF_SOURCE_IP);
                 break;
             case RC_FILE_PATH:
                 strlcpy(options->rc_file, optarg, MAX_PATH_LEN);
                 break;
             case 'r':
                 options->rand_port = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_RAND_PORT);
                 break;
             case 'R':
                 options->resolve_ip_http = 1;
@@ -947,6 +1511,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
                 strlcpy(options->resolve_url, optarg, strlen(optarg)+1);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_RESOLVE_URL);
                 break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;
@@ -957,15 +1522,18 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'S':
                 options->spa_src_port = strtol_wrapper(optarg, 0,
                         MAX_PORT, EXIT_UPON_ERR, &is_err);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SOURCE_PORT);
                 break;
             case 'T':
                 options->test = 1;
                 break;
             case 'u':
                 strlcpy(options->http_user_agent, optarg, HTTP_MAX_USER_AGENT_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HTTP_USER_AGENT);
                 break;
             case 'U':
                 strlcpy(options->spoof_user, optarg, MAX_USERNAME_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPOOF_USER);
                 break;
             case 'v':
                 /* Handled earlier.
@@ -977,34 +1545,47 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case GPG_RECIP_KEY:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_recipient_key, optarg, MAX_GPG_KEY_ID);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_RECIPIENT);
                 break;
             case GPG_SIGNER_KEY:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_signer_key, optarg, MAX_GPG_KEY_ID);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_SIGNER);
                 break;
             case GPG_HOME_DIR:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_home_dir, optarg, MAX_PATH_LEN);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_HOMEDIR);
                 break;
             case GPG_AGENT:
                 options->use_gpg = 1;
                 options->use_gpg_agent = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG_AGENT);
                 break;
             case NAT_LOCAL:
                 options->nat_local = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_LOCAL);
                 break;
             case NAT_RAND_PORT:
                 options->nat_rand_port = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_RAND_PORT);
                 break;
             case NAT_PORT:
                 options->nat_port = strtol_wrapper(optarg, 0,
                         MAX_PORT, EXIT_UPON_ERR, &is_err);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_PORT);
                 break;
             case TIME_OFFSET_PLUS:
                 options->time_offset_plus = parse_time_offset(optarg);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_TIME_OFFSET);
                 break;
             case TIME_OFFSET_MINUS:
                 options->time_offset_minus = parse_time_offset(optarg);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_TIME_OFFSET);
                 break;
             case USE_HMAC:
                 options->use_hmac = 1;
@@ -1015,9 +1596,36 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         }
     }
 
-    /* Now that we have all of our options set, we can validate them.
-    */
+    /* Ask the user whether we overwrite the stanza from the rcfile with the
+     * command line arguments */
+    if (   (options->save_rc_stanza == 1)
+        && (cli_arg_bitmask != 0)
+        && (options->got_named_stanza == 1) )
+    {
+        fprintf(stdout, "Overwritting stanza [%s] [Y/n] ? ", options->use_rc_stanza);
+
+        if (scanf("%c", &user_input ) != 1)
+            user_input = 'Y';
+
+        if (user_input != 'Y')
+        {
+            options->save_rc_stanza = 0;
+            process_rc(options);
+        }
+    }
+
+    /* Force a stanza found since we are going to update it. We cannot update
+     * the rcfile without prio validation */
+    if ( (options->save_rc_stanza == 1) && (cli_arg_bitmask != 0) )
+        options->got_named_stanza = 1;
+
+    /* Now that we have all of our options set, we can validate them */
     validate_options(options);
+
+    /* We can upgrade our settings with the parameters set on the command
+     * line by the user */
+    if ( (options->save_rc_stanza == 1) && (cli_arg_bitmask != 0) )
+        update_rc(options, cli_arg_bitmask);
 
     return;
 }
@@ -1043,8 +1651,9 @@ usage(void)
       " -n, --named-config          Specify an named configuration stanza in the\n"
       "                             '$HOME/.fwknoprc' file to provide some of all\n"
       "                             of the configuration parameters.\n"
-      " -N, --nat-access            Gain NAT access to an internal service\n"
-      "                             protected by the fwknop server.\n"
+      "                             If more arguments are set through the command\n"
+      "                             line, the configuration is updated accordingly\n"
+      " -N, --nat-access            Gain NAT access to an internal service.\n"
       " -p, --server-port           Set the destination port for outgoing SPA\n"
       "                             packet.\n"
       " -P, --server-proto          Set the protocol (udp, tcp, http, tcpraw,\n"
