@@ -178,6 +178,9 @@ EXTRA_DIST = \
     test/conf/tcp_pcap_filter_fwknopd.conf \
     test/conf/tcp_server_fwknopd.conf \
     test/conf/spa_replay.pcap \
+    test/fko-wrapper/Makefile \
+    test/fko-wrapper/fko_wrapper.c \
+    test/fko-wrapper/run_valgrind.sh \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte_eq.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte.patch \
