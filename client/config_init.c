@@ -55,27 +55,6 @@ digest_strtoint(const char *dt_str)
         return(-1);
 }
 
-/* Convert an encryption_mode string to its integer value.
-*/
-static int
-enc_mode_strtoint(const char *enc_mode_str)
-{
-    if(strcasecmp(enc_mode_str, "cbc") == 0)
-        return(FKO_ENC_MODE_CBC);
-    else if(strcasecmp(enc_mode_str, "ecb") == 0)
-        return(FKO_ENC_MODE_ECB);
-    else if(strcasecmp(enc_mode_str, "cfb") == 0)
-        return(FKO_ENC_MODE_CFB);
-    else if(strcasecmp(enc_mode_str, "pcbc") == 0)
-        return(-1); /* not supported yet */
-    else if(strcasecmp(enc_mode_str, "ofb") == 0)
-        return(FKO_ENC_MODE_OFB);
-    else if(strcasecmp(enc_mode_str, "ctr") == 0)
-        return(FKO_ENC_MODE_CTR);
-    else
-        return(-1);
-}
-
 /* Convert a protocol string to its integer value.
 */
 static int

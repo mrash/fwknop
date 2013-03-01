@@ -448,16 +448,15 @@ fko_get_spa_encryption_mode(fko_ctx_t ctx, int *enc_mode)
 /* Encrypt the encoded SPA data.
 */
 int
-fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key, const int enc_key_len)
+fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key,
+        const int enc_key_len)
 {
     int             res = 0;
 
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-    {
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
-    }
 
     /* If there is no encoded data or the SPA data has been modified,
      * go ahead and re-encode here.

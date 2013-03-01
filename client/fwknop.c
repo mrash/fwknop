@@ -867,7 +867,16 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         *key_len = fko_base64_decode(options->key_base64,
                 (unsigned char *) options->key);
-        memcpy(key, options->key, RIJNDAEL_MAX_KEYSIZE);
+        if(*key_len > 0 && *key_len < MAX_KEY_LEN)
+        {
+            //memcpy(key, options->key, *key_len);
+            memcpy(key, options->key, 32);
+        }
+        else
+        {
+            printf("FIXME bad\n");
+            exit(EXIT_FAILURE);
+        }
     }
     else
     {
