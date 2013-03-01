@@ -869,13 +869,12 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
                 (unsigned char *) options->key);
         if(*key_len > 0 && *key_len < MAX_KEY_LEN)
         {
-            //memcpy(key, options->key, *key_len);
-            memcpy(key, options->key, 32);
+            memcpy(key, options->key, *key_len);
         }
         else
         {
-            printf("FIXME bad\n");
-            exit(EXIT_FAILURE);
+            fprintf(stderr, "[*] Invalid base64 decoded key length.");
+            clean_exit(ctx, options, EXIT_FAILURE);
         }
     }
     else
