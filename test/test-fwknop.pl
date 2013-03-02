@@ -191,6 +191,7 @@ my $LINUX   = 1;
 my $FREEBSD = 2;
 my $MACOSX  = 3;
 my $OPENBSD = 4;
+my $start_time = time();
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -3084,8 +3085,19 @@ if ($enable_valgrind) {
         }
     );
 }
+&logr("\n");
+
+my $total_elapsed_seconds = time() - $start_time;
+my $total_elapsed_minutes = sprintf "%.2f", ($total_elapsed_seconds / 60);
+
+if ($total_elapsed_seconds > 60) {
+    &logr("    Run time: $total_elapsed_minutes minutes\n");
+} else {
+    &logr("    Run time: $total_elapsed_seconds seconds\n");
+}
 
 &logr("\n");
+
 if ($enable_openssl_compatibility_tests) {
     &logr("[+] $openssl_success_ctr/$openssl_failure_ctr/$openssl_ctr " .
         "OpenSSL tests passed/failed/executed\n");
@@ -7229,7 +7241,7 @@ sub usage() {
     --valgrind-path=<path>         - Path to valgrind, default is:
                                      $valgrindCmd
     --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
-                                     directory (can set to
+                                     directory (defaults to:
                                      "output.last/valgrind-coverage").
     -h   --help                    - Display usage on STDOUT and exit.
 
