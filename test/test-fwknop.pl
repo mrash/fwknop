@@ -307,10 +307,6 @@ if ($diff_mode) {
     exit 0;
 }
 
-### make sure no fwknopd instance is currently running
-die "[*] Please stop the running fwknopd instance."
-    if &is_fwknopd_running();
-
 ### main array that defines the tests we will run
 my @tests = (
     {
@@ -769,7 +765,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -782,7 +778,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rotate digest file',
         'err_msg'  => 'could not rotate digest file',
@@ -795,7 +791,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--save-packet $tmp_pkt_file",
         'err_msg'  => 'could not run SPA client',
@@ -807,7 +803,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--last-cmd",
         'err_msg'  => 'could not run last args',
@@ -819,7 +815,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'permissions check cycle (tcp/22)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -833,7 +829,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'client IP resolve (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -848,7 +844,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -862,7 +858,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -875,7 +871,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -888,7 +884,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -901,7 +897,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -914,7 +910,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => 'validate digest type arg',
         'err_msg'  => 'could not complete SPA cycle',
@@ -926,7 +922,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'dual usage access key (tcp/80 http)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -945,7 +941,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'create rc file (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -967,7 +963,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rc file default key (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -982,7 +978,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rc file base64 key (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -998,7 +994,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rc file named key (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1013,7 +1009,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael+HMAC',
         'subcategory' => 'client',
         'detail'   => 'rc file HMAC base64 key (tcp/22 ssh)',
         'err_msg'  => 'SPA packet not generated',
@@ -1024,9 +1020,9 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => 'complete cycle + HMAC (tcp/22 ssh)',
+        'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key " .
@@ -1039,7 +1035,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'altered HMAC (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1053,7 +1049,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'altered pkt HMAC (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1069,7 +1065,7 @@ my @tests = (
 
     ### --key-gen tests
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => '--key-gen',
         'err_msg'  => 'keys not generated',
@@ -1080,7 +1076,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--key-gen $uniq_keys key uniqueness",
         'err_msg'  => 'keys not generated',
@@ -1090,7 +1086,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => '--key-gen to file',
         'err_msg'  => 'keys not generated',
@@ -1103,7 +1099,7 @@ my @tests = (
 
     ### rc file tests
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => 'rc file invalid stanza (tcp/22 ssh)',
         'err_msg'  => 'SPA packet generated/accepted',
@@ -1115,7 +1111,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => 'rc file invalid base64 key (tcp/22 ssh)',
         'err_msg'  => 'SPA packet generated/accepted',
@@ -1128,7 +1124,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'packet aging (past) (tcp/22 ssh)',
         'err_msg'  => 'old SPA packet accepted',
@@ -1141,7 +1137,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'packet aging (future) (tcp/22 ssh)',
         'err_msg'  => 'future SPA packet accepted',
@@ -1154,7 +1150,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'invalid SOURCE (tcp/22 ssh)',
         'err_msg'  => 'SPA packet accepted',
@@ -1168,7 +1164,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'expired stanza (tcp/22 ssh)',
         'err_msg'  => 'SPA packet accepted',
@@ -1182,7 +1178,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'invalid expire date (tcp/22 ssh)',
         'err_msg'  => 'SPA packet accepted',
@@ -1196,7 +1192,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'expired epoch stanza (tcp/22 ssh)',
         'err_msg'  => 'SPA packet accepted',
@@ -1210,7 +1206,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'future expired stanza (tcp/22 ssh)',
         'err_msg'  => 'SPA packet not accepted',
@@ -1225,7 +1221,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'OPEN_PORTS (tcp/22 ssh)',
         'err_msg'  => "improper OPEN_PORTS result",
@@ -1239,7 +1235,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'OPEN_PORTS mismatch',
         'err_msg'  => "SPA packet accepted",
@@ -1255,7 +1251,7 @@ my @tests = (
 
     ### spoof the source IP on the SPA packet
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "udpraw spoof src IP (tcp/22 ssh)",
         'err_msg'  => "could not spoof source IP",
@@ -1269,7 +1265,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "tcpraw spoof src IP (tcp/22 ssh)",
         'err_msg'  => "could not spoof source IP",
@@ -1284,7 +1280,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "icmp spoof src IP (tcp/22 ssh)",
         'err_msg'  => "could not spoof source IP",
@@ -1299,7 +1295,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "icmp type/code 8/0 spoof src IP ",
         'err_msg'  => "could not spoof source IP",
@@ -1317,7 +1313,7 @@ my @tests = (
     ### SPA over TCP (not really "single" packet auth since a TCP connection
     ### is established)
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "SPA over TCP connection",
         'err_msg'  => "could not send/process SPA packet over TCP connection",
@@ -1332,7 +1328,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'require user (tcp/22 ssh)',
         'err_msg'  => "missed require user criteria",
@@ -1346,7 +1342,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'user mismatch (tcp/22 ssh)',
         'err_msg'  => "improper user accepted for access",
@@ -1361,7 +1357,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'require src (tcp/22 ssh)',
         'err_msg'  => "fw rule not created",
@@ -1375,7 +1371,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'mismatch require src (tcp/22 ssh)',
         'err_msg'  => "fw rule created",
@@ -1391,7 +1387,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'allow -s (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1408,7 +1404,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'IP filtering (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
@@ -1422,7 +1418,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'subnet filtering (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
@@ -1436,7 +1432,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'IP+subnet filtering (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
@@ -1450,7 +1446,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'IP match (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
@@ -1464,7 +1460,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'subnet match (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
@@ -1478,7 +1474,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi IP/net match (tcp/22 ssh)',
         'err_msg'  => "did not filter $loopback_ip",
@@ -1492,7 +1488,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi access stanzas (tcp/22 ssh)',
         'err_msg'  => "could not complete SPA cycle",
@@ -1506,7 +1502,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'bad/good key stanzas (tcp/22 ssh)',
         'err_msg'  => "could not complete SPA cycle",
@@ -1521,7 +1517,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "non-enabled NAT (tcp/22 ssh)",
         'err_msg'  => "SPA packet not filtered",
@@ -1535,7 +1531,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "NAT to $internal_nat_host (tcp/22 ssh)",
         'err_msg'  => "could not complete NAT SPA cycle",
@@ -1551,7 +1547,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "NAT bogus IP validation",
         'err_msg'  => "could not complete NAT SPA cycle",
@@ -1562,7 +1558,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "force NAT $force_nat_host (tcp/22 ssh)",
         'err_msg'  => "could not complete NAT SPA cycle",
@@ -1579,7 +1575,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "local NAT $force_nat_host (tcp/22 ssh)",
         'err_msg'  => "could not complete NAT SPA cycle",
@@ -1597,7 +1593,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "local NAT non-FORCE_NAT (tcp/22 ssh)",
         'err_msg'  => "could not complete NAT SPA cycle",
@@ -1617,7 +1613,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'ECB mode (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1632,7 +1628,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'CFB mode (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1647,7 +1643,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'CTR mode (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1662,7 +1658,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'OFB mode (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1678,7 +1674,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'mode mismatch (tcp/22 ssh)',
         'err_msg'  => 'server accepted mismatch enc mode',
@@ -1694,7 +1690,7 @@ my @tests = (
 
     ### --pcap-file
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => '--pcap-file processing',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1713,7 +1709,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1728,7 +1724,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1743,7 +1739,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/60001)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1758,7 +1754,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/60001,udp/60001)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1773,7 +1769,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/22,udp/53,tcp/1234)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1789,7 +1785,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1804,7 +1800,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "-P bpf SPA over port $non_std_spa_port",
         'err_msg'  => 'could not complete SPA cycle',
@@ -1820,7 +1816,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'random SPA port (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -1835,7 +1831,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22)',
         'err_msg'  => 'could not spoof username',
@@ -1849,7 +1845,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
         'err_msg'  => 'could not detect replay attack',
@@ -1861,7 +1857,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #1 (Rijndael prefix)',
         'err_msg'  => 'could not detect replay attack',
@@ -1876,7 +1872,7 @@ my @tests = (
 
     ### ensure iptables rules are not duplicated for identical access requests
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'iptables rules not duplicated',
         'err_msg'  => 'iptables rules duplicated',
@@ -1890,7 +1886,7 @@ my @tests = (
 
     ### backwards compatibility tests
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0',
         'err_msg'  => 'backwards compatibility failed',
@@ -1907,7 +1903,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.1',
         'err_msg'  => 'backwards compatibility failed',
@@ -1924,7 +1920,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.2',
         'err_msg'  => 'backwards compatibility failed',
@@ -1941,7 +1937,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.3',
         'err_msg'  => 'backwards compatibility failed',
@@ -1957,7 +1953,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.4',
         'err_msg'  => 'backwards compatibility failed',
@@ -1973,7 +1969,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'Android compatibility',
         'detail'   => 'v4.1.2',
         'err_msg'  => 'Android compatibility failed',
@@ -1993,7 +1989,7 @@ my @tests = (
 
     ### fuzzing tests
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'overly long port value',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2021,7 +2017,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'overly long proto value',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2049,7 +2045,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'overly long IP value',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2079,7 +2075,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'negative port value',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2102,7 +2098,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'null port value',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2125,7 +2121,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'long FKO protocol value (enc mode trigger)',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2158,7 +2154,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'long FKO protocol value (Rijndael trigger)',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2188,7 +2184,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'null proto value',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2211,7 +2207,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'invalid NAT IP',
         'err_msg'  => 'server crashed or did not detect error condition',
@@ -2276,7 +2272,7 @@ my @tests = (
 
     ### command execution tests
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'command execution',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2293,7 +2289,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #2 (Rijndael prefix)',
         'err_msg'  => 'could not detect replay attack',
@@ -2305,7 +2301,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'err_msg'  => 'improper digest cache structure',
@@ -2314,7 +2310,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'server',
         'detail'   => 'ipfw active/expire sets not equal',
         'err_msg'  => 'allowed active/expire sets to be the same',
@@ -2329,7 +2325,7 @@ my @tests = (
     },
 
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -2340,7 +2336,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -2351,7 +2347,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -2362,7 +2358,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'Rijndael SPA',
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -2594,7 +2590,7 @@ my @tests = (
 
     ### no password GPG testing
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2607,7 +2603,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2624,7 +2620,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2641,7 +2637,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2658,7 +2654,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/60001)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2676,7 +2672,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2694,7 +2690,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
         'err_msg'  => 'could not detect replay attack',
@@ -2706,7 +2702,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #1 (GnuPG prefix)',
         'err_msg'  => 'could not detect replay attack',
@@ -2721,7 +2717,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -2732,7 +2728,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -2743,7 +2739,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -2754,7 +2750,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -2765,7 +2761,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GPG (no pw) SPA',
+        'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22 ssh)',
         'err_msg'  => 'could not spoof username',
@@ -2779,7 +2775,7 @@ my @tests = (
     ### GPG testing (with passwords associated with keys) - first check to
     ### see if pinentry is required and disable remaining GPG tests if so
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'pinentry not required',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2788,7 +2784,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2800,7 +2796,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'rc file default key (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2814,7 +2810,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'rc file named key (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2828,7 +2824,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2844,7 +2840,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2861,7 +2857,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2878,7 +2874,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/60001)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2896,7 +2892,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
         'err_msg'  => 'could not complete SPA cycle',
@@ -2914,7 +2910,7 @@ my @tests = (
     },
 
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
         'err_msg'  => 'could not detect replay attack',
@@ -2925,7 +2921,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #2 (GnuPG prefix)',
         'err_msg'  => 'could not detect replay attack',
@@ -2938,7 +2934,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #3 (GnuPG prefix)',
         'err_msg'  => 'could not detect replay attack',
@@ -2952,7 +2948,7 @@ my @tests = (
 
 
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -2962,7 +2958,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
         'err_msg'  => 'allowed improper SPA data',
@@ -2972,7 +2968,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -2982,7 +2978,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
         'err_msg'  => 'allowed improper SPA data',
@@ -2992,7 +2988,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22 ssh)',
         'err_msg'  => 'could not spoof username',
@@ -3002,7 +2998,7 @@ my @tests = (
         'fatal'    => $NO
     },
     {
-        'category' => 'GnuPG (GPG) SPA',
+        'category' => 'GPG',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'err_msg'  => 'improper digest cache structure',
@@ -3035,6 +3031,13 @@ my %test_keys = (
     'replay_positive_output_matches' => $OPTIONAL,
     'replay_negative_output_matches' => $OPTIONAL,
 );
+
+&validate_test_hashes();
+
+### make sure no fwknopd instance is currently running
+die "[*] Please stop the running fwknopd instance."
+    if &is_fwknopd_running();
+
 
 &logr("\n[+] Starting the fwknop test suite...\n\n" .
     "    args: @args_cp\n\n"
@@ -6576,14 +6579,7 @@ sub dots_print() {
     return;
 }
 
-sub init() {
-
-    $|++; ### turn off buffering
-
-    $< == 0 && $> == 0 or
-        die "[*] $0: You must be root (or equivalent ",
-            "UID 0 account) to effectively test fwknop";
-
+sub validate_test_hashes() {
     ### validate test hashes
     my $hash_num = 0;
     for my $test_hr (@tests) {
@@ -6597,6 +6593,16 @@ sub init() {
         }
         $hash_num++;
     }
+    return;
+}
+
+sub init() {
+
+    $|++; ### turn off buffering
+
+    $< == 0 && $> == 0 or
+        die "[*] $0: You must be root (or equivalent ",
+            "UID 0 account) to effectively test fwknop";
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
 
