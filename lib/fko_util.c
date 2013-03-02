@@ -30,6 +30,7 @@
 */
 #include "fko_common.h"
 #include "fko.h"
+#include "fko_util.h"
 #include <errno.h>
 
 /* Validate encoded message length
@@ -50,30 +51,6 @@ is_valid_pt_msg_len(const int len)
 {
     if(len < MIN_SPA_PLAINTEXT_MSG_SIZE || len >= MAX_SPA_PLAINTEXT_MSG_SIZE)
         return(0);
-
-    return(1);
-}
-
-/* Validate digest length
-*/
-int
-is_valid_digest_len(const int len)
-{
-    switch(len)
-    {
-        case MD5_B64_LEN:
-            break;
-        case SHA1_B64_LEN:
-            break;
-        case SHA256_B64_LEN:
-            break;
-        case SHA384_B64_LEN:
-            break;
-        case SHA512_B64_LEN:
-            break;
-        default:
-            return(0);
-    }
 
     return(1);
 }

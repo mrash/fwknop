@@ -33,8 +33,6 @@
 
 #include <time.h>
 
-#include "digest.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

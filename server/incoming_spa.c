@@ -43,6 +43,7 @@
 #include "fw_util.h"
 #include "fwknopd_errors.h"
 #include "replay_cache.h"
+#include "rijndael.h"
 
 /* Validate and in some cases preprocess/reformat the SPA data.  Return an
  * error code value if there is any indication the data is not valid spa data.

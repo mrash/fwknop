@@ -121,9 +121,6 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
 
-    unsigned int    fst_proto;
-    unsigned int    fst_port;
-
     int             res = 0;
     time_t          now;
     unsigned int    exp_ts;
@@ -135,12 +132,6 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
     /* Start at the top of the proto-port list...
     */
     ple = port_list;
-
-    /* Remember the first proto/port combo in case we need them
-     * for NAT access requests.
-    */
-    fst_proto = ple->proto;
-    fst_port  = ple->port;
 
     /* Set our expire time value.
     */

@@ -31,8 +31,6 @@
 #ifndef FKO_UTIL_H
 #define FKO_UTIL_H 1
 
-#include "fko_common.h"
-
 /* Function prototypes
 */
 int is_valid_encoded_msg_len(const int len);

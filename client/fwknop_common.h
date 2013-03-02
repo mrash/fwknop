@@ -32,6 +32,7 @@
 #define FWKNOP_COMMON_H
 
 #include "common.h"
+#include "fko_limits.h"
 
 /* My Name and Version
 */

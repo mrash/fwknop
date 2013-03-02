@@ -33,11 +33,10 @@
  * 128, 192, or 256 bits, designed by Joan Daemen and Vincent Rijmen.  See
  * http://www.esat.kuleuven.ac.be/~rijmen/rijndael/ for details.
  */
-
 #ifndef RIJNDAEL_H
 #define RIJNDAEL_H 1
 
-#include "fko_common.h"
+#include "common.h"
 
 /* Other block sizes and key lengths are possible, but in the context of
  * the ssh protocols, 256 bits is the default.

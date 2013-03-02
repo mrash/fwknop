@@ -31,7 +31,10 @@
 #ifndef GPGME_FUNCS_H
 #define GPGME_FUNCS_H 1
 
-#include "fko_common.h"
+#if HAVE_LIBGPGME
+  #include <gpgme.h>
+#endif
+
 #include "fko.h"
 
 int gpgme_encrypt(fko_ctx_t ctx, unsigned char *in, size_t len, const char *pw, unsigned char **out, size_t *out_len);

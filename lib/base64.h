@@ -31,8 +31,6 @@
 #ifndef BASE64_H
 #define BASE64_H 1
 
-#include "fko_common.h"
-
 /* Prototypes
 */
 int b64_encode(unsigned char *in, char *out, int in_len);
