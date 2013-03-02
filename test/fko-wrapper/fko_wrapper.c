@@ -65,6 +65,11 @@ int main(void) {
                 fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_RIJNDAEL));
     }
 
+    for (i=0; i<FCN_CALLS; i++) {
+        printf("fko_set_spa_encryption_mode(FKO_ENC_MODE_CBC): %d\n",
+                fko_set_spa_encryption_mode(ctx, FKO_ENC_MODE_CBC));
+    }
+
     if (ENABLE_GPG_TESTS) {
         for (i=0; i<FCN_CALLS; i++) {
             printf("fko_set_spa_encryption_type(FKO_ENCRYPTION_GPG): %d\n",
