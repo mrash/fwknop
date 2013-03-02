@@ -90,7 +90,6 @@ my $tmp_args_file       = "$run_dir/args.save";
 my $fwknopCmd   = '../client/.libs/fwknop';
 my $fwknopdCmd  = '../server/.libs/fwknopd';
 my $libfko_bin  = "$lib_dir/libfko.so";  ### this is usually a link
-my $valgrindCmd = '/usr/bin/valgrind';
 
 my $gpg_server_key = '361BBAD4';
 my $gpg_client_key = '6A3FAD56';
@@ -162,6 +161,7 @@ my $openssl_ctr = 0;
 my $fuzzing_success_ctr = 0;
 my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
+my $valgrind_path = '';
 my $sudo_path = '';
 my $gcov_path = '';
 my $killall_path = '';
@@ -223,7 +223,7 @@ exit 1 unless GetOptions(
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$enable_valgrind,
     'enable-all'        => \$enable_all,
-    'valgrind-path=s'   => \$valgrindCmd,
+    'valgrind-path=s'   => \$valgrind_path,
     ### can set the following to "output.last/valgrind-coverage" if
     ### a full test suite run has already been executed with --enable-valgrind
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
@@ -251,7 +251,10 @@ exit &anonymize_results() if $anonymize_results;
 
 &identify_loopback_intf();
 
-$valgrind_str = "$valgrindCmd --leak-check=full " .
+### make sure everything looks as expected before continuing
+&init();
+
+$valgrind_str = "$valgrind_path --leak-check=full " .
     "--show-reachable=yes --track-origins=yes" if $enable_valgrind;
 
 my $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
@@ -298,6 +301,15 @@ my $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
 ### point the compiled binaries at the local libary path
 ### instead of any installed libfko instance
 $ENV{'LD_LIBRARY_PATH'} = $lib_dir;
+
+if ($diff_mode) {
+    &diff_test_results();
+    exit 0;
+}
+
+### make sure no fwknopd instance is currently running
+die "[*] Please stop the running fwknopd instance."
+    if &is_fwknopd_running();
 
 ### main array that defines the tests we will run
 my @tests = (
@@ -3023,14 +3035,6 @@ my %test_keys = (
     'replay_positive_output_matches' => $OPTIONAL,
     'replay_negative_output_matches' => $OPTIONAL,
 );
-
-if ($diff_mode) {
-    &diff_test_results();
-    exit 0;
-}
-
-### make sure everything looks as expected before continuing
-&init();
 
 &logr("\n[+] Starting the fwknop test suite...\n\n" .
     "    args: @args_cp\n\n"
@@ -6573,11 +6577,6 @@ sub init() {
         $hash_num++;
     }
 
-    if ($enable_valgrind) {
-        die "[*] $valgrindCmd exec problem, use --valgrind-path"
-            unless -e $valgrindCmd and -x $valgrindCmd;
-    }
-
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
 
     unless ($enable_recompilation_warnings_check) {
@@ -6648,15 +6647,16 @@ sub init() {
         }
     }
 
-    ### make sure no fwknopd instance is currently running
-    die "[*] Please stop the running fwknopd instance."
-        if &is_fwknopd_running();
-
     if ($enable_openssl_compatibility_tests) {
         $openssl_path = &find_command('openssl');
         die "[*] openssl command not found." unless $openssl_path;
         require MIME::Base64;
         MIME::Base64->import(qw(decode_base64));
+    }
+
+    if ($enable_valgrind) {
+        $valgrind_path = &find_command('valgrind');
+        die "[*] valgrind command not found." unless $valgrind_path;
     }
 
     $enable_perl_module_checks = 1
@@ -7238,8 +7238,7 @@ sub usage() {
                                      $fwknopdCmd
     --libfko-path=<path>           - Path to libfko, default is:
                                      $libfko_bin
-    --valgrind-path=<path>         - Path to valgrind, default is:
-                                     $valgrindCmd
+    --valgrind-path=<path>         - Specify path to valgrind
     --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
                                      directory (defaults to:
                                      "output.last/valgrind-coverage").
