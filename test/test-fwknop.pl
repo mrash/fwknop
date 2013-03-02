@@ -3047,6 +3047,27 @@ if ($saved_last_results) {
         "to: ${output_dir}.last/\n\n");
 }
 
+if ($enable_valgrind) {
+    if ($previous_valgrind_coverage_dir) {
+        die "[*] $previous_valgrind_coverage_dir does not exist"
+            unless -d $previous_valgrind_coverage_dir;
+    } else {
+        ### try the previous output.last/valgrind-coverage dir first
+        $previous_valgrind_coverage_dir = "${output_dir}.last/$valgrind_cov_dir";
+
+        unless (-d $previous_valgrind_coverage_dir) {
+            my $os = 'linux';
+            $os = 'freebsd' if $platform == $FREEBSD;
+            $previous_valgrind_coverage_dir = "valgrind-coverage/$os";
+        }
+
+    }
+    if (-d $previous_valgrind_coverage_dir) {
+        &logr("    Valgrind mode enabled, will import previous coverage from:\n" .
+            "        $previous_valgrind_coverage_dir/\n\n");
+    }
+}
+
 ### main loop through all of the tests
 for my $test_hr (@tests) {
     &run_test($test_hr);
@@ -6806,20 +6827,6 @@ sub identify_loopback_intf() {
 }
 
 sub import_previous_valgrind_coverage_info() {
-
-    if ($previous_valgrind_coverage_dir) {
-        die "[*] $previous_valgrind_coverage_dir does not exist"
-            unless -d $previous_valgrind_coverage_dir;
-    } else {
-        ### try the previous output.last/valgrind-coverage dir first
-        $previous_valgrind_coverage_dir = "${output_dir}.last/$valgrind_cov_dir";
-
-        unless (-d $previous_valgrind_coverage_dir) {
-            my $os = 'linux';
-            $os = 'freebsd' if $platform == $FREEBSD;
-            $previous_valgrind_coverage_dir = "valgrind-coverage/$os";
-        }
-    }
 
     return unless -d $previous_valgrind_coverage_dir;
 
