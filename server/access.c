@@ -40,6 +40,7 @@
 #include "access.h"
 #include "utils.h"
 #include "log_msg.h"
+#include "rijndael.h"
 
 /* Add an access string entry
 */

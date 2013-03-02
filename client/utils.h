@@ -42,7 +42,4 @@ int is_base64(const unsigned char *buf, const unsigned short int len);
 int set_file_perms(const char *file);
 int verify_file_perms_ownership(const char *file);
 
-size_t strlcat(char *dst, const char *src, size_t siz);
-size_t strlcpy(char *dst, const char *src, size_t siz);
-
 #endif  /* UTILS_H */

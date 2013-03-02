@@ -33,9 +33,6 @@
 
 #include <time.h>
 
-#include "rijndael.h"   /* For encryption modes */
-#include "digest.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -111,12 +108,12 @@ typedef enum {
 */
 typedef enum {
     FKO_ENC_MODE_UNKNOWN = 0,
-    FKO_ENC_MODE_ECB  = MODE_ECB,
-    FKO_ENC_MODE_CBC  = MODE_CBC,
-    FKO_ENC_MODE_CFB  = MODE_CFB,
-    FKO_ENC_MODE_PCBC = MODE_PCBC,
-    FKO_ENC_MODE_OFB  = MODE_OFB,
-    FKO_ENC_MODE_CTR  = MODE_CTR,
+    FKO_ENC_MODE_ECB, //  = MODE_ECB,
+    FKO_ENC_MODE_CBC, //  = MODE_CBC,
+    FKO_ENC_MODE_CFB, //  = MODE_CFB,
+    FKO_ENC_MODE_PCBC, // = MODE_PCBC,
+    FKO_ENC_MODE_OFB, //  = MODE_OFB,
+    FKO_ENC_MODE_CTR, //  = MODE_CTR,
     FKO_ENC_MODE_ASYMMETRIC,  /* placeholder when GPG is used */
     FKO_ENC_MODE_CBC_LEGACY_IV,  /* for the old zero-padding strategy */
     FKO_LAST_ENC_MODE /* Always leave this as the last one */

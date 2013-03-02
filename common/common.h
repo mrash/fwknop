@@ -100,6 +100,7 @@
 
 #include "fko.h"
 #include "fko_limits.h"
+#include "fko_util.h"
 
 /* Get our program version from VERSION (defined in config.h).
 */
