@@ -267,9 +267,16 @@ my $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     "--no-save-args --verbose --verbose";
 
+my $default_client_hmac_args = "$default_client_args_no_get_key " .
+    "--rc-file $cf{'rc_file_hmac_b64_key'}";
+
 my $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
     "$local_key_file --verbose --verbose";
+
+my $client_ip_resolve_hmac_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+    "$fwknopCmd -A tcp/22 -R -D $loopback_ip --rc-file " .
+    "$cf{'rc_file_hmac_b64_key'} --verbose --verbose";
 
 my $default_client_gpg_args = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
@@ -286,6 +293,9 @@ my $default_client_gpg_args_no_get_key = "$default_client_args_no_get_key " .
     "--gpg-home-dir $gpg_client_home_dir";
 
 my $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
+    "-d $default_digest_file -p $default_pid_file";
+
+my $default_server_hmac_conf_args = "-c $cf{'def'} -a $cf{'hmac_access'} " .
     "-d $default_digest_file -p $default_pid_file";
 
 my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
@@ -1034,6 +1044,149 @@ my @tests = (
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'rotate digest file',
+        'err_msg'  => 'could not rotate digest file',
+        'function' => \&rotate_digest_file,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str --rotate-digest-cache",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => "--save-packet $tmp_pkt_file",
+        'err_msg'  => 'could not run SPA client',
+        'function' => \&client_save_spa_pkt,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_file_hmac_b64_key'} " .
+            "--save-args-file $tmp_args_file " .
+            "--save-packet $tmp_pkt_file",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => "--last-cmd",
+        'err_msg'  => 'could not run last args',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
+            "--verbose --verbose",
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'permissions check cycle (tcp/22)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&permissions_check,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/permissions\sshould\sonly\sbe\suser/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP resolve (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => $client_ip_resolve_hmac_args,
+        'no_ip_check' => 1,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_hmac_args -m md5",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_hmac_args -m sha1",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_hmac_args -m sha256",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_hmac_args -m sha384",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_hmac_args -m sha512",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => 'validate digest type arg',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_hmac_args -m invaliddigest",
+        'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
