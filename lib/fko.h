@@ -33,9 +33,6 @@
 
 #include <time.h>
 
-#include "rijndael.h"   /* For encryption modes */
-#include "digest.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -107,16 +104,16 @@ typedef enum {
     FKO_LAST_ENCRYPTION_TYPE /* Always leave this as the last one */
 } fko_encryption_type_t;
 
-/* Symmetric encryption modes derived from rijndael.h
+/* Symmetric encryption modes to correspond to rijndael.h
 */
 typedef enum {
     FKO_ENC_MODE_UNKNOWN = 0,
-    FKO_ENC_MODE_ECB  = MODE_ECB,
-    FKO_ENC_MODE_CBC  = MODE_CBC,
-    FKO_ENC_MODE_CFB  = MODE_CFB,
-    FKO_ENC_MODE_PCBC = MODE_PCBC,
-    FKO_ENC_MODE_OFB  = MODE_OFB,
-    FKO_ENC_MODE_CTR  = MODE_CTR,
+    FKO_ENC_MODE_ECB,
+    FKO_ENC_MODE_CBC,
+    FKO_ENC_MODE_CFB,
+    FKO_ENC_MODE_PCBC,
+    FKO_ENC_MODE_OFB,
+    FKO_ENC_MODE_CTR,
     FKO_ENC_MODE_ASYMMETRIC,  /* placeholder when GPG is used */
     FKO_ENC_MODE_CBC_LEGACY_IV,  /* for the old zero-padding strategy */
     FKO_LAST_ENC_MODE /* Always leave this as the last one */
@@ -192,7 +189,7 @@ typedef enum {
 #define FKO_DEFAULT_MSG_TYPE    FKO_ACCESS_MSG
 #define FKO_DEFAULT_DIGEST      FKO_DIGEST_SHA256
 #define FKO_DEFAULT_ENCRYPTION  FKO_ENCRYPTION_RIJNDAEL
-#define FKO_DEFAULT_ENC_MODE    MODE_CBC
+#define FKO_DEFAULT_ENC_MODE    FKO_ENC_MODE_CBC
 
 /* Define the consistent prefixes or salt on some encryption schemes.
 */

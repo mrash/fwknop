@@ -34,6 +34,10 @@
 #include "fko_common.h"
 
 #if HAVE_LIBGPGME
+  #include <gpgme.h>
+#endif
+ 
+#if HAVE_LIBGPGME
 /* Stucture to hold a list of the gpg signature information
  * we are interested in.
 */

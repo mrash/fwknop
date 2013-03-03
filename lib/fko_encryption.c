@@ -32,6 +32,7 @@
 #include "fko.h"
 #include "cipher_funcs.h"
 #include "base64.h"
+#include "digest.h"
 
 #if HAVE_LIBGPGME
   #include "gpgme_funcs.h"
@@ -54,8 +55,21 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
-    if (! is_valid_digest_len(ctx->digest_len))
-        return(FKO_ERROR_INVALID_DATA);
+    switch(ctx->digest_len)
+    {
+        case MD5_B64_LEN:
+            break;
+        case SHA1_B64_LEN:
+            break;
+        case SHA256_B64_LEN:
+            break;
+        case SHA384_B64_LEN:
+            break;
+        case SHA512_B64_LEN:
+            break;
+        default:
+            return(FKO_ERROR_INVALID_DATA);
+    }
 
     pt_len = ctx->encoded_msg_len + ctx->digest_len + RIJNDAEL_BLOCKSIZE + 2;
 
@@ -217,8 +231,21 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
-    if (! is_valid_digest_len(ctx->digest_len))
-        return(FKO_ERROR_INVALID_DATA);
+    switch(ctx->digest_len)
+    {
+        case MD5_B64_LEN:
+            break;
+        case SHA1_B64_LEN:
+            break;
+        case SHA256_B64_LEN:
+            break;
+        case SHA384_B64_LEN:
+            break;
+        case SHA512_B64_LEN:
+            break;
+        default:
+            return(FKO_ERROR_INVALID_DATA);
+    }
 
     /* First make sure we have a recipient key set.
     */
@@ -448,16 +475,15 @@ fko_get_spa_encryption_mode(fko_ctx_t ctx, int *enc_mode)
 /* Encrypt the encoded SPA data.
 */
 int
-fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key, const int enc_key_len)
+fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key,
+        const int enc_key_len)
 {
     int             res = 0;
 
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
-    {
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
-    }
 
     /* If there is no encoded data or the SPA data has been modified,
      * go ahead and re-encode here.

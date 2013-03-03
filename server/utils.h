@@ -64,7 +64,4 @@ int is_base64(const unsigned char *buf, const unsigned short int len);
 int is_valid_dir(const char *path);
 int verify_file_perms_ownership(const char *file);
 
-size_t strlcat(char *dst, const char *src, size_t siz);
-size_t strlcpy(char *dst, const char *src, size_t siz);
-
 #endif  /* UTILS_H */

@@ -151,29 +151,6 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
     return;
 }
 
-/* Convert an encryption_mode string to its integer value.
-*/
-static int
-enc_mode_strtoint(const char *enc_mode_str)
-{
-    if(strcasecmp(enc_mode_str, "cbc") == 0)
-        return(FKO_ENC_MODE_CBC);
-    else if(strcasecmp(enc_mode_str, "ecb") == 0)
-        return(FKO_ENC_MODE_ECB);
-    else if(strcasecmp(enc_mode_str, "cfb") == 0)
-        return(FKO_ENC_MODE_CFB);
-    else if(strcasecmp(enc_mode_str, "pcbc") == 0)
-        return(-1);  /* not supported yet */
-    else if(strcasecmp(enc_mode_str, "ofb") == 0)
-        return(FKO_ENC_MODE_OFB);
-    else if(strcasecmp(enc_mode_str, "ctr") == 0)
-        return(FKO_ENC_MODE_CTR);
-    else if(strcasecmp(enc_mode_str, "legacy") == 0)
-        return(FKO_ENC_MODE_CBC_LEGACY_IV);
-    else
-        return(-1);
-}
-
 #if FIREWALL_IPTABLES
 static void
 add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)

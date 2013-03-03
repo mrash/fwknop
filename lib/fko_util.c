@@ -30,6 +30,7 @@
 */
 #include "fko_common.h"
 #include "fko.h"
+#include "fko_util.h"
 #include <errno.h>
 
 /* Validate encoded message length
@@ -54,28 +55,27 @@ is_valid_pt_msg_len(const int len)
     return(1);
 }
 
-/* Validate digest length
+/* Convert an encryption_mode string to its integer value.
 */
 int
-is_valid_digest_len(const int len)
+enc_mode_strtoint(const char *enc_mode_str)
 {
-    switch(len)
-    {
-        case MD5_B64_LEN:
-            break;
-        case SHA1_B64_LEN:
-            break;
-        case SHA256_B64_LEN:
-            break;
-        case SHA384_B64_LEN:
-            break;
-        case SHA512_B64_LEN:
-            break;
-        default:
-            return(0);
-    }
-
-    return(1);
+    if(strcasecmp(enc_mode_str, "cbc") == 0)
+        return(FKO_ENC_MODE_CBC);
+    else if(strcasecmp(enc_mode_str, "ecb") == 0)
+        return(FKO_ENC_MODE_ECB);
+    else if(strcasecmp(enc_mode_str, "cfb") == 0)
+        return(FKO_ENC_MODE_CFB);
+    else if(strcasecmp(enc_mode_str, "pcbc") == 0)
+        return(-1);  /* not supported yet */
+    else if(strcasecmp(enc_mode_str, "ofb") == 0)
+        return(FKO_ENC_MODE_OFB);
+    else if(strcasecmp(enc_mode_str, "ctr") == 0)
+        return(FKO_ENC_MODE_CTR);
+    else if(strcasecmp(enc_mode_str, "legacy") == 0)
+        return(FKO_ENC_MODE_CBC_LEGACY_IV);
+    else
+        return(-1);
 }
 
 int

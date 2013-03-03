@@ -135,8 +135,7 @@ fko_new(fko_ctx_t *r_ctx)
         return res;
     }
 
-    /* Default Encryption Mode (Rijndael in EBC mode for backwards
-     * compatibility - it recommended to change this to CBC mode)
+    /* Default is Rijndael in CBC mode
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_mode(ctx, FKO_DEFAULT_ENC_MODE);

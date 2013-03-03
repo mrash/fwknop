@@ -174,8 +174,21 @@ int fko_calculate_hmac(fko_ctx_t ctx,
 
     free(hmac_base64);
 
-    if(! is_valid_digest_len(ctx->msg_hmac_len))
-        return(FKO_ERROR_INVALID_DATA);
+    switch(ctx->msg_hmac_len)
+    {
+        case MD5_B64_LEN:
+            break;
+        case SHA1_B64_LEN:
+            break;
+        case SHA256_B64_LEN:
+            break;
+        case SHA384_B64_LEN:
+            break;
+        case SHA512_B64_LEN:
+            break;
+        default:
+            return(FKO_ERROR_INVALID_DATA);
+    }
 
     return FKO_SUCCESS;
 }
