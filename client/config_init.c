@@ -40,6 +40,7 @@
 #include <fcntl.h>
 
 #define RC_PARAM_TEMPLATE           "%-24s    %s\n"             /*!< Template to define param = val in a rc file */
+#define RC_SECTION_TEMPLATE         "[%s]\n"                    /*!< Template to define a section in a rc file */
 #define FWKNOP_CLI_ARG_BM(x)        ((uint32_t)(1 << (x)))      /*!< Bitmask command line arg */
 #define FWKNOPRC_OFLAGS             (O_WRONLY|O_CREAT|O_EXCL)   /*!< O_flags used to create an fwknoprc file with the open function */
 #define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
@@ -64,6 +65,9 @@ enum
     FWKNOP_CLI_ARG_ACCESS,
     FWKNOP_CLI_ARG_SPA_SERVER,
     FWKNOP_CLI_ARG_RAND_PORT,
+    FWKNOP_CLI_ARG_KEY,
+    FWKNOP_CLI_ARG_KEY_BASE64,
+    FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
     FWKNOP_CLI_ARG_HTTP_USER_AGENT,
@@ -94,6 +98,9 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
     "ACCESS",
     "SPA_SERVER",
     "RAND_PORT",
+    "KEY",
+    "KEY_BASE64",
+    "HMAC_KEY_BASE64",
     "KEY_FILE",
     "NAT_ACCESS",
     "HTTP_USER_AGENT",
@@ -123,13 +130,15 @@ lookup_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16
     char    buf[MAX_LINE_LEN];
     int     section_not_found = 1;
 
-    /* FIXME : we may want to remove unwanted whitespaces before processing */
     if (line_size < sizeof(buf))
     {
         memset (buf, 0, sizeof(buf));
         strlcpy(buf, line, line_size);
 
         ndx = buf;
+
+        while(isspace(*ndx))
+            ndx++;
 
         if(*ndx == '[')
         {
@@ -1120,7 +1129,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     rcfile_fd = open(rcfile_update, FWKNOPRC_OFLAGS, FWKNOPRC_MODE);
     if (rcfile_fd == -1)
     {
-            fprintf(stderr, "update_rc() : Unable to create initial rc file: %s: %s\n",
+            fprintf(stderr, "update_rc() : Unable to create temporary rc file: %s: %s\n",
                 rcfile_update, strerror(errno));
             return;
     }
@@ -1132,6 +1141,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     {
         fprintf(stderr, "update_rc() : Unable to open rc file: %s: %s\n",
             rcfile, strerror(errno));
+        return;
     }
 
     if ((rc_update = fopen(rcfile_update, "w")) == NULL)
@@ -1153,7 +1163,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
             if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
             {
                 stanza_found = 1;
-                fprintf(rc_update, "%s", line);
+                fprintf(rc_update, RC_SECTION_TEMPLATE, curr_stanza);
 
                 if(options->verbose > 3)
                     fprintf(stderr, "Updating %s stanza\n", curr_stanza);
@@ -1607,7 +1617,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         if (scanf("%c", &user_input ) != 1)
             user_input = 'Y';
 
-        if (user_input != 'Y')
+        if ((user_input != 'Y') && (user_input != 0x0A))
         {
             options->save_rc_stanza = 0;
             process_rc(options);
