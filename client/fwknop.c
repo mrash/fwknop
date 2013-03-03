@@ -28,7 +28,6 @@
  *
  *****************************************************************************
 */
-#include "fko.h"
 #include "fwknop.h"
 #include "config_init.h"
 #include "spa_comm.h"
