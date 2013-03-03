@@ -32,6 +32,7 @@
 #include "fko.h"
 #include "cipher_funcs.h"
 #include "base64.h"
+#include "digest.h"
 
 #if HAVE_LIBGPGME
   #include "gpgme_funcs.h"
@@ -54,8 +55,21 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
-    if (! is_valid_digest_len(ctx->digest_len))
-        return(FKO_ERROR_INVALID_DATA);
+    switch(ctx->digest_len)
+    {
+        case MD5_B64_LEN:
+            break;
+        case SHA1_B64_LEN:
+            break;
+        case SHA256_B64_LEN:
+            break;
+        case SHA384_B64_LEN:
+            break;
+        case SHA512_B64_LEN:
+            break;
+        default:
+            return(FKO_ERROR_INVALID_DATA);
+    }
 
     pt_len = ctx->encoded_msg_len + ctx->digest_len + RIJNDAEL_BLOCKSIZE + 2;
 
@@ -217,8 +231,21 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
-    if (! is_valid_digest_len(ctx->digest_len))
-        return(FKO_ERROR_INVALID_DATA);
+    switch(ctx->digest_len)
+    {
+        case MD5_B64_LEN:
+            break;
+        case SHA1_B64_LEN:
+            break;
+        case SHA256_B64_LEN:
+            break;
+        case SHA384_B64_LEN:
+            break;
+        case SHA512_B64_LEN:
+            break;
+        default:
+            return(FKO_ERROR_INVALID_DATA);
+    }
 
     /* First make sure we have a recipient key set.
     */

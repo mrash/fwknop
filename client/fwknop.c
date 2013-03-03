@@ -28,13 +28,19 @@
  *
  *****************************************************************************
 */
+#include "fko.h"
 #include "fwknop.h"
 #include "config_init.h"
 #include "spa_comm.h"
 #include "utils.h"
 #include "getpasswd.h"
+
+#include "digest.h"
+#include "rijndael.h"
+
 #include <sys/stat.h>
 #include <fcntl.h>
+
 
 /* prototypes
 */
@@ -61,13 +67,14 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
 int
 main(int argc, char **argv)
 {
-    fko_ctx_t           ctx = NULL, ctx2 = NULL;
+    fko_ctx_t           ctx = NULL;
+    fko_ctx_t           ctx2 = NULL;
     int                 res;
     char               *spa_data, *version;
     char                access_buf[MAX_LINE_LEN] = {0};
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
-    int                 key_len = 0, hmac_key_len = 0;
+    int                 key_len = 0, hmac_key_len = 0, enc_mode;
     FILE               *key_gen_file_ptr = NULL;
 
     fko_cli_options_t   options;
@@ -402,6 +409,17 @@ main(int argc, char **argv)
             return(EXIT_FAILURE);
         }
 
+        /* Pull the encryption mode.
+        */
+        res = fko_get_spa_encryption_mode(ctx, &enc_mode);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_get_spa_encryption_mode", res);
+            fko_destroy(ctx);
+            fko_destroy(ctx2);
+            return(EXIT_FAILURE);
+        }
+
         /* If gpg-home-dir is specified, we have to defer decrypting if we
          * use the fko_new_with_data() function because we need to set the
          * gpg home dir after the context is created, but before we attempt
@@ -411,7 +429,7 @@ main(int argc, char **argv)
          * options, then decode it.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            0, ctx->encryption_mode, hmac_key, hmac_key_len);
+            0, enc_mode, hmac_key, hmac_key_len);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -420,7 +438,7 @@ main(int argc, char **argv)
             return(EXIT_FAILURE);
         }
 
-        res = fko_set_spa_encryption_mode(ctx2, ctx->encryption_mode);
+        res = fko_set_spa_encryption_mode(ctx2, enc_mode);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_mode", res);
@@ -927,7 +945,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         *hmac_key_len = fko_base64_decode(options->hmac_key_base64,
             (unsigned char *) options->hmac_key);
-        memcpy(hmac_key, options->hmac_key, SHA256_BLOCK_LEN);
+        memcpy(hmac_key, options->hmac_key, *hmac_key_len);
         use_hmac = 1;
     }
     else if (options->use_hmac)

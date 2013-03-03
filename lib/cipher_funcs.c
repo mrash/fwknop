@@ -39,6 +39,7 @@
   #include <sys/time.h>
 #endif
 
+#include "fko_common.h"
 #include "cipher_funcs.h"
 #include "digest.h"
 

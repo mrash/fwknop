@@ -31,7 +31,7 @@
 #ifndef CIPHER_FUNCS_H
 #define CIPHER_FUNCS_H 1
 
-#include "fko_common.h"
+#include "fko.h"
 #include "rijndael.h"
 #include "gpgme_funcs.h"
 
