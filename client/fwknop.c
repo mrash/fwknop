@@ -35,9 +35,6 @@
 #include "utils.h"
 #include "getpasswd.h"
 
-#include "digest.h"
-#include "rijndael.h"
-
 #include <sys/stat.h>
 #include <fcntl.h>
 
