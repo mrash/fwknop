@@ -144,6 +144,7 @@ my $server_test_file  = '';
 my $enable_valgrind = 0;
 my $valgrind_str = '';
 my %prev_valgrind_cov = ();
+my %prev_valgrind_file_titles = ();
 my $fko_wrapper_dir = 'fko-wrapper';
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
@@ -7022,6 +7023,7 @@ sub import_previous_valgrind_coverage_info() {
             if (/TEST\:\s/) {
                 $test_title = $_;
                 chomp $test_title;
+                $prev_valgrind_file_titles{$test_title} = $file;
                 next;
             }
             ### stop after the unique functions view
@@ -7150,67 +7152,72 @@ sub parse_valgrind_flagged_functions() {
         close F;
 
         next FILE if $test_title =~ /valgrind\soutput/;
+        next FILE unless $filename;
 
         ### write out flagged fcns for this file
-        if ($filename) {
-            open F, "> $output_dir/$valgrind_cov_dir/$filename"
-                or die "[*] Could not open file $output_dir/$valgrind_cov_dir/$filename: $!";
-            print F $test_title, "\n";
+        open F, "> $output_dir/$valgrind_cov_dir/$filename"
+            or die "[*] Could not open file $output_dir/$valgrind_cov_dir/$filename: $!";
+        print F $test_title, "\n";
 
-            if (keys %file_scope_flagged_fcns_unique) {
-                print F "\n[+] fwknop functions (unique view):\n";
-                for my $fcn (sort {$file_scope_flagged_fcns_unique{$b}
-                        <=> $file_scope_flagged_fcns_unique{$a}}
-                        keys %file_scope_flagged_fcns_unique) {
-                    printf F "    %5d : %s\n", $file_scope_flagged_fcns_unique{$fcn}, $fcn;
-                }
-            }
-            if (keys %file_scope_flagged_fcns) {
-                print F "\n[+] fwknop functions (with call line numbers):\n";
-                for my $fcn (sort {$file_scope_flagged_fcns{$b}
-                        <=> $file_scope_flagged_fcns{$a}} keys %file_scope_flagged_fcns) {
-                    printf F "    %5d : %s\n", $file_scope_flagged_fcns{$fcn}, $fcn;
-                }
-            }
-            close F;
-
-            my $new_flagged_fcns = 0;
-
-            ### look for differences in flagged functions between the two
-            ### test runs
+        if (keys %file_scope_flagged_fcns_unique) {
+            print F "\n[+] fwknop functions (unique view):\n";
             for my $fcn (sort {$file_scope_flagged_fcns_unique{$b}
                     <=> $file_scope_flagged_fcns_unique{$a}}
                     keys %file_scope_flagged_fcns_unique) {
-                if (defined $prev_valgrind_cov{$type}
-                        and defined $prev_valgrind_cov{$type}{$test_title}) {
-                    ### we're looking at a matching test results file at this point
-                    if (defined $prev_valgrind_cov{$type}{$test_title}{$fcn}) {
-                        my $prev_calls = $prev_valgrind_cov{$type}{$test_title}{$fcn};
-                        my $curr_calls = $file_scope_flagged_fcns_unique{$fcn};
-                        if ($curr_calls > $prev_calls) {
-                            open F, ">> $curr_test_file" or die $!;
-                            print F "[-] $filename ($type) '$test_title' --> Larger number of flagged calls to " .
-                                "$fcn (current: $curr_calls, previous: $prev_calls)\n";
-                            close F;
-                            $new_flagged_fcns = 1;
-                        }
-                    } else {
+                printf F "    %5d : %s\n", $file_scope_flagged_fcns_unique{$fcn}, $fcn;
+            }
+        }
+        if (keys %file_scope_flagged_fcns) {
+            print F "\n[+] fwknop functions (with call line numbers):\n";
+            for my $fcn (sort {$file_scope_flagged_fcns{$b}
+                    <=> $file_scope_flagged_fcns{$a}} keys %file_scope_flagged_fcns) {
+                printf F "    %5d : %s\n", $file_scope_flagged_fcns{$fcn}, $fcn;
+            }
+        }
+        close F;
+
+        my $new_flagged_fcns  = 0;
+
+        ### look for differences in flagged functions between the two
+        ### test runs
+        for my $fcn (sort {$file_scope_flagged_fcns_unique{$b}
+                <=> $file_scope_flagged_fcns_unique{$a}}
+                keys %file_scope_flagged_fcns_unique) {
+            if (defined $prev_valgrind_cov{$type}
+                    and defined $prev_valgrind_cov{$type}{$test_title}) {
+                ### we're looking at a matching test results file at this point
+                if (defined $prev_valgrind_cov{$type}{$test_title}{$fcn}) {
+                    my $prev_calls = $prev_valgrind_cov{$type}{$test_title}{$fcn};
+                    my $curr_calls = $file_scope_flagged_fcns_unique{$fcn};
+                    if ($curr_calls > $prev_calls) {
                         open F, ">> $curr_test_file" or die $!;
-                        print F "[-] $filename ($type) '$test_title' --> NEW valgrind flagged function: $fcn\n";
+                        print F "[-] $filename ($type) '$test_title' --> Larger number of flagged calls to " .
+                            "$fcn (current: $curr_calls, previous: $prev_calls)\n";
                         close F;
-                        $new_flagged_fcns = 1;
+                        $new_flagged_fcns  = 1;
                     }
+                } else {
+                    open F, ">> $curr_test_file" or die $!;
+                    print F "[-] $filename ($type) '$test_title' --> NEW valgrind flagged function: $fcn\n";
+                    close F;
+                    $new_flagged_fcns  = 1;
                 }
             }
+        }
 
-            if ($new_flagged_fcns) {
+        if ($new_flagged_fcns) {
+            open F, ">> $curr_test_file" or die $!;
+            print F "[-] $filename ($test_title) New and/or greater number of valgrind flagged function calls\n";
+            close F;
+            $rv = 0;
+        } else {
+            if (defined $prev_valgrind_file_titles{$test_title}) {
                 open F, ">> $curr_test_file" or die $!;
-                print F "[-] $filename New and/or greater number of valgrind flagged function calls\n";
+                print F "[+] $filename ($test_title) No new or greater number of valgrind flagged function calls\n";
                 close F;
-                $rv = 0;
             } else {
                 open F, ">> $curr_test_file" or die $!;
-                print F "[+] $filename No new or greater number of valgrind flagged function calls\n";
+                print F "[.] Skipping $filename ($test_title), no matching previous valgrind output.\n";
                 close F;
             }
         }
