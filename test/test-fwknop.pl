@@ -42,6 +42,7 @@ my %cf = (
     'android_access'          => "$conf_dir/android_access.conf",
     'android_legacy_iv_access' => "$conf_dir/android_legacy_iv_access.conf",
     'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
+    'hmac_dual_key_access'    => "$conf_dir/hmac_dual_key_usage_access.conf",
     'gpg_access'              => "$conf_dir/gpg_access.conf",
     'legacy_iv_access'        => "$conf_dir/legacy_iv_access.conf",
     'gpg_no_pw_access'        => "$conf_dir/gpg_no_pw_access.conf",
@@ -1184,6 +1185,25 @@ my @tests = (
         'cmdline'  => "$default_client_hmac_args -m invaliddigest",
         'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'dual usage access key (tcp/80 http)',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --rc-file " .
+            "$cf{'rc_file_hmac_b64_key'} --verbose --verbose",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_dual_key_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        ### check for the first stanza that does not allow tcp/80 - the
+        ### second stanza allows this
+        'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
 
