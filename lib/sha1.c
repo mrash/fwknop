@@ -17,6 +17,7 @@
  *****************************************************************************
 */
 #include "sha1.h"
+#include "fko_common.h"
 
 /* SHA f()-functions */
 #define f1(x,y,z)    ((x & y) | (~x & z))

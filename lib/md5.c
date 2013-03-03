@@ -28,6 +28,7 @@
  *****************************************************************************
 */
 #include "md5.h"
+#include "fko_common.h"
 
 #if BYTEORDER == 1234
   #define byteReverse(buf, len)    /* Nothing */
