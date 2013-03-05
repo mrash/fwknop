@@ -54,6 +54,9 @@ enum {
     GPG_AGENT,
     SPA_ICMP_TYPE,
     SPA_ICMP_CODE,
+    KEY_RIJNDAEL,
+    KEY_RIJNDAEL_BASE64,
+    KEY_HMAC_BASE64,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -87,6 +90,9 @@ static struct option cmd_opts[] =
     {"http-proxy",          1, NULL, 'H'},
     {"key-gen",             0, NULL, 'k'},
     {"key-gen-file",        1, NULL, 'K'},
+    {"key-rijndael",        1, NULL, KEY_RIJNDAEL },
+    {"key-rijndael-base64", 1, NULL, KEY_RIJNDAEL_BASE64 },
+    {"key-hmac-base64",     1, NULL, KEY_HMAC_BASE64 },
     {"icmp-type",           1, NULL, SPA_ICMP_TYPE },
     {"icmp-code",           1, NULL, SPA_ICMP_CODE },
     {"last-cmd",            0, NULL, 'l'},

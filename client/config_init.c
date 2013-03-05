@@ -29,7 +29,9 @@
  ******************************************************************************
  */
 
-/* FIXME: Finish save capability. */
+/* FIXME: Finish save capability.
+ *        SPAC_ICMP_TYPE and ICMP_SPA_CODE are not stored in the stanza
+ */
 
 #include "fwknop_common.h"
 #include "netinet_common.h"
@@ -65,8 +67,8 @@ enum
     FWKNOP_CLI_ARG_ACCESS,
     FWKNOP_CLI_ARG_SPA_SERVER,
     FWKNOP_CLI_ARG_RAND_PORT,
-    FWKNOP_CLI_ARG_KEY,
-    FWKNOP_CLI_ARG_KEY_BASE64,
+    FWKNOP_CLI_ARG_KEY_RIJNDAEL,
+    FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64,
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
@@ -837,6 +839,15 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_KEY_FILE :
             strlcpy(val, options->get_key_file, sizeof(val));
             break;
+        case FWKNOP_CLI_ARG_KEY_RIJNDAEL:
+            strlcpy(val, options->key, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64:
+            strlcpy(val, options->key_base64, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_KEY_HMAC_BASE64:
+            strlcpy(val, options->hmac_key_base64, sizeof(val));
+            break;
         case FWKNOP_CLI_ARG_NAT_ACCESS :
             strlcpy(val, options->nat_access_str, sizeof(val));
             break;
@@ -1428,6 +1439,35 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->key_gen = 1;
                 strlcpy(options->key_gen_file, optarg, MAX_PATH_LEN);
                 break;
+            case KEY_RIJNDAEL:
+                strlcpy(options->key, optarg, MAX_KEY_LEN);
+                options->have_key = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL);
+                break;
+            case KEY_RIJNDAEL_BASE64:
+                if (! is_base64((unsigned char *) optarg, strlen(optarg)))
+                {
+                    fprintf(stderr,
+                        "Base64 encoded Rijndael argument '%s' doesn't look like base64-encoded data.\n",
+                        optarg);
+                    exit(EXIT_FAILURE);
+                }
+                strlcpy(options->key_base64, optarg, MAX_KEY_LEN);
+                options->have_base64_key = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64);
+                break;
+            case KEY_HMAC_BASE64:
+                if (! is_base64((unsigned char *) optarg, strlen(optarg)))
+                {
+                    fprintf(stderr,
+                        "Base64 encoded HMAC argument '%s' doesn't look like base64-encoded data.\n",
+                        optarg);
+                     exit(EXIT_FAILURE);
+                }
+                strlcpy(options->hmac_key_base64, optarg, MAX_KEY_LEN);
+                options->have_hmac_base64_key = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64);
+                break;
             case SPA_ICMP_TYPE:
                 options->spa_icmp_type = strtol_wrapper(optarg, 0,
                         MAX_ICMP_TYPE, NO_EXIT_UPON_ERR, &is_err);
@@ -1698,6 +1738,18 @@ usage(void)
       " -k, --key-gen               Generate SPA Rijndael + HMAC keys.\n"
       " -K, --key-gen-file          Write generated Rijndael + HMAC keys to a\n"
       "                             file\n"
+      "     --key-rijndael          Specify the Rijndael key. Since the password is\n"
+      "                             visible to utilities (like 'ps' under Unix) this\n"
+      "                             form should only be used where security is not\n"
+      "                             important.\n"
+      "     --key-base64-rijndael   Specify the base64 encoded Rijndael key. Since\n"
+      "                             the password is visible to utilities (like 'ps'\n"
+      "                             under Unix) this form should only be used where\n"
+      "                             security is not important.\n"
+      "     --key-base64-hmac       Specify the base64 encoded HMAC key. Since the\n"
+      "                             password is visible to utilities (like 'ps'\n"
+      "                             under Unix) this form should only be used where\n"
+      "                             security is not important.\n"
       " -r, --rand-port             Send the SPA packet over a randomly assigned\n"
       "                             port (requires a broader pcap filter on the\n"
       "                             server side than the default of udp 62201).\n"
