@@ -31,6 +31,7 @@ my %cf = (
     'def'                     => "$conf_dir/default_fwknopd.conf",
     'def_access'              => "$conf_dir/default_access.conf",
     'hmac_access'             => "$conf_dir/hmac_access.conf",
+    'hmac_simple_keys_access' => "$conf_dir/hmac_simple_keys_access.conf",
     'exp_access'              => "$conf_dir/expired_stanza_access.conf",
     'future_exp_access'       => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'        => "$conf_dir/expired_epoch_stanza_access.conf",
@@ -74,6 +75,7 @@ my %cf = (
     'rc_file_named_key'       => "$conf_dir/fwknoprc_named_key",
     'rc_file_invalid_b64_key' => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_file_hmac_b64_key'    => "$conf_dir/fwknoprc_default_hmac_base64_key",
+    'rc_file_hmac_simple_key' => "$conf_dir/fwknoprc_hmac_simple_keys",
     'base64_key_access'       => "$conf_dir/base64_key_access.conf",
     'disable_aging'           => "$conf_dir/disable_aging_fwknopd.conf",
     'disable_aging_nat'       => "$conf_dir/disable_aging_nat_fwknopd.conf",
@@ -169,6 +171,7 @@ my $gcov_path = '';
 my $killall_path = '';
 my $pgrep_path   = '';
 my $openssl_path = '';
+my $base64_path  = '';
 my $pinentry_fail = 0;
 my $platform = '';
 my $help = 0;
@@ -1037,28 +1040,45 @@ my @tests = (
         'detail'   => 'complete cycle (tcp/22 ssh)',
         'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle simple keys',
+        'err_msg'  => 'could not complete SPA cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_file_hmac_simple_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_simple_keys_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_simple_key'},
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'rotate digest file',
         'err_msg'  => 'could not rotate digest file',
         'function' => \&rotate_digest_file,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+        'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --rotate-digest-cache",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1067,10 +1087,10 @@ my @tests = (
         'detail'   => "--save-packet $tmp_pkt_file",
         'err_msg'  => 'could not run SPA client',
         'function' => \&client_save_spa_pkt,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_hmac_b64_key'} " .
+        'cmdline'  => $default_client_hmac_args .
             "--save-args-file $tmp_args_file " .
             "--save-packet $tmp_pkt_file",
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1096,6 +1116,7 @@ my @tests = (
         'server_positive_output_matches' => [qr/permissions\sshould\sonly\sbe\suser/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1110,6 +1131,7 @@ my @tests = (
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1123,6 +1145,7 @@ my @tests = (
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1136,6 +1159,7 @@ my @tests = (
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1149,6 +1173,7 @@ my @tests = (
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1162,6 +1187,7 @@ my @tests = (
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1175,6 +1201,7 @@ my @tests = (
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1186,6 +1213,7 @@ my @tests = (
         'cmdline'  => "$default_client_hmac_args -m invaliddigest",
         'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
@@ -1205,6 +1233,7 @@ my @tests = (
         'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_file_hmac_b64_key'},
         'fatal'    => $NO
     },
 
@@ -3692,6 +3721,7 @@ sub client_send_spa_packet() {
         my $digest = '';
         my $enc_mode = 0;
         my $is_hmac_mode = 1;
+        my $hmac_digest = '';
         open F, "< $cmd_out_tmp" or die $!;
         while (<F>) {
             if (/^\s+Encoded\sData\:\s+(\S+)/) {
@@ -3702,6 +3732,8 @@ sub client_send_spa_packet() {
                 $enc_mode = $1;
             } elsif (/^\s+HMAC.*\:\s\<NULL\>/) {
                 $is_hmac_mode = 0;
+            } elsif (/^\s+HMAC.*\:\s(\S+)/) {
+                $hmac_digest = $1;
             }
         }
         close F;
@@ -3715,20 +3747,35 @@ sub client_send_spa_packet() {
         my $encrypted_msg = &get_spa_packet_from_file($cmd_out_tmp);
 
         my $key = '';
+        my $hmac_key = '';
+        my $b64_decode_key = 0;
         if ($test_hr->{'key_file'}) {
             open F, "< $test_hr->{'key_file'}" or die $!;
             while (<F>) {
-                if (/^KEY_BASE64\s+(\S+)/) {
-                    $key = decode_base64($1);
+                if (/^KEY_BASE64\:?\s+(\S+)/) {
+                    $key = $1;
+                    $b64_decode_key = 1;
+                } elsif (/^HMAC_KEY_BASE64\:?\s+(\S+)/) {
+                    $hmac_key = $1;
+                    $b64_decode_key = 1;
                 }
             }
             close F;
         }
         $key = $default_key unless $key;
 
-        unless (&openssl_verification($encrypted_msg,
-                $encoded_msg, '', $key, $ssl_test_flag)) {
+        unless (&openssl_enc_verification($encrypted_msg,
+                $encoded_msg, '', $key, $b64_decode_key,
+                $ssl_test_flag)) {
             $rv = 0;
+        }
+
+        if ($is_hmac_mode and $hmac_key) {
+            unless (&openssl_hmac_verification($encrypted_msg,
+                    $encoded_msg, '', $hmac_key, $b64_decode_key,
+                    $hmac_digest)) {
+                $rv = 0;
+            }
         }
     }
 
@@ -4692,8 +4739,8 @@ sub perl_fko_module_rijndael_truncated_keys() {
                         $fko_obj->destroy();
 
                         if ($enable_openssl_compatibility_tests) {
-                            unless (&openssl_verification($encrypted_msg,
-                                    '', $msg, $key, $REQUIRE_SUCCESS)) {
+                            unless (&openssl_enc_verification($encrypted_msg,
+                                    '', $msg, $key, 0, $REQUIRE_SUCCESS)) {
                                 $rv = 0;
                             }
                         }
@@ -4725,8 +4772,8 @@ sub perl_fko_module_rijndael_truncated_keys() {
                         $fko_obj->destroy();
 
                         if ($enable_openssl_compatibility_tests) {
-                            unless (&openssl_verification($encrypted_msg,
-                                    '', $msg, $truncated_key, $REQUIRE_FAILURE)) {
+                            unless (&openssl_enc_verification($encrypted_msg,
+                                    '', $msg, $truncated_key, 0, $REQUIRE_FAILURE)) {
                                 $rv = 0;
                             }
                         }
@@ -4796,8 +4843,8 @@ sub perl_fko_module_complete_cycle() {
                     if ($enable_openssl_compatibility_tests) {
                         my $flag = $REQUIRE_SUCCESS;
                         $flag = $REQUIRE_FAILURE if $test_hr->{'set_legacy_iv'} eq $YES;
-                        unless (&openssl_verification($encrypted_msg,
-                                '', $msg, $key, $flag)) {
+                        unless (&openssl_enc_verification($encrypted_msg,
+                                '', $msg, $key, 0, $flag)) {
                             $rv = 0;
                         }
                     }
@@ -4854,8 +4901,8 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     if ($enable_openssl_compatibility_tests) {
                         my $flag = $REQUIRE_SUCCESS;
                         $flag = $REQUIRE_FAILURE if $test_hr->{'set_legacy_iv'} eq $YES;
-                        unless (&openssl_verification($encrypted_msg,
-                                '', $msg, $key, $flag)) {
+                        unless (&openssl_enc_verification($encrypted_msg,
+                                '', $msg, $key, 0, $flag)) {
                             $rv = 0;
                         }
                     }
@@ -6347,16 +6394,112 @@ sub immediate_binding() {
     return 0;
 }
 
-sub openssl_verification() {
-    my ($encrypted_msg, $encoded_msg, $access_msg, $key, $rv_flag) = @_;
+sub openssl_hmac_verification() {
+    my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
+        $b64_decode_key, $hmac_digest) = @_;
+
+    my $hmac_key = '';
+    my $enc_msg_without_hmac = '';
+    my $openssl_hmac = '';
+
+    if ($b64_decode_key) {
+        $hmac_key = decode_base64($tmp_key);
+    } else {
+        $hmac_key = $tmp_key;
+    }
+
+    &write_test_file("[+] OpenSSL HMAC verification, (encoded msg: " .
+        "$encoded_msg) (access: $access_msg), hmac_key: $tmp_key, " .
+        "encrypted+encoded msg: $encrypted_msg, hmac_digest: $hmac_digest\n",
+        $curr_test_file);
+
+    my $hmac_digest_search = quotemeta $hmac_digest;
+
+    ### see if OpenSSL produces the same HMAC digest value from the encrypted
+    ### data and corresponding HMAC key
+
+    if ($encrypted_msg =~ m|(\S+)${hmac_digest_search}$|) {
+        $enc_msg_without_hmac = $1;
+    }
+
+    unless ($enc_msg_without_hmac) {
+        &write_test_file("    Msg not in the form <enc_msg><hmac_digest>\n",
+            $curr_test_file);
+        return 0;
+    }
+
+    ### transform encrypted message into the format that openssl expects
+    $enc_msg_without_hmac = 'U2FsdGVkX1' . $enc_msg_without_hmac
+        unless $enc_msg_without_hmac =~ /^U2FsdGVkX1/;
+
+    &write_test_file("    Calculating HMAC over: '$enc_msg_without_hmac'\n",
+        $curr_test_file);
+
+    open F, "> $data_tmp" or die $!;
+    print F $enc_msg_without_hmac;
+    close F;
+
+    my $hex_hmac_key = '';
+    for my $char (split //, $hmac_key) {
+        $hex_hmac_key .= sprintf "%02x", ord($char);
+    }
+
+    my $openssl_hmac_cmd = "$openssl_path dgst -binary -sha256 -mac HMAC " .
+        "-macopt hexkey:$hex_hmac_key $data_tmp";
+
+    $openssl_hmac_cmd .= " | $base64_path" if $base64_path;
+
+    unless (&run_cmd($openssl_hmac_cmd, $cmd_out_tmp, $curr_test_file)) {
+        &write_test_file("[-] Could not run openssl command: '$openssl_hmac_cmd'\n",
+            $curr_test_file);
+        return 0;
+    }
+
+    open F, "< $cmd_out_tmp" or die $!;
+    my $openssl_hmac_line = <F>;
+    chomp $openssl_hmac_line;
+    close F;
+
+    if ($base64_path) {
+        $openssl_hmac = $openssl_hmac_line;
+    } else {
+        $openssl_hmac = encode_base64($openssl_hmac_line);
+    }
+
+    $openssl_hmac =~ s|=||g;
+
+    if ($openssl_hmac eq $hmac_digest) {
+        &write_test_file("[+] OpenSSL HMAC match '$openssl_hmac'\n",
+            $curr_test_file);
+    } else {
+        &write_test_file("[-] OpenSSL HMAC mismatch " .
+            "'$openssl_hmac' != '$hmac_digest'\n",
+            $curr_test_file);
+        return 0;
+    }
+
+    return 1;
+}
+
+sub openssl_enc_verification() {
+    my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
+        $b64_decode_key, $rv_flag) = @_;
 
     my $rv = 1;
 
     my $rv_str = 'REQUIRE_SUCCESS';
     $rv_str = 'REQUIRE_FAILURE' if $rv_flag == $REQUIRE_FAILURE;
 
+    my $key = '';
+
+    if ($b64_decode_key) {
+        $key = decode_base64($tmp_key);
+    } else {
+        $key = $tmp_key;
+    }
+
     &write_test_file("[+] OpenSSL verification, (encoded msg: " .
-        "$encoded_msg) (access: $access_msg), key: $key, " .
+        "$encoded_msg) (access: $access_msg), key: $tmp_key, " .
         "encrypted+encoded msg: $encrypted_msg, $rv_str\n",
         $curr_test_file);
 
@@ -6852,12 +6995,17 @@ sub init() {
         $openssl_path = &find_command('openssl');
         die "[*] openssl command not found." unless $openssl_path;
         require MIME::Base64;
-        MIME::Base64->import(qw(decode_base64));
+        MIME::Base64->import(qw(encode_base64 decode_base64));
+        $base64_path = &find_command('base64');
     }
 
     if ($enable_valgrind) {
         $valgrind_path = &find_command('valgrind');
-        die "[*] valgrind command not found." unless $valgrind_path;
+        unless ($valgrind_path) {
+            print "[-] --enable-valgrind mode requested ",
+                "but valgrind not found, disabling.\n";
+            $enable_valgrind = 0;
+        }
     }
 
     $enable_perl_module_checks = 1

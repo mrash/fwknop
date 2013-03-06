@@ -146,6 +146,8 @@ EXTRA_DIST = \
     test/conf/gpg_access.conf \
     test/conf/gpg_no_pw_access.conf \
     test/conf/hmac_access.conf \
+    test/conf/fwknoprc_hmac_simple_keys \
+    test/conf/hmac_simple_keys_access.conf \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \

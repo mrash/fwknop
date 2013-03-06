@@ -36,6 +36,8 @@ void hmac_sha256(const char *msg, const unsigned int msg_len,
 {
     hmac_sha256_ctx ctx;
 
+    memset(&ctx, 0, sizeof(&ctx));
+
     hmac_sha256_init(&ctx, hmac_key);
     hmac_sha256_update(&ctx, msg, msg_len);
     hmac_sha256_final(&ctx, hmac);

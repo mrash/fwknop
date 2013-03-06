@@ -151,6 +151,8 @@ int fko_calculate_hmac(fko_ctx_t ctx,
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    memset(hmac, 0x00, SHA256_DIGEST_STR_LEN);
+
     /* Only HMAC-SHA256 is supported for now
     */
     if(ctx->hmac_mode != FKO_HMAC_SHA256)

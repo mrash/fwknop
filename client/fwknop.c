@@ -75,6 +75,8 @@ main(int argc, char **argv)
 
     fko_cli_options_t   options;
 
+    memset(hmac_key, 0x00, MAX_KEY_LEN);
+
     /* Handle command line
     */
     config_init(&options, argc, argv);
