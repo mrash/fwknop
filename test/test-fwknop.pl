@@ -31,7 +31,12 @@ my %cf = (
     'def'                     => "$conf_dir/default_fwknopd.conf",
     'def_access'              => "$conf_dir/default_access.conf",
     'hmac_access'             => "$conf_dir/hmac_access.conf",
+    'hmac_md5_access'         => "$conf_dir/hmac_md5_access.conf",
+    'hmac_sha1_access'        => "$conf_dir/hmac_sha1_access.conf",
+    'hmac_sha384_access'      => "$conf_dir/hmac_sha384_access.conf",
+    'hmac_sha512_access'      => "$conf_dir/hmac_sha512_access.conf",
     'hmac_simple_keys_access' => "$conf_dir/hmac_simple_keys_access.conf",
+    'hmac_invalid_type_access' => "$conf_dir/hmac_invalid_type_access.conf",
     'exp_access'              => "$conf_dir/expired_stanza_access.conf",
     'future_exp_access'       => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'        => "$conf_dir/expired_epoch_stanza_access.conf",
@@ -70,12 +75,13 @@ my %cf = (
     'multi_src_access'        => "$conf_dir/multi_source_match_access.conf",
     'ip_src_match'            => "$conf_dir/ip_source_match_access.conf",
     'subnet_src_match'        => "$conf_dir/ip_source_match_access.conf",
-    'rc_file_def_key'         => "$conf_dir/fwknoprc_with_default_key",
-    'rc_file_def_b64_key'     => "$conf_dir/fwknoprc_with_default_base64_key",
-    'rc_file_named_key'       => "$conf_dir/fwknoprc_named_key",
-    'rc_file_invalid_b64_key' => "$conf_dir/fwknoprc_invalid_base64_key",
-    'rc_file_hmac_b64_key'    => "$conf_dir/fwknoprc_default_hmac_base64_key",
-    'rc_file_hmac_simple_key' => "$conf_dir/fwknoprc_hmac_simple_keys",
+    'rc_def_key'              => "$conf_dir/fwknoprc_with_default_key",
+    'rc_def_b64_key'          => "$conf_dir/fwknoprc_with_default_base64_key",
+    'rc_named_key'            => "$conf_dir/fwknoprc_named_key",
+    'rc_invalid_b64_key'      => "$conf_dir/fwknoprc_invalid_base64_key",
+    'rc_hmac_b64_key'         => "$conf_dir/fwknoprc_default_hmac_base64_key",
+    'rc_hmac_simple_key'      => "$conf_dir/fwknoprc_hmac_simple_keys",
+    'rc_hmac_invalid_type'    => "$conf_dir/fwknoprc_hmac_invalid_type",
     'base64_key_access'       => "$conf_dir/base64_key_access.conf",
     'disable_aging'           => "$conf_dir/disable_aging_fwknopd.conf",
     'disable_aging_nat'       => "$conf_dir/disable_aging_nat_fwknopd.conf",
@@ -162,6 +168,9 @@ my $enable_openssl_compatibility_tests = 0;
 my $openssl_success_ctr = 0;
 my $openssl_failure_ctr = 0;
 my $openssl_ctr = 0;
+my $openssl_hmac_success_ctr = 0;
+my $openssl_hmac_failure_ctr = 0;
+my $openssl_hmac_ctr = 0;
 my $fuzzing_success_ctr = 0;
 my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
@@ -273,7 +282,7 @@ my $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
     "--no-save-args --verbose --verbose";
 
 my $default_client_hmac_args = "$default_client_args_no_get_key " .
-    "--rc-file $cf{'rc_file_hmac_b64_key'}";
+    "--rc-file $cf{'rc_hmac_b64_key'}";
 
 my $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
@@ -281,7 +290,7 @@ my $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
 
 my $client_ip_resolve_hmac_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --rc-file " .
-    "$cf{'rc_file_hmac_b64_key'} --verbose --verbose";
+    "$cf{'rc_hmac_b64_key'} --verbose --verbose";
 
 my $default_client_gpg_args = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
@@ -327,14 +336,12 @@ my @tests = (
     {
         'category' => 'recompilation',
         'detail'   => 'recompile and look for compilation warnings',
-        'err_msg'  => 'compile warnings exist',
         'function' => \&compile_warnings,
         'fatal'    => $NO
     },
     {
         'category' => 'make distcheck',
         'detail'   => 'ensure proper distribution creation',
-        'err_msg'  => 'could not create proper tarball',
         'function' => \&make_distcheck,
         'fatal'    => $NO
     },
@@ -342,7 +349,6 @@ my @tests = (
         'category' => 'build',
         'subcategory' => 'client',
         'detail'   => 'binary exists',
-        'err_msg'  => 'binary not found',
         'function' => \&binary_exists,
         'binary'   => $fwknopCmd,
         'fatal'    => $YES
@@ -351,7 +357,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'Position Independent Executable (PIE)',
-        'err_msg'  => 'non PIE binary (fwknop client)',
         'function' => \&pie_binary,
         'binary'   => $fwknopCmd,
         'fatal'    => $NO
@@ -360,7 +365,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'stack protected binary',
-        'err_msg'  => 'non stack protected binary (fwknop client)',
         'function' => \&stack_protected_binary,
         'binary'   => $fwknopCmd,
         'fatal'    => $NO
@@ -369,7 +373,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'fortify source functions',
-        'err_msg'  => 'source functions not fortified (fwknop client)',
         'function' => \&fortify_source_functions,
         'binary'   => $fwknopCmd,
         'fatal'    => $NO
@@ -378,7 +381,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'read-only relocations',
-        'err_msg'  => 'no read-only relocations (fwknop client)',
         'function' => \&read_only_relocations,
         'binary'   => $fwknopCmd,
         'fatal'    => $NO
@@ -387,7 +389,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'client',
         'detail'   => 'immediate binding',
-        'err_msg'  => 'no immediate binding (fwknop client)',
         'function' => \&immediate_binding,
         'binary'   => $fwknopCmd,
         'fatal'    => $NO
@@ -397,7 +398,6 @@ my @tests = (
         'category' => 'build',
         'subcategory' => 'server',
         'detail'   => 'binary exists',
-        'err_msg'  => 'binary not found',
         'function' => \&binary_exists,
         'binary'   => $fwknopdCmd,
         'fatal'    => $YES
@@ -407,7 +407,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'Position Independent Executable (PIE)',
-        'err_msg'  => 'non PIE binary (fwknopd server)',
         'function' => \&pie_binary,
         'binary'   => $fwknopdCmd,
         'fatal'    => $NO
@@ -416,7 +415,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'stack protected binary',
-        'err_msg'  => 'non stack protected binary (fwknopd server)',
         'function' => \&stack_protected_binary,
         'binary'   => $fwknopdCmd,
         'fatal'    => $NO
@@ -425,7 +423,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'fortify source functions',
-        'err_msg'  => 'source functions not fortified (fwknopd server)',
         'function' => \&fortify_source_functions,
         'binary'   => $fwknopdCmd,
         'fatal'    => $NO
@@ -434,7 +431,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'read-only relocations',
-        'err_msg'  => 'no read-only relocations (fwknopd server)',
         'function' => \&read_only_relocations,
         'binary'   => $fwknopdCmd,
         'fatal'    => $NO
@@ -443,7 +439,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'server',
         'detail'   => 'immediate binding',
-        'err_msg'  => 'no immediate binding (fwknopd server)',
         'function' => \&immediate_binding,
         'binary'   => $fwknopdCmd,
         'fatal'    => $NO
@@ -453,7 +448,6 @@ my @tests = (
         'category' => 'build',
         'subcategory' => 'libfko',
         'detail'   => 'binary exists',
-        'err_msg'  => 'binary not found',
         'function' => \&binary_exists,
         'binary'   => $libfko_bin,
         'fatal'    => $YES
@@ -462,7 +456,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'stack protected binary',
-        'err_msg'  => 'non stack protected binary (libfko)',
         'function' => \&stack_protected_binary,
         'binary'   => $libfko_bin,
         'fatal'    => $NO
@@ -471,7 +464,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'fortify source functions',
-        'err_msg'  => 'source functions not fortified (libfko)',
         'function' => \&fortify_source_functions,
         'binary'   => $libfko_bin,
         'fatal'    => $NO
@@ -480,7 +472,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'read-only relocations',
-        'err_msg'  => 'no read-only relocations (libfko)',
         'function' => \&read_only_relocations,
         'binary'   => $libfko_bin,
         'fatal'    => $NO
@@ -489,7 +480,6 @@ my @tests = (
         'category' => 'build security',
         'subcategory' => 'libfko',
         'detail'   => 'immediate binding',
-        'err_msg'  => 'no immediate binding (libfko)',
         'function' => \&immediate_binding,
         'binary'   => $libfko_bin,
         'fatal'    => $NO
@@ -499,7 +489,6 @@ my @tests = (
         'category' => 'preliminaries',
         'subcategory' => 'client',
         'detail'   => 'usage info',
-        'err_msg'  => 'could not get usage info',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd -h",
         'fatal'    => $NO
@@ -508,7 +497,6 @@ my @tests = (
         'category' => 'preliminaries',
         'subcategory' => 'client',
         'detail'   => 'getopt() no such argument',
-        'err_msg'  => 'getopt() allowed non-existant argument',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --no-such-arg",
         'exec_err' => $YES,
@@ -518,7 +506,6 @@ my @tests = (
         'category' => 'preliminaries',
         'subcategory' => 'client',
         'detail'   => '--test mode, packet not sent',
-        'err_msg'  => '--test mode, packet sent?',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/test\smode\senabled/],
         'cmdline'  => "$default_client_args --test",
@@ -529,7 +516,6 @@ my @tests = (
         'category' => 'preliminaries',
         'subcategory' => 'client',
         'detail'   => 'expected code version',
-        'err_msg'  => 'code version mis-match',
         'function' => \&expected_code_version,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --version",
         'fatal'    => $NO
@@ -539,7 +525,6 @@ my @tests = (
         'category' => 'preliminaries',
         'subcategory' => 'server',
         'detail'   => 'usage info',
-        'err_msg'  => 'could not get usage info',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd -h",
         'fatal'    => $NO
@@ -548,7 +533,6 @@ my @tests = (
         'category' => 'preliminaries',
         'subcategory' => 'server',
         'detail'   => 'getopt() no such argument',
-        'err_msg'  => 'getopt() allowed non-existant argument',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd --no-such-arg",
         'exec_err' => $YES,
@@ -559,7 +543,6 @@ my @tests = (
         'category' => 'preliminaries',
         'subcategory' => 'server',
         'detail'   => 'expected code version',
-        'err_msg'  => 'code version mis-match',
         'function' => \&expected_code_version,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a " .
@@ -569,7 +552,6 @@ my @tests = (
     {
         'category' => 'preliminaries',
         'detail'   => 'collecting system specifics',
-        'err_msg'  => 'could not get complete system specs',
         'function' => \&specs,
         'binary'   => $fwknopdCmd,
         'fatal'    => $NO
@@ -578,7 +560,6 @@ my @tests = (
     {
         'category' => 'basic operations',
         'detail'   => 'dump config',
-        'err_msg'  => 'could not dump configuration',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/SYSLOG_IDENTITY/],
         'exec_err' => $NO,
@@ -590,7 +571,6 @@ my @tests = (
     {
         'category' => 'basic operations',
         'detail'   => 'override config',
-        'err_msg'  => 'could not override configuration',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
         'exec_err' => $NO,
@@ -604,7 +584,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => 'show last args',
-        'err_msg'  => 'could not show last args',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Could\snot|Last\sfwknop/i],
         'exec_err' => $IGNORE,
@@ -616,7 +595,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => '--get-key path validation',
-        'err_msg'  => 'accepted improper --get-key path',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/could\snot\sopen/i],
         'exec_err' => $YES,
@@ -629,7 +607,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => 'require [-s|-R|-a]',
-        'err_msg'  => 'allowed null allow IP',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/must\suse\sone\sof/i],
         'exec_err' => $YES,
@@ -641,7 +618,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => '--allow-ip <IP> valid IP',
-        'err_msg'  => 'permitted invalid --allow-ip arg',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Invalid\sallow\sIP\saddress/i],
         'exec_err' => $YES,
@@ -653,7 +629,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => '-A <proto>/<port> specification (proto)',
-        'err_msg'  => 'permitted invalid -A <proto>/<port>',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
         'exec_err' => $YES,
@@ -665,7 +640,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => '-A <proto>/<port> specification (port)',
-        'err_msg'  => 'permitted invalid -A <proto>/<port>',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
         'exec_err' => $YES,
@@ -678,7 +652,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => 'generate SPA packet',
-        'err_msg'  => 'could not generate SPA packet',
         'function' => \&client_send_spa_packet,
         'cmdline'  => $default_client_args,
         'fatal'    => $YES
@@ -688,7 +661,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'list current fwknopd fw rules',
-        'err_msg'  => 'could not list current fwknopd fw rules',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --fw-list",
@@ -698,7 +670,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'list all current fw rules',
-        'err_msg'  => 'could not list all current fw rules',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --fw-list-all",
@@ -708,7 +679,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'flush current firewall rules',
-        'err_msg'  => 'could not flush current fw rules',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --fw-flush",
@@ -719,7 +689,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'start',
-        'err_msg'  => 'start error',
         'function' => \&server_start,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
@@ -729,7 +698,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'stop',
-        'err_msg'  => 'stop error',
         'function' => \&server_stop,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
@@ -739,7 +707,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'write PID',
-        'err_msg'  => 'did not write PID',
         'function' => \&write_pid,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
@@ -750,7 +717,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => '--packet-limit 1 exit',
-        'err_msg'  => 'did not exit after one packet',
         'function' => \&server_packet_limit,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
@@ -760,7 +726,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'ignore packets < min SPA len (140)',
-        'err_msg'  => 'did not ignore small packets',
         'function' => \&server_ignore_small_packets,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
@@ -770,7 +735,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => '-P bpf filter ignore packet',
-        'err_msg'  => 'filter did not ignore packet',
         'function' => \&server_bpf_ignore_packet,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -783,7 +747,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -796,7 +759,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rotate digest file',
-        'err_msg'  => 'could not rotate digest file',
         'function' => \&rotate_digest_file,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -809,7 +771,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--save-packet $tmp_pkt_file",
-        'err_msg'  => 'could not run SPA client',
         'function' => \&client_save_spa_pkt,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
@@ -821,7 +782,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--last-cmd",
-        'err_msg'  => 'could not run last args',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
@@ -833,7 +793,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'permissions check cycle (tcp/22)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&permissions_check,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -847,7 +806,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'client IP resolve (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $client_ip_resolve_args,
         'no_ip_check' => 1,
@@ -862,7 +820,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m md5",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -876,7 +833,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha1",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -889,7 +845,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha256",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -902,7 +857,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha384",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -915,7 +869,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -m sha512",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -928,7 +881,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => 'validate digest type arg',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_args -m invaliddigest",
         'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
@@ -940,7 +892,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'dual usage access key (tcp/80 http)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
@@ -959,7 +910,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'create rc file (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --rc-file $tmp_rc_file",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -973,7 +923,6 @@ my @tests = (
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => "rc file created",
-        'err_msg'  => "rc file $tmp_rc_file does not exist",
         'function' => \&rc_file_exists,
         'fatal'    => $NO
     },
@@ -981,64 +930,93 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rc file default key (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_def_key'}",
+            "--rc-file $cf{'rc_def_key'}",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_def_key'},
+        'key_file' => $cf{'rc_def_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rc file base64 key (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_def_b64_key'}",
+            "--rc-file $cf{'rc_def_b64_key'}",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'base64_key_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_def_b64_key'},
+        'key_file' => $cf{'rc_def_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'rc file named key (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_named_key'} -n testssh",
+            "--rc-file $cf{'rc_named_key'} -n testssh",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_named_key'},
+        'key_file' => $cf{'rc_named_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client',
         'detail'   => 'rc file HMAC base64 key (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet not generated',
         'function' => \&generic_exec,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_hmac_b64_key'}",
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'cmdline'  => $default_client_hmac_args,
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => 'validate HMAC type arg',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_hmac_args --hmac-digest-type invalid",
+        'positive_output_matches' => [qr/Invalid\shmac\sdigest\stype/i],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => 'rc file invalid HMAC type arg',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_hmac_invalid_type'}",
+        'positive_output_matches' => [qr/must\sbe\sone\sof/i],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'server',
+        'detail'   => 'access file invalid HMAC type arg',
+        'function' => \&generic_exec,
+        'cmdline'  => '',
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_invalid_type_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+       'positive_output_matches' => [qr/must\sbe\sone\sof/i],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1046,23 +1024,22 @@ my @tests = (
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle simple keys',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_hmac_simple_key'}",
+            "--rc-file $cf{'rc_hmac_simple_key'}",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_simple_keys_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_simple_key'},
+        'key_file' => $cf{'rc_hmac_simple_key'},
         'fatal'    => $NO
     },
 
@@ -1070,7 +1047,6 @@ my @tests = (
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'rotate digest file',
-        'err_msg'  => 'could not rotate digest file',
         'function' => \&rotate_digest_file,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1078,26 +1054,24 @@ my @tests = (
             "-d $default_digest_file -p $default_pid_file $intf_str --rotate-digest-cache",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client',
         'detail'   => "--save-packet $tmp_pkt_file",
-        'err_msg'  => 'could not run SPA client',
         'function' => \&client_save_spa_pkt,
-        'cmdline'  => $default_client_hmac_args .
+        'cmdline'  => "$default_client_hmac_args " .
             "--save-args-file $tmp_args_file " .
             "--save-packet $tmp_pkt_file",
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client',
         'detail'   => "--last-cmd",
-        'err_msg'  => 'could not run last args',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
@@ -1108,7 +1082,6 @@ my @tests = (
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'permissions check cycle (tcp/22)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&permissions_check,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1116,14 +1089,13 @@ my @tests = (
         'server_positive_output_matches' => [qr/permissions\sshould\sonly\sbe\suser/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'client IP resolve (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $client_ip_resolve_hmac_args,
         'no_ip_check' => 1,
@@ -1131,100 +1103,93 @@ my @tests = (
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_hmac_args -m md5",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_hmac_args -m sha1",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_hmac_args -m sha256",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_hmac_args -m sha384",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_hmac_args -m sha512",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client',
         'detail'   => 'validate digest type arg',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_hmac_args -m invaliddigest",
         'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'dual usage access key (tcp/80 http)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_file_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_dual_key_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
@@ -1233,7 +1198,7 @@ my @tests = (
         'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
 
@@ -1241,28 +1206,26 @@ my @tests = (
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'altered HMAC (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&altered_hmac_spa_data,  ### alter HMAC itself
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+            "--rc-file $cf{'rc_hmac_b64_key'}",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'altered pkt HMAC (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&altered_pkt_hmac_spa_data,  ### alter SPA payload
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_hmac_b64_key'}",
+            "--rc-file $cf{'rc_hmac_b64_key'}",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'key_file' => $cf{'rc_file_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
 
@@ -1271,7 +1234,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => '--key-gen',
-        'err_msg'  => 'keys not generated',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$valgrind_str $fwknopCmd --key-gen",
@@ -1282,7 +1244,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--key-gen $uniq_keys key uniqueness",
-        'err_msg'  => 'keys not generated',
         'function' => \&key_gen_uniqueness,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$fwknopCmd --key-gen",   ### no valgrind string (too slow for 100 client exec's)
@@ -1292,7 +1253,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => '--key-gen to file',
-        'err_msg'  => 'keys not generated',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$valgrind_str $fwknopCmd --key-gen --key-gen-file $key_gen_file",
@@ -1305,24 +1265,22 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => 'rc file invalid stanza (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet generated/accepted',
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_named_key'} -n invalidstanza",
+            "--rc-file $cf{'rc_named_key'} -n invalidstanza",
         'positive_output_matches' => [qr/Named\sconfiguration.*not\sfound/],
-        'key_file' => $cf{'rc_file_named_key'},
+        'key_file' => $cf{'rc_named_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => 'rc file invalid base64 key (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet generated/accepted',
         'function' => \&generic_exec,
         'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_file_invalid_b64_key'} -n testssh",
+            "--rc-file $cf{'rc_invalid_b64_key'} -n testssh",
         'positive_output_matches' => [qr/look\slike\sbase64\-encoded/],
-        'key_file' => $cf{'rc_file_invalide_b64_key'},
+        'key_file' => $cf{'rc_invalide_b64_key'},
         'fatal'    => $NO
     },
 
@@ -1330,7 +1288,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'packet aging (past) (tcp/22 ssh)',
-        'err_msg'  => 'old SPA packet accepted',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --time-offset-minus 300s",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1343,7 +1300,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'packet aging (future) (tcp/22 ssh)',
-        'err_msg'  => 'future SPA packet accepted',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --time-offset-plus 300s",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1356,7 +1312,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'invalid SOURCE (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet accepted',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1370,7 +1325,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'expired stanza (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet accepted',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1384,7 +1338,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'invalid expire date (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet accepted',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1398,7 +1351,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'expired epoch stanza (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet accepted',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1412,7 +1364,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'future expired stanza (tcp/22 ssh)',
-        'err_msg'  => 'SPA packet not accepted',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1427,7 +1378,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'OPEN_PORTS (tcp/22 ssh)',
-        'err_msg'  => "improper OPEN_PORTS result",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1441,7 +1391,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'OPEN_PORTS mismatch',
-        'err_msg'  => "SPA packet accepted",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1457,7 +1406,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "udpraw spoof src IP (tcp/22 ssh)",
-        'err_msg'  => "could not spoof source IP",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -P udpraw -Q $spoof_ip",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1471,7 +1419,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "tcpraw spoof src IP (tcp/22 ssh)",
-        'err_msg'  => "could not spoof source IP",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -P tcpraw -Q $spoof_ip",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1486,7 +1433,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "icmp spoof src IP (tcp/22 ssh)",
-        'err_msg'  => "could not spoof source IP",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -P icmp -Q $spoof_ip",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1501,7 +1447,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "icmp type/code 8/0 spoof src IP ",
-        'err_msg'  => "could not spoof source IP",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -P icmp --icmp-type 8 --icmp-code 0 -Q $spoof_ip",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1519,7 +1464,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "SPA over TCP connection",
-        'err_msg'  => "could not send/process SPA packet over TCP connection",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -P tcp",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1534,7 +1478,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'require user (tcp/22 ssh)',
-        'err_msg'  => "missed require user criteria",
         'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_args",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1548,7 +1491,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'user mismatch (tcp/22 ssh)',
-        'err_msg'  => "improper user accepted for access",
         'function' => \&user_mismatch,
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
@@ -1563,7 +1505,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'require src (tcp/22 ssh)',
-        'err_msg'  => "fw rule not created",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1577,7 +1518,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'mismatch require src (tcp/22 ssh)',
-        'err_msg'  => "fw rule created",
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
@@ -1593,7 +1533,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'allow -s (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'no_ip_check' => 1,
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1610,7 +1549,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'IP filtering (tcp/22 ssh)',
-        'err_msg'  => "did not filter $loopback_ip",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1624,7 +1562,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'subnet filtering (tcp/22 ssh)',
-        'err_msg'  => "did not filter $loopback_ip",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1638,7 +1575,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'IP+subnet filtering (tcp/22 ssh)',
-        'err_msg'  => "did not filter $loopback_ip",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1652,7 +1588,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'IP match (tcp/22 ssh)',
-        'err_msg'  => "did not filter $loopback_ip",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1666,7 +1601,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'subnet match (tcp/22 ssh)',
-        'err_msg'  => "did not filter $loopback_ip",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1680,7 +1614,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi IP/net match (tcp/22 ssh)',
-        'err_msg'  => "did not filter $loopback_ip",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1694,7 +1627,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi access stanzas (tcp/22 ssh)',
-        'err_msg'  => "could not complete SPA cycle",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1708,7 +1640,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'bad/good key stanzas (tcp/22 ssh)',
-        'err_msg'  => "could not complete SPA cycle",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1723,7 +1654,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "non-enabled NAT (tcp/22 ssh)",
-        'err_msg'  => "SPA packet not filtered",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1737,7 +1667,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "NAT to $internal_nat_host (tcp/22 ssh)",
-        'err_msg'  => "could not complete NAT SPA cycle",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1753,7 +1682,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "NAT bogus IP validation",
-        'err_msg'  => "could not complete NAT SPA cycle",
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args -N 999.1.1.1:22",
@@ -1764,7 +1692,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "force NAT $force_nat_host (tcp/22 ssh)",
-        'err_msg'  => "could not complete NAT SPA cycle",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1781,7 +1708,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "local NAT $force_nat_host (tcp/22 ssh)",
-        'err_msg'  => "could not complete NAT SPA cycle",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --nat-local",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1799,7 +1725,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "local NAT non-FORCE_NAT (tcp/22 ssh)",
-        'err_msg'  => "could not complete NAT SPA cycle",
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
@@ -1819,7 +1744,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'ECB mode (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ecb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1834,7 +1758,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'CFB mode (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M cfb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1849,7 +1772,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'CTR mode (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ctr",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1864,7 +1786,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'OFB mode (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ofb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1880,7 +1801,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'mode mismatch (tcp/22 ssh)',
-        'err_msg'  => 'server accepted mismatch enc mode',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -M ecb",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1896,7 +1816,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => '--pcap-file processing',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&process_pcap_file_directly,
         'cmdline'  => '',
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -1915,7 +1834,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
@@ -1930,7 +1848,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
@@ -1945,7 +1862,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/60001)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
@@ -1960,7 +1876,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/60001,udp/60001)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --get-key " .
@@ -1975,7 +1890,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/22,udp/53,tcp/1234)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
@@ -1991,7 +1905,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
@@ -2006,7 +1919,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "-P bpf SPA over port $non_std_spa_port",
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --server-port $non_std_spa_port",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2022,7 +1934,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'random SPA port (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -r",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2037,7 +1948,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22)',
-        'err_msg'  => 'could not spoof username',
         'function' => \&spoof_username,
         'cmdline'  => "SPOOF_USER=$spoof_user LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
@@ -2051,7 +1961,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2063,7 +1972,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #1 (Rijndael prefix)',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'U2FsdGVkX1',
         'cmdline'  => $default_client_args,
@@ -2078,7 +1986,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'iptables rules not duplicated',
-        'err_msg'  => 'iptables rules duplicated',
         'function' => \&iptables_rules_not_duplicated,
         'cmdline'  => "$default_client_args --test",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2092,7 +1999,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0',
-        'err_msg'  => 'backwards compatibility failed',
         'function' => \&backwards_compatibility,
         'no_ip_check' => 1,
         'pkt' =>
@@ -2109,7 +2015,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.1',
-        'err_msg'  => 'backwards compatibility failed',
         'function' => \&backwards_compatibility,
         'no_ip_check' => 1,
         'pkt' =>
@@ -2126,7 +2031,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.2',
-        'err_msg'  => 'backwards compatibility failed',
         'function' => \&backwards_compatibility,
         'no_ip_check' => 1,
         'pkt' =>
@@ -2143,7 +2047,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.3',
-        'err_msg'  => 'backwards compatibility failed',
         'function' => \&backwards_compatibility,
         'pkt' =>
             '+8OtxmTJPgQmrXZ7hAqTopLBC/thqHNuPHTfR234pFuQOCZUikPe0inHmjfnQFnP' .
@@ -2159,7 +2062,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.4',
-        'err_msg'  => 'backwards compatibility failed',
         'function' => \&backwards_compatibility,
         'pkt' =>
             '8Xm8U5vQ03T88UTCWbwO3t/aL6euZ8IgVbNdDVz3Bn6HkTcBqxcME95U/G3bCH' .
@@ -2175,7 +2077,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'Android compatibility',
         'detail'   => 'v4.1.2',
-        'err_msg'  => 'Android compatibility failed',
         'function' => \&backwards_compatibility,
         'no_ip_check' => 1,
         'pkt' =>
@@ -2195,7 +2096,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'overly long port value',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2223,7 +2123,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'overly long proto value',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2251,7 +2150,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'overly long IP value',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2281,7 +2179,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'negative port value',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2304,7 +2201,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'null port value',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2327,7 +2223,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'long FKO protocol value (enc mode trigger)',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2360,7 +2255,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'long FKO protocol value (Rijndael trigger)',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2390,7 +2284,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'null proto value',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2413,7 +2306,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'FUZZING',
         'detail'   => 'invalid NAT IP',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&fuzzer,
         ### this packet was generated with a modified fwknop client via the
         ### following command line:
@@ -2437,7 +2329,6 @@ my @tests = (
         'category' => 'FUZZING',
         'subcategory' => 'server',
         'detail'   => 'invalid SOURCE access.conf',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_source'} " .
@@ -2450,7 +2341,6 @@ my @tests = (
         'category' => 'FUZZING',
         'subcategory' => 'server',
         'detail'   => 'invalid OPEN_PORTS access.conf',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_open_ports'} " .
@@ -2463,7 +2353,6 @@ my @tests = (
         'category' => 'FUZZING',
         'subcategory' => 'server',
         'detail'   => 'invalid RESTRICT_PORTS access.conf',
-        'err_msg'  => 'server crashed or did not detect error condition',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_restrict_ports'} " .
@@ -2478,7 +2367,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'command execution',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cmd_exec_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             qq|$fwknopCmd --server-cmd "echo fwknoptest > $cmd_exec_test_file" | .
@@ -2495,7 +2383,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #2 (Rijndael prefix)',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'U2FsdGVkX1',
         'cmdline'  => $default_client_args,
@@ -2507,7 +2394,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
-        'err_msg'  => 'improper digest cache structure',
         'function' => \&digest_cache_structure,
         'fatal'    => $NO
     },
@@ -2516,7 +2402,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'server',
         'detail'   => 'ipfw active/expire sets not equal',
-        'err_msg'  => 'allowed active/expire sets to be the same',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2531,7 +2416,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2542,7 +2426,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_base64_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2553,7 +2436,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&appended_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2564,7 +2446,6 @@ my @tests = (
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&prepended_spa_data,
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -2577,7 +2458,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'compile/install',
         'detail'   => 'to: ./FKO',
-        'err_msg'  => 'could not install FKO module',
         'function' => \&perl_fko_module_compile_install,
         'fatal'    => $NO
     },
@@ -2585,7 +2465,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'FUZZING',
         'detail'   => 'generate invalid SPA pkts',
-        'err_msg'  => 'could not generate invalid SPA pkts',
         'function' => \&perl_fko_module_assume_patches_generate_fuzzing_spa_packets,
         'fatal'    => $NO
     },
@@ -2593,7 +2472,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'FUZZING',
         'detail'   => 'generate invalid encoded pkts',
-        'err_msg'  => 'could not generate invalid SPA pkts',
         'function' => \&perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets,
         'fatal'    => $NO
     },
@@ -2602,7 +2480,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'create/destroy FKO object',
-        'err_msg'  => 'could not create/destroy FKO object',
         'function' => \&perl_fko_module_new_object,
         'fatal'    => $NO
     },
@@ -2610,7 +2487,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'create/destroy 1000 FKO objects',
-        'err_msg'  => 'could not create/destroy FKO object',
         'function' => \&perl_fko_module_new_objects_1000,
         'fatal'    => $NO
     },
@@ -2618,7 +2494,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko version',
-        'err_msg'  => 'could not get libfko version',
         'function' => \&perl_fko_module_version,
         'fatal'    => $NO
     },
@@ -2626,7 +2501,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko get random data',
-        'err_msg'  => 'could not get libfko random data',
         'function' => \&perl_fko_module_rand,
         'fatal'    => $NO
     },
@@ -2634,7 +2508,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko get/set username',
-        'err_msg'  => 'could not get libfko username',
         'function' => \&perl_fko_module_user,
         'fatal'    => $NO
     },
@@ -2642,7 +2515,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko timestamp',
-        'err_msg'  => 'could not get libfko timestamp',
         'function' => \&perl_fko_module_timestamp,
         'fatal'    => $NO
     },
@@ -2650,7 +2522,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko get/set msg types',
-        'err_msg'  => 'could not get/set libfko msg types',
         'function' => \&perl_fko_module_msg_types,
         'fatal'    => $NO
     },
@@ -2658,7 +2529,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko get/set access msgs',
-        'err_msg'  => 'could not get/set libfko access msgs',
         'function' => \&perl_fko_module_access_msgs,
         'fatal'    => $NO
     },
@@ -2666,7 +2536,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko get/set NAT access msgs',
-        'err_msg'  => 'could not get/set libfko NAT access msgs',
         'function' => \&perl_fko_module_nat_access_msgs,
         'fatal'    => $NO
     },
@@ -2674,7 +2543,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko get/set cmd msgs',
-        'err_msg'  => 'could not get/set libfko cmd msgs',
         'function' => \&perl_fko_module_cmd_msgs,
         'fatal'    => $NO
     },
@@ -2682,7 +2550,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'basic ops',
         'detail'   => 'libfko get/set client timeout',
-        'err_msg'  => 'could not get/set libfko client timeout',
         'function' => \&perl_fko_module_client_timeout,
         'fatal'    => $NO
     },
@@ -2690,7 +2557,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
         'detail'   => 'libfko complete cycle',
-        'err_msg'  => 'could not finish complete cycle',
         'function' => \&perl_fko_module_complete_cycle,
         'set_legacy_iv' => $NO,
         'fatal'    => $NO
@@ -2699,7 +2565,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
         'detail'   => 'libfko complete cycle (lIV)',
-        'err_msg'  => 'could not finish complete cycle',
         'function' => \&perl_fko_module_complete_cycle,
         'set_legacy_iv' => $YES,
         'fatal'    => $NO
@@ -2708,7 +2573,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
         'detail'   => 'truncated keys',
-        'err_msg'  => 'allowed truncated keys to decrypt SPA data',
         'function' => \&perl_fko_module_rijndael_truncated_keys,
         'fatal'    => $NO
     },
@@ -2716,7 +2580,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
         'detail'   => 'complete cycle (mod reuse)',
-        'err_msg'  => 'could not finish complete cycle',
         'function' => \&perl_fko_module_complete_cycle_module_reuse,
         'set_legacy_iv' => $NO,
         'fatal'    => $NO
@@ -2725,7 +2588,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
         'detail'   => 'complete cycle (mod reuse, lIV)',
-        'err_msg'  => 'could not finish complete cycle',
         'function' => \&perl_fko_module_complete_cycle_module_reuse,
         'set_legacy_iv' => $YES,
         'fatal'    => $NO
@@ -2734,7 +2596,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'fuzzing data',
         'detail'   => 'legacy IV REPLPKTS',
-        'err_msg'  => 'server accepted fuzzing pkts',
         'function' => \&perl_fko_module_full_fuzzing_packets,
         'set_legacy_iv' => $YES,
         'fatal'    => $NO
@@ -2743,7 +2604,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'fuzzing data',
         'detail'   => 'non-legacy IV REPLPKTS',
-        'err_msg'  => 'server accepted fuzzing pkts',
         'function' => \&perl_fko_module_full_fuzzing_packets,
         'set_legacy_iv' => $NO,
         'fatal'    => $NO
@@ -2753,7 +2613,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'compatibility',
         'detail'   => 'client FKO -> C server',
-        'err_msg'  => 'invalid SPA packet data',
         'function' => \&perl_fko_module_client_compatibility,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
@@ -2765,7 +2624,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'compatibility',
         'detail'   => 'FKO -> C invalid legacy IV',
-        'err_msg'  => 'invalid SPA packet data',
         'function' => \&perl_fko_module_client_compatibility,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
@@ -2779,7 +2637,6 @@ my @tests = (
         'category' => 'perl FKO module',
         'subcategory' => 'compatibility',
         'detail'   => 'FKO -> C valid legacy IV',
-        'err_msg'  => 'invalid SPA packet data',
         'function' => \&perl_fko_module_client_compatibility,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
@@ -2796,7 +2653,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2809,7 +2665,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2826,7 +2681,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
@@ -2843,7 +2697,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
@@ -2860,7 +2713,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/60001)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
@@ -2878,7 +2730,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
@@ -2896,7 +2747,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2908,7 +2758,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #1 (GnuPG prefix)',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
         'cmdline'  => "$default_client_gpg_args_no_homedir "
@@ -2923,7 +2772,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2934,7 +2782,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_base64_spa_data,
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2945,7 +2792,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&appended_spa_data,
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2956,7 +2802,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&prepended_spa_data,
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2967,7 +2812,6 @@ my @tests = (
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22 ssh)',
-        'err_msg'  => 'could not spoof username',
         'function' => \&spoof_username,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -2981,7 +2825,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'pinentry not required',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&gpg_pinentry_check,
         'cmdline'  => $default_client_gpg_args,
         'fatal'    => $NO
@@ -2990,7 +2833,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
@@ -3002,35 +2844,32 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'rc file default key (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_gpg_args_no_get_key " .
-            "--rc-file $cf{'rc_file_def_key'}",
+            "--rc-file $cf{'rc_def_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_def_key'},
+        'key_file' => $cf{'rc_def_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'rc file named key (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_gpg_args_no_get_key " .
-            "--rc-file $cf{'rc_file_named_key'} -n testssh",
+            "--rc-file $cf{'rc_named_key'} -n testssh",
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_file_named_key'},
+        'key_file' => $cf{'rc_named_key'},
         'fatal'    => $NO
     },
     {
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
@@ -3046,7 +2885,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
@@ -3063,7 +2901,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
@@ -3080,7 +2917,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/60001)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
@@ -3098,7 +2934,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
-        'err_msg'  => 'could not complete SPA cycle',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
@@ -3116,7 +2951,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'replay attack detection',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
@@ -3127,7 +2961,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #2 (GnuPG prefix)',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
         'cmdline'  => $default_client_gpg_args,
@@ -3140,7 +2973,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'detect replay #3 (GnuPG prefix)',
-        'err_msg'  => 'could not detect replay attack',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
         'cmdline'  => $default_client_args,
@@ -3154,7 +2986,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'non-base64 altered SPA data',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
@@ -3164,7 +2995,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'base64 altered SPA data',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&altered_base64_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
@@ -3174,7 +3004,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'appended data to SPA pkt',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&appended_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
@@ -3184,7 +3013,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'prepended data to SPA pkt',
-        'err_msg'  => 'allowed improper SPA data',
         'function' => \&prepended_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
@@ -3194,7 +3022,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22 ssh)',
-        'err_msg'  => 'could not spoof username',
         'function' => \&spoof_username,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args",
         'fwknopd_cmdline'  => $default_server_gpg_args,
@@ -3204,7 +3031,6 @@ my @tests = (
         'category' => 'GPG',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
-        'err_msg'  => 'improper digest cache structure',
         'function' => \&digest_cache_structure,
         'fatal'    => $NO
     },
@@ -3257,6 +3083,9 @@ if ($enable_valgrind) {
     if ($previous_valgrind_coverage_dir) {
         die "[*] $previous_valgrind_coverage_dir does not exist"
             unless -d $previous_valgrind_coverage_dir;
+        if (-d "${previous_valgrind_coverage_dir}/valgrind-coverage") {
+            $previous_valgrind_coverage_dir .= '/valgrind-coverage';
+        }
     } else {
         ### try the previous output.last/valgrind-coverage dir first
         $previous_valgrind_coverage_dir = "${output_dir}.last/$valgrind_cov_dir";
@@ -3287,7 +3116,6 @@ if ($enable_profile_coverage_check) {
         {
             'category' => 'profile coverage',
             'detail'   => 'gcov profile coverage',
-            'err_msg'  => 'profile coverage failed',
             'function' => \&profile_coverage,
             'fatal'    => $NO
         },
@@ -3300,7 +3128,6 @@ if ($enable_valgrind) {
             'category' => 'valgrind',
             'subcategory' => 'fko-wrapper',
             'detail'   => 'multiple libfko calls',
-            'err_msg'  => 'could not compile/execute fko-wrapper',
             'function' => \&compile_execute_fko_wrapper,
             'fatal'    => $NO
         }
@@ -3310,7 +3137,6 @@ if ($enable_valgrind) {
             'category' => 'valgrind output',
             'subcategory' => 'flagged functions',
             'detail'   => '',
-            'err_msg'  => 'could not parse flagged functions',
             'function' => \&parse_valgrind_flagged_functions,
             'fatal'    => $NO
         }
@@ -3332,6 +3158,8 @@ if ($total_elapsed_seconds > 60) {
 if ($enable_openssl_compatibility_tests) {
     &logr("[+] $openssl_success_ctr/$openssl_failure_ctr/$openssl_ctr " .
         "OpenSSL tests passed/failed/executed\n");
+    &logr("[+] $openssl_hmac_success_ctr/$openssl_hmac_failure_ctr/$openssl_hmac_ctr " .
+        "OpenSSL HMAC tests passed/failed/executed\n");
 }
 if ($fuzzing_ctr > 0) {
     &logr("[+] $fuzzing_success_ctr/$fuzzing_failure_ctr/$fuzzing_ctr " .
@@ -3720,7 +3548,7 @@ sub client_send_spa_packet() {
         my $encoded_msg = '';
         my $digest = '';
         my $enc_mode = 0;
-        my $is_hmac_mode = 1;
+        my $is_hmac_type = 1;
         my $hmac_digest = '';
         open F, "< $cmd_out_tmp" or die $!;
         while (<F>) {
@@ -3731,7 +3559,7 @@ sub client_send_spa_packet() {
             } elsif (/Encryption\sMode\:\s+(\d+)/) {
                 $enc_mode = $1;
             } elsif (/^\s+HMAC.*\:\s\<NULL\>/) {
-                $is_hmac_mode = 0;
+                $is_hmac_type = 0;
             } elsif (/^\s+HMAC.*\:\s(\S+)/) {
                 $hmac_digest = $1;
             }
@@ -3742,7 +3570,7 @@ sub client_send_spa_packet() {
 
         my $ssl_test_flag = $REQUIRE_SUCCESS;
         $ssl_test_flag = $REQUIRE_FAILURE if $enc_mode != 2;  ### CBC mode
-        $ssl_test_flag = $REQUIRE_FAILURE if $is_hmac_mode;
+        $ssl_test_flag = $REQUIRE_FAILURE if $is_hmac_type;
 
         my $encrypted_msg = &get_spa_packet_from_file($cmd_out_tmp);
 
@@ -3770,7 +3598,7 @@ sub client_send_spa_packet() {
             $rv = 0;
         }
 
-        if ($is_hmac_mode and $hmac_key) {
+        if ($is_hmac_type and $hmac_key) {
             unless (&openssl_hmac_verification($encrypted_msg,
                     $encoded_msg, '', $hmac_key, $b64_decode_key,
                     $hmac_digest)) {
@@ -6398,6 +6226,8 @@ sub openssl_hmac_verification() {
     my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
         $b64_decode_key, $hmac_digest) = @_;
 
+    $openssl_hmac_ctr++;
+
     my $hmac_key = '';
     my $enc_msg_without_hmac = '';
     my $openssl_hmac = '';
@@ -6425,6 +6255,7 @@ sub openssl_hmac_verification() {
     unless ($enc_msg_without_hmac) {
         &write_test_file("    Msg not in the form <enc_msg><hmac_digest>\n",
             $curr_test_file);
+        $openssl_hmac_failure_ctr++;
         return 0;
     }
 
@@ -6452,6 +6283,7 @@ sub openssl_hmac_verification() {
     unless (&run_cmd($openssl_hmac_cmd, $cmd_out_tmp, $curr_test_file)) {
         &write_test_file("[-] Could not run openssl command: '$openssl_hmac_cmd'\n",
             $curr_test_file);
+        $openssl_hmac_failure_ctr++;
         return 0;
     }
 
@@ -6475,9 +6307,11 @@ sub openssl_hmac_verification() {
         &write_test_file("[-] OpenSSL HMAC mismatch " .
             "'$openssl_hmac' != '$hmac_digest'\n",
             $curr_test_file);
+        $openssl_hmac_failure_ctr++;
         return 0;
     }
 
+    $openssl_hmac_success_ctr++;
     return 1;
 }
 
@@ -7171,7 +7005,7 @@ sub import_previous_valgrind_coverage_info() {
             if (/TEST\:\s/) {
                 $test_title = $_;
                 chomp $test_title;
-                $prev_valgrind_file_titles{$test_title} = $file;
+                $prev_valgrind_file_titles{$type}{$test_title} = $file;
                 next;
             }
             ### stop after the unique functions view
@@ -7324,7 +7158,7 @@ sub parse_valgrind_flagged_functions() {
         }
         close F;
 
-        my $new_flagged_fcns  = 0;
+        my $new_flagged_fcns = 0;
 
         ### look for differences in flagged functions between the two
         ### test runs
@@ -7333,6 +7167,7 @@ sub parse_valgrind_flagged_functions() {
                 keys %file_scope_flagged_fcns_unique) {
             if (defined $prev_valgrind_cov{$type}
                     and defined $prev_valgrind_cov{$type}{$test_title}) {
+
                 ### we're looking at a matching test results file at this point
                 if (defined $prev_valgrind_cov{$type}{$test_title}{$fcn}) {
                     my $prev_calls = $prev_valgrind_cov{$type}{$test_title}{$fcn};
@@ -7359,7 +7194,8 @@ sub parse_valgrind_flagged_functions() {
             close F;
             $rv = 0;
         } else {
-            if (defined $prev_valgrind_file_titles{$test_title}) {
+            if (defined $prev_valgrind_file_titles{$type}
+                    and $prev_valgrind_file_titles{$type}{$test_title}) {
                 open F, ">> $curr_test_file" or die $!;
                 print F "[+] $filename ($test_title) No new or greater number of valgrind flagged function calls\n";
                 close F;

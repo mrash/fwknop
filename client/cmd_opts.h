@@ -46,14 +46,17 @@ enum {
     RC_FILE_PATH,
     RESOLVE_URL,
     USE_HMAC,
+    SPA_ICMP_TYPE,
+    SPA_ICMP_CODE,
+    KEY_LEN,
+    HMAC_DIGEST_TYPE,
+    HMAC_KEY_LEN,
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
     GPG_SIGNER_KEY,
     GPG_HOME_DIR,
     GPG_AGENT,
-    SPA_ICMP_TYPE,
-    SPA_ICMP_CODE,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -87,6 +90,9 @@ static struct option cmd_opts[] =
     {"http-proxy",          1, NULL, 'H'},
     {"key-gen",             0, NULL, 'k'},
     {"key-gen-file",        1, NULL, 'K'},
+    {"key-len",             1, NULL, KEY_LEN},
+    {"hmac-key-len",        1, NULL, HMAC_KEY_LEN},
+    {"hmac-digest-type",    1, NULL, HMAC_DIGEST_TYPE},
     {"icmp-type",           1, NULL, SPA_ICMP_TYPE },
     {"icmp-code",           1, NULL, SPA_ICMP_CODE },
     {"last-cmd",            0, NULL, 'l'},

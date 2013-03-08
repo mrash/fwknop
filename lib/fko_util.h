@@ -39,6 +39,8 @@ int is_valid_digest_len(const int len);
 int enc_mode_strtoint(const char *enc_mode_str);
 int strtol_wrapper(const char * const str, const int min,
     const int max, const int exit_upon_err, int *is_err);
+short digest_strtoint(const char *dt_str);
+short hmac_digest_strtoint(const char *dt_str);
 
 size_t strlcat(char *dst, const char *src, size_t siz);
 size_t strlcpy(char *dst, const char *src, size_t siz);

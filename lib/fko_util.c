@@ -44,6 +44,42 @@ is_valid_encoded_msg_len(const int len)
     return(1);
 }
 
+/* Convert a digest_type string to its integer value.
+*/
+short
+digest_strtoint(const char *dt_str)
+{
+    if(strcasecmp(dt_str, "md5") == 0)
+        return(FKO_DIGEST_MD5);
+    else if(strcasecmp(dt_str, "sha1") == 0)
+        return(FKO_DIGEST_SHA1);
+    else if(strcasecmp(dt_str, "sha256") == 0)
+        return(FKO_DIGEST_SHA256);
+    else if(strcasecmp(dt_str, "sha384") == 0)
+        return(FKO_DIGEST_SHA384);
+    else if(strcasecmp(dt_str, "sha512") == 0)
+        return(FKO_DIGEST_SHA512);
+    else
+        return(-1);
+}
+
+short
+hmac_digest_strtoint(const char *dt_str)
+{
+    if(strcasecmp(dt_str, "md5") == 0)
+        return(FKO_HMAC_MD5);
+    else if(strcasecmp(dt_str, "sha1") == 0)
+        return(FKO_HMAC_SHA1);
+    else if(strcasecmp(dt_str, "sha256") == 0)
+        return(FKO_HMAC_SHA256);
+    else if(strcasecmp(dt_str, "sha384") == 0)
+        return(FKO_HMAC_SHA384);
+    else if(strcasecmp(dt_str, "sha512") == 0)
+        return(FKO_HMAC_SHA512);
+    else
+        return(-1);
+}
+
 /* Validate plaintext input size
 */
 int

@@ -27,7 +27,7 @@ my $min_len = 0;
 my $lib_dir = '../../lib/.libs';
 my $fwknop_client_path = '../../client/.libs/fwknop';
 my $enc_mode = 'cbc';
-my $hmac_mode = 0;
+my $hmac_type = 0;
 my $hmac_key_file = '../../test/conf/fwknoprc_default_hmac_base64_key';
 my $enable_fwknop_client_gpg = 0;
 my $gpg_recipient = '361BBAD4';
@@ -67,7 +67,7 @@ die "[*] See '$0 -h' for usage information" unless (GetOptions(
     'gpg-recip=s'       => \$gpg_recipient,
     'gpg-signer=s'      => \$gpg_signer,
     'gpg-home=s'        => \$gpg_home_dir,
-    'hmac-mode'         => \$hmac_mode,
+    'hmac-mode'         => \$hmac_type,
     'lib-dir=s'         => \$lib_dir,
     'Client-path=s'     => \$fwknop_client_path,
     'use-openssl'       => \$use_openssl,
@@ -245,7 +245,7 @@ sub run_fwknop_client() {
     my $cmd = "LD_LIBRARY_PATH=$lib_dir $fwknop_client_path -A tcp/22 " .
         "-a 127.0.0.2 -D 127.0.0.1 -B $file_to_measure -b -v --test";
 
-    if ($hmac_mode) {
+    if ($hmac_type) {
         $cmd .= " --rc-file $hmac_key_file";
     } else {
         $cmd .= " --get-key $spa_key_file";

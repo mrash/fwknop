@@ -93,8 +93,8 @@ int main(void) {
     }
 
     for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_hmac_mode(FKO_HMAC_SHA256): %d\n",
-                fko_set_hmac_mode(ctx, FKO_HMAC_SHA256));
+        printf("fko_set_hmac_type(FKO_HMAC_SHA256): %d\n",
+                fko_set_hmac_type(ctx, FKO_HMAC_SHA256));
     }
 
     for (i=0; i<FCN_CALLS; i++) {

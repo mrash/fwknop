@@ -297,6 +297,7 @@ typedef struct acc_stanza
     char                *hmac_key;
     int                 hmac_key_len;
     char                *hmac_key_base64;
+    int                 hmac_type;
     unsigned char       use_rijndael;
     int                 fw_access_timeout;
     unsigned char       enable_cmd_exec;

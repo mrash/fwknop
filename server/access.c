@@ -1029,6 +1029,18 @@ parse_access_file(fko_srv_options_t *opts)
                 &(curr_acc->key_len), curr_acc->key_base64);
             add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
+        /* HMAC digest type */
+        else if(CONF_VAR_IS(var, "HMAC_DIGEST_TYPE"))
+        {
+            curr_acc->hmac_type = hmac_digest_strtoint(val);
+            if(curr_acc->hmac_type < 0)
+            {
+                fprintf(stderr,
+                    "HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}\n",
+                    val);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
         else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
