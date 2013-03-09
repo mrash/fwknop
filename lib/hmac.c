@@ -31,21 +31,16 @@
 
 #include "hmac.h"
 
-void hmac_sha256(const char *msg, const unsigned int msg_len,
-    unsigned char *hmac, const char *hmac_key)
-{
-    hmac_sha256_ctx ctx;
+typedef struct {
+    SHA256_CTX ctx_inside;
+    SHA256_CTX ctx_outside;
 
-    memset(&ctx, 0, sizeof(&ctx));
+    unsigned char block_inner_pad[SHA256_BLOCK_LEN];
+    unsigned char block_outer_pad[SHA256_BLOCK_LEN];
+} hmac_sha256_ctx;
 
-    hmac_sha256_init(&ctx, hmac_key);
-    hmac_sha256_update(&ctx, msg, msg_len);
-    hmac_sha256_final(&ctx, hmac);
-
-    return;
-}
-
-void hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key)
+static void
+hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key)
 {
     int i = 0;
 
@@ -63,14 +58,16 @@ void hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key)
     return;
 }
 
-void hmac_sha256_update(hmac_sha256_ctx *ctx, const char *msg,
+static void
+hmac_sha256_update(hmac_sha256_ctx *ctx, const char *msg,
     unsigned int msg_len)
 {
     SHA256_Update(&ctx->ctx_inside, (unsigned char *)msg, msg_len);
     return;
 }
 
-void hmac_sha256_final(hmac_sha256_ctx *ctx, unsigned char *hmac)
+static void
+hmac_sha256_final(hmac_sha256_ctx *ctx, unsigned char *hmac)
 {
     unsigned char digest_inside[SHA256_DIGEST_LEN];
 
@@ -80,3 +77,20 @@ void hmac_sha256_final(hmac_sha256_ctx *ctx, unsigned char *hmac)
 
     return;
 }
+
+void
+hmac_sha256(const char *msg, const unsigned int msg_len,
+    unsigned char *hmac, const char *hmac_key)
+{
+    hmac_sha256_ctx ctx;
+
+    memset(&ctx, 0, sizeof(&ctx));
+
+    hmac_sha256_init(&ctx, hmac_key);
+    hmac_sha256_update(&ctx, msg, msg_len);
+    hmac_sha256_final(&ctx, hmac);
+
+    return;
+}
+
+

@@ -33,21 +33,8 @@
 
 #include "digest.h"
 
-typedef struct {
-    SHA256_CTX ctx_inside;
-    SHA256_CTX ctx_outside;
-
-    unsigned char block_inner_pad[SHA256_BLOCK_LEN];
-    unsigned char block_outer_pad[SHA256_BLOCK_LEN];
-} hmac_sha256_ctx;
-
 void hmac_sha256(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key);
-
-void hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key);
-void hmac_sha256_update(hmac_sha256_ctx *ctx, const char *msg,
-    unsigned int msg_len);
-void hmac_sha256_final(hmac_sha256_ctx *ctx, unsigned char *hmac);
 
 #endif /* HMAC_H */
 
