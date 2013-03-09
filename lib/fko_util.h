@@ -43,6 +43,7 @@ int     strtol_wrapper(const char * const str, const int min,
 short   digest_strtoint(const char *dt_str);
 short   digest_inttostr(int digest, char* digest_str, size_t digest_size);
 short   hmac_digest_strtoint(const char *dt_str);
+short   hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size);
 
 size_t  strlcat(char *dst, const char *src, size_t siz);
 size_t  strlcpy(char *dst, const char *src, size_t siz);

@@ -30,7 +30,6 @@
  */
 
 /* FIXME: Finish save capability.
- *        SPAC_ICMP_TYPE and ICMP_SPA_CODE are not stored in the stanza
  */
 
 #include "fwknop_common.h"
@@ -69,6 +68,7 @@ enum
     FWKNOP_CLI_ARG_RAND_PORT,
     FWKNOP_CLI_ARG_KEY_RIJNDAEL,
     FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64,
+    FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE,
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
@@ -102,6 +102,7 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
     "RAND_PORT",
     "KEY",
     "KEY_BASE64",
+    "HMAC_DIGEST_TYPE",
     "HMAC_KEY_BASE64",
     "KEY_FILE",
     "NAT_ACCESS",
@@ -735,6 +736,9 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             break;
         case FWKNOP_CLI_ARG_KEY_HMAC_BASE64:
             strlcpy(val, options->hmac_key_base64, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE :
+            hmac_digest_inttostr(options->hmac_type, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_NAT_ACCESS :
             strlcpy(val, options->nat_access_str, sizeof(val));
@@ -1378,6 +1382,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     optarg);
                     exit(EXIT_FAILURE);
                 }
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE);
                 break;
             case HMAC_KEY_LEN:
                 options->hmac_key_len = strtol_wrapper(optarg, 1,

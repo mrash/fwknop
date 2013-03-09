@@ -106,6 +106,7 @@ digest_inttostr(int digest, char* digest_str, size_t digest_size)
 
     return digest_not_valid;
 }
+
 short
 hmac_digest_strtoint(const char *dt_str)
 {
@@ -121,6 +122,50 @@ hmac_digest_strtoint(const char *dt_str)
         return(FKO_HMAC_SHA512);
     else
         return(-1);
+}
+
+/**
+ * \brief Return a hmac digest string according to a hmac digest integer value
+ *
+ * This function checks if the digest integer is valid, and write the digest
+ * string associated.
+ *
+ * \param digest Digest inetger value (FKO_HMAC_MD5, FKO_HMAC_SHA1 ...)
+ * \param digest_str Buffer to write the digest string
+ * \param digest_size size of the digest string buffer
+ *
+ * \return -1 if the digest integer value is not supported, 0 otherwise
+ */
+short
+hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size)
+{
+    short digest_not_valid = 0;
+
+    memset(digest_str, 0, digest_size);
+
+    switch (digest)
+    {
+        case FKO_HMAC_MD5:
+            strlcpy(digest_str, "MD5", digest_size);
+            break;
+        case FKO_HMAC_SHA1:
+            strlcpy(digest_str, "SHA1", digest_size);
+            break;
+        case FKO_HMAC_SHA256:
+            strlcpy(digest_str, "SHA256", digest_size);
+            break;
+        case FKO_HMAC_SHA384:
+            strlcpy(digest_str, "SHA384", digest_size);
+            break;
+        case FKO_HMAC_SHA512:
+            strlcpy(digest_str, "SHA512", digest_size);
+            break;
+        default:
+            digest_not_valid = -1;
+            break;
+    }
+
+    return digest_not_valid;
 }
 
 /* Validate plaintext input size
