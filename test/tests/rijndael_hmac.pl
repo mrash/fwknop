@@ -34,11 +34,10 @@
         'subcategory' => 'server',
         'detail'   => 'access file invalid HMAC type arg',
         'function' => \&generic_exec,
-        'cmdline'  => '',
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
              "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_invalid_type_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-       'positive_output_matches' => [qr/must\sbe\sone\sof/i],
+        'positive_output_matches' => [qr/must\sbe\sone\sof/i],
         'exec_err' => $YES,
         'fatal'    => $NO
     },
