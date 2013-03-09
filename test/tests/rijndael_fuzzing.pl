@@ -234,8 +234,8 @@
     },
 
     {
-        'category' => 'FUZZING',
-        'subcategory' => 'server',
+        'category' => 'Rijndael',
+        'subcategory' => 'FUZZING',
         'detail'   => 'invalid SOURCE access.conf',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -246,8 +246,8 @@
         'fatal'    => $NO
     },
     {
-        'category' => 'FUZZING',
-        'subcategory' => 'server',
+        'category' => 'Rijndael',
+        'subcategory' => 'FUZZING',
         'detail'   => 'invalid OPEN_PORTS access.conf',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -258,8 +258,8 @@
         'fatal'    => $NO
     },
     {
-        'category' => 'FUZZING',
-        'subcategory' => 'server',
+        'category' => 'Rijndael',
+        'subcategory' => 'FUZZING',
         'detail'   => 'invalid RESTRICT_PORTS access.conf',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -270,8 +270,8 @@
         'fatal'    => $NO
     },
     {
-        'category' => 'FUZZING',
-        'subcategory' => 'client+server',
+        'category' => 'Rijndael',
+        'subcategory' => 'FUZZING',
         'detail'   => 'non-base64 altered SPA data',
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => $default_client_args,
@@ -280,8 +280,8 @@
         'fatal'    => $NO
     },
     {
-        'category' => 'FUZZING',
-        'subcategory' => 'client+server',
+        'category' => 'Rijndael',
+        'subcategory' => 'FUZZING',
         'detail'   => 'base64 altered SPA data',
         'function' => \&altered_base64_spa_data,
         'cmdline'  => $default_client_args,
@@ -290,8 +290,8 @@
         'fatal'    => $NO
     },
     {
-        'category' => 'FUZZING',
-        'subcategory' => 'client+server',
+        'category' => 'Rijndael',
+        'subcategory' => 'FUZZING',
         'detail'   => 'appended data to SPA pkt',
         'function' => \&appended_spa_data,
         'cmdline'  => $default_client_args,
@@ -300,8 +300,8 @@
         'fatal'    => $NO
     },
     {
-        'category' => 'FUZZING',
-        'subcategory' => 'client+server',
+        'category' => 'Rijndael',
+        'subcategory' => 'FUZZING',
         'detail'   => 'prepended data to SPA pkt',
         'function' => \&prepended_spa_data,
         'cmdline'  => $default_client_args,
