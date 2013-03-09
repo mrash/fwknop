@@ -63,6 +63,49 @@ digest_strtoint(const char *dt_str)
         return(-1);
 }
 
+/**
+ * \brief Return a digest string according to a digest integer value
+ *
+ * This function checks the digest integer is valid, and write the digest
+ * string associated.
+ *
+ * \param digest Digest inetger value (FKO_DIGEST_MD5, FKO_DIGEST_SHA1 ...)
+ * \param digest_str Buffer to write the digest string
+ * \param digest_size size of the digest string buffer
+ *
+ * \return -1 if the digest integer value is not supported, 0 otherwise
+ */
+short
+digest_inttostr(int digest, char* digest_str, size_t digest_size)
+{
+    short digest_not_valid = 0;
+
+    memset(digest_str, 0, digest_size);
+
+    switch (digest)
+    {
+        case FKO_DIGEST_MD5:
+            strlcpy(digest_str, "MD5", digest_size);
+            break;
+        case FKO_DIGEST_SHA1:
+            strlcpy(digest_str, "SHA1", digest_size);
+            break;
+        case FKO_DIGEST_SHA256:
+            strlcpy(digest_str, "SHA256", digest_size);
+            break;
+        case FKO_DIGEST_SHA384:
+            strlcpy(digest_str, "SHA384", digest_size);
+            break;
+        case FKO_DIGEST_SHA512:
+            strlcpy(digest_str, "SHA512", digest_size);
+            break;
+        default:
+            digest_not_valid = -1;
+            break;
+    }
+
+    return digest_not_valid;
+}
 short
 hmac_digest_strtoint(const char *dt_str)
 {
@@ -112,6 +155,57 @@ enc_mode_strtoint(const char *enc_mode_str)
         return(FKO_ENC_MODE_CBC_LEGACY_IV);
     else
         return(-1);
+}
+
+/**
+ * \brief Return an encryption mode string according to an enc_mode integer value
+ *
+ * This function checks if the encryption mode integer is valid, and write the
+ * encryption mode string associated.
+ *
+ * \param enc_mode Encryption mode inetger value (FKO_ENC_MODE_CBC, FKO_ENC_MODE_ECB ...)
+ * \param enc_mode_str Buffer to write the encryption mode string
+ * \param enc_mode_size size of the encryption mode string buffer
+ *
+ * \return -1 if the encryption mode integer value is not supported, 0 otherwise
+ */
+short
+enc_mode_inttostr(int enc_mode, char* enc_mode_str, size_t enc_mode_size)
+{
+    short enc_mode_not_valid = 0;
+
+    memset(enc_mode_str, 0, enc_mode_size);
+
+    switch (enc_mode)
+    {
+        case FKO_ENC_MODE_CBC :
+            strlcpy(enc_mode_str, "CBC", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_ECB :
+            strlcpy(enc_mode_str, "ECB", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_CFB :
+            strlcpy(enc_mode_str, "CFB", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_PCBC :
+            //strlcpy(enc_mode_str, "PCBC", enc_mode_size);
+            enc_mode_not_valid = -1;
+            break;
+        case FKO_ENC_MODE_OFB :
+            strlcpy(enc_mode_str, "OFB", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_CTR :
+            strlcpy(enc_mode_str, "CTR", enc_mode_size);
+            break;
+        case FKO_ENC_MODE_CBC_LEGACY_IV:
+            strlcpy(enc_mode_str, "LEGACY", enc_mode_size);
+            break;
+        default:
+            enc_mode_not_valid = -1;
+            break;
+    }
+
+    return enc_mode_not_valid;
 }
 
 int
