@@ -179,12 +179,12 @@ _get_encryption_mode(ctx, val)
     RETVAL
 
 int
-_set_hmac_mode(ctx, hmac_mode)
+_set_hmac_type(ctx, hmac_type)
     INPUT:
     fko_ctx_t ctx;
-    short    hmac_mode;
+    short    hmac_type;
     CODE:
-    RETVAL = fko_set_hmac_mode(ctx, hmac_mode);
+    RETVAL = fko_set_hmac_type(ctx, hmac_type);
     OUTPUT:
     RETVAL
 

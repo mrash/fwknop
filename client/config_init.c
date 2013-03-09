@@ -676,6 +676,22 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         strlcpy(options->key_base64, val, MAX_KEY_LEN);
         options->have_base64_key = 1;
     }
+    /* HMAC digest type */
+    else if(CONF_VAR_IS(var, "HMAC_DIGEST_TYPE"))
+    {
+        tmpint = hmac_digest_strtoint(val);
+        if(tmpint < 0)
+        {
+            fprintf(stderr,
+                "HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}\n",
+                val);
+            return(-1);
+        }
+        else
+        {
+            options->hmac_type = tmpint;
+        }
+    }
     /* HMAC key */
     else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
     {
@@ -1320,8 +1336,13 @@ set_defaults(fko_cli_options_t *options)
     options->spa_dst_port = FKO_DEFAULT_PORT;
     options->fw_timeout   = -1;
 
+    options->key_len      = FKO_DEFAULT_KEY_LEN;
+    options->hmac_key_len = FKO_DEFAULT_HMAC_KEY_LEN;
+    options->hmac_type    = FKO_DEFAULT_HMAC_MODE;
+
     options->spa_icmp_type = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
     options->spa_icmp_code = 0;               /* only used in '-P icmp' mode */
+
     return;
 }
 
@@ -1467,6 +1488,34 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->hmac_key_base64, optarg, MAX_KEY_LEN);
                 options->have_hmac_base64_key = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64);
+            case KEY_LEN:
+                options->key_len = strtol_wrapper(optarg, 1,
+                        MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    fprintf(stderr, "Invalid key length '%s', must be in [%d-%d]\n",
+                            optarg, 1, MAX_KEY_LEN);
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case HMAC_DIGEST_TYPE:
+                if((options->hmac_type = hmac_digest_strtoint(optarg)) < 0)
+                {
+                    fprintf(stderr,
+                        "* Invalid hmac digest type: %s, use {md5,sha1,sha256,sha384,sha512}\n",
+                    optarg);
+                    exit(EXIT_FAILURE);
+                }
+                break;
+            case HMAC_KEY_LEN:
+                options->hmac_key_len = strtol_wrapper(optarg, 1,
+                        MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    fprintf(stderr, "Invalid hmac key length '%s', must be in [%d-%d]\n",
+                            optarg, 1, MAX_KEY_LEN);
+                    exit(EXIT_FAILURE);
+                }
                 break;
             case SPA_ICMP_TYPE:
                 options->spa_icmp_type = strtol_wrapper(optarg, 0,
@@ -1758,9 +1807,13 @@ usage(void)
       " -v, --verbose               Set verbose mode.\n"
       " -V, --version               Print version number.\n"
       " -m, --digest-type           Specify the message digest algorithm to use.\n"
-      "                             (md5, sha1, or sha256 (default)).\n"
+      "                             (md5, sha1, sha256, sha384, or sha512). The\n"
+      "                             default is sha256.\n"
       " -f, --fw-timeout            Specify SPA server firewall timeout from the\n"
       "                             client side.\n"
+      "     --hmac-digest-type      Set the HMAC digest algorithm (default is\n"
+      "                             sha256). Options are md5, sha1, sha256,\n"
+      "                             sha384, or sha512.\n"
       "     --icmp-type             Set the ICMP type (used with '-P icmp')\n"
       "     --icmp-code             Set the ICMP code (used with '-P icmp')\n"
       "     --gpg-encryption        Use GPG encryption (default is Rijndael).\n"

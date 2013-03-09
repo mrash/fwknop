@@ -46,7 +46,7 @@
 #GPG_HOMEDIR         /path/to/.gnupg
 #GPG_SIGNER          <signer ID>
 #GPG_RECIPIENT       <recipient ID>
-HMAC_DIGEST_TYPE    sha256
+HMAC_DIGEST_TYPE    invalid
 KEY_BASE64          wzNP62oPPgEc+kXDPQLHPOayQBuNbYUTPP+QrErNDmg=
 HMAC_KEY_BASE64     Yh+xizBnl6FotC5ec7FanVGClRMlsOAPh2u6eovnerfBVKwaVKzjGoblFMHMc593TNyi0dWn4opLoTIV9q/ttg==
 

@@ -43,7 +43,7 @@
 extern "C" {
 #endif
 
-#include "fko_common.h"
+#include "common.h"
 
 /*
  * Import u_intXX_t size_t type definitions from system headers.  You
@@ -70,12 +70,17 @@ extern "C" {
 #define SHA256_BLOCK_LEN        64
 #define SHA256_DIGEST_LEN       32
 #define SHA256_DIGEST_STR_LEN   (SHA256_DIGEST_LEN * 2 + 1)
+#define SHA256_B64_LEN          43
+
 #define SHA384_BLOCK_LEN        128
 #define SHA384_DIGEST_LEN       48
 #define SHA384_DIGEST_STR_LEN   (SHA384_DIGEST_LEN * 2 + 1)
+#define SHA384_B64_LEN          64
+
 #define SHA512_BLOCK_LEN        128
 #define SHA512_DIGEST_LEN       64
 #define SHA512_DIGEST_STR_LEN   (SHA512_DIGEST_LEN * 2 + 1)
+#define SHA512_B64_LEN          86
 
 
 /*** SHA-256/384/512 Context Structures *******************************/

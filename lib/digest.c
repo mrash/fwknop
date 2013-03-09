@@ -28,8 +28,10 @@
  *
  *****************************************************************************
 */
+#include "fko_common.h"
 #include "digest.h"
 #include "base64.h"
+
 
 /* Convert a raw digest into its hex string representation.
 */

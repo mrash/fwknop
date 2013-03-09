@@ -46,9 +46,8 @@
 #GPG_HOMEDIR         /path/to/.gnupg
 #GPG_SIGNER          <signer ID>
 #GPG_RECIPIENT       <recipient ID>
-HMAC_DIGEST_TYPE    sha256
-KEY_BASE64          wzNP62oPPgEc+kXDPQLHPOayQBuNbYUTPP+QrErNDmg=
-HMAC_KEY_BASE64     Yh+xizBnl6FotC5ec7FanVGClRMlsOAPh2u6eovnerfBVKwaVKzjGoblFMHMc593TNyi0dWn4opLoTIV9q/ttg==
+KEY_BASE64:         dGVzdA==
+HMAC_KEY_BASE64:    dGVzdHRlc3Q=
 
 # User-provided named stanzas:
 

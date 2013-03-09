@@ -86,7 +86,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
     /* Calculate the HMAC from the encrypted data and then
      * compare
     */
-    res = fko_set_hmac_mode(ctx, FKO_HMAC_SHA256);
+    res = fko_set_hmac_type(ctx, FKO_HMAC_SHA256);
     if(res == FKO_SUCCESS)
     {
         res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
@@ -123,19 +123,34 @@ fko_get_hmac_data(fko_ctx_t ctx, char **hmac_data)
 /* Set the HMAC type
 */
 int
-fko_set_hmac_mode(fko_ctx_t ctx, const short hmac_mode)
+fko_set_hmac_type(fko_ctx_t ctx, const short hmac_type)
 {
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
-    if(hmac_mode < 0 || hmac_mode >= FKO_LAST_HMAC_MODE)
+    if(hmac_type < 0 || hmac_type >= FKO_LAST_HMAC_MODE)
         return(FKO_ERROR_INVALID_DATA);
 
-    ctx->hmac_mode = hmac_mode;
+    ctx->hmac_type = hmac_type;
 
     ctx->state |= FKO_HMAC_MODE_MODIFIED;
+
+    return(FKO_SUCCESS);
+}
+
+/* Return the fko HMAC type
+*/
+int
+fko_get_spa_hmac_type(fko_ctx_t ctx, short *hmac_type)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    *hmac_type = ctx->hmac_type;
 
     return(FKO_SUCCESS);
 }
@@ -151,9 +166,11 @@ int fko_calculate_hmac(fko_ctx_t ctx,
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    memset(hmac, 0x00, SHA256_DIGEST_STR_LEN);
+
     /* Only HMAC-SHA256 is supported for now
     */
-    if(ctx->hmac_mode != FKO_HMAC_SHA256)
+    if(ctx->hmac_type != FKO_HMAC_SHA256)
         return(FKO_ERROR_UNSUPPORTED_HMAC_MODE);
 
     hmac_base64 = calloc(1, MD_HEX_SIZE(SHA256_DIGEST_LEN)+1);
@@ -174,8 +191,21 @@ int fko_calculate_hmac(fko_ctx_t ctx,
 
     free(hmac_base64);
 
-    if(! is_valid_digest_len(ctx->msg_hmac_len))
-        return(FKO_ERROR_INVALID_DATA);
+    switch(ctx->msg_hmac_len)
+    {
+        case MD5_B64_LEN:
+            break;
+        case SHA1_B64_LEN:
+            break;
+        case SHA256_B64_LEN:
+            break;
+        case SHA384_B64_LEN:
+            break;
+        case SHA512_B64_LEN:
+            break;
+        default:
+            return(FKO_ERROR_INVALID_DATA);
+    }
 
     return FKO_SUCCESS;
 }

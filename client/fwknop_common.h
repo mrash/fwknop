@@ -102,13 +102,16 @@ typedef struct fko_cli_options
     /* Encryption keys read from a .fwknoprc stanza
     */
     char key[MAX_KEY_LEN+1];
-    char key_base64[MAX_KEY_LEN+1];
+    char key_base64[2*MAX_KEY_LEN+1];
+    int  key_len;
     char hmac_key[MAX_KEY_LEN+1];
-    char hmac_key_base64[MAX_KEY_LEN+1];
+    char hmac_key_base64[2*MAX_KEY_LEN+1];
+    int  hmac_key_len;
     int  have_key;
     int  have_base64_key;
     int  have_hmac_key;
     int  have_hmac_base64_key;
+    int  hmac_type;
 
     /* NAT access
     */

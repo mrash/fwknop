@@ -33,8 +33,10 @@
 #include "spa_comm.h"
 #include "utils.h"
 #include "getpasswd.h"
+
 #include <sys/stat.h>
 #include <fcntl.h>
+
 
 /* prototypes
 */
@@ -61,16 +63,22 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
 int
 main(int argc, char **argv)
 {
-    fko_ctx_t           ctx = NULL, ctx2 = NULL;
+    fko_ctx_t           ctx = NULL;
+    fko_ctx_t           ctx2 = NULL;
     int                 res;
-    char               *spa_data, *version;
+    char               *spa_data=NULL, *version=NULL;
     char                access_buf[MAX_LINE_LEN] = {0};
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
-    int                 key_len = 0, hmac_key_len = 0;
+    int                 key_len = 0, hmac_key_len = 0, enc_mode;
     FILE               *key_gen_file_ptr = NULL;
 
     fko_cli_options_t   options;
+
+    memset(key, 0x00, MAX_KEY_LEN+1);
+    memset(hmac_key, 0x00, MAX_KEY_LEN+1);
+    memset(access_buf, 0x00, MAX_LINE_LEN);
+    memset(hmac_key, 0x00, MAX_KEY_LEN);
 
     /* Handle command line
     */
@@ -85,7 +93,9 @@ main(int argc, char **argv)
     */
     if(options.key_gen)
     {
-        fko_key_gen(options.key_base64, options.hmac_key_base64);
+        fko_key_gen(options.key_base64, options.key_len,
+                options.hmac_key_base64, options.hmac_key_len,
+                options.hmac_type);
 
         if(options.key_gen_file != NULL && options.key_gen_file[0] != '\0')
         {
@@ -402,6 +412,17 @@ main(int argc, char **argv)
             return(EXIT_FAILURE);
         }
 
+        /* Pull the encryption mode.
+        */
+        res = fko_get_spa_encryption_mode(ctx, &enc_mode);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_get_spa_encryption_mode", res);
+            fko_destroy(ctx);
+            fko_destroy(ctx2);
+            return(EXIT_FAILURE);
+        }
+
         /* If gpg-home-dir is specified, we have to defer decrypting if we
          * use the fko_new_with_data() function because we need to set the
          * gpg home dir after the context is created, but before we attempt
@@ -411,7 +432,7 @@ main(int argc, char **argv)
          * options, then decode it.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            0, ctx->encryption_mode, hmac_key, hmac_key_len);
+            0, enc_mode, hmac_key, hmac_key_len);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -420,7 +441,7 @@ main(int argc, char **argv)
             return(EXIT_FAILURE);
         }
 
-        res = fko_set_spa_encryption_mode(ctx2, ctx->encryption_mode);
+        res = fko_set_spa_encryption_mode(ctx2, enc_mode);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_mode", res);
@@ -867,7 +888,15 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         *key_len = fko_base64_decode(options->key_base64,
                 (unsigned char *) options->key);
-        memcpy(key, options->key, RIJNDAEL_MAX_KEYSIZE);
+        if(*key_len > 0 && *key_len < MAX_KEY_LEN)
+        {
+            memcpy(key, options->key, *key_len);
+        }
+        else
+        {
+            fprintf(stderr, "[*] Invalid base64 decoded key length.");
+            clean_exit(ctx, options, EXIT_FAILURE);
+        }
     }
     else
     {
@@ -919,7 +948,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         *hmac_key_len = fko_base64_decode(options->hmac_key_base64,
             (unsigned char *) options->hmac_key);
-        memcpy(hmac_key, options->hmac_key, SHA256_BLOCK_LEN);
+        memcpy(hmac_key, options->hmac_key, *hmac_key_len);
         use_hmac = 1;
     }
     else if (options->use_hmac)
@@ -941,10 +970,10 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
 
     if (use_hmac)
     {
-        res = fko_set_hmac_mode(ctx, FKO_HMAC_SHA256);
+        res = fko_set_hmac_type(ctx, FKO_HMAC_SHA256);
         if(res != FKO_SUCCESS)
         {
-            errmsg("fko_set_hmac_mode", res);
+            errmsg("fko_set_hmac_type", res);
             exit(EXIT_FAILURE);
         }
     }
@@ -989,6 +1018,7 @@ display_ctx(fko_ctx_t ctx)
     time_t      timestamp       = 0;
     short       msg_type        = -1;
     short       digest_type     = -1;
+    short       hmac_type       = -1;
     int         encryption_mode = -1;
     int         client_timeout  = -1;
 
@@ -1004,6 +1034,7 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_server_auth(ctx, &server_auth);
     fko_get_spa_client_timeout(ctx, &client_timeout);
     fko_get_spa_digest_type(ctx, &digest_type);
+    fko_get_spa_hmac_type(ctx, &hmac_type);
     fko_get_spa_encryption_mode(ctx, &encryption_mode);
     fko_get_encoded_data(ctx, &enc_data);
     fko_get_hmac_data(ctx, &hmac_data);
@@ -1021,10 +1052,11 @@ display_ctx(fko_ctx_t ctx)
     printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
     printf(" Client Timeout: %u\n", client_timeout);
     printf("    Digest Type: %d\n", digest_type);
+    printf("      HMAC Type: %d\n", hmac_type);
     printf("Encryption Mode: %d\n", encryption_mode);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
-    printf("    HMAC-SHA256: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
+    printf("           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
 
     if (enc_data != NULL && spa_digest != NULL)
         printf("      Plaintext: %s:%s\n", enc_data, spa_digest);

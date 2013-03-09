@@ -39,6 +39,7 @@
   #include <sys/time.h>
 #endif
 
+#include "fko_common.h"
 #include "cipher_funcs.h"
 #include "digest.h"
 
@@ -111,8 +112,7 @@ get_random_data(unsigned char *data, const size_t len)
 /*** These are Rijndael-specific functions ***/
 
 /* Rijndael function to generate initial salt and initialization vector
- * (iv).  This is is done to be compatible with the data produced via
- * the Perl Crypt::CBC module's use of Rijndael.
+ * (iv).  This is is done to be compatible with the data produced via OpenSSL
 */
 static void
 rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
@@ -208,11 +208,24 @@ rijndael_init(RIJNDAEL_context *ctx, const char *key,
     int encryption_mode)
 {
 
-    /* The default (set in fko.h) is CBC mode
+    /* The default is Rijndael in CBC mode
     */
-    if(encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV)
-        ctx->mode = FKO_ENC_MODE_CBC;
-    else
+    if(encryption_mode == FKO_ENC_MODE_CBC
+            || encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV)
+        ctx->mode = MODE_CBC;
+    else if(encryption_mode == FKO_ENC_MODE_CFB)
+        ctx->mode = MODE_CFB;
+    else if(encryption_mode == FKO_ENC_MODE_PCBC)
+        ctx->mode = MODE_PCBC;
+    else if(encryption_mode == FKO_ENC_MODE_OFB)
+        ctx->mode = MODE_OFB;
+    else if(encryption_mode == FKO_ENC_MODE_CTR)
+        ctx->mode = MODE_CTR;
+    else if(encryption_mode == FKO_ENC_MODE_CFB)
+        ctx->mode = MODE_CFB;
+    else if(encryption_mode == FKO_ENC_MODE_ECB)
+        ctx->mode = MODE_ECB;
+    else  /* shouldn't get this far */
         ctx->mode = encryption_mode;
 
     /* Generate the salt and initialization vector.

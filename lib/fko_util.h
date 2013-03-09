@@ -31,15 +31,16 @@
 #ifndef FKO_UTIL_H
 #define FKO_UTIL_H 1
 
-#include "fko_common.h"
-
 /* Function prototypes
 */
 int is_valid_encoded_msg_len(const int len);
 int is_valid_pt_msg_len(const int len);
 int is_valid_digest_len(const int len);
+int enc_mode_strtoint(const char *enc_mode_str);
 int strtol_wrapper(const char * const str, const int min,
     const int max, const int exit_upon_err, int *is_err);
+short digest_strtoint(const char *dt_str);
+short hmac_digest_strtoint(const char *dt_str);
 
 size_t strlcat(char *dst, const char *src, size_t siz);
 size_t strlcpy(char *dst, const char *src, size_t siz);

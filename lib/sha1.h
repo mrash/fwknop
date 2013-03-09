@@ -32,7 +32,7 @@
 #ifndef SHA1_H
 #define SHA1_H 1
 
-#include "fko_common.h"
+#include "common.h"
 
 #ifdef WIN32
   #define BYTEORDER 1234
@@ -46,6 +46,7 @@
 
 #define SHA1_BLOCKSIZE      64
 #define SHA1_DIGEST_LEN     20
+#define SHA1_B64_LEN        27
 
 typedef struct {
     uint32_t    digest[8];

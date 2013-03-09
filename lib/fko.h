@@ -33,9 +33,6 @@
 
 #include <time.h>
 
-#include "rijndael.h"   /* For encryption modes */
-#include "digest.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -95,7 +92,7 @@ typedef enum {
     FKO_HMAC_SHA384,
     FKO_HMAC_SHA512,
     FKO_LAST_HMAC_MODE /* Always leave this as the last one */
-} fko_hmac_mode_t;
+} fko_hmac_type_t;
 
 /* Supported encryption types...
 */
@@ -107,16 +104,16 @@ typedef enum {
     FKO_LAST_ENCRYPTION_TYPE /* Always leave this as the last one */
 } fko_encryption_type_t;
 
-/* Symmetric encryption modes derived from rijndael.h
+/* Symmetric encryption modes to correspond to rijndael.h
 */
 typedef enum {
     FKO_ENC_MODE_UNKNOWN = 0,
-    FKO_ENC_MODE_ECB  = MODE_ECB,
-    FKO_ENC_MODE_CBC  = MODE_CBC,
-    FKO_ENC_MODE_CFB  = MODE_CFB,
-    FKO_ENC_MODE_PCBC = MODE_PCBC,
-    FKO_ENC_MODE_OFB  = MODE_OFB,
-    FKO_ENC_MODE_CTR  = MODE_CTR,
+    FKO_ENC_MODE_ECB,
+    FKO_ENC_MODE_CBC,
+    FKO_ENC_MODE_CFB,
+    FKO_ENC_MODE_PCBC,
+    FKO_ENC_MODE_OFB,
+    FKO_ENC_MODE_CTR,
     FKO_ENC_MODE_ASYMMETRIC,  /* placeholder when GPG is used */
     FKO_ENC_MODE_CBC_LEGACY_IV,  /* for the old zero-padding strategy */
     FKO_LAST_ENC_MODE /* Always leave this as the last one */
@@ -189,10 +186,13 @@ typedef enum {
 
 /* General Defaults
 */
-#define FKO_DEFAULT_MSG_TYPE    FKO_ACCESS_MSG
-#define FKO_DEFAULT_DIGEST      FKO_DIGEST_SHA256
-#define FKO_DEFAULT_ENCRYPTION  FKO_ENCRYPTION_RIJNDAEL
-#define FKO_DEFAULT_ENC_MODE    MODE_CBC
+#define FKO_DEFAULT_MSG_TYPE     FKO_ACCESS_MSG
+#define FKO_DEFAULT_DIGEST       FKO_DIGEST_SHA256
+#define FKO_DEFAULT_ENCRYPTION   FKO_ENCRYPTION_RIJNDAEL
+#define FKO_DEFAULT_ENC_MODE     FKO_ENC_MODE_CBC
+#define FKO_DEFAULT_KEY_LEN      0
+#define FKO_DEFAULT_HMAC_KEY_LEN 0
+#define FKO_DEFAULT_HMAC_MODE    FKO_HMAC_SHA256
 
 /* Define the consistent prefixes or salt on some encryption schemes.
 */
@@ -260,13 +260,15 @@ DLL_API int fko_set_raw_spa_digest(fko_ctx_t ctx);
 DLL_API int fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type);
 DLL_API int fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode);
 DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg);
-DLL_API int fko_set_hmac_mode(fko_ctx_t ctx, const short hmac_mode);
+DLL_API int fko_set_hmac_type(fko_ctx_t ctx, const short hmac_type);
 
 /* Data processing and misc utility functions
 */
 DLL_API const char* fko_errstr(const int err_code);
 DLL_API int fko_encryption_type(const char * const enc_data);
-DLL_API int fko_key_gen(char * const key_base64, char * const hmac_key_base64);
+DLL_API int fko_key_gen(char * const key_base64, const int key_len,
+        char * const hmac_key_base64, const int hmac_ken_len,
+        const int hmac_type);
 DLL_API int fko_base64_encode(unsigned char * const in, char * const out, int in_len);
 DLL_API int fko_base64_decode(const char * const in, unsigned char *out);
 
@@ -297,6 +299,7 @@ DLL_API int fko_get_spa_server_auth(fko_ctx_t ctx, char **server_auth);
 DLL_API int fko_get_spa_client_timeout(fko_ctx_t ctx, int *client_timeout);
 DLL_API int fko_get_spa_digest_type(fko_ctx_t ctx, short *spa_digest_type);
 DLL_API int fko_get_raw_spa_digest_type(fko_ctx_t ctx, short *raw_spa_digest_type);
+DLL_API int fko_get_spa_hmac_type(fko_ctx_t ctx, short *spa_hmac_type);
 DLL_API int fko_get_spa_digest(fko_ctx_t ctx, char **spa_digest);
 DLL_API int fko_get_raw_spa_digest(fko_ctx_t ctx, char **raw_spa_digest);
 DLL_API int fko_get_spa_encryption_type(fko_ctx_t ctx, short *spa_enc_type);

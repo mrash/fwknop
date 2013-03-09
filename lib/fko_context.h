@@ -34,6 +34,10 @@
 #include "fko_common.h"
 
 #if HAVE_LIBGPGME
+  #include <gpgme.h>
+#endif
+ 
+#if HAVE_LIBGPGME
 /* Stucture to hold a list of the gpg signature information
  * we are interested in.
 */
@@ -65,7 +69,7 @@ struct fko_context {
     short  digest_type;
     short  encryption_type;
     int    encryption_mode;
-    short  hmac_mode;
+    short  hmac_type;
 
     /* Computed or predefined data */
     char           *version;

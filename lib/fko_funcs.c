@@ -135,8 +135,7 @@ fko_new(fko_ctx_t *r_ctx)
         return res;
     }
 
-    /* Default Encryption Mode (Rijndael in EBC mode for backwards
-     * compatibility - it recommended to change this to CBC mode)
+    /* Default is Rijndael in CBC mode
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_mode(ctx, FKO_DEFAULT_ENC_MODE);
@@ -353,16 +352,44 @@ fko_destroy(fko_ctx_t ctx)
  * encode them
 */
 int
-fko_key_gen(char * const key_base64, char * const hmac_key_base64)
+fko_key_gen(char * const key_base64, const int key_len,
+        char * const hmac_key_base64, const int hmac_key_len,
+        const int hmac_type)
 {
     unsigned char key[RIJNDAEL_MAX_KEYSIZE];
     unsigned char hmac_key[SHA256_BLOCK_LEN];
+    int klen      = 0;
+    int hmac_klen = 0;
 
-    get_random_data(key, RIJNDAEL_MAX_KEYSIZE);
-    get_random_data(hmac_key, SHA256_BLOCK_LEN);
+    if(key_len == FKO_DEFAULT_KEY_LEN)
+        klen = RIJNDAEL_MAX_KEYSIZE;
 
-    b64_encode(key, key_base64, RIJNDAEL_MAX_KEYSIZE);
-    b64_encode(hmac_key, hmac_key_base64, SHA256_BLOCK_LEN);
+    if(hmac_key_len == FKO_DEFAULT_KEY_LEN)
+    {
+        if(hmac_type == FKO_DEFAULT_HMAC_MODE
+                || hmac_type == FKO_HMAC_SHA256)
+            hmac_klen = SHA256_BLOCK_LEN;
+        else if(hmac_type == FKO_HMAC_MD5)
+            hmac_klen = MD5_DIGEST_LEN;
+        else if(hmac_type == FKO_HMAC_SHA1)
+            hmac_klen = SHA1_DIGEST_LEN;
+        else if(hmac_type == FKO_HMAC_SHA384)
+            hmac_klen = SHA384_BLOCK_LEN;
+        else if(hmac_type == FKO_HMAC_SHA512)
+            hmac_klen = SHA512_BLOCK_LEN;
+    }
+
+    if((klen < 1) || (klen > RIJNDAEL_MAX_KEYSIZE))
+        return(FKO_ERROR_INVALID_DATA);
+
+    if((hmac_klen < 1) || (hmac_klen > SHA512_BLOCK_LEN))
+        return(FKO_ERROR_INVALID_DATA);
+
+    get_random_data(key, klen);
+    get_random_data(hmac_key, hmac_klen);
+
+    b64_encode(key, key_base64, klen);
+    b64_encode(hmac_key, hmac_key_base64, hmac_klen);
 
     return(FKO_SUCCESS);
 }
@@ -418,7 +445,7 @@ fko_spa_data_final(fko_ctx_t ctx,
     /* Now calculate hmac if so configured
     */
     if (res == FKO_SUCCESS &&
-            ctx->hmac_mode != FKO_HMAC_UNKNOWN && hmac_key != NULL)
+            ctx->hmac_type != FKO_HMAC_UNKNOWN && hmac_key != NULL)
     {
         res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
 

@@ -31,6 +31,7 @@
  *****************************************************************************
 */
 #include "base64.h"
+#include "fko_common.h"
 
 static unsigned char map2[] =
 {
