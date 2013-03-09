@@ -969,6 +969,7 @@ parse_access_file(fko_srv_options_t *opts)
                     fprintf(stderr,
                         "[*] Data error in access file: '%s'\n",
                         opts->config[CONF_ACCESS_FILE]);
+                    fclose(file_ptr);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
             }
@@ -1002,6 +1003,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key), val);
@@ -1015,6 +1017,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
@@ -1022,6 +1025,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                     val);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key_base64), val);
@@ -1038,6 +1042,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}\n",
                     val);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
@@ -1048,6 +1053,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
@@ -1055,6 +1061,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                     val);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->hmac_key_base64), val);
@@ -1069,6 +1076,7 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 fprintf(stderr,
                     "[*] FW_ACCESS_TIMEOUT value not in range.");
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
@@ -1079,6 +1087,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] Unrecognized ENCRYPTION_MODE '%s', use {cbc,ecb}\n",
                     val);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
@@ -1097,6 +1106,7 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 fprintf(stderr, "Unable to determine UID for CMD_EXEC_USER: %s.\n",
                     errno ? strerror(errno) : "Not a user on this system");
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
 
@@ -1125,6 +1135,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'\n",
                     val, curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
@@ -1139,6 +1150,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fprintf(stderr,
                     "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
@@ -1182,12 +1194,14 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 fprintf(stderr,
                     "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf\n");
+                fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_force_nat(opts, curr_acc, val);
 #else
             fprintf(stderr,
                 "[*] FORCE_NAT not supported.\n");
+            fclose(file_ptr);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 #endif
         }
