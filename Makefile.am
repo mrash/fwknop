@@ -134,7 +134,6 @@ EXTRA_DIST = \
     test/conf/disable_aging_fwknopd.conf \
     test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
-    test/conf/hmac_dual_key_usage_access.conf \
     test/conf/ecb_mode_access.conf \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
@@ -146,7 +145,12 @@ EXTRA_DIST = \
     test/conf/gpg_access.conf \
     test/conf/gpg_no_pw_access.conf \
     test/conf/hmac_access.conf \
-    test/conf/fwknoprc_hmac_simple_keys \
+    test/conf/hmac_dual_key_usage_access.conf \
+    test/conf/hmac_invalid_type_access.conf \
+    test/conf/hmac_md5_access.conf \
+    test/conf/hmac_sha1_access.conf \
+    test/conf/hmac_sha384_access.conf \
+    test/conf/hmac_sha512_access.conf \
     test/conf/hmac_simple_keys_access.conf \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
@@ -168,12 +172,6 @@ EXTRA_DIST = \
     test/conf/no_subnet_source_match_access.conf \
     test/conf/ofb_mode_access.conf \
     test/conf/open_ports_access.conf \
-    test/conf/fwknoprc_default_hmac_base64_key \
-    test/conf/fwknoprc_invalid_base64_key \
-    test/conf/fwknoprc_named_key \
-    test/conf/fwknoprc_with_default_base64_key \
-    test/conf/fwknoprc_with_default_key \
-    test/conf/fwknoprc_with_named_key \
     test/conf/override_fwknopd.conf \
     test/conf/require_src_access.conf \
     test/conf/require_user_access.conf \
@@ -205,6 +203,18 @@ EXTRA_DIST = \
     test/fuzzing/patches/long_ip.patch \
     test/fuzzing/patches/non_b64_user_char.patch \
     test/fuzzing/fuzzing_spa_packets \
+    test/tests/build_security.pl \
+    test/tests/preliminaries.pl \
+    test/tests/basic_operations.pl \
+    test/tests/rijndael_hmac.pl \
+    test/tests/rijndael_backwards_compatibility.pl \
+    test/tests/gpg_no_pw.pl \
+    test/tests/gpg.pl \
+    test/tests/rijndael_fuzzing.pl \
+    test/tests/perl_FKO_module.pl \
+    test/tests/rijndael_replay_attacks.pl \
+    test/tests/rijndael.pl \
+    test/tests/rijndael_cmd_exec.pl \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \

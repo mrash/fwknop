@@ -11,10 +11,9 @@ use strict;
 
 #==================== config =====================
 my $logfile        = 'test.log';
-my $local_key_file = 'local_spa.key';
+our $local_key_file = 'local_spa.key';
 my $output_dir     = 'output';
-my $lib_dir        = '../lib/.libs';
-my $conf_dir       = 'conf';
+our $conf_dir       = 'conf';
 my $run_dir        = 'run';
 my $cmd_out_tmp    = 'cmd.out';
 my $server_cmd_tmp = 'server_cmd.out';
@@ -22,11 +21,12 @@ my $data_tmp       = 'data.tmp';
 my $key_tmp        = 'key.tmp';
 my $enc_save_tmp   = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
-my $gpg_client_home_dir = "$conf_dir/client-gpg";
-my $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
-my $replay_pcap_file = "$conf_dir/spa_replay.pcap";
+our $gpg_client_home_dir = "$conf_dir/client-gpg";
+our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
+our $replay_pcap_file = "$conf_dir/spa_replay.pcap";
 
-my %cf = (
+our $lib_dir        = '../lib/.libs';
+our %cf = (
     'nat'                     => "$conf_dir/nat_fwknopd.conf",
     'def'                     => "$conf_dir/default_fwknopd.conf",
     'def_access'              => "$conf_dir/default_access.conf",
@@ -90,35 +90,67 @@ my %cf = (
     'fuzz_restrict_ports'     => "$conf_dir/fuzzing_restrict_ports_access.conf",
 );
 
-my $default_digest_file = "$run_dir/digest.cache";
-my $default_pid_file    = "$run_dir/fwknopd.pid";
-my $tmp_rc_file         = "$run_dir/fwknoprc";
-my $tmp_pkt_file        = "$run_dir/tmp_spa.pkt";
-my $tmp_args_file       = "$run_dir/args.save";
+our $default_digest_file = "$run_dir/digest.cache";
+our $default_pid_file    = "$run_dir/fwknopd.pid";
+our $tmp_rc_file         = "$run_dir/fwknoprc";
+our $tmp_pkt_file        = "$run_dir/tmp_spa.pkt";
+our $tmp_args_file       = "$run_dir/args.save";
 
-my $fwknopCmd   = '../client/.libs/fwknop';
-my $fwknopdCmd  = '../server/.libs/fwknopd';
-my $libfko_bin  = "$lib_dir/libfko.so";  ### this is usually a link
+our $fwknopCmd  = '../client/.libs/fwknop';
+our $fwknopdCmd = '../server/.libs/fwknopd';
+our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
-my $gpg_server_key = '361BBAD4';
-my $gpg_client_key = '6A3FAD56';
+our $gpg_server_key = '361BBAD4';
+our $gpg_client_key = '6A3FAD56';
 
-my $loopback_ip = '127.0.0.1';
-my $fake_ip     = '127.0.0.2';
-my $internal_nat_host = '192.168.1.2';
-my $force_nat_host = '192.168.1.123';
-my $default_spa_port = 62201;
-my $non_std_spa_port = 12345;
+our $loopback_ip = '127.0.0.1';
+our $fake_ip     = '127.0.0.2';
+our $internal_nat_host = '192.168.1.2';
+our $force_nat_host = '192.168.1.123';
+our $default_spa_port = 62201;
+our $non_std_spa_port = 12345;
 
-my $spoof_user = 'testuser';
+our $spoof_user = 'testuser';
 
 my $valgrind_cov_dir = 'valgrind-coverage';
 
-my $spoof_ip   = '1.2.3.4';
+our $spoof_ip   = '1.2.3.4';
 my $perl_mod_fko_dir = 'FKO';
-my $cmd_exec_test_file = '/tmp/fwknoptest';
+our $cmd_exec_test_file = '/tmp/fwknoptest';
 my $default_key = 'fwknoptest';
+
+my $tests_dir = 'tests';
+
+my @test_files = (
+    "$tests_dir/build_security.pl",
+    "$tests_dir/preliminaries.pl",
+    "$tests_dir/basic_operations.pl",
+    "$tests_dir/rijndael.pl",
+    "$tests_dir/rijndael_cmd_exec.pl",
+    "$tests_dir/rijndael_replay_attacks.pl",
+    "$tests_dir/rijndael_fuzzing.pl",
+    "$tests_dir/rijndael_backwards_compatibility.pl",
+    "$tests_dir/rijndael_hmac.pl",
+    "$tests_dir/perl_FKO_module.pl",
+    "$tests_dir/gpg_no_pw.pl",
+    "$tests_dir/gpg.pl",
+);
 #================== end config ===================
+
+our @build_security_client   = ();  ### imported from tests/build_security.pl
+our @build_security_server   = ();
+our @build_security_libfko   = ();
+our @preliminaries           = ();  ### from tests/preliminaries.pl
+our @basic_operations        = ();  ### from tests/basic_operations.pl
+our @rijndael                = ();  ### from tests/rijndael.pl
+our @rijndael_cmd_exec       = ();  ### from tests/rijndael_cmd_exec.pl
+our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
+our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
+our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
+our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
+our @gpg                     = ();  ### from tests/gpg.pl
+our @perl_FKO_module         = ();  ### from tests/perl_FKO_module.pl
+our @rijndael_backwards_compatibility = ();  ### from tests/rijndael_backwards_compatibility.pl
 
 my $passed = 0;
 my $failed = 0;
@@ -130,7 +162,7 @@ my @tests_to_exclude = ();
 my %valgrind_flagged_fcns = ();
 my %valgrind_flagged_fcns_unique = ();
 my $previous_valgrind_coverage_dir = '';
-my $uniq_keys = 100;
+our $uniq_keys = 100;
 my $test_limit = 0;
 my $list_mode = 0;
 my $diff_dir1 = '';
@@ -139,7 +171,7 @@ my $loopback_intf = '';
 my $anonymize_results = 0;
 my $curr_test_file = "$output_dir/init";
 my $tarfile = 'test_fwknop.tar.gz';
-my $key_gen_file = "$output_dir/key_gen";
+our $key_gen_file = "$output_dir/key_gen";
 my $fuzzing_pkts_file = 'fuzzing/fuzzing_spa_packets';
 my $fuzzing_pkts_append = 0;
 my $fuzzing_key = 'testtest';
@@ -150,7 +182,7 @@ my %fuzzing_spa_packets = ();
 my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
 my $enable_valgrind = 0;
-my $valgrind_str = '';
+our $valgrind_str = '';
 my %prev_valgrind_cov = ();
 my %prev_valgrind_file_titles = ();
 my $fko_wrapper_dir = 'fko-wrapper';
@@ -271,53 +303,53 @@ exit &anonymize_results() if $anonymize_results;
 $valgrind_str = "$valgrind_path --leak-check=full " .
     "--show-reachable=yes --track-origins=yes" if $enable_valgrind;
 
-my $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
+our $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
 
-my $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+our $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
     "$local_key_file --no-save-args --verbose --verbose";
 
-my $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     "--no-save-args --verbose --verbose";
 
-my $default_client_hmac_args = "$default_client_args_no_get_key " .
+our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
 
-my $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+our $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
     "$local_key_file --verbose --verbose";
 
-my $client_ip_resolve_hmac_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+our $client_ip_resolve_hmac_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --rc-file " .
     "$cf{'rc_hmac_b64_key'} --verbose --verbose";
 
-my $default_client_gpg_args = "$default_client_args " .
+our $default_client_gpg_args = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
 
-my $default_client_gpg_args_no_homedir = "$default_client_args " .
+our $default_client_gpg_args_no_homedir = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key ";
 
-my $default_client_gpg_args_no_get_key = "$default_client_args_no_get_key " .
+our $default_client_gpg_args_no_get_key = "$default_client_args_no_get_key " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
 
-my $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
+our $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
     "-d $default_digest_file -p $default_pid_file";
 
-my $default_server_hmac_conf_args = "-c $cf{'def'} -a $cf{'hmac_access'} " .
+our $default_server_hmac_conf_args = "-c $cf{'def'} -a $cf{'hmac_access'} " .
     "-d $default_digest_file -p $default_pid_file";
 
-my $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
-my $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_no_pw_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
@@ -331,7 +363,12 @@ if ($diff_mode) {
     exit 0;
 }
 
+### import the tests from the various tests/ files
+&import_test_files();
+
+###
 ### main array that defines the tests we will run
+###
 my @tests = (
     {
         'category' => 'recompilation',
@@ -345,2695 +382,21 @@ my @tests = (
         'function' => \&make_distcheck,
         'fatal'    => $NO
     },
-    {
-        'category' => 'build',
-        'subcategory' => 'client',
-        'detail'   => 'binary exists',
-        'function' => \&binary_exists,
-        'binary'   => $fwknopCmd,
-        'fatal'    => $YES
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'client',
-        'detail'   => 'Position Independent Executable (PIE)',
-        'function' => \&pie_binary,
-        'binary'   => $fwknopCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'client',
-        'detail'   => 'stack protected binary',
-        'function' => \&stack_protected_binary,
-        'binary'   => $fwknopCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'client',
-        'detail'   => 'fortify source functions',
-        'function' => \&fortify_source_functions,
-        'binary'   => $fwknopCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'client',
-        'detail'   => 'read-only relocations',
-        'function' => \&read_only_relocations,
-        'binary'   => $fwknopCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'client',
-        'detail'   => 'immediate binding',
-        'function' => \&immediate_binding,
-        'binary'   => $fwknopCmd,
-        'fatal'    => $NO
-    },
 
-    {
-        'category' => 'build',
-        'subcategory' => 'server',
-        'detail'   => 'binary exists',
-        'function' => \&binary_exists,
-        'binary'   => $fwknopdCmd,
-        'fatal'    => $YES
-    },
-
-    {
-        'category' => 'build security',
-        'subcategory' => 'server',
-        'detail'   => 'Position Independent Executable (PIE)',
-        'function' => \&pie_binary,
-        'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'server',
-        'detail'   => 'stack protected binary',
-        'function' => \&stack_protected_binary,
-        'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'server',
-        'detail'   => 'fortify source functions',
-        'function' => \&fortify_source_functions,
-        'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'server',
-        'detail'   => 'read-only relocations',
-        'function' => \&read_only_relocations,
-        'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'server',
-        'detail'   => 'immediate binding',
-        'function' => \&immediate_binding,
-        'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'build',
-        'subcategory' => 'libfko',
-        'detail'   => 'binary exists',
-        'function' => \&binary_exists,
-        'binary'   => $libfko_bin,
-        'fatal'    => $YES
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'libfko',
-        'detail'   => 'stack protected binary',
-        'function' => \&stack_protected_binary,
-        'binary'   => $libfko_bin,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'libfko',
-        'detail'   => 'fortify source functions',
-        'function' => \&fortify_source_functions,
-        'binary'   => $libfko_bin,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'libfko',
-        'detail'   => 'read-only relocations',
-        'function' => \&read_only_relocations,
-        'binary'   => $libfko_bin,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'build security',
-        'subcategory' => 'libfko',
-        'detail'   => 'immediate binding',
-        'function' => \&immediate_binding,
-        'binary'   => $libfko_bin,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'preliminaries',
-        'subcategory' => 'client',
-        'detail'   => 'usage info',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd -h",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'preliminaries',
-        'subcategory' => 'client',
-        'detail'   => 'getopt() no such argument',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --no-such-arg",
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'preliminaries',
-        'subcategory' => 'client',
-        'detail'   => '--test mode, packet not sent',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/test\smode\senabled/],
-        'cmdline'  => "$default_client_args --test",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'preliminaries',
-        'subcategory' => 'client',
-        'detail'   => 'expected code version',
-        'function' => \&expected_code_version,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --version",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'preliminaries',
-        'subcategory' => 'server',
-        'detail'   => 'usage info',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd -h",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'preliminaries',
-        'subcategory' => 'server',
-        'detail'   => 'getopt() no such argument',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd --no-such-arg",
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'preliminaries',
-        'subcategory' => 'server',
-        'detail'   => 'expected code version',
-        'function' => \&expected_code_version,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a " .
-            "$cf{'def_access'} --version",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'preliminaries',
-        'detail'   => 'collecting system specifics',
-        'function' => \&specs,
-        'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'basic operations',
-        'detail'   => 'dump config',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/SYSLOG_IDENTITY/],
-        'exec_err' => $NO,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} " .
-            "-a $cf{'def_access'} --dump-config",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'detail'   => 'override config',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
-        'exec_err' => $NO,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
-            "-O $conf_dir/override_fwknopd.conf --dump-config",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => 'show last args',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/Could\snot|Last\sfwknop/i],
-        'exec_err' => $IGNORE,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd --show-last",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => '--get-key path validation',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/could\snot\sopen/i],
-        'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -a $fake_ip " .
-            "-D $loopback_ip --get-key not/there",
-        'fatal'    => $YES
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => 'require [-s|-R|-a]',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/must\suse\sone\sof/i],
-        'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -D $loopback_ip",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => '--allow-ip <IP> valid IP',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/Invalid\sallow\sIP\saddress/i],
-        'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => '-A <proto>/<port> specification (proto)',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
-        'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => '-A <proto>/<port> specification (port)',
-        'function' => \&generic_exec,
-        'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
-        'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => 'generate SPA packet',
-        'function' => \&client_send_spa_packet,
-        'cmdline'  => $default_client_args,
-        'fatal'    => $YES
-    },
-
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => 'list current fwknopd fw rules',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --fw-list",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => 'list all current fw rules',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --fw-list-all",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => 'flush current firewall rules',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --fw-flush",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => 'start',
-        'function' => \&server_start,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => 'stop',
-        'function' => \&server_stop,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => 'write PID',
-        'function' => \&write_pid,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => '--packet-limit 1 exit',
-        'function' => \&server_packet_limit,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => 'ignore packets < min SPA len (140)',
-        'function' => \&server_ignore_small_packets,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'server',
-        'detail'   => '-P bpf filter ignore packet',
-        'function' => \&server_bpf_ignore_packet,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str " .
-            qq|-P "udp port $non_std_spa_port"|,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'rotate digest file',
-        'function' => \&rotate_digest_file,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str --rotate-digest-cache",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => "--save-packet $tmp_pkt_file",
-        'function' => \&client_save_spa_pkt,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --save-args-file $tmp_args_file --verbose " .
-            "--verbose --save-packet $tmp_pkt_file",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => "--last-cmd",
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
-            "--verbose --verbose",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'permissions check cycle (tcp/22)',
-        'function' => \&permissions_check,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'server_positive_output_matches' => [qr/permissions\sshould\sonly\sbe\suser/],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'client IP resolve (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $client_ip_resolve_args,
-        'no_ip_check' => 1,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -m md5",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -m sha1",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -m sha256",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -m sha384",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -m sha512",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => 'validate digest type arg',
-        'function' => \&generic_exec,
-        'cmdline'  => "$default_client_args -m invaliddigest",
-        'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'dual usage access key (tcp/80 http)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'dual_key_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        ### check for the first stanza that does not allow tcp/80 - the
-        ### second stanza allows this
-        'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'create rc file (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args --rc-file $tmp_rc_file",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $tmp_rc_file,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'basic operations',
-        'subcategory' => 'client',
-        'detail'   => "rc file created",
-        'function' => \&rc_file_exists,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'rc file default key (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_def_key'}",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_def_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'rc file base64 key (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_def_b64_key'}",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'base64_key_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_def_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'rc file named key (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_named_key'} -n testssh",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_named_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client',
-        'detail'   => 'rc file HMAC base64 key (tcp/22 ssh)',
-        'function' => \&generic_exec,
-        'cmdline'  => $default_client_hmac_args,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client',
-        'detail'   => 'validate HMAC type arg',
-        'function' => \&generic_exec,
-        'cmdline'  => "$default_client_hmac_args --hmac-digest-type invalid",
-        'positive_output_matches' => [qr/Invalid\shmac\sdigest\stype/i],
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client',
-        'detail'   => 'rc file invalid HMAC type arg',
-        'function' => \&generic_exec,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_hmac_invalid_type'}",
-        'positive_output_matches' => [qr/must\sbe\sone\sof/i],
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'server',
-        'detail'   => 'access file invalid HMAC type arg',
-        'function' => \&generic_exec,
-        'cmdline'  => '',
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_invalid_type_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-       'positive_output_matches' => [qr/must\sbe\sone\sof/i],
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle simple keys',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_hmac_simple_key'}",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_simple_keys_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_simple_key'},
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'rotate digest file',
-        'function' => \&rotate_digest_file,
-        'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str --rotate-digest-cache",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client',
-        'detail'   => "--save-packet $tmp_pkt_file",
-        'function' => \&client_save_spa_pkt,
-        'cmdline'  => "$default_client_hmac_args " .
-            "--save-args-file $tmp_args_file " .
-            "--save-packet $tmp_pkt_file",
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client',
-        'detail'   => "--last-cmd",
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
-            "--verbose --verbose",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'permissions check cycle (tcp/22)',
-        'function' => \&permissions_check,
-        'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
-        'server_positive_output_matches' => [qr/permissions\sshould\sonly\sbe\suser/],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'client IP resolve (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $client_ip_resolve_hmac_args,
-        'no_ip_check' => 1,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m md5",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha1",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha256",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha384",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha512",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client',
-        'detail'   => 'validate digest type arg',
-        'function' => \&generic_exec,
-        'cmdline'  => "$default_client_hmac_args -m invaliddigest",
-        'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'dual usage access key (tcp/80 http)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_dual_key_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        ### check for the first stanza that does not allow tcp/80 - the
-        ### second stanza allows this
-        'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'altered HMAC (tcp/22 ssh)',
-        'function' => \&altered_hmac_spa_data,  ### alter HMAC itself
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_hmac_b64_key'}",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'client+server',
-        'detail'   => 'altered pkt HMAC (tcp/22 ssh)',
-        'function' => \&altered_pkt_hmac_spa_data,  ### alter SPA payload
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_hmac_b64_key'}",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
-    },
-
-    ### --key-gen tests
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => '--key-gen',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopCmd --key-gen",
-        'positive_output_matches' => [qr/BASE64/, qw/HMAC/, qw/KEY/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => "--key-gen $uniq_keys key uniqueness",
-        'function' => \&key_gen_uniqueness,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$fwknopCmd --key-gen",   ### no valgrind string (too slow for 100 client exec's)
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => '--key-gen to file',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopCmd --key-gen --key-gen-file $key_gen_file",
-        'positive_output_matches' => [qr/Wrote.*\skeys/],
-        'fatal'    => $NO
-    },
-
-    ### rc file tests
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => 'rc file invalid stanza (tcp/22 ssh)',
-        'function' => \&generic_exec,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_named_key'} -n invalidstanza",
-        'positive_output_matches' => [qr/Named\sconfiguration.*not\sfound/],
-        'key_file' => $cf{'rc_named_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => 'rc file invalid base64 key (tcp/22 ssh)',
-        'function' => \&generic_exec,
-        'cmdline'  => "$default_client_args_no_get_key " .
-            "--rc-file $cf{'rc_invalid_b64_key'} -n testssh",
-        'positive_output_matches' => [qr/look\slike\sbase64\-encoded/],
-        'key_file' => $cf{'rc_invalide_b64_key'},
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'packet aging (past) (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args --time-offset-minus 300s",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'server_positive_output_matches' => [qr/SPA\sdata\stime\sdifference/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'packet aging (future) (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args --time-offset-plus 300s",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'server_positive_output_matches' => [qr/SPA\sdata\stime\sdifference/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'invalid SOURCE (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'invalid_src_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Fatal\serror\sparsing\sIP\sto\sint/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'expired stanza (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'exp_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'invalid expire date (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'invalid_exp_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/invalid\sdate\svalue/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'expired epoch stanza (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'exp_epoch_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'future expired stanza (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'future_exp_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'OPEN_PORTS (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'open_ports_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'OPEN_PORTS mismatch',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'open_ports_mismatch'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/One\s+or\s+more\s+requested/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-
-    ### spoof the source IP on the SPA packet
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "udpraw spoof src IP (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -P udpraw -Q $spoof_ip",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "tcpraw spoof src IP (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -P tcpraw -Q $spoof_ip",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'tcp_pcap_filter'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "icmp spoof src IP (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -P icmp -Q $spoof_ip",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'icmp_pcap_filter'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "icmp type/code 8/0 spoof src IP ",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -P icmp --icmp-type 8 --icmp-code 0 -Q $spoof_ip",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'icmp_pcap_filter'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
-    },
-
-    ### SPA over TCP (not really "single" packet auth since a TCP connection
-    ### is established)
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "SPA over TCP connection",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -P tcp",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'tcp_server'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'require user (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "SPOOF_USER=$spoof_user $default_client_args",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_user_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'user mismatch (tcp/22 ssh)',
-        'function' => \&user_mismatch,
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'user_mismatch_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Username\s+in\s+SPA\s+data/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'require src (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_src_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'mismatch require src (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'require_src_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'allow -s (tcp/22 ssh)',
-        'no_ip_check' => 1,
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'IP filtering (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_src_match'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'subnet filtering (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_subnet_match'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'IP+subnet filtering (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'no_multi_src'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'IP match (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'ip_src_match'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'subnet match (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'subnet_src_match'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'multi IP/net match (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'multi_src_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'multi access stanzas (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'multi_stanza_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'bad/good key stanzas (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'broken_keys_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "non-enabled NAT (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -N $internal_nat_host:22",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'server_positive_output_matches' => [qr/requested\sNAT\saccess.*not\senabled/i],
-        'server_conf' => $cf{'nat'},
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "NAT to $internal_nat_host (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -N $internal_nat_host:22",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'nat'} -a $cf{'open_ports_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$internal_nat_host\:22/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => "NAT bogus IP validation",
-        'function' => \&generic_exec,
-        'exec_err' => $YES,
-        'cmdline'  => "$default_client_args -N 999.1.1.1:22",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "force NAT $force_nat_host (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'nat'} -a $cf{'force_nat_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/\sto\:$force_nat_host\:22/i],
-        'server_negative_output_matches' => [qr/\sto\:$internal_nat_host\:22/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "local NAT $force_nat_host (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args --nat-local",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i,
-            qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
-        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "local NAT non-FORCE_NAT (tcp/22 ssh)",
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose --nat-local --nat-port 22",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
-            qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
-        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'ECB mode (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -M ecb",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'ecb_mode_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_negative_output_matches' => [qr/Decryption\sfailed/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'CFB mode (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -M cfb",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'cfb_mode_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_negative_output_matches' => [qr/Decryption\sfailed/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'CTR mode (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -M ctr",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'ctr_mode_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_negative_output_matches' => [qr/Decryption\sfailed/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'OFB mode (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -M ofb",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'ofb_mode_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_negative_output_matches' => [qr/Decryption\sfailed/i],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'mode mismatch (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -M ecb",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Decryption\sfailed/i],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-
-    ### --pcap-file
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => '--pcap-file processing',
-        'function' => \&process_pcap_file_directly,
-        'cmdline'  => '',
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file " .
-            "--pcap-file $replay_pcap_file --foreground --verbose --verbose " .
-            "--verbose",
-        'server_positive_output_matches' => [qr/Replay\sdetected/i,
-            qr/candidate\sSPA/, qr/0x0000\:\s+2b/],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/23 telnet)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/9418 git)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/60001)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'multi port (tcp/60001,udp/60001)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'multi port (tcp/22,udp/53,tcp/1234)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (udp/53 dns)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "-P bpf SPA over port $non_std_spa_port",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args --server-port $non_std_spa_port",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str " .
-            qq|-P "udp port $non_std_spa_port"|,
-        'server_positive_output_matches' => [qr/PCAP\sfilter.*\s$non_std_spa_port/],
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'random SPA port (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args -r",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str " .
-            qq|-P "udp"|,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'spoof username (tcp/22)',
-        'function' => \&spoof_username,
-        'cmdline'  => "SPOOF_USER=$spoof_user LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'replay attack detection',
-        'function' => \&replay_detection,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'detect replay #1 (Rijndael prefix)',
-        'function' => \&replay_detection,
-        'pkt_prefix' => 'U2FsdGVkX1',
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
-    },
-
-    ### ensure iptables rules are not duplicated for identical access requests
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'iptables rules not duplicated',
-        'function' => \&iptables_rules_not_duplicated,
-        'cmdline'  => "$default_client_args --test",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'server_negative_output_matches' => [qr/^2\s+ACCEPT\s.*$fake_ip/],
-        'fatal'    => $NO
-    },
-
-    ### backwards compatibility tests
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client->server backwards compatibility',
-        'detail'   => 'v2.0',
-        'function' => \&backwards_compatibility,
-        'no_ip_check' => 1,
-        'pkt' =>
-            '9ptGrLs8kVGVludcXFy17opvThEYzTeaT7RVlCN66W/G9QZs9BBevEQ0xxI8eCn' .
-            'KPDM+Bu9g0XwmCEVxxg+4jwBwtbCxVt9t5aSR29EVWZ6UAOwLkunK3t4FYBy1tL' .
-            '55krFt+1B2TtNSAH005kyDEZEOIGoY9Q/iU',
-        'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client->server backwards compatibility',
-        'detail'   => 'v2.0.1',
-        'function' => \&backwards_compatibility,
-        'no_ip_check' => 1,
-        'pkt' =>
-            '+uAD6hlS2BHuaCtVKIGyIsB/4U8USqcP9o4aT6FvBuPKORwTV8byyzv6bzZYINs4' .
-            'Voq3QvBbIwkXJ63/oU+XxvP5R+DBLEnh3e/NHPFK6NB0WT2dujVyVxwBfvvWjIqW' .
-            'Hhro2tH34nqfTRIpevfLTMx7r+N8ZQ4V8',
-        'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client->server backwards compatibility',
-        'detail'   => 'v2.0.2',
-        'function' => \&backwards_compatibility,
-        'no_ip_check' => 1,
-        'pkt' =>
-            '+mS70t2A2YmV50KgwDyy6nYLwzQ7AUO8pA/eatm7g9xc83xy1z7VOXeAYrgAOWy' .
-            'Ksk30QvkwHtPhl7I0oDz1bO+2K2JbDbyc0KBBzVNMLgJcuYgEpOXPkX2XhcTsgQ' .
-            'Vw2/Va/aUjvEvNPtwuipQS6DLTzOw/qy+/g',
-        'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client->server backwards compatibility',
-        'detail'   => 'v2.0.3',
-        'function' => \&backwards_compatibility,
-        'pkt' =>
-            '+8OtxmTJPgQmrXZ7hAqTopLBC/thqHNuPHTfR234pFuQOCZUikPe0inHmjfnQFnP' .
-            'Sop/Iy6v+BCn9D+QD7eT7JI6BIoKp14K+8iNgKaNw1BdfgF1XDulpkNEdyG0fXz5' .
-            'M+GledHfz2d49aYThoQ2Cr8Iw1ycViawY',
-        'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client->server backwards compatibility',
-        'detail'   => 'v2.0.4',
-        'function' => \&backwards_compatibility,
-        'pkt' =>
-            '8Xm8U5vQ03T88UTCWbwO3t/aL6euZ8IgVbNdDVz3Bn6HkTcBqxcME95U/G3bCH' .
-            'vQznpnGb05Md4ZgexHZGzZdSwsP8iVtcZdsgCBfeO4Eqs8OaSMjJVF8SQ+Jmhu' .
-            'XZMcWgMsIzhpprJ7JX41DrWd0OtBnE3rVwsN0',
-        'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'Android compatibility',
-        'detail'   => 'v4.1.2',
-        'function' => \&backwards_compatibility,
-        'no_ip_check' => 1,
-        'pkt' =>
-            '+59hIQhS1RlmqYLXNM/hPxtBAQTB5y3UKZq13O+r6qmg+APdQ+HQ' .
-            'OI7d4QCsp14s8KJpW8qBzZ/n0aZCFCFdZnvdZeJJVboQu4jo' .
-            'QFKZ8mmKwR/5DIO7k3qrXYGxYP0bnHYsih0HIE6CzSHlBGSf' .
-            'DJR92YhjYtL4Q',
-        'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'android_legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-
-    ### fuzzing tests
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'overly long port value',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A \
-        # "tcp/`perl -e '{print "1"x"40"}'`" -a 127.0.0.2 -D 127.0.0.1 \
-        # --get-key local_spa.key --verbose --verbose
-        #
-        # This problem was found by Fernando Arnaboldi of IOActive and exploits
-        # a buffer overflow in the fwknopd servers prior to 2.0.3 from
-        # authenticated clients.
-        #
-        'fuzzing_pkt' =>
-            '+JzxeTGlc6lwwzbJSrYChKx8bonWBIPajwGfEtGOaoglcMLbTY/GGXo/nxqiN1LykFS' .
-            'lDFXgrkyx2emJ7NGzYqQPUYZxLdZRocR9aRIptvXLLIPBcIpJASi/TUiJlw7CDFMcj0' .
-            'ptSBJJUZi0tozpKHETp3AgqfzyOy5FNs38aZsV5/sDl3Pt+kF7fTZJ+YLbmYY4yCUz2' .
-            'ZUYoCaJ7X78ULyJTi5eT7nug',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'overly long proto value',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A \
-        # "tcp`perl -e '{print "A"x"28"}'`/1" -a 127.0.0.2 -D 127.0.0.1 \
-        # --get-key local_spa.key --verbose --verbose
-        #
-        # This problem was found by Fernando Arnaboldi of IOActive and exploits
-        # a buffer overflow in the fwknopd servers prior to 2.0.3 from
-        # authenticated clients.
-        #
-        'fuzzing_pkt' =>
-            '/im5MiJQmOdzqrdWXv+AjEtAm/HsLrdaTFcSw3ZskqpGOdDIrSCz3VXbFfv7qDkc5Y4' .
-            'q/k1mRXl9SGzpug87U5dZSyCdAr30z7/2kUFEPTGOQBi/x+L1t1pvdkm4xg13t09ldm' .
-            '5OD8KiV6qzqLOvN4ULJjvvJJWBZ9qvo/f2Q9Wf67g2KHiwS6EeCINAuMoUw/mNRQMa4' .
-            'oGnOXu3/DeWHJAwtSeh7EAr4',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'overly long IP value',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/22 \
-        # -a `perl -e '{print "1"x"136"}'`.0.0.1 -D 127.0.0.1 \
-        # --get-key local_spa.key --verbose --verbose
-        #
-        # This problem was found by Fernando Arnaboldi of IOActive and exploits
-        # a condition in which pre-2.0.3 fwknopd servers fail to properly validate
-        # allow IP addresses from malicious authenticated clients.
-        #
-        'fuzzing_pkt' =>
-            '93f2rhsXLmBoPicWvYTqrbp+6lNqvWDc8dzmX2s3settwjBGRAXm33TB9agibEphrBu' .
-            '3d+7DEsivZLDS6Kz0JwdjX7t0J9c8es+DVNjlLnPtVNcxhs+2kUzimNrgysIXQRJ+GF' .
-            'GbhdxiXCqdy1vWxWpdoaZmY/CeGIkpoFJFPbJhCRLLX25UMvMF2wXj02MpI4d3t1/6W' .
-            'DM3taM3kZsiFv6HxFjAhIEuQ1oAg2OgRGXkDmT3jDNZMHUm0d4Ahm9LonG7RbOxq/B0' .
-            'qUvY8lkymbwvjelVok7Lvlc06cRhN4zm32D4V05g0vQS3PlX9C+mgph9DeAPVX+D8iZ' .
-            '8lGrxcPSfbCOW61k0MP+q1EhLZkc1qAm5g2+2cLNZcoBNEdh3yj8OTPZJyBVw',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'negative port value',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A \
-        # tcp/-33 -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key \
-        # --verbose --verbose
-        #
-        'fuzzing_pkt' =>
-            '/weoc+pEuQknZo8ImWTQBB+/PwSJ2/TcrmFoSkxpRXX4+jlUxoJakHrioxh8rhLmAD9' .
-            '8E4lMnq+EbM2XYdhs2alpZ5bovAFojMsYRWwr/BvRO4Um4Fmo9z9sY3DR477TXNYXBR' .
-            'iGXWxSL4u+AWSSePK3qiiYoRQVw',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'null port value',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/ \
-        # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key \
-        # --verbose --verbose
-        #
-        'fuzzing_pkt' =>
-            '94nu7hvq6V/3A27GzjHwfPnPCQfs44ySlraIFYHOAqy5YqjkrBS67nH35tX55N1BrYZ' .
-            '07zvcT03keUhLE1Uo7Wme1nE7BfTOG5stmIK1UQI85sL52//lDHu+xCqNcL7GUKbVRz' .
-            'ekw+EUscVvUkrsRcVtSvOm+fCNo',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'long FKO protocol value (enc mode trigger)',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/22 \
-        # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key --verbose --verbose
-        #
-        # This problem was found by Fernando Arnaboldi of IOActive and is designed
-        # to have fwknopd look for a mode decryption mode for a long Rijndael-
-        # encrypted SPA packet
-        #
-        'fuzzing_pkt' =>
-            '/ewH/k1XsDX+VQ8NlNvCZ4P2QOl/4IpJYXkq4TtAe3899OtApXJiTtPCuYW70XPuxge' .
-            'MtFjc4UfslK/r9v+FYfyd3fIIHCz0Q0M4+nM3agTLmJj8nOxk6ZeBj82SDQWhHAxGdJ' .
-            'IQALPve0ug4cuGxS3b4M+2Q/Av9i2tU3Lzlogw3sY0tk6wGf4zZk4UsviVXYpINniGT' .
-            'RhYSIQ1dfdkng7hKiHMDaObYY1GFp4nxEt/QjasAwvE+7/iFyoKN+IRpGG4v4hGEPh2' .
-            'vTDqmvfRuIHtgFD7NxZjt+m/jjcu0gkdWEoD4fenwGU35FlvchyM2AiAEw7yRzSABfn' .
-            'R9d3sYZGMtyASw2O1vSluwIxUUnDop3gxEIhJEj8h+01pA3K+klSpALeY9EZgHqYC7E' .
-            'ETuPS6dZ3764nWohtCY67JvNUX7TtNDNc2qrhrapdRP17+PT2Vh4s9m38V3WwVWC3uH' .
-            'X/klLZcHIt+aRDV+uekw9GOKSgwFL2ekPpr3gXxigc3zrxel5hcsqLOpVUa4CP/0HkG' .
-            'F0NPQvOT3ZvpeIJnirKP1ZX9gDFinqhuzL7oqktW61e1iwe7KZEdrZV0k2KZwyb8qU5' .
-            'rPAEnw',
-        'server_positive_output_matches' => [qr/No\sstanza\sencryption\smode\smatch/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'long FKO protocol value (Rijndael trigger)',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/22 \
-        # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key --verbose --verbose
-        #
-        # This problem was found by Fernando Arnaboldi of IOActive and is designed
-        # to have fwknopd look for a mode decryption mode for a long Rijndael-
-        # encrypted SPA packet
-        #
-        'fuzzing_pkt' =>
-            '+YQNu4BFgiNeu8HeiBiNKriqCFSseALt9vJaKzkzK/OF4pjkJcvhGEOi7fEVXqn3VIdlGR' .
-            'DmBul2I7H3z18U9E97bWGgT9NexKgEPCuekL18ZEPf5xR3JleNsNWatqYgAOkgN8ZWE69Q' .
-            'qQUYYhxTvJHS6R+5JqFKB3A44hMXoICdYNkn9MAktHxk3PbbpQ+nA+jESwVCra2doAiLiM' .
-            'ucvGIZZiTv0Mc1blFYIE2zqZ/C7ct1V+ukwSkUv0r87eA7uJhmlpThRsL0dN6iekJ6i87B' .
-            'tE8QyuOXzOMftI11SUn/LwqD4RMdR21rvLrzR6ZB5eUX2UBpODyzX6n+PJJkTWCuFVT4z1' .
-            'MKY',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'null proto value',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A /22 \
-        # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key \
-        # --verbose --verbose
-        #
-        'fuzzing_pkt' =>
-            '/JT14qxh9P4iy+CuUZahThaQjoEuL2zd46a+jL6sTrBZJSa6faUX4dH5fte/4ZJv+9f' .
-            'd/diWYKAUvdQ4DydPGlR7mwQa2W+obKpqrsTBz7D4054z6ATAOGpCtifakEVl1XRc2+' .
-            'hW04WpY8mdUNu9i+PrfPr7/KxqU',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'invalid NAT IP',
-        'function' => \&fuzzer,
-        ### this packet was generated with a modified fwknop client via the
-        ### following command line:
-        #
-        # LD_LIBRARY_PATH=../lib/.libs  ../client/.libs/fwknop -A tcp/22 \
-        # -a 127.0.0.2 -D 127.0.0.1 --get-key local_spa.key --verbose \
-        # --verbose -N 999.1.1.1:22
-        'fuzzing_pkt' =>
-            '/v/kYVOqw+NCkg8CNEphPPvH3dOAECWjqiF+NNYnK7yKHer/Gy8wCVNa/Rr/Wnm' .
-            'siApB3jrXEfyEY3yebJV+PHoYIYC3+4Trt2jxw0m+6iR231Ywhw1JetIPwsv7iQ' .
-            'ATvSTpZ+qiaoN0PPfy0+7yM6KlaQIu7bfG5E2a6VJTqTZ1qYz3H7QaJfbAtOD8j' .
-            'yEkDgP5+f49xrRA',
-        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging_nat'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'FUZZING',
-        'subcategory' => 'server',
-        'detail'   => 'invalid SOURCE access.conf',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_source'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'positive_output_matches' => [qr/Fatal\sinvalid/],
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'FUZZING',
-        'subcategory' => 'server',
-        'detail'   => 'invalid OPEN_PORTS access.conf',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_open_ports'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'positive_output_matches' => [qr/Fatal\sinvalid/],
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'FUZZING',
-        'subcategory' => 'server',
-        'detail'   => 'invalid RESTRICT_PORTS access.conf',
-        'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_restrict_ports'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'positive_output_matches' => [qr/Fatal\sinvalid/],
-        'exec_err' => $YES,
-        'fatal'    => $NO
-    },
-
-    ### command execution tests
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'command execution',
-        'function' => \&spa_cmd_exec_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            qq|$fwknopCmd --server-cmd "echo fwknoptest > $cmd_exec_test_file" | .
-            "-a $fake_ip -D $loopback_ip --get-key $local_key_file " .
-            "--verbose --verbose",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'cmd_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'detect replay #2 (Rijndael prefix)',
-        'function' => \&replay_detection,
-        'pkt_prefix' => 'U2FsdGVkX1',
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'server',
-        'detail'   => 'digest cache structure',
-        'function' => \&digest_cache_structure,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'server',
-        'detail'   => 'ipfw active/expire sets not equal',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'ipfw_active_expire'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Cannot\sset\sidentical\sipfw\sactive\sand\sexpire\ssets/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'non-base64 altered SPA data',
-        'function' => \&altered_non_base64_spa_data,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'base64 altered SPA data',
-        'function' => \&altered_base64_spa_data,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'appended data to SPA pkt',
-        'function' => \&appended_spa_data,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => 'prepended data to SPA pkt',
-        'function' => \&prepended_spa_data,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-
-    ### perl module checks
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'compile/install',
-        'detail'   => 'to: ./FKO',
-        'function' => \&perl_fko_module_compile_install,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'generate invalid SPA pkts',
-        'function' => \&perl_fko_module_assume_patches_generate_fuzzing_spa_packets,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'FUZZING',
-        'detail'   => 'generate invalid encoded pkts',
-        'function' => \&perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'create/destroy FKO object',
-        'function' => \&perl_fko_module_new_object,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'create/destroy 1000 FKO objects',
-        'function' => \&perl_fko_module_new_objects_1000,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko version',
-        'function' => \&perl_fko_module_version,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko get random data',
-        'function' => \&perl_fko_module_rand,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko get/set username',
-        'function' => \&perl_fko_module_user,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko timestamp',
-        'function' => \&perl_fko_module_timestamp,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko get/set msg types',
-        'function' => \&perl_fko_module_msg_types,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko get/set access msgs',
-        'function' => \&perl_fko_module_access_msgs,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko get/set NAT access msgs',
-        'function' => \&perl_fko_module_nat_access_msgs,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko get/set cmd msgs',
-        'function' => \&perl_fko_module_cmd_msgs,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'basic ops',
-        'detail'   => 'libfko get/set client timeout',
-        'function' => \&perl_fko_module_client_timeout,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'encrypt/decrypt',
-        'detail'   => 'libfko complete cycle',
-        'function' => \&perl_fko_module_complete_cycle,
-        'set_legacy_iv' => $NO,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'encrypt/decrypt',
-        'detail'   => 'libfko complete cycle (lIV)',
-        'function' => \&perl_fko_module_complete_cycle,
-        'set_legacy_iv' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'encrypt/decrypt',
-        'detail'   => 'truncated keys',
-        'function' => \&perl_fko_module_rijndael_truncated_keys,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'encrypt/decrypt',
-        'detail'   => 'complete cycle (mod reuse)',
-        'function' => \&perl_fko_module_complete_cycle_module_reuse,
-        'set_legacy_iv' => $NO,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'encrypt/decrypt',
-        'detail'   => 'complete cycle (mod reuse, lIV)',
-        'function' => \&perl_fko_module_complete_cycle_module_reuse,
-        'set_legacy_iv' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'fuzzing data',
-        'detail'   => 'legacy IV REPLPKTS',
-        'function' => \&perl_fko_module_full_fuzzing_packets,
-        'set_legacy_iv' => $YES,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'fuzzing data',
-        'detail'   => 'non-legacy IV REPLPKTS',
-        'function' => \&perl_fko_module_full_fuzzing_packets,
-        'set_legacy_iv' => $NO,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'compatibility',
-        'detail'   => 'client FKO -> C server',
-        'function' => \&perl_fko_module_client_compatibility,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'compatibility',
-        'detail'   => 'FKO -> C invalid legacy IV',
-        'function' => \&perl_fko_module_client_compatibility,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file " .
-            "$intf_str",
-        'server_positive_output_matches' => [qr/Decryption failed/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'perl FKO module',
-        'subcategory' => 'compatibility',
-        'detail'   => 'FKO -> C valid legacy IV',
-        'function' => \&perl_fko_module_client_compatibility,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
-            "-d $default_digest_file -p $default_pid_file " .
-            "$intf_str",
-        'set_legacy_iv' => $YES,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    ### no password GPG testing
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
-            "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
-            "-d $default_digest_file -p $default_pid_file",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/23 telnet)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/9418 git)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/60001)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (udp/53 dns)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'replay attack detection',
-        'function' => \&replay_detection,
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'detect replay #1 (GnuPG prefix)',
-        'function' => \&replay_detection,
-        'pkt_prefix' => 'hQ',
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'non-base64 altered SPA data',
-        'function' => \&altered_non_base64_spa_data,
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'base64 altered SPA data',
-        'function' => \&altered_base64_spa_data,
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'appended data to SPA pkt',
-        'function' => \&appended_spa_data,
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'prepended data to SPA pkt',
-        'function' => \&prepended_spa_data,
-        'cmdline'  => "$default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG (no pw)',
-        'subcategory' => 'client+server',
-        'detail'   => 'spoof username (tcp/22 ssh)',
-        'function' => \&spoof_username,
-        'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args_no_homedir "
-            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
-        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
-    },
-
-    ### GPG testing (with passwords associated with keys) - first check to
-    ### see if pinentry is required and disable remaining GPG tests if so
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'pinentry not required',
-        'function' => \&gpg_pinentry_check,
-        'cmdline'  => $default_client_gpg_args,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'rc file default key (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_gpg_args_no_get_key " .
-            "--rc-file $cf{'rc_def_key'}",
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_def_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'rc file named key (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_gpg_args_no_get_key " .
-            "--rc-file $cf{'rc_named_key'} -n testssh",
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_named_key'},
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
-            "-a $cf{'multi_gpg_access'} $intf_str " .
-            "-d $default_digest_file -p $default_pid_file",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/23 telnet)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir",
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/9418 git)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir",
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (tcp/60001)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir",
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'complete cycle (udp/53 dns)',
-        'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose " .
-            "--gpg-recipient-key $gpg_server_key " .
-            "--gpg-signer-key $gpg_client_key " .
-            "--gpg-home-dir $gpg_client_home_dir",
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
-    },
-
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'replay attack detection',
-        'function' => \&replay_detection,
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'detect replay #2 (GnuPG prefix)',
-        'function' => \&replay_detection,
-        'pkt_prefix' => 'hQ',
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'detect replay #3 (GnuPG prefix)',
-        'function' => \&replay_detection,
-        'pkt_prefix' => 'hQ',
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
-    },
-
-
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'non-base64 altered SPA data',
-        'function' => \&altered_non_base64_spa_data,
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'base64 altered SPA data',
-        'function' => \&altered_base64_spa_data,
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'appended data to SPA pkt',
-        'function' => \&appended_spa_data,
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'prepended data to SPA pkt',
-        'function' => \&prepended_spa_data,
-        'cmdline'  => $default_client_gpg_args,
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'client+server',
-        'detail'   => 'spoof username (tcp/22 ssh)',
-        'function' => \&spoof_username,
-        'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args",
-        'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
-    },
-    {
-        'category' => 'GPG',
-        'subcategory' => 'server',
-        'detail'   => 'digest cache structure',
-        'function' => \&digest_cache_structure,
-        'fatal'    => $NO
-    },
+    @build_security_client,
+    @build_security_server,
+    @build_security_libfko,
+    @preliminaries,
+    @basic_operations,
+    @rijndael,
+    @rijndael_cmd_exec,
+    @rijndael_replay_attacks,
+    @rijndael_backwards_compatibility,
+    @rijndael_fuzzing,
+    @rijndael_hmac,
+    @perl_FKO_module,
+    @gpg_no_pw,
+    @gpg,
 );
 
 my %test_keys = (
@@ -3066,7 +429,6 @@ my %test_keys = (
 ### make sure no fwknopd instance is currently running
 die "[*] Please stop the running fwknopd instance."
     if &is_fwknopd_running();
-
 
 &logr("\n[+] Starting the fwknop test suite...\n\n" .
     "    args: @args_cp\n\n"
@@ -3163,9 +525,9 @@ if ($enable_openssl_compatibility_tests) {
 }
 if ($fuzzing_ctr > 0) {
     &logr("[+] $fuzzing_success_ctr/$fuzzing_failure_ctr/$fuzzing_ctr " .
-        "Fuzzing tests passed/failed/executed\n");
+        "Fuzzing test passed/failed/executed\n");
 }
-&logr("[+] $passed/$failed/$executed tests passed/failed/executed\n\n");
+&logr("[+] $passed/$failed/$executed test buckets passed/failed/executed\n\n");
 
 copy $logfile, "$output_dir/$logfile" or die $!;
 
@@ -4340,6 +1702,7 @@ sub valid_encryption_keys() {
         '$',
         '!@#$%',
         'asdfasdfsafsdaf',
+        'asdfasdfsafsdafasdfasdfsafsdaf',
     );
     return \@keys;
 }
@@ -4623,7 +1986,15 @@ sub perl_fko_module_complete_cycle() {
     for my $msg (@{valid_access_messages()}) {
         for my $user (@{valid_usernames()}) {
             for my $digest_type (@{valid_spa_digest_types()}) {
-                for my $key (@{valid_encryption_keys()}) {
+                KEY: for my $key (@{valid_encryption_keys()}) {
+
+                    if ($test_hr->{'set_legacy_iv'} eq $YES
+                            and (length($key) > 16)) {
+                        &write_test_file("[.] Legacy IV mode is set, " .
+                            "skipping long key '$key'.\n",
+                            $curr_test_file);
+                        next KEY;
+                    }
 
                     &write_test_file("[+] msg: $msg, user: $user, " .
                         "digest type: $digest_type, key: $key\n",
@@ -4692,7 +2063,15 @@ sub perl_fko_module_complete_cycle_module_reuse() {
     for my $msg (@{valid_access_messages()}) {
         for my $user (@{valid_usernames()}) {
             for my $digest_type (@{valid_spa_digest_types()}) {
-                for my $key (@{valid_encryption_keys()}) {
+                KEY: for my $key (@{valid_encryption_keys()}) {
+
+                    if ($test_hr->{'set_legacy_iv'} eq $YES
+                            and (length($key) > 16)) {
+                        &write_test_file("[.] Legacy IV mode is set, " .
+                            "skipping long key '$key'.\n",
+                            $curr_test_file);
+                        next KEY;
+                    }
 
                     &write_test_file("[+] msg: $msg, user: $user, " .
                         "digest type: $digest_type, key: $key\n",
@@ -6744,6 +4123,21 @@ sub validate_test_hashes() {
         }
         $hash_num++;
     }
+
+    ### make sure test message strings are unique across all tests
+    my %uniq_test_msgs = ();
+    for my $test_hr (@tests) {
+        my $msg = "[$test_hr->{'category'}]";
+        $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
+        $msg .= " $test_hr->{'detail'}";
+        if (defined $uniq_test_msgs{$msg}) {
+            die "[*] Duplicate test message: $msg\n";
+        } else {
+            $uniq_test_msgs{$msg} = '';
+        }
+    }
+
+
     return;
 }
 
@@ -6809,19 +4203,6 @@ sub init() {
     if ($test_exclude) {
         for my $re (split /\s*,\s*/, $test_exclude) {
             push @tests_to_exclude, qr/$re/;
-        }
-    }
-
-    ### make sure test message strings are unique across all tests
-    my %uniq_test_msgs = ();
-    for my $test_hr (@tests) {
-        my $msg = "[$test_hr->{'category'}]";
-        $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
-        $msg .= " $test_hr->{'detail'}";
-        if (defined $uniq_test_msgs{$msg}) {
-            die "[*] Duplicate test message: $msg\n";
-        } else {
-            $uniq_test_msgs{$msg} = '';
         }
     }
 
@@ -7334,6 +4715,15 @@ sub find_command() {
     }
     close C;
     return $path;
+}
+
+sub import_test_files() {
+    for my $file (@test_files) {
+        die "[*] tests file: $file does not exist"
+            unless -e $file;
+        require $file or die "[*] Could not 'require $file': $!";
+    }
+    return;
 }
 
 sub write_test_file() {
