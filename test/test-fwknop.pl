@@ -925,7 +925,7 @@ sub client_send_spa_packet() {
                 $is_hmac_type = 0;
             } elsif (/^\s+HMAC\:\s(\S+)/) {
                 $hmac_digest = $1;
-            } elsif (/^\s+HMAC\sType\:\s\d+\((\S+)\)/) {
+            } elsif (/^\s+HMAC\sType\:\s\d+\s\((\S+)\)/) {
                 $hmac_mode = lc($1);
             }
         }

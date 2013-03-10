@@ -432,7 +432,7 @@ main(int argc, char **argv)
          * options, then decode it.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            0, enc_mode, hmac_key, hmac_key_len);
+            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -970,7 +970,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
 
     if (use_hmac)
     {
-        res = fko_set_hmac_type(ctx, FKO_HMAC_SHA256);
+        res = fko_set_hmac_type(ctx, options->hmac_type);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_hmac_type", res);

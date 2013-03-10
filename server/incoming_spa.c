@@ -137,7 +137,7 @@ get_raw_digest(char **digest, char *pkt_data)
      * we can get the outer message digest
     */
     res = fko_new_with_data(&ctx, (char *)pkt_data, NULL, 0,
-            FKO_DEFAULT_ENC_MODE, NULL, 0);
+            FKO_DEFAULT_ENC_MODE, NULL, 0, 0);
     if(res != FKO_SUCCESS)
     {
         log_msg(LOG_WARNING, "Error initializing FKO context from SPA data: %s",
@@ -397,7 +397,7 @@ incoming_spa(fko_srv_options_t *opts)
 
             res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data,
                 acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
-                acc->hmac_key_len);
+                acc->hmac_key_len, acc->hmac_type);
         }
         else if(acc->use_gpg && enc_type == FKO_ENCRYPTION_GPG)
         {
@@ -407,7 +407,7 @@ incoming_spa(fko_srv_options_t *opts)
             if(acc->gpg_decrypt_pw != NULL || acc->gpg_allow_no_pw)
             {
                 res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
-                        0, acc->encryption_mode, NULL, 0);
+                        0, acc->encryption_mode, NULL, 0, 0);
                 if(res != FKO_SUCCESS)
                 {
                     log_msg(LOG_WARNING,

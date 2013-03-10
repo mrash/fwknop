@@ -140,9 +140,10 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle MD5 (tcp/22 ssh)',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m md5",
+        'cmdline'  => "$default_client_hmac_args --hmac-digest-type md5",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_md5_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
@@ -153,9 +154,10 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA1 (tcp/22 ssh)',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha1",
+        'cmdline'  => "$default_client_hmac_args --hmac-digest-type sha1",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha1_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
@@ -166,7 +168,7 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA256 (tcp/22 ssh)',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha256",
+        'cmdline'  => "$default_client_hmac_args --hmac-digest-type sha256",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -179,9 +181,10 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA384 (tcp/22 ssh)',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha384",
+        'cmdline'  => "$default_client_hmac_args --hmac-digest-type sha384",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha384_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
@@ -192,9 +195,10 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA512 (tcp/22 ssh)',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -m sha512",
+        'cmdline'  => "$default_client_hmac_args --hmac-digest-type sha512",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha512_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
@@ -205,8 +209,8 @@
         'subcategory' => 'client',
         'detail'   => 'validate digest type arg',
         'function' => \&generic_exec,
-        'cmdline'  => "$default_client_hmac_args -m invaliddigest",
-        'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
+        'cmdline'  => "$default_client_hmac_args --hmac-digest-type invaliddigest",
+        'positive_output_matches' => [qr/Invalid\shmac\sdigest\stype/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
