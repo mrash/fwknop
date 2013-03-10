@@ -54,6 +54,15 @@ static PyObject * get_spa_data(PyObject *self, PyObject *args);
 static PyObject * set_spa_data(PyObject *self, PyObject *args);
 static PyObject * get_encoded_data(PyObject *self, PyObject *args);
 
+static PyObject * get_raw_spa_digest_type(PyObject *self, PyObject *args);
+static PyObject * set_raw_spa_digest_type(PyObject *self, PyObject *args);
+static PyObject * get_raw_spa_digest(PyObject *self, PyObject *args);
+static PyObject * set_raw_spa_digest(PyObject *self, PyObject *args);
+static PyObject * get_spa_encryption_mode(PyObject *self, PyObject *args);
+static PyObject * set_spa_encryption_mode(PyObject *self, PyObject *args);
+static PyObject * get_spa_hmac_type(PyObject *self, PyObject *args);
+static PyObject * set_spa_hmac_type(PyObject *self, PyObject *args);
+
 /* FKO other utility Functions.
 */
 static PyObject * spa_data_final(PyObject *self, PyObject *args);
@@ -61,6 +70,14 @@ static PyObject * decrypt_spa_data(PyObject *self, PyObject *args);
 static PyObject * encrypt_spa_data(PyObject *self, PyObject *args);
 static PyObject * decode_spa_data(PyObject *self, PyObject *args);
 static PyObject * encode_spa_data(PyObject *self, PyObject *args);
+
+static PyObject * encryption_type(PyObject *self, PyObject *args);
+static PyObject * key_gen(PyObject *self, PyObject *args);
+static PyObject * base64_encode(PyObject *self, PyObject *args);
+static PyObject * base64_decode(PyObject *self, PyObject *args);
+static PyObject * verify_hmac(PyObject *self, PyObject *args);
+static PyObject * calculate_hmac(PyObject *self, PyObject *args);
+static PyObject * get_hmac_data(PyObject *self, PyObject *args);
 
 /* FKO GPG-related Functions.
 */
@@ -83,9 +100,10 @@ static PyObject * get_gpg_signature_status(PyObject *self, PyObject *args);
 static PyObject * gpg_signature_id_match(PyObject *self, PyObject *args);
 static PyObject * gpg_signature_fpr_match(PyObject *self, PyObject *args);
 
-/* FKO error message function.
+/* FKO error message functions.
 */
 static PyObject * errstr(PyObject *self, PyObject *args);
+static PyObject * gpg_errstr(PyObject *self, PyObject *args);
 
 static PyMethodDef FKOMethods[] = {
     {"init_ctx",  init_ctx, METH_VARARGS,
@@ -148,6 +166,23 @@ static PyMethodDef FKOMethods[] = {
     {"get_encoded_data",  get_encoded_data, METH_VARARGS,
      "Returns the encoded_data string for this context"},
 
+//--DSS
+    {"get_raw_spa_digest_type", get_raw_spa_digest_type, METH_VARARGS,
+     "Returns the raw spa_digest_type value for this context"},
+    {"set_raw_spa_digest_type", set_raw_spa_digest_type, METH_VARARGS,
+     "Sets the raw_spa_digest_type string for this context"},
+    {"get_raw_spa_digest", get_raw_spa_digest, METH_VARARGS,
+     "Returns the raw spa_digest value for this context"},
+    {"set_raw_spa_digest", set_raw_spa_digest, METH_VARARGS,
+     "Sets the raw_spa_digest string for this context"},
+    {"get_spa_encryption_mode", get_spa_encryption_mode, METH_VARARGS,
+     "Returns the raw spa_encryption_mode value for this context"},
+    {"set_spa_encryption_mode", set_spa_encryption_mode, METH_VARARGS,
+     "Sets the set_spa_encryption_mode string for this context"},
+    {"get_spa_hmac_type", get_spa_hmac_type, METH_VARARGS,
+     "Returns the raw spa_hmac_type value for this context"},
+    {"set_spa_hmac_type", set_spa_hmac_type, METH_VARARGS,
+     "Sets the spa_hmac_type string for this context"},
 
     {"spa_data_final",  spa_data_final, METH_VARARGS,
      "Recalculate and recreate the SPA data for the current context"},
@@ -160,6 +195,21 @@ static PyMethodDef FKOMethods[] = {
     {"encode_spa_data",  encode_spa_data, METH_VARARGS,
      "Encode the current context raw data to prepare for encryption"},
 
+//--DSS
+    {"encryption_type", encryption_type, METH_VARARGS,
+     "Return the assumed encryption type based on the encryptped data"},
+    {"key_gen", key_gen, METH_VARARGS,
+     "Generate Rijndael and HMAC keys and base64 encode them"},
+    {"base64_encode", base64_encode, METH_VARARGS,
+     "Base64 encode function"},
+    {"base64_decode", base64_decode, METH_VARARGS,
+     "Base64 decode function"},
+    {"verify_hmac", verify_hmac, METH_VARARGS,
+     "Generate HMAC for the data and verify it against the HMAC included with the data"},
+    {"calculate_hmac", calculate_hmac, METH_VARARGS,
+     "Calculate the HMAC for the given data"},
+    {"get_hmac_data", get_hmac_data, METH_VARARGS,
+     "Return the HMAC for the data in the current context"},
 
     {"get_gpg_recipient",  get_gpg_recipient, METH_VARARGS,
      "Returns the gpg_recipient string for this context"},
@@ -201,6 +251,8 @@ static PyMethodDef FKOMethods[] = {
 
     {"errstr",  errstr, METH_VARARGS,
      "Returns the error message for the given error code"},
+    {"gpg_errstr", gpg_errstr, METH_VARARGS,
+     "Returns the GPG error message for the given error code"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -245,6 +297,7 @@ init_ctx(PyObject *self, PyObject *args)
     return Py_BuildValue("k", ctx);
 }
 
+
 /* init_ctx_with_data
 */
 static PyObject *
@@ -252,13 +305,19 @@ init_ctx_with_data(PyObject *self, PyObject *args)
 {
     fko_ctx_t ctx;
     char *spa_data;
-    char *key;
+    char *dec_key;
+    int dec_key_len;
+    int enc_mode;
+    char *hmac_key;
+    int hmac_key_len;
     int res;
 
-    if(!PyArg_ParseTuple(args, "sz", &spa_data, &key))
+    if(!PyArg_ParseTuple(args, "ss#is#", &spa_data, &dec_key, &dec_key_len,
+                         &enc_mode, &hmac_key, &hmac_key_len))
         return NULL;
 
-    res = fko_new_with_data(&ctx, spa_data, key);
+    res = fko_new_with_data(&ctx, spa_data, dec_key, dec_key_len, enc_mode,
+                            hmac_key, hmac_key_len);
 
     if(res != FKO_SUCCESS)
     {
@@ -884,6 +943,172 @@ get_encoded_data(PyObject *self, PyObject *args)
     return Py_BuildValue("s", encoded_data);
 }
 
+static PyObject *
+get_raw_spa_digest_type(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    short raw_digest_type;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "k", &ctx))
+        return NULL;
+
+    res = fko_get_raw_spa_digest_type(ctx, &raw_digest_type);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("h", raw_digest_type);
+}
+
+static PyObject *
+set_raw_spa_digest_type(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    short raw_digest_type;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "kh", &ctx, &raw_digest_type))
+        return NULL;
+
+    res = fko_set_raw_spa_digest_type(ctx, raw_digest_type);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("", NULL);
+}
+
+static PyObject *
+get_raw_spa_digest(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    char *raw_spa_digest;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "k", &ctx))
+        return NULL;
+
+    res = fko_get_raw_spa_digest(ctx, &raw_spa_digest);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("s", raw_spa_digest);
+}
+
+static PyObject *
+set_raw_spa_digest(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "k", &ctx))
+        return NULL;
+
+    res = fko_set_raw_spa_digest(ctx);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("", NULL);
+}
+
+static PyObject *
+get_spa_encryption_mode(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    int encryption_mode;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "k", &ctx))
+        return NULL;
+
+    res = fko_get_spa_encryption_mode(ctx, &encryption_mode);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("h", encryption_mode);
+}
+
+static PyObject *
+set_spa_encryption_mode(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    int encryption_mode;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "kh", &ctx, &encryption_mode))
+        return NULL;
+
+    res = fko_set_spa_encryption_mode(ctx, encryption_mode);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("", NULL);
+}
+
+static PyObject *
+get_spa_hmac_type(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    short hmac_type;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "k", &ctx))
+        return NULL;
+
+    res = fko_get_spa_hmac_type(ctx, &hmac_type);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("h", hmac_type);
+}
+
+static PyObject *
+set_spa_hmac_type(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    short hmac_type;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "kh", &ctx, &hmac_type))
+        return NULL;
+
+    res = fko_set_spa_hmac_type(ctx, hmac_type);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("", NULL);
+}
 
 /*****************************************************************************
  * FKO other utility functions.
@@ -894,13 +1119,18 @@ static PyObject *
 spa_data_final(PyObject *self, PyObject *args)
 {
     fko_ctx_t ctx;
-    char *key;
+    char *enc_key;
+    int enc_key_len;
+    char *hmac_key;
+    int hmac_key_len;
     int res;
 
-    if(!PyArg_ParseTuple(args, "ks", &ctx, &key))
+    if(!PyArg_ParseTuple(args, "ks#s#", &ctx, &enc_key, &enc_key_len,
+                         &hmac_key, &hmac_key_len))
         return NULL;
 
-    res = fko_spa_data_final(ctx, key);
+    res = fko_spa_data_final(ctx, enc_key, enc_key_len,
+                             hmac_key, hmac_key_len);
 
     if(res != FKO_SUCCESS)
     {
@@ -918,12 +1148,13 @@ decrypt_spa_data(PyObject *self, PyObject *args)
 {
     fko_ctx_t ctx;
     char *key;
+    int key_len;
     int res;
 
-    if(!PyArg_ParseTuple(args, "ks", &ctx, &key))
+    if(!PyArg_ParseTuple(args, "ks#", &ctx, &key, &key_len))
         return NULL;
 
-    res = fko_decrypt_spa_data(ctx, key);
+    res = fko_decrypt_spa_data(ctx, key, key_len);
 
     if(res != FKO_SUCCESS)
     {
@@ -941,12 +1172,13 @@ encrypt_spa_data(PyObject *self, PyObject *args)
 {
     fko_ctx_t ctx;
     char *key;
+    int key_len;
     int res;
 
-    if(!PyArg_ParseTuple(args, "ks", &ctx, &key))
+    if(!PyArg_ParseTuple(args, "ks#", &ctx, &key, &key_len))
         return NULL;
 
-    res = fko_encrypt_spa_data(ctx, key);
+    res = fko_encrypt_spa_data(ctx, key, key_len);
 
     if(res != FKO_SUCCESS)
     {
@@ -1001,6 +1233,143 @@ encode_spa_data(PyObject *self, PyObject *args)
     return Py_BuildValue("", NULL);
 }
 
+static PyObject *
+encryption_type(PyObject *self, PyObject *args)
+{
+    char *spa_data;
+    int enc_type;
+
+    if(!PyArg_ParseTuple(args, "s", &spa_data))
+        return NULL;
+
+    enc_type = fko_encryption_type(spa_data);
+
+    return Py_BuildValue("i", enc_type);
+}
+
+static PyObject *
+key_gen(PyObject *self, PyObject *args)
+{
+    char *key_b64;
+    int key_b64_len;
+    char *hmac_key_b64;
+    int hmac_key_b64_len;
+    int hmac_type;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "s#s#i", &key_b64, &key_b64_len,
+                         &hmac_key_b64, &hmac_key_b64_len, &hmac_type))
+        return NULL;
+
+    res = fko_key_gen(key_b64, key_b64_len, hmac_key_b64, hmac_key_b64_len,
+                      hmac_type);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("", NULL);
+}
+
+static PyObject *
+base64_encode(PyObject *self, PyObject *args)
+{
+    unsigned char *in;
+    int in_len;
+    char *out;
+    int res;
+
+    /* --DSS Note the order of args is different than the libfko call.
+             We need to do this for the following parse call. */
+    if(!PyArg_ParseTuple(args, "s#s", &in, &in_len, &out))
+        return NULL;
+
+    res = fko_base64_encode(in, out, in_len);
+
+    return Py_BuildValue("s", out);
+}
+
+static PyObject *
+base64_decode(PyObject *self, PyObject *args)
+{
+    char *in;
+    unsigned char *out;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "ss", &in, &out))
+        return NULL;
+
+    res = fko_base64_decode(in, out);
+
+    return Py_BuildValue("s#", out, res);
+}
+
+static PyObject *
+verify_hmac(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    char *hmac_key;
+    int hmac_key_len;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "ks#", &ctx, &hmac_key, &hmac_key_len))
+        return NULL;
+
+    res = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("", NULL);
+}
+
+static PyObject *
+calculate_hmac(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    char *hmac_key;
+    int hmac_key_len;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "ks#", &ctx, &hmac_key, &hmac_key_len))
+        return NULL;
+
+    res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("", NULL);
+}
+
+static PyObject *
+get_hmac_data(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    char *enc_data;
+    int res;
+
+    if(!PyArg_ParseTuple(args, "k", &ctx))
+        return NULL;
+
+    res = fko_get_hmac_data(ctx, &enc_data);
+
+    if(res != FKO_SUCCESS)
+    {
+        PyErr_SetString(FKOError, fko_errstr(res));
+        return NULL;
+    }
+
+    return Py_BuildValue("s", enc_data);
+}
 
 /*****************************************************************************
  * FKO GPG-related functions.
@@ -1437,6 +1806,22 @@ errstr(PyObject *self, PyObject *args)
         return NULL;
 
     errmsg = fko_errstr(res);
+
+    return Py_BuildValue("s", errmsg);
+}
+
+/* gpg_errstr
+*/
+static PyObject *
+gpg_errstr(PyObject *self, PyObject *args)
+{
+    fko_ctx_t ctx;
+    const char *errmsg;
+
+    if(!PyArg_ParseTuple(args, "k", &ctx))
+        return NULL;
+
+    errmsg = fko_gpg_errstr(ctx);
 
     return Py_BuildValue("s", errmsg);
 }

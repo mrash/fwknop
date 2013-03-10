@@ -970,10 +970,10 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
 
     if (use_hmac)
     {
-        res = fko_set_hmac_type(ctx, FKO_HMAC_SHA256);
+        res = fko_set_spa_hmac_type(ctx, FKO_HMAC_SHA256);
         if(res != FKO_SUCCESS)
         {
-            errmsg("fko_set_hmac_type", res);
+            errmsg("fko_set_spa_hmac_type", res);
             exit(EXIT_FAILURE);
         }
     }

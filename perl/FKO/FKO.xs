@@ -184,7 +184,7 @@ _set_hmac_type(ctx, hmac_type)
     fko_ctx_t ctx;
     short    hmac_type;
     CODE:
-    RETVAL = fko_set_hmac_type(ctx, hmac_type);
+    RETVAL = fko_set_spa_hmac_type(ctx, hmac_type);
     OUTPUT:
     RETVAL
 

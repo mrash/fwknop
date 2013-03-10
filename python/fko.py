@@ -61,16 +61,42 @@ FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG = 6
 
 """Digest type constants
 """
+FKO_DIGEST_INVALID_DATA = -1
+FKO_DIGEST_UNKNOWN = 0
 FKO_DIGEST_MD5 = 1
 FKO_DIGEST_SHA1 = 2
 FKO_DIGEST_SHA256 = 3
 FKO_DIGEST_SHA384 = 4
 FKO_DIGEST_SHA512 = 5
 
+"""Digest type constants
+"""
+FKO_HMAC_INVALID_DATA = -1
+FKO_HMAC_UNKNOWN = 0
+FKO_HMAC_MD5 = 1
+FKO_HMAC_SHA1 = 2
+FKO_HMAC_SHA256 = 3
+FKO_HMAC_SHA384 = 4
+FKO_HMAC_SHA512 = 5
+
 """Encryption type constants
 """
+FKO_ENCRYPTION_INVALID_DATA = -1
+FKO_ENCRYPTION_UNKNOWN = 0
 FKO_ENCRYPTION_RIJNDAEL = 1
 FKO_ENCRYPTION_GPG = 2
+
+"""Symmetric encryption modes to correspond to rijndael.h
+"""
+FKO_ENC_MODE_UNKNOWN = 0
+FKO_ENC_MODE_ECB = 1
+FKO_ENC_MODE_CBC = 2
+FKO_ENC_MODE_CFB = 3
+FKO_ENC_MODE_PCBC = 4
+FKO_ENC_MODE_OFB = 5
+FKO_ENC_MODE_CTR = 6
+FKO_ENC_MODE_ASYMMETRIC = 7
+FKO_ENC_MODE_CBC_LEGACY_IV = 8
 
 """FKO error codes
 """
@@ -93,35 +119,36 @@ FKO_ERROR_WRONG_ENCRYPTION_TYPE = 15
 FKO_ERROR_DECRYPTION_SIZE = 16
 FKO_ERROR_DECRYPTION_FAILURE = 17
 FKO_ERROR_DIGEST_VERIFICATION_FAILED = 18
-FKO_ERROR_UNSUPPORTED_FEATURE = 19
-FKO_ERROR_UNKNOWN = 20
+FKO_UNSUPPOERTED_HMAC_MODE = 19
+FKO_ERROR_UNSUPPORTED_FEATURE = 20
+FKO_ERROR_UNKNOWN = 21
 # Start GPGME-related errors
-GPGME_ERR_START = 21
-FKO_ERROR_MISSING_GPG_KEY_DATA = 22
-FKO_ERROR_GPGME_NO_OPENPGP = 23
-FKO_ERROR_GPGME_CONTEXT = 24
-FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ = 25
-FKO_ERROR_GPGME_SET_PROTOCOL = 26
-FKO_ERROR_GPGME_CIPHER_DATA_OBJ = 27
-FKO_ERROR_GPGME_BAD_PASSPHRASE = 28
-FKO_ERROR_GPGME_ENCRYPT_SIGN = 29
-FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY = 30
-FKO_ERROR_GPGME_SIGNER_KEYLIST_START = 31
-FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND = 32
-FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS = 33
-FKO_ERROR_GPGME_ADD_SIGNER = 34
-FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY = 35
-FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START = 36
-FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND = 37
-FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS = 38
-FKO_ERROR_GPGME_DECRYPT_FAILED = 39
-FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM = 40
-FKO_ERROR_GPGME_BAD_GPG_EXE = 41
-FKO_ERROR_GPGME_BAD_HOME_DIR = 42
-FKO_ERROR_GPGME_SET_HOME_DIR = 43
-FKO_ERROR_GPGME_NO_SIGNATURE = 44
-FKO_ERROR_GPGME_BAD_SIGNATURE = 45
-FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED = 46
+GPGME_ERR_START = 22
+FKO_ERROR_MISSING_GPG_KEY_DATA = 23
+FKO_ERROR_GPGME_NO_OPENPGP = 24
+FKO_ERROR_GPGME_CONTEXT = 25
+FKO_ERROR_GPGME_PLAINTEXT_DATA_OBJ = 26
+FKO_ERROR_GPGME_SET_PROTOCOL = 27
+FKO_ERROR_GPGME_CIPHER_DATA_OBJ = 28
+FKO_ERROR_GPGME_BAD_PASSPHRASE = 29
+FKO_ERROR_GPGME_ENCRYPT_SIGN = 30
+FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY = 31
+FKO_ERROR_GPGME_SIGNER_KEYLIST_START = 32
+FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND = 33
+FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS = 34
+FKO_ERROR_GPGME_ADD_SIGNER = 35
+FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY = 36
+FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START = 37
+FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND = 38
+FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS = 39
+FKO_ERROR_GPGME_DECRYPT_FAILED = 40
+FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM = 41
+FKO_ERROR_GPGME_BAD_GPG_EXE = 42
+FKO_ERROR_GPGME_BAD_HOME_DIR = 43
+FKO_ERROR_GPGME_SET_HOME_DIR = 44
+FKO_ERROR_GPGME_NO_SIGNATURE = 45
+FKO_ERROR_GPGME_BAD_SIGNATURE = 46
+FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED = 47
 
 ### End FKO Constants ###
 
@@ -423,7 +450,51 @@ class Fko:
         """
         return _fko.get_encoded_data(self.ctx)
 
-    def spa_data_final(self, key):
+    def raw_spa_digest_type(self, val=None):
+        """Get or set the raw spa_digest_type
+
+        This is an integer value. If no argument is given, the current value
+        is returned.  Otherwise, the SPA message client timeout value will
+        be set to the given value.
+        """
+        if val != None:
+            _fko.set_raw_spa_digest_type(self.ctx, val)
+        else:
+            return _fko.get_raw_spa_digest_type(self.ctx)
+
+    def raw_spa_digest(self, val=None):
+        """Get or set the raw spa_digest_type
+        """
+        if val != None:
+            _fko.set_raw_spa_digest(self.ctx, val)
+        else:
+            return _fko.get_raw_spa_digest(self.ctx)
+
+    def spa_encryption_mode(self, val=None):
+        """Get or set the spa_encryption mode
+
+        This is an integer value. If no argument is given, the current value
+        is returned.  Otherwise, the SPA message client timeout value will
+        be set to the given value.
+        """
+        if val != None:
+            _fko.set_spa_encryption_mode(self.ctx, val)
+        else:
+            return _fko.get_spa_encryption_mode(self.ctx)
+
+    def spa_hmac_type(self, val=None):
+        """Get or set the spa_hmac_type
+
+        This is an integer value. If no argument is given, the current value
+        is returned.  Otherwise, the SPA message client timeout value will
+        be set to the given value.
+        """
+        if val != None:
+            _fko.set_spa_hmac_type(self.ctx, val)
+        else:
+            return _fko.get_spa_hmac_type(self.ctx)
+
+    def spa_data_final(self, key, hmac_key):
         """Perform final processing and generation of the SPA message data.
 
         This function is the final step in creating a complete encrypted
@@ -431,7 +502,7 @@ class Fko:
         does require all of the requisite SPA data fields be set. Otherwise,
         it will fail and throw an fko.error exception.
         """
-        _fko.spa_data_final(self.ctx, key)
+        _fko.spa_data_final(self.ctx, key, hmac_key)
 
     def gen_spa_data(self, key):
         """Alias for "spa_data_final()".
@@ -492,6 +563,44 @@ class Fko:
         decrypt and decode the data at that time.
         """
         _fko.decrypt_spa_data(self.ctx, key)
+
+# --DSS
+
+    def encryption_type(self, enc_data):
+        """Return the assumed encryption type based on the encryptped data
+        """
+        _fko.encryption_type(enc_data)
+
+    def key_gen(self, keyb64, hmac_keyb64):
+        """Generate Rijndael and HMAC keys and base64 encode them
+        """
+        _fko.key_gen(keyb64, hmac_keyb64)
+
+    def base64_encode(self, indata):
+        """Base64 encode function
+        """
+        _fko.base64_encode(indata)
+
+    def base64_decode(self, indata):
+        """Base64 decode function
+        """
+        _fko.base64_decode(indata)
+
+    def verify_hmac(self, hmac_key):
+        """Generate HMAC for the data and verify it against the HMAC included with the data
+        """
+        _fko.verify_hmac(self.ctx, hmac_key)
+
+    def calculate_hmac(self, hmac_key):
+        """Calculate the HMAC for the given data
+        """
+        _fko.calculate_hmac(self.ctx, hmac_key)
+
+    def get_hmac_data(self):
+        """Return the HMAC for the data in the current context
+        """
+        _fko.get_hmac_data(self.ctx)
+
 
     # GPG-related functions.
 
@@ -637,6 +746,11 @@ class Fko:
             return True
         return False
 
+    def gpg_errstr(self):
+        """Return the last GPG-related error on the current context
+        """
+        _fko.fko_gpg_errstr(self.ctx)
+
     # Error message string function.
 
     def errstr(self, val):
@@ -668,16 +782,23 @@ class Fko:
         elif val == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG:
             mts = "Local NAT Access Message with timeout"
         else:
-            mts = "Unknown message type"
+            mts = "Unknown SPA message type"
         return mts
 
     def digest_type_str(self, val=None):
         """Returns the digest type string for the given value.
+
+        If no value is given, the digest type for the current context
+        is returned.
         """
         if val == None:
             val = _fko.get_spa_digest_type(self.ctx)
 
-        if val == FKO_DIGEST_MD5:
+        if val == FKO_DIGEST_INVALID_DATA:
+            dts = "invalid_data"
+        elif val == FKO_DIGEST_UNKNOWN:
+            dts = "unknown"
+        elif val == FKO_DIGEST_MD5:
             dts = "MD5"
         elif val == FKO_DIGEST_SHA1:
             dts = "SHA1"
@@ -688,22 +809,88 @@ class Fko:
         elif val == FKO_DIGEST_SHA512:
             dts = "SHA512"
         else:
-            dts = "Unknown digest type"
+            dts = "Invalid digest type value"
         return dts
+
+    def hmac_type_str(self, val=None):
+        """Returns the HMAC type string for the given value.
+
+        If no value is given, the HMAC type for the current context
+        is returned.
+        """
+        if val == None:
+            val = _fko.get_spa_hmac_type(self.ctx)
+
+        if val == FKO_HMAC_INVALID_DATA:
+            ht = "invalid_data"
+        elif val == FKO_HMAC_UNKNOWN:
+            ht = "unknown"
+        elif val == FKO_HMAC_MD5:
+            ht = "MD5"
+        elif val == FKO_HMAC_SHA1:
+            ht = "SHA1"
+        elif val == FKO_HMAC_SHA256:
+            ht = "SHA256"
+        elif val == FKO_HMAC_SHA384:
+            ht = "SHA384"
+        elif val == FKO_HMAC_SHA512:
+            ht = "SHA512"
+        else:
+            ht = "Invalid HMAC digest type value"
+        return ht
 
     def encryption_type_str(self, val=None):
         """Returns the encryption type string for the given value.
+
+        If no value is given, the encryption type for the current context
+        is returned.
         """
         if val == None:
             val = _fko.get_spa_encryption_type(self.ctx)
 
-        if val == FKO_ENCRYPTION_RIJNDAEL:
+        if val == FKO_ENCRYPTION_INVALID_DATA:
+            ets = "invalid_data"
+        elif val == FKO_ENCRYPTION_UNKNOWN:
+            ets = "unknown"
+        elif val == FKO_ENCRYPTION_RIJNDAEL:
             ets = "Rijndael (AES)"
         elif val == FKO_ENCRYPTION_GPG:
             ets = "GPG"
         else:
             ets = "Unknown encryption type"
         return ets
+
+    def encryption_mode_str(self, val=None):
+        """Returns the encryption mode string for the given value.
+
+        If no value is given, the encryption mode for the current context
+        is returned.
+        """
+        if val == None:
+            val = _fko.get_spa_encryption_mode(self.ctx)
+
+        if val == FKO_ENC_MODE_UNKNOWN:
+            dts = "unknown"
+        elif val == FKO_ENC_MODE_ECB:
+            dts = "ECB"
+        elif val == FKO_ENC_MODE_CBC:
+            dts = "CBC"
+        elif val == FKO_ENC_MODE_CBF:
+            dts = "CBF"
+        elif val == FKO_ENC_MODE_PCBC:
+            dts = "PCBC"
+        elif val == FKO_ENC_MODE_OFB:
+            dts = "OFB"
+        elif val == FKO_ENC_MODE_CTR:
+            dts = "CTR"
+        elif val == FKO_ENC_MODE_ASYMMETRIC:
+            dts = "ASYMMETRIC"
+        elif val == FKO_ENC_MODE_CBC_LEGACY_IV:
+            dts = "CBC_LEGACY_IV"
+        else:
+            dts = "Invalid encryption mode value"
+        return dts
+
 
     def __call__(self):
         """Calls the spa_data() method.
