@@ -80,6 +80,25 @@ hmac_digest_strtoint(const char *dt_str)
         return(-1);
 }
 
+/* Return digest string representation
+*/
+const char *
+digest_inttostr(const int type)
+{
+    if(type == FKO_DIGEST_MD5 || type == FKO_HMAC_MD5)
+        return("MD5");
+    else if(type == FKO_DIGEST_SHA1 || type == FKO_HMAC_SHA1)
+        return("SHA1");
+    else if(type == FKO_DIGEST_SHA256 || type == FKO_HMAC_SHA256)
+        return("SHA256");
+    else if(type == FKO_DIGEST_SHA384 || type == FKO_HMAC_SHA384)
+        return("SHA384");
+    else if(type == FKO_DIGEST_SHA512 || type == FKO_HMAC_SHA512)
+        return("SHA512");
+
+    return("Unknown digest type");
+}
+
 /* Validate plaintext input size
 */
 int

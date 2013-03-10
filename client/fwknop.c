@@ -1051,8 +1051,8 @@ display_ctx(fko_ctx_t ctx)
     printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
     printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
     printf(" Client Timeout: %u\n", client_timeout);
-    printf("    Digest Type: %d\n", digest_type);
-    printf("      HMAC Type: %d\n", hmac_type);
+    printf("    Digest Type: %d (%s)\n", digest_type, digest_inttostr(digest_type));
+    printf("      HMAC Type: %d (%s)\n", hmac_type, digest_inttostr(hmac_type));
     printf("Encryption Mode: %d\n", encryption_mode);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);

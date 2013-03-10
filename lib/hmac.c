@@ -39,14 +39,42 @@ typedef struct {
     unsigned char block_outer_pad[SHA256_BLOCK_LEN];
 } hmac_sha256_ctx;
 
+typedef struct {
+    SHA384_CTX ctx_inside;
+    SHA384_CTX ctx_outside;
+
+    unsigned char block_inner_pad[SHA384_BLOCK_LEN];
+    unsigned char block_outer_pad[SHA384_BLOCK_LEN];
+} hmac_sha384_ctx;
+
+typedef struct {
+    SHA512_CTX ctx_inside;
+    SHA512_CTX ctx_outside;
+
+    unsigned char block_inner_pad[SHA512_BLOCK_LEN];
+    unsigned char block_outer_pad[SHA512_BLOCK_LEN];
+} hmac_sha512_ctx;
+
+/* Begin SHA256 HMAC functions
+*/
 static void
-hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key)
+hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key, const int key_len)
 {
     int i = 0;
 
-    for (i=0; i < (int) SHA256_BLOCK_LEN; i++) {
+    for (i=0; i < key_len; i++) {
         ctx->block_inner_pad[i] = key[i] ^ 0x36;
         ctx->block_outer_pad[i] = key[i] ^ 0x5c;
+    }
+
+    if(i < SHA256_BLOCK_LEN)
+    {
+        while(i < SHA256_BLOCK_LEN)
+        {
+            ctx->block_inner_pad[i] = 0x36;
+            ctx->block_outer_pad[i] = 0x5c;
+            i++;
+        }
     }
 
     SHA256_Init(&ctx->ctx_inside);
@@ -80,17 +108,148 @@ hmac_sha256_final(hmac_sha256_ctx *ctx, unsigned char *hmac)
 
 void
 hmac_sha256(const char *msg, const unsigned int msg_len,
-    unsigned char *hmac, const char *hmac_key)
+    unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
     hmac_sha256_ctx ctx;
 
     memset(&ctx, 0, sizeof(&ctx));
 
-    hmac_sha256_init(&ctx, hmac_key);
+    hmac_sha256_init(&ctx, hmac_key, hmac_key_len);
     hmac_sha256_update(&ctx, msg, msg_len);
     hmac_sha256_final(&ctx, hmac);
 
     return;
 }
 
+/* Begin SHA384 HMAC functions
+*/
+static void
+hmac_sha384_init(hmac_sha384_ctx *ctx, const char *key, const int key_len)
+{
 
+    int i = 0;
+
+    for (i=0; i < key_len; i++) {
+        ctx->block_inner_pad[i] = key[i] ^ 0x36;
+        ctx->block_outer_pad[i] = key[i] ^ 0x5c;
+    }
+
+    if(i < SHA384_BLOCK_LEN)
+    {
+        while(i < SHA384_BLOCK_LEN)
+        {
+            ctx->block_inner_pad[i] = 0x36;
+            ctx->block_outer_pad[i] = 0x5c;
+            i++;
+        }
+    }
+
+    SHA384_Init(&ctx->ctx_inside);
+    SHA384_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA384_BLOCK_LEN);
+
+    SHA384_Init(&ctx->ctx_outside);
+    SHA384_Update(&ctx->ctx_outside, ctx->block_outer_pad, SHA384_BLOCK_LEN);
+
+    return;
+}
+
+static void
+hmac_sha384_update(hmac_sha384_ctx *ctx, const char *msg,
+    unsigned int msg_len)
+{
+    SHA384_Update(&ctx->ctx_inside, (unsigned char *)msg, msg_len);
+    return;
+}
+
+static void
+hmac_sha384_final(hmac_sha384_ctx *ctx, unsigned char *hmac)
+{
+    unsigned char digest_inside[SHA384_DIGEST_LEN];
+
+    SHA384_Final(digest_inside, &ctx->ctx_inside);
+    SHA384_Update(&ctx->ctx_outside, digest_inside, SHA384_DIGEST_LEN);
+    SHA384_Final(hmac, &ctx->ctx_outside);
+
+    return;
+}
+
+void
+hmac_sha384(const char *msg, const unsigned int msg_len,
+    unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
+{
+    hmac_sha384_ctx ctx;
+
+    memset(&ctx, 0, sizeof(&ctx));
+
+    hmac_sha384_init(&ctx, hmac_key, hmac_key_len);
+    hmac_sha384_update(&ctx, msg, msg_len);
+    hmac_sha384_final(&ctx, hmac);
+
+    return;
+}
+
+/* Begin SHA512 HMAC functions
+*/
+static void
+hmac_sha512_init(hmac_sha512_ctx *ctx, const char *key, const int key_len)
+{
+    int i = 0;
+
+    for (i=0; i < key_len; i++) {
+        ctx->block_inner_pad[i] = key[i] ^ 0x36;
+        ctx->block_outer_pad[i] = key[i] ^ 0x5c;
+    }
+
+    if(i < SHA512_BLOCK_LEN)
+    {
+        while(i < SHA512_BLOCK_LEN)
+        {
+            ctx->block_inner_pad[i] = 0x36;
+            ctx->block_outer_pad[i] = 0x5c;
+            i++;
+        }
+    }
+
+    SHA512_Init(&ctx->ctx_inside);
+    SHA512_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA512_BLOCK_LEN);
+
+    SHA512_Init(&ctx->ctx_outside);
+    SHA512_Update(&ctx->ctx_outside, ctx->block_outer_pad, SHA512_BLOCK_LEN);
+
+    return;
+}
+
+static void
+hmac_sha512_update(hmac_sha512_ctx *ctx, const char *msg,
+    unsigned int msg_len)
+{
+    SHA512_Update(&ctx->ctx_inside, (unsigned char *)msg, msg_len);
+    return;
+}
+
+static void
+hmac_sha512_final(hmac_sha512_ctx *ctx, unsigned char *hmac)
+{
+    unsigned char digest_inside[SHA512_DIGEST_LEN];
+
+    SHA512_Final(digest_inside, &ctx->ctx_inside);
+    SHA512_Update(&ctx->ctx_outside, digest_inside, SHA512_DIGEST_LEN);
+    SHA512_Final(hmac, &ctx->ctx_outside);
+
+    return;
+}
+
+void
+hmac_sha512(const char *msg, const unsigned int msg_len,
+    unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
+{
+    hmac_sha512_ctx ctx;
+
+    memset(&ctx, 0, sizeof(&ctx));
+
+    hmac_sha512_init(&ctx, hmac_key, hmac_key_len);
+    hmac_sha512_update(&ctx, msg, msg_len);
+    hmac_sha512_final(&ctx, hmac);
+
+    return;
+}

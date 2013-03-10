@@ -178,7 +178,7 @@ int fko_calculate_hmac(fko_ctx_t ctx,
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     hmac_sha256(ctx->encrypted_msg,
-        ctx->encrypted_msg_len, hmac, hmac_key);
+        ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
 
     b64_encode(hmac, hmac_base64, SHA256_DIGEST_LEN);
     strip_b64_eq(hmac_base64);

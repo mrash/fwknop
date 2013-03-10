@@ -34,7 +34,11 @@
 #include "digest.h"
 
 void hmac_sha256(const char *msg, const unsigned int msg_len,
-        unsigned char *hmac, const char *hmac_key);
+        unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
+void hmac_sha384(const char *msg, const unsigned int msg_len,
+        unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
+void hmac_sha512(const char *msg, const unsigned int msg_len,
+        unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 
 #endif /* HMAC_H */
 
