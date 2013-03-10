@@ -45,7 +45,9 @@
 #endif
 
 #define SHA1_BLOCKSIZE      64
+#define SHA1_BLOCK_LEN      SHA1_BLOCKSIZE
 #define SHA1_DIGEST_LEN     20
+#define SHA1_DIGEST_STR_LEN (SHA1_DIGEST_LEN * 2 + 1)
 #define SHA1_B64_LEN        27
 
 typedef struct {
