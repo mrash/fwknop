@@ -115,6 +115,7 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
 
 /**
  * \brief Lookup a section in a line and fetch it.
+ * \brief Lookup a section in a line and fetch it.
  *
  * This function parses a NULL terminated string in order to find a section,
  * something like [mysection]. If it succeeds, the stanza is retrieved.
@@ -666,7 +667,7 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             proto_inttostr(options->spa_proto, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_SPA_SERVER_PORT :
-            strlcpy(val, options->spa_server_str, sizeof(val));
+            snprintf(val, sizeof(val)-1, "%d", options->spa_dst_port);
             break;
         case FWKNOP_CLI_ARG_SPA_SOURCE_PORT :
             snprintf(val, sizeof(val)-1, "%d", options->spa_src_port);
@@ -679,9 +680,9 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             break;
         case FWKNOP_CLI_ARG_TIME_OFFSET :
             if (options->time_offset_minus != 0)
-                snprintf(val, sizeof(val)-1, "%d", options->time_offset_minus);
+                snprintf(val, sizeof(val)-1, "-%d", options->time_offset_minus);
             else if (options->time_offset_plus != 0)
-                snprintf(val, sizeof(val)-1, "%d", options->time_offset_minus);
+                snprintf(val, sizeof(val)-1, "%d", options->time_offset_plus);
             else
             {
             }
@@ -723,7 +724,7 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             strlcpy(val, options->spa_server_str, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_RAND_PORT :
-            snprintf(val, sizeof(val)-1, "%d", options->rand_port);
+            val[0] = (options->rand_port) ? 'Y' : 'N';
             break;
         case FWKNOP_CLI_ARG_KEY_FILE :
             strlcpy(val, options->get_key_file, sizeof(val));
@@ -754,10 +755,10 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             }
             break;
         case FWKNOP_CLI_ARG_NAT_LOCAL :
-            snprintf(val, sizeof(val)-1, "%d", options->nat_local);
+            val[0] = (options->nat_local) ? 'Y' : 'N';
             break;
         case FWKNOP_CLI_ARG_NAT_RAND_PORT :
-            snprintf(val, sizeof(val)-1, "%d", options->nat_rand_port);
+            val[0] = (options->nat_rand_port) ? 'Y' : 'N';
             break;
         case FWKNOP_CLI_ARG_NAT_PORT :
             snprintf(val, sizeof(val)-1, "%d", options->nat_port);
@@ -1104,7 +1105,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
      * othewise we already updated it earlier. */
     if (stanza_updated == 0)
     {
-        fprintf(rc_update, "[%s]\n", options->use_rc_stanza);
+        fprintf(rc_update, "\n[%s]\n", options->use_rc_stanza);
 
         if(options->verbose > 3)
             fprintf(stderr, "Updating %s stanza\n", curr_stanza);
@@ -1591,7 +1592,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     }
 
     /* Force a stanza found since we are going to update it. We cannot update
-     * the rcfile without prio validation */
+     * the rcfile without prior validation */
     if ( (options->save_rc_stanza == 1) && (cli_arg_bitmask != 0) )
         options->got_named_stanza = 1;
 
@@ -1716,4 +1717,3 @@ usage(void)
     return;
 }
 
-/***EOF***/
