@@ -850,7 +850,6 @@ set_acc_defaults(fko_srv_options_t *opts)
         {
             acc->hmac_type = FKO_DEFAULT_HMAC_MODE;
         }
-        printf("..........HERE acc->hmac_type: %d\n", acc->hmac_type);
 
         acc = acc->next;
     }
