@@ -172,7 +172,7 @@ int
 fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     const char * const dec_key, const int dec_key_len,
     int encryption_mode, const char * const hmac_key,
-    const int hmac_key_len)
+    const int hmac_key_len, const int hmac_type)
 {
     fko_ctx_t   ctx;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
@@ -208,6 +208,17 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     */
     ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_mode(ctx, encryption_mode);
+    if(res != FKO_SUCCESS)
+    {
+        fko_destroy(ctx);
+        return res;
+    }
+    ctx->initval = 0;
+
+    /* HMAC digest type
+    */
+    ctx->initval = FKO_CTX_INITIALIZED;
+    res = fko_set_spa_hmac_type(ctx, hmac_type);
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -357,7 +368,7 @@ fko_key_gen(char * const key_base64, const int key_len,
         const int hmac_type)
 {
     unsigned char key[RIJNDAEL_MAX_KEYSIZE];
-    unsigned char hmac_key[SHA256_BLOCK_LEN];
+    unsigned char hmac_key[SHA512_BLOCK_LEN];
     int klen      = 0;
     int hmac_klen = 0;
 

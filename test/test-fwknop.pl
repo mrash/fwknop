@@ -206,38 +206,38 @@ my $openssl_hmac_ctr = 0;
 my $fuzzing_success_ctr = 0;
 my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
-my $valgrind_path = '';
-my $sudo_path = '';
-my $gcov_path = '';
-my $killall_path = '';
-my $pgrep_path   = '';
-my $openssl_path = '';
-my $base64_path  = '';
-my $pinentry_fail = 0;
-my $platform = '';
-my $help = 0;
-my $YES = 1;
-my $NO  = 0;
-my $IGNORE = 2;
-my $PRINT_LEN = 68;
-my $USE_PREDEF_PKTS = 1;
-my $USE_CLIENT = 2;
-my $USE_PCAP_FILE = 3;
-my $REQUIRED = 1;
-my $OPTIONAL = 0;
-my $NEW_RULE_REQUIRED = 1;
-my $REQUIRE_NO_NEW_RULE = 2;
-my $NEW_RULE_REMOVED = 1;
-my $REQUIRE_NO_NEW_REMOVED = 2;
-my $MATCH_ANY = 1;
-my $MATCH_ALL = 2;
-my $REQUIRE_SUCCESS = 0;
-my $REQUIRE_FAILURE = 1;
-my $LINUX   = 1;
-my $FREEBSD = 2;
-my $MACOSX  = 3;
-my $OPENBSD = 4;
-my $start_time = time();
+our $valgrind_path = '';
+our $sudo_path = '';
+our $gcov_path = '';
+our $killall_path = '';
+our $pgrep_path   = '';
+our $openssl_path = '';
+our $base64_path  = '';
+our $pinentry_fail = 0;
+our $platform = '';
+our $help = 0;
+our $YES = 1;
+our $NO  = 0;
+our $IGNORE = 2;
+our $PRINT_LEN = 68;
+our $USE_PREDEF_PKTS = 1;
+our $USE_CLIENT = 2;
+our $USE_PCAP_FILE = 3;
+our $REQUIRED = 1;
+our $OPTIONAL = 0;
+our $NEW_RULE_REQUIRED = 1;
+our $REQUIRE_NO_NEW_RULE = 2;
+our $NEW_RULE_REMOVED = 1;
+our $REQUIRE_NO_NEW_REMOVED = 2;
+our $MATCH_ANY = 1;
+our $MATCH_ALL = 2;
+our $REQUIRE_SUCCESS = 0;
+our $REQUIRE_FAILURE = 1;
+our $LINUX   = 1;
+our $FREEBSD = 2;
+our $MACOSX  = 3;
+our $OPENBSD = 4;
+our $start_time = time();
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -912,6 +912,7 @@ sub client_send_spa_packet() {
         my $enc_mode = 0;
         my $is_hmac_type = 1;
         my $hmac_digest = '';
+        my $hmac_mode = 'sha256';
         open F, "< $cmd_out_tmp" or die $!;
         while (<F>) {
             if (/^\s+Encoded\sData\:\s+(\S+)/) {
@@ -920,10 +921,12 @@ sub client_send_spa_packet() {
                 $digest = $1;
             } elsif (/Encryption\sMode\:\s+(\d+)/) {
                 $enc_mode = $1;
-            } elsif (/^\s+HMAC.*\:\s\<NULL\>/) {
+            } elsif (/^\s+HMAC\:\s\<NULL\>/) {
                 $is_hmac_type = 0;
-            } elsif (/^\s+HMAC.*\:\s(\S+)/) {
+            } elsif (/^\s+HMAC\:\s(\S+)/) {
                 $hmac_digest = $1;
+            } elsif (/^\s+HMAC\sType\:\s\d+\s\((\S+)\)/) {
+                $hmac_mode = lc($1);
             }
         }
         close F;
@@ -963,7 +966,7 @@ sub client_send_spa_packet() {
         if ($is_hmac_type and $hmac_key) {
             unless (&openssl_hmac_verification($encrypted_msg,
                     $encoded_msg, '', $hmac_key, $b64_decode_key,
-                    $hmac_digest)) {
+                    $hmac_digest, $hmac_mode)) {
                 $rv = 0;
             }
         }
@@ -3603,7 +3606,7 @@ sub immediate_binding() {
 
 sub openssl_hmac_verification() {
     my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
-        $b64_decode_key, $hmac_digest) = @_;
+        $b64_decode_key, $hmac_digest, $hmac_mode) = @_;
 
     $openssl_hmac_ctr++;
 
@@ -3617,7 +3620,7 @@ sub openssl_hmac_verification() {
         $hmac_key = $tmp_key;
     }
 
-    &write_test_file("[+] OpenSSL HMAC verification, (encoded msg: " .
+    &write_test_file("[+] OpenSSL HMAC $hmac_mode verification, (encoded msg: " .
         "$encoded_msg) (access: $access_msg), hmac_key: $tmp_key, " .
         "encrypted+encoded msg: $encrypted_msg, hmac_digest: $hmac_digest\n",
         $curr_test_file);
@@ -3654,7 +3657,7 @@ sub openssl_hmac_verification() {
         $hex_hmac_key .= sprintf "%02x", ord($char);
     }
 
-    my $openssl_hmac_cmd = "$openssl_path dgst -binary -sha256 -mac HMAC " .
+    my $openssl_hmac_cmd = "$openssl_path dgst -binary -${hmac_mode} -mac HMAC " .
         "-macopt hexkey:$hex_hmac_key $data_tmp";
 
     $openssl_hmac_cmd .= " | $base64_path" if $base64_path;

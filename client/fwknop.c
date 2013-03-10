@@ -432,7 +432,7 @@ main(int argc, char **argv)
          * options, then decode it.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            0, enc_mode, hmac_key, hmac_key_len);
+            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -970,7 +970,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
 
     if (use_hmac)
     {
-        res = fko_set_spa_hmac_type(ctx, FKO_HMAC_SHA256);
+        res = fko_set_spa_hmac_type(ctx, options->hmac_type);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_hmac_type", res);
@@ -1051,8 +1051,8 @@ display_ctx(fko_ctx_t ctx)
     printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
     printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
     printf(" Client Timeout: %u\n", client_timeout);
-    printf("    Digest Type: %d\n", digest_type);
-    printf("      HMAC Type: %d\n", hmac_type);
+    printf("    Digest Type: %d (%s)\n", digest_type, digest_inttostr(digest_type));
+    printf("      HMAC Type: %d (%s)\n", hmac_type, digest_inttostr(hmac_type));
     printf("Encryption Mode: %d\n", encryption_mode);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);

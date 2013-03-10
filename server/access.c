@@ -838,8 +838,18 @@ set_acc_defaults(fko_srv_options_t *opts)
                 add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]);
         }
 
-        if (acc->encryption_mode == FKO_ENC_MODE_UNKNOWN)
+        if(acc->encryption_mode == FKO_ENC_MODE_UNKNOWN)
             acc->encryption_mode = FKO_DEFAULT_ENC_MODE;
+
+        /* if we're using an HMAC key and the HMAC digest type was not
+         * set for HMAC_DIGEST_TYPE, then assume it's SHA256
+        */
+
+        if(acc->hmac_type == FKO_HMAC_UNKNOWN
+                && acc->hmac_key_len > 0 && acc->hmac_key != NULL)
+        {
+            acc->hmac_type = FKO_DEFAULT_HMAC_MODE;
+        }
 
         acc = acc->next;
     }

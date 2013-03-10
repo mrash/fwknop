@@ -100,7 +100,7 @@ fko_errstr(const int err_code)
             return("The computed digest did not match the digest in the spa data");
 
         case FKO_ERROR_UNSUPPORTED_HMAC_MODE:
-            return("Unsupported HMAC mode (default: sha256)");
+            return("Unsupported HMAC mode (default: SHA256)");
 
         case FKO_ERROR_UNSUPPORTED_FEATURE:
             return("Unsupported or unimplemented feature or function");

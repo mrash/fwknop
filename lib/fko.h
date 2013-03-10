@@ -237,7 +237,7 @@ enum {
 DLL_API int fko_new(fko_ctx_t *ctx);
 DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char * const enc_msg,
     const char * const dec_key, const int dec_key_len, int encryption_mode,
-    const char * const hmac_key, const int hmac_key_len);
+    const char * const hmac_key, const int hmac_key_len, const int hmac_type);
 DLL_API void fko_destroy(fko_ctx_t ctx);
 DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char * const enc_key,
     const int enc_key_len, const char * const hmac_key, const int hmac_key_len);
