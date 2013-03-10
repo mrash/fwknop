@@ -37,8 +37,10 @@
 
 #include "common.h"
 
-#define MD5_DIGEST_LEN 16
-#define MD5_B64_LEN    22
+#define MD5_DIGEST_LEN      16
+#define MD5_BLOCK_LEN       MD5_DIGEST_LEN
+#define MD5_DIGEST_STR_LEN  (MD5_DIGEST_LEN * 2 + 1)
+#define MD5_B64_LEN         22
 
 typedef struct _MD5Context {
         uint32_t buf[4];

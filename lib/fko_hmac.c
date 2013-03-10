@@ -192,7 +192,11 @@ int fko_calculate_hmac(fko_ctx_t ctx,
 
     if(ctx->hmac_type == FKO_HMAC_MD5)
     {
-        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+        hmac_md5(ctx->encrypted_msg,
+            ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
+
+        hmac_digest_len     = MD5_DIGEST_LEN;
+        hmac_digest_str_len = MD5_DIGEST_STR_LEN;
     }
     else if(ctx->hmac_type == FKO_HMAC_SHA1)
     {
