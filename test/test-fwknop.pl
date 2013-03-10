@@ -912,6 +912,7 @@ sub client_send_spa_packet() {
         my $enc_mode = 0;
         my $is_hmac_type = 1;
         my $hmac_digest = '';
+        my $hmac_mode = 'sha256';
         open F, "< $cmd_out_tmp" or die $!;
         while (<F>) {
             if (/^\s+Encoded\sData\:\s+(\S+)/) {
@@ -920,10 +921,12 @@ sub client_send_spa_packet() {
                 $digest = $1;
             } elsif (/Encryption\sMode\:\s+(\d+)/) {
                 $enc_mode = $1;
-            } elsif (/^\s+HMAC.*\:\s\<NULL\>/) {
+            } elsif (/^\s+HMAC\:\s\<NULL\>/) {
                 $is_hmac_type = 0;
-            } elsif (/^\s+HMAC.*\:\s(\S+)/) {
+            } elsif (/^\s+HMAC\:\s(\S+)/) {
                 $hmac_digest = $1;
+            } elsif (/^\s+HMAC\sType\:\s\d+\((\S+)\)/) {
+                $hmac_mode = lc($1);
             }
         }
         close F;
@@ -963,7 +966,7 @@ sub client_send_spa_packet() {
         if ($is_hmac_type and $hmac_key) {
             unless (&openssl_hmac_verification($encrypted_msg,
                     $encoded_msg, '', $hmac_key, $b64_decode_key,
-                    $hmac_digest)) {
+                    $hmac_digest, $hmac_mode)) {
                 $rv = 0;
             }
         }
@@ -3603,7 +3606,7 @@ sub immediate_binding() {
 
 sub openssl_hmac_verification() {
     my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
-        $b64_decode_key, $hmac_digest) = @_;
+        $b64_decode_key, $hmac_digest, $hmac_mode) = @_;
 
     $openssl_hmac_ctr++;
 
@@ -3617,7 +3620,7 @@ sub openssl_hmac_verification() {
         $hmac_key = $tmp_key;
     }
 
-    &write_test_file("[+] OpenSSL HMAC verification, (encoded msg: " .
+    &write_test_file("[+] OpenSSL HMAC $hmac_mode verification, (encoded msg: " .
         "$encoded_msg) (access: $access_msg), hmac_key: $tmp_key, " .
         "encrypted+encoded msg: $encrypted_msg, hmac_digest: $hmac_digest\n",
         $curr_test_file);
@@ -3654,7 +3657,7 @@ sub openssl_hmac_verification() {
         $hex_hmac_key .= sprintf "%02x", ord($char);
     }
 
-    my $openssl_hmac_cmd = "$openssl_path dgst -binary -sha256 -mac HMAC " .
+    my $openssl_hmac_cmd = "$openssl_path dgst -binary -${hmac_mode} -mac HMAC " .
         "-macopt hexkey:$hex_hmac_key $data_tmp";
 
     $openssl_hmac_cmd .= " | $base64_path" if $base64_path;
