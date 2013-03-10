@@ -17,8 +17,6 @@ fko_ext = Extension(
     '_fko',
     define_macros = [('MAJOR_VERSION', '1'), ('MINOR_VERSION', '5')],
                     libraries = ['fko'],
-                    library_dirs = ['/opt/local/lib'],
-                    include_dirs = ['/opt/local/include'],
                     sources = ['fkomodule.c']
 )
 
