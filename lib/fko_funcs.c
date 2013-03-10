@@ -218,7 +218,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     /* HMAC digest type
     */
     ctx->initval = FKO_CTX_INITIALIZED;
-    res = fko_set_hmac_type(ctx, hmac_type);
+    res = fko_set_spa_hmac_type(ctx, hmac_type);
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);

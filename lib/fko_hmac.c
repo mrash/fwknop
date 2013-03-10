@@ -106,7 +106,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
     /* Calculate the HMAC from the encrypted data and then
      * compare
     */
-    res = fko_set_hmac_type(ctx, ctx->hmac_type);
+    res = fko_set_spa_hmac_type(ctx, ctx->hmac_type);
     if(res == FKO_SUCCESS)
     {
         res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
@@ -143,7 +143,7 @@ fko_get_hmac_data(fko_ctx_t ctx, char **hmac_data)
 /* Set the HMAC type
 */
 int
-fko_set_hmac_type(fko_ctx_t ctx, const short hmac_type)
+fko_set_spa_hmac_type(fko_ctx_t ctx, const short hmac_type)
 {
     /* Must be initialized
     */

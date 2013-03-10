@@ -15,14 +15,16 @@ from distutils.core import setup, Extension
 #
 fko_ext = Extension(
     '_fko',
-    define_macros = [('MAJOR_VERSION', '1'), ('MINOR_VERSION', '0')],
+    define_macros = [('MAJOR_VERSION', '1'), ('MINOR_VERSION', '5')],
                     libraries = ['fko'],
+                    library_dirs = ['/opt/local/lib'],
+                    include_dirs = ['/opt/local/include'],
                     sources = ['fkomodule.c']
 )
 
 setup (
     name = 'fko',
-    version = '1.0',
+    version = '1.5',
     description = 'Wrapper for Fwknop library (libfko)',
     author = 'Damien S. Stuart',
     author_email = 'dstuart@dstuart.org',
