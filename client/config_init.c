@@ -1,11 +1,11 @@
 /*
  ******************************************************************************
  *
- * File:    config_init.c
+ * \file    config_init.c
  *
- * Author:  Damien Stuart
+ * \author  Damien Stuart
  *
- * Purpose: Command-line and config file processing for fwknop client.
+ * \brief   Command-line and config file processing for fwknop client.
  *
  * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -45,6 +45,8 @@
 #define FWKNOP_CLI_ARG_BM(x)        ((uint32_t)(1 << (x)))      /*!< Bitmask command line arg */
 #define FWKNOPRC_OFLAGS             (O_WRONLY|O_CREAT|O_EXCL)   /*!< O_flags used to create an fwknoprc file with the open function */
 #define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
+#define PARAM_YES_VALUE             "Y"                         /*!< String which represents a YES value for a parameter in fwknoprc */
+#define PARAM_NO_VALUE              "N"                         /*!< String which represents a NO value for a parameter in fwknoprc */
 
 enum
 {
@@ -114,7 +116,26 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
 };
 
 /**
- * \brief Lookup a section in a line and fetch it.
+ * \brief Set a string as a Yes or No value according to a boolean (0 or 1).
+ *
+ * This function checks whether a value is set to zero or not, and updates a
+ * string to a YES_NO parameter value.
+ * The string must be zeroed before being passed to the function.
+ *
+ * \param val Variable to check
+ * \param s String where to store the YES_NO value.
+ * \param len Number of bytes avaialble for the s buffer.
+ */
+static void
+bool_to_yesno(int val, char* s, size_t len)
+{
+    if (val == 0)
+        strlcpy(s, PARAM_NO_VALUE, len);
+    else
+        strlcpy(s, PARAM_YES_VALUE, len);
+}
+
+/**
  * \brief Lookup a section in a line and fetch it.
  *
  * This function parses a NULL terminated string in order to find a section,
@@ -691,16 +712,10 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             enc_mode_inttostr(options->encryption_mode, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_USE_GPG :
-            if (options->use_gpg == 0)
-                strlcpy(val, "N", sizeof(val));
-            else
-                strlcpy(val, "Y", sizeof(val));
+            bool_to_yesno(options->use_gpg, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_USE_GPG_AGENT :
-            if (options->use_gpg_agent == 0)
-                strlcpy(val, "N", sizeof(val));
-            else
-                strlcpy(val, "Y", sizeof(val));
+            bool_to_yesno(options->use_gpg_agent, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_GPG_RECIPIENT :
             strlcpy(val, options->gpg_recipient_key, sizeof(val));
@@ -724,7 +739,7 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             strlcpy(val, options->spa_server_str, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_RAND_PORT :
-            val[0] = (options->rand_port) ? 'Y' : 'N';
+            bool_to_yesno(options->rand_port, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_KEY_FILE :
             strlcpy(val, options->get_key_file, sizeof(val));
@@ -755,10 +770,10 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             }
             break;
         case FWKNOP_CLI_ARG_NAT_LOCAL :
-            val[0] = (options->nat_local) ? 'Y' : 'N';
+            bool_to_yesno(options->nat_local, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_NAT_RAND_PORT :
-            val[0] = (options->nat_rand_port) ? 'Y' : 'N';
+            bool_to_yesno(options->nat_rand_port, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_NAT_PORT :
             snprintf(val, sizeof(val)-1, "%d", options->nat_port);
