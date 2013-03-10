@@ -3669,9 +3669,13 @@ sub openssl_hmac_verification() {
         return 0;
     }
 
+    ### for HMAC SHA512 this output will span two lines
+    my $openssl_hmac_line = '';
     open F, "< $cmd_out_tmp" or die $!;
-    my $openssl_hmac_line = <F>;
-    chomp $openssl_hmac_line;
+    while (<F>) {
+        $openssl_hmac_line .= $_;
+        chomp $openssl_hmac_line;
+    }
     close F;
 
     if ($base64_path) {
