@@ -369,8 +369,8 @@ fko_key_gen(char * const key_base64, const int key_len,
 {
     unsigned char key[RIJNDAEL_MAX_KEYSIZE];
     unsigned char hmac_key[SHA512_BLOCK_LEN];
-    int klen      = 0;
-    int hmac_klen = 0;
+    int klen      = key_len;
+    int hmac_klen = hmac_key_len;
 
     if(key_len == FKO_DEFAULT_KEY_LEN)
         klen = RIJNDAEL_MAX_KEYSIZE;
