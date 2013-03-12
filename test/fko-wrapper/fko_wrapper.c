@@ -111,7 +111,7 @@ int main(void) {
     /* now decrypt */
     printf("fko_new_with_data(): %d\n",
         fko_new_with_data(&decrypt_ctx, spa_data, NULL,
-        0, ctx->encryption_mode, NULL, 0));
+        0, ctx->encryption_mode, NULL, 0, 0));
 
     for (i=0; i<FCN_CALLS; i++) {
         printf("fko_decrypt_spa_data(): %d\n",
@@ -147,6 +147,7 @@ display_ctx(fko_ctx_t ctx)
     time_t      timestamp       = 0;
     short       msg_type        = -1;
     short       digest_type     = -1;
+    short       hmac_type       = -1;
     int         encryption_mode = -1;
     int         client_timeout  = -1;
 
@@ -162,6 +163,7 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_server_auth(ctx, &server_auth);
     fko_get_spa_client_timeout(ctx, &client_timeout);
     fko_get_spa_digest_type(ctx, &digest_type);
+    fko_get_spa_hmac_type(ctx, &hmac_type);
     fko_get_spa_encryption_mode(ctx, &encryption_mode);
     fko_get_encoded_data(ctx, &enc_data);
     fko_get_hmac_data(ctx, &hmac_data);
@@ -179,10 +181,11 @@ display_ctx(fko_ctx_t ctx)
     printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
     printf(" Client Timeout: %u\n", client_timeout);
     printf("    Digest Type: %d\n", digest_type);
+    printf("      HMAC Type: %d\n", hmac_type);
     printf("Encryption Mode: %d\n", encryption_mode);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
-    printf("    HMAC-SHA256: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
+    printf("           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
 
     if (enc_data != NULL && spa_digest != NULL)
         printf("      Plaintext: %s:%s\n", enc_data, spa_digest);
