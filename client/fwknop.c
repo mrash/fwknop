@@ -78,7 +78,6 @@ main(int argc, char **argv)
     memset(key, 0x00, MAX_KEY_LEN+1);
     memset(hmac_key, 0x00, MAX_KEY_LEN+1);
     memset(access_buf, 0x00, MAX_LINE_LEN);
-    memset(hmac_key, 0x00, MAX_KEY_LEN);
 
     /* Handle command line
     */
