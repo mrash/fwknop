@@ -72,6 +72,7 @@
 #define MAX_URL_HOST_LEN            256
 #define MAX_URL_PATH_LEN            1024
 #define MAX_KEY_LEN                 128
+#define MAX_B64_KEY_LEN             180
 
 /* fwknop client configuration parameters and values
 */

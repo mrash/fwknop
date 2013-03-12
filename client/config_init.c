@@ -372,7 +372,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
                 val);
             return(-1);
         }
-        strlcpy(options->key_base64, val, MAX_KEY_LEN);
+        strlcpy(options->key_base64, val, MAX_B64_KEY_LEN);
         options->have_base64_key = 1;
     }
     /* HMAC digest type */
@@ -401,7 +401,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
                 val);
             return(-1);
         }
-        strlcpy(options->hmac_key_base64, val, MAX_KEY_LEN);
+        strlcpy(options->hmac_key_base64, val, MAX_B64_KEY_LEN);
         options->have_hmac_base64_key = 1;
     }
 
