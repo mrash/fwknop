@@ -44,7 +44,7 @@ _init_ctx()
     RETVAL
 
 fko_ctx_t
-_init_ctx_with_data(enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len)
+_init_ctx_with_data(enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len, hmac_type)
     INPUT:
     char*   enc_msg;
     char*   dec_key;
@@ -52,10 +52,11 @@ _init_ctx_with_data(enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_
     int     enc_mode;
     char*   hmac_key;
     int     hmac_key_len;
+    int     hmac_type;
     INIT:
     fko_ctx_t ctx;
     CODE:
-    g_ec = fko_new_with_data(&ctx, enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len);
+    g_ec = fko_new_with_data(&ctx, enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len, hmac_type);
     if(g_ec == 0)
         RETVAL = ctx;
     else
@@ -70,7 +71,7 @@ _init_ctx_with_data_only(data)
     INIT:
     fko_ctx_t ctx;
     CODE:
-    g_ec = fko_new_with_data(&ctx, data, NULL, 0, FKO_ENCRYPTION_RIJNDAEL, NULL, 0);
+    g_ec = fko_new_with_data(&ctx, data, NULL, 0, FKO_ENCRYPTION_RIJNDAEL, NULL, 0, 0);
     if(g_ec == 0)
         RETVAL = ctx;
     else
