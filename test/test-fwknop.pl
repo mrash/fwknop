@@ -25,69 +25,95 @@ our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $replay_pcap_file = "$conf_dir/spa_replay.pcap";
 
-our $lib_dir        = '../lib/.libs';
+our $lib_dir = '../lib/.libs';
+
 our %cf = (
-    'nat'                     => "$conf_dir/nat_fwknopd.conf",
-    'def'                     => "$conf_dir/default_fwknopd.conf",
-    'def_access'              => "$conf_dir/default_access.conf",
-    'hmac_access'             => "$conf_dir/hmac_access.conf",
-    'hmac_md5_access'         => "$conf_dir/hmac_md5_access.conf",
-    'hmac_sha1_access'        => "$conf_dir/hmac_sha1_access.conf",
-    'hmac_sha384_access'      => "$conf_dir/hmac_sha384_access.conf",
-    'hmac_sha512_access'      => "$conf_dir/hmac_sha512_access.conf",
-    'hmac_simple_keys_access' => "$conf_dir/hmac_simple_keys_access.conf",
-    'hmac_invalid_type_access' => "$conf_dir/hmac_invalid_type_access.conf",
-    'exp_access'              => "$conf_dir/expired_stanza_access.conf",
-    'future_exp_access'       => "$conf_dir/future_expired_stanza_access.conf",
-    'exp_epoch_access'        => "$conf_dir/expired_epoch_stanza_access.conf",
-    'invalid_exp_access'      => "$conf_dir/invalid_expire_access.conf",
-    'force_nat_access'        => "$conf_dir/force_nat_access.conf",
-    'cmd_access'              => "$conf_dir/cmd_access.conf",
-    'local_nat'               => "$conf_dir/local_nat_fwknopd.conf",
-    'ipfw_active_expire'      => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
-    'android_access'          => "$conf_dir/android_access.conf",
-    'android_legacy_iv_access' => "$conf_dir/android_legacy_iv_access.conf",
-    'dual_key_access'         => "$conf_dir/dual_key_usage_access.conf",
-    'hmac_dual_key_access'    => "$conf_dir/hmac_dual_key_usage_access.conf",
-    'gpg_access'              => "$conf_dir/gpg_access.conf",
-    'legacy_iv_access'        => "$conf_dir/legacy_iv_access.conf",
-    'gpg_no_pw_access'        => "$conf_dir/gpg_no_pw_access.conf",
-    'tcp_server'              => "$conf_dir/tcp_server_fwknopd.conf",
-    'tcp_pcap_filter'         => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
-    'icmp_pcap_filter'        => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
-    'open_ports_access'       => "$conf_dir/open_ports_access.conf",
-    'multi_gpg_access'        => "$conf_dir/multi_gpg_access.conf",
-    'multi_gpg_no_pw_access'  => "$conf_dir/multi_gpg_no_pw_access.conf",
-    'multi_stanza_access'     => "$conf_dir/multi_stanzas_access.conf",
-    'broken_keys_access'      => "$conf_dir/multi_stanzas_with_broken_keys.conf",
-    'ecb_mode_access'         => "$conf_dir/ecb_mode_access.conf",
-    'ctr_mode_access'         => "$conf_dir/ctr_mode_access.conf",
-    'cfb_mode_access'         => "$conf_dir/cfb_mode_access.conf",
-    'ofb_mode_access'         => "$conf_dir/ofb_mode_access.conf",
-    'open_ports_mismatch'     => "$conf_dir/mismatch_open_ports_access.conf",
-    'require_user_access'     => "$conf_dir/require_user_access.conf",
-    'user_mismatch_access'    => "$conf_dir/mismatch_user_access.conf",
-    'require_src_access'      => "$conf_dir/require_src_access.conf",
-    'invalid_src_access'      => "$conf_dir/invalid_source_access.conf",
-    'no_src_match'            => "$conf_dir/no_source_match_access.conf",
-    'no_subnet_match'         => "$conf_dir/no_subnet_source_match_access.conf",
-    'no_multi_src'            => "$conf_dir/no_multi_source_match_access.conf",
-    'multi_src_access'        => "$conf_dir/multi_source_match_access.conf",
-    'ip_src_match'            => "$conf_dir/ip_source_match_access.conf",
-    'subnet_src_match'        => "$conf_dir/ip_source_match_access.conf",
-    'rc_def_key'              => "$conf_dir/fwknoprc_with_default_key",
-    'rc_def_b64_key'          => "$conf_dir/fwknoprc_with_default_base64_key",
-    'rc_named_key'            => "$conf_dir/fwknoprc_named_key",
-    'rc_invalid_b64_key'      => "$conf_dir/fwknoprc_invalid_base64_key",
-    'rc_hmac_b64_key'         => "$conf_dir/fwknoprc_default_hmac_base64_key",
-    'rc_hmac_simple_key'      => "$conf_dir/fwknoprc_hmac_simple_keys",
-    'rc_hmac_invalid_type'    => "$conf_dir/fwknoprc_hmac_invalid_type",
-    'base64_key_access'       => "$conf_dir/base64_key_access.conf",
-    'disable_aging'           => "$conf_dir/disable_aging_fwknopd.conf",
-    'disable_aging_nat'       => "$conf_dir/disable_aging_nat_fwknopd.conf",
-    'fuzz_source'             => "$conf_dir/fuzzing_source_access.conf",
-    'fuzz_open_ports'         => "$conf_dir/fuzzing_open_ports_access.conf",
-    'fuzz_restrict_ports'     => "$conf_dir/fuzzing_restrict_ports_access.conf",
+    'nat'                          => "$conf_dir/nat_fwknopd.conf",
+    'def'                          => "$conf_dir/default_fwknopd.conf",
+    'def_access'                   => "$conf_dir/default_access.conf",
+    'hmac_access'                  => "$conf_dir/hmac_access.conf",
+    'hmac_md5_access'              => "$conf_dir/hmac_md5_access.conf",
+    'hmac_md5_short_key_access'    => "$conf_dir/hmac_md5_short_key_access.conf",
+    'hmac_md5_long_key_access'     => "$conf_dir/hmac_md5_long_key_access.conf",
+    'hmac_sha1_access'             => "$conf_dir/hmac_sha1_access.conf",
+    'hmac_sha1_short_key_access'   => "$conf_dir/hmac_sha1_short_key_access.conf",
+    'hmac_sha1_long_key_access'    => "$conf_dir/hmac_sha1_long_key_access.conf",
+    'hmac_sha256_access'           => "$conf_dir/hmac_sha256_access.conf",
+    'hmac_sha256_short_key_access' => "$conf_dir/hmac_sha256_short_key_access.conf",
+    'hmac_sha256_long_key_access'  => "$conf_dir/hmac_sha256_long_key_access.conf",
+    'hmac_sha384_access'           => "$conf_dir/hmac_sha384_access.conf",
+    'hmac_sha384_short_key_access' => "$conf_dir/hmac_sha384_short_key_access.conf",
+    'hmac_sha384_long_key_access'  => "$conf_dir/hmac_sha384_long_key_access.conf",
+    'hmac_sha512_access'           => "$conf_dir/hmac_sha512_access.conf",
+    'hmac_sha512_short_key_access' => "$conf_dir/hmac_sha512_short_key_access.conf",
+    'hmac_simple_keys_access'      => "$conf_dir/hmac_simple_keys_access.conf",
+    'hmac_invalid_type_access'     => "$conf_dir/hmac_invalid_type_access.conf",
+    'exp_access'                   => "$conf_dir/expired_stanza_access.conf",
+    'future_exp_access'            => "$conf_dir/future_expired_stanza_access.conf",
+    'exp_epoch_access'             => "$conf_dir/expired_epoch_stanza_access.conf",
+    'invalid_exp_access'           => "$conf_dir/invalid_expire_access.conf",
+    'force_nat_access'             => "$conf_dir/force_nat_access.conf",
+    'cmd_access'                   => "$conf_dir/cmd_access.conf",
+    'local_nat'                    => "$conf_dir/local_nat_fwknopd.conf",
+    'ipfw_active_expire'           => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
+    'android_access'               => "$conf_dir/android_access.conf",
+    'android_legacy_iv_access'     => "$conf_dir/android_legacy_iv_access.conf",
+    'dual_key_access'              => "$conf_dir/dual_key_usage_access.conf",
+    'hmac_dual_key_access'         => "$conf_dir/hmac_dual_key_usage_access.conf",
+    'gpg_access'                   => "$conf_dir/gpg_access.conf",
+    'legacy_iv_access'             => "$conf_dir/legacy_iv_access.conf",
+    'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
+    'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
+    'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
+    'icmp_pcap_filter'             => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
+    'open_ports_access'            => "$conf_dir/open_ports_access.conf",
+    'multi_gpg_access'             => "$conf_dir/multi_gpg_access.conf",
+    'multi_gpg_no_pw_access'       => "$conf_dir/multi_gpg_no_pw_access.conf",
+    'multi_stanza_access'          => "$conf_dir/multi_stanzas_access.conf",
+    'broken_keys_access'           => "$conf_dir/multi_stanzas_with_broken_keys.conf",
+    'ecb_mode_access'              => "$conf_dir/ecb_mode_access.conf",
+    'ctr_mode_access'              => "$conf_dir/ctr_mode_access.conf",
+    'cfb_mode_access'              => "$conf_dir/cfb_mode_access.conf",
+    'ofb_mode_access'              => "$conf_dir/ofb_mode_access.conf",
+    'open_ports_mismatch'          => "$conf_dir/mismatch_open_ports_access.conf",
+    'require_user_access'          => "$conf_dir/require_user_access.conf",
+    'user_mismatch_access'         => "$conf_dir/mismatch_user_access.conf",
+    'require_src_access'           => "$conf_dir/require_src_access.conf",
+    'invalid_src_access'           => "$conf_dir/invalid_source_access.conf",
+    'no_src_match'                 => "$conf_dir/no_source_match_access.conf",
+    'no_subnet_match'              => "$conf_dir/no_subnet_source_match_access.conf",
+    'no_multi_src'                 => "$conf_dir/no_multi_source_match_access.conf",
+    'multi_src_access'             => "$conf_dir/multi_source_match_access.conf",
+    'ip_src_match'                 => "$conf_dir/ip_source_match_access.conf",
+    'subnet_src_match'             => "$conf_dir/ip_source_match_access.conf",
+    'rc_def_key'                   => "$conf_dir/fwknoprc_with_default_key",
+    'rc_def_b64_key'               => "$conf_dir/fwknoprc_with_default_base64_key",
+    'rc_named_key'                 => "$conf_dir/fwknoprc_named_key",
+    'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
+    'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
+    'rc_hmac_simple_key'           => "$conf_dir/fwknoprc_hmac_simple_keys",
+    'rc_hmac_invalid_type'         => "$conf_dir/fwknoprc_hmac_invalid_type",
+    'rc_hmac_invalid_type'         => "$conf_dir/fwknoprc_hmac_invalid_type",
+    'rc_hmac_md5_key'              => "$conf_dir/fwknoprc_hmac_md5_key",
+    'rc_hmac_md5_short_key'        => "$conf_dir/fwknoprc_hmac_md5_short_key",
+    'rc_hmac_md5_long_key'         => "$conf_dir/fwknoprc_hmac_md5_long_key",
+    'rc_hmac_sha1_key'             => "$conf_dir/fwknoprc_hmac_sha1_key",
+    'rc_hmac_sha1_short_key'       => "$conf_dir/fwknoprc_hmac_sha1_short_key",
+    'rc_hmac_sha1_long_key'        => "$conf_dir/fwknoprc_hmac_sha1_long_key",
+    'rc_hmac_sha256_key'           => "$conf_dir/fwknoprc_hmac_sha256_key",
+    'rc_hmac_sha256_short_key'     => "$conf_dir/fwknoprc_hmac_sha256_short_key",
+    'rc_hmac_sha256_long_key'      => "$conf_dir/fwknoprc_hmac_sha256_long_key",
+    'rc_hmac_sha384_key'           => "$conf_dir/fwknoprc_hmac_sha384_key",
+    'rc_hmac_sha384_short_key'     => "$conf_dir/fwknoprc_hmac_sha384_short_key",
+    'rc_hmac_sha384_long_key'      => "$conf_dir/fwknoprc_hmac_sha384_long_key",
+    'rc_hmac_sha512_key'           => "$conf_dir/fwknoprc_hmac_sha512_key",
+    'rc_hmac_sha512_short_key'     => "$conf_dir/fwknoprc_hmac_sha512_short_key",
+    'base64_key_access'            => "$conf_dir/base64_key_access.conf",
+    'disable_aging'                => "$conf_dir/disable_aging_fwknopd.conf",
+    'disable_aging_nat'            => "$conf_dir/disable_aging_nat_fwknopd.conf",
+    'fuzz_source'                  => "$conf_dir/fuzzing_source_access.conf",
+    'fuzz_open_ports'              => "$conf_dir/fuzzing_open_ports_access.conf",
+    'fuzz_restrict_ports'          => "$conf_dir/fuzzing_restrict_ports_access.conf",
 );
 
 our $default_digest_file = "$run_dir/digest.cache";
@@ -4138,12 +4164,25 @@ sub validate_test_hashes() {
         $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
         $msg .= " $test_hr->{'detail'}";
         if (defined $uniq_test_msgs{$msg}) {
-            die "[*] Duplicate test message: $msg\n";
+            die "[*] Duplicate test message: $msg";
         } else {
             $uniq_test_msgs{$msg} = '';
         }
     }
 
+    ### if 'key_file' is defined, then ensure the client command line
+    ### references the same file
+    for my $test_hr (@tests) {
+        my $msg = "[$test_hr->{'category'}]";
+        $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
+        $msg .= " $test_hr->{'detail'}";
+        if ($test_hr->{'key_file'}) {
+            unless ($test_hr->{'cmdline'} =~ /\s$test_hr->{'key_file'}\b/) {
+                die "[*] 'key_file' value not matched in " .
+                    "client command line for: $msg";
+            }
+        }
+    }
 
     return;
 }
