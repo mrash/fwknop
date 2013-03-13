@@ -33,6 +33,8 @@
 
 #include "digest.h"
 
+#define MAX_DIGEST_BLOCK_LEN    SHA512_BLOCK_LEN
+
 void hmac_md5(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 void hmac_sha1(const char *msg, const unsigned int msg_len,

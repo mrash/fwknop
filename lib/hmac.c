@@ -35,63 +35,88 @@ typedef struct {
     MD5Context ctx_inside;
     MD5Context ctx_outside;
 
-    unsigned char block_inner_pad[MD5_BLOCK_LEN];
-    unsigned char block_outer_pad[MD5_BLOCK_LEN];
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN];
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN];
 } hmac_md5_ctx;
 
 typedef struct {
     SHA1_INFO ctx_inside;
     SHA1_INFO ctx_outside;
 
-    unsigned char block_inner_pad[SHA1_BLOCK_LEN];
-    unsigned char block_outer_pad[SHA1_BLOCK_LEN];
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN];
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN];
 } hmac_sha1_ctx;
 
 typedef struct {
     SHA256_CTX ctx_inside;
     SHA256_CTX ctx_outside;
 
-    unsigned char block_inner_pad[SHA256_BLOCK_LEN];
-    unsigned char block_outer_pad[SHA256_BLOCK_LEN];
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN];
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN];
 } hmac_sha256_ctx;
 
 typedef struct {
     SHA384_CTX ctx_inside;
     SHA384_CTX ctx_outside;
 
-    unsigned char block_inner_pad[SHA384_BLOCK_LEN];
-    unsigned char block_outer_pad[SHA384_BLOCK_LEN];
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN];
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN];
 } hmac_sha384_ctx;
 
 typedef struct {
     SHA512_CTX ctx_inside;
     SHA512_CTX ctx_outside;
 
-    unsigned char block_inner_pad[SHA512_BLOCK_LEN];
-    unsigned char block_outer_pad[SHA512_BLOCK_LEN];
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN];
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN];
 } hmac_sha512_ctx;
+
+static void
+pad_init(unsigned char *inner_pad, unsigned char *outer_pad,
+        const unsigned char *key, const int key_len)
+{
+    int i = 0;
+
+    for (i=0; i < MAX_DIGEST_BLOCK_LEN && i < key_len; i++) {
+        inner_pad[i] = key[i] ^ 0x36;
+        outer_pad[i] = key[i] ^ 0x5c;
+    }
+
+    if(i < MAX_DIGEST_BLOCK_LEN)
+    {
+        while(i < MAX_DIGEST_BLOCK_LEN)
+        {
+            inner_pad[i] = 0x36;
+            outer_pad[i] = 0x5c;
+            i++;
+        }
+    }
+    return;
+}
 
 /* Begin MD5 HMAC functions
 */
 static void
 hmac_md5_init(hmac_md5_ctx *ctx, const char *key, const int key_len)
 {
-    int i = 0;
+    unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
 
-    for (i=0; i < MD5_BLOCK_LEN && i < key_len; i++) {
-        ctx->block_inner_pad[i] = key[i] ^ 0x36;
-        ctx->block_outer_pad[i] = key[i] ^ 0x5c;
-    }
+    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
+    memcpy(init_key, key, key_len);
 
-    if(i < MD5_BLOCK_LEN)
+    if(MD5_BLOCK_LEN < key_len)
     {
-        while(i < MD5_BLOCK_LEN)
-        {
-            ctx->block_inner_pad[i] = 0x36;
-            ctx->block_outer_pad[i] = 0x5c;
-            i++;
-        }
+        /* Calculate the digest of the key
+        */
+        md5(final_key, init_key, key_len);
     }
+    else
+    {
+        memcpy(final_key, init_key, key_len);
+    }
+
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
 
     MD5Init(&ctx->ctx_inside);
     MD5Update(&ctx->ctx_inside, ctx->block_inner_pad, MD5_BLOCK_LEN);
@@ -142,22 +167,24 @@ hmac_md5(const char *msg, const unsigned int msg_len,
 static void
 hmac_sha1_init(hmac_sha1_ctx *ctx, const char *key, const int key_len)
 {
-    int i = 0;
+    unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
 
-    for (i=0; i < SHA1_BLOCK_LEN && i < key_len; i++) {
-        ctx->block_inner_pad[i] = key[i] ^ 0x36;
-        ctx->block_outer_pad[i] = key[i] ^ 0x5c;
-    }
+    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
+    memcpy(init_key, key, key_len);
 
-    if(i < SHA1_BLOCK_LEN)
+    if(SHA1_BLOCK_LEN < key_len)
     {
-        while(i < SHA1_BLOCK_LEN)
-        {
-            ctx->block_inner_pad[i] = 0x36;
-            ctx->block_outer_pad[i] = 0x5c;
-            i++;
-        }
+        /* Calculate the digest of the key
+        */
+        sha1(final_key, init_key, key_len);
     }
+    else
+    {
+        memcpy(final_key, init_key, key_len);
+    }
+
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
 
     sha1_init(&ctx->ctx_inside);
     sha1_update(&ctx->ctx_inside, ctx->block_inner_pad, SHA1_BLOCK_LEN);
@@ -208,22 +235,24 @@ hmac_sha1(const char *msg, const unsigned int msg_len,
 static void
 hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key, const int key_len)
 {
-    int i = 0;
+    unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
 
-    for (i=0; i < SHA256_BLOCK_LEN && i < key_len; i++) {
-        ctx->block_inner_pad[i] = key[i] ^ 0x36;
-        ctx->block_outer_pad[i] = key[i] ^ 0x5c;
-    }
+    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
+    memcpy(init_key, key, key_len);
 
-    if(i < SHA256_BLOCK_LEN)
+    if(SHA256_BLOCK_LEN < key_len)
     {
-        while(i < SHA256_BLOCK_LEN)
-        {
-            ctx->block_inner_pad[i] = 0x36;
-            ctx->block_outer_pad[i] = 0x5c;
-            i++;
-        }
+        /* Calculate the digest of the key
+        */
+        sha256(final_key, init_key, key_len);
     }
+    else
+    {
+        memcpy(final_key, init_key, key_len);
+    }
+
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
 
     SHA256_Init(&ctx->ctx_inside);
     SHA256_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA256_BLOCK_LEN);
@@ -274,23 +303,24 @@ hmac_sha256(const char *msg, const unsigned int msg_len,
 static void
 hmac_sha384_init(hmac_sha384_ctx *ctx, const char *key, const int key_len)
 {
+    unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
 
-    int i = 0;
+    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
+    memcpy(init_key, key, key_len);
 
-    for (i=0; i < SHA384_BLOCK_LEN && i < key_len; i++) {
-        ctx->block_inner_pad[i] = key[i] ^ 0x36;
-        ctx->block_outer_pad[i] = key[i] ^ 0x5c;
-    }
-
-    if(i < SHA384_BLOCK_LEN)
+    if(SHA384_BLOCK_LEN < key_len)
     {
-        while(i < SHA384_BLOCK_LEN)
-        {
-            ctx->block_inner_pad[i] = 0x36;
-            ctx->block_outer_pad[i] = 0x5c;
-            i++;
-        }
+        /* Calculate the digest of the key
+        */
+        sha384(final_key, init_key, key_len);
     }
+    else
+    {
+        memcpy(final_key, init_key, key_len);
+    }
+
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
 
     SHA384_Init(&ctx->ctx_inside);
     SHA384_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA384_BLOCK_LEN);
@@ -341,22 +371,24 @@ hmac_sha384(const char *msg, const unsigned int msg_len,
 static void
 hmac_sha512_init(hmac_sha512_ctx *ctx, const char *key, const int key_len)
 {
-    int i = 0;
+    unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
 
-    for (i=0; i < SHA512_BLOCK_LEN && i < key_len; i++) {
-        ctx->block_inner_pad[i] = key[i] ^ 0x36;
-        ctx->block_outer_pad[i] = key[i] ^ 0x5c;
-    }
+    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
+    memcpy(init_key, key, key_len);
 
-    if(i < SHA512_BLOCK_LEN)
+    if(SHA512_BLOCK_LEN < key_len)
     {
-        while(i < SHA512_BLOCK_LEN)
-        {
-            ctx->block_inner_pad[i] = 0x36;
-            ctx->block_outer_pad[i] = 0x5c;
-            i++;
-        }
+        /* Calculate the digest of the key
+        */
+        sha512(final_key, init_key, key_len);
     }
+    else
+    {
+        memcpy(final_key, init_key, key_len);
+    }
+
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
 
     SHA512_Init(&ctx->ctx_inside);
     SHA512_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA512_BLOCK_LEN);
