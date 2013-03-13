@@ -408,6 +408,12 @@ my @tests = (
         'function' => \&make_distcheck,
         'fatal'    => $NO
     },
+    {
+        'category' => 'Makefile.am',
+        'detail'   => 'test suite conf/ files included',
+        'function' => \&test_suite_conf_files,
+        'fatal'    => $NO
+    },
 
     @build_security_client,
     @build_security_server,
@@ -850,6 +856,43 @@ sub profile_coverage() {
     }
 
     return 1;
+}
+
+sub test_suite_conf_files() {
+    my $make_file = '../Makefile.am';
+    my $rv = 1;
+
+    my %makefile_am_files = ();
+
+    unless (-e $make_file) {
+        &write_test_file("[-] $make_file does not exist.\n",
+            $curr_test_file);
+        return 0;
+    }
+
+    open F, "< $make_file" or die $!;
+    while (<F>) {
+        if (m|test/conf/(\S+)|) {
+            $makefile_am_files{$1} = '';
+        }
+    }
+    close F;
+
+    for my $f (glob("$conf_dir/*")) {
+        next if -d $f;
+        next unless $f =~ /\.conf/ or $f =~ /fwknop/;
+        if ($f =~ m|$conf_dir/(\S+)|) {
+            if (defined $makefile_am_files{$1}) {
+                &write_test_file("[+] test suite conf file $1 is in $make_file.\n",
+                    $curr_test_file);
+            } else {
+                &write_test_file("[-] test suite conf file $1 not in $make_file.\n",
+                    $curr_test_file);
+                $rv = 0;
+            }
+        }
+    }
+    return $rv;
 }
 
 sub make_distcheck() {

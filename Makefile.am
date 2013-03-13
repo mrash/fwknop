@@ -148,10 +148,43 @@ EXTRA_DIST = \
     test/conf/hmac_dual_key_usage_access.conf \
     test/conf/hmac_invalid_type_access.conf \
     test/conf/hmac_md5_access.conf \
+    test/conf/hmac_md5_short_key_access.conf \
+    test/conf/hmac_md5_long_key_access.conf \
     test/conf/hmac_sha1_access.conf \
+    test/conf/hmac_sha1_short_key_access.conf \
+    test/conf/hmac_sha1_long_key_access.conf \
+    test/conf/hmac_sha256_access.conf \
+    test/conf/hmac_sha256_short_key_access.conf \
+    test/conf/hmac_sha256_long_key_access.conf \
     test/conf/hmac_sha384_access.conf \
+    test/conf/hmac_sha384_short_key_access.conf \
+    test/conf/hmac_sha384_long_key_access.conf \
     test/conf/hmac_sha512_access.conf \
+    test/conf/hmac_sha512_short_key_access.conf \
+    test/conf/hmac_sha512_long_key_access.conf \
     test/conf/hmac_simple_keys_access.conf \
+    test/conf/fwknoprc_default_hmac_base64_key \
+    test/conf/fwknoprc_hmac_invalid_type \
+    test/conf/fwknoprc_hmac_md5_key \
+    test/conf/fwknoprc_hmac_md5_long_key \
+    test/conf/fwknoprc_hmac_md5_short_key \
+    test/conf/fwknoprc_hmac_sha1_key \
+    test/conf/fwknoprc_hmac_sha1_long_key \
+    test/conf/fwknoprc_hmac_sha1_short_key \
+    test/conf/fwknoprc_hmac_sha256_key \
+    test/conf/fwknoprc_hmac_sha256_long_key \
+    test/conf/fwknoprc_hmac_sha256_short_key \
+    test/conf/fwknoprc_hmac_sha384_key \
+    test/conf/fwknoprc_hmac_sha384_long_key \
+    test/conf/fwknoprc_hmac_sha384_short_key \
+    test/conf/fwknoprc_hmac_sha512_key \
+    test/conf/fwknoprc_hmac_sha512_short_key \
+    test/conf/fwknoprc_hmac_simple_keys \
+    test/conf/fwknoprc_invalid_base64_key \
+    test/conf/fwknoprc_named_key \
+    test/conf/fwknoprc_with_default_base64_key \
+    test/conf/fwknoprc_with_default_key \
+    test/conf/fwknoprc_with_named_key \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
