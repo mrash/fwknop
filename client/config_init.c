@@ -41,12 +41,19 @@
 #include <fcntl.h>
 
 #define RC_PARAM_TEMPLATE           "%-24s    %s\n"             /*!< Template to define param = val in a rc file */
+#define RC_SECTION_DEFAULT          "default"                   /*!< Name of the default section in fwknoprc */
 #define RC_SECTION_TEMPLATE         "[%s]\n"                    /*!< Template to define a section in a rc file */
 #define FWKNOP_CLI_ARG_BM(x)        ((uint32_t)(1 << (x)))      /*!< Bitmask command line arg */
 #define FWKNOPRC_OFLAGS             (O_WRONLY|O_CREAT|O_EXCL)   /*!< O_flags used to create an fwknoprc file with the open function */
 #define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
 #define PARAM_YES_VALUE             "Y"                         /*!< String which represents a YES value for a parameter in fwknoprc */
 #define PARAM_NO_VALUE              "N"                         /*!< String which represents a NO value for a parameter in fwknoprc */
+
+typedef struct
+{
+    char name[MAX_LINE_LEN];
+    char val[MAX_LINE_LEN];
+} TParam;
 
 enum
 {
@@ -136,7 +143,7 @@ bool_to_yesno(int val, char* s, size_t len)
 }
 
 /**
- * \brief Lookup a section in a line and fetch it.
+ * \brief Check if a section is in a line and fetch it.
  *
  * This function parses a NULL terminated string in order to find a section,
  * something like [mysection]. If it succeeds, the stanza is retrieved.
@@ -146,14 +153,14 @@ bool_to_yesno(int val, char* s, size_t len)
  * \param rc_section String to store the section found
  * \param rc_section_size Size of the rc_section buffer
  *
- * \return 0 if a section was found, 1 otherwise
+ * \return 1 if a section was found, 0 otherwise
  */
 static int
-lookup_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t rc_section_size)
+is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t rc_section_size)
 {
     char    *ndx, *emark;
     char    buf[MAX_LINE_LEN];
-    int     section_not_found = 1;
+    int     section_found = 0;
 
     if (line_size < sizeof(buf))
     {
@@ -174,7 +181,7 @@ lookup_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16
                 *emark = '\0';
                 memset(rc_section, 0, rc_section_size);
                 strlcpy(rc_section, ndx, rc_section_size);
-                section_not_found = 0;
+                section_found = 1;
             }
             else
             {
@@ -185,7 +192,44 @@ lookup_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16
     {
     }
 
-    return section_not_found;
+    return section_found;
+}
+
+/**
+ *
+ */
+static int
+is_rc_param(const char *line, TParam *param)
+{
+    char    var[MAX_LINE_LEN] = {0};
+    char    val[MAX_LINE_LEN] = {0};
+    char    *ndx;
+    
+    /* Fetch the variable and its value */
+    if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)
+    {
+        fprintf(stderr,
+            "*Invalid entry in '%s'", line);
+        return 0;
+    }
+
+    /* Remove any colon that may be on the end of the var */
+    if((ndx = strrchr(var, ':')) != NULL)
+        *ndx = '\0';
+
+    /* Even though sscanf should automatically add a terminating
+     * NULL byte, an assumption is made that the input arrays are
+     * big enough, so we'll force a terminating NULL byte regardless
+     */
+    var[MAX_LINE_LEN-1] = 0x0;
+    val[MAX_LINE_LEN-1] = 0x0;
+
+
+    /* Copy back the val and var in the structure */
+    strlcpy(param->name, var, sizeof(param->name));
+    strlcpy(param->val, val, sizeof(param->val));
+
+    return 1;
 }
 
 /* Convert a protocol string to its intger value.
@@ -417,6 +461,8 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
 {
     int     tmpint, is_err;
 
+    fprintf(stdout, "Parsing variable %s...\n", var);
+    
     /* Digest Type */
     if(CONF_VAR_IS(var, "DIGEST_TYPE"))
     {
@@ -790,6 +836,137 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
     fprintf(fhandle, RC_PARAM_TEMPLATE, fwknop_cli_key_tab[arg_ndx], val);
 }
 
+static int
+process_rc_section(char *section_name, fko_cli_options_t *options)
+{
+    FILE    *rc;
+    int     line_num = 0, do_exit = 0;
+    int     rcf_offset;
+    char    line[MAX_LINE_LEN];
+    char    rcfile[MAX_PATH_LEN];
+    char    curr_stanza[MAX_LINE_LEN] = {0};
+    TParam  param;
+    int     rc_section_found = 0;
+
+    char    *homedir;
+
+    memset(rcfile, 0x0, MAX_PATH_LEN);
+
+    if(options->rc_file[0] == 0x0)
+    {
+#ifdef WIN32
+        homedir = getenv("USERPROFILE");
+#else
+        homedir = getenv("HOME");
+#endif
+
+        if(homedir == NULL)
+        {
+            fprintf(stderr, "Warning: Unable to determine HOME directory.\n"
+                " No .fwknoprc file processed.\n");
+            return -1;
+        }
+
+        strlcpy(rcfile, homedir, MAX_PATH_LEN);
+
+        rcf_offset = strlen(rcfile);
+
+        /* Sanity check the path to .fwknoprc.
+         * The preceeding path plus the path separator and '.fwknoprc' = 11
+         * cannot exceed MAX_PATH_LEN.
+         */
+        if(rcf_offset > (MAX_PATH_LEN - 11))
+        {
+            fprintf(stderr, "Warning: Path to .fwknoprc file is too long.\n"
+                " No .fwknoprc file processed.\n");
+            return -1;
+        }
+
+        rcfile[rcf_offset] = PATH_SEP;
+        strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
+    }
+    else
+    {
+        strlcpy(rcfile, options->rc_file, MAX_PATH_LEN);
+    }
+
+    /* Check rc file permissions - if anything other than user read/write,
+     * then throw a warning.  This change was made to help ensure that the
+     * client consumes a proper rc file with strict permissions set (thanks
+     * to Fernando Arnaboldi from IOActive for pointing this out).
+    */
+    verify_file_perms_ownership(rcfile);
+
+    /* Open the rc file for reading, if it does not exist, then create
+     * an initial .fwknoprc file with defaults and go on.
+    */
+    if ((rc = fopen(rcfile, "r")) == NULL)
+    {
+        if(errno == ENOENT)
+        {
+            if(create_fwknoprc(rcfile) != 0)
+                return -1;
+        }
+        else
+            fprintf(stderr, "Unable to open rc file: %s: %s\n",
+                rcfile, strerror(errno));
+
+        return - 1;
+    }
+
+    if (options->verbose > 3)
+        fprintf(stderr, "process_rc_section() : Parsing section '%s' ...\n", section_name);
+    
+    while ((fgets(line, MAX_LINE_LEN, rc)) != NULL)
+    {
+        line_num++;
+        line[MAX_LINE_LEN-1] = '\0';
+
+        /* Get past comments and empty lines (note: we only look at the
+         * first character.
+        */
+        if(IS_EMPTY_LINE(line[0]))
+            continue;
+        
+        /* Check which section we are working on */
+        if (is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)))
+        {
+            rc_section_found = (strcasecmp(curr_stanza, section_name) == 0) ? 1 : 0;
+
+            if (strcasecmp(curr_stanza, options->use_rc_stanza) == 0)
+                options->got_named_stanza = 1;
+
+            continue;
+        }
+
+        /* We are not in the good section */
+        else if (rc_section_found == 0)
+            continue;
+
+        /* We have not found a valid parameter */
+        else if (is_rc_param(line, &param) == 0)
+            continue;
+
+        /* We have a valid parameter */
+        else
+        {
+           if(parse_rc_param(options, param.name, param.val) < 0)
+            {
+                fprintf(stderr, "Parameter error in %s, line %i: var=%s, val=%s\n",
+                    rcfile, line_num, param.name, param.val);
+                do_exit = 1;
+            }            
+        }
+    }
+
+    fclose(rc);
+
+    if (do_exit)
+        exit(EXIT_FAILURE);
+
+    return 0;
+}
+
 /* Process (create if necessary) the users ~/.fwknoprc file.
 */
 static void
@@ -1076,7 +1253,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         line[MAX_LINE_LEN-1] = '\0';
 
         /* If we find a section... */
-        if(lookup_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 0)
+        if(is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 0)
         {
             /* and this is the one we are looking for, we add the new settings */
             if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
@@ -1284,7 +1461,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
 
     /* First process the .fwknoprc file.
     */
-    process_rc(options);
+    process_rc_section(RC_SECTION_DEFAULT, options);
 
     /* Reset the options index so we can run through them again.
     */
