@@ -282,7 +282,7 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'key_file' => $cf{'rc_hmac_b64_key'},
+        'key_file' => $cf{'rc_hmac_sha384_key'},
         'fatal'    => $NO
     },
 
