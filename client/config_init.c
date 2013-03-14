@@ -196,7 +196,12 @@ is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t r
 }
 
 /**
+ * Grab a variable and its value from a rc line.
  *
+ * \param line  Line to parse for a variable
+ * \param param Parameter structure where to store the variable name and its value
+ *
+ * \return 0 if no variable has been found, 1 otherwise.
  */
 static int
 is_rc_param(const char *line, TParam *param)
@@ -448,7 +453,6 @@ create_fwknoprc(const char *rcfile)
         "#CLIENT_TIMEOUT      60\n"
         "#\n"
         "\n"
-        "###EOF###\n"
     );
 
     fclose(rc);
@@ -461,7 +465,8 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
 {
     int     tmpint, is_err;
 
-    fprintf(stdout, "Parsing variable %s...\n", var);
+    if(options->verbose > 3)
+        fprintf(stderr, "add_rc_param() : Parsing variable %s...\n", var);
     
     /* Digest Type */
     if(CONF_VAR_IS(var, "DIGEST_TYPE"))
@@ -830,12 +835,25 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
     }
 
     if(options->verbose > 3)
-        fprintf(stderr, "Updating param (%u) %s to %s\n",
+        fprintf(stderr, "add_rc_param() : Updating param (%u) %s to %s\n",
                 arg_ndx, fwknop_cli_key_tab[arg_ndx], val);
 
     fprintf(fhandle, RC_PARAM_TEMPLATE, fwknop_cli_key_tab[arg_ndx], val);
 }
 
+/**
+ * Process the fwknoprc file and lookup a section to extract its settings.
+ *
+ * This function aims at loading the settings for a specific section in
+ * a fwknoprc file.
+ *
+ * \param section_name  Name of the section to lookup.
+ * \param options       Fwknop option structure where settings have to
+ *                      be stored.
+ *
+ * \return 0 if the section has been found and processed successfully
+ *         a negative value if one or more errors occured
+ */
 static int
 process_rc_section(char *section_name, fko_cli_options_t *options)
 {
@@ -967,196 +985,6 @@ process_rc_section(char *section_name, fko_cli_options_t *options)
     return 0;
 }
 
-/* Process (create if necessary) the users ~/.fwknoprc file.
-*/
-static void
-process_rc(fko_cli_options_t *options)
-{
-    FILE    *rc;
-    int     line_num = 0, do_exit = 0;
-    int     rcf_offset;
-    char    line[MAX_LINE_LEN];
-    char    rcfile[MAX_PATH_LEN];
-    char    curr_stanza[MAX_LINE_LEN] = {0};
-    char    var[MAX_LINE_LEN]  = {0};
-    char    val[MAX_LINE_LEN]  = {0};
-
-    char    *ndx, *emark, *homedir;
-
-    memset(rcfile, 0x0, MAX_PATH_LEN);
-
-    if(options->rc_file[0] == 0x0)
-    {
-#ifdef WIN32
-        homedir = getenv("USERPROFILE");
-#else
-        homedir = getenv("HOME");
-#endif
-
-        if(homedir == NULL)
-        {
-            fprintf(stderr, "Warning: Unable to determine HOME directory.\n"
-                " No .fwknoprc file processed.\n");
-            return;
-        }
-
-        strlcpy(rcfile, homedir, MAX_PATH_LEN);
-
-        rcf_offset = strlen(rcfile);
-
-        /* Sanity check the path to .fwknoprc.
-         * The preceeding path plus the path separator and '.fwknoprc' = 11
-         * cannot exceed MAX_PATH_LEN.
-        */
-        if(rcf_offset > (MAX_PATH_LEN - 11))
-        {
-            fprintf(stderr, "Warning: Path to .fwknoprc file is too long.\n"
-                " No .fwknoprc file processed.\n");
-            return;
-        }
-
-        rcfile[rcf_offset] = PATH_SEP;
-        strlcat(rcfile, ".fwknoprc", MAX_PATH_LEN);
-    }
-    else
-    {
-        strlcpy(rcfile, options->rc_file, MAX_PATH_LEN);
-    }
-
-    /* Check rc file permissions - if anything other than user read/write,
-     * then throw a warning.  This change was made to help ensure that the
-     * client consumes a proper rc file with strict permissions set (thanks
-     * to Fernando Arnaboldi from IOActive for pointing this out).
-    */
-    verify_file_perms_ownership(rcfile);
-
-    /* Open the rc file for reading, if it does not exist, then create
-     * an initial .fwknoprc file with defaults and go on.
-    */
-    if ((rc = fopen(rcfile, "r")) == NULL)
-    {
-        if(errno == ENOENT)
-        {
-            if(create_fwknoprc(rcfile) != 0)
-                return;
-        }
-        else
-            fprintf(stderr, "Unable to open rc file: %s: %s\n",
-                rcfile, strerror(errno));
-
-        return;
-    }
-
-    /* Read in and parse the rc file parameters.
-    */
-    while ((fgets(line, MAX_LINE_LEN, rc)) != NULL)
-    {
-        line_num++;
-        line[MAX_LINE_LEN-1] = '\0';
-
-        ndx = line;
-
-        /* Skip any leading whitespace.
-        */
-        while(isspace(*ndx))
-            ndx++;
-
-        /* Get past comments and empty lines (note: we only look at the
-         * first character.
-        */
-        if(IS_EMPTY_LINE(line[0]))
-            continue;
-
-        if(*ndx == '[')
-        {
-            ndx++;
-            emark = strchr(ndx, ']');
-            if(emark == NULL)
-            {
-                fprintf(stderr, "Unterminated stanza line: '%s'.  Skipping.\n",
-                    line);
-                continue;
-            }
-
-            *emark = '\0';
-
-            strlcpy(curr_stanza, ndx, MAX_LINE_LEN);
-
-            if(options->verbose > 3)
-                fprintf(stderr,
-                    "RC FILE: %s, LINE: %s\tSTANZA: %s:\n",
-                    rcfile, line, curr_stanza
-                );
-
-            continue;
-        }
-
-        if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)
-        {
-            fprintf(stderr,
-                "*Invalid entry in %s at line %i.\n - '%s'",
-                rcfile, line_num, line
-            );
-            continue;
-        }
-
-        /* Remove any colon that may be on the end of the var
-        */
-        if((ndx = strrchr(var, ':')) != NULL)
-            *ndx = '\0';
-
-        /* Even though sscanf should automatically add a terminating
-         * NULL byte, an assumption is made that the input arrays are
-         * big enough, so we'll force a terminating NULL byte regardless
-        */
-        var[MAX_LINE_LEN-1] = 0x0;
-        val[MAX_LINE_LEN-1] = 0x0;
-
-        if(options->verbose > 3)
-            fprintf(stderr,
-                "RC FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
-                rcfile, line, var, val
-            );
-
-        /* We do not proceed with parsing until we know we are in
-         * a stanza.
-        */
-        if(strlen(curr_stanza) < 1)
-            continue;
-
-        /* Process the values. We assume we will see the default stanza
-         * first, then if a named-stanza is specified, we process its
-         * entries as well.
-        */
-        if(strcasecmp(curr_stanza, "default") == 0)
-        {
-            if(parse_rc_param(options, var, val) < 0)
-            {
-                fprintf(stderr, "Parameter error in %s, line %i: var=%s, val=%s\n",
-                    rcfile, line_num, var, val);
-                do_exit = 1;
-            }
-        }
-        else if(options->use_rc_stanza[0] != '\0'
-          && strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
-        {
-            options->got_named_stanza = 1;
-            if(parse_rc_param(options, var, val) < 0)
-            {
-                fprintf(stderr,
-                    "Parameter error in %s, stanza: %s, line %i: var=%s, val=%s\n",
-                    rcfile, curr_stanza, line_num, var, val);
-                do_exit = 1;
-            }
-        }
-
-    } /* end while fgets rc */
-    fclose(rc);
-
-    if(do_exit)
-        exit(EXIT_FAILURE);
-}
-
 /**
  * \brief Update the user rc file with the new parameters for a selected stanza.
  *
@@ -1253,7 +1081,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         line[MAX_LINE_LEN-1] = '\0';
 
         /* If we find a section... */
-        if(is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 0)
+        if(is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 1)
         {
             /* and this is the one we are looking for, we add the new settings */
             if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
@@ -1262,7 +1090,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
                 fprintf(rc_update, RC_SECTION_TEMPLATE, curr_stanza);
 
                 if(options->verbose > 3)
-                    fprintf(stderr, "Updating %s stanza\n", curr_stanza);
+                    fprintf(stderr, "update_rc() : Updating %s stanza\n", curr_stanza);
 
                 for (arg_ndx=0 ; arg_ndx<FWKNOP_CLI_ARG_NB ; arg_ndx++)
                 {
@@ -1300,7 +1128,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         fprintf(rc_update, "\n[%s]\n", options->use_rc_stanza);
 
         if(options->verbose > 3)
-            fprintf(stderr, "Updating %s stanza\n", curr_stanza);
+            fprintf(stderr, "update_rc() : Updating %s stanza\n", curr_stanza);
 
         for (arg_ndx=0 ; arg_ndx<FWKNOP_CLI_ARG_NB ; arg_ndx++)
         {
@@ -1765,35 +1593,51 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         }
     }
 
-    /* Ask the user whether we overwrite the stanza from the rcfile with the
-     * command line arguments */
-    if (   (options->save_rc_stanza == 1)
-        && (cli_arg_bitmask != 0)
-        && (options->got_named_stanza == 1) )
+    /* We are asked to save a new stanza wit the args supplied on the command line */
+    if ( (options->save_rc_stanza == 1) && (cli_arg_bitmask != 0) )
     {
-        fprintf(stdout, "Overwritting stanza [%s] [Y/n] ? ", options->use_rc_stanza);
-
-        if (scanf("%c", &user_input ) != 1)
-            user_input = 'Y';
-
-        if ((user_input != 'Y') && (user_input != 0x0A))
+        /* Ask the user whether we overwrite the stanza from the rcfile with the
+         * command line arguments */
+        if (options->got_named_stanza == 1)
         {
-            options->save_rc_stanza = 0;
-            process_rc(options);
+            fprintf(stdout, "Overwritting stanza [%s] [Y/n] ? ", options->use_rc_stanza);
+
+            if (scanf("%c", &user_input ) != 1)
+                user_input = 'Y';
+
+            /* Cancel the current operation since the user discard the overwrite.
+             * It would be nice to be able to reset the args set by the user on the
+             * command line or to reset the settings. */
+            if ((user_input != 'Y') && (user_input != 0x0A))
+            {
+                fprintf(stderr, "Canceling...\n");
+                exit(EXIT_FAILURE);
+            }
         }
+
+        /* Force a stanza found since we are going to update it. We cannot update
+         * the rcfile without prior validation */
+        else
+            options->got_named_stanza = 1;
     }
 
-    /* Force a stanza found since we are going to update it. We cannot update
-     * the rcfile without prior validation */
-    if ( (options->save_rc_stanza == 1) && (cli_arg_bitmask != 0) )
-        options->got_named_stanza = 1;
+    /* Load the specified stanza */
+    else if (options->got_named_stanza == 1)
+    {
+        options->save_rc_stanza = 0;
+        process_rc_section(options->use_rc_stanza, options);
+    }
+
+    /* Discard the save stanza since there is no args specified on the command line */
+    else
+        options->save_rc_stanza = 0;
 
     /* Now that we have all of our options set, we can validate them */
     validate_options(options);
 
     /* We can upgrade our settings with the parameters set on the command
      * line by the user */
-    if ( (options->save_rc_stanza == 1) && (cli_arg_bitmask != 0) )
+    if (options->save_rc_stanza == 1)
         update_rc(options, cli_arg_bitmask);
 
     return;
