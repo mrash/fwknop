@@ -84,12 +84,16 @@ dump_ctx(fko_ctx_t ctx)
     char       *nat_access      = NULL;
     char       *server_auth     = NULL;
     char       *enc_data        = NULL;
+    char       *hmac_data       = NULL;
     char       *spa_digest      = NULL;
     char       *spa_data        = NULL;
 
     time_t      timestamp       = 0;
     short       msg_type        = -1;
     short       digest_type     = -1;
+    short       hmac_type       = -1;
+    short       encryption_type = -1;
+    int         encryption_mode = -1;
     int         client_timeout  = -1;
 
     /* Should be checking return values, but this is temp code. --DSS
@@ -104,7 +108,11 @@ dump_ctx(fko_ctx_t ctx)
     fko_get_spa_server_auth(ctx, &server_auth);
     fko_get_spa_client_timeout(ctx, &client_timeout);
     fko_get_spa_digest_type(ctx, &digest_type);
+    fko_get_spa_hmac_type(ctx, &hmac_type);
+    fko_get_spa_encryption_type(ctx, &encryption_type);
+    fko_get_spa_encryption_mode(ctx, &encryption_mode);
     fko_get_encoded_data(ctx, &enc_data);
+    fko_get_hmac_data(ctx, &hmac_data);
     fko_get_spa_digest(ctx, &spa_digest);
     fko_get_spa_data(ctx, &spa_data);
 
@@ -122,7 +130,7 @@ dump_ctx(fko_ctx_t ctx)
     ndx += cp;
     cp = sprintf(ndx, "    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
     ndx += cp;
-    cp = sprintf(ndx, "   Message Type: %i\n", msg_type);
+    cp = sprintf(ndx, "   Message Type: %i (%s)\n", msg_type, msg_type_inttostr(msg_type));
     ndx += cp;
     cp = sprintf(ndx, " Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
     ndx += cp;
@@ -132,11 +140,19 @@ dump_ctx(fko_ctx_t ctx)
     ndx += cp;
     cp = sprintf(ndx, " Client Timeout: %u\n", client_timeout);
     ndx += cp;
-    cp = sprintf(ndx, "    Digest Type: %u\n", digest_type);
+    cp = sprintf(ndx, "    Digest Type: %u (%s)\n", digest_type, digest_inttostr(digest_type));
+    ndx += cp;
+    cp = sprintf(ndx, "      HMAC Type: %u (%s)\n", hmac_type, digest_inttostr(hmac_type));
+    ndx += cp;
+    cp = sprintf(ndx, "Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
+    ndx += cp;
+    cp = sprintf(ndx, "Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_inttostr(encryption_mode));
     ndx += cp;
     cp = sprintf(ndx, "   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     ndx += cp;
     cp = sprintf(ndx, "SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
+    ndx += cp;
+    cp = sprintf(ndx, "           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
 
     return(buf);
 }

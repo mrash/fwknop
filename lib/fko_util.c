@@ -80,6 +80,71 @@ hmac_digest_strtoint(const char *dt_str)
         return(-1);
 }
 
+/* Return encryption type string representation
+*/
+const char *
+enc_type_inttostr(const int type)
+{
+    if(type == FKO_ENC_MODE_UNKNOWN)
+        return("Unknown encryption type");
+    else if(type == FKO_ENCRYPTION_RIJNDAEL)
+        return("Rijndael");
+    else if(type == FKO_ENCRYPTION_GPG)
+        return("GPG");
+
+    return("Unknown encryption type");
+}
+
+/* Return encryption mode string representation
+*/
+const char *
+enc_mode_inttostr(const int mode)
+{
+    if(mode == FKO_ENC_MODE_UNKNOWN)
+        return("Unknown encryption mode");
+    else if(mode == FKO_ENC_MODE_ECB)
+        return("ECB");
+    else if(mode == FKO_ENC_MODE_CBC)
+        return("CBC");
+    else if(mode == FKO_ENC_MODE_CFB)
+        return("CFB");
+    else if(mode == FKO_ENC_MODE_PCBC)
+        return("PCBC");
+    else if(mode == FKO_ENC_MODE_OFB)
+        return("OFB");
+    else if(mode == FKO_ENC_MODE_CTR)
+        return("CTR");
+    else if(mode == FKO_ENC_MODE_ASYMMETRIC)
+        return("Asymmetric");
+    else if(mode == FKO_ENC_MODE_CBC_LEGACY_IV)
+        return("CBC legacy initialization vector");
+
+    return("Unknown encryption mode");
+}
+
+/* Return message type string representation
+*/
+const char *
+msg_type_inttostr(const int type)
+{
+    if(type == FKO_COMMAND_MSG)
+        return("Command msg");
+    else if(type == FKO_ACCESS_MSG)
+        return("Access msg");
+    else if(type == FKO_NAT_ACCESS_MSG)
+        return("NAT access msg");
+    else if(type == FKO_CLIENT_TIMEOUT_ACCESS_MSG)
+        return("Client timeout access msg");
+    else if(type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+        return("Client timeout NAT access msg");
+    else if(type == FKO_LOCAL_NAT_ACCESS_MSG)
+        return("Local NAT access msg");
+    else if(type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+        return("Client timeout local NAT access msg");
+
+    return("Unknown message type");
+}
+
 /* Return digest string representation
 */
 const char *

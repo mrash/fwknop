@@ -947,6 +947,12 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         *hmac_key_len = fko_base64_decode(options->hmac_key_base64,
             (unsigned char *) options->hmac_key);
+        if(*hmac_key_len > MAX_KEY_LEN || *hmac_key_len <= 0)
+        {
+            fprintf(stderr, "[*] Invalid decoded key length: '%d', must be in [1,%d]",
+                    *hmac_key_len, MAX_KEY_LEN);
+            clean_exit(ctx, options, EXIT_FAILURE);
+        }
         memcpy(hmac_key, options->hmac_key, *hmac_key_len);
         use_hmac = 1;
     }
@@ -1018,6 +1024,7 @@ display_ctx(fko_ctx_t ctx)
     short       msg_type        = -1;
     short       digest_type     = -1;
     short       hmac_type       = -1;
+    short       encryption_type = -1;
     int         encryption_mode = -1;
     int         client_timeout  = -1;
 
@@ -1034,6 +1041,7 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_client_timeout(ctx, &client_timeout);
     fko_get_spa_digest_type(ctx, &digest_type);
     fko_get_spa_hmac_type(ctx, &hmac_type);
+    fko_get_spa_encryption_type(ctx, &encryption_type);
     fko_get_spa_encryption_mode(ctx, &encryption_mode);
     fko_get_encoded_data(ctx, &enc_data);
     fko_get_hmac_data(ctx, &hmac_data);
@@ -1045,14 +1053,15 @@ display_ctx(fko_ctx_t ctx)
     printf("       Username: %s\n", username == NULL ? "<NULL>" : username);
     printf("      Timestamp: %u\n", (unsigned int) timestamp);
     printf("    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
-    printf("   Message Type: %i\n", msg_type);
+    printf("   Message Type: %i (%s)\n", msg_type, msg_type_inttostr(msg_type));
     printf(" Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
     printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
     printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
-    printf(" Client Timeout: %u\n", client_timeout);
+    printf(" Client Timeout: %u (seconds)\n", client_timeout);
     printf("    Digest Type: %d (%s)\n", digest_type, digest_inttostr(digest_type));
     printf("      HMAC Type: %d (%s)\n", hmac_type, digest_inttostr(hmac_type));
-    printf("Encryption Mode: %d\n", encryption_mode);
+    printf("Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
+    printf("Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_inttostr(encryption_mode));
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
     printf("           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);

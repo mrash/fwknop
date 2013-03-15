@@ -39,7 +39,10 @@ int is_valid_digest_len(const int len);
 int enc_mode_strtoint(const char *enc_mode_str);
 int strtol_wrapper(const char * const str, const int min,
     const int max, const int exit_upon_err, int *is_err);
+const char * msg_type_inttostr(const int type);
 short digest_strtoint(const char *dt_str);
+const char * enc_type_inttostr(const int type);
+const char * enc_mode_inttostr(const int mode);
 const char * digest_inttostr(const int type);
 short hmac_digest_strtoint(const char *dt_str);
 
