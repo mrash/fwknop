@@ -656,7 +656,7 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/requested\sNAT\saccess.*not\senabled/i],
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{'def'},
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
@@ -669,12 +669,34 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'nat'} -a $cf{'open_ports_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
+            qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT tcp/80 to $internal_nat_host tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose -N $internal_nat_host:22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'nat'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
+            qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'nat'},
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael',
         'subcategory' => 'client',
@@ -715,17 +737,15 @@
         'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{'local_nat'},
         'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
-        'detail'   => "local NAT non-FORCE_NAT (tcp/22 ssh)",
+        'detail'   => "local NAT rand port to tcp/22",
         'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose --nat-local --nat-port 22",
+        'cmdline'  => "$default_client_args --nat-local --nat-rand-port",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
@@ -734,7 +754,64 @@
         'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'local_nat'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT rand port to tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args --nat-rand-port -N $internal_nat_host",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'nat'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD.*dport\s22\s.*\sACCEPT/,
+            qr/FWKNOP_PREROUTING.*\sDNAT\s.*to\-destination\s$internal_nat_host\:22/,
+        ],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT rand port to -N <host>:40001",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args --nat-rand-port -N $internal_nat_host:40001",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'nat'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD.*dport\s40001\s.*\sACCEPT/,
+            qr/FWKNOP_PREROUTING.*\sDNAT\s.*to\-destination\s$internal_nat_host\:40001/,
+        ],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'nat'},
+        'fatal'    => $NO
+    },
+
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "local NAT non-FORCE_NAT (tcp/22)",
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --verbose --verbose --nat-local --nat-port 80",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
+            qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
+        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'local_nat'},
         'fatal'    => $NO
     },
     {

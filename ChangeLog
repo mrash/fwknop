@@ -1,8 +1,9 @@
 fwknop-2.5 (//2013):
-    - Major release of new functionality - HMAC SHA-256 support in the
-      encrypt-then-authenticate model.
+    - Major release of new functionality - HMAC support in the encrypt-then-
+      authenticate model.  Supported HMAC digests include MD5, SHA1, SHA256,
+      SHA384, and SHA512.  The default is HMAC-SHA256 when HMAC is used.
     - [libfko] Significant bug fix to honor the full encryption key length for
-      user-supplied Rijndael keys > 16 bytes long.  Previous to this bug fix,
+      user-supplied Rijndael keys > 16 bytes long.  Previous to this fix,
       only the first 16 bytes of a key were actually used in the encryption/
       decryption process even if the supplied key was longer.  The result was
       a weakening of expected security for users that had keys > 16 bytes,
@@ -13,8 +14,8 @@ fwknop-2.5 (//2013):
       the passphrase and a random salt.  This issue was reported by Michael T.
       Dean.  Closes issue #18 on github.
     - [libfko] Added the ability to maintain backwards compatibility with the
-      now deprecated "zero padding" strategy in AES mode that was a hold over
-      from the old perl fwknop implementation.
+      now deprecated "zero padding" key derivation strategy in AES mode that
+      was a hold over from the old perl fwknop implementation.
     - [test suite] Added --enable-openssl-checks to send all SPA packets
       encrypted via libfko through the OpenSSL library to ensure that the
       libfko usage of AES is always compatible with OpenSSL.  This ensures
@@ -23,6 +24,13 @@ fwknop-2.5 (//2013):
       engine.  If a vulnerability is discovered in OpenSSL and a change is
       made, then the --enable-openssl-checks mode will allow the test suite to
       discover this in a automated fashion for fwknop.
+    - [client] Bug fix for --nat-rand-port mode to ensure that the port to be
+      NAT'd is properly defined so that the fwknopd server will NAT
+      connnections to this port instead of applying the NAT operation to the
+      port that is to be accessed via -A.  This change also prints the
+      randomly assigned port to stdout regardless of whether --verbose mode is
+      used (since it not then the user will have no idea which port is
+      actually going to be NAT'd on the fwknopd side).
     - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.4, and this has
       been checked in under the extras/openbsd/fwknop-2.0.4 directory.
 

@@ -52,7 +52,10 @@ static void save_args(int argc, char **argv, const char * const args_save_file);
 static void run_last_args(fko_cli_options_t *options,
         const char * const args_save_file);
 static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
-static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options);
+static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options,
+        const char * const access_buf);
+static void set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options,
+        char *access_buf);
 static int get_rand_port(fko_ctx_t ctx);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
@@ -213,16 +216,7 @@ main(int argc, char **argv)
          * to be specified as well, so in this case append the string
          * "none/0" to the allow IP.
         */
-        if(options.access_str[0] != 0x0)
-        {
-            snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
-                    options.allow_ip_str, ",", options.access_str);
-        }
-        else
-        {
-            snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
-                    options.allow_ip_str, ",", "none/0");
-        }
+        set_access_buf(ctx, &options, access_buf);
     }
     res = fko_set_spa_message(ctx, access_buf);
     if(res != FKO_SUCCESS)
@@ -236,7 +230,7 @@ main(int argc, char **argv)
     */
     if (options.nat_local || options.nat_access_str[0] != 0x0)
     {
-        res = set_nat_access(ctx, &options);
+        res = set_nat_access(ctx, &options, access_buf);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_nat_access_str", res);
@@ -529,7 +523,7 @@ static int
 get_rand_port(fko_ctx_t ctx)
 {
     char *rand_val = NULL;
-    char  port_str[6];
+    char  port_str[MAX_PORT_STR_LEN+1];
     int   tmpint, is_err;
     int   port     = 0;
     int   res      = 0;
@@ -601,25 +595,119 @@ ipv4_str_has_port(char *str)
     return 0;
 }
 
+/* Set access buf
+*/
+static void
+set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
+{
+    char   *ndx = NULL, tmp_nat_port[MAX_PORT_STR_LEN+1] = {0};
+    int     nat_port = 0;
+
+    memset(tmp_nat_port, 0x0, MAX_PORT_STR_LEN+1);
+
+    if(options->access_str[0] != 0x0)
+    {
+        if (options->nat_rand_port)
+        {
+            nat_port = get_rand_port(ctx);
+            options->nat_port = nat_port;
+        }
+        else if (options->nat_port)
+            nat_port = options->nat_port;
+
+        if(nat_port > 0 && nat_port <= MAX_PORT)
+        {
+            /* Replace the access string port with the NAT port since the
+             * NAT port is manually specified (--nat-port) or derived from
+             * random data (--nat-rand-port).  In the NAT modes, the fwknopd
+             * server uses the port in the access string as the one to NAT,
+             * and access is granted via this translated port to whatever is
+             * specified with --nat-access <IP:port> (so this service is the
+             * utlimate target of the incoming connection after the SPA
+             * packet is sent).
+            */
+            ndx = strchr(options->access_str, '/');
+            if(ndx == NULL)
+            {
+                fprintf(stderr, "[*] Expecting <proto>/<port> for -A arg.\n");
+                clean_exit(ctx, options, EXIT_FAILURE);
+            }
+            snprintf(access_buf, MAX_LINE_LEN, "%s%s",
+                    options->allow_ip_str, ",");
+
+            /* This adds in the protocol + '/' char
+            */
+            strlcat(access_buf, options->access_str,
+                    strlen(access_buf) + (ndx - options->access_str) + 2);
+
+            if (strchr(ndx+1, '/') != NULL)
+            {
+                fprintf(stderr,
+                        "[*] NAT for multiple ports/protocols not yet supported.\n");
+                clean_exit(ctx, options, EXIT_FAILURE);
+            }
+
+            /* Now add the NAT port
+            */
+            snprintf(tmp_nat_port, MAX_PORT_STR_LEN+1, "%d", nat_port);
+            strlcat(access_buf, tmp_nat_port,
+                    strlen(access_buf)+MAX_PORT_STR_LEN+1);
+        }
+        else
+        {
+            snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
+                    options->allow_ip_str, ",", options->access_str);
+        }
+    }
+    else
+    {
+        snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
+                options->allow_ip_str, ",", "none/0");
+    }
+    return;
+}
+
 /* Set NAT access string
 */
 static int
-set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options)
+set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const access_buf)
 {
-    char nat_access_buf[MAX_LINE_LEN] = "";
-    int nat_port = 0;
+    char nat_access_buf[MAX_LINE_LEN] = {0};
+    char tmp_access_port[MAX_PORT_STR_LEN+1], *ndx = NULL;
+    int  access_port = 0, i = 0, is_err = 0;
 
-    if (options->nat_rand_port)
-        nat_port = get_rand_port(ctx);
-    else if (options->nat_port)
-        nat_port = options->nat_port;
-    else
-        nat_port = DEFAULT_NAT_PORT;
+    memset(nat_access_buf, 0x0, MAX_LINE_LEN);
+    memset(tmp_access_port, 0x0, MAX_PORT_STR_LEN+1);
+
+    ndx = strchr(options->access_str, '/');
+    if(ndx == NULL)
+    {
+        fprintf(stderr, "[*] Expecting <proto>/<port> for -A arg.\n");
+        clean_exit(ctx, options, EXIT_FAILURE);
+    }
+    ndx++;
+
+    while(*ndx != '\0' && isdigit(*ndx) && i < MAX_PORT_STR_LEN)
+    {
+        tmp_access_port[i] = *ndx;
+        ndx++;
+        i++;
+    }
+    tmp_access_port[i] = '\0';
+
+    access_port = strtol_wrapper(tmp_access_port, 1,
+            MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        fprintf(stderr, "[*] Invalid port value '%d' for -A arg.\n",
+                access_port);
+        clean_exit(ctx, options, EXIT_FAILURE);
+    }
 
     if (options->nat_local && options->nat_access_str[0] == 0x0)
     {
         snprintf(nat_access_buf, MAX_LINE_LEN, "%s,%d",
-            options->spa_server_str, nat_port);
+            options->spa_server_str, access_port);
     }
 
     if (nat_access_buf[0] == 0x0 && options->nat_access_str[0] != 0x0)
@@ -632,8 +720,18 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options)
         else
         {
             snprintf(nat_access_buf, MAX_LINE_LEN, "%s,%d",
-                options->nat_access_str, nat_port);
+                options->nat_access_str, access_port);
         }
+    }
+
+    if(options->nat_rand_port)
+    {
+        /* Must print to stdout what the random port is since
+         * if not then the user will not which port will be
+         * opened/NAT'd on the fwknopd side
+        */
+        printf("[+] Randomly assigned port '%d' on: '%s' will grant access to: '%s'\n",
+                options->nat_port, access_buf, nat_access_buf);
     }
 
     return fko_set_spa_nat_access(ctx, nat_access_buf);
@@ -865,7 +963,8 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     char *key, int *key_len, char *hmac_key,
     int *hmac_key_len, const int crypt_op)
 {
-    int use_hmac = 0, res = 0;
+    char   *key_tmp = NULL, *hmac_key_tmp = NULL;
+    int     use_hmac = 0, res = 0;
 
     memset(key, 0x0, MAX_KEY_LEN+1);
     memset(hmac_key, 0x0, MAX_KEY_LEN+1);
@@ -893,7 +992,8 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         }
         else
         {
-            fprintf(stderr, "[*] Invalid base64 decoded key length.");
+            fprintf(stderr, "[*] Invalid key length: '%d', must be in [1,%d]",
+                    *key_len, MAX_KEY_LEN);
             clean_exit(ctx, options, EXIT_FAILURE);
         }
     }
@@ -910,46 +1010,59 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         {
             if(crypt_op == CRYPT_OP_DECRYPT)
             {
-                strlcpy(key, getpasswd("Enter passphrase for secret key: "),
-                    MAX_KEY_LEN+1);
+                key_tmp = getpasswd("Enter passphrase for secret key: ");
+                if(key_tmp == NULL)
+                {
+                    fprintf(stderr, "[*] getpasswd() key error.\n");
+                    clean_exit(ctx, options, EXIT_FAILURE);
+                }
+                strlcpy(key, key_tmp, MAX_KEY_LEN+1);
                 *key_len = strlen(key);
             }
             else if(options->gpg_signer_key && strlen(options->gpg_signer_key))
             {
-                strlcpy(key, getpasswd("Enter passphrase for signing: "),
-                    MAX_KEY_LEN+1);
+                key_tmp = getpasswd("Enter passphrase for signing: ");
+                if(key_tmp == NULL)
+                {
+                    fprintf(stderr, "[*] getpasswd() key error.\n");
+                    clean_exit(ctx, options, EXIT_FAILURE);
+                }
+                strlcpy(key, key_tmp, MAX_KEY_LEN+1);
                 *key_len = strlen(key);
             }
         }
         else
         {
             if(crypt_op == CRYPT_OP_ENCRYPT)
-                strlcpy(key, getpasswd("Enter encryption key: "),
-                    MAX_KEY_LEN+1);
+                key_tmp = getpasswd("Enter encryption key: ");
             else if(crypt_op == CRYPT_OP_DECRYPT)
-                strlcpy(key, getpasswd("Enter decryption key: "),
-                    MAX_KEY_LEN+1);
+                key_tmp = getpasswd("Enter decryption key: ");
             else
-                strlcpy(key, getpasswd("Enter key: "),
-                    MAX_KEY_LEN+1);
+                key_tmp = getpasswd("Enter key: ");
+
+            if(key_tmp == NULL)
+            {
+                fprintf(stderr, "[*] getpasswd() key error.\n");
+                clean_exit(ctx, options, EXIT_FAILURE);
+            }
+            strlcpy(key, key_tmp, MAX_KEY_LEN+1);
             *key_len = strlen(key);
         }
     }
 
-
-    if (options->have_hmac_key)
+    if(options->have_hmac_key)
     {
         strlcpy(hmac_key, options->hmac_key, MAX_KEY_LEN+1);
         *hmac_key_len = strlen(hmac_key);
         use_hmac = 1;
     }
-    else if (options->have_hmac_base64_key)
+    else if(options->have_hmac_base64_key)
     {
         *hmac_key_len = fko_base64_decode(options->hmac_key_base64,
             (unsigned char *) options->hmac_key);
-        if(*hmac_key_len > MAX_KEY_LEN || *hmac_key_len <= 0)
+        if(*hmac_key_len > MAX_KEY_LEN || *hmac_key_len < 0)
         {
-            fprintf(stderr, "[*] Invalid decoded key length: '%d', must be in [1,%d]",
+            fprintf(stderr, "[*] Invalid decoded key length: '%d', must be in [0,%d]",
                     *hmac_key_len, MAX_KEY_LEN);
             clean_exit(ctx, options, EXIT_FAILURE);
         }
@@ -968,13 +1081,28 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         else
         {
 #endif
-        strlcpy(hmac_key, getpasswd("Enter HMAC key: "), MAX_KEY_LEN+1);
+        hmac_key_tmp = getpasswd("Enter HMAC key: ");
+
+        if(hmac_key_tmp == NULL)
+        {
+            fprintf(stderr, "[*] getpasswd() key error.\n");
+            clean_exit(ctx, options, EXIT_FAILURE);
+        }
+
+        strlcpy(hmac_key, hmac_key_tmp, MAX_KEY_LEN+1);
         *hmac_key_len = strlen(hmac_key);
         use_hmac = 1;
     }
 
     if (use_hmac)
     {
+        if(*hmac_key_len < 0 || *hmac_key_len > MAX_KEY_LEN)
+        {
+            fprintf(stderr, "[*] Invalid HMAC key length: '%d', must be in [0,%d]",
+                    *hmac_key_len, MAX_KEY_LEN);
+            clean_exit(ctx, options, EXIT_FAILURE);
+        }
+
         res = fko_set_spa_hmac_type(ctx, options->hmac_type);
         if(res != FKO_SUCCESS)
         {
