@@ -62,6 +62,15 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
     */
     spa_pkt->packet_data_len = 0;
 
+    /* These two checks are already done in process_packet(), but this is a
+     * defensive measure to run them again here
+    */
+    if(pkt_data_len < MIN_SPA_DATA_SIZE)
+        return(SPA_MSG_BAD_DATA);
+
+    if(pkt_data_len > MAX_SPA_PACKET_LEN)
+        return(SPA_MSG_BAD_DATA);
+
     /* Ignore any SPA packets that contain the Rijndael or GnuPG prefixes
      * since an attacker might have tacked them on to a previously seen
      * SPA packet in an attempt to get past the replay check.  And, we're
@@ -256,7 +265,7 @@ incoming_spa(fko_srv_options_t *opts)
     time_t          now_ts;
     int             res, status, ts_diff, enc_type, stanza_num=0;
     int             added_replay_digest = 0, pkt_data_len=0;
-    int             is_err;
+    int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
@@ -340,6 +349,9 @@ incoming_spa(fko_srv_options_t *opts)
     */
     while(acc)
     {
+        res = FKO_SUCCESS;
+        cmd_exec_success  = 0;
+        attempted_decrypt = 0;
         stanza_num++;
 
         /* Check for a match for the SPA source IP and the access stanza
@@ -383,7 +395,7 @@ incoming_spa(fko_srv_options_t *opts)
         */
         enc_type = fko_encryption_type((char *)spa_pkt->packet_data);
 
-        if(acc->use_rijndael && enc_type == FKO_ENCRYPTION_RIJNDAEL)
+        if(acc->use_rijndael)
         {
             if (acc->key == NULL)
             {
@@ -395,11 +407,20 @@ incoming_spa(fko_srv_options_t *opts)
                 continue;
             }
 
-            res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data,
-                acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
-                acc->hmac_key_len, acc->hmac_type);
+            /* Command mode messages may be quite long
+            */
+            if(acc->enable_cmd_exec || enc_type == FKO_ENCRYPTION_RIJNDAEL)
+            {
+                res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data,
+                    acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
+                    acc->hmac_key_len, acc->hmac_type);
+                attempted_decrypt = 1;
+                if(res == FKO_SUCCESS)
+                    cmd_exec_success = 1;
+            }
         }
-        else if(acc->use_gpg && enc_type == FKO_ENCRYPTION_GPG)
+
+        if(acc->use_gpg && enc_type == FKO_ENCRYPTION_GPG && cmd_exec_success == 0)
         {
             /* For GPG we create the new context without decrypting on the fly
              * so we can set some GPG parameters first.
@@ -408,6 +429,7 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
                         0, acc->encryption_mode, NULL, 0, 0);
+                attempted_decrypt = 1;
                 if(res != FKO_SUCCESS)
                 {
                     log_msg(LOG_WARNING,
@@ -461,10 +483,11 @@ incoming_spa(fko_srv_options_t *opts)
                 /* Now decrypt the data.
                 */
                 res = fko_decrypt_spa_data(ctx, acc->gpg_decrypt_pw, 0);
-
+                attempted_decrypt = 1;
             }
         }
-        else
+
+        if(attempted_decrypt == 0)
         {
             log_msg(LOG_ERR,
                 "(stanza #%d) No stanza encryption mode match for encryption type: %i.",
