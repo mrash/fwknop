@@ -4217,16 +4217,21 @@ sub validate_test_hashes() {
         }
     }
 
-    ### if 'key_file' is defined, then ensure the client command line
-    ### references the same file
+    ### validate the 'key_file' and 'server_conf' hash keys
     for my $test_hr (@tests) {
         my $msg = "[$test_hr->{'category'}]";
         $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
         $msg .= " $test_hr->{'detail'}";
         if ($test_hr->{'key_file'}) {
             unless ($test_hr->{'cmdline'} =~ /\s$test_hr->{'key_file'}\b/) {
-                die "[*] 'key_file' value not matched in " .
-                    "client command line for: $msg";
+                die "[*] 'key_file' value: '$test_hr->{'key_file'}' not matched in " .
+                    "client command line '$test_hr->{'cmdline'}' for: $msg";
+            }
+        }
+        if ($test_hr->{'server_conf'}) {
+            unless ($test_hr->{'fwknopd_cmdline'} =~ /\s$test_hr->{'server_conf'}\b/) {
+                die "[*] 'server_conf' value: '$test_hr->{'server_conf'}' not matched in " .
+                    "server command line '$test_hr->{'fwknopd_cmdline'}' for: $msg";
             }
         }
     }
