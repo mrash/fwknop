@@ -73,7 +73,7 @@ typedef struct {
 
 static void
 pad_init(unsigned char *inner_pad, unsigned char *outer_pad,
-        const unsigned char *key, const int key_len)
+        const unsigned char * const key, const int key_len)
 {
     int i = 0;
 
