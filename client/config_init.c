@@ -1154,6 +1154,13 @@ validate_options(fko_cli_options_t *options)
             exit(EXIT_FAILURE);
         }
 
+        if ( (options->save_rc_stanza == 1)  && (options->use_rc_stanza[0] == 0) )
+        {
+            fprintf(stderr, "The option --save-rc-stanza must be used with the "
+                        "--named-config option to specify the stanza to update.\n");
+            exit(EXIT_FAILURE);
+        }
+
         if (options->spa_server_str[0] == 0x0)
         {
             fprintf(stderr,
@@ -1268,6 +1275,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     /* First process the .fwknoprc file.
     */
     process_rc_section(RC_SECTION_DEFAULT, options);
+
+    /* Load the user specified stanza from .fwknoprc file */
+    if ( (options->got_named_stanza) && (options->save_rc_stanza == 0) )
+        process_rc_section(options->use_rc_stanza, options);
 
     /* Reset the options index so we can run through them again.
     */
@@ -1574,17 +1585,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 exit(EXIT_FAILURE);
         }
     }
-
-    /* Load the specified stanza */
-    if (options->got_named_stanza == 1)
-    {
-        options->save_rc_stanza = 0;
-        process_rc_section(options->use_rc_stanza, options);
-    }
-
-    /* Discard the save stanza since there is no args specified on the command line */
-    else
-        options->save_rc_stanza = 0;
 
     /* Now that we have all of our options set, we can validate them */
     validate_options(options);
