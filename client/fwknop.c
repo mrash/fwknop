@@ -1147,6 +1147,9 @@ display_ctx(fko_ctx_t ctx)
     char       *hmac_data       = NULL;
     char       *spa_digest      = NULL;
     char       *spa_data        = NULL;
+    char        digest_str[MAX_LINE_LEN]   = {0};
+    char        hmac_str[MAX_LINE_LEN]     = {0};
+    char        enc_mode_str[MAX_LINE_LEN] = {0};
 
     time_t      timestamp       = 0;
     short       msg_type        = -1;
@@ -1176,6 +1179,10 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_digest(ctx, &spa_digest);
     fko_get_spa_data(ctx, &spa_data);
 
+    digest_inttostr(digest_type, digest_str, sizeof(digest_str));
+    hmac_digest_inttostr(hmac_type, hmac_str, sizeof(hmac_str));
+    enc_mode_inttostr(encryption_mode, enc_mode_str, sizeof(enc_mode_str));
+
     printf("\nFKO Field Values:\n=================\n\n");
     printf("   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
     printf("       Username: %s\n", username == NULL ? "<NULL>" : username);
@@ -1186,10 +1193,10 @@ display_ctx(fko_ctx_t ctx)
     printf("     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
     printf("    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
     printf(" Client Timeout: %u (seconds)\n", client_timeout);
-    printf("    Digest Type: %d (%s)\n", digest_type, digest_inttostr(digest_type));
-    printf("      HMAC Type: %d (%s)\n", hmac_type, digest_inttostr(hmac_type));
+    printf("    Digest Type: %d (%s)\n", digest_type, digest_str);
+    printf("      HMAC Type: %d (%s)\n", hmac_type, hmac_str);
     printf("Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
-    printf("Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_inttostr(encryption_mode));
+    printf("Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_str);
     printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
     printf("           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);

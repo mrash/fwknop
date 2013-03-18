@@ -87,6 +87,9 @@ dump_ctx(fko_ctx_t ctx)
     char       *hmac_data       = NULL;
     char       *spa_digest      = NULL;
     char       *spa_data        = NULL;
+    char        digest_str[MAX_LINE_LEN]   = {0};
+    char        hmac_str[MAX_LINE_LEN]     = {0};
+    char        enc_mode_str[MAX_LINE_LEN] = {0};
 
     time_t      timestamp       = 0;
     short       msg_type        = -1;
@@ -116,6 +119,10 @@ dump_ctx(fko_ctx_t ctx)
     fko_get_spa_digest(ctx, &spa_digest);
     fko_get_spa_data(ctx, &spa_data);
 
+    digest_inttostr(digest_type, digest_str, sizeof(digest_str));
+    hmac_digest_inttostr(hmac_type, hmac_str, sizeof(hmac_str));
+    enc_mode_inttostr(encryption_mode, enc_mode_str, sizeof(enc_mode_str));
+
     memset(buf, 0x0, CTX_DUMP_BUFSIZE);
 
     ndx = buf;
@@ -140,13 +147,13 @@ dump_ctx(fko_ctx_t ctx)
     ndx += cp;
     cp = sprintf(ndx, " Client Timeout: %u\n", client_timeout);
     ndx += cp;
-    cp = sprintf(ndx, "    Digest Type: %u (%s)\n", digest_type, digest_inttostr(digest_type));
+    cp = sprintf(ndx, "    Digest Type: %u (%s)\n", digest_type, digest_str);
     ndx += cp;
-    cp = sprintf(ndx, "      HMAC Type: %u (%s)\n", hmac_type, digest_inttostr(hmac_type));
+    cp = sprintf(ndx, "      HMAC Type: %u (%s)\n", hmac_type, hmac_str);
     ndx += cp;
     cp = sprintf(ndx, "Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
     ndx += cp;
-    cp = sprintf(ndx, "Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_inttostr(encryption_mode));
+    cp = sprintf(ndx, "Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_str);
     ndx += cp;
     cp = sprintf(ndx, "   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     ndx += cp;
