@@ -561,7 +561,7 @@ if ($enable_openssl_compatibility_tests) {
 }
 if ($fuzzing_ctr > 0) {
     &logr("[+] $fuzzing_success_ctr/$fuzzing_failure_ctr/$fuzzing_ctr " .
-        "Fuzzing test passed/failed/executed\n");
+        "Fuzzing tests passed/failed/executed\n");
 }
 &logr("[+] $passed/$failed/$executed test buckets passed/failed/executed\n\n");
 
