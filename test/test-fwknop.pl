@@ -1,4 +1,8 @@
 #!/usr/bin/perl -w
+#
+# This is the main driver program for the fwknop test suite.  Test definitions
+# are imported from the tests/ directory.
+#
 
 use Cwd;
 use File::Copy;
@@ -146,6 +150,8 @@ my $valgrind_cov_dir = 'valgrind-coverage';
 
 our $spoof_ip   = '1.2.3.4';
 my $perl_mod_fko_dir = 'FKO';
+my $python_fko_dir   = 'python_fko';
+my $python_script    = 'fko-python.py';
 our $cmd_exec_test_file = '/tmp/fwknoptest';
 my $default_key = 'fwknoptest';
 
@@ -162,6 +168,7 @@ my @test_files = (
     "$tests_dir/rijndael_backwards_compatibility.pl",
     "$tests_dir/rijndael_hmac.pl",
     "$tests_dir/perl_FKO_module.pl",
+    "$tests_dir/python_fko.pl",
     "$tests_dir/gpg_no_pw.pl",
     "$tests_dir/gpg.pl",
 );
@@ -180,6 +187,7 @@ our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
 our @gpg                     = ();  ### from tests/gpg.pl
 our @perl_FKO_module         = ();  ### from tests/perl_FKO_module.pl
+our @python_fko              = ();  ### from tests/python_fko.pl
 our @rijndael_backwards_compatibility = ();  ### from tests/rijndael_backwards_compatibility.pl
 
 my $passed = 0;
@@ -226,6 +234,7 @@ my $enable_profile_coverage_check = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
+my $enable_python_module_checks = 0;
 my $enable_openssl_compatibility_tests = 0;
 my $openssl_success_ctr = 0;
 my $openssl_failure_ctr = 0;
@@ -285,6 +294,7 @@ exit 1 unless GetOptions(
     'exclude=s'         => \$test_exclude,  ### synonym
     'enable-perl-module-checks' => \$enable_perl_module_checks,
     'enable-perl-module-pkt-generation' => \$enable_perl_module_fuzzing_spa_pkt_generation,
+    'enable-python-module-checks' => \$enable_python_module_checks,
     'fuzzing-pkts-file=s' => \$fuzzing_pkts_file,
     'fuzzing-pkts-append' => \$fuzzing_pkts_append,
     'fuzzing-test-tag=s'  => \$fuzzing_test_tag,
@@ -318,6 +328,7 @@ if ($enable_all) {
     $enable_make_distcheck = 1;
     $enable_client_ip_resolve_test = 1;
     $enable_perl_module_checks = 1;
+    $enable_python_module_checks = 1;
     $enable_openssl_compatibility_tests = 1;
 }
 
@@ -431,6 +442,7 @@ my @tests = (
     @rijndael_fuzzing,
     @rijndael_hmac,
     @perl_FKO_module,
+    @python_fko,
     @gpg_no_pw,
     @gpg,
 );
@@ -1173,6 +1185,56 @@ sub gpg_pinentry_check() {
         die "[*] Could not run the fwknop client: $!" unless defined $pid;
         exec qq{$test_hr->{'cmdline'} > /dev/null 2>&1 };
     }
+
+    return $rv;
+}
+
+sub python_fko_compile_install() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    if (-d $python_fko_dir) {
+        rmtree $python_fko_dir or die $!;
+    }
+    mkdir $python_fko_dir or die "[*] Could not mkdir $python_fko_dir: $!";
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '../python' or die $!;
+
+    &run_cmd("python setup.py build", $cmd_out_tmp,
+        "../test/$curr_test_file");
+    &run_cmd("python setup.py install --prefix=../test/$python_fko_dir",
+        $cmd_out_tmp, "../test/$curr_test_file");
+
+    chdir $curr_pwd or die $!;
+
+    return $rv;
+}
+
+sub python_fko_basic_exec() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    my $site_dir = "$python_fko_dir/lib";
+
+    for my $dir (glob("$site_dir/python*")) {
+        $site_dir = $dir;
+        last;
+    }
+    $site_dir .= '/site-packages';
+
+    unless (-d $site_dir) {
+        &write_test_file("[-] $site_dir directory dir does not exist.\n",
+            $curr_test_file);
+        return 0;
+    }
+
+    $rv = &run_cmd("LD_LIBRARY_PATH=$lib_dir " .
+        "PYTHONPATH=$site_dir ./$python_script", $cmd_out_tmp,
+        $curr_test_file);
 
     return $rv;
 }
@@ -4351,6 +4413,14 @@ sub init() {
         close F;
     } else {
         push @tests_to_exclude, qr/perl FKO module/;
+    }
+
+    if ($enable_python_module_checks) {
+        die "[*] The python test script: $python_script doesn't exist ",
+            "or is not executable."
+            unless -e $python_script and -x $python_script;
+    } else {
+        push @tests_to_exclude, qr/python fko extension/;
     }
 
     if ($enable_perl_module_fuzzing_spa_pkt_generation) {
