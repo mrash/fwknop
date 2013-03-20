@@ -1697,7 +1697,7 @@ usage(void)
       "     --no-save-args          Do not save fwknop command line args to the\n"
       "                             $HOME/fwknop.run file\n"
       "     --rc-file               Specify path to the fwknop rc file (default\n"
-      "                             is $HOME/.fwknoprc\n"
+      "                             is $HOME/.fwknoprc)\n"
       "     --save-rc-stanza        Save command line arguments to the\n"
       "                             $HOME/.fwknoprc stanza specified with the\n"
       "                             -n option.\n"
