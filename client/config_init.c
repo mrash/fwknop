@@ -1146,7 +1146,9 @@ validate_options(fko_cli_options_t *options)
         && !options->show_last_command
         && !options->run_last_command)
     {
-        if(options->use_rc_stanza[0] != 0x0 && options->got_named_stanza == 0)
+        if ( (options->use_rc_stanza[0] != 0x0)
+            && (options->got_named_stanza == 0)
+            && (options->save_rc_stanza == 0) )
         {
             fprintf(stderr, "Named configuration stanza: [%s] was not found.\n",
                 options->use_rc_stanza);
