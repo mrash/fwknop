@@ -209,8 +209,9 @@ try_url(struct url *url, fko_cli_options_t *options)
     }
     else
     {
-        fprintf(stderr, "Invalid IP (%s) in HTTP response:\n\n%s\n",
-            ndx, http_response);
+        fprintf(stderr,
+            "[-] From http://%s%s\n    Invalid IP (%s) in HTTP response:\n\n%s\n",
+            url->host, url->path, ndx, http_response);
         return(-1);
     }
 }

@@ -1258,7 +1258,7 @@ key_gen(PyObject *self, PyObject *args)
     int hmac_type;
     int res;
 
-    if(!PyArg_ParseTuple(args, "s#s#i", &key_b64, &key_b64_len,
+    if(!PyArg_ParseTuple(args, "s#s#ih", &key_b64, &key_b64_len,
                          &hmac_key_b64, &hmac_key_b64_len, &hmac_type))
         return NULL;
 

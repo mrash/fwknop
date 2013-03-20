@@ -69,7 +69,7 @@ FKO_DIGEST_SHA256 = 3
 FKO_DIGEST_SHA384 = 4
 FKO_DIGEST_SHA512 = 5
 
-"""Digest type constants
+"""Hmac type constants
 """
 FKO_HMAC_INVALID_DATA = -1
 FKO_HMAC_UNKNOWN = 0
@@ -482,7 +482,7 @@ class Fko:
         else:
             return _fko.get_spa_encryption_mode(self.ctx)
 
-    def spa_hmac_type(self, val=None):
+    def hmac_type(self, val=None):
         """Get or set the spa_hmac_type
 
         This is an integer value. If no argument is given, the current value
