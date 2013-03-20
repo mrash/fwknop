@@ -53,7 +53,7 @@ print "Timestamp:", fko.timestamp()
 print "Username:", fko.username()
 print "Digest Type (value):", fko.digest_type()
 print "Digest Type (string):", fko.digest_type_str()
-print "Digest:", fko.digest()
+print "Digest:", fko.spa_digest()
 print "SPA Message:", fko.spa_message()
 
 
