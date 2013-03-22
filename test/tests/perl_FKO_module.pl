@@ -117,6 +117,15 @@
     },
     {
         'category' => 'perl FKO module',
+        'subcategory' => 'HMAC encrypt/decrypt',
+        'detail'   => 'libfko complete cycle',
+        'function' => \&perl_fko_module_complete_cycle_hmac,
+        'set_legacy_iv' => $NO,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
         'detail'   => 'truncated keys',
         'function' => \&perl_fko_module_rijndael_truncated_keys,

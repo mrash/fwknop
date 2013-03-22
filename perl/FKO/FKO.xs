@@ -190,6 +190,16 @@ _set_hmac_type(ctx, hmac_type)
     RETVAL
 
 int
+_get_hmac_type(ctx, hmac_type)
+    INPUT:
+    fko_ctx_t ctx;
+    short    hmac_type;
+    CODE:
+    RETVAL = fko_get_spa_hmac_type(ctx, hmac_type);
+    OUTPUT:
+    RETVAL
+
+int
 _set_rand_value(ctx, rand_val)
     INPUT:
     fko_ctx_t ctx;
@@ -373,6 +383,17 @@ _get_spa_digest(ctx, val)
     char *val;
     CODE:
     RETVAL = fko_get_spa_digest(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_get_spa_hmac(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    char *val;
+    CODE:
+    RETVAL = fko_get_hmac_data(ctx, &val);
     OUTPUT:
     val
     RETVAL
@@ -603,6 +624,28 @@ _decrypt_spa_data(ctx, dec_key, dec_key_len)
     int     dec_key_len;
     CODE:
     RETVAL = fko_decrypt_spa_data(ctx, dec_key, dec_key_len);
+    OUTPUT:
+    RETVAL
+
+int
+_verify_hmac(ctx, hmac_key, hmac_key_len)
+    INPUT:
+    fko_ctx_t ctx;
+    char*   hmac_key;
+    int     hmac_key_len;
+    CODE:
+    RETVAL = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
+    OUTPUT:
+    RETVAL
+
+int
+_calculate_hmac(ctx, hmac_key, hmac_key_len)
+    INPUT:
+    fko_ctx_t ctx;
+    char*   hmac_key;
+    int     hmac_key_len;
+    CODE:
+    RETVAL = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
     OUTPUT:
     RETVAL
 

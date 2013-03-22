@@ -1832,15 +1832,19 @@ sub fuzzing_usernames() {
 
 sub valid_encryption_keys() {
     my @keys = (
+        '!@#$%',
+        'asdfasdfsafsdafasdfasdfsafsdaf',
+#        'asdfasdfsafsdafasdfasdfsafsdaffdjskalfjdskl' .
+#        'afjsldkafjdsajdkajsklfdafsklfjjdkljdsafjdjd' .
+#        'sklfjsfdsafjdslfdkjdljsajdskjdskafjdldsljdk' .
+#        afdsljdslafdslaldldajdskajlddslajsl',
+        '$',
+        'asdfasdfsafsdaf',
         'testtest',
         '12341234',
         '1',
         '1234',
         'a',
-        '$',
-        '!@#$%',
-        'asdfasdfsafsdaf',
-        'asdfasdfsafsdafasdfasdfsafsdaf',
     );
     return \@keys;
 }
@@ -1854,6 +1858,34 @@ sub valid_spa_digest_types() {
         FKO->FKO_DIGEST_SHA512
     );
     return \@types;
+}
+
+sub valid_spa_hmac_types() {
+    my @types = (
+        FKO->FKO_HMAC_MD5,
+        FKO->FKO_HMAC_SHA1,
+        FKO->FKO_HMAC_SHA256,
+        FKO->FKO_HMAC_SHA384,
+        FKO->FKO_HMAC_SHA512
+    );
+    return \@types;
+}
+
+sub hmac_type_to_str() {
+    my $hmac_type = shift;
+
+    if ($hmac_type == FKO->FKO_HMAC_MD5) {
+        return 'md5';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA1) {
+        return 'sha1';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA256) {
+        return 'sha256';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA384) {
+        return 'sha384';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA512) {
+        return 'sha512';
+    }
+    return 'Unknown';
 }
 
 sub fuzzing_spa_digest_types() {
@@ -2108,6 +2140,115 @@ sub perl_fko_module_rijndael_truncated_keys() {
                         }
                     }
                     &write_test_file("\n", $curr_test_file);
+                }
+            }
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_complete_cycle_hmac() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $user (@{valid_usernames()}) {
+            for my $digest_type (@{valid_spa_digest_types()}) {
+                for my $hmac_type (@{valid_spa_hmac_types()}) {
+                    my $key_ctr = 0;
+                    KEY: for my $key (@{valid_encryption_keys()}) {
+                        $key_ctr++;
+                        last KEY if $key_ctr >= 2;
+                        if ($test_hr->{'set_legacy_iv'} eq $YES
+                                and (length($key) > 16)) {
+                            &write_test_file("[.] Legacy IV mode is set, " .
+                                "skipping long key '$key'.\n",
+                                $curr_test_file);
+                            next KEY;
+                        }
+
+                        my $hmac_key_ctr = 0;
+                        HMAC_KEY: for my $hmac_key (@{valid_encryption_keys()}) {
+                            $hmac_key_ctr++;
+                            last HMAC_KEY if $hmac_key_ctr >= 4;
+
+                            if ($test_hr->{'set_legacy_iv'} eq $YES
+                                    and (length($hmac_key) > 16)) {
+                                &write_test_file("[.] Legacy IV mode is set, " .
+                                    "skipping long key '$hmac_key'.\n",
+                                    $curr_test_file);
+                                next HMAC_KEY;
+                            }
+
+                            &write_test_file("[+] msg: $msg, user: $user, " .
+                                "digest type: $digest_type, hmac digest type: " .
+                                "$hmac_type, key: $key, hmac_key: $hmac_key\n",
+                                $curr_test_file);
+
+                            $fko_obj = FKO->new();
+                            unless ($fko_obj) {
+                                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                                    $curr_test_file);
+                                return 0;
+                            }
+                            $fko_obj->spa_message($msg);
+                            $fko_obj->username($user);
+                            $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+                            $fko_obj->digest_type($digest_type);
+                            $fko_obj->hmac_type($hmac_type);
+
+                            my $enc_mode = FKO->FKO_ENC_MODE_CBC;
+                            $enc_mode = FKO->FKO_ENC_MODE_CBC_LEGACY_IV
+                                if $test_hr->{'set_legacy_iv'} eq $YES;
+                            $fko_obj->encryption_mode($enc_mode);
+
+                            $fko_obj->spa_data_final($key, length($key), $hmac_key, length($hmac_key));
+
+                            my $encrypted_msg = $fko_obj->spa_data();
+
+                            $fko_obj->destroy();
+
+                            ### now get new object for decryption
+                            $fko_obj = FKO->new($encrypted_msg, $key, length($key),
+                                    $enc_mode, $hmac_key, length($hmac_key), $hmac_type);
+                            unless ($fko_obj) {
+                                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                                    $curr_test_file);
+                                return 0;
+                            }
+                            $fko_obj->spa_data($encrypted_msg);
+                            $fko_obj->hmac_type($hmac_type);
+                            $fko_obj->encryption_mode($enc_mode);
+                            my $hmac_digest = $fko_obj->spa_hmac();
+
+                            $fko_obj->decrypt_spa_data($key, length($key), $hmac_key, length($hmac_key));
+
+                            if ($msg ne $fko_obj->spa_message()) {
+                                &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
+                                    $curr_test_file);
+                                $rv = 0;
+                            }
+
+                            $fko_obj->destroy();
+
+                            if ($enable_openssl_compatibility_tests) {
+                                unless (&openssl_hmac_verification($encrypted_msg,
+                                        '', $msg, $hmac_key, 0, $hmac_digest,
+                                        &hmac_type_to_str($hmac_type))) {
+                                    $rv = 0;
+                                }
+
+#                                my $flag = $REQUIRE_SUCCESS;
+#                                $flag = $REQUIRE_FAILURE if $test_hr->{'set_legacy_iv'} eq $YES;
+#                                unless (&openssl_enc_verification($encrypted_msg,
+#                                        '', $msg, $key, 0, $flag)) {
+#                                    $rv = 0;
+#                                }
+                            }
+                        }
+                    }
                 }
             }
         }

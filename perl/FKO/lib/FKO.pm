@@ -73,6 +73,10 @@ sub new {
     my $data      = shift;
     my $dc_pw     = shift;
     my $dc_pw_len = shift;
+    my $enc_mode  = shift;
+    my $hmac_pw   = shift;
+    my $hmac_pw_len = shift;
+    my $hmac_type = shift;
     my $res;
 
     my $ctx;
@@ -82,7 +86,8 @@ sub new {
     #
     if($data) {
         if(defined($dc_pw)) {
-            $ctx = _init_ctx_with_data($data, $dc_pw, $dc_pw_len);
+            $ctx = _init_ctx_with_data($data, $dc_pw, $dc_pw_len,
+                        $enc_mode, $hmac_pw, $hmac_pw_len, $hmac_type);
         } else {
             $ctx = _init_ctx_with_data_only($data);
         }
@@ -162,6 +167,19 @@ sub digest_type {
 
     $val = -1;
     $self->{_err} = FKO::_get_digest_type($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub hmac_type {
+    my $self = shift;
+    my $val  = shift;
+
+    return FKO::_set_hmac_type($self->{_ctx}, $val)
+        if(defined($val));
+
+    $val = -1;
+    $self->{_err} = FKO::_get_hmac_type($self->{_ctx}, $val);
 
     return($self->_check_return_val($val));
 }
@@ -293,6 +311,22 @@ sub spa_digest {
         if($recompute);
 
     $self->{_err} = FKO::_get_spa_digest($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub spa_hmac {
+    my $self = shift;
+    my $recompute    = shift || 0;
+    my $hmac_key     = shift || '';
+    my $hmac_key_len = shift || 0;
+
+    my $val = '';
+
+    return FKO::_calculate_hmac($self->{_ctx})
+        if($recompute and $hmac_key and $hmac_key_len);
+
+    $self->{_err} = FKO::_get_spa_hmac($self->{_ctx}, $val);
 
     return($self->_check_return_val($val));
 }
@@ -476,6 +510,22 @@ sub decode_spa_data {
     return FKO::_decode_spa_data($self->{_ctx});
 }
 
+sub verify_hmac {
+    my $self         = shift;
+    my $hmac_key     = shift || '';
+    my $hmac_key_len = shift || 0;
+
+    return FKO::_verify_hmac($self->{_ctx}, $hmac_key, $hmac_key_len)
+}
+
+sub calculate_hmac {
+    my $self         = shift;
+    my $hmac_key     = shift || '';
+    my $hmac_key_len = shift || 0;
+
+    return FKO::_calculate_hmac($self->{_ctx}, $hmac_key, $hmac_key_len)
+}
+
 sub DESTROY {
     my $self = shift;
     FKO::_destroy_ctx($self->{_ctx}) if($self->{_ctx});
@@ -545,7 +595,7 @@ FKO - Perl module wrapper for libfko
   } elsif($digest_type == FKO::FKO_DIGEST_MD5) {
       # do something else
   }
-  
+
 =head1 DESCRIPTION
 
 This module is essentially a Perl wrapper for the I<Firewall Knock Operator>
