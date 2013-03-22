@@ -1,7 +1,8 @@
 fwknop-2.5 (//2013):
-    - Major release of new functionality - HMAC support in the encrypt-then-
-      authenticate model.  Supported HMAC digests include MD5, SHA1, SHA256,
-      SHA384, and SHA512.  The default is HMAC-SHA256 when HMAC is used.
+    - Major release of new functionality - HMAC authenticated encryption
+      support in the encrypt-then-authenticate model for SPA communications.
+      Supported HMAC digests include MD5, SHA1, SHA256, SHA384, and SHA512.
+      The default is HMAC-SHA256 when HMAC is used.
     - [libfko] Significant bug fix to honor the full encryption key length for
       user-supplied Rijndael keys > 16 bytes long.  Previous to this fix,
       only the first 16 bytes of a key were actually used in the encryption/
