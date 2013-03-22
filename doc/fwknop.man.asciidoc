@@ -117,6 +117,10 @@ GENERAL OPTIONS
     Instruct the *fwknop* client to write a newly created SPA packet out
     to the specified file so that it can be examined off-line.
 
+*-b, --save-packet-append*::
+    Append the generated packet data to the file specified with the -B
+    option.
+
 *-G, --get-key*='<file>'::
     Load an encryption key/password from the specified file.  The key file
     contains a line for each destination hostname or IP address, a colon
@@ -124,6 +128,21 @@ GENERAL OPTIONS
     that the last line has to have a terminating newline character. 
     Also note: though this is a convenience, have a file on your system with
     cleartext passwords is not a good idea and is not recommended.
+
+*--key-rijndael*='<key>'::
+    Specify the Rijndael key. Since the password is visible to utilities
+    (like 'ps' under Unix) this form should only be used where security is
+    not important.
+
+*--key-base64-rijndael*='<key>'::
+    Specify the base64 encoded Rijndael key. Since the password is visible
+    to utilities (like 'ps' under Unix) this form should only be used where
+    security is not important.
+
+*--key-base64-hmac*='<key>'::
+    Specify the base64 encoded HMAC key. Since the password is visible to
+    utilities (like 'ps' under Unix) this form should only be used where
+    security is not important.
 
 *-l, --last-cmd*::
     Execute *fwknop* with the command-line arguments from the previous
@@ -137,6 +156,13 @@ GENERAL OPTIONS
     for frequently used invocations of *fwknop*. See the section labeled,
     FWKNOPRC FILE below for a list of the valid configuration directives in
     the '.fwknoprc' file.
+
+*--rc-file*='<file>'::
+    Specify path to the fwknop rc file (default is $HOME/.fwknoprc).
+
+*--save-rc-stanza*='<stanza name>'::
+    Save command line arguments to the $HOME/.fwknoprc stanza specified with
+    the -n option.
 
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
@@ -211,6 +237,10 @@ SPA OPTIONS
     as long as this is also specified in the 'access.conf' file on the
     server side via the ENCRYPTION_MODE variable.  In general, it is
     recommended to not use this argument and just use the default.
+
+*--hmac-digest-type*='<digest>'::
+    Set the HMAC digest algorithm (default is sha256). Options are md5, sha1,
+    sha256, sha384, or sha512.
 
 *-N, --nat-access*='<internalIP:forwardPort>'::
     The *fwknopd* server offers the ability to provide SPA access through
@@ -302,6 +332,9 @@ SPA OPTIONS
     *fwknop* client is deployed on a machine that is behind a NAT device. 
     The permit-address options *-s*, *-R* and *-a* are mutually
     exclusive.
+
+*-S, --source-port*='<port>'::
+    Set the source port for outgoing SPA packet.
 
 *--time-offset-plus*='<time>'::
     By default, the *fwknopd* daemon on the server side enforces time

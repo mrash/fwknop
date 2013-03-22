@@ -1146,7 +1146,9 @@ validate_options(fko_cli_options_t *options)
         && !options->show_last_command
         && !options->run_last_command)
     {
-        if(options->use_rc_stanza[0] != 0x0 && options->got_named_stanza == 0)
+        if ( (options->use_rc_stanza[0] != 0x0)
+            && (options->got_named_stanza == 0)
+            && (options->save_rc_stanza == 0) )
         {
             fprintf(stderr, "Named configuration stanza: [%s] was not found.\n",
                 options->use_rc_stanza);
@@ -1695,7 +1697,7 @@ usage(void)
       "     --no-save-args          Do not save fwknop command line args to the\n"
       "                             $HOME/fwknop.run file\n"
       "     --rc-file               Specify path to the fwknop rc file (default\n"
-      "                             is $HOME/.fwknoprc\n"
+      "                             is $HOME/.fwknoprc)\n"
       "     --save-rc-stanza        Save command line arguments to the\n"
       "                             $HOME/.fwknoprc stanza specified with the\n"
       "                             -n option.\n"
