@@ -14,16 +14,16 @@ use Getopt::Long 'GetOptions';
 use strict;
 
 #==================== config =====================
-my $logfile        = 'test.log';
+my $logfile         = 'test.log';
 our $local_key_file = 'local_spa.key';
-my $output_dir     = 'output';
+my $output_dir      = 'output';
 our $conf_dir       = 'conf';
-my $run_dir        = 'run';
-my $cmd_out_tmp    = 'cmd.out';
-my $server_cmd_tmp = 'server_cmd.out';
-my $data_tmp       = 'data.tmp';
-my $key_tmp        = 'key.tmp';
-my $enc_save_tmp   = 'openssl_save.enc';
+my $run_dir         = 'run';
+my $cmd_out_tmp     = 'cmd.out';
+my $server_cmd_tmp  = 'server_cmd.out';
+my $data_tmp        = 'data.tmp';
+my $key_tmp         = 'key.tmp';
+my $enc_save_tmp    = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
