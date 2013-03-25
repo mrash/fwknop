@@ -52,6 +52,9 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     int             cipher_len;
     int             pt_len;
 
+    if(enc_key_len > RIJNDAEL_MAX_KEYSIZE)
+        return(FKO_ERROR_INVALID_KEY_LEN);
+
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
@@ -137,6 +140,9 @@ _rijndael_decrypt(fko_ctx_t ctx,
     unsigned char  *ndx;
     unsigned char  *cipher;
     int             cipher_len, pt_len, i, err = 0;
+
+    if(key_len > RIJNDAEL_MAX_KEYSIZE)
+        return(FKO_ERROR_INVALID_KEY_LEN);
 
     /* Now see if we need to add the "Salted__" string to the front of the
      * encrypted data.

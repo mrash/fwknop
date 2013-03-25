@@ -60,6 +60,9 @@ fko_errstr(const int err_code)
         case FKO_ERROR_DATA_TOO_LARGE:
             return("Value or Size of the data exceeded the max allowed");
 
+        case FKO_ERROR_INVALID_KEY_LEN:
+            return("Invalid key length");
+
         case FKO_ERROR_USERNAME_UNKNOWN:
             return("Unable to determine username");
 
@@ -98,6 +101,9 @@ fko_errstr(const int err_code)
 
         case FKO_ERROR_DIGEST_VERIFICATION_FAILED:
             return("The computed digest did not match the digest in the spa data");
+
+        case FKO_ERROR_INVALID_HMAC_KEY_LEN:
+            return("Invalid HMAC key length");
 
         case FKO_ERROR_UNSUPPORTED_HMAC_MODE:
             return("Unsupported HMAC mode (default: SHA256)");
