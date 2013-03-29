@@ -134,6 +134,21 @@
     {
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
+        'detail'   => 'invalid (long) keys',
+        'function' => \&perl_fko_module_long_keys,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'HMAC encrypt/decrypt',
+        'detail'   => 'invalid (long) keys',
+        'function' => \&perl_fko_module_long_hmac_keys,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'encrypt/decrypt',
         'detail'   => 'complete cycle (mod reuse)',
         'function' => \&perl_fko_module_complete_cycle_module_reuse,
         'set_legacy_iv' => $NO,
