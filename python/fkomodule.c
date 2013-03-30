@@ -76,8 +76,8 @@ static PyObject * key_gen(PyObject *self, PyObject *args);
 static PyObject * base64_encode(PyObject *self, PyObject *args);
 static PyObject * base64_decode(PyObject *self, PyObject *args);
 static PyObject * verify_hmac(PyObject *self, PyObject *args);
-static PyObject * calculate_hmac(PyObject *self, PyObject *args);
-static PyObject * get_hmac_data(PyObject *self, PyObject *args);
+static PyObject * set_spa_hmac(PyObject *self, PyObject *args);
+static PyObject * get_spa_hmac(PyObject *self, PyObject *args);
 
 /* FKO GPG-related Functions.
 */
@@ -206,9 +206,9 @@ static PyMethodDef FKOMethods[] = {
      "Base64 decode function"},
     {"verify_hmac", verify_hmac, METH_VARARGS,
      "Generate HMAC for the data and verify it against the HMAC included with the data"},
-    {"calculate_hmac", calculate_hmac, METH_VARARGS,
+    {"set_spa_hmac", set_spa_hmac, METH_VARARGS,
      "Calculate the HMAC for the given data"},
-    {"get_hmac_data", get_hmac_data, METH_VARARGS,
+    {"get_spa_hmac", get_spa_hmac, METH_VARARGS,
      "Return the HMAC for the data in the current context"},
 
     {"get_gpg_recipient",  get_gpg_recipient, METH_VARARGS,
@@ -1330,7 +1330,7 @@ verify_hmac(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-calculate_hmac(PyObject *self, PyObject *args)
+set_spa_hmac(PyObject *self, PyObject *args)
 {
     fko_ctx_t ctx;
     char *hmac_key;
@@ -1340,7 +1340,7 @@ calculate_hmac(PyObject *self, PyObject *args)
     if(!PyArg_ParseTuple(args, "ks#", &ctx, &hmac_key, &hmac_key_len))
         return NULL;
 
-    res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
+    res = fko_set_spa_hmac(ctx, hmac_key, hmac_key_len);
 
     if(res != FKO_SUCCESS)
     {
@@ -1352,7 +1352,7 @@ calculate_hmac(PyObject *self, PyObject *args)
 }
 
 static PyObject *
-get_hmac_data(PyObject *self, PyObject *args)
+get_spa_hmac(PyObject *self, PyObject *args)
 {
     fko_ctx_t ctx;
     char *enc_data;
@@ -1361,7 +1361,7 @@ get_hmac_data(PyObject *self, PyObject *args)
     if(!PyArg_ParseTuple(args, "k", &ctx))
         return NULL;
 
-    res = fko_get_hmac_data(ctx, &enc_data);
+    res = fko_get_spa_hmac(ctx, &enc_data);
 
     if(res != FKO_SUCCESS)
     {

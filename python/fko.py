@@ -591,15 +591,15 @@ class Fko:
         """
         _fko.verify_hmac(self.ctx, hmac_key)
 
-    def calculate_hmac(self, hmac_key):
+    def set_spa_hmac(self, hmac_key):
         """Calculate the HMAC for the given data
         """
-        _fko.calculate_hmac(self.ctx, hmac_key)
+        _fko.set_spa_hmac(self.ctx, hmac_key)
 
-    def get_hmac_data(self):
+    def get_spa_hmac(self):
         """Return the HMAC for the data in the current context
         """
-        _fko.get_hmac_data(self.ctx)
+        _fko.get_spa_hmac(self.ctx)
 
 
     # GPG-related functions.

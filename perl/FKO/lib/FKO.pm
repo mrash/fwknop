@@ -323,7 +323,7 @@ sub spa_hmac {
 
     my $val = '';
 
-    return FKO::_calculate_hmac($self->{_ctx})
+    return FKO::_set_spa_hmac($self->{_ctx})
         if($recompute and $hmac_key and $hmac_key_len);
 
     $self->{_err} = FKO::_get_spa_hmac($self->{_ctx}, $val);
@@ -518,12 +518,12 @@ sub verify_hmac {
     return FKO::_verify_hmac($self->{_ctx}, $hmac_key, $hmac_key_len)
 }
 
-sub calculate_hmac {
+sub set_spa_hmac {
     my $self         = shift;
     my $hmac_key     = shift || '';
     my $hmac_key_len = shift || 0;
 
-    return FKO::_calculate_hmac($self->{_ctx}, $hmac_key, $hmac_key_len)
+    return FKO::_set_spa_hmac($self->{_ctx}, $hmac_key, $hmac_key_len)
 }
 
 sub DESTROY {

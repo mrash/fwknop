@@ -132,6 +132,7 @@ typedef enum {
     FKO_ERROR_FILESYSTEM_OPERATION,
     FKO_ERROR_INVALID_DATA,
     FKO_ERROR_DATA_TOO_LARGE,
+    FKO_ERROR_INVALID_KEY_LEN,
     FKO_ERROR_USERNAME_UNKNOWN,
     FKO_ERROR_INCOMPLETE_SPA_DATA,
     FKO_ERROR_MISSING_ENCODED_DATA,
@@ -145,6 +146,7 @@ typedef enum {
     FKO_ERROR_DECRYPTION_SIZE,
     FKO_ERROR_DECRYPTION_FAILURE,
     FKO_ERROR_DIGEST_VERIFICATION_FAILED,
+    FKO_ERROR_INVALID_HMAC_KEY_LEN,
     FKO_ERROR_UNSUPPORTED_HMAC_MODE,
     FKO_ERROR_UNSUPPORTED_FEATURE,
     FKO_ERROR_UNKNOWN,
@@ -280,9 +282,9 @@ DLL_API int fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key,
     const int dec_key_len);
 DLL_API int fko_verify_hmac(fko_ctx_t ctx, const char * const hmac_key,
     const int hmac_key_len);
-DLL_API int fko_calculate_hmac(fko_ctx_t ctx, const char * const hmac_key,
+DLL_API int fko_set_spa_hmac(fko_ctx_t ctx, const char * const hmac_key,
     const int hmac_key_len);
-DLL_API int fko_get_hmac_data(fko_ctx_t ctx, char **enc_data);
+DLL_API int fko_get_spa_hmac(fko_ctx_t ctx, char **enc_data);
 
 DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
 

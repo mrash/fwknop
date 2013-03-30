@@ -254,6 +254,7 @@ EXTRA_DIST = \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
+    test/fko-python.py \
     test/run-test-suite.sh \
     test/README \
     VERSION \

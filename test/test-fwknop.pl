@@ -1617,6 +1617,88 @@ sub perl_fko_module_msg_types() {
     return $rv;
 }
 
+sub perl_fko_module_long_keys() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $key (@{fuzzing_encryption_keys()}) {
+
+            $fko_obj = FKO->new();
+
+            unless ($fko_obj) {
+                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                    $curr_test_file);
+                return 0;
+            }
+
+            ### set message and then encrypt
+            my $status = $fko_obj->spa_message($msg);
+
+            $status = $fko_obj->spa_data_final($key, length($key), '', 0);
+
+            if ($status == FKO->FKO_SUCCESS) {
+                &write_test_file("[-] Accepted fuzzing key '$key' for $msg\n",
+                    $curr_test_file);
+                $rv = 0;
+                $fko_obj->destroy();
+                last;
+            } else {
+                &write_test_file("[+] Rejected fuzzing key '$key' for $msg: " .
+                    FKO::error_str() . "\n",
+                    $curr_test_file);
+            }
+            $fko_obj->destroy();
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_long_hmac_keys() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $hmac_type (@{valid_spa_hmac_types()}) {
+            for my $hmac_key (@{fuzzing_hmac_keys()}) {
+
+                $fko_obj = FKO->new();
+
+                unless ($fko_obj) {
+                    &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                        $curr_test_file);
+                    return 0;
+                }
+
+                ### set message and then encrypt
+                my $status = $fko_obj->spa_message($msg);
+                $fko_obj->hmac_type($hmac_type);
+
+                my $enc_key = 'asdfasdf';
+                $status = $fko_obj->spa_data_final($enc_key, length($enc_key), $hmac_key, length($hmac_key));
+
+                if ($status == FKO->FKO_SUCCESS) {
+                    &write_test_file("[-] Accepted fuzzing hmac key '$hmac_key' for $msg\n",
+                        $curr_test_file);
+                    $rv = 0;
+                    $fko_obj->destroy();
+                    last;
+                } else {
+                    &write_test_file("[+] Rejected fuzzing hmac key '$hmac_key' for $msg: " .
+                        FKO::error_str() . "\n",
+                        $curr_test_file);
+                }
+                $fko_obj->destroy();
+            }
+        }
+    }
+
+    return $rv;
+}
+
 sub perl_fko_module_access_msgs() {
     my $test_hr = shift;
 
@@ -1830,14 +1912,32 @@ sub fuzzing_usernames() {
     return \@users;
 }
 
+sub fuzzing_encryption_keys() {
+    my @keys = (
+        'A'x33,
+        'A'x34,
+        'A'x128,
+        'A'x1000,
+        'A'x2000,
+        'asdfasdfsafsdafasdfasdfsafsdaffdjskalfjdsklafjsldkafjdsajdkajsklfdafsklfjjdkljdsafjdjd' .
+        'sklfjsfdsafjdslfdkjdljsajdskjdskafjdldsljdkafdsljdslafdslaldldajdskajlddslajsl',
+    );
+    return \@keys;
+}
+
+sub fuzzing_hmac_keys() {
+    my @keys = (
+        'A'x129,
+        'A'x1000,
+        'A'x2000,
+    );
+    return \@keys;
+}
+
 sub valid_encryption_keys() {
     my @keys = (
         '!@#$%',
         'asdfasdfsafsdafasdfasdfsafsdaf',
-#        'asdfasdfsafsdafasdfasdfsafsdaffdjskalfjdskl' .
-#        'afjsldkafjdsajdkajsklfdafsklfjjdkljdsafjdjd' .
-#        'sklfjsfdsafjdslfdkjdljsajdskjdskafjdldsljdk' .
-#        afdsljdslafdslaldldajdskajlddslajsl',
         '$',
         'asdfasdfsafsdaf',
         'testtest',
@@ -1849,6 +1949,20 @@ sub valid_encryption_keys() {
     return \@keys;
 }
 
+sub valid_hmac_keys() {
+    my @keys = (
+        '!@#$%',
+        'asdfasdfsafsdafasdfasdfsafsdaf',
+        '$',
+        'A'x33,
+        'A'x128,
+        'A'x120,
+        'asdfasdfsafsdaf',
+        '1234',
+        'a',
+    );
+    return \@keys;
+}
 sub valid_spa_digest_types() {
     my @types = (
         FKO->FKO_DIGEST_MD5,
@@ -2170,7 +2284,7 @@ sub perl_fko_module_complete_cycle_hmac() {
                         }
 
                         my $hmac_key_ctr = 0;
-                        HMAC_KEY: for my $hmac_key (@{valid_encryption_keys()}) {
+                        HMAC_KEY: for my $hmac_key (@{valid_hmac_keys()}) {
                             $hmac_key_ctr++;
                             last HMAC_KEY if $hmac_key_ctr >= 4;
 

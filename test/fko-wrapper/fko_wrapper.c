@@ -166,7 +166,7 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_hmac_type(ctx, &hmac_type);
     fko_get_spa_encryption_mode(ctx, &encryption_mode);
     fko_get_encoded_data(ctx, &enc_data);
-    fko_get_hmac_data(ctx, &hmac_data);
+    fko_get_spa_hmac(ctx, &hmac_data);
     fko_get_spa_digest(ctx, &spa_digest);
     fko_get_spa_data(ctx, &spa_data);
 
