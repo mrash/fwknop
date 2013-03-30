@@ -282,9 +282,9 @@ DLL_API int fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key,
     const int dec_key_len);
 DLL_API int fko_verify_hmac(fko_ctx_t ctx, const char * const hmac_key,
     const int hmac_key_len);
-DLL_API int fko_calculate_hmac(fko_ctx_t ctx, const char * const hmac_key,
+DLL_API int fko_set_spa_hmac(fko_ctx_t ctx, const char * const hmac_key,
     const int hmac_key_len);
-DLL_API int fko_get_hmac_data(fko_ctx_t ctx, char **enc_data);
+DLL_API int fko_get_spa_hmac(fko_ctx_t ctx, char **enc_data);
 
 DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
 

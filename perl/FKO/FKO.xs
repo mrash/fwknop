@@ -393,7 +393,7 @@ _get_spa_hmac(ctx, val)
     fko_ctx_t ctx;
     char *val;
     CODE:
-    RETVAL = fko_get_hmac_data(ctx, &val);
+    RETVAL = fko_get_spa_hmac(ctx, &val);
     OUTPUT:
     val
     RETVAL
@@ -639,13 +639,13 @@ _verify_hmac(ctx, hmac_key, hmac_key_len)
     RETVAL
 
 int
-_calculate_hmac(ctx, hmac_key, hmac_key_len)
+_set_spa_hmac(ctx, hmac_key, hmac_key_len)
     INPUT:
     fko_ctx_t ctx;
     char*   hmac_key;
     int     hmac_key_len;
     CODE:
-    RETVAL = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
+    RETVAL = fko_set_spa_hmac(ctx, hmac_key, hmac_key_len);
     OUTPUT:
     RETVAL
 
