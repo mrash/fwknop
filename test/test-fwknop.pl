@@ -228,6 +228,7 @@ my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
+my $enc_dummy_key = 'A'x8;
 my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_profile_coverage_check = 0;
@@ -1677,8 +1678,8 @@ sub perl_fko_module_long_hmac_keys() {
                 my $status = $fko_obj->spa_message($msg);
                 $fko_obj->hmac_type($hmac_type);
 
-                my $enc_key = 'asdfasdf';
-                $status = $fko_obj->spa_data_final($enc_key, length($enc_key), $hmac_key, length($hmac_key));
+                $status = $fko_obj->spa_data_final($enc_dummy_key,
+                        length($enc_dummy_key), $hmac_key, length($hmac_key));
 
                 if ($status == FKO->FKO_SUCCESS) {
                     &write_test_file("[-] Accepted fuzzing hmac key '$hmac_key' for $msg\n",
