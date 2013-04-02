@@ -353,7 +353,11 @@ directive starts a new stanza.
 *ENCRYPTION_MODE*: '<mode>'::
     Specify the encryption mode when AES is used.  The default is CBC mode,
     but other modes can be selected such as OFB and CFB.  In general, it is
-    recommended to not use this variable and leave it as the default.
+    recommended to not use this variable and leave it as the default.  Note
+    that the string ``legacy'' can be specified in order to generate SPA
+    packets with the old initialization vector strategy used by versions of
+    *fwknop* before 2.5.  With the 2.5 release, *fwknop* generates
+    initialization vectors in a manner that is compatible with OpenSSL.
 
 *ENABLE_CMD_EXEC*: '<Y/N>'::
     This instructs *fwknopd* to accept complete commands that are contained
