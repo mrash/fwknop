@@ -337,6 +337,8 @@ if ($enable_all) {
 ### emailed around to assist in debugging fwknop communications
 exit &anonymize_results() if $anonymize_results;
 
+exit &diff_test_results() if $diff_mode;
+
 &identify_loopback_intf();
 
 ### make sure everything looks as expected before continuing
@@ -399,11 +401,6 @@ our $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
 ### point the compiled binaries at the local libary path
 ### instead of any installed libfko instance
 $ENV{'LD_LIBRARY_PATH'} = $lib_dir;
-
-if ($diff_mode) {
-    &diff_test_results();
-    exit 0;
-}
 
 ### import the tests from the various tests/ files
 &import_test_files();
@@ -780,7 +777,7 @@ sub diff_results() {
 sub build_results_hash() {
     my ($hr, $dir) = @_;
 
-    open F, "< $dir/$logfile" or die $!;
+    open F, "< $dir/$logfile" or die "[*] Could not open $dir/$logfile: $!";
     while (<F>) {
         if (/^(.*?)\.\.\..*(pass|fail)\s\((\d+)\)/) {
             $hr->{$1}{'pass_fail'} = $2;
