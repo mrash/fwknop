@@ -1,11 +1,9 @@
-/*
- *****************************************************************************
+/**
+ * @file    fwknop.c
  *
- * File:    fwknop.c
+ * @author  Damien S. Stuart
  *
- * Author:  Damien S. Stuart
- *
- * Purpose: An implementation of an fwknop client.
+ * @brief   An implementation of an fwknop client.
  *
  * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -25,9 +23,8 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
  *  USA
- *
- *****************************************************************************
-*/
+ */
+
 #include "fwknop.h"
 #include "config_init.h"
 #include "spa_comm.h"
@@ -60,8 +57,83 @@ static int get_rand_port(fko_ctx_t ctx);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     unsigned int exit_status);
+static void *get_in_addr(struct sockaddr *sa);
+static int resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize);
 
 #define MAX_CMDLINE_ARGS    50  /* should be way more than enough */
+
+
+/**
+ * @brief Grab the sin address from the sockaddr structure.
+ *
+ * This functions returns the sin address as a sockaddr_in or sockaddr_in6
+ * structure according to the family set (ipv4 or ipv6) in the sockaddr
+ * structure.
+ *
+ * @param sa sockaddr strcuture
+ *
+ * @return the sin addr if the sa family is AF_INET or the sin6_addr otherwise.
+ */
+static void *get_in_addr(struct sockaddr *sa)
+{
+  if (sa->sa_family == AF_INET)
+  {
+    return &(((struct sockaddr_in*)sa)->sin_addr);
+  }
+
+  else
+  {
+    return &(((struct sockaddr_in6*)sa)->sin6_addr);
+  }
+}
+
+/**
+ * @brief  Resolve a domain name as an ip adress.
+ *
+ * @param dns_str    Name of the host to resolve.
+ * @param hints      Hints to reduce the number of result from getaddrinfo()
+ * @param ip_str     String where to store the resolve ip address
+ * @param ip_bufsize Number of bytes available in the ip_str buffer
+ *
+ * @return 0 if successful, 1 if an error occured.
+ */
+static int resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize)
+{
+    int                 error;      /* Function error return code */
+    struct addrinfo    *result;     /* Result of getaddrinfo() */
+    struct addrinfo    *rp;         /* Element of the linked list returned by getaddrinfo() */
+    struct sockaddr_in *sai_remote; /* Remote host information as a sockaddr_in structure */
+
+    /* Try to resolve the host name */
+    error = getaddrinfo(dns_str, NULL, hints, &result);
+    if (error != 0)
+        fprintf(stderr, "resolve_dest_adr() : %s\n", gai_strerror(error));
+
+    else
+    {
+        error = 1;
+
+        /* Go through the linked list of addrinfo structures */
+        for (rp = result; rp != NULL; rp = rp->ai_next)
+        {
+            sai_remote = (struct sockaddr_in *)get_in_addr((struct sockaddr *)(rp->ai_addr));
+
+            memset(ip_str, 0, ip_bufsize);
+            if (inet_ntop(rp->ai_family, sai_remote, ip_str, ip_bufsize) != NULL)
+            {
+                error = 0;
+                break;
+            }
+            else
+                fprintf(stderr, "resolve_dest_adr() : inet_ntop (%d) - %s\n", errno, strerror(errno));
+        }
+
+        /* Free our result from getaddrinfo() */
+        freeaddrinfo(result);
+    }
+
+    return error;
+}
 
 int
 main(int argc, char **argv)
@@ -672,12 +744,15 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
 static int
 set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const access_buf)
 {
-    char nat_access_buf[MAX_LINE_LEN] = {0};
-    char tmp_access_port[MAX_PORT_STR_LEN+1], *ndx = NULL;
-    int  access_port = 0, i = 0, is_err = 0;
+    char                nat_access_buf[MAX_LINE_LEN] = {0};
+    char                tmp_access_port[MAX_PORT_STR_LEN+1], *ndx = NULL;
+    int                 access_port = 0, i = 0, is_err = 0;
+    char                dst_ip_str[INET_ADDRSTRLEN];
+    struct addrinfo     hints;
 
     memset(nat_access_buf, 0x0, MAX_LINE_LEN);
     memset(tmp_access_port, 0x0, MAX_PORT_STR_LEN+1);
+    memset(&hints, 0 , sizeof(hints));
 
     ndx = strchr(options->access_str, '/');
     if(ndx == NULL)
@@ -706,6 +781,21 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
 
     if (options->nat_local && options->nat_access_str[0] == 0x0)
     {
+        /* Speed up the name resolution by forcing ipv4 (AF_INET).
+         * A NULL pointer could be used instead if there is no constraint.
+         * Maybe when ipv6 support will be enable the structure could initialize the
+         * family to either AF_INET or AF_INET6 */
+        hints.ai_family = AF_INET;
+
+        if (resolve_dest_adr(options->spa_server_str, &hints, dst_ip_str, sizeof(dst_ip_str)) != 0)
+        {
+            fprintf(stderr, "[*] Unable to resolve %s as an ip address\n",
+                    options->spa_server_str);
+            clean_exit(ctx, options, EXIT_FAILURE);
+        }
+
+        strlcpy(options->spa_server_str, dst_ip_str, sizeof(options->spa_server_str));
+
         snprintf(nat_access_buf, MAX_LINE_LEN, "%s,%d",
             options->spa_server_str, access_port);
     }
