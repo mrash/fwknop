@@ -171,6 +171,7 @@ my @test_files = (
     "$tests_dir/python_fko.pl",
     "$tests_dir/gpg_no_pw.pl",
     "$tests_dir/gpg.pl",
+    "$tests_dir/client_nat.pl",
 );
 #================== end config ===================
 
@@ -189,6 +190,7 @@ our @gpg                     = ();  ### from tests/gpg.pl
 our @perl_FKO_module         = ();  ### from tests/perl_FKO_module.pl
 our @python_fko              = ();  ### from tests/python_fko.pl
 our @rijndael_backwards_compatibility = ();  ### from tests/rijndael_backwards_compatibility.pl
+our @client_nat_dns_resolution_fko = (); ### from tests/client_nat.pl
 
 my $passed = 0;
 my $failed = 0;
@@ -443,6 +445,7 @@ my @tests = (
     @python_fko,
     @gpg_no_pw,
     @gpg,
+    @client_nat_dns_resolution_fko,
 );
 
 my %test_keys = (
