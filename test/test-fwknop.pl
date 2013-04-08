@@ -4574,38 +4574,40 @@ sub init() {
         chmod 0600, $cf{$name} or die "[*] Could not chmod 0600 $cf{$name}";
     }
 
-    if (-d $output_dir) {
-        if (-d "${output_dir}.last") {
-            rmtree "${output_dir}.last"
-                or die "[*] rmtree ${output_dir}.last $!";
+    unless ($list_mode) {
+        if (-d $output_dir) {
+            if (-d "${output_dir}.last") {
+                rmtree "${output_dir}.last"
+                    or die "[*] rmtree ${output_dir}.last $!";
+            }
+            move $output_dir, "${output_dir}.last" or die $!;
+            if (-e "$output_dir/init") {
+                copy "$output_dir/init", "${output_dir}.last/init";
+            }
+            if (-e $logfile) {
+                copy $logfile, "${output_dir}.last/$logfile" or die $!;
+            }
+            $saved_last_results = 1;
+        } else {
+            mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
         }
-        move $output_dir, "${output_dir}.last" or die $!;
-        if (-e "$output_dir/init") {
-            copy "$output_dir/init", "${output_dir}.last/init";
+
+        if (-d $run_dir) {
+            rmtree $run_dir or die $!;
         }
-        if (-e $logfile) {
-            copy $logfile, "${output_dir}.last/$logfile" or die $!;
+        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+
+        for my $dir ($output_dir, $run_dir) {
+            next if -d $dir;
+            mkdir $dir or die "[*] Could not mkdir $dir: $!";
         }
-        $saved_last_results = 1;
-    } else {
-        mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
-    }
 
-    if (-d $run_dir) {
-        rmtree $run_dir or die $!;
-    }
-    mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
-
-    for my $dir ($output_dir, $run_dir) {
-        next if -d $dir;
-        mkdir $dir or die "[*] Could not mkdir $dir: $!";
-    }
-
-    for my $file (glob("$output_dir/*.test"), "$output_dir/init",
-            $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
-            $logfile, $key_gen_file) {
-        next unless -e $file;
-        unlink $file or die "[*] Could not unlink($file)";
+        for my $file (glob("$output_dir/*.test"), "$output_dir/init",
+                $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
+                $logfile, $key_gen_file) {
+            next unless -e $file;
+            unlink $file or die "[*] Could not unlink($file)";
+        }
     }
 
     if ($test_include) {
