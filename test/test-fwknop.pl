@@ -50,6 +50,7 @@ our %cf = (
     'hmac_sha384_long_key_access'  => "$conf_dir/hmac_sha384_long_key_access.conf",
     'hmac_sha512_access'           => "$conf_dir/hmac_sha512_access.conf",
     'hmac_sha512_short_key_access' => "$conf_dir/hmac_sha512_short_key_access.conf",
+    'hmac_sha512_short_key2_access' => "$conf_dir/hmac_sha512_short_key2_access.conf",
     'hmac_sha512_long_key_access'  => "$conf_dir/hmac_sha512_long_key_access.conf",
     'hmac_simple_keys_access'      => "$conf_dir/hmac_simple_keys_access.conf",
     'hmac_invalid_type_access'     => "$conf_dir/hmac_invalid_type_access.conf",
@@ -224,6 +225,7 @@ our $valgrind_str = '';
 my %prev_valgrind_cov = ();
 my %prev_valgrind_file_titles = ();
 my $fko_wrapper_dir = 'fko-wrapper';
+my $python_spa_packet = '';
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
 my $saved_last_results = 0;
@@ -1233,6 +1235,59 @@ sub python_fko_basic_exec() {
     $rv = &run_cmd("LD_LIBRARY_PATH=$lib_dir " .
         "PYTHONPATH=$site_dir ./$python_script", $cmd_out_tmp,
         $curr_test_file);
+
+    if ($rv) {
+
+        $python_spa_packet = '';
+
+        ### get the SPA packet data
+        open F, "< $curr_test_file" or die $!;
+        while (<F>) {
+            if (/SPA\spacket\sdata\:\s(\S+)/) {
+                $python_spa_packet = $1;
+                last;
+            }
+        }
+        close F;
+
+        unless ($python_spa_packet) {
+            &write_test_file("[-] could not acquite SPA packet from python output\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    return $rv;
+}
+
+sub python_fko_client_to_C_server() {
+    my $test_hr = shift;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $python_spa_packet,
+        },
+    );
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
+        $rv = 0 unless $fw_rule_created;
+    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
+        $rv = 0 if $fw_rule_created;
+    }
+
+    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
+        $rv = 0 unless $fw_rule_removed;
+    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
+        $rv = 0 if $fw_rule_removed;
+    }
 
     return $rv;
 }

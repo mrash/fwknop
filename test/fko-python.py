@@ -13,15 +13,15 @@ fko.hmac_type(FKO_HMAC_SHA512)
 
 # Set the SPA message (Note: Access request is default if not specified).
 #
-fko.spa_message("0.0.0.0,tcp/22")
+fko.spa_message("127.0.0.2,tcp/22")
 
 # Create the final SPA data message string.
 #
-fko.spa_data_final("testtest", "blah")
+fko.spa_data_final("testkey1", "testkey2")
 
 # print the spa message.
 #
-print fko.spa_data()
+print "SPA packet data:", fko.spa_data()
 
 # Print some of the data:
 #

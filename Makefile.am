@@ -161,6 +161,7 @@ EXTRA_DIST = \
     test/conf/hmac_sha384_long_key_access.conf \
     test/conf/hmac_sha512_access.conf \
     test/conf/hmac_sha512_short_key_access.conf \
+    test/conf/hmac_sha512_short_key2_access.conf \
     test/conf/hmac_sha512_long_key_access.conf \
     test/conf/hmac_simple_keys_access.conf \
     test/conf/hmac_sha256_open_ports_access.conf \
