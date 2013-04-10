@@ -157,6 +157,15 @@
     {
         'category' => 'perl FKO module',
         'subcategory' => 'encrypt/decrypt',
+        'detail'   => 'key with NULL handling',
+        'function' => \&perl_fko_module_key_with_null,
+        'set_legacy_iv' => $NO,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'encrypt/decrypt',
         'detail'   => 'complete cycle (mod reuse, lIV)',
         'function' => \&perl_fko_module_complete_cycle_module_reuse,
         'set_legacy_iv' => $YES,
