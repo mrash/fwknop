@@ -59,14 +59,117 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     unsigned int exit_status);
 static void *get_in_addr(struct sockaddr *sa);
 static int resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize);
+static int is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port);
 
-#define MAX_CMDLINE_ARGS    50  /* should be way more than enough */
+#define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
+#define IPV4_STR_TEMPLATE           "%u.%u.%u.%u"       /*!< Template for a string as an ipv4 address with sscanf */
+#define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
+#define HOSTNAME_BUFSIZE            64                  /*!< Maximum size of a hostname string */
 
+
+/**
+ * @brief Check whether a string is an ipv4 address or not
+ *
+ * @param str String to check for an ipv4 address.
+ *
+ * @return 1 if the string is an ipv4 address, 0 otherwise.
+ */
+static int
+is_ipv4_str(char *str)
+{
+    int o1, o2, o3, o4;
+    int valid_ipv4;
+
+    /* Check format and values.
+    */
+    if((sscanf(str, IPV4_STR_TEMPLATE, &o1, &o2, &o3, &o4)) == 4
+        && o1 >= 0 && o1 <= 255
+        && o2 >= 0 && o2 <= 255
+        && o3 >= 0 && o3 <= 255
+        && o4 >= 0 && o4 <= 255)
+    {
+        valid_ipv4 = 1;
+    }
+    else
+        valid_ipv4 = 0;
+
+    return valid_ipv4;
+}
+
+/**
+ * @brief Check whether a string is an ipv6 address or not
+ *
+ * @param str String to check for an ipv6 address.
+ *
+ * @return 1 if the string is an ipv6 address, 0 otherwise.
+ */
+static int
+is_ipv6_str(char *str)
+{
+    return 0;
+}
+
+/**
+ * @brief Check a string to find out if it is built as 'hostname,port'
+ *
+ * This function check if we can extract an hostname and a port from the string.
+ * If yes, we return 1, and both the hostname buffer and the port number are set
+ * accordingly.
+ *
+ * We could have used sscanf() here with a template "%[^,],%u", but this way we
+ * do not limit the size of the value copy in the hostname destination buffer.
+ * Limiting the string in the sscanf() can be done but would prevent any easy change
+ * for the hostname buffer size.
+ *
+ * @param str String to parse.
+ * @param hostname Buffer where to store the hostname value read from @str.
+ * @param hostname_bufsize Hostname buffer size.
+ * @param port Value of the port read from @str.
+ *
+ * @return 1 if the string is built as 'hostname,port', 0 otherwise.
+ */
+static int
+is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port)
+{
+    int     valid = 0;              /* Result of the function */
+    char    buf[MAX_LINE_LEN];      /* Copy of the buffer eg. "hostname,port" */
+    char   *h;                      /* Pointer on the hostname string */
+    char   *p;                      /* Ponter on the port string */
+
+    memset(buf, 0, sizeof(buf));
+    memset(hostname, 0, hostname_bufsize);
+    *port = 0;
+
+    /* Replace the comma in the string with a NULL char to split the
+     * buffer in two strings (hostname and port) */
+    strlcpy(buf, str, sizeof(buf));
+    p = strchr(buf, ',');
+
+    if(p != NULL)
+    {
+        *p++ = 0;
+        h = buf;
+
+        *port = atoi(p);
+
+        /* If the string does not match an ipv4 or ipv6 address we assume this
+         * is an hostname. We make sure the port is in the good range too */
+        if (   (is_ipv4_str(buf) == 0)
+            && (is_ipv6_str(buf) == 0)
+            && ((*port > 0) && (*port < 65536)) )
+        {
+            strlcpy(hostname, h, hostname_bufsize);
+            valid = 1;
+        }
+    }
+
+    return valid;
+}
 
 /**
  * @brief Grab the sin address from the sockaddr structure.
  *
- * This functions returns the sin address as a sockaddr_in or sockaddr_in6
+ * This function returns the sin address as a sockaddr_in or sockaddr_in6
  * structure according to the family set (ipv4 or ipv6) in the sockaddr
  * structure.
  *
@@ -74,7 +177,8 @@ static int resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *i
  *
  * @return the sin addr if the sa family is AF_INET or the sin6_addr otherwise.
  */
-static void *get_in_addr(struct sockaddr *sa)
+static void *
+get_in_addr(struct sockaddr *sa)
 {
   if (sa->sa_family == AF_INET)
   {
@@ -97,7 +201,8 @@ static void *get_in_addr(struct sockaddr *sa)
  *
  * @return 0 if successful, 1 if an error occured.
  */
-static int resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize)
+static int
+resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize)
 {
     int                 error;      /* Function error return code */
     struct addrinfo    *result;     /* Result of getaddrinfo() */
@@ -747,7 +852,9 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     char                nat_access_buf[MAX_LINE_LEN] = {0};
     char                tmp_access_port[MAX_PORT_STR_LEN+1], *ndx = NULL;
     int                 access_port = 0, i = 0, is_err = 0;
-    char                dst_ip_str[INET_ADDRSTRLEN];
+    char                dst_ip_str[INET_ADDRSTRLEN] = {0};
+    char                hostname[HOSTNAME_BUFSIZE] = {0};
+    int                 port = 0;
     struct addrinfo     hints;
 
     memset(nat_access_buf, 0x0, MAX_LINE_LEN);
@@ -781,22 +888,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
 
     if (options->nat_local && options->nat_access_str[0] == 0x0)
     {
-        /* Speed up the name resolution by forcing ipv4 (AF_INET).
-         * A NULL pointer could be used instead if there is no constraint.
-         * Maybe when ipv6 support will be enable the structure could initialize the
-         * family to either AF_INET or AF_INET6 */
-        hints.ai_family = AF_INET;
-
-        if (resolve_dest_adr(options->spa_server_str, &hints, dst_ip_str, sizeof(dst_ip_str)) != 0)
-        {
-            fprintf(stderr, "[*] Unable to resolve %s as an ip address\n",
-                    options->spa_server_str);
-            clean_exit(ctx, options, EXIT_FAILURE);
-        }
-
-        strlcpy(options->spa_server_str, dst_ip_str, sizeof(options->spa_server_str));
-
-        snprintf(nat_access_buf, MAX_LINE_LEN, "%s,%d",
+        snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
             options->spa_server_str, access_port);
     }
 
@@ -809,9 +901,28 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
         }
         else
         {
-            snprintf(nat_access_buf, MAX_LINE_LEN, "%s,%d",
+            snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
                 options->nat_access_str, access_port);
         }
+    }
+
+    if (is_hostname_str_with_port(nat_access_buf, hostname, sizeof(hostname), &port))
+    {
+        /* Speed up the name resolution by forcing ipv4 (AF_INET).
+         * A NULL pointer could be used instead if there is no constraint.
+         * Maybe when ipv6 support will be enable the structure could initialize the
+         * family to either AF_INET or AF_INET6 */
+        hints.ai_family = AF_INET;
+
+        if (resolve_dest_adr(hostname, &hints, dst_ip_str, sizeof(dst_ip_str)) != 0)
+        {
+            fprintf(stderr, "[*] Unable to resolve %s as an ip address\n",
+                    hostname);
+            clean_exit(ctx, options, EXIT_FAILURE);
+        }
+
+        snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
+                dst_ip_str, port);
     }
 
     if(options->nat_rand_port)
