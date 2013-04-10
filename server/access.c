@@ -1078,6 +1078,19 @@ parse_access_file(fko_srv_options_t *opts)
             add_acc_b64_string(&(curr_acc->hmac_key),
                 &curr_acc->hmac_key_len, curr_acc->hmac_key_base64);
         }
+        else if(CONF_VAR_IS(var, "HMAC_KEY"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                fprintf(stderr,
+                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            add_acc_string(&(curr_acc->hmac_key), val);
+            curr_acc->hmac_key_len = strlen(curr_acc->hmac_key);
+        }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {
             curr_acc->fw_access_timeout = strtol_wrapper(val, 0,

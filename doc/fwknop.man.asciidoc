@@ -236,7 +236,11 @@ SPA OPTIONS
     The default is CBC mode, but others can be chosen such as CFB or OFB
     as long as this is also specified in the 'access.conf' file on the
     server side via the ENCRYPTION_MODE variable.  In general, it is
-    recommended to not use this argument and just use the default.
+    recommended to not use this argument and just use the default.  Note that
+    the string ``legacy'' can be specified in order to generate SPA packets
+    with the old initialization vector strategy used by versions of *fwknop*
+    before 2.5.  With the 2.5 release, *fwknop* generates initialization
+    vectors in a manner that is compatible with OpenSSL.
 
 *--hmac-digest-type*='<digest>'::
     Set the HMAC digest algorithm (default is sha256). Options are md5, sha1,

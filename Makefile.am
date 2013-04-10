@@ -145,6 +145,7 @@ EXTRA_DIST = \
     test/conf/gpg_access.conf \
     test/conf/gpg_no_pw_access.conf \
     test/conf/hmac_access.conf \
+    test/conf/hmac_no_b64_access.conf \
     test/conf/hmac_dual_key_usage_access.conf \
     test/conf/hmac_invalid_type_access.conf \
     test/conf/hmac_md5_access.conf \
@@ -161,11 +162,13 @@ EXTRA_DIST = \
     test/conf/hmac_sha384_long_key_access.conf \
     test/conf/hmac_sha512_access.conf \
     test/conf/hmac_sha512_short_key_access.conf \
+    test/conf/hmac_sha512_short_key2_access.conf \
     test/conf/hmac_sha512_long_key_access.conf \
     test/conf/hmac_simple_keys_access.conf \
     test/conf/hmac_sha256_open_ports_access.conf \
     test/conf/hmac_force_nat_access.conf \
     test/conf/fwknoprc_default_hmac_base64_key \
+    test/conf/fwknoprc_hmac_key2 \
     test/conf/fwknoprc_hmac_invalid_type \
     test/conf/fwknoprc_hmac_md5_key \
     test/conf/fwknoprc_hmac_md5_long_key \
@@ -254,6 +257,7 @@ EXTRA_DIST = \
     test/hardening-check \
     test/local_spa.key \
     test/test-fwknop.pl \
+    test/fko-python.py \
     test/run-test-suite.sh \
     test/README \
     VERSION \

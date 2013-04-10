@@ -458,7 +458,7 @@ fko_spa_data_final(fko_ctx_t ctx,
     if (res == FKO_SUCCESS &&
             ctx->hmac_type != FKO_HMAC_UNKNOWN && hmac_key != NULL)
     {
-        res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
+        res = fko_set_spa_hmac(ctx, hmac_key, hmac_key_len);
 
         if (res == FKO_SUCCESS)
         {

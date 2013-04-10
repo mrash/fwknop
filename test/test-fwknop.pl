@@ -14,16 +14,16 @@ use Getopt::Long 'GetOptions';
 use strict;
 
 #==================== config =====================
-my $logfile        = 'test.log';
+my $logfile         = 'test.log';
 our $local_key_file = 'local_spa.key';
-my $output_dir     = 'output';
+my $output_dir      = 'output';
 our $conf_dir       = 'conf';
-my $run_dir        = 'run';
-my $cmd_out_tmp    = 'cmd.out';
-my $server_cmd_tmp = 'server_cmd.out';
-my $data_tmp       = 'data.tmp';
-my $key_tmp        = 'key.tmp';
-my $enc_save_tmp   = 'openssl_save.enc';
+my $run_dir         = 'run';
+my $cmd_out_tmp     = 'cmd.out';
+my $server_cmd_tmp  = 'server_cmd.out';
+my $data_tmp        = 'data.tmp';
+my $key_tmp         = 'key.tmp';
+my $enc_save_tmp    = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
@@ -36,6 +36,7 @@ our %cf = (
     'def'                          => "$conf_dir/default_fwknopd.conf",
     'def_access'                   => "$conf_dir/default_access.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
+    'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
     'hmac_md5_access'              => "$conf_dir/hmac_md5_access.conf",
     'hmac_md5_short_key_access'    => "$conf_dir/hmac_md5_short_key_access.conf",
     'hmac_md5_long_key_access'     => "$conf_dir/hmac_md5_long_key_access.conf",
@@ -50,6 +51,7 @@ our %cf = (
     'hmac_sha384_long_key_access'  => "$conf_dir/hmac_sha384_long_key_access.conf",
     'hmac_sha512_access'           => "$conf_dir/hmac_sha512_access.conf",
     'hmac_sha512_short_key_access' => "$conf_dir/hmac_sha512_short_key_access.conf",
+    'hmac_sha512_short_key2_access' => "$conf_dir/hmac_sha512_short_key2_access.conf",
     'hmac_sha512_long_key_access'  => "$conf_dir/hmac_sha512_long_key_access.conf",
     'hmac_simple_keys_access'      => "$conf_dir/hmac_simple_keys_access.conf",
     'hmac_invalid_type_access'     => "$conf_dir/hmac_invalid_type_access.conf",
@@ -98,6 +100,7 @@ our %cf = (
     'rc_named_key'                 => "$conf_dir/fwknoprc_named_key",
     'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
+    'rc_hmac_b64_key2'             => "$conf_dir/fwknoprc_hmac_key2",
     'rc_hmac_simple_key'           => "$conf_dir/fwknoprc_hmac_simple_keys",
     'rc_hmac_invalid_type'         => "$conf_dir/fwknoprc_hmac_invalid_type",
     'rc_hmac_invalid_type'         => "$conf_dir/fwknoprc_hmac_invalid_type",
@@ -226,10 +229,12 @@ our $valgrind_str = '';
 my %prev_valgrind_cov = ();
 my %prev_valgrind_file_titles = ();
 my $fko_wrapper_dir = 'fko-wrapper';
+my $python_spa_packet = '';
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
+my $enc_dummy_key = 'A'x8;
 my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_profile_coverage_check = 0;
@@ -338,6 +343,8 @@ if ($enable_all) {
 ### emailed around to assist in debugging fwknop communications
 exit &anonymize_results() if $anonymize_results;
 
+exit &diff_test_results() if $diff_mode;
+
 &identify_loopback_intf();
 
 ### make sure everything looks as expected before continuing
@@ -400,11 +407,6 @@ our $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
 ### point the compiled binaries at the local libary path
 ### instead of any installed libfko instance
 $ENV{'LD_LIBRARY_PATH'} = $lib_dir;
-
-if ($diff_mode) {
-    &diff_test_results();
-    exit 0;
-}
 
 ### import the tests from the various tests/ files
 &import_test_files();
@@ -782,7 +784,7 @@ sub diff_results() {
 sub build_results_hash() {
     my ($hr, $dir) = @_;
 
-    open F, "< $dir/$logfile" or die $!;
+    open F, "< $dir/$logfile" or die "[*] Could not open $dir/$logfile: $!";
     while (<F>) {
         if (/^(.*?)\.\.\..*(pass|fail)\s\((\d+)\)/) {
             $hr->{$1}{'pass_fail'} = $2;
@@ -1239,6 +1241,59 @@ sub python_fko_basic_exec() {
         "PYTHONPATH=$site_dir ./$python_script", $cmd_out_tmp,
         $curr_test_file);
 
+    if ($rv) {
+
+        $python_spa_packet = '';
+
+        ### get the SPA packet data
+        open F, "< $curr_test_file" or die $!;
+        while (<F>) {
+            if (/SPA\spacket\sdata\:\s(\S+)/) {
+                $python_spa_packet = $1;
+                last;
+            }
+        }
+        close F;
+
+        unless ($python_spa_packet) {
+            &write_test_file("[-] could not acquite SPA packet from python output\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    return $rv;
+}
+
+sub python_fko_client_to_C_server() {
+    my $test_hr = shift;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $python_spa_packet,
+        },
+    );
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
+        $rv = 0 unless $fw_rule_created;
+    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
+        $rv = 0 if $fw_rule_created;
+    }
+
+    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
+        $rv = 0 unless $fw_rule_removed;
+    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
+        $rv = 0 if $fw_rule_removed;
+    }
+
     return $rv;
 }
 
@@ -1620,6 +1675,88 @@ sub perl_fko_module_msg_types() {
     return $rv;
 }
 
+sub perl_fko_module_long_keys() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $key (@{fuzzing_encryption_keys()}) {
+
+            $fko_obj = FKO->new();
+
+            unless ($fko_obj) {
+                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                    $curr_test_file);
+                return 0;
+            }
+
+            ### set message and then encrypt
+            my $status = $fko_obj->spa_message($msg);
+
+            $status = $fko_obj->spa_data_final($key, length($key), '', 0);
+
+            if ($status == FKO->FKO_SUCCESS) {
+                &write_test_file("[-] Accepted fuzzing key '$key' for $msg\n",
+                    $curr_test_file);
+                $rv = 0;
+                $fko_obj->destroy();
+                last;
+            } else {
+                &write_test_file("[+] Rejected fuzzing key '$key' for $msg: " .
+                    FKO::error_str() . "\n",
+                    $curr_test_file);
+            }
+            $fko_obj->destroy();
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_long_hmac_keys() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $hmac_type (@{valid_spa_hmac_types()}) {
+            for my $hmac_key (@{fuzzing_hmac_keys()}) {
+
+                $fko_obj = FKO->new();
+
+                unless ($fko_obj) {
+                    &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                        $curr_test_file);
+                    return 0;
+                }
+
+                ### set message and then encrypt
+                my $status = $fko_obj->spa_message($msg);
+                $fko_obj->hmac_type($hmac_type);
+
+                $status = $fko_obj->spa_data_final($enc_dummy_key,
+                        length($enc_dummy_key), $hmac_key, length($hmac_key));
+
+                if ($status == FKO->FKO_SUCCESS) {
+                    &write_test_file("[-] Accepted fuzzing hmac key '$hmac_key' for $msg\n",
+                        $curr_test_file);
+                    $rv = 0;
+                    $fko_obj->destroy();
+                    last;
+                } else {
+                    &write_test_file("[+] Rejected fuzzing hmac key '$hmac_key' for $msg: " .
+                        FKO::error_str() . "\n",
+                        $curr_test_file);
+                }
+                $fko_obj->destroy();
+            }
+        }
+    }
+
+    return $rv;
+}
+
 sub perl_fko_module_access_msgs() {
     my $test_hr = shift;
 
@@ -1833,21 +1970,57 @@ sub fuzzing_usernames() {
     return \@users;
 }
 
+sub fuzzing_encryption_keys() {
+    my @keys = (
+        'A'x33,
+        'A'x34,
+        'A'x128,
+        'A'x1000,
+        'A'x2000,
+        'asdfasdfsafsdafasdfasdfsafsdaffdjskalfjdsklafjsldkafjdsajdkajsklfdafsklfjjdkljdsafjdjd' .
+        'sklfjsfdsafjdslfdkjdljsajdskjdskafjdldsljdkafdsljdslafdslaldldajdskajlddslajsl',
+    );
+    return \@keys;
+}
+
+sub fuzzing_hmac_keys() {
+    my @keys = (
+        'A'x129,
+        'A'x1000,
+        'A'x2000,
+    );
+    return \@keys;
+}
+
 sub valid_encryption_keys() {
     my @keys = (
+        '!@#$%',
+        'asdfasdfsafsdafasdfasdfsafsdaf',
+        '$',
+        'asdfasdfsafsdaf',
         'testtest',
         '12341234',
         '1',
         '1234',
         'a',
-        '$',
-        '!@#$%',
-        'asdfasdfsafsdaf',
-        'asdfasdfsafsdafasdfasdfsafsdaf',
     );
     return \@keys;
 }
 
+sub valid_hmac_keys() {
+    my @keys = (
+        '!@#$%',
+        'asdfasdfsafsdafasdfasdfsafsdaf',
+        '$',
+        'A'x33,
+        'A'x128,
+        'A'x120,
+        'asdfasdfsafsdaf',
+        '1234',
+        'a',
+    );
+    return \@keys;
+}
 sub valid_spa_digest_types() {
     my @types = (
         FKO->FKO_DIGEST_MD5,
@@ -1857,6 +2030,34 @@ sub valid_spa_digest_types() {
         FKO->FKO_DIGEST_SHA512
     );
     return \@types;
+}
+
+sub valid_spa_hmac_types() {
+    my @types = (
+        FKO->FKO_HMAC_MD5,
+        FKO->FKO_HMAC_SHA1,
+        FKO->FKO_HMAC_SHA256,
+        FKO->FKO_HMAC_SHA384,
+        FKO->FKO_HMAC_SHA512
+    );
+    return \@types;
+}
+
+sub hmac_type_to_str() {
+    my $hmac_type = shift;
+
+    if ($hmac_type == FKO->FKO_HMAC_MD5) {
+        return 'md5';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA1) {
+        return 'sha1';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA256) {
+        return 'sha256';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA384) {
+        return 'sha384';
+    } elsif ($hmac_type == FKO->FKO_HMAC_SHA512) {
+        return 'sha512';
+    }
+    return 'Unknown';
 }
 
 sub fuzzing_spa_digest_types() {
@@ -2111,6 +2312,115 @@ sub perl_fko_module_rijndael_truncated_keys() {
                         }
                     }
                     &write_test_file("\n", $curr_test_file);
+                }
+            }
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_complete_cycle_hmac() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    for my $msg (@{valid_access_messages()}) {
+        for my $user (@{valid_usernames()}) {
+            for my $digest_type (@{valid_spa_digest_types()}) {
+                for my $hmac_type (@{valid_spa_hmac_types()}) {
+                    my $key_ctr = 0;
+                    KEY: for my $key (@{valid_encryption_keys()}) {
+                        $key_ctr++;
+                        last KEY if $key_ctr >= 2;
+                        if ($test_hr->{'set_legacy_iv'} eq $YES
+                                and (length($key) > 16)) {
+                            &write_test_file("[.] Legacy IV mode is set, " .
+                                "skipping long key '$key'.\n",
+                                $curr_test_file);
+                            next KEY;
+                        }
+
+                        my $hmac_key_ctr = 0;
+                        HMAC_KEY: for my $hmac_key (@{valid_hmac_keys()}) {
+                            $hmac_key_ctr++;
+                            last HMAC_KEY if $hmac_key_ctr >= 4;
+
+                            if ($test_hr->{'set_legacy_iv'} eq $YES
+                                    and (length($hmac_key) > 16)) {
+                                &write_test_file("[.] Legacy IV mode is set, " .
+                                    "skipping long key '$hmac_key'.\n",
+                                    $curr_test_file);
+                                next HMAC_KEY;
+                            }
+
+                            &write_test_file("[+] msg: $msg, user: $user, " .
+                                "digest type: $digest_type, hmac digest type: " .
+                                "$hmac_type, key: $key, hmac_key: $hmac_key\n",
+                                $curr_test_file);
+
+                            $fko_obj = FKO->new();
+                            unless ($fko_obj) {
+                                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                                    $curr_test_file);
+                                return 0;
+                            }
+                            $fko_obj->spa_message($msg);
+                            $fko_obj->username($user);
+                            $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+                            $fko_obj->digest_type($digest_type);
+                            $fko_obj->hmac_type($hmac_type);
+
+                            my $enc_mode = FKO->FKO_ENC_MODE_CBC;
+                            $enc_mode = FKO->FKO_ENC_MODE_CBC_LEGACY_IV
+                                if $test_hr->{'set_legacy_iv'} eq $YES;
+                            $fko_obj->encryption_mode($enc_mode);
+
+                            $fko_obj->spa_data_final($key, length($key), $hmac_key, length($hmac_key));
+
+                            my $encrypted_msg = $fko_obj->spa_data();
+
+                            $fko_obj->destroy();
+
+                            ### now get new object for decryption
+                            $fko_obj = FKO->new($encrypted_msg, $key, length($key),
+                                    $enc_mode, $hmac_key, length($hmac_key), $hmac_type);
+                            unless ($fko_obj) {
+                                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                                    $curr_test_file);
+                                return 0;
+                            }
+                            $fko_obj->spa_data($encrypted_msg);
+                            $fko_obj->hmac_type($hmac_type);
+                            $fko_obj->encryption_mode($enc_mode);
+                            my $hmac_digest = $fko_obj->spa_hmac();
+
+                            $fko_obj->decrypt_spa_data($key, length($key), $hmac_key, length($hmac_key));
+
+                            if ($msg ne $fko_obj->spa_message()) {
+                                &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
+                                    $curr_test_file);
+                                $rv = 0;
+                            }
+
+                            $fko_obj->destroy();
+
+                            if ($enable_openssl_compatibility_tests) {
+                                unless (&openssl_hmac_verification($encrypted_msg,
+                                        '', $msg, $hmac_key, 0, $hmac_digest,
+                                        &hmac_type_to_str($hmac_type))) {
+                                    $rv = 0;
+                                }
+
+#                                my $flag = $REQUIRE_SUCCESS;
+#                                $flag = $REQUIRE_FAILURE if $test_hr->{'set_legacy_iv'} eq $YES;
+#                                unless (&openssl_enc_verification($encrypted_msg,
+#                                        '', $msg, $key, 0, $flag)) {
+#                                    $rv = 0;
+#                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -4324,38 +4634,40 @@ sub init() {
         chmod 0600, $cf{$name} or die "[*] Could not chmod 0600 $cf{$name}";
     }
 
-    if (-d $output_dir) {
-        if (-d "${output_dir}.last") {
-            rmtree "${output_dir}.last"
-                or die "[*] rmtree ${output_dir}.last $!";
+    unless ($list_mode) {
+        if (-d $output_dir) {
+            if (-d "${output_dir}.last") {
+                rmtree "${output_dir}.last"
+                    or die "[*] rmtree ${output_dir}.last $!";
+            }
+            move $output_dir, "${output_dir}.last" or die $!;
+            if (-e "$output_dir/init") {
+                copy "$output_dir/init", "${output_dir}.last/init";
+            }
+            if (-e $logfile) {
+                copy $logfile, "${output_dir}.last/$logfile" or die $!;
+            }
+            $saved_last_results = 1;
+        } else {
+            mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
         }
-        move $output_dir, "${output_dir}.last" or die $!;
-        if (-e "$output_dir/init") {
-            copy "$output_dir/init", "${output_dir}.last/init";
+
+        if (-d $run_dir) {
+            rmtree $run_dir or die $!;
         }
-        if (-e $logfile) {
-            copy $logfile, "${output_dir}.last/$logfile" or die $!;
+        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+
+        for my $dir ($output_dir, $run_dir) {
+            next if -d $dir;
+            mkdir $dir or die "[*] Could not mkdir $dir: $!";
         }
-        $saved_last_results = 1;
-    } else {
-        mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
-    }
 
-    if (-d $run_dir) {
-        rmtree $run_dir or die $!;
-    }
-    mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
-
-    for my $dir ($output_dir, $run_dir) {
-        next if -d $dir;
-        mkdir $dir or die "[*] Could not mkdir $dir: $!";
-    }
-
-    for my $file (glob("$output_dir/*.test"), "$output_dir/init",
-            $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
-            $logfile, $key_gen_file) {
-        next unless -e $file;
-        unlink $file or die "[*] Could not unlink($file)";
+        for my $file (glob("$output_dir/*.test"), "$output_dir/init",
+                $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
+                $logfile, $key_gen_file) {
+            next unless -e $file;
+            unlink $file or die "[*] Could not unlink($file)";
+        }
     }
 
     if ($test_include) {

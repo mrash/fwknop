@@ -50,6 +50,9 @@ int fko_verify_hmac(fko_ctx_t ctx,
     if (! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
+    if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
+        return(FKO_ERROR_INVALID_HMAC_KEY_LEN);
+
     if(ctx->hmac_type == FKO_HMAC_MD5)
         hmac_b64_digest_len = MD5_B64_LEN;
     else if(ctx->hmac_type == FKO_HMAC_SHA1)
@@ -109,7 +112,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
     res = fko_set_spa_hmac_type(ctx, ctx->hmac_type);
     if(res == FKO_SUCCESS)
     {
-        res = fko_calculate_hmac(ctx, hmac_key, hmac_key_len);
+        res = fko_set_spa_hmac(ctx, hmac_key, hmac_key_len);
 
         if(res == FKO_SUCCESS)
         {
@@ -128,7 +131,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
 /* Return the fko HMAC data
 */
 int
-fko_get_hmac_data(fko_ctx_t ctx, char **hmac_data)
+fko_get_spa_hmac(fko_ctx_t ctx, char **hmac_data)
 {
     /* Must be initialized
     */
@@ -175,7 +178,7 @@ fko_get_spa_hmac_type(fko_ctx_t ctx, short *hmac_type)
     return(FKO_SUCCESS);
 }
 
-int fko_calculate_hmac(fko_ctx_t ctx,
+int fko_set_spa_hmac(fko_ctx_t ctx,
     const char * const hmac_key, const int hmac_key_len)
 {
     unsigned char hmac[SHA512_DIGEST_STR_LEN] = {0};
@@ -187,6 +190,9 @@ int fko_calculate_hmac(fko_ctx_t ctx,
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
+        return(FKO_ERROR_INVALID_HMAC_KEY_LEN);
 
     memset(hmac, 0x00, SHA512_DIGEST_STR_LEN);
 
