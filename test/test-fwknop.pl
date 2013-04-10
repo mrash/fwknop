@@ -2234,84 +2234,81 @@ sub perl_fko_module_rijndael_truncated_keys() {
 
     my $rv = 1;
 
-    for my $msg (@{valid_access_messages()}[0]) {
-        for my $user (@{valid_usernames()}[0]) {
-            for my $digest_type (@{valid_spa_digest_types()}[0]) {
+    my $msg  =  @{valid_access_messages()}[0];
+    my $user = @{valid_usernames()}[0];
+    my $digest_type = @{valid_spa_digest_types()}[0];
 
-                my $key = '1';
-                for (my $i=20; $i <= 32; $i++) {
+    my $key = '1';
+    for (my $i=20; $i <= 32; $i++) {
 
-                    $key .= $i % 10;
+        $key .= $i % 10;
 
-                    &write_test_file("\n\n[+] ------ KEY: $key (" . length($key) . " bytes)\n",
-                        $curr_test_file);
-                    for (my $j=1; $j < length($key); $j++) {
+        &write_test_file("\n\n[+] ------ KEY: $key (" . length($key) . " bytes)\n",
+            $curr_test_file);
+        for (my $j=1; $j < length($key); $j++) {
 
-                        &write_test_file("\n    MSG: $msg, user: $user, " .
-                            "digest type: $digest_type (orig key: $key)\n",
-                            $curr_test_file);
+            &write_test_file("\n    MSG: $msg, user: $user, " .
+                "digest type: $digest_type (orig key: $key)\n",
+                $curr_test_file);
 
-                        $fko_obj = FKO->new();
-                        unless ($fko_obj) {
-                            &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                                $curr_test_file);
-                            return 0;
-                        }
+            $fko_obj = FKO->new();
+            unless ($fko_obj) {
+                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                    $curr_test_file);
+                return 0;
+            }
 
-                        $fko_obj->spa_message($msg);
-                        $fko_obj->username($user);
-                        $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
-                        $fko_obj->digest_type($digest_type);
-                        $fko_obj->spa_data_final($key, length($key), '', 0);
+            $fko_obj->spa_message($msg);
+            $fko_obj->username($user);
+            $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
+            $fko_obj->digest_type($digest_type);
+            $fko_obj->spa_data_final($key, length($key), '', 0);
 
-                        my $encrypted_msg = $fko_obj->spa_data();
+            my $encrypted_msg = $fko_obj->spa_data();
 
-                        $fko_obj->destroy();
+            $fko_obj->destroy();
 
-                        if ($enable_openssl_compatibility_tests) {
-                            unless (&openssl_enc_verification($encrypted_msg,
-                                    '', $msg, $key, 0, $REQUIRE_SUCCESS)) {
-                                $rv = 0;
-                            }
-                        }
+            if ($enable_openssl_compatibility_tests) {
+                unless (&openssl_enc_verification($encrypted_msg,
+                        '', $msg, $key, 0, $REQUIRE_SUCCESS)) {
+                    $rv = 0;
+                }
+            }
 
-                        ### now get new object for decryption
-                        $fko_obj = FKO->new();
-                        unless ($fko_obj) {
-                            &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
-                                $curr_test_file);
-                            return 0;
-                        }
-                        $fko_obj->spa_data($encrypted_msg);
-                        my $truncated_key = $key;
-                        $truncated_key =~ s/^(.{$j}).*/$1/;
-                        &write_test_file("    Trying truncated key: $truncated_key\n",
-                            $curr_test_file);
-                        if ($fko_obj->decrypt_spa_data($truncated_key,
-                                length($truncated_key)) == FKO->FKO_SUCCESS) {
-                            &write_test_file("[-] $msg decrypt success with truncated key " .
-                                "($key -> $truncated_key)\n",
-                                $curr_test_file);
-                            $rv = 0;
-                        } else {
-                            &write_test_file("[+] $msg decrypt rejected truncated " .
-                                "key ($key -> $truncated_key)\n",
-                                $curr_test_file);
-                        }
+            ### now get new object for decryption
+            $fko_obj = FKO->new();
+            unless ($fko_obj) {
+                &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
+                    $curr_test_file);
+                return 0;
+            }
+            $fko_obj->spa_data($encrypted_msg);
+            my $truncated_key = $key;
+            $truncated_key =~ s/^(.{$j}).*/$1/;
+            &write_test_file("    Trying truncated key: $truncated_key\n",
+                $curr_test_file);
+            if ($fko_obj->decrypt_spa_data($truncated_key,
+                    length($truncated_key)) == FKO->FKO_SUCCESS) {
+                &write_test_file("[-] $msg decrypt success with truncated key " .
+                    "($key -> $truncated_key)\n",
+                    $curr_test_file);
+                $rv = 0;
+            } else {
+                &write_test_file("[+] $msg decrypt rejected truncated " .
+                    "key ($key -> $truncated_key)\n",
+                    $curr_test_file);
+            }
 
-                        $fko_obj->destroy();
+            $fko_obj->destroy();
 
-                        if ($enable_openssl_compatibility_tests) {
-                            unless (&openssl_enc_verification($encrypted_msg,
-                                    '', $msg, $truncated_key, 0, $REQUIRE_FAILURE)) {
-                                $rv = 0;
-                            }
-                        }
-                    }
-                    &write_test_file("\n", $curr_test_file);
+            if ($enable_openssl_compatibility_tests) {
+                unless (&openssl_enc_verification($encrypted_msg,
+                        '', $msg, $truncated_key, 0, $REQUIRE_FAILURE)) {
+                    $rv = 0;
                 }
             }
         }
+        &write_test_file("\n", $curr_test_file);
     }
 
     return $rv;
