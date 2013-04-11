@@ -21,6 +21,7 @@ our $conf_dir       = 'conf';
 my $run_dir         = 'run';
 my $cmd_out_tmp     = 'cmd.out';
 my $server_cmd_tmp  = 'server_cmd.out';
+my $openssl_cmd_tmp = 'openssl_cmd.out';
 my $data_tmp        = 'data.tmp';
 my $key_tmp         = 'key.tmp';
 my $enc_save_tmp    = 'openssl_save.enc';
@@ -989,8 +990,7 @@ sub client_send_spa_packet() {
     $rv = 0 unless &file_find_regex([qr/final\spacked/i],
         $MATCH_ALL, $curr_test_file);
 
-    if ($enable_openssl_compatibility_tests
-            and $test_hr->{'detail'} !~ /iptables.*not\sduplicated/) {
+    if ($enable_openssl_compatibility_tests) {
 
         ### extract the SPA packet from the cmd tmp file before
         ### openssl command execution overwrites it
@@ -3916,6 +3916,11 @@ sub client_server_interaction() {
         $server_was_stopped = 0;
     }
 
+    &write_test_file("[.] client_server_interaction() rv: $rv, " .
+        "server_was_stopped: $server_was_stopped, " .
+        "fw_rule_created: $fw_rule_created, fw_rule_removed: $fw_rule_removed\n",
+        $curr_test_file);
+
     return ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed);
 }
 
@@ -4172,7 +4177,7 @@ sub openssl_hmac_verification() {
 
     $openssl_hmac_cmd .= " | $base64_path" if $base64_path;
 
-    unless (&run_cmd($openssl_hmac_cmd, $cmd_out_tmp, $curr_test_file)) {
+    unless (&run_cmd($openssl_hmac_cmd, $openssl_cmd_tmp, $curr_test_file)) {
         &write_test_file("[-] Could not run openssl command: '$openssl_hmac_cmd'\n",
             $curr_test_file);
         $openssl_hmac_failure_ctr++;
@@ -4181,7 +4186,7 @@ sub openssl_hmac_verification() {
 
     ### for HMAC SHA512 this output will span two lines
     my $openssl_hmac_line = '';
-    open F, "< $cmd_out_tmp" or die $!;
+    open F, "< $openssl_cmd_tmp" or die $!;
     while (<F>) {
         $openssl_hmac_line .= $_;
         chomp $openssl_hmac_line;
@@ -4256,7 +4261,7 @@ sub openssl_enc_verification() {
 
     $rv = &run_cmd("$openssl_path enc -d -a -aes-256-cbc " .
         "-pass file:$key_tmp -in $data_tmp",
-        $cmd_out_tmp, $curr_test_file);
+        $openssl_cmd_tmp, $curr_test_file);
 
     if ($rv) {
         if ($rv_flag == $REQUIRE_FAILURE) {
@@ -4269,7 +4274,7 @@ sub openssl_enc_verification() {
             ### a valid access message
             my $decrypted_msg = '';
             my $decrypted_access_msg = '';
-            open F, "< $cmd_out_tmp" or die $!;
+            open F, "< $openssl_cmd_tmp" or die $!;
             while (<F>) {
                 if (/^(?:\S+?\:){5}(\S+?)\:/) {
                     $decrypted_access_msg = $1;
@@ -4307,7 +4312,7 @@ sub openssl_enc_verification() {
             my $decrypted_msg = '';
             my $decrypted_access_msg = '';
             my $decoded_msg = '';
-            open F, "< $cmd_out_tmp" or die $!;
+            open F, "< $openssl_cmd_tmp" or die $!;
             while (<F>) {
                 if (/^(?:\S+?\:){5}(\S+?)\:/) {
                     $decrypted_access_msg = $1;
@@ -4344,7 +4349,7 @@ sub openssl_enc_verification() {
                 unless (&run_cmd("$openssl_path enc " .
                         "-e -a -aes-256-cbc -pass file:$key_tmp -in " .
                         "$data_tmp -out $enc_save_tmp",
-                        $cmd_out_tmp, $curr_test_file)) {
+                        $openssl_cmd_tmp, $curr_test_file)) {
 
                     &write_test_file("[-] OpenSSL could not re-encrypt\n",
                         $curr_test_file);

@@ -435,15 +435,13 @@
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA512 (long key)',
-        'function' => \&spa_cycle,
+        'function' => \&generic_exec,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             "$cf{'rc_hmac_sha512_long_key'} --hmac-digest-type sha512",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha512_long_key_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_sha512_long_key'},
+        'positive_output_matches' => [qr/Invalid\sdecoded\skey\slength/],
+        'exec_err' => $YES,
         'fatal'    => $NO
     },
 
@@ -727,7 +725,7 @@
         'function' => \&iptables_rules_not_duplicated,
         'cmdline'  => "$default_client_hmac_args --test",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'hmac_access'} " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_negative_output_matches' => [qr/^2\s+ACCEPT\s.*$fake_ip/],
         'key_file' => $cf{'rc_hmac_b64_key'},

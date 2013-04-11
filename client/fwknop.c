@@ -1152,7 +1152,8 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             (unsigned char *) options->hmac_key);
         if(*hmac_key_len > MAX_KEY_LEN || *hmac_key_len < 0)
         {
-            fprintf(stderr, "[*] Invalid decoded key length: '%d', must be in [0,%d]",
+            fprintf(stderr,
+                    "[*] Invalid decoded key length: '%d', must be in [0,%d]\n",
                     *hmac_key_len, MAX_KEY_LEN);
             clean_exit(ctx, options, EXIT_FAILURE);
         }
