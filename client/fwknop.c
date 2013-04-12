@@ -161,7 +161,13 @@ is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsi
             strlcpy(hostname, h, hostname_bufsize);
             valid = 1;
         }
+
+        /* The port is out of range or the ip is an ipv6 or ipv4 address */
+        else;
     }
+
+    /* No port found in the string, let's skip */
+    else;
 
     return valid;
 }
@@ -906,6 +912,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
         }
     }
 
+    /* Check if there is a hostname to resolve as an ip address in the NAT access buffer */
     if (is_hostname_str_with_port(nat_access_buf, hostname, sizeof(hostname), &port))
     {
         /* Speed up the name resolution by forcing ipv4 (AF_INET).
@@ -924,6 +931,9 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
         snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
                 dst_ip_str, port);
     }
+
+    /* Nothing to resolve */
+    else;
 
     if(options->nat_rand_port)
     {
