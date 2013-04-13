@@ -631,7 +631,7 @@ sub run_test() {
         }
     }
 
-    if ($enable_valgrind) {
+    if ($enable_valgrind and &is_valgrind_running()) {
         if ($killall_path and $pgrep_path) {
             for my $cmd ('memcheck', 'valgrind') {
                 system "$pgrep_path > /dev/null $cmd " .
@@ -4451,14 +4451,18 @@ sub specs() {
 
 sub time_for_valgrind() {
     my $ctr = 0;
-    while (&run_cmd("ps axuww | grep LD_LIBRARY_PATH | " .
-            "grep valgrind |grep -v perl | grep -v grep",
-            $cmd_out_tmp, $curr_test_file)) {
+    while (&is_valgrind_running()) {
         $ctr++;
         last if $ctr == 5;
         sleep 1;
     }
     return;
+}
+
+sub is_valgrind_running() {
+    return &run_cmd("ps axuww | grep LD_LIBRARY_PATH | " .
+        "grep valgrind |grep -v perl | grep -v grep",
+        $cmd_out_tmp, $curr_test_file);
 }
 
 sub anonymize_results() {
@@ -4540,6 +4544,17 @@ sub start_fwknopd() {
         exit &run_cmd($test_hr->{'fwknopd_cmdline'},
             $server_cmd_tmp, $server_test_file);
     }
+
+    ### look for 'fwknopd main event loop' as the indicator that fwknopd
+    ### is ready to receive packets
+    my $tries = 0;
+    while (not &file_find_regex([qr/fwknopd\smain\sevent\sloop/],
+            $MATCH_ALL, $server_cmd_tmp)) {
+        $tries++;
+        last if $tries == 10;  ### shouldn't reasonably get here
+        sleep 1;
+    }
+
     return $pid;
 }
 
@@ -5204,6 +5219,22 @@ sub stop_fwknopd() {
         &time_for_valgrind();
     } else {
         sleep 1;
+    }
+
+    ### open the pid file and send signal manually if -K didn't work
+    if (-e $default_pid_file) {
+        open F, "< $default_pid_file"
+            or die "[*] Could not open $default_pid_file: $!";
+        my $pid = <F>;
+        close F;
+        chomp $pid;
+        my $tries = 0;
+        while (kill 0, $pid) {
+            kill 9, $pid unless kill 15, $pid;
+            $tries++;
+            last if $tries == 3;
+            sleep 1;
+        }
     }
 
     return;
