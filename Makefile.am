@@ -251,6 +251,7 @@ EXTRA_DIST = \
     test/tests/gpg.pl \
     test/tests/rijndael_fuzzing.pl \
     test/tests/perl_FKO_module.pl \
+    test/tests/python_fko.pl \
     test/tests/rijndael_replay_attacks.pl \
     test/tests/rijndael.pl \
     test/tests/rijndael_cmd_exec.pl \
