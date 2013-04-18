@@ -156,6 +156,7 @@ our $spoof_ip   = '1.2.3.4';
 my $perl_mod_fko_dir = 'FKO';
 my $python_fko_dir   = 'python_fko';
 my $python_script    = 'fko-python.py';
+my $python_path      = '';
 our $cmd_exec_test_file = '/tmp/fwknoptest';
 my $default_key = 'fwknoptest';
 
@@ -248,6 +249,7 @@ my $openssl_ctr = 0;
 my $openssl_hmac_success_ctr = 0;
 my $openssl_hmac_failure_ctr = 0;
 my $openssl_hmac_ctr = 0;
+my $openssl_hmac_hexkey_supported = 0;
 my $fuzzing_success_ctr = 0;
 my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
@@ -283,6 +285,10 @@ our $FREEBSD = 2;
 our $MACOSX  = 3;
 our $OPENBSD = 4;
 our $start_time = time();
+my $SERVER_RECEIVE_CHECK    = 1;
+my $NO_SERVER_RECEIVE_CHECK = 2;
+my $APPEND_RESULTS    = 1;
+my $NO_APPEND_RESULTS = 2;
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -598,6 +604,10 @@ exit 0;
 sub run_test() {
     my $test_hr = shift;
 
+    ### start off with clean slate
+    unlink $server_cmd_tmp if -e $server_cmd_tmp;
+    unlink $cmd_out_tmp    if -e $cmd_out_tmp;
+
     my $msg = "[$test_hr->{'category'}]";
     $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
     $msg .= " $test_hr->{'detail'}";
@@ -831,7 +841,7 @@ sub compile_warnings() {
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
     if (&file_find_regex([qr/\swarning:\s/i, qr/gcc\:.*\sunused/],
-            $MATCH_ANY, "test/$curr_test_file")) {
+            $MATCH_ANY, $APPEND_RESULTS, "test/$curr_test_file")) {
         chdir $curr_pwd or die $!;
         return 0;
     }
@@ -921,7 +931,7 @@ sub make_distcheck() {
         $cmd_out_tmp, $curr_test_file);
 
     return 1 if &file_find_regex([qr/archives\sready\sfor\sdistribution/],
-        $MATCH_ALL, $curr_test_file);
+        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
 
     return 0;
 }
@@ -973,27 +983,55 @@ sub expected_code_version() {
         return 0 unless &run_cmd($test_hr->{'cmdline'},
             $cmd_out_tmp, $curr_test_file);
         return 1 if &file_find_regex([qr/$version/],
-            $MATCH_ALL, $curr_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     }
     return 0;
 }
 
 sub client_send_spa_packet() {
-    my $test_hr = shift;
+    my ($test_hr, $server_receive_check) = @_;
+
+    $server_receive_check = $NO_SERVER_RECEIVE_CHECK
+        unless defined $server_receive_check;
 
     my $rv = 1;
 
     &write_key($default_key, $local_key_file);
 
-    $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $curr_test_file);
-    $rv = 0 unless &file_find_regex([qr/final\spacked/i],
-        $MATCH_ALL, $curr_test_file);
+    if (-e $server_cmd_tmp) {
+        my $tries = 0;
+        while (not &file_find_regex(
+                [qr/stanza\s.*\sSPA Packet from IP/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
+
+            &write_test_file("[.] client_send_spa_packet() " .
+                "executing client and looking for fwknopd receiving " .
+                "packet, try: $tries\n",
+                $curr_test_file);
+
+            $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
+                    $cmd_out_tmp, $curr_test_file);
+            $rv = 0 unless &file_find_regex([qr/final\spacked/i],
+                $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
+
+            last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
+            $tries++;
+            last if $tries == 10;   ### should be plenty of time
+            sleep 1;
+        }
+    } else {
+        $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
+                $cmd_out_tmp, $curr_test_file);
+        $rv = 0 unless &file_find_regex([qr/final\spacked/i],
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
+    }
+
+    &write_test_file("[+] fwknopd received SPA packet.\n", $curr_test_file)
+        unless $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
 
     if ($enable_openssl_compatibility_tests) {
 
-        ### extract the SPA packet from the cmd tmp file before
-        ### openssl command execution overwrites it
+        ### extract the SPA packet from the cmd tmp file
         my $encoded_msg = '';
         my $digest = '';
         my $enc_mode = 0;
@@ -1035,9 +1073,13 @@ sub client_send_spa_packet() {
                 if (/^KEY_BASE64\:?\s+(\S+)/) {
                     $key = $1;
                     $b64_decode_key = 1;
+                } elsif (/KEY\:?\s+(\S+)/) {
+                    $key = $1;
                 } elsif (/^HMAC_KEY_BASE64\:?\s+(\S+)/) {
                     $hmac_key = $1;
                     $b64_decode_key = 1;
+                } elsif (/^HMAC_KEY\:?\s+(\S+)/) {
+                    $hmac_key = $1;
                 }
             }
             close F;
@@ -1059,6 +1101,9 @@ sub client_send_spa_packet() {
         }
     }
 
+    &write_test_file("[.] client_send_spa_packet() rv: $rv\n",
+        $curr_test_file);
+
     return $rv;
 }
 
@@ -1077,7 +1122,7 @@ sub permissions_check() {
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $server_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
     return $rv;
 }
@@ -1123,25 +1168,25 @@ sub spa_cycle() {
     if ($test_hr->{'client_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'client_positive_output_matches'},
-            $MATCH_ALL, $curr_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     }
 
     if ($test_hr->{'client_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'client_negative_output_matches'},
-            $MATCH_ANY, $curr_test_file);
+            $MATCH_ANY, $APPEND_RESULTS, $curr_test_file);
     }
 
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $server_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
 
     if ($test_hr->{'server_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'server_negative_output_matches'},
-            $MATCH_ANY, $server_test_file);
+            $MATCH_ANY, $APPEND_RESULTS, $server_test_file);
     }
 
     return $rv;
@@ -1153,12 +1198,12 @@ sub spoof_username() {
     my $rv = &spa_cycle($test_hr);
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $MATCH_ALL, $curr_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
         $rv = 0;
     }
 
     unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -1205,9 +1250,9 @@ sub python_fko_compile_install() {
 
     chdir '../python' or die $!;
 
-    &run_cmd("python setup.py build", $cmd_out_tmp,
+    &run_cmd("$python_path setup.py build", $cmd_out_tmp,
         "../test/$curr_test_file");
-    &run_cmd("python setup.py install --prefix=../test/$python_fko_dir",
+    &run_cmd("$python_path setup.py install --prefix=../test/$python_fko_dir",
         $cmd_out_tmp, "../test/$curr_test_file");
 
     chdir $curr_pwd or die $!;
@@ -1235,8 +1280,8 @@ sub python_fko_basic_exec() {
     }
 
     $rv = &run_cmd("LD_LIBRARY_PATH=$lib_dir " .
-        "PYTHONPATH=$site_dir ./$python_script", $cmd_out_tmp,
-        $curr_test_file);
+        "PYTHONPATH=$site_dir $python_path ./$python_script",
+        $cmd_out_tmp, $curr_test_file);
 
     if ($rv) {
 
@@ -1318,7 +1363,7 @@ sub perl_fko_module_compile_install() {
     &run_cmd('make', $cmd_out_tmp, "../../test/$curr_test_file");
 
     if (&file_find_regex([qr/rerun\sthe\smake\scommand/],
-            $MATCH_ALL, "../../test/$curr_test_file")) {
+            $MATCH_ALL, $APPEND_RESULTS, "../../test/$curr_test_file")) {
         &run_cmd('touch Makefile.PL', $cmd_out_tmp, "../../test/$curr_test_file");
         &run_cmd('touch Makefile', $cmd_out_tmp, "../../test/$curr_test_file");
         &run_cmd('make', $cmd_out_tmp, "../../test/$curr_test_file");
@@ -3093,7 +3138,7 @@ sub perl_fko_module_client_compatibility() {
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $server_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
 
     return $rv;
@@ -3172,13 +3217,13 @@ sub replay_detection() {
     if ($test_hr->{'replay_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'replay_positive_output_matches'},
-            $MATCH_ALL, $server_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
 
     if ($test_hr->{'replay_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'replay_negative_output_matches'},
-            $MATCH_ANY, $server_test_file);
+            $MATCH_ANY, $APPEND_RESULTS, $server_test_file);
     }
 
     return $rv;
@@ -3190,7 +3235,8 @@ sub digest_cache_structure() {
 
     &run_cmd("file $default_digest_file", $cmd_out_tmp, $curr_test_file);
 
-    if (&file_find_regex([qr/ASCII/i], $MATCH_ALL, $cmd_out_tmp)) {
+    if (&file_find_regex([qr/ASCII/i], $MATCH_ALL,
+            $APPEND_RESULTS, $cmd_out_tmp)) {
 
         ### the format should be:
         ### <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>
@@ -3209,7 +3255,8 @@ sub digest_cache_structure() {
         close F;
     } elsif (&file_find_regex([qr/dbm/i], $MATCH_ALL, $cmd_out_tmp)) {
         &write_test_file("[+] DBM digest file format, " .
-            "assuming this is valid.\n", $curr_test_file);
+            "assuming this is valid.\n", $APPEND_RESULTS,
+            $curr_test_file);
     } else {
         ### don't know what kind of file the digest.cache is
         &write_test_file("[-] unrecognized file type for " .
@@ -3236,7 +3283,7 @@ sub iptables_rules_not_duplicated() {
     my @packets = ();
 
     for (my $i=0; $i < 3; $i++) {
-        unless (&client_send_spa_packet($test_hr)) {
+        unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
             &write_test_file("[-] fwknop client execution error.\n",
                 $curr_test_file);
             $rv = 0;
@@ -3291,7 +3338,7 @@ sub server_bpf_ignore_packet() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr)) {
+    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -3318,7 +3365,7 @@ sub server_bpf_ignore_packet() {
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/PCAP\sfilter.*\s$non_std_spa_port/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3333,7 +3380,7 @@ sub altered_non_base64_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr)) {
+    unless (&client_send_spa_packet($test_hr, $SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -3399,7 +3446,7 @@ sub backwards_compatibility() {
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $server_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
 
     return $rv;
@@ -3433,13 +3480,13 @@ sub process_pcap_file_directly() {
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $server_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
 
     if ($test_hr->{'server_negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'server_negative_output_matches'},
-            $MATCH_ANY, $server_test_file);
+            $MATCH_ANY, $APPEND_RESULTS, $server_test_file);
     }
 
     return $rv;
@@ -3477,7 +3524,7 @@ sub fuzzer() {
     if ($test_hr->{'server_positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $server_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
 
     if ($rv) {
@@ -3498,7 +3545,7 @@ sub altered_base64_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr)) {
+    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -3536,7 +3583,7 @@ sub altered_base64_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3551,7 +3598,7 @@ sub altered_hmac_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr)) {
+    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -3590,7 +3637,7 @@ sub altered_hmac_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3605,7 +3652,7 @@ sub altered_pkt_hmac_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr)) {
+    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -3644,7 +3691,7 @@ sub altered_pkt_hmac_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3659,7 +3706,7 @@ sub appended_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr)) {
+    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -3697,7 +3744,7 @@ sub appended_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3712,7 +3759,7 @@ sub prepended_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr)) {
+    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -3750,7 +3797,7 @@ sub prepended_spa_data() {
     }
 
     unless (&file_find_regex([qr/Error\screating\sfko\scontext/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3764,7 +3811,7 @@ sub server_start() {
         = &client_server_interaction($test_hr, [], $USE_PREDEF_PKTS);
 
     unless (&file_find_regex([qr/Starting\sfwknopd\smain\sevent\sloop/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3805,12 +3852,12 @@ sub server_packet_limit() {
     }
 
     unless (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
     unless (&file_find_regex([qr/Shutting\sDown\sfwknopd/i],
-            $MATCH_ALL, $server_test_file)) {
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
         $rv = 0;
     }
 
@@ -3853,18 +3900,10 @@ sub client_server_interaction() {
     ### start fwknopd to monitor for the SPA packet over the loopback interface
     my $fwknopd_parent_pid = &start_fwknopd($test_hr);
 
-    ### give fwknopd a chance to parse its config and start sniffing
-    ### on the loopback interface
-    if ($enable_valgrind) {
-        sleep 3;
-    } else {
-        sleep 2;
-    }
-
     ### send the SPA packet(s) to the server either manually using IO::Socket or
     ### with the fwknopd client
     if ($spa_client_flag == $USE_CLIENT) {
-        unless (&client_send_spa_packet($test_hr)) {
+        unless (&client_send_spa_packet($test_hr, $SERVER_RECEIVE_CHECK)) {
             &write_test_file("[-] fwknop client execution error.\n",
                 $curr_test_file);
             $rv = 0;
@@ -3878,7 +3917,7 @@ sub client_server_interaction() {
     ### check to see if the SPA packet resulted in a new fw access rule
     my $ctr = 0;
     while (not &is_fw_rule_active($test_hr)) {
-        &write_test_file("[-] new fw rule does not exist.\n",
+        &write_test_file("[.] new fw rule does not exist.\n",
             $curr_test_file);
         $ctr++;
         last if $ctr == 3;
@@ -3888,8 +3927,6 @@ sub client_server_interaction() {
         $fw_rule_created = 0;
         $fw_rule_removed = 0;
     }
-
-    &time_for_valgrind() if $enable_valgrind;
 
     if ($fw_rule_created) {
         sleep 3;  ### allow time for rule time out.
@@ -3907,7 +3944,7 @@ sub client_server_interaction() {
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
         unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $MATCH_ALL, $server_test_file)) {
+                $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
             $server_was_stopped = 0;
         }
     } else {
@@ -3957,26 +3994,65 @@ sub send_packets() {
     print F Dumper $pkts_ar;
     close F;
 
-    for my $pkt_hr (@$pkts_ar) {
-        if ($pkt_hr->{'proto'} eq 'tcp' or $pkt_hr->{'proto'} eq 'udp') {
-            my $socket = IO::Socket::INET->new(
-                PeerAddr => $pkt_hr->{'dst_ip'},
-                PeerPort => $pkt_hr->{'port'},
-                Proto    => $pkt_hr->{'proto'},
-                Timeout  => 1
-            ) or die "[*] Could not acquire $pkt_hr->{'proto'}/$pkt_hr->{'port'} " .
-                "socket to $pkt_hr->{'dst_ip'}: $!";
+    my $received_first_packet = 0;
 
-            $socket->send($pkt_hr->{'data'});
-            undef $socket;
+    if (-e $server_cmd_tmp) {
+        for my $pkt_hr (@$pkts_ar) {
+            my $tries = 0;
+            while (not &file_find_regex(
+                    [qr/stanza\s.*\sSPA Packet from IP/],
+                    $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
 
-        } elsif ($pkt_hr->{'proto'} eq 'http') {
-            ### FIXME
-        } elsif ($pkt_hr->{'proto'} eq 'icmp') {
-            ### FIXME
+                &write_test_file("[.] send_packets() looking for " .
+                    "fwknopd to receive packet, try: $tries\n",
+                    $curr_test_file);
+
+                if ($pkt_hr->{'proto'} eq 'tcp' or $pkt_hr->{'proto'} eq 'udp') {
+                    my $socket = IO::Socket::INET->new(
+                        PeerAddr => $pkt_hr->{'dst_ip'},
+                        PeerPort => $pkt_hr->{'port'},
+                        Proto    => $pkt_hr->{'proto'},
+                        Timeout  => 1
+                    ) or die "[*] Could not acquire $pkt_hr->{'proto'}/$pkt_hr->{'port'} " .
+                        "socket to $pkt_hr->{'dst_ip'}: $!";
+
+                    $socket->send($pkt_hr->{'data'});
+                    undef $socket;
+
+                } elsif ($pkt_hr->{'proto'} eq 'http') {
+                    ### FIXME
+                } elsif ($pkt_hr->{'proto'} eq 'icmp') {
+                    ### FIXME
+                }
+                last if $received_first_packet;
+                $tries++;
+                last if $tries == 10;   ### should be plenty of time
+                sleep 1;
+            }
+            $received_first_packet = 1;
+            sleep $pkt_hr->{'delay'} if defined $pkt_hr->{'delay'};
         }
+    } else {
+        for my $pkt_hr (@$pkts_ar) {
+            if ($pkt_hr->{'proto'} eq 'tcp' or $pkt_hr->{'proto'} eq 'udp') {
+                my $socket = IO::Socket::INET->new(
+                    PeerAddr => $pkt_hr->{'dst_ip'},
+                    PeerPort => $pkt_hr->{'port'},
+                    Proto    => $pkt_hr->{'proto'},
+                    Timeout  => 1
+                ) or die "[*] Could not acquire $pkt_hr->{'proto'}/$pkt_hr->{'port'} " .
+                    "socket to $pkt_hr->{'dst_ip'}: $!";
 
-        sleep $pkt_hr->{'delay'} if defined $pkt_hr->{'delay'};
+                $socket->send($pkt_hr->{'data'});
+                undef $socket;
+
+            } elsif ($pkt_hr->{'proto'} eq 'http') {
+                ### FIXME
+            } elsif ($pkt_hr->{'proto'} eq 'icmp') {
+                ### FIXME
+            }
+            sleep $pkt_hr->{'delay'} if defined $pkt_hr->{'delay'};
+        }
     }
     return;
 }
@@ -3988,7 +4064,7 @@ sub rc_file_exists() {
 
     if (-e $tmp_rc_file) {
         $rv = 0 unless &file_find_regex([qr/This\sfile\scontains/],
-            $MATCH_ALL, $tmp_rc_file);
+            $MATCH_ALL, $APPEND_RESULTS, $tmp_rc_file);
     } else {
         &write_test_file("[-] $tmp_rc_file does not exist.\n",
             $curr_test_file);
@@ -4026,13 +4102,13 @@ sub generic_exec() {
     if ($test_hr->{'positive_output_matches'}) {
         $rv = 0 unless &file_find_regex(
             $test_hr->{'positive_output_matches'},
-            $MATCH_ALL, $curr_test_file);
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     }
 
     if ($test_hr->{'negative_output_matches'}) {
         $rv = 0 if &file_find_regex(
             $test_hr->{'negative_output_matches'},
-            $MATCH_ANY, $curr_test_file);
+            $MATCH_ANY, $APPEND_RESULTS, $curr_test_file);
     }
 
     return $rv;
@@ -4071,7 +4147,7 @@ sub pie_binary() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Position\sIndependent.*:\syes/i],
-        $MATCH_ALL, $curr_test_file);
+        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     return 0;
 }
 
@@ -4082,7 +4158,7 @@ sub stack_protected_binary() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Stack\sprotected.*:\syes/i],
-        $MATCH_ALL, $curr_test_file);
+        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     return 0;
 }
 
@@ -4093,7 +4169,7 @@ sub fortify_source_functions() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Fortify\sSource\sfunctions:\syes/i],
-        $MATCH_ALL, $curr_test_file);
+        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     return 0;
 }
 
@@ -4104,7 +4180,7 @@ sub read_only_relocations() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Read.only\srelocations:\syes/i],
-        $MATCH_ALL, $curr_test_file);
+        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     return 0;
 }
 
@@ -4115,7 +4191,7 @@ sub immediate_binding() {
     &run_cmd("./hardening-check $test_hr->{'binary'}",
             $cmd_out_tmp, $curr_test_file);
     return 1 if &file_find_regex([qr/Immediate\sbinding:\syes/i],
-        $MATCH_ALL, $curr_test_file);
+        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     return 0;
 }
 
@@ -4139,6 +4215,13 @@ sub openssl_hmac_verification() {
         "$encoded_msg) (access: $access_msg), hmac_key: $tmp_key, " .
         "encrypted+encoded msg: $encrypted_msg, hmac_digest: $hmac_digest\n",
         $curr_test_file);
+
+    unless ($openssl_hmac_hexkey_supported and $hmac_key =~ /\s/) {
+        &write_test_file("[-] openssl hex key not supported and key " .
+            "contains syntax busting spaces, skipping hmac test.\n",
+            $curr_test_file);
+        return 1;
+    }
 
     my $hmac_digest_search = quotemeta $hmac_digest;
 
@@ -4172,10 +4255,14 @@ sub openssl_hmac_verification() {
         $hex_hmac_key .= sprintf "%02x", ord($char);
     }
 
-    my $openssl_hmac_cmd = "$openssl_path dgst -binary -${hmac_mode} -mac HMAC " .
-        "-macopt hexkey:$hex_hmac_key $data_tmp";
+    my $openssl_hmac_cmd = "$openssl_path dgst -binary -${hmac_mode} ";
+    if ($openssl_hmac_hexkey_supported) {
+        $openssl_hmac_cmd .= "-mac HMAC -macopt hexkey:$hex_hmac_key $data_tmp ";
+    } else {
+        $openssl_hmac_cmd .= "-hmac $hmac_key $data_tmp ";
+    }
 
-    $openssl_hmac_cmd .= " | $base64_path" if $base64_path;
+    $openssl_hmac_cmd .= "| $base64_path" if $base64_path;
 
     unless (&run_cmd($openssl_hmac_cmd, $openssl_cmd_tmp, $curr_test_file)) {
         &write_test_file("[-] Could not run openssl command: '$openssl_hmac_cmd'\n",
@@ -4200,13 +4287,14 @@ sub openssl_hmac_verification() {
     }
 
     $openssl_hmac =~ s|=||g;
+    $openssl_hmac =~ s|\n||g;
 
     if ($openssl_hmac eq $hmac_digest) {
         &write_test_file("[+] OpenSSL HMAC match '$openssl_hmac'\n",
             $curr_test_file);
     } else {
         &write_test_file("[-] OpenSSL HMAC mismatch " .
-            "'$openssl_hmac' != '$hmac_digest'\n",
+            "(openssl): '$openssl_hmac' != (fwknop): '$hmac_digest'\n",
             $curr_test_file);
         $openssl_hmac_failure_ctr++;
         return 0;
@@ -4436,7 +4524,7 @@ sub specs() {
 
         if ($cmd =~ /^ldd/) {
             $have_gpgme++ if &file_find_regex([qr/gpgme/],
-                $MATCH_ALL, $cmd_out_tmp);
+                $MATCH_ALL, $APPEND_RESULTS, $cmd_out_tmp);
         }
     }
 
@@ -4447,16 +4535,6 @@ sub specs() {
     }
 
     return 1;
-}
-
-sub time_for_valgrind() {
-    my $ctr = 0;
-    while (&is_valgrind_running()) {
-        $ctr++;
-        last if $ctr == 5;
-        sleep 1;
-    }
-    return;
 }
 
 sub is_valgrind_running() {
@@ -4548,11 +4626,29 @@ sub start_fwknopd() {
     ### look for 'fwknopd main event loop' as the indicator that fwknopd
     ### is ready to receive packets
     my $tries = 0;
-    while (not &file_find_regex([qr/fwknopd\smain\sevent\sloop/],
-            $MATCH_ALL, $server_cmd_tmp)) {
+
+    while (not -e $server_cmd_tmp) {
         $tries++;
-        last if $tries == 10;  ### shouldn't reasonably get here
         sleep 1;
+        last if $tries == 5;
+    }
+
+    if (&file_find_regex([qr/fwknopd\smain\sevent\sloop/],
+            $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
+        &write_test_file("[.] start_fwknopd() found 'main event loop' string\n",
+            $curr_test_file);
+        sleep 1;
+    } else {
+        $tries = 0;
+        while (not &file_find_regex([qr/fwknopd\smain\sevent\sloop/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
+            &write_test_file("[.] start_fwknopd() looking " .
+                "for 'main event loop' string, try: $tries\n",
+                $curr_test_file);
+            $tries++;
+            last if $tries == 10;  ### shouldn't reasonably get here
+            sleep 1;
+        }
     }
 
     return $pid;
@@ -4566,6 +4662,7 @@ sub write_key() {
     print K "localhost: $key\n";
     print K "some.host.through.proxy.com: $key\n";
     close K;
+
     return;
 }
 
@@ -4581,6 +4678,8 @@ sub dump_pids() {
 
 sub run_cmd() {
     my ($cmd, $cmd_out, $file) = @_;
+
+    unlink $cmd_out if -e $cmd_out;
 
     if (-e $file) {
         open F, ">> $file"
@@ -4765,10 +4864,19 @@ sub init() {
 
     if ($enable_openssl_compatibility_tests) {
         $openssl_path = &find_command('openssl');
-        die "[*] openssl command not found." unless $openssl_path;
-        require MIME::Base64;
-        MIME::Base64->import(qw(encode_base64 decode_base64));
-        $base64_path = &find_command('base64');
+        if ($openssl_path) {
+            require MIME::Base64;
+            MIME::Base64->import(qw(encode_base64 decode_base64));
+            $base64_path = &find_command('base64');
+
+            ### check for hmac openssl support
+            &openssl_hmac_style_check();
+
+        } else {
+            print "[-] openssl checks requested, but openssl ",
+                " command not found, disabling.\n";
+            $enable_openssl_compatibility_tests = 0;
+        }
     }
 
     if ($enable_valgrind) {
@@ -4816,6 +4924,10 @@ sub init() {
         die "[*] The python test script: $python_script doesn't exist ",
             "or is not executable."
             unless -e $python_script and -x $python_script;
+        $python_path = &find_command('python');
+        unless ($python_path) {
+            push @tests_to_exclude, qr/python fko extension/
+        }
     } else {
         push @tests_to_exclude, qr/python fko extension/;
     }
@@ -4879,6 +4991,20 @@ sub init() {
         }
     }
 
+    return;
+}
+
+sub openssl_hmac_style_check() {
+    if (&run_cmd("$openssl_path dgst -hex -sha256 -mac HMAC " .
+            "-macopt hexkey:61616161 $0", $cmd_out_tmp, $curr_test_file)) {
+        $openssl_hmac_hexkey_supported = 1;
+    } elsif (&run_cmd("$openssl_path dgst -hex -sha256 -hmac dummykey $0",
+            $cmd_out_tmp, $curr_test_file)) {
+        $openssl_hmac_hexkey_supported = 0;
+    } else {
+        print "[-] openssl hmac syntax unknown, disabling.\n";
+        $enable_openssl_compatibility_tests = 0;
+    }
     return;
 }
 
@@ -5024,7 +5150,7 @@ sub compile_execute_fko_wrapper() {
     &run_cmd('./run_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
 
     $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
-        $MATCH_ALL, "../$curr_test_file");
+        $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
 
     chdir '..' or die $!;
 
@@ -5199,40 +5325,77 @@ sub is_fw_rule_active() {
 
 sub is_fwknopd_running() {
 
-    sleep 2 if $enable_valgrind;
-
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
         "--status", $cmd_out_tmp, $curr_test_file);
 
     return 1 if &file_find_regex([qr/Detected\sfwknopd\sis\srunning/i],
-            $MATCH_ALL, $cmd_out_tmp);
+            $MATCH_ALL, $APPEND_RESULTS, $cmd_out_tmp);
 
     return 0;
 }
 
 sub stop_fwknopd() {
 
+    my $pid = &is_pid_running($default_pid_file);
+
+    if ($pid) {
+        &write_test_file("[+] stop_fwknopd() fwknopd is running, pid: $pid\n",
+            $curr_test_file);
+    } else {
+        &write_test_file("[-] stop_fwknopd() fwknopd is not running.\n",
+            $curr_test_file);
+        return;
+    }
+
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
         "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
 
-    if ($enable_valgrind) {
-        &time_for_valgrind();
+    ### look for SIGTERM receipt
+    my $tries = 0;
+    if (&file_find_regex(
+            [qr/Got\sSIGTERM/],
+            $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
+        &write_test_file("[+] stop_fwknopd() fwknopd received SIGTERM\n",
+            $curr_test_file);
     } else {
-        sleep 1;
+        while (not &file_find_regex(
+                [qr/Got\sSIGTERM/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
+
+            &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+                "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
+
+            &write_test_file("[.] stop_fwknopd() looking for fwknopd receiving " .
+                "SIGTERM, try: $tries\n",
+                $curr_test_file);
+            last unless &is_pid_running($default_pid_file);
+            $tries++;
+            last if $tries == 10;   ### should be plenty of time
+            sleep 1;
+        }
+    }
+
+    if ($tries == 10) {
+        &write_test_file("[-] stop_fwknopd() fwknopd not stopped with -K\n",
+            $curr_test_file);
     }
 
     ### open the pid file and send signal manually if -K didn't work
     if (-e $default_pid_file) {
-        open F, "< $default_pid_file"
-            or die "[*] Could not open $default_pid_file: $!";
-        my $pid = <F>;
-        close F;
-        chomp $pid;
-        my $tries = 0;
-        while (kill 0, $pid) {
-            kill 9, $pid unless kill 15, $pid;
-            $tries++;
-            last if $tries == 3;
+        ### don't manually send signal immediately after
+        ### fwknopd wrote 'Got SIGTERM'
+        sleep 1 if $tries == 0;
+        my $sig_tries = 0;
+        while (&is_pid_running($default_pid_file)) {
+            &write_test_file("[.] Manually sending pid: $pid SIGTERM.\n",
+                $curr_test_file);
+            unless (kill 15, $pid) {
+                &write_test_file("[.] Manually sending pid: $pid SIGKILL.\n",
+                    $curr_test_file);
+                kill 9, $pid;
+            }
+            $sig_tries++;
+            last if $sig_tries == 3;
             sleep 1;
         }
     }
@@ -5240,8 +5403,21 @@ sub stop_fwknopd() {
     return;
 }
 
+sub is_pid_running() {
+    my $pid_file = shift;
+    return 0 unless -e $pid_file;
+    open F, "< $pid_file" or die "[*] Could not open pid file: $!";
+    my $pid = <F>;
+    close F;
+    chomp $pid;
+    if (kill 0, $pid) {
+        return $pid;
+    }
+    return 0;
+}
+
 sub file_find_regex() {
-    my ($re_ar, $match_style, $file) = @_;
+    my ($re_ar, $match_style, $append_results_flag, $file) = @_;
 
     my $found_all_regexs = 1;
     my $found_single_match = 0;
@@ -5262,6 +5438,7 @@ sub file_find_regex() {
                     "Matched '$re' with line: $line";
                 $matched = 1;
                 $found_single_match = 1;
+                last if $append_results_flag == $NO_APPEND_RESULTS;
             }
         }
         unless ($matched) {
@@ -5272,8 +5449,10 @@ sub file_find_regex() {
         }
     }
 
-    for my $line (@write_lines) {
-        &write_test_file($line, $file);
+    if ($append_results_flag == $APPEND_RESULTS) {
+        for my $line (@write_lines) {
+            &write_test_file($line, $file);
+        }
     }
 
     if ($match_style == $MATCH_ANY) {
@@ -5287,7 +5466,7 @@ sub find_command() {
     my $cmd = shift;
 
     my $path = '';
-    open C, "which $cmd |" or die "[*] Could not execute: which $cmd: $!";
+    open C, "which $cmd 2>&1 |" or die "[*] Could not execute: which $cmd: $!";
     while (<C>) {
         if (m|^(/.*$cmd)$|) {
             $path = $1;
