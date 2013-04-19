@@ -25,6 +25,23 @@ fwknop-2.5 (//2013):
       engine.  If a vulnerability is discovered in OpenSSL and a change is
       made, then the --enable-openssl-checks mode will allow the test suite to
       discover this in a automated fashion for fwknop.
+    - [test suite] Changed how the test suite interacts with the fwknop client
+      and server by looking for indications that SPA packets are actually
+      received.  This is done by first waiting for 'main event loop' in fwknopd
+      log output to ensure that fwknopd is ready to receive packets, sending
+      the SPA packet(s), and then watching for for 'SPA Packet from IP' in
+      fwknopd output.  This is an improvement over the previous strategy that
+      was only based on timeout values since it works identically regardless of
+      whether fwknop is being run under valgrind or when the test suite is run
+      on an embedded system with very limited resources.  Another check is run
+      for fwknopd receiving the SIGTERM signal to shutdown via 'fwknopd -K',
+      and that failing, the test suite manually kills the process (though this
+      should be rarely needed).  This change was implemented based on
+      discussions with George Herlin.
+    - (Franck Joncourt) Added support for resolving hostnames in various NAT
+      modes (fixes issue #43 in github).
+    - (Franck Joncourt) Added support for saving fwknop client command line
+      arguments via a new options --save-rc-stanza.
     - [client] Bug fix for --nat-rand-port mode to ensure that the port to be
       NAT'd is properly defined so that the fwknopd server will NAT
       connnections to this port instead of applying the NAT operation to the

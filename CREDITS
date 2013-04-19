@@ -46,6 +46,10 @@ Franck Joncourt
     - Contributed a patch to ensure that duplicate iptables rules are not
       created even for different SPA packets that arrive at the same time and
       request the same access.
+    - Added support for resolving hostnames in various NAT modes (fixes issue
+      #43 in github).
+    - Added support for saving fwknop client command line arguments via a new
+      options --save-rc-stanza.
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode
@@ -99,3 +103,10 @@ Sean Greven
 Michael T. Dean
     - Reported the Rijndael key truncation issue for user-supplied keys
       (passphrases) greater than 16 bytes long.
+
+George Herlin
+    - Proposed a verification approach to test suite operations, and the result
+      was implemented in a61939c005e2b09d6800e2171f607c9d1948f022.  This makes
+      test suite operate equivalently regardless of whether valgrind is used or
+      whether fwknop is being tested on an embedded system with very limited
+      resources.
