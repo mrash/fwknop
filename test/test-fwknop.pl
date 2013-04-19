@@ -467,6 +467,7 @@ my %test_keys = (
     'fatal'           => $OPTIONAL,
     'key_file'        => $OPTIONAL,
     'exec_err'        => $OPTIONAL,
+    'server_exec_err' => $OPTIONAL,
     'fw_rule_created' => $OPTIONAL,
     'fw_rule_removed' => $OPTIONAL,
     'server_conf'     => $OPTIONAL,
@@ -628,7 +629,9 @@ sub run_test() {
     $server_test_file = "$output_dir/${executed}_fwknopd.test";
 
     &write_test_file("[+] TEST: $msg\n", $curr_test_file);
+
     $test_hr->{'msg'} = $msg;
+
     if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
         $passed++;
@@ -1012,7 +1015,7 @@ sub client_send_spa_packet() {
             $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                     $cmd_out_tmp, $curr_test_file);
             $rv = 0 unless &file_find_regex([qr/final\spacked/i],
-                $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
+                $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
             $tries++;
@@ -1023,7 +1026,7 @@ sub client_send_spa_packet() {
         $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                 $cmd_out_tmp, $curr_test_file);
         $rv = 0 unless &file_find_regex([qr/final\spacked/i],
-            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
+            $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
     }
 
     &write_test_file("[+] fwknopd received SPA packet.\n", $curr_test_file)
@@ -1153,41 +1156,6 @@ sub spa_cycle() {
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
             = &client_server_interaction($test_hr, [], $USE_CLIENT);
 
-    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
-        $rv = 0 unless $fw_rule_created;
-    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
-        $rv = 0 if $fw_rule_created;
-    }
-
-    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
-        $rv = 0 unless $fw_rule_removed;
-    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
-        $rv = 0 if $fw_rule_removed;
-    }
-
-    if ($test_hr->{'client_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'client_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
-    }
-
-    if ($test_hr->{'client_negative_output_matches'}) {
-        $rv = 0 if &file_find_regex(
-            $test_hr->{'client_negative_output_matches'},
-            $MATCH_ANY, $APPEND_RESULTS, $curr_test_file);
-    }
-
-    if ($test_hr->{'server_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
-    }
-
-    if ($test_hr->{'server_negative_output_matches'}) {
-        $rv = 0 if &file_find_regex(
-            $test_hr->{'server_negative_output_matches'},
-            $MATCH_ANY, $APPEND_RESULTS, $server_test_file);
-    }
 
     return $rv;
 }
@@ -1321,20 +1289,6 @@ sub python_fko_client_to_C_server() {
 
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
-
-    $rv = 0 unless $server_was_stopped;
-
-    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
-        $rv = 0 unless $fw_rule_created;
-    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
-        $rv = 0 if $fw_rule_created;
-    }
-
-    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
-        $rv = 0 unless $fw_rule_removed;
-    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
-        $rv = 0 if $fw_rule_removed;
-    }
 
     return $rv;
 }
@@ -3121,26 +3075,6 @@ sub perl_fko_module_client_compatibility() {
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    $rv = 0 unless $server_was_stopped;
-
-    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
-        $rv = 0 unless $fw_rule_created;
-    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
-        $rv = 0 if $fw_rule_created;
-    }
-
-    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
-        $rv = 0 unless $fw_rule_removed;
-    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
-        $rv = 0 if $fw_rule_removed;
-    }
-
-    if ($test_hr->{'server_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
-    }
-
     return $rv;
 }
 
@@ -3211,20 +3145,6 @@ sub replay_detection() {
 
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
-
-    $rv = 0 unless $server_was_stopped;
-
-    if ($test_hr->{'replay_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'replay_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
-    }
-
-    if ($test_hr->{'replay_negative_output_matches'}) {
-        $rv = 0 if &file_find_regex(
-            $test_hr->{'replay_negative_output_matches'},
-            $MATCH_ANY, $APPEND_RESULTS, $server_test_file);
-    }
 
     return $rv;
 }
@@ -3443,12 +3363,6 @@ sub backwards_compatibility() {
         $rv = 0;
     }
 
-    if ($test_hr->{'server_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
-    }
-
     return $rv;
 }
 
@@ -3463,31 +3377,6 @@ sub process_pcap_file_directly() {
     ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, [], $USE_PCAP_FILE);
 
-    $rv = 0 unless $server_was_stopped;
-
-    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
-        $rv = 0 unless $fw_rule_created;
-    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
-        $rv = 0 if $fw_rule_created;
-    }
-
-    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
-        $rv = 0 unless $fw_rule_removed;
-    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
-        $rv = 0 if $fw_rule_removed;
-    }
-
-    if ($test_hr->{'server_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
-    }
-
-    if ($test_hr->{'server_negative_output_matches'}) {
-        $rv = 0 if &file_find_regex(
-            $test_hr->{'server_negative_output_matches'},
-            $MATCH_ANY, $APPEND_RESULTS, $server_test_file);
-    }
 
     return $rv;
 }
@@ -3519,12 +3408,6 @@ sub fuzzer() {
         $rv = 0;
     } else {
         &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
-    }
-
-    if ($test_hr->{'server_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
     }
 
     if ($rv) {
@@ -3846,19 +3729,9 @@ sub server_packet_limit() {
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        $rv = 0;
-    }
-
-    unless (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
+    if (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
             $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
-        $rv = 0;
-    }
-
-    unless (&file_find_regex([qr/Shutting\sDown\sfwknopd/i],
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
-        $rv = 0;
+        $rv = 1;
     }
 
     return $rv;
@@ -3879,11 +3752,9 @@ sub server_ignore_small_packets() {
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
-    sleep 2;
-
-    if (&is_fwknopd_running()) {
-        &stop_fwknopd();
-        $rv = 0;
+    if (&file_find_regex([qr/count\slimit\sof\s1\sreached/],
+            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
+        $rv = 1;
     }
 
     return $rv;
@@ -3900,12 +3771,28 @@ sub client_server_interaction() {
     ### start fwknopd to monitor for the SPA packet over the loopback interface
     my $fwknopd_parent_pid = &start_fwknopd($test_hr);
 
+    if ($test_hr->{'server_exec_err'}) {
+        if (&is_fwknopd_running()) {
+            &write_test_file("[-] server is running, but required server_exec_err.\n",
+                $curr_test_file);
+            &stop_fwknopd();
+            return (0, 0, 0, 0);
+        }
+        return ($rv, 0, 0, 0);
+    }
+
     ### send the SPA packet(s) to the server either manually using IO::Socket or
     ### with the fwknopd client
     if ($spa_client_flag == $USE_CLIENT) {
         unless (&client_send_spa_packet($test_hr, $SERVER_RECEIVE_CHECK)) {
-            &write_test_file("[-] fwknop client execution error.\n",
-                $curr_test_file);
+            if ($enable_openssl_compatibility_tests) {
+                &write_test_file(
+                    "[-] fwknop client execution and/or OpenSSL error.\n",
+                    $curr_test_file);
+            } else {
+                &write_test_file("[-] fwknop client execution error.\n",
+                    $curr_test_file);
+            }
             $rv = 0;
         }
     } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
@@ -3931,7 +3818,7 @@ sub client_server_interaction() {
     if ($fw_rule_created) {
         sleep 3;  ### allow time for rule time out.
         if (&is_fw_rule_active($test_hr)) {
-            &write_test_file("[-] new fw rule not timed out.\n",
+            &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
                 $curr_test_file);
             $rv = 0;
         } else {
@@ -3951,6 +3838,88 @@ sub client_server_interaction() {
         &write_test_file("[-] server is not running.\n",
             $curr_test_file);
         $server_was_stopped = 0;
+    }
+
+    unless ($server_was_stopped) {
+        &write_test_file("[-] server_was_stopped=0, so setting rv=0.\n",
+            $curr_test_file);
+        $rv = 0;
+    }
+
+    if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
+        unless ($fw_rule_created) {
+            &write_test_file(
+                "[-] fw_rule_created=0 but new rule required, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    } elsif ($test_hr->{'fw_rule_created'} eq $REQUIRE_NO_NEW_RULE) {
+        if ($fw_rule_created) {
+            &write_test_file(
+                "[-] fw_rule_created=1 but new rule NOT required, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
+        unless ($fw_rule_removed) {
+            &write_test_file(
+                "[-] fw_rule_removed=0 but new rule removal requied, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
+        if ($fw_rule_removed) {
+            &write_test_file(
+                "[-] fw_rule_removed=1 but new rule removal NOT requied, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'client_positive_output_matches'}) {
+        unless (&file_find_regex(
+                $test_hr->{'client_positive_output_matches'},
+                $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] client_positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'client_negative_output_matches'}) {
+        if (&file_find_regex(
+                $test_hr->{'client_negative_output_matches'},
+                $MATCH_ANY, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] client_negative_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'server_positive_output_matches'}) {
+        unless (&file_find_regex(
+                $test_hr->{'server_positive_output_matches'},
+                $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
+            &write_test_file(
+                "[-] server_positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'server_negative_output_matches'}) {
+        if (&file_find_regex(
+                $test_hr->{'server_negative_output_matches'},
+                $MATCH_ANY, $APPEND_RESULTS, $server_test_file)) {
+            &write_test_file(
+                "[-] server_negative_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
     }
 
     &write_test_file("[.] client_server_interaction() rv: $rv, " .
@@ -5423,6 +5392,13 @@ sub file_find_regex() {
     my $found_single_match = 0;
     my @write_lines = ();
     my @file_lines = ();
+
+    my $tries = 0;
+    while (not -e $file) {
+        $tries++;
+        sleep 1;
+        return 0 if $tries == 5;
+    }
 
     open F, "< $file" or die "[*] Could not open $file: $!";
     while (<F>) {

@@ -329,6 +329,7 @@
             "$fwknopdCmd -c $cf{'def'} -a $cf{'invalid_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Fatal\serror\sparsing\sIP\sto\sint/],
+        'server_exec_err' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'fatal'    => $NO
     },
@@ -356,6 +357,7 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/invalid\sdate\svalue/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'server_exec_err' => $YES,
         'fatal'    => $NO
     },
     {
