@@ -110,3 +110,9 @@ George Herlin
       test suite operate equivalently regardless of whether valgrind is used or
       whether fwknop is being tested on an embedded system with very limited
       resources.
+
+Ruhsam Bernhard
+    - Reported an issue where the message size test would result in long
+      command mode SPA packets not decrypting properly because only GPG decrypt
+      attempts were made.  This issue was fixed in
+      7e784df3870373f055a2f0f8d818829501bcb1c0.
