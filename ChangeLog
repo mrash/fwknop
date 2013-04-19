@@ -47,7 +47,7 @@ fwknop-2.5 (//2013):
       connnections to this port instead of applying the NAT operation to the
       port that is to be accessed via -A.  This change also prints the
       randomly assigned port to stdout regardless of whether --verbose mode is
-      used (since it not then the user will have no idea which port is
+      used (since if not then the user will have no idea which port is
       actually going to be NAT'd on the fwknopd side).
     - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.4, and this has
       been checked in under the extras/openbsd/fwknop-2.0.4 directory.
