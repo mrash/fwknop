@@ -68,6 +68,6 @@
 #
 
 [testssh]
-KEY                 fwknoptest;
+KEY                 fwknoptest
 
 ###EOF###
