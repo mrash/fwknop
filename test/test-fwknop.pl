@@ -1076,7 +1076,7 @@ sub client_send_spa_packet() {
                 if (/^KEY_BASE64\:?\s+(\S+)/) {
                     $key = $1;
                     $b64_decode_key = 1;
-                } elsif (/KEY\:?\s+(\S+)/) {
+                } elsif (/^KEY\:?\s+(\S+)/) {
                     $key = $1;
                 } elsif (/^HMAC_KEY_BASE64\:?\s+(\S+)/) {
                     $hmac_key = $1;
@@ -4185,10 +4185,11 @@ sub openssl_hmac_verification() {
         "encrypted+encoded msg: $encrypted_msg, hmac_digest: $hmac_digest\n",
         $curr_test_file);
 
-    unless ($openssl_hmac_hexkey_supported and $hmac_key =~ /\s/) {
+    if ($hmac_key =~ /\s/ and not $openssl_hmac_hexkey_supported) {
         &write_test_file("[-] openssl hex key not supported and key " .
             "contains syntax busting spaces, skipping hmac test.\n",
             $curr_test_file);
+        $openssl_hmac_failure_ctr++;
         return 1;
     }
 
@@ -4966,14 +4967,19 @@ sub init() {
 sub openssl_hmac_style_check() {
     if (&run_cmd("$openssl_path dgst -hex -sha256 -mac HMAC " .
             "-macopt hexkey:61616161 $0", $cmd_out_tmp, $curr_test_file)) {
+        &write_test_file("[+] OpenSSL supports HMAC hexkey option.\n",
+            $curr_test_file);
         $openssl_hmac_hexkey_supported = 1;
     } elsif (&run_cmd("$openssl_path dgst -hex -sha256 -hmac dummykey $0",
             $cmd_out_tmp, $curr_test_file)) {
+        &write_test_file("[+] OpenSSL does not support the HMAC hexkey option.\n",
+            $curr_test_file);
         $openssl_hmac_hexkey_supported = 0;
     } else {
         print "[-] openssl hmac syntax unknown, disabling.\n";
         $enable_openssl_compatibility_tests = 0;
     }
+
     return;
 }
 
