@@ -55,6 +55,7 @@ enum {
     KEY_RIJNDAEL,
     KEY_RIJNDAEL_BASE64,
     KEY_HMAC_BASE64,
+    KEY_HMAC,
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
@@ -98,6 +99,7 @@ static struct option cmd_opts[] =
     {"key-rijndael",        1, NULL, KEY_RIJNDAEL },
     {"key-rijndael-base64", 1, NULL, KEY_RIJNDAEL_BASE64 },
     {"key-hmac-base64",     1, NULL, KEY_HMAC_BASE64 },
+    {"key-hmac",            1, NULL, KEY_HMAC },
     {"key-len",             1, NULL, KEY_LEN},
     {"hmac-key-len",        1, NULL, HMAC_KEY_LEN},
     {"hmac-digest-type",    1, NULL, HMAC_DIGEST_TYPE},

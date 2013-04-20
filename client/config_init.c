@@ -76,6 +76,8 @@ enum
     FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64,
     FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE,
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
+    FWKNOP_CLI_ARG_KEY_HMAC,
+    FWKNOP_CLI_ARG_USE_HMAC,
     FWKNOP_CLI_ARG_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
     FWKNOP_CLI_ARG_HTTP_USER_AGENT,
@@ -110,6 +112,8 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
     "KEY_BASE64",
     "HMAC_DIGEST_TYPE",
     "HMAC_KEY_BASE64",
+    "HMAC_KEY",
+    "USE_HMAC",
     "KEY_FILE",
     "NAT_ACCESS",
     "HTTP_USER_AGENT",
@@ -693,7 +697,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             options->hmac_type = tmpint;
         }
     }
-    /* HMAC key */
+    /* HMAC key (base64 encoded) */
     else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
     {
         if (! is_base64((unsigned char *) val, strlen(val)))
@@ -705,6 +709,13 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         }
         strlcpy(options->hmac_key_base64, val, MAX_B64_KEY_LEN);
         options->have_hmac_base64_key = 1;
+    }
+
+    /* HMAC key */
+    else if(CONF_VAR_IS(var, "HMAC_KEY"))
+    {
+        strlcpy(options->hmac_key, val, MAX_KEY_LEN);
+        options->have_hmac_key = 1;
     }
 
     /* Key file */
@@ -859,8 +870,14 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_KEY_HMAC_BASE64:
             strlcpy(val, options->hmac_key_base64, sizeof(val));
             break;
+        case FWKNOP_CLI_ARG_KEY_HMAC:
+            strlcpy(val, options->hmac_key, sizeof(val));
+            break;
         case FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE :
             hmac_digest_inttostr(options->hmac_type, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_USE_HMAC :
+            bool_to_yesno(options->use_hmac, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_NAT_ACCESS :
             strlcpy(val, options->nat_access_str, sizeof(val));
@@ -1375,7 +1392,15 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 }
                 strlcpy(options->hmac_key_base64, optarg, MAX_KEY_LEN);
                 options->have_hmac_base64_key = 1;
+                options->use_hmac = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+            case KEY_HMAC:
+                strlcpy(options->hmac_key, optarg, MAX_KEY_LEN);
+                options->have_hmac_key = 1;
+                options->use_hmac = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
             case KEY_LEN:
                 options->key_len = strtol_wrapper(optarg, 1,
                         MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
@@ -1395,6 +1420,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE);
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                options->use_hmac = 1;
                 break;
             case HMAC_KEY_LEN:
                 options->hmac_key_len = strtol_wrapper(optarg, 1,
@@ -1405,6 +1432,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                             optarg, 1, MAX_KEY_LEN);
                     exit(EXIT_FAILURE);
                 }
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                options->use_hmac = 1;
                 break;
             case SPA_ICMP_TYPE:
                 options->spa_icmp_type = strtol_wrapper(optarg, 0,
@@ -1580,6 +1609,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_TIME_OFFSET);
                 break;
             case USE_HMAC:
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
                 options->use_hmac = 1;
                 break;
             default:

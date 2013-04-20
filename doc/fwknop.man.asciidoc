@@ -125,7 +125,7 @@ GENERAL OPTIONS
     Load an encryption key/password from the specified file.  The key file
     contains a line for each destination hostname or IP address, a colon
     (":"), optional space and the password, followed by a newline.  Note
-    that the last line has to have a terminating newline character. 
+    that the last line has to have a terminating newline character.
     Also note: though this is a convenience, have a file on your system with
     cleartext passwords is not a good idea and is not recommended.
 
@@ -143,6 +143,11 @@ GENERAL OPTIONS
     Specify the base64 encoded HMAC key. Since the password is visible to
     utilities (like 'ps' under Unix) this form should only be used where
     security is not important.
+
+*--key-hmac*='<key>'::
+    Specify the raw HMAC key (not base64 encoded). Since the password is
+    visible to utilities (like 'ps' under Unix) this form should only be used
+    where security is not important.
 
 *-l, --last-cmd*::
     Execute *fwknop* with the command-line arguments from the previous
@@ -245,6 +250,11 @@ SPA OPTIONS
 *--hmac-digest-type*='<digest>'::
     Set the HMAC digest algorithm (default is sha256). Options are md5, sha1,
     sha256, sha384, or sha512.
+
+*--use-hmac*::
+    Set HMAC mode for authenticated encryption of SPA communications.  As of
+    *fwknop* 2.5, this is an optional feature, but this will become the
+    default in a future release.
 
 *-N, --nat-access*='<internalIP:forwardPort>'::
     The *fwknopd* server offers the ability to provide SPA access through
