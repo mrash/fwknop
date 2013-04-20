@@ -47,8 +47,8 @@
 #GPG_SIGNER          <signer ID>
 #GPG_RECIPIENT       <recipient ID>
 HMAC_DIGEST_TYPE    sha256
-KEY_BASE64          wzNP62oPPgEc+kXDPQLHPOayQBuNbYUTPP+QrErNDmg=
-HMAC_KEY_BASE64     dGVzdHRlc3Q=
+KEY                 rijndaeltest
+HMAC_KEY            hmactest
 
 # User-provided named stanzas:
 
