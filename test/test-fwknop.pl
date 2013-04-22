@@ -253,6 +253,7 @@ my $openssl_hmac_hexkey_supported = 0;
 my $fuzzing_success_ctr = 0;
 my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
+my $include_permissions_warnings = 0;
 our $valgrind_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
@@ -564,6 +565,8 @@ if ($enable_valgrind) {
 }
 &logr("\n");
 
+&remove_permissions_warnings() unless $include_permissions_warnings;
+
 my $total_elapsed_seconds = time() - $start_time;
 my $total_elapsed_minutes = sprintf "%.2f", ($total_elapsed_seconds / 60);
 
@@ -605,9 +608,8 @@ exit 0;
 sub run_test() {
     my $test_hr = shift;
 
-    ### start off with clean slate
-    unlink $server_cmd_tmp if -e $server_cmd_tmp;
-    unlink $cmd_out_tmp    if -e $cmd_out_tmp;
+    ### prepare for test run
+    &rm_tmp_files();
 
     my $msg = "[$test_hr->{'category'}]";
     $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
@@ -660,6 +662,9 @@ sub run_test() {
             exit 0;
         }
     }
+
+    ### clean up tmp files now that the test is complete
+    &rm_tmp_files();
 
     return;
 }
@@ -1155,7 +1160,6 @@ sub spa_cycle() {
 
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
             = &client_server_interaction($test_hr, [], $USE_CLIENT);
-
 
     return $rv;
 }
@@ -3144,7 +3148,7 @@ sub replay_detection() {
     );
 
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
-        = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+            = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     return $rv;
 }
@@ -5406,7 +5410,7 @@ sub file_find_regex() {
         return 0 if $tries == 5;
     }
 
-    open F, "< $file" or die "[*] Could not open $file: $!";
+    open F, "< $file" or (print Dumper $re_ar and die "[*] Could not open $file: $!");
     while (<F>) {
         push @file_lines, $_;
     }
@@ -5442,6 +5446,18 @@ sub file_find_regex() {
     }
 
     return $found_all_regexs;
+}
+
+sub remove_permissions_warnings() {
+    system qq|perl -p -i -e 's/.*not owned by current effective.*\n//' $output_dir/*|;
+    return;
+}
+
+sub rm_tmp_files() {
+    for my $file ($cmd_out_tmp, $server_cmd_tmp, $openssl_cmd_tmp) {
+        unlink $file if -e $file;
+    }
+    return;
 }
 
 sub find_command() {
