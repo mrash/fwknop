@@ -642,7 +642,8 @@ rule_exists(const fko_srv_options_t * const opts,
     return rule_exists;
 }
 
-static int create_rule(const fko_srv_options_t * const opts,
+static int
+create_rule(const fko_srv_options_t * const opts,
         const char * const fw_chain, const char * const fw_rule)
 {
     int res;
