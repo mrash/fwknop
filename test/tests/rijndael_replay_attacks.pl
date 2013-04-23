@@ -34,6 +34,4 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fatal'    => $NO
     },
-
-
 );

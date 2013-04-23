@@ -332,7 +332,6 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 static int
 gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 {
-    char           *tbuf;
     unsigned char  *cipher;
     size_t          cipher_len;
     int             res, pt_len;
@@ -340,25 +339,8 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     /* Now see if we need to add the "hQ" string to the front of the
      * base64-encoded-GPG-encrypted data.
     */
-    if(strncmp(ctx->encrypted_msg, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN))
-    {
-        /* We need to realloc space for the GPG prefix of hQ.
-        */
-        tbuf = realloc(ctx->encrypted_msg, ctx->encrypted_msg_len + 12);
-        if(tbuf == NULL)
-            return(FKO_ERROR_MEMORY_ALLOCATION);
-
-        memmove(tbuf+B64_GPG_PREFIX_STR_LEN, tbuf, ctx->encrypted_msg_len);
-
-        ctx->encrypted_msg = memcpy(tbuf, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN);
-
-        /* Adjust encrypted msg length for GnuPG prefix and make sure we are still
-         * a properly NULL-terminated string (Ubuntu was one system for
-         * which this was an issue).
-        */
-        ctx->encrypted_msg_len += B64_GPG_PREFIX_STR_LEN;
-        tbuf[ctx->encrypted_msg_len] = '\0';
-    }
+    if(! ctx->added_gpg_prefix)
+        add_gpg_prefix(ctx);
 
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.

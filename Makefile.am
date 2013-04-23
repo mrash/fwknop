@@ -248,6 +248,7 @@ EXTRA_DIST = \
     test/tests/rijndael_hmac.pl \
     test/tests/rijndael_backwards_compatibility.pl \
     test/tests/gpg_no_pw.pl \
+    test/tests/gpg_no_pw_hmac.pl \
     test/tests/gpg.pl \
     test/tests/rijndael_fuzzing.pl \
     test/tests/perl_FKO_module.pl \

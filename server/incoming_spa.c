@@ -428,7 +428,8 @@ incoming_spa(fko_srv_options_t *opts)
             if(acc->gpg_decrypt_pw != NULL || acc->gpg_allow_no_pw)
             {
                 res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
-                        0, acc->encryption_mode, NULL, 0, 0);
+                        0, FKO_ENC_MODE_ASYMMETRIC, acc->hmac_key,
+                        acc->hmac_key_len, acc->hmac_type);
                 attempted_decrypt = 1;
                 if(res != FKO_SUCCESS)
                 {

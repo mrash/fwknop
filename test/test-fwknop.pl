@@ -72,6 +72,7 @@ our %cf = (
     'gpg_access'                   => "$conf_dir/gpg_access.conf",
     'legacy_iv_access'             => "$conf_dir/legacy_iv_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
+    'gpg_no_pw_hmac_access'        => "$conf_dir/gpg_no_pw_hmac_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
     'icmp_pcap_filter'             => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
@@ -175,6 +176,7 @@ my @test_files = (
     "$tests_dir/perl_FKO_module.pl",
     "$tests_dir/python_fko.pl",
     "$tests_dir/gpg_no_pw.pl",
+    "$tests_dir/gpg_no_pw_hmac.pl",
     "$tests_dir/gpg.pl",
 );
 #================== end config ===================
@@ -190,6 +192,7 @@ our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
 our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
 our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
+our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
 our @gpg                     = ();  ### from tests/gpg.pl
 our @perl_FKO_module         = ();  ### from tests/perl_FKO_module.pl
 our @python_fko              = ();  ### from tests/python_fko.pl
@@ -281,6 +284,8 @@ our $MATCH_ANY = 1;
 our $MATCH_ALL = 2;
 our $REQUIRE_SUCCESS = 0;
 our $REQUIRE_FAILURE = 1;
+my $ENC_RIJNDAEL = 1;
+my $ENC_GPG      = 2;
 our $LINUX   = 1;
 our $FREEBSD = 2;
 our $MACOSX  = 3;
@@ -410,6 +415,11 @@ our $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
     "-a $cf{'gpg_no_pw_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
+our $default_server_gpg_args_no_pw_hmac = "LD_LIBRARY_PATH=$lib_dir " .
+    "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+    "-a $cf{'gpg_no_pw_hmac_access'} $intf_str " .
+    "-d $default_digest_file -p $default_pid_file";
+
 ### point the compiled binaries at the local libary path
 ### instead of any installed libfko instance
 $ENV{'LD_LIBRARY_PATH'} = $lib_dir;
@@ -454,6 +464,7 @@ my @tests = (
     @perl_FKO_module,
     @python_fko,
     @gpg_no_pw,
+    @gpg_no_pw_hmac,
     @gpg,
 );
 
@@ -1101,6 +1112,8 @@ sub client_send_spa_packet() {
         }
 
         if ($is_hmac_type and $hmac_key) {
+            my $enc_mode = $ENC_RIJNDAEL;
+            $enc_mode = $ENC_GPG if $test_hr->{'msg'} =~ /GPG\s/;
             unless (&openssl_hmac_verification($encrypted_msg,
                     $encoded_msg, '', $hmac_key, $b64_decode_key,
                     $hmac_digest, $hmac_mode)) {
@@ -2473,7 +2486,7 @@ sub perl_fko_module_complete_cycle_hmac() {
                             if ($enable_openssl_compatibility_tests) {
                                 unless (&openssl_hmac_verification($encrypted_msg,
                                         '', $msg, $hmac_key, 0, $hmac_digest,
-                                        &hmac_type_to_str($hmac_type))) {
+                                        &hmac_type_to_str($hmac_type), $ENC_RIJNDAEL)) {
                                     $rv = 0;
                                 }
 
@@ -4170,7 +4183,7 @@ sub immediate_binding() {
 
 sub openssl_hmac_verification() {
     my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
-        $b64_decode_key, $hmac_digest, $hmac_mode) = @_;
+        $b64_decode_key, $hmac_digest, $hmac_mode, $enc_mode) = @_;
 
     $openssl_hmac_ctr++;
 
@@ -4214,8 +4227,13 @@ sub openssl_hmac_verification() {
     }
 
     ### transform encrypted message into the format that openssl expects
-    $enc_msg_without_hmac = 'U2FsdGVkX1' . $enc_msg_without_hmac
-        unless $enc_msg_without_hmac =~ /^U2FsdGVkX1/;
+    if ($enc_mode) {
+        $enc_msg_without_hmac = 'U2FsdGVkX1' . $enc_msg_without_hmac
+            unless $enc_msg_without_hmac =~ /^U2FsdGVkX1/;
+    } else {
+        $enc_msg_without_hmac = 'hQ' . $enc_msg_without_hmac
+            unless $enc_msg_without_hmac =~ /^hQ/;
+    }
 
     &write_test_file("    Calculating HMAC over: '$enc_msg_without_hmac'\n",
         $curr_test_file);
@@ -5449,7 +5467,7 @@ sub file_find_regex() {
 }
 
 sub remove_permissions_warnings() {
-    system qq|perl -p -i -e 's/.*not owned by current effective.*\n//' $output_dir/*|;
+    system qq|perl -p -i -e 's/.*not owned by current effective.*\n//' $output_dir/*.test|;
     return;
 }
 

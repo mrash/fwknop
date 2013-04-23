@@ -94,11 +94,26 @@ int fko_verify_hmac(fko_ctx_t ctx,
     ctx->encrypted_msg      = tbuf;
     ctx->encrypted_msg_len -= hmac_b64_digest_len;
 
-    /* See if we need to add the "Salted__" string to the front of the
-     * encrypted data.
-    */
-    if(! ctx->added_salted_str)
-        res = add_salted_str(ctx);
+    if(ctx->encryption_mode == FKO_ENC_MODE_ASYMMETRIC)
+    {
+        /* See if we need to add the "hQ" string to the front of the
+         * encrypted data.
+         */
+        if(! ctx->added_gpg_prefix)
+        {
+            res = add_gpg_prefix(ctx);
+        }
+    }
+    else
+    {
+        /* See if we need to add the "Salted__" string to the front of the
+         * encrypted data.
+         */
+        if(! ctx->added_salted_str)
+        {
+            res = add_salted_str(ctx);
+        }
+    }
 
     if (res != FKO_SUCCESS)
     {

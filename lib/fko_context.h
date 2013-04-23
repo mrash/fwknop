@@ -91,6 +91,7 @@ struct fko_context {
     char           *msg_hmac;
     int             msg_hmac_len;
     int             added_salted_str;
+    int             added_gpg_prefix;
 
     /* State info */
     unsigned short  state;

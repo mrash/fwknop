@@ -1076,7 +1076,7 @@ parse_access_file(fko_srv_options_t *opts)
             }
             add_acc_string(&(curr_acc->hmac_key_base64), val);
             add_acc_b64_string(&(curr_acc->hmac_key),
-                &curr_acc->hmac_key_len, curr_acc->hmac_key_base64);
+                &(curr_acc->hmac_key_len), curr_acc->hmac_key_base64);
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY"))
         {
@@ -1457,7 +1457,12 @@ dump_access_list(const fko_srv_options_t *opts)
             "==============================================================\n"
             "                 OPEN_PORTS:  %s\n"
             "             RESTRICT_PORTS:  %s\n"
-            "                        KEY:  <see the access.conf file>\n"
+            "                        KEY:  %s\n"
+            "                 KEY_BASE64:  %s\n"
+            "                    KEY_LEN:  %d\n"
+            "                   HMAC_KEY:  %s\n"
+            "            HMAC_KEY_BASE64:  %s\n"
+            "               HMAC_KEY_LEN:  %d\n"
             "          FW_ACCESS_TIMEOUT:  %i\n"
             "            ENABLE_CMD_EXEC:  %s\n"
             "              CMD_EXEC_USER:  %s\n"
@@ -1469,7 +1474,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "              ACCESS_EXPIRE:  %s"  /* asctime() adds a newline */
             "               GPG_HOME_DIR:  %s\n"
             "             GPG_DECRYPT_ID:  %s\n"
-            "             GPG_DECRYPT_PW:  <see the access.conf file>\n"
+            "             GPG_DECRYPT_PW:  %s\n"
             "            GPG_REQUIRE_SIG:  %s\n"
             "GPG_IGNORE_SIG_VERIFY_ERROR:  %s\n"
             "              GPG_REMOTE_ID:  %s\n",
@@ -1477,7 +1482,12 @@ dump_access_list(const fko_srv_options_t *opts)
             acc->source,
             (acc->open_ports == NULL) ? "<not set>" : acc->open_ports,
             (acc->restrict_ports == NULL) ? "<not set>" : acc->restrict_ports,
-            //(acc->key == NULL) ? "<not set>" : acc->key,
+            (acc->key == NULL) ? "<not set>" : "<see the access.conf file>",
+            (acc->key_base64 == NULL) ? "<not set>" : "<see the access.conf file>",
+            acc->key_len ? acc->key_len : 0,
+            (acc->hmac_key == NULL) ? "<not set>" : "<see the access.conf file>",
+            (acc->hmac_key_base64 == NULL) ? "<not set>" : "<see the access.conf file>",
+            acc->hmac_key_len ? acc->hmac_key_len : 0,
             acc->fw_access_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
@@ -1489,7 +1499,7 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>\n",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,
-            //(acc->gpg_decrypt_pw == NULL) ? "<not set>" : acc->gpg_decrypt_pw,
+            (acc->gpg_decrypt_pw == NULL) ? "<not set>" : "<see the access.conf file>",
             acc->gpg_require_sig ? "Yes" : "No",
             acc->gpg_ignore_sig_error  ? "Yes" : "No",
             (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id
