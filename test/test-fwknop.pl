@@ -70,6 +70,7 @@ our %cf = (
     'dual_key_access'              => "$conf_dir/dual_key_usage_access.conf",
     'hmac_dual_key_access'         => "$conf_dir/hmac_dual_key_usage_access.conf",
     'gpg_access'                   => "$conf_dir/gpg_access.conf",
+    'gpg_hmac_access'              => "$conf_dir/gpg_hmac_access.conf",
     'legacy_iv_access'             => "$conf_dir/legacy_iv_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
     'gpg_no_pw_hmac_access'        => "$conf_dir/gpg_no_pw_hmac_access.conf",
@@ -103,6 +104,7 @@ our %cf = (
     'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
     'rc_hmac_b64_key2'             => "$conf_dir/fwknoprc_hmac_key2",
+    'rc_gpg_hmac_b64_key'          => "$conf_dir/fwknoprc_gpg_hmac_key",
     'rc_hmac_simple_key'           => "$conf_dir/fwknoprc_hmac_simple_keys",
     'rc_hmac_invalid_type'         => "$conf_dir/fwknoprc_hmac_invalid_type",
     'rc_hmac_invalid_type'         => "$conf_dir/fwknoprc_hmac_invalid_type",
@@ -178,6 +180,7 @@ my @test_files = (
     "$tests_dir/gpg_no_pw.pl",
     "$tests_dir/gpg_no_pw_hmac.pl",
     "$tests_dir/gpg.pl",
+    "$tests_dir/gpg_hmac.pl",
 );
 #================== end config ===================
 
@@ -194,6 +197,7 @@ our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
 our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
 our @gpg                     = ();  ### from tests/gpg.pl
+our @gpg_hmac                = ();  ### from tests/gpg_hmac.pl
 our @perl_FKO_module         = ();  ### from tests/perl_FKO_module.pl
 our @python_fko              = ();  ### from tests/python_fko.pl
 our @rijndael_backwards_compatibility = ();  ### from tests/rijndael_backwards_compatibility.pl
@@ -228,6 +232,7 @@ my %fuzzing_spa_packets = ();
 my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
 my $enable_valgrind = 0;
+my $disable_valgrind = 0;
 our $valgrind_str = '';
 my %prev_valgrind_cov = ();
 my %prev_valgrind_file_titles = ();
@@ -326,6 +331,7 @@ exit 1 unless GetOptions(
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$enable_valgrind,
+    'disable-valgrind'  => \$disable_valgrind,
     'enable-all'        => \$enable_all,
     'valgrind-path=s'   => \$valgrind_path,
     ### can set the following to "output.last/valgrind-coverage" if
@@ -349,6 +355,8 @@ if ($enable_all) {
     $enable_python_module_checks = 1;
     $enable_openssl_compatibility_tests = 1;
 }
+
+$enable_valgrind = 0 if $disable_valgrind;
 
 ### create an anonymized tar file of test suite results that can be
 ### emailed around to assist in debugging fwknop communications
@@ -415,6 +423,11 @@ our $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
     "-a $cf{'gpg_no_pw_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
+our $default_server_gpg_args_hmac = "LD_LIBRARY_PATH=$lib_dir " .
+    "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+    "-a $cf{'gpg_hmac_access'} $intf_str " .
+    "-d $default_digest_file -p $default_pid_file";
+
 our $default_server_gpg_args_no_pw_hmac = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_no_pw_hmac_access'} $intf_str " .
@@ -466,6 +479,7 @@ my @tests = (
     @gpg_no_pw,
     @gpg_no_pw_hmac,
     @gpg,
+    @gpg_hmac,
 );
 
 my %test_keys = (
@@ -1113,10 +1127,10 @@ sub client_send_spa_packet() {
 
         if ($is_hmac_type and $hmac_key) {
             my $enc_mode = $ENC_RIJNDAEL;
-            $enc_mode = $ENC_GPG if $test_hr->{'msg'} =~ /GPG\s/;
+            $enc_mode = $ENC_GPG if $test_hr->{'msg'} =~ /GPG/;
             unless (&openssl_hmac_verification($encrypted_msg,
                     $encoded_msg, '', $hmac_key, $b64_decode_key,
-                    $hmac_digest, $hmac_mode)) {
+                    $hmac_digest, $hmac_mode, $enc_mode)) {
                 $rv = 0;
             }
         }
@@ -4197,9 +4211,13 @@ sub openssl_hmac_verification() {
         $hmac_key = $tmp_key;
     }
 
+    my $enc_mode_str = 'Rijndael';
+    $enc_mode_str = 'GPG' if $enc_mode == $ENC_GPG;
+
     &write_test_file("[+] OpenSSL HMAC $hmac_mode verification, (encoded msg: " .
         "$encoded_msg) (access: $access_msg), hmac_key: $tmp_key, " .
-        "encrypted+encoded msg: $encrypted_msg, hmac_digest: $hmac_digest\n",
+        "encrypted+encoded msg: $encrypted_msg, hmac_digest: $hmac_digest, " .
+        "enc_mode: $enc_mode_str\n",
         $curr_test_file);
 
     if ($hmac_key =~ /\s/ and not $openssl_hmac_hexkey_supported) {
@@ -4227,7 +4245,7 @@ sub openssl_hmac_verification() {
     }
 
     ### transform encrypted message into the format that openssl expects
-    if ($enc_mode) {
+    if ($enc_mode == $ENC_RIJNDAEL) {
         $enc_msg_without_hmac = 'U2FsdGVkX1' . $enc_msg_without_hmac
             unless $enc_msg_without_hmac =~ /^U2FsdGVkX1/;
     } else {
@@ -5549,6 +5567,9 @@ sub usage() {
     --enable-recompile             - Recompile fwknop sources and look for
                                      compilation warnings.
     --enable-valgrind              - Run every test underneath valgrind.
+    --disable-valgrind             - Disable valgrind mode (useful sometimes
+                                     when --enable-all is used to have
+                                     everything except for valgrind enabled).
     --enable-ip-resolve            - Enable client IP resolution (-R) test -
                                      this requires internet access.
     --enable-distcheck             - Enable 'make dist' check.
