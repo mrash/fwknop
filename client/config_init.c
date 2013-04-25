@@ -45,6 +45,8 @@
 #define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
 #define PARAM_YES_VALUE             "Y"                         /*!< String which represents a YES value for a parameter in fwknoprc */
 #define PARAM_NO_VALUE              "N"                         /*!< String which represents a NO value for a parameter in fwknoprc */
+#define ARRAY_SIZE(t)               (sizeof(t) / sizeof(t[0]))  /*!< Macro to get the number of elements of an array */
+
 
 typedef struct
 {
@@ -141,6 +143,26 @@ bool_to_yesno(int val, char* s, size_t len)
         strlcpy(s, PARAM_NO_VALUE, len);
     else
         strlcpy(s, PARAM_YES_VALUE, len);
+}
+
+/**
+ * @brief Is a string formatted as YES string.
+ *
+ * @param s String to check for a YES string
+ *
+ * @return 1 if the string match the YES pattern, 0 otherwise
+ */
+static int
+is_yes_str(const char *s)
+{
+    int valid;
+
+    if (strcasecmp(PARAM_YES_VALUE, s) == 0)
+        valid = 1;
+    else
+        valid = 0;
+
+    return valid;
 }
 
 /**
@@ -522,59 +544,68 @@ create_fwknoprc(const char *rcfile)
 static int
 parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
 {
-    int     tmpint, is_err;
+    int tmpint, is_err;
+    int conf_key_ndx;       /* Index on the fwknop conf variable in the fwknop_cli_key_tab array */
+    int parse_error = 0;    /* 0 if the variable has been successfully processed, < 0 otherwise */
 
     if(options->verbose > 3)
         fprintf(stderr, "add_rc_param() : Parsing variable %s...\n", var);
-    
+
+    /* Go through the fwknop_cli_arg to find out which variable
+     * we should work on. */
+    for(conf_key_ndx=0 ; conf_key_ndx<ARRAY_SIZE(fwknop_cli_key_tab) ; conf_key_ndx++)
+    {
+        if (CONF_VAR_IS(var, fwknop_cli_key_tab[conf_key_ndx]))
+            break;
+    }
+
     /* Digest Type */
-    if(CONF_VAR_IS(var, "DIGEST_TYPE"))
+    if (conf_key_ndx == FWKNOP_CLI_ARG_DIGEST_TYPE)
     {
         tmpint = digest_strtoint(val);
         if(tmpint < 0)
-            return(-1);
+            parse_error = -1;
         else
             options->digest_type = tmpint;
     }
     /* Server protocol */
-    else if(CONF_VAR_IS(var, "SPA_SERVER_PROTO"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SERVER_PROTO)
     {
         tmpint = proto_strtoint(val);
         if(tmpint < 0)
-            return(-1);
+            parse_error = -1;
         else
             options->spa_proto = tmpint;
     }
     /* Server port */
-    else if(CONF_VAR_IS(var, "SPA_SERVER_PORT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SERVER_PORT)
     {
         tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
             options->spa_dst_port = tmpint;
         else
-            return(-1);
+            parse_error = -1;
     }
     /* Source port */
-    else if(CONF_VAR_IS(var, "SPA_SOURCE_PORT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SOURCE_PORT)
     {
         tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
             options->spa_src_port = tmpint;
         else
-            return(-1);
+            parse_error = -1;
     }
     /* Firewall rule timeout */
-    else if(CONF_VAR_IS(var, "FW_TIMEOUT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_FW_TIMEOUT)
     {
         tmpint = strtol_wrapper(val, 0, (2 << 15), NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
             options->fw_timeout = tmpint;
         else
-            return(-1);
-
+            parse_error = -1;
     }
     /* Allow IP */
-    else if(CONF_VAR_IS(var, "ALLOW_IP"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_ALLOW_IP)
     {
         /* In case this was set previously
         */
@@ -590,7 +621,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             strlcpy(options->allow_ip_str, val, MAX_IPV4_STR_LEN);
     }
     /* Time Offset */
-    else if(CONF_VAR_IS(var, "TIME_OFFSET"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_TIME_OFFSET)
     {
         if(val[0] == '-')
         {
@@ -601,88 +632,91 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             options->time_offset_plus = parse_time_offset(val);
     }
     /* symmetric encryption mode */
-    else if(CONF_VAR_IS(var, "ENCRYPTION_MODE"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_ENCRYPTION_MODE)
     {
         tmpint = enc_mode_strtoint(val);
         if(tmpint < 0)
-            return(-1);
+            parse_error = -1;
         else
             options->encryption_mode = tmpint;
     }
     /* Use GPG ? */
-    else if(CONF_VAR_IS(var, "USE_GPG"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_USE_GPG)
     {
-        if(val[0] == 'y' || val[0] == 'Y')
+        if (is_yes_str(val))
             options->use_gpg = 1;
+        else;
     }
     /* Use GPG Agent ? */
-    else if(CONF_VAR_IS(var, "USE_GPG_AGENT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_USE_GPG_AGENT)
     {
-        if(val[0] == 'y' || val[0] == 'Y')
+        if (is_yes_str(val))
             options->use_gpg_agent = 1;
+        else;
     }
     /* GPG Recipient */
-    else if(CONF_VAR_IS(var, "GPG_RECIPIENT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_GPG_RECIPIENT)
     {
         strlcpy(options->gpg_recipient_key, val, MAX_GPG_KEY_ID);
     }
     /* GPG Signer */
-    else if(CONF_VAR_IS(var, "GPG_SIGNER"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_GPG_SIGNER)
     {
         strlcpy(options->gpg_signer_key, val, MAX_GPG_KEY_ID);
     }
     /* GPG Homedir */
-    else if(CONF_VAR_IS(var, "GPG_HOMEDIR"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_GPG_HOMEDIR)
     {
         strlcpy(options->gpg_home_dir, val, MAX_PATH_LEN);
     }
     /* Spoof User */
-    else if(CONF_VAR_IS(var, "SPOOF_USER"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPOOF_USER)
     {
         strlcpy(options->spoof_user, val, MAX_USERNAME_LEN);
     }
     /* Spoof Source IP */
-    else if(CONF_VAR_IS(var, "SPOOF_SOURCE_IP"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPOOF_SOURCE_IP)
     {
         strlcpy(options->spoof_ip_src_str, val, MAX_IPV4_STR_LEN);
     }
     /* ACCESS request */
-    else if(CONF_VAR_IS(var, "ACCESS"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_ACCESS)
     {
         strlcpy(options->access_str, val, MAX_LINE_LEN);
     }
     /* SPA Server (destination) */
-    else if(CONF_VAR_IS(var, "SPA_SERVER"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SERVER)
     {
         strlcpy(options->spa_server_str, val, MAX_SERVER_STR_LEN);
     }
     /* Rand port ? */
-    else if(CONF_VAR_IS(var, "RAND_PORT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_RAND_PORT)
     {
-        if(val[0] == 'y' || val[0] == 'Y')
+        if (is_yes_str(val))
             options->rand_port = 1;
+        else;
     }
     /* Rijndael key */
-    else if(CONF_VAR_IS(var, "KEY"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_RIJNDAEL)
     {
         strlcpy(options->key, val, MAX_KEY_LEN);
         options->have_key = 1;
     }
     /* Rijndael key (base-64 encoded) */
-    else if(CONF_VAR_IS(var, "KEY_BASE64"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64)
     {
         if (! is_base64((unsigned char *) val, strlen(val)))
         {
             fprintf(stderr,
                 "KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                 val);
-            return(-1);
+            parse_error = -1;
         }
         strlcpy(options->key_base64, val, MAX_B64_KEY_LEN);
         options->have_base64_key = 1;
     }
     /* HMAC digest type */
-    else if(CONF_VAR_IS(var, "HMAC_DIGEST_TYPE"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE)
     {
         tmpint = hmac_digest_strtoint(val);
         if(tmpint < 0)
@@ -690,7 +724,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             fprintf(stderr,
                 "HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}\n",
                 val);
-            return(-1);
+            parse_error = -1;
         }
         else
         {
@@ -698,43 +732,43 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         }
     }
     /* HMAC key (base64 encoded) */
-    else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_HMAC_BASE64)
     {
         if (! is_base64((unsigned char *) val, strlen(val)))
         {
             fprintf(stderr,
                 "HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                 val);
-            return(-1);
+            parse_error = -1;
         }
         strlcpy(options->hmac_key_base64, val, MAX_B64_KEY_LEN);
         options->have_hmac_base64_key = 1;
     }
 
     /* HMAC key */
-    else if(CONF_VAR_IS(var, "HMAC_KEY"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_HMAC)
     {
         strlcpy(options->hmac_key, val, MAX_KEY_LEN);
         options->have_hmac_key = 1;
     }
 
     /* Key file */
-    else if(CONF_VAR_IS(var, "KEY_FILE"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_FILE)
     {
         strlcpy(options->get_key_file, val, MAX_PATH_LEN);
     }
     /* NAT Access Request */
-    else if(CONF_VAR_IS(var, "NAT_ACCESS"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_ACCESS)
     {
         strlcpy(options->nat_access_str, val, MAX_PATH_LEN);
     }
     /* HTTP User Agent */
-    else if(CONF_VAR_IS(var, "HTTP_USER_AGENT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_HTTP_USER_AGENT)
     {
         strlcpy(options->http_user_agent, val, HTTP_MAX_USER_AGENT_LEN);
     }
     /* Resolve URL */
-    else if(CONF_VAR_IS(var, "RESOLVE_URL"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_RESOLVE_URL)
     {
         if(options->resolve_url != NULL)
             free(options->resolve_url);
@@ -748,28 +782,35 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         strlcpy(options->resolve_url, val, tmpint);
     }
     /* NAT Local ? */
-    else if(CONF_VAR_IS(var, "NAT_LOCAL"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_LOCAL)
     {
-        if(val[0] == 'y' || val[0] == 'Y')
+        if (is_yes_str(val))
             options->nat_local = 1;
+        else;
     }
     /* NAT rand port ? */
-    else if(CONF_VAR_IS(var, "NAT_RAND_PORT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_RAND_PORT)
     {
-        if(val[0] == 'y' || val[0] == 'Y')
+        if (is_yes_str(val))
             options->nat_rand_port = 1;
+        else;
     }
     /* NAT port */
-    else if(CONF_VAR_IS(var, "NAT_PORT"))
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_PORT)
     {
         tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
             options->nat_port = tmpint;
         else
-            return(-1);
+            parse_error = -1;
+    }
+    /* The variable is not a configuration variable */
+    else
+    {
+        parse_error = -1;
     }
 
-    return(0);
+    return(parse_error);
 }
 
 /**
