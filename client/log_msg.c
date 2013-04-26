@@ -26,6 +26,8 @@
  *  USA
  */
 
+/* TODO : Normal/info/debug message should go to stdout */
+
 #include "fwknop_common.h"
 #include "log_msg.h"
 #include <stdarg.h>
