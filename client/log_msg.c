@@ -4,7 +4,7 @@
  * @author  Damien S. Stuart
  *
  * @brief   General logging routine that can write to stderr
- *          and can take varibale number of args.
+ *          and can take variable number of args.
  *
  * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -31,7 +31,6 @@
 #include <stdarg.h>
 
 #define LOG_STREAM              stderr                  /*!< All of the messages log by the module are sent to the sderr stream */
-#define LOG_DEFAULT_VERBOSITY   LOG_VERBOSITY_NORMAL    /*!< Default verbosity to use */
 
 typedef struct
 {
@@ -66,7 +65,7 @@ log_free(void)
  * Set the verbosity level
  *
  * The function set the verbosity level for the current context of the log
- * module. New messages with a lower priority will not be printed afterwards.
+ * module. New messages with a higher priority will not be printed afterwards.
  * For example setting the verbosity to LOG_VERBOSITY_WARNING will not
  * print a message with a priority set to LOG_VERBOSITY_NORMAL to the stream
  * LOG_STREAM.
@@ -76,11 +75,7 @@ log_free(void)
 void
 log_set_verbosity(int level)
 {
-    if (level < LOG_VERBOSITY_MAX)
-        log_ctx.verbosity = level;
-
-    else
-        log_ctx.verbosity = LOG_DEFAULT_VERBOSITY;
+    log_ctx.verbosity = level;
 }
 
 /**
@@ -97,8 +92,8 @@ log_msg(int level, char* msg, ...)
     va_list ap;
 
     /* Send the message only to the stream for messages with a verbosity
-     * equal or higher than the verbosity context. */
-    if (level >= log_ctx.verbosity)
+     * equal or lower than the verbosity context. */
+    if (level <= log_ctx.verbosity)
     {
         va_start(ap, msg);
         vfprintf(LOG_STREAM, msg, ap);

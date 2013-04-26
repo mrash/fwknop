@@ -265,6 +265,9 @@ main(int argc, char **argv)
     memset(hmac_key, 0x00, MAX_KEY_LEN+1);
     memset(access_buf, 0x00, MAX_LINE_LEN);
 
+    /* Initialize the log module */
+    log_new();
+
     /* Handle command line
     */
     config_init(&options, argc, argv);

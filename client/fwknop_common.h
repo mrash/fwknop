@@ -32,6 +32,7 @@
 #define FWKNOP_COMMON_H
 
 #include "common.h"
+#include "log_msg.h"
 
 /* My Name and Version
 */

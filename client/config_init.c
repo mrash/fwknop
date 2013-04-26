@@ -1332,6 +1332,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         }
     }
 
+    /* Update the verbosity level for the log module */
+    log_set_verbosity(LOG_DEFAULT_VERBOSITY + options->verbose);
+
     /* First process the .fwknoprc file.
     */
     process_rc_section(RC_SECTION_DEFAULT, options);
