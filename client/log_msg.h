@@ -1,0 +1,48 @@
+/**
+ * @file    log_msg.h
+ *
+ * @author  Damien S. Stuart
+ *
+ * @brief   Header file for log_msg.c
+ *
+ * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ *
+ *  License (GNU Public License):
+ *
+ *  This program is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU General Public License
+ *  as published by the Free Software Foundation; either version 2
+ *  of the License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+ *  USA
+ */
+
+#ifndef LOG_MSG_H
+#define LOG_MSG_H
+
+enum
+{
+    LOG_VERBOSITY_DEBUG = 0,    /*<! Constant to define a DEBUG message */
+    LOG_VERBOSITY_INFO,         /*<! Constant to define a INFO message */
+    LOG_VERBOSITY_NORMAL,       /*<! Constant to define a NORMAL message */
+    LOG_VERBOSITY_WARNING,      /*<! Constant to define a WARNING message */
+    LOG_VERBOSITY_ERROR,        /*<! Constant to define a ERROR message */
+    LOG_VERBOSITY_MAX
+} log_level_t;
+
+void log_new(void);
+void log_free(void);
+void log_set_verbosity(int level);
+void log_msg(int verbosity_level, char *msg, ...);
+
+#endif /* LOG_MSG_H */
+
+/***EOF***/
