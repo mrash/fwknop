@@ -159,7 +159,7 @@ dump_ctx(fko_ctx_t ctx)
     ndx += cp;
     cp = sprintf(ndx, "SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
     ndx += cp;
-    cp = sprintf(ndx, "           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
+    sprintf(ndx, "           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
 
     return(buf);
 }
