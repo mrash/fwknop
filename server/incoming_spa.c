@@ -430,7 +430,7 @@ incoming_spa(fko_srv_options_t *opts)
                 res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
                         0, FKO_ENC_MODE_ASYMMETRIC, acc->hmac_key,
                         acc->hmac_key_len, acc->hmac_type);
-                attempted_decrypt = 1;
+
                 if(res != FKO_SUCCESS)
                 {
                     log_msg(LOG_WARNING,
@@ -644,7 +644,6 @@ incoming_spa(fko_srv_options_t *opts)
 
             if(ctx != NULL)
                 fko_destroy(ctx);
-            acc = acc->next;
             break;
         }
 
