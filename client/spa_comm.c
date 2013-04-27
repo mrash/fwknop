@@ -605,8 +605,12 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 {
     int                 res, sd_len;
     char               *spa_data;
-
     struct sockaddr_in  saddr, daddr;
+    char                ip_str[INET_ADDRSTRLEN] = {0};  /* String used to contain the ip addres of an hostname */
+    struct addrinfo     hints;                          /* Structure used to set hints to reslove hostname */
+
+    /* Initialize the hint buffer */
+    memset(&hints, 0 , sizeof(hints));
 
 #ifdef WIN32
     WSADATA wsa_data;
@@ -679,16 +683,23 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
             exit(EXIT_FAILURE);
         }
 
-        /* Set destination address and port
+        /* Set destination port
         */
         daddr.sin_port = htons(options->spa_dst_port);
-        daddr.sin_addr.s_addr = inet_addr(options->spa_server_str);
 
-        if (daddr.sin_addr.s_addr == -1)
+        /* Set destination address. We use the default protocol to reslove
+         * the ip address */
+        hints.ai_family = AF_INET;
+
+        if (resolve_dest_adr(options->spa_server_str, &hints, ip_str, sizeof(ip_str)) != 0)
         {
-            fprintf(stderr, "Could not set destination IP.\n");
+            fprintf(stderr, "[*] Unable to resolve %s as an ip address\n",
+                    options->spa_server_str);
             exit(EXIT_FAILURE);
         }
+        else;
+
+        daddr.sin_addr.s_addr = inet_addr(ip_str);
 
         if (options->spa_proto == FKO_PROTO_TCP_RAW)
         {

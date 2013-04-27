@@ -144,12 +144,13 @@ our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 our $gpg_server_key = '361BBAD4';
 our $gpg_client_key = '6A3FAD56';
 
-our $loopback_ip = '127.0.0.1';
-our $fake_ip     = '127.0.0.2';
+our $loopback_ip       = '127.0.0.1';
+our $fake_ip           = '127.0.0.2';
+our $fake_spoof_ip     = '1.2.3.4';
 our $internal_nat_host = '192.168.1.2';
-our $force_nat_host = '192.168.1.123';
-our $default_spa_port = 62201;
-our $non_std_spa_port = 12345;
+our $force_nat_host    = '192.168.1.123';
+our $default_spa_port  = 62201;
+our $non_std_spa_port  = 12345;
 
 our $spoof_user = 'testuser';
 
