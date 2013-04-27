@@ -482,13 +482,13 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     }
 
     /* Pull and set Target */
-    strlcpy(chain->target, chain_fields[0], MAX_TARGET_NAME_LEN);
+    strlcpy(chain->target, chain_fields[0], sizeof(chain->target));
 
     /* Pull and set Table */
-    strlcpy(chain->table, chain_fields[1], MAX_TABLE_NAME_LEN);
+    strlcpy(chain->table, chain_fields[1], sizeof(chain->table));
 
     /* Pull and set From_chain */
-    strlcpy(chain->from_chain, chain_fields[2], MAX_CHAIN_NAME_LEN);
+    strlcpy(chain->from_chain, chain_fields[2], sizeof(chain->from_chain));
 
     /* Pull and set Jump_rule_position */
     chain->jump_rule_pos = strtol_wrapper(chain_fields[3],
@@ -501,7 +501,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     }
 
     /* Pull and set To_chain */
-    strlcpy(chain->to_chain, chain_fields[4], MAX_CHAIN_NAME_LEN);
+    strlcpy(chain->to_chain, chain_fields[4], sizeof(chain->to_chain));
 
     /* Pull and set to_chain rule position */
     chain->rule_pos = strtol_wrapper(chain_fields[5],
@@ -522,7 +522,7 @@ fw_config_init(fko_srv_options_t * const opts)
 
     /* Set our firewall exe command path (iptables in most cases).
     */
-    strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], MAX_PATH_LEN);
+    strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
 
     /* Pull the fwknop chain config info and setup our internal
      * config struct.  The IPT_INPUT is the only one that is
@@ -832,7 +832,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         */
         if(acc->force_nat)
         {
-            strlcpy(nat_ip, acc->force_nat_ip, MAX_IPV4_STR_LEN);
+            strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
             nat_port = acc->force_nat_port;
         }
         else
@@ -1114,7 +1114,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             */
             tmp_mark = ndx;
 
-            strlcpy(exp_str, ndx, 11);
+            strlcpy(exp_str, ndx, sizeof(exp_str));
             rule_exp = (time_t)atoll(exp_str);
 
             if(rule_exp <= now)

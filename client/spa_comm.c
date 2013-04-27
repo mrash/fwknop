@@ -581,7 +581,8 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
             options->http_user_agent,
             options->http_proxy  /* hostname or IP */
         );
-        strlcpy(options->spa_server_str, options->http_proxy, MAX_SERVER_STR_LEN);
+        strlcpy(options->spa_server_str, options->http_proxy,
+                sizeof(options->spa_server_str));
     }
     free(spa_data_copy);
 

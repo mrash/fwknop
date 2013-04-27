@@ -71,7 +71,7 @@ fw_config_init(fko_srv_options_t *opts)
 
     /* Set our firewall exe command path (iptables in most cases).
     */
-    strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], MAX_PATH_LEN);
+    strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
 
 
     /* Let us find it via our opts struct as well.

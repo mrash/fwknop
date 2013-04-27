@@ -149,11 +149,11 @@ fw_config_init(fko_srv_options_t * const opts)
 
     /* Set our firewall exe command path
     */
-    strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], MAX_PATH_LEN);
+    strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
 
     /* Set the PF anchor name
     */
-    strlcpy(fwc.anchor, opts->config[CONF_PF_ANCHOR_NAME], MAX_PF_ANCHOR_LEN);
+    strlcpy(fwc.anchor, opts->config[CONF_PF_ANCHOR_NAME], sizeof(fwc.anchor));
 
     /* Let us find it via our opts struct as well.
     */
@@ -403,7 +403,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         */
         tmp_mark = ndx;
 
-        strlcpy(exp_str, ndx, 11);
+        strlcpy(exp_str, ndx, sizeof(exp_str));
         rule_exp = (time_t)atoll(exp_str);
 
         if(rule_exp <= now)

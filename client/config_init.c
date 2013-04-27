@@ -166,7 +166,7 @@ is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t r
     if (line_size < sizeof(buf))
     {
         memset (buf, 0, sizeof(buf));
-        strlcpy(buf, line, line_size);
+        strlcpy(buf, line, sizeof(buf));
 
         ndx = buf;
 
@@ -583,11 +583,11 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         /* use source, resolve, or an actual IP
         */
         if(strcasecmp(val, "source") == 0)
-            strlcpy(options->allow_ip_str, "0.0.0.0", 8);
+            strlcpy(options->allow_ip_str, "0.0.0.0", sizeof(options->allow_ip_str));
         else if(strcasecmp(val, "resolve") == 0)
             options->resolve_ip_http = 1;
         else /* Assume IP address */
-            strlcpy(options->allow_ip_str, val, MAX_IPV4_STR_LEN);
+            strlcpy(options->allow_ip_str, val, sizeof(options->allow_ip_str));
     }
     /* Time Offset */
     else if(CONF_VAR_IS(var, "TIME_OFFSET"))
@@ -624,37 +624,37 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     /* GPG Recipient */
     else if(CONF_VAR_IS(var, "GPG_RECIPIENT"))
     {
-        strlcpy(options->gpg_recipient_key, val, MAX_GPG_KEY_ID);
+        strlcpy(options->gpg_recipient_key, val, sizeof(options->gpg_recipient_key));
     }
     /* GPG Signer */
     else if(CONF_VAR_IS(var, "GPG_SIGNER"))
     {
-        strlcpy(options->gpg_signer_key, val, MAX_GPG_KEY_ID);
+        strlcpy(options->gpg_signer_key, val, sizeof(options->gpg_signer_key));
     }
     /* GPG Homedir */
     else if(CONF_VAR_IS(var, "GPG_HOMEDIR"))
     {
-        strlcpy(options->gpg_home_dir, val, MAX_PATH_LEN);
+        strlcpy(options->gpg_home_dir, val, sizeof(options->gpg_home_dir));
     }
     /* Spoof User */
     else if(CONF_VAR_IS(var, "SPOOF_USER"))
     {
-        strlcpy(options->spoof_user, val, MAX_USERNAME_LEN);
+        strlcpy(options->spoof_user, val, sizeof(options->spoof_user));
     }
     /* Spoof Source IP */
     else if(CONF_VAR_IS(var, "SPOOF_SOURCE_IP"))
     {
-        strlcpy(options->spoof_ip_src_str, val, MAX_IPV4_STR_LEN);
+        strlcpy(options->spoof_ip_src_str, val, sizeof(options->spoof_ip_src_str));
     }
     /* ACCESS request */
     else if(CONF_VAR_IS(var, "ACCESS"))
     {
-        strlcpy(options->access_str, val, MAX_LINE_LEN);
+        strlcpy(options->access_str, val, sizeof(options->access_str));
     }
     /* SPA Server (destination) */
     else if(CONF_VAR_IS(var, "SPA_SERVER"))
     {
-        strlcpy(options->spa_server_str, val, MAX_SERVER_STR_LEN);
+        strlcpy(options->spa_server_str, val, sizeof(options->spa_server_str));
     }
     /* Rand port ? */
     else if(CONF_VAR_IS(var, "RAND_PORT"))
@@ -665,7 +665,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     /* Rijndael key */
     else if(CONF_VAR_IS(var, "KEY"))
     {
-        strlcpy(options->key, val, MAX_KEY_LEN);
+        strlcpy(options->key, val, sizeof(options->key));
         options->have_key = 1;
     }
     /* Rijndael key (base-64 encoded) */
@@ -678,7 +678,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
                 val);
             return(-1);
         }
-        strlcpy(options->key_base64, val, MAX_B64_KEY_LEN);
+        strlcpy(options->key_base64, val, sizeof(options->key_base64));
         options->have_base64_key = 1;
     }
     /* HMAC digest type */
@@ -707,31 +707,31 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
                 val);
             return(-1);
         }
-        strlcpy(options->hmac_key_base64, val, MAX_B64_KEY_LEN);
+        strlcpy(options->hmac_key_base64, val, sizeof(options->hmac_key_base64));
         options->have_hmac_base64_key = 1;
     }
 
     /* HMAC key */
     else if(CONF_VAR_IS(var, "HMAC_KEY"))
     {
-        strlcpy(options->hmac_key, val, MAX_KEY_LEN);
+        strlcpy(options->hmac_key, val, sizeof(options->hmac_key));
         options->have_hmac_key = 1;
     }
 
     /* Key file */
     else if(CONF_VAR_IS(var, "KEY_FILE"))
     {
-        strlcpy(options->get_key_file, val, MAX_PATH_LEN);
+        strlcpy(options->get_key_file, val, sizeof(options->get_key_file));
     }
     /* NAT Access Request */
     else if(CONF_VAR_IS(var, "NAT_ACCESS"))
     {
-        strlcpy(options->nat_access_str, val, MAX_PATH_LEN);
+        strlcpy(options->nat_access_str, val, sizeof(options->nat_access_str));
     }
     /* HTTP User Agent */
     else if(CONF_VAR_IS(var, "HTTP_USER_AGENT"))
     {
-        strlcpy(options->http_user_agent, val, HTTP_MAX_USER_AGENT_LEN);
+        strlcpy(options->http_user_agent, val, sizeof(options->http_user_agent));
     }
     /* Resolve URL */
     else if(CONF_VAR_IS(var, "RESOLVE_URL"))
@@ -1040,8 +1040,8 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
 
     set_rc_file(rcfile, options);
 
-    strlcpy(rcfile_update, rcfile, MAX_PATH_LEN);
-    strlcat(rcfile_update, ".updated", MAX_PATH_LEN);
+    strlcpy(rcfile_update, rcfile, sizeof(rcfile_update));
+    strlcat(rcfile_update, ".updated", sizeof(rcfile_update));
 
     /* Create a new temporary rc file */
     rcfile_fd = open(rcfile_update, FWKNOPRC_OFLAGS, FWKNOPRC_MODE);
@@ -1274,16 +1274,16 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
             case 'n':
                 options->no_save_args = 1;
-                strlcpy(options->use_rc_stanza, optarg, MAX_LINE_LEN);
+                strlcpy(options->use_rc_stanza, optarg, sizeof(options->use_rc_stanza));
                 break;
             case SAVE_RC_STANZA:
                 options->save_rc_stanza = 1;
                 break;
             case 'E':
-                strlcpy(options->args_save_file, optarg, MAX_PATH_LEN);
+                strlcpy(options->args_save_file, optarg, sizeof(options->args_save_file));
                 break;
             case RC_FILE_PATH:
-                strlcpy(options->rc_file, optarg, MAX_PATH_LEN);
+                strlcpy(options->rc_file, optarg, sizeof(options->rc_file));
                 break;
             case 'v':
                 options->verbose++;
@@ -1308,28 +1308,28 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
 
         switch(cmd_arg) {
             case 'a':
-                strlcpy(options->allow_ip_str, optarg, MAX_IPV4_STR_LEN);
+                strlcpy(options->allow_ip_str, optarg, sizeof(options->allow_ip_str));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ALLOW_IP);
                 break;
             case 'A':
-                strlcpy(options->access_str, optarg, MAX_LINE_LEN);
+                strlcpy(options->access_str, optarg, sizeof(options->access_str));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ACCESS);
                 break;
             case 'b':
                 options->save_packet_file_append = 1;
                 break;
             case 'B':
-                strlcpy(options->save_packet_file, optarg, MAX_PATH_LEN);
+                strlcpy(options->save_packet_file, optarg, sizeof(options->save_packet_file));
                 break;
             case 'C':
-                strlcpy(options->server_command, optarg, MAX_LINE_LEN);
+                strlcpy(options->server_command, optarg, sizeof(options->server_command));
                 break;
             case 'D':
-                strlcpy(options->spa_server_str, optarg, MAX_SERVER_STR_LEN);
+                strlcpy(options->spa_server_str, optarg, sizeof(options->spa_server_str));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER);
                 break;
             case 'E':
-                strlcpy(options->args_save_file, optarg, MAX_PATH_LEN);
+                strlcpy(options->args_save_file, optarg, sizeof(options->args_save_file));
                 break;
             case 'f':
                 options->fw_timeout = strtol_wrapper(optarg, 0,
@@ -1348,7 +1348,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
                 break;
             case 'G':
-                strlcpy(options->get_key_file, optarg, MAX_PATH_LEN);
+                strlcpy(options->get_key_file, optarg, sizeof(options->get_key_file));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_FILE);
                 break;
             case 'h':
@@ -1356,17 +1356,17 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 exit(EXIT_SUCCESS);
             case 'H':
                 options->spa_proto = FKO_PROTO_HTTP;
-                strlcpy(options->http_proxy, optarg, MAX_PATH_LEN);
+                strlcpy(options->http_proxy, optarg, sizeof(options->http_proxy));
                 break;
             case 'k':
                 options->key_gen = 1;
                 break;
             case 'K':
                 options->key_gen = 1;
-                strlcpy(options->key_gen_file, optarg, MAX_PATH_LEN);
+                strlcpy(options->key_gen_file, optarg, sizeof(options->key_gen_file));
                 break;
             case KEY_RIJNDAEL:
-                strlcpy(options->key, optarg, MAX_KEY_LEN);
+                strlcpy(options->key, optarg, sizeof(options->key));
                 options->have_key = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL);
                 break;
@@ -1378,7 +1378,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                         optarg);
                     exit(EXIT_FAILURE);
                 }
-                strlcpy(options->key_base64, optarg, MAX_KEY_LEN);
+                strlcpy(options->key_base64, optarg, sizeof(options->key_base64));
                 options->have_base64_key = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64);
                 break;
@@ -1390,13 +1390,13 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                         optarg);
                     exit(EXIT_FAILURE);
                 }
-                strlcpy(options->hmac_key_base64, optarg, MAX_KEY_LEN);
+                strlcpy(options->hmac_key_base64, optarg, sizeof(options->hmac_key_base64));
                 options->have_hmac_base64_key = 1;
                 options->use_hmac = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
             case KEY_HMAC:
-                strlcpy(options->hmac_key, optarg, MAX_KEY_LEN);
+                strlcpy(options->hmac_key, optarg, sizeof(options->hmac_key));
                 options->have_hmac_key = 1;
                 options->use_hmac = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC);
@@ -1488,7 +1488,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 */
                 break;
             case 'N':
-                strlcpy(options->nat_access_str, optarg, MAX_LINE_LEN);
+                strlcpy(options->nat_access_str, optarg, sizeof(options->nat_access_str));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_ACCESS);
                 break;
             case 'p':
@@ -1505,11 +1505,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER_PROTO);
                 break;
             case 'Q':
-                strlcpy(options->spoof_ip_src_str, optarg, MAX_IPV4_STR_LEN);
+                strlcpy(options->spoof_ip_src_str, optarg, sizeof(options->spoof_ip_src_str));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPOOF_SOURCE_IP);
                 break;
             case RC_FILE_PATH:
-                strlcpy(options->rc_file, optarg, MAX_PATH_LEN);
+                strlcpy(options->rc_file, optarg, sizeof(options->rc_file));
                 break;
             case 'r':
                 options->rand_port = 1;
@@ -1534,7 +1534,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->show_last_command = 1;
                 break;
             case 's':
-                strlcpy(options->allow_ip_str, "0.0.0.0", MAX_IPV4_STR_LEN);
+                strlcpy(options->allow_ip_str, "0.0.0.0", sizeof(options->allow_ip_str));
                 break;
             case 'S':
                 options->spa_src_port = strtol_wrapper(optarg, 0,
@@ -1549,11 +1549,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->test = 1;
                 break;
             case 'u':
-                strlcpy(options->http_user_agent, optarg, HTTP_MAX_USER_AGENT_LEN);
+                strlcpy(options->http_user_agent, optarg, sizeof(options->http_user_agent));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HTTP_USER_AGENT);
                 break;
             case 'U':
-                strlcpy(options->spoof_user, optarg, MAX_USERNAME_LEN);
+                strlcpy(options->spoof_user, optarg, sizeof(options->spoof_user));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPOOF_USER);
                 break;
             case 'v':
@@ -1565,19 +1565,19 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case GPG_RECIP_KEY:
                 options->use_gpg = 1;
-                strlcpy(options->gpg_recipient_key, optarg, MAX_GPG_KEY_ID);
+                strlcpy(options->gpg_recipient_key, optarg, sizeof(options->gpg_recipient_key));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_RECIPIENT);
                 break;
             case GPG_SIGNER_KEY:
                 options->use_gpg = 1;
-                strlcpy(options->gpg_signer_key, optarg, MAX_GPG_KEY_ID);
+                strlcpy(options->gpg_signer_key, optarg, sizeof(options->gpg_signer_key));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_SIGNER);
                 break;
             case GPG_HOME_DIR:
                 options->use_gpg = 1;
-                strlcpy(options->gpg_home_dir, optarg, MAX_PATH_LEN);
+                strlcpy(options->gpg_home_dir, optarg, sizeof(options->gpg_home_dir));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_HOMEDIR);
                 break;

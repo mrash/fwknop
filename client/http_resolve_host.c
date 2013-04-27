@@ -46,7 +46,7 @@
 
 struct url
 {
-    char    port[MAX_PORT_STR_LEN];
+    char    port[MAX_PORT_STR_LEN+1];
     char    host[MAX_URL_HOST_LEN+1];
     char    path[MAX_URL_PATH_LEN+1];
 };
@@ -197,7 +197,7 @@ try_url(struct url *url, fko_cli_options_t *options)
             && o3 >= 0 && o3 <= 255
             && o4 >= 0 && o4 <= 255)
     {
-        strlcpy(options->allow_ip_str, ndx, MAX_IPV4_STR_LEN);
+        strlcpy(options->allow_ip_str, ndx, sizeof(options->allow_ip_str));
 
         if(options->verbose)
             printf("\n[+] Resolved external IP (via http://%s%s) as: %s\n",
@@ -260,7 +260,7 @@ parse_url(char *res_url, struct url* url)
     }
     else
     {
-        strlcpy(url->port, "80", 3);
+        strlcpy(url->port, "80", sizeof(url->port));
         tlen_offset = 0;
     }
 
@@ -292,13 +292,13 @@ parse_url(char *res_url, struct url* url)
             return(-1);
         }
 
-        strlcpy(url->path, e_ndx, MAX_URL_PATH_LEN);
+        strlcpy(url->path, e_ndx, sizeof(url->path));
     }
     else
     {
         /* default to "GET /" if there isn't a more specific URL
         */
-        strlcpy(url->path, "/", MAX_URL_PATH_LEN);
+        strlcpy(url->path, "/", sizeof(url->path));
     }
 
     return(0);
@@ -321,16 +321,16 @@ resolve_ip_http(fko_cli_options_t *options)
         res = try_url(&url, options);
 
     } else {
-        strlcpy(url.port, "80", 3);
-        strlcpy(url.host, HTTP_RESOLVE_HOST, MAX_URL_HOST_LEN);
-        strlcpy(url.path, HTTP_RESOLVE_URL, MAX_URL_PATH_LEN);
+        strlcpy(url.port, "80", sizeof(url.port));
+        strlcpy(url.host, HTTP_RESOLVE_HOST, sizeof(url.host));
+        strlcpy(url.path, HTTP_RESOLVE_URL, sizeof(url.path));
 
         res = try_url(&url, options);
         if(res != 1)
         {
             /* try the backup url (just switches the host to cipherdyne.com)
             */
-            strlcpy(url.host, HTTP_BACKUP_RESOLVE_HOST, MAX_URL_HOST_LEN);
+            strlcpy(url.host, HTTP_BACKUP_RESOLVE_HOST, sizeof(url.host));
 
 #ifndef WIN32
             sleep(2);

@@ -719,7 +719,7 @@ get_rand_port(fko_ctx_t ctx)
         exit(EXIT_FAILURE);
     }
 
-    strlcpy(port_str, rand_val, 6);
+    strlcpy(port_str, rand_val, sizeof(port_str));
 
     tmpint = strtol_wrapper(port_str, 0, -1, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
@@ -955,7 +955,7 @@ prev_exec(fko_cli_options_t *options, int argc, char **argv)
 
     if(options->args_save_file != NULL && options->args_save_file[0] != 0x0)
     {
-        strlcpy(args_save_file, options->args_save_file, MAX_PATH_LEN);
+        strlcpy(args_save_file, options->args_save_file, sizeof(args_save_file));
     }
     else
     {

@@ -269,8 +269,8 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
                     {
                         if((cndx = config_entry_index(opts, tmp1)) >= 0)
                         {
-                            strlcpy(val, opts->config[cndx], MAX_LINE_LEN);
-                            strlcat(val, tmp2, MAX_LINE_LEN);
+                            strlcpy(val, opts->config[cndx], sizeof(val));
+                            strlcat(val, tmp2, sizeof(val));
                         }
                     }
                 }
@@ -320,7 +320,7 @@ validate_options(fko_srv_options_t *opts)
 
     if(opts->config[CONF_FWKNOP_PID_FILE] == NULL)
     {
-        strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], MAX_PATH_LEN);
+        strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], sizeof(tmp_path));
 
         if(tmp_path[strlen(tmp_path)-1] != '/')
             strlcat(tmp_path, "/", MAX_PATH_LEN);
@@ -336,7 +336,7 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_DIGEST_DB_FILE] == NULL)
 #endif
     {
-        strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], MAX_PATH_LEN);
+        strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], sizeof(tmp_path));
 
         if(tmp_path[strlen(tmp_path)-1] != '/')
             strlcat(tmp_path, "/", MAX_PATH_LEN);
@@ -723,7 +723,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     {
         /* Make a copy of the override_config string so we can munge it.
         */
-        strlcpy(override_file, opts->config[CONF_OVERRIDE_CONFIG], MAX_LINE_LEN);
+        strlcpy(override_file, opts->config[CONF_OVERRIDE_CONFIG], sizeof(override_file));
 
         ndx  = override_file;
         cmrk = strchr(ndx, ',');
