@@ -51,8 +51,6 @@ EXTRA_DIST = \
     ChangeLog \
     ChangeLog.git \
     CREDITS \
-    todo.org \
-    roadmap.org \
     extras/upstart/fwknop.conf \
     extras/fwknop.init.debian \
     extras/fwknop.init.openwrt \
