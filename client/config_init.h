@@ -1,11 +1,11 @@
-/*
+/**
  ******************************************************************************
  *
- * File:    fwknop.h
+ * @file    config_init.h
  *
- * Author:  Damien Stuart
+ * @author  Damien Stuart
  *
- * Purpose: Header file for fwknop config_init.
+ * @brief   Header file for fwknop config_init.
  *
  * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
  *

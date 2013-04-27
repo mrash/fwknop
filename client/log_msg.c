@@ -26,20 +26,19 @@
  *  USA
  */
 
-/* TODO : Normal/info/debug message should go to stdout */
-
 #include "fwknop_common.h"
 #include "log_msg.h"
 #include <stdarg.h>
 
-#define LOG_STREAM              stderr                  /*!< All of the messages log by the module are sent to the sderr stream */
+#define LOG_STREAM_STDERR   stderr                  /*!< Error and warning messages are redirected to stderr */
+#define LOG_STREAM_STDOUT   stdout                  /*!< Normal, info and debug messages are redirected to stdout */
 
 typedef struct
 {
-    int verbosity;
+    int verbosity;                                  /*!< Verbosity level (LOG_VERBOSITY_DEBUG...*/
 } log_ctx_t;
 
-static log_ctx_t log_ctx;
+static log_ctx_t log_ctx;                           /*!< Structure to store the context of the module */
 
 /**
  * Set up the context for the log module.
@@ -64,13 +63,7 @@ log_free(void)
 }
 
 /**
- * Set the verbosity level
- *
- * The function set the verbosity level for the current context of the log
- * module. New messages with a higher priority will not be printed afterwards.
- * For example setting the verbosity to LOG_VERBOSITY_WARNING will not
- * print a message with a priority set to LOG_VERBOSITY_NORMAL to the stream
- * LOG_STREAM.
+ * Set the verbosity level for the current context of the log module.
  * 
  * @param level verbosity level to set
  */
@@ -81,9 +74,11 @@ log_set_verbosity(int level)
 }
 
 /**
- * Send a message to LOG_STREAM
+ * Log a message
  *
- * Print a message to LOG_STREAM according to the context verbosity.
+ * This function sends a message to the stream dedicated to the priority
+ * set. If the verbosity for the context is higher than the one used for
+ * the message, then the message is discarded.
  * 
  * @param level Verbosity level to used for the message.
  * @param msg   Message to print
@@ -93,13 +88,26 @@ log_msg(int level, char* msg, ...)
 {
     va_list ap;
 
-    /* Send the message only to the stream for messages with a verbosity
-     * equal or lower than the verbosity context. */
     if (level <= log_ctx.verbosity)
     {
         va_start(ap, msg);
-        vfprintf(LOG_STREAM, msg, ap);
-        fprintf(LOG_STREAM, "\n");
+        
+        switch (level)
+        {
+            case LOG_VERBOSITY_ERROR:
+            case LOG_VERBOSITY_WARNING:
+                vfprintf(LOG_STREAM_STDERR, msg, ap);
+                fprintf(LOG_STREAM_STDERR, "\n");
+                break;
+            case LOG_VERBOSITY_NORMAL:
+            case LOG_VERBOSITY_INFO:
+            case LOG_VERBOSITY_DEBUG:
+            default : 
+                vfprintf(LOG_STREAM_STDOUT, msg, ap);
+                fprintf(LOG_STREAM_STDOUT, "\n");
+                break;
+        }
+
         va_end(ap);
     }
     else;
