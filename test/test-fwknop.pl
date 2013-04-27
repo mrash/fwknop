@@ -4333,6 +4333,7 @@ sub openssl_enc_verification() {
 
     &write_test_file("[+] OpenSSL verification, (encoded msg: " .
         "$encoded_msg) (access: $access_msg), key: $tmp_key, " .
+        "b64_decode_key: $b64_decode_key, " .
         "encrypted+encoded msg: $encrypted_msg, $rv_str\n",
         $curr_test_file);
 
