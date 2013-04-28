@@ -35,11 +35,16 @@
   #include "config.h"
 #endif
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
 /* Prototypes
 */
 void hex_dump(const unsigned char *data, const int size);
 int is_base64(const unsigned char *buf, const unsigned short int len);
 int set_file_perms(const char *file);
 int verify_file_perms_ownership(const char *file);
+int resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize);
 
 #endif  /* UTILS_H */

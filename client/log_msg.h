@@ -1,11 +1,9 @@
 /**
- ******************************************************************************
+ * @file    log_msg.h
  *
- * @file    config_init.h
+ * @author  Damien S. Stuart
  *
- * @author  Damien Stuart
- *
- * @brief   Header file for fwknop config_init.
+ * @brief   Header file for log_msg.c
  *
  * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -25,24 +23,27 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
  *  USA
- *
- ******************************************************************************
-*/
-#ifndef CONFIG_INIT_H
-#define CONFIG_INIT_H
+ */
 
-#include <getopt.h>
-#include <sys/stat.h>
+#ifndef LOG_MSG_H
+#define LOG_MSG_H
 
-/* String compare macro.
-*/
-#define CONF_VAR_IS(n, v) (strcmp(n, v) == 0)
+enum
+{
+    LOG_VERBOSITY_ERROR = 0,    /*!< Constant to define a ERROR message */
+    LOG_VERBOSITY_WARNING,      /*!< Constant to define a WARNING message */
+    LOG_VERBOSITY_NORMAL,       /*!< Constant to define a NORMAL message */
+    LOG_VERBOSITY_INFO,         /*!< Constant to define a INFO message */
+    LOG_VERBOSITY_DEBUG,        /*!< Constant to define a DEBUG message */
+} log_level_t;
 
-/* Function Prototypes
-*/
-void config_init(fko_cli_options_t *options, int argc, char **argv);
-void usage(void);
+#define LOG_DEFAULT_VERBOSITY   LOG_VERBOSITY_NORMAL    /*!< Default verbosity to use */
 
-#endif /* CONFIG_INIT_H */
+void log_new(void);
+void log_free(void);
+void log_set_verbosity(int level);
+void log_msg(int verbosity_level, char *msg, ...);
+
+#endif /* LOG_MSG_H */
 
 /***EOF***/

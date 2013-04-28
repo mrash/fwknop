@@ -57,8 +57,6 @@ static int get_rand_port(fko_ctx_t ctx);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     unsigned int exit_status);
-static void *get_in_addr(struct sockaddr *sa);
-static int resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize);
 static int is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port);
 
 #define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
@@ -172,80 +170,6 @@ is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsi
     return valid;
 }
 
-/**
- * @brief Grab the sin address from the sockaddr structure.
- *
- * This function returns the sin address as a sockaddr_in or sockaddr_in6
- * structure according to the family set (ipv4 or ipv6) in the sockaddr
- * structure.
- *
- * @param sa sockaddr strcuture
- *
- * @return the sin addr if the sa family is AF_INET or the sin6_addr otherwise.
- */
-static void *
-get_in_addr(struct sockaddr *sa)
-{
-  if (sa->sa_family == AF_INET)
-  {
-    return &(((struct sockaddr_in*)sa)->sin_addr);
-  }
-
-  else
-  {
-    return &(((struct sockaddr_in6*)sa)->sin6_addr);
-  }
-}
-
-/**
- * @brief  Resolve a domain name as an ip adress.
- *
- * @param dns_str    Name of the host to resolve.
- * @param hints      Hints to reduce the number of result from getaddrinfo()
- * @param ip_str     String where to store the resolve ip address
- * @param ip_bufsize Number of bytes available in the ip_str buffer
- *
- * @return 0 if successful, 1 if an error occured.
- */
-static int
-resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize)
-{
-    int                 error;      /* Function error return code */
-    struct addrinfo    *result;     /* Result of getaddrinfo() */
-    struct addrinfo    *rp;         /* Element of the linked list returned by getaddrinfo() */
-    struct sockaddr_in *sai_remote; /* Remote host information as a sockaddr_in structure */
-
-    /* Try to resolve the host name */
-    error = getaddrinfo(dns_str, NULL, hints, &result);
-    if (error != 0)
-        fprintf(stderr, "resolve_dest_adr() : %s\n", gai_strerror(error));
-
-    else
-    {
-        error = 1;
-
-        /* Go through the linked list of addrinfo structures */
-        for (rp = result; rp != NULL; rp = rp->ai_next)
-        {
-            sai_remote = (struct sockaddr_in *)get_in_addr((struct sockaddr *)(rp->ai_addr));
-
-            memset(ip_str, 0, ip_bufsize);
-            if (inet_ntop(rp->ai_family, sai_remote, ip_str, ip_bufsize) != NULL)
-            {
-                error = 0;
-                break;
-            }
-            else
-                fprintf(stderr, "resolve_dest_adr() : inet_ntop (%d) - %s\n", errno, strerror(errno));
-        }
-
-        /* Free our result from getaddrinfo() */
-        freeaddrinfo(result);
-    }
-
-    return error;
-}
-
 int
 main(int argc, char **argv)
 {
@@ -264,6 +188,9 @@ main(int argc, char **argv)
     memset(key, 0x00, MAX_KEY_LEN+1);
     memset(hmac_key, 0x00, MAX_KEY_LEN+1);
     memset(access_buf, 0x00, MAX_LINE_LEN);
+
+    /* Initialize the log module */
+    log_new();
 
     /* Handle command line
     */
