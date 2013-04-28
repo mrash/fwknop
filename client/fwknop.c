@@ -1117,10 +1117,10 @@ save_args(int argc, char **argv, const char * const args_save_file)
                 fprintf(stderr, "argument string too long, exiting.\n");
                 exit(EXIT_FAILURE);
             }
-            strlcat(args_str, argv[i], MAX_PATH_LEN);
-            strlcat(args_str, " ", MAX_PATH_LEN);
+            strlcat(args_str, argv[i], sizeof(args_str));
+            strlcat(args_str, " ", sizeof(args_str));
         }
-        strlcat(args_str, "\n", MAX_PATH_LEN);
+        strlcat(args_str, "\n", sizeof(args_str));
         if(write(args_file_fd, args_str, strlen(args_str))
                 != strlen(args_str)) {
             fprintf(stderr,

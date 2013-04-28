@@ -323,9 +323,9 @@ validate_options(fko_srv_options_t *opts)
         strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], sizeof(tmp_path));
 
         if(tmp_path[strlen(tmp_path)-1] != '/')
-            strlcat(tmp_path, "/", MAX_PATH_LEN);
+            strlcat(tmp_path, "/", sizeof(tmp_path));
 
-        strlcat(tmp_path, DEF_PID_FILENAME, MAX_PATH_LEN);
+        strlcat(tmp_path, DEF_PID_FILENAME, sizeof(tmp_path));
 
         set_config_entry(opts, CONF_FWKNOP_PID_FILE, tmp_path);
     }
@@ -339,14 +339,14 @@ validate_options(fko_srv_options_t *opts)
         strlcpy(tmp_path, opts->config[CONF_FWKNOP_RUN_DIR], sizeof(tmp_path));
 
         if(tmp_path[strlen(tmp_path)-1] != '/')
-            strlcat(tmp_path, "/", MAX_PATH_LEN);
+            strlcat(tmp_path, "/", sizeof(tmp_path));
 
 
 #if USE_FILE_CACHE
-        strlcat(tmp_path, DEF_DIGEST_CACHE_FILENAME, MAX_PATH_LEN);
+        strlcat(tmp_path, DEF_DIGEST_CACHE_FILENAME, sizeof(tmp_path));
         set_config_entry(opts, CONF_DIGEST_FILE, tmp_path);
 #else
-        strlcat(tmp_path, DEF_DIGEST_CACHE_DB_FILENAME, MAX_PATH_LEN);
+        strlcat(tmp_path, DEF_DIGEST_CACHE_DB_FILENAME, sizeof(tmp_path));
         set_config_entry(opts, CONF_DIGEST_DB_FILE, tmp_path);
 #endif
     }
