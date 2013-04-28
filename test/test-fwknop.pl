@@ -26,6 +26,7 @@ my $data_tmp        = 'data.tmp';
 my $key_tmp         = 'key.tmp';
 my $enc_save_tmp    = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
+my $gpg_dir_orig_tar = 'gpg_dirs_orig.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $replay_pcap_file = "$conf_dir/spa_replay.pcap";
@@ -592,6 +593,7 @@ if ($enable_valgrind) {
 &logr("\n");
 
 &remove_permissions_warnings() unless $include_permissions_warnings;
+&restore_gpg_dirs();
 
 my $total_elapsed_seconds = time() - $start_time;
 my $total_elapsed_minutes = sprintf "%.2f", ($total_elapsed_seconds / 60);
@@ -5002,6 +5004,21 @@ sub init() {
             unlink $file;
         }
     }
+
+    return;
+}
+
+sub restore_gpg_dirs() {
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir $conf_dir or die $!;
+
+    if (-e $gpg_dir_orig_tar) {
+        system "tar xfz $gpg_dir_orig_tar > /dev/null";
+    }
+
+    chdir $curr_pwd or die $!;
 
     return;
 }

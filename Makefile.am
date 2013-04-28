@@ -109,6 +109,7 @@ EXTRA_DIST = \
     python/setup.py \
     python/fkomodule.c \
     python/fko.py \
+    test/conf/gpg_dirs_orig.tar.gz \
     test/conf/client-gpg/pubring.gpg \
     test/conf/client-gpg/secring.gpg \
     test/conf/client-gpg/trustdb.gpg \
