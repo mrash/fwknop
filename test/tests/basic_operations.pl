@@ -154,7 +154,61 @@
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
         'fatal'    => $NO
     },
-
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa server proto UDP',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
+        'positive_output_matches' => [qr/protocol:\sudp/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa server proto TCP',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'TCP'}}],
+        'positive_output_matches' => [qr/protocol:\stcp/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa server proto HTTP',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'HTTP'}}],
+        'positive_output_matches' => [qr/protocol:\shttp/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa server proto TCPRAW',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'TCPRAW'}}],
+        'positive_output_matches' => [qr/protocol:\stcpraw/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa server proto ICMP',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'ICMP'}}],
+        'positive_output_matches' => [qr/protocol:\sicmp/],
+        'fatal'    => $NO
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',

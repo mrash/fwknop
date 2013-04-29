@@ -70,7 +70,7 @@ try_url(struct url *url, fko_cli_options_t *options)
     res = WSAStartup( MAKEWORD(1,1), &wsa_data );
     if( res != 0 )
     {
-        fprintf(stderr, "Winsock initialization error %d\n", res );
+        log_msg(LOG_VERBOSITY_ERROR, "Winsock initialization error %d", res );
         return(-1);
     }
 #endif
@@ -97,7 +97,7 @@ try_url(struct url *url, fko_cli_options_t *options)
     error = getaddrinfo(url->host, url->port, &hints, &result);
     if (error != 0)
     {
-        fprintf(stderr, "error in getaddrinfo: %s\n", gai_strerror(error));
+        log_msg(LOG_VERBOSITY_ERROR, "error in getaddrinfo: %s\n", gai_strerror(error));
         return(-1);
     }
 
@@ -118,25 +118,24 @@ try_url(struct url *url, fko_cli_options_t *options)
     }
 
     if (rp == NULL) {
-        perror("resolve_ip_http: Could not create socket: ");
+        log_msg(LOG_VERBOSITY_ERROR, "resolve_ip_http: Could not create socket: ", strerror(errno));
         return(-1);
     }
 
     freeaddrinfo(result);
 
-    if(options->verbose > 1)
-        printf("\nHTTP request: %s\n", http_buf);
+    log_msg(LOG_VERBOSITY_DEBUG, "\nHTTP request: %s", http_buf);
 
     res = send(sock, http_buf, http_buf_len, 0);
 
     if(res < 0)
     {
-        perror("resolve_ip_http: write error: ");
+        log_msg(LOG_VERBOSITY_ERROR, "resolve_ip_http: write error: ", strerror(errno));
     }
     else if(res != http_buf_len)
     {
-        fprintf(stderr,
-            "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+        log_msg(LOG_VERBOSITY_WARNING,
+            "[#] Warning: bytes sent (%i) not spa data length (%i).",
             res, http_buf_len
         );
     }
@@ -162,15 +161,14 @@ try_url(struct url *url, fko_cli_options_t *options)
     close(sock);
 #endif
 
-    if(options->verbose > 1)
-        printf("\nHTTP response: %s\n", http_response);
+    log_msg(LOG_VERBOSITY_DEBUG, "\nHTTP response: %s", http_response);
 
     /* Move to the end of the HTTP header and to the start of the content.
     */
     ndx = strstr(http_response, "\r\n\r\n");
     if(ndx == NULL)
     {
-        fprintf(stderr, "Did not find the end of HTTP header.\n");
+        log_msg(LOG_VERBOSITY_ERROR, "Did not find the end of HTTP header.");
         return(-1);
     }
     ndx += 4;
@@ -199,8 +197,8 @@ try_url(struct url *url, fko_cli_options_t *options)
     {
         strlcpy(options->allow_ip_str, ndx, sizeof(options->allow_ip_str));
 
-        if(options->verbose)
-            printf("\n[+] Resolved external IP (via http://%s%s) as: %s\n",
+        log_msg(LOG_VERBOSITY_INFO,
+                    "\n[+] Resolved external IP (via http://%s%s) as: %s",
                     url->host,
                     url->path,
                     options->allow_ip_str);
@@ -209,8 +207,8 @@ try_url(struct url *url, fko_cli_options_t *options)
     }
     else
     {
-        fprintf(stderr,
-            "[-] From http://%s%s\n    Invalid IP (%s) in HTTP response:\n\n%s\n",
+        log_msg(LOG_VERBOSITY_ERROR,
+            "[-] From http://%s%s\n    Invalid IP (%s) in HTTP response:\n\n%s",
             url->host, url->path, ndx, http_response);
         return(-1);
     }
@@ -226,7 +224,7 @@ parse_url(char *res_url, struct url* url)
     */
     if(strncasecmp(res_url, "https", 5) == 0)
     {
-        fprintf(stderr, "[*] https is not yet supported for http-resolve-ip.\n");
+        log_msg(LOG_VERBOSITY_ERROR, "[*] https is not yet supported for http-resolve-ip.");
         return(-1);
     }
 
@@ -245,8 +243,8 @@ parse_url(char *res_url, struct url* url)
         port = strtol_wrapper(e_ndx+1, 1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err != FKO_SUCCESS)
         {
-            fprintf(stderr,
-                "[*] resolve-url port value is invalid, must be in [%d-%d]\n",
+            log_msg(LOG_VERBOSITY_ERROR,
+                "[*] resolve-url port value is invalid, must be in [%d-%d]",
                 1, MAX_PORT);
             return(-1);
         }
@@ -279,7 +277,7 @@ parse_url(char *res_url, struct url* url)
 
     if(tlen > MAX_URL_HOST_LEN)
     {
-        fprintf(stderr, "resolve-url hostname portion is too large.\n");
+        log_msg(LOG_VERBOSITY_ERROR, "resolve-url hostname portion is too large.");
         return(-1);
     }
     strlcpy(url->host, s_ndx, tlen);
@@ -288,7 +286,7 @@ parse_url(char *res_url, struct url* url)
     {
         if(strlen(e_ndx) > MAX_URL_PATH_LEN)
         {
-            fprintf(stderr, "resolve-url path portion is too large.\n");
+            log_msg(LOG_VERBOSITY_ERROR, "resolve-url path portion is too large.");
             return(-1);
         }
 
@@ -314,7 +312,7 @@ resolve_ip_http(fko_cli_options_t *options)
     {
         if(parse_url(options->resolve_url, &url) < 0)
         {
-            fprintf(stderr, "Error parsing resolve-url\n");
+            log_msg(LOG_VERBOSITY_ERROR, "Error parsing resolve-url");
             return(-1);
         }
 

@@ -176,7 +176,7 @@ getpasswd_file(fko_ctx_t ctx, const fko_cli_options_t *options)
 
     if ((pwfile_ptr = fopen(options->get_key_file, "r")) == NULL)
     {
-        fprintf(stderr, "Could not open config file: %s\n", options->get_key_file);
+        log_msg(LOG_VERBOSITY_ERROR, "Could not open config file: %s", options->get_key_file);
         fko_destroy(ctx);
         exit(EXIT_FAILURE);
     }
@@ -231,7 +231,7 @@ getpasswd_file(fko_ctx_t ctx, const fko_cli_options_t *options)
     fclose(pwfile_ptr);
 
     if (pwbuf[0] == '\0') {
-        fprintf(stderr, "Could not get password for IP: %s from: %s\n",
+        log_msg(LOG_VERBOSITY_ERROR, "Could not get password for IP: %s from: %s",
             options->spa_server_str, options->get_key_file);
         fko_destroy(ctx);
         exit(EXIT_FAILURE);
