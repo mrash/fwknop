@@ -135,6 +135,7 @@ our %cf = (
 our $default_digest_file = "$run_dir/digest.cache";
 our $default_pid_file    = "$run_dir/fwknopd.pid";
 our $tmp_rc_file         = "$run_dir/fwknoprc";
+our $rewrite_rc_file     = "$run_dir/rewrite_fwknoprc";
 our $tmp_pkt_file        = "$run_dir/tmp_spa.pkt";
 our $tmp_args_file       = "$run_dir/args.save";
 
@@ -384,6 +385,9 @@ our $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     "--no-save-args --verbose --verbose";
 
+our $client_rewrite_rc_args = "$default_client_args_no_get_key " .
+    "--rc-file $rewrite_rc_file --test";
+
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
 
@@ -502,6 +506,7 @@ my %test_keys = (
     'pkt_prefix'      => $OPTIONAL,
     'no_ip_check'     => $OPTIONAL,
     'set_legacy_iv'   => $OPTIONAL,
+    'write_rc_file'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
@@ -1022,6 +1027,114 @@ sub expected_code_version() {
             $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     }
     return 0;
+}
+
+sub client_rc_file() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    if ($test_hr->{'write_rc_file'}) {
+        open RC, "> $rewrite_rc_file"
+            or die "[*] Could not open $rewrite_rc_file: $!";
+        for my $hr (@{$test_hr->{'write_rc_file'}}) {
+            print RC "[$hr->{'name'}]\n";
+            for my $var (keys %{$hr->{'vars'}}) {
+                print RC "$var      $hr->{'vars'}->{$var}\n";
+            }
+        }
+        close RC;
+    }
+
+    $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
+            $cmd_out_tmp, $curr_test_file);
+    $rv = 0 unless &file_find_regex([qr/final\spacked/i],
+        $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
+
+    if ($test_hr->{'positive_output_matches'}) {
+        unless (&file_find_regex(
+                $test_hr->{'positive_output_matches'},
+                $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'negative_output_matches'}) {
+        if (&file_find_regex(
+                $test_hr->{'negative_output_matches'},
+                $MATCH_ANY, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] negative_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    unless (&validate_fko_decode()) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub validate_fko_decode() {
+    return 0 unless -e $curr_test_file;
+
+    ### make sure that the before and after FKO decode
+    ### sections are the same - this ensures that libfko
+    ### encoding / decoding cycles match up
+
+    my @before_lines = ();
+    my @after_lines  = ();
+
+    my $found_fko_field_values = 0;
+    my $finished_first_section = 0;
+    open F, "< $curr_test_file"
+        or die "[*] Could not open $curr_test_file: $!";
+    while (<F>) {
+        if (/^FKO\sField\sValues/) {
+            $found_fko_field_values = 1;
+            next;
+        }
+        next unless $found_fko_field_values;
+        if (/Generating\sSPA\spacket/) {
+            $found_fko_field_values = 0;
+            last if $finished_first_section;
+            $finished_first_section = 1;
+        }
+        if ($found_fko_field_values) {
+            if ($finished_first_section) {
+                push @after_lines, $_ if $_ =~ /\S/;
+            } else {
+                push @before_lines, $_ if $_ =~ /\S/;
+            }
+        }
+    }
+    close F;
+
+    my $found_difference = 0;
+    for (my $i=0; $i < $#before_lines; $i++) {
+        unless (defined $after_lines[$i]) {
+            $found_difference = 1;
+            last;
+        }
+        if ($before_lines[$i] ne $after_lines[$i]) {
+            chomp $before_lines[$i];
+            chomp $after_lines[$i];
+            &write_test_file(
+                "[-] Line mismatch, before '$before_lines[$i]', after '$after_lines[$i]'\n",
+                $curr_test_file);
+            $found_difference = 1;
+        }
+    }
+
+    if ($found_difference) {
+        return 0;
+    }
+    return 1;
 }
 
 sub client_send_spa_packet() {
@@ -5474,6 +5587,7 @@ sub file_find_regex() {
     for my $re (@$re_ar) {
         my $matched = 0;
         for my $line (@file_lines) {
+            next if $line =~ /file_find_regex\(\)/;
             if ($line =~ $re) {
                 push @write_lines, "[.] file_find_regex() " .
                     "Matched '$re' with line: $line";
