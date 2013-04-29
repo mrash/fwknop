@@ -112,7 +112,7 @@ verify_file_perms_ownership(const char *file)
         {
             return 0;
         } else {
-            fprintf(stderr, "[-] stat() against file: %s returned: %s\n",
+            log_msg(LOG_VERBOSITY_ERROR, "[-] stat() against file: %s returned: %s",
                 file, strerror(errno));
             exit(EXIT_FAILURE);
         }
@@ -122,8 +122,8 @@ verify_file_perms_ownership(const char *file)
     */
     if(S_ISREG(st.st_mode) != 1 && S_ISLNK(st.st_mode) != 1)
     {
-        fprintf(stderr,
-            "[-] file: %s is not a regular file or symbolic link.\n",
+        log_msg(LOG_VERBOSITY_WARNING,
+            "[-] file: %s is not a regular file or symbolic link.",
             file
         );
         res = 0;
@@ -131,8 +131,8 @@ verify_file_perms_ownership(const char *file)
 
     if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
     {
-        fprintf(stderr,
-            "[-] file: %s permissions should only be user read/write (0600, -rw-------)\n",
+        log_msg(LOG_VERBOSITY_WARNING,
+            "[-] file: %s permissions should only be user read/write (0600, -rw-------)",
             file
         );
         res = 0;
@@ -140,7 +140,8 @@ verify_file_perms_ownership(const char *file)
 
     if(st.st_uid != getuid())
     {
-        fprintf(stderr, "[-] file: %s not owned by current effective user id.\n",
+        log_msg(LOG_VERBOSITY_WARNING,
+            "[-] file: %s not owned by current effective user id.",
             file);
         res = 0;
     }
@@ -213,7 +214,7 @@ resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size
                 break;
             }
             else
-                fprintf(stderr, "resolve_dest_adr() : inet_ntop (%d) - %s\n", errno, strerror(errno));
+                log_msg(LOG_VERBOSITY_ERROR, "resolve_dest_adr() : inet_ntop (%d) - %s", errno, strerror(errno));
         }
 
         /* Free our result from getaddrinfo() */
