@@ -742,6 +742,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         }
         strlcpy(options->hmac_key_base64, val, sizeof(options->hmac_key_base64));
         options->have_hmac_base64_key = 1;
+        options->use_hmac = 1;
     }
 
     /* HMAC key */
@@ -749,6 +750,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     {
         strlcpy(options->hmac_key, val, sizeof(options->hmac_key));
         options->have_hmac_key = 1;
+        options->use_hmac = 1;
     }
 
     /* Key file */
@@ -1267,6 +1269,11 @@ validate_options(fko_cli_options_t *options)
         }
     }
 
+    /* Validate HMAC digest type
+    */
+    if(options->use_hmac && options->hmac_type == FKO_HMAC_UNKNOWN)
+        options->hmac_type = FKO_DEFAULT_HMAC_MODE;
+
     return;
 }
 
@@ -1282,7 +1289,7 @@ set_defaults(fko_cli_options_t *options)
 
     options->key_len      = FKO_DEFAULT_KEY_LEN;
     options->hmac_key_len = FKO_DEFAULT_HMAC_KEY_LEN;
-    options->hmac_type    = FKO_DEFAULT_HMAC_MODE;
+    options->hmac_type    = FKO_HMAC_UNKNOWN;  /* updated when HMAC key is used */
 
     options->spa_icmp_type = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
     options->spa_icmp_code = 0;               /* only used in '-P icmp' mode */
