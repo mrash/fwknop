@@ -101,6 +101,62 @@
 
     {
         'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'digest MD5',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*MD5/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'digest SHA1',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'digest SHA256',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA256'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA256/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'digest SHA384',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA384'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA384/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'digest SHA512',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA512'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'list current fwknopd fw rules',
         'function' => \&generic_exec,
