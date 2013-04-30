@@ -35,6 +35,25 @@
 
 static void *get_in_addr(struct sockaddr *sa);
 
+/**
+ * Structure to handle a protocol string and its associated integer value
+ */
+typedef struct fko_protocol
+{
+    char str[PROTOCOL_BUFSIZE];     /*!< String which represents a protocol value for the FKO library */
+    int  val;                       /*!< Value of the protocol according to the FKO library */
+} fko_protocol_t;
+
+static fko_protocol_t fko_protocol_array[] =
+{
+    { "udpraw", FKO_PROTO_UDP_RAW   },
+    { "udp",    FKO_PROTO_UDP       },
+    { "tcpraw", FKO_PROTO_TCP_RAW   },
+    { "tcp",    FKO_PROTO_TCP       },
+    { "icmp",   FKO_PROTO_ICMP      },
+    { "http",   FKO_PROTO_HTTP      }
+};
+
 /* Generic hex dump function.
 */
 void
@@ -222,6 +241,70 @@ resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size
     }
 
     return error;
+}
+
+/**
+ * @brief Return a protocol string according to a protocol integer value
+ *
+ * This function checks if the protocol integer is valid, and write the protocol
+ * string associated.
+ *
+ * @param proto protocol inetger value (UDP_RAW, UDP, TCPRAW...)
+ * @param proto_str Buffer to write the protocol string
+ * @param proto_size size of the protocol string buffer
+ *
+ * @return -1 if the protocol integer value is not supported, 0 otherwise
+ */
+short
+proto_inttostr(int proto, char *proto_str, size_t proto_size)
+{
+    short           proto_error = -1;
+    unsigned char   ndx_proto;          /* Index for the fko_protocol_t structure */
+
+    /* Initialize the protocol string */
+    memset(proto_str, 0, proto_size);
+
+    /* Look into the fko_protocol_array to find out the right protocol */
+    for (ndx_proto = 0 ; ndx_proto < ARRAY_SIZE(fko_protocol_array) ; ndx_proto++)
+    {
+        /* If the protocol matches, grab it */
+        if (fko_protocol_array[ndx_proto].val == proto)
+        {
+            strlcpy(proto_str, fko_protocol_array[ndx_proto].str, proto_size);
+            proto_error = 0;
+            break;
+        }
+    }
+
+    return proto_error;
+
+}
+
+/**
+ * @brief Convert a protocol string to its integer value.
+ *
+ * @param pr_str Protocol string (UDP_RAW, UDP, TCPRAW...)
+ *
+ * @return -1 if the protocol string is not supported, otherwise the protocol value
+ */
+short
+proto_strtoint(const char *pr_str)
+{
+    unsigned char   ndx_proto;          /* Index for the fko_protocol_t structure */
+    int             proto_int = -1;     /* Protocol integer value */
+
+    /* Look into the fko_protocol_array to find out the right protocol */
+    for (ndx_proto = 0 ; ndx_proto < ARRAY_SIZE(fko_protocol_array) ; ndx_proto++)
+    {
+        /* If the protocol matches, grab it */
+        if (strcasecmp(pr_str, fko_protocol_array[ndx_proto].str) == 0)
+        {
+            proto_int = fko_protocol_array[ndx_proto].val;
+            break;
+        }
+    }
+
+    return proto_int;
 }
 
 /***EOF***/

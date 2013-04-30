@@ -45,8 +45,6 @@
 #define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
 #define PARAM_YES_VALUE             "Y"                         /*!< String which represents a YES value for a parameter in fwknoprc */
 #define PARAM_NO_VALUE              "N"                         /*!< String which represents a NO value for a parameter in fwknoprc */
-#define ARRAY_SIZE(t)               (sizeof(t) / sizeof(t[0]))  /*!< Macro to get the number of elements of an array */
-
 
 /**
  * Structure to handle a variable in an rcfile
@@ -222,12 +220,12 @@ is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t r
 }
 
 /**
- * Grab a variable and its value from a rc line.
+ * @brief Grab a variable and its value from a rc line.
  *
- * \param line  Line to parse for a variable
- * \param param Parameter structure where to store the variable name and its value
+ * @param line  Line to parse for a variable
+ * @param param Parameter structure where to store the variable name and its value
  *
- * \return 0 if no variable has been found, 1 otherwise.
+ * @return 0 if no variable has been found, 1 otherwise.
  */
 static int
 is_rc_param(const char *line, rc_file_param_t *param)
@@ -261,71 +259,6 @@ is_rc_param(const char *line, rc_file_param_t *param)
     strlcpy(param->val, val, sizeof(param->val));
 
     return 1;
-}
-
-/* Convert a protocol string to its intger value.
-*/
-static int
-proto_strtoint(const char *pr_str)
-{
-    if (strcasecmp(pr_str, "udpraw") == 0)
-        return(FKO_PROTO_UDP_RAW);
-    else if (strcasecmp(pr_str, "udp") == 0)
-        return(FKO_PROTO_UDP);
-    else if (strcasecmp(pr_str, "tcpraw") == 0)
-        return(FKO_PROTO_TCP_RAW);
-    else if (strcasecmp(pr_str, "tcp") == 0)
-        return(FKO_PROTO_TCP);
-    else if (strcasecmp(pr_str, "icmp") == 0)
-        return(FKO_PROTO_ICMP);
-    else if (strcasecmp(pr_str, "http") == 0)
-        return(FKO_PROTO_HTTP);
-    else
-        return(-1);
-}
-
-/**
- * \brief Return a prototype string according to a prototype integer value
- *
- * This function checks the prototype integer is valid, and write the prototype
- * string associated.
- *
- * \param proto Prototype inetger value (UDP_RAW, UDP, TCPRAW...)
- * \param proto_str Buffer to write the prototype string
- * \param proto_size size of the prototype string buffer
- *
- * \return 1 if the digest integer value is not supported, 0 otherwise
- */
-static int
-proto_inttostr(unsigned int proto, char* pr_str, size_t pr_size)
-{
-    uint8_t proto_not_valid = 0;
-
-    memset(pr_str, 0, pr_size);
-
-    switch (proto)
-    {
-        case FKO_PROTO_UDP_RAW:
-            strlcpy(pr_str, "UDPRAW", pr_size);
-            break;
-        case FKO_PROTO_UDP:
-            strlcpy(pr_str, "UDP", pr_size);
-            break;
-        case FKO_PROTO_TCP_RAW:
-            strlcpy(pr_str, "TCPRAW", pr_size);
-            break;
-        case FKO_PROTO_TCP:
-            strlcpy(pr_str, "TCP", pr_size);
-            break;
-        case FKO_PROTO_ICMP:
-            strlcpy(pr_str, "ICMP", pr_size);
-            break;
-        default:
-            proto_not_valid = 1;
-            break;
-    }
-
-    return proto_not_valid;
 }
 
 /* Assign path to fwknop rc file

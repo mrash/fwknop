@@ -134,6 +134,10 @@ enum {
 
 /* Some convenience macros */
 
+/* Get the number of elements of an array
+ */
+#define ARRAY_SIZE(t)   (sizeof(t) / sizeof(t[0]))
+
 /* Characters allowed between a config parameter and its value.
 */
 #define IS_CONFIG_PARAM_DELIMITER(x) (x == ' ' || x == '\t' || x == '=');
