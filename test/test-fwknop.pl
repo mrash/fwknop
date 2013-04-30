@@ -136,6 +136,7 @@ our $default_digest_file = "$run_dir/digest.cache";
 our $default_pid_file    = "$run_dir/fwknopd.pid";
 our $tmp_rc_file         = "$run_dir/fwknoprc";
 our $rewrite_rc_file     = "$run_dir/rewrite_fwknoprc";
+our $save_rc_file        = "$run_dir/save_fwknoprc";
 our $tmp_pkt_file        = "$run_dir/tmp_spa.pkt";
 our $tmp_args_file       = "$run_dir/args.save";
 
@@ -388,6 +389,9 @@ our $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
 our $client_rewrite_rc_args = "$default_client_args_no_get_key " .
     "--rc-file $rewrite_rc_file --test";
 
+our $client_save_rc_args = "$default_client_args_no_get_key " .
+    "--rc-file $save_rc_file --save-rc-stanza --test";
+
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
 
@@ -507,6 +511,7 @@ my %test_keys = (
     'no_ip_check'     => $OPTIONAL,
     'set_legacy_iv'   => $OPTIONAL,
     'write_rc_file'   => $OPTIONAL,
+    'save_rc_stanza'  => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
@@ -1044,6 +1049,21 @@ sub client_rc_file() {
             }
         }
         close RC;
+    } elsif ($test_hr->{'save_rc_stanza'}) {
+        open RC, "> $save_rc_file"
+            or die "[*] Could not open $save_rc_file: $!";
+        for my $hr (@{$test_hr->{'save_rc_stanza'}}) {
+            print RC "[$hr->{'name'}]\n";
+            for my $var (keys %{$hr->{'vars'}}) {
+                print RC "$var      $hr->{'vars'}->{$var}\n";
+            }
+        }
+        close RC;
+    } else {
+        &write_test_file(
+            "[-] test hash does not include 'write_rc_file' or 'save_rc_stanza'\n",
+            $curr_test_file);
+        return 0;
     }
 
     $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
@@ -1074,6 +1094,9 @@ sub client_rc_file() {
     }
 
     unless (&validate_fko_decode()) {
+        &write_test_file(
+            "[-] validate_fko_decode() returned zero, setting rv=0\n",
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -1081,6 +1104,7 @@ sub client_rc_file() {
 }
 
 sub validate_fko_decode() {
+
     return 0 unless -e $curr_test_file;
 
     ### make sure that the before and after FKO decode
@@ -1100,7 +1124,7 @@ sub validate_fko_decode() {
             next;
         }
         next unless $found_fko_field_values;
-        if (/Generating\sSPA\spacket/) {
+        if (/Final\sPacked/) {
             $found_fko_field_values = 0;
             last if $finished_first_section;
             $finished_first_section = 1;
@@ -5619,6 +5643,7 @@ sub file_find_regex() {
 
 sub remove_permissions_warnings() {
     system qq|perl -p -i -e 's/.*not owned by current effective.*\n//' $output_dir/*.test|;
+    system qq|perl -p -i -e 's/.*permissions should only be user.*\n//' $output_dir/*.test|;
     return;
 }
 

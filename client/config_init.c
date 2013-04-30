@@ -1207,25 +1207,6 @@ validate_options(fko_cli_options_t *options)
         && !options->show_last_command
         && !options->run_last_command)
     {
-        if ( (options->use_rc_stanza[0] != 0x0)
-            && (options->got_named_stanza == 0)
-            && (options->save_rc_stanza == 0) )
-        {
-            log_msg(LOG_VERBOSITY_ERROR,
-                    "Named configuration stanza: [%s] was not found.",
-                    options->use_rc_stanza);
-
-            exit(EXIT_FAILURE);
-        }
-
-        if ( (options->save_rc_stanza == 1)  && (options->use_rc_stanza[0] == 0) )
-        {
-            log_msg(LOG_VERBOSITY_ERROR,
-                    "The option --save-rc-stanza must be used with the "
-                    "--named-config option to specify the stanza to update.");
-            exit(EXIT_FAILURE);
-        }
-
         if (options->spa_server_str[0] == 0x0)
         {
             log_msg(LOG_VERBOSITY_ERROR,
@@ -1242,6 +1223,25 @@ validate_options(fko_cli_options_t *options)
                 "Must use one of [-s|-R|-a] to specify IP for SPA access.");
             exit(EXIT_FAILURE);
         }
+    }
+
+    if ( (options->use_rc_stanza[0] != 0x0)
+        && (options->got_named_stanza == 0)
+        && (options->save_rc_stanza == 0) )
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+                "Named configuration stanza: [%s] was not found.",
+                options->use_rc_stanza);
+
+        exit(EXIT_FAILURE);
+    }
+
+    if ( (options->save_rc_stanza == 1)  && (options->use_rc_stanza[0] == 0) )
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+                "The option --save-rc-stanza must be used with the "
+                "--named-config option to specify the stanza to update.");
+        exit(EXIT_FAILURE);
     }
 
     if(options->resolve_ip_http || options->spa_proto == FKO_PROTO_HTTP)

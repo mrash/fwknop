@@ -99,6 +99,7 @@
         'fatal'    => $YES
     },
 
+    ### rc tests: digest
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
@@ -209,6 +210,83 @@
         'positive_output_matches' => [qr/protocol:\sicmp/],
         'fatal'    => $NO
     },
+
+    ### rc file saving --save-rc-stanza
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'HMAC digest MD5',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --hmac-digest-type MD5",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*MD5/],
+        'fatal'    => $NO
+    },
+
+    ### rc tests: hmac digest
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'HMAC digest MD5',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*MD5/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'HMAC digest SHA1',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA1/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'HMAC digest SHA256',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA256'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA256/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'HMAC digest SHA384',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA384'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA384/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'HMAC digest SHA512',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA512'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA512/],
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',

@@ -532,6 +532,9 @@ main(int argc, char **argv)
          * decryption key to fko_new_with_data() or use fko_new() to create
          * an empty context, populate it with the encrypted data, set our
          * options, then decode it.
+         *
+         * This also verifies the HMAC and truncates it if there are no
+         * problems.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
             0, enc_mode, hmac_key, hmac_key_len, options.hmac_type);
@@ -572,19 +575,9 @@ main(int argc, char **argv)
         get_keys(ctx2, &options, key, &key_len,
             hmac_key, &hmac_key_len, CRYPT_OP_DECRYPT);
 
-        /* Verify HMAC first
-        */
-        if(options.use_hmac)
-            res = fko_verify_hmac(ctx2, hmac_key, hmac_key_len);
-
         /* Decrypt
         */
-        if(options.use_hmac)
-        {
-            /* check fko_verify_hmac() return value */
-        }
-        else
-            res = fko_decrypt_spa_data(ctx2, key, key_len);
+        res = fko_decrypt_spa_data(ctx2, key, key_len);
 
         if(res != FKO_SUCCESS)
         {
