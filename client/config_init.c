@@ -1165,7 +1165,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     }
 
     /* If the stanza has not been found, we append the settings to the file,
-     * othewise we already updated it earlier. */
+     * otherwise we already updated it earlier. */
     if (stanza_updated == 0)
     {
         fprintf(rc_update, "\n[%s]\n", options->use_rc_stanza);

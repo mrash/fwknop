@@ -210,6 +210,28 @@
         'positive_output_matches' => [qr/protocol:\sicmp/],
         'fatal'    => $NO
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa server port 65421',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '65421'}}],
+        'positive_output_matches' => [qr/port:\s65421/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa server port 22',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '22'}}],
+        'positive_output_matches' => [qr/port:\s22/],
+        'fatal'    => $NO
+    },
 
     ### rc file saving --save-rc-stanza
     {
