@@ -753,6 +753,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         options->use_hmac = 1;
     }
 
+    /* --use-hmac */
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_USE_HMAC)
+    {
+        if (is_yes_str(val))
+            options->use_hmac = 1;
+    }
     /* Key file */
     else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_FILE)
     {
