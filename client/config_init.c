@@ -48,11 +48,14 @@
 #define ARRAY_SIZE(t)               (sizeof(t) / sizeof(t[0]))  /*!< Macro to get the number of elements of an array */
 
 
-typedef struct
+/**
+ * Structure to handle a variable in an rcfile
+ */
+typedef struct rc_file_param
 {
-    char name[MAX_LINE_LEN];
-    char val[MAX_LINE_LEN];
-} TParam;
+    char name[MAX_LINE_LEN];    /*!< Variable name */
+    char val[MAX_LINE_LEN];     /*!< Variable value */
+} rc_file_param_t;
 
 enum
 {
@@ -227,7 +230,7 @@ is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t r
  * \return 0 if no variable has been found, 1 otherwise.
  */
 static int
-is_rc_param(const char *line, TParam *param)
+is_rc_param(const char *line, rc_file_param_t *param)
 {
     char    var[MAX_LINE_LEN] = {0};
     char    val[MAX_LINE_LEN] = {0};
@@ -976,13 +979,13 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
 static int
 process_rc_section(char *section_name, fko_cli_options_t *options)
 {
-    FILE    *rc;
-    int     line_num = 0, do_exit = 0;
-    char    line[MAX_LINE_LEN];
-    char    rcfile[MAX_PATH_LEN];
-    char    curr_stanza[MAX_LINE_LEN] = {0};
-    TParam  param;
-    int     rc_section_found = 0;
+    FILE           *rc;
+    int             line_num = 0, do_exit = 0;
+    char            line[MAX_LINE_LEN];
+    char            rcfile[MAX_PATH_LEN];
+    char            curr_stanza[MAX_LINE_LEN] = {0};
+    rc_file_param_t param;
+    int             rc_section_found = 0;
 
     set_rc_file(rcfile, options);
 
