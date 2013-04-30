@@ -43,8 +43,11 @@ fwknop-2.5 (//2013):
       discussions with George Herlin.
     - (Franck Joncourt) Added support for resolving hostnames in various NAT
       modes (fixes issue #43 in github).
+    - (Franck Joncourt) Bug fix in the client for resolving hostnames in '-P
+      icmp' mode (fixes issue #64).
     - (Franck Joncourt) Added support for saving fwknop client command line
       arguments via a new options --save-rc-stanza.
+    - (Franck Joncourt) Added log module support for the client.
     - [client] Bug fix for --nat-rand-port mode to ensure that the port to be
       NAT'd is properly defined so that the fwknopd server will NAT
       connnections to this port instead of applying the NAT operation to the

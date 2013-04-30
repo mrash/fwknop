@@ -48,8 +48,11 @@ Franck Joncourt
       request the same access.
     - Added support for resolving hostnames in various NAT modes (fixes issue
       #43 in github).
+    - Bug fix in the client for resolving hostnames in '-P icmp' mode (fixes
+      issue #64).
     - Added support for saving fwknop client command line arguments via a new
       options --save-rc-stanza.
+    - Added log module support for the client.
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode
