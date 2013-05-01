@@ -40,9 +40,15 @@ dump_transmit_options(const fko_cli_options_t *options)
     proto_inttostr(options->spa_proto, proto_str, sizeof(proto_str));
 
     log_msg(LOG_VERBOSITY_INFO, "Generating SPA packet:");
-    log_msg(LOG_VERBOSITY_INFO, "    protocol: %s", proto_str);
-    log_msg(LOG_VERBOSITY_INFO, "        port: %d", options->spa_dst_port);
-    log_msg(LOG_VERBOSITY_INFO, "     IP/host: %s", options->spa_server_str);
+    log_msg(LOG_VERBOSITY_INFO, "            protocol: %s", proto_str);
+
+    if (options->spa_src_port)
+        log_msg(LOG_VERBOSITY_INFO, "         source port: %d", options->spa_src_port);
+    else
+        log_msg(LOG_VERBOSITY_INFO, "         source port: unknown");
+
+    log_msg(LOG_VERBOSITY_INFO, "    destination port: %d", options->spa_dst_port);
+    log_msg(LOG_VERBOSITY_INFO, "             IP/host: %s", options->spa_server_str);
 
     return;
 }

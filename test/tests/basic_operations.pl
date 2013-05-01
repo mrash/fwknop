@@ -218,7 +218,7 @@
         'cmdline'  => $client_rewrite_rc_args,
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '65421'}}],
-        'positive_output_matches' => [qr/port:\s65421/],
+        'positive_output_matches' => [qr/destination\sport:\s65421/],
         'fatal'    => $NO
     },
     {
@@ -229,7 +229,40 @@
         'cmdline'  => $client_rewrite_rc_args,
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '22'}}],
-        'positive_output_matches' => [qr/port:\s22/],
+        'positive_output_matches' => [qr/destination\sport:\s22/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa source port 65421',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '65421'}}],
+        'positive_output_matches' => [qr/source\sport:\s65421/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa source port 22',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '22'}}],
+        'positive_output_matches' => [qr/source\sport:\s22/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'firewall timeout 1234s',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '1234'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
         'fatal'    => $NO
     },
 
