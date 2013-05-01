@@ -291,7 +291,7 @@ incoming_spa(fko_srv_options_t *opts)
     {
         if(opts->verbose > 1)
             log_msg(LOG_INFO, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
-                sspadat.pkt_source_ip, res, get_errstr(res));
+                spadat.pkt_source_ip, res, get_errstr(res));
         return;
     }
 
@@ -307,7 +307,7 @@ incoming_spa(fko_srv_options_t *opts)
                 0, RCHK_MAX_SPA_PACKET_AGE, NO_EXIT_UPON_ERR, &is_err);
         if(is_err != FKO_SUCCESS)
         {
-            log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE\n", sspadat.pkt_source_ip);
+            log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE\n", spadat.pkt_source_ip);
             return;
         }
     }
@@ -382,7 +382,7 @@ incoming_spa(fko_srv_options_t *opts)
                 if(time(NULL) > acc->access_expire_time)
                 {
                     log_msg(LOG_INFO, "[%s] (stanza #%d) Access stanza has expired",
-                        sspadat.pkt_source_ip, stanza_num);
+                        spadat.pkt_source_ip, stanza_num);
                     acc->expired = 1;
                     acc = acc->next;
                     continue;
@@ -401,7 +401,7 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[%s] (stanza #%d) No KEY for RIJNDAEL encrypted messages",
-                    sspadat.pkt_source_ip, stanza_num
+                    spadat.pkt_source_ip, stanza_num
                 );
                 acc = acc->next;
                 continue;
@@ -435,7 +435,7 @@ incoming_spa(fko_srv_options_t *opts)
                 {
                     log_msg(LOG_WARNING,
                         "[%s] (stanza #%d) Error creating fko context (before decryption): %s",
-                        sspadat.pkt_source_ip, tanza_num, fko_errstr(res),
+                        spadat.pkt_source_ip, tanza_num, fko_errstr(res),
                     );
                     if(ctx != NULL)
                         fko_destroy(ctx);
@@ -450,8 +450,8 @@ incoming_spa(fko_srv_options_t *opts)
                     if(res != FKO_SUCCESS)
                     {
                         log_msg(LOG_WARNING,
-                            "[%s] [%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
-                            sspadat.pkt_source_ip, sspadat.pkt_source_ip, stanza_num, acc->gpg_home_dir, fko_errstr(res)
+                            "[%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
+                            spadat.pkt_source_ip, stanza_num, acc->gpg_home_dir, fko_errstr(res)
                         );
                         if(ctx != NULL)
                             fko_destroy(ctx);
@@ -502,11 +502,11 @@ incoming_spa(fko_srv_options_t *opts)
         if(res != FKO_SUCCESS)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Error creating fko context: %s",
-                ssspadat.pkt_source_ip, tanza_num, fko_errstr(res));
+                spadat.pkt_source_ip, tanza_num, fko_errstr(res));
 
             if(IS_GPG_ERROR(res))
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) - GPG ERROR: %s",
-                    ssspadat.pkt_source_ip, tanza_num, fko_gpg_errstr(ctx));
+                    spadat.pkt_source_ip, tanza_num, fko_gpg_errstr(ctx));
 
             if(ctx != NULL)
                 fko_destroy(ctx);
@@ -522,7 +522,7 @@ incoming_spa(fko_srv_options_t *opts)
             if (res != SPA_MSG_SUCCESS)
             {
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) Could not add digest to replay cache",
-                    ssspadat.pkt_source_ip, tanza_num);
+                    spadat.pkt_source_ip, tanza_num);
                 if(ctx != NULL)
                     fko_destroy(ctx);
                 acc = acc->next;
@@ -536,7 +536,7 @@ incoming_spa(fko_srv_options_t *opts)
         */
         if(opts->verbose > 1)
             log_msg(LOG_INFO, "[%s] (stanza #%d) SPA Decode (res=%i):\n%s",
-                sspadat.pkt_source_ip, stanza_num, res, dump_ctx(ctx));
+                spadat.pkt_source_ip, stanza_num, res, dump_ctx(ctx));
 
         /* First, if this is a GPG message, and GPG_REMOTE_ID list is not empty,
          * then we need to make sure this incoming message is signer ID matches
@@ -548,7 +548,7 @@ incoming_spa(fko_srv_options_t *opts)
             if(res != FKO_SUCCESS)
             {
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
-                    sspadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
                 if(ctx != NULL)
                     fko_destroy(ctx);
                 acc = acc->next;
@@ -557,13 +557,13 @@ incoming_spa(fko_srv_options_t *opts)
 
             if(opts->verbose)
                 log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s'.",
-                    sspadat.pkt_source_ip, stanza_num, gpg_id);
+                    spadat.pkt_source_ip, stanza_num, gpg_id);
 
             if(acc->gpg_remote_id != NULL && !acc_check_gpg_remote_id(acc, gpg_id))
             {
                 log_msg(LOG_WARNING,
                     "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
-                    sspadat.pkt_source_ip, stanza_num, gpg_id);
+                    spadat.pkt_source_ip, stanza_num, gpg_id);
                 if(ctx != NULL)
                     fko_destroy(ctx);
                 acc = acc->next;
@@ -589,7 +589,7 @@ incoming_spa(fko_srv_options_t *opts)
         if(res != FKO_SUCCESS)
         {
             log_msg(LOG_ERR, "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
-                sspadat.pkt_source_ip, stanza_num, fko_errstr(res));
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             if(ctx != NULL)
                 fko_destroy(ctx);
@@ -608,7 +608,7 @@ incoming_spa(fko_srv_options_t *opts)
             if(ts_diff > conf_pkt_age)
             {
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) SPA data time difference is too great (%i seconds).",
-                    sspadat.pkt_source_ip, stanza_num, ts_diff);
+                    spadat.pkt_source_ip, stanza_num, ts_diff);
 
                 if(ctx != NULL)
                     fko_destroy(ctx);
@@ -625,7 +625,7 @@ incoming_spa(fko_srv_options_t *opts)
         if(spa_ip_demark == NULL)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Error parsing SPA message string: %s",
-                sspadat.pkt_source_ip, stanza_num, fko_errstr(res));
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             if(ctx != NULL)
                 fko_destroy(ctx);
@@ -640,7 +640,7 @@ incoming_spa(fko_srv_options_t *opts)
                 MIN_IPV4_STR_LEN) < MIN_IPV4_STR_LEN)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
-                sspadat.pkt_source_ip, stanza_num, fko_errstr(res));
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             if(ctx != NULL)
                 fko_destroy(ctx);
@@ -658,7 +658,7 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 log_msg(LOG_WARNING,
                     "[%s] (stanza #%d) Got 0.0.0.0 when valid source IP was required.",
-                    sspadat.pkt_source_ip, stanza_num
+                    spadat.pkt_source_ip, stanza_num
                 );
 
                 if(ctx != NULL)
@@ -681,7 +681,7 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 log_msg(LOG_WARNING,
                     "[%s] (stanza #%d) Username in SPA data (%s) does not match required username: %s",
-                    sspadat.pkt_source_ip, stanza_num, spadat.username, acc->require_username
+                    spadat.pkt_source_ip, stanza_num, spadat.username, acc->require_username
                 );
 
                 if(ctx != NULL)
@@ -732,7 +732,7 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 log_msg(LOG_WARNING,
                     "[%s] (stanza #%d) SPA Command message are not allowed in the current configuration.",
-                    sspadat.pkt_source_ip, stanza_num
+                    spadat.pkt_source_ip, stanza_num
                 );
 
                 if(ctx != NULL)
@@ -744,7 +744,7 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 log_msg(LOG_INFO,
                     "[%s] (stanza #%d) Processing SPA Command message: command='%s'.",
-                    sspadat.pkt_source_ip, stanza_num, spadat.spa_message_remain
+                    spadat.pkt_source_ip, stanza_num, spadat.spa_message_remain
                 );
 
                 /* Do we need to become another user? If so, we call
@@ -754,7 +754,7 @@ incoming_spa(fko_srv_options_t *opts)
                 {
                     if(opts->verbose)
                         log_msg(LOG_INFO, "[%s] (stanza #%d) Setting effective user to %s (UID=%i) before running command.",
-                            sspadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
+                            spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
 
 
                     res = run_extcmd_as(acc->cmd_exec_uid,
@@ -773,7 +773,7 @@ incoming_spa(fko_srv_options_t *opts)
                 if(opts->verbose > 1)
                     log_msg(LOG_WARNING,
                         "[%s] (stanza #%d) CMD_EXEC: command returned %i",
-                        sspadat.pkt_source_ip, stanza_num, status);
+                        spadat.pkt_source_ip, stanza_num, status);
 
                 if(status != 0)
                     res = SPA_MSG_COMMAND_ERROR;
@@ -798,7 +798,7 @@ incoming_spa(fko_srv_options_t *opts)
         {
             log_msg(LOG_WARNING,
                 "[%s] (stanza #%d) One or more requested protocol/ports was denied per access.conf.",
-                sspadat.pkt_source_ip, stanza_num
+                spadat.pkt_source_ip, stanza_num
             );
 
             if(ctx != NULL)
