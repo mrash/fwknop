@@ -149,7 +149,7 @@ our $gpg_client_key = '6A3FAD56';
 
 our $loopback_ip       = '127.0.0.1';
 our $fake_ip           = '127.0.0.2';
-our $fake_spoof_ip     = '1.2.3.4';
+our $spoof_ip          = '1.2.3.4';
 our $internal_nat_host = '192.168.1.2';
 our $force_nat_host    = '192.168.1.123';
 our $default_spa_port  = 62201;
@@ -159,7 +159,6 @@ our $spoof_user = 'testuser';
 
 my $valgrind_cov_dir = 'valgrind-coverage';
 
-our $spoof_ip   = '1.2.3.4';
 my $perl_mod_fko_dir = 'FKO';
 my $python_fko_dir   = 'python_fko';
 my $python_script    = 'fko-python.py';
