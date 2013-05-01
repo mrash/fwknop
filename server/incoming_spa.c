@@ -435,7 +435,7 @@ incoming_spa(fko_srv_options_t *opts)
                 {
                     log_msg(LOG_WARNING,
                         "[%s] (stanza #%d) Error creating fko context (before decryption): %s",
-                        spadat.pkt_source_ip, tanza_num, fko_errstr(res),
+                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
                     );
                     if(ctx != NULL)
                         fko_destroy(ctx);
@@ -502,11 +502,11 @@ incoming_spa(fko_srv_options_t *opts)
         if(res != FKO_SUCCESS)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Error creating fko context: %s",
-                spadat.pkt_source_ip, tanza_num, fko_errstr(res));
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             if(IS_GPG_ERROR(res))
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) - GPG ERROR: %s",
-                    spadat.pkt_source_ip, tanza_num, fko_gpg_errstr(ctx));
+                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
 
             if(ctx != NULL)
                 fko_destroy(ctx);
@@ -522,7 +522,7 @@ incoming_spa(fko_srv_options_t *opts)
             if (res != SPA_MSG_SUCCESS)
             {
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) Could not add digest to replay cache",
-                    spadat.pkt_source_ip, tanza_num);
+                    spadat.pkt_source_ip, stanza_num);
                 if(ctx != NULL)
                     fko_destroy(ctx);
                 acc = acc->next;
