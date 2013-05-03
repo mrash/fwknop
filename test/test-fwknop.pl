@@ -937,7 +937,8 @@ sub test_suite_conf_files() {
     my $make_file = '../Makefile.am';
     my $rv = 1;
 
-    my %makefile_am_files = ();
+    my %makefile_conf_files = ();
+    my %makefile_test_scripts = ();
 
     unless (-e $make_file) {
         &write_test_file("[-] $make_file does not exist.\n",
@@ -947,8 +948,10 @@ sub test_suite_conf_files() {
 
     open F, "< $make_file" or die $!;
     while (<F>) {
-        if (m|test/conf/(\S+)|) {
-            $makefile_am_files{$1} = '';
+        if (m|test/$conf_dir/(\S+)|) {
+            $makefile_conf_files{$1} = '';
+        } elsif (m|test/$tests_dir/(\S+)|) {
+            $makefile_test_scripts{$1} = '';
         }
     }
     close F;
@@ -957,7 +960,7 @@ sub test_suite_conf_files() {
         next if -d $f;
         next unless $f =~ /\.conf/ or $f =~ /fwknop/;
         if ($f =~ m|$conf_dir/(\S+)|) {
-            if (defined $makefile_am_files{$1}) {
+            if (defined $makefile_conf_files{$1}) {
                 &write_test_file("[+] test suite conf file $1 is in $make_file.\n",
                     $curr_test_file);
             } else {
@@ -967,6 +970,20 @@ sub test_suite_conf_files() {
             }
         }
     }
+
+    for my $f (glob("$tests_dir/*.pl")) {
+        if ($f =~ m|$tests_dir/(\S+)|) {
+            if (defined $makefile_test_scripts{$1}) {
+                &write_test_file("[+] test suite script file $1 is in $make_file.\n",
+                    $curr_test_file);
+            } else {
+                &write_test_file("[-] test suite script file $1 not in $make_file.\n",
+                    $curr_test_file);
+                $rv = 0;
+            }
+        }
+    }
+
     return $rv;
 }
 
