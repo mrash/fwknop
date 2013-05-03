@@ -92,7 +92,7 @@ add_acc_bool(unsigned char *var, const char *val)
 
 /* Add expiration time - convert date to epoch seconds
 */
-static void
+static int
 add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const char *val)
 {
     struct tm tm;
@@ -106,7 +106,7 @@ add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const c
             "Fatal: invalid date value '%s' (need MM/DD/YYYY) for access stanza expiration time",
             val
         );
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return 0;
     }
 
     if(tm.tm_mon > 0)
@@ -122,12 +122,12 @@ add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const c
 
     *access_expire_time = mktime(&tm);
 
-    return;
+    return 1;
 }
 
 /* Add expiration time via epoch seconds defined in access.conf
 */
-static void
+static int
 add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, const char *val)
 {
     char *endptr;
@@ -143,12 +143,12 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
             "Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
             val
         );
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return 0;
     }
 
     *access_expire_time = (time_t) expire_time;
 
-    return;
+    return 1;
 }
 
 #if FIREWALL_IPTABLES
@@ -1204,11 +1204,19 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE"))
         {
-            add_acc_expire_time(opts, &(curr_acc->access_expire_time), val);
+            if (add_acc_expire_time(opts, &(curr_acc->access_expire_time), val) != 1)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE_EPOCH"))
         {
-            add_acc_expire_time_epoch(opts, &(curr_acc->access_expire_time), val);
+            if (add_acc_expire_time_epoch(opts, &(curr_acc->access_expire_time), val) != 1)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "FORCE_NAT"))
         {
