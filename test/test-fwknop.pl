@@ -65,6 +65,9 @@ our %cf = (
     'hmac_force_nat_access'        => "$conf_dir/hmac_force_nat_access.conf",
     'cmd_access'                   => "$conf_dir/cmd_access.conf",
     'local_nat'                    => "$conf_dir/local_nat_fwknopd.conf",
+    'no_flush_init'                => "$conf_dir/no_flush_init_fwknopd.conf",
+    'no_flush_exit'                => "$conf_dir/no_flush_exit_fwknopd.conf",
+    'no_flush_init_or_exit'        => "$conf_dir/no_flush_init_or_exit_fwknopd.conf",
     'ipfw_active_expire'           => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
     'android_access'               => "$conf_dir/android_access.conf",
     'android_legacy_iv_access'     => "$conf_dir/android_legacy_iv_access.conf",
@@ -360,6 +363,9 @@ if ($enable_all) {
     $enable_openssl_compatibility_tests = 1;
 }
 
+unless (-d $output_dir) {
+    mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
+}
 $enable_valgrind = 0 if $disable_valgrind;
 
 ### create an anonymized tar file of test suite results that can be
@@ -492,39 +498,15 @@ my @tests = (
     @gpg_hmac,
 );
 
-my %test_keys = (
-    'category'        => $REQUIRED,
-    'subcategory'     => $OPTIONAL,
-    'detail'          => $REQUIRED,
-    'function'        => $REQUIRED,
-    'binary'          => $OPTIONAL,
-    'cmdline'         => $OPTIONAL,
-    'fwknopd_cmdline' => $OPTIONAL,
-    'fatal'           => $OPTIONAL,
-    'key_file'        => $OPTIONAL,
-    'exec_err'        => $OPTIONAL,
-    'server_exec_err' => $OPTIONAL,
-    'fw_rule_created' => $OPTIONAL,
-    'fw_rule_removed' => $OPTIONAL,
-    'server_conf'     => $OPTIONAL,
-    'pkt_prefix'      => $OPTIONAL,
-    'no_ip_check'     => $OPTIONAL,
-    'set_legacy_iv'   => $OPTIONAL,
-    'write_rc_file'   => $OPTIONAL,
-    'save_rc_stanza'  => $OPTIONAL,
-    'positive_output_matches' => $OPTIONAL,
-    'negative_output_matches' => $OPTIONAL,
-    'server_positive_output_matches' => $OPTIONAL,
-    'server_negative_output_matches' => $OPTIONAL,
-    'replay_positive_output_matches' => $OPTIONAL,
-    'replay_negative_output_matches' => $OPTIONAL,
-);
-
 &validate_test_hashes();
 
 ### make sure no fwknopd instance is currently running
 die "[*] Please stop the running fwknopd instance."
     if &is_fwknopd_running();
+
+### now that we're ready to run, preserve any previous test
+### suite output
+&preserve_previous_test_run_results();
 
 &logr("\n[+] Starting the fwknop test suite...\n\n" .
     "    args: @args_cp\n\n"
@@ -561,6 +543,47 @@ if ($enable_valgrind) {
     }
 }
 
+if ($enable_profile_coverage_check) {
+    push @tests,
+        {
+            'category' => 'profile coverage',
+            'detail'   => 'gcov profile coverage',
+            'function' => \&profile_coverage,
+            'fatal'    => $NO
+        };
+}
+
+if ($enable_valgrind) {
+    push @tests,
+        {
+            'category' => 'valgrind',
+            'subcategory' => 'fko-wrapper',
+            'detail'   => 'multiple libfko calls',
+            'function' => \&compile_execute_fko_wrapper,
+            'fatal'    => $NO
+        };
+
+    push @tests,
+        {
+            'category' => 'valgrind output',
+            'subcategory' => 'flagged functions',
+            'detail'   => '',
+            'function' => \&parse_valgrind_flagged_functions,
+            'fatal'    => $NO
+        };
+}
+
+### print a summary of how many test buckets will be run
+my $test_buckets = 0;
+for my $test_hr (@tests) {
+    next unless &process_include_exclude(&get_msg($test_hr));
+    $test_buckets++;
+    if ($test_limit > 0) {
+        last if $executed >= $test_limit;
+    }
+}
+&logr("[+] Total test buckets to execute: $test_buckets\n\n");
+
 ### main loop through all of the tests
 for my $test_hr (@tests) {
     &run_test($test_hr);
@@ -569,37 +592,6 @@ for my $test_hr (@tests) {
     }
 }
 
-if ($enable_profile_coverage_check) {
-    &run_test(
-        {
-            'category' => 'profile coverage',
-            'detail'   => 'gcov profile coverage',
-            'function' => \&profile_coverage,
-            'fatal'    => $NO
-        },
-    );
-}
-
-if ($enable_valgrind) {
-    &run_test(
-        {
-            'category' => 'valgrind',
-            'subcategory' => 'fko-wrapper',
-            'detail'   => 'multiple libfko calls',
-            'function' => \&compile_execute_fko_wrapper,
-            'fatal'    => $NO
-        }
-    );
-    &run_test(
-        {
-            'category' => 'valgrind output',
-            'subcategory' => 'flagged functions',
-            'detail'   => '',
-            'function' => \&parse_valgrind_flagged_functions,
-            'fatal'    => $NO
-        }
-    );
-}
 &logr("\n");
 
 &remove_permissions_warnings() unless $include_permissions_warnings;
@@ -649,9 +641,7 @@ sub run_test() {
     ### prepare for test run
     &rm_tmp_files();
 
-    my $msg = "[$test_hr->{'category'}]";
-    $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
-    $msg .= " $test_hr->{'detail'}";
+    my $msg = &get_msg($test_hr);
 
     $msg =~ s/REPLPKTS/-->$total_fuzzing_pkts<-- pkts/;
 
@@ -705,6 +695,16 @@ sub run_test() {
     &rm_tmp_files();
 
     return;
+}
+
+sub get_msg() {
+    my $test_hr = shift;
+
+    my $msg = "[$test_hr->{'category'}]";
+    $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
+    $msg .= " $test_hr->{'detail'}";
+
+    return $msg;
 }
 
 sub process_include_exclude() {
@@ -1331,19 +1331,29 @@ sub spa_cycle() {
     return $rv;
 }
 
-sub spoof_username() {
+sub iptables_no_flush_init_exit() {
     my $test_hr = shift;
 
-    my $rv = &spa_cycle($test_hr);
+    my $rv = 1;
 
-    unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
-        $rv = 0;
+    &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
+        "--fw-flush --verbose --verbose", $cmd_out_tmp, $curr_test_file);
+
+    if ($test_hr->{'insert_rule_before_exec'}) {
+        ### first create the fwknop chains and add a rule, then check for
+        ### this rule to either not be deleted at init or exit
+        &run_cmd("iptables -N FWKNOP_INPUT", $cmd_out_tmp, $curr_test_file);
+        &run_cmd("iptables -A FWKNOP_INPUT -p tcp -s $fake_ip --dport 1234 -j ACCEPT",
+            $cmd_out_tmp, $curr_test_file);
     }
 
-    unless (&file_find_regex([qr/Username:\s*$spoof_user/],
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
-        $rv = 0;
+    $rv = &spa_cycle($test_hr);
+
+    if ($test_hr->{'search_for_rule_after_exit'}) {
+        &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
+            "--fw-list --verbose --verbose", $cmd_out_tmp, $curr_test_file);
+        $rv = 0 unless &file_find_regex([qr/ACCEPT.*$fake_ip\s.*dpt\:1234/],
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     }
 
     return $rv;
@@ -3314,6 +3324,8 @@ sub replay_detection() {
         },
     );
 
+    sleep 1;
+
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
             = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
@@ -3547,7 +3559,6 @@ sub process_pcap_file_directly() {
 
     ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, [], $USE_PCAP_FILE);
-
 
     return $rv;
 }
@@ -3950,6 +3961,11 @@ sub client_server_interaction() {
             return (0, 0, 0, 0);
         }
         return ($rv, 0, 0, 0);
+    }
+
+    if ($test_hr->{'insert_rule_while_running'}) {
+        &run_cmd("iptables -A FWKNOP_INPUT -p tcp -s $fake_ip --dport 1234 -j ACCEPT",
+            $cmd_out_tmp, $curr_test_file);
     }
 
     ### send the SPA packet(s) to the server either manually using IO::Socket or
@@ -4897,26 +4913,61 @@ sub dots_print() {
 }
 
 sub validate_test_hashes() {
+
+    my %test_keys = (
+        'category'        => $REQUIRED,
+        'subcategory'     => $OPTIONAL,
+        'detail'          => $REQUIRED,
+        'function'        => $REQUIRED,
+        'binary'          => $OPTIONAL,
+        'cmdline'         => $OPTIONAL,
+        'fwknopd_cmdline' => $OPTIONAL,
+        'fatal'           => $OPTIONAL,
+        'key_file'        => $OPTIONAL,
+        'exec_err'        => $OPTIONAL,
+        'server_exec_err' => $OPTIONAL,
+        'fw_rule_created' => $OPTIONAL,
+        'fw_rule_removed' => $OPTIONAL,
+        'server_conf'     => $OPTIONAL,
+        'pkt'             => $OPTIONAL,
+        'fuzzing_pkt'     => $OPTIONAL,
+        'pkt_prefix'      => $OPTIONAL,
+        'no_ip_check'     => $OPTIONAL,
+        'set_legacy_iv'   => $OPTIONAL,
+        'write_rc_file'   => $OPTIONAL,
+        'save_rc_stanza'  => $OPTIONAL,
+        'positive_output_matches' => $OPTIONAL,
+        'negative_output_matches' => $OPTIONAL,
+        'insert_rule_before_exec'    => $OPTIONAL,
+        'insert_rule_while_running'  => $OPTIONAL,
+        'search_for_rule_after_exit' => $OPTIONAL,
+        'server_positive_output_matches' => $OPTIONAL,
+        'server_negative_output_matches' => $OPTIONAL,
+        'replay_positive_output_matches' => $OPTIONAL,
+        'replay_negative_output_matches' => $OPTIONAL,
+    );
+
     ### validate test hashes
-    my $hash_num = 0;
     for my $test_hr (@tests) {
+        my $msg = &get_msg($test_hr);
         for my $key (keys %test_keys) {
             if ($test_keys{$key} == $REQUIRED) {
-                die "[*] Missing '$key' element in hash: $hash_num"
+                die "[*] Missing '$key' element in test hash: '$msg'"
                     unless defined $test_hr->{$key};
             } else {
                 $test_hr->{$key} = '' unless defined $test_hr->{$key};
             }
         }
-        $hash_num++;
+        for my $key (keys %$test_hr) {
+            die "[*] Unrecognized key '$key' in test hash: '$msg'"
+                unless defined $test_keys{$key};
+        }
     }
 
     ### make sure test message strings are unique across all tests
     my %uniq_test_msgs = ();
     for my $test_hr (@tests) {
-        my $msg = "[$test_hr->{'category'}]";
-        $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
-        $msg .= " $test_hr->{'detail'}";
+        my $msg = &get_msg($test_hr);
         if (defined $uniq_test_msgs{$msg}) {
             die "[*] Duplicate test message: $msg";
         } else {
@@ -4926,9 +4977,7 @@ sub validate_test_hashes() {
 
     ### validate the 'key_file' and 'server_conf' hash keys
     for my $test_hr (@tests) {
-        my $msg = "[$test_hr->{'category'}]";
-        $msg .= " [$test_hr->{'subcategory'}]" if $test_hr->{'subcategory'};
-        $msg .= " $test_hr->{'detail'}";
+        my $msg = &get_msg($test_hr);
         if ($test_hr->{'key_file'}) {
             unless ($test_hr->{'cmdline'} =~ /\s$test_hr->{'key_file'}\b/) {
                 die "[*] 'key_file' value: '$test_hr->{'key_file'}' not matched in " .
@@ -4964,42 +5013,6 @@ sub init() {
     for my $name (keys %cf) {
         die "[*] $cf{$name} does not exist" unless -e $cf{$name};
         chmod 0600, $cf{$name} or die "[*] Could not chmod 0600 $cf{$name}";
-    }
-
-    unless ($list_mode) {
-        if (-d $output_dir) {
-            if (-d "${output_dir}.last") {
-                rmtree "${output_dir}.last"
-                    or die "[*] rmtree ${output_dir}.last $!";
-            }
-            move $output_dir, "${output_dir}.last" or die $!;
-            if (-e "$output_dir/init") {
-                copy "$output_dir/init", "${output_dir}.last/init";
-            }
-            if (-e $logfile) {
-                copy $logfile, "${output_dir}.last/$logfile" or die $!;
-            }
-            $saved_last_results = 1;
-        } else {
-            mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
-        }
-
-        if (-d $run_dir) {
-            rmtree $run_dir or die $!;
-        }
-        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
-
-        for my $dir ($output_dir, $run_dir) {
-            next if -d $dir;
-            mkdir $dir or die "[*] Could not mkdir $dir: $!";
-        }
-
-        for my $file (glob("$output_dir/*.test"), "$output_dir/init",
-                $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
-                $logfile, $key_gen_file) {
-            next unless -e $file;
-            unlink $file or die "[*] Could not unlink($file)";
-        }
     }
 
     if ($test_include) {
@@ -5142,6 +5155,45 @@ sub init() {
         }
     }
 
+    return;
+}
+
+sub preserve_previous_test_run_results() {
+    unless ($list_mode) {
+        if (-d $output_dir) {
+            if (-d "${output_dir}.last") {
+                rmtree "${output_dir}.last"
+                    or die "[*] rmtree ${output_dir}.last $!";
+            }
+            move $output_dir, "${output_dir}.last" or die $!;
+            if (-e "$output_dir/init") {
+                copy "$output_dir/init", "${output_dir}.last/init";
+            }
+            if (-e $logfile) {
+                copy $logfile, "${output_dir}.last/$logfile" or die $!;
+            }
+            $saved_last_results = 1;
+        } else {
+            mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
+        }
+
+        if (-d $run_dir) {
+            rmtree $run_dir or die $!;
+        }
+        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+
+        for my $dir ($output_dir, $run_dir) {
+            next if -d $dir;
+            mkdir $dir or die "[*] Could not mkdir $dir: $!";
+        }
+
+        for my $file (glob("$output_dir/*.test"), "$output_dir/init",
+                $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
+                $logfile, $key_gen_file) {
+            next unless -e $file;
+            unlink $file or die "[*] Could not unlink($file)";
+        }
+    }
     return;
 }
 
