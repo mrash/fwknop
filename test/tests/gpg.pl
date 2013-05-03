@@ -202,9 +202,11 @@
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22 ssh)',
-        'function' => \&spoof_username,
+        'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args",
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'positive_output_matches' => [qr/Username:\s*$spoof_user/],
+        'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'fatal'    => $NO
     },
     {

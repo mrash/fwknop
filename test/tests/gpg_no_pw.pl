@@ -163,10 +163,12 @@
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22 ssh)',
-        'function' => \&spoof_username,
+        'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
+        'positive_output_matches' => [qr/Username:\s*$spoof_user/],
+        'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'fatal'    => $NO
     },
 );
