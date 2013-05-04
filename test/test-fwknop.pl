@@ -4372,8 +4372,6 @@ sub openssl_hmac_verification() {
     my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
         $b64_decode_key, $hmac_digest, $hmac_mode, $enc_mode) = @_;
 
-    $openssl_hmac_ctr++;
-
     my $hmac_key = '';
     my $enc_msg_without_hmac = '';
     my $openssl_hmac = '';
@@ -4393,13 +4391,14 @@ sub openssl_hmac_verification() {
         "enc_mode: $enc_mode_str\n",
         $curr_test_file);
 
-    if ($hmac_key =~ /\s/ and not $openssl_hmac_hexkey_supported) {
+    if ($hmac_key =~ /\W/ and not $openssl_hmac_hexkey_supported) {
         &write_test_file("[-] openssl hex key not supported and key " .
-            "contains syntax busting spaces, skipping hmac test.\n",
+            "contains syntax busting chars, skipping hmac test.\n",
             $curr_test_file);
-        $openssl_hmac_failure_ctr++;
         return 1;
     }
+
+    $openssl_hmac_ctr++;
 
     my $hmac_digest_search = quotemeta $hmac_digest;
 
@@ -4736,7 +4735,7 @@ sub anonymize_results() {
         unlink $tarfile or die "[*] Could not unlink $tarfile: $!";
     }
 
-    print "[+] Anonymizing all IP addresses and hostnames ",
+    print "\n[+] Anonymizing all IP addresses and hostnames ",
         "from $output_dir files...\n";
 
     ### remove non-loopback IP addresses
@@ -4763,7 +4762,10 @@ sub anonymize_results() {
     ### create tarball
     print "    Creating tar file: $tarfile\n";
     system "tar cvfz $tarfile $logfile $output_dir";
-    print "[+] Anonymized test results file: $tarfile\n";
+
+    print "\n[+] Anonymized test results file: '$tarfile', you can send\n",
+        "    this to mbr\@cipherdyne.org for diagnosis.\n\n";
+
     if (-e $tarfile) {
         $rv = 1;
     }
