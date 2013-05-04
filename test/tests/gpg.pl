@@ -64,6 +64,49 @@
     {
         'category' => 'GPG',
         'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at init',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopdCmd -c $cf{'no_flush_init'} " .
+            "-a $cf{'multi_gpg_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at exit',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopdCmd -c $cf{'no_flush_exit'} " .
+            "-a $cf{'multi_gpg_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at init or exit',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_gpg_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopdCmd -c $cf{'no_flush_init_or_exit'} " .
+            "-a $cf{'multi_gpg_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GPG',
+        'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -202,9 +245,11 @@
         'category' => 'GPG',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22 ssh)',
-        'function' => \&spoof_username,
+        'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user $default_client_gpg_args",
         'fwknopd_cmdline'  => $default_server_gpg_args,
+        'positive_output_matches' => [qr/Username:\s*$spoof_user/],
+        'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'fatal'    => $NO
     },
     {

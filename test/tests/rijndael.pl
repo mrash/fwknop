@@ -147,6 +147,83 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'fatal'    => $NO
     },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client->server compatibility',
+        'detail'   => 'Cygwin Windows 2008',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '8GuHEQbyE4TuEbP7zL2DVsTbQv8x3jp8mdHFM0v+9ZUfgZMjuZLBvAa8NnmUdAb' .
+            '/OUvCP5PFDVbLDnZ+JYUFMGexGRwlk5CEKX8KA8R1Xh5xIdbVxWzy1lY1imRQD5' .
+            'wpIBx/hGB4O2G3mdJSe3w5zxGjE2JNSFKCAZzvgDmfLQM9A+tjMKPk6x',
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at init',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'no_flush_init'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/\'\schain exists/,
+            qr/^2\s+ACCEPT.*$fake_ip\s.*dpt\:22/,
+        ],
+        'insert_rule_before_exec' => $YES,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at exit',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'no_flush_exit'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/\'\schain exists/,
+            qr/^2\s+ACCEPT.*$fake_ip\s.*dpt\:22/,
+        ],
+        'insert_rule_while_running'  => $YES,
+        'search_for_rule_after_exit' => $YES,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at init or exit',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'no_flush_init_or_exit'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/\'\schain exists/,
+            qr/^2\s+ACCEPT.*$fake_ip\s.*dpt\:22/,
+        ],
+        'insert_rule_before_exec'    => $YES,
+        'search_for_rule_after_exit' => $YES,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO,
+    },
+
     {
         'category' => 'Rijndael',
         'subcategory' => 'client',
@@ -1076,12 +1153,14 @@
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'spoof username (tcp/22)',
-        'function' => \&spoof_username,
+        'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --verbose --verbose",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
+        'positive_output_matches' => [qr/Username:\s*$spoof_user/],
+        'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'fatal'    => $NO
     },
 

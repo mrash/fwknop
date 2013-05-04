@@ -56,6 +56,71 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at init',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'no_flush_init'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at exit',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'no_flush_exit'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'iptables - no flush at init or exit',
+        'function' => \&iptables_no_flush_init_exit,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'no_flush_init_or_exit'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'fatal'    => $NO
+    },
+
+    {
+
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client->server compatibility',
+        'detail'   => 'Cygwin Windows 2008',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+NHb5ytzAppxOdX/sy48+nvGNzsR9Bq6wbaakwihbepSDlZWpBwG7HOv0V' .
+            '1Lwzpt5/vYMkmzCr1aXdgBPJVkqMQQZppjkxMApQGbX0MXLPG+aqP9MGWr' .
+            'mpOVjSY8vW5uc8wOhnNJFtu77jvR7MIDFOkNO16LbLV+IxQOmoJHE2+lUH' .
+            '1nvudMWCORI/tzK/QU5YWFAXbbjFhR6RgvdWfzDhwxAEpNfd5gE',
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_cygwin_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
     {
 
         'category' => 'Rijndael+HMAC',

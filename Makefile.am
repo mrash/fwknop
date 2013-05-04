@@ -142,7 +142,12 @@ EXTRA_DIST = \
     test/conf/fuzzing_restrict_ports_access.conf \
     test/conf/fuzzing_source_access.conf \
     test/conf/gpg_access.conf \
+    test/conf/gpg_hmac_access.conf \
     test/conf/gpg_no_pw_access.conf \
+    test/conf/gpg_no_pw_hmac_access.conf \
+    test/conf/no_flush_init_fwknopd.conf \
+    test/conf/no_flush_exit_fwknopd.conf \
+    test/conf/no_flush_init_or_exit_fwknopd.conf \
     test/conf/hmac_access.conf \
     test/conf/hmac_no_b64_access.conf \
     test/conf/hmac_dual_key_usage_access.conf \
@@ -166,8 +171,10 @@ EXTRA_DIST = \
     test/conf/hmac_simple_keys_access.conf \
     test/conf/hmac_sha256_open_ports_access.conf \
     test/conf/hmac_force_nat_access.conf \
+    test/conf/hmac_no_b64_cygwin_access.conf \
     test/conf/fwknoprc_default_hmac_base64_key \
     test/conf/fwknoprc_hmac_key2 \
+    test/conf/fwknoprc_gpg_hmac_key \
     test/conf/fwknoprc_hmac_invalid_type \
     test/conf/fwknoprc_hmac_md5_key \
     test/conf/fwknoprc_hmac_md5_long_key \
@@ -246,6 +253,7 @@ EXTRA_DIST = \
     test/tests/basic_operations.pl \
     test/tests/rijndael_hmac.pl \
     test/tests/rijndael_backwards_compatibility.pl \
+    test/tests/gpg_hmac.pl \
     test/tests/gpg_no_pw.pl \
     test/tests/gpg_no_pw_hmac.pl \
     test/tests/gpg.pl \
