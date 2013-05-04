@@ -134,10 +134,31 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
     "NAT_PORT"
 };
 
+/**
+ * @brief Ask the user if a variable must be overwriyten or not for a specific stanza
+ *
+ * @param var Variable which should be overwritten
+ * @param stanza Stanza where the variable should be overwritten
+ *
+ * @return 1 if the user wants to overwrite the variable, 0 otherwise
+ */
 static int
-ask_overwrite(void)
+ask_overwrite_var(const char *var, const char *stanza)
 {
-    log_msg(LOG_VERBOSITY_NORMAL, "Overwrite key ? [Y/N]");
+    char    user_input;
+    int     overwrite = 0;
+
+    log_msg(LOG_VERBOSITY_NORMAL,
+            "Overwritting variable '%s' in stanza '%s' [N/y] ? ",
+            var, stanza);
+
+    if (scanf("%c", &user_input) != 1)
+        user_input = 'N';
+
+    if ( (user_input != 'N') && (user_input != 0x0A ) )
+        overwrite = 1;
+
+    return  overwrite;
 }
 
 /**
@@ -553,7 +574,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     int conf_key_ndx;       /* Index on the fwknop conf variable in the fwknop_cli_key_tab array */
     int parse_error = 0;    /* 0 if the variable has been successfully processed, < 0 otherwise */
 
-    log_msg(LOG_VERBOSITY_DEBUG, "add_rc_param() : Parsing variable %s...", var);
+    log_msg(LOG_VERBOSITY_DEBUG, "parse_rc_param() : Parsing variable %s...", var);
 
     conf_key_ndx = lookup_fwknop_conf_var_ndx(var);
 
@@ -945,11 +966,11 @@ add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options
             snprintf(val, sizeof(val)-1, "%d", options->nat_port);
             break;
         default:
-            log_msg(LOG_VERBOSITY_WARNING, "Warning from add_rc_param() : Bad command line argument %u", arg_ndx);
+            log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad command line argument %u", arg_ndx);
             return;
     }
 
-    log_msg(LOG_VERBOSITY_DEBUG, "add_rc_param() : Updating param (%u) %s to %s",
+    log_msg(LOG_VERBOSITY_DEBUG, "add_single_var_to_rc() : Updating param (%u) %s to %s",
                 arg_ndx, fwknop_cli_key_tab[arg_ndx], val);
 
     fprintf(fhandle, RC_PARAM_TEMPLATE, fwknop_cli_key_tab[arg_ndx], val);
@@ -973,7 +994,7 @@ add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, uint32_t bitmask)
     for (var_ndx=0 ; var_ndx<ARRAY_SIZE(fwknop_cli_key_tab) ; var_ndx++)
     {
         if (FWKNOP_CLI_ARG_BM(var_ndx) & bitmask)
-            add_rc_param(rc, var_ndx, options);
+            add_single_var_to_rc(rc, var_ndx, options);
     }
 }
 
@@ -1190,11 +1211,10 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
 
                 if (var_bm & FWKNOP_CRITICAL_VARS_BM)
                 {
-                    /* TODO: Ask the user what to do. Discard or keep ? */
-                    log_msg(LOG_VERBOSITY_WARNING,
-                            "Critical variable not overwritten : %s",
-                            param.name);
-                    args_bitmask &= ~var_bm;
+                    if (ask_overwrite_var(param.name, curr_stanza))
+                        continue;
+                    else
+                        args_bitmask &= ~var_bm;
                 }
                 else
                     continue;
