@@ -57,6 +57,7 @@ our %cf = (
     'hmac_sha512_long_key_access'  => "$conf_dir/hmac_sha512_long_key_access.conf",
     'hmac_simple_keys_access'      => "$conf_dir/hmac_simple_keys_access.conf",
     'hmac_invalid_type_access'     => "$conf_dir/hmac_invalid_type_access.conf",
+    'hmac_cygwin_access'           => "$conf_dir/hmac_no_b64_cygwin_access.conf",
     'exp_access'                   => "$conf_dir/expired_stanza_access.conf",
     'future_exp_access'            => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'             => "$conf_dir/expired_epoch_stanza_access.conf",

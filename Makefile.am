@@ -171,6 +171,7 @@ EXTRA_DIST = \
     test/conf/hmac_simple_keys_access.conf \
     test/conf/hmac_sha256_open_ports_access.conf \
     test/conf/hmac_force_nat_access.conf \
+    test/conf/hmac_no_b64_cygwin_access.conf \
     test/conf/fwknoprc_default_hmac_base64_key \
     test/conf/fwknoprc_hmac_key2 \
     test/conf/fwknoprc_gpg_hmac_key \

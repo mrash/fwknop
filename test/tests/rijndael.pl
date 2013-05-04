@@ -150,6 +150,25 @@
 
     {
         'category' => 'Rijndael',
+        'subcategory' => 'client->server compatibility',
+        'detail'   => 'Cygwin Windows 2008',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '8GuHEQbyE4TuEbP7zL2DVsTbQv8x3jp8mdHFM0v+9ZUfgZMjuZLBvAa8NnmUdAb' .
+            '/OUvCP5PFDVbLDnZ+JYUFMGexGRwlk5CEKX8KA8R1Xh5xIdbVxWzy1lY1imRQD5' .
+            'wpIBx/hGB4O2G3mdJSe3w5zxGjE2JNSFKCAZzvgDmfLQM9A+tjMKPk6x',
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => 'iptables - no flush at init',
         'function' => \&iptables_no_flush_init_exit,
