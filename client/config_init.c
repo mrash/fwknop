@@ -134,6 +134,12 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
     "NAT_PORT"
 };
 
+static int
+ask_overwrite(void)
+{
+    log_msg(LOG_VERBOSITY_NORMAL, "Overwrite key ? [Y/N]");
+}
+
 /**
  * @brief Check if a string is an fwknop configuration variable and return its index
  *
@@ -823,7 +829,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
  * \param options FKO command line option structure
  */
 static void
-add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
+add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
 {
     char    val[MAX_LINE_LEN]  = {0};
 
@@ -950,7 +956,7 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
 }
 
 /**
- * @brief Insert configuration variables in a file
+ * @brief Add configuration variables in a file
  *
  * The parameters are selected by a bitmask and extracted from the
  * fko_cli_options_t structure.
@@ -960,7 +966,7 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
  * @param bitmask   Bitmask used to select the parameters to add
  */
 static void
-insert_rc_variables(FILE* rc, fko_cli_options_t *options, uint32_t bitmask)
+add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, uint32_t bitmask)
 {
     short   var_ndx = 0;    /* Index of a configuration variable in fwknop_cli_key_tab array */
 
@@ -1158,7 +1164,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
             if (stanza_found)
             {
                 log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", curr_stanza);
-                insert_rc_variables(rc_update, options, args_bitmask);
+                add_multiple_vars_to_rc(rc_update, options, args_bitmask);
                 stanza_updated = 1;
             }
 
@@ -1210,7 +1216,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Inserting new %s stanza", curr_stanza);
         fprintf(rc_update, "\n");
         fprintf(rc_update, RC_SECTION_TEMPLATE, options->use_rc_stanza);
-        insert_rc_variables(rc_update, options, args_bitmask);
+        add_multiple_vars_to_rc(rc_update, options, args_bitmask);
     }
 
     /* Close file handles */
