@@ -185,7 +185,7 @@ jump_rule_exists(const int chain_num)
     char    line_buf[CMD_BUFSIZE] = {0};
     FILE   *ipt;
 
-    sprintf(cmd_buf, "%s " IPT_LIST_RULES_ARGS,
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
         fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].from_chain

@@ -249,7 +249,7 @@ parse_url(char *res_url, struct url* url)
             return(-1);
         }
 
-        sprintf(url->port, "%u", port);
+        snprintf(url->port, sizeof(url->port)-1, "%u", port);
 
         /* Get the offset we need to skip the port portion when we
          * extract the hostname part.
@@ -307,6 +307,8 @@ resolve_ip_http(fko_cli_options_t *options)
 {
     int     res;
     struct  url url;
+
+    memset(&url, 0, sizeof(url));
 
     if(options->resolve_url != NULL)
     {
