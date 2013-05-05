@@ -149,7 +149,7 @@ ask_overwrite_var(const char *var, const char *stanza)
     int     overwrite = 0;
 
     log_msg(LOG_VERBOSITY_NORMAL,
-            "Overwritting variable '%s' in stanza '%s' [N/y] ? ",
+            "Variable '%s' found in stanza '%s'. Overwrite [N/y] ? ",
             var, stanza);
 
     if (scanf("%c", &user_input) != 1)
@@ -158,7 +158,7 @@ ask_overwrite_var(const char *var, const char *stanza)
     if ( (user_input != 'N') && (user_input != 0x0A ) )
         overwrite = 1;
 
-    return  overwrite;
+    return overwrite;
 }
 
 /**
@@ -1199,6 +1199,11 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         /* If we are processing a parameter for our stanza */
         else if (stanza_found)
         {
+            /* If the user has specified a force option, tyhere is no need to
+             * check for critical variables */
+            if (options->force_save_rc_stanza)
+                continue;
+
             /* Discard all lines since no critical vars have to be set */
             if (!(args_bitmask & FWKNOP_CRITICAL_VARS_BM))
                 continue;
@@ -1736,6 +1741,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
                 options->use_hmac = 1;
                 break;
+            case FORCE_SAVE_RC_STANZA:
+                options->force_save_rc_stanza = 1;
+                break;
             default:
                 usage();
                 exit(EXIT_FAILURE);
@@ -1856,6 +1864,8 @@ usage(void)
       "     --save-rc-stanza        Save command line arguments to the\n"
       "                             $HOME/.fwknoprc stanza specified with the\n"
       "                             -n option.\n"
+      "     --force-stanza          Used with --save-rc-stanza to overwrite all of\n"
+      "                             the variables for the specified stanza\n"
       "     --nat-local             Access a local service via a forwarded port\n"
       "                             on the fwknopd server system.\n"
       "     --nat-port              Specify the port to forward to access a\n"
