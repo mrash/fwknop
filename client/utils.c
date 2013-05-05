@@ -212,7 +212,7 @@ resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size
     int                 error;      /* Function error return code */
     struct addrinfo    *result;     /* Result of getaddrinfo() */
     struct addrinfo    *rp;         /* Element of the linked list returned by getaddrinfo() */
-#ifdef WIN32
+#if WIN32 && WINVER <= 0x0600
 	struct sockaddr_in *in;
 	char			   *win_ip;
 #else
@@ -232,8 +232,8 @@ resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size
         for (rp = result; rp != NULL; rp = rp->ai_next)
         {
             memset(ip_str, 0, ip_bufsize);
-#ifdef WIN32
-			/* On older Windows systems (anything before Vista, server 2008),
+#if WIN32 && WINVER <= 0x0600
+			/* On older Windows systems (anything before Vista?),
 			 * we use inet_ntoa for now.
 			*/
 			in = (struct sockaddr_in*)(rp->ai_addr);
