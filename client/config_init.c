@@ -52,7 +52,9 @@
 #define FWKNOP_CRITICAL_VARS_BM     (     FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL)        \
                                         | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64) \
                                         | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC)            \
-                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64) )
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64)     \
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_RECIPIENT)       \
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_SIGNER) )
 
 /**
  * Structure to handle a variable in an rcfile
@@ -324,6 +326,8 @@ is_rc_param(const char *line, rc_file_param_t *param)
     char    var[MAX_LINE_LEN] = {0};
     char    val[MAX_LINE_LEN] = {0};
     char    *ndx;
+
+    memset(param, 0, sizeof(param));
 
     /* Fetch the variable and its value */
     if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)
