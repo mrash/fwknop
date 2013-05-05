@@ -262,7 +262,7 @@ rij_encrypt(unsigned char *in, size_t in_len,
      * multiple of the Rijndael block size
     */
     pad_val = RIJNDAEL_BLOCKSIZE - (in_len % RIJNDAEL_BLOCKSIZE);
-    for (i = in_len; i < in_len+pad_val; i++)
+    for (i = (int)in_len; i < ((int)in_len+pad_val); i++)
         in[i] = pad_val;
 
     block_encrypt(&ctx, in, in_len+pad_val, ondx, ctx.iv);

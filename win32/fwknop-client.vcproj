@@ -425,6 +425,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\lib\fko_util.c"
+				>
+			</File>
+			<File
 				RelativePath="..\client\fwknop.c"
 				>
 			</File>
@@ -442,6 +446,10 @@
 			</File>
 			<File
 				RelativePath="..\client\http_resolve_host.c"
+				>
+			</File>
+			<File
+				RelativePath="..\client\log_msg.c"
 				>
 			</File>
 			<File
@@ -467,6 +475,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\client\cmd_opts.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\common.h"
 				>
 			</File>
@@ -483,6 +495,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\lib\fko_util.h"
+				>
+			</File>
+			<File
 				RelativePath="..\client\fwknop.h"
 				>
 			</File>
@@ -496,6 +512,14 @@
 			</File>
 			<File
 				RelativePath="..\client\getpasswd.h"
+				>
+			</File>
+			<File
+				RelativePath="..\client\log_msg.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\netinet_common.h"
 				>
 			</File>
 			<File

@@ -569,7 +569,7 @@ fko_encryption_type(const char * const enc_data)
 /* Set the GPG recipient key name.
 */
 int
-fko_set_gpg_recipient(fko_ctx_t ctx, const char *recip)
+fko_set_gpg_recipient(fko_ctx_t ctx, const char * const recip)
 {
 #if HAVE_LIBGPGME
     int             res;

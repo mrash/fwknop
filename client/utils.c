@@ -31,7 +31,9 @@
 #include "common.h"
 #include "fwknop_common.h"
 #include "utils.h"
+#ifndef WIN32
 #include <arpa/inet.h>
+#endif
 
 static void *get_in_addr(struct sockaddr *sa);
 
