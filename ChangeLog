@@ -57,6 +57,9 @@ fwknop-2.5 (//2013):
       actually going to be NAT'd on the fwknopd side).
     - (Vlad Glagolev) Submitted an OpenBSD port for fwknop-2.0.4, and this has
       been checked in under the extras/openbsd/fwknop-2.0.4 directory.
+    - (Shawn Wilson) Added better SPA source IP logging for various fwknopd
+      logging messages.  This helps to make it more clear why certain SPA
+      packets are rejected from some systems.
 
 fwknop-2.0.4 (12/09/2012):
     - [client] Misc fixes and the addition of save_args and last command 

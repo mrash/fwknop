@@ -119,3 +119,8 @@ Ruhsam Bernhard
       command mode SPA packets not decrypting properly because only GPG decrypt
       attempts were made.  This issue was fixed in
       7e784df3870373f055a2f0f8d818829501bcb1c0.
+
+Shawn Wilson
+    - Added better SPA source IP logging for various fwknopd logging messages.
+      This helps to make it more clear why certain SPA packets are rejected
+      from some systems.
