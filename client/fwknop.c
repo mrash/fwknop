@@ -220,12 +220,14 @@ main(int argc, char **argv)
             fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
                 options.key_base64, options.hmac_key_base64);
             fclose(key_gen_file_ptr);
-            printf("[+] Wrote Rijndael and HMAC keys to: %s\n",
+            log_msg(LOG_VERBOSITY_NORMAL,
+                    "[+] Wrote Rijndael and HMAC keys to: %s",
                 options.key_gen_file);
         }
         else
         {
-            printf("KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
+            log_msg(LOG_VERBOSITY_NORMAL,
+                    "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s",
                     options.key_base64, options.hmac_key_base64);
         }
         return(EXIT_SUCCESS);
