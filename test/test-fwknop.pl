@@ -396,7 +396,7 @@ our $client_rewrite_rc_args = "$default_client_args_no_get_key " .
     "--rc-file $rewrite_rc_file --test";
 
 our $client_save_rc_args = "$default_client_args_no_get_key " .
-    "--rc-file $save_rc_file --save-rc-stanza --test";
+    "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test";
 
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
