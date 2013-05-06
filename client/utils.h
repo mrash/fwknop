@@ -36,8 +36,15 @@
 #endif
 
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#ifdef WIN32
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+#else
+  #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+  #endif
+  #include <netdb.h>
+#endif
 
 #define PROTOCOL_BUFSIZE    16      /*!< Maximum number of chars for a protocol string (TCP for example) */
 

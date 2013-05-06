@@ -51,6 +51,10 @@ const char * msg_type_inttostr(const int type);
 size_t  strlcat(char *dst, const char *src, size_t siz);
 size_t  strlcpy(char *dst, const char *src, size_t siz);
 
+#ifdef WIN32
+char * strndup( const char * s, size_t len );
+#endif
+
 #endif /* FKO_UTIL_H */
 
 /***EOF***/

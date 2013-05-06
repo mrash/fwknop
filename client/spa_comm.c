@@ -590,13 +590,13 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     struct sockaddr_in  saddr, daddr;
     char                ip_str[INET_ADDRSTRLEN] = {0};  /* String used to contain the ip addres of an hostname */
     struct addrinfo     hints;                          /* Structure used to set hints to reslove hostname */
-
-    /* Initialize the hint buffer */
-    memset(&hints, 0 , sizeof(hints));
-
 #ifdef WIN32
     WSADATA wsa_data;
 #endif
+
+
+    /* Initialize the hint buffer */
+    memset(&hints, 0 , sizeof(hints));
 
     /* Get our spa data here.
     */
