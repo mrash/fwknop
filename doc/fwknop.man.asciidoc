@@ -190,6 +190,10 @@ GENERAL OPTIONS
     Save command line arguments to the $HOME/.fwknoprc stanza specified with
     the -n option.
 
+*--force-stanza*::
+    Used with --save-rc-stanza to overwrite all of the variables for the
+    specified stanza
+
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
 

@@ -155,7 +155,7 @@ our $gpg_client_key = '6A3FAD56';
 
 our $loopback_ip       = '127.0.0.1';
 our $fake_ip           = '127.0.0.2';
-our $fake_spoof_ip     = '1.2.3.4';
+our $spoof_ip          = '1.2.3.4';
 our $internal_nat_host = '192.168.1.2';
 our $force_nat_host    = '192.168.1.123';
 our $default_spa_port  = 62201;
@@ -165,7 +165,6 @@ our $spoof_user = 'testuser';
 
 my $valgrind_cov_dir = 'valgrind-coverage';
 
-our $spoof_ip   = '1.2.3.4';
 my $perl_mod_fko_dir = 'FKO';
 my $python_fko_dir   = 'python_fko';
 my $python_script    = 'fko-python.py';
@@ -399,7 +398,7 @@ our $client_rewrite_rc_args = "$default_client_args_no_get_key " .
     "--rc-file $rewrite_rc_file --test";
 
 our $client_save_rc_args = "$default_client_args_no_get_key " .
-    "--rc-file $save_rc_file --save-rc-stanza --test";
+    "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test";
 
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";

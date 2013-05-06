@@ -46,6 +46,16 @@
 #define PARAM_YES_VALUE             "Y"                         /*!< String which represents a YES value for a parameter in fwknoprc */
 #define PARAM_NO_VALUE              "N"                         /*!< String which represents a NO value for a parameter in fwknoprc */
 
+/* Marco to define which conf. variables are critical and should not be
+ * overwritten when a stanza is updated using the --save-rc-stanza arg
+ * without the user validation */
+#define FWKNOP_CRITICAL_VARS_BM     (     FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL)        \
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64) \
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC)            \
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64)     \
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_RECIPIENT)       \
+                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_SIGNER) )
+
 /**
  * Structure to handle a variable in an rcfile
  */
@@ -129,15 +139,98 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
 };
 
 /**
- * \brief Set a string as a Yes or No value according to a boolean (0 or 1).
+ * @brief Ask the user if a variable must be overwriyten or not for a specific stanza
+ *
+ * @param var Variable which should be overwritten
+ * @param stanza Stanza where the variable should be overwritten
+ *
+ * @return 1 if the user wants to overwrite the variable, 0 otherwise
+ */
+static int
+ask_overwrite_var(const char *var, const char *stanza)
+{
+    char    user_input;
+    int     overwrite = 0;
+
+    log_msg(LOG_VERBOSITY_NORMAL,
+            "Variable '%s' found in stanza '%s'. Overwrite [N/y] ? ",
+            var, stanza);
+
+    if (scanf("%c", &user_input) != 1)
+        user_input = 'N';
+
+    if ( (user_input != 'N') && (user_input != 0x0A ) )
+        overwrite = 1;
+
+    return overwrite;
+}
+
+/**
+ * @brief Check if a string is an fwknop configuration variable and return its index
+ *
+ * This function parses the fwknop_cli_key_tab array and try to find a match
+ * for the user string, which indicates we have found a configuration variable.
+ *
+ * @param str String to compare against every fwknop conf variables
+ *
+ * @return the variable index in the fwknop_cli_key_tab array if found
+ *         -1 otherwise
+ */
+static short
+lookup_fwknop_conf_var_ndx(const char *str)
+{
+    short ndx;      /* Index on the the fwknop_cli_key_tab array */
+
+    /* Check str against each variable available in fwknop_cli_key_tab */
+    for (ndx=0 ; ndx<ARRAY_SIZE(fwknop_cli_key_tab) ; ndx++)
+    {
+        if (CONF_VAR_IS(str, fwknop_cli_key_tab[ndx]))
+            break;
+    }
+
+    /* If str is not an fwknop configuration variable, set a wrong index  */
+    if (ndx >= ARRAY_SIZE(fwknop_cli_key_tab))
+        ndx = -1;
+
+    return ndx;
+}
+
+/**
+ * @brief Return the configuration variable bitmask
+ *
+ * @param str Configuration variable string
+ *
+ * @return the configuration variable bitmask if found
+ *         0 otherwise
+ */
+static uint32_t
+lookup_fwknop_conf_var_bm(const char *str)
+{
+    short       ndx;    /* Index on the the fwknop_cli_key_tab array */
+    uint32_t    bm = 0; /* Bitmask associated to an fwknop conf variable */
+
+    /* Look for the index of the variable */
+    ndx = lookup_fwknop_conf_var_ndx(str);
+
+    /* Get its bitmask */
+    if (ndx >= 0)
+        bm = FWKNOP_CLI_ARG_BM(ndx);
+
+    else;
+
+    return bm;
+}
+
+/**
+ * @brief Set a string as a Yes or No value according to a boolean (0 or 1).
  *
  * This function checks whether a value is set to zero or not, and updates a
  * string to a YES_NO parameter value.
  * The string must be zeroed before being passed to the function.
  *
- * \param val Variable to check
- * \param s String where to store the YES_NO value.
- * \param len Number of bytes avaialble for the s buffer.
+ * @param val Variable to check
+ * @param s String where to store the YES_NO value.
+ * @param len Number of bytes avaialble for the s buffer.
  */
 static void
 bool_to_yesno(int val, char* s, size_t len)
@@ -169,17 +262,17 @@ is_yes_str(const char *s)
 }
 
 /**
- * \brief Check if a section is in a line and fetch it.
+ * @brief Check if a section is in a line and fetch it.
  *
  * This function parses a NULL terminated string in order to find a section,
  * something like [mysection]. If it succeeds, the stanza is retrieved.
  *
- * \param line String containing a line from the rc file to check for a section
- * \param line_size size of the line buffer
- * \param rc_section String to store the section found
- * \param rc_section_size Size of the rc_section buffer
+ * @param line String containing a line from the rc file to check for a section
+ * @param line_size size of the line buffer
+ * @param rc_section String to store the section found
+ * @param rc_section_size Size of the rc_section buffer
  *
- * \return 1 if a section was found, 0 otherwise
+ * @return 1 if a section was found, 0 otherwise
  */
 static int
 is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t rc_section_size)
@@ -236,6 +329,8 @@ is_rc_param(const char *line, rc_file_param_t *param)
     char    val[MAX_LINE_LEN] = {0};
     char    *ndx;
 
+    memset(param, 0, sizeof(param));
+
     /* Fetch the variable and its value */
     if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)
     {
@@ -254,7 +349,6 @@ is_rc_param(const char *line, rc_file_param_t *param)
      */
     var[MAX_LINE_LEN-1] = 0x0;
     val[MAX_LINE_LEN-1] = 0x0;
-
 
     /* Copy back the val and var in the structure */
     strlcpy(param->name, var, sizeof(param->name));
@@ -486,15 +580,9 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     int conf_key_ndx;       /* Index on the fwknop conf variable in the fwknop_cli_key_tab array */
     int parse_error = 0;    /* 0 if the variable has been successfully processed, < 0 otherwise */
 
-    log_msg(LOG_VERBOSITY_DEBUG, "add_rc_param() : Parsing variable %s...", var);
+    log_msg(LOG_VERBOSITY_DEBUG, "parse_rc_param() : Parsing variable %s...", var);
 
-    /* Go through the fwknop_cli_arg to find out which variable
-     * we should work on. */
-    for(conf_key_ndx=0 ; conf_key_ndx<ARRAY_SIZE(fwknop_cli_key_tab) ; conf_key_ndx++)
-    {
-        if (CONF_VAR_IS(var, fwknop_cli_key_tab[conf_key_ndx]))
-            break;
-    }
+    conf_key_ndx = lookup_fwknop_conf_var_ndx(var);
 
     /* Digest Type */
     if (conf_key_ndx == FWKNOP_CLI_ARG_DIGEST_TYPE)
@@ -774,7 +862,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
  * \param options FKO command line option structure
  */
 static void
-add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
+add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
 {
     char    val[MAX_LINE_LEN]  = {0};
 
@@ -813,9 +901,7 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
                 snprintf(val, sizeof(val)-1, "-%d", options->time_offset_minus);
             else if (options->time_offset_plus != 0)
                 snprintf(val, sizeof(val)-1, "%d", options->time_offset_plus);
-            else
-            {
-            }
+            else;
             break;
         case FWKNOP_CLI_ARG_ENCRYPTION_MODE :
             enc_mode_inttostr(options->encryption_mode, val, sizeof(val));
@@ -883,9 +969,7 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_RESOLVE_URL :
             if (options->resolve_url != NULL)
                 strlcpy(val, options->resolve_url, sizeof(val));
-            else
-            {
-            }
+            else;
             break;
         case FWKNOP_CLI_ARG_NAT_LOCAL :
             bool_to_yesno(options->nat_local, val, sizeof(val));
@@ -897,27 +981,49 @@ add_rc_param(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
             snprintf(val, sizeof(val)-1, "%d", options->nat_port);
             break;
         default:
-            log_msg(LOG_VERBOSITY_WARNING, "Warning from add_rc_param() : Bad command line argument %u", arg_ndx);
+            log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad command line argument %u", arg_ndx);
             return;
     }
 
-    log_msg(LOG_VERBOSITY_DEBUG, "add_rc_param() : Updating param (%u) %s to %s",
+    log_msg(LOG_VERBOSITY_DEBUG, "add_single_var_to_rc() : Updating param (%u) %s to %s",
                 arg_ndx, fwknop_cli_key_tab[arg_ndx], val);
 
     fprintf(fhandle, RC_PARAM_TEMPLATE, fwknop_cli_key_tab[arg_ndx], val);
 }
 
 /**
- * Process the fwknoprc file and lookup a section to extract its settings.
+ * @brief Add configuration variables in a file
+ *
+ * The parameters are selected by a bitmask and extracted from the
+ * fko_cli_options_t structure.
+ *
+ * @param rc        File handle on the file to write to
+ * @param options   fko_cli_options_t structure containing the values of the parameters
+ * @param bitmask   Bitmask used to select the parameters to add
+ */
+static void
+add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, uint32_t bitmask)
+{
+    short   var_ndx = 0;    /* Index of a configuration variable in fwknop_cli_key_tab array */
+
+    for (var_ndx=0 ; var_ndx<ARRAY_SIZE(fwknop_cli_key_tab) ; var_ndx++)
+    {
+        if (FWKNOP_CLI_ARG_BM(var_ndx) & bitmask)
+            add_single_var_to_rc(rc, var_ndx, options);
+    }
+}
+
+/**
+ * @brief Process the fwknoprc file and lookup a section to extract its settings.
  *
  * This function aims at loading the settings for a specific section in
  * a fwknoprc file.
  *
- * \param section_name  Name of the section to lookup.
- * \param options       Fwknop option structure where settings have to
+ * @param section_name  Name of the section to lookup.
+ * @param options       Fwknop option structure where settings have to
  *                      be stored.
  *
- * \return 0 if the section has been found and processed successfully
+ * @return 0 if the section has been found and processed successfully
  *         a negative value if one or more errors occured
  */
 static int
@@ -1005,29 +1111,30 @@ process_rc_section(char *section_name, fko_cli_options_t *options)
 }
 
 /**
- * \brief Update the user rc file with the new parameters for a selected stanza.
+ * @brief Update the user rc file with the new parameters for a selected stanza.
  *
  * This function writes the new configuration in a temporary file and renames it
  * as the new rc file afterwards. All of the previous parameters for the
  * selected stanza are removed and replaced by the arguments from the command
  * line.
  *
- * \param options structure containing all of the fko settings
- * \param args_bitmask command line argument bitmask
+ * @param options structure containing all of the fko settings
+ * @param args_bitmask command line argument bitmask
  */
 static void
 update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
 {
-    FILE        *rc;
-    FILE        *rc_update;
-    int         stanza_found = 0;
-    int         stanza_updated = 0;
-    char        line[MAX_LINE_LEN];
-    char        rcfile[MAX_PATH_LEN];
-    char        rcfile_update[MAX_PATH_LEN];
-    char        curr_stanza[MAX_LINE_LEN] = {0};
-    uint16_t    arg_ndx = 0;
-    int         rcfile_fd = -1;
+    FILE           *rc;
+    FILE           *rc_update;
+    int             rcfile_fd = -1;
+    int             stanza_found = 0;
+    int             stanza_updated = 0;
+    char            line[MAX_LINE_LEN];
+    char            rcfile[MAX_PATH_LEN];
+    char            rcfile_update[MAX_PATH_LEN];
+    char            curr_stanza[MAX_LINE_LEN] = {0};
+    uint32_t        var_bm  = 0;                        /* Bitmask associated to a conf. variable */
+    rc_file_param_t param;                              /* Structure to contain a conf. variable name with its value  */
 
     memset(rcfile, 0, MAX_PATH_LEN);
     memset(rcfile_update, 0, MAX_PATH_LEN);
@@ -1063,6 +1170,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         log_msg(LOG_VERBOSITY_WARNING,
                 "update_rc() : Unable to open rc file: %s: %s",
                 rcfile_update, strerror(errno));
+        return;
     }
 
     /* Go though the file line by line */
@@ -1074,37 +1182,67 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         /* If we find a section... */
         if(is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 1)
         {
-            /* and this is the one we are looking for, we add the new settings */
-            if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN)==0)
-            {
+            /* and this is the one we are looking for, we set the stanza
+             * as found */
+            if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN) == 0)
                 stanza_found = 1;
-                fprintf(rc_update, RC_SECTION_TEMPLATE, curr_stanza);
 
-                log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", curr_stanza);
-
-                for (arg_ndx=0 ; arg_ndx<FWKNOP_CLI_ARG_NB ; arg_ndx++)
-                {
-                    if (FWKNOP_CLI_ARG_BM(arg_ndx) & args_bitmask)
-                        add_rc_param(rc_update, arg_ndx, options);
-                }
-
-                stanza_updated = 1;
-
-                continue;
-            }
-            /* otherwise we disable the stanza since it is another section */
-            else
-              stanza_found = 0;
-        }
-
-        /* For the current section we do not add previous settings until we
-         * find an empty line*/
-        if (stanza_found)
-        {
-            if (!IS_EMPTY_LINE(line[0]))
-                continue;
+            /* otherwise we disable the stanza since */
             else
                 stanza_found = 0;
+        }
+
+        /* If we are processing new lines */
+        else if (IS_EMPTY_LINE(line[0]))
+        {
+            /* and this is the end of the stanza to update, it means we have finished
+             * to parse it, and we can update its parameters */
+            if (stanza_found)
+            {
+                log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", curr_stanza);
+                add_multiple_vars_to_rc(rc_update, options, args_bitmask);
+                stanza_updated = 1;
+            }
+
+            /* End of a stanza that we do not care */
+            else;
+
+            /* Discard all stanza */
+            stanza_found = 0;
+        }
+
+        /* If we are processing a parameter for our stanza */
+        else if (stanza_found)
+        {
+            /* If the user has specified a force option, tyhere is no need to
+             * check for critical variables */
+            if (options->force_save_rc_stanza)
+                continue;
+
+            /* Discard all lines since no critical vars have to be set */
+            if (!(args_bitmask & FWKNOP_CRITICAL_VARS_BM))
+                continue;
+
+            /* Ask the user what to do with the critical var found in the
+             * rcfile */
+            else if (is_rc_param(line, &param))
+            {
+                var_bm = lookup_fwknop_conf_var_bm(param.name);
+
+                if (var_bm & FWKNOP_CRITICAL_VARS_BM)
+                {
+                    if (ask_overwrite_var(param.name, curr_stanza))
+                        continue;
+                    else
+                        args_bitmask &= ~var_bm;
+                }
+                else
+                    continue;
+            }
+
+            /* Discard all other lines */
+            else
+                continue;
         }
 
         /* Add the line to the new rcfile */
@@ -1115,15 +1253,10 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
      * otherwise we already updated it earlier. */
     if (stanza_updated == 0)
     {
-        fprintf(rc_update, "\n[%s]\n", options->use_rc_stanza);
-
-        log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", curr_stanza);
-
-        for (arg_ndx=0 ; arg_ndx<FWKNOP_CLI_ARG_NB ; arg_ndx++)
-        {
-            if (FWKNOP_CLI_ARG_BM(arg_ndx) & args_bitmask)
-                add_rc_param(rc_update, arg_ndx, options);
-        }
+        log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Inserting new %s stanza", curr_stanza);
+        fprintf(rc_update, "\n");
+        fprintf(rc_update, RC_SECTION_TEMPLATE, options->use_rc_stanza);
+        add_multiple_vars_to_rc(rc_update, options, args_bitmask);
     }
 
     /* Close file handles */
@@ -1629,6 +1762,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
                 options->use_hmac = 1;
                 break;
+            case FORCE_SAVE_RC_STANZA:
+                options->force_save_rc_stanza = 1;
+                break;
             default:
                 usage();
                 exit(EXIT_FAILURE);
@@ -1749,6 +1885,8 @@ usage(void)
       "     --save-rc-stanza        Save command line arguments to the\n"
       "                             $HOME/.fwknoprc stanza specified with the\n"
       "                             -n option.\n"
+      "     --force-stanza          Used with --save-rc-stanza to overwrite all of\n"
+      "                             the variables for the specified stanza\n"
       "     --nat-local             Access a local service via a forwarded port\n"
       "                             on the fwknopd server system.\n"
       "     --nat-port              Specify the port to forward to access a\n"

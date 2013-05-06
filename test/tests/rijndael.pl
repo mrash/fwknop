@@ -1206,7 +1206,7 @@
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a $fake_ip -D localhost --get-key " .
-            "$local_key_file --no-save-args --verbose --verbose -Q $fake_spoof_ip",
+            "$local_key_file --no-save-args --verbose --verbose -Q $spoof_ip",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,

@@ -155,6 +155,7 @@
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
         'fatal'    => $NO
     },
+    ### rc tests: spa server proto
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
@@ -210,6 +211,7 @@
         'positive_output_matches' => [qr/protocol:\sicmp/],
         'fatal'    => $NO
     },
+    ### rc tests: spa server port
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
@@ -218,7 +220,7 @@
         'cmdline'  => $client_rewrite_rc_args,
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '65421'}}],
-        'positive_output_matches' => [qr/port:\s65421/],
+        'positive_output_matches' => [qr/destination\sport:\s65421/],
         'fatal'    => $NO
     },
     {
@@ -229,24 +231,44 @@
         'cmdline'  => $client_rewrite_rc_args,
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '22'}}],
-        'positive_output_matches' => [qr/port:\s22/],
+        'positive_output_matches' => [qr/destination\sport:\s22/],
         'fatal'    => $NO
     },
-
-    ### rc file saving --save-rc-stanza
+    ### rc tests: spa source port
     {
         'category' => 'basic operations',
-        'subcategory' => 'client save rc file',
-        'detail'   => 'HMAC digest MD5',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa source port 65421',
         'function' => \&client_rc_file,
-        'cmdline'  => "$client_save_rc_args -n default --hmac-digest-type MD5",
-        'save_rc_stanza' => [{'name' => 'default',
-                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
-                    'HMAC_DIGEST_TYPE' => 'MD5'}}],
-        'positive_output_matches' => [qr/HMAC\sType\:\s.*MD5/],
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '65421'}}],
+        'positive_output_matches' => [qr/source\sport:\s65421/],
         'fatal'    => $NO
     },
-
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'spa source port 22',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '22'}}],
+        'positive_output_matches' => [qr/source\sport:\s22/],
+        'fatal'    => $NO
+    },
+    ### rc tests: firewall timeout
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'firewall timeout 1234s',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '1234'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
+        'fatal'    => $NO
+    },
     ### rc tests: hmac digest
     {
         'category' => 'basic operations',
@@ -306,6 +328,210 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA512'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA512/],
+        'fatal'    => $NO
+    },
+    ### rc file saving --save-rc-stanza
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'digest MD5',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --digest-type MD5",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*MD5/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'digest SHA1',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --digest-type SHA1",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'digest SHA256',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --digest-type SHA256",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA256/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'digest SHA384',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --digest-type SHA384",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA384/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'digest SHA512',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --digest-type SHA512",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'HMAC digest MD5',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --hmac-digest-type MD5",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*MD5/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'HMAC digest SHA1',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --hmac-digest-type SHA1",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA1/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'HMAC digest SHA256',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --hmac-digest-type SHA256",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA256/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'HMAC digest SHA384',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --hmac-digest-type SHA384",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA384/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'HMAC digest SHA512',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --hmac-digest-type SHA512",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'MD5'}}],
+        'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA512/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'spa server proto UDP',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-proto UDP",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'TCP'}}],
+        'positive_output_matches' => [qr/protocol:\sudp/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'spa server proto TCP',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-proto TCP",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
+        'positive_output_matches' => [qr/protocol:\stcp/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'spa server proto HTTP',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-proto HTTP",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
+        'positive_output_matches' => [qr/protocol:\shttp/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'spa server proto TCPRAW',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-proto TCPRAW",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
+        'positive_output_matches' => [qr/protocol:\stcpraw/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'spa server proto ICMP',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-proto ICMP",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
+        'positive_output_matches' => [qr/protocol:\sicmp/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'spa source port 65421',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --source-port 65421",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '65531'}}],
+        'positive_output_matches' => [qr/source\sport:\s65421/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'spa destination port 65421',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-port 65421",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '65531'}}],
+        'positive_output_matches' => [qr/destination\sport:\s65421/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'firewall timeout 1234s',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --fw-timeout 1234",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
         'fatal'    => $NO
     },
 

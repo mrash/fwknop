@@ -42,8 +42,8 @@ static void *get_in_addr(struct sockaddr *sa);
  */
 typedef struct fko_protocol
 {
-    char str[PROTOCOL_BUFSIZE];     /*!< String which represents a protocol value for the FKO library */
-    int  val;                       /*!< Value of the protocol according to the FKO library */
+    const char  str[PROTOCOL_BUFSIZE];      /*!< String which represents a protocol value for the FKO library */
+    int         val;                        /*!< Value of the protocol according to the FKO library */
 } fko_protocol_t;
 
 static fko_protocol_t fko_protocol_array[] =
