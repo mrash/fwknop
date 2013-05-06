@@ -149,6 +149,7 @@ EXTRA_DIST = \
     test/conf/no_flush_exit_fwknopd.conf \
     test/conf/no_flush_init_or_exit_fwknopd.conf \
     test/conf/hmac_access.conf \
+    test/conf/hmac_get_key_access.conf \
     test/conf/hmac_no_b64_access.conf \
     test/conf/hmac_dual_key_usage_access.conf \
     test/conf/hmac_invalid_type_access.conf \

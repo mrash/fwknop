@@ -126,28 +126,49 @@ GENERAL OPTIONS
     contains a line for each destination hostname or IP address, a colon
     (":"), optional space and the password, followed by a newline.  Note
     that the last line has to have a terminating newline character.
-    Also note: though this is a convenience, have a file on your system with
-    cleartext passwords is not a good idea and is not recommended.
+    Also note: though this is a convenience, having a file on your system
+    with cleartext passwords is not a good idea and is not recommended.
+    Having the *fwknop* client prompt you for the key is generally more
+    secure.  Note also that if a key is stored on disk, the *fwknop* rc
+    file is a more powerful mechanism for specifying the key but other
+    options as well.
+
+*--get-hmac-key*='<file>'::
+    Load an HMAC key/password from the specified file.  Similarly to the
+    format for the *--get-key* option, the HMAC key file contains a line for
+    each destination hostname or IP address, a colon (":"), optional space
+    and the password, followed by a newline.  Note that the last line has
+    to have a terminating newline character.  Also note: though this is a
+    convenience, having a file on your system with cleartext passwords is
+    not a good idea and is not recommended.  Having the *fwknop* client
+    prompt you for the HMAC key is generally more secure.  Note also that
+    if a key is stored on disk, the *fwknop* rc file is a more powerful
+    mechanism for specifying the key but other options as well.
 
 *--key-rijndael*='<key>'::
-    Specify the Rijndael key. Since the password is visible to utilities
-    (like 'ps' under Unix) this form should only be used where security is
-    not important.
+    Specify the Rijndael key. Since the key may be visible to utilities
+    such as 'ps' under Unix, this form should only be used where security is
+    not critical.  Having the *fwknop* client prompt you for the key is
+    generally more secure.
 
 *--key-base64-rijndael*='<key>'::
-    Specify the base64 encoded Rijndael key. Since the password is visible
-    to utilities (like 'ps' under Unix) this form should only be used where
-    security is not important.
+    Specify the base64 encoded Rijndael key. Since the key may be visible
+    to utilities such as 'ps' under Unix, this form should only be used where
+    security is not critical.  Having the *fwknop* client prompt you for the
+    key is generally more secure.
 
 *--key-base64-hmac*='<key>'::
-    Specify the base64 encoded HMAC key. Since the password is visible to
-    utilities (like 'ps' under Unix) this form should only be used where
-    security is not important.
+    Specify the base64 encoded HMAC key. Since the key may be visible
+    to utilities such as 'ps' under Unix, this form should only be used where
+    security is not critical.  Having the *fwknop* client prompt you for the
+    key is generally more secure.
+
 
 *--key-hmac*='<key>'::
-    Specify the raw HMAC key (not base64 encoded). Since the password is
-    visible to utilities (like 'ps' under Unix) this form should only be used
-    where security is not important.
+    Specify the raw HMAC key (not base64 encoded). Since the key may be visible
+    to utilities such as 'ps' under Unix, this form should only be used where
+    security is not critical.  Having the *fwknop* client prompt you for the
+    key is generally more secure.
 
 *-l, --last-cmd*::
     Execute *fwknop* with the command-line arguments from the previous

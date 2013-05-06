@@ -163,20 +163,24 @@ getpasswd(
 
 /* Function for accepting password input from from a file
 */
-char*
-getpasswd_file(fko_ctx_t ctx, const fko_cli_options_t *options)
+void
+get_key_file(char *key, int *key_len, const char *key_file,
+    fko_ctx_t ctx, const fko_cli_options_t *options)
 {
     FILE           *pwfile_ptr;
     unsigned int    numLines = 0, i = 0, found_dst;
 
-    static char     pwbuf[MAX_KEY_LEN + 1]      = {0};
     char            conf_line_buf[MAX_LINE_LEN] = {0};
     char            tmp_char_buf[MAX_LINE_LEN]  = {0};
     char           *lptr;
 
-    if ((pwfile_ptr = fopen(options->get_key_file, "r")) == NULL)
+    memset(key, 0x00, MAX_KEY_LEN+1);
+    memset(conf_line_buf, 0x00, MAX_LINE_LEN);
+    memset(tmp_char_buf, 0x00, MAX_LINE_LEN);
+
+    if ((pwfile_ptr = fopen(key_file, "r")) == NULL)
     {
-        log_msg(LOG_VERBOSITY_ERROR, "Could not open config file: %s", options->get_key_file);
+        log_msg(LOG_VERBOSITY_ERROR, "Could not open config file: %s", key_file);
         fko_destroy(ctx);
         exit(EXIT_FAILURE);
     }
@@ -221,23 +225,25 @@ getpasswd_file(fko_ctx_t ctx, const fko_cli_options_t *options)
 
         i = 0;
         while (*lptr != '\0' && *lptr != '\n') {
-            pwbuf[i] = *lptr;
+            key[i] = *lptr;
             lptr++;
             i++;
         }
-        pwbuf[i] = '\0';
+        key[i] = '\0';
     }
 
     fclose(pwfile_ptr);
 
-    if (pwbuf[0] == '\0') {
-        log_msg(LOG_VERBOSITY_ERROR, "Could not get password for IP: %s from: %s",
-            options->spa_server_str, options->get_key_file);
+    if (key[0] == '\0') {
+        log_msg(LOG_VERBOSITY_ERROR, "Could not get key for IP: %s from: %s",
+            options->spa_server_str, key_file);
         fko_destroy(ctx);
         exit(EXIT_FAILURE);
     }
 
-    return pwbuf;
+    *key_len = strlen(key);
+
+    return;
 }
 
 /***EOF***/
