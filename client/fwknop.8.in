@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 07/06/2011
+.\"      Date: 05/05/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "07/06/2011" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "05/05/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -114,9 +114,42 @@ Instruct the
 client to write a newly created SPA packet out to the specified file so that it can be examined off\-line\&.
 .RE
 .PP
+\fB\-b, \-\-save\-packet\-append\fR
+.RS 4
+Append the generated packet data to the file specified with the \-B option\&.
+.RE
+.PP
 \fB\-G, \-\-get\-key\fR=\fI<file>\fR
 .RS 4
 Load an encryption key/password from the specified file\&. The key file contains a line for each destination hostname or IP address, a colon (":"), optional space and the password, followed by a newline\&. Note that the last line has to have a terminating newline character\&. Also note: though this is a convenience, have a file on your system with cleartext passwords is not a good idea and is not recommended\&.
+.RE
+.PP
+\fB\-\-key\-rijndael\fR=\fI<key>\fR
+.RS 4
+Specify the Rijndael key\&. Since the password is visible to utilities (like
+\fIps\fR
+under Unix) this form should only be used where security is not important\&.
+.RE
+.PP
+\fB\-\-key\-base64\-rijndael\fR=\fI<key>\fR
+.RS 4
+Specify the base64 encoded Rijndael key\&. Since the password is visible to utilities (like
+\fIps\fR
+under Unix) this form should only be used where security is not important\&.
+.RE
+.PP
+\fB\-\-key\-base64\-hmac\fR=\fI<key>\fR
+.RS 4
+Specify the base64 encoded HMAC key\&. Since the password is visible to utilities (like
+\fIps\fR
+under Unix) this form should only be used where security is not important\&.
+.RE
+.PP
+\fB\-\-key\-hmac\fR=\fI<key>\fR
+.RS 4
+Specify the raw HMAC key (not base64 encoded)\&. Since the password is visible to utilities (like
+\fIps\fR
+under Unix) this form should only be used where security is not important\&.
 .RE
 .PP
 \fB\-l, \-\-last\-cmd\fR
@@ -136,10 +169,35 @@ Specify the name of the configuration stanza in the \(lq$HOME/\&.fwknoprc\(rq fi
 file\&.
 .RE
 .PP
+\fB\-\-rc\-file\fR=\fI<file>\fR
+.RS 4
+Specify path to the fwknop rc file (default is $HOME/\&.fwknoprc)\&.
+.RE
+.PP
+\fB\-\-save\-rc\-stanza\fR=\fI<stanza name>\fR
+.RS 4
+Save command line arguments to the $HOME/\&.fwknoprc stanza specified with the \-n option\&.
+.RE
+.PP
 \fB\-\-show\-last\fR
 .RS 4
 Display the last command\-line arguments used by
 \fBfwknop\fR\&.
+.RE
+.PP
+\fB\-E, \-\-save\-args\-file\fR=\fI<file>\fR
+.RS 4
+Save command line arguments to a specified file path\&. Without this option, and when
+\fI\-\-no\-save\-args\fR
+is not also specified, then the default save args path is
+\fI~/\&.fwknop\&.run\fR\&.
+.RE
+.PP
+\fB\-\-no\-save\-args\fR
+.RS 4
+Do not save the command line arguments given when
+\fBfwknop\fR
+is executed\&.
 .RE
 .PP
 \fB\-T, \-\-test\fR
@@ -166,7 +224,7 @@ Display version information and exit\&.
 .RS 4
 Specify IP address that should be permitted through the destination
 \fBfwknopd\fR
-server firewall (this IP is encrypted within the SPA packet itself)\&. This is useful to prevent a MTIM attack where a SPA packet can be intercepted enroute and sent from a different IP than the original\&. Hence, if the
+server firewall (this IP is encrypted within the SPA packet itself)\&. This is useful to prevent a MITM attack where a SPA packet can be intercepted en\-route and sent from a different IP than the original\&. Hence, if the
 \fBfwknopd\fR
 server trusts the source address on the SPA packet IP header then the attacker gains access\&. The
 \fB\-a\fR
@@ -219,6 +277,29 @@ Specify the message digest algorithm to use in the SPA data\&. Choices are:
 (the default),
 \fBSHA384\fR, and
 \fBSHA512\fR\&.
+.RE
+.PP
+\fB\-M, \-\-encryption\-mode\fR=\fI<mode>\fR
+.RS 4
+Specify the encryption mode when AES is used for encrypting SPA packets\&. The default is CBC mode, but others can be chosen such as CFB or OFB as long as this is also specified in the
+\fIaccess\&.conf\fR
+file on the server side via the ENCRYPTION_MODE variable\&. In general, it is recommended to not use this argument and just use the default\&. Note that the string \(lqlegacy\(rq can be specified in order to generate SPA packets with the old initialization vector strategy used by versions of
+\fBfwknop\fR
+before 2\&.5\&. With the 2\&.5 release,
+\fBfwknop\fR
+generates initialization vectors in a manner that is compatible with OpenSSL\&.
+.RE
+.PP
+\fB\-\-hmac\-digest\-type\fR=\fI<digest>\fR
+.RS 4
+Set the HMAC digest algorithm (default is sha256)\&. Options are md5, sha1, sha256, sha384, or sha512\&.
+.RE
+.PP
+\fB\-\-use\-hmac\fR
+.RS 4
+Set HMAC mode for authenticated encryption of SPA communications\&. As of
+\fBfwknop\fR
+2\&.5, this is an optional feature, but this will become the default in a future release\&.
 .RE
 .PP
 \fB\-N, \-\-nat\-access\fR=\fI<internalIP:forwardPort>\fR
@@ -281,9 +362,9 @@ looks for authorization packets over UDP port 62201\&.
 .PP
 \fB\-P, \-\-server\-proto\fR=\fI<protocol>\fR
 .RS 4
-Set the protocol (udp, tcp, http, tcpraw, or icmp) for the outgoing SPA packet\&. Note: The
-\fBtcpraw\fR
-and
+Set the protocol (udp, tcp, http, udpraw, tcpraw, or icmp) for the outgoing SPA packet\&. Note: The
+\fBudpraw\fR,
+\fBtcpraw\fR, and
 \fBicmp\fR
 modes use raw sockets and thus require root access to run\&. Also note: The
 \fBtcp\fR
@@ -354,6 +435,11 @@ and
 are mutually exclusive\&.
 .RE
 .PP
+\fB\-S, \-\-source\-port\fR=\fI<port>\fR
+.RS 4
+Set the source port for outgoing SPA packet\&.
+.RE
+.PP
 \fB\-\-time\-offset\-plus\fR=\fI<time>\fR
 .RS 4
 By default, the
@@ -389,6 +475,20 @@ mode requires that the
 \fBfwknop\fR
 client is executed as root)\&.
 .RE
+.PP
+\fB\-\-icmp\-type\fR=\fI<type>\fR
+.RS 4
+In
+\fB\-P icmp\fR
+mode, specify the ICMP type value that will be set in the SPA packet ICMP header\&. The default is echo reply\&.
+.RE
+.PP
+\fB\-\-icmp\-code\fR=\fI<code>\fR
+.RS 4
+In
+\fB\-P icmp\fR
+mode, specify the ICMP code value that will be set in the SPA packet ICMP header\&. The default is zero\&.
+.RE
 .SH "GPG-RELATED OPTIONS"
 .PP
 \fB\-\-gpg\-agent\fR
@@ -422,9 +522,9 @@ daemon on the remote server to authenticate who created the SPA message\&.
 .sp
 The \fI\&.fwknoprc\fR file is used to set various parameters to override default program parameters at runtime\&. It also allows for additional named configuration \fIstanzas\fR for setting program parameters for a particular invocation\&.
 .sp
-The \fBfwkop\fR client will create this file if it does not exist in the user\(cqs home directory\&. This initial version has some sample directives that are commented out\&. It is up to the user to edit this file to meet their needs\&.
+The \fBfwknop\fR client will create this file if it does not exist in the user\(cqs home directory\&. This initial version has some sample directives that are commented out\&. It is up to the user to edit this file to meet their needs\&.
 .sp
-The \fI\&.fwkoprc\fR file contains a default configuration area or stanza which holds global configuration directives that override the program defaults\&. You can edit this file and create additonal \fInamed stanzas\fR that can be specified with the \fB\-n\fR or \fB\-\-named\-config\fR option\&. Parameters defined in the named stanzas will override any matching \fIdefault\fR stanza directives\&. Note that command\-line options will still override any corresponding \fI\&.fwknoprc\fR directives\&.
+The \fI\&.fwknoprc\fR file contains a default configuration area or stanza which holds global configuration directives that override the program defaults\&. You can edit this file and create additional \fInamed stanzas\fR that can be specified with the \fB\-n\fR or \fB\-\-named\-config\fR option\&. Parameters defined in the named stanzas will override any matching \fIdefault\fR stanza directives\&. Note that command\-line options will still override any corresponding \fI\&.fwknoprc\fR directives\&.
 .sp
 There are directives to match most of the command\-line parameters \fBfwknop\fR supports\&. Here is the current list of each directive along with a brief description and its matching command\-line option(s):
 .PP
@@ -485,6 +585,13 @@ Set to a URL that will be used for resolving the source IP address (\-\-resolve\
 \fBTIME_OFFSET\fR
 .RS 4
 Set a value to apply to the timestamp in the SPA packet\&. This can be either a positive or negative value (\fI\-\-time\-offset\-plus/minus\fR)\&.
+.RE
+.PP
+\fBENCRYPTION_MODE\fR
+.RS 4
+Specify the encryption mode when AES is used\&. This variable is a synonym for the
+\fI\-\-encryption\-mode\fR
+command line argument\&.
 .RE
 .PP
 \fBUSE_GPG\fR
@@ -670,7 +777,7 @@ This \(lqC\(rq version of fwknop was derived from the original Perl\-based versi
 The phrase \(lqSingle Packet Authorization\(rq was coined by MadHat and Simple Nomad at the BlackHat Briefings of 2005 (see: \fIhttp://www\&.nmrc\&.org\fR)\&.
 .SH "BUGS"
 .sp
-Send bug reports to dstuart@dstuart\&.org\&. Suggestions and/or comments are always welcome as well\&.
+Send bug reports to dstuart@dstuart\&.org or mbr@cipherdyne\&.org\&. Suggestions and/or comments are always welcome as well\&.
 .SH "DISTRIBUTION"
 .sp
 \fBfwknop\fR is distributed under the GNU General Public License (GPL), and the latest version may be downloaded from \fIhttp://www\&.cipherdyne\&.org\fR\&.
