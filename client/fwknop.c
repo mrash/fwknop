@@ -1136,8 +1136,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         */
         if (options->get_key_file[0] != 0x0)
         {
-            strlcpy(key, getpasswd_file(ctx, options), MAX_KEY_LEN+1);
-            *key_len = strlen(key);
+            get_key_file(key, key_len, options->get_key_file, ctx, options);
         }
         else if (options->use_gpg)
         {
@@ -1207,25 +1206,26 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         /* If --get-key file was specified grab the key/password from it.
         */
-#if 0
-        if (options->get_key_file[0] != 0x0)
+        if(options->get_hmac_key_file[0] != 0x0)
         {
-            key = getpasswd_file(options->get_key_file, options->spa_server_str);
+            get_key_file(hmac_key, hmac_key_len,
+                options->get_hmac_key_file, ctx, options);
+            use_hmac = 1;
         }
         else
         {
-#endif
-        hmac_key_tmp = getpasswd("Enter HMAC key: ");
+            hmac_key_tmp = getpasswd("Enter HMAC key: ");
 
-        if(hmac_key_tmp == NULL)
-        {
-            log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
-            clean_exit(ctx, options, EXIT_FAILURE);
+            if(hmac_key_tmp == NULL)
+            {
+                log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
+                clean_exit(ctx, options, EXIT_FAILURE);
+            }
+
+            strlcpy(hmac_key, hmac_key_tmp, MAX_KEY_LEN+1);
+            *hmac_key_len = strlen(hmac_key);
+            use_hmac = 1;
         }
-
-        strlcpy(hmac_key, hmac_key_tmp, MAX_KEY_LEN+1);
-        *hmac_key_len = strlen(hmac_key);
-        use_hmac = 1;
     }
 
     if (use_hmac)

@@ -56,6 +56,24 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => '--get-hmac-key (tcp/22 ssh)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args .
+            " --get-hmac-key $local_hmac_key_file",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_get_key_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'get_key' => {'file' => $local_key_file,
+            'key' => 'rijndaelkey'},
+        'get_hmac_key' => {'file' => $local_hmac_key_file,
+            'key' => 'hmackey'},
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'Rijndael+HMAC',

@@ -16,6 +16,7 @@ use strict;
 #==================== config =====================
 my $logfile         = 'test.log';
 our $local_key_file = 'local_spa.key';
+our $local_hmac_key_file = 'local_hmac_spa.key';
 my $output_dir      = 'output';
 our $conf_dir       = 'conf';
 my $run_dir         = 'run';
@@ -38,6 +39,7 @@ our %cf = (
     'def'                          => "$conf_dir/default_fwknopd.conf",
     'def_access'                   => "$conf_dir/default_access.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
+    'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
     'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
     'hmac_md5_access'              => "$conf_dir/hmac_md5_access.conf",
     'hmac_md5_short_key_access'    => "$conf_dir/hmac_md5_short_key_access.conf",
@@ -1186,7 +1188,19 @@ sub client_send_spa_packet() {
 
     my $rv = 1;
 
-    &write_key($default_key, $local_key_file);
+    if ($test_hr->{'get_key'}) {
+        &write_key($test_hr->{'get_key'}->{'key'},
+            $test_hr->{'get_key'}->{'file'});
+    } else {
+        &write_key($default_key, $local_key_file);
+    }
+
+    if ($test_hr->{'get_hmac_key'}) {
+        &write_key($test_hr->{'get_hmac_key'}->{'key'},
+            $test_hr->{'get_hmac_key'}->{'file'});
+    } else {
+        &write_key($default_key, $local_key_file);
+    }
 
     if (-e $server_cmd_tmp) {
         my $tries = 0;
@@ -4952,6 +4966,8 @@ sub validate_test_hashes() {
         'fuzzing_pkt'     => $OPTIONAL,
         'pkt_prefix'      => $OPTIONAL,
         'no_ip_check'     => $OPTIONAL,
+        'get_key'         => $OPTIONAL,
+        'get_hmac_key'    => $OPTIONAL,
         'set_legacy_iv'   => $OPTIONAL,
         'write_rc_file'   => $OPTIONAL,
         'save_rc_stanza'  => $OPTIONAL,

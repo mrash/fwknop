@@ -1,0 +1,26 @@
+README.VISUAL_STUDIO
+====================
+
+As we get fwknop working for different versions of Visual Studio (VS),
+we may start making version-specific copies of the Solution (.sln) and
+Project (.vcproj) files.  Though most later versions of VS can convert
+these files from previous versions, the older versions cannot use those
+created in the newer versions.
+
+The solution and project files are:
+
+    - libfko.sln
+    - libfko.vcproj
+    - fwknop-client.vcproj
+
+Version-specific copies will have the same names, but with a prefix
+of ".vs2XXX" (i.e. for VS2008: libfko.sln.vs2008, etc.).
+
+If this directory contains a solution and project files that match
+your version of VS, then you should copy them over the original versions
+to use them.
+
+If you have a version of VS that is not covered by any of the existing
+files, you should be able to get it to read one of the older files and
+convert it.  If you do this, please consider contributing these back to
+the fwknop project.

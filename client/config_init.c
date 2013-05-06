@@ -92,6 +92,7 @@ enum
     FWKNOP_CLI_ARG_KEY_HMAC,
     FWKNOP_CLI_ARG_USE_HMAC,
     FWKNOP_CLI_ARG_KEY_FILE,
+    FWKNOP_CLI_ARG_HMAC_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
     FWKNOP_CLI_ARG_HTTP_USER_AGENT,
     FWKNOP_CLI_ARG_RESOLVE_URL,
@@ -128,6 +129,7 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
     "HMAC_KEY",
     "USE_HMAC",
     "KEY_FILE",
+    "HMAC_KEY_FILE",
     "NAT_ACCESS",
     "HTTP_USER_AGENT",
     "RESOLVE_URL",
@@ -788,6 +790,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     {
         strlcpy(options->get_key_file, val, sizeof(options->get_key_file));
     }
+    /* HMAC key file */
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_HMAC_KEY_FILE)
+    {
+        strlcpy(options->get_key_file, val,
+            sizeof(options->get_hmac_key_file));
+    }
     /* NAT Access Request */
     else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_ACCESS)
     {
@@ -930,6 +938,9 @@ add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options
             break;
         case FWKNOP_CLI_ARG_KEY_FILE :
             strlcpy(val, options->get_key_file, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_HMAC_KEY_FILE :
+            strlcpy(val, options->get_hmac_key_file, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_KEY_RIJNDAEL:
             strlcpy(val, options->key, sizeof(val));
@@ -1479,6 +1490,12 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'G':
                 strlcpy(options->get_key_file, optarg, sizeof(options->get_key_file));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_FILE);
+                break;
+            case GET_HMAC_KEY: 
+                strlcpy(options->get_hmac_key_file, optarg,
+                    sizeof(options->get_hmac_key_file));
+                options->use_hmac = 1;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HMAC_KEY_FILE);
                 break;
             case 'h':
                 usage();

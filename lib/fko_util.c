@@ -347,4 +347,26 @@ strtol_wrapper(const char * const str, const int min,
     return val;
 }
 
+
+#ifdef WIN32
+/* Windows does not have strndup, so we well implement it here.
+ * This was the Public Domain C Library (PDCLib).
+*/
+char 
+*strndup( const char * s, size_t len )
+{
+    char* ns = NULL;
+    if(s) {
+        ns = malloc(len + 1);
+        if(ns) {
+            ns[len] = 0;
+            // strncpy to be pedantic about modification in multithreaded 
+            // applications
+            return strncpy(ns, s, len);
+        }
+    }
+    return ns;
+}
+#endif
+
 /***EOF***/
