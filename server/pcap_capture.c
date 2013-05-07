@@ -174,7 +174,8 @@ pcap_capture(fko_srv_options_t *opts)
 
     /* We are only interested on seeing packets coming into the interface.
     */
-    if (set_direction && (pcap_file_mode == 0)
+    if ((opts->pcap_any_direction == 0)
+            && (set_direction == 1) && (pcap_file_mode == 0)
             && (pcap_setdirection(pcap, PCAP_D_IN) < 0))
         if(opts->verbose)
             log_msg(LOG_WARNING, "[*] Warning: pcap error on setdirection: %s.",

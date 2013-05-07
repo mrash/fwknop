@@ -87,6 +87,7 @@
 #define DEF_PCAP_FILTER                 "udp port 62201"
 #define DEF_PCAP_DISPATCH_COUNT         "0"
 #define DEF_PCAP_LOOP_SLEEP             "100000" /* a tenth of a second (in microseconds) */
+#define DEF_PCAP_ANY_DIRECTION          "N"
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
 #define DEF_MAX_SPA_PACKET_AGE          "120"
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
@@ -188,6 +189,7 @@ enum {
     CONF_PCAP_FILTER,
     CONF_PCAP_DISPATCH_COUNT,
     CONF_PCAP_LOOP_SLEEP,
+    CONF_PCAP_ANY_DIRECTION,
     CONF_MAX_SNIFF_BYTES,
     CONF_ENABLE_SPA_PACKET_AGING,
     CONF_MAX_SPA_PACKET_AGE,
@@ -453,6 +455,13 @@ typedef struct fko_srv_options
     unsigned char   fw_flush;           /* Flush current firewall rules */
     unsigned char   test;               /* Test mode flag */
     unsigned char   verbose;            /* Verbose mode flag */
+
+    /* Flag for permitting SPA packets regardless of directionality test
+     * w.r.t. the sniffing interface.  This can sometimes be useful for SPA
+     * packets that are sent _through_ a system and fwknopd is sniffing on
+     * the outbound interface as far as these packets are concerned.
+    */
+    unsigned char   pcap_any_direction;
 
     int             data_link_offset;
     int             tcp_server_pid;

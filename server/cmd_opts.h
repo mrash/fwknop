@@ -47,6 +47,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "PCAP_FILTER",
     "PCAP_DISPATCH_COUNT",
     "PCAP_LOOP_SLEEP",
+    "PCAP_ANY_DIRECTION",
     "MAX_SNIFF_BYTES",
     "ENABLE_SPA_PACKET_AGING",
     "MAX_SPA_PACKET_AGE",
@@ -117,6 +118,7 @@ enum {
     FW_FLUSH,
     GPG_HOME_DIR,
     PCAP_FILE,
+    PCAP_ANY_DIRECTION,
     ROTATE_DIGEST_CACHE,
     NOOP /* Just to be a marker for the end */
 };
@@ -147,6 +149,7 @@ static struct option cmd_opts[] =
     {"override-config",     1, NULL, 'O' },
     {"pcap-file",           1, NULL, PCAP_FILE },
     {"pcap-filter",         1, NULL, 'P'},
+    {"pcap-any-direction",  0, NULL, PCAP_ANY_DIRECTION },
     {"pid-file",            1, NULL, 'p'},
     {"restart",             0, NULL, 'R'},
     {"status",              0, NULL, 'S'},

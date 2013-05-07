@@ -1368,7 +1368,8 @@ sub iptables_no_flush_init_exit() {
     my $rv = 1;
 
     &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
-        "--fw-flush --verbose --verbose", $cmd_out_tmp, $curr_test_file);
+        "$default_server_conf_args --fw-flush --verbose --verbose",
+        $cmd_out_tmp, $curr_test_file);
 
     if ($test_hr->{'insert_rule_before_exec'}) {
         ### first create the fwknop chains and add a rule, then check for
@@ -1382,7 +1383,8 @@ sub iptables_no_flush_init_exit() {
 
     if ($test_hr->{'search_for_rule_after_exit'}) {
         &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
-            "--fw-list --verbose --verbose", $cmd_out_tmp, $curr_test_file);
+            "$default_server_conf_args --fw-list --verbose --verbose",
+            $cmd_out_tmp, $curr_test_file);
         $rv = 0 unless &file_find_regex([qr/ACCEPT.*$fake_ip\s.*dpt\:1234/],
             $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
     }
@@ -5689,7 +5691,8 @@ sub file_find_regex() {
         return 0 if $tries == 5;
     }
 
-    open F, "< $file" or (print Dumper $re_ar and die "[*] Could not open $file: $!");
+    open F, "< $file" or
+        (&write_test_file("[-] Could not open $file: $!\n", $file) and return 0);
     while (<F>) {
         push @file_lines, $_;
     }
