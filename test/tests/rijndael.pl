@@ -536,7 +536,7 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
-        'detail'   => "icmp type/code 8/0 spoof src IP ",
+        'detail'   => "icmp type/code 8/0 spoof src IP",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -P icmp --icmp-type 8 --icmp-code 0 -Q $spoof_ip",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
