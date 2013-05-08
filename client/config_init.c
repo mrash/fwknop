@@ -1541,12 +1541,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->use_hmac = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                break;
             case KEY_HMAC:
                 strlcpy(options->hmac_key, optarg, sizeof(options->hmac_key));
                 options->have_hmac_key = 1;
                 options->use_hmac = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                break;
             case KEY_LEN:
                 options->key_len = strtol_wrapper(optarg, 1,
                         MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
