@@ -447,7 +447,7 @@ main(int argc, char **argv)
     */
     if(options.digest_type)
     {
-        fko_set_spa_digest_type(ctx, options.digest_type);
+        res = fko_set_spa_digest_type(ctx, options.digest_type);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_digest_type", res);
