@@ -446,6 +446,7 @@ incoming_spa(fko_srv_options_t *opts)
                 /* Set whatever GPG parameters we have.
                 */
                 if(acc->gpg_home_dir != NULL)
+                {
                     res = fko_set_gpg_home_dir(ctx, acc->gpg_home_dir);
                     if(res != FKO_SUCCESS)
                     {
@@ -458,6 +459,7 @@ incoming_spa(fko_srv_options_t *opts)
                         acc = acc->next;
                         continue;
                     }
+                }
 
                 if(acc->gpg_decrypt_id != NULL)
                     fko_set_gpg_recipient(ctx, acc->gpg_decrypt_id);
