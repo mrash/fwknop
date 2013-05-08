@@ -101,15 +101,21 @@ hmac_md5_init(hmac_md5_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
+    int            final_len = key_len;
 
     memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memcpy(init_key, key, key_len);
+    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
-    if(MD5_BLOCK_LEN < key_len)
+    if(key_len > MAX_DIGEST_BLOCK_LEN)
+        final_len = MAX_DIGEST_BLOCK_LEN;
+
+    memcpy(init_key, key, final_len);
+
+    if(MD5_BLOCK_LEN < final_len)
     {
         /* Calculate the digest of the key
         */
-        md5(final_key, init_key, key_len);
+        md5(final_key, init_key, final_len);
     }
     else
     {
@@ -169,15 +175,21 @@ hmac_sha1_init(hmac_sha1_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
+    int            final_len = key_len;
 
     memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memcpy(init_key, key, key_len);
+    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
-    if(SHA1_BLOCK_LEN < key_len)
+    if(key_len > MAX_DIGEST_BLOCK_LEN)
+        final_len = MAX_DIGEST_BLOCK_LEN;
+
+    memcpy(init_key, key, final_len);
+
+    if(SHA1_BLOCK_LEN < final_len)
     {
         /* Calculate the digest of the key
         */
-        sha1(final_key, init_key, key_len);
+        sha1(final_key, init_key, final_len);
     }
     else
     {
@@ -237,15 +249,21 @@ hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
+    int            final_len = key_len;
 
     memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memcpy(init_key, key, key_len);
+    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
-    if(SHA256_BLOCK_LEN < key_len)
+    if(key_len > MAX_DIGEST_BLOCK_LEN)
+        final_len = MAX_DIGEST_BLOCK_LEN;
+
+    memcpy(init_key, key, final_len);
+
+    if(SHA256_BLOCK_LEN < final_len)
     {
         /* Calculate the digest of the key
         */
-        sha256(final_key, init_key, key_len);
+        sha256(final_key, init_key, final_len);
     }
     else
     {
@@ -305,15 +323,21 @@ hmac_sha384_init(hmac_sha384_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
+    int            final_len = key_len;
 
     memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memcpy(init_key, key, key_len);
+    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
-    if(SHA384_BLOCK_LEN < key_len)
+    if(key_len > MAX_DIGEST_BLOCK_LEN)
+        final_len = MAX_DIGEST_BLOCK_LEN;
+
+    memcpy(init_key, key, final_len);
+
+    if(SHA384_BLOCK_LEN < final_len)
     {
         /* Calculate the digest of the key
         */
-        sha384(final_key, init_key, key_len);
+        sha384(final_key, init_key, final_len);
     }
     else
     {
@@ -373,15 +397,21 @@ hmac_sha512_init(hmac_sha512_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
+    int            final_len = key_len;
 
     memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memcpy(init_key, key, key_len);
+    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
-    if(SHA512_BLOCK_LEN < key_len)
+    if(key_len > MAX_DIGEST_BLOCK_LEN)
+        final_len = MAX_DIGEST_BLOCK_LEN;
+
+    memcpy(init_key, key, final_len);
+
+    if(SHA512_BLOCK_LEN < final_len)
     {
         /* Calculate the digest of the key
         */
-        sha512(final_key, init_key, key_len);
+        sha512(final_key, init_key, final_len);
     }
     else
     {
