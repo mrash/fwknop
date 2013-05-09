@@ -1185,8 +1185,6 @@ parse_access_file(fko_srv_options_t *opts)
             if(curr_acc->gpg_allow_no_pw == 1)
             {
                 add_acc_bool(&(curr_acc->use_gpg), "Y");
-                if(curr_acc->gpg_decrypt_pw != NULL && curr_acc->gpg_decrypt_pw[0] != '\0')
-                    free(curr_acc->gpg_decrypt_pw);
                 add_acc_string(&(curr_acc->gpg_decrypt_pw), "");
             }
         }
