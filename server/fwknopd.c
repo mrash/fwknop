@@ -627,13 +627,13 @@ write_pid_file(fko_srv_options_t *opts)
     lck_res = lockf(op_fd, F_TLOCK, 0);
     if(lck_res == -1)
     {
+        close(op_fd);
+
         if(errno != EAGAIN)
         {
             perror("Unexpected error from lockf: ");
             return -1;
         }
-
-        close(op_fd);
 
         /* Look for an existing lock holder. If we get a pid return it.
         */
@@ -685,21 +685,24 @@ get_running_pid(const fko_srv_options_t *opts)
 
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 
-    if(op_fd > 0)
+    if(op_fd == -1)
     {
-        if (read(op_fd, buf, PID_BUFLEN) > 0)
-        {
-            buf[PID_BUFLEN-1] = '\0';
-            /* max pid value is configurable on Linux
-            */
-            rpid = (pid_t) strtol_wrapper(buf, 0, (2 << 30),
-                    NO_EXIT_UPON_ERR, &is_err);
-            if(is_err != FKO_SUCCESS)
-                rpid = 0;
-        }
-
-        close(op_fd);
+        perror("Error trying to open PID file: ");
+        return(rpid);
     }
+
+    if (read(op_fd, buf, PID_BUFLEN) > 0)
+    {
+        buf[PID_BUFLEN-1] = '\0';
+        /* max pid value is configurable on Linux
+        */
+        rpid = (pid_t) strtol_wrapper(buf, 0, (2 << 30),
+                NO_EXIT_UPON_ERR, &is_err);
+        if(is_err != FKO_SUCCESS)
+            rpid = 0;
+    }
+
+    close(op_fd);
 
     return(rpid);
 }

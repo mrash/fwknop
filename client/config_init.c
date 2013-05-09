@@ -1148,10 +1148,10 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     rcfile_fd = open(rcfile_update, FWKNOPRC_OFLAGS, FWKNOPRC_MODE);
     if (rcfile_fd == -1)
     {
-            log_msg(LOG_VERBOSITY_WARNING,
-                    "update_rc() : Unable to create temporary rc file: %s: %s",
-                    rcfile_update, strerror(errno));
-            return;
+        log_msg(LOG_VERBOSITY_WARNING,
+                "update_rc() : Unable to create temporary rc file: %s: %s",
+                rcfile_update, strerror(errno));
+        return;
     }
     close(rcfile_fd);
 
@@ -1170,6 +1170,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         log_msg(LOG_VERBOSITY_WARNING,
                 "update_rc() : Unable to open rc file: %s: %s",
                 rcfile_update, strerror(errno));
+        fclose(rc);
         return;
     }
 

@@ -93,7 +93,10 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     */
     ciphertext = calloc(1, pt_len + 32); /* Plus padding for salt and Block */
     if(ciphertext == NULL)
+    {
+        free(plaintext);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
 
     cipher_len = rij_encrypt(
         (unsigned char*)plaintext, pt_len,
@@ -105,7 +108,11 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     */
     b64ciphertext = malloc(((cipher_len / 3) * 4) + 8);
     if(b64ciphertext == NULL)
+    {
+        free(ciphertext);
+        free(plaintext);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
 
     b64_encode(ciphertext, b64ciphertext, cipher_len);
     strip_b64_eq(b64ciphertext);
@@ -158,7 +165,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
+    {
+        free(cipher);
         return(FKO_ERROR_INVALID_DATA);
+    }
 
     /* Since we're using AES, make sure the incoming data is a multiple of
      * the blocksize
@@ -177,7 +187,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
     */
     ctx->encoded_msg = malloc(cipher_len);
     if(ctx->encoded_msg == NULL)
+    {
+        free(cipher);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
 
     pt_len = rij_decrypt(cipher, cipher_len, dec_key, key_len,
                 (unsigned char*)ctx->encoded_msg, encryption_mode);
@@ -270,7 +283,10 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     pt_len = snprintf(plain, pt_len+1, "%s:%s", ctx->encoded_msg, ctx->digest);
 
     if(! is_valid_pt_msg_len(pt_len))
+    {
+        free(plain);
         return(FKO_ERROR_INVALID_DATA);
+    }
 
     if (enc_key != NULL)
     {
@@ -291,7 +307,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     {
         free(plain);
 
-        if(cipher)
+        if(cipher != NULL)
             free(cipher);
 
         return(res);
@@ -301,7 +317,12 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     */
     b64cipher = malloc(((cipher_len / 3) * 4) + 8);
     if(b64cipher == NULL)
+    {
+        free(plain);
+        if(cipher != NULL)
+            free(cipher);
         return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
 
     b64_encode(cipher, b64cipher, cipher_len);
     strip_b64_eq(b64cipher);

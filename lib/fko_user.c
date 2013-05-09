@@ -41,7 +41,7 @@ int
 fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
 {
     char   *username = NULL;
-    int     res = FKO_SUCCESS;
+    int     res = FKO_SUCCESS, is_user_heap_allocated=0;
 
     /* Must be initialized
     */
@@ -81,6 +81,7 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
                     username = strdup("NO_USER");
                     if(username == NULL)
                         return(FKO_ERROR_MEMORY_ALLOCATION);
+                    is_user_heap_allocated = 1;
                 }
             }
         }
@@ -92,7 +93,11 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
         *(username + MAX_SPA_USERNAME_SIZE - 1) = '\0';
 
     if((res = validate_username(username)) != FKO_SUCCESS)
+    {
+        if(is_user_heap_allocated == 1)
+            free(username);
         return res;
+    }
 
     /* Just in case this is a subsquent call to this function.  We
      * do not want to be leaking memory.
@@ -103,6 +108,9 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
     ctx->username = strdup(username);
 
     ctx->state |= FKO_DATA_MODIFIED;
+
+    if(is_user_heap_allocated == 1)
+        free(username);
 
     if(ctx->username == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
