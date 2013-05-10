@@ -621,7 +621,12 @@ write_pid_file(fko_srv_options_t *opts)
         return -1;
     }
 
-    fcntl(op_fd, F_SETFD, FD_CLOEXEC);
+    if(fcntl(op_fd, F_SETFD, FD_CLOEXEC) == -1)
+    {
+        close(op_fd);
+        perror("Unexpected error from fcntl: ");
+        return -1;
+    }
 
     /* Attempt to lock the PID file.  If we get an EWOULDBLOCK
      * error, another instance already has the lock. So we grab
