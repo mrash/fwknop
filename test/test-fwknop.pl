@@ -581,7 +581,7 @@ for my $test_hr (@tests) {
     next unless &process_include_exclude(&get_msg($test_hr));
     $test_buckets++;
     if ($test_limit > 0) {
-        last if $executed >= $test_limit;
+        last if $test_buckets >= $test_limit;
     }
 }
 &logr("[+] Total test buckets to execute: $test_buckets\n\n");
