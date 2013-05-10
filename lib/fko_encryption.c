@@ -84,10 +84,14 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if(plaintext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
+
     pt_len = snprintf(plaintext, pt_len, "%s:%s", ctx->encoded_msg, ctx->digest);
 
     if(! is_valid_pt_msg_len(pt_len))
+    {
+        free(plaintext);
         return(FKO_ERROR_INVALID_DATA);
+    }
 
     /* Make a bucket for the encrypted version and populate it.
     */
@@ -371,7 +375,10 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     if((b64_decode_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
+    {
+        free(cipher);
         return(FKO_ERROR_INVALID_DATA);
+    }
 
     cipher_len = b64_decode_len;
 
