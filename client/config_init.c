@@ -1347,8 +1347,7 @@ validate_options(fko_cli_options_t *options)
     */
     if(options->use_gpg)
     {
-        if(options->gpg_recipient_key == NULL
-            || strlen(options->gpg_recipient_key) == 0)
+        if(strlen(options->gpg_recipient_key) == 0)
         {
             log_msg(LOG_VERBOSITY_ERROR,
                 "Must specify --gpg-recipient-key when GPG is used.");
