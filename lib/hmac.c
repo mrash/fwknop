@@ -159,7 +159,7 @@ hmac_md5(const char *msg, const unsigned int msg_len,
 {
     hmac_md5_ctx ctx;
 
-    memset(&ctx, 0, sizeof(&ctx));
+    memset(&ctx, 0, sizeof(ctx));
 
     hmac_md5_init(&ctx, hmac_key, hmac_key_len);
     hmac_md5_update(&ctx, msg, msg_len);
@@ -233,7 +233,7 @@ hmac_sha1(const char *msg, const unsigned int msg_len,
 {
     hmac_sha1_ctx ctx;
 
-    memset(&ctx, 0, sizeof(&ctx));
+    memset(&ctx, 0, sizeof(ctx));
 
     hmac_sha1_init(&ctx, hmac_key, hmac_key_len);
     hmac_sha1_update(&ctx, msg, msg_len);
@@ -307,7 +307,7 @@ hmac_sha256(const char *msg, const unsigned int msg_len,
 {
     hmac_sha256_ctx ctx;
 
-    memset(&ctx, 0, sizeof(&ctx));
+    memset(&ctx, 0, sizeof(ctx));
 
     hmac_sha256_init(&ctx, hmac_key, hmac_key_len);
     hmac_sha256_update(&ctx, msg, msg_len);
@@ -381,7 +381,7 @@ hmac_sha384(const char *msg, const unsigned int msg_len,
 {
     hmac_sha384_ctx ctx;
 
-    memset(&ctx, 0, sizeof(&ctx));
+    memset(&ctx, 0, sizeof(ctx));
 
     hmac_sha384_init(&ctx, hmac_key, hmac_key_len);
     hmac_sha384_update(&ctx, msg, msg_len);
@@ -455,7 +455,7 @@ hmac_sha512(const char *msg, const unsigned int msg_len,
 {
     hmac_sha512_ctx ctx;
 
-    memset(&ctx, 0, sizeof(&ctx));
+    memset(&ctx, 0, sizeof(ctx));
 
     hmac_sha512_init(&ctx, hmac_key, hmac_key_len);
     hmac_sha512_update(&ctx, msg, msg_len);

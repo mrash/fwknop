@@ -355,7 +355,7 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 {
     unsigned char  *cipher;
     size_t          cipher_len;
-    int             res, pt_len;
+    int             res, pt_len, b64_decode_len;
 
     /* Now see if we need to add the "hQ" string to the front of the
      * base64-encoded-GPG-encrypted data.
@@ -370,8 +370,10 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
+    if((b64_decode_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
         return(FKO_ERROR_INVALID_DATA);
+
+    cipher_len = b64_decode_len;
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.

@@ -329,7 +329,7 @@ is_rc_param(const char *line, rc_file_param_t *param)
     char    val[MAX_LINE_LEN] = {0};
     char    *ndx;
 
-    memset(param, 0, sizeof(param));
+    memset(param, 0, sizeof(*param));
 
     /* Fetch the variable and its value */
     if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)

@@ -259,8 +259,11 @@ main(int argc, char **argv)
                 log_msg(LOG_WARNING,
                     "Error opening digest cache file. Incoming digests will not be remembered."
                 );
-                strlcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N",
-                        sizeof(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE]));
+                /* Destination points to heap memory, and is guaranteed to be
+                 * at least two bytes large via validate_options(),
+                 * DEF_ENABLE_DIGEST_PERSISTENCE, and set_config_entry()
+                */
+                strlcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N", 2);
             }
 
             if(opts.verbose)

@@ -209,7 +209,7 @@ main(int argc, char **argv)
                 options.hmac_key_base64, options.hmac_key_len,
                 options.hmac_type);
 
-        if(options.key_gen_file != NULL && options.key_gen_file[0] != '\0')
+        if(options.key_gen_file[0] != '\0')
         {
             if ((key_gen_file_ptr = fopen(options.key_gen_file, "w")) == NULL)
             {
@@ -388,7 +388,7 @@ main(int argc, char **argv)
          * this has to occur before calling any of the other GPG-related
          * functions.
         */
-        if(options.gpg_home_dir != NULL && strlen(options.gpg_home_dir) > 0)
+        if(strlen(options.gpg_home_dir) > 0)
         {
             res = fko_set_gpg_home_dir(ctx, options.gpg_home_dir);
             if(res != FKO_SUCCESS)
@@ -410,7 +410,7 @@ main(int argc, char **argv)
             return(EXIT_FAILURE);
         }
 
-        if(options.gpg_signer_key != NULL && strlen(options.gpg_signer_key))
+        if(strlen(options.gpg_signer_key) > 0)
         {
             res = fko_set_gpg_signer(ctx, options.gpg_signer_key);
             if(res != FKO_SUCCESS)
@@ -561,7 +561,7 @@ main(int argc, char **argv)
         */
         if(options.use_gpg)
         {
-            if(options.gpg_home_dir != NULL && strlen(options.gpg_home_dir) > 0)
+            if(strlen(options.gpg_home_dir) > 0)
             {
                 res = fko_set_gpg_home_dir(ctx2, options.gpg_home_dir);
                 if(res != FKO_SUCCESS)
@@ -875,7 +875,7 @@ prev_exec(fko_cli_options_t *options, int argc, char **argv)
 {
     char       args_save_file[MAX_PATH_LEN] = {0};
 
-    if(options->args_save_file != NULL && options->args_save_file[0] != 0x0)
+    if(options->args_save_file[0] != 0x0)
     {
         strlcpy(args_save_file, options->args_save_file, sizeof(args_save_file));
     }
@@ -1107,7 +1107,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     */
     if(options->use_gpg
       && (options->use_gpg_agent
-           || (crypt_op == CRYPT_OP_ENCRYPT && options->gpg_signer_key == NULL)))
+           || (crypt_op == CRYPT_OP_ENCRYPT && options->gpg_signer_key[0] == '\0')))
         return;
 
     if (options->have_key)
@@ -1151,7 +1151,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
                 strlcpy(key, key_tmp, MAX_KEY_LEN+1);
                 *key_len = strlen(key);
             }
-            else if(options->gpg_signer_key && strlen(options->gpg_signer_key))
+            else if(strlen(options->gpg_signer_key))
             {
                 key_tmp = getpasswd("Enter passphrase for signing: ");
                 if(key_tmp == NULL)
