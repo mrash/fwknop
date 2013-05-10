@@ -111,7 +111,7 @@ hmac_md5_init(hmac_md5_ctx *ctx, const char *key, const int key_len)
 
     memcpy(init_key, key, final_len);
 
-    if(MD5_BLOCK_LEN < final_len)
+    if(MD5_BLOCK_LEN < key_len)
     {
         /* Calculate the digest of the key
         */
@@ -122,7 +122,7 @@ hmac_md5_init(hmac_md5_ctx *ctx, const char *key, const int key_len)
         memcpy(final_key, init_key, key_len);
     }
 
-    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
     MD5Init(&ctx->ctx_inside);
     MD5Update(&ctx->ctx_inside, ctx->block_inner_pad, MD5_BLOCK_LEN);
@@ -185,7 +185,7 @@ hmac_sha1_init(hmac_sha1_ctx *ctx, const char *key, const int key_len)
 
     memcpy(init_key, key, final_len);
 
-    if(SHA1_BLOCK_LEN < final_len)
+    if(SHA1_BLOCK_LEN < key_len)
     {
         /* Calculate the digest of the key
         */
@@ -196,7 +196,7 @@ hmac_sha1_init(hmac_sha1_ctx *ctx, const char *key, const int key_len)
         memcpy(final_key, init_key, key_len);
     }
 
-    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
     sha1_init(&ctx->ctx_inside);
     sha1_update(&ctx->ctx_inside, ctx->block_inner_pad, SHA1_BLOCK_LEN);
@@ -259,7 +259,7 @@ hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key, const int key_len)
 
     memcpy(init_key, key, final_len);
 
-    if(SHA256_BLOCK_LEN < final_len)
+    if(SHA256_BLOCK_LEN < key_len)
     {
         /* Calculate the digest of the key
         */
@@ -270,7 +270,7 @@ hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key, const int key_len)
         memcpy(final_key, init_key, key_len);
     }
 
-    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
     SHA256_Init(&ctx->ctx_inside);
     SHA256_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA256_BLOCK_LEN);
@@ -322,29 +322,19 @@ static void
 hmac_sha384_init(hmac_sha384_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
-    unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
     int            final_len = key_len;
 
     memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
-    memcpy(init_key, key, final_len);
+    /* When we eventually support arbitrary key sizes, take the digest
+     * of the key with: sha384(final_key, init_key, final_len);
+    */
+    memcpy(final_key, key, final_len);
 
-    if(SHA384_BLOCK_LEN < final_len)
-    {
-        /* Calculate the digest of the key
-        */
-        sha384(final_key, init_key, final_len);
-    }
-    else
-    {
-        memcpy(final_key, init_key, key_len);
-    }
-
-    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
     SHA384_Init(&ctx->ctx_inside);
     SHA384_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA384_BLOCK_LEN);
@@ -396,29 +386,19 @@ static void
 hmac_sha512_init(hmac_sha512_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
-    unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
     int            final_len = key_len;
 
     memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
-    memcpy(init_key, key, final_len);
+    /* When we eventually support arbitrary key sizes, take the digest
+     * of the key with: sha512(final_key, init_key, final_len);
+    */
+    memcpy(final_key, key, final_len);
 
-    if(SHA512_BLOCK_LEN < final_len)
-    {
-        /* Calculate the digest of the key
-        */
-        sha512(final_key, init_key, final_len);
-    }
-    else
-    {
-        memcpy(final_key, init_key, key_len);
-    }
-
-    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, key_len);
+    pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
     SHA512_Init(&ctx->ctx_inside);
     SHA512_Update(&ctx->ctx_inside, ctx->block_inner_pad, SHA512_BLOCK_LEN);
