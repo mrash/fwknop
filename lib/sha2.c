@@ -665,7 +665,7 @@ char *SHA256_End(SHA256_CTX* context, char buffer[]) {
 		}
 		*buffer = (char)0;
 	} else {
-		MEMSET_BZERO(context, sizeof(context));
+		MEMSET_BZERO(context, sizeof(*context));
 	}
 	MEMSET_BZERO(digest, SHA256_DIGEST_LEN);
 	return buffer;
