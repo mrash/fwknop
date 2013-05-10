@@ -94,7 +94,7 @@ struct fko_context {
     int             added_gpg_prefix;
 
     /* State info */
-    unsigned short  state;
+    unsigned int    state;
     unsigned char   initval;
 
 #if HAVE_LIBGPGME
