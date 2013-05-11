@@ -545,36 +545,6 @@ if ($enable_valgrind) {
     }
 }
 
-if ($enable_profile_coverage_check) {
-    push @tests,
-        {
-            'category' => 'profile coverage',
-            'detail'   => 'gcov profile coverage',
-            'function' => \&profile_coverage,
-            'fatal'    => $NO
-        };
-}
-
-if ($enable_valgrind) {
-    push @tests,
-        {
-            'category' => 'valgrind',
-            'subcategory' => 'fko-wrapper',
-            'detail'   => 'multiple libfko calls',
-            'function' => \&compile_execute_fko_wrapper,
-            'fatal'    => $NO
-        };
-
-    push @tests,
-        {
-            'category' => 'valgrind output',
-            'subcategory' => 'flagged functions',
-            'detail'   => '',
-            'function' => \&parse_valgrind_flagged_functions,
-            'fatal'    => $NO
-        };
-}
-
 ### print a summary of how many test buckets will be run
 my $test_buckets = 0;
 for my $test_hr (@tests) {
@@ -593,6 +563,34 @@ for my $test_hr (@tests) {
         last if $executed >= $test_limit;
     }
 }
+
+if ($enable_profile_coverage_check) {
+    &run_test({
+        'category' => 'profile coverage',
+        'detail'   => 'gcov profile coverage',
+        'function' => \&profile_coverage,
+        'fatal'    => $NO}
+    );
+}
+
+if ($enable_valgrind) {
+    &run_test({
+        'category' => 'valgrind',
+        'subcategory' => 'fko-wrapper',
+        'detail'   => 'multiple libfko calls',
+        'function' => \&compile_execute_fko_wrapper,
+        'fatal'    => $NO}
+    );
+
+    &run_test({
+        'category' => 'valgrind output',
+        'subcategory' => 'flagged functions',
+        'detail'   => '',
+        'function' => \&parse_valgrind_flagged_functions,
+        'fatal'    => $NO}
+    );
+}
+
 
 &logr("\n");
 
