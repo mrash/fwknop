@@ -33,6 +33,35 @@
 #include "fko_util.h"
 #include <errno.h>
 
+#define FKO_ENCRYPTION_MODE_BUFSIZE 16                      /*!< Maximum size of an encryption mode string */
+#define FKO_ENC_MODE_SUPPORTED      0                       /*!< Defined a supported fko encryption mode */
+#define FKO_ENC_MODE_NOT_SUPPORTED  !FKO_ENC_MODE_SUPPORTED /*!< Defined an unsupported fko encryption mode */
+
+/**
+ * Structure to handle an encryption mode string string and its associated integer value
+ */
+typedef struct fko_enc_mode_str
+{
+    const char  str[FKO_ENCRYPTION_MODE_BUFSIZE];   /*!< String which represents an encryption mode value for the FKO library */
+    int         val;                                /*!< Value of the encryption mode according to the FKO library */
+    int         supported;                          /*!< SUPPORTED or NOT_SUPPORTED */
+} fko_enc_mode_str_t;
+
+/**
+ * Array to associate all of encryption modes with their respective string
+ */
+static fko_enc_mode_str_t fko_enc_mode_strs[] =
+{
+    { "CBC",            FKO_ENC_MODE_CBC,           FKO_ENC_MODE_SUPPORTED      },
+    { "ECB",            FKO_ENC_MODE_ECB,           FKO_ENC_MODE_SUPPORTED      },
+    { "CFB",            FKO_ENC_MODE_CFB,           FKO_ENC_MODE_SUPPORTED      },
+    { "PCBC",           FKO_ENC_MODE_PCBC,          FKO_ENC_MODE_NOT_SUPPORTED  },
+    { "OFB",            FKO_ENC_MODE_OFB,           FKO_ENC_MODE_SUPPORTED      },
+    { "CTR",            FKO_ENC_MODE_CTR,           FKO_ENC_MODE_SUPPORTED      },
+    { "Asymmetric",     FKO_ENC_MODE_ASYMMETRIC,    FKO_ENC_MODE_SUPPORTED      },
+    { "legacy",         FKO_ENC_MODE_CBC_LEGACY_IV, FKO_ENC_MODE_SUPPORTED      }
+};
+
 /* Validate encoded message length
 */
 int
@@ -219,81 +248,76 @@ is_valid_pt_msg_len(const int len)
     return(1);
 }
 
-/* Convert an encryption_mode string to its integer value.
-*/
+/**
+ * @brief Convert an encryption mode string to its integer value.
+ *
+ * @param enc_mode_str Encryption mode string (CBC,ECB...)
+ *
+ * @return -1 if the encryption mode string is not supported,
+ *         otherwise the encryption mode value
+ */
 int
 enc_mode_strtoint(const char *enc_mode_str)
 {
-    if(strcasecmp(enc_mode_str, "cbc") == 0)
-        return(FKO_ENC_MODE_CBC);
-    else if(strcasecmp(enc_mode_str, "ecb") == 0)
-        return(FKO_ENC_MODE_ECB);
-    else if(strcasecmp(enc_mode_str, "cfb") == 0)
-        return(FKO_ENC_MODE_CFB);
-    else if(strcasecmp(enc_mode_str, "pcbc") == 0)
-        return(-1);  /* not supported yet */
-    else if(strcasecmp(enc_mode_str, "ofb") == 0)
-        return(FKO_ENC_MODE_OFB);
-    else if(strcasecmp(enc_mode_str, "ctr") == 0)
-        return(FKO_ENC_MODE_CTR);
-    else if(strcasecmp(enc_mode_str, "legacy") == 0)
-        return(FKO_ENC_MODE_CBC_LEGACY_IV);
-    else
-        return(-1);
+    unsigned char           ndx_enc_mode;
+    int                     enc_mode_int = -1;     /* Encryption mode integer value */
+    fko_enc_mode_str_t     *enc_mode_str_pt;
+
+    /* Look into the fko_enc_mode_strs array to find out the right encryption mode */
+    for (ndx_enc_mode = 0 ; ndx_enc_mode < ARRAY_SIZE(fko_enc_mode_strs) ; ndx_enc_mode++)
+    {
+        enc_mode_str_pt = &(fko_enc_mode_strs[ndx_enc_mode]);
+
+        /* If the encryption mode matches, grab it */
+        if (   (strcasecmp(enc_mode_str, enc_mode_str_pt->str) == 0)
+            && (enc_mode_str_pt->supported == FKO_ENC_MODE_SUPPORTED) )
+        {
+            enc_mode_int = enc_mode_str_pt->val;
+            break;
+        }
+    }
+
+    return enc_mode_int;
 }
 
 /**
- * \brief Return an encryption mode string according to an enc_mode integer value
+ * @brief Return an encryption mode string according to an enc_mode integer value
  *
  * This function checks if the encryption mode integer is valid, and write the
  * encryption mode string associated.
  *
- * \param enc_mode Encryption mode inetger value (FKO_ENC_MODE_CBC, FKO_ENC_MODE_ECB ...)
- * \param enc_mode_str Buffer to write the encryption mode string
- * \param enc_mode_size size of the encryption mode string buffer
+ * @param enc_mode Encryption mode integer value (FKO_ENC_MODE_CBC, FKO_ENC_MODE_ECB ...)
+ * @param enc_mode_str Buffer to write the encryption mode string to
+ * @param enc_mode_size Size of the encryption mode string buffer
  *
- * \return -1 if the encryption mode integer value is not supported, 0 otherwise
+ * @return -1 if the encryption mode integer value is not supported, 0 otherwise
  */
 short
 enc_mode_inttostr(int enc_mode, char* enc_mode_str, size_t enc_mode_size)
 {
-    short enc_mode_not_valid = 0;
+    short                   enc_mode_error = -1;
+    unsigned char           ndx_enc_mode;
+    fko_enc_mode_str_t     *enc_mode_str_pt;
 
+    /* Initialize the protocol string */
     memset(enc_mode_str, 0, enc_mode_size);
 
-    switch (enc_mode)
+    /* Look into the fko_enc_mode_strs array to find out the right protocol */
+    for (ndx_enc_mode = 0 ; ndx_enc_mode < ARRAY_SIZE(fko_enc_mode_strs) ; ndx_enc_mode++)
     {
-        case FKO_ENC_MODE_CBC :
-            strlcpy(enc_mode_str, "CBC", enc_mode_size);
+        enc_mode_str_pt = &(fko_enc_mode_strs[ndx_enc_mode]);
+
+        /* If the encryption mode matches, grab it */
+        if (   (enc_mode_str_pt->val == enc_mode)
+            && (enc_mode_str_pt->supported == FKO_ENC_MODE_SUPPORTED) )
+        {
+            strlcpy(enc_mode_str, enc_mode_str_pt->str, enc_mode_size);
+            enc_mode_error = 0;
             break;
-        case FKO_ENC_MODE_ECB :
-            strlcpy(enc_mode_str, "ECB", enc_mode_size);
-            break;
-        case FKO_ENC_MODE_CFB :
-            strlcpy(enc_mode_str, "CFB", enc_mode_size);
-            break;
-        case FKO_ENC_MODE_PCBC :
-            //strlcpy(enc_mode_str, "PCBC", enc_mode_size);
-            enc_mode_not_valid = -1;
-            break;
-        case FKO_ENC_MODE_OFB :
-            strlcpy(enc_mode_str, "OFB", enc_mode_size);
-            break;
-        case FKO_ENC_MODE_CTR :
-            strlcpy(enc_mode_str, "CTR", enc_mode_size);
-            break;
-        case FKO_ENC_MODE_CBC_LEGACY_IV:
-            strlcpy(enc_mode_str, "CBC legacy IV", enc_mode_size);
-            break;
-        case FKO_ENC_MODE_ASYMMETRIC:
-            strlcpy(enc_mode_str, "Asymmetric", enc_mode_size);
-            break;
-        default:
-            enc_mode_not_valid = -1;
-            break;
+        }
     }
 
-    return enc_mode_not_valid;
+    return enc_mode_error;
 }
 
 int

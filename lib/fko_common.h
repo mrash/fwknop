@@ -145,6 +145,10 @@
   #define strnlen(s, l) (strlen(s) < l ? strlen(s) : l)
 #endif
 
+/* Get the number of elements of an array
+ */
+#define ARRAY_SIZE(t)   (sizeof(t) / sizeof(t[0]))
+
 #endif /* FKO_COMMON_H */
 
 /***EOF***/
