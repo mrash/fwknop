@@ -36,7 +36,7 @@
 int
 fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
 {
-    int     old_msg_type = ctx->message_type;
+    int     old_msg_type;
 
     /* Context must be initialized.
     */
@@ -47,6 +47,8 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
     */
     if(timeout < 0)
         return(FKO_ERROR_INVALID_DATA);
+
+    old_msg_type = ctx->message_type;
 
     ctx->client_timeout = timeout;
 
