@@ -620,4 +620,85 @@
             qq|-P "udp port $non_std_spa_port"|,
         'fatal'    => $NO
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode CBC',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode CBC",
+        'positive_output_matches' => [qr/Encryption\sMode\:\s.*CBC/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode ECB',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode ECB",
+        'positive_output_matches' => [qr/Encryption\sMode\:\s.*ECB/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode CFB',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode CFB",
+        'positive_output_matches' => [qr/Encryption\sMode\:\s.*CFB/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode PCBC (unsupported)',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode PCBC",
+        'positive_output_matches' => [qr/Invalid\sencryption\smode:\sPCBC/],
+        'fatal'    => $NO
+    },    
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode OFB',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode OFB",
+        'positive_output_matches' => [qr/Encryption\sMode\:\s.*OFB/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode CTR',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode CTR",
+        'positive_output_matches' => [qr/Encryption\sMode\:\s.*CTR/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode Asymmetric',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode \"Asymmetric\"",
+        'positive_output_matches' => [qr/Encryption\sMode\:\s.*Asymmetric/],
+        'fatal'    => $NO
+    },    
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'encryption mode legacy',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode legacy",
+        'positive_output_matches' => [qr/Encryption\sMode\:\s.*legacy/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'bad encryption mode',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --encryption-mode badmode",
+        'positive_output_matches' => [qr/Invalid\sencryption\smode:\sbadmode/],
+        'fatal'    => $NO
+    },    
 );
