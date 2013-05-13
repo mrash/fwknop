@@ -91,6 +91,7 @@ EXTRA_DIST = \
     iphone/Classes/libfwknop/get_libfko_files.sh \
     iphone/Classes/bridge_fwknop.c \
     iphone/Classes/logutils.h \
+    m4/gpgme.m4 \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \
     perl/FKO/MANIFEST \
