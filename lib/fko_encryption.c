@@ -542,6 +542,9 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key, const int key_le
 {
     int     enc_type, res;
 
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
     /* Get the (assumed) type of encryption used. This will also provide
      * some data validation.
     */
