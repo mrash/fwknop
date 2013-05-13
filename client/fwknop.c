@@ -252,6 +252,7 @@ main(int argc, char **argv)
             MY_VERSION, version);
 
         fko_destroy(ctx);
+        ctx = NULL;
         return(EXIT_SUCCESS);
     }
 
@@ -264,6 +265,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_set_spa_client_timeout", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
     }
@@ -275,6 +277,7 @@ main(int argc, char **argv)
     {
         errmsg("fko_set_spa_message_type", res);
         fko_destroy(ctx);
+        ctx = NULL;
         return(EXIT_FAILURE);
     }
 
@@ -287,6 +290,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_set_timestamp", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
     }
@@ -297,6 +301,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_set_timestamp", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
     }
@@ -319,6 +324,7 @@ main(int argc, char **argv)
             if(resolve_ip_http(&options) < 0)
             {
                 fko_destroy(ctx);
+                ctx = NULL;
                 return(EXIT_FAILURE);
             }
         }
@@ -335,6 +341,7 @@ main(int argc, char **argv)
     {
         errmsg("fko_set_spa_message", res);
         fko_destroy(ctx);
+        ctx = NULL;
         return(EXIT_FAILURE);
     }
 
@@ -347,6 +354,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_set_nat_access_str", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
     }
@@ -360,6 +368,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_set_username", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
     }
@@ -381,6 +390,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_set_spa_encryption_type", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
 
@@ -395,6 +405,7 @@ main(int argc, char **argv)
             {
                 errmsg("fko_set_gpg_home_dir", res);
                 fko_destroy(ctx);
+                ctx = NULL;
                 return(EXIT_FAILURE);
             }
         }
@@ -407,6 +418,7 @@ main(int argc, char **argv)
             if(IS_GPG_ERROR(res))
                 log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s", fko_gpg_errstr(ctx));
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
 
@@ -421,6 +433,7 @@ main(int argc, char **argv)
                     log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s", fko_gpg_errstr(ctx));
 
                 fko_destroy(ctx);
+                ctx = NULL;
                 return(EXIT_FAILURE);
             }
         }
@@ -452,6 +465,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_set_spa_digest_type", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
     }
@@ -492,6 +506,7 @@ main(int argc, char **argv)
     {
         log_msg(LOG_VERBOSITY_ERROR, "send_spa_packet: packet not sent.");
         fko_destroy(ctx);
+        ctx = NULL;
         return(EXIT_FAILURE);
     }
     else
@@ -513,6 +528,7 @@ main(int argc, char **argv)
         {
             errmsg("fko_get_spa_data", res);
             fko_destroy(ctx);
+            ctx = NULL;
             return(EXIT_FAILURE);
         }
 
@@ -524,6 +540,7 @@ main(int argc, char **argv)
             errmsg("fko_get_spa_encryption_mode", res);
             fko_destroy(ctx);
             fko_destroy(ctx2);
+            ctx = ctx2 = NULL;
             return(EXIT_FAILURE);
         }
 
@@ -545,6 +562,7 @@ main(int argc, char **argv)
             errmsg("fko_new_with_data", res);
             fko_destroy(ctx);
             fko_destroy(ctx2);
+            ctx = ctx2 = NULL;
             return(EXIT_FAILURE);
         }
 
@@ -554,6 +572,7 @@ main(int argc, char **argv)
             errmsg("fko_set_spa_encryption_mode", res);
             fko_destroy(ctx);
             fko_destroy(ctx2);
+            ctx = ctx2 = NULL;
             return(EXIT_FAILURE);
         }
 
@@ -569,6 +588,7 @@ main(int argc, char **argv)
                     errmsg("fko_set_gpg_home_dir", res);
                     fko_destroy(ctx);
                     fko_destroy(ctx2);
+                    ctx = ctx2 = NULL;
                     return(EXIT_FAILURE);
                 }
             }
@@ -597,11 +617,13 @@ main(int argc, char **argv)
                     "No access to recipient private key?");
                 fko_destroy(ctx);
                 fko_destroy(ctx2);
+                ctx = ctx2 = NULL;
                 return(EXIT_SUCCESS);
             }
 
             fko_destroy(ctx);
             fko_destroy(ctx2);
+            ctx = ctx2 = NULL;
             return(EXIT_FAILURE);
         }
 
@@ -609,6 +631,7 @@ main(int argc, char **argv)
         display_ctx(ctx2);
 
         fko_destroy(ctx2);
+        ctx2 = NULL;
     }
 
     clean_exit(ctx, &options, EXIT_SUCCESS);
@@ -637,6 +660,7 @@ get_rand_port(fko_ctx_t ctx)
     {
         errmsg("get_rand_port(), fko_get_rand_value", res);
         fko_destroy(ctx);
+        ctx = NULL;
         exit(EXIT_FAILURE);
     }
 
@@ -649,6 +673,7 @@ get_rand_port(fko_ctx_t ctx)
             "[*] get_rand_port(), could not convert rand_val str '%s', to integer",
             rand_val);
         fko_destroy(ctx);
+        ctx = NULL;
         exit(EXIT_FAILURE);
     }
 
@@ -665,6 +690,7 @@ get_rand_port(fko_ctx_t ctx)
     {
         errmsg("get_rand_port(), fko_get_rand_value", res);
         fko_destroy(ctx);
+        ctx = NULL;
         exit(EXIT_FAILURE);
     }
 
@@ -1263,6 +1289,7 @@ clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts, unsigned int exit_status)
 {
     free_configs(opts);
     fko_destroy(ctx);
+    ctx = NULL;
     exit(exit_status);
 }
 

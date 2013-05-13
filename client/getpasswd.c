@@ -182,6 +182,7 @@ get_key_file(char *key, int *key_len, const char *key_file,
     {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open config file: %s", key_file);
         fko_destroy(ctx);
+        ctx = NULL;
         exit(EXIT_FAILURE);
     }
 
@@ -238,6 +239,7 @@ get_key_file(char *key, int *key_len, const char *key_file,
         log_msg(LOG_VERBOSITY_ERROR, "Could not get key for IP: %s from: %s",
             options->spa_server_str, key_file);
         fko_destroy(ctx);
+        ctx = NULL;
         exit(EXIT_FAILURE);
     }
 
