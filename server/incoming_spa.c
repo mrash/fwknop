@@ -152,6 +152,7 @@ get_raw_digest(char **digest, char *pkt_data)
         log_msg(LOG_WARNING, "Error initializing FKO context from SPA data: %s",
             fko_errstr(res));
         fko_destroy(ctx);
+        ctx = NULL;
         return(SPA_MSG_FKO_CTX_ERROR);
     }
 
@@ -161,6 +162,7 @@ get_raw_digest(char **digest, char *pkt_data)
         log_msg(LOG_WARNING, "Error setting digest type for SPA data: %s",
             fko_errstr(res));
         fko_destroy(ctx);
+        ctx = NULL;
         return(SPA_MSG_DIGEST_ERROR);
     }
 
@@ -170,6 +172,7 @@ get_raw_digest(char **digest, char *pkt_data)
         log_msg(LOG_WARNING, "Error setting digest for SPA data: %s",
             fko_errstr(res));
         fko_destroy(ctx);
+        ctx = NULL;
         return(SPA_MSG_DIGEST_ERROR);
     }
 
@@ -179,6 +182,7 @@ get_raw_digest(char **digest, char *pkt_data)
         log_msg(LOG_WARNING, "Error getting digest from SPA data: %s",
             fko_errstr(res));
         fko_destroy(ctx);
+        ctx = NULL;
         return(SPA_MSG_DIGEST_ERROR);
     }
 
@@ -188,6 +192,7 @@ get_raw_digest(char **digest, char *pkt_data)
         return SPA_MSG_ERROR;
 
     fko_destroy(ctx);
+    ctx = NULL;
 
     return res;
 }
@@ -354,6 +359,14 @@ incoming_spa(fko_srv_options_t *opts)
         attempted_decrypt = 0;
         stanza_num++;
 
+        /* Start access loop with a clean FKO context
+        */
+        if(ctx != NULL)
+        {
+            fko_destroy(ctx);
+            ctx = NULL;
+        }
+
         /* Check for a match for the SPA source IP and the access stanza
         */
         if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)))
@@ -437,8 +450,6 @@ incoming_spa(fko_srv_options_t *opts)
                         "[%s] (stanza #%d) Error creating fko context (before decryption): %s",
                         spadat.pkt_source_ip, stanza_num, fko_errstr(res)
                     );
-                    if(ctx != NULL)
-                        fko_destroy(ctx);
                     acc = acc->next;
                     continue;
                 }
@@ -454,8 +465,6 @@ incoming_spa(fko_srv_options_t *opts)
                             "[%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
                             spadat.pkt_source_ip, stanza_num, acc->gpg_home_dir, fko_errstr(res)
                         );
-                        if(ctx != NULL)
-                            fko_destroy(ctx);
                         acc = acc->next;
                         continue;
                     }
@@ -510,8 +519,6 @@ incoming_spa(fko_srv_options_t *opts)
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) - GPG ERROR: %s",
                     spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
 
-            if(ctx != NULL)
-                fko_destroy(ctx);
             acc = acc->next;
             continue;
         }
@@ -525,8 +532,6 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) Could not add digest to replay cache",
                     spadat.pkt_source_ip, stanza_num);
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -551,8 +556,6 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
                     spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -566,8 +569,6 @@ incoming_spa(fko_srv_options_t *opts)
                 log_msg(LOG_WARNING,
                     "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
                     spadat.pkt_source_ip, stanza_num, gpg_id);
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -593,8 +594,6 @@ incoming_spa(fko_srv_options_t *opts)
             log_msg(LOG_ERR, "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
-            if(ctx != NULL)
-                fko_destroy(ctx);
             acc = acc->next;
             continue;
         }
@@ -612,8 +611,6 @@ incoming_spa(fko_srv_options_t *opts)
                 log_msg(LOG_WARNING, "[%s] (stanza #%d) SPA data time difference is too great (%i seconds).",
                     spadat.pkt_source_ip, stanza_num, ts_diff);
 
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -629,8 +626,6 @@ incoming_spa(fko_srv_options_t *opts)
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Error parsing SPA message string: %s",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
-            if(ctx != NULL)
-                fko_destroy(ctx);
             acc = acc->next;
             continue;
         }
@@ -645,7 +640,10 @@ incoming_spa(fko_srv_options_t *opts)
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             if(ctx != NULL)
+            {
                 fko_destroy(ctx);
+                ctx = NULL;
+            }
             break;
         }
 
@@ -663,8 +661,6 @@ incoming_spa(fko_srv_options_t *opts)
                     spadat.pkt_source_ip, stanza_num
                 );
 
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -686,8 +682,6 @@ incoming_spa(fko_srv_options_t *opts)
                     spadat.pkt_source_ip, stanza_num, spadat.username, acc->require_username
                 );
 
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -708,8 +702,6 @@ incoming_spa(fko_srv_options_t *opts)
                     stanza_num, spadat.pkt_source_ip
                 );
 
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -719,8 +711,6 @@ incoming_spa(fko_srv_options_t *opts)
                 stanza_num, spadat.pkt_source_ip
             );
 
-            if(ctx != NULL)
-                fko_destroy(ctx);
             acc = acc->next;
             continue;
 #endif
@@ -737,8 +727,6 @@ incoming_spa(fko_srv_options_t *opts)
                     spadat.pkt_source_ip, stanza_num
                 );
 
-                if(ctx != NULL)
-                    fko_destroy(ctx);
                 acc = acc->next;
                 continue;
             }
@@ -781,7 +769,10 @@ incoming_spa(fko_srv_options_t *opts)
                     res = SPA_MSG_COMMAND_ERROR;
 
                 if(ctx != NULL)
+                {
                     fko_destroy(ctx);
+                    ctx = NULL;
+                }
 
                 /* we processed the command on a matching access stanza, so we
                  * don't look for anything else to do with this SPA packet
@@ -803,8 +794,6 @@ incoming_spa(fko_srv_options_t *opts)
                 spadat.pkt_source_ip, stanza_num
             );
 
-            if(ctx != NULL)
-                fko_destroy(ctx);
             acc = acc->next;
             continue;
         }
@@ -815,12 +804,21 @@ incoming_spa(fko_srv_options_t *opts)
         */
         process_spa_request(opts, acc, &spadat);
         if(ctx != NULL)
+        {
             fko_destroy(ctx);
+            ctx = NULL;
+        }
         break;
     }
 
     if (raw_digest != NULL)
         free(raw_digest);
+
+    if(ctx != NULL)
+    {
+        fko_destroy(ctx);
+        ctx = NULL;
+    }
 
     return;
 }
