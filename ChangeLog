@@ -28,6 +28,14 @@ fwknop-2.5 (//2013):
       engine.  If a vulnerability is discovered in OpenSSL and a change is
       made, then the --enable-openssl-checks mode will allow the test suite to
       discover this in a automated fashion for fwknop.
+    - The fwknop project is using Coverity for source code validation (in
+      addition to other tools such as the CLANG static analyzer).  Many bugs
+      have been fixed in this release that were discovered by Coverity.  These
+      bugs spanned multiple classes of problems from memory leaks, improper use
+      of sizeof(), potential double-free conditions, and more.  Full details on
+      these fixes are available in the git history.  Any open source project
+      that is written in a language supported by Coverity would benefit highly
+      from participating.
     - [test suite] Changed how the test suite interacts with the fwknop client
       and server by looking for indications that SPA packets are actually
       received.  This is done by first waiting for 'main event loop' in fwknopd
