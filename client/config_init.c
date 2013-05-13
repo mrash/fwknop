@@ -329,7 +329,7 @@ is_rc_param(const char *line, rc_file_param_t *param)
     char    val[MAX_LINE_LEN] = {0};
     char    *ndx;
 
-    memset(param, 0, sizeof(param));
+    memset(param, 0, sizeof(*param));
 
     /* Fetch the variable and its value */
     if(sscanf(line, "%s %[^ ;\t\n\r#]", var, val) != 2)
@@ -1148,10 +1148,10 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     rcfile_fd = open(rcfile_update, FWKNOPRC_OFLAGS, FWKNOPRC_MODE);
     if (rcfile_fd == -1)
     {
-            log_msg(LOG_VERBOSITY_WARNING,
-                    "update_rc() : Unable to create temporary rc file: %s: %s",
-                    rcfile_update, strerror(errno));
-            return;
+        log_msg(LOG_VERBOSITY_WARNING,
+                "update_rc() : Unable to create temporary rc file: %s: %s",
+                rcfile_update, strerror(errno));
+        return;
     }
     close(rcfile_fd);
 
@@ -1170,6 +1170,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         log_msg(LOG_VERBOSITY_WARNING,
                 "update_rc() : Unable to open rc file: %s: %s",
                 rcfile_update, strerror(errno));
+        fclose(rc);
         return;
     }
 
@@ -1346,8 +1347,7 @@ validate_options(fko_cli_options_t *options)
     */
     if(options->use_gpg)
     {
-        if(options->gpg_recipient_key == NULL
-            || strlen(options->gpg_recipient_key) == 0)
+        if(strlen(options->gpg_recipient_key) == 0)
         {
             log_msg(LOG_VERBOSITY_ERROR,
                 "Must specify --gpg-recipient-key when GPG is used.");
@@ -1541,12 +1541,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->use_hmac = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                break;
             case KEY_HMAC:
                 strlcpy(options->hmac_key, optarg, sizeof(options->hmac_key));
                 options->have_hmac_key = 1;
                 options->use_hmac = 1;
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                break;
             case KEY_LEN:
                 options->key_len = strtol_wrapper(optarg, 1,
                         MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);

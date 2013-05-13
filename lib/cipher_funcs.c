@@ -213,14 +213,12 @@ rijndael_init(RIJNDAEL_context *ctx, const char *key,
     if(encryption_mode == FKO_ENC_MODE_CBC
             || encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV)
         ctx->mode = MODE_CBC;
-    else if(encryption_mode == FKO_ENC_MODE_CFB)
-        ctx->mode = MODE_CFB;
+    else if(encryption_mode == FKO_ENC_MODE_CTR)
+        ctx->mode = MODE_CTR;
     else if(encryption_mode == FKO_ENC_MODE_PCBC)
         ctx->mode = MODE_PCBC;
     else if(encryption_mode == FKO_ENC_MODE_OFB)
         ctx->mode = MODE_OFB;
-    else if(encryption_mode == FKO_ENC_MODE_CTR)
-        ctx->mode = MODE_CTR;
     else if(encryption_mode == FKO_ENC_MODE_CFB)
         ctx->mode = MODE_CFB;
     else if(encryption_mode == FKO_ENC_MODE_ECB)

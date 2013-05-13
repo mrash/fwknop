@@ -149,9 +149,6 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
 
             while((fgets(so_read_buf, IO_READ_BUF_LEN, ipt)) != NULL)
             {
-                if(so_buf == NULL)
-                    continue;
-
                 strlcat(so_buf, so_read_buf, so_buf_sz);
 
                 if(strlen(so_buf) >= so_buf_sz-1)

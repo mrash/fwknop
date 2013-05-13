@@ -39,7 +39,7 @@
 int
 fko_new(fko_ctx_t *r_ctx)
 {
-    fko_ctx_t   ctx;
+    fko_ctx_t   ctx = NULL;
     int         res;
     char       *ver;
 
@@ -77,6 +77,7 @@ fko_new(fko_ctx_t *r_ctx)
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
 
@@ -88,6 +89,7 @@ fko_new(fko_ctx_t *r_ctx)
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
 
@@ -99,6 +101,7 @@ fko_new(fko_ctx_t *r_ctx)
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
 
@@ -110,6 +113,7 @@ fko_new(fko_ctx_t *r_ctx)
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
 
@@ -121,6 +125,7 @@ fko_new(fko_ctx_t *r_ctx)
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
 
@@ -132,6 +137,7 @@ fko_new(fko_ctx_t *r_ctx)
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
 
@@ -143,6 +149,7 @@ fko_new(fko_ctx_t *r_ctx)
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
 
@@ -174,9 +181,12 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     int encryption_mode, const char * const hmac_key,
     const int hmac_key_len, const int hmac_type)
 {
-    fko_ctx_t   ctx;
+    fko_ctx_t   ctx = NULL;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
     int         enc_msg_len;
+
+    if(enc_msg == NULL)
+        return(FKO_ERROR_INVALID_DATA);
 
     ctx = calloc(1, sizeof *ctx);
     if(ctx == NULL)
@@ -211,6 +221,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
     ctx->initval = 0;
@@ -222,6 +233,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
     ctx->initval = 0;
@@ -234,6 +246,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
+        ctx = NULL;
         return res;
     }
     ctx->initval = 0;
@@ -252,6 +265,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         if(res != FKO_SUCCESS)
         {
             fko_destroy(ctx);
+            ctx = NULL;
             *r_ctx = NULL; /* Make sure the caller ctx is null just in case */
             return(res);
         }
@@ -278,83 +292,79 @@ fko_destroy(fko_ctx_t ctx)
     fko_gpg_sig_t   gsig, tgsig;
 #endif
 
-    if(CTX_INITIALIZED(ctx))
-    {
-        if(ctx->rand_val != NULL)
-            free(ctx->rand_val);
+    if(!CTX_INITIALIZED(ctx))
+        return;
 
-        if(ctx->username != NULL)
-            free(ctx->username);
+    if(ctx->rand_val != NULL)
+        free(ctx->rand_val);
 
-        if(ctx->version != NULL)
-            free(ctx->version);
+    if(ctx->username != NULL)
+        free(ctx->username);
 
-        if(ctx->message != NULL)
-            free(ctx->message);
+    if(ctx->version != NULL)
+        free(ctx->version);
 
-        if(ctx->nat_access != NULL)
-            free(ctx->nat_access);
+    if(ctx->message != NULL)
+        free(ctx->message);
 
-        if(ctx->server_auth != NULL)
-            free(ctx->server_auth);
+    if(ctx->nat_access != NULL)
+        free(ctx->nat_access);
 
-        if(ctx->digest != NULL)
-            free(ctx->digest);
+    if(ctx->server_auth != NULL)
+        free(ctx->server_auth);
 
-        if(ctx->raw_digest != NULL)
-            free(ctx->raw_digest);
+    if(ctx->digest != NULL)
+        free(ctx->digest);
 
-        if(ctx->encoded_msg != NULL)
-            free(ctx->encoded_msg);
+    if(ctx->raw_digest != NULL)
+        free(ctx->raw_digest);
 
-        if(ctx->encrypted_msg != NULL)
-            free(ctx->encrypted_msg);
+    if(ctx->encoded_msg != NULL)
+        free(ctx->encoded_msg);
 
-        if(ctx->msg_hmac != NULL)
-            free(ctx->msg_hmac);
+    if(ctx->encrypted_msg != NULL)
+        free(ctx->encrypted_msg);
+
+    if(ctx->msg_hmac != NULL)
+        free(ctx->msg_hmac);
 
 #if HAVE_LIBGPGME
-        if(ctx->gpg_exe != NULL)
-            free(ctx->gpg_exe);
+    if(ctx->gpg_exe != NULL)
+        free(ctx->gpg_exe);
 
-        if(ctx->gpg_home_dir != NULL)
-            free(ctx->gpg_home_dir);
+    if(ctx->gpg_home_dir != NULL)
+        free(ctx->gpg_home_dir);
 
-        if(ctx->gpg_recipient != NULL)
-            free(ctx->gpg_recipient);
+    if(ctx->gpg_recipient != NULL)
+        free(ctx->gpg_recipient);
 
-        if(ctx->gpg_signer != NULL)
-            free(ctx->gpg_signer);
+    if(ctx->gpg_signer != NULL)
+        free(ctx->gpg_signer);
 
-        if(ctx->recipient_key != NULL)
-        {
-            gpgme_key_unref(ctx->recipient_key);
-        }
+    if(ctx->recipient_key != NULL)
+        gpgme_key_unref(ctx->recipient_key);
 
-        if(ctx->signer_key != NULL)
-        {
-            gpgme_key_unref(ctx->signer_key);
-        }
+    if(ctx->signer_key != NULL)
+        gpgme_key_unref(ctx->signer_key);
 
-        if(ctx->gpg_ctx != NULL)
-            gpgme_release(ctx->gpg_ctx);
+    if(ctx->gpg_ctx != NULL)
+        gpgme_release(ctx->gpg_ctx);
 
-        gsig = ctx->gpg_sigs;
-        while(gsig != NULL)
-        {
-            if(gsig->fpr != NULL)
-                free(gsig->fpr);
+    gsig = ctx->gpg_sigs;
+    while(gsig != NULL)
+    {
+        if(gsig->fpr != NULL)
+            free(gsig->fpr);
 
-            tgsig = gsig;
-            gsig = gsig->next;
+        tgsig = gsig;
+        gsig = gsig->next;
 
-            free(tgsig);
-        }
+        free(tgsig);
+    }
 
 #endif /* HAVE_LIBGPGME */
 
-        bzero(ctx, sizeof(*ctx));
-    }
+    bzero(ctx, sizeof(*ctx));
 
     free(ctx);
 }

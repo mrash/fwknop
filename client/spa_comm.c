@@ -552,6 +552,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
                 log_msg(LOG_VERBOSITY_ERROR,
                     "[-] proxy port value is invalid, must be in [%d-%d]",
                     1, MAX_PORT);
+                free(spa_data_copy);
                 return 0;
             }
         }

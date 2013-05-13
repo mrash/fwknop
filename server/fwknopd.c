@@ -259,8 +259,11 @@ main(int argc, char **argv)
                 log_msg(LOG_WARNING,
                     "Error opening digest cache file. Incoming digests will not be remembered."
                 );
-                strlcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N",
-                        sizeof(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE]));
+                /* Destination points to heap memory, and is guaranteed to be
+                 * at least two bytes large via validate_options(),
+                 * DEF_ENABLE_DIGEST_PERSISTENCE, and set_config_entry()
+                */
+                strlcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N", 2);
             }
 
             if(opts.verbose)
@@ -618,7 +621,12 @@ write_pid_file(fko_srv_options_t *opts)
         return -1;
     }
 
-    fcntl(op_fd, F_SETFD, FD_CLOEXEC);
+    if(fcntl(op_fd, F_SETFD, FD_CLOEXEC) == -1)
+    {
+        close(op_fd);
+        perror("Unexpected error from fcntl: ");
+        return -1;
+    }
 
     /* Attempt to lock the PID file.  If we get an EWOULDBLOCK
      * error, another instance already has the lock. So we grab
@@ -627,13 +635,13 @@ write_pid_file(fko_srv_options_t *opts)
     lck_res = lockf(op_fd, F_TLOCK, 0);
     if(lck_res == -1)
     {
+        close(op_fd);
+
         if(errno != EAGAIN)
         {
             perror("Unexpected error from lockf: ");
             return -1;
         }
-
-        close(op_fd);
 
         /* Look for an existing lock holder. If we get a pid return it.
         */
@@ -685,21 +693,24 @@ get_running_pid(const fko_srv_options_t *opts)
 
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 
-    if(op_fd > 0)
+    if(op_fd == -1)
     {
-        if (read(op_fd, buf, PID_BUFLEN) > 0)
-        {
-            buf[PID_BUFLEN-1] = '\0';
-            /* max pid value is configurable on Linux
-            */
-            rpid = (pid_t) strtol_wrapper(buf, 0, (2 << 30),
-                    NO_EXIT_UPON_ERR, &is_err);
-            if(is_err != FKO_SUCCESS)
-                rpid = 0;
-        }
-
-        close(op_fd);
+        perror("Error trying to open PID file: ");
+        return(rpid);
     }
+
+    if (read(op_fd, buf, PID_BUFLEN) > 0)
+    {
+        buf[PID_BUFLEN-1] = '\0';
+        /* max pid value is configurable on Linux
+        */
+        rpid = (pid_t) strtol_wrapper(buf, 0, (2 << 30),
+                NO_EXIT_UPON_ERR, &is_err);
+        if(is_err != FKO_SUCCESS)
+            rpid = 0;
+    }
+
+    close(op_fd);
 
     return(rpid);
 }
