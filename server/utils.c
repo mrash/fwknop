@@ -1,11 +1,9 @@
-/*
- *****************************************************************************
+/**
+ * @file    utils.c
  *
- * File:    utils.c
+ * @author  Damien S. Stuart
  *
- * Author:  Damien S. Stuart
- *
- * Purpose: General/Generic functions for the fwknop server.
+ * @brief   General/Generic functions for the fwknop server.
  *
  * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
  *
@@ -25,11 +23,54 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
  *  USA
- *
- *****************************************************************************
-*/
+ */
+
 #include "fwknopd_common.h"
 #include "utils.h"
+#include "log_msg.h"
+#include <stdarg.h>
+
+/**
+ * @brief Add a printf style message to a buffer
+ *
+ * This function allows to append a printf style message to a buffer
+ * and prevents buffer overflow by taking care of the size the buffer.
+ * It returns the number of bytes really written to the buffer.
+ * Thus if an error is encoutered during the process the number of bytes
+ * written is set to 0. This way the user knows exactly how many bytes
+ * can be appended afterwards.
+ *
+ * @param buf Buffer to write the formated message to
+ * @param buf_size Maximum number of bytes to write to the buffer
+ * @param msg Message to format and to append to the buffer
+ *
+ * @return the number of bytes written to the buffer
+ */
+static int
+append_msg_to_buf(char *buf, size_t buf_size, const char* msg, ...)
+{
+    int     bytes_written = 0;  /* Number of bytes written to buf */
+    va_list ap;
+
+    if (buf_size != 0)
+    {
+        va_start(ap, msg);
+
+        bytes_written = vsnprintf(buf, buf_size, msg, ap);
+        if ( (bytes_written < 0) || (bytes_written >= buf_size) )
+        {
+            log_msg(LOG_WARNING, "add_msg_to_buf() : message truncated / snprintf error");
+            bytes_written = 0;
+        }
+        else;
+
+        va_end(ap);
+    }
+    else
+        log_msg(LOG_WARNING, "add_msg_to_buf() : nothing to write.");
+
+    return bytes_written;
+}
 
 /* Generic hex dump function.
 */
@@ -74,8 +115,8 @@ char *
 dump_ctx(fko_ctx_t ctx)
 {
     static char buf[CTX_DUMP_BUFSIZE];
-    char       *ndx;
-    int         cp;
+    int         cp = 0;
+    size_t      bytes_left;
 
     char       *rand_val        = NULL;
     char       *username        = NULL;
@@ -123,43 +164,26 @@ dump_ctx(fko_ctx_t ctx)
     hmac_digest_inttostr(hmac_type, hmac_str, sizeof(hmac_str));
     enc_mode_inttostr(encryption_mode, enc_mode_str, sizeof(enc_mode_str));
 
-    memset(buf, 0x0, CTX_DUMP_BUFSIZE);
+    memset(buf, 0x0, sizeof(buf));
+    bytes_left = sizeof(buf) - 1;
 
-    ndx = buf;
-
-    cp = sprintf(ndx, "SPA Field Values:\n=================\n");
-    ndx += cp;
-    cp = sprintf(ndx, "   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
-    ndx += cp;
-    cp = sprintf(ndx, "       Username: %s\n", username == NULL ? "<NULL>" : username);
-    ndx += cp;
-    cp = sprintf(ndx, "      Timestamp: %u\n", (unsigned int) timestamp);
-    ndx += cp;
-    cp = sprintf(ndx, "    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
-    ndx += cp;
-    cp = sprintf(ndx, "   Message Type: %i (%s)\n", msg_type, msg_type_inttostr(msg_type));
-    ndx += cp;
-    cp = sprintf(ndx, " Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
-    ndx += cp;
-    cp = sprintf(ndx, "     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
-    ndx += cp;
-    cp = sprintf(ndx, "    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
-    ndx += cp;
-    cp = sprintf(ndx, " Client Timeout: %u\n", client_timeout);
-    ndx += cp;
-    cp = sprintf(ndx, "    Digest Type: %u (%s)\n", digest_type, digest_str);
-    ndx += cp;
-    cp = sprintf(ndx, "      HMAC Type: %u (%s)\n", hmac_type, hmac_str);
-    ndx += cp;
-    cp = sprintf(ndx, "Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
-    ndx += cp;
-    cp = sprintf(ndx, "Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_str);
-    ndx += cp;
-    cp = sprintf(ndx, "   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
-    ndx += cp;
-    cp = sprintf(ndx, "SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
-    ndx += cp;
-    sprintf(ndx, "           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
+    cp  = append_msg_to_buf(buf,    bytes_left,    "SPA Field Values:\n=================\n");
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "   Random Value: %s\n", rand_val == NULL ? "<NULL>" : rand_val);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "       Username: %s\n", username == NULL ? "<NULL>" : username);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "      Timestamp: %u\n", (unsigned int) timestamp);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "    FKO Version: %s\n", version == NULL ? "<NULL>" : version);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "   Message Type: %i (%s)\n", msg_type, msg_type_inttostr(msg_type));
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, " Message String: %s\n", spa_message == NULL ? "<NULL>" : spa_message);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "     Nat Access: %s\n", nat_access == NULL ? "<NULL>" : nat_access);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "    Server Auth: %s\n", server_auth == NULL ? "<NULL>" : server_auth);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, " Client Timeout: %u\n", client_timeout);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "    Digest Type: %u (%s)\n", digest_type, digest_str);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "      HMAC Type: %u (%s)\n", hmac_type, hmac_str);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_str);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
+    cp += append_msg_to_buf(buf+cp, bytes_left-cp, "           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
 
     return(buf);
 }

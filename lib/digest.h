@@ -40,19 +40,19 @@
 #define MD_HEX_SIZE(x) x * 2
 
 void md5(unsigned char* out, unsigned char* in, size_t size);
-void md5_hex(char* out, unsigned char* in, size_t size);
+void md5_hex(char* out, size_t size_out, unsigned char* in, size_t size);
 void md5_base64(char* out, unsigned char* in, size_t size);
 void sha1(unsigned char* out, unsigned char* in, size_t size);
-void sha1_hex(char* out, unsigned char* in, size_t size);
+void sha1_hex(char* out, size_t size_out, unsigned char* in, size_t size);
 void sha1_base64(char* out, unsigned char* in, size_t size);
 void sha256(unsigned char* out, unsigned char* in, size_t size);
-void sha256_hex(char* out, unsigned char* in, size_t size);
+void sha256_hex(char* out, size_t size_out, unsigned char* in, size_t size);
 void sha256_base64(char* out, unsigned char* in, size_t size);
 void sha384(unsigned char* out, unsigned char* in, size_t size);
-void sha384_hex(char* out, unsigned char* in, size_t size);
+void sha384_hex(char* out, size_t size_out, unsigned char* in, size_t size);
 void sha384_base64(char* out, unsigned char* in, size_t size);
 void sha512(unsigned char* out, unsigned char* in, size_t size);
-void sha512_hex(char* out, unsigned char* in, size_t size);
+void sha512_hex(char* out, size_t size_out, unsigned char* in, size_t size);
 void sha512_base64(char* out, unsigned char* in, size_t size);
 
 #endif /* DIGEST_H */

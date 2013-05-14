@@ -118,7 +118,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Add the timestamp.
     */
     offset = strlen(tbuf);
-    sprintf(((char*)tbuf+offset), ":%u:", (unsigned int) ctx->timestamp);
+    snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset, ":%u:", (unsigned int) ctx->timestamp);
 
     /* Add the version string.
     */
@@ -138,7 +138,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Add the message type value.
     */
     offset = strlen(tbuf);
-    sprintf(((char*)tbuf+offset), ":%i:", ctx->message_type);
+    snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset, ":%i:", ctx->message_type);
 
     /* Add the base64-encoded SPA message.
     */
@@ -180,7 +180,7 @@ fko_encode_spa_data(fko_ctx_t ctx)
     if(ctx->client_timeout > 0 && ctx->message_type != FKO_COMMAND_MSG)
     {
         offset = strlen(tbuf);
-        sprintf(((char*)tbuf+offset), ":%i", ctx->client_timeout);
+        snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset, ":%i", ctx->client_timeout);
     }
 
     /* If encoded_msg is not null, then we assume it needs to
