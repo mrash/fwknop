@@ -5690,7 +5690,7 @@ sub file_find_regex() {
     }
 
     open F, "< $file" or
-        (&write_test_file("[-] Could not open $file: $!\n", $file) and return 0);
+        (&write_test_file("[-] Could not open $file: $!\n", $curr_test_file) and return 0);
     while (<F>) {
         push @file_lines, $_;
     }

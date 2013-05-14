@@ -707,7 +707,14 @@ process_spa_request(const fko_srv_options_t * const opts,
     /* Parse and expand our access message.
     */
     if(expand_acc_port_list(&port_list, spadat->spa_message_remain) != 1)
+    {
+        /* technically we would already have exited with an error if there were
+         * any memory allocation errors (see the add_port_list() function), but
+         * for completeness...
+        */
+        free_acc_port_list(port_list);
         return res;
+    }
 
     /* Start at the top of the proto-port list...
     */
@@ -740,7 +747,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         if(jump_rule_exists(IPT_INPUT_ACCESS) == 0)
             add_jump_rule(opts, IPT_INPUT_ACCESS);
 
-        if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
+        if(strlen(out_chain->to_chain))
         {
             if(chain_exists(opts, IPT_OUTPUT_ACCESS) == 0)
                 create_chain(opts, IPT_OUTPUT_ACCESS);
@@ -786,7 +793,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             /* If we have to make an corresponding OUTPUT rule if out_chain target
             * is not NULL.
             */
-            if(out_chain->to_chain != NULL && strlen(out_chain->to_chain))
+            if(strlen(out_chain->to_chain))
             {
                 memset(rule_buf, 0, CMD_BUFSIZE);
 
@@ -884,7 +891,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             }
 
         }
-        else if(fwd_chain->to_chain != NULL && strlen(fwd_chain->to_chain))
+        else if(strlen(fwd_chain->to_chain))
         {
             /* Make our FORWARD and NAT rules, and make sure the
              * required chain and jump rule exists
@@ -927,7 +934,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             }
         }
 
-        if(dnat_chain->to_chain != NULL && strlen(dnat_chain->to_chain))
+        if(strlen(dnat_chain->to_chain))
         {
             /* Make sure the required chain and jump rule exists
             */

@@ -1365,13 +1365,15 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
                     "Unable to create acc_port_list from incoming data: %s",
                     port_str
                 );
+                free_acc_port_list(in_pl);
                 return(0);
             }
             strlcpy(buf, start, (ndx-start)+1);
             if(add_port_list_ent(&in_pl, buf) == 0)
             {
                 log_msg(LOG_ERR, "Invalid proto/port string");
-                return 0;
+                free_acc_port_list(in_pl);
+                return(0);
             }
 
             start = ndx+1;
@@ -1386,12 +1388,14 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
             "Unable to create acc_port_list from incoming data: %s",
             port_str
         );
+        free_acc_port_list(in_pl);
         return(0);
     }
     strlcpy(buf, start, (ndx-start)+1);
     if(add_port_list_ent(&in_pl, buf) == 0)
     {
         log_msg(LOG_ERR, "Invalid proto/port string");
+        free_acc_port_list(in_pl);
         return 0;
     }
 
