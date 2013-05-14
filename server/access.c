@@ -1392,6 +1392,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
     if(add_port_list_ent(&in_pl, buf) == 0)
     {
         log_msg(LOG_ERR, "Invalid proto/port string");
+        free_acc_port_list(in_pl);
         return 0;
     }
 
