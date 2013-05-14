@@ -189,7 +189,7 @@ get_raw_digest(char **digest, char *pkt_data)
     *digest = strdup(tmp_digest);
 
     if (*digest == NULL)
-        return SPA_MSG_ERROR;  /* really a strdup() memory allocation problem */
+        res = SPA_MSG_ERROR;  /* really a strdup() memory allocation problem */
 
     fko_destroy(ctx);
     ctx = NULL;
