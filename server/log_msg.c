@@ -164,7 +164,10 @@ log_msg(int level, char* msg, ...)
         va_end(apse);
 
         if(LOG_STDERR_ONLY & level)
+        {
+            va_end(ap);
             return;
+        }
 
         /* Remove the log to stderr flag from the log level value.
         */
