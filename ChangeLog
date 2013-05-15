@@ -2,10 +2,14 @@ fwknop-2.5 (//2013):
     - Major release of new functionality - HMAC authenticated encryption
       support in the encrypt-then-authenticate model for SPA communications.
       Supported HMAC digests include MD5, SHA1, SHA256, SHA384, and SHA512.
-      The default is HMAC-SHA256 when HMAC is used.  HMAC is supported for both
-      Rijndael and GPG encrypted SPA packet data, and provides a significant
-      security benefit since the HMAC verification is more simplisitic than
-      decryption operations (particularly for GPG).
+      The default is HMAC-SHA256 when an HMAC is used.  The HMAC mode is
+      supported for both Rijndael and GPG encrypted SPA packet data, and
+      provides a significant security benefit for the fwknopd server since the
+      HMAC verification is more simplisitic than decryption operations.  This
+      is particularly true for GPG.  Beyond this, HMAC authenticated
+      encryption in the encrypt-then-authenticate mode does not suffer from
+      things like CBC-mode padding oracle attacks (see the Vaudenay attack and
+      the more recent "Lucky 13" attack against SSL).
     - [libfko] Significant bug fix to honor the full encryption key length for
       user-supplied Rijndael keys > 16 bytes long.  Previous to this fix,
       only the first 16 bytes of a key were actually used in the encryption/
@@ -13,13 +17,15 @@ fwknop-2.5 (//2013):
       a weakening of expected security for users that had keys > 16 bytes,
       although this is probably not too common.  Note that "passphrase" is
       perhaps technically a better word for "user-supplied key" in this
-      context since Rijndael in CBC mode derives a real encryption/decryption
-      key from the passphrase through a series of applications of md5 against
-      the passphrase and a random salt.  This issue was reported by Michael T.
-      Dean.  Closes issue #18 on github.
+      context since the actual key is generated with the PBKDF1 key derivation
+      algorithm.  This issue was reported by Michael T. Dean.  Closes issue #18
+      on github.
     - [libfko] Added the ability to maintain backwards compatibility with the
       now deprecated "zero padding" key derivation strategy in AES mode that
-      was a hold over from the old perl fwknop implementation.
+      was a hold over from the old perl fwknop implementation.  This is NOT
+      compliant with PBKDF1 and is only brought forward into fwknop-2.5 for
+      backwards compatibility.  Future versions of fwknop will remove this
+      code altogether since PBKDF1 is now implemented.
     - [test suite] Added --enable-openssl-checks to send all SPA packets
       encrypted via libfko through the OpenSSL library to ensure that the
       libfko usage of AES is always compatible with OpenSSL.  This ensures
