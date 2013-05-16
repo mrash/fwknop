@@ -99,6 +99,7 @@ that both *fwknop* and *fwknopd* use for SPA packet encryption/decryption
 and HMAC authentication operations.  This library can be used to allow
 third party applications to use SPA.
 
+
 REQUIRED ARGUMENTS
 ------------------
 These required arguments can be specified via command-line or from within
@@ -182,7 +183,6 @@ GENERAL OPTIONS
     to utilities such as 'ps' under Unix, this form should only be used where
     security is not critical.  Having the *fwknop* client prompt you for the
     key is generally more secure.
-
 
 *--key-hmac*='<key>'::
     Specify the raw HMAC key (not base64 encoded). Since the key may be visible
@@ -437,6 +437,24 @@ SPA OPTIONS
 
 GPG-RELATED OPTIONS
 -------------------
+Note that the usage of GPG for SPA encryption/decryption can and should involve
+GPG keys that are signed by each side (client and server).  The basic procedure
+for this involves the following steps after the client key has been transferred
+the server and vice-versa:
+
+..........................
+    [spaserver]# gpg --import client.asc
+    [spaserver]# gpg --edit-key 1234ABCD
+    Command> sign
+
+    [spaclient]$ gpg --import server.asc
+    [spaclient]$ gpg --edit-key ABCD1234
+    Command> sign
+..........................
+
+More comprehensive information on this can be found here:
+'http://www.cipherdyne.org/fwknop/docs/gpghowto.html'.
+
 *--gpg-agent*::
     Instruct *fwknop* to acquire GnuPG key password from a running gpg-agent
     instance (if available).
@@ -626,6 +644,7 @@ access through the firewall.  This makes it possible to make it appear as
 though, say, www.yahoo.com is trying to authenticate to a target system but in
 reality the actual connection will come from a seemingly unrelated IP.
 
+
 EXAMPLES
 --------
 The following examples illustrate the command line arguments that could
@@ -749,9 +768,10 @@ print the SPA packet information, then run it through a decrypt/decode cycle
 and print it again.  In addition, the *--verbose* command line switch is useful
 to see various SPA packet specifics printed to stdout.
 
+
 SEE ALSO
 --------
-fwknopd(8), iptables(8), gpg(1), libfko documentation.
+fwknopd(8), iptables(8), pf(4), pfctl(8), ipfw(8), gpg(1), libfko documentation.
 
 More information on Single Packet Authorization can be found in the paper
 ``Single Packet Authorization with fwknop'' available at
