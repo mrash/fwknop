@@ -82,7 +82,7 @@ SPA packet data after encryption.  The 16 bytes of random data ensures that no
 two SPA packets are identical, and this is in addition to and independent of
 using PBKDF1 for key derivation for Rijndael in CBC mode.  Because *fwknopd*
 tracks the SHA256 digest of all incoming valid SPA packets and throws out
-duplicates, replay attacks are not possible against *fwknop*.  Syslog
+duplicates, replay attacks are not feasible against *fwknop*.  Syslog
 alerts are generated if a replay is detected.
 
 By default, the *fwknop* client sends authorization packets over UDP port
@@ -91,6 +91,13 @@ By default, the *fwknop* client sends authorization packets over UDP port
 Also, *fwknop* can send the SPA packet over a random port via the
 *--rand-port* argument. See 'fwknopd(8)' for further details. See the
 *EXAMPLES* section for example invocations of the *fwknop* client.
+
+The *fwknop* client is quite portable, and is known to run on various Linux
+distributions (all major distros and embedded ones as well such as OpenWRT),
+FreeBSD, OpenBSD, and Cygwin on Windows.  There is also a library *libfko*
+that both *fwknop* and *fwknopd* use for SPA packet encryption/decryption
+and HMAC authentication operations.  This library can be used to allow
+third party applications to use SPA.
 
 REQUIRED ARGUMENTS
 ------------------
@@ -139,7 +146,7 @@ GENERAL OPTIONS
     (":"), optional space and the password, followed by a newline.  Note
     that the last line has to have a terminating newline character.
     Also note: though this is a convenience, having a file on your system
-    with cleartext passwords is not a good idea and is not recommended.
+    with clear text passwords is not a good idea and is not recommended.
     Having the *fwknop* client prompt you for the key is generally more
     secure.  Note also that if a key is stored on disk, the *fwknop* rc
     file is a more powerful mechanism for specifying not only the key but
@@ -151,7 +158,7 @@ GENERAL OPTIONS
     each destination hostname or IP address, a colon (":"), optional space
     and the password, followed by a newline.  Note that the last line has
     to have a terminating newline character.  Also note: though this is a
-    convenience, having a file on your system with cleartext passwords is
+    convenience, having a file on your system with clear text passwords is
     not a good idea and is not recommended.  Having the *fwknop* client
     prompt you for the HMAC key is generally more secure.  Note also that
     if a key is stored on disk, the *fwknop* rc file is a more powerful
@@ -287,8 +294,8 @@ SPA OPTIONS
     PBKDF1 algorithm.
 
 *--hmac-digest-type*='<digest>'::
-    Set the HMAC digest algorithm (default is sha256). Options are md5, sha1,
-    sha256, sha384, or sha512.
+    Set the HMAC digest algorithm for authenticated encryption of SPA packets.
+    Choices are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*, and *SHA512*.
 
 *--use-hmac*::
     Set HMAC mode for authenticated encryption of SPA communications.  As of
@@ -480,24 +487,9 @@ There are directives to match most of the command-line parameters *fwknop*
 supports.  Here is the current list of each directive along with a brief
 description and its matching command-line option(s):
 
-*DIGEST_TYPE*::
-    Set the SPA message digest type ('-m, --digest-type').
-
-*SPA_SERVER_PROTO*::
-    Set the protocol to use for sending the SPA packet ('-P, --server-proto').
-
 *SPA_SERVER*::
     Specify the IP or hostname of the destination (*fwknopd*) server
-    ('-D, --destination).
-
-*SPA_SERVER_PORT*::
-    Set the server port to use for sending the SPA packet ('-p, --server-port').
-
-*SPA_SOURCE_PORT*::
-    Set the source port to use for sending the SPA packet ('-S, --source-port').
-
-*FW_TIMEOUT*::
-    Set the firewall rule timeout value ('-f, --fw-timeout').
+    ('-D, --destination').
 
 *ALLOW_IP*::
     Specify the address to allow within the SPA data.  Note: This parameter
@@ -506,6 +498,49 @@ description and its matching command-line option(s):
     tell the *fwknopd* server to accept the source IP of the packet as the IP
     to allow (the *-s* option), or use the word "resolve" to have *fwknop*
     resolve the external network IP via HTTP request (the *-R* option).
+
+*ACCESS*::
+    Set the one or more protocol/ports to open on the firewall ('-A, --access').
+
+*SPA_SERVER_PORT*::
+    Set the server port to use for sending the SPA packet ('-p, --server-port').
+
+*SPA_SERVER_PROTO*::
+    Set the protocol to use for sending the SPA packet ('-P, --server-proto').
+
+*KEY*::
+    This is the passphrase that is used for SPA packet encryption and applies
+    to both Rijndael or GPG encryption modes.  The actual encryption key that
+    is used for Rijndael is derived from the PBKDF1 algorithm, and the GPG key
+    is derived from the specified GPG key ring.
+
+*KEY_BASE64*::
+    Specify the encryption passphrase as a base64 encoded string.  This allows
+    non-ascii characters to be included.
+
+*USE_HMAC*::
+    Set HMAC mode for authenticated encryption of SPA packets.  This will have
+    *fwknop* prompt the user for a dedicated HMAC key that is independent of
+    the encryption key.  Alternatively, the HMAC key can be specified with the
+    'HMAC_KEY' or 'HMAC_KEY_BASE64' directives (see below).
+
+*HMAC_KEY*::
+    Specify the HMAC key for authenticated encryption of SPA packets.
+
+*HMAC_KEY_BASE64*::
+    Specify the HMAC key as a base64 encoded string.  This allows non-ascii
+    characters to be included.
+
+*HMAC_DIGEST_TYPE*::
+    Set the HMAC digest algorithm used for authenticated encryption of SPA
+    packets.  Choices are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*,
+    and *SHA512*.
+
+*SPA_SOURCE_PORT*::
+    Set the source port to use for sending the SPA packet ('-S, --source-port').
+
+*FW_TIMEOUT*::
+    Set the firewall rule timeout value ('-f, --fw-timeout').
 
 *RESOLVE_URL*::
     Set to a URL that will be used for resolving the source IP address
@@ -519,8 +554,16 @@ description and its matching command-line option(s):
     Specify the encryption mode when AES is used.  This variable is a synonym
     for the '--encryption-mode' command line argument.
 
+*DIGEST_TYPE*::
+    Set the SPA message digest type ('-m, --digest-type').
+
 *USE_GPG*::
     Set to 'Y' to specify the use of GPG for encryption ('--gpg-encryption').
+
+*USE_GPG*::
+    Set to 'Y' to have *fwknop* interface with a GPG agent instance for the GPG
+    key password ('--gpg-agent').  Agent information itself is specified with
+    the 'GPG_AGENT_INFO' environmental variable.
 
 *GPG_SIGNER*::
     Specify the GPG key name or ID for signing the GPG-encrypted SPA data
@@ -541,9 +584,6 @@ description and its matching command-line option(s):
     Set the source IP of the outgoing SPA packet to the specified value
     ('-Q, --spoof-source').
 
-*ACCESS*::
-    Set the one or more protocol/ports to open on the firewall ('-A, --access').
-
 *RAND_PORT*::
     Send the SPA packet over a randomly assigned port ('-r, --rand-port').
 
@@ -552,7 +592,7 @@ description and its matching command-line option(s):
 
 *HTTP_USER_AGENT*::
     Set the HTTP User-Agent for resolving the external IP via -R, or for
-    sending SPA packets over HTTP ('-u, --user-agent').   
+    sending SPA packets over HTTP ('-u, --user-agent').
 
 *NAT_ACCESS*::
     Gain NAT access to an internal service protected by the fwknop server
@@ -593,16 +633,36 @@ be supplied to the fwknop client in a few situations:
 
 Access mode examples
 ~~~~~~~~~~~~~~~~~~~~
-Packet contents printed to stdout by the fwknop client in *--verbose* mode when
-creating a normal ``access mode'' SPA packet with a SHA256 HMAC applied:
+The most common usage of *fwknop* is to gain access to 'SSH' running on a
+remote system that has the *fwknopd* daemon deployed along with a default-drop
+firewall policy.  The following command illustrates this where IP '1.1.1.1' is
+the IP to be allowed through the firewall running on '2.2.2.2' (note that the
+'access.conf' file consumed by *fwknopd* will need to have matching encryption
+and HMAC keys, and configuration specifics can be found in the 'fwknopd(8)'
+manual page):
 
 ..........................
+    $ fwknop -A tcp/22 --use-hmac -a 1.1.1.1 -D 2.2.2.2
+    Enter encryption key:
+    Enter HMAC key:
+    $ ssh -l user 2.2.2.2
+    user@2.2.2.2's password:
+..........................
+
+If the *--verbose* flag is added to the command line, then some SPA packet
+specifics are printed to stdout (not all output is shown for brevity):
+
+..........................
+    $ fwknop -A tcp/22 --use-hmac -a 1.1.1.1 -D 2.2.2.2 --verbose
+    Enter encryption key:
+    Enter HMAC key:
+
        Random Value: 1916307060193417
            Username: mbr
           Timestamp: 1368498909
         FKO Version: 2.5.0
        Message Type: 1 (Access msg)
-     Message String: 127.0.0.2,tcp/22
+     Message String: 1.1.1.1,tcp/22
          Nat Access: <NULL>
         Server Auth: <NULL>
      Client Timeout: 0 (seconds)
@@ -612,57 +672,53 @@ creating a normal ``access mode'' SPA packet with a SHA256 HMAC applied:
     Encryption Mode: 2 (CBC)
 ..........................
 
-Use the Single Packet Authorization mode to gain access to
-tcp/22 (ssh) and udp/53 running on the system 10.0.0.123 from
-the IP 192.168.10.4:
+Simultaneous access to multiple services is also supported, and here is an
+example of requesting access to both 'SSH' and 'OpenVPN' on '2.2.2.2':
 
 ..........................
-    $ fwknop -A "tcp/22,udp/53" --use-hmac -a 192.168.10.4 -D 10.0.0.123
-    Enter encryption key:
-    Enter HMAC key:
+    $ fwknop -A "tcp/22,tcp/1194" --use-hmac -a 1.1.1.1 -D 2.2.2.2
 ..........................
 
-Same as above example, but gain access from whatever source IP
-is seen by the fwknop server (useful if the fwknop client is
-behind a NAT device):
+There are many cases where an *fwknop* client is deployed on a network behind
+a NAT device and the externally routable IP is not known to the user.  In this
+case, use the IP resolution service available at
+'http://www.cipherdyne.org/cgi-bin/myip' via the *-R* command line switch in
+order to derive the external client IP address.  This is a safer method of
+acquiring the client IP address than using the *-s* option mentioned earlier
+in this manual page because the source IP is put within the encrypted packet
+instead of having the *fwknopd* daemon grant the requested access from whatever
+IP address the SPA packet originates (i.e. using *-s* opens the possibility of
+a MITM attack):
 
 ..........................
-    $ fwknop -A "tcp/22,udp/53" --use-hmac -s -D 10.0.0.123
-    Enter encryption key:
-    Enter HMAC key:
+    $ fwknop -A tcp/22 --use-hmac -R -D 2.2.2.2
 ..........................
 
-Same as above example, but use the IP resolution service available at
-'http://www.cipherdyne.org/cgi-bin/myip' to derive the external client IP
-address.  This is a safer method of acquiring the client
-IP address than using the *-s* option because the source IP is put within
-the encrypted packet instead of having the *fwknopd* daemon grant the
-requested access from whatever IP address the SPA packet originates:
+Use the Single Packet Authorization mode to gain access to 'SSH' and this time
+use GnuPG keys to encrypt and decrypt:
 
 ..........................
-    $ fwknop -A "tcp/22,udp/53" --use-hmac -R -D 10.0.0.123
-    Enter encryption key:
-    Enter HMAC key:
+    $ fwknop -A tcp/22 --use-hmac --gpg-sign ABCD1234 --gpg--recipient 1234ABCD -R -D 2.2.2.2
 ..........................
 
-Use the Single Packet Authorization mode to gain access to tcp/22
-(ssh) and udp/53 running on the system 10.0.0.123, and use GnuPG keys
-to encrypt and decrypt:
+Instruct the fwknop server running at 2.2.2.2 to allow 1.1.1.1 to connect to
+'SSH', but spoof the authorization packet from an IP associated with
+'www.yahoo.com' (requires root on the *fwknop* client OS):
 
 ..........................
-    $ fwknop -A "tcp/22,udp/53" --use-hmac --gpg-sign ABCD1234 --gpg--recipient 1234ABCD -R -D 10.0.0.123
-    Enter encryption key:
-    Enter HMAC key:
+    # fwknop --spoof-src "www.yahoo.com" -A tcp/22 --use-hmac -a 1.1.1.1 -D 2.2.2.2
 ..........................
 
-Instruct the fwknop server running at 10.0.0.123 to allow 172.16.5.4
-to connect to TCP/22, but spoof the authorization packet from an IP
-associated with www.yahoo.com:
+When *fwknopd* is running on an iptables firewall with systems deployed behind
+it, it is possible to take advantage of the 'NAT' capabilities offered by
+iptables in order to transparently reach systems behind the firewall via SPA.
+Here is an example where the *fwknop* client is used to gain access to 'SSH'
+running on the non-routable IP '192.168.10.23' that is deployed on the network
+behind '2.2.2.2'.  In this case, the 'SSH' connection made to '2.2.2.2' is
+translated into the '192.168.10.2' system automatically:
 
 ..........................
-    # fwknop --Spoof-src ’www.yahoo.com’ -A tcp/22 --use-hmac -a 172.16.5.4 -D 10.0.0.123
-    Enter encryption key:
-    Enter HMAC key:
+    $ fwknop -A tcp/22 -N 192.168.10.2:22 -R -D 2.2.2.2
 ..........................
 
 
@@ -682,9 +738,16 @@ firewall is required on the underlying operating system.
 
 DIAGNOSTICS
 -----------
-fwknop can be run with the *-T* (or *--test*) command line option.
-This will have *fwknop* simply create and print the SPA packet information,
-then run it through a decrypt/decode cycle and print it again.
+The most comprehensive way to gain diagnostic information on *fwknop* is to run
+the test suite 'test-fwknop.pl' script located in the 'test/' directory in the fwknop
+sources.  The test suite runs sends fwknop through a large number of run time
+tests, has 'valgrind' support, validates both SPA encryption and HMAC results
+against OpenSSL, and even has its own built in fuzzer for SPA communications.
+For more basic diagnostic information, *fwknop* can be executed with the *-T*
+(or *--test*) command line option.  This will have *fwknop* simply create and
+print the SPA packet information, then run it through a decrypt/decode cycle
+and print it again.  In addition, the *--verbose* command line switch is useful
+to see various SPA packet specifics printed to stdout.
 
 SEE ALSO
 --------
@@ -699,6 +762,14 @@ also includes information about the design of *fwknop* that may be worth
 reading for those interested in why fwknop is different from other SPA
 implementations.
 
+*fwknop* uses the 'git' versioning system as its source code repository
+along with 'Github' for tracking of issues and milestones:
+
+..........................
+    $ git clone https://github.com/mrash/fwknop.git fwknop.git
+..........................
+
+
 AUTHORS
 -------
 Damien Stuart <dstuart@dstuart.org>,
@@ -710,10 +781,12 @@ This ``C'' version of fwknop was derived from the original Perl-based version
 on which many people who are active in the open source community have
 contributed.  See the CREDITS file in the fwknop sources, or visit
 'http://www.cipherdyne.org/fwknop/docs/contributors.html' to view the online
-list of contributors.
+list of contributors.  A few contributors deserve to be singled out including:
+Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger,
+Fernando Arnaboldi, and Erik Gomez.
 
 The phrase ``Single Packet Authorization'' was coined by MadHat and Simple
-Nomad at the BlackHat Briefings of 2005 (see: 'http://www.nmrc.org').
+Nomad at the BlackHat Briefings of 2005.
 
 BUGS
 ----
