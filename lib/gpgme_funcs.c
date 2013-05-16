@@ -392,7 +392,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
     gpgme_data_release(plaintext);
 
     /* Get the encrypted data and its length from the gpgme data object.
-     * BTW, this does does free the memory used by cipher.
+     * BTW, this does free the memory used by cipher.
     */
     tmp_buf = gpgme_data_release_and_get_mem(cipher, out_len);
 
