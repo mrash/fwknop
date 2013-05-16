@@ -161,7 +161,7 @@ getpasswd(
     return (ptr);
 }
 
-/* Function for accepting password input from from a file
+/* Function for accepting password input from a file
 */
 void
 get_key_file(char *key, int *key_len, const char *key_file,
