@@ -1272,6 +1272,18 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             clean_exit(ctx, options, EXIT_FAILURE);
         }
 
+        /* Make sure the same key is not used for both encryption and the HMAC
+        */
+        if(*hmac_key_len == *key_len)
+        {
+            if(memcmp(hmac_key, key, *key_len) == 0)
+            {
+                log_msg(LOG_VERBOSITY_ERROR,
+                        "[*] The encryption passphrase and the HMAC key should not be identical.");
+                clean_exit(ctx, options, EXIT_FAILURE);
+            }
+        }
+
         res = fko_set_spa_hmac_type(ctx, options->hmac_type);
         if(res != FKO_SUCCESS)
         {

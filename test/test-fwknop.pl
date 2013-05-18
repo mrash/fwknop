@@ -40,6 +40,7 @@ our %cf = (
     'def_access'                   => "$conf_dir/default_access.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
     'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
+    'hmac_equal_keys_access'       => "$conf_dir/hmac_equal_keys_access.conf",
     'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
     'hmac_md5_access'              => "$conf_dir/hmac_md5_access.conf",
     'hmac_md5_short_key_access'    => "$conf_dir/hmac_md5_short_key_access.conf",
@@ -108,6 +109,7 @@ our %cf = (
     'rc_def_key'                   => "$conf_dir/fwknoprc_with_default_key",
     'rc_def_b64_key'               => "$conf_dir/fwknoprc_with_default_base64_key",
     'rc_named_key'                 => "$conf_dir/fwknoprc_named_key",
+    'rc_hmac_equal_keys'           => "$conf_dir/fwknoprc_hmac_equal_keys",
     'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
     'rc_hmac_b64_key2'             => "$conf_dir/fwknoprc_hmac_key2",
@@ -5742,6 +5744,7 @@ sub file_find_regex() {
 }
 
 sub remove_permissions_warnings() {
+    return unless -e "$output_dir/1.test";
     system qq|perl -p -i -e 's/.*not owned by current effective.*\n//' $output_dir/*.test|;
     system qq|perl -p -i -e 's/.*permissions should only be user.*\n//' $output_dir/*.test|;
     return;

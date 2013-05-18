@@ -31,6 +31,30 @@
     },
     {
         'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => 'rc file HMAC+encryption keys not equal',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--rc-file $cf{'rc_hmac_equal_keys'}",
+        'positive_output_matches' => [qr/should\snot\sbe\sidentical/i],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'server',
+        'detail'   => 'rc file HMAC+encryption keys not equal',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_equal_keys_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'positive_output_matches' => [qr/should\snot\sbe\sidentical/i],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
         'subcategory' => 'server',
         'detail'   => 'access file invalid HMAC type arg',
         'function' => \&generic_exec,
