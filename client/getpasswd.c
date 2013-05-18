@@ -40,107 +40,135 @@
 #include "fwknop_common.h"
 #include "getpasswd.h"
 
-#define MAX_PASS_LEN    128         ///< Maximum number of chars an encryption key or a password can contain
+#define PW_BUFSIZE              128                 /*!< Maximum number of chars an encryption key or a password can contain */
 
-#define PW_BREAK_CHAR   0x03        ///< Ascii code for the Ctrl-C char
-#define PW_BS_CHAR      0x08        ///< Ascii code for the backspace char
-#define PW_LF_CHAR      0x0A        ///< Ascii code for the \n char
-#define PW_CR_CHAR      0x0D        ///< Ascii code for the \r char
-#define PW_CLEAR_CHAR   0x15        ///< Ascii code for the Ctrl-U char
+/* TODO Wrong BS char 0x08 insteaf od 0x7F */
+#define PW_BREAK_CHAR           0x03                /*!< Ascii code for the Ctrl-C char */
+#define PW_BS_CHAR              0x08                /*!< Ascii code for the backspace char */
+#define PW_LF_CHAR              0x0A                /*!< Ascii code for the \n char */
+#define PW_CR_CHAR              0x0D                /*!< Ascii code for the \r char */
+#define PW_CLEAR_CHAR           0x15                /*!< Ascii code for the Ctrl-U char */
+
+#define ARRAY_FIRST_ELT_ADR(t)  &((t)[0])           /*!< Macro to get the first element of an array */
+#define ARRAY_LAST_ELT_ADR(t)   &((t)[sizeof(t)-1]) /*!< Macro to get the last element of an array */
 
 /**
- * Function for accepting password input from users
+ * @brief Read a password from a file descriptor
+ *
+ * @param fd File descriptor to read the password from
+ *
+ * @return The password buffer or NULL if not set
+ */
+static char *
+read_passwd_from_fd(FILE *fd)
+{
+    static char     password[PW_BUFSIZE] = {0};
+    int             c;
+    char           *ptr;
+
+    /* TODO check fd validity */
+    ptr = ARRAY_FIRST_ELT_ADR(password);
+
+#ifdef WIN32
+    while((c = _getch()) != PW_CR_CHAR)
+#else
+    while( ((c = getc(fd)) != EOF) && (c != PW_LF_CHAR) && (c != PW_BREAK_CHAR) )
+#endif
+    {
+        /* Handle a backspace without backing up too far. */
+        if (c == PW_BS_CHAR)
+        {
+            if (ptr != ARRAY_FIRST_ELT_ADR(password))
+                ptr--;
+        }
+
+        /* Handle a Ctrl-U to clear the password entry and start over */
+        else if (c == PW_CLEAR_CHAR)
+            ptr = ARRAY_FIRST_ELT_ADR(password);
+
+        /* Fill in the password buffer until it reach the last -1 char.
+         * The last char is used to NULL terminate the string. */
+        else if (ptr < ARRAY_LAST_ELT_ADR(password))
+        {
+            *ptr++ = c;
+        }
+
+        /* Discard char */
+        else;
+    }
+
+    /* A CTRL-C char has been detected, we discard the password */
+    if (c == PW_BREAK_CHAR)
+        password[0] = '\0';
+
+    /* Otherwise we NULL terminate the string here. Overflows are handled
+     * previously, so we can add the char without worrying */
+    else
+        *ptr = '\0';
+
+    return password;
+}
+
+/**
+ * @brief Function for accepting password input from users
  *
  * The functions reads chars from the terminal and store them in a buffer of chars.
+ *
+ * @param prompt String displayed on the terminal to prompt the user for a password
+ *               or an encryption key
+ * @param fp     File descriptor to use as terminal
  *
  * @return NULL if a problem occured or the user killed the terminal (Ctrl-C)\n
  *         otherwise the password - empty password is accepted.
  */
 char*
-getpasswd(
-    const char *prompt)     ///< String displayed on the terminal to prompt the user for a password or an encryption key
+getpasswd(const char *prompt, FILE *fp)
 {
-    static char     pwbuf[MAX_KEY_LEN + 1] = {0};
-    char           *ptr;
-    int             c;
-
+    char *ptr;
+    
 #ifndef WIN32
-    FILE           *fp;
     sigset_t        sig, old_sig;
     struct termios  ts, old_ts;
 
-    if((fp = fopen(ctermid(NULL), "r+")) == NULL)
-        return(NULL);
+    if (fp == NULL)
+    {
+        if((fp = fopen(ctermid(NULL), "r+")) == NULL)
+            return(NULL);
 
-    setbuf(fp, NULL);
+        setbuf(fp, NULL);
 
-    /* Setup blocks for SIGINT and SIGTSTP and save the original signal
-     * mask.
-     */
-    sigemptyset(&sig);
-    sigaddset(&sig, SIGINT);
-    sigaddset(&sig, SIGTSTP);
-    sigprocmask(SIG_BLOCK, &sig, &old_sig);
+        /* Setup blocks for SIGINT and SIGTSTP and save the original signal
+        * mask.
+        */
+        sigemptyset(&sig);
+        sigaddset(&sig, SIGINT);
+        sigaddset(&sig, SIGTSTP);
+        sigprocmask(SIG_BLOCK, &sig, &old_sig);
 
-    /*
-     * Save current tty state for later restoration after we :
-     *   - disable echo of characters to the tty
-     *   - disable signal generation
-     *   - disable cannonical mode (input read line by line mode)
-     */
-    tcgetattr(fileno(fp), &ts);
-    old_ts = ts;
-    ts.c_lflag &= ~(ECHO | ICANON | ISIG);
-    tcsetattr(fileno(fp), TCSAFLUSH, &ts);
+        /*
+        * Save current tty state for later restoration after we :
+        *   - disable echo of characters to the tty
+        *   - disable signal generation
+        *   - disable cannonical mode (input read line by line mode)
+        */
+        tcgetattr(fileno(fp), &ts);
+        old_ts = ts;
+        ts.c_lflag &= ~(ECHO | ICANON | ISIG);
+        tcsetattr(fileno(fp), TCSAFLUSH, &ts);
 
-    fputs(prompt, fp);
-#endif
-
-    /* Read in the password.
-    */
-    ptr = pwbuf;
-
-#ifdef WIN32
-    _cputs(prompt);
-    while((c = _getch()) != PW_CR_CHAR)
+        fputs(prompt, fp);
+    }
 #else
-    while( ((c = getc(fp)) != EOF) && (c != PW_LF_CHAR) && (c != PW_BREAK_CHAR) )
+    _cputs(prompt);
 #endif
-    {
-        /* Handle a backspace without backing up too far.
-         */
-        if (c == PW_BS_CHAR)
-        {
-            if (ptr != pwbuf)
-                ptr--;
-        }
 
-        /* Handle a Ctrl-U to clear the password entry and start over
-         */
-        else if (c == PW_CLEAR_CHAR)
-            ptr = pwbuf;
-
-        /* Store data in the buffer and check for a possible overflow
-         */
-        else if (ptr < &pwbuf[MAX_PASS_LEN])
-            *ptr++ = c;
-    }
-
-    /* If a Ctrl-C char has been detected we set an error
-     */
-    if (c == PW_BREAK_CHAR)
-        ptr = NULL;
-
-    /* Otherwise we make the password as a NULL terminated string and point
-     * to the start of the password in order to be returned by the function.
-     */
-    else
-    {
-        *ptr = '\0';
-        ptr = pwbuf;
-    }
+    /* Read the password */
+    ptr = read_passwd_from_fd(fp);
 
 #ifndef WIN32
+
+    if (fp != stdin)
+    {
     /* we can go ahead and echo out a newline.
     */
     putc(PW_LF_CHAR, fp);
@@ -151,6 +179,7 @@ getpasswd(
     sigprocmask(SIG_BLOCK, &old_sig, NULL);
 
     fclose(fp);
+    }
 #else
     /* In Windows, it would be a CR-LF
      */
@@ -158,6 +187,7 @@ getpasswd(
     _putch(PW_LF_CHAR);
 #endif
 
+    printf("PAssword = %s\n",ptr);
     return (ptr);
 }
 
