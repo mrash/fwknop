@@ -1304,11 +1304,20 @@ validate_options(fko_cli_options_t *options)
         if (options->resolve_url != NULL)
             options->resolve_ip_http = 1;
 
-        if (!options->resolve_ip_http && options->allow_ip_str[0] == 0x0)
+        if (!options->resolve_ip_http)
         {
-            log_msg(LOG_VERBOSITY_ERROR,
-                "Must use one of [-s|-R|-a] to specify IP for SPA access.");
-            exit(EXIT_FAILURE);
+            if(options->allow_ip_str[0] == 0x0)
+            {
+                log_msg(LOG_VERBOSITY_ERROR,
+                    "Must use one of [-s|-R|-a] to specify IP for SPA access.");
+                exit(EXIT_FAILURE);
+            }
+            else if(options->verbose
+                    && strncmp(options->allow_ip_str, "0.0.0.0", strlen("0.0.0.0")) == 0)
+            {
+                log_msg(LOG_VERBOSITY_WARNING,
+                    "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
+            }
         }
     }
 
