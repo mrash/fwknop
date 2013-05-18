@@ -228,7 +228,8 @@ my $diff_dir1 = '';
 my $diff_dir2 = '';
 my $loopback_intf = '';
 my $anonymize_results = 0;
-my $curr_test_file = "$output_dir/init";
+my $curr_test_file = 'init';
+my $init_file = $curr_test_file;
 my $tarfile = 'test_fwknop.tar.gz';
 our $key_gen_file = "$output_dir/key_gen";
 my $fuzzing_pkts_file = 'fuzzing/fuzzing_spa_packets';
@@ -521,6 +522,8 @@ if ($saved_last_results) {
     &logr("    Saved results from previous run " .
         "to: ${output_dir}.last/\n\n");
 }
+
+copy $init_file, "$output_dir/init" if -e $init_file;
 
 if ($enable_valgrind) {
     if ($previous_valgrind_coverage_dir) {
