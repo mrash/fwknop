@@ -1360,6 +1360,9 @@ validate_options(fko_cli_options_t *options)
     if(options->use_hmac && options->hmac_type == FKO_HMAC_UNKNOWN)
         options->hmac_type = FKO_DEFAULT_HMAC_MODE;
 
+    if(options->key_gen && options->hmac_type == FKO_HMAC_UNKNOWN)
+        options->hmac_type = FKO_DEFAULT_HMAC_MODE;
+
     return;
 }
 
@@ -1491,7 +1494,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->get_key_file, optarg, sizeof(options->get_key_file));
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_FILE);
                 break;
-            case GET_HMAC_KEY: 
+            case GET_HMAC_KEY:
                 strlcpy(options->get_hmac_key_file, optarg,
                     sizeof(options->get_hmac_key_file));
                 options->use_hmac = 1;

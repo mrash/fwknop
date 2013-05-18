@@ -205,9 +205,18 @@ main(int argc, char **argv)
     */
     if(options.key_gen)
     {
-        fko_key_gen(options.key_base64, options.key_len,
+        memset(options.key_base64, 0x00, MAX_B64_KEY_LEN+1);
+        memset(options.hmac_key_base64, 0x00, MAX_B64_KEY_LEN+1);
+
+        res = fko_key_gen(options.key_base64, options.key_len,
                 options.hmac_key_base64, options.hmac_key_len,
                 options.hmac_type);
+
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_key_gen", res);
+            return(EXIT_FAILURE);
+        }
 
         if(options.key_gen_file[0] != '\0')
         {

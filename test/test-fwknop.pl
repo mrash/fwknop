@@ -346,6 +346,7 @@ exit 1 unless GetOptions(
     ### can set the following to "output.last/valgrind-coverage" if
     ### a full test suite run has already been executed with --enable-valgrind
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
+    'openssl-path=s'    => \$openssl_path,
     'output-dir=s'      => \$output_dir,
     'diff'              => \$diff_mode,
     'diff-dir1=s'       => \$diff_dir1,
@@ -4307,8 +4308,11 @@ sub key_gen_uniqueness() {
     my %rijndael_keys = ();
     my %hmac_keys     = ();
 
+    my $rv = 1;
+
     ### collect key information
     my $found_dup = 0;
+
     for (my $i=0; $i < $uniq_keys; $i++) {
         open CMD, "$test_hr->{'cmdline'} | " or die $!;
         while (<CMD>) {
@@ -4324,7 +4328,12 @@ sub key_gen_uniqueness() {
         last if $found_dup;
     }
 
-    return ! $found_dup;
+    $rv = 0 if $found_dup;
+
+    $rv = 0 unless keys %rijndael_keys == $uniq_keys;
+    $rv = 0 unless keys %hmac_keys == $uniq_keys;
+
+    return $rv;
 }
 
 ### check for PIE
@@ -5062,11 +5071,11 @@ sub init() {
     }
 
     if ($enable_openssl_compatibility_tests) {
-        $openssl_path = &find_command('openssl');
+        $openssl_path = &find_command('openssl') unless $openssl_path;
         if ($openssl_path) {
             require MIME::Base64;
             MIME::Base64->import(qw(encode_base64 decode_base64));
-            $base64_path = &find_command('base64');
+            $base64_path = &find_command('base64') unless $base64_path;
 
             ### check for hmac openssl support
             &openssl_hmac_style_check();
@@ -5079,7 +5088,7 @@ sub init() {
     }
 
     if ($enable_valgrind) {
-        $valgrind_path = &find_command('valgrind');
+        $valgrind_path = &find_command('valgrind') unless $valgrind_path;
         unless ($valgrind_path) {
             print "[-] --enable-valgrind mode requested ",
                 "but valgrind not found, disabling.\n";
@@ -5123,7 +5132,7 @@ sub init() {
         die "[*] The python test script: $python_script doesn't exist ",
             "or is not executable."
             unless -e $python_script and -x $python_script;
-        $python_path = &find_command('python');
+        $python_path = &find_command('python') unless $python_path;
         unless ($python_path) {
             push @tests_to_exclude, qr/python fko extension/
         }
@@ -5142,16 +5151,16 @@ sub init() {
         push @tests_to_exclude, qr/perl FKO module.*FUZZING/;
     }
 
-    $sudo_path    = &find_command('sudo');
-    $killall_path = &find_command('killall');
-    $pgrep_path   = &find_command('pgrep');
+    $sudo_path    = &find_command('sudo') unless $sudo_path;
+    $killall_path = &find_command('killall') unless $killall_path;
+    $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
         push @tests_to_exclude, qr/recompilation/;
     }
 
-    $gcov_path = &find_command('gcov');
+    $gcov_path = &find_command('gcov') unless $gcov_path;
 
     if ($gcov_path) {
         if ($enable_profile_coverage_check) {

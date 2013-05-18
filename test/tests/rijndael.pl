@@ -325,7 +325,8 @@
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$valgrind_str $fwknopCmd --key-gen",
-        'positive_output_matches' => [qr/BASE64/, qw/HMAC/, qw/KEY/],
+        'positive_output_matches' => [qr/^KEY_BASE64\:?\s\S{10}/,
+            qw/HMAC_KEY_BASE64\:?\s\S{10}/],
         'fatal'    => $NO
     },
     {
