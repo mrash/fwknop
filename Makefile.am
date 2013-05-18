@@ -151,6 +151,7 @@ EXTRA_DIST = \
     test/conf/hmac_access.conf \
     test/conf/hmac_get_key_access.conf \
     test/conf/hmac_no_b64_access.conf \
+    test/conf/hmac_equal_keys_access.conf \
     test/conf/hmac_dual_key_usage_access.conf \
     test/conf/hmac_invalid_type_access.conf \
     test/conf/hmac_md5_access.conf \
@@ -176,6 +177,7 @@ EXTRA_DIST = \
     test/conf/fwknoprc_default_hmac_base64_key \
     test/conf/fwknoprc_hmac_key2 \
     test/conf/fwknoprc_gpg_hmac_key \
+    test/conf/fwknoprc_hmac_equal_keys \
     test/conf/fwknoprc_hmac_invalid_type \
     test/conf/fwknoprc_hmac_md5_key \
     test/conf/fwknoprc_hmac_md5_long_key \
