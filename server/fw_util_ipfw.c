@@ -511,6 +511,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         if(rule_num == 0)
         {
             log_msg(LOG_WARNING, "Access request rejected: Maximum allowed number of rules has been reached.");
+            free_acc_port_list(port_list);
             return(-1);
         }
 
@@ -577,9 +578,11 @@ process_spa_request(const fko_srv_options_t * const opts,
             log_msg(LOG_WARNING, "Forwarding/NAT requests are not currently supported.");
         }
 
+        free_acc_port_list(port_list);
         return(-1);
     }
 
+    free_acc_port_list(port_list);
     return(res);
 }
 

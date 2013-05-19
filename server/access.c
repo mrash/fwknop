@@ -871,9 +871,10 @@ acc_data_is_valid(const acc_stanza_t *acc)
         return(0);
     }
 
-    if(acc->hmac_key_len != 0)
+    if((acc->hmac_key_len) != 0 && (acc->hmac_key != NULL))
     {
-        if(((acc->key_len != 0) && (acc->key_len == acc->hmac_key_len)))
+        if((acc->key != NULL) && (acc->key_len != 0)
+                && (acc->key_len == acc->hmac_key_len))
         {
             if(memcmp(acc->key, acc->hmac_key, acc->hmac_key_len) == 0)
             {
