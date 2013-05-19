@@ -507,13 +507,15 @@ create_fwknoprc(const char *rcfile)
         "#\n"
         "# Each section (or stanza) is identified and started by a line in this\n"
         "# file that contains a single identifier surrounded by square brackets.\n"
+        "# It is this identifier (or name) that is used from the fwknop command line\n"
+        "# via the '-n <name>' argument to reference the corresponding stanza.\n"
         "#\n"
         "# The parameters within the stanza typicaly match corresponding client \n"
         "# command-line parameters.\n"
         "#\n"
         "# The first one should always be `[default]' as it defines the global\n"
         "# default settings for the user. These override the program defaults\n"
-        "# for these parameter.  If a named stanza is used, its entries will\n"
+        "# for these parameters.  If a named stanza is used, its entries will\n"
         "# override any of the default.  Command-line options will trump them\n"
         "# all.\n"
         "#\n"
@@ -1285,6 +1287,26 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
 static void
 validate_options(fko_cli_options_t *options)
 {
+
+    if ( (options->use_rc_stanza[0] != 0x0)
+        && (options->got_named_stanza == 0)
+        && (options->save_rc_stanza == 0) )
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+                "Named configuration stanza: [%s] was not found.",
+                options->use_rc_stanza);
+
+        exit(EXIT_FAILURE);
+    }
+
+    if ( (options->save_rc_stanza == 1)  && (options->use_rc_stanza[0] == 0) )
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+                "The option --save-rc-stanza must be used with the "
+                "--named-config option to specify the stanza to update.");
+        exit(EXIT_FAILURE);
+    }
+
     /* Gotta have a Destination unless we are just testing or getting the
      * the version, and must use one of [-s|-R|-a].
     */
@@ -1319,25 +1341,6 @@ validate_options(fko_cli_options_t *options)
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
             }
         }
-    }
-
-    if ( (options->use_rc_stanza[0] != 0x0)
-        && (options->got_named_stanza == 0)
-        && (options->save_rc_stanza == 0) )
-    {
-        log_msg(LOG_VERBOSITY_ERROR,
-                "Named configuration stanza: [%s] was not found.",
-                options->use_rc_stanza);
-
-        exit(EXIT_FAILURE);
-    }
-
-    if ( (options->save_rc_stanza == 1)  && (options->use_rc_stanza[0] == 0) )
-    {
-        log_msg(LOG_VERBOSITY_ERROR,
-                "The option --save-rc-stanza must be used with the "
-                "--named-config option to specify the stanza to update.");
-        exit(EXIT_FAILURE);
     }
 
     if(options->resolve_ip_http || options->spa_proto == FKO_PROTO_HTTP)
@@ -1421,8 +1424,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'h':
                 usage();
                 exit(EXIT_SUCCESS);
-            case 'n':
+            case NO_SAVE_ARGS:
                 options->no_save_args = 1;
+                break;
+            case 'n':
                 strlcpy(options->use_rc_stanza, optarg, sizeof(options->use_rc_stanza));
                 break;
             case SAVE_RC_STANZA:

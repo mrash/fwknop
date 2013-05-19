@@ -105,7 +105,7 @@ REQUIRED ARGUMENTS
 ------------------
 These required arguments can be specified via command-line or from within
 the '.fwknoprc' file (see '-n, --named-config' option and the FWKNOPRC FILE
-section below.
+section below).
 
 *-A, --access*='<port list>'::
     Provide a list of ports and protocols to access on a remote computer

@@ -1279,7 +1279,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             if(memcmp(hmac_key, key, *key_len) == 0)
             {
                 log_msg(LOG_VERBOSITY_ERROR,
-                        "[*] The encryption passphrase and the HMAC key should not be identical.");
+                    "[*] The encryption passphrase and HMAC key should not be identical, no SPA packet sent. Exiting.");
                 clean_exit(ctx, options, EXIT_FAILURE);
             }
         }
