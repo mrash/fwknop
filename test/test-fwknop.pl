@@ -40,6 +40,7 @@ our %cf = (
     'def_access'                   => "$conf_dir/default_access.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
     'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
+    'hmac_equal_keys_access'       => "$conf_dir/hmac_equal_keys_access.conf",
     'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
     'hmac_md5_access'              => "$conf_dir/hmac_md5_access.conf",
     'hmac_md5_short_key_access'    => "$conf_dir/hmac_md5_short_key_access.conf",
@@ -108,6 +109,7 @@ our %cf = (
     'rc_def_key'                   => "$conf_dir/fwknoprc_with_default_key",
     'rc_def_b64_key'               => "$conf_dir/fwknoprc_with_default_base64_key",
     'rc_named_key'                 => "$conf_dir/fwknoprc_named_key",
+    'rc_hmac_equal_keys'           => "$conf_dir/fwknoprc_hmac_equal_keys",
     'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
     'rc_hmac_b64_key2'             => "$conf_dir/fwknoprc_hmac_key2",
@@ -228,7 +230,8 @@ my $diff_dir1 = '';
 my $diff_dir2 = '';
 my $loopback_intf = '';
 my $anonymize_results = 0;
-my $curr_test_file = "$output_dir/init";
+my $curr_test_file = 'init';
+my $init_file = $curr_test_file;
 my $tarfile = 'test_fwknop.tar.gz';
 our $key_gen_file = "$output_dir/key_gen";
 my $fuzzing_pkts_file = 'fuzzing/fuzzing_spa_packets';
@@ -346,6 +349,7 @@ exit 1 unless GetOptions(
     ### can set the following to "output.last/valgrind-coverage" if
     ### a full test suite run has already been executed with --enable-valgrind
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
+    'openssl-path=s'    => \$openssl_path,
     'output-dir=s'      => \$output_dir,
     'diff'              => \$diff_mode,
     'diff-dir1=s'       => \$diff_dir1,
@@ -520,6 +524,8 @@ if ($saved_last_results) {
     &logr("    Saved results from previous run " .
         "to: ${output_dir}.last/\n\n");
 }
+
+copy $init_file, "$output_dir/init" if -e $init_file;
 
 if ($enable_valgrind) {
     if ($previous_valgrind_coverage_dir) {
@@ -4307,8 +4313,11 @@ sub key_gen_uniqueness() {
     my %rijndael_keys = ();
     my %hmac_keys     = ();
 
+    my $rv = 1;
+
     ### collect key information
     my $found_dup = 0;
+
     for (my $i=0; $i < $uniq_keys; $i++) {
         open CMD, "$test_hr->{'cmdline'} | " or die $!;
         while (<CMD>) {
@@ -4324,7 +4333,12 @@ sub key_gen_uniqueness() {
         last if $found_dup;
     }
 
-    return ! $found_dup;
+    $rv = 0 if $found_dup;
+
+    $rv = 0 unless keys %rijndael_keys == $uniq_keys;
+    $rv = 0 unless keys %hmac_keys == $uniq_keys;
+
+    return $rv;
 }
 
 ### check for PIE
@@ -4469,12 +4483,12 @@ sub openssl_hmac_verification() {
 
     ### for HMAC SHA512 this output will span two lines
     my $openssl_hmac_line = '';
-    open F, "< $openssl_cmd_tmp" or die $!;
-    while (<F>) {
-        $openssl_hmac_line .= $_;
-        chomp $openssl_hmac_line;
+    {
+        local $/ = undef;
+        open F, "< $openssl_cmd_tmp" or die $!;
+        $openssl_hmac_line = <F>;
+        close F;
     }
-    close F;
 
     if ($base64_path) {
         $openssl_hmac = $openssl_hmac_line;
@@ -5062,11 +5076,11 @@ sub init() {
     }
 
     if ($enable_openssl_compatibility_tests) {
-        $openssl_path = &find_command('openssl');
+        $openssl_path = &find_command('openssl') unless $openssl_path;
         if ($openssl_path) {
             require MIME::Base64;
             MIME::Base64->import(qw(encode_base64 decode_base64));
-            $base64_path = &find_command('base64');
+            $base64_path = &find_command('base64') unless $base64_path;
 
             ### check for hmac openssl support
             &openssl_hmac_style_check();
@@ -5079,7 +5093,7 @@ sub init() {
     }
 
     if ($enable_valgrind) {
-        $valgrind_path = &find_command('valgrind');
+        $valgrind_path = &find_command('valgrind') unless $valgrind_path;
         unless ($valgrind_path) {
             print "[-] --enable-valgrind mode requested ",
                 "but valgrind not found, disabling.\n";
@@ -5123,7 +5137,7 @@ sub init() {
         die "[*] The python test script: $python_script doesn't exist ",
             "or is not executable."
             unless -e $python_script and -x $python_script;
-        $python_path = &find_command('python');
+        $python_path = &find_command('python') unless $python_path;
         unless ($python_path) {
             push @tests_to_exclude, qr/python fko extension/
         }
@@ -5142,16 +5156,16 @@ sub init() {
         push @tests_to_exclude, qr/perl FKO module.*FUZZING/;
     }
 
-    $sudo_path    = &find_command('sudo');
-    $killall_path = &find_command('killall');
-    $pgrep_path   = &find_command('pgrep');
+    $sudo_path    = &find_command('sudo') unless $sudo_path;
+    $killall_path = &find_command('killall') unless $killall_path;
+    $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
         push @tests_to_exclude, qr/recompilation/;
     }
 
-    $gcov_path = &find_command('gcov');
+    $gcov_path = &find_command('gcov') unless $gcov_path;
 
     if ($gcov_path) {
         if ($enable_profile_coverage_check) {
@@ -5730,6 +5744,7 @@ sub file_find_regex() {
 }
 
 sub remove_permissions_warnings() {
+    return unless -e "$output_dir/1.test";
     system qq|perl -p -i -e 's/.*not owned by current effective.*\n//' $output_dir/*.test|;
     system qq|perl -p -i -e 's/.*permissions should only be user.*\n//' $output_dir/*.test|;
     return;

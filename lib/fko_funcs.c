@@ -381,6 +381,7 @@ fko_key_gen(char * const key_base64, const int key_len,
     unsigned char hmac_key[SHA512_BLOCK_LEN];
     int klen      = key_len;
     int hmac_klen = hmac_key_len;
+    int b64_len   = 0;
 
     if(key_len == FKO_DEFAULT_KEY_LEN)
         klen = RIJNDAEL_MAX_KEYSIZE;
@@ -409,8 +410,13 @@ fko_key_gen(char * const key_base64, const int key_len,
     get_random_data(key, klen);
     get_random_data(hmac_key, hmac_klen);
 
-    b64_encode(key, key_base64, klen);
-    b64_encode(hmac_key, hmac_key_base64, hmac_klen);
+    b64_len = b64_encode(key, key_base64, klen);
+    if(b64_len < klen)
+        return(FKO_ERROR_INVALID_DATA);
+
+    b64_len = b64_encode(hmac_key, hmac_key_base64, hmac_klen);
+    if(b64_len < hmac_klen)
+        return(FKO_ERROR_INVALID_DATA);
 
     return(FKO_SUCCESS);
 }

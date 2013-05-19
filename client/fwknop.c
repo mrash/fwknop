@@ -205,9 +205,18 @@ main(int argc, char **argv)
     */
     if(options.key_gen)
     {
-        fko_key_gen(options.key_base64, options.key_len,
+        memset(options.key_base64, 0x00, MAX_B64_KEY_LEN+1);
+        memset(options.hmac_key_base64, 0x00, MAX_B64_KEY_LEN+1);
+
+        res = fko_key_gen(options.key_base64, options.key_len,
                 options.hmac_key_base64, options.hmac_key_len,
                 options.hmac_type);
+
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_key_gen", res);
+            return(EXIT_FAILURE);
+        }
 
         if(options.key_gen_file[0] != '\0')
         {
@@ -1261,6 +1270,18 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid HMAC key length: '%d', must be in [0,%d]",
                     *hmac_key_len, MAX_KEY_LEN);
             clean_exit(ctx, options, EXIT_FAILURE);
+        }
+
+        /* Make sure the same key is not used for both encryption and the HMAC
+        */
+        if(*hmac_key_len == *key_len)
+        {
+            if(memcmp(hmac_key, key, *key_len) == 0)
+            {
+                log_msg(LOG_VERBOSITY_ERROR,
+                    "[*] The encryption passphrase and HMAC key should not be identical, no SPA packet sent. Exiting.");
+                clean_exit(ctx, options, EXIT_FAILURE);
+            }
         }
 
         res = fko_set_spa_hmac_type(ctx, options->hmac_type);

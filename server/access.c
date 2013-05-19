@@ -860,7 +860,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 static int
 acc_data_is_valid(const acc_stanza_t *acc)
 {
-    if(((acc->key == NULL || !strlen(acc->key))
+    if(((acc->key == NULL || acc->key_len == 0)
       && ((acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw))
           && acc->gpg_allow_no_pw == 0))
       || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0))
@@ -869,6 +869,34 @@ acc_data_is_valid(const acc_stanza_t *acc)
             "[*] No keys found for access stanza source: '%s'\n", acc->source
         );
         return(0);
+    }
+
+    if(acc->hmac_key_len != 0)
+    {
+        if(((acc->key_len != 0) && (acc->key_len == acc->hmac_key_len)))
+        {
+            if(memcmp(acc->key, acc->hmac_key, acc->hmac_key_len) == 0)
+            {
+                fprintf(stderr,
+                    "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'\n",
+                    acc->source
+                );
+                return(0);
+            }
+        }
+        else if((acc->gpg_allow_no_pw == 0)
+                && acc->gpg_decrypt_pw != NULL
+                && (strlen(acc->gpg_decrypt_pw) == acc->hmac_key_len))
+        {
+            if(memcmp(acc->gpg_decrypt_pw, acc->hmac_key, acc->hmac_key_len) == 0)
+            {
+                fprintf(stderr,
+                    "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'\n",
+                    acc->source
+                );
+                return(0);
+            }
+        }
     }
 
     return(1);

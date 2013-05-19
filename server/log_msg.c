@@ -97,9 +97,13 @@ init_logging(fko_srv_options_t *opts) {
     else
         strlcpy(log_name, my_name, strlen(MY_NAME)+1);
 
-    /* If we are running in the foreground, all logging will go to stderr.
+    /* If we are running in the foreground or performing firewall operations,
+     * all logging will go to stderr.
     */
-    if(opts->foreground != 0)
+    if(opts->foreground != 0
+            || opts->fw_flush != 0
+            || opts->fw_list != 0
+            || opts->fw_list_all != 0)
         static_log_flag = LOG_STDERR | LOG_STDERR_ONLY;
 
     /* Parse the log facility as specified in the config struct. If, for some
