@@ -45,7 +45,7 @@ dump_transmit_options(const fko_cli_options_t *options)
     if (options->spa_src_port)
         log_msg(LOG_VERBOSITY_INFO, "         source port: %d", options->spa_src_port);
     else
-        log_msg(LOG_VERBOSITY_INFO, "         source port: unknown");
+        log_msg(LOG_VERBOSITY_INFO, "         source port: <OS assigned>");
 
     log_msg(LOG_VERBOSITY_INFO, "    destination port: %d", options->spa_dst_port);
     log_msg(LOG_VERBOSITY_INFO, "             IP/host: %s", options->spa_server_str);

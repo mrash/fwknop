@@ -267,6 +267,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 {
                     log_msg(LOG_WARNING, "Could not execute command: %s",
                         write_cmd);
+                    free_acc_port_list(port_list);
                     return(-1);
                 }
 
@@ -301,6 +302,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                  * of anchor rules.
                 */
                 log_msg(LOG_WARNING, "Max anchor rules reached, try again later.");
+                free_acc_port_list(port_list);
                 return 0;
             }
 
@@ -323,9 +325,11 @@ process_spa_request(const fko_srv_options_t * const opts,
             log_msg(LOG_WARNING, "Forwarding/NAT requests are not currently supported.");
         }
 
+        free_acc_port_list(port_list);
         return(-1);
     }
 
+    free_acc_port_list(port_list);
     return(res);
 }
 
