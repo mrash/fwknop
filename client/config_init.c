@@ -1176,7 +1176,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         return;
     }
 
-    /* Go though the file line by line */
+    /* Go through the file line by line */
     stanza_found = 0;
     while ((fgets(line, MAX_LINE_LEN, rc)) != NULL)
     {
@@ -1185,48 +1185,41 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
         /* If we find a section... */
         if(is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 1)
         {
-            /* and this is the one we are looking for, we set the stanza
-             * as found */
-            if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN) == 0)
-                stanza_found = 1;
-
-            /* otherwise we disable the stanza since */
-            else
-                stanza_found = 0;
-        }
-
-        /* If we are processing new lines */
-        else if (IS_EMPTY_LINE(line[0]))
-        {
-            /* and this is the end of the stanza to update, it means we have finished
-             * to parse it, and we can update its parameters */
+            /* and we have already parsed the section we wanted to save, we
+             * can update our parameters */
             if (stanza_found)
             {
-                log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", curr_stanza);
+                log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", options->use_rc_stanza);
                 add_multiple_vars_to_rc(rc_update, options, args_bitmask);
+                fprintf(rc_update, "\n");
+                stanza_found   = 0;
                 stanza_updated = 1;
             }
 
-            /* End of a stanza that we do not care */
-            else;
+            /* and this is the one we are looking for, we set the stanza
+             * as found */
+            else if (strncasecmp(curr_stanza, options->use_rc_stanza, MAX_LINE_LEN) == 0)
+                stanza_found = 1;
 
-            /* Discard all stanza */
-            stanza_found = 0;
+            /* otherwise we disable the stanza */
+            else
+                stanza_found = 0;
         }
 
         /* If we are processing a parameter for our stanza */
         else if (stanza_found)
         {
-            /* If the user has specified a force option, tyhere is no need to
+            /* and the user has specified a force option, there is no need to
              * check for critical variables */
             if (options->force_save_rc_stanza)
                 continue;
 
-            /* Discard all lines since no critical vars have to be set */
+            /* discard all lines since no critical vars have been set through
+             * the command line */
             if (!(args_bitmask & FWKNOP_CRITICAL_VARS_BM))
                 continue;
 
-            /* Ask the user what to do with the critical var found in the
+            /* ask the user what to do with the critical var found in the
              * rcfile */
             else if (is_rc_param(line, &param))
             {
@@ -1243,24 +1236,41 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
                     continue;
             }
 
-            /* Discard all other lines */
+            /* discard all other lines */
             else
                 continue;
         }
+
+        /* We re not processing any important variables from our stanza and no new
+         * stanza */
+        else;
 
         /* Add the line to the new rcfile */
         fprintf(rc_update, "%s", line);
     }
 
-    /* If the stanza has not been found, we append the settings to the file,
-     * otherwise we already updated it earlier. */
+    /* The configuration has not been updated yet */
     if (stanza_updated == 0)
     {
-        log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Inserting new %s stanza", curr_stanza);
-        fprintf(rc_update, "\n");
-        fprintf(rc_update, RC_SECTION_TEMPLATE, options->use_rc_stanza);
+        /* but the stanza has been found, We update it now. */
+        if (stanza_found == 1)
+            log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza",
+                    options->use_rc_stanza);
+
+        /* otherwise we append the new settings to the file */
+        else
+        {
+            fprintf(rc_update, "\n");
+            log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Inserting new %s stanza",
+                    options->use_rc_stanza);
+            fprintf(rc_update, RC_SECTION_TEMPLATE, options->use_rc_stanza);
+        }
+
         add_multiple_vars_to_rc(rc_update, options, args_bitmask);
     }
+
+    /* otherwise we have already done everything. Nothing to do. */
+    else;
 
     /* Close file handles */
     fclose(rc);
