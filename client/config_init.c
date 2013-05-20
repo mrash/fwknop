@@ -1254,13 +1254,15 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     {
         /* but the stanza has been found, We update it now. */
         if (stanza_found == 1)
-            log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", curr_stanza);
+            log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza",
+                    options->use_rc_stanza);
 
         /* otherwise we append the new settings to the file */
         else
         {
             fprintf(rc_update, "\n");
-            log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Inserting new %s stanza", curr_stanza);
+            log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Inserting new %s stanza",
+                    options->use_rc_stanza);
             fprintf(rc_update, RC_SECTION_TEMPLATE, options->use_rc_stanza);
         }
 
