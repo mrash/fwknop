@@ -175,8 +175,6 @@ get_key_file(char *key, int *key_len, const char *key_file,
     char           *lptr;
 
     memset(key, 0x00, MAX_KEY_LEN+1);
-    memset(conf_line_buf, 0x00, MAX_LINE_LEN);
-    memset(tmp_char_buf, 0x00, MAX_LINE_LEN);
 
     if ((pwfile_ptr = fopen(key_file, "r")) == NULL)
     {

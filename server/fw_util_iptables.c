@@ -191,8 +191,8 @@ static int
 jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
 {
     int     num, pos = 0;
-    char    cmd_buf[CMD_BUFSIZE] = {0};
-    char    target[CMD_BUFSIZE] = {0};
+    char    cmd_buf[CMD_BUFSIZE]  = {0};
+    char    target[CMD_BUFSIZE]   = {0};
     char    line_buf[CMD_BUFSIZE] = {0};
     FILE   *ipt;
 
@@ -459,8 +459,8 @@ static void
 set_fw_chain_conf(const int type, const char * const conf_str)
 {
     int i, j, is_err;
-    char tbuf[1024]     = {0};
-    const char *ndx     = conf_str;
+    char tbuf[MAX_LINE_LEN]  = {0};
+    const char *ndx          = conf_str;
 
     char *chain_fields[FW_NUM_CHAIN_FIELDS];
 
@@ -713,8 +713,8 @@ process_spa_request(const fko_srv_options_t * const opts,
 {
     char             nat_ip[MAX_IPV4_STR_LEN] = {0};
     char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
+    char             rule_buf[CMD_BUFSIZE] = {0};
     char            *ndx;
-    char             rule_buf[CMD_BUFSIZE];
 
     unsigned int     nat_port = 0;
 
@@ -1076,8 +1076,8 @@ process_spa_request(const fko_srv_options_t * const opts,
 void
 check_firewall_rules(const fko_srv_options_t * const opts)
 {
-    char             exp_str[12];
-    char             rule_num_str[6];
+    char             exp_str[12]     = {0};
+    char             rule_num_str[6] = {0};
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
 
     int             i, res, rn_offset, rule_num, is_err;

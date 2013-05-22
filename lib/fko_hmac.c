@@ -209,8 +209,6 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
         return(FKO_ERROR_INVALID_HMAC_KEY_LEN);
 
-    memset(hmac, 0x00, SHA512_DIGEST_STR_LEN);
-
     if(ctx->hmac_type == FKO_HMAC_MD5)
     {
         hmac_md5(ctx->encrypted_msg,

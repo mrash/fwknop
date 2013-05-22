@@ -592,8 +592,8 @@ process_spa_request(const fko_srv_options_t * const opts,
 void
 check_firewall_rules(const fko_srv_options_t * const opts)
 {
-    char            exp_str[12];
-    char            rule_num_str[6];
+    char            exp_str[12]     = {0};
+    char            rule_num_str[6] = {0};
     char           *ndx, *rn_start, *rn_end, *tmp_mark;
 
     int             i=0, res=0, is_err;

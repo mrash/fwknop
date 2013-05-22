@@ -94,7 +94,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
 {
     FILE   *ipt;
     int     retval = 0;
-    char    so_read_buf[IO_READ_BUF_LEN];
+    char    so_read_buf[IO_READ_BUF_LEN] = {0};
     pid_t   pid;
     int     res;
 

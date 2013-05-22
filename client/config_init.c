@@ -278,12 +278,11 @@ static int
 is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t rc_section_size)
 {
     char    *ndx, *emark;
-    char    buf[MAX_LINE_LEN];
+    char    buf[MAX_LINE_LEN] = {0};
     int     section_found = 0;
 
     if (line_size < sizeof(buf))
     {
-        memset (buf, 0, sizeof(buf));
         strlcpy(buf, line, sizeof(buf));
 
         ndx = buf;
@@ -426,7 +425,7 @@ parse_time_offset(const char *offset_str)
     int os_len      = strlen(offset_str);
     int is_err;
 
-    char offset_digits[MAX_TIME_STR_LEN];
+    char offset_digits[MAX_TIME_STR_LEN] = {0};
 
     j=0;
     for (i=0; i < os_len; i++) {
@@ -866,7 +865,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
 static void
 add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
 {
-    char    val[MAX_LINE_LEN]  = {0};
+    char    val[MAX_LINE_LEN] = {0};
 
     if (arg_ndx >= FWKNOP_CLI_ARG_NB)
         return;
@@ -874,10 +873,7 @@ add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options
     if (fhandle == NULL)
         return;
 
-    /* Zero the val buffer */
-    memset(val, 0, sizeof(val));
-
-    /* Selecty the argument to add and store its string value into val */
+    /* Select the argument to add and store its string value into val */
     switch (arg_ndx)
     {
         case FWKNOP_CLI_ARG_DIGEST_TYPE :
@@ -1033,8 +1029,8 @@ process_rc_section(char *section_name, fko_cli_options_t *options)
 {
     FILE           *rc;
     int             line_num = 0, do_exit = 0;
-    char            line[MAX_LINE_LEN];
-    char            rcfile[MAX_PATH_LEN];
+    char            line[MAX_LINE_LEN] = {0};
+    char            rcfile[MAX_PATH_LEN] = {0};
     char            curr_stanza[MAX_LINE_LEN] = {0};
     rc_file_param_t param;
     int             rc_section_found = 0;
@@ -1131,15 +1127,12 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     int             rcfile_fd = -1;
     int             stanza_found = 0;
     int             stanza_updated = 0;
-    char            line[MAX_LINE_LEN];
-    char            rcfile[MAX_PATH_LEN];
-    char            rcfile_update[MAX_PATH_LEN];
-    char            curr_stanza[MAX_LINE_LEN] = {0};
+    char            line[MAX_LINE_LEN]   = {0};
+    char            rcfile[MAX_PATH_LEN] = {0};
+    char            rcfile_update[MAX_PATH_LEN] = {0};
+    char            curr_stanza[MAX_LINE_LEN]   = {0};
     uint32_t        var_bm  = 0;                        /* Bitmask associated to a conf. variable */
     rc_file_param_t param;                              /* Structure to contain a conf. variable name with its value  */
-
-    memset(rcfile, 0, MAX_PATH_LEN);
-    memset(rcfile_update, 0, MAX_PATH_LEN);
 
     set_rc_file(rcfile, options);
 
@@ -1821,23 +1814,24 @@ usage(void)
             MY_NAME, MY_VERSION, MY_DESC, HTTP_RESOLVE_HOST);
     log_msg(LOG_VERBOSITY_NORMAL,
       "Usage: fwknop -A <port list> [-s|-R|-a] -D <spa_server> [options]\n\n"
-      " -h, --help                  Print this usage message and exit.\n"
-      " -A, --access                Provide a list of ports/protocols to open\n"
-      "                             on the server.\n"
-      " -B, --save-packet           Save the generated packet data to the\n"
-      "                             specified file.\n"
-      " -b, --save-packet-append    Append the generated packet data to the\n"
-      "                             file specified with the -B option.\n"
-      " -a, --allow-ip              Specify IP address to allow within the SPA\n"
-      "                             packet.\n"
-      " -C, --server-cmd            Specify a command that the fwknop server will\n"
-      "                             execute on behalf of the fwknop client..\n"
-      " -D, --destination           Specify the IP address of the fwknop server.\n"
-      " -n, --named-config          Specify an named configuration stanza in the\n"
+      " -n, --named-config          Specify a named configuration stanza in the\n"
       "                             '$HOME/.fwknoprc' file to provide some of all\n"
       "                             of the configuration parameters.\n"
       "                             If more arguments are set through the command\n"
       "                             line, the configuration is updated accordingly\n"
+      " -A, --access                Provide a list of ports/protocols to open\n"
+      "                             on the server (e.g. 'tcp/22').\n"
+      " -a, --allow-ip              Specify IP address to allow within the SPA\n"
+      "                             packet (e.g. '123.2.3.4').  If \n"
+      " -D, --destination           Specify the hostname or IP address of the\n"
+      "                             fwknop server.\n"
+      " -h, --help                  Print this usage message and exit.\n"
+      " -B, --save-packet           Save the generated packet data to the\n"
+      "                             specified file.\n"
+      " -b, --save-packet-append    Append the generated packet data to the\n"
+      "                             file specified with the -B option.\n"
+      " -C, --server-cmd            Specify a command that the fwknop server will\n"
+      "                             execute on behalf of the fwknop client..\n"
       " -N, --nat-access            Gain NAT access to an internal service.\n"
       " -p, --server-port           Set the destination port for outgoing SPA\n"
       "                             packet.\n"

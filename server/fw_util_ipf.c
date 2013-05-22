@@ -152,8 +152,8 @@ check_firewall_rules(const fko_srv_options_t *opts)
 
     /* TODO: Implement me */
 
-    char             exp_str[12];
-    char             rule_num_str[6];
+    char             exp_str[12]     = {0};
+    char             rule_num_str[6] = {0};
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
 
     int             i, res, rn_offset;

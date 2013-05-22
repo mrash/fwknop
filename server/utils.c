@@ -114,7 +114,7 @@ hex_dump(const unsigned char *data, const int size)
 char *
 dump_ctx(fko_ctx_t ctx)
 {
-    static char buf[CTX_DUMP_BUFSIZE];
+    static char buf[CTX_DUMP_BUFSIZE] = {0};
     int         cp = 0;
     size_t      bytes_left;
 
@@ -164,7 +164,6 @@ dump_ctx(fko_ctx_t ctx)
     hmac_digest_inttostr(hmac_type, hmac_str, sizeof(hmac_str));
     enc_mode_inttostr(encryption_mode, enc_mode_str, sizeof(enc_mode_str));
 
-    memset(buf, 0x0, sizeof(buf));
     bytes_left = sizeof(buf) - 1;
 
     cp  = append_msg_to_buf(buf,    bytes_left,    "SPA Field Values:\n=================\n");

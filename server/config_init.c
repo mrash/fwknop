@@ -298,7 +298,7 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
 static void
 validate_options(fko_srv_options_t *opts)
 {
-    char tmp_path[MAX_PATH_LEN];
+    char tmp_path[MAX_PATH_LEN] = {0};
 
     /* If no conf dir is set in the config file, use the default.
     */
@@ -650,7 +650,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     int             cmd_arg, index, is_err;
     unsigned char   got_conf_file = 0, got_override_config = 0;
 
-    char            override_file[MAX_LINE_LEN];
+    char            override_file[MAX_LINE_LEN] = {0};
     char           *ndx, *cmrk;
 
     /* Zero out options and opts_track.

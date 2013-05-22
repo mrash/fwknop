@@ -647,7 +647,7 @@ incoming_spa(fko_srv_options_t *opts)
             break;
         }
 
-        strlcpy(spadat.spa_message_remain, spa_ip_demark+1, 1024);
+        strlcpy(spadat.spa_message_remain, spa_ip_demark+1, MAX_DECRYPTED_SPA_LEN);
 
         /* If use source IP was requested (embedded IP of 0.0.0.0), make sure it
          * is allowed.
