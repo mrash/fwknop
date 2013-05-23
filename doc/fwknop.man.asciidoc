@@ -49,15 +49,16 @@ currently optional (enabled via the *--use-hmac* command line switch), it is
 highly recommended for three reasons: '1)' without an HMAC, cryptographically
 strong authentication is not possible with *fwknop* unless GnuPG is used, but
 even then an HMAC should still be applied, '2)' an HMAC applied after
-encryption protects against CBC-mode padding oracle attacks such as the
-Vaudenay attack and the more recent "Lucky 13" attack against SSL, and '3)' the
-code required by the *fwknopd* daemon to verify an HMAC is much more simplistic
-than the code required to decrypt an SPA packet, so an SPA packet without a
-proper HMAC isn't even sent through the decryption routines.  Reason '3)' is
-why an HMAC should still be used even when SPA packets are encrypted with
-GnuPG due to the fact that SPA data is not sent through *libgpgme* functions
-unless the HMAC checks out first.  Generating an HMAC for SPA communications
-requires a dedicated key in addition to the normal encryption key.
+encryption protects against cryptanalytic CBC-mode padding oracle attacks such
+as the Vaudenay attack and related trickery (like the more recent "Lucky 13"
+attack against SSL), and '3)' the code required by the *fwknopd* daemon to
+verify an HMAC is much more simplistic than the code required to decrypt an SPA
+packet, so an SPA packet without a proper HMAC isn't even sent through the
+decryption routines.  Reason '3)' is why an HMAC should still be used even when
+SPA packets are encrypted with GnuPG due to the fact that SPA data is not sent
+through *libgpgme* functions unless the HMAC checks out first.  Generating an
+HMAC for SPA communications requires a dedicated key in addition to the normal
+encryption key, and both can be generated with the *--key-gen* option.
 
 *fwknop* encrypts SPA packets either with the 'Rijndael' block cipher or via
 'GnuPG' and associated asymmetric cipher.  If the symmetric encryption method
