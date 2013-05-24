@@ -1191,13 +1191,12 @@
         'category' => 'Rijndael',
         'subcategory' => 'server',
         'detail'   => 'ipfw active/expire sets not equal',
-        'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'ipfw_active_expire'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/Cannot\sset\sidentical\sipfw\sactive\sand\sexpire\ssets/],
-        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'positive_output_matches' => [qr/Cannot\sset\sidentical\sipfw\sactive\sand\sexpire\ssets/],
+        'exec_err' => $YES,
         'fatal'    => $NO
     },
     {
