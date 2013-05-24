@@ -1701,6 +1701,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 }
                 strlcpy(options->resolve_url, optarg, strlen(optarg)+1);
                 cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_RESOLVE_URL);
+                options->resolve_ip_http = 1;
                 break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;
