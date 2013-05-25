@@ -40,7 +40,7 @@
 #define RC_PARAM_TEMPLATE           "%-24s    %s\n"             /*!< Template to define param = val in a rc file */
 #define RC_SECTION_DEFAULT          "default"                   /*!< Name of the default section in fwknoprc */
 #define RC_SECTION_TEMPLATE         "[%s]\n"                    /*!< Template to define a section in a rc file */
-#define FWKNOP_CLI_ARG_BM(x)        ((uint32_t)(1 << (x)))      /*!< Bitmask command line arg */
+#define FWKNOP_CLI_ARG_BM(x)        ((uint64_t)(1) << (x))      /*!< Bitmask command line arg */
 #define FWKNOPRC_OFLAGS             (O_WRONLY|O_CREAT|O_EXCL)   /*!< O_flags used to create an fwknoprc file with the open function */
 #define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
 #define PARAM_YES_VALUE             "Y"                         /*!< String which represents a YES value for a parameter in fwknoprc */
@@ -99,6 +99,7 @@ enum
     FWKNOP_CLI_ARG_NAT_LOCAL,
     FWKNOP_CLI_ARG_NAT_RAND_PORT,
     FWKNOP_CLI_ARG_NAT_PORT,
+    FWKNOP_CLI_ARG_VERBOSE,
     FWKNOP_CLI_ARG_NB
 } fwknop_cli_arg_t;
 
@@ -135,7 +136,8 @@ const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
     "RESOLVE_URL",
     "NAT_LOCAL",
     "NAT_RAND_PORT",
-    "NAT_PORT"
+    "NAT_PORT",
+    "VERBOSE"
 };
 
 /**
@@ -203,11 +205,11 @@ lookup_fwknop_conf_var_ndx(const char *str)
  * @return the configuration variable bitmask if found
  *         0 otherwise
  */
-static uint32_t
+static uint64_t
 lookup_fwknop_conf_var_bm(const char *str)
 {
     short       ndx;    /* Index on the the fwknop_cli_key_tab array */
-    uint32_t    bm = 0; /* Bitmask associated to an fwknop conf variable */
+    uint64_t    bm = 0; /* Bitmask associated to an fwknop conf variable */
 
     /* Look for the index of the variable */
     ndx = lookup_fwknop_conf_var_ndx(str);
@@ -844,6 +846,15 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         else
             parse_error = -1;
     }
+    /* VERBOSE level */
+    else if (conf_key_ndx == FWKNOP_CLI_ARG_VERBOSE)
+    {
+        tmpint = strtol_wrapper(val, 0, LOG_LAST_VERBOSITY - 1, NO_EXIT_UPON_ERR, &is_err);
+        if(is_err == FKO_SUCCESS)
+            options->verbose = tmpint;
+        else
+            parse_error = -1;
+    }
     /* The variable is not a configuration variable */
     else
     {
@@ -978,6 +989,9 @@ add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options
         case FWKNOP_CLI_ARG_NAT_PORT :
             snprintf(val, sizeof(val)-1, "%d", options->nat_port);
             break;
+        case FWKNOP_CLI_ARG_VERBOSE:
+            snprintf(val, sizeof(val)-1, "%d", options->verbose);
+            break;
         default:
             log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad command line argument %u", arg_ndx);
             return;
@@ -1000,7 +1014,7 @@ add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options
  * @param bitmask   Bitmask used to select the parameters to add
  */
 static void
-add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, uint32_t bitmask)
+add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, uint64_t bitmask)
 {
     short   var_ndx = 0;    /* Index of a configuration variable in fwknop_cli_key_tab array */
 
@@ -1120,7 +1134,7 @@ process_rc_section(char *section_name, fko_cli_options_t *options)
  * @param args_bitmask command line argument bitmask
  */
 static void
-update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
+update_rc(fko_cli_options_t *options, uint64_t args_bitmask)
 {
     FILE           *rc;
     FILE           *rc_update;
@@ -1131,7 +1145,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     char            rcfile[MAX_PATH_LEN] = {0};
     char            rcfile_update[MAX_PATH_LEN] = {0};
     char            curr_stanza[MAX_LINE_LEN]   = {0};
-    uint32_t        var_bm  = 0;                        /* Bitmask associated to a conf. variable */
+    uint64_t        var_bm  = 0;                        /* Bitmask associated to a conf. variable */
     rc_file_param_t param;                              /* Structure to contain a conf. variable name with its value  */
 
     set_rc_file(rcfile, options);
@@ -1408,7 +1422,7 @@ void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
     int         cmd_arg, index, is_err;
-    uint32_t    cli_arg_bitmask = 0;
+    uint64_t    cli_arg_bitmask = 0;
 
     /* Zero out options and opts_track.
     */
@@ -1444,6 +1458,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'v':
                 options->verbose++;
+                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_VERBOSE);
                 break;
         }
     }
