@@ -46,6 +46,7 @@
 #define PARAM_NO_VALUE              "N"                                 /*!< String which represents a NO value for a parameter in fwknoprc */
 #define POSITION_TO_BITMASK(x)      ((uint32_t)(1) << ((x) % 32))       /*!< Macro do get a bitmask from a position */
 #define BITMASK_ARRAY_SIZE          2                                   /*!< Number of 32bits integer used to handle bitmask in the fko_var_bitmask_t structure */
+#define LF_CHAR                     0x0A                                /*!< Hexadecimal value associated to the LF char */
 
 /**
  * Structure to handle long bitmask.
@@ -60,7 +61,7 @@ typedef struct fko_var_bitmask
 } fko_var_bitmask_t;
 
 /**
- * Structure to handle a variable in an rcfile
+ * Structure to handle a variable in an rcfile (name and value)
  */
 typedef struct rc_file_param
 {
@@ -68,6 +69,9 @@ typedef struct rc_file_param
     char val[MAX_LINE_LEN];     /*!< Variable value */
 } rc_file_param_t;
 
+/**
+ * Structure to identify a configuration variable (name and position)
+ */
 typedef struct fko_var
 {
     const char      name[32];   /*!< Variable name in fwknoprc */
@@ -162,6 +166,44 @@ static int critical_var_array[] =
     FWKNOP_CLI_ARG_GPG_RECIPIENT,
     FWKNOP_CLI_ARG_GPG_SIGNER
 };
+
+/**
+ * @brief Generate Rijndael + HMAC keys from /dev/random (base64 encoded) and exit.
+ *
+ * @param options FKO command line option structure
+ */
+static void
+generate_keys(fko_cli_options_t *options)
+{
+    int res;
+
+    /* If asked, we have to generate the keys */
+    if(options->key_gen)
+    {
+        /* Zero out the key buffers */
+        memset(&(options->key_base64), 0x00, sizeof(options->key_base64));
+        memset(&(options->hmac_key_base64), 0x00, sizeof(options->hmac_key_base64));
+
+        /* Generate the key with through libfko */
+        res = fko_key_gen(options->key_base64, options->key_len,
+                options->hmac_key_base64, options->hmac_key_len,
+                options->hmac_type);
+
+        /* Exit upon key generation failure*/
+        if(res != FKO_SUCCESS)
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "%s: fko_key_gen: Error %i - %s",
+                MY_NAME, res, fko_errstr(res));
+            exit(EXIT_FAILURE);
+        }
+
+        /* Everything is ok - nothing to do */
+        else;
+    }
+
+    /* No key generation asked - nothing to do */
+    else;
+}
 
 /**
  * @brief Check if a variable is a critical var.
@@ -279,27 +321,36 @@ bitmask_has_var(short var_pos, fko_var_bitmask_t *bm)
 }
 
 /**
- * @brief Ask the user if a variable must be overwriyten or not for a specific stanza
+ * @brief Ask the user if a variable must be overwritten or not for a specific stanza
  *
- * @param var Variable which should be overwritten
- * @param stanza Stanza where the variable should be overwritten
+ * If the user sets other chars than a 'y' char, we assume he does not want to
+ * overwrite the variable.
+ *
+ * @param var       Variable which should be overwritten
+ * @param stanza    Stanza where the variable should be overwritten
  *
  * @return 1 if the user wants to overwrite the variable, 0 otherwise
  */
 static int
 ask_overwrite_var(const char *var, const char *stanza)
 {
-    char    user_input;
+    char    user_input = 'N';
     int     overwrite = 0;
+    int     c;
+    int     first_char = 1;;
 
     log_msg(LOG_VERBOSITY_NORMAL,
             "Variable '%s' found in stanza '%s'. Overwrite [N/y] ? ",
             var, stanza);
 
-    if (scanf("%c", &user_input) != 1)
-        user_input = 'N';
+    while ((c=getchar()) != LF_CHAR)
+    {
+        if (first_char)
+            user_input = c;
+        first_char = 0;
+    }
 
-    if ( (user_input != 'N') && (user_input != 0x0A ) )
+    if (user_input == 'y')
         overwrite = 1;
 
     return overwrite;
@@ -1956,10 +2007,25 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     /* Now that we have all of our options set, we can validate them */
     validate_options(options);
 
+    /* Do some processings */
+    generate_keys(options);
+
     /* We can upgrade our settings with the parameters set on the command
      * line by the user */
     if (options->save_rc_stanza == 1)
+    {
+        /* If we are asked to generate keys, we add them to the bitmask so
+         * that they can be added to the stanza when updated */
+        if (options->key_gen)
+        {
+            add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64, &var_bitmask);
+            add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_HMAC_BASE64, &var_bitmask);
+        }
+        else;
+
         update_rc(options, &var_bitmask);
+    }
+    else;
 
     return;
 }
