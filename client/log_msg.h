@@ -30,11 +30,13 @@
 
 enum
 {
+    LOG_FIRST_VERBOSITY = 0,
     LOG_VERBOSITY_ERROR = 0,    /*!< Constant to define a ERROR message */
     LOG_VERBOSITY_WARNING,      /*!< Constant to define a WARNING message */
     LOG_VERBOSITY_NORMAL,       /*!< Constant to define a NORMAL message */
     LOG_VERBOSITY_INFO,         /*!< Constant to define a INFO message */
     LOG_VERBOSITY_DEBUG,        /*!< Constant to define a DEBUG message */
+    LOG_LAST_VERBOSITY
 } log_level_t;
 
 #define LOG_DEFAULT_VERBOSITY   LOG_VERBOSITY_NORMAL    /*!< Default verbosity to use */

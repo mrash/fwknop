@@ -37,27 +37,31 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define RC_PARAM_TEMPLATE           "%-24s    %s\n"             /*!< Template to define param = val in a rc file */
-#define RC_SECTION_DEFAULT          "default"                   /*!< Name of the default section in fwknoprc */
-#define RC_SECTION_TEMPLATE         "[%s]\n"                    /*!< Template to define a section in a rc file */
-#define FWKNOP_CLI_ARG_BM(x)        ((uint32_t)(1 << (x)))      /*!< Bitmask command line arg */
-#define FWKNOPRC_OFLAGS             (O_WRONLY|O_CREAT|O_EXCL)   /*!< O_flags used to create an fwknoprc file with the open function */
-#define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)           /*!< mode used to create an fwknoprc file with the open function */
-#define PARAM_YES_VALUE             "Y"                         /*!< String which represents a YES value for a parameter in fwknoprc */
-#define PARAM_NO_VALUE              "N"                         /*!< String which represents a NO value for a parameter in fwknoprc */
-
-/* Marco to define which conf. variables are critical and should not be
- * overwritten when a stanza is updated using the --save-rc-stanza arg
- * without the user validation */
-#define FWKNOP_CRITICAL_VARS_BM     (     FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL)        \
-                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64) \
-                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC)            \
-                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64)     \
-                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_RECIPIENT)       \
-                                        | FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_SIGNER) )
+#define RC_PARAM_TEMPLATE           "%-24s    %s\n"                     /*!< Template to define param = val in a rc file */
+#define RC_SECTION_DEFAULT          "default"                           /*!< Name of the default section in fwknoprc */
+#define RC_SECTION_TEMPLATE         "[%s]\n"                            /*!< Template to define a section in a rc file */
+#define FWKNOPRC_OFLAGS             (O_WRONLY|O_CREAT|O_EXCL)           /*!< O_flags used to create an fwknoprc file with the open function */
+#define FWKNOPRC_MODE               (S_IRUSR|S_IWUSR)                   /*!< mode used to create an fwknoprc file with the open function */
+#define PARAM_YES_VALUE             "Y"                                 /*!< String which represents a YES value for a parameter in fwknoprc */
+#define PARAM_NO_VALUE              "N"                                 /*!< String which represents a NO value for a parameter in fwknoprc */
+#define POSITION_TO_BITMASK(x)      ((uint32_t)(1) << ((x) % 32))       /*!< Macro do get a bitmask from a position */
+#define BITMASK_ARRAY_SIZE          2                                   /*!< Number of 32bits integer used to handle bitmask in the fko_var_bitmask_t structure */
+#define LF_CHAR                     0x0A                                /*!< Hexadecimal value associated to the LF char */
 
 /**
- * Structure to handle a variable in an rcfile
+ * Structure to handle long bitmask.
+ *
+ * The structure is built as an array of unsigned 32 bits integer to be able to
+ * easily increase the size of the bitmask.
+ * This bitmask can contains at most (BITMASK_ARRAY_SIZE * 32) values.
+ */
+typedef struct fko_var_bitmask
+{
+    uint32_t dw[BITMASK_ARRAY_SIZE];        /*!< Array of bitmasks */
+} fko_var_bitmask_t;
+
+/**
+ * Structure to handle a variable in an rcfile (name and value)
  */
 typedef struct rc_file_param
 {
@@ -65,8 +69,18 @@ typedef struct rc_file_param
     char val[MAX_LINE_LEN];     /*!< Variable value */
 } rc_file_param_t;
 
+/**
+ * Structure to identify a configuration variable (name and position)
+ */
+typedef struct fko_var
+{
+    const char      name[32];   /*!< Variable name in fwknoprc */
+    unsigned int    pos;        /*!< Variable position from the fwknop_cli_arg_t enumeration */
+} fko_var_t;
+
 enum
 {
+    FWKNOP_CLI_FIRST_ARG = 0,
     FWKNOP_CLI_ARG_DIGEST_TYPE = 0,
     FWKNOP_CLI_ARG_SPA_SERVER_PROTO,
     FWKNOP_CLI_ARG_SPA_SERVER_PORT,
@@ -99,126 +113,307 @@ enum
     FWKNOP_CLI_ARG_NAT_LOCAL,
     FWKNOP_CLI_ARG_NAT_RAND_PORT,
     FWKNOP_CLI_ARG_NAT_PORT,
-    FWKNOP_CLI_ARG_NB
+    FWKNOP_CLI_ARG_VERBOSE,
+    FWKNOP_CLI_ARG_RESOLVE_IP_HTTP,
+    FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
-const char* fwknop_cli_key_tab[FWKNOP_CLI_ARG_NB] =
+static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
 {
-    "DIGEST_TYPE",
-    "SPA_SERVER_PROTO",
-    "SPA_SERVER_PORT",
-    "SPA_SOURCE_PORT",
-    "FW_TIMEOUT",
-    "ALLOW_IP",
-    "TIME_OFFSET",
-    "ENCRYPTION_MODE",
-    "USE_GPG",
-    "USE_GPG_AGENT",
-    "GPG_RECIPIENT",
-    "GPG_SIGNER",
-    "GPG_HOMEDIR",
-    "SPOOF_USER",
-    "SPOOF_SOURCE_IP",
-    "ACCESS",
-    "SPA_SERVER",
-    "RAND_PORT",
-    "KEY",
-    "KEY_BASE64",
-    "HMAC_DIGEST_TYPE",
-    "HMAC_KEY_BASE64",
-    "HMAC_KEY",
-    "USE_HMAC",
-    "KEY_FILE",
-    "HMAC_KEY_FILE",
-    "NAT_ACCESS",
-    "HTTP_USER_AGENT",
-    "RESOLVE_URL",
-    "NAT_LOCAL",
-    "NAT_RAND_PORT",
-    "NAT_PORT"
+    { "DIGEST_TYPE",        FWKNOP_CLI_ARG_DIGEST_TYPE          },
+    { "SPA_SERVER_PROTO",   FWKNOP_CLI_ARG_SPA_SERVER_PROTO     },
+    { "SPA_SERVER_PORT",    FWKNOP_CLI_ARG_SPA_SERVER_PORT      },
+    { "SPA_SOURCE_PORT",    FWKNOP_CLI_ARG_SPA_SOURCE_PORT      },
+    { "FW_TIMEOUT",         FWKNOP_CLI_ARG_FW_TIMEOUT           },
+    { "ALLOW_IP",           FWKNOP_CLI_ARG_ALLOW_IP             },
+    { "TIME_OFFSET",        FWKNOP_CLI_ARG_TIME_OFFSET          },
+    { "ENCRYPTION_MODE",    FWKNOP_CLI_ARG_ENCRYPTION_MODE      },
+    { "USE_GPG",            FWKNOP_CLI_ARG_USE_GPG              },
+    { "USE_GPG_AGENT",      FWKNOP_CLI_ARG_USE_GPG_AGENT        },
+    { "GPG_RECIPIENT",      FWKNOP_CLI_ARG_GPG_RECIPIENT        },
+    { "GPG_SIGNER",         FWKNOP_CLI_ARG_GPG_SIGNER           },
+    { "GPG_HOMEDIR",        FWKNOP_CLI_ARG_GPG_HOMEDIR          },
+    { "SPOOF_USER",         FWKNOP_CLI_ARG_SPOOF_USER           },
+    { "SPOOF_SOURCE_IP",    FWKNOP_CLI_ARG_SPOOF_SOURCE_IP      },
+    { "ACCESS",             FWKNOP_CLI_ARG_ACCESS               },
+    { "SPA_SERVER",         FWKNOP_CLI_ARG_SPA_SERVER           },
+    { "RAND_PORT",          FWKNOP_CLI_ARG_RAND_PORT            },
+    { "KEY",                FWKNOP_CLI_ARG_KEY_RIJNDAEL         },
+    { "KEY_BASE64",         FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64  },
+    { "HMAC_DIGEST_TYPE",   FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE     },
+    { "HMAC_KEY_BASE64",    FWKNOP_CLI_ARG_KEY_HMAC_BASE64      },
+    { "HMAC_KEY",           FWKNOP_CLI_ARG_KEY_HMAC             },
+    { "USE_HMAC",           FWKNOP_CLI_ARG_USE_HMAC             },
+    { "KEY_FILE",           FWKNOP_CLI_ARG_KEY_FILE             },
+    { "HMAC_KEY_FILE",      FWKNOP_CLI_ARG_HMAC_KEY_FILE        },
+    { "NAT_ACCESS",         FWKNOP_CLI_ARG_NAT_ACCESS           },
+    { "HTTP_USER_AGENT",    FWKNOP_CLI_ARG_HTTP_USER_AGENT      },
+    { "RESOLVE_URL",        FWKNOP_CLI_ARG_RESOLVE_URL          },
+    { "NAT_LOCAL",          FWKNOP_CLI_ARG_NAT_LOCAL            },
+    { "NAT_RAND_PORT",      FWKNOP_CLI_ARG_NAT_RAND_PORT        },
+    { "NAT_PORT",           FWKNOP_CLI_ARG_NAT_PORT             },
+    { "VERBOSE",            FWKNOP_CLI_ARG_VERBOSE              },
+    { "RESOLVE_IP_HTTP",    FWKNOP_CLI_ARG_RESOLVE_IP_HTTP      }
+};
+
+/* Array to define which conf. variables are critical and should not be
+ * overwritten when a stanza is updated using the --save-rc-stanza arg
+ * without the user validation */
+static int critical_var_array[] =
+{
+    FWKNOP_CLI_ARG_KEY_RIJNDAEL,
+    FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64,
+    FWKNOP_CLI_ARG_KEY_HMAC,
+    FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
+    FWKNOP_CLI_ARG_GPG_RECIPIENT,
+    FWKNOP_CLI_ARG_GPG_SIGNER
 };
 
 /**
- * @brief Ask the user if a variable must be overwriyten or not for a specific stanza
+ * @brief Generate Rijndael + HMAC keys from /dev/random (base64 encoded) and exit.
  *
- * @param var Variable which should be overwritten
- * @param stanza Stanza where the variable should be overwritten
+ * @param options FKO command line option structure
+ */
+static void
+generate_keys(fko_cli_options_t *options)
+{
+    int res;
+
+    /* If asked, we have to generate the keys */
+    if(options->key_gen)
+    {
+        /* Zero out the key buffers */
+        memset(&(options->key_base64), 0x00, sizeof(options->key_base64));
+        memset(&(options->hmac_key_base64), 0x00, sizeof(options->hmac_key_base64));
+
+        /* Generate the key with through libfko */
+        res = fko_key_gen(options->key_base64, options->key_len,
+                options->hmac_key_base64, options->hmac_key_len,
+                options->hmac_type);
+
+        /* Exit upon key generation failure*/
+        if(res != FKO_SUCCESS)
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "%s: fko_key_gen: Error %i - %s",
+                MY_NAME, res, fko_errstr(res));
+            exit(EXIT_FAILURE);
+        }
+
+        /* Everything is ok - nothing to do */
+        else;
+    }
+
+    /* No key generation asked - nothing to do */
+    else;
+}
+
+/**
+ * @brief Check if a variable is a critical var.
+ *
+ * This function check the critical_var_array table to find if the variable
+ * position is available.
+ *
+ * @param var_pos   Fwknop configuration variable position
+ *
+ * @return 1 the variable is critical, 0 otherwise
+ */
+static int
+var_is_critical(short var_pos)
+{
+    int ndx;            /* Index on the critical_var_array array */
+    int var_found = 0;
+
+    /* Go through the array of critical vars */
+    for (ndx=0 ; ndx<ARRAY_SIZE(critical_var_array) ; ndx++)
+    {
+        /* and check if we find it */
+        if (var_pos == critical_var_array[ndx])
+        {
+            var_found = 1;
+            break;
+        }
+    }
+
+    return var_found;
+}
+
+/**
+ * @brief Add a variable to a bitmask
+ *
+ * This function adds the bitmask associated to a variable position, to a
+ * bitmask.
+ *
+ * @param var_pos   Fwknop configuration variable position
+ * @param bm        fko_var_bitmask_t variable to update
+ */
+static void
+add_var_to_bitmask(short var_pos, fko_var_bitmask_t *bm)
+{
+    unsigned int bitmask_ndx;
+
+    /* Look for the index on the uint32_t array we have to process */
+    bitmask_ndx = var_pos / 32;
+
+    /* Set the bitmask according to the index found */
+    if (bitmask_ndx < BITMASK_ARRAY_SIZE)
+        bm->dw[bitmask_ndx] |= POSITION_TO_BITMASK(var_pos);
+
+    /* The index on the uint32_t bitmask is invalid */
+    else
+        log_msg(LOG_VERBOSITY_WARNING, "add_var_to_bitmask() : Bad variable position %u", var_pos);
+}
+
+/**
+ * @brief Remove a variable from a bitmask
+ *
+ * This function removes the bitmask associated to the variable position from a
+ * bitmask.
+ *
+ * @param var_pos   Fwknop configuration variable position
+ * @param bm        fko_var_bitmask_t structure to update
+ */
+static void
+remove_var_from_bitmask(short var_pos, fko_var_bitmask_t *bm)
+{
+    unsigned int bitmask_ndx;
+
+    /* Look for the index on the uint32_t array we have to process */
+    bitmask_ndx = var_pos / 32;
+
+    /* Set the bitmask according to the index found */
+    if (bitmask_ndx < BITMASK_ARRAY_SIZE)
+        bm->dw[bitmask_ndx] &= ~POSITION_TO_BITMASK(var_pos);
+
+    /* The index on the uint32_t bitmask is invalid */
+    else
+        log_msg(LOG_VERBOSITY_WARNING, "remove_from_bitmask() : Bad variable position %u", var_pos);
+}
+
+/**
+ * @brief Return whether a variable is available in a bitmask
+ *
+ * The variable bitmask is looked for in the bitmask.
+ *
+ * @param var_pos   Fwknop configuration variable position
+ * @param bm        fko_var_bitmask_t structure to check
+ *
+ * @return 1 if the bitmsk contains the variable, 0 otherwise.
+ */
+static int
+bitmask_has_var(short var_pos, fko_var_bitmask_t *bm)
+{
+    unsigned int    bitmask_ndx;
+    int             var_found = 0;
+
+    /* Look for the index on the uint32_t array we have to process */
+    bitmask_ndx = var_pos / 32;
+
+    /* Check the bitmask according to the index found */
+    if (bitmask_ndx < BITMASK_ARRAY_SIZE)
+    {
+        if ( bm->dw[bitmask_ndx] & POSITION_TO_BITMASK(var_pos) )
+            var_found = 1;
+    }
+
+    /* The index on the uint32_t bitmask is invalid */
+    else
+        log_msg(LOG_VERBOSITY_WARNING, "bitmask_has_var_ndx() : Bad variable position %u", var_pos);
+
+    return var_found;
+}
+
+/**
+ * @brief Ask the user if a variable must be overwritten or not for a specific stanza
+ *
+ * If the user sets other chars than a 'y' char, we assume he does not want to
+ * overwrite the variable.
+ *
+ * @param var       Variable which should be overwritten
+ * @param stanza    Stanza where the variable should be overwritten
  *
  * @return 1 if the user wants to overwrite the variable, 0 otherwise
  */
 static int
 ask_overwrite_var(const char *var, const char *stanza)
 {
-    char    user_input;
+    char    user_input = 'N';
     int     overwrite = 0;
+    int     c;
+    int     first_char = 1;;
 
     log_msg(LOG_VERBOSITY_NORMAL,
             "Variable '%s' found in stanza '%s'. Overwrite [N/y] ? ",
             var, stanza);
 
-    if (scanf("%c", &user_input) != 1)
-        user_input = 'N';
+    while ((c=getchar()) != LF_CHAR)
+    {
+        if (first_char)
+            user_input = c;
+        first_char = 0;
+    }
 
-    if ( (user_input != 'N') && (user_input != 0x0A ) )
+    if (user_input == 'y')
         overwrite = 1;
 
     return overwrite;
 }
 
 /**
- * @brief Check if a string is an fwknop configuration variable and return its index
+ * @brief Lookup a variable in the variable array according to its name
  *
- * This function parses the fwknop_cli_key_tab array and try to find a match
+ * This function parses the fko_var_array table and try to find a match
  * for the user string, which indicates we have found a configuration variable.
  *
- * @param str String to compare against every fwknop conf variables
+ * @param str       String to compare against every fwknop conf variables
  *
- * @return the variable index in the fwknop_cli_key_tab array if found
- *         -1 otherwise
+ * @return A pointer on the variable structure, or NULL if not found
  */
-static short
-lookup_fwknop_conf_var_ndx(const char *str)
+static fko_var_t *
+lookup_var_by_name(const char *var_name)
 {
-    short ndx;      /* Index on the the fwknop_cli_key_tab array */
+    short       ndx;            /* Index on the the fko_var_array table */
+    fko_var_t  *var = NULL;
 
-    /* Check str against each variable available in fwknop_cli_key_tab */
-    for (ndx=0 ; ndx<ARRAY_SIZE(fwknop_cli_key_tab) ; ndx++)
+    /* Check str against each variable available in fko_var_array */
+    for (ndx=0 ; ndx<ARRAY_SIZE(fko_var_array) ; ndx++)
     {
-        if (CONF_VAR_IS(str, fwknop_cli_key_tab[ndx]))
+        if (CONF_VAR_IS(var_name, fko_var_array[ndx].name))
+        {
+            var = &(fko_var_array[ndx]);
             break;
+        }
     }
 
-    /* If str is not an fwknop configuration variable, set a wrong index  */
-    if (ndx >= ARRAY_SIZE(fwknop_cli_key_tab))
-        ndx = -1;
-
-    return ndx;
+    return var;
 }
 
 /**
- * @brief Return the configuration variable bitmask
+ * @brief Lookup a variable in the variable array according to its position
  *
- * @param str Configuration variable string
+ * This function parses the fko_var_array table and try to find a match
+ * for the position, which indicates we have found a configuration variable.
  *
- * @return the configuration variable bitmask if found
- *         0 otherwise
+ * @param var_pos   Position to compare against every fwknop conf variables
+ *
+ * @return A pointer on the variable structure, or NULL if not found
  */
-static uint32_t
-lookup_fwknop_conf_var_bm(const char *str)
+static fko_var_t *
+lookup_var_by_position(short var_pos)
 {
-    short       ndx;    /* Index on the the fwknop_cli_key_tab array */
-    uint32_t    bm = 0; /* Bitmask associated to an fwknop conf variable */
+    short       ndx;            /* Index on the the fko_var_array table */
+    fko_var_t  *var = NULL;
 
-    /* Look for the index of the variable */
-    ndx = lookup_fwknop_conf_var_ndx(str);
+    /* Check str against each variable available in fko_var_array */
+    for (ndx=0 ; ndx<ARRAY_SIZE(fko_var_array) ; ndx++)
+    {
+        if (var_pos == fko_var_array[ndx].pos)
+        {
+            var = &(fko_var_array[ndx]);
+            break;
+        }
+    }
 
-    /* Get its bitmask */
-    if (ndx >= 0)
-        bm = FWKNOP_CLI_ARG_BM(ndx);
-
-    else;
-
-    return bm;
+    return var;
 }
 
 /**
@@ -575,18 +770,23 @@ create_fwknoprc(const char *rcfile)
 }
 
 static int
-parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
+parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
 {
-    int tmpint, is_err;
-    int conf_key_ndx;       /* Index on the fwknop conf variable in the fwknop_cli_key_tab array */
-    int parse_error = 0;    /* 0 if the variable has been successfully processed, < 0 otherwise */
+    int         tmpint, is_err;
+    int         parse_error = 0;    /* 0 if the variable has been successfully processed, < 0 otherwise */
+    fko_var_t  *var;                /* Pointer on an fwknop variable structure */
 
-    log_msg(LOG_VERBOSITY_DEBUG, "parse_rc_param() : Parsing variable %s...", var);
+    log_msg(LOG_VERBOSITY_DEBUG, "parse_rc_param() : Parsing variable %s...", var_name);
 
-    conf_key_ndx = lookup_fwknop_conf_var_ndx(var);
+    /* Lookup the variable according to its name. */
+    var = lookup_var_by_name(var_name);
+
+    /* The variable is not handled if its pointer is NULL */
+    if (var == NULL)
+        parse_error = -1;
 
     /* Digest Type */
-    if (conf_key_ndx == FWKNOP_CLI_ARG_DIGEST_TYPE)
+    else if (var->pos == FWKNOP_CLI_ARG_DIGEST_TYPE)
     {
         tmpint = digest_strtoint(val);
         if(tmpint < 0)
@@ -595,7 +795,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             options->digest_type = tmpint;
     }
     /* Server protocol */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SERVER_PROTO)
+    else if (var->pos == FWKNOP_CLI_ARG_SPA_SERVER_PROTO)
     {
         tmpint = proto_strtoint(val);
         if(tmpint < 0)
@@ -604,7 +804,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             options->spa_proto = tmpint;
     }
     /* Server port */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SERVER_PORT)
+    else if (var->pos == FWKNOP_CLI_ARG_SPA_SERVER_PORT)
     {
         tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
@@ -613,7 +813,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             parse_error = -1;
     }
     /* Source port */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SOURCE_PORT)
+    else if (var->pos == FWKNOP_CLI_ARG_SPA_SOURCE_PORT)
     {
         tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
@@ -622,7 +822,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             parse_error = -1;
     }
     /* Firewall rule timeout */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_FW_TIMEOUT)
+    else if (var->pos == FWKNOP_CLI_ARG_FW_TIMEOUT)
     {
         tmpint = strtol_wrapper(val, 0, (2 << 15), NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
@@ -631,7 +831,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             parse_error = -1;
     }
     /* Allow IP */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_ALLOW_IP)
+    else if (var->pos == FWKNOP_CLI_ARG_ALLOW_IP)
     {
         /* In case this was set previously
         */
@@ -647,7 +847,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             strlcpy(options->allow_ip_str, val, sizeof(options->allow_ip_str));
     }
     /* Time Offset */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_TIME_OFFSET)
+    else if (var->pos == FWKNOP_CLI_ARG_TIME_OFFSET)
     {
         if(val[0] == '-')
         {
@@ -658,7 +858,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             options->time_offset_plus = parse_time_offset(val);
     }
     /* symmetric encryption mode */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_ENCRYPTION_MODE)
+    else if (var->pos == FWKNOP_CLI_ARG_ENCRYPTION_MODE)
     {
         tmpint = enc_mode_strtoint(val);
         if(tmpint < 0)
@@ -667,69 +867,69 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
             options->encryption_mode = tmpint;
     }
     /* Use GPG ? */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_USE_GPG)
+    else if (var->pos == FWKNOP_CLI_ARG_USE_GPG)
     {
         if (is_yes_str(val))
             options->use_gpg = 1;
         else;
     }
     /* Use GPG Agent ? */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_USE_GPG_AGENT)
+    else if (var->pos == FWKNOP_CLI_ARG_USE_GPG_AGENT)
     {
         if (is_yes_str(val))
             options->use_gpg_agent = 1;
         else;
     }
     /* GPG Recipient */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_GPG_RECIPIENT)
+    else if (var->pos == FWKNOP_CLI_ARG_GPG_RECIPIENT)
     {
         strlcpy(options->gpg_recipient_key, val, sizeof(options->gpg_recipient_key));
     }
     /* GPG Signer */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_GPG_SIGNER)
+    else if (var->pos == FWKNOP_CLI_ARG_GPG_SIGNER)
     {
         strlcpy(options->gpg_signer_key, val, sizeof(options->gpg_signer_key));
     }
     /* GPG Homedir */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_GPG_HOMEDIR)
+    else if (var->pos == FWKNOP_CLI_ARG_GPG_HOMEDIR)
     {
         strlcpy(options->gpg_home_dir, val, sizeof(options->gpg_home_dir));
     }
     /* Spoof User */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPOOF_USER)
+    else if (var->pos == FWKNOP_CLI_ARG_SPOOF_USER)
     {
         strlcpy(options->spoof_user, val, sizeof(options->spoof_user));
     }
     /* Spoof Source IP */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPOOF_SOURCE_IP)
+    else if (var->pos == FWKNOP_CLI_ARG_SPOOF_SOURCE_IP)
     {
         strlcpy(options->spoof_ip_src_str, val, sizeof(options->spoof_ip_src_str));
     }
     /* ACCESS request */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_ACCESS)
+    else if (var->pos == FWKNOP_CLI_ARG_ACCESS)
     {
         strlcpy(options->access_str, val, sizeof(options->access_str));
     }
     /* SPA Server (destination) */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_SPA_SERVER)
+    else if (var->pos == FWKNOP_CLI_ARG_SPA_SERVER)
     {
         strlcpy(options->spa_server_str, val, sizeof(options->spa_server_str));
     }
     /* Rand port ? */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_RAND_PORT)
+    else if (var->pos == FWKNOP_CLI_ARG_RAND_PORT)
     {
         if (is_yes_str(val))
             options->rand_port = 1;
         else;
     }
     /* Rijndael key */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_RIJNDAEL)
+    else if (var->pos == FWKNOP_CLI_ARG_KEY_RIJNDAEL)
     {
         strlcpy(options->key, val, sizeof(options->key));
         options->have_key = 1;
     }
     /* Rijndael key (base-64 encoded) */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64)
+    else if (var->pos == FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64)
     {
         if (! is_base64((unsigned char *) val, strlen(val)))
         {
@@ -742,7 +942,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         options->have_base64_key = 1;
     }
     /* HMAC digest type */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE)
+    else if (var->pos == FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE)
     {
         tmpint = hmac_digest_strtoint(val);
         if(tmpint < 0)
@@ -758,7 +958,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         }
     }
     /* HMAC key (base64 encoded) */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_HMAC_BASE64)
+    else if (var->pos == FWKNOP_CLI_ARG_KEY_HMAC_BASE64)
     {
         if (! is_base64((unsigned char *) val, strlen(val)))
         {
@@ -773,7 +973,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     }
 
     /* HMAC key */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_HMAC)
+    else if (var->pos == FWKNOP_CLI_ARG_KEY_HMAC)
     {
         strlcpy(options->hmac_key, val, sizeof(options->hmac_key));
         options->have_hmac_key = 1;
@@ -781,34 +981,34 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
     }
 
     /* --use-hmac */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_USE_HMAC)
+    else if (var->pos == FWKNOP_CLI_ARG_USE_HMAC)
     {
         if (is_yes_str(val))
             options->use_hmac = 1;
     }
     /* Key file */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_KEY_FILE)
+    else if (var->pos == FWKNOP_CLI_ARG_KEY_FILE)
     {
         strlcpy(options->get_key_file, val, sizeof(options->get_key_file));
     }
     /* HMAC key file */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_HMAC_KEY_FILE)
+    else if (var->pos == FWKNOP_CLI_ARG_HMAC_KEY_FILE)
     {
         strlcpy(options->get_key_file, val,
             sizeof(options->get_hmac_key_file));
     }
     /* NAT Access Request */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_ACCESS)
+    else if (var->pos == FWKNOP_CLI_ARG_NAT_ACCESS)
     {
         strlcpy(options->nat_access_str, val, sizeof(options->nat_access_str));
     }
     /* HTTP User Agent */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_HTTP_USER_AGENT)
+    else if (var->pos == FWKNOP_CLI_ARG_HTTP_USER_AGENT)
     {
         strlcpy(options->http_user_agent, val, sizeof(options->http_user_agent));
     }
     /* Resolve URL */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_RESOLVE_URL)
+    else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_URL)
     {
         if(options->resolve_url != NULL)
             free(options->resolve_url);
@@ -822,27 +1022,43 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
         strlcpy(options->resolve_url, val, tmpint);
     }
     /* NAT Local ? */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_LOCAL)
+    else if (var->pos == FWKNOP_CLI_ARG_NAT_LOCAL)
     {
         if (is_yes_str(val))
             options->nat_local = 1;
         else;
     }
     /* NAT rand port ? */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_RAND_PORT)
+    else if (var->pos == FWKNOP_CLI_ARG_NAT_RAND_PORT)
     {
         if (is_yes_str(val))
             options->nat_rand_port = 1;
         else;
     }
     /* NAT port */
-    else if (conf_key_ndx == FWKNOP_CLI_ARG_NAT_PORT)
+    else if (var->pos == FWKNOP_CLI_ARG_NAT_PORT)
     {
         tmpint = strtol_wrapper(val, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
         if(is_err == FKO_SUCCESS)
             options->nat_port = tmpint;
         else
             parse_error = -1;
+    }
+    /* VERBOSE level */
+    else if (var->pos == FWKNOP_CLI_ARG_VERBOSE)
+    {
+        tmpint = strtol_wrapper(val, 0, LOG_LAST_VERBOSITY - 1, NO_EXIT_UPON_ERR, &is_err);
+        if(is_err == FKO_SUCCESS)
+            options->verbose = tmpint;
+        else
+            parse_error = -1;
+    }
+    /* RESOLVE_IP_HTTP ? */
+    else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTP)
+    {
+        if (is_yes_str(val))
+            options->resolve_ip_http = 1;
+        else;
     }
     /* The variable is not a configuration variable */
     else
@@ -854,27 +1070,30 @@ parse_rc_param(fko_cli_options_t *options, const char *var, char * val)
 }
 
 /**
- * \brief Write a cli parameter to a file handle
+ * @brief Write a cli parameter to a file handle
  *
  * This function writes into a file handle a command line parameter
  *
- * \param fhandle File handle to write the new parameter to
- * \param arg_ndx Argument index
- * \param options FKO command line option structure
+ * @param fhandle File handle to write the new parameter to
+ * @param var_pos Variable position
+ * @param options FKO command line option structure
  */
 static void
-add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options)
+add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
 {
-    char    val[MAX_LINE_LEN] = {0};
+    char        val[MAX_LINE_LEN] = {0};
+    fko_var_t  *var;
 
-    if (arg_ndx >= FWKNOP_CLI_ARG_NB)
+    var = lookup_var_by_position(var_pos);
+
+    if (var == NULL)
         return;
 
     if (fhandle == NULL)
         return;
 
     /* Select the argument to add and store its string value into val */
-    switch (arg_ndx)
+    switch (var->pos)
     {
         case FWKNOP_CLI_ARG_DIGEST_TYPE :
             digest_inttostr(options->digest_type, val, sizeof(val));
@@ -978,15 +1197,21 @@ add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options
         case FWKNOP_CLI_ARG_NAT_PORT :
             snprintf(val, sizeof(val)-1, "%d", options->nat_port);
             break;
+        case FWKNOP_CLI_ARG_VERBOSE:
+            snprintf(val, sizeof(val)-1, "%d", options->verbose);
+            break;
+        case FWKNOP_CLI_ARG_RESOLVE_IP_HTTP:
+            bool_to_yesno(options->resolve_ip_http, val, sizeof(val));
+            break;
         default:
-            log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad command line argument %u", arg_ndx);
+            log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
             return;
     }
 
     log_msg(LOG_VERBOSITY_DEBUG, "add_single_var_to_rc() : Updating param (%u) %s to %s",
-                arg_ndx, fwknop_cli_key_tab[arg_ndx], val);
+                var->pos, var->name, val);
 
-    fprintf(fhandle, RC_PARAM_TEMPLATE, fwknop_cli_key_tab[arg_ndx], val);
+    fprintf(fhandle, RC_PARAM_TEMPLATE, var->name, val);
 }
 
 /**
@@ -1000,14 +1225,16 @@ add_single_var_to_rc(FILE* fhandle, uint16_t arg_ndx, fko_cli_options_t *options
  * @param bitmask   Bitmask used to select the parameters to add
  */
 static void
-add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, uint32_t bitmask)
+add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
 {
-    short   var_ndx = 0;    /* Index of a configuration variable in fwknop_cli_key_tab array */
+    short ndx = 0;      /* Index of a configuration variable in fko_var_array table */
+    short position;     /* Position of the configuration variable */
 
-    for (var_ndx=0 ; var_ndx<ARRAY_SIZE(fwknop_cli_key_tab) ; var_ndx++)
+    for (ndx=0 ; ndx<ARRAY_SIZE(fko_var_array) ; ndx++)
     {
-        if (FWKNOP_CLI_ARG_BM(var_ndx) & bitmask)
-            add_single_var_to_rc(rc, var_ndx, options);
+        position = fko_var_array[ndx].pos;
+        if (bitmask_has_var(position, bitmask))
+            add_single_var_to_rc(rc, position, options);
     }
 }
 
@@ -1120,7 +1347,7 @@ process_rc_section(char *section_name, fko_cli_options_t *options)
  * @param args_bitmask command line argument bitmask
  */
 static void
-update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
+update_rc(fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
 {
     FILE           *rc;
     FILE           *rc_update;
@@ -1131,8 +1358,8 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
     char            rcfile[MAX_PATH_LEN] = {0};
     char            rcfile_update[MAX_PATH_LEN] = {0};
     char            curr_stanza[MAX_LINE_LEN]   = {0};
-    uint32_t        var_bm  = 0;                        /* Bitmask associated to a conf. variable */
     rc_file_param_t param;                              /* Structure to contain a conf. variable name with its value  */
+    fko_var_t      *var;
 
     set_rc_file(rcfile, options);
 
@@ -1183,7 +1410,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
             if (stanza_found)
             {
                 log_msg(LOG_VERBOSITY_DEBUG, "update_rc() : Updating %s stanza", options->use_rc_stanza);
-                add_multiple_vars_to_rc(rc_update, options, args_bitmask);
+                add_multiple_vars_to_rc(rc_update, options, bitmask);
                 fprintf(rc_update, "\n");
                 stanza_found   = 0;
                 stanza_updated = 1;
@@ -1207,23 +1434,17 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
             if (options->force_save_rc_stanza)
                 continue;
 
-            /* discard all lines since no critical vars have been set through
-             * the command line */
-            if (!(args_bitmask & FWKNOP_CRITICAL_VARS_BM))
-                continue;
-
             /* ask the user what to do with the critical var found in the
              * rcfile */
             else if (is_rc_param(line, &param))
             {
-                var_bm = lookup_fwknop_conf_var_bm(param.name);
-
-                if (var_bm & FWKNOP_CRITICAL_VARS_BM)
+                if (   ((var=lookup_var_by_name(param.name)) != NULL)
+                    && var_is_critical(var->pos) )
                 {
-                    if (ask_overwrite_var(param.name, curr_stanza))
+                    if (ask_overwrite_var(var->name, curr_stanza))
                         continue;
                     else
-                        args_bitmask &= ~var_bm;
+                        remove_var_from_bitmask(var->pos, bitmask);
                 }
                 else
                     continue;
@@ -1259,7 +1480,7 @@ update_rc(fko_cli_options_t *options, uint32_t args_bitmask)
             fprintf(rc_update, RC_SECTION_TEMPLATE, options->use_rc_stanza);
         }
 
-        add_multiple_vars_to_rc(rc_update, options, args_bitmask);
+        add_multiple_vars_to_rc(rc_update, options, bitmask);
     }
 
     /* otherwise we have already done everything. Nothing to do. */
@@ -1407,12 +1628,13 @@ set_defaults(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int         cmd_arg, index, is_err;
-    uint32_t    cli_arg_bitmask = 0;
+    int                 cmd_arg, index, is_err;
+    fko_var_bitmask_t   var_bitmask;
 
-    /* Zero out options and opts_track.
+    /* Zero out options, opts_track and bitmask.
     */
     memset(options, 0x00, sizeof(fko_cli_options_t));
+    memset(&var_bitmask, 0x00, sizeof(fko_var_bitmask_t));
 
     /* Make sure a few reasonable defaults are set
     */
@@ -1444,6 +1666,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'v':
                 options->verbose++;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_VERBOSE, &var_bitmask);
                 break;
         }
     }
@@ -1469,11 +1692,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         switch(cmd_arg) {
             case 'a':
                 strlcpy(options->allow_ip_str, optarg, sizeof(options->allow_ip_str));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ALLOW_IP);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_ALLOW_IP, &var_bitmask);
                 break;
             case 'A':
                 strlcpy(options->access_str, optarg, sizeof(options->access_str));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ACCESS);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_ACCESS, &var_bitmask);
                 break;
             case 'b':
                 options->save_packet_file_append = 1;
@@ -1486,7 +1709,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'D':
                 strlcpy(options->spa_server_str, optarg, sizeof(options->spa_server_str));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_SPA_SERVER, &var_bitmask);
                 break;
             case 'E':
                 strlcpy(options->args_save_file, optarg, sizeof(options->args_save_file));
@@ -1500,22 +1723,22 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                             0, (2 << 16));
                     exit(EXIT_FAILURE);
                 }
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_FW_TIMEOUT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_FW_TIMEOUT, &var_bitmask);
                 break;
             case 'g':
             case GPG_ENCRYPTION:
                 options->use_gpg = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
                 break;
             case 'G':
                 strlcpy(options->get_key_file, optarg, sizeof(options->get_key_file));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_FILE);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_FILE, &var_bitmask);
                 break;
             case GET_HMAC_KEY:
                 strlcpy(options->get_hmac_key_file, optarg,
                     sizeof(options->get_hmac_key_file));
                 options->use_hmac = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HMAC_KEY_FILE);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_HMAC_KEY_FILE, &var_bitmask);
                 break;
             case 'h':
                 usage();
@@ -1534,7 +1757,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case KEY_RIJNDAEL:
                 strlcpy(options->key, optarg, sizeof(options->key));
                 options->have_key = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
                 break;
             case KEY_RIJNDAEL_BASE64:
                 if (! is_base64((unsigned char *) optarg, strlen(optarg)))
@@ -1546,7 +1769,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 }
                 strlcpy(options->key_base64, optarg, sizeof(options->key_base64));
                 options->have_base64_key = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64, &var_bitmask);
                 break;
             case KEY_HMAC_BASE64:
                 if (! is_base64((unsigned char *) optarg, strlen(optarg)))
@@ -1559,15 +1782,15 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->hmac_key_base64, optarg, sizeof(options->hmac_key_base64));
                 options->have_hmac_base64_key = 1;
                 options->use_hmac = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC_BASE64);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_HMAC_BASE64, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 break;
             case KEY_HMAC:
                 strlcpy(options->hmac_key, optarg, sizeof(options->hmac_key));
                 options->have_hmac_key = 1;
                 options->use_hmac = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_KEY_HMAC);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_HMAC, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 break;
             case KEY_LEN:
                 options->key_len = strtol_wrapper(optarg, 1,
@@ -1588,8 +1811,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                         optarg);
                     exit(EXIT_FAILURE);
                 }
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 options->use_hmac = 1;
                 break;
             case HMAC_KEY_LEN:
@@ -1602,7 +1825,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                             optarg, 1, MAX_KEY_LEN);
                     exit(EXIT_FAILURE);
                 }
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 options->use_hmac = 1;
                 break;
             case SPA_ICMP_TYPE:
@@ -1639,7 +1862,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     optarg);
                     exit(EXIT_FAILURE);
                 }
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_DIGEST_TYPE);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_DIGEST_TYPE, &var_bitmask);
                 break;
             case 'M':
             case ENCRYPTION_MODE:
@@ -1650,7 +1873,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     optarg);
                     exit(EXIT_FAILURE);
                 }
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_ENCRYPTION_MODE);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_ENCRYPTION_MODE, &var_bitmask);
                 break;
             case NO_SAVE_ARGS:
                 options->no_save_args = 1;
@@ -1661,12 +1884,12 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'N':
                 strlcpy(options->nat_access_str, optarg, sizeof(options->nat_access_str));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_ACCESS);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_NAT_ACCESS, &var_bitmask);
                 break;
             case 'p':
                 options->spa_dst_port = strtol_wrapper(optarg, 0,
                         MAX_PORT, EXIT_UPON_ERR, &is_err);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER_PORT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_SPA_SERVER_PORT, &var_bitmask);
                 break;
             case 'P':
                 if((options->spa_proto = proto_strtoint(optarg)) < 0)
@@ -1674,21 +1897,22 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     log_msg(LOG_VERBOSITY_ERROR, "Unrecognized protocol: %s", optarg);
                     exit(EXIT_FAILURE);
                 }
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SERVER_PROTO);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_SPA_SERVER_PROTO, &var_bitmask);
                 break;
             case 'Q':
                 strlcpy(options->spoof_ip_src_str, optarg, sizeof(options->spoof_ip_src_str));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPOOF_SOURCE_IP);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_SPOOF_SOURCE_IP, &var_bitmask);
                 break;
             case RC_FILE_PATH:
                 strlcpy(options->rc_file, optarg, sizeof(options->rc_file));
                 break;
             case 'r':
                 options->rand_port = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_RAND_PORT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RAND_PORT, &var_bitmask);
                 break;
             case 'R':
                 options->resolve_ip_http = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTP, &var_bitmask);
                 break;
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
@@ -1700,8 +1924,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
                 strlcpy(options->resolve_url, optarg, strlen(optarg)+1);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_RESOLVE_URL);
-                options->resolve_ip_http = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_URL, &var_bitmask);
                 break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;
@@ -1712,7 +1935,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'S':
                 options->spa_src_port = strtol_wrapper(optarg, 0,
                         MAX_PORT, EXIT_UPON_ERR, &is_err);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPA_SOURCE_PORT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_SPA_SOURCE_PORT, &var_bitmask);
                 break;
             case SAVE_RC_STANZA:
                 /* We already handled this earlier, so we do nothing here
@@ -1723,11 +1946,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'u':
                 strlcpy(options->http_user_agent, optarg, sizeof(options->http_user_agent));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_HTTP_USER_AGENT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_HTTP_USER_AGENT, &var_bitmask);
                 break;
             case 'U':
                 strlcpy(options->spoof_user, optarg, sizeof(options->spoof_user));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_SPOOF_USER);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_SPOOF_USER, &var_bitmask);
                 break;
             case 'v':
                 /* Handled earlier.
@@ -1739,50 +1962,50 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case GPG_RECIP_KEY:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_recipient_key, optarg, sizeof(options->gpg_recipient_key));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_RECIPIENT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_RECIPIENT, &var_bitmask);
                 break;
             case GPG_SIGNER_KEY:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_signer_key, optarg, sizeof(options->gpg_signer_key));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_SIGNER);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_SIGNER, &var_bitmask);
                 break;
             case GPG_HOME_DIR:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_home_dir, optarg, sizeof(options->gpg_home_dir));
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_GPG_HOMEDIR);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_HOMEDIR, &var_bitmask);
                 break;
             case GPG_AGENT:
                 options->use_gpg = 1;
                 options->use_gpg_agent = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_GPG_AGENT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG_AGENT, &var_bitmask);
                 break;
             case NAT_LOCAL:
                 options->nat_local = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_LOCAL);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_NAT_LOCAL, &var_bitmask);
                 break;
             case NAT_RAND_PORT:
                 options->nat_rand_port = 1;
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_RAND_PORT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_NAT_RAND_PORT, &var_bitmask);
                 break;
             case NAT_PORT:
                 options->nat_port = strtol_wrapper(optarg, 0,
                         MAX_PORT, EXIT_UPON_ERR, &is_err);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_NAT_PORT);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_NAT_PORT, &var_bitmask);
                 break;
             case TIME_OFFSET_PLUS:
                 options->time_offset_plus = parse_time_offset(optarg);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_TIME_OFFSET);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_TIME_OFFSET, &var_bitmask);
                 break;
             case TIME_OFFSET_MINUS:
                 options->time_offset_minus = parse_time_offset(optarg);
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_TIME_OFFSET);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_TIME_OFFSET, &var_bitmask);
                 break;
             case USE_HMAC:
-                cli_arg_bitmask |= FWKNOP_CLI_ARG_BM(FWKNOP_CLI_ARG_USE_HMAC);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 options->use_hmac = 1;
                 break;
             case FORCE_SAVE_RC_STANZA:
@@ -1797,10 +2020,25 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     /* Now that we have all of our options set, we can validate them */
     validate_options(options);
 
+    /* Do some processings */
+    generate_keys(options);
+
     /* We can upgrade our settings with the parameters set on the command
      * line by the user */
     if (options->save_rc_stanza == 1)
-        update_rc(options, cli_arg_bitmask);
+    {
+        /* If we are asked to generate keys, we add them to the bitmask so
+         * that they can be added to the stanza when updated */
+        if (options->key_gen)
+        {
+            add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64, &var_bitmask);
+            add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_HMAC_BASE64, &var_bitmask);
+        }
+        else;
+
+        update_rc(options, &var_bitmask);
+    }
+    else;
 
     return;
 }
