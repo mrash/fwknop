@@ -114,6 +114,7 @@ enum
     FWKNOP_CLI_ARG_NAT_RAND_PORT,
     FWKNOP_CLI_ARG_NAT_PORT,
     FWKNOP_CLI_ARG_VERBOSE,
+    FWKNOP_CLI_ARG_RESOLVE_IP_HTTP,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
@@ -151,7 +152,8 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "NAT_LOCAL",          FWKNOP_CLI_ARG_NAT_LOCAL            },
     { "NAT_RAND_PORT",      FWKNOP_CLI_ARG_NAT_RAND_PORT        },
     { "NAT_PORT",           FWKNOP_CLI_ARG_NAT_PORT             },
-    { "VERBOSE",            FWKNOP_CLI_ARG_VERBOSE              }
+    { "VERBOSE",            FWKNOP_CLI_ARG_VERBOSE              },
+    { "RESOLVE_IP_HTTP",    FWKNOP_CLI_ARG_RESOLVE_IP_HTTP      }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -1051,6 +1053,13 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         else
             parse_error = -1;
     }
+    /* RESOLVE_IP_HTTP ? */
+    else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTP)
+    {
+        if (is_yes_str(val))
+            options->resolve_ip_http = 1;
+        else;
+    }
     /* The variable is not a configuration variable */
     else
     {
@@ -1190,6 +1199,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             break;
         case FWKNOP_CLI_ARG_VERBOSE:
             snprintf(val, sizeof(val)-1, "%d", options->verbose);
+            break;
+        case FWKNOP_CLI_ARG_RESOLVE_IP_HTTP:
+            bool_to_yesno(options->resolve_ip_http, val, sizeof(val));
             break;
         default:
             log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
@@ -1900,6 +1912,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case 'R':
                 options->resolve_ip_http = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTP, &var_bitmask);
                 break;
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
