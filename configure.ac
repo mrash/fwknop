@@ -306,7 +306,7 @@ dnl
 want_file_cache=yes
 AC_ARG_ENABLE([file-cache],
   [AS_HELP_STRING([--disable-file-cache],
-    [Replace file cache with gdbm/ndbm @<:@default on@:>@])],
+    [Replace file cache with gdbm/ndbm @<:@default=no@:>@])],
   [want_file_cache=$enableval],
   [])
 AS_IF([test "$want_file_cache" = yes], [
