@@ -609,6 +609,52 @@ set_rc_file(char *rcfile, fko_cli_options_t *options)
     return;
 }
 
+static void
+keys_status(fko_cli_options_t *options)
+{
+    FILE  *key_gen_file_ptr = NULL;
+    char   rcfile[MAX_PATH_LEN] = {0};
+
+    if(options->key_gen == 1)
+    {
+        if(options->key_gen_file[0] != '\0')
+        {
+            if ((key_gen_file_ptr = fopen(options->key_gen_file, "w")) == NULL)
+            {
+                log_msg(LOG_VERBOSITY_ERROR, "Unable to create key gen file: %s: %s",
+                    options->key_gen_file, strerror(errno));
+                exit(EXIT_FAILURE);
+            }
+            fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
+                options->key_base64, options->hmac_key_base64);
+            fclose(key_gen_file_ptr);
+            log_msg(LOG_VERBOSITY_NORMAL,
+                    "[+] Wrote Rijndael and HMAC keys to: %s",
+                options->key_gen_file);
+        }
+        else
+        {
+            if(options->save_rc_stanza == 1)
+            {
+                set_rc_file(rcfile, options);
+                log_msg(LOG_VERBOSITY_NORMAL,
+                    "[+] Wrote Rijndael and HMAC keys to rc file: %s",
+                    options->rc_file);
+            }
+            else
+                log_msg(LOG_VERBOSITY_NORMAL,
+                        "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s",
+                        options->key_base64, options->hmac_key_base64);
+        }
+
+        /* Always exit out in --key-gen mode since the fwknopd server
+         * has no way to know what the new keys are
+        */
+        exit(EXIT_SUCCESS);
+    }
+}
+
+
 /* Parse any time offset from the command line
 */
 static int
@@ -2020,7 +2066,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     /* Now that we have all of our options set, we can validate them */
     validate_options(options);
 
-    /* Do some processings */
+    /* Generate Rijndael + HMAC keys from /dev/random and base64 encode
+    */
     generate_keys(options);
 
     /* We can upgrade our settings with the parameters set on the command
@@ -2029,7 +2076,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     {
         /* If we are asked to generate keys, we add them to the bitmask so
          * that they can be added to the stanza when updated */
-        if (options->key_gen)
+        if (options->key_gen == 1)
         {
             add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64, &var_bitmask);
             add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_HMAC_BASE64, &var_bitmask);
@@ -2039,6 +2086,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         update_rc(options, &var_bitmask);
     }
     else;
+
+    keys_status(options);
 
     return;
 }

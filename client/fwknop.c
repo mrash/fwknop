@@ -172,7 +172,7 @@ is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsi
 int
 main(int argc, char **argv)
 {
-    fko_ctx_t           ctx = NULL;
+    fko_ctx_t           ctx  = NULL;
     fko_ctx_t           ctx2 = NULL;
     int                 res;
     char               *spa_data=NULL, *version=NULL;
@@ -180,7 +180,6 @@ main(int argc, char **argv)
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
     int                 key_len = 0, hmac_key_len = 0, enc_mode;
-    FILE               *key_gen_file_ptr = NULL;
 
     fko_cli_options_t   options;
 
@@ -194,35 +193,6 @@ main(int argc, char **argv)
     /* Handle previous execution arguments if required
     */
     prev_exec(&options, argc, argv);
-
-    /* Generate Rijndael + HMAC keys from /dev/random (base64
-     * encoded) and exit.
-    */
-    if(options.key_gen)
-    {
-        if(options.key_gen_file[0] != '\0')
-        {
-            if ((key_gen_file_ptr = fopen(options.key_gen_file, "w")) == NULL)
-            {
-                log_msg(LOG_VERBOSITY_ERROR, "Unable to create key gen file: %s: %s",
-                    options.key_gen_file, strerror(errno));
-                return(EXIT_FAILURE);
-            }
-            fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
-                options.key_base64, options.hmac_key_base64);
-            fclose(key_gen_file_ptr);
-            log_msg(LOG_VERBOSITY_NORMAL,
-                    "[+] Wrote Rijndael and HMAC keys to: %s",
-                options.key_gen_file);
-        }
-        else
-        {
-            log_msg(LOG_VERBOSITY_NORMAL,
-                    "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s",
-                    options.key_base64, options.hmac_key_base64);
-        }
-        return(EXIT_SUCCESS);
-    }
 
     /* Intialize the context
     */
