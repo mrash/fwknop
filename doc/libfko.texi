@@ -135,16 +135,21 @@ abstract the details of encoding, encryption, decoding, parsing, and verifying
 @acronym{SPA} messages such as those used by Michael Rash's @dfn{Firewall
 Knock Operator} (fwknop).
 
-@dfn{fwknop} implements @acronym{SPA}; an authorization scheme that requires
-only a single encrypted packet to communicate various pieces of information
-including desired access through an iptables policy and/or specific commands
-to execute on the target system.  The main application for a program of this
-type is to protect services such as SSH with an additional layer of security
-in order to make the exploitation of vulnerabilities much more difficult.
+@dfn{fwknop} implements an authorization scheme known as Single Packet
+Authorization (@acronym{SPA}) for strong service protection.  SPA requires only a single
+packet which is encrypted, non-replayable, and authenticated via an HMAC in order
+to communicate desired access to a service that is hidden behind a firewall in a
+default-drop filtering stance.  The main application of SPA is to use a
+firewall to drop all attempts to connect to services such as 'SSH' in order
+to make the exploitation of vulnerabilities (both 0-day and unpatched code)
+more difficult.  Any service that is protected by SPA naturally cannot be
+scanned for with 'Nmap'.  The fwknop project supports three different
+firewalls: 'iptables' on Linux systems, 'pf' on OpenBSD, and 'ipfw' on FreeBSD
+and Mac OS X.
 
 libfko is not an implementation of an fwknop client or server.  It simply
 provides the functions for managing the @acronym{SPA} data used by those
-programs. 
+programs.
 
 @sp 1
 @noindent
@@ -174,8 +179,8 @@ interface of the library.
 @section Features
 
 The primary advantage of using libfko is it provides a single API for either
-creating, or parsing of existing @acronym{SPA} data that is fully compatible
-with the existing Perl-based fwknop implemetation.  Other advantages include:
+creating, or parsing of existing @acronym{SPA} data.  Additional advantages
+include:
 
 @table @asis
 @item It's free software
