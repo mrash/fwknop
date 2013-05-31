@@ -5538,12 +5538,8 @@ sub parse_valgrind_flagged_functions() {
             close F;
             $rv = 0;
         } else {
-            if (defined $prev_valgrind_file_titles{$type}
+            unless (defined $prev_valgrind_file_titles{$type}
                     and $prev_valgrind_file_titles{$type}{$test_title}) {
-                open F, ">> $curr_test_file" or die $!;
-                print F "[+] $filename ($test_title) No new or greater number of valgrind flagged function calls\n";
-                close F;
-            } else {
                 open F, ">> $curr_test_file" or die $!;
                 print F "[.] Skipping $filename ($test_title), no matching previous valgrind output.\n";
                 close F;
