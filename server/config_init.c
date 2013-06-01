@@ -836,7 +836,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case PCAP_FILE:
                 set_config_entry(opts, CONF_PCAP_FILE, optarg);
                 break;
-            case PCAP_ANY_DIRECTION:
+            case ENABLE_PCAP_ANY_DIRECTION:
                 opts->pcap_any_direction = 1;
                 break;
             case ROTATE_DIGEST_CACHE:
