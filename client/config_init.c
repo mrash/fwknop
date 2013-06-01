@@ -1395,7 +1395,7 @@ set_defaults(fko_cli_options_t *options)
     options->spa_icmp_type = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
     options->spa_icmp_code = 0;               /* only used in '-P icmp' mode */
 
-    options->input_fd = NULL;
+    options->input_fd = -1;
     return;
 }
 
@@ -1786,10 +1786,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->force_save_rc_stanza = 1;
                 break;
             case FD_SET_STDIN:
-                options->input_fd = stdin;
+                options->input_fd = STDIN_FILENO;
                 break;
             case FD_SET:
-                options->input_fd = stdin;
+                options->input_fd = strtol_wrapper(optarg, 0,
+                        65535, EXIT_UPON_ERR, &is_err);;
                 break;                
             default:
                 usage();

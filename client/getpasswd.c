@@ -42,7 +42,6 @@
 
 #define PW_BUFSIZE              128                 /*!< Maximum number of chars an encryption key or a password can contain */
 
-/* TODO Wrong BS char 0x08 insteaf od 0x7F */
 #define PW_BREAK_CHAR           0x03                /*!< Ascii code for the Ctrl-C char */
 #define PW_BS_CHAR              0x08                /*!< Ascii code for the backspace char */
 #define PW_LF_CHAR              0x0A                /*!< Ascii code for the \n char */
@@ -53,26 +52,25 @@
 #define ARRAY_LAST_ELT_ADR(t)   &((t)[sizeof(t)-1]) /*!< Macro to get the last element of an array */
 
 /**
- * @brief Read a password from a file descriptor
+ * @brief Read a password from a stream object
  *
- * @param fd File descriptor to read the password from
+ * @param stream Pointer to a FILE object that identifies an input stream.
  *
  * @return The password buffer or NULL if not set
  */
 static char *
-read_passwd_from_fd(FILE *fd)
+read_passwd_from_stream(FILE *stream)
 {
     static char     password[PW_BUFSIZE] = {0};
     int             c;
     char           *ptr;
 
-    /* TODO check fd validity */
     ptr = ARRAY_FIRST_ELT_ADR(password);
 
 #ifdef WIN32
     while((c = _getch()) != PW_CR_CHAR)
 #else
-    while( ((c = getc(fd)) != EOF) && (c != PW_LF_CHAR) && (c != PW_BREAK_CHAR) )
+    while( ((c = getc(stream)) != EOF) && (c != PW_LF_CHAR) && (c != PW_BREAK_CHAR) )
 #endif
     {
         /* Handle a backspace without backing up too far. */
@@ -116,21 +114,36 @@ read_passwd_from_fd(FILE *fd)
  *
  * @param prompt String displayed on the terminal to prompt the user for a password
  *               or an encryption key
- * @param fp     File descriptor to use as terminal
+ * @param fd     File descriptor
  *
  * @return NULL if a problem occured or the user killed the terminal (Ctrl-C)\n
  *         otherwise the password - empty password is accepted.
  */
 char*
-getpasswd(const char *prompt, FILE *fp)
+getpasswd(const char *prompt, int fd)
 {
     char *ptr;
     
 #ifndef WIN32
     sigset_t        sig, old_sig;
     struct termios  ts, old_ts;
+    FILE           *fp;
+    int             use_ext_fd = 0;
 
-    if (fp == NULL)
+    if (fd >= 0)
+    {
+        fp = fdopen(fd, "r");
+        if (fp == NULL)
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "getpasswd() - "
+                "Unable to create a stream from file descriptor : %s",
+                strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        use_ext_fd = 1;
+    }
+
+    if (use_ext_fd == 0)
     {
         if((fp = fopen(ctermid(NULL), "r+")) == NULL)
             return(NULL);
@@ -163,22 +176,22 @@ getpasswd(const char *prompt, FILE *fp)
 #endif
 
     /* Read the password */
-    ptr = read_passwd_from_fd(fp);
+    ptr = read_passwd_from_stream(fp);
 
 #ifndef WIN32
 
-    if (fp != stdin)
+    if (use_ext_fd == 0)
     {
-    /* we can go ahead and echo out a newline.
-    */
-    putc(PW_LF_CHAR, fp);
+        /* we can go ahead and echo out a newline.
+        */
+        putc(PW_LF_CHAR, fp);
 
-    /* Restore our tty state and signal handlers.
-    */
-    tcsetattr(fileno(fp), TCSAFLUSH, &old_ts);
-    sigprocmask(SIG_BLOCK, &old_sig, NULL);
+        /* Restore our tty state and signal handlers.
+        */
+        tcsetattr(fileno(fp), TCSAFLUSH, &old_ts);
+        sigprocmask(SIG_BLOCK, &old_sig, NULL);
 
-    fclose(fp);
+        fclose(fp);
     }
 #else
     /* In Windows, it would be a CR-LF
@@ -187,7 +200,6 @@ getpasswd(const char *prompt, FILE *fp)
     _putch(PW_LF_CHAR);
 #endif
 
-    printf("PAssword = %s\n",ptr);
     return (ptr);
 }
 

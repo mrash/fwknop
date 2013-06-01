@@ -33,7 +33,7 @@
 
 /* Prototypes
 */
-char* getpasswd(const char *prompt, FILE* fp);
+char* getpasswd(const char *prompt, int fd);
 
 /* This can be used to acquire an encryption key or HMAC key
 */
