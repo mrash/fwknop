@@ -117,6 +117,7 @@ SPA Parameter Types
 * SPA Messages::                  The fko @acronym{SPA} message types
                                   supported by libfko (and fwknop)
 * Encryption Algorithms::         Encryption schemes supported by libfko
+* HMAC Digests::                  Digests that can be used to build an HMAC
 
 @end detailmenu
 @end menu
@@ -179,8 +180,7 @@ interface of the library.
 @section Features
 
 The primary advantage of using libfko is it provides a single API for either
-creating, or parsing of existing @acronym{SPA} data.  Additional advantages
-include:
+creating or parsing @acronym{SPA} data.  Additional advantages include:
 
 @table @asis
 @item It's free software
@@ -191,12 +191,14 @@ General Public License (@pxref{Library Copying}).
 The Perl-based implementation requires several additional Perl
 modules and has a relatively large footprint in memory.  This C-based
 library eliminates those dependencies and has a much smaller footprint.
+Using this library allows @acronym{SPA} to easily function on embedded
+operating systems such as OpenWRT.
 
 @item It's easy
 libfko hides many of the gory details of fwknop's @acronym{SPA} message data
-format, encoding, encrypting, decrypting, decoding, and parsing.  In most
-cases, only a few function calls will be needed create or parse a @acronym{SPA}
-message.
+format, encoding, decoding, encrypting, decrypting, authenticating, and parsing.
+In most cases, only a few function calls will be needed create or parse a
+@acronym{SPA} message.
 @end table
 
 @node Overview
@@ -208,8 +210,10 @@ message.
 @end menu
 
 libfko functionality can be divided into two roles.  One is the creation of
-an encrypted @acronym{SPA} message.  The other is the taking an encrypted
-@acronym{SPA} message to decode, parse, and extract the original data.
+an encrypted @acronym{SPA} message together with an HMAC for authentication.
+The other is the taking an encrypted
+@acronym{SPA} message to authenticate, decode, parse, and extract the original
+data.
 
 The actual @acronym{SPA} data handling and operations are set within a
 context.  The context represents a single @acronym{SPA} message and provides
@@ -236,10 +240,10 @@ Destroy the context
 @subsection SPA Data Format
 @cindex SPA, data format
 
-The format of the @acronym{SPA} message data used by fwknop (before encryption)
-is a colon-delimited string containing the individual @acronym{SPA} data
-fields. Some of these fields are base64-encoded in the final encoding process
-as dictated by the current fwknop implementation.
+The format of the @acronym{SPA} message data used by fwknop (before encryption
+and before an HMAC is applied) is a colon-delimited string containing the
+individual @acronym{SPA} data fields. Some of these fields are base64-encoded
+in the final encoding process as dictated by the current fwknop implementation.
 
 @deftypevar data spa_message_fields
 Using the libfko names for the data fields, the list of these fields (in
@@ -279,7 +283,7 @@ are not base64-encoded):
 @sp 1
 @cartouche
 @example
-8307540982176539:juser:1230665172:1.1.10:1:0.0.0.0,tcp/22:192.168.1.2,22:
+8307540982176539:juser:1230665172:2.5:1:1.1.1.1,tcp/22:192.168.1.2,22:
 crypt,mypw:120:xswj8V0zMR7/7MV9pQRarSKWG1l9Zfjv+kbXaKrJ+RA
 @end example
 @end cartouche
@@ -361,10 +365,11 @@ gcc -o foo foo.c -I/opt/fko/include -L/opt/fko/lib -lfko
 @section SPA Parameter Types
 
 @menu
-* Digests::                       The message digest hashes supported by libfko 
+* Digests::                       The message digest hashes supported by libfko
 * SPA Messages::                  The fko @acronym{SPA} message types
                                   supported by libfko (and fwknop)
 * Encryption Algorithms::         Encryption schemes supported by libfko
+* HMAC Digests::                  Digests that can be used to build an HMAC
 @end menu
 
 @node Digests
@@ -373,14 +378,16 @@ gcc -o foo foo.c -I/opt/fko/include -L/opt/fko/lib -lfko
 @cindex message digest types
 @cindex default message digest
 
-The fwknop system employs a message digest hash of the @acronym{SPA} 
+The fwknop system employs a message digest hash of the @acronym{SPA}
 data as one of the data fields to act a signature which can be used
-at the receiving end to verify the data is valid.  This provides a means
-to ensure the data was not modified in-transit.  The resulting digest
-is base64-encoded before it is added to the @acronym{SPA} data.
+at the receiving end to verify the data is valid (although this feature
+has been superceded by the usage of an HMAC for proper message authentication
+and verification of integrity).  The resulting digest is base64-encoded
+before it is added to the
+@acronym{SPA} data.
 
-Currently, libfko support the same message digests as the legacy fwknop
-plus 2 others (SHA384 and SHA512).  These are (in order of strength):
+Currently, libfko supports the same message digests as the legacy fwknop
+plus two others (SHA384 and SHA512).  These are (in order of strength):
 
 @deftypevar int fko_digest_type_t
 @table @code
@@ -457,9 +464,9 @@ data field.
 @cindex encryption types
 @cindex default encryption
 
-One of the final steps in creating an fwknop @acronym{SPA} message is
-encrypting the entire message.  Currently, fwknop supports two methods
-of encryption:
+One of the final steps (before the HMAC is calculated and applied) in creating
+an fwknop @acronym{SPA} message is encrypting the entire message.  Currently,
+fwknop supports two methods of encryption:
 
 @deftypevar int fko_encryption_type_t
 @table @code
@@ -472,11 +479,42 @@ As indicated, libfko uses Rijndael encryption by default.  Rijndael
 encryption is sufficient for most users and produces a much smaller data
 packet than @acronym{GPG} (between 140 bytes with MD5 digest to around 225
 bytes or so with SHA512, compared to around 1100 for signed @acronym{GPG}).
+When Rijndael is used, the encryption key itself is derived from the supplied
+passphrase via the PBKDF1 algorithm, and CBC mode is set.
 
 However, some may prefer the higher level of security provided by @acronym{GPG}.
 When selected, additional parameters such as @emph{recipient} and @emph{signer}
 may be set as well. See @ref{Setting SPA Data} for detail on
 setting these and other @acronym{SPA} data fields.
+
+@node HMAC Digests
+@subsection HMAC Digests
+@cindex HMAC digest types
+@cindex message digest types
+@cindex default message digest
+
+The fwknop project employs an HMAC in the encrypt-then-authenticate model
+for strong @acronym{SPA} message authentication.  The HMAC itself is derived
+from a digest of the encrypted @acronym{SPA} message along with a dedicated
+HMAC key.
+
+Currently, libfko supports the same message digests as mentioned in the
+Digest section above, and these are (in order of strength):
+
+@deftypevar int fko_digest_type_t
+@table @code
+@item FKO_HMAC_MD5
+@item FKO_HMAC_SHA1
+@item FKO_HMAC_SHA256  (libfko default)
+@item FKO_HMAC_SHA384
+@item FKO_HMAC_SHA512
+@end table
+@end deftypevar
+
+As indicated in the list above, SHA256 is the default.  This means the
+HMAC digest type does not need to be explicitly set unless you wish to use
+one of the other values.  This applies to all libfko @acronym{SPA} data
+fields that have a default value.
 
 @node Using libfko
 @chapter Using libfko
@@ -501,7 +539,7 @@ to further illustrate usage.
 @section Creating Contexts
 @cindex context, creation
 
-Before doing anything with libfko, you need to create a context.  
+Before doing anything with libfko, you need to create a context.
 A context is created for one of two reasons.  One is for the
 purpose of building a new fko @acronym{SPA} message from scratch (typically
 to be packaged and sent to an fwknop server somewhere). The other would be
@@ -511,7 +549,7 @@ parsing, and data extraction.
 @noindent
 For building a new fko @acronym{SPA} message, you will use the @code{fko_new}
 function:
- 
+
 @deftypefun int fko_new (@w{fko_ctx_t @var{*ctx}})
 The function @code{fko_new} sets up and initializes a new @code{fko_ctx_t}
 object, pre-populates default values and returns a handle for it in @var{ctx}.
