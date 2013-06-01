@@ -128,3 +128,8 @@ Shawn Wilson
 Dan Lauber
     - Suggested a check for fwknopd to ensure that the jump rule on systems
       running iptables is not duplicated if it already exists.
+
+Ryman
+    - Reported a timing attack bug in the HMAC comparison operation (#85) and
+      suggested a fix derived from YaSSL:
+      http://www.mail-archive.com/debian-bugs-rc@lists.debian.org/msg320402.html
