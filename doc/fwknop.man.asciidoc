@@ -233,7 +233,9 @@ GENERAL OPTIONS
 
 *--save-rc-stanza*='<stanza name>'::
     Save command line arguments to the $HOME/.fwknoprc stanza specified with
-    the *-n* option.
+    the *-n* option.  If the *-n* option is omitted, then the stanza name will
+    default to the destination server value (hostname or IP) given with the
+    *-D* argument.
 
 *--force-stanza*::
     Used with *--save-rc-stanza* to overwrite all of the variables for the

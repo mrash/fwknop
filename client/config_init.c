@@ -638,8 +638,7 @@ keys_status(fko_cli_options_t *options)
             {
                 set_rc_file(rcfile, options);
                 log_msg(LOG_VERBOSITY_NORMAL,
-                    "[+] Wrote Rijndael and HMAC keys to rc file: %s",
-                    options->rc_file);
+                    "[+] Wrote Rijndael and HMAC keys to rc file: %s", rcfile);
             }
             else
                 log_msg(LOG_VERBOSITY_NORMAL,
@@ -1571,10 +1570,16 @@ validate_options(fko_cli_options_t *options)
 
     if ( (options->save_rc_stanza == 1)  && (options->use_rc_stanza[0] == 0) )
     {
-        log_msg(LOG_VERBOSITY_ERROR,
-                "The option --save-rc-stanza must be used with the "
-                "--named-config option to specify the stanza to update.");
-        exit(EXIT_FAILURE);
+        /* Set the stanza name to the -D arg value
+        */
+        if (options->spa_server_str[0] == 0x0)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                "Must use --destination unless --test mode is used");
+            exit(EXIT_FAILURE);
+        }
+
+        strlcpy(options->use_rc_stanza, options->spa_server_str, sizeof(options->use_rc_stanza));
     }
 
     /* Gotta have a Destination unless we are just testing or getting the

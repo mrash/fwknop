@@ -218,7 +218,11 @@ Specify path to the fwknop rc file (default is $HOME/\&.fwknoprc)\&.
 .RS 4
 Save command line arguments to the $HOME/\&.fwknoprc stanza specified with the
 \fB\-n\fR
-option\&.
+option\&. If the
+\fB\-n\fR
+option is omitted, then the stanza name will default to the destination server value (hostname or IP) given with the
+\fB\-D\fR
+argument\&.
 .RE
 .PP
 \fB\-\-force\-stanza\fR
