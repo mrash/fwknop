@@ -1659,16 +1659,18 @@ validate_options(fko_cli_options_t *options)
 static void
 set_defaults(fko_cli_options_t *options)
 {
-    options->spa_proto    = FKO_DEFAULT_PROTO;
-    options->spa_dst_port = FKO_DEFAULT_PORT;
-    options->fw_timeout   = -1;
+    options->spa_proto      = FKO_DEFAULT_PROTO;
+    options->spa_dst_port   = FKO_DEFAULT_PORT;
+    options->fw_timeout     = -1;
 
-    options->key_len      = FKO_DEFAULT_KEY_LEN;
-    options->hmac_key_len = FKO_DEFAULT_HMAC_KEY_LEN;
-    options->hmac_type    = FKO_HMAC_UNKNOWN;  /* updated when HMAC key is used */
+    options->key_len        = FKO_DEFAULT_KEY_LEN;
+    options->hmac_key_len   = FKO_DEFAULT_HMAC_KEY_LEN;
+    options->hmac_type      = FKO_HMAC_UNKNOWN;  /* updated when HMAC key is used */
 
-    options->spa_icmp_type = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
-    options->spa_icmp_code = 0;               /* only used in '-P icmp' mode */
+    options->spa_icmp_type  = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
+    options->spa_icmp_code  = 0;               /* only used in '-P icmp' mode */
+
+    options->input_fd       = FD_INVALID;
 
     return;
 }
@@ -2062,6 +2064,13 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case FORCE_SAVE_RC_STANZA:
                 options->force_save_rc_stanza = 1;
                 break;
+            case FD_SET_STDIN:
+                options->input_fd = STDIN_FILENO;
+                break;
+            case FD_SET:
+                options->input_fd = strtol_wrapper(optarg, 0,
+                        -1, EXIT_UPON_ERR, &is_err);
+                break;                
             default:
                 usage();
                 exit(EXIT_FAILURE);
@@ -2157,6 +2166,9 @@ usage(void)
       "                             line args as the last time it was executed\n"
       "                             (args are read from the ~/.fwknop.run file).\n"
       " -G, --get-key               Load an encryption key/password from a file.\n"
+      "     --stdin                 Read the encryption key/password from stdin\n"      
+      "     --fd                    Specify the file descriptor to read the\n"
+      "                             encryption key/password from.\n"      
       " -k, --key-gen               Generate SPA Rijndael + HMAC keys.\n"
       " -K, --key-gen-file          Write generated Rijndael + HMAC keys to a\n"
       "                             file\n"
