@@ -19,7 +19,7 @@
 This manual is for the Firewall Knock Operator library, libfko.
 (version @value{VERSION}, last updated @value{UPDATED}).
 
-Copyright @copyright{} 2009 Damien Stuart.
+Copyright @copyright{} 2009-2013 Damien Stuart.
 
 @quotation
 The libfko manual is free; you can redistribute it and/or modify
@@ -577,7 +577,7 @@ if(rc != FKO_SUCCESS)
 For a context that will be used for receiving and parsing an existing
 @acronym{SPA} message, you will use the @code{fko_new_with_data} function:
 
-@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, char @var{*data}, char @var{*key}})
+@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, const char @var{*data}, const char @var{*key}, const char @var{key_len}, int @var{encryption_mode}, const char @var{hmac_key}, const int @var{hmac_type}})
 The function @code{fko_new_with_data} sets up and initializes a new
 @code{fko_ctx_t} context, but instead of initializing default values, it
 stores the encrypted message data and makes it ready for parsing.  This
@@ -585,9 +585,13 @@ can be done in one of two ways.  One is to pass @code{NULL} for the third
 argument.  The context will be created and the data will be stored, but no
 decryption or decoding takes place.  In this case, you will need to call
 @code{fko_decrypt_spa_data} at a later time.  The other way to do it is
-to supply the @var{key} value; which would be the password or decryption
-key.  In this case, the context is created, the @acronym{SPA} data is
+to supply the @var{key} value (decryption passphrase) and assocated length.
+In this case, the context is created, the @acronym{SPA} data is
 decrypted, decoded, parsed, and stored in the context ready for retrieval.
+If an HMAC is also desired or required, then the @var{hmac_key} and
+associated length can be passed in.  This will cause libfko to authenticate
+the SPA data before decryption is attempted, and this is strongly
+recommended to do.
 
 The @code{fko_new_with_data} function returns the error code
 @code{FKO_SUCCESS} if the context was successfully created.  If any of the
@@ -603,12 +607,17 @@ The most common (simple) case...
 fko_ctx_t   ctx;
 char       *spa_data;
 char       *key;
+int         key_len;
+char       *hmac_key;
+int         hmac_key_len;
+int         hmac_type;
+int         enc_mode;
 int rc;
 
 /* Assume we called code that retrieves the data and key
 */
 
-rc = fko_new_with_data(&ctx, spa_data, key);
+rc = fko_new_with_data(&ctx, spa_data, key, key_len, enc_mode, hmac_key, hmac_key_len, hmac_type);
 
 if(rc != FKO_SUCCESS)
 @{
@@ -1242,10 +1251,14 @@ Success
 FKO Context is not initialized
 @item FKO_ERROR_MEMORY_ALLOCATION
 Unable to allocate memory
+@item FKO_ERROR_FILESYSTEM_OPERATION
+Read/write bytes mismiatch
 @item FKO_ERROR_INVALID_DATA
 Args contain invalid data
 @item FKO_ERROR_DATA_TOO_LARGE
 Value or Size of the data exceeded the max allowed
+@item FKO_ERROR_INVALID_KEY_LEN
+Invalid key length
 @item FKO_ERROR_USERNAME_UNKNOWN
 Unable to determine username
 @item FKO_ERROR_INCOMPLETE_SPA_DATA
@@ -1272,6 +1285,10 @@ Unexpected or invalid size for decrypted data
 Decryption failed or decrypted data is invalid
 @item FKO_ERROR_DIGEST_VERIFICATION_FAILED
 The computed digest did not match the digest in the spa data
+@item FKO_ERROR_INVALID_HMAC_KEY_LEN
+Invalid HMAC key length
+@item FKO_ERROR_UNSUPPORTED_HMAC_MODE
+Unsupported HMAC mode (default: SHA256)
 @item FKO_ERROR_UNSUPPORTED_FEATURE
 Unsupported or unimplemented feature or function
 @item FKO_ERROR_UNKNOWN
