@@ -14,6 +14,32 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => 'use of encryption key with fd 0',
+        'function' => \&spa_cycle,
+        'cmdline'  => "echo $local_spa_key | $default_client_args_no_get_key " .
+            "--fd 0",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'use of encryption key with stdin',
+        'function' => \&spa_cycle,
+        'cmdline'  => "echo $local_spa_key | $default_client_args_no_get_key " .
+            "--stdin",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'localhost hostname->IP (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .

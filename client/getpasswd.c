@@ -39,6 +39,7 @@
 
 #include "fwknop_common.h"
 #include "getpasswd.h"
+#include "utils.h"
 
 #define PW_BUFSIZE              128                 /*!< Maximum number of chars an encryption key or a password can contain */
 
@@ -84,7 +85,7 @@ read_passwd_from_stream(FILE *stream)
         else if (c == PW_CLEAR_CHAR)
             ptr = ARRAY_FIRST_ELT_ADR(password);
 
-        /* Fill in the password buffer until it reach the last -1 char.
+        /* Fill in the password buffer until it reaches the last -1 char.
          * The last char is used to NULL terminate the string. */
         else if (ptr < ARRAY_LAST_ELT_ADR(password))
         {
@@ -110,11 +111,15 @@ read_passwd_from_stream(FILE *stream)
 /**
  * @brief Function for accepting password input from users
  *
- * The functions reads chars from the terminal and store them in a buffer of chars.
+ * The functions reads chars from a buffered stream and store them in a buffer of
+ * chars. If a file descriptor is supplied then, the password is read from
+ * the associated stream, otherwise a new buffered stream is created and a
+ * prompt is displayed to the user.
  *
- * @param prompt String displayed on the terminal to prompt the user for a password
- *               or an encryption key
- * @param fd     File descriptor
+ * @param prompt String displayed on the terminal to prompt the user for a
+ *               password or an encryption key
+ * @param fd     File descriptor to use to read the pasword from. If fd is set
+ *               to FD_INVALID, then a new stream is opened.
  *
  * @return NULL if a problem occured or the user killed the terminal (Ctrl-C)\n
  *         otherwise the password - empty password is accepted.
@@ -128,22 +133,22 @@ getpasswd(const char *prompt, int fd)
     sigset_t        sig, old_sig;
     struct termios  ts, old_ts;
     FILE           *fp;
-    int             use_ext_fd = 0;
 
-    if (fd >= 0)
+    /* If a valid file descriptor is supplied, we try to open a stream from it */
+    if (FD_IS_VALID(fd))
     {
         fp = fdopen(fd, "r");
         if (fp == NULL)
         {
             log_msg(LOG_VERBOSITY_ERROR, "getpasswd() - "
-                "Unable to create a stream from file descriptor : %s",
+                "Unable to create a stream from the file descriptor : %s",
                 strerror(errno));
             exit(EXIT_FAILURE);
         }
-        use_ext_fd = 1;
     }
 
-    if (use_ext_fd == 0)
+    /* Otherwise we are going to open a new stream */
+    else
     {
         if((fp = fopen(ctermid(NULL), "r+")) == NULL)
             return(NULL);
@@ -180,7 +185,8 @@ getpasswd(const char *prompt, int fd)
 
 #ifndef WIN32
 
-    if (use_ext_fd == 0)
+    /* If we used a new buffered stream */
+    if (FD_IS_VALID(fd) == 0)
     {
         /* we can go ahead and echo out a newline.
         */
@@ -190,9 +196,9 @@ getpasswd(const char *prompt, int fd)
         */
         tcsetattr(fileno(fp), TCSAFLUSH, &old_ts);
         sigprocmask(SIG_BLOCK, &old_sig, NULL);
-
-        fclose(fp);
     }
+
+    fclose(fp);
 #else
     /* In Windows, it would be a CR-LF
      */

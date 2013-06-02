@@ -1384,18 +1384,19 @@ validate_options(fko_cli_options_t *options)
 static void
 set_defaults(fko_cli_options_t *options)
 {
-    options->spa_proto    = FKO_DEFAULT_PROTO;
-    options->spa_dst_port = FKO_DEFAULT_PORT;
-    options->fw_timeout   = -1;
+    options->spa_proto      = FKO_DEFAULT_PROTO;
+    options->spa_dst_port   = FKO_DEFAULT_PORT;
+    options->fw_timeout     = -1;
 
-    options->key_len      = FKO_DEFAULT_KEY_LEN;
-    options->hmac_key_len = FKO_DEFAULT_HMAC_KEY_LEN;
-    options->hmac_type    = FKO_HMAC_UNKNOWN;  /* updated when HMAC key is used */
+    options->key_len        = FKO_DEFAULT_KEY_LEN;
+    options->hmac_key_len   = FKO_DEFAULT_HMAC_KEY_LEN;
+    options->hmac_type      = FKO_HMAC_UNKNOWN;  /* updated when HMAC key is used */
 
-    options->spa_icmp_type = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
-    options->spa_icmp_code = 0;               /* only used in '-P icmp' mode */
+    options->spa_icmp_type  = ICMP_ECHOREPLY;  /* only used in '-P icmp' mode */
+    options->spa_icmp_code  = 0;               /* only used in '-P icmp' mode */
 
-    options->input_fd = -1;
+    options->input_fd       = FD_INVALID;
+
     return;
 }
 
@@ -1790,7 +1791,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case FD_SET:
                 options->input_fd = strtol_wrapper(optarg, 0,
-                        65535, EXIT_UPON_ERR, &is_err);;
+                        -1, EXIT_UPON_ERR, &is_err);
                 break;                
             default:
                 usage();
@@ -1831,6 +1832,8 @@ usage(void)
       " -C, --server-cmd            Specify a command that the fwknop server will\n"
       "                             execute on behalf of the fwknop client..\n"
       " -D, --destination           Specify the IP address of the fwknop server.\n"
+      "     --fd                    Specify the file descriptor to read the\n"
+      "                             encryption key/password from.\n"
       " -n, --named-config          Specify an named configuration stanza in the\n"
       "                             '$HOME/.fwknoprc' file to provide some of all\n"
       "                             of the configuration parameters.\n"
@@ -1921,6 +1924,7 @@ usage(void)
       "     --save-rc-stanza        Save command line arguments to the\n"
       "                             $HOME/.fwknoprc stanza specified with the\n"
       "                             -n option.\n"
+      "     --stdin                 Read the encryption key/password from stdin\n"
       "     --force-stanza          Used with --save-rc-stanza to overwrite all of\n"
       "                             the variables for the specified stanza\n"
       "     --nat-local             Access a local service via a forwarded port\n"
