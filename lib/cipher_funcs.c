@@ -118,18 +118,13 @@ static void
 rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
         const int key_len, const unsigned char *data, const int mode_flag)
 {
-    char            pw_buf[RIJNDAEL_MAX_KEYSIZE];
-    unsigned char   tmp_buf[MD5_DIGEST_LEN+RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE];
-    unsigned char   kiv_buf[RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE]; /* Key and IV buffer */
-    unsigned char   md5_buf[MD5_DIGEST_LEN]; /* Buffer for computed md5 hash */
+    char            pw_buf[RIJNDAEL_MAX_KEYSIZE] = {0};
+    unsigned char   tmp_buf[MD5_DIGEST_LEN+RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE] = {0};
+    unsigned char   kiv_buf[RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE] = {0}; /* Key and IV buffer */
+    unsigned char   md5_buf[MD5_DIGEST_LEN] = {0}; /* Buffer for computed md5 hash */
 
     int             final_key_len = 0;
     size_t          kiv_len = 0;
-
-    memset(pw_buf,  0x00, RIJNDAEL_MAX_KEYSIZE);
-    memset(tmp_buf, 0x00, MD5_DIGEST_LEN+RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE);
-    memset(kiv_buf, 0x00, RIJNDAEL_MAX_KEYSIZE+RIJNDAEL_BLOCKSIZE);
-    memset(md5_buf, 0x00, MD5_DIGEST_LEN);
 
     if(mode_flag == FKO_ENC_MODE_CBC_LEGACY_IV)
     {
@@ -325,8 +320,8 @@ add_salted_str(fko_ctx_t ctx)
 {
     char           *tbuf;
 
-    if(strncmp(ctx->encrypted_msg,
-            B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN))
+    if(constant_runtime_cmp(ctx->encrypted_msg,
+            B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) != 0)
     {
         /* We need to realloc space for the salt.
         */
@@ -361,8 +356,8 @@ add_gpg_prefix(fko_ctx_t ctx)
 {
     char           *tbuf;
 
-    if(strncmp(ctx->encrypted_msg,
-            B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN))
+    if(constant_runtime_cmp(ctx->encrypted_msg,
+            B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) != 0)
     {
         /* We need to realloc space for the prefix.
         */

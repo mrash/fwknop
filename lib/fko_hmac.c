@@ -34,7 +34,8 @@
 #include "hmac.h"
 #include "base64.h"
 
-int fko_verify_hmac(fko_ctx_t ctx,
+int
+fko_verify_hmac(fko_ctx_t ctx,
     const char * const hmac_key, const int hmac_key_len)
 {
     char    *hmac_digest_from_data = NULL;
@@ -131,7 +132,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
 
         if(res == FKO_SUCCESS)
         {
-            if(strncmp(hmac_digest_from_data,
+            if(constant_runtime_cmp(hmac_digest_from_data,
                     ctx->msg_hmac, hmac_b64_digest_len) != 0)
             {
                 res = FKO_ERROR_INVALID_DATA;
@@ -208,8 +209,6 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
 
     if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
         return(FKO_ERROR_INVALID_HMAC_KEY_LEN);
-
-    memset(hmac, 0x00, SHA512_DIGEST_STR_LEN);
 
     if(ctx->hmac_type == FKO_HMAC_MD5)
     {

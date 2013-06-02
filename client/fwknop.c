@@ -129,12 +129,11 @@ is_ipv6_str(char *str)
 static int
 is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port)
 {
-    int     valid = 0;              /* Result of the function */
-    char    buf[MAX_LINE_LEN];      /* Copy of the buffer eg. "hostname,port" */
-    char   *h;                      /* Pointer on the hostname string */
-    char   *p;                      /* Ponter on the port string */
+    int     valid = 0;                /* Result of the function */
+    char    buf[MAX_LINE_LEN] = {0};  /* Copy of the buffer eg. "hostname,port" */
+    char   *h;                        /* Pointer on the hostname string */
+    char   *p;                        /* Ponter on the port string */
 
-    memset(buf, 0, sizeof(buf));
     memset(hostname, 0, hostname_bufsize);
     *port = 0;
 
@@ -173,7 +172,7 @@ is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsi
 int
 main(int argc, char **argv)
 {
-    fko_ctx_t           ctx = NULL;
+    fko_ctx_t           ctx  = NULL;
     fko_ctx_t           ctx2 = NULL;
     int                 res;
     char               *spa_data=NULL, *version=NULL;
@@ -181,13 +180,8 @@ main(int argc, char **argv)
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
     int                 key_len = 0, hmac_key_len = 0, enc_mode;
-    FILE               *key_gen_file_ptr = NULL;
 
     fko_cli_options_t   options;
-
-    memset(key, 0x00, MAX_KEY_LEN+1);
-    memset(hmac_key, 0x00, MAX_KEY_LEN+1);
-    memset(access_buf, 0x00, MAX_LINE_LEN);
 
     /* Initialize the log module */
     log_new();
@@ -199,48 +193,6 @@ main(int argc, char **argv)
     /* Handle previous execution arguments if required
     */
     prev_exec(&options, argc, argv);
-
-    /* Generate Rijndael + HMAC keys from /dev/random (base64
-     * encoded) and exit.
-    */
-    if(options.key_gen)
-    {
-        memset(options.key_base64, 0x00, MAX_B64_KEY_LEN+1);
-        memset(options.hmac_key_base64, 0x00, MAX_B64_KEY_LEN+1);
-
-        res = fko_key_gen(options.key_base64, options.key_len,
-                options.hmac_key_base64, options.hmac_key_len,
-                options.hmac_type);
-
-        if(res != FKO_SUCCESS)
-        {
-            errmsg("fko_key_gen", res);
-            return(EXIT_FAILURE);
-        }
-
-        if(options.key_gen_file[0] != '\0')
-        {
-            if ((key_gen_file_ptr = fopen(options.key_gen_file, "w")) == NULL)
-            {
-                log_msg(LOG_VERBOSITY_ERROR, "Unable to create key gen file: %s: %s",
-                    options.key_gen_file, strerror(errno));
-                return(EXIT_FAILURE);
-            }
-            fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
-                options.key_base64, options.hmac_key_base64);
-            fclose(key_gen_file_ptr);
-            log_msg(LOG_VERBOSITY_NORMAL,
-                    "[+] Wrote Rijndael and HMAC keys to: %s",
-                options.key_gen_file);
-        }
-        else
-        {
-            log_msg(LOG_VERBOSITY_NORMAL,
-                    "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s",
-                    options.key_base64, options.hmac_key_base64);
-        }
-        return(EXIT_SUCCESS);
-    }
 
     /* Intialize the context
     */
@@ -659,7 +611,7 @@ static int
 get_rand_port(fko_ctx_t ctx)
 {
     char *rand_val = NULL;
-    char  port_str[MAX_PORT_STR_LEN+1];
+    char  port_str[MAX_PORT_STR_LEN+1] = {0};
     int   tmpint, is_err;
     int   port     = 0;
     int   res      = 0;
@@ -742,8 +694,6 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
     char   *ndx = NULL, tmp_nat_port[MAX_PORT_STR_LEN+1] = {0};
     int     nat_port = 0;
 
-    memset(tmp_nat_port, 0x0, MAX_PORT_STR_LEN+1);
-
     if(options->access_str[0] != 0x0)
     {
         if (options->nat_rand_port)
@@ -812,15 +762,13 @@ static int
 set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const access_buf)
 {
     char                nat_access_buf[MAX_LINE_LEN] = {0};
-    char                tmp_access_port[MAX_PORT_STR_LEN+1], *ndx = NULL;
+    char                tmp_access_port[MAX_PORT_STR_LEN+1] = {0}, *ndx = NULL;
     int                 access_port = 0, i = 0, is_err = 0;
     char                dst_ip_str[INET_ADDRSTRLEN] = {0};
     char                hostname[HOSTNAME_BUFSIZE] = {0};
     int                 port = 0;
     struct addrinfo     hints;
 
-    memset(nat_access_buf, 0x0, MAX_LINE_LEN);
-    memset(tmp_access_port, 0x0, MAX_PORT_STR_LEN+1);
     memset(&hints, 0 , sizeof(hints));
 
     ndx = strchr(options->access_str, '/');
@@ -938,7 +886,7 @@ prev_exec(fko_cli_options_t *options, int argc, char **argv)
 static void
 show_last_command(const char * const args_save_file)
 {
-    char args_str[MAX_LINE_LEN] = "";
+    char args_str[MAX_LINE_LEN] = {0};
     FILE *args_file_ptr = NULL;
 
     verify_file_perms_ownership(args_save_file);
@@ -1058,7 +1006,7 @@ get_save_file(char *args_save_file)
 static void
 save_args(int argc, char **argv, const char * const args_save_file)
 {
-    char args_str[MAX_LINE_LEN] = "";
+    char args_str[MAX_LINE_LEN] = {0};
     int i = 0, args_str_len = 0, args_file_fd = -1;
 
     args_file_fd = open(args_save_file, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);

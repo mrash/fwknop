@@ -194,8 +194,8 @@ int
 process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
-    char             new_rule[MAX_PF_NEW_RULE_LEN];
-    char             write_cmd[CMD_BUFSIZE];
+    char             new_rule[MAX_PF_NEW_RULE_LEN] = {0};
+    char             write_cmd[CMD_BUFSIZE] = {0};
 
     FILE            *pfctl_fd = NULL;
 
@@ -339,9 +339,9 @@ process_spa_request(const fko_srv_options_t * const opts,
 void
 check_firewall_rules(const fko_srv_options_t * const opts)
 {
-    char            exp_str[12];
-    char            anchor_rules_copy[STANDARD_CMD_OUT_BUFSIZE];
-    char            write_cmd[CMD_BUFSIZE];
+    char            exp_str[12] = {0};
+    char            anchor_rules_copy[STANDARD_CMD_OUT_BUFSIZE] = {0};
+    char            write_cmd[CMD_BUFSIZE] = {0};
     char           *ndx, *tmp_mark, *tmp_ndx, *newline_tmp_ndx;
 
     time_t          now, rule_exp, min_exp=0;

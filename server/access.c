@@ -300,7 +300,7 @@ static int
 expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
 {
     char           *ndx, *start;
-    char            buf[ACCESS_BUF_LEN];
+    char            buf[ACCESS_BUF_LEN] = {0};
     int             res = 1;
 
     start = acc->source;
@@ -346,7 +346,7 @@ static int
 parse_proto_and_port(char *pstr, int *proto, int *port)
 {
     char    *ndx;
-    char    proto_str[ACCESS_BUF_LEN];
+    char    proto_str[ACCESS_BUF_LEN] = {0};
     int     is_err;
 
     /* Parse the string into its components.
@@ -493,7 +493,7 @@ int
 expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
 {
     char           *ndx, *start;
-    char            buf[ACCESS_BUF_LEN];
+    char            buf[ACCESS_BUF_LEN] = {0};
 
     start = plist_str;
 
@@ -540,7 +540,7 @@ static int
 expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
 {
     char           *ndx, *start;
-    char            buf[1024];
+    char            buf[MAX_LINE_LEN] = {0};
 
     start = stlist_str;
 
@@ -553,7 +553,7 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
             while(isspace(*start))
                 start++;
 
-            if(((ndx-start)+1) >= 1024)
+            if(((ndx-start)+1) >= MAX_LINE_LEN)
                 return 0;
 
             strlcpy(buf, start, (ndx-start)+1);
@@ -567,7 +567,7 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
     while(isspace(*start))
         start++;
 
-    if(((ndx-start)+1) >= 1024)
+    if(((ndx-start)+1) >= MAX_LINE_LEN)
         return 0;
 
     strlcpy(buf, start, (ndx-start)+1);
@@ -914,8 +914,8 @@ parse_access_file(fko_srv_options_t *opts)
     unsigned int    num_lines = 0;
 
     char            access_line_buf[MAX_LINE_LEN] = {0};
-    char            var[MAX_LINE_LEN]  = {0};
-    char            val[MAX_LINE_LEN]  = {0};
+    char            var[MAX_LINE_LEN] = {0};
+    char            val[MAX_LINE_LEN] = {0};
 
     struct passwd  *pw;
     struct stat     st;
@@ -1370,7 +1370,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
 {
     int             res = 1, ctr = 0;
 
-    char            buf[ACCESS_BUF_LEN];
+    char            buf[ACCESS_BUF_LEN] = {0};
     char           *ndx, *start;
 
     acc_port_list_t *o_pl   = acc->oport_list;

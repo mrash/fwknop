@@ -87,7 +87,7 @@
 #define DEF_PCAP_FILTER                 "udp port 62201"
 #define DEF_PCAP_DISPATCH_COUNT         "0"
 #define DEF_PCAP_LOOP_SLEEP             "100000" /* a tenth of a second (in microseconds) */
-#define DEF_PCAP_ANY_DIRECTION          "N"
+#define DEF_ENABLE_PCAP_ANY_DIRECTION   "N"
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
 #define DEF_MAX_SPA_PACKET_AGE          "120"
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
@@ -163,10 +163,11 @@
 
 /* fwknopd-specific limits
 */
-#define MAX_PCAP_FILTER_LEN 1024
-#define MAX_IFNAME_LEN      128
-#define MAX_SPA_PACKET_LEN  1500 /* --DSS check this? */
-#define MAX_HOSTNAME_LEN    64
+#define MAX_PCAP_FILTER_LEN     1024
+#define MAX_IFNAME_LEN          128
+#define MAX_SPA_PACKET_LEN      1500 /* --DSS check this? */
+#define MAX_HOSTNAME_LEN        64
+#define MAX_DECRYPTED_SPA_LEN   1024
 
 /* The minimum possible valid SPA data size.
 */
@@ -189,7 +190,7 @@ enum {
     CONF_PCAP_FILTER,
     CONF_PCAP_DISPATCH_COUNT,
     CONF_PCAP_LOOP_SLEEP,
-    CONF_PCAP_ANY_DIRECTION,
+    CONF_ENABLE_PCAP_ANY_DIRECTION,
     CONF_MAX_SNIFF_BYTES,
     CONF_ENABLE_SPA_PACKET_AGING,
     CONF_MAX_SPA_PACKET_AGE,

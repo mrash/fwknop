@@ -103,9 +103,6 @@ hmac_md5_init(hmac_md5_ctx *ctx, const char *key, const int key_len)
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
     int            final_len = key_len;
 
-    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
@@ -176,9 +173,6 @@ hmac_sha1_init(hmac_sha1_ctx *ctx, const char *key, const int key_len)
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
     int            final_len = key_len;
-
-    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
@@ -251,9 +245,6 @@ hmac_sha256_init(hmac_sha256_ctx *ctx, const char *key, const int key_len)
     unsigned char  init_key[MAX_DIGEST_BLOCK_LEN]  = {0};
     int            final_len = key_len;
 
-    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-    memset(init_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
@@ -324,8 +315,6 @@ hmac_sha384_init(hmac_sha384_ctx *ctx, const char *key, const int key_len)
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     int            final_len = key_len;
 
-    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
-
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
@@ -387,8 +376,6 @@ hmac_sha512_init(hmac_sha512_ctx *ctx, const char *key, const int key_len)
 {
     unsigned char  final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     int            final_len = key_len;
-
-    memset(final_key, 0x00, MAX_DIGEST_BLOCK_LEN);
 
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;

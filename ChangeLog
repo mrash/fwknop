@@ -26,6 +26,14 @@ fwknop-2.5 (//2013):
       compliant with PBKDF1 and is only brought forward into fwknop-2.5 for
       backwards compatibility.  Future versions of fwknop will remove this
       code altogether since PBKDF1 is now implemented.
+    - [libfko+server] Ensure that all HMAC, digest, and other comparisons are
+      done via a dedicated constant_runtime_cmp() function so that a potential
+      attacker cannot gain any information about fail/success just by mounting
+      a timing attack.  This function always compares two buffers from
+      beginning to end regardless of whether a difference is detected early on
+      in the comparison, and this strategy mirrors changes in SSL libraries
+      such as yaSSL to protect against potential timing attacks.  This change
+      fixes #85 on github which was reported by Ryman.
     - [test suite] Added --enable-openssl-checks to send all SPA packets
       encrypted via libfko through the OpenSSL library to ensure that the
       libfko usage of AES is always compatible with OpenSSL.  This ensures

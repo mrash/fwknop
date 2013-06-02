@@ -322,6 +322,12 @@ install-exec-hook:
 			mv $(DESTDIR)$(sysconfdir)/fwknop/access.conf.inst $(DESTDIR)$(sysconfdir)/fwknop/access.conf; \
 		fi \
 	fi
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf.inst; then \
+		chmod 600 $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf.inst; \
+	fi
+	if test -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf.inst; then \
+		chmod 600 $(DESTDIR)$(sysconfdir)/fwknop/access.conf.inst; \
+	fi
 	if test -f $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; then \
 		chmod 600 $(DESTDIR)$(sysconfdir)/fwknop/fwknopd.conf; \
 	fi

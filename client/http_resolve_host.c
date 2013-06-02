@@ -58,7 +58,7 @@ try_url(struct url *url, fko_cli_options_t *options)
     int     bytes_read = 0, position = 0;
     int     o1, o2, o3, o4;
     struct  addrinfo *result, *rp, hints;
-    char    http_buf[HTTP_MAX_REQUEST_LEN];
+    char    http_buf[HTTP_MAX_REQUEST_LEN]       = {0};
     char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
     char   *ndx;
 

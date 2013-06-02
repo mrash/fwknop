@@ -143,10 +143,10 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
 {
     char        src_ip[INET_ADDRSTRLEN+1] = {0};
     char        orig_src_ip[INET_ADDRSTRLEN+1] = {0};
-    char        created[DATE_LEN];
+    char        created[DATE_LEN] = {0};
 
 #if ! USE_FILE_CACHE
-    char        first[DATE_LEN], last[DATE_LEN];
+    char        first[DATE_LEN] = {0}, last[DATE_LEN] = {0};
 #endif
 
     /* Convert the IPs to a human readable form
@@ -234,7 +234,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
 {
     FILE           *digest_file_ptr = NULL;
     unsigned int    num_lines = 0, digest_ctr = 0;
-    char            line_buf[MAX_LINE_LEN] = {0};
+    char            line_buf[MAX_LINE_LEN]    = {0};
     char            src_ip[INET_ADDRSTRLEN+1] = {0};
     char            dst_ip[INET_ADDRSTRLEN+1] = {0};
     long int        time_tmp;
@@ -490,7 +490,8 @@ is_replay_file_cache(fko_srv_options_t *opts, char *digest)
             digest_list_ptr != NULL;
             digest_list_ptr = digest_list_ptr->next) {
 
-        if (strncmp(digest_list_ptr->cache_info.digest, digest, digest_len) == 0) {
+        if (constant_runtime_cmp(digest_list_ptr->cache_info.digest,
+                    digest, digest_len) == 0) {
 
             replay_warning(opts, &(digest_list_ptr->cache_info));
 

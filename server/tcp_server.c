@@ -60,7 +60,7 @@ run_tcp_server(fko_srv_options_t *opts)
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
-    char                sipbuf[MAX_IPV4_STR_LEN];
+    char                sipbuf[MAX_IPV4_STR_LEN] = {0};
 
     unsigned short      port;
 

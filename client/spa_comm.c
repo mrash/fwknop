@@ -35,7 +35,7 @@
 static void
 dump_transmit_options(const fko_cli_options_t *options)
 {
-    char proto_str[PROTOCOL_BUFSIZE];   /* Protocol string */
+    char proto_str[PROTOCOL_BUFSIZE] = {0};   /* Protocol string */
 
     proto_inttostr(options->spa_proto, proto_str, sizeof(proto_str));
 
@@ -89,7 +89,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
 {
     int     sock, res=0, error;
     struct  addrinfo *result, *rp, hints;
-    char    port_str[MAX_PORT_STR_LEN+1];
+    char    port_str[MAX_PORT_STR_LEN+1] = {0};
 
     if (options->test)
     {
@@ -495,7 +495,7 @@ static int
 send_spa_packet_http(const char *spa_data, const int sd_len,
     fko_cli_options_t *options)
 {
-    char http_buf[HTTP_MAX_REQUEST_LEN], *spa_data_copy = NULL;
+    char http_buf[HTTP_MAX_REQUEST_LEN] = {0}, *spa_data_copy = NULL;
     char *ndx = options->http_proxy;
     int  i, proxy_port = 0, is_err;
 
