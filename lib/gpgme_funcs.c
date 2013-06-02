@@ -7,7 +7,7 @@
  *
  * Purpose: gpgme-related functions for GPG encryptions support in libfko.
  *
- * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

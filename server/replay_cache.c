@@ -11,7 +11,7 @@
  *          (ndbm or gdbm in ndbm compatibility mode) file to store the digest
  *          of a previously received SPA packets.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

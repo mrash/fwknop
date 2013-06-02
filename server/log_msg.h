@@ -7,7 +7,7 @@
  *
  * Purpose: Header file for log_msg.c.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

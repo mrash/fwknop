@@ -7,7 +7,7 @@
  *
  * Purpose: Fwknop routines for managing iptables firewall rules.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *
