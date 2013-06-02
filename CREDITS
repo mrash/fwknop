@@ -131,5 +131,5 @@ Dan Lauber
 
 Ryman
     - Reported a timing attack bug in the HMAC comparison operation (#85) and
-      suggested a fix derived from YaSSL:
+      suggested a fix derived from yaSSL:
       http://www.mail-archive.com/debian-bugs-rc@lists.debian.org/msg320402.html
