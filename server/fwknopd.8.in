@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 05/31/2013
+.\"      Date: 06/01/2013
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "05/31/2013" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "06/01/2013" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -398,6 +398,11 @@ man page\&.
 \fBPCAP_LOOP_SLEEP\fR \fI<microseconds>\fR
 .RS 4
 Sets the number of microseconds to passed as an argument to usleep() in the pcap loop\&. The default is 10000, or 1/10th of a second\&.
+.RE
+.PP
+\fBENABLE_PCAP_ANY_DIRECTION\fR \fI<Y/N>\fR
+.RS 4
+Controls whether fwknopd is permitted to sniff SPA packets regardless of whether they are received on the sniffing interface or sent from the sniffing interface\&. In the later case, this can be useful to have fwknopd sniff SPA packets that are forwarded through a system and destined for a different network\&. If the sniffing interface is the egress interface for such packets, then this variable will need to be set to "Y" in order for fwknopd to see them\&. The default is "N" so that fwknopd only looks for SPA packets that are received on the sniffing interface (note that this is independent of promiscuous mode)\&.
 .RE
 .PP
 \fBTCPSERV_PORT\fR \fI<port>\fR
