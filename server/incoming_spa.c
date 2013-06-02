@@ -78,11 +78,11 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
      * a prefix after the outer one is stripped off won't decrypt properly
      * anyway because libfko would not add a new one.
     */
-    if(strncmp(ndx, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) == 0)
+    if(constant_runtime_cmp(ndx, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) == 0)
         return(SPA_MSG_BAD_DATA);
 
     if(pkt_data_len > MIN_GNUPG_MSG_SIZE
-            && strncmp(ndx, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) == 0)
+            && constant_runtime_cmp(ndx, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) == 0)
         return(SPA_MSG_BAD_DATA);
 
     /* Detect and parse out SPA data from an HTTP request. If the SPA data
@@ -525,7 +525,7 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Add this SPA packet into the replay detection cache
         */
-        if (! added_replay_digest)
+        if (added_replay_digest == 0)
         {
             res = add_replay(opts, raw_digest);
             if (res != SPA_MSG_SUCCESS)

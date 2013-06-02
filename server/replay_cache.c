@@ -490,7 +490,8 @@ is_replay_file_cache(fko_srv_options_t *opts, char *digest)
             digest_list_ptr != NULL;
             digest_list_ptr = digest_list_ptr->next) {
 
-        if (strncmp(digest_list_ptr->cache_info.digest, digest, digest_len) == 0) {
+        if (constant_runtime_cmp(digest_list_ptr->cache_info.digest,
+                    digest, digest_len) == 0) {
 
             replay_warning(opts, &(digest_list_ptr->cache_info));
 

@@ -62,6 +62,33 @@ static fko_enc_mode_str_t fko_enc_mode_strs[] =
     { "legacy",         FKO_ENC_MODE_CBC_LEGACY_IV, FKO_ENC_MODE_SUPPORTED      }
 };
 
+/* Compare all bytes with constant run time regardless of
+ * input characteristics (i.e. don't return early if a difference
+ * is found before comparing all bytes).  This code was adapted
+ * from YaSSL which is GPLv2 after a timing bug was reported by
+ * Ryman through github (#85)
+*/
+int
+constant_runtime_cmp(const char *a, const char *b, int len)
+{
+    int good = 0;
+    int bad  = 0;
+    int i;
+
+    for(i=0; i < len; i++) {
+        if (a[i] == b[i])
+            good++;
+        else
+            bad++;
+    }
+
+    if (good == len)
+        return 0;
+    else
+        return 0 - bad;
+}
+
+
 /* Validate encoded message length
 */
 int

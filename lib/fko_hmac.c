@@ -34,33 +34,8 @@
 #include "hmac.h"
 #include "base64.h"
 
-/* Compare all bytes with constant run time regardless of
- * input characteristics (i.e. don't return early if a difference
- * is found before comparing all bytes).  This code was adapted
- * from YaSSL which is GPLv2 after a timing bug was reported by
- * Ryman through github (#85)
-*/
-static int
-constant_runtime_compare(const char *a, const char *b, int len)
-{
-    int good = 0;
-    int bad  = 0;
-    int i;
-
-    for(i=0; i < len; i++) {
-        if (a[i] == b[i])
-            good++;
-        else
-            bad++;
-    }
-
-    if (good == len)
-        return 0;
-    else
-        return 0 - bad;
-}
-
-int fko_verify_hmac(fko_ctx_t ctx,
+int
+fko_verify_hmac(fko_ctx_t ctx,
     const char * const hmac_key, const int hmac_key_len)
 {
     char    *hmac_digest_from_data = NULL;
@@ -157,7 +132,7 @@ int fko_verify_hmac(fko_ctx_t ctx,
 
         if(res == FKO_SUCCESS)
         {
-            if(constant_runtime_compare(hmac_digest_from_data,
+            if(constant_runtime_cmp(hmac_digest_from_data,
                     ctx->msg_hmac, hmac_b64_digest_len) != 0)
             {
                 res = FKO_ERROR_INVALID_DATA;
