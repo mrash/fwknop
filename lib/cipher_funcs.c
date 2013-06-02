@@ -320,8 +320,8 @@ add_salted_str(fko_ctx_t ctx)
 {
     char           *tbuf;
 
-    if(strncmp(ctx->encrypted_msg,
-            B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN))
+    if(constant_runtime_cmp(ctx->encrypted_msg,
+            B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) != 0)
     {
         /* We need to realloc space for the salt.
         */
@@ -356,8 +356,8 @@ add_gpg_prefix(fko_ctx_t ctx)
 {
     char           *tbuf;
 
-    if(strncmp(ctx->encrypted_msg,
-            B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN))
+    if(constant_runtime_cmp(ctx->encrypted_msg,
+            B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) != 0)
     {
         /* We need to realloc space for the prefix.
         */

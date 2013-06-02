@@ -150,7 +150,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     /* We give up here if the computed digest does not match the
      * digest in the message data.
     */
-    if(strncmp(ctx->digest, tbuf, t_size))
+    if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
     {
         free(tbuf);
         return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
