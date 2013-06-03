@@ -16,6 +16,7 @@ use strict;
 #==================== config =====================
 my $logfile         = 'test.log';
 our $local_key_file = 'local_spa.key';
+our $local_spa_key  = 'fwknoptest';
 our $local_hmac_key_file = 'local_hmac_spa.key';
 my $output_dir      = 'output';
 our $conf_dir       = 'conf';

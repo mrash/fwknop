@@ -21,7 +21,6 @@
             "-O $conf_dir/override_fwknopd.conf --dump-config",
         'fatal'    => $NO
     },
-
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -700,5 +699,14 @@
         'cmdline'  => $default_client_args . " --test --encryption-mode badmode",
         'positive_output_matches' => [qr/Invalid\sencryption\smode:\sbadmode/],
         'fatal'    => $NO
-    },    
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'bad file descriptor',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --test --fd -1",
+        'positive_output_matches' => [qr/Value\s.*out\sof\srange/],
+        'fatal'    => $NO
+    },
 );

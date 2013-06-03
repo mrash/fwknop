@@ -51,8 +51,10 @@ Franck Joncourt
     - Bug fix in the client for resolving hostnames in '-P icmp' mode (fixes
       issue #64).
     - Added support for saving fwknop client command line arguments via a new
-      options --save-rc-stanza.
+      option --save-rc-stanza.
     - Added log module support for the client.
+    - Added the ability to read a passphrase from STDIN and also from a file
+      descriptor via --fd (closes #74).
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode
@@ -133,3 +135,8 @@ Ryman
     - Reported a timing attack bug in the HMAC comparison operation (#85) and
       suggested a fix derived from yaSSL:
       http://www.mail-archive.com/debian-bugs-rc@lists.debian.org/msg320402.html
+
+hlein
+    - Suggested the ability to read a passphrase from STDIN and via a new --fd
+      command line argument (github #74) to allow things like:
+            $ gpg -d passphrasefile.pgp | fwknop -R -n myserver

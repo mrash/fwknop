@@ -161,6 +161,8 @@ typedef struct fko_cli_options
     unsigned char   save_rc_stanza;
     unsigned char   force_save_rc_stanza;
 
+    int input_fd;
+
     //char            config_file[MAX_PATH_LEN];
 
 } fko_cli_options_t;

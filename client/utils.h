@@ -48,6 +48,9 @@
 
 #define PROTOCOL_BUFSIZE    16      /*!< Maximum number of chars for a protocol string (TCP for example) */
 
+#define FD_INVALID          -1
+#define FD_IS_VALID(x)      ((x)>=0)
+
 /* Prototypes
 */
 void    hex_dump(const unsigned char *data, const int size);

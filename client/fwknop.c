@@ -1125,7 +1125,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         {
             if(crypt_op == CRYPT_OP_DECRYPT)
             {
-                key_tmp = getpasswd("Enter passphrase for secret key: ");
+                key_tmp = getpasswd("Enter passphrase for secret key: ", options->input_fd);
                 if(key_tmp == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
@@ -1136,7 +1136,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             }
             else if(strlen(options->gpg_signer_key))
             {
-                key_tmp = getpasswd("Enter passphrase for signing: ");
+                key_tmp = getpasswd("Enter passphrase for signing: ", options->input_fd);
                 if(key_tmp == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
@@ -1149,11 +1149,11 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         else
         {
             if(crypt_op == CRYPT_OP_ENCRYPT)
-                key_tmp = getpasswd("Enter encryption key: ");
+                    key_tmp = getpasswd("Enter encryption key: ", options->input_fd);
             else if(crypt_op == CRYPT_OP_DECRYPT)
-                key_tmp = getpasswd("Enter decryption key: ");
+                key_tmp = getpasswd("Enter decryption key: ", options->input_fd);
             else
-                key_tmp = getpasswd("Enter key: ");
+                    key_tmp = getpasswd("Enter key: ", options->input_fd);
 
             if(key_tmp == NULL)
             {
@@ -1197,7 +1197,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         }
         else
         {
-            hmac_key_tmp = getpasswd("Enter HMAC key: ");
+            hmac_key_tmp = getpasswd("Enter HMAC key: ", options->input_fd);
 
             if(hmac_key_tmp == NULL)
             {
