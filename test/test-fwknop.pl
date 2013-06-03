@@ -80,6 +80,7 @@ our %cf = (
     'gpg_access'                   => "$conf_dir/gpg_access.conf",
     'gpg_hmac_access'              => "$conf_dir/gpg_hmac_access.conf",
     'legacy_iv_access'             => "$conf_dir/legacy_iv_access.conf",
+    'legacy_iv_long_key_access'    => "$conf_dir/legacy_iv_long_key_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
     'gpg_no_pw_hmac_access'        => "$conf_dir/gpg_no_pw_hmac_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
