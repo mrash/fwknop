@@ -206,6 +206,7 @@ EXTRA_DIST = \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/legacy_iv_access.conf \
+    test/conf/legacy_iv_long_key_access.conf \
     test/conf/local_nat_fwknopd.conf \
     test/conf/mismatch_open_ports_access.conf \
     test/conf/mismatch_user_access.conf \
