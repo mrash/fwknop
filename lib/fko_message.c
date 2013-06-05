@@ -8,7 +8,7 @@
  * Purpose: Set/Get the spa message (access req/command/etc) based
  *          on the current spa data.
  *
- * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

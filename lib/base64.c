@@ -9,7 +9,7 @@
  * by Ryan Martell. (rdm4@martellventures.com).
  *
  * Copyright (C) Ryan Martell. (rdm4@martellventures.com)
- * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

@@ -7,7 +7,7 @@
  *
  * Purpose: Header file for sig_handler functions and data.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

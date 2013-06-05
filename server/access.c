@@ -7,7 +7,7 @@
  *
  * Purpose: Access.conf file processing for fwknop server.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

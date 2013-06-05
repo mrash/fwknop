@@ -8,7 +8,7 @@
  * Purpose: General logging routine that can write to syslog and/or stderr
  *          and can take varibale number of args.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

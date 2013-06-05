@@ -7,7 +7,7 @@
  *
  * Purpose: Get the current timestamp with optional offset applied.
  *
- * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

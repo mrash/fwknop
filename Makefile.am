@@ -91,6 +91,7 @@ EXTRA_DIST = \
     iphone/Classes/libfwknop/get_libfko_files.sh \
     iphone/Classes/bridge_fwknop.c \
     iphone/Classes/logutils.h \
+    m4/gpgme.m4 \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \
     perl/FKO/MANIFEST \
@@ -206,6 +207,7 @@ EXTRA_DIST = \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/legacy_iv_access.conf \
+    test/conf/legacy_iv_long_key_access.conf \
     test/conf/local_nat_fwknopd.conf \
     test/conf/mismatch_open_ports_access.conf \
     test/conf/mismatch_user_access.conf \

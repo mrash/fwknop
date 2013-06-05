@@ -6,7 +6,7 @@
  * @brief   General logging routine that can write to stderr
  *          and can take variable number of args.
  *
- * Copyright 2009-2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

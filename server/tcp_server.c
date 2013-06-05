@@ -8,7 +8,7 @@
  * Purpose: Spawns off a dummy tcp server for fwknopd.  Its purpose is
  *          to accept a tcp connection, then drop it after the first packet.
  *
- * Copyright 2010 Damien Stuart (dstuart@dstuart.org)
+ * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
  *  License (GNU Public License):
  *

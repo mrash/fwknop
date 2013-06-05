@@ -22,7 +22,7 @@ else
   exit 1
 fi
 
-aclocal -I config
+aclocal -I config -I m4
 autoheader
 automake --add-missing --copy
 autoconf

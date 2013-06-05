@@ -19,7 +19,7 @@
 This manual is for the Firewall Knock Operator library, libfko.
 (version @value{VERSION}, last updated @value{UPDATED}).
 
-Copyright @copyright{} 2009 Damien Stuart.
+Copyright @copyright{} 2009-2013 Damien Stuart.
 
 @quotation
 The libfko manual is free; you can redistribute it and/or modify
@@ -577,7 +577,7 @@ if(rc != FKO_SUCCESS)
 For a context that will be used for receiving and parsing an existing
 @acronym{SPA} message, you will use the @code{fko_new_with_data} function:
 
-@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, char @var{*data}, char @var{*key}})
+@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, const char @var{*data}, const char @var{*key}, const char @var{key_len}, int @var{encryption_mode}, const char @var{hmac_key}, const int @var{hmac_type}})
 The function @code{fko_new_with_data} sets up and initializes a new
 @code{fko_ctx_t} context, but instead of initializing default values, it
 stores the encrypted message data and makes it ready for parsing.  This
@@ -585,9 +585,13 @@ can be done in one of two ways.  One is to pass @code{NULL} for the third
 argument.  The context will be created and the data will be stored, but no
 decryption or decoding takes place.  In this case, you will need to call
 @code{fko_decrypt_spa_data} at a later time.  The other way to do it is
-to supply the @var{key} value; which would be the password or decryption
-key.  In this case, the context is created, the @acronym{SPA} data is
+to supply the @var{key} value (decryption passphrase) and assocated length.
+In this case, the context is created, the @acronym{SPA} data is
 decrypted, decoded, parsed, and stored in the context ready for retrieval.
+If an HMAC is also desired or required, then the @var{hmac_key} and
+associated length can be passed in.  This will cause libfko to authenticate
+the SPA data before decryption is attempted, and this is strongly
+recommended to do.
 
 The @code{fko_new_with_data} function returns the error code
 @code{FKO_SUCCESS} if the context was successfully created.  If any of the
@@ -603,12 +607,17 @@ The most common (simple) case...
 fko_ctx_t   ctx;
 char       *spa_data;
 char       *key;
+int         key_len;
+char       *hmac_key;
+int         hmac_key_len;
+int         hmac_type = FKO_HMAC_SHA256;
+int         enc_mode  = FKO_ENC_MODE_CBC;
 int rc;
 
 /* Assume we called code that retrieves the data and key
 */
 
-rc = fko_new_with_data(&ctx, spa_data, key);
+rc = fko_new_with_data(&ctx, spa_data, key, key_len, enc_mode, hmac_key, hmac_key_len, hmac_type);
 
 if(rc != FKO_SUCCESS)
 @{
@@ -621,9 +630,9 @@ if(rc != FKO_SUCCESS)
 @noindent
 Or, perhaps you need to defer decryption and parsing to a later point
 in the program.  We could use fko_new_with_data(), passing NULL for the
-decryption key, or we could use fko_new() to create an empty context,
-then use fko_set_spa_data() to add the encypted data (see comments in the code
-samples).
+decryption key and HMAC keys, or we could use fko_new() to create an empty
+context, then use fko_set_spa_data() to add the encypted data (see comments
+in the code samples).
 
 @example
 fko_ctx_t   ctx;
@@ -634,7 +643,8 @@ int rc;
 /* Assume we called code that retrieves the data and key
 */
 
-rc = fko_new_with_data(&ctx, spa_data, NULL);
+rc = fko_new_with_data(&ctx, spa_data, NULL, 0,
+        FKO_ENC_MODE_CBC, NULL, 0, FKO_HMAC_SHA256);
 
 if(rc != FKO_SUCCESS)
 @{
@@ -654,9 +664,19 @@ if(rc != FKO_SUCCESS)
 
 /* Assume we called other code and functions...  */
 
+/* Verify HMAC
+*/
+rc = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
+if(rc != FKO_SUCCESS)
+@{
+    fprintf(stderr, "Error from fko_verify_hmac: %s\n",
+        fko_errstr(rc));
+    exit(1);
+@}
+
 /* Decrypt and decode...
 */
-rc = fko_decrypt_spa_data(ctx, key);
+rc = fko_decrypt_spa_data(ctx, key, key_len);
 
 if(rc != FKO_SUCCESS)
 @{
@@ -743,13 +763,19 @@ a contrived bit of code demonstrating this:
 int
 main(int argc, char **argv)
 @{
-    fko_ctx_t       ctx;        /* FKO Context */
-    char           *password;   /* Encryption password */
-    char           *final_spa;  /* Final encrypted SPA data */
-    int             rc;         /* Result code */
+    fko_ctx_t       ctx;           /* FKO Context */
+    char           *key;           /* Encryption passphrase */
+    char           *hmac_key;      /* HMAC key */
+    char           *final_spa;     /* Final encrypted SPA data */
+    int             key_len;       /* Length of encryption key */
+    int             hmac_key_len;  /* Length of HMAC key */
+    int             rc;            /* Result code */
+    int             hmac_type = FKO_HMAC_SHA256;   /* Default HMAC digest */
+    int             enc_mode  = FKO_ENC_MODE_ASYMMETRIC;  /* Use GPG */
 
     /*  Assume we processed the command line
-     *  and retrieved the password.
+     *  and retrieved the password and the HMAC key and
+    *   set their associated lengths.
     */
 
     /* Create the context */
@@ -783,7 +809,8 @@ main(int argc, char **argv)
     rc = fko_set_gpg_signer(ctx, "me@@right.here");
 
     /* Finalize the SPA data */
-    rc = fko_spa_data_final(ctx);
+    rc = fko_spa_data_final(ctx, key, key_len, enc_mode,
+            hmac_key, hmac_key_len, hmac_type);
     if(rc != FKO_SUCCESS)
     @{
         fprintf(stderr, "Error encoding SPA data: %s\n", fko_errstr(rc));
@@ -804,7 +831,7 @@ main(int argc, char **argv)
     exit(0);
 @}
 @end example
-    
+
 @node Setting SPA Data
 @section Setting SPA Data
 @cindex spa data, setting values
@@ -822,6 +849,16 @@ the function will return @code{FKO_ERROR_INVALID_DATA}.
 For example:
 @example
     rc = fko_set_digest_type(ctx, FKO_DIGEST_SHA1);
+@end example
+@end deftypefun
+
+@deftypefun int fko_set_spa_hmac_type (@w{fko_ctx_t @var{ctx}, short @var{hmac_type}});
+Set the message hmac type.  Valid values can be found in @ref{HMAC Digests}
+of this manual. If a value other than the those that are supported is given,
+the function will return @code{FKO_ERROR_INVALID_DATA}.
+For example:
+@example
+    rc = fko_set_hmac_type(ctx, FKO_HMAC_SHA256);
 @end example
 @end deftypefun
 
@@ -893,9 +930,17 @@ the correct @code{message_type} ahead of time.
 @end deftypefun
 
 @deftypefun int fko_set_spa_digest (@w{fko_ctx_t @var{ctx}});
-Initiates a calculation (or recalculation) if the message digest hash for the
+Initiates a calculation (or recalculation) of the message digest hash for the
 current @acronym{SPA} data. If the required data fields are not set this
 function will return @code{FKO_ERROR_MISSING_ENCODED_DATA}.
+@strong{Note}: It should not be necessary to call this function directly
+as it will be called automatically by other functions during normal
+processing (most notably @code{fko_spa_data_final}).
+@end deftypefun
+
+@deftypefun int fko_set_spa_hmac (@w{fko_ctx_t @var{ctx}, const char @var{*hmac_key}, const int @var{hmac_key_len}});
+Initiates a calculation (or recalculation) of the message HMAC for the
+current @acronym{SPA} data.
 @strong{Note}: It should not be necessary to call this function directly
 as it will be called automatically by other functions during normal
 processing (most notably @code{fko_spa_data_final}).
@@ -1045,9 +1090,22 @@ list of valid digest_types listed in @ref{Digests} of this manual.  The
 return value is an FKO error status.
 @end deftypefun
 
+@deftypefun int fko_get_spa_hmac_type (@w{fko_ctx_t @var{ctx}, short @var{*hmac_type}});
+Sets the value of the @var{hmac_type} variable to the HMAC type value
+associated with the current context. This value can be checked against the
+list of valid hmac_types listed in @ref{HMAC Digests} of this manual.  The
+return value is an FKO error status.
+@end deftypefun
+
 @deftypefun int fko_get_spa_digest (@w{fko_ctx_t @var{ctx}, char @var{**spa_digest}});
 Assigns the pointer to the string holding the the fko @acronym{SPA} digest
 value associated with the current context to the address @var{spa_digest}
+is pointing to.  The return value is an FKO error status.
+@end deftypefun
+
+@deftypefun int fko_get_spa_hmac (@w{fko_ctx_t @var{ctx}, char @var{**spa_hmac}});
+Assigns the pointer to the string holding the the fko @acronym{SPA} HMAC
+value associated with the current context to the address @var{spa_hmac}
 is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
@@ -1158,14 +1216,14 @@ All of these functions return an integer representing the return status of
 the function. When succesfull, they will return @code{FKO_SUCCESS}.
 Otherwise, an error code value is returned.
 
-@deftypefun int fko_spa_data_final (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}});
+@deftypefun int fko_spa_data_final (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}, int @var{ken_len}, char @var{*hmac_key}, int @var{hmac_key_len}});
 This function is the final step in creating a complete encrypted
 @acronym{SPA} data string suitable for transmission to an fwknop server.
 It does require all of the requisite @acronym{SPA} data fields be set,
 otherwise it will fail with an appropriate error code.
 @end deftypefun
 
-@deftypefun int fko_decrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*dec_key}});
+@deftypefun int fko_decrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*dec_key}, int @var{key_len}});
 When given the correct @var{key} (password), this function decrypts, decodes,
 and parses the encrypted @acronym{SPA} data that was supplied to the context
 via the @code{fko_new_with_data} function that was also called without the
@@ -1174,10 +1232,10 @@ via the @code{fko_new_with_data} function that was also called without the
 fields in the context for later retrieval.
 @end deftypefun
 
-@deftypefun int fko_encrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}});
+@deftypefun int fko_encrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}, int @var{key_len}});
 Encrypts the intermediate encoded @acronym{SPA} data stored in the context.
 This function will call @code{fko_encode} if necessary.  It is normally not
-called directly as it is called from @code{fko_spa_data_final}. 
+called directly as it is called from @code{fko_spa_data_final}.
 @end deftypefun
 
 @deftypefun int fko_decode_spa_data (@w{fko_ctx_t @var{ctx}});
@@ -1242,10 +1300,14 @@ Success
 FKO Context is not initialized
 @item FKO_ERROR_MEMORY_ALLOCATION
 Unable to allocate memory
+@item FKO_ERROR_FILESYSTEM_OPERATION
+Read/write bytes mismiatch
 @item FKO_ERROR_INVALID_DATA
 Args contain invalid data
 @item FKO_ERROR_DATA_TOO_LARGE
 Value or Size of the data exceeded the max allowed
+@item FKO_ERROR_INVALID_KEY_LEN
+Invalid key length
 @item FKO_ERROR_USERNAME_UNKNOWN
 Unable to determine username
 @item FKO_ERROR_INCOMPLETE_SPA_DATA
@@ -1272,6 +1334,10 @@ Unexpected or invalid size for decrypted data
 Decryption failed or decrypted data is invalid
 @item FKO_ERROR_DIGEST_VERIFICATION_FAILED
 The computed digest did not match the digest in the spa data
+@item FKO_ERROR_INVALID_HMAC_KEY_LEN
+Invalid HMAC key length
+@item FKO_ERROR_UNSUPPORTED_HMAC_MODE
+Unsupported HMAC mode (default: SHA256)
 @item FKO_ERROR_UNSUPPORTED_FEATURE
 Unsupported or unimplemented feature or function
 @item FKO_ERROR_UNKNOWN
