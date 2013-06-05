@@ -206,8 +206,7 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
 
     struct stat     st;
 
-    /* First see if the config file exists.  If it doesn't, complain
-     * and go on with program defaults.
+    /* Make sure the config file exists.
     */
     if(stat(config_file, &st) != 0)
     {
@@ -218,6 +217,9 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
 
     verify_file_perms_ownership(config_file);
 
+    /* See the comment in the parse_access_file() function regarding security
+     * here relative to a TOCTOU bug flagged by Coverity.
+    */
     if ((cfile_ptr = fopen(config_file, "r")) == NULL)
     {
         fprintf(stderr, "[*] Could not open config file: %s\n",
