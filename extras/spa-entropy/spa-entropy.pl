@@ -32,7 +32,7 @@ my $hmac_key_file = '../../test/conf/fwknoprc_default_hmac_base64_key';
 my $enable_fwknop_client_gpg = 0;
 my $gpg_recipient = '361BBAD4';
 my $gpg_signer    = '6A3FAD56';
-my $gpg_home_dir  = '../../test/conf/client-gpg';
+my $gpg_home_dir  = '../../test/conf/client-gpg-no-pw';
 my $spa_key_file = '../../test/local_spa.key';
 my $help = 0;
 
