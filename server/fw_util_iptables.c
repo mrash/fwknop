@@ -644,7 +644,7 @@ rule_exists(const fko_srv_options_t * const opts,
 
     zero_cmd_buffers();
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -C %s %s",
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHK_RULE_ARGS,
             opts->fw_config->fw_command, fw_chain, fw_rule);
 
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);

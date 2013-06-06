@@ -36,6 +36,7 @@
 /* iptables command args
 */
 #define IPT_RULE_ARGS           "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s 2>&1"
+#define IPT_CHK_RULE_ARGS       "-C %s %s 2>&1"
 #define IPT_OUT_RULE_ARGS       "-t %s -p %i -d %s --sport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s 2>&1"
 #define IPT_FWD_RULE_ARGS       "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s 2>&1"
 #define IPT_DNAT_RULE_ARGS      "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i 2>&1"
