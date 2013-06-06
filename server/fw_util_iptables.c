@@ -76,7 +76,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_TMP_COMMENT_ARGS,
         opts->fw_config->fw_command,
         in_chain->table,
-        in_chain->to_chain,
+        in_chain->from_chain,
         1,   /* first rule */
         in_chain->target
     );
@@ -93,7 +93,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
         opts->fw_config->fw_command,
         in_chain->table,
-        in_chain->to_chain
+        in_chain->from_chain
     );
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
@@ -117,7 +117,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
             opts->fw_config->fw_command,
             in_chain->table,
-            in_chain->to_chain,
+            in_chain->from_chain,
             1
         );
         run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
