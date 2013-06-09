@@ -1092,11 +1092,16 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
     /* VERBOSE level */
     else if (var->pos == FWKNOP_CLI_ARG_VERBOSE)
     {
-        tmpint = strtol_wrapper(val, 0, LOG_LAST_VERBOSITY - 1, NO_EXIT_UPON_ERR, &is_err);
-        if(is_err == FKO_SUCCESS)
-            options->verbose = tmpint;
+        if (is_yes_str(val))
+            options->verbose = 1;
         else
-            parse_error = -1;
+        {
+            tmpint = strtol_wrapper(val, 0, LOG_LAST_VERBOSITY - 1, NO_EXIT_UPON_ERR, &is_err);
+            if(is_err == FKO_SUCCESS)
+                options->verbose = tmpint;
+            else
+                parse_error = -1;
+        }
     }
     /* RESOLVE_IP_HTTP ? */
     else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTP)
@@ -1243,7 +1248,10 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             snprintf(val, sizeof(val)-1, "%d", options->nat_port);
             break;
         case FWKNOP_CLI_ARG_VERBOSE:
-            snprintf(val, sizeof(val)-1, "%d", options->verbose);
+            if((options->verbose == 0) || (options->verbose == 1))
+                bool_to_yesno(options->verbose, val, sizeof(val));
+            else
+                snprintf(val, sizeof(val)-1, "%d", options->verbose);
             break;
         case FWKNOP_CLI_ARG_RESOLVE_IP_HTTP:
             bool_to_yesno(options->resolve_ip_http, val, sizeof(val));
