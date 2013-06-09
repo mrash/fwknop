@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/02/2013
+.\"      Date: 06/05/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "06/02/2013" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/05/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -129,6 +129,16 @@ Load an encryption key/password from the specified file\&. The key file contains
 client prompt you for the key is generally more secure\&. Note also that if a key is stored on disk, the
 \fBfwknop\fR
 rc file is a more powerful mechanism for specifying not only the key but other options as well\&.
+.RE
+.PP
+\fB\-\-stdin\fR
+.RS 4
+Read the encryption key/password from stdin\&. This can be used to send the data via a pipe for example\&. This command is similar to \-\-fd 0\&.
+.RE
+.PP
+\fB\-\-fd\fR=\fI<number>\fR
+.RS 4
+Specify the file descriptor number to read the key/password from\&. This command avoids the user being prompted for his password if none has been found in the user specific stanza, or none has been supplied on the command line\&. A file descriptor set to 0 is similar to the stdin command\&.
 .RE
 .PP
 \fB\-\-get\-hmac\-key\fR=\fI<file>\fR
