@@ -753,7 +753,7 @@ is what the new '2.2.2.2' stanza looks like in the .fwknoprc file:
     KEY_BASE64                  HvUtIOramehLGKimD4ECXOzinaH4h3U8H1WXum7b54Q=
     HMAC_KEY_BASE64             DLeLf93a3yBT2vhEpM+dWlirGta5GU+jdyG5uXp4461HgOtbqMem4gX0Bp2PJGzYZlbbcavcOM00UPm+0GqkXA==
     USE_HMAC                    Y
-    VERBOSE                     1
+    VERBOSE                     Y
     RESOLVE_IP_HTTP             Y
 ..........................
 
