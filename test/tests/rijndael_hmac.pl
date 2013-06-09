@@ -83,6 +83,23 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'custom input chain (tcp/22)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'custom_input_chain'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/FWKNOP_INPUT_TEST\s\(1\sreferences/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf'     => $cf{'custom_input_chain'},
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => '--get-hmac-key (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args .
@@ -699,6 +716,26 @@
         'server_conf' => $cf{'nat'},
         'fatal'    => $NO
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT to $internal_nat_host custom chain",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_b64_key'} -N $internal_nat_host:22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'custom_nat_chain'} -a $cf{'hmac_open_ports_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD_TEST\s.*dport\s22\s/,
+            qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_conf' => $cf{'custom_nat_chain'},
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',

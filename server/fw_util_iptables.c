@@ -44,6 +44,9 @@ static char   cmd_buf[CMD_BUFSIZE];
 static char   err_buf[CMD_BUFSIZE];
 static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
 
+static int rule_exists(const fko_srv_options_t * const opts,
+        const char * const fw_chain, const char * const fw_rule);
+
 static void
 zero_cmd_buffers(void)
 {
@@ -190,56 +193,25 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
 static int
 jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int     num, pos = 0;
-    char    cmd_buf[CMD_BUFSIZE]  = {0};
-    char    target[CMD_BUFSIZE]   = {0};
-    char    line_buf[CMD_BUFSIZE] = {0};
-    FILE   *ipt;
+    int    exists = 0;
+    char   rule_buf[CMD_BUFSIZE] = {0};
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
-        fwc.fw_command,
+    memset(rule_buf, 0, CMD_BUFSIZE);
+
+    snprintf(rule_buf, CMD_BUFSIZE-1, IPT_CHK_JUMP_RULE_ARGS,
         fwc.chain[chain_num].table,
-        fwc.chain[chain_num].from_chain
+        fwc.chain[chain_num].to_chain
     );
 
-    ipt = popen(cmd_buf, "r");
-
-    if(ipt == NULL)
+    if(rule_exists(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
     {
-        log_msg(LOG_ERR,
-            "Got error %i trying to get rules list.\n", errno);
-        return(-1);
+        log_msg(LOG_INFO, "jump_rule_exists() jump rule found");
+        exists = 1;
     }
+    else
+        log_msg(LOG_INFO, "jump_rule_exists() jump rule not found");
 
-    while((fgets(line_buf, CMD_BUFSIZE-1, ipt)) != NULL)
-    {
-        /* Get past comments and empty lines (note: we only look at the
-         * first character).
-        */
-        if(IS_EMPTY_LINE(line_buf[0]))
-            continue;
-
-        if(sscanf(line_buf, "%i %s ", &num, target) == 2)
-        {
-            if(strcmp(target, fwc.chain[chain_num].to_chain) == 0)
-            {
-                pos = num;
-                break;
-            }
-        }
-    }
-
-    pclose(ipt);
-
-    if (opts->verbose)
-    {
-        if(pos > 0)
-            log_msg(LOG_INFO, "jump_rule_exists() jump rule position: %d", pos);
-        else
-            log_msg(LOG_INFO, "jump_rule_exists() jump rule not found");
-    }
-
-    return(pos);
+    return exists;
 }
 
 /* Print all firewall rules currently instantiated by the running fwknopd
@@ -333,8 +305,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 static void
 delete_all_chains(const fko_srv_options_t * const opts)
 {
-    int     i, res;
-    int     jump_rule_num;
+    int     i, res, cmd_ctr = 0;
 
     for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
     {
@@ -344,15 +315,16 @@ delete_all_chains(const fko_srv_options_t * const opts)
         /* First look for a jump rule to this chain and remove it if it
          * is there.
         */
-        if((jump_rule_num = jump_rule_exists(opts, i)) > 0)
+        cmd_ctr = 0;
+        while(cmd_ctr < CMD_LOOP_TRIES && (jump_rule_exists(opts, i) == 1))
         {
             zero_cmd_buffers();
 
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_JUMP_RULE_ARGS,
                 fwc.fw_command,
                 fwc.chain[i].table,
                 fwc.chain[i].from_chain,
-                jump_rule_num
+                fwc.chain[i].to_chain
             );
 
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
@@ -365,6 +337,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
                 log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+            cmd_ctr++;
         }
 
         zero_cmd_buffers();
@@ -664,7 +638,7 @@ rule_exists(const fko_srv_options_t * const opts,
     {
         rule_exists = 1;
         if (opts->verbose)
-            log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s already exist.",
+            log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s already exists.",
                     fw_rule, fw_chain);
     }
 

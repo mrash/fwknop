@@ -33,6 +33,7 @@
 
 #define CMD_BUFSIZE                 256
 #define MAX_FW_COMMAND_ARGS_LEN     256
+#define CMD_LOOP_TRIES              10   /* for repeated command executions */
 
 #define STANDARD_CMD_OUT_BUFSIZE    4096
 
