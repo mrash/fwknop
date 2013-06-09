@@ -1,0 +1,7 @@
+[default]
+HMAC_DIGEST_TYPE    sha256
+HMAC_KEY_BASE64     Yh+xizBnl6FotC5ec7FanVGClRMlsOAPh2u6eovnerfBVKwaVKzjGoblFMHMc593TNyi0dWn4opLoTIV9q/ttg==
+GPG_HOMEDIR         conf/client-gpg-no-pw
+GPG_SIGNER          6A3FAD56
+GPG_RECIPIENT       361BBAD4
+USE_GPG             Y

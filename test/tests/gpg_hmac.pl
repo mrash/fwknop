@@ -11,20 +11,33 @@
         'fatal'    => $NO
     },
 
-    ### no password GPG testing
     {
         'category' => 'GPG+HMAC',
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/22 ssh)',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_gpg_args "
-            . "--rc-file $cf{'rc_gpg_hmac_b64_key'}",
-        'fwknopd_cmdline'  => $default_server_gpg_args_hmac,
+        'cmdline'  => $default_client_gpg_args
+            . " --rc-file $cf{'rc_gpg_hmac_b64_key'}",
+        'fwknopd_cmdline' => $default_server_gpg_args_hmac,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_b64_key'},
         'fatal'    => $NO
     },
+    {
+        'category' => 'GPG+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'gpg args from rc file',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args
+            . " --rc-file $cf{'rc_gpg_args_hmac_b64_key'}",
+        'fwknopd_cmdline' => $default_server_gpg_args_hmac,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_gpg_args_hmac_b64_key'},
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GPG+HMAC',
         'subcategory' => 'client+server',

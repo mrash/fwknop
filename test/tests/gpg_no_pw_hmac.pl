@@ -17,6 +17,20 @@
     {
         'category' => 'GPG (no pw) HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'gpg args from rc file',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . " --rc-file $cf{'rc_gpg_args_no_pw_hmac_b64_key'}",
+        'fwknopd_cmdline'  => $default_server_gpg_args_no_pw_hmac,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_gpg_args_no_pw_hmac_b64_key'},
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GPG (no pw) HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
