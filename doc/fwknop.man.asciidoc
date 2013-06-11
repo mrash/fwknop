@@ -900,9 +900,9 @@ decrypt SPA packets produced by a 2.5 and later client (set '-M legacy'), and
 a 2.5 and later server can decrypt SPA packets produced by pre-2.5 clients (set
 'ENCRYPTION_MODE legacy' in the access.conf file).  Note that HMAC is only
 supported as of 2.5 and is an optional feature, so backwards compatibility is
-only possible for SPA packets that don't use an HMAC.  It is recommended to
-upgrade all fwknop clients and servers to 2.5 and use the new HMAC mode for
-properly authenticated SPA communications.
+only configurations that don't use an HMAC on either side.  It is strongly
+recommended to upgrade all fwknop clients and servers to 2.5 and use the new
+HMAC mode for properly authenticated SPA communications.
 
 
 DEPENDENCIES
