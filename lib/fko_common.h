@@ -100,9 +100,23 @@
     #define BYTEORDER 4321
   #elif defined(_LITTLE_ENDIAN)
     #define BYTEORDER 1234
-  #else
-    #error unable to determine BYTEORDER
   #endif
+#elif defined(_BIG_ENDIAN) || defined(__BIG_ENDIAN__)
+  #if defined(__i386__) || defined(__ppc__)
+    #define BYTEORDER 4321
+  #elif defined(__x86_64__) || defined(__ppc64)
+    #define BYTEORDER 87654321
+  #endif
+#elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__)
+  #if defined(__i386__) || defined(__ppc__)
+    #define BYTEORDER 1234
+  #elif defined(__x86_64__) || defined(__ppc64)
+    #define BYTEORDER 12345678
+  #endif
+#endif
+
+#ifndef BYTEORDER
+  #error unable to determine BYTEORDER
 #endif
 
 #ifdef WIN32

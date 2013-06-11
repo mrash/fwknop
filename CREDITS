@@ -140,3 +140,9 @@ hlein
     - Suggested the ability to read a passphrase from STDIN and via a new --fd
       command line argument (github #74) to allow things like:
             $ gpg -d passphrasefile.pgp | fwknop -R -n myserver
+
+Blair Zajac
+    - Contributed patches to handle endian issues on PPC systems.
+    - Reported an issue where strndup() is not available on some PPC systems
+      and the fix is to use the local lib/fko_util.c implementation similarly
+      to Windows builds.
