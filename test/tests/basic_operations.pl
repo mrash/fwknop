@@ -339,6 +339,7 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*MD5/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*MD5/],
         'fatal'    => $NO
     },
     {
@@ -350,6 +351,7 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA1/],
         'fatal'    => $NO
     },
     {
@@ -361,6 +363,7 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA256/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA256/],
         'fatal'    => $NO
     },
     {
@@ -372,6 +375,7 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA384/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA384/],
         'fatal'    => $NO
     },
     {
@@ -383,6 +387,7 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA512/],
         'fatal'    => $NO
     },
     {
@@ -395,6 +400,7 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*MD5/],
+        'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*MD5/, qw/USE_HMAC.*Y/],
         'fatal'    => $NO
     },
     {
@@ -407,6 +413,7 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA1/],
         'fatal'    => $NO
     },
     {
@@ -419,6 +426,7 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA256/],
+        'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA256/],
         'fatal'    => $NO
     },
     {
@@ -431,6 +439,7 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA384/],
+        'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA384/],
         'fatal'    => $NO
     },
     {
@@ -443,6 +452,7 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA512/],
+        'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA512/],
         'fatal'    => $NO
     },
     {
@@ -454,6 +464,8 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'TCP'}}],
         'positive_output_matches' => [qr/protocol:\sudp/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*udp/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
         'fatal'    => $NO
     },
     {
@@ -465,6 +477,8 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
         'positive_output_matches' => [qr/protocol:\stcp/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*tcp/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
         'fatal'    => $NO
     },
     {
@@ -476,6 +490,8 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
         'positive_output_matches' => [qr/protocol:\shttp/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*http/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
         'fatal'    => $NO
     },
     {
@@ -487,6 +503,8 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
         'positive_output_matches' => [qr/protocol:\stcpraw/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*tcpraw/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
         'fatal'    => $NO
     },
     {
@@ -498,6 +516,8 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
         'positive_output_matches' => [qr/protocol:\sicmp/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*icmp/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
         'fatal'    => $NO
     },
     {
@@ -509,6 +529,8 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '65531'}}],
         'positive_output_matches' => [qr/source\sport:\s65421/],
+        'rc_positive_output_matches' => [qr/SPA_SOURCE_PORT.*65421/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
         'fatal'    => $NO
     },
     {
@@ -520,6 +542,8 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '65531'}}],
         'positive_output_matches' => [qr/destination\sport:\s65421/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PORT.*65421/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
         'fatal'    => $NO
     },
     {
@@ -531,6 +555,60 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
+        'rc_positive_output_matches' => [qr/FW_TIMEOUT.*1234/],
+        'rc_negative_output_matches' => [qr/USE_HMAC/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--verbose',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default --fw-timeout 1234 --verbose",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*Y/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--verbose --verbose',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 --verbose --verbose",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*2/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'no --verbose',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
+        'rc_negative_output_matches' => [qr/VERBOSE/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--use-hmac --key-gen',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 --verbose --use-hmac --key-gen",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*Y/,
+            qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/],
         'fatal'    => $NO
     },
 

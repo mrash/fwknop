@@ -405,10 +405,17 @@ our $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     "--no-save-args --verbose --verbose";
 
+our $default_client_args_no_verbose = "LD_LIBRARY_PATH=$lib_dir " .
+    "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+    '--no-save-args ';
+
 our $client_rewrite_rc_args = "$default_client_args_no_get_key " .
     "--rc-file $rewrite_rc_file --test";
 
 our $client_save_rc_args = "$default_client_args_no_get_key " .
+    "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test";
+
+our $client_save_rc_args_no_verbose = "$default_client_args_no_verbose " .
     "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test";
 
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
@@ -1075,31 +1082,34 @@ sub expected_code_version() {
     return 0;
 }
 
+sub write_rc_file() {
+    my ($rc_hr, $rc_file) = @_;
+
+    open RC, "> $rc_file"
+        or die "[*] Could not open $rc_file: $!";
+    for my $hr (@$rc_hr) {
+        print RC "[$hr->{'name'}]\n";
+        for my $var (keys %{$hr->{'vars'}}) {
+            print RC "$var      $hr->{'vars'}->{$var}\n";
+        }
+    }
+    close RC;
+
+    return;
+}
+
 sub client_rc_file() {
     my $test_hr = shift;
 
     my $rv = 1;
+    my $rc_file = '';
 
     if ($test_hr->{'write_rc_file'}) {
-        open RC, "> $rewrite_rc_file"
-            or die "[*] Could not open $rewrite_rc_file: $!";
-        for my $hr (@{$test_hr->{'write_rc_file'}}) {
-            print RC "[$hr->{'name'}]\n";
-            for my $var (keys %{$hr->{'vars'}}) {
-                print RC "$var      $hr->{'vars'}->{$var}\n";
-            }
-        }
-        close RC;
+        &write_rc_file($test_hr->{'write_rc_file'}, $rewrite_rc_file);
+        $rc_file = $rewrite_rc_file;
     } elsif ($test_hr->{'save_rc_stanza'}) {
-        open RC, "> $save_rc_file"
-            or die "[*] Could not open $save_rc_file: $!";
-        for my $hr (@{$test_hr->{'save_rc_stanza'}}) {
-            print RC "[$hr->{'name'}]\n";
-            for my $var (keys %{$hr->{'vars'}}) {
-                print RC "$var      $hr->{'vars'}->{$var}\n";
-            }
-        }
-        close RC;
+        &write_rc_file($test_hr->{'save_rc_stanza'}, $save_rc_file);
+        $rc_file = $save_rc_file;
     } else {
         &write_test_file(
             "[-] test hash does not include 'write_rc_file' or 'save_rc_stanza'\n",
@@ -1109,8 +1119,11 @@ sub client_rc_file() {
 
     $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
             $cmd_out_tmp, $curr_test_file);
-    $rv = 0 unless &file_find_regex([qr/final\spacked/i],
-        $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
+
+    unless ($test_hr->{'cmdline'} =~ /key\-gen/ or $test_hr->{'cmdline'} =~ /\-k/) {
+        $rv = 0 unless &file_find_regex([qr/final\spacked/i],
+            $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
+    }
 
     if ($test_hr->{'positive_output_matches'}) {
         unless (&file_find_regex(
@@ -1139,6 +1152,28 @@ sub client_rc_file() {
             "[-] validate_fko_decode() returned zero, setting rv=0\n",
             $curr_test_file);
         $rv = 0;
+    }
+
+    if ($test_hr->{'rc_positive_output_matches'}) {
+        unless (&file_find_regex(
+                $test_hr->{'rc_positive_output_matches'},
+                $MATCH_ALL, $NO_APPEND_RESULTS, $rc_file)) {
+            &write_test_file(
+                "[-] rc_positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'rc_negative_output_matches'}) {
+        if (&file_find_regex(
+                $test_hr->{'rc_negative_output_matches'},
+                $MATCH_ANY, $NO_APPEND_RESULTS, $rc_file)) {
+            &write_test_file(
+                "[-] rc_negative_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
     }
 
     return $rv;
@@ -5008,7 +5043,9 @@ sub validate_test_hashes() {
         'insert_rule_before_exec'    => $OPTIONAL,
         'insert_rule_while_running'  => $OPTIONAL,
         'search_for_rule_after_exit' => $OPTIONAL,
-        'mv_and_restore_replay_cache'  => $OPTIONAL,
+        'rc_positive_output_matches' => $OPTIONAL,
+        'rc_negative_output_matches' => $OPTIONAL,
+        'mv_and_restore_replay_cache' => $OPTIONAL,
         'server_positive_output_matches' => $OPTIONAL,
         'server_negative_output_matches' => $OPTIONAL,
         'replay_positive_output_matches' => $OPTIONAL,
