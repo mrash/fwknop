@@ -134,6 +134,7 @@ EXTRA_DIST = \
     test/conf/disable_aging_fwknopd.conf \
     test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
+    test/conf/dual_key_legacy_iv_access.conf \
     test/conf/ecb_mode_access.conf \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \

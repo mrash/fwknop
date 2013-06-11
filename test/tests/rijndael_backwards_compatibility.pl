@@ -73,6 +73,25 @@
     },
     {
         'category' => 'Rijndael',
+        'subcategory' => 'client->server backwards compat.',
+        'detail'   => 'v2.0.3 dual keys',
+        'function' => \&backwards_compatibility,
+        'pkt' =>
+            '+8OtxmTJPgQmrXZ7hAqTopLBC/thqHNuPHTfR234pFuQOCZUikPe0inHmjfnQFnP' .
+            'Sop/Iy6v+BCn9D+QD7eT7JI6BIoKp14K+8iNgKaNw1BdfgF1XDulpkNEdyG0fXz5' .
+            'M+GledHfz2d49aYThoQ2Cr8Iw1ycViawY',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'dual_key_legacy_iv_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'mv_and_restore_replay_cache' => $YES,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael',
         'subcategory' => 'client->server backwards compatibility',
         'detail'   => 'v2.0.4',
         'function' => \&backwards_compatibility,
@@ -86,6 +105,24 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client->server backwards compat.',
+        'detail'   => 'v2.0.4 dual keys',
+        'function' => \&backwards_compatibility,
+        'pkt' =>
+            '8Xm8U5vQ03T88UTCWbwO3t/aL6euZ8IgVbNdDVz3Bn6HkTcBqxcME95U/G3bCH' .
+            'vQznpnGb05Md4ZgexHZGzZdSwsP8iVtcZdsgCBfeO4Eqs8OaSMjJVF8SQ+Jmhu' .
+            'XZMcWgMsIzhpprJ7JX41DrWd0OtBnE3rVwsN0',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'dual_key_legacy_iv_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'mv_and_restore_replay_cache' => $YES,
         'fatal'    => $NO
     },
 

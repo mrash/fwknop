@@ -77,6 +77,7 @@ our %cf = (
     'android_access'               => "$conf_dir/android_access.conf",
     'android_legacy_iv_access'     => "$conf_dir/android_legacy_iv_access.conf",
     'dual_key_access'              => "$conf_dir/dual_key_usage_access.conf",
+    'dual_key_legacy_iv_access'    => "$conf_dir/dual_key_legacy_iv_access.conf",
     'hmac_dual_key_access'         => "$conf_dir/hmac_dual_key_usage_access.conf",
     'gpg_access'                   => "$conf_dir/gpg_access.conf",
     'gpg_hmac_access'              => "$conf_dir/gpg_hmac_access.conf",
@@ -674,6 +675,12 @@ sub run_test() {
 
     $test_hr->{'msg'} = $msg;
 
+    if ($test_hr->{'mv_and_restore_replay_cache'}) {
+        unlink "${default_digest_file}.mv"
+            if -e "${default_digest_file}.mv";
+        move $default_digest_file, "${default_digest_file}.mv";
+    }
+
     if (&{$test_hr->{'function'}}($test_hr)) {
         &logr("pass ($executed)\n");
         $passed++;
@@ -684,6 +691,11 @@ sub run_test() {
         if ($test_hr->{'fatal'} eq $YES) {
             die "[*] required test failed, exiting.";
         }
+    }
+
+    if ($test_hr->{'mv_and_restore_replay_cache'}) {
+        unlink $default_digest_file if -e $default_digest_file;
+        move "${default_digest_file}.mv", $default_digest_file;
     }
 
     if ($enable_valgrind and &is_valgrind_running()) {
@@ -4996,6 +5008,7 @@ sub validate_test_hashes() {
         'insert_rule_before_exec'    => $OPTIONAL,
         'insert_rule_while_running'  => $OPTIONAL,
         'search_for_rule_after_exit' => $OPTIONAL,
+        'mv_and_restore_replay_cache'  => $OPTIONAL,
         'server_positive_output_matches' => $OPTIONAL,
         'server_negative_output_matches' => $OPTIONAL,
         'replay_positive_output_matches' => $OPTIONAL,
