@@ -131,6 +131,8 @@ EXTRA_DIST = \
     test/conf/ctr_mode_access.conf \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
+    test/conf/custom_input_chain_fwknopd.conf \
+    test/conf/custom_nat_chain_fwknopd.conf \
     test/conf/disable_aging_fwknopd.conf \
     test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
@@ -138,6 +140,7 @@ EXTRA_DIST = \
     test/conf/ecb_mode_access.conf \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
+    test/conf/force_nat_access.conf \
     test/conf/force_nat_access.conf \
     test/conf/future_expired_stanza_access.conf \
     test/conf/fuzzing_open_ports_access.conf \
@@ -202,6 +205,8 @@ EXTRA_DIST = \
     test/conf/fwknoprc_with_default_base64_key \
     test/conf/fwknoprc_with_default_key \
     test/conf/fwknoprc_with_named_key \
+    test/conf/fwknoprc_gpg_args_hmac_key \
+    test/conf/fwknoprc_gpg_args_no_pw_hmac_key \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
