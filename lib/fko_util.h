@@ -52,7 +52,7 @@ const char * msg_type_inttostr(const int type);
 size_t  strlcat(char *dst, const char *src, size_t siz);
 size_t  strlcpy(char *dst, const char *src, size_t siz);
 
-#ifdef WIN32
+#if defined(WIN32) || !defined(HAVE_STRNDUP)
 char * strndup( const char * s, size_t len );
 #endif
 

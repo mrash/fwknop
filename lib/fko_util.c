@@ -399,11 +399,11 @@ strtol_wrapper(const char * const str, const int min,
 }
 
 
-#ifdef WIN32
+#if defined(WIN32) || !defined(HAVE_STRNDUP)
 /* Windows does not have strndup, so we well implement it here.
  * This was the Public Domain C Library (PDCLib).
 */
-char 
+char
 *strndup( const char * s, size_t len )
 {
     char* ns = NULL;
