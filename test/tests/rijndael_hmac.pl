@@ -83,7 +83,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => 'custom input chain (tcp/22)',
+        'detail'   => 'iptables custom input chain',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
@@ -719,7 +719,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => "NAT to $internal_nat_host custom chain",
+        'detail'   => "iptables NAT custom chain",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             "$cf{'rc_hmac_b64_key'} -N $internal_nat_host:22",
