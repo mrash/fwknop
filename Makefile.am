@@ -264,6 +264,7 @@ EXTRA_DIST = \
     test/tests/basic_operations.pl \
     test/tests/rijndael_hmac.pl \
     test/tests/rijndael_backwards_compatibility.pl \
+    test/tests/os_compatibility.pl \
     test/tests/gpg_hmac.pl \
     test/tests/gpg_no_pw.pl \
     test/tests/gpg_no_pw_hmac.pl \

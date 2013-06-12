@@ -193,6 +193,7 @@ my @test_files = (
     "$tests_dir/rijndael_fuzzing.pl",
     "$tests_dir/rijndael_backwards_compatibility.pl",
     "$tests_dir/rijndael_hmac.pl",
+    "$tests_dir/os_compatibility.pl",
     "$tests_dir/perl_FKO_module.pl",
     "$tests_dir/python_fko.pl",
     "$tests_dir/gpg_no_pw.pl",
@@ -218,6 +219,7 @@ our @gpg                     = ();  ### from tests/gpg.pl
 our @gpg_hmac                = ();  ### from tests/gpg_hmac.pl
 our @perl_FKO_module         = ();  ### from tests/perl_FKO_module.pl
 our @python_fko              = ();  ### from tests/python_fko.pl
+our @os_compatibility        = ();  ### from tests/os_compatibility.pl
 our @rijndael_backwards_compatibility = ();  ### from tests/rijndael_backwards_compatibility.pl
 
 my $passed = 0;
@@ -510,6 +512,7 @@ my @tests = (
     @rijndael_backwards_compatibility,
     @rijndael_fuzzing,
     @rijndael_hmac,
+    @os_compatibility,
     @perl_FKO_module,
     @python_fko,
     @gpg_no_pw,
@@ -3605,6 +3608,12 @@ sub altered_non_base64_spa_data() {
     $rv = 0 unless $server_was_stopped;
 
     return $rv;
+}
+
+sub os_compatibility() {
+    my $test_hr = shift;
+
+    return &backwards_compatibility($test_hr);
 }
 
 sub backwards_compatibility() {
