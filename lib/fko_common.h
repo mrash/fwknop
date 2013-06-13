@@ -101,17 +101,23 @@
   #elif defined(_LITTLE_ENDIAN)
     #define BYTEORDER 1234
   #endif
-#elif defined(_BIG_ENDIAN) || defined(__BIG_ENDIAN__)
-  #if defined(__i386__) || defined(__ppc__)
-    #define BYTEORDER 4321
-  #elif defined(__x86_64__) || defined(__ppc64)
-    #define BYTEORDER 87654321
+#endif
+
+#ifndef BYTEORDER
+  #if defined(__BYTE_ORDER)
+    #define BYTEORDER __BYTE_ORDER
+  #elif defined(_BYTE_ORDER)
+    #define BYTEORDER _BYTE_ORDER
+  #elif defined(BYTE_ORDER)
+    #define BYTEORDER BYTE_ORDER
   #endif
-#elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__)
-  #if defined(__i386__) || defined(__ppc__)
+#endif
+
+#ifndef BYTEORDER
+  #if defined(_BIG_ENDIAN) || defined(__BIG_ENDIAN__)
+    #define BYTEORDER 4321
+  #elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__)
     #define BYTEORDER 1234
-  #elif defined(__x86_64__) || defined(__ppc64)
-    #define BYTEORDER 12345678
   #endif
 #endif
 
