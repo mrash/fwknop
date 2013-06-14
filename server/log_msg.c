@@ -164,6 +164,7 @@ log_msg(int level, char* msg, ...)
 
         vfprintf(stderr, msg, apse);
         fprintf(stderr, "\n");
+        fflush(stderr);
 
         va_end(apse);
 
