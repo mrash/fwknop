@@ -1009,7 +1009,7 @@ save_args(int argc, char **argv, const char * const args_save_file)
     char args_str[MAX_LINE_LEN] = {0};
     int i = 0, args_str_len = 0, args_file_fd = -1;
 
-    args_file_fd = open(args_save_file, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR);
+    args_file_fd = open(args_save_file, O_WRONLY|O_CREAT|O_TRUNC, S_IRUSR|S_IWUSR);
     if (args_file_fd == -1) {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open args file: %s",
             args_save_file);
