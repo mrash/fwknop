@@ -209,7 +209,7 @@ main(int argc, char **argv)
         */
         if(get_running_pid(&opts) != getpid())
         {
-            /* If foreground mode is not set, the fork off and become a daemon.
+            /* If foreground mode is not set, then fork off and become a daemon.
             * Otherwise, attempt to get the pid file lock and go on.
             */
             if(opts.foreground == 0)

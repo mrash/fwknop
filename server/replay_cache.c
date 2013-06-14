@@ -262,7 +262,9 @@ replay_file_cache_init(fko_srv_options_t *opts)
         /* the file does not exist yet, so it will be created when the first
          * successful SPA packet digest is written to disk
         */
-        digest_file_fd = open(opts->config[CONF_DIGEST_FILE], O_WRONLY|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+        digest_file_fd = open(opts->config[CONF_DIGEST_FILE],
+                O_WRONLY|O_CREAT|O_EXCL, S_IRUSR|S_IWUSR);
+
         if (digest_file_fd == -1)
         {
             log_msg(LOG_WARNING, "Could not create digest cache: %s: %s",
