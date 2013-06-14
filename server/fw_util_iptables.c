@@ -205,11 +205,13 @@ jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
 
     if(rule_exists(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
     {
-        log_msg(LOG_INFO, "jump_rule_exists() jump rule found");
+        if (opts->verbose)
+            log_msg(LOG_INFO, "jump_rule_exists() jump rule found");
         exists = 1;
     }
     else
-        log_msg(LOG_INFO, "jump_rule_exists() jump rule not found");
+        if (opts->verbose)
+            log_msg(LOG_INFO, "jump_rule_exists() jump rule not found");
 
     return exists;
 }
@@ -630,9 +632,9 @@ rule_exists(const fko_srv_options_t * const opts,
 
     if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
     {
-        rule_exists = 0;
-        log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s does not exist.",
-                fw_rule, fw_chain);
+        if (opts->verbose)
+            log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s does not exist.",
+                    fw_rule, fw_chain);
     }
     else
     {
@@ -649,7 +651,7 @@ static int
 create_rule(const fko_srv_options_t * const opts,
         const char * const fw_chain, const char * const fw_rule)
 {
-    int res;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -664,15 +666,12 @@ create_rule(const fko_srv_options_t * const opts,
 
     if(EXTCMD_IS_SUCCESS(res))
     {
-        res = 0;
         if (opts->verbose)
             log_msg(LOG_INFO, "create_rule() Rule: '%s' added to %s", fw_rule, fw_chain);
+        res = 1;
     }
     else
-    {
-        res = 1;
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
-    }
 
     return res;
 }
@@ -777,7 +776,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             if(rule_exists(opts, in_chain->to_chain, rule_buf) == 0)
             {
-                if (create_rule(opts, in_chain->to_chain, rule_buf) == 0)
+                if(create_rule(opts, in_chain->to_chain, rule_buf))
                 {
                     log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
                         in_chain->to_chain, spadat->use_src_ip,
@@ -812,9 +811,9 @@ process_spa_request(const fko_srv_options_t * const opts,
 
                 if(rule_exists(opts, out_chain->to_chain, rule_buf) == 0)
                 {
-                    if (create_rule(opts, out_chain->to_chain, rule_buf) == 0)
+                    if(create_rule(opts, out_chain->to_chain, rule_buf))
                     {
-                        log_msg(LOG_INFO, "Rule in %s for %s, %s expires at %u, does not exist.",
+                        log_msg(LOG_INFO, "Added Rule in %s for %s, %s expires at %u",
                             out_chain->to_chain, spadat->use_src_ip,
                             spadat->spa_message_remain, exp_ts
                         );
@@ -877,7 +876,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             if(rule_exists(opts, in_chain->to_chain, rule_buf) == 0)
             {
-                if (create_rule(opts, in_chain->to_chain, rule_buf) == 0)
+                if(create_rule(opts, in_chain->to_chain, rule_buf))
                 {
                     log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
                         in_chain->to_chain, spadat->use_src_ip,
@@ -893,7 +892,6 @@ process_spa_request(const fko_srv_options_t * const opts,
                         in_chain->next_expire = exp_ts;
                 }
             }
-
         }
         else if(strlen(fwd_chain->to_chain))
         {
@@ -920,7 +918,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             if(rule_exists(opts, fwd_chain->to_chain, rule_buf) == 0)
             {
-                if (create_rule(opts, fwd_chain->to_chain, rule_buf) == 0)
+                if(create_rule(opts, fwd_chain->to_chain, rule_buf))
                 {
                     log_msg(LOG_INFO, "Added FORWARD Rule to %s for %s, %s expires at %u",
                         fwd_chain->to_chain, spadat->use_src_ip,
@@ -963,7 +961,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             if(rule_exists(opts, dnat_chain->to_chain, rule_buf) == 0)
             {
-                if (create_rule(opts, dnat_chain->to_chain, rule_buf) == 0)
+                if(create_rule(opts, dnat_chain->to_chain, rule_buf))
                 {
                     log_msg(LOG_INFO, "Added DNAT Rule to %s for %s, %s expires at %u",
                         dnat_chain->to_chain, spadat->use_src_ip,
@@ -1018,9 +1016,9 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             if(rule_exists(opts, snat_chain->to_chain, rule_buf) == 0)
             {
-                if(create_rule(opts, snat_chain->to_chain, rule_buf) == 0)
+                if(create_rule(opts, snat_chain->to_chain, rule_buf))
                 {
-                    log_msg(LOG_INFO, "Added Source NAT Rule to %s for %s, %s expires at %u",
+                    log_msg(LOG_INFO, "Added SNAT Rule to %s for %s, %s expires at %u",
                         snat_chain->to_chain, spadat->use_src_ip,
                         spadat->spa_message_remain, exp_ts
                     );
