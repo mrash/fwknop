@@ -39,9 +39,10 @@
  * LOG_STDERR_ONLY can be set to send a message stderr with a copy to
  * syslog as well.
 */
-#define LOG_STDERR      0x1000
-#define LOG_STDERR_ONLY 0x3000
-#define LOG_STDERR_MASK 0x0FFF
+#define LOG_STDERR              0x1000
+#define LOG_WITHOUT_SYSLOG      0x2000
+#define LOG_STDERR_ONLY         (LOG_STDERR | LOG_WITHOUT_SYSLOG)
+#define LOG_VERBOSITY_MASK      0x0FFF
 
 #define LOG_DEFAULT_VERBOSITY   LOG_WARNING     /*!< Default verbosity to use */
 

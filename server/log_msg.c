@@ -154,7 +154,7 @@ log_msg(int level, char* msg, ...)
 {
     va_list ap, apse;
 
-    if (level > verbosity)
+    if ((level & LOG_VERBOSITY_MASK) > verbosity)
         return;
 
     va_start(ap, msg);
@@ -175,17 +175,18 @@ log_msg(int level, char* msg, ...)
         fflush(stderr);
 
         va_end(apse);
-
-        if(LOG_STDERR_ONLY & level)
-        {
-            va_end(ap);
-            return;
-        }
-
-        /* Remove the log to stderr flag from the log level value.
-        */
-        level &= LOG_STDERR_MASK;
     }
+
+    /* If the message has not to be printed to the syslog, we return */
+    if (LOG_WITHOUT_SYSLOG & level)
+    {
+        va_end(ap);
+        return;
+    }
+
+    /* Remove the log to stderr flag from the log level value.
+    */
+    level &= LOG_VERBOSITY_MASK;
 
     /* Send the message to syslog.
     */
