@@ -83,6 +83,48 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'replay attack detection',
+        'function' => \&replay_detection,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'detect replay (Rijndael prefix)',
+        'function' => \&replay_detection,
+        'cmdline'  => $default_client_hmac_args,
+        'pkt_prefix' => 'U2FsdGVkX1',
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'detect replay (GnuPG prefix)',
+        'function' => \&replay_detection,
+        'cmdline'  => $default_client_hmac_args,
+        'pkt_prefix' => 'hQ',
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'iptables custom input chain',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,

@@ -160,20 +160,33 @@
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'replay_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+        'server_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
         'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
-        'detail'   => 'detect replay #1 (GnuPG prefix)',
+        'detail'   => 'detect replay (Rijndael prefix)',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'U2FsdGVkX1',
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => 'detect replay (GnuPG prefix)',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
+        'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
         'fatal'    => $NO
     },
 
