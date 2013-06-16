@@ -900,9 +900,33 @@ decrypt SPA packets produced by a 2.5 and later client (set '-M legacy'), and
 a 2.5 and later server can decrypt SPA packets produced by pre-2.5 clients (set
 'ENCRYPTION_MODE legacy' in the access.conf file).  Note that HMAC is only
 supported as of 2.5 and is an optional feature, so backwards compatibility is
-only configurations that don't use an HMAC on either side.  It is strongly
+only for configurations that don't use an HMAC on either side.  It is strongly
 recommended to upgrade all fwknop clients and servers to 2.5 and use the new
-HMAC mode for properly authenticated SPA communications.
+HMAC mode for properly authenticated SPA communications.  The backwards
+compatibility support is used to make it easier to upgrade clients and servers
+with a phased approach.
+
+For emphasis, if the *fwknopd* server is upgraded to 2.5 (or later), but older
+clients cannot be upgraded at the same time, then for each 'SOURCE' stanza in
+the '@sysconfdir@/fwknop/access.conf' file, add the following line:
+
+..........................
+    ENCRYPTION_MODE         legacy
+..........................
+
+In addition, if the 'KEY' variable has an encryption key longer than 16 bytes,
+it will need to be truncated to 16 characters in the 'access.conf' file in
+order for pre-2.5 clients to work properly.  This limitation is fixed in 2.5,
+and provides additional motiviation for upgrading all clients and servers to
+2.5 or later.
+
+Now, flipping the scenario around, if the *fwknop* clients are upgraded but the
+*fwknopd* server is still at a pre-2.5 version, then add the '-M legacy'
+argument to the fwknop command line:
+
+..........................
+    $ fwknop -A tcp/22 -M legacy -R -D 2.2.2.2
+..........................
 
 
 DEPENDENCIES
