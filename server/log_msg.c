@@ -107,7 +107,7 @@ init_logging(fko_srv_options_t *opts) {
             || opts->fw_flush != 0
             || opts->fw_list != 0
             || opts->fw_list_all != 0)
-        static_log_flag = LOG_STDERR | LOG_STDERR_ONLY;
+        static_log_flag = LOG_STDERR | LOG_WITHOUT_SYSLOG;
 
     /* Parse the log facility as specified in the config struct. If, for some
      * reason, it is not, fac will already be set to LOG_DAEMON.
