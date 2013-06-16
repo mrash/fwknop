@@ -3393,7 +3393,7 @@ sub replay_detection() {
     ### do a complete SPA cycle and then parse the SPA packet out of the
     ### current test file and re-send
 
-    return 0 unless &spa_cycle($test_hr);
+    &spa_cycle($test_hr);
 
     my $spa_pkt = &get_spa_packet_from_file($curr_test_file);
 
@@ -5057,8 +5057,6 @@ sub validate_test_hashes() {
         'mv_and_restore_replay_cache' => $OPTIONAL,
         'server_positive_output_matches' => $OPTIONAL,
         'server_negative_output_matches' => $OPTIONAL,
-        'replay_positive_output_matches' => $OPTIONAL,
-        'replay_negative_output_matches' => $OPTIONAL,
     );
 
     ### validate test hashes

@@ -124,14 +124,28 @@
     {
         'category' => 'GPG+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => 'detect replay #1 (GnuPG prefix)',
+        'detail'   => 'detect replay (Rijndael prefix)',
+        'function' => \&replay_detection,
+        'pkt_prefix' => 'U2FsdGVkX1',
+        'cmdline'  => "$default_client_gpg_args " .
+            "--gpg-home-dir $gpg_client_home_dir " .
+            "--rc-file $cf{'rc_gpg_hmac_b64_key'}",
+        'fwknopd_cmdline'  => $default_server_gpg_args_hmac,
+        'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'detect replay (GnuPG prefix)',
         'function' => \&replay_detection,
         'pkt_prefix' => 'hQ',
         'cmdline'  => "$default_client_gpg_args " .
             "--gpg-home-dir $gpg_client_home_dir " .
             "--rc-file $cf{'rc_gpg_hmac_b64_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args_hmac,
-        'replay_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
+        'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
         'fatal'    => $NO
     },
+
 );
