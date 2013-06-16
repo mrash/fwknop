@@ -43,10 +43,13 @@
 #define LOG_STDERR_ONLY 0x3000
 #define LOG_STDERR_MASK 0x0FFF
 
+#define LOG_DEFAULT_VERBOSITY   LOG_WARNING     /*!< Default verbosity to use */
+
 void init_logging(fko_srv_options_t *opts);
 void free_logging(void);
 void set_log_facility(int fac);
 void log_msg(int, char*, ...);
+void log_set_verbosity(int level);
 
 #endif /* LOG_MSG_H */
 
