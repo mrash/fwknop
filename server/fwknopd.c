@@ -224,14 +224,14 @@ main(int argc, char **argv)
                 if(old_pid > 0)
                 {
                     fprintf(stderr,
-                        "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+                        "[*] An instance of fwknopd is already running: (PID=%i).\n", old_pid
                     );
 
                     clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
                 else if(old_pid < 0)
                 {
-                    fprintf(stderr, "* PID file error. The lock may not be effective.\n");
+                    fprintf(stderr, "[*] PID file error. The lock may not be effective.\n");
                 }
             }
 
@@ -574,14 +574,15 @@ daemonize_process(fko_srv_options_t * const opts)
     if(old_pid > 0)
     {
         fprintf(stderr,
-            "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+            "[*] An instance of fwknopd is already running: (PID=%i).\n", old_pid
         );
 
         exit(EXIT_FAILURE);
     }
     else if(old_pid < 0)
     {
-        fprintf(stderr, "* PID file error. The lock may not be effective.\n");
+        fprintf(stderr,
+                "[*] PID file error. The lock may not be effective.\n");
     }
 
     /* Chdir to the root of the filesystem

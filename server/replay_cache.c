@@ -314,13 +314,13 @@ replay_file_cache_init(fko_srv_options_t *opts)
         */
         if ((digest_elm = calloc(1, sizeof(struct digest_cache_list))) == NULL)
         {
-            fprintf(stderr, "Could not allocate digest list element\n");
+            log_msg(LOG_ERR, "[*] Could not allocate digest list element\n");
             continue;
         }
         if ((digest_elm->cache_info.digest = calloc(1, MAX_DIGEST_SIZE+1)) == NULL)
         {
             free(digest_elm);
-            fprintf(stderr, "Could not allocate digest string\n");
+            log_msg(LOG_ERR, "[*] Could not allocate digest string\n");
             continue;
         }
         src_ip[0] = '\0';
@@ -335,11 +335,10 @@ replay_file_cache_init(fko_srv_options_t *opts)
             &(digest_elm->cache_info.dst_port),
             &time_tmp) != 7)
         {
-            if(opts->verbose)
-                fprintf(stderr,
-                    "*Skipping invalid digest file entry in %s at line %i.\n - %s",
-                    opts->config[CONF_DIGEST_FILE], num_lines, line_buf
-                );
+            log_msg(LOG_INFO,
+                "*Skipping invalid digest file entry in %s at line %i.\n - %s",
+                opts->config[CONF_DIGEST_FILE], num_lines, line_buf
+            );
             free(digest_elm->cache_info.digest);
             free(digest_elm);
             continue;
@@ -366,7 +365,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
         digest_ctr++;
 
         if(opts->verbose > 3)
-            fprintf(stderr,
+            log_msg(LOG_DEBUG,
                 "DIGEST FILE: %s, VALID LINE: %s",
                 opts->config[CONF_DIGEST_FILE], line_buf
             );

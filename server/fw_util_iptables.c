@@ -434,7 +434,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 
     if(conf_str == NULL)
     {
-        fprintf(stderr, "[*] NULL conf_str.\n");
+        log_msg(LOG_ERR, "[*] NULL conf_str.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -465,7 +465,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     */
     if(j != FW_NUM_CHAIN_FIELDS)
     {
-        fprintf(stderr, "[*] Custom Chain config parse error.\n"
+        log_msg(LOG_ERR, "[*] Custom Chain config parse error.\n"
             "Wrong number of fields for chain type %i\n"
             "Line: %s\n", type, conf_str);
         exit(EXIT_FAILURE);
@@ -576,7 +576,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(res != 0)
     {
-        fprintf(stderr, "Warning: Errors detected during fwknop custom chain creation.\n");
+        log_msg(LOG_WARNING, "Warning: Errors detected during fwknop custom chain creation.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -585,7 +585,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if((strncasecmp(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK], "Y", 1) == 0)
             && (comment_match_exists(opts) != 1))
     {
-        fprintf(stderr, "Warning: Could not use the 'comment' match.\n");
+        log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.\n");
         exit(EXIT_FAILURE);
     }
 }

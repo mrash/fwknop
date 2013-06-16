@@ -191,7 +191,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_START_RULE_NUM], 0, RCHK_MAX_IPFW_MAX_RULES);
         exit(EXIT_FAILURE);
     }
@@ -200,7 +200,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_MAX_RULES], 0, RCHK_MAX_IPFW_MAX_RULES);
         exit(EXIT_FAILURE);
     }
@@ -209,7 +209,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_ACTIVE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
         exit(EXIT_FAILURE);
     }
@@ -218,7 +218,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_EXPIRE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
         exit(EXIT_FAILURE);
     }
@@ -227,7 +227,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_PURGE_INTERVAL, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL], 0,
                 RCHK_MAX_IPFW_PURGE_INTERVAL);
         exit(EXIT_FAILURE);
@@ -254,7 +254,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(res != 0)
     {
-        fprintf(stderr, "Fatal: Errors detected during ipfw rules initialization.\n");
+        log_msg(LOG_ERR, "[*] Fatal: Errors detected during ipfw rules initialization.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -264,7 +264,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(fwc.rule_map == NULL)
     {
-        fprintf(stderr, "Fatal: Memory allocation error in fw_initialize.\n");
+        log_msg(LOG_ERR, "[*] Fatal: Memory allocation error in fw_initialize.\n");
         exit(EXIT_FAILURE);
     }
 
