@@ -200,7 +200,7 @@ is_valid_dir(const char *path)
     */
     if(stat(path, &st) != 0)
     {
-        fprintf(stderr, "[-] unable to stat() directory: %s: %s\n",
+        log_msg(LOG_ERR, "[-] unable to stat() directory: %s: %s\n",
             path, strerror(errno));
         exit(EXIT_FAILURE);
     }
@@ -231,7 +231,7 @@ verify_file_perms_ownership(const char *file)
         {
             return 0;
         } else {
-            fprintf(stderr, "[-] stat() against file: %s returned: %s\n",
+            log_msg(LOG_ERR, "[-] stat() against file: %s returned: %s\n",
                 file, strerror(errno));
             exit(EXIT_FAILURE);
         }
@@ -241,7 +241,7 @@ verify_file_perms_ownership(const char *file)
     */
     if(S_ISREG(st.st_mode) != 1 && S_ISLNK(st.st_mode) != 1)
     {
-        fprintf(stderr,
+        log_msg(LOG_WARNING,
             "[-] file: %s is not a regular file or symbolic link.\n",
             file
         );
@@ -250,7 +250,7 @@ verify_file_perms_ownership(const char *file)
 
     if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
     {
-        fprintf(stderr,
+        log_msg(LOG_WARNING,
             "[-] file: %s permissions should only be user read/write (0600, -rw-------)\n",
             file
         );
@@ -259,7 +259,7 @@ verify_file_perms_ownership(const char *file)
 
     if(st.st_uid != getuid())
     {
-        fprintf(stderr, "[-] file: %s not owned by current effective user id\n",
+        log_msg(LOG_WARNING, "[-] file: %s not owned by current effective user id\n",
             file);
         res = 0;
     }

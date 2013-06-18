@@ -294,9 +294,8 @@ incoming_spa(fko_srv_options_t *opts)
     res = preprocess_spa_data(opts, spadat.pkt_source_ip);
     if(res != FKO_SUCCESS)
     {
-        if(opts->verbose > 1)
-            log_msg(LOG_INFO, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
-                spadat.pkt_source_ip, res, get_errstr(res));
+        log_msg(LOG_DEBUG, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
+            spadat.pkt_source_ip, res, get_errstr(res));
         return;
     }
 
@@ -378,8 +377,7 @@ incoming_spa(fko_srv_options_t *opts)
         log_msg(LOG_INFO, "(stanza #%d) SPA Packet from IP: %s received with access source match",
             stanza_num, spadat.pkt_source_ip);
 
-        if(opts->verbose > 1)
-            log_msg(LOG_INFO, "SPA Packet: '%s'\n", spa_pkt->packet_data);
+        log_msg(LOG_DEBUG, "SPA Packet: '%s'\n", spa_pkt->packet_data);
 
         /* Make sure this access stanza has not expired
         */
@@ -541,9 +539,8 @@ incoming_spa(fko_srv_options_t *opts)
         /* At this point, we assume the SPA data is valid.  Now we need to see
          * if it meets our access criteria.
         */
-        if(opts->verbose > 1)
-            log_msg(LOG_INFO, "[%s] (stanza #%d) SPA Decode (res=%i):\n%s",
-                spadat.pkt_source_ip, stanza_num, res, dump_ctx(ctx));
+        log_msg(LOG_DEBUG, "[%s] (stanza #%d) SPA Decode (res=%i):\n%s",
+            spadat.pkt_source_ip, stanza_num, res, dump_ctx(ctx));
 
         /* First, if this is a GPG message, and GPG_REMOTE_ID list is not empty,
          * then we need to make sure this incoming message is signer ID matches
@@ -560,9 +557,8 @@ incoming_spa(fko_srv_options_t *opts)
                 continue;
             }
 
-            if(opts->verbose)
-                log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s'.",
-                    spadat.pkt_source_ip, stanza_num, gpg_id);
+            log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s'.",
+                spadat.pkt_source_ip, stanza_num, gpg_id);
 
             if(acc->gpg_remote_id != NULL && !acc_check_gpg_remote_id(acc, gpg_id))
             {
@@ -742,10 +738,8 @@ incoming_spa(fko_srv_options_t *opts)
                 */
                 if(acc->cmd_exec_user != NULL && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
                 {
-                    if(opts->verbose)
-                        log_msg(LOG_INFO, "[%s] (stanza #%d) Setting effective user to %s (UID=%i) before running command.",
-                            spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
-
+                    log_msg(LOG_INFO, "[%s] (stanza #%d) Setting effective user to %s (UID=%i) before running command.",
+                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
 
                     res = run_extcmd_as(acc->cmd_exec_uid,
                                         spadat.spa_message_remain, NULL, 0, 0);

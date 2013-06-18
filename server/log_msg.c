@@ -47,6 +47,9 @@ static int  static_log_flag = 0;
 */
 static char *log_name = NULL;
 
+/* The value of the default verbosity used by the log module */
+static int verbosity = LOG_DEFAULT_VERBOSITY;
+
 /* Free resources allocated for logging.
 */
 void
@@ -104,7 +107,7 @@ init_logging(fko_srv_options_t *opts) {
             || opts->fw_flush != 0
             || opts->fw_list != 0
             || opts->fw_list_all != 0)
-        static_log_flag = LOG_STDERR | LOG_STDERR_ONLY;
+        static_log_flag = LOG_STDERR | LOG_WITHOUT_SYSLOG;
 
     /* Parse the log facility as specified in the config struct. If, for some
      * reason, it is not, fac will already be set to LOG_DAEMON.
@@ -131,6 +134,8 @@ init_logging(fko_srv_options_t *opts) {
         else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL7"))
             syslog_fac = LOG_LOCAL7;
     }
+
+    verbosity = LOG_DEFAULT_VERBOSITY + opts->verbose;
 }
 
 /* Set the log facility value.
@@ -148,6 +153,9 @@ void
 log_msg(int level, char* msg, ...)
 {
     va_list ap, apse;
+
+    if ((level & LOG_VERBOSITY_MASK) > verbosity)
+        return;
 
     va_start(ap, msg);
 
@@ -167,17 +175,18 @@ log_msg(int level, char* msg, ...)
         fflush(stderr);
 
         va_end(apse);
-
-        if(LOG_STDERR_ONLY & level)
-        {
-            va_end(ap);
-            return;
-        }
-
-        /* Remove the log to stderr flag from the log level value.
-        */
-        level &= LOG_STDERR_MASK;
     }
+
+    /* If the message has not to be printed to the syslog, we return */
+    if (LOG_WITHOUT_SYSLOG & level)
+    {
+        va_end(ap);
+        return;
+    }
+
+    /* Remove the log to stderr flag from the log level value.
+    */
+    level &= LOG_VERBOSITY_MASK;
 
     /* Send the message to syslog.
     */
@@ -186,6 +195,19 @@ log_msg(int level, char* msg, ...)
     vsyslog(level, msg, ap);
 
     va_end(ap);
+}
+
+/**
+ * Set the verbosity level for the current context of the log module.
+ *
+ * The verbosity levels used byt the module are defined by the sylsog module.
+ *
+ * @param level verbosity level to set (LOG_INFO, LOG_NOTICE ...)
+ */
+void
+log_set_verbosity(int level)
+{
+    verbosity = level;
 }
 
 /***EOF***/
