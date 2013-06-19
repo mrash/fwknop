@@ -543,6 +543,12 @@ More comprehensive information on this can be found here:
     the *fwknopd* daemon on the remote server to authenticate who created
     the SPA message.
 
+*--gpg-no-signing-pw*::
+    Instruct *fwknop* to not acquire a passphrase for usage of GnuPG signing
+    key.  This option is provided to make SPA packet construction easier for
+    client-side operations in automated environments where the passphrase for
+    the signing key has been removed from the GnuPG key ring.  However, it is
+    usually better to leverage 'gpg-agent' instead of using this option.
 
 FWKNOPRC FILE
 -------------

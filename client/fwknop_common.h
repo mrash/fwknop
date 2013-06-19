@@ -151,6 +151,7 @@ typedef struct fko_cli_options
     unsigned char   test;
     unsigned char   use_gpg;
     unsigned char   use_gpg_agent;
+    unsigned char   gpg_no_signing_pw;
     int             time_offset_plus;
     int             time_offset_minus;
     int             fw_timeout;

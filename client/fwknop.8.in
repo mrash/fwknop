@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/16/2013
+.\"      Date: 06/18/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "06/16/2013" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/18/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -657,6 +657,15 @@ server and the associated private key is used to decrypt the SPA packet\&. The r
 Specify the GnuPG key ID, e\&.g\&. \(lq+ABCD1234+\(rq (see the output of "gpg \-\-list\-keys") or the key name to use when signing the SPA message\&. The user is prompted for the associated GnuPG password to create the signature\&. This adds a cryptographically strong mechanism to allow the
 \fBfwknopd\fR
 daemon on the remote server to authenticate who created the SPA message\&.
+.RE
+.PP
+\fB\-\-gpg\-no\-signing\-pw\fR
+.RS 4
+Instruct
+\fBfwknop\fR
+to not acquire a passphrase for usage of GnuPG signing key\&. This option is provided to make SPA packet construction easier for client\-side operations in automated environments where the passphrase for the signing key has been removed from the GnuPG key ring\&. However, it is usually better to leverage
+\fIgpg\-agent\fR
+instead of using this option\&.
 .RE
 .SH "FWKNOPRC FILE"
 .sp

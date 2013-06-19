@@ -66,6 +66,7 @@ enum {
     GPG_SIGNER_KEY,
     GPG_HOME_DIR,
     GPG_AGENT,
+    GPG_ALLOW_NO_SIGNING_PW,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -97,6 +98,7 @@ static struct option cmd_opts[] =
     {"gpg-signer-key",      1, NULL, GPG_SIGNER_KEY },
     {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
     {"gpg-agent",           0, NULL, GPG_AGENT },
+    {"gpg-no-signing-pw",   0, NULL, GPG_ALLOW_NO_SIGNING_PW },
     {"get-key",             1, NULL, 'G'},
     {"get-hmac-key",        1, NULL, GET_HMAC_KEY },
     {"help",                0, NULL, 'h'},

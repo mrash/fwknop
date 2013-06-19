@@ -91,6 +91,7 @@ enum
     FWKNOP_CLI_ARG_ENCRYPTION_MODE,
     FWKNOP_CLI_ARG_USE_GPG,
     FWKNOP_CLI_ARG_USE_GPG_AGENT,
+    FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW,
     FWKNOP_CLI_ARG_GPG_RECIPIENT,
     FWKNOP_CLI_ARG_GPG_SIGNER,
     FWKNOP_CLI_ARG_GPG_HOMEDIR,
@@ -101,6 +102,8 @@ enum
     FWKNOP_CLI_ARG_RAND_PORT,
     FWKNOP_CLI_ARG_KEY_RIJNDAEL,
     FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64,
+    FWKNOP_CLI_ARG_GPG_SIGNING_PW,
+    FWKNOP_CLI_ARG_GPG_SIGNING_PW_BASE64,
     FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE,
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_KEY_HMAC,
@@ -120,40 +123,43 @@ enum
 
 static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
 {
-    { "DIGEST_TYPE",        FWKNOP_CLI_ARG_DIGEST_TYPE          },
-    { "SPA_SERVER_PROTO",   FWKNOP_CLI_ARG_SPA_SERVER_PROTO     },
-    { "SPA_SERVER_PORT",    FWKNOP_CLI_ARG_SPA_SERVER_PORT      },
-    { "SPA_SOURCE_PORT",    FWKNOP_CLI_ARG_SPA_SOURCE_PORT      },
-    { "FW_TIMEOUT",         FWKNOP_CLI_ARG_FW_TIMEOUT           },
-    { "ALLOW_IP",           FWKNOP_CLI_ARG_ALLOW_IP             },
-    { "TIME_OFFSET",        FWKNOP_CLI_ARG_TIME_OFFSET          },
-    { "ENCRYPTION_MODE",    FWKNOP_CLI_ARG_ENCRYPTION_MODE      },
-    { "USE_GPG",            FWKNOP_CLI_ARG_USE_GPG              },
-    { "USE_GPG_AGENT",      FWKNOP_CLI_ARG_USE_GPG_AGENT        },
-    { "GPG_RECIPIENT",      FWKNOP_CLI_ARG_GPG_RECIPIENT        },
-    { "GPG_SIGNER",         FWKNOP_CLI_ARG_GPG_SIGNER           },
-    { "GPG_HOMEDIR",        FWKNOP_CLI_ARG_GPG_HOMEDIR          },
-    { "SPOOF_USER",         FWKNOP_CLI_ARG_SPOOF_USER           },
-    { "SPOOF_SOURCE_IP",    FWKNOP_CLI_ARG_SPOOF_SOURCE_IP      },
-    { "ACCESS",             FWKNOP_CLI_ARG_ACCESS               },
-    { "SPA_SERVER",         FWKNOP_CLI_ARG_SPA_SERVER           },
-    { "RAND_PORT",          FWKNOP_CLI_ARG_RAND_PORT            },
-    { "KEY",                FWKNOP_CLI_ARG_KEY_RIJNDAEL         },
-    { "KEY_BASE64",         FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64  },
-    { "HMAC_DIGEST_TYPE",   FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE     },
-    { "HMAC_KEY_BASE64",    FWKNOP_CLI_ARG_KEY_HMAC_BASE64      },
-    { "HMAC_KEY",           FWKNOP_CLI_ARG_KEY_HMAC             },
-    { "USE_HMAC",           FWKNOP_CLI_ARG_USE_HMAC             },
-    { "KEY_FILE",           FWKNOP_CLI_ARG_KEY_FILE             },
-    { "HMAC_KEY_FILE",      FWKNOP_CLI_ARG_HMAC_KEY_FILE        },
-    { "NAT_ACCESS",         FWKNOP_CLI_ARG_NAT_ACCESS           },
-    { "HTTP_USER_AGENT",    FWKNOP_CLI_ARG_HTTP_USER_AGENT      },
-    { "RESOLVE_URL",        FWKNOP_CLI_ARG_RESOLVE_URL          },
-    { "NAT_LOCAL",          FWKNOP_CLI_ARG_NAT_LOCAL            },
-    { "NAT_RAND_PORT",      FWKNOP_CLI_ARG_NAT_RAND_PORT        },
-    { "NAT_PORT",           FWKNOP_CLI_ARG_NAT_PORT             },
-    { "VERBOSE",            FWKNOP_CLI_ARG_VERBOSE              },
-    { "RESOLVE_IP_HTTP",    FWKNOP_CLI_ARG_RESOLVE_IP_HTTP      }
+    { "DIGEST_TYPE",           FWKNOP_CLI_ARG_DIGEST_TYPE           },
+    { "SPA_SERVER_PROTO",      FWKNOP_CLI_ARG_SPA_SERVER_PROTO      },
+    { "SPA_SERVER_PORT",       FWKNOP_CLI_ARG_SPA_SERVER_PORT       },
+    { "SPA_SOURCE_PORT",       FWKNOP_CLI_ARG_SPA_SOURCE_PORT       },
+    { "FW_TIMEOUT",            FWKNOP_CLI_ARG_FW_TIMEOUT            },
+    { "ALLOW_IP",              FWKNOP_CLI_ARG_ALLOW_IP              },
+    { "TIME_OFFSET",           FWKNOP_CLI_ARG_TIME_OFFSET           },
+    { "ENCRYPTION_MODE",       FWKNOP_CLI_ARG_ENCRYPTION_MODE       },
+    { "USE_GPG",               FWKNOP_CLI_ARG_USE_GPG               },
+    { "USE_GPG_AGENT",         FWKNOP_CLI_ARG_USE_GPG_AGENT         },
+    { "GPG_RECIPIENT",         FWKNOP_CLI_ARG_GPG_RECIPIENT         },
+    { "GPG_SIGNER",            FWKNOP_CLI_ARG_GPG_SIGNER            },
+    { "GPG_HOMEDIR",           FWKNOP_CLI_ARG_GPG_HOMEDIR           },
+    { "GPG_SIGNING_PW",        FWKNOP_CLI_ARG_GPG_SIGNING_PW        },
+    { "GPG_SIGNING_PW_BASE64", FWKNOP_CLI_ARG_GPG_SIGNING_PW_BASE64 },
+    { "GPG_NO_SIGNING_PW",     FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW    },
+    { "SPOOF_USER",            FWKNOP_CLI_ARG_SPOOF_USER            },
+    { "SPOOF_SOURCE_IP",       FWKNOP_CLI_ARG_SPOOF_SOURCE_IP       },
+    { "ACCESS",                FWKNOP_CLI_ARG_ACCESS                },
+    { "SPA_SERVER",            FWKNOP_CLI_ARG_SPA_SERVER            },
+    { "RAND_PORT",             FWKNOP_CLI_ARG_RAND_PORT             },
+    { "KEY",                   FWKNOP_CLI_ARG_KEY_RIJNDAEL          },
+    { "KEY_BASE64",            FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64   },
+    { "HMAC_DIGEST_TYPE",      FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE      },
+    { "HMAC_KEY_BASE64",       FWKNOP_CLI_ARG_KEY_HMAC_BASE64       },
+    { "HMAC_KEY",              FWKNOP_CLI_ARG_KEY_HMAC              },
+    { "USE_HMAC",              FWKNOP_CLI_ARG_USE_HMAC              },
+    { "KEY_FILE",              FWKNOP_CLI_ARG_KEY_FILE              },
+    { "HMAC_KEY_FILE",         FWKNOP_CLI_ARG_HMAC_KEY_FILE         },
+    { "NAT_ACCESS",            FWKNOP_CLI_ARG_NAT_ACCESS            },
+    { "HTTP_USER_AGENT",       FWKNOP_CLI_ARG_HTTP_USER_AGENT       },
+    { "RESOLVE_URL",           FWKNOP_CLI_ARG_RESOLVE_URL           },
+    { "NAT_LOCAL",             FWKNOP_CLI_ARG_NAT_LOCAL             },
+    { "NAT_RAND_PORT",         FWKNOP_CLI_ARG_NAT_RAND_PORT         },
+    { "NAT_PORT",              FWKNOP_CLI_ARG_NAT_PORT              },
+    { "VERBOSE",               FWKNOP_CLI_ARG_VERBOSE               },
+    { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -166,7 +172,9 @@ static int critical_var_array[] =
     FWKNOP_CLI_ARG_KEY_HMAC,
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_GPG_RECIPIENT,
-    FWKNOP_CLI_ARG_GPG_SIGNER
+    FWKNOP_CLI_ARG_GPG_SIGNER,
+    FWKNOP_CLI_ARG_GPG_SIGNING_PW,
+    FWKNOP_CLI_ARG_GPG_SIGNING_PW_BASE64
 };
 
 /**
@@ -925,6 +933,13 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
             options->use_gpg_agent = 1;
         else;
     }
+    /* No GPG signing passphrase ? */
+    else if (var->pos == FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW)
+    {
+        if (is_yes_str(val))
+            options->gpg_no_signing_pw = 1;
+        else;
+    }
     /* GPG Recipient */
     else if (var->pos == FWKNOP_CLI_ARG_GPG_RECIPIENT)
     {
@@ -980,6 +995,25 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         {
             log_msg(LOG_VERBOSITY_WARNING,
                 "KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
+                val);
+            parse_error = -1;
+        }
+        strlcpy(options->key_base64, val, sizeof(options->key_base64));
+        options->have_base64_key = 1;
+    }
+    /* GnuPG signing passphrase */
+    else if (var->pos == FWKNOP_CLI_ARG_GPG_SIGNING_PW)
+    {
+        strlcpy(options->key, val, sizeof(options->key));
+        options->have_key = 1;
+    }
+    /* GnuPG signing passphrase (base-64 encoded) */
+    else if (var->pos == FWKNOP_CLI_ARG_GPG_SIGNING_PW_BASE64)
+    {
+        if (! is_base64((unsigned char *) val, strlen(val)))
+        {
+            log_msg(LOG_VERBOSITY_WARNING,
+                "GPG_SIGNING_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
                 val);
             parse_error = -1;
         }
@@ -2043,6 +2077,12 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->use_gpg_agent = 1;
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG_AGENT, &var_bitmask);
+                break;
+            case GPG_ALLOW_NO_SIGNING_PW:
+                options->use_gpg = 1;
+                options->gpg_no_signing_pw = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW, &var_bitmask);
                 break;
             case NAT_LOCAL:
                 options->nat_local = 1;

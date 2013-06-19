@@ -445,6 +445,12 @@ our $default_client_gpg_args_no_get_key = "$default_client_args_no_get_key " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir";
 
+our $default_client_gpg_args_no_pw = "$default_client_args_no_get_key " .
+    "--gpg-no-signing-pw " .
+    "--gpg-recipient-key $gpg_server_key " .
+    "--gpg-signer-key $gpg_client_key " .
+    "--gpg-home-dir $gpg_client_home_dir_no_pw";
+
 our $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
     "-d $default_digest_file -p $default_pid_file";
 

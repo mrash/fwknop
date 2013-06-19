@@ -1085,14 +1085,6 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     memset(key, 0x0, MAX_KEY_LEN+1);
     memset(hmac_key, 0x0, MAX_KEY_LEN+1);
 
-    /* First of all if we are using GPG and GPG_AGENT
-     * then there is no password to return.
-    */
-    if(options->use_gpg
-      && (options->use_gpg_agent
-           || (crypt_op == CRYPT_OP_ENCRYPT && options->gpg_signer_key[0] == '\0')))
-        return;
-
     if (options->have_key)
     {
         strlcpy(key, options->key, MAX_KEY_LEN+1);
@@ -1123,7 +1115,16 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         }
         else if (options->use_gpg)
         {
-            if(crypt_op == CRYPT_OP_DECRYPT)
+            if(options->use_gpg_agent)
+                log_msg(LOG_VERBOSITY_NORMAL,
+                    "[+] GPG mode set, signing passphrase acquired via gpg-agent");
+            else if(options->gpg_no_signing_pw)
+                log_msg(LOG_VERBOSITY_NORMAL,
+                    "[+] GPG mode set, signing passphrase not required");
+            else if(crypt_op == CRYPT_OP_ENCRYPT)
+                log_msg(LOG_VERBOSITY_NORMAL,
+                    "[+] GPG mode set, encrypt instead of decrypt operation");
+            else if(crypt_op == CRYPT_OP_DECRYPT)
             {
                 key_tmp = getpasswd("Enter passphrase for secret key: ", options->input_fd);
                 if(key_tmp == NULL)
@@ -1149,11 +1150,11 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         else
         {
             if(crypt_op == CRYPT_OP_ENCRYPT)
-                    key_tmp = getpasswd("Enter encryption key: ", options->input_fd);
+                key_tmp = getpasswd("Enter encryption key: ", options->input_fd);
             else if(crypt_op == CRYPT_OP_DECRYPT)
                 key_tmp = getpasswd("Enter decryption key: ", options->input_fd);
             else
-                    key_tmp = getpasswd("Enter key: ", options->input_fd);
+                key_tmp = getpasswd("Enter key: ", options->input_fd);
 
             if(key_tmp == NULL)
             {
