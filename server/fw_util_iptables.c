@@ -87,9 +87,8 @@ comment_match_exists(const fko_srv_options_t * const opts)
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
-                cmd_buf, res, err_buf);
+    log_msg(LOG_INFO, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
 
     zero_cmd_buffers();
 
@@ -146,9 +145,8 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "add_jump_rule() CMD: '%s' (res: %d, err: %s)",
-            cmd_buf, res, err_buf);
+    log_msg(LOG_INFO, "add_jump_rule() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
         log_msg(LOG_INFO, "Added jump rule from chain: %s to chain: %s",
@@ -176,9 +174,8 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "chain_exists() CMD: '%s' (res: %d, err: %s)",
-            cmd_buf, res, err_buf);
+    log_msg(LOG_INFO, "chain_exists() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
         log_msg(LOG_INFO, "'%s' table '%s' chain exists",
@@ -205,13 +202,11 @@ jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
 
     if(rule_exists(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
     {
-        if (opts->verbose)
-            log_msg(LOG_INFO, "jump_rule_exists() jump rule found");
+        log_msg(LOG_INFO, "jump_rule_exists() jump rule found");
         exists = 1;
     }
     else
-        if (opts->verbose)
-            log_msg(LOG_INFO, "jump_rule_exists() jump rule not found");
+        log_msg(LOG_INFO, "jump_rule_exists() jump rule not found");
 
     return exists;
 }
@@ -249,9 +244,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 
             res = system(cmd_buf);
 
-            if (opts->verbose)
-                log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
-                    cmd_buf, res);
+            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
 
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
@@ -286,9 +280,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             fflush(stdout);
             res = system(cmd_buf);
 
-            if (opts->verbose)
-                log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
-                    cmd_buf, res);
+            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
 
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
@@ -332,9 +325,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
             chop_newline(err_buf);
 
-            if (opts->verbose)
-                log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
+            log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
 
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
@@ -360,9 +352,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
         res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
         chop_newline(err_buf);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
-                cmd_buf, res, err_buf);
+        log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -388,9 +379,8 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "create_chain() CMD: '%s' (res: %d, err: %s)",
-            cmd_buf, res, err_buf);
+    log_msg(LOG_INFO, "create_chain() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
 
     /* Expect full success on this */
     if(! EXTCMD_IS_SUCCESS(res))
@@ -444,7 +434,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 
     if(conf_str == NULL)
     {
-        fprintf(stderr, "[*] NULL conf_str.\n");
+        log_msg(LOG_ERR, "[*] NULL conf_str.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -475,7 +465,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     */
     if(j != FW_NUM_CHAIN_FIELDS)
     {
-        fprintf(stderr, "[*] Custom Chain config parse error.\n"
+        log_msg(LOG_ERR, "[*] Custom Chain config parse error.\n"
             "Wrong number of fields for chain type %i\n"
             "Line: %s\n", type, conf_str);
         exit(EXIT_FAILURE);
@@ -586,7 +576,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(res != 0)
     {
-        fprintf(stderr, "Warning: Errors detected during fwknop custom chain creation.\n");
+        log_msg(LOG_WARNING, "Warning: Errors detected during fwknop custom chain creation.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -595,7 +585,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if((strncasecmp(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK], "Y", 1) == 0)
             && (comment_match_exists(opts) != 1))
     {
-        fprintf(stderr, "Warning: Could not use the 'comment' match.\n");
+        log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.\n");
         exit(EXIT_FAILURE);
     }
 }
@@ -626,22 +616,19 @@ rule_exists(const fko_srv_options_t * const opts,
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "rule_exists() CMD: '%s' (res: %d, err: %s)",
-            cmd_buf, res, err_buf);
+    log_msg(LOG_INFO, "rule_exists() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
     {
-        if (opts->verbose)
-            log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s does not exist.",
-                    fw_rule, fw_chain);
+        log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s does not exist.",
+                fw_rule, fw_chain);
     }
     else
     {
         rule_exists = 1;
-        if (opts->verbose)
-            log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s already exists.",
-                    fw_rule, fw_chain);
+        log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s already exists.",
+                fw_rule, fw_chain);
     }
 
     return rule_exists;
@@ -660,14 +647,12 @@ create_rule(const fko_srv_options_t * const opts,
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "create_rule() CMD: '%s' (res: %d, err: %s)",
-            cmd_buf, res, err_buf);
+    log_msg(LOG_INFO, "create_rule() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
     {
-        if (opts->verbose)
-            log_msg(LOG_INFO, "create_rule() Rule: '%s' added to %s", fw_rule, fw_chain);
+        log_msg(LOG_INFO, "create_rule() Rule: '%s' added to %s", fw_rule, fw_chain);
         res = 1;
     }
     else
@@ -1085,9 +1070,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
         chop_newline(cmd_out);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
-                cmd_buf, res, cmd_out);
+        log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
+            cmd_buf, res, cmd_out);
 
         if(!EXTCMD_IS_SUCCESS(res))
         {
@@ -1095,8 +1079,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             continue;
         }
 
-        if(opts->verbose > 1)
-            log_msg(LOG_INFO, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
+        log_msg(LOG_DEBUG, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
 
         ndx = strstr(cmd_out, EXPIRE_COMMENT_PREFIX);
         if(ndx == NULL)
@@ -1195,9 +1178,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
                 chop_newline(err_buf);
 
-                if (opts->verbose)
-                    log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
-                        cmd_buf, res, err_buf);
+                log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
 
                 if(EXTCMD_IS_SUCCESS(res))
                 {

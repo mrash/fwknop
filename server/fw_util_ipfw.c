@@ -80,9 +80,8 @@ ipfw_set_exists(const fko_srv_options_t *opts,
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "ipfw_set_exists() CMD: '%s' (res: %d)",
-            cmd_buf, res);
+    log_msg(LOG_INFO, "ipfw_set_exists() CMD: '%s' (res: %d)",
+        cmd_buf, res);
 
     if(!EXTCMD_IS_SUCCESS(res))
         return(0);
@@ -116,9 +115,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 
         res = system(cmd_buf);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
-                cmd_buf, res);
+        log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+            cmd_buf, res);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -144,9 +142,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         printf("\nActive Rules:\n");
         res = system(cmd_buf);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
-                cmd_buf, res);
+        log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+            cmd_buf, res);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -165,9 +162,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         printf("\nExpired Rules:\n");
         res = system(cmd_buf);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
-                cmd_buf, res);
+        log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+            cmd_buf, res);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -195,7 +191,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_START_RULE_NUM], 0, RCHK_MAX_IPFW_MAX_RULES);
         exit(EXIT_FAILURE);
     }
@@ -204,7 +200,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_MAX_RULES], 0, RCHK_MAX_IPFW_MAX_RULES);
         exit(EXIT_FAILURE);
     }
@@ -213,7 +209,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_ACTIVE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
         exit(EXIT_FAILURE);
     }
@@ -222,7 +218,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_EXPIRE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
         exit(EXIT_FAILURE);
     }
@@ -231,7 +227,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_PURGE_INTERVAL, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        fprintf(stderr, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].\n",
                 opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL], 0,
                 RCHK_MAX_IPFW_PURGE_INTERVAL);
         exit(EXIT_FAILURE);
@@ -258,7 +254,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(res != 0)
     {
-        fprintf(stderr, "Fatal: Errors detected during ipfw rules initialization.\n");
+        log_msg(LOG_ERR, "[*] Fatal: Errors detected during ipfw rules initialization.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -268,7 +264,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(fwc.rule_map == NULL)
     {
-        fprintf(stderr, "Fatal: Memory allocation error in fw_initialize.\n");
+        log_msg(LOG_ERR, "[*] Fatal: Memory allocation error in fw_initialize.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -286,9 +282,8 @@ fw_initialize(const fko_srv_options_t * const opts)
 
         res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
-                cmd_buf, res, err_buf);
+        log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
 
         if(EXTCMD_IS_SUCCESS(res))
         {
@@ -317,9 +312,8 @@ fw_initialize(const fko_srv_options_t * const opts)
 
         res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
-                cmd_buf, res, err_buf);
+        log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
 
         if(EXTCMD_IS_SUCCESS(res))
             log_msg(LOG_INFO, "Set ipfw expire set %u to disabled.",
@@ -340,9 +334,8 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d)",
-            cmd_buf, res);
+    log_msg(LOG_INFO, "fw_initialize() CMD: '%s' (res: %d)",
+        cmd_buf, res);
 
     if(!EXTCMD_IS_SUCCESS(res))
     {
@@ -350,8 +343,7 @@ fw_initialize(const fko_srv_options_t * const opts)
         return;
     }
 
-    if(opts->verbose > 1)
-        log_msg(LOG_INFO, "RULES LIST: %s", cmd_out);
+    log_msg(LOG_DEBUG, "RULES LIST: %s", cmd_out);
 
     /* Find the first "# DISABLED" string (if any).
     */
@@ -420,9 +412,8 @@ fw_cleanup(const fko_srv_options_t * const opts)
 
         res = system(cmd_buf);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "fw_cleanup() CMD: '%s' (res: %d)",
-                cmd_buf, res);
+        log_msg(LOG_INFO, "fw_cleanup() CMD: '%s' (res: %d)",
+            cmd_buf, res);
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
@@ -533,9 +524,8 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-            if (opts->verbose)
-                log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
+            log_msg(LOG_INFO, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
 
             if(EXTCMD_IS_SUCCESS(res))
             {
@@ -628,9 +618,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d)",
-            cmd_buf, res);
+    log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d)",
+        cmd_buf, res);
 
     if(!EXTCMD_IS_SUCCESS(res))
     {
@@ -638,8 +627,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         return;
     }
 
-    if(opts->verbose > 1)
-        log_msg(LOG_INFO, "RULES LIST: %s", cmd_out);
+    log_msg(LOG_DEBUG, "RULES LIST: %s", cmd_out);
 
     /* Find the first _exp_ string (if any).
     */
@@ -736,9 +724,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-                if (opts->verbose)
-                    log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
-                        cmd_buf, res, err_buf);
+                log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+                    cmd_buf, res, err_buf);
 
                 if(EXTCMD_IS_SUCCESS(res))
                 {
@@ -805,9 +792,8 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
-    if (opts->verbose)
-        log_msg(LOG_INFO, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
-            cmd_buf, res);
+    log_msg(LOG_INFO, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
+        cmd_buf, res);
 
     if(!EXTCMD_IS_SUCCESS(res))
     {
@@ -822,8 +808,7 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
     {
         co_end = cmd_out + strlen(cmd_out);
 
-        if(opts->verbose > 1)
-            log_msg(LOG_INFO, "EXP RULES LIST: %s", cmd_out);
+        log_msg(LOG_DEBUG, "EXP RULES LIST: %s", cmd_out);
 
         /* Find the "## Dynamic rules" string.
         */
@@ -914,9 +899,8 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 
         res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
 
-        if (opts->verbose)
-            log_msg(LOG_INFO, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
-                cmd_buf, res);
+        log_msg(LOG_INFO, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
+            cmd_buf, res);
 
         if(!EXTCMD_IS_SUCCESS(res))
         {

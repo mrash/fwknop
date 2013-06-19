@@ -274,7 +274,7 @@ pcap_capture(fko_srv_options_t *opts)
         if(res > 0)
         {
             if(opts->foreground == 1 && opts->verbose > 2)
-                log_msg(LOG_INFO, "pcap_dispatch() processed: %d packets", res);
+                log_msg(LOG_DEBUG, "pcap_dispatch() processed: %d packets", res);
 
             /* Count the set of processed packets (pcap_dispatch() return
              * value) - we use this as a comparison for --packet-limit regardless

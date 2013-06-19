@@ -139,6 +139,9 @@ main(int argc, char **argv)
         */
         init_logging(&opts);
 
+        /* Update the verbosity level for the log module */
+        log_set_verbosity(LOG_DEFAULT_VERBOSITY + opts.verbose);
+
 #if HAVE_LOCALE_H
         /* Set the locale if specified.
         */
@@ -156,10 +159,9 @@ main(int argc, char **argv)
             }
             else
             {
-                if(opts.verbose)
-                    log_msg(LOG_INFO,
-                        "Locale set to '%s'.", opts.config[CONF_LOCALE]
-                    );
+                log_msg(LOG_INFO,
+                    "Locale set to '%s'.", opts.config[CONF_LOCALE]
+                );
             }
         }
 #endif
@@ -222,14 +224,14 @@ main(int argc, char **argv)
                 if(old_pid > 0)
                 {
                     fprintf(stderr,
-                        "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+                        "[*] An instance of fwknopd is already running: (PID=%i).\n", old_pid
                     );
 
                     clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
                 else if(old_pid < 0)
                 {
-                    fprintf(stderr, "* PID file error. The lock may not be effective.\n");
+                    fprintf(stderr, "[*] PID file error. The lock may not be effective.\n");
                 }
             }
 
@@ -572,14 +574,15 @@ daemonize_process(fko_srv_options_t * const opts)
     if(old_pid > 0)
     {
         fprintf(stderr,
-            "* An instance of fwknopd is already running: (PID=%i).\n", old_pid
+            "[*] An instance of fwknopd is already running: (PID=%i).\n", old_pid
         );
 
         exit(EXIT_FAILURE);
     }
     else if(old_pid < 0)
     {
-        fprintf(stderr, "* PID file error. The lock may not be effective.\n");
+        fprintf(stderr,
+                "[*] PID file error. The lock may not be effective.\n");
     }
 
     /* Chdir to the root of the filesystem
@@ -660,9 +663,8 @@ write_pid_file(fko_srv_options_t *opts)
     my_pid = getpid();
     snprintf(buf, PID_BUFLEN, "%i\n", my_pid);
 
-    if(opts->verbose > 1)
-        log_msg(LOG_INFO, "[+] Writing my PID (%i) to the lock file: %s\n",
-            my_pid, opts->config[CONF_FWKNOP_PID_FILE]);
+    log_msg(LOG_DEBUG, "[+] Writing my PID (%i) to the lock file: %s\n",
+        my_pid, opts->config[CONF_FWKNOP_PID_FILE]);
 
     num_bytes = write(op_fd, buf, strlen(buf));
 

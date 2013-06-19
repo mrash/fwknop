@@ -52,7 +52,7 @@ add_acc_string(char **var, const char *val)
     if((*var = strdup(val)) == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error adding access list entry: %s", *var
+            "[*] Fatal memory allocation error adding access list entry: %s", *var
         );
         exit(EXIT_FAILURE);
     }
@@ -66,7 +66,7 @@ add_acc_b64_string(char **var, int *len, const char *val)
     if((*var = strdup(val)) == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error adding access list entry: %s", *var
+            "[*] Fatal memory allocation error adding access list entry: %s", *var
         );
         exit(EXIT_FAILURE);
     }
@@ -76,7 +76,7 @@ add_acc_b64_string(char **var, int *len, const char *val)
     if (*len < 0)
     {
         log_msg(LOG_ERR,
-            "base64 decoding returned error for: %s", *var
+            "[*] base64 decoding returned error for: %s", *var
         );
         exit(EXIT_FAILURE);
     }
@@ -103,7 +103,7 @@ add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const c
     {
 
         log_msg(LOG_ERR,
-            "Fatal: invalid date value '%s' (need MM/DD/YYYY) for access stanza expiration time",
+            "[*] Fatal: invalid date value '%s' (need MM/DD/YYYY) for access stanza expiration time",
             val
         );
         return 0;
@@ -140,7 +140,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
     if (errno == ERANGE || (errno != 0 && expire_time == 0))
     {
         log_msg(LOG_ERR,
-            "Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
+            "[* ]Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
             val
         );
         return 0;
@@ -161,7 +161,7 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
     {
 
         log_msg(LOG_ERR,
-            "Fatal: invalid FORCE_NAT arg '%s', need <IP> <PORT>",
+            "[*] Fatal: invalid FORCE_NAT arg '%s', need <IP> <PORT>",
             val
         );
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -170,7 +170,7 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
     if (curr_acc->force_nat_port > MAX_PORT)
     {
         log_msg(LOG_ERR,
-            "Fatal: invalid FORCE_NAT port '%d'", curr_acc->force_nat_port);
+            "[*] Fatal: invalid FORCE_NAT port '%d'", curr_acc->force_nat_port);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -199,7 +199,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
     if((new_sle = calloc(1, sizeof(acc_int_list_t))) == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error adding stanza source_list entry"
+            "[*] Fatal memory allocation error adding stanza source_list entry"
         );
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -220,7 +220,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         {
             if(((ndx-ip)) >= MAX_IPV4_STR_LEN)
             {
-                log_msg(LOG_ERR, "Error parsing string to IP");
+                log_msg(LOG_ERR, "[*] Error parsing string to IP");
                 free(new_sle);
                 new_sle = NULL;
                 return 0;
@@ -229,8 +229,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
             mask = strtol_wrapper(ndx+1, 0, -1, NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
             {
-                fprintf(stderr,
-                    "[*] Invalid IP mask str '%s'.", ndx+1);
+                log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
                 free(new_sle);
                 new_sle = NULL;
                 return 0;
@@ -243,7 +242,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
             mask = 32;
             if(strnlen(ip, MAX_IPV4_STR_LEN+1) >= MAX_IPV4_STR_LEN)
             {
-                log_msg(LOG_ERR, "Error parsing string to IP");
+                log_msg(LOG_ERR, "[*] Error parsing string to IP");
                 free(new_sle);
                 new_sle = NULL;
                 return 0;
@@ -254,7 +253,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         if(inet_aton(ip_str, &in) == 0)
         {
             log_msg(LOG_ERR,
-                "Fatal error parsing IP to int for: %s", ip_str
+                "[*] Fatal error parsing IP to int for: %s", ip_str
             );
 
             free(new_sle);
@@ -354,7 +353,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
     if((ndx = strchr(pstr, '/')) == NULL)
     {
         log_msg(LOG_ERR,
-            "Parse error on access port entry: %s", pstr);
+            "[*] Parse error on access port entry: %s", pstr);
 
         return(-1);
     }
@@ -362,7 +361,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
     if(((ndx - pstr)+1) >= ACCESS_BUF_LEN)
     {
         log_msg(LOG_ERR,
-            "Parse error on access port entry: %s", pstr);
+            "[*] Parse error on access port entry: %s", pstr);
         return(-1);
     }
 
@@ -372,7 +371,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR,
-            "Invalid port '%s' in access request, must be in [%d,%d]",
+            "[*] Invalid port '%s' in access request, must be in [%d,%d]",
             pstr, 0, MAX_PORT);
         return(-1);
     }
@@ -384,7 +383,7 @@ parse_proto_and_port(char *pstr, int *proto, int *port)
     else
     {
         log_msg(LOG_ERR,
-            "Invalid protocol in access port entry: %s", pstr);
+            "[*] Invalid protocol in access port entry: %s", pstr);
         return(-1);
     }
 
@@ -410,7 +409,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
     if((new_plist = calloc(1, sizeof(acc_port_list_t))) == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error adding stanza source_list entry"
+            "[*] Fatal memory allocation error adding stanza source_list entry"
         );
         exit(EXIT_FAILURE);
     }
@@ -449,7 +448,7 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
     if((new_stlist = calloc(1, sizeof(acc_string_list_t))) == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error creating string list entry"
+            "[*] Fatal memory allocation error creating string list entry"
         );
         exit(EXIT_FAILURE);
     }
@@ -480,7 +479,7 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
     if(new_stlist->str == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error adding string list entry item"
+            "[*] Fatal memory allocation error adding string list entry item"
         );
         exit(EXIT_FAILURE);
     }
@@ -706,7 +705,7 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         */
         if(expand_acc_source(opts, acc) == 0)
         {
-            log_msg(LOG_ERR, "Fatal invalid SOURCE in access stanza");
+            log_msg(LOG_ERR, "[*] Fatal invalid SOURCE in access stanza");
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
 
@@ -716,7 +715,7 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         {
             if(expand_acc_port_list(&(acc->oport_list), acc->open_ports) == 0)
             {
-                log_msg(LOG_ERR, "Fatal invalid OPEN_PORTS in access stanza");
+                log_msg(LOG_ERR, "[*] Fatal invalid OPEN_PORTS in access stanza");
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
@@ -725,7 +724,7 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         {
             if(expand_acc_port_list(&(acc->rport_list), acc->restrict_ports) == 0)
             {
-                log_msg(LOG_ERR, "Fatal invalid RESTRICT_PORTS in access stanza");
+                log_msg(LOG_ERR, "[*] Fatal invalid RESTRICT_PORTS in access stanza");
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
@@ -788,7 +787,7 @@ acc_stanza_add(fko_srv_options_t *opts)
     if(new_acc == NULL)
     {
         log_msg(LOG_ERR,
-            "Fatal memory allocation error adding access stanza"
+            "[*] Fatal memory allocation error adding access stanza"
         );
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -865,7 +864,7 @@ acc_data_is_valid(const acc_stanza_t *acc)
           && acc->gpg_allow_no_pw == 0))
       || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0))
     {
-        fprintf(stderr,
+        log_msg(LOG_ERR,
             "[*] No keys found for access stanza source: '%s'\n", acc->source
         );
         return(0);
@@ -878,7 +877,7 @@ acc_data_is_valid(const acc_stanza_t *acc)
         {
             if(memcmp(acc->key, acc->hmac_key, acc->hmac_key_len) == 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'\n",
                     acc->source
                 );
@@ -891,7 +890,7 @@ acc_data_is_valid(const acc_stanza_t *acc)
         {
             if(memcmp(acc->gpg_decrypt_pw, acc->hmac_key, acc->hmac_key_len) == 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'\n",
                     acc->source
                 );
@@ -927,7 +926,7 @@ parse_access_file(fko_srv_options_t *opts)
     */
     if(stat(opts->config[CONF_ACCESS_FILE], &st) != 0)
     {
-        fprintf(stderr, "[*] Access file: '%s' was not found.\n",
+        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.\n",
             opts->config[CONF_ACCESS_FILE]);
 
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -951,7 +950,7 @@ parse_access_file(fko_srv_options_t *opts)
     */
     if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
     {
-        fprintf(stderr, "[*] Could not open access file: %s\n",
+        log_msg(LOG_ERR, "[*] Could not open access file: %s\n",
             opts->config[CONF_ACCESS_FILE]);
         perror(NULL);
 
@@ -978,8 +977,8 @@ parse_access_file(fko_srv_options_t *opts)
 
         if(sscanf(access_line_buf, "%s %[^;\n\r]", var, val) != 2)
         {
-            fprintf(stderr,
-                "*Invalid access file entry in %s at line %i.\n - '%s'",
+            log_msg(LOG_ERR,
+                "[*] Invalid access file entry in %s at line %i.\n - '%s'",
                 opts->config[CONF_ACCESS_FILE], num_lines, access_line_buf
             );
             continue;
@@ -999,8 +998,8 @@ parse_access_file(fko_srv_options_t *opts)
 
         /*
         */
-        if(opts->verbose > 3)
-            fprintf(stderr,
+        if (opts->verbose > 3)
+            log_msg(LOG_DEBUG,
                 "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
                 opts->config[CONF_ACCESS_FILE], access_line_buf, var, val
             );
@@ -1019,8 +1018,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(curr_acc != NULL) {
                 if(!acc_data_is_valid(curr_acc))
                 {
-                    fprintf(stderr,
-                        "[*] Data error in access file: '%s'\n",
+                    log_msg(LOG_ERR, "[*] Data error in access file: '%s'\n",
                         opts->config[CONF_ACCESS_FILE]);
                     fclose(file_ptr);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1053,7 +1051,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
@@ -1067,7 +1065,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
@@ -1075,8 +1073,8 @@ parse_access_file(fko_srv_options_t *opts)
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
-                fprintf(stderr,
-                    "KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                log_msg(LOG_ERR,
+                    "[*] KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1092,8 +1090,8 @@ parse_access_file(fko_srv_options_t *opts)
             curr_acc->hmac_type = hmac_digest_strtoint(val);
             if(curr_acc->hmac_type < 0)
             {
-                fprintf(stderr,
-                    "HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}\n",
+                log_msg(LOG_ERR,
+                    "[*] HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}\n",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1103,7 +1101,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
@@ -1111,8 +1109,8 @@ parse_access_file(fko_srv_options_t *opts)
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
-                fprintf(stderr,
-                    "HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                log_msg(LOG_ERR,
+                    "[*] HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1125,7 +1123,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
@@ -1140,7 +1138,7 @@ parse_access_file(fko_srv_options_t *opts)
                     RCHK_MAX_FW_TIMEOUT, NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] FW_ACCESS_TIMEOUT value not in range.");
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1150,7 +1148,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if((curr_acc->encryption_mode = enc_mode_strtoint(val)) < 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] Unrecognized ENCRYPTION_MODE '%s', use {cbc,ecb}\n",
                     val);
                 fclose(file_ptr);
@@ -1170,7 +1168,7 @@ parse_access_file(fko_srv_options_t *opts)
 
             if(pw == NULL)
             {
-                fprintf(stderr, "Unable to determine UID for CMD_EXEC_USER: %s.\n",
+                log_msg(LOG_ERR, "[*] Unable to determine UID for CMD_EXEC_USER: %s.\n",
                     errno ? strerror(errno) : "Not a user on this system");
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1198,7 +1196,7 @@ parse_access_file(fko_srv_options_t *opts)
             }
             else
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'\n",
                     val, curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
@@ -1213,7 +1211,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'\n",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
@@ -1264,14 +1262,14 @@ parse_access_file(fko_srv_options_t *opts)
 #if FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
-                fprintf(stderr,
+                log_msg(LOG_ERR,
                     "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf\n");
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_force_nat(opts, curr_acc, val);
 #else
-            fprintf(stderr,
+            log_msg(LOG_ERR,
                 "[*] FORCE_NAT not supported.\n");
             fclose(file_ptr);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1279,8 +1277,8 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else
         {
-            fprintf(stderr,
-                "*Ignoring unknown access parameter: '%s' in %s\n",
+            log_msg(LOG_ERR,
+                "[*] Ignoring unknown access parameter: '%s' in %s\n",
                 var, opts->config[CONF_ACCESS_FILE]
             );
         }
@@ -1294,7 +1292,7 @@ parse_access_file(fko_srv_options_t *opts)
     */
     if (got_source == 0)
     {
-        fprintf(stderr,
+        log_msg(LOG_ERR,
             "[*] Could not find valid SOURCE stanza in access file: '%s'\n",
             opts->config[CONF_ACCESS_FILE]);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1304,7 +1302,7 @@ parse_access_file(fko_srv_options_t *opts)
     */
     if(!acc_data_is_valid(curr_acc))
     {
-        fprintf(stderr,
+        log_msg(LOG_ERR,
             "[*] Data error in access file: '%s'\n",
             opts->config[CONF_ACCESS_FILE]);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1405,7 +1403,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
                     || (((ndx-start)+1) >= ACCESS_BUF_LEN))
             {
                 log_msg(LOG_ERR,
-                    "Unable to create acc_port_list from incoming data: %s",
+                    "[*] Unable to create acc_port_list from incoming data: %s",
                     port_str
                 );
                 free_acc_port_list(in_pl);
@@ -1414,7 +1412,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
             strlcpy(buf, start, (ndx-start)+1);
             if(add_port_list_ent(&in_pl, buf) == 0)
             {
-                log_msg(LOG_ERR, "Invalid proto/port string");
+                log_msg(LOG_ERR, "[*] Invalid proto/port string");
                 free_acc_port_list(in_pl);
                 return(0);
             }
@@ -1428,7 +1426,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
             || (((ndx-start)+1) >= ACCESS_BUF_LEN))
     {
         log_msg(LOG_ERR,
-            "Unable to create acc_port_list from incoming data: %s",
+            "[*] Unable to create acc_port_list from incoming data: %s",
             port_str
         );
         free_acc_port_list(in_pl);
@@ -1437,7 +1435,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
     strlcpy(buf, start, (ndx-start)+1);
     if(add_port_list_ent(&in_pl, buf) == 0)
     {
-        log_msg(LOG_ERR, "Invalid proto/port string");
+        log_msg(LOG_ERR, "[*] Invalid proto/port string");
         free_acc_port_list(in_pl);
         return 0;
     }
@@ -1445,7 +1443,7 @@ acc_check_port_access(acc_stanza_t *acc, char *port_str)
     if(in_pl == NULL)
     {
         log_msg(LOG_ERR,
-            "Unable to create acc_port_list from incoming data: %s", port_str
+            "[*] Unable to create acc_port_list from incoming data: %s", port_str
         );
         return(0);
     }
