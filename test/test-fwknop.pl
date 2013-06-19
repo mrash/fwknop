@@ -1382,14 +1382,16 @@ sub client_send_spa_packet() {
 sub permissions_check() {
     my $test_hr = shift;
 
-    for my $f (glob("$conf_dir/*")) {
-        chmod 0777, $f or die $!;
+    for my $f (keys %cf) {
+        next unless -f $cf{$f};
+        chmod 0777, $cf{$f} or die $!;
     }
 
     my $rv = &spa_cycle($test_hr);
 
-    for my $f (glob("$conf_dir/*")) {
-        chmod 0600, $f or die $!;
+    for my $f (keys %cf) {
+        next unless -f $cf{$f};
+        chmod 0600, $cf{$f} or die $!;
     }
 
     if ($test_hr->{'server_positive_output_matches'}) {
