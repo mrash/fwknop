@@ -207,6 +207,8 @@ EXTRA_DIST = \
     test/conf/fwknoprc_with_named_key \
     test/conf/fwknoprc_gpg_args_hmac_key \
     test/conf/fwknoprc_gpg_args_no_pw_hmac_key \
+    test/conf/fwknoprc_gpg_signing_pw \
+    test/conf/fwknoprc_named_gpg_signing_pw \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
