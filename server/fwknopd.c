@@ -467,7 +467,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
         if(! S_ISDIR(st.st_mode))
         {
             log_msg(LOG_ERR,
-                "Specified %s directory: %s is NOT a directory\n\n", fp_desc, tmp_path
+                "Specified %s directory: %s is NOT a directory", fp_desc, tmp_path
             );
             exit(EXIT_FAILURE);
         }
@@ -516,7 +516,7 @@ make_dir_path(const char * const run_dir)
                     if(stat(tmp_path, &st) != 0)
                     {
                         log_msg(LOG_ERR,
-                            "Could not create component: %s of %s\n\n", tmp_path, run_dir
+                            "Could not create component: %s of %s", tmp_path, run_dir
                         );
                         return(ENOTDIR);
                     }
@@ -526,7 +526,7 @@ make_dir_path(const char * const run_dir)
             if(! S_ISDIR(st.st_mode))
             {
                 log_msg(LOG_ERR,
-                    "Component: %s of %s is NOT a directory\n\n", tmp_path, run_dir
+                    "Component: %s of %s is NOT a directory", tmp_path, run_dir
                 );
                 return(ENOTDIR);
             }
@@ -663,7 +663,7 @@ write_pid_file(fko_srv_options_t *opts)
     my_pid = getpid();
     snprintf(buf, PID_BUFLEN, "%i\n", my_pid);
 
-    log_msg(LOG_DEBUG, "[+] Writing my PID (%i) to the lock file: %s\n",
+    log_msg(LOG_DEBUG, "[+] Writing my PID (%i) to the lock file: %s",
         my_pid, opts->config[CONF_FWKNOP_PID_FILE]);
 
     num_bytes = write(op_fd, buf, strlen(buf));

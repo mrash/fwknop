@@ -90,7 +90,8 @@ fw_initialize(const fko_srv_options_t *opts)
 
     if(res != 0)
     {
-        log_msg(LOG_WARNING, "Warning: Errors detected during fwknop custom chain creation.\n");
+        log_msg(LOG_WARNING,
+                "Warning: Errors detected during fw_initialize().");
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 }

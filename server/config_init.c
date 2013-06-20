@@ -46,7 +46,7 @@ range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
     strtol_wrapper(val, low, high, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] var %s value '%s' not in the range %d-%d\n",
+        log_msg(LOG_ERR, "[*] var %s value '%s' not in the range %d-%d",
             var, val, low, high);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -66,7 +66,7 @@ set_config_entry(fko_srv_options_t *opts, const int var_ndx, const char *value)
     */
     if(var_ndx < 0 || var_ndx >= NUMBER_OF_CONFIG_ENTRIES)
     {
-        log_msg(LOG_ERR, "[*] Index value of %i is not valid\n", var_ndx);
+        log_msg(LOG_ERR, "[*] Index value of %i is not valid", var_ndx);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -92,7 +92,7 @@ set_config_entry(fko_srv_options_t *opts, const int var_ndx, const char *value)
 
     if(opts->config[var_ndx] == NULL)
     {
-        log_msg(LOG_ERR, "[*] Fatal memory allocation error!\n");
+        log_msg(LOG_ERR, "[*] Fatal memory allocation error!");
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -132,7 +132,9 @@ free_configs(fko_srv_options_t *opts)
 static void
 validate_int_var_ranges(fko_srv_options_t *opts)
 {
+#if FIREWALL_IPFW
     int     is_err = FKO_SUCCESS;
+#endif
 
     range_check(opts, "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
         1, RCHK_MAX_PCAP_LOOP_SLEEP);
@@ -169,7 +171,13 @@ validate_int_var_ranges(fko_srv_options_t *opts)
                     0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err))
     {
         log_msg(LOG_ERR,
-                "[*] Cannot set identical ipfw active and expire sets.\n");
+                "[*] Cannot set identical ipfw active and expire sets.");
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid integer conversion error.\n");
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -178,12 +186,6 @@ validate_int_var_ranges(fko_srv_options_t *opts)
         1, RCHK_MAX_PF_EXPIRE_INTERVAL);
 
 #endif /* FIREWALL type */
-
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] invalid integer conversion error.\n");
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-    }
 
     return;
 }
@@ -210,7 +212,7 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
     */
     if(stat(config_file, &st) != 0)
     {
-        log_msg(LOG_ERR, "[*] Config file: '%s' was not found.\n",
+        log_msg(LOG_ERR, "[*] Config file: '%s' was not found.",
             config_file);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -222,7 +224,7 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
     */
     if ((cfile_ptr = fopen(config_file, "r")) == NULL)
     {
-        log_msg(LOG_ERR, "[*] Could not open config file: %s\n",
+        log_msg(LOG_ERR, "[*] Could not open config file: %s",
             config_file);
         perror(NULL);
 
@@ -285,7 +287,7 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
 
         if(good_ent == 0)
             log_msg(LOG_ERR,
-                "[*] Ignoring unknown configuration parameter: '%s' in %s\n",
+                "[*] Ignoring unknown configuration parameter: '%s' in %s",
                 var, config_file
             );
     }
@@ -610,7 +612,7 @@ validate_options(fko_srv_options_t *opts)
     if((opts->dump_config + opts->kill + opts->restart + opts->status) > 1)
     {
         log_msg(LOG_ERR,
-            "The -D, -K, -R, and -S options are mutually exclusive.  Pick only one.\n"
+            "The -D, -K, -R, and -S options are mutually exclusive.  Pick only one."
         );
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -618,7 +620,7 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_FIREWALL_EXE] == NULL)
     {
         log_msg(LOG_ERR,
-            "[*] No firewall command executable is set. Please check FIREWALL_EXE in fwknopd.conf.\n"
+            "[*] No firewall command executable is set. Please check FIREWALL_EXE in fwknopd.conf."
         );
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -776,7 +778,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 if(is_err != FKO_SUCCESS)
                 {
                     log_msg(LOG_ERR,
-                        "[*] invalid -C packet count limit '%s'\n",
+                        "[*] invalid -C packet count limit '%s'",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
@@ -812,7 +814,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] Directory '%s' could not stat()/does not exist?\n",
+                        "[*] Directory '%s' could not stat()/does not exist?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }

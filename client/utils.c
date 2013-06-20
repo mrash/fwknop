@@ -249,7 +249,8 @@ resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size
                 break;
             }
             else
-                log_msg(LOG_VERBOSITY_ERROR, "resolve_dest_adr() : inet_ntop (%d) - %s", errno, strerror(errno));
+                log_msg(LOG_VERBOSITY_ERROR, "resolve_dest_adr() : inet_ntop (%d) - %s",
+                        errno, strerror(errno));
         }
 
         /* Free our result from getaddrinfo() */

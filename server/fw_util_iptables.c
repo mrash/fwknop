@@ -250,7 +250,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
             {
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
                 got_err++;
             }
         }
@@ -434,7 +434,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 
     if(conf_str == NULL)
     {
-        log_msg(LOG_ERR, "[*] NULL conf_str.\n");
+        log_msg(LOG_ERR, "[*] NULL conf_str.");
         exit(EXIT_FAILURE);
     }
 
@@ -467,7 +467,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     {
         log_msg(LOG_ERR, "[*] Custom Chain config parse error.\n"
             "Wrong number of fields for chain type %i\n"
-            "Line: %s\n", type, conf_str);
+            "Line: %s", type, conf_str);
         exit(EXIT_FAILURE);
     }
 
@@ -485,7 +485,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
             0, RCHK_MAX_IPT_RULE_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] invalid jump rule position in Line: %s\n",
+        log_msg(LOG_ERR, "[*] invalid jump rule position in Line: %s",
             conf_str);
         exit(EXIT_FAILURE);
     }
@@ -498,7 +498,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
             0, RCHK_MAX_IPT_RULE_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] invalid to_chain rule position in Line: %s\n",
+        log_msg(LOG_ERR, "[*] invalid to_chain rule position in Line: %s",
             conf_str);
         exit(EXIT_FAILURE);
     }
@@ -576,7 +576,8 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(res != 0)
     {
-        log_msg(LOG_WARNING, "Warning: Errors detected during fwknop custom chain creation.\n");
+        log_msg(LOG_WARNING,
+                "Warning: Errors detected during fwknop custom chain creation.");
         exit(EXIT_FAILURE);
     }
 
@@ -585,7 +586,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if((strncasecmp(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK], "Y", 1) == 0)
             && (comment_match_exists(opts) != 1))
     {
-        log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.\n");
+        log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.");
         exit(EXIT_FAILURE);
     }
 }
@@ -1087,7 +1088,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             /* we did not find an expected rule.
             */
             log_msg(LOG_ERR,
-                "Did not find expire comment in rules list %i.\n", i);
+                "Did not find expire comment in rules list %i.", i);
 
             if (ch[i].active_rules > 0)
                 ch[i].active_rules--;

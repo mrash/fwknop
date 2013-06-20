@@ -97,7 +97,7 @@ try_url(struct url *url, fko_cli_options_t *options)
     error = getaddrinfo(url->host, url->port, &hints, &result);
     if (error != 0)
     {
-        log_msg(LOG_VERBOSITY_ERROR, "error in getaddrinfo: %s\n", gai_strerror(error));
+        log_msg(LOG_VERBOSITY_ERROR, "error in getaddrinfo: %s", gai_strerror(error));
         return(-1);
     }
 

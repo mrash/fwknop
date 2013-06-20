@@ -73,7 +73,7 @@ pcap_capture(fko_srv_options_t *opts)
             0, RCHK_MAX_PCAP_LOOP_SLEEP, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] invalid PCAP_LOOP_SLEEP_value\n");
+        log_msg(LOG_ERR, "[*] invalid PCAP_LOOP_SLEEP_value");
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -81,7 +81,7 @@ pcap_capture(fko_srv_options_t *opts)
             0, RCHK_MAX_SNIFF_BYTES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] invalid MAX_SNIFF_BYTES\n");
+        log_msg(LOG_ERR, "[*] invalid MAX_SNIFF_BYTES");
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -102,7 +102,7 @@ pcap_capture(fko_srv_options_t *opts)
 
         if(pcap == NULL)
         {
-            log_msg(LOG_ERR, "[*] pcap_open_offline() error: %s\n",
+            log_msg(LOG_ERR, "[*] pcap_open_offline() error: %s",
                     errstr);
             clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
         }
@@ -118,7 +118,7 @@ pcap_capture(fko_srv_options_t *opts)
 
         if(pcap == NULL)
         {
-            log_msg(LOG_ERR, "[*] pcap_open_live() error: %s\n", errstr);
+            log_msg(LOG_ERR, "[*] pcap_open_live() error: %s", errstr);
             clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
         }
     }
@@ -200,7 +200,7 @@ pcap_capture(fko_srv_options_t *opts)
             0, RCHK_MAX_PCAP_DISPATCH_COUNT, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] invalid PCAP_DISPATCH_COUNT\n");
+        log_msg(LOG_ERR, "[*] invalid PCAP_DISPATCH_COUNT");
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 

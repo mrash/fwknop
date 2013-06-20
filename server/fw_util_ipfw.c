@@ -191,7 +191,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_START_RULE_NUM], 0, RCHK_MAX_IPFW_MAX_RULES);
         exit(EXIT_FAILURE);
     }
@@ -200,7 +200,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_MAX_RULES, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_MAX_RULES], 0, RCHK_MAX_IPFW_MAX_RULES);
         exit(EXIT_FAILURE);
     }
@@ -209,7 +209,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_ACTIVE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
         exit(EXIT_FAILURE);
     }
@@ -218,7 +218,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_SET_NUM, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_EXPIRE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
         exit(EXIT_FAILURE);
     }
@@ -227,7 +227,7 @@ fw_config_init(fko_srv_options_t * const opts)
             0, RCHK_MAX_IPFW_PURGE_INTERVAL, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].\n",
+        log_msg(LOG_ERR, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL], 0,
                 RCHK_MAX_IPFW_PURGE_INTERVAL);
         exit(EXIT_FAILURE);
@@ -254,7 +254,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(res != 0)
     {
-        log_msg(LOG_ERR, "[*] Fatal: Errors detected during ipfw rules initialization.\n");
+        log_msg(LOG_ERR, "[*] Fatal: Errors detected during ipfw rules initialization.");
         exit(EXIT_FAILURE);
     }
 
@@ -264,7 +264,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if(fwc.rule_map == NULL)
     {
-        log_msg(LOG_ERR, "[*] Fatal: Memory allocation error in fw_initialize.\n");
+        log_msg(LOG_ERR, "[*] Fatal: Memory allocation error in fw_initialize().");
         exit(EXIT_FAILURE);
     }
 
@@ -378,7 +378,8 @@ fw_initialize(const fko_srv_options_t * const opts)
             }
         }
         else
-            log_msg(LOG_WARNING, "fw_initialize: No rule number found where expected.");
+            log_msg(LOG_WARNING,
+                    "fw_initialize: No rule number found where expected.");
 
         /* Find the next "# DISABLED" string (if any).
         */
@@ -418,7 +419,7 @@ fw_cleanup(const fko_srv_options_t * const opts)
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
             got_err++;
         }
     }
@@ -501,7 +502,8 @@ process_spa_request(const fko_srv_options_t * const opts,
         */
         if(rule_num == 0)
         {
-            log_msg(LOG_WARNING, "Access request rejected: Maximum allowed number of rules has been reached.");
+            log_msg(LOG_WARNING,
+                    "Access request rejected: Maximum allowed number of rules has been reached.");
             free_acc_port_list(port_list);
             return(-1);
         }
@@ -547,7 +549,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                     fwc.next_expire = exp_ts;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf); 
+                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
             ple = ple->next;
         }
@@ -638,7 +640,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         /* we did not find an expected rule.
         */
         log_msg(LOG_ERR,
-            "Did not find expire comment in rules list %i.\n", i);
+            "Did not find expire comment in rules list %i.", i);
 
         if (fwc.active_rules > 0)
             fwc.active_rules--;

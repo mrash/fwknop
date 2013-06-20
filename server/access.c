@@ -46,6 +46,12 @@
 static void
 add_acc_string(char **var, const char *val)
 {
+    if(var == NULL)
+    {
+        log_msg(LOG_ERR, "[*] add_acc_string() called with NULL variable");
+        exit(EXIT_FAILURE);
+    }
+
     if(*var != NULL)
         free(*var);
 
@@ -140,7 +146,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
     if (errno == ERANGE || (errno != 0 && expire_time == 0))
     {
         log_msg(LOG_ERR,
-            "[* ]Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
+            "[*] Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
             val
         );
         return 0;
@@ -859,13 +865,20 @@ set_acc_defaults(fko_srv_options_t *opts)
 static int
 acc_data_is_valid(const acc_stanza_t *acc)
 {
+    if(acc == NULL)
+    {
+        log_msg(LOG_ERR,
+            "[*] acc_data_is_valid() called with NULL acc stanza");
+        return(0);
+    }
+
     if(((acc->key == NULL || acc->key_len == 0)
       && ((acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw))
           && acc->gpg_allow_no_pw == 0))
       || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0))
     {
         log_msg(LOG_ERR,
-            "[*] No keys found for access stanza source: '%s'\n", acc->source
+            "[*] No keys found for access stanza source: '%s'", acc->source
         );
         return(0);
     }
@@ -878,7 +891,7 @@ acc_data_is_valid(const acc_stanza_t *acc)
             if(memcmp(acc->key, acc->hmac_key, acc->hmac_key_len) == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'\n",
+                    "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'",
                     acc->source
                 );
                 return(0);
@@ -891,12 +904,20 @@ acc_data_is_valid(const acc_stanza_t *acc)
             if(memcmp(acc->gpg_decrypt_pw, acc->hmac_key, acc->hmac_key_len) == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'\n",
+                    "[*] The encryption passphrase and HMAC key should not be identical for access stanza source: '%s'",
                     acc->source
                 );
                 return(0);
             }
         }
+    }
+
+    if(acc->require_source_address == 0)
+    {
+        log_msg(LOG_INFO,
+            "Warning: REQUIRE_SOURCE_ADDRESS not enabled for access stanza source: '%s'",
+            acc->source
+        );
     }
 
     return(1);
@@ -926,7 +947,7 @@ parse_access_file(fko_srv_options_t *opts)
     */
     if(stat(opts->config[CONF_ACCESS_FILE], &st) != 0)
     {
-        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.\n",
+        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
             opts->config[CONF_ACCESS_FILE]);
 
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -950,7 +971,7 @@ parse_access_file(fko_srv_options_t *opts)
     */
     if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
     {
-        log_msg(LOG_ERR, "[*] Could not open access file: %s\n",
+        log_msg(LOG_ERR, "[*] Could not open access file: %s",
             opts->config[CONF_ACCESS_FILE]);
         perror(NULL);
 
@@ -1000,7 +1021,7 @@ parse_access_file(fko_srv_options_t *opts)
         */
         if (opts->verbose > 3)
             log_msg(LOG_DEBUG,
-                "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
+                "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'",
                 opts->config[CONF_ACCESS_FILE], access_line_buf, var, val
             );
 
@@ -1018,7 +1039,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(curr_acc != NULL) {
                 if(!acc_data_is_valid(curr_acc))
                 {
-                    log_msg(LOG_ERR, "[*] Data error in access file: '%s'\n",
+                    log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
                         opts->config[CONF_ACCESS_FILE]);
                     fclose(file_ptr);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1052,7 +1073,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1066,7 +1087,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1074,7 +1095,7 @@ parse_access_file(fko_srv_options_t *opts)
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
                 log_msg(LOG_ERR,
-                    "[*] KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                    "[*] KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1091,7 +1112,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(curr_acc->hmac_type < 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}\n",
+                    "[*] HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1102,7 +1123,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1110,7 +1131,7 @@ parse_access_file(fko_srv_options_t *opts)
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
                 log_msg(LOG_ERR,
-                    "[*] HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.\n",
+                    "[*] HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1124,7 +1145,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1149,7 +1170,7 @@ parse_access_file(fko_srv_options_t *opts)
             if((curr_acc->encryption_mode = enc_mode_strtoint(val)) < 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] Unrecognized ENCRYPTION_MODE '%s', use {cbc,ecb}\n",
+                    "[*] Unrecognized ENCRYPTION_MODE '%s', use {CBC,CTR,legacy,Asymmetric}",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1168,7 +1189,7 @@ parse_access_file(fko_srv_options_t *opts)
 
             if(pw == NULL)
             {
-                log_msg(LOG_ERR, "[*] Unable to determine UID for CMD_EXEC_USER: %s.\n",
+                log_msg(LOG_ERR, "[*] Unable to determine UID for CMD_EXEC_USER: %s.",
                     errno ? strerror(errno) : "Not a user on this system");
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1197,7 +1218,7 @@ parse_access_file(fko_srv_options_t *opts)
             else
             {
                 log_msg(LOG_ERR,
-                    "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'\n",
+                    "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'",
                     val, curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1212,7 +1233,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'\n",
+                    "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1263,14 +1284,14 @@ parse_access_file(fko_srv_options_t *opts)
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf\n");
+                    "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_force_nat(opts, curr_acc, val);
 #else
             log_msg(LOG_ERR,
-                "[*] FORCE_NAT not supported.\n");
+                "[*] FORCE_NAT not supported.");
             fclose(file_ptr);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 #endif
@@ -1278,7 +1299,7 @@ parse_access_file(fko_srv_options_t *opts)
         else
         {
             log_msg(LOG_ERR,
-                "[*] Ignoring unknown access parameter: '%s' in %s\n",
+                "[*] Ignoring unknown access parameter: '%s' in %s",
                 var, opts->config[CONF_ACCESS_FILE]
             );
         }
@@ -1293,7 +1314,7 @@ parse_access_file(fko_srv_options_t *opts)
     if (got_source == 0)
     {
         log_msg(LOG_ERR,
-            "[*] Could not find valid SOURCE stanza in access file: '%s'\n",
+            "[*] Could not find valid SOURCE stanza in access file: '%s'",
             opts->config[CONF_ACCESS_FILE]);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
@@ -1303,7 +1324,7 @@ parse_access_file(fko_srv_options_t *opts)
     if(!acc_data_is_valid(curr_acc))
     {
         log_msg(LOG_ERR,
-            "[*] Data error in access file: '%s'\n",
+            "[*] Data error in access file: '%s'",
             opts->config[CONF_ACCESS_FILE]);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }

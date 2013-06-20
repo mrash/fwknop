@@ -168,7 +168,8 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     if (! anchor_active(opts))
     {
-        log_msg(LOG_WARNING, "Warning: the fwknop anchor is not active in the pf policy\n");
+        log_msg(LOG_WARNING,
+                "Warning: the fwknop anchor is not active in the pf policy");
         exit(EXIT_FAILURE);
     }
 
@@ -387,7 +388,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         /* we did not find an expected rule.
         */
         log_msg(LOG_ERR,
-            "Did not find expire comment in rules list %i.\n", i);
+            "Did not find expire comment in rules list %i.", i);
 
         return;
     }

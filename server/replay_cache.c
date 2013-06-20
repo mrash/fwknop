@@ -276,7 +276,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
             if(write(digest_file_fd, digest_header, strlen(digest_header))
                     != strlen(digest_header)) {
                 log_msg(LOG_WARNING,
-                    "Did not write expected number of bytes to digest cache: %s\n",
+                    "Did not write expected number of bytes to digest cache: %s",
                     opts->config[CONF_DIGEST_FILE]);
             }
             close(digest_file_fd);
@@ -314,13 +314,13 @@ replay_file_cache_init(fko_srv_options_t *opts)
         */
         if ((digest_elm = calloc(1, sizeof(struct digest_cache_list))) == NULL)
         {
-            log_msg(LOG_ERR, "[*] Could not allocate digest list element\n");
+            log_msg(LOG_ERR, "[*] Could not allocate digest list element");
             continue;
         }
         if ((digest_elm->cache_info.digest = calloc(1, MAX_DIGEST_SIZE+1)) == NULL)
         {
             free(digest_elm);
-            log_msg(LOG_ERR, "[*] Could not allocate digest string\n");
+            log_msg(LOG_ERR, "[*] Could not allocate digest string");
             continue;
         }
         src_ip[0] = '\0';

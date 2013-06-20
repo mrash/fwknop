@@ -311,7 +311,7 @@ incoming_spa(fko_srv_options_t *opts)
                 0, RCHK_MAX_SPA_PACKET_AGE, NO_EXIT_UPON_ERR, &is_err);
         if(is_err != FKO_SUCCESS)
         {
-            log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE\n", spadat.pkt_source_ip);
+            log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE", spadat.pkt_source_ip);
             return;
         }
     }
@@ -377,7 +377,7 @@ incoming_spa(fko_srv_options_t *opts)
         log_msg(LOG_INFO, "(stanza #%d) SPA Packet from IP: %s received with access source match",
             stanza_num, spadat.pkt_source_ip);
 
-        log_msg(LOG_DEBUG, "SPA Packet: '%s'\n", spa_pkt->packet_data);
+        log_msg(LOG_DEBUG, "SPA Packet: '%s'", spa_pkt->packet_data);
 
         /* Make sure this access stanza has not expired
         */
@@ -551,7 +551,8 @@ incoming_spa(fko_srv_options_t *opts)
             res = fko_get_gpg_signature_id(ctx, &gpg_id);
             if(res != FKO_SUCCESS)
             {
-                log_msg(LOG_WARNING, "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
                     spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
                 acc = acc->next;
                 continue;

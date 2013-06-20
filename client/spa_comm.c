@@ -94,7 +94,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
     if (options->test)
     {
         log_msg(LOG_VERBOSITY_NORMAL,
-            "test mode enabled, SPA packet not actually sent.\n");
+            "test mode enabled, SPA packet not actually sent.");
         return res;
     }
 
@@ -374,7 +374,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
     else if(res != sd_len + hdrlen) /* account for the header ?*/
     {
         log_msg(LOG_VERBOSITY_WARNING,
-            "[#] Warning: bytes sent (%i) not spa data length (%i).\n",
+            "[#] Warning: bytes sent (%i) not spa data length (%i).",
             res, sd_len
         );
     }

@@ -68,7 +68,7 @@ run_tcp_server(fko_srv_options_t *opts)
             0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] Invalid max TCPSERV_PORT value.\n");
+        log_msg(LOG_ERR, "[*] Invalid max TCPSERV_PORT value.");
         exit(EXIT_FAILURE);
     }
     log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.", port);

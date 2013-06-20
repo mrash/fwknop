@@ -138,7 +138,7 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "GPG_HOMEDIR",           FWKNOP_CLI_ARG_GPG_HOMEDIR           },
     { "GPG_SIGNING_PW",        FWKNOP_CLI_ARG_GPG_SIGNING_PW        },
     { "GPG_SIGNING_PW_BASE64", FWKNOP_CLI_ARG_GPG_SIGNING_PW_BASE64 },
-    { "GPG_NO_SIGNING_PW",     FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW    },
+    { "GPG_NO_SIGNING_PW",     FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW     },
     { "SPOOF_USER",            FWKNOP_CLI_ARG_SPOOF_USER            },
     { "SPOOF_SOURCE_IP",       FWKNOP_CLI_ARG_SPOOF_SOURCE_IP       },
     { "ACCESS",                FWKNOP_CLI_ARG_ACCESS                },
@@ -720,7 +720,7 @@ create_fwknoprc(const char *rcfile)
     FILE *rc = NULL;
     int   rcfile_fd = -1;
 
-    log_msg(LOG_VERBOSITY_NORMAL,"[*] Creating initial rc file: %s.\n", rcfile);
+    log_msg(LOG_VERBOSITY_NORMAL, "[*] Creating initial rc file: %s.", rcfile);
 
     /* Try to create the initial rcfile with user read/write rights only.
      * If the rcfile already exists, an error is returned */
@@ -1684,6 +1684,14 @@ validate_options(fko_cli_options_t *options)
         }
     }
 
+    if(options->encryption_mode == FKO_ENC_MODE_ASYMMETRIC
+            && ! options->use_gpg)
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+            "Must specify GPG recipient/signing keys when Asymmetric encryption mode is used.");
+        exit(EXIT_FAILURE);
+    }
+
     /* Validate HMAC digest type
     */
     if(options->use_hmac && options->hmac_type == FKO_HMAC_UNKNOWN)
@@ -1964,7 +1972,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 if((options->encryption_mode = enc_mode_strtoint(optarg)) < 0)
                 {
                     log_msg(LOG_VERBOSITY_ERROR,
-                        "* Invalid encryption mode: %s, use {cbc,ecb}",
+                        "* Invalid encryption mode: %s, use {CBC,CTR,legacy,Asymmetric}",
                     optarg);
                     exit(EXIT_FAILURE);
                 }

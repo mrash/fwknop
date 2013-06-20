@@ -574,7 +574,7 @@ main(int argc, char **argv)
                  * programs like the fwknop test suite don't interpret this as
                  * an unrecoverable error), but print the error string for
                  debugging purposes. */
-                log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s\n%s\n", fko_gpg_errstr(ctx2),
+                log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s\n%s", fko_gpg_errstr(ctx2),
                     "No access to recipient private key?");
                 fko_destroy(ctx);
                 fko_destroy(ctx2);

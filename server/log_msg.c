@@ -200,7 +200,7 @@ log_msg(int level, char* msg, ...)
 /**
  * Set the verbosity level for the current context of the log module.
  *
- * The verbosity levels used byt the module are defined by the sylsog module.
+ * The verbosity levels used by the module are defined by the syslog module.
  *
  * @param level verbosity level to set (LOG_INFO, LOG_NOTICE ...)
  */
