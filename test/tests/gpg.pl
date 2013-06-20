@@ -36,6 +36,19 @@
     {
         'category' => 'GPG',
         'subcategory' => 'client+server',
+        'detail'   => 'rc file default key ..._PW synonym',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_get_key " .
+            "--rc-file $cf{'rc_gpg_signing_pw'}",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_gpg_signing_pw'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG',
+        'subcategory' => 'client+server',
         'detail'   => 'rc file named key (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_gpg_args_no_get_key " .
@@ -46,6 +59,33 @@
         'key_file' => $cf{'rc_named_key'},
         'fatal'    => $NO
     },
+    {
+        'category' => 'GPG',
+        'subcategory' => 'client+server',
+        'detail'   => 'rc file named key ..._PW synonym',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_get_key " .
+            "--rc-file $cf{'rc_gpg_named_signing_pw'} -n testssh",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_gpg_named_signing_pw'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'GPG',
+        'subcategory' => 'client+server',
+        'detail'   => 'rc file b64 named key ..._PW synonym',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_get_key " .
+            "--rc-file $cf{'rc_gpg_named_signing_pw'} -n testssh2",
+        'fwknopd_cmdline'  => $default_server_gpg_args,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_gpg_named_signing_pw'},
+        'fatal'    => $NO
+    },
+
     {
         'category' => 'GPG',
         'subcategory' => 'client+server',

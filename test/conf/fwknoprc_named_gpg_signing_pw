@@ -1,0 +1,7 @@
+[default]
+
+[testssh]
+GPG_SIGNING_PW                 fwknoptest
+
+[testssh2]
+GPG_SIGNING_PW_BASE64          Zndrbm9wdGVzdA==

@@ -108,7 +108,7 @@
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip " .
-            "--gpg-no-singing-pw --verbose --verbose " .
+            "--gpg-no-signing-pw --verbose --verbose " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir_no_pw",

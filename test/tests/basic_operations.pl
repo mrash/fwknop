@@ -757,9 +757,9 @@
         'detail'   => 'encryption mode Asymmetric',
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode \"Asymmetric\"",
-        'positive_output_matches' => [qr/Encryption\sMode\:\s.*Asymmetric/],
+        'positive_output_matches' => [qr/Must\sspecify\sGPG\srecipient/],
         'fatal'    => $NO
-    },    
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
