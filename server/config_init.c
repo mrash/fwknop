@@ -706,6 +706,10 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             */
             if(got_conf_file > 0)
                 break;
+        /* Verbosity level */
+        case 'v':
+            opts->verbose++;
+            break;
         }
     }
 
@@ -752,6 +756,20 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             /* Process the last entry
             */
             parse_config_file(opts, ndx);
+        }
+    }
+
+    /* Set up the verbosity level according to the value found in the
+     * config files */
+    if (opts->config[CONF_VERBOSITY] != NULL)
+    {
+        opts->verbose = strtol_wrapper(opts->config[CONF_VERBOSITY], 0, -1,
+                                       NO_EXIT_UPON_ERR, &is_err);
+        if(is_err != FKO_SUCCESS)
+        {
+            log_msg(LOG_ERR, "[*] VERBOSITY value '%s' not in the range (>0)",
+                opts->config[CONF_VERBOSITY]);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
     }
 
@@ -851,9 +869,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case 'S':
                 opts->status = 1;
-                break;
-            case 'v':
-                opts->verbose++;
                 break;
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);

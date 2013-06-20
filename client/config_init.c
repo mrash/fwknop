@@ -1136,6 +1136,9 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
             else
                 parse_error = -1;
         }
+
+        if (parse_error == 0)
+            log_set_verbosity(LOG_DEFAULT_VERBOSITY + options->verbose);
     }
     /* RESOLVE_IP_HTTP ? */
     else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTP)
