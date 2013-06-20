@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/18/2013
+.\"      Date: 06/19/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "06/18/2013" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/19/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -814,6 +814,20 @@ to have
 interface with a GPG agent instance for the GPG key password (\fI\-\-gpg\-agent\fR)\&. Agent information itself is specified with the
 \fIGPG_AGENT_INFO\fR
 environmental variable\&.
+.RE
+.PP
+\fBGPG_SIGNING_PW\fR \fI<passphrase>\fR
+.RS 4
+This is the passphrase that is used for signing SPA packet data in GPG encryption mode, and is a synonym for the
+\fIKEY\fR
+variable (i\&.e\&. the signing passphrase can be specified with the
+\fIKEY\fR
+variable instead)\&. The SPA packet is encrypted with the remote server key and signed with the local client key\&.
+.RE
+.PP
+\fBGPG_SIGNING_PW_BASE64\fR \fI<base64 encoded passphrase>\fR
+.RS 4
+Specify the GPG signing passphrase as a base64 encoded string\&. This allows non\-ascii characters to be included in the base64\-decoded key\&.
 .RE
 .PP
 \fBGPG_SIGNER\fR \fI<key ID or Name>\fR

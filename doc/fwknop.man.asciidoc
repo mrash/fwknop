@@ -659,6 +659,17 @@ description and its matching command-line option(s):
     key password ('--gpg-agent').  Agent information itself is specified with
     the 'GPG_AGENT_INFO' environmental variable.
 
+*GPG_SIGNING_PW* '<passphrase>'::
+    This is the passphrase that is used for signing SPA packet data in GPG
+    encryption mode, and is a synonym for the 'KEY' variable (i.e. the signing
+    passphrase can be specified with the 'KEY' variable instead).  The SPA
+    packet is encrypted with the remote server key and signed with the local
+    client key.
+
+*GPG_SIGNING_PW_BASE64* '<base64 encoded passphrase>'::
+    Specify the GPG signing passphrase as a base64 encoded string.  This allows
+    non-ascii characters to be included in the base64-decoded key.
+
 *GPG_SIGNER* '<key ID or Name>'::
     Specify the GPG key name or ID for signing the GPG-encrypted SPA data
     ('--gpg-signer-key').
