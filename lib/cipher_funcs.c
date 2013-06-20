@@ -277,6 +277,9 @@ rij_decrypt(unsigned char *in, size_t in_len,
     unsigned char      *pad_s;
     unsigned char      *ondx = out;
 
+    if(in == NULL || key == NULL || out == NULL)
+        return 0;
+
     rijndael_init(&ctx, key, key_len, in, encryption_mode);
 
     /* Remove the first block since it contains the salt (it was consumed

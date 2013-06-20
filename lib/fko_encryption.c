@@ -150,7 +150,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
 {
     unsigned char  *ndx;
     unsigned char  *cipher;
-    int             cipher_len, pt_len, i, err = 0;
+    int             cipher_len, pt_len, i, err = 0, res = FKO_SUCCESS;
 
     if(key_len > RIJNDAEL_MAX_KEYSIZE)
         return(FKO_ERROR_INVALID_KEY_LEN);
@@ -159,7 +159,11 @@ _rijndael_decrypt(fko_ctx_t ctx,
      * encrypted data.
     */
     if(! ctx->added_salted_str)
-        add_salted_str(ctx);
+    {
+        res = add_salted_str(ctx);
+        if(res != FKO_SUCCESS)
+            return res;
+    }
 
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.
@@ -206,7 +210,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
     /* The length of the decrypted data should be within 32 bytes of the
      * length of the encrypted version.
     */
-    if(pt_len < (cipher_len - 32))
+    if(pt_len < (cipher_len - 32) || pt_len <= 0)
         return(FKO_ERROR_DECRYPTION_SIZE);
 
     if(ctx->encoded_msg == NULL)
