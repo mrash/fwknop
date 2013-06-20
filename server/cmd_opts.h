@@ -107,6 +107,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
 #endif
     "GPG_HOME_DIR",
     "FIREWALL_EXE",
+    "VERBOSITY"
 };
 
 
