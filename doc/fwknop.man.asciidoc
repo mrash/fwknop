@@ -184,7 +184,7 @@ GENERAL OPTIONS
 
 *--key-gen*::
     Have *fwknop* generate both Rijndael and HMAC keys that can be used for SPA
-    packet encryption.  These keys are derived from /dev/random and then base64
+    packet encryption.  These keys are derived from /dev/urandom and then base64
     encoded before being printed to stdout, and are meant to be included within
     the ``$HOME/.fwknoprc'' file (or the file referenced by *--get-key*).  Such
     keys are generally more secure than passphrases that are typed in from the
@@ -905,12 +905,14 @@ translated via NAT to the '192.168.10.2' system automatically:
 BACKWARDS COMPATIBILITY
 -----------------------
 With the '2.5' release, *fwknop* underwent significant changes in its usage of
-cryptography including the addition of support for HMAC authenticated encryption,
-ensuring the proper usage of PBKDF1 for key derivation when SPA packets are
-encrypted with Rijndael, and several bugs were fixed from previous versions of
-fwknop.  In general, this implies that SPA packets produced by the '2.5' release
-are incompatible with previous versions of fwknop.  However, backwards
-compatibility is supported through setting the 'legacy' encryption mode with
+cryptography including the addition of support for HMAC authenticated encryption
+for both Rijndael and GnuPG modes, ensuring the proper usage of PBKDF1 for key
+derivation when SPA packets are encrypted with Rijndael, and several bugs were
+fixed from previous versions of fwknop.  In general, this implies that when
+Rijndael is used, SPA packets produced by the '2.5' release are incompatible
+with previous versions of fwknop.  The GnuPG encryption mode is unaffected by
+these updates.  However, even with Rijndael is used, backwards compatibility is
+supported through setting the 'legacy' encryption mode with
 *-M* on the fwknop client command line and/or the 'ENCRYPTION_MODE' variable in
 the '@sysconfdir@/fwknop/access.conf' file.  This way, a pre-2.5 server can
 decrypt SPA packets produced by a 2.5 and later client (set '-M legacy'), and
