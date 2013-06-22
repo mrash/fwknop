@@ -898,7 +898,8 @@ dump_config(const fko_srv_options_t *opts)
 void
 usage(void)
 {
-    fprintf(stdout, "\n%s server version %s\n%s\n\n", MY_NAME, MY_VERSION, MY_DESC);
+    fprintf(stdout, "\n%s server version %s\n%s - http://www.cipherdyne.org/fwknop/\n\n",
+            MY_NAME, MY_VERSION, MY_DESC);
     fprintf(stdout,
       "Usage: fwknopd [options]\n\n"
       " -h, --help              - Print this usage message and exit.\n"
