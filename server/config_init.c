@@ -685,31 +685,32 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 break;
 
-        /* Look for configuration file arg.
-        */
-        case 'c':
-            set_config_entry(opts, CONF_CONFIG_FILE, optarg);
-            got_conf_file++;
-
-            /* If we already have the config_override option, we are done.
-            */
-            if(got_override_config > 0)
+            /* Verbosity level */
+            case 'v':
+                opts->verbose++;
                 break;
 
-        /* Look for override configuration file arg.
-        */
-        case 'O':
-            set_config_entry(opts, CONF_OVERRIDE_CONFIG, optarg);
-            got_override_config++;
-
-            /* If we already have the conf_file option, we are done.
+            /* Look for configuration file arg.
             */
-            if(got_conf_file > 0)
-                break;
-        /* Verbosity level */
-        case 'v':
-            opts->verbose++;
-            break;
+            case 'c':
+                set_config_entry(opts, CONF_CONFIG_FILE, optarg);
+                got_conf_file++;
+
+                /* If we already have the config_override option, we are done.
+                */
+                if(got_override_config > 0)
+                    break;
+
+            /* Look for override configuration file arg.
+            */
+            case 'O':
+                set_config_entry(opts, CONF_OVERRIDE_CONFIG, optarg);
+                got_override_config++;
+
+                /* If we already have the conf_file option, we are done.
+                */
+                if(got_conf_file > 0)
+                    break;
         }
     }
 
@@ -869,6 +870,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case 'S':
                 opts->status = 1;
+                break;
+            /* Verbosity level - handled previously */
+            case 'v':
                 break;
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
