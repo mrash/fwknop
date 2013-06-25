@@ -251,7 +251,7 @@ enum {
 #endif
     CONF_GPG_HOME_DIR,
     CONF_FIREWALL_EXE,
-    CONF_VERBOSITY,
+    CONF_VERBOSE,
 
     NUMBER_OF_CONFIG_ENTRIES  /* Marks the end and number of entries */
 };
