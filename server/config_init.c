@@ -762,14 +762,14 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
 
     /* Set up the verbosity level according to the value found in the
      * config files */
-    if (opts->config[CONF_VERBOSITY] != NULL)
+    if (opts->config[CONF_VERBOSE] != NULL)
     {
-        opts->verbose = strtol_wrapper(opts->config[CONF_VERBOSITY], 0, -1,
+        opts->verbose = strtol_wrapper(opts->config[CONF_VERBOSE], 0, -1,
                                        NO_EXIT_UPON_ERR, &is_err);
         if(is_err != FKO_SUCCESS)
         {
-            log_msg(LOG_ERR, "[*] VERBOSITY value '%s' not in the range (>0)",
-                opts->config[CONF_VERBOSITY]);
+            log_msg(LOG_ERR, "[*] VERBOSE value '%s' not in the range (>0)",
+                opts->config[CONF_VERBOSE]);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
     }
