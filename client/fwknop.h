@@ -34,9 +34,4 @@
 
 #include "fwknop_common.h"
 
-/* Used by the get_user_pw function below.
-*/
-#define CRYPT_OP_ENCRYPT 1
-#define CRYPT_OP_DECRYPT 2
-
 #endif  /* FWKNOP_H */

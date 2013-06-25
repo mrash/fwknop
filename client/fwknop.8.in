@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/19/2013
+.\"      Date: 06/20/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "06/19/2013" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/20/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1075,7 +1075,7 @@ When \fBfwknopd\fR is running on an iptables firewall with systems deployed behi
 .\}
 .SH "BACKWARDS COMPATIBILITY"
 .sp
-With the \fI2\&.5\fR release, \fBfwknop\fR underwent significant changes in its usage of cryptography including the addition of support for HMAC authenticated encryption, ensuring the proper usage of PBKDF1 for key derivation when SPA packets are encrypted with Rijndael, and several bugs were fixed from previous versions of fwknop\&. In general, this implies that SPA packets produced by the \fI2\&.5\fR release are incompatible with previous versions of fwknop\&. However, backwards compatibility is supported through setting the \fIlegacy\fR encryption mode with \fB\-M\fR on the fwknop client command line and/or the \fIENCRYPTION_MODE\fR variable in the \fI@sysconfdir@/fwknop/access\&.conf\fR file\&. This way, a pre\-2\&.5 server can decrypt SPA packets produced by a 2\&.5 and later client (set \fI\-M legacy\fR), and a 2\&.5 and later server can decrypt SPA packets produced by pre\-2\&.5 clients (set \fIENCRYPTION_MODE legacy\fR in the access\&.conf file)\&. Note that HMAC is only supported as of 2\&.5 and is an optional feature, so backwards compatibility is only for configurations that don\(cqt use an HMAC on either side\&. It is strongly recommended to upgrade all fwknop clients and servers to 2\&.5 and use the new HMAC mode for properly authenticated SPA communications\&. The backwards compatibility support is used to make it easier to upgrade clients and servers with a phased approach\&.
+With the \fI2\&.5\fR release, \fBfwknop\fR underwent significant changes in its usage of cryptography including the addition of support for HMAC authenticated encryption for both Rijndael and GnuPG modes, ensuring the proper usage of PBKDF1 for key derivation when SPA packets are encrypted with Rijndael, and several bugs were fixed from previous versions of fwknop\&. In general, this implies that when Rijndael is used, SPA packets produced by the \fI2\&.5\fR release are incompatible with previous versions of fwknop\&. The GnuPG encryption mode is unaffected by these updates\&. However, even with Rijndael is used, backwards compatibility is supported through setting the \fIlegacy\fR encryption mode with \fB\-M\fR on the fwknop client command line and/or the \fIENCRYPTION_MODE\fR variable in the \fI@sysconfdir@/fwknop/access\&.conf\fR file\&. This way, a pre\-2\&.5 server can decrypt SPA packets produced by a 2\&.5 and later client (set \fI\-M legacy\fR), and a 2\&.5 and later server can decrypt SPA packets produced by pre\-2\&.5 clients (set \fIENCRYPTION_MODE legacy\fR in the access\&.conf file)\&. Note that HMAC is only supported as of 2\&.5 and is an optional feature, so backwards compatibility is only for configurations that don\(cqt use an HMAC on either side\&. It is strongly recommended to upgrade all fwknop clients and servers to 2\&.5 and use the new HMAC mode for properly authenticated SPA communications\&. The backwards compatibility support is used to make it easier to upgrade clients and servers with a phased approach\&.
 .sp
 For emphasis, if the \fBfwknopd\fR server is upgraded to 2\&.5 (or later), but older clients cannot be upgraded at the same time, then for each \fISOURCE\fR stanza in the \fI@sysconfdir@/fwknop/access\&.conf\fR file, add the following line:
 .sp

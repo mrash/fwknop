@@ -38,8 +38,7 @@
 /* prototypes
 */
 static void get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
-    char *key, int *key_len, char *hmac_key,
-    int *hmac_key_len, const int crypt_op);
+    char *key, int *key_len, char *hmac_key, int *hmac_key_len);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
 static void prev_exec(fko_cli_options_t *options, int argc, char **argv);
@@ -433,8 +432,7 @@ main(int argc, char **argv)
 
     /* Acquire the necessary encryption/hmac keys
     */
-    get_keys(ctx, &options, key, &key_len,
-        hmac_key, &hmac_key_len, CRYPT_OP_ENCRYPT);
+    get_keys(ctx, &options, key, &key_len, hmac_key, &hmac_key_len);
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
@@ -554,9 +552,6 @@ main(int argc, char **argv)
                 }
             }
         }
-
-        get_keys(ctx2, &options, key, &key_len,
-            hmac_key, &hmac_key_len, CRYPT_OP_DECRYPT);
 
         /* Decrypt
         */
@@ -1076,8 +1071,7 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 */
 static void
 get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
-    char *key, int *key_len, char *hmac_key,
-    int *hmac_key_len, const int crypt_op)
+    char *key, int *key_len, char *hmac_key, int *hmac_key_len)
 {
     char   *key_tmp = NULL, *hmac_key_tmp = NULL;
     int     use_hmac = 0, res = 0;
@@ -1085,12 +1079,12 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     memset(key, 0x0, MAX_KEY_LEN+1);
     memset(hmac_key, 0x0, MAX_KEY_LEN+1);
 
-    if (options->have_key)
+    if(options->have_key)
     {
         strlcpy(key, options->key, MAX_KEY_LEN+1);
         *key_len = strlen(key);
     }
-    else if (options->have_base64_key)
+    else if(options->have_base64_key)
     {
         *key_len = fko_base64_decode(options->key_base64,
                 (unsigned char *) options->key);
@@ -1109,11 +1103,11 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     {
         /* If --get-key file was specified grab the key/password from it.
         */
-        if (options->get_key_file[0] != 0x0)
+        if(options->get_key_file[0] != 0x0)
         {
             get_key_file(key, key_len, options->get_key_file, ctx, options);
         }
-        else if (options->use_gpg)
+        else if(options->use_gpg)
         {
             if(options->use_gpg_agent)
                 log_msg(LOG_VERBOSITY_NORMAL,
@@ -1121,20 +1115,6 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             else if(options->gpg_no_signing_pw)
                 log_msg(LOG_VERBOSITY_NORMAL,
                     "[+] GPG mode set, signing passphrase not required");
-            else if(crypt_op == CRYPT_OP_ENCRYPT)
-                log_msg(LOG_VERBOSITY_NORMAL,
-                    "[+] GPG mode set, encrypt instead of decrypt operation");
-            else if(crypt_op == CRYPT_OP_DECRYPT)
-            {
-                key_tmp = getpasswd("Enter passphrase for secret key: ", options->input_fd);
-                if(key_tmp == NULL)
-                {
-                    log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
-                    clean_exit(ctx, options, EXIT_FAILURE);
-                }
-                strlcpy(key, key_tmp, MAX_KEY_LEN+1);
-                *key_len = strlen(key);
-            }
             else if(strlen(options->gpg_signer_key))
             {
                 key_tmp = getpasswd("Enter passphrase for signing: ", options->input_fd);
@@ -1149,12 +1129,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         }
         else
         {
-            if(crypt_op == CRYPT_OP_ENCRYPT)
-                key_tmp = getpasswd("Enter encryption key: ", options->input_fd);
-            else if(crypt_op == CRYPT_OP_DECRYPT)
-                key_tmp = getpasswd("Enter decryption key: ", options->input_fd);
-            else
-                key_tmp = getpasswd("Enter key: ", options->input_fd);
+            key_tmp = getpasswd("Enter encryption key: ", options->input_fd);
 
             if(key_tmp == NULL)
             {

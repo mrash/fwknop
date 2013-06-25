@@ -57,11 +57,6 @@
   #define   LOCK_UN        0x08      /* unlock file */
 #endif
 
-/* Used by the get_user_pw function.
-*/
-#define CRYPT_OP_ENCRYPT 1
-#define CRYPT_OP_DECRYPT 2
-
 #define PID_BUFLEN 7
 
 #endif  /* FWKNOPD_H */

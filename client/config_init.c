@@ -757,13 +757,13 @@ create_fwknoprc(const char *rcfile)
         "# It is this identifier (or name) that is used from the fwknop command line\n"
         "# via the '-n <name>' argument to reference the corresponding stanza.\n"
         "#\n"
-        "# The parameters within the stanza typicaly match corresponding client \n"
+        "# The parameters within the stanza typically match corresponding client \n"
         "# command-line parameters.\n"
         "#\n"
         "# The first one should always be `[default]' as it defines the global\n"
         "# default settings for the user. These override the program defaults\n"
         "# for these parameters.  If a named stanza is used, its entries will\n"
-        "# override any of the default.  Command-line options will trump them\n"
+        "# override any of the default values.  Command-line options will trump them\n"
         "# all.\n"
         "#\n"
         "# Subsequent stanzas will have only the overriding and destination\n"
@@ -797,7 +797,7 @@ create_fwknoprc(const char *rcfile)
         "\n"
         "# User-provided named stanzas:\n"
         "\n"
-        "# Example for a destination server of 192.168.1.20 to open access to \n"
+        "# Example for a destination server of 192.168.1.20 to open access to\n"
         "# SSH for an IP that is resolved externally, and one with a NAT request\n"
         "# for a specific source IP that maps port 8088 on the server\n"
         "# to port 88 on 192.168.1.55 with timeout.\n"
@@ -1224,6 +1224,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             break;
         case FWKNOP_CLI_ARG_GPG_HOMEDIR :
             strlcpy(val, options->gpg_home_dir, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW :
+            bool_to_yesno(options->gpg_no_signing_pw, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_SPOOF_USER :
             strlcpy(val, options->spoof_user, sizeof(val));
