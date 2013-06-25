@@ -685,11 +685,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 break;
 
-            /* Verbosity level */
-            case 'v':
-                opts->verbose++;
-                break;
-
             /* Look for configuration file arg.
             */
             case 'c':
@@ -871,8 +866,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'S':
                 opts->status = 1;
                 break;
-            /* Verbosity level - handled previously */
+            /* Verbosity level */
             case 'v':
+                opts->verbose++;
                 break;
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
