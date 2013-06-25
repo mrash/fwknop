@@ -685,27 +685,27 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 break;
 
-        /* Look for configuration file arg.
-        */
-        case 'c':
-            set_config_entry(opts, CONF_CONFIG_FILE, optarg);
-            got_conf_file++;
-
-            /* If we already have the config_override option, we are done.
+            /* Look for configuration file arg.
             */
-            if(got_override_config > 0)
-                break;
+            case 'c':
+                set_config_entry(opts, CONF_CONFIG_FILE, optarg);
+                got_conf_file++;
 
-        /* Look for override configuration file arg.
-        */
-        case 'O':
-            set_config_entry(opts, CONF_OVERRIDE_CONFIG, optarg);
-            got_override_config++;
+                /* If we already have the config_override option, we are done.
+                */
+                if(got_override_config > 0)
+                    break;
 
-            /* If we already have the conf_file option, we are done.
+            /* Look for override configuration file arg.
             */
-            if(got_conf_file > 0)
-                break;
+            case 'O':
+                set_config_entry(opts, CONF_OVERRIDE_CONFIG, optarg);
+                got_override_config++;
+
+                /* If we already have the conf_file option, we are done.
+                */
+                if(got_conf_file > 0)
+                    break;
         }
     }
 
@@ -752,6 +752,20 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             /* Process the last entry
             */
             parse_config_file(opts, ndx);
+        }
+    }
+
+    /* Set up the verbosity level according to the value found in the
+     * config files */
+    if (opts->config[CONF_VERBOSE] != NULL)
+    {
+        opts->verbose = strtol_wrapper(opts->config[CONF_VERBOSE], 0, -1,
+                                       NO_EXIT_UPON_ERR, &is_err);
+        if(is_err != FKO_SUCCESS)
+        {
+            log_msg(LOG_ERR, "[*] VERBOSE value '%s' not in the range (>0)",
+                opts->config[CONF_VERBOSE]);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
     }
 
@@ -852,6 +866,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'S':
                 opts->status = 1;
                 break;
+            /* Verbosity level */
             case 'v':
                 opts->verbose++;
                 break;

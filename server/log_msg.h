@@ -44,7 +44,7 @@
 #define LOG_STDERR_ONLY         (LOG_STDERR | LOG_WITHOUT_SYSLOG)
 #define LOG_VERBOSITY_MASK      0x0FFF
 
-#define LOG_DEFAULT_VERBOSITY   LOG_NOTICE     /*!< Default verbosity to use */
+#define LOG_DEFAULT_VERBOSITY   LOG_INFO     /*!< Default verbosity to use */
 
 void init_logging(fko_srv_options_t *opts);
 void free_logging(void);
