@@ -101,11 +101,15 @@ main(int argc, char **argv)
             old_pid = write_pid_file(&opts);
 
             if(old_pid > 0)
+            {
                 fprintf(stdout, "Detected fwknopd is running (pid=%i).\n", old_pid);
+                clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+            }
             else
+            {
                 fprintf(stdout, "No running fwknopd detected.\n");
-
-            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
 
         /* Restart the currently running fwknopd?

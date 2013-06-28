@@ -53,7 +53,7 @@ extern "C" {
 
 /* General params
 */
-#define FKO_PROTOCOL_VERSION "2.5.0" /* The fwknop protocol version */
+#define FKO_PROTOCOL_VERSION "2.0" /* The fwknop protocol version */
 
 /* Supported FKO Message types...
 */
