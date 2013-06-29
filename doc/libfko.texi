@@ -578,6 +578,7 @@ For a context that will be used for receiving and parsing an existing
 @acronym{SPA} message, you will use the @code{fko_new_with_data} function:
 
 @deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, const char @var{*data}, const char @var{*key}, const char @var{key_len}, int @var{encryption_mode}, const char @var{hmac_key}, const int @var{hmac_type}})
+
 The function @code{fko_new_with_data} sets up and initializes a new
 @code{fko_ctx_t} context, but instead of initializing default values, it
 stores the encrypted message data and makes it ready for parsing.  This
@@ -617,7 +618,8 @@ int rc;
 /* Assume we called code that retrieves the data and key
 */
 
-rc = fko_new_with_data(&ctx, spa_data, key, key_len, enc_mode, hmac_key, hmac_key_len, hmac_type);
+rc = fko_new_with_data(&ctx, spa_data, key, key_len, \\
+    enc_mode, hmac_key, hmac_key_len, hmac_type);
 
 if(rc != FKO_SUCCESS)
 @{
@@ -763,15 +765,15 @@ a contrived bit of code demonstrating this:
 int
 main(int argc, char **argv)
 @{
-    fko_ctx_t       ctx;           /* FKO Context */
-    char           *key;           /* Encryption passphrase */
-    char           *hmac_key;      /* HMAC key */
-    char           *final_spa;     /* Final encrypted SPA data */
-    int             key_len;       /* Length of encryption key */
-    int             hmac_key_len;  /* Length of HMAC key */
-    int             rc;            /* Result code */
-    int             hmac_type = FKO_HMAC_SHA256;   /* Default HMAC digest */
-    int             enc_mode  = FKO_ENC_MODE_ASYMMETRIC;  /* Use GPG */
+    fko_ctx_t   ctx;           /* FKO Context */
+    char       *key;           /* Encryption passphrase */
+    char       *hmac_key;      /* HMAC key */
+    char       *final_spa;     /* Final encrypted SPA data */
+    int         key_len;       /* Length of encryption key */
+    int         hmac_key_len;  /* Length of HMAC key */
+    int         rc;            /* Result code */
+    int         hmac_type = FKO_HMAC_SHA256;   /* Default HMAC digest */
+    int         enc_mode  = FKO_ENC_MODE_ASYMMETRIC;  /* Use GPG */
 
     /*  Assume we processed the command line
      *  and retrieved the password and the HMAC key and
@@ -813,7 +815,8 @@ main(int argc, char **argv)
             hmac_key, hmac_key_len, hmac_type);
     if(rc != FKO_SUCCESS)
     @{
-        fprintf(stderr, "Error encoding SPA data: %s\n", fko_errstr(rc));
+        fprintf(stderr, "Error encoding SPA data: %s\n",
+            fko_errstr(rc));
         exit(1);
     @}
 
