@@ -16,13 +16,13 @@ SYNOPSIS
 DESCRIPTION
 -----------
 *fwknop* implements an authorization scheme known as Single Packet
-Authorization (SPA) for strong service protection.  SPA requires only a single
+Authorization (SPA) for strong service concealment.  SPA requires only a single
 packet which is encrypted, non-replayable, and authenticated via an HMAC in order
 to communicate desired access to a service that is hidden behind a firewall in a
 default-drop filtering stance.  The main application of SPA is to use a
 firewall to drop all attempts to connect to services such as 'SSH' in order
 to make the exploitation of vulnerabilities (both 0-day and unpatched code)
-more difficult.  Any service that is protected by SPA naturally cannot be
+more difficult.  Any service that is concealed by SPA naturally cannot be
 scanned for with 'Nmap'.  The fwknop project supports three different
 firewalls: 'iptables' on Linux systems, 'pf' on OpenBSD, and 'ipfw' on FreeBSD
 and Mac OS X.
@@ -1001,6 +1001,9 @@ along with 'Github' for tracking of issues and milestones:
 ..........................
     $ git clone https://github.com/mrash/fwknop.git fwknop.git
 ..........................
+
+Additional commentary on Single Packet Authorization can be found via Michael
+Rash's Twitter feed: http://twitter.com/michaelrash, @michaelrash
 
 
 AUTHORS
