@@ -6,7 +6,7 @@
  *
  * Purpose: Simple wrapper for Android logging
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *     This program is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of

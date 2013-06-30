@@ -12,7 +12,7 @@
 #
 # Copyright (C) 2008 Michael Rash (mbr@cipherdyne.org)
 #
-# License: GNU Public License version 2 (GPLv2):
+# License: GNU General Public License version 2 (GPLv2):
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
