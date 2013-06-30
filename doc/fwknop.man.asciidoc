@@ -16,13 +16,13 @@ SYNOPSIS
 DESCRIPTION
 -----------
 *fwknop* implements an authorization scheme known as Single Packet
-Authorization (SPA) for strong service protection.  SPA requires only a single
+Authorization (SPA) for strong service concealment.  SPA requires only a single
 packet which is encrypted, non-replayable, and authenticated via an HMAC in order
 to communicate desired access to a service that is hidden behind a firewall in a
 default-drop filtering stance.  The main application of SPA is to use a
 firewall to drop all attempts to connect to services such as 'SSH' in order
 to make the exploitation of vulnerabilities (both 0-day and unpatched code)
-more difficult.  Any service that is protected by SPA naturally cannot be
+more difficult.  Any service that is concealed by SPA naturally cannot be
 scanned for with 'Nmap'.  The fwknop project supports three different
 firewalls: 'iptables' on Linux systems, 'pf' on OpenBSD, and 'ipfw' on FreeBSD
 and Mac OS X.
@@ -760,7 +760,7 @@ With the access request arguments and encryption and HMAC keys generated and sav
 in ``$HOME/.fwknoprc'', the keys themselves need to be transferred to the '2.2.2.2'
 system where fwknopd is running.  As always, this should be done via some secure
 means such as SSH before SPA is enabled and SSHD is blocked by the firewall.  Here
-is what the new '2.2.2.2' stanza looks like in the .fwknoprc file:
+is what the new '2.2.2.2' stanza looks like in the '~/.fwknoprc' file:
 
 ..........................
     $ tail -n 8 /home/user/.fwknoprc
@@ -791,7 +791,7 @@ file (some *--verbose* output is included for illustration):
        Random Value: 8950423288486978
            Username: mbr
           Timestamp: 1370194770
-        FKO Version: 2.5.0
+        FKO Version: 2.5
        Message Type: 1 (Access msg)
      Message String: 1.1.1.1,tcp/22
          Nat Access: <NULL>
@@ -818,7 +818,7 @@ and HMAC keys, and configuration specifics can be found in the 'fwknopd(8)'
 manual page).  Also, note the examples below prompt the user to supply the
 encryption and HMAC keys via stdin instead of writing them to disk as in the
 case of using the ``$HOME/.fwknoprc'' file in the example above.  However, all
-of the following examples can be converted to using the .fwknoprc file just by
+of the following examples can be converted to using the ~/.fwknoprc file just by
 adding the *--save-rc-stanza* argument:
 
 ..........................
@@ -840,7 +840,7 @@ specifics are printed to stdout (not all output is shown for brevity):
        Random Value: 1916307060193417
            Username: mbr
           Timestamp: 1368498909
-        FKO Version: 2.5.0
+        FKO Version: 2.5
        Message Type: 1 (Access msg)
      Message String: 1.1.1.1,tcp/22
          Nat Access: <NULL>
@@ -1001,6 +1001,9 @@ along with 'Github' for tracking of issues and milestones:
 ..........................
     $ git clone https://github.com/mrash/fwknop.git fwknop.git
 ..........................
+
+Additional commentary on Single Packet Authorization can be found via Michael
+Rash's Twitter feed: http://twitter.com/michaelrash, @michaelrash
 
 
 AUTHORS

@@ -1,4 +1,20 @@
 fwknop-2.5 (//2013):
+    - ***** IMPORTANT *****:  If you are upgrading from an older version of
+      fwknop, you will want to read the "Backwards Compatibility" section of
+      the fwknop tutorial available here:
+
+      http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html#backwards-compatibility
+
+      In summary, it is possible to have a mixed environment of fwknop-2.5
+      clients and/or servers with older client and/or servers, but this
+      requires some configuration in order to work properly.  On the server
+      side, the directive "ENCRYPTION_MODE legacy" will need to be added to
+      every access.conf stanza that uses Rijndael and that needs to support
+      SPA packets from pre-2.5 clients.  On the client side when generating
+      Rijndael-encrypted SPA packets from a pre-2.5 server, the command line
+      argument "-M legacy" will need to be given.  GnuPG operations are not
+      affected however and don't require the above steps whenever the new HMAC
+      authenticated encryption feature (offered in fwknop-2.5) is not used.
     - Major release of new functionality - HMAC authenticated encryption
       support in the encrypt-then-authenticate model for SPA communications.
       Supported HMAC digests include MD5, SHA1, SHA256, SHA384, and SHA512.
@@ -49,7 +65,8 @@ fwknop-2.5 (//2013):
       of sizeof(), potential double-free conditions, and more.  Full details on
       these fixes are available in the git history.  Any open source project
       that is written in a language supported by Coverity would benefit highly
-      from participating.
+      from participating.  As of the 2.5 release, fwknop has a Coverity defect
+      score of zero.
     - [test suite] Changed how the test suite interacts with the fwknop client
       and server by looking for indications that SPA packets are actually
       received.  This is done by first waiting for 'main event loop' in fwknopd

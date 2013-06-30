@@ -115,6 +115,9 @@ George Herlin
       test suite operate equivalently regardless of whether valgrind is used or
       whether fwknop is being tested on an embedded system with very limited
       resources.
+    - Suggested that 'make install' run ldconfig since on some systems it
+      appears that ldconfig is not automatically run via the autoconf generated
+      Makefile configs.
 
 Ruhsam Bernhard
     - Reported an issue where the message size test would result in long

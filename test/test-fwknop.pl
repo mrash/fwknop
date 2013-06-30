@@ -1408,6 +1408,14 @@ sub rotate_digest_file() {
     my $test_hr = shift;
     my $rv = 1;
 
+    unless (-e $default_digest_file) {
+        open F, "> $default_digest_file"
+            or die "[*] Could not open $default_digest_file: $!";
+        print F "# <digest> <proto> <src_ip> "
+            . "<src_port> <dst_ip> <dst_port> <time>\n";
+        close F;
+    }
+
     $rv = &spa_cycle($test_hr);
 
     if (-e "${default_digest_file}-old") {

@@ -87,7 +87,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    log_msg(LOG_INFO, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
+    log_msg(LOG_DEBUG, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
             cmd_buf, res, err_buf);
 
     zero_cmd_buffers();
@@ -145,7 +145,7 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
 
-    log_msg(LOG_INFO, "add_jump_rule() CMD: '%s' (res: %d, err: %s)",
+    log_msg(LOG_DEBUG, "add_jump_rule() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
@@ -174,11 +174,11 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    log_msg(LOG_INFO, "chain_exists() CMD: '%s' (res: %d, err: %s)",
+    log_msg(LOG_DEBUG, "chain_exists() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
-        log_msg(LOG_INFO, "'%s' table '%s' chain exists",
+        log_msg(LOG_DEBUG, "'%s' table '%s' chain exists",
             fwc.chain[chain_num].table,
             fwc.chain[chain_num].to_chain);
     else
@@ -202,11 +202,11 @@ jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
 
     if(rule_exists(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
     {
-        log_msg(LOG_INFO, "jump_rule_exists() jump rule found");
+        log_msg(LOG_DEBUG, "jump_rule_exists() jump rule found");
         exists = 1;
     }
     else
-        log_msg(LOG_INFO, "jump_rule_exists() jump rule not found");
+        log_msg(LOG_DEBUG, "jump_rule_exists() jump rule not found");
 
     return exists;
 }
@@ -244,7 +244,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 
             res = system(cmd_buf);
 
-            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+            log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
                 cmd_buf, res);
 
             /* Expect full success on this */
@@ -280,7 +280,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             fflush(stdout);
             res = system(cmd_buf);
 
-            log_msg(LOG_INFO, "fw_dump_rules() CMD: '%s' (res: %d)",
+            log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
                 cmd_buf, res);
 
             /* Expect full success on this */
@@ -325,7 +325,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
             res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
             chop_newline(err_buf);
 
-            log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+            log_msg(LOG_DEBUG, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
                 cmd_buf, res, err_buf);
 
             /* Expect full success on this */
@@ -352,7 +352,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
         res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
         chop_newline(err_buf);
 
-        log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+        log_msg(LOG_DEBUG, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
             cmd_buf, res, err_buf);
 
         /* Expect full success on this */
@@ -379,7 +379,7 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    log_msg(LOG_INFO, "create_chain() CMD: '%s' (res: %d, err: %s)",
+    log_msg(LOG_DEBUG, "create_chain() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
     /* Expect full success on this */
@@ -617,18 +617,18 @@ rule_exists(const fko_srv_options_t * const opts,
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    log_msg(LOG_INFO, "rule_exists() CMD: '%s' (res: %d, err: %s)",
+    log_msg(LOG_DEBUG, "rule_exists() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
     {
-        log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s does not exist.",
+        log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s does not exist.",
                 fw_rule, fw_chain);
     }
     else
     {
         rule_exists = 1;
-        log_msg(LOG_INFO, "rule_exists() Rule : '%s' in %s already exists.",
+        log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s already exists.",
                 fw_rule, fw_chain);
     }
 
@@ -648,12 +648,12 @@ create_rule(const fko_srv_options_t * const opts,
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
     chop_newline(err_buf);
 
-    log_msg(LOG_INFO, "create_rule() CMD: '%s' (res: %d, err: %s)",
+    log_msg(LOG_DEBUG, "create_rule() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
     {
-        log_msg(LOG_INFO, "create_rule() Rule: '%s' added to %s", fw_rule, fw_chain);
+        log_msg(LOG_DEBUG, "create_rule() Rule: '%s' added to %s", fw_rule, fw_chain);
         res = 1;
     }
     else
@@ -1071,7 +1071,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
         chop_newline(cmd_out);
 
-        log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
+        log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
             cmd_buf, res, cmd_out);
 
         if(!EXTCMD_IS_SUCCESS(res))
@@ -1179,7 +1179,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
                 chop_newline(err_buf);
 
-                log_msg(LOG_INFO, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+                log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
                     cmd_buf, res, err_buf);
 
                 if(EXTCMD_IS_SUCCESS(res))

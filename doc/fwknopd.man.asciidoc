@@ -23,10 +23,10 @@ or ACL policy to allow the desired access after authenticating and
 decrypting a valid SPA packet (in that order), and removing access after a
 configurable timeout.
 
-The main application of this program is to protect services such as 'SSH'
+The main application of this program is to conceal services such as 'SSH'
 with an additional layer of security in order to make the exploitation of
 vulnerabilities (both 0-day and unpatched code) much more difficult.  In
-addition, services that are protected in this fashion naturally cannot be
+addition, services that are concealed in this fashion naturally cannot be
 scanned for with 'Nmap'.
 
 The main configuration for *fwknopd* is maintained within two files:
@@ -136,7 +136,8 @@ COMMAND-LINE OPTIONS
 
 *-S, --status*::
     Display the status of any *fwknopd* processes that may or not be
-    running.
+    running.  If there is an existing fwknopd process then 0 is returned for the
+    exit status and 1 is returned otherwise.
 
 *-v, --verbose*::
     Run *fwknopd* in verbose mode. This can option can be specified
@@ -155,7 +156,7 @@ FWKNOPD CONFIG AND ACCESS VARIABLES
 *fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf'' file for configuration variables
 that define its operational parameters (what network interface and port
 to sniff, what features to enable/disable, etc.). The 'fwknopd.conf' file
-does not define any access control directives. 
+does not define any access control directives.
 
 The access control directives are contained in the '@sysconfdir@/fwknop/access.conf' file.
 Access control directives define encryption keys and level of access that
@@ -556,6 +557,9 @@ along with 'Github' for tracking of issues and milestones:
 ..........................
     $ git clone https://github.com/mrash/fwknop.git fwknop.git
 ..........................
+
+Additional commentary on Single Packet Authorization can be found via Michael
+Rash's Twitter feed: http://twitter.com/michaelrash, @michaelrash
 
 
 AUTHORS

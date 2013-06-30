@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/20/2013
+.\"      Date: 06/30/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "06/20/2013" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/30/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -34,7 +34,7 @@ fwknop \- Firewall Knock Operator
 \fBfwknop\fR \fB\-A\fR <\*(Aqproto/ports\*(Aq> \fB\-R\fR|\fB\-a\fR|\fB\-s \-D\fR <\*(Aqhost\*(Aq> [\fIoptions\fR]
 .SH "DESCRIPTION"
 .sp
-\fBfwknop\fR implements an authorization scheme known as Single Packet Authorization (SPA) for strong service protection\&. SPA requires only a single packet which is encrypted, non\-replayable, and authenticated via an HMAC in order to communicate desired access to a service that is hidden behind a firewall in a default\-drop filtering stance\&. The main application of SPA is to use a firewall to drop all attempts to connect to services such as \fISSH\fR in order to make the exploitation of vulnerabilities (both 0\-day and unpatched code) more difficult\&. Any service that is protected by SPA naturally cannot be scanned for with \fINmap\fR\&. The fwknop project supports three different firewalls: \fIiptables\fR on Linux systems, \fIpf\fR on OpenBSD, and \fIipfw\fR on FreeBSD and Mac OS X\&.
+\fBfwknop\fR implements an authorization scheme known as Single Packet Authorization (SPA) for strong service concealment\&. SPA requires only a single packet which is encrypted, non\-replayable, and authenticated via an HMAC in order to communicate desired access to a service that is hidden behind a firewall in a default\-drop filtering stance\&. The main application of SPA is to use a firewall to drop all attempts to connect to services such as \fISSH\fR in order to make the exploitation of vulnerabilities (both 0\-day and unpatched code) more difficult\&. Any service that is concealed by SPA naturally cannot be scanned for with \fINmap\fR\&. The fwknop project supports three different firewalls: \fIiptables\fR on Linux systems, \fIpf\fR on OpenBSD, and \fIipfw\fR on FreeBSD and Mac OS X\&.
 .sp
 SPA is essentially next generation Port Knocking (PK), but solves many of the limitations exhibited by PK while retaining its core benefits\&. PK limitations include a general difficulty in protecting against replay attacks, asymmetric ciphers and HMAC schemes are not usually possible to reliably support, and it is trivially easy to mount a DoS attack against a PK server just by spoofing an additional packet into a PK sequence as it traverses the network (thereby convincing the PK server that the client doesn\(cqt know the proper sequence)\&. All of these limitation are solved by SPA\&. At the same time, SPA hides services behind a default\-drop firewall policy, acquires SPA data passively (usually via libpcap or other means), and implements standard cryptographic operations for SPA packet authentication and encryption/decryption\&.
 .sp
@@ -156,7 +156,7 @@ rc file is a more powerful mechanism for specifying not only the HMAC key but ot
 .RS 4
 Have
 \fBfwknop\fR
-generate both Rijndael and HMAC keys that can be used for SPA packet encryption\&. These keys are derived from /dev/random and then base64 encoded before being printed to stdout, and are meant to be included within the \(lq$HOME/\&.fwknoprc\(rq file (or the file referenced by
+generate both Rijndael and HMAC keys that can be used for SPA packet encryption\&. These keys are derived from /dev/urandom and then base64 encoded before being printed to stdout, and are meant to be included within the \(lq$HOME/\&.fwknoprc\(rq file (or the file referenced by
 \fB\-\-get\-key\fR)\&. Such keys are generally more secure than passphrases that are typed in from the command line\&.
 .RE
 .PP
@@ -916,7 +916,7 @@ So, assuming that the IP \fI2\&.2\&.2\&.2\fR is the system where \fBfwknopd\fR i
 .RE
 .\}
 .sp
-With the access request arguments and encryption and HMAC keys generated and saved in \(lq$HOME/\&.fwknoprc\(rq, the keys themselves need to be transferred to the \fI2\&.2\&.2\&.2\fR system where fwknopd is running\&. As always, this should be done via some secure means such as SSH before SPA is enabled and SSHD is blocked by the firewall\&. Here is what the new \fI2\&.2\&.2\&.2\fR stanza looks like in the \&.fwknoprc file:
+With the access request arguments and encryption and HMAC keys generated and saved in \(lq$HOME/\&.fwknoprc\(rq, the keys themselves need to be transferred to the \fI2\&.2\&.2\&.2\fR system where fwknopd is running\&. As always, this should be done via some secure means such as SSH before SPA is enabled and SSHD is blocked by the firewall\&. Here is what the new \fI2\&.2\&.2\&.2\fR stanza looks like in the \fI~/\&.fwknoprc\fR file:
 .sp
 .if n \{\
 .RS 4
@@ -950,7 +950,7 @@ The keys are base64 encoded blobs of random data, and both the \fBKEY_BASE64\fR 
        Random Value: 8950423288486978
            Username: mbr
           Timestamp: 1370194770
-        FKO Version: 2\&.5\&.0
+        FKO Version: 2\&.5
        Message Type: 1 (Access msg)
      Message String: 1\&.1\&.1\&.1,tcp/22
          Nat Access: <NULL>
@@ -970,7 +970,7 @@ The keys are base64 encoded blobs of random data, and both the \fBKEY_BASE64\fR 
 .\}
 .SS "Access mode examples"
 .sp
-The most common usage of \fBfwknop\fR is to gain access to SSH running on a remote system that has the \fBfwknopd\fR daemon deployed along with a default\-drop firewall policy\&. The following command illustrates this where IP \fI1\&.1\&.1\&.1\fR is the IP to be allowed through the firewall running on \fI3\&.3\&.3\&.3\fR (note that the \fI@sysconfdir@/fwknop/access\&.conf\fR file consumed by \fBfwknopd\fR will need to have matching encryption and HMAC keys, and configuration specifics can be found in the \fIfwknopd(8)\fR manual page)\&. Also, note the examples below prompt the user to supply the encryption and HMAC keys via stdin instead of writing them to disk as in the case of using the \(lq$HOME/\&.fwknoprc\(rq file in the example above\&. However, all of the following examples can be converted to using the \&.fwknoprc file just by adding the \fB\-\-save\-rc\-stanza\fR argument:
+The most common usage of \fBfwknop\fR is to gain access to SSH running on a remote system that has the \fBfwknopd\fR daemon deployed along with a default\-drop firewall policy\&. The following command illustrates this where IP \fI1\&.1\&.1\&.1\fR is the IP to be allowed through the firewall running on \fI3\&.3\&.3\&.3\fR (note that the \fI@sysconfdir@/fwknop/access\&.conf\fR file consumed by \fBfwknopd\fR will need to have matching encryption and HMAC keys, and configuration specifics can be found in the \fIfwknopd(8)\fR manual page)\&. Also, note the examples below prompt the user to supply the encryption and HMAC keys via stdin instead of writing them to disk as in the case of using the \(lq$HOME/\&.fwknoprc\(rq file in the example above\&. However, all of the following examples can be converted to using the ~/\&.fwknoprc file just by adding the \fB\-\-save\-rc\-stanza\fR argument:
 .sp
 .if n \{\
 .RS 4
@@ -999,7 +999,7 @@ If the \fB\-\-verbose\fR flag is added to the command line, then some SPA packet
        Random Value: 1916307060193417
            Username: mbr
           Timestamp: 1368498909
-        FKO Version: 2\&.5\&.0
+        FKO Version: 2\&.5
        Message Type: 1 (Access msg)
      Message String: 1\&.1\&.1\&.1,tcp/22
          Nat Access: <NULL>
@@ -1129,6 +1129,8 @@ More information on Single Packet Authorization can be found in the paper \(lqSi
 .if n \{\
 .RE
 .\}
+.sp
+Additional commentary on Single Packet Authorization can be found via Michael Rash\(cqs Twitter feed: http://twitter\&.com/michaelrash, @michaelrash
 .SH "AUTHORS"
 .sp
 Damien Stuart <dstuart@dstuart\&.org>, Michael Rash <mbr@cipherdyne\&.org>
