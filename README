@@ -53,6 +53,17 @@ for Rijndael encryption is generated via the standard PBKDF1 key derivation
 algorithm, and CBC mode is set. If the GnuPG method is chosen, then the
 encryption keys are derived from GnuPG key rings.
 
+A comprehensive tutorial on fwknop can be found here:
+
+http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html
+
+
+LICENSE
+=======
+The fwknop project is released as open source software under the terms of the
+GNU Public License (GPL v2).  The latest release can be found at
+http://www.cipherdyne.org/fwknop/
+
 
 CURRENT STATE
 =============
