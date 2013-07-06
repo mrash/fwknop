@@ -170,14 +170,14 @@ fw_initialize(const fko_srv_options_t * const opts)
     {
         log_msg(LOG_WARNING,
                 "Warning: the fwknop anchor is not active in the pf policy");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Delete any existing rules in the fwknop anchor
     */
     delete_all_anchor_rules(opts);
 
-    return;
+    return 1;
 }
 
 int

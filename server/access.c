@@ -631,6 +631,22 @@ free_acc_string_list(acc_string_list_t *stl)
     }
 }
 
+/* zero out key information in a way that isn't optimized out by the compiler
+*/
+static void
+zero_key(char *key, int len)
+{
+    int i;
+
+    memset(key, 0x0, len);
+
+    for(i=0; i < len; i++)
+        if(key[i] != 0x0)
+            log_msg(LOG_ERR, "[*] Could not zero out key data.");
+
+    return;
+}
+
 /* Free any allocated content of an access stanza.
  *
  * NOTE: If a new access.conf parameter is created, and it is a string
@@ -663,16 +679,28 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->force_nat_ip);
 
     if(acc->key != NULL)
+    {
+        zero_key(acc->key, acc->key_len);
         free(acc->key);
+    }
 
     if(acc->key_base64 != NULL)
+    {
+        zero_key(acc->key, strlen(acc->key_base64));
         free(acc->key_base64);
+    }
 
     if(acc->hmac_key != NULL)
+    {
+        zero_key(acc->hmac_key, acc->hmac_key_len);
         free(acc->hmac_key);
+    }
 
     if(acc->hmac_key_base64 != NULL)
+    {
+        zero_key(acc->hmac_key_base64, strlen(acc->hmac_key_base64));
         free(acc->hmac_key_base64);
+    }
 
     if(acc->cmd_exec_user != NULL)
         free(acc->cmd_exec_user);

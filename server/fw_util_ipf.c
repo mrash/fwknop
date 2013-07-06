@@ -92,8 +92,9 @@ fw_initialize(const fko_srv_options_t *opts)
     {
         log_msg(LOG_WARNING,
                 "Warning: Errors detected during fw_initialize().");
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return 0;
     }
+    return 1;
 }
 
 int

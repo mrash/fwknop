@@ -255,7 +255,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(res != 0)
     {
         log_msg(LOG_ERR, "[*] Fatal: Errors detected during ipfw rules initialization.");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Allocate our rule_map array for tracking active (and expired) rules.
@@ -265,7 +265,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(fwc.rule_map == NULL)
     {
         log_msg(LOG_ERR, "[*] Fatal: Memory allocation error in fw_initialize().");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Create a check-state rule if necessary.
@@ -340,7 +340,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(!EXTCMD_IS_SUCCESS(res))
     {
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
-        return;
+        return 0;
     }
 
     log_msg(LOG_DEBUG, "RULES LIST: %s", cmd_out);
@@ -352,7 +352,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     /* Assume no disabled rules if we did not see the string.
     */
     if(ndx == NULL)
-        return;
+        return 1;
 
     /* Otherwise we walk each line to pull the rule number and
      * set the appropriate rule map entries.
@@ -385,6 +385,8 @@ fw_initialize(const fko_srv_options_t * const opts)
         */
         ndx = strstr(ndx, "# DISABLED ");
     }
+
+    return 1;
 }
 
 int

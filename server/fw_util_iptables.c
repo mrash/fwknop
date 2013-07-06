@@ -560,11 +560,9 @@ fw_config_init(fko_srv_options_t * const opts)
     return;
 }
 
-void
+int
 fw_initialize(const fko_srv_options_t * const opts)
 {
-    int res;
-
     /* Flush the chains (just in case) so we can start fresh.
     */
     if(strncasecmp(opts->config[CONF_FLUSH_IPT_AT_INIT], "Y", 1) == 0)
@@ -572,13 +570,11 @@ fw_initialize(const fko_srv_options_t * const opts)
 
     /* Now create any configured chains.
     */
-    res = create_fw_chains(opts);
-
-    if(res != 0)
+    if(create_fw_chains(opts) != 0)
     {
         log_msg(LOG_WARNING,
                 "Warning: Errors detected during fwknop custom chain creation.");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Make sure that the 'comment' match is available
@@ -587,8 +583,9 @@ fw_initialize(const fko_srv_options_t * const opts)
             && (comment_match_exists(opts) != 1))
     {
         log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.");
-        exit(EXIT_FAILURE);
+        return 0;
     }
+    return 1;
 }
 
 int

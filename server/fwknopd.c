@@ -286,7 +286,8 @@ main(int argc, char **argv)
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
         */
-        fw_initialize(&opts);
+        if(fw_initialize(&opts) != 1)
+            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
         /* If the TCP server option was set, fire it up here.
         */
