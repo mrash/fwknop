@@ -421,7 +421,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
     return(got_err);
 }
 
-static void
+static int
 set_fw_chain_conf(const int type, const char * const conf_str)
 {
     int i, j, is_err;
@@ -435,7 +435,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     if(conf_str == NULL)
     {
         log_msg(LOG_ERR, "[*] NULL conf_str.");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     chain->type = type;
@@ -468,7 +468,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
         log_msg(LOG_ERR, "[*] Custom Chain config parse error.\n"
             "Wrong number of fields for chain type %i\n"
             "Line: %s", type, conf_str);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Pull and set Target */
@@ -487,7 +487,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     {
         log_msg(LOG_ERR, "[*] invalid jump rule position in Line: %s",
             conf_str);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Pull and set To_chain */
@@ -500,11 +500,12 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     {
         log_msg(LOG_ERR, "[*] invalid to_chain rule position in Line: %s",
             conf_str);
-        exit(EXIT_FAILURE);
+        return 0;
     }
+    return 1;
 }
 
-void
+int
 fw_config_init(fko_srv_options_t * const opts)
 {
 
@@ -518,20 +519,25 @@ fw_config_init(fko_srv_options_t * const opts)
      * config struct.  The IPT_INPUT is the only one that is
      * required. The rest are optional.
     */
-    set_fw_chain_conf(IPT_INPUT_ACCESS, opts->config[CONF_IPT_INPUT_ACCESS]);
+    if(set_fw_chain_conf(IPT_INPUT_ACCESS, opts->config[CONF_IPT_INPUT_ACCESS]) != 1)
+        return 0;
 
     /* The FWKNOP_OUTPUT_ACCESS requires ENABLE_IPT_OUTPUT_ACCESS be Y
     */
     if(strncasecmp(opts->config[CONF_ENABLE_IPT_OUTPUT], "Y", 1)==0)
-        set_fw_chain_conf(IPT_OUTPUT_ACCESS, opts->config[CONF_IPT_OUTPUT_ACCESS]);
+        if(set_fw_chain_conf(IPT_OUTPUT_ACCESS, opts->config[CONF_IPT_OUTPUT_ACCESS]) != 1)
+            return 0;
 
     /* The remaining access chains require ENABLE_IPT_FORWARDING = Y
     */
     if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)==0)
     {
 
-        set_fw_chain_conf(IPT_FORWARD_ACCESS, opts->config[CONF_IPT_FORWARD_ACCESS]);
-        set_fw_chain_conf(IPT_DNAT_ACCESS, opts->config[CONF_IPT_DNAT_ACCESS]);
+        if(set_fw_chain_conf(IPT_FORWARD_ACCESS, opts->config[CONF_IPT_FORWARD_ACCESS]) != 1)
+            return 0;
+
+        if(set_fw_chain_conf(IPT_DNAT_ACCESS, opts->config[CONF_IPT_DNAT_ACCESS]) != 1)
+            return 0;
 
         /* SNAT (whichever mode) requires ENABLE_IPT_SNAT = Y
         */
@@ -545,11 +551,17 @@ fw_config_init(fko_srv_options_t * const opts)
              *             this.
              *
             */
-            if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL
-              && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
-                set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]);
+            if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+              && (strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)) != 0)
+            {
+                if(set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]) != 1)
+                    return 0;
+            }
             else
-                set_fw_chain_conf(IPT_MASQUERADE_ACCESS, opts->config[CONF_IPT_MASQUERADE_ACCESS]);
+            {
+                if(set_fw_chain_conf(IPT_MASQUERADE_ACCESS, opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
+                    return 0;
+            }
         }
     }
 
@@ -557,7 +569,7 @@ fw_config_init(fko_srv_options_t * const opts)
     */
     opts->fw_config = &fwc;
 
-    return;
+    return 1;
 }
 
 int

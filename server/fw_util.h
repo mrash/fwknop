@@ -60,7 +60,7 @@
  *       They should be implemented in each of the corresponding
  *       fw_util_<fw-type>.c files.
 */
-void fw_config_init(fko_srv_options_t * const opts);
+int fw_config_init(fko_srv_options_t * const opts);
 int fw_initialize(const fko_srv_options_t * const opts);
 int fw_cleanup(const fko_srv_options_t * const opts);
 void check_firewall_rules(const fko_srv_options_t * const opts);

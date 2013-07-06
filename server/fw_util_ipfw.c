@@ -193,7 +193,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_START_RULE_NUM], 0, RCHK_MAX_IPFW_MAX_RULES);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.max_rules = strtol_wrapper(opts->config[CONF_IPFW_MAX_RULES],
@@ -202,7 +202,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_MAX_RULES], 0, RCHK_MAX_IPFW_MAX_RULES);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.active_set_num = strtol_wrapper(opts->config[CONF_IPFW_ACTIVE_SET_NUM],
@@ -211,7 +211,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_ACTIVE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.expire_set_num = strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_SET_NUM],
@@ -220,7 +220,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_EXPIRE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.purge_interval = strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL],
@@ -230,14 +230,14 @@ fw_config_init(fko_srv_options_t * const opts)
         log_msg(LOG_ERR, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL], 0,
                 RCHK_MAX_IPFW_PURGE_INTERVAL);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Let us find it via our opts struct as well.
     */
     opts->fw_config = &fwc;
 
-    return;
+    return 1;
 }
 
 void

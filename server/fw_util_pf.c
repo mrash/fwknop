@@ -159,7 +159,7 @@ fw_config_init(fko_srv_options_t * const opts)
     */
     opts->fw_config = &fwc;
 
-    return;
+    return 1;
 }
 
 void

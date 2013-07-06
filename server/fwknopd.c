@@ -181,7 +181,8 @@ main(int argc, char **argv)
          * via fw_rules_dump() in --fw-list mode before changing around any rules
          * of an existing fwknopd process.
         */
-        fw_config_init(&opts);
+        if(fw_config_init(&opts) != 1)
+            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
         if(opts.fw_list == 1 || opts.fw_list_all == 1)
         {
