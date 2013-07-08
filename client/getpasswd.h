@@ -37,7 +37,7 @@ char* getpasswd(const char *prompt, int fd);
 
 /* This can be used to acquire an encryption key or HMAC key
 */
-void get_key_file(char *key, int *key_len, const char *key_file,
+int get_key_file(char *key, int *key_len, const char *key_file,
     fko_ctx_t ctx, const fko_cli_options_t *options);
 
 #endif  /* GETPASSWD_H */

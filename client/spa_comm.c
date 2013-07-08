@@ -125,7 +125,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
     if (error != 0)
     {
         log_msg(LOG_VERBOSITY_ERROR, "error in getaddrinfo: %s", gai_strerror(error));
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     for (rp = result; rp != NULL; rp = rp->ai_next) {
@@ -145,8 +145,10 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
     }
 
     if (rp == NULL) {
-        log_msg(LOG_VERBOSITY_ERROR, "send_spa_packet_tcp_or_udp: Could not create socket: ", strerror(errno));
-        exit(EXIT_FAILURE);
+        log_msg(LOG_VERBOSITY_ERROR,
+                "send_spa_packet_tcp_or_udp: Could not create socket: ",
+                strerror(errno));
+        return -1;
     }
 
     freeaddrinfo(result);
@@ -503,7 +505,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
     if (spa_data_copy == NULL)
     {
         log_msg(LOG_VERBOSITY_ERROR, "[*] Fatal, could not allocate memory.");
-        exit(EXIT_FAILURE);
+        return -1;
     }
     memcpy(spa_data_copy, spa_data, sd_len+1);
 
@@ -539,7 +541,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
             memmove(ndx, ndx+7, strlen(ndx)+1);
 
         /* If there is a colon assume the proxy hostame or IP is on the left
-         * and the proxy port is on the right. So we make the : a \0 and 
+         * and the proxy port is on the right. So we make the : a \0 and
          * extract the port value.
         */
         ndx = strchr(options->http_proxy, ':');
@@ -553,7 +555,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
                     "[-] proxy port value is invalid, must be in [%d-%d]",
                     1, MAX_PORT);
                 free(spa_data_copy);
-                return 0;
+                return -1;
             }
         }
 
@@ -600,7 +602,6 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 #ifdef WIN32
     WSADATA wsa_data;
 #endif
-
 
     /* Initialize the hint buffer */
     memset(&hints, 0 , sizeof(hints));
@@ -667,8 +668,8 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 
         if (saddr.sin_addr.s_addr == -1)
         {
-            fprintf(stderr, "Could not set source IP.\n");
-            exit(EXIT_FAILURE);
+            log_msg(LOG_VERBOSITY_ERROR, "Could not set source IP.");
+            return -1;
         }
 
         /* Set destination port
@@ -683,7 +684,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         {
             log_msg(LOG_VERBOSITY_ERROR, "[*] Unable to resolve %s as an ip address",
                     options->spa_server_str);
-            exit(EXIT_FAILURE);
+            return -1;
         }
         else;
 

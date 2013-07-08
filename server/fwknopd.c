@@ -697,7 +697,11 @@ get_running_pid(const fko_srv_options_t *opts)
     pid_t   rpid            = 0;
 
 
-    verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]);
+    if(verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]) != 1)
+    {
+        fprintf(stderr, "verify_file_perms_ownership() error\n");
+        return(rpid);
+    }
 
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 

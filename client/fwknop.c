@@ -37,25 +37,27 @@
 
 /* prototypes
 */
-static void get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
+static int get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len);
 static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
-static void prev_exec(fko_cli_options_t *options, int argc, char **argv);
+static int prev_exec(fko_cli_options_t *options, int argc, char **argv);
 static int get_save_file(char *args_save_file);
-static void show_last_command(const char * const args_save_file);
-static void save_args(int argc, char **argv, const char * const args_save_file);
-static void run_last_args(fko_cli_options_t *options,
+static int show_last_command(const char * const args_save_file);
+static int save_args(int argc, char **argv, const char * const args_save_file);
+static int run_last_args(fko_cli_options_t *options,
         const char * const args_save_file);
 static int set_message_type(fko_ctx_t ctx, fko_cli_options_t *options);
 static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options,
         const char * const access_buf);
-static void set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options,
+static int set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options,
         char *access_buf);
 static int get_rand_port(fko_ctx_t ctx);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
+    char *key, int *key_len, char *hmac_key, int *hmac_key_len,
     unsigned int exit_status);
+static void zero_buf(char *buf, int len);
 static int is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port);
 
 #define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
@@ -179,6 +181,7 @@ main(int argc, char **argv)
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
     int                 key_len = 0, hmac_key_len = 0, enc_mode;
+    int                 tmp_port = 0;
 
     fko_cli_options_t   options;
 
@@ -191,7 +194,13 @@ main(int argc, char **argv)
 
     /* Handle previous execution arguments if required
     */
-    prev_exec(&options, argc, argv);
+    if(prev_exec(&options, argc, argv) != 1)
+        clean_exit(ctx, &options, key, &key_len, hmac_key,
+                &hmac_key_len, EXIT_FAILURE);
+
+    if(options.show_last_command)
+        clean_exit(ctx, &options, key, &key_len, hmac_key,
+                &hmac_key_len, EXIT_SUCCESS);
 
     /* Intialize the context
     */
@@ -199,7 +208,8 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_new", res);
-        return(EXIT_FAILURE);
+        clean_exit(ctx, &options, key, &key_len, hmac_key,
+                &hmac_key_len, EXIT_FAILURE);
     }
 
     /* Display version info and exit.
@@ -211,9 +221,8 @@ main(int argc, char **argv)
         fprintf(stdout, "fwknop client %s, FKO protocol version %s\n",
             MY_VERSION, version);
 
-        fko_destroy(ctx);
-        ctx = NULL;
-        return(EXIT_SUCCESS);
+        clean_exit(ctx, &options, key, &key_len,
+            hmac_key, &hmac_key_len, EXIT_SUCCESS);
     }
 
     /* Set client timeout
@@ -224,9 +233,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_client_timeout", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
 
@@ -236,9 +244,8 @@ main(int argc, char **argv)
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_set_spa_message_type", res);
-        fko_destroy(ctx);
-        ctx = NULL;
-        return(EXIT_FAILURE);
+        clean_exit(ctx, &options, key, &key_len,
+            hmac_key, &hmac_key_len, EXIT_FAILURE);
     }
 
     /* Adjust the SPA timestamp if necessary
@@ -249,9 +256,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_timestamp", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
     if(options.time_offset_minus > 0)
@@ -260,9 +266,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_timestamp", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
 
@@ -283,9 +288,8 @@ main(int argc, char **argv)
         {
             if(resolve_ip_http(&options) < 0)
             {
-                fko_destroy(ctx);
-                ctx = NULL;
-                return(EXIT_FAILURE);
+                clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
             }
         }
 
@@ -294,15 +298,16 @@ main(int argc, char **argv)
          * to be specified as well, so in this case append the string
          * "none/0" to the allow IP.
         */
-        set_access_buf(ctx, &options, access_buf);
+        if(set_access_buf(ctx, &options, access_buf) != 1)
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
     }
     res = fko_set_spa_message(ctx, access_buf);
     if(res != FKO_SUCCESS)
     {
         errmsg("fko_set_spa_message", res);
-        fko_destroy(ctx);
-        ctx = NULL;
-        return(EXIT_FAILURE);
+        clean_exit(ctx, &options, key, &key_len,
+            hmac_key, &hmac_key_len, EXIT_FAILURE);
     }
 
     /* Set NAT access string
@@ -313,9 +318,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_nat_access_str", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
 
@@ -327,9 +331,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_username", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
 
@@ -349,9 +352,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_type", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
         /* If a GPG home dir was specified, set it here.  Note: Setting
@@ -364,9 +366,8 @@ main(int argc, char **argv)
             if(res != FKO_SUCCESS)
             {
                 errmsg("fko_set_gpg_home_dir", res);
-                fko_destroy(ctx);
-                ctx = NULL;
-                return(EXIT_FAILURE);
+                clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
             }
         }
 
@@ -377,9 +378,8 @@ main(int argc, char **argv)
 
             if(IS_GPG_ERROR(res))
                 log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s", fko_gpg_errstr(ctx));
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
         if(strlen(options.gpg_signer_key) > 0)
@@ -391,10 +391,8 @@ main(int argc, char **argv)
 
                 if(IS_GPG_ERROR(res))
                     log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s", fko_gpg_errstr(ctx));
-
-                fko_destroy(ctx);
-                ctx = NULL;
-                return(EXIT_FAILURE);
+                clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
             }
         }
 
@@ -402,7 +400,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_mode", res);
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
 
@@ -412,7 +411,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_mode", res);
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
 
@@ -424,15 +424,16 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_digest_type", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
     }
 
     /* Acquire the necessary encryption/hmac keys
     */
-    get_keys(ctx, &options, key, &key_len, hmac_key, &hmac_key_len);
+    if(get_keys(ctx, &options, key, &key_len, hmac_key, &hmac_key_len) != 1)
+        clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
 
     /* Finalize the context data (encrypt and encode the SPA data)
     */
@@ -443,8 +444,8 @@ main(int argc, char **argv)
 
         if(IS_GPG_ERROR(res))
             log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s", fko_gpg_errstr(ctx));
-
-        clean_exit(ctx, &options, EXIT_FAILURE);
+        clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
     }
 
     /* Display the context data.
@@ -458,15 +459,20 @@ main(int argc, char **argv)
         write_spa_packet_data(ctx, &options);
 
     if (options.rand_port)
-        options.spa_dst_port = get_rand_port(ctx);
+    {
+        tmp_port = get_rand_port(ctx);
+        if(tmp_port < 0)
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+        options.spa_dst_port = tmp_port;
+    }
 
     res = send_spa_packet(ctx, &options);
     if(res < 0)
     {
         log_msg(LOG_VERBOSITY_ERROR, "send_spa_packet: packet not sent.");
-        fko_destroy(ctx);
-        ctx = NULL;
-        return(EXIT_FAILURE);
+        clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
     }
     else
     {
@@ -486,9 +492,8 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_data", res);
-            fko_destroy(ctx);
-            ctx = NULL;
-            return(EXIT_FAILURE);
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
         /* Pull the encryption mode.
@@ -497,10 +502,10 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_encryption_mode", res);
-            fko_destroy(ctx);
             fko_destroy(ctx2);
-            ctx = ctx2 = NULL;
-            return(EXIT_FAILURE);
+            ctx2 = NULL;
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
         /* If gpg-home-dir is specified, we have to defer decrypting if we
@@ -519,20 +524,20 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
-            fko_destroy(ctx);
             fko_destroy(ctx2);
-            ctx = ctx2 = NULL;
-            return(EXIT_FAILURE);
+            ctx2 = NULL;
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
         res = fko_set_spa_encryption_mode(ctx2, enc_mode);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_mode", res);
-            fko_destroy(ctx);
             fko_destroy(ctx2);
-            ctx = ctx2 = NULL;
-            return(EXIT_FAILURE);
+            ctx2 = NULL;
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
         /* See if we are using gpg and if we need to set the GPG home dir.
@@ -545,10 +550,10 @@ main(int argc, char **argv)
                 if(res != FKO_SUCCESS)
                 {
                     errmsg("fko_set_gpg_home_dir", res);
-                    fko_destroy(ctx);
                     fko_destroy(ctx2);
-                    ctx = ctx2 = NULL;
-                    return(EXIT_FAILURE);
+                    ctx2 = NULL;
+                    clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
                 }
             }
         }
@@ -571,16 +576,12 @@ main(int argc, char **argv)
                  debugging purposes. */
                 log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s\n%s", fko_gpg_errstr(ctx2),
                     "No access to recipient private key?");
-                fko_destroy(ctx);
-                fko_destroy(ctx2);
-                ctx = ctx2 = NULL;
-                return(EXIT_SUCCESS);
             }
 
-            fko_destroy(ctx);
             fko_destroy(ctx2);
-            ctx = ctx2 = NULL;
-            return(EXIT_FAILURE);
+            ctx2 = NULL;
+            clean_exit(ctx, &options, key, &key_len,
+                hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
         log_msg(LOG_VERBOSITY_NORMAL,"\nDump of the Decoded Data");
@@ -590,9 +591,10 @@ main(int argc, char **argv)
         ctx2 = NULL;
     }
 
-    clean_exit(ctx, &options, EXIT_SUCCESS);
+    clean_exit(ctx, &options, key, &key_len,
+            hmac_key, &hmac_key_len, EXIT_SUCCESS);
 
-    return(EXIT_SUCCESS);
+    return EXIT_SUCCESS;  /* quiet down a gcc warning */
 }
 
 void
@@ -600,6 +602,14 @@ free_configs(fko_cli_options_t *opts)
 {
     if (opts->resolve_url != NULL)
         free(opts->resolve_url);
+    zero_buf(opts->key, MAX_KEY_LEN+1);
+    zero_buf(opts->key_base64, MAX_B64_KEY_LEN+1);
+    zero_buf(opts->hmac_key, MAX_KEY_LEN+1);
+    zero_buf(opts->hmac_key_base64, MAX_B64_KEY_LEN+1);
+    zero_buf(opts->gpg_recipient_key, MAX_GPG_KEY_ID);
+    zero_buf(opts->gpg_signer_key, MAX_GPG_KEY_ID);
+    zero_buf(opts->gpg_home_dir, MAX_PATH_LEN);
+    zero_buf(opts->server_command, MAX_LINE_LEN);
 }
 
 static int
@@ -615,9 +625,7 @@ get_rand_port(fko_ctx_t ctx)
     if(res != FKO_SUCCESS)
     {
         errmsg("get_rand_port(), fko_get_rand_value", res);
-        fko_destroy(ctx);
-        ctx = NULL;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     strlcpy(port_str, rand_val, sizeof(port_str));
@@ -628,9 +636,7 @@ get_rand_port(fko_ctx_t ctx)
         log_msg(LOG_VERBOSITY_ERROR,
             "[*] get_rand_port(), could not convert rand_val str '%s', to integer",
             rand_val);
-        fko_destroy(ctx);
-        ctx = NULL;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     /* Convert to a random value between 1024 and 65535
@@ -645,9 +651,7 @@ get_rand_port(fko_ctx_t ctx)
     if(res != FKO_SUCCESS)
     {
         errmsg("get_rand_port(), fko_get_rand_value", res);
-        fko_destroy(ctx);
-        ctx = NULL;
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     return port;
@@ -683,7 +687,7 @@ ipv4_str_has_port(char *str)
 
 /* Set access buf
 */
-static void
+static int
 set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
 {
     char   *ndx = NULL, tmp_nat_port[MAX_PORT_STR_LEN+1] = {0};
@@ -714,7 +718,7 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
             if(ndx == NULL)
             {
                 log_msg(LOG_VERBOSITY_ERROR, "[*] Expecting <proto>/<port> for -A arg.");
-                clean_exit(ctx, options, EXIT_FAILURE);
+                return 0;
             }
             snprintf(access_buf, MAX_LINE_LEN, "%s%s",
                     options->allow_ip_str, ",");
@@ -728,7 +732,7 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
             {
                 log_msg(LOG_VERBOSITY_ERROR,
                         "[*] NAT for multiple ports/protocols not yet supported.");
-                clean_exit(ctx, options, EXIT_FAILURE);
+                return 0;
             }
 
             /* Now add the NAT port
@@ -748,7 +752,7 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
         snprintf(access_buf, MAX_LINE_LEN, "%s%s%s",
                 options->allow_ip_str, ",", "none/0");
     }
-    return;
+    return 1;
 }
 
 /* Set NAT access string
@@ -770,7 +774,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     if(ndx == NULL)
     {
         log_msg(LOG_VERBOSITY_ERROR, "[*] Expecting <proto>/<port> for -A arg.");
-        clean_exit(ctx, options, EXIT_FAILURE);
+        return FKO_ERROR_INVALID_DATA;
     }
     ndx++;
 
@@ -788,7 +792,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     {
         log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid port value '%d' for -A arg.",
                 access_port);
-        clean_exit(ctx, options, EXIT_FAILURE);
+        return FKO_ERROR_INVALID_DATA;
     }
 
     if (options->nat_local && options->nat_access_str[0] == 0x0)
@@ -824,7 +828,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
         {
             log_msg(LOG_VERBOSITY_ERROR, "[*] Unable to resolve %s as an ip address",
                     hostname);
-            clean_exit(ctx, options, EXIT_FAILURE);
+            return FKO_ERROR_INVALID_DATA;
         }
 
         snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
@@ -848,10 +852,11 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     return fko_set_spa_nat_access(ctx, nat_access_buf);
 }
 
-static void
+static int
 prev_exec(fko_cli_options_t *options, int argc, char **argv)
 {
     char       args_save_file[MAX_PATH_LEN] = {0};
+    int        res = 1;
 
     if(options->args_save_file[0] != 0x0)
     {
@@ -862,33 +867,35 @@ prev_exec(fko_cli_options_t *options, int argc, char **argv)
         if (get_save_file(args_save_file) != 1)
         {
             log_msg(LOG_VERBOSITY_ERROR, "Unable to determine args save file");
-            exit(EXIT_FAILURE);
+            return 0;
         }
     }
 
     if(options->run_last_command)
-        run_last_args(options, args_save_file);
+        res = run_last_args(options, args_save_file);
     else if(options->show_last_command)
-        show_last_command(args_save_file);
+        res = show_last_command(args_save_file);
     else if (!options->no_save_args)
-        save_args(argc, argv, args_save_file);
+        res = save_args(argc, argv, args_save_file);
 
-    return;
+    return res;
 }
 
 /* Show the last command that was executed
 */
-static void
+static int
 show_last_command(const char * const args_save_file)
 {
     char args_str[MAX_LINE_LEN] = {0};
     FILE *args_file_ptr = NULL;
 
-    verify_file_perms_ownership(args_save_file);
+    if(verify_file_perms_ownership(args_save_file) != 1)
+        return 0;
+
     if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open args file: %s",
             args_save_file);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
@@ -898,12 +905,12 @@ show_last_command(const char * const args_save_file)
     }
     fclose(args_file_ptr);
 
-    exit(EXIT_SUCCESS);
+    return 1;
 }
 
 /* Get the command line arguments from the previous invocation
 */
-static void
+static int
 run_last_args(fko_cli_options_t *options, const char * const args_save_file)
 {
     FILE           *args_file_ptr = NULL;
@@ -916,12 +923,14 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
     char            arg_tmp[MAX_LINE_LEN]  = {0};
     char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
 
-    verify_file_perms_ownership(args_save_file);
+    if(verify_file_perms_ownership(args_save_file) != 1)
+        return 0;
+
     if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
     {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open args file: %s",
                 args_save_file);
-        exit(EXIT_FAILURE);
+        return 0;
     }
     if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL)
     {
@@ -942,7 +951,8 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
                 if (argv_new[argc_new] == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] malloc failure for cmd line arg.");
-                    exit(EXIT_FAILURE);
+                    fclose(args_file_ptr);
+                    return 0;
                 }
                 strlcpy(argv_new[argc_new], arg_tmp, strlen(arg_tmp)+1);
                 current_arg_ctr = 0;
@@ -950,7 +960,8 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
                 if(argc_new >= MAX_CMDLINE_ARGS)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] max command line args exceeded.");
-                    exit(EXIT_FAILURE);
+                    fclose(args_file_ptr);
+                    return 0;
                 }
             }
         }
@@ -973,7 +984,7 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
             free(argv_new[i]);
     }
 
-    return;
+    return 1;
 }
 
 static int
@@ -998,7 +1009,7 @@ get_save_file(char *args_save_file)
 
 /* Save our command line arguments
 */
-static void
+static int
 save_args(int argc, char **argv, const char * const args_save_file)
 {
     char args_str[MAX_LINE_LEN] = {0};
@@ -1008,14 +1019,15 @@ save_args(int argc, char **argv, const char * const args_save_file)
     if (args_file_fd == -1) {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open args file: %s",
             args_save_file);
-        exit(EXIT_FAILURE);
+        return 0;
     }
     else {
         for (i=0; i < argc; i++) {
             args_str_len += strlen(argv[i]);
             if (args_str_len >= MAX_PATH_LEN) {
                 log_msg(LOG_VERBOSITY_ERROR, "argument string too long, exiting.");
-                exit(EXIT_FAILURE);
+                close(args_file_fd);
+                return 0;
             }
             strlcat(args_str, argv[i], sizeof(args_str));
             strlcat(args_str, " ", sizeof(args_str));
@@ -1028,7 +1040,7 @@ save_args(int argc, char **argv, const char * const args_save_file)
         }
         close(args_file_fd);
     }
-    return;
+    return 1;
 }
 
 /* Set the SPA packet message type
@@ -1069,7 +1081,7 @@ set_message_type(fko_ctx_t ctx, fko_cli_options_t *options)
 
 /* Prompt for and receive a user password.
 */
-static void
+static int
 get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len)
 {
@@ -1096,7 +1108,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         {
             log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid key length: '%d', must be in [1,%d]",
                     *key_len, MAX_KEY_LEN);
-            clean_exit(ctx, options, EXIT_FAILURE);
+            return 0;
         }
     }
     else
@@ -1105,7 +1117,10 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         */
         if(options->get_key_file[0] != 0x0)
         {
-            get_key_file(key, key_len, options->get_key_file, ctx, options);
+            if(get_key_file(key, key_len, options->get_key_file, ctx, options) != 1)
+            {
+                return 0;
+            }
         }
         else if(options->use_gpg)
         {
@@ -1121,7 +1136,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
                 if(key_tmp == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
-                    clean_exit(ctx, options, EXIT_FAILURE);
+                    return 0;
                 }
                 strlcpy(key, key_tmp, MAX_KEY_LEN+1);
                 *key_len = strlen(key);
@@ -1134,7 +1149,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             if(key_tmp == NULL)
             {
                 log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
-                clean_exit(ctx, options, EXIT_FAILURE);
+                return 0;
             }
             strlcpy(key, key_tmp, MAX_KEY_LEN+1);
             *key_len = strlen(key);
@@ -1156,7 +1171,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             log_msg(LOG_VERBOSITY_ERROR,
                     "[*] Invalid decoded key length: '%d', must be in [0,%d]",
                     *hmac_key_len, MAX_KEY_LEN);
-            clean_exit(ctx, options, EXIT_FAILURE);
+            return 0;
         }
         memcpy(hmac_key, options->hmac_key, *hmac_key_len);
         use_hmac = 1;
@@ -1167,8 +1182,11 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         */
         if(options->get_hmac_key_file[0] != 0x0)
         {
-            get_key_file(hmac_key, hmac_key_len,
-                options->get_hmac_key_file, ctx, options);
+            if(get_key_file(hmac_key, hmac_key_len,
+                options->get_hmac_key_file, ctx, options) != 1)
+            {
+                return 0;
+            }
             use_hmac = 1;
         }
         else
@@ -1178,7 +1196,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             if(hmac_key_tmp == NULL)
             {
                 log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
-                clean_exit(ctx, options, EXIT_FAILURE);
+                return 0;
             }
 
             strlcpy(hmac_key, hmac_key_tmp, MAX_KEY_LEN+1);
@@ -1193,7 +1211,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         {
             log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid HMAC key length: '%d', must be in [0,%d]",
                     *hmac_key_len, MAX_KEY_LEN);
-            clean_exit(ctx, options, EXIT_FAILURE);
+            return 0;
         }
 
         /* Make sure the same key is not used for both encryption and the HMAC
@@ -1204,7 +1222,7 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
             {
                 log_msg(LOG_VERBOSITY_ERROR,
                     "[*] The encryption passphrase and HMAC key should not be identical, no SPA packet sent. Exiting.");
-                clean_exit(ctx, options, EXIT_FAILURE);
+                return 0;
             }
         }
 
@@ -1212,11 +1230,11 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_hmac_type", res);
-            exit(EXIT_FAILURE);
+            return 0;
         }
     }
 
-    return;
+    return 1;
 }
 
 /* Display an FKO error message.
@@ -1227,14 +1245,41 @@ errmsg(const char *msg, const int err) {
         MY_NAME, msg, err, fko_errstr(err));
 }
 
+/* zero out sensitive information in a way that isn't optimized out by the compiler
+ * since we force a comparision
+*/
+static void
+zero_buf(char *buf, int len)
+{
+    int i;
+
+    if(len <= 0)
+        return;
+
+    memset(buf, 0x0, len);
+
+    for(i=0; i < len; i++)
+        if(buf[i] != 0x0)
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "[*] Could not zero out sensitive data buffer.");
+
+    return;
+}
+
 /* free up memory and exit
 */
 static void
-clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts, unsigned int exit_status)
+clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
+        char *key, int *key_len, char *hmac_key, int *hmac_key_len,
+        unsigned int exit_status)
 {
     free_configs(opts);
     fko_destroy(ctx);
     ctx = NULL;
+    zero_buf(key, *key_len);
+    zero_buf(hmac_key, *hmac_key_len);
+    *key_len = 0;
+    *hmac_key_len = 0;
     exit(exit_status);
 }
 

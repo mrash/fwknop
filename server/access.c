@@ -686,7 +686,7 @@ free_acc_stanza_data(acc_stanza_t *acc)
 
     if(acc->key_base64 != NULL)
     {
-        zero_key(acc->key, strlen(acc->key_base64));
+        zero_key(acc->key_base64, strlen(acc->key_base64));
         free(acc->key_base64);
     }
 
@@ -981,7 +981,8 @@ parse_access_file(fko_srv_options_t *opts)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]);
+    if(verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]) != 1)
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
     /* A note on security here: Coverity flags the following fopen() as a
      * Time of check time of use (TOCTOU) bug with a low priority due to the

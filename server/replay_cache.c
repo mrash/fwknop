@@ -285,7 +285,8 @@ replay_file_cache_init(fko_srv_options_t *opts)
         }
     }
 
-    verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE]);
+    if(verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE]) != 1)
+        return(-1);
 
     /* File exists, and we have access - create in-memory digest cache
     */

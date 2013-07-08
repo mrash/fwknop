@@ -612,7 +612,8 @@ set_rc_file(char *rcfile, fko_cli_options_t *options)
      * client consumes a proper rc file with strict permissions set (thanks
      * to Fernando Arnaboldi from IOActive for pointing this out).
     */
-    verify_file_perms_ownership(rcfile);
+    if(verify_file_perms_ownership(rcfile) != 1)
+        exit(EXIT_FAILURE);
 
     return;
 }

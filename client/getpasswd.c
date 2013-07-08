@@ -128,7 +128,7 @@ char*
 getpasswd(const char *prompt, int fd)
 {
     char *ptr;
-    
+
 #ifndef WIN32
     sigset_t        sig, old_sig;
     struct termios  ts, old_ts;
@@ -143,7 +143,7 @@ getpasswd(const char *prompt, int fd)
             log_msg(LOG_VERBOSITY_ERROR, "getpasswd() - "
                 "Unable to create a stream from the file descriptor : %s",
                 strerror(errno));
-            exit(EXIT_FAILURE);
+            return(NULL);
         }
     }
 
@@ -211,7 +211,7 @@ getpasswd(const char *prompt, int fd)
 
 /* Function for accepting password input from a file
 */
-void
+int
 get_key_file(char *key, int *key_len, const char *key_file,
     fko_ctx_t ctx, const fko_cli_options_t *options)
 {
@@ -227,9 +227,7 @@ get_key_file(char *key, int *key_len, const char *key_file,
     if ((pwfile_ptr = fopen(key_file, "r")) == NULL)
     {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open config file: %s", key_file);
-        fko_destroy(ctx);
-        ctx = NULL;
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     while ((fgets(conf_line_buf, MAX_LINE_LEN, pwfile_ptr)) != NULL)
@@ -284,14 +282,12 @@ get_key_file(char *key, int *key_len, const char *key_file,
     if (key[0] == '\0') {
         log_msg(LOG_VERBOSITY_ERROR, "Could not get key for IP: %s from: %s",
             options->spa_server_str, key_file);
-        fko_destroy(ctx);
-        ctx = NULL;
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     *key_len = strlen(key);
 
-    return;
+    return 1;
 }
 
 /***EOF***/

@@ -84,7 +84,6 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if(plaintext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-
     pt_len = snprintf(plaintext, pt_len, "%s:%s", ctx->encoded_msg, ctx->digest);
 
     if(! is_valid_pt_msg_len(pt_len))
