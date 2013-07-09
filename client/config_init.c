@@ -1699,6 +1699,14 @@ validate_options(fko_cli_options_t *options)
         exit(EXIT_FAILURE);
     }
 
+    if(options->encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV
+            && options->use_hmac)
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+            "Legacy encryption mode is incompatible with HMAC usage.");
+        exit(EXIT_FAILURE);
+    }
+
     /* Validate HMAC digest type
     */
     if(options->use_hmac && options->hmac_type == FKO_HMAC_UNKNOWN)
@@ -2133,7 +2141,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case FD_SET:
                 options->input_fd = strtol_wrapper(optarg, 0,
                         -1, EXIT_UPON_ERR, &is_err);
-                break;                
+                break;
             default:
                 usage();
                 exit(EXIT_FAILURE);
