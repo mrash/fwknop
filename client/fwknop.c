@@ -57,7 +57,7 @@ int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
     unsigned int exit_status);
-static void zero_buf(char *buf, int len);
+static void zero_buf_wrapper(char *buf, int len);
 static int is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port);
 
 #define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
@@ -184,6 +184,8 @@ main(int argc, char **argv)
     int                 tmp_port = 0;
 
     fko_cli_options_t   options;
+
+    memset(&options, 0x0, sizeof(fko_cli_options_t));
 
     /* Initialize the log module */
     log_new();
@@ -502,7 +504,9 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_encryption_mode", res);
-            fko_destroy(ctx2);
+            if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+                log_msg(LOG_VERBOSITY_ERROR,
+                        "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
             clean_exit(ctx, &options, key, &key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
@@ -524,7 +528,9 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
-            fko_destroy(ctx2);
+            if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+                log_msg(LOG_VERBOSITY_ERROR,
+                        "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
             clean_exit(ctx, &options, key, &key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
@@ -534,7 +540,9 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_spa_encryption_mode", res);
-            fko_destroy(ctx2);
+            if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+                log_msg(LOG_VERBOSITY_ERROR,
+                        "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
             clean_exit(ctx, &options, key, &key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
@@ -550,7 +558,9 @@ main(int argc, char **argv)
                 if(res != FKO_SUCCESS)
                 {
                     errmsg("fko_set_gpg_home_dir", res);
-                    fko_destroy(ctx2);
+                    if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+                        log_msg(LOG_VERBOSITY_ERROR,
+                                "[*] Could not zero out sensitive data buffer.");
                     ctx2 = NULL;
                     clean_exit(ctx, &options, key, &key_len,
                         hmac_key, &hmac_key_len, EXIT_FAILURE);
@@ -577,8 +587,9 @@ main(int argc, char **argv)
                 log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s\n%s", fko_gpg_errstr(ctx2),
                     "No access to recipient private key?");
             }
-
-            fko_destroy(ctx2);
+            if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+                log_msg(LOG_VERBOSITY_ERROR,
+                        "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
             clean_exit(ctx, &options, key, &key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
@@ -587,7 +598,9 @@ main(int argc, char **argv)
         log_msg(LOG_VERBOSITY_NORMAL,"\nDump of the Decoded Data");
         display_ctx(ctx2);
 
-        fko_destroy(ctx2);
+        if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "[*] Could not zero out sensitive data buffer.");
         ctx2 = NULL;
     }
 
@@ -602,14 +615,14 @@ free_configs(fko_cli_options_t *opts)
 {
     if (opts->resolve_url != NULL)
         free(opts->resolve_url);
-    zero_buf(opts->key, MAX_KEY_LEN+1);
-    zero_buf(opts->key_base64, MAX_B64_KEY_LEN+1);
-    zero_buf(opts->hmac_key, MAX_KEY_LEN+1);
-    zero_buf(opts->hmac_key_base64, MAX_B64_KEY_LEN+1);
-    zero_buf(opts->gpg_recipient_key, MAX_GPG_KEY_ID);
-    zero_buf(opts->gpg_signer_key, MAX_GPG_KEY_ID);
-    zero_buf(opts->gpg_home_dir, MAX_PATH_LEN);
-    zero_buf(opts->server_command, MAX_LINE_LEN);
+    zero_buf_wrapper(opts->key, MAX_KEY_LEN+1);
+    zero_buf_wrapper(opts->key_base64, MAX_B64_KEY_LEN+1);
+    zero_buf_wrapper(opts->hmac_key, MAX_KEY_LEN+1);
+    zero_buf_wrapper(opts->hmac_key_base64, MAX_B64_KEY_LEN+1);
+    zero_buf_wrapper(opts->gpg_recipient_key, MAX_GPG_KEY_ID);
+    zero_buf_wrapper(opts->gpg_signer_key, MAX_GPG_KEY_ID);
+    zero_buf_wrapper(opts->gpg_home_dir, MAX_PATH_LEN);
+    zero_buf_wrapper(opts->server_command, MAX_LINE_LEN);
 }
 
 static int
@@ -1245,23 +1258,13 @@ errmsg(const char *msg, const int err) {
         MY_NAME, msg, err, fko_errstr(err));
 }
 
-/* zero out sensitive information in a way that isn't optimized out by the compiler
- * since we force a comparision
-*/
 static void
-zero_buf(char *buf, int len)
+zero_buf_wrapper(char *buf, int len)
 {
-    int i;
 
-    if(len <= 0)
-        return;
-
-    memset(buf, 0x0, len);
-
-    for(i=0; i < len; i++)
-        if(buf[i] != 0x0)
-            log_msg(LOG_VERBOSITY_ERROR,
-                    "[*] Could not zero out sensitive data buffer.");
+    if(zero_buf(buf, len) != FKO_SUCCESS)
+        log_msg(LOG_VERBOSITY_ERROR,
+                "[*] Could not zero out sensitive data buffer.");
 
     return;
 }
@@ -1273,11 +1276,13 @@ clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
         char *key, int *key_len, char *hmac_key, int *hmac_key_len,
         unsigned int exit_status)
 {
-    free_configs(opts);
-    fko_destroy(ctx);
+    if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
+        log_msg(LOG_VERBOSITY_ERROR,
+                "[*] Could not zero out sensitive data buffer.");
     ctx = NULL;
-    zero_buf(key, *key_len);
-    zero_buf(hmac_key, *hmac_key_len);
+    free_configs(opts);
+    zero_buf_wrapper(key, *key_len);
+    zero_buf_wrapper(hmac_key, *hmac_key_len);
     *key_len = 0;
     *hmac_key_len = 0;
     exit(exit_status);

@@ -398,6 +398,42 @@ strtol_wrapper(const char * const str, const int min,
     return val;
 }
 
+/* zero out a buffer before free()
+*/
+int zero_free(char *buf, int len, int default_err)
+{
+    int res;
+
+    res = zero_buf(buf, len);
+
+    if(res == FKO_SUCCESS)
+        res = default_err;
+
+    free(buf);
+
+    return res;
+}
+
+/* zero out sensitive information in a way that isn't optimized out by the compiler
+ * since we force a comparision and return an error if there is a problem (though
+ * the caller should do something with this information too).
+*/
+int
+zero_buf(char *buf, int len)
+{
+    int i, res = FKO_SUCCESS;
+
+    if(len <= 0 || len > MAX_SPA_ENCODED_MSG_SIZE)
+        return FKO_ERROR_ZERO_OUT_DATA;
+
+    memset(buf, 0x0, len);
+
+    for(i=0; i < len; i++)
+        if(buf[i] != 0x0)
+            res = FKO_ERROR_ZERO_OUT_DATA;
+
+    return res;
+}
 
 #if defined(WIN32) || !defined(HAVE_STRNDUP)
 /* Windows does not have strndup, so we well implement it here.

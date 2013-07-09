@@ -147,6 +147,7 @@ get_raw_digest(char **digest, char *pkt_data)
     */
     res = fko_new_with_data(&ctx, (char *)pkt_data, NULL, 0,
             FKO_DEFAULT_ENC_MODE, NULL, 0, 0);
+
     if(res != FKO_SUCCESS)
     {
         log_msg(LOG_WARNING, "Error initializing FKO context from SPA data: %s",
@@ -362,7 +363,11 @@ incoming_spa(fko_srv_options_t *opts)
         */
         if(ctx != NULL)
         {
-            fko_destroy(ctx);
+            if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
+                    spadat.pkt_source_ip, stanza_num, fko_errstr(res)
+                );
             ctx = NULL;
         }
 
@@ -638,7 +643,11 @@ incoming_spa(fko_srv_options_t *opts)
 
             if(ctx != NULL)
             {
-                fko_destroy(ctx);
+                if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
+                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
+                    );
                 ctx = NULL;
             }
             break;
@@ -765,7 +774,11 @@ incoming_spa(fko_srv_options_t *opts)
 
                 if(ctx != NULL)
                 {
-                    fko_destroy(ctx);
+                    if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
+                        log_msg(LOG_WARNING,
+                            "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
+                            spadat.pkt_source_ip, stanza_num, fko_errstr(res)
+                        );
                     ctx = NULL;
                 }
 
@@ -800,7 +813,11 @@ incoming_spa(fko_srv_options_t *opts)
         process_spa_request(opts, acc, &spadat);
         if(ctx != NULL)
         {
-            fko_destroy(ctx);
+            if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
+                    spadat.pkt_source_ip, stanza_num
+                );
             ctx = NULL;
         }
         break;
@@ -811,7 +828,11 @@ incoming_spa(fko_srv_options_t *opts)
 
     if(ctx != NULL)
     {
-        fko_destroy(ctx);
+        if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
+            log_msg(LOG_WARNING,
+                "[%s] fko_destroy() could not zero out sensitive data buffer.",
+                spadat.pkt_source_ip
+            );
         ctx = NULL;
     }
 

@@ -111,6 +111,9 @@ fko_errstr(const int err_code)
         case FKO_ERROR_UNSUPPORTED_FEATURE:
             return("Unsupported or unimplemented feature or function");
 
+        case FKO_ERROR_ZERO_OUT_DATA:
+            return("Could not zero out sensitive data");
+
         case FKO_ERROR_UNKNOWN:
             return("Unknown/Unclassified error");
 

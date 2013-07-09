@@ -631,18 +631,13 @@ free_acc_string_list(acc_string_list_t *stl)
     }
 }
 
-/* zero out key information in a way that isn't optimized out by the compiler
-*/
 static void
-zero_key(char *key, int len)
+zero_buf_wrapper(char *buf, int len)
 {
-    int i;
 
-    memset(key, 0x0, len);
-
-    for(i=0; i < len; i++)
-        if(key[i] != 0x0)
-            log_msg(LOG_ERR, "[*] Could not zero out key data.");
+    if(zero_buf(buf, len) != FKO_SUCCESS)
+        log_msg(LOG_ERR,
+                "[*] Could not zero out sensitive data buffer.");
 
     return;
 }
@@ -680,25 +675,25 @@ free_acc_stanza_data(acc_stanza_t *acc)
 
     if(acc->key != NULL)
     {
-        zero_key(acc->key, acc->key_len);
+        zero_buf_wrapper(acc->key, acc->key_len);
         free(acc->key);
     }
 
     if(acc->key_base64 != NULL)
     {
-        zero_key(acc->key_base64, strlen(acc->key_base64));
+        zero_buf_wrapper(acc->key_base64, strlen(acc->key_base64));
         free(acc->key_base64);
     }
 
     if(acc->hmac_key != NULL)
     {
-        zero_key(acc->hmac_key, acc->hmac_key_len);
+        zero_buf_wrapper(acc->hmac_key, acc->hmac_key_len);
         free(acc->hmac_key);
     }
 
     if(acc->hmac_key_base64 != NULL)
     {
-        zero_key(acc->hmac_key_base64, strlen(acc->hmac_key_base64));
+        zero_buf_wrapper(acc->hmac_key_base64, strlen(acc->hmac_key_base64));
         free(acc->hmac_key_base64);
     }
 
