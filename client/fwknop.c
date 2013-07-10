@@ -180,7 +180,7 @@ main(int argc, char **argv)
     char                access_buf[MAX_LINE_LEN] = {0};
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
-    int                 key_len = 0, hmac_key_len = 0, enc_mode;
+    int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0, enc_mode;
     int                 tmp_port = 0;
 
     fko_cli_options_t   options;
@@ -437,6 +437,20 @@ main(int argc, char **argv)
         clean_exit(ctx, &options, key, &key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
 
+    orig_key_len = key_len;
+
+    if(options.encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV
+            && key_len > 16)
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+                "WARNING: Encryption key in '-M legacy' mode must be <= 16 bytes");
+        log_msg(LOG_VERBOSITY_ERROR,
+                "long - truncating before sending SPA packet. Upgrading remote");
+        log_msg(LOG_VERBOSITY_ERROR,
+                "fwknopd is recommended.");
+        key_len = 16;
+    }
+
     /* Finalize the context data (encrypt and encode the SPA data)
     */
     res = fko_spa_data_final(ctx, key, key_len, hmac_key, hmac_key_len);
@@ -446,7 +460,7 @@ main(int argc, char **argv)
 
         if(IS_GPG_ERROR(res))
             log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s", fko_gpg_errstr(ctx));
-        clean_exit(ctx, &options, key, &key_len,
+        clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
     }
 
@@ -464,7 +478,7 @@ main(int argc, char **argv)
     {
         tmp_port = get_rand_port(ctx);
         if(tmp_port < 0)
-            clean_exit(ctx, &options, key, &key_len,
+            clean_exit(ctx, &options, key, &orig_key_len,
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
         options.spa_dst_port = tmp_port;
     }
@@ -473,7 +487,7 @@ main(int argc, char **argv)
     if(res < 0)
     {
         log_msg(LOG_VERBOSITY_ERROR, "send_spa_packet: packet not sent.");
-        clean_exit(ctx, &options, key, &key_len,
+        clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
     }
     else
@@ -494,7 +508,7 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_data", res);
-            clean_exit(ctx, &options, key, &key_len,
+            clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
@@ -508,7 +522,7 @@ main(int argc, char **argv)
                 log_msg(LOG_VERBOSITY_ERROR,
                         "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
-            clean_exit(ctx, &options, key, &key_len,
+            clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
@@ -532,7 +546,7 @@ main(int argc, char **argv)
                 log_msg(LOG_VERBOSITY_ERROR,
                         "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
-            clean_exit(ctx, &options, key, &key_len,
+            clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
@@ -544,7 +558,7 @@ main(int argc, char **argv)
                 log_msg(LOG_VERBOSITY_ERROR,
                         "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
-            clean_exit(ctx, &options, key, &key_len,
+            clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
@@ -562,7 +576,7 @@ main(int argc, char **argv)
                         log_msg(LOG_VERBOSITY_ERROR,
                                 "[*] Could not zero out sensitive data buffer.");
                     ctx2 = NULL;
-                    clean_exit(ctx, &options, key, &key_len,
+                    clean_exit(ctx, &options, key, &orig_key_len,
                         hmac_key, &hmac_key_len, EXIT_FAILURE);
                 }
             }
@@ -591,7 +605,7 @@ main(int argc, char **argv)
                 log_msg(LOG_VERBOSITY_ERROR,
                         "[*] Could not zero out sensitive data buffer.");
             ctx2 = NULL;
-            clean_exit(ctx, &options, key, &key_len,
+            clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
@@ -604,7 +618,7 @@ main(int argc, char **argv)
         ctx2 = NULL;
     }
 
-    clean_exit(ctx, &options, key, &key_len,
+    clean_exit(ctx, &options, key, &orig_key_len,
             hmac_key, &hmac_key_len, EXIT_SUCCESS);
 
     return EXIT_SUCCESS;  /* quiet down a gcc warning */
