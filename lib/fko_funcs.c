@@ -316,23 +316,23 @@ fko_destroy(fko_ctx_t ctx)
         free(ctx->server_auth);
 
     if(ctx->digest != NULL)
-        if(zero_free(ctx->digest, ctx->digest_len, FKO_SUCCESS) != FKO_SUCCESS)
+        if(zero_free(ctx->digest, ctx->digest_len) != FKO_SUCCESS)
             zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->raw_digest != NULL)
-        if(zero_free(ctx->raw_digest, ctx->raw_digest_len, FKO_SUCCESS) != FKO_SUCCESS)
+        if(zero_free(ctx->raw_digest, ctx->raw_digest_len) != FKO_SUCCESS)
             zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->encoded_msg != NULL)
-        if(zero_free(ctx->encoded_msg, ctx->encoded_msg_len, FKO_SUCCESS) != FKO_SUCCESS)
+        if(zero_free(ctx->encoded_msg, ctx->encoded_msg_len) != FKO_SUCCESS)
             zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->encrypted_msg != NULL)
-        if(zero_free(ctx->encrypted_msg, ctx->encrypted_msg_len, FKO_SUCCESS) != FKO_SUCCESS)
+        if(zero_free(ctx->encrypted_msg, ctx->encrypted_msg_len) != FKO_SUCCESS)
             zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->msg_hmac != NULL)
-        if(zero_free(ctx->msg_hmac, ctx->msg_hmac_len, FKO_SUCCESS) != FKO_SUCCESS)
+        if(zero_free(ctx->msg_hmac, ctx->msg_hmac_len) != FKO_SUCCESS)
             zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
 #if HAVE_LIBGPGME

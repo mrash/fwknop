@@ -84,13 +84,17 @@ fko_verify_hmac(fko_ctx_t ctx,
     */
     tbuf = strndup(ctx->encrypted_msg,
             ctx->encrypted_msg_len - hmac_b64_digest_len);
-    if(tbuf == NULL)
-        return(zero_free(hmac_digest_from_data,
-                    strnlen(hmac_digest_from_data, MAX_SPA_ENCODED_MSG_SIZE),
-                FKO_ERROR_MEMORY_ALLOCATION));
 
-    if(zero_free(ctx->encrypted_msg, ctx->encrypted_msg_len,
-                FKO_SUCCESS) != FKO_SUCCESS)
+    if(tbuf == NULL)
+    {
+        if(zero_free(hmac_digest_from_data, strnlen(hmac_digest_from_data,
+                MAX_SPA_ENCODED_MSG_SIZE)) == FKO_SUCCESS)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
+    }
+
+    if(zero_free(ctx->encrypted_msg, ctx->encrypted_msg_len) != FKO_SUCCESS)
         zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     ctx->encrypted_msg      = tbuf;
@@ -119,9 +123,8 @@ fko_verify_hmac(fko_ctx_t ctx,
 
     if (res != FKO_SUCCESS)
     {
-        if(zero_free(hmac_digest_from_data,
-                    strnlen(hmac_digest_from_data, MAX_SPA_ENCODED_MSG_SIZE),
-                FKO_SUCCESS) != FKO_SUCCESS)
+        if(zero_free(hmac_digest_from_data, strnlen(hmac_digest_from_data,
+                        MAX_SPA_ENCODED_MSG_SIZE)) != FKO_SUCCESS)
             zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
         if(zero_free_rv == FKO_SUCCESS)
@@ -148,9 +151,8 @@ fko_verify_hmac(fko_ctx_t ctx,
         }
     }
 
-    if(zero_free(hmac_digest_from_data,
-                strnlen(hmac_digest_from_data, MAX_SPA_ENCODED_MSG_SIZE),
-            FKO_SUCCESS) != FKO_SUCCESS)
+    if(zero_free(hmac_digest_from_data, strnlen(hmac_digest_from_data,
+                    MAX_SPA_ENCODED_MSG_SIZE)) != FKO_SUCCESS)
         zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(res == FKO_SUCCESS)

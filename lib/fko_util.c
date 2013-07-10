@@ -400,14 +400,14 @@ strtol_wrapper(const char * const str, const int min,
 
 /* zero out a buffer before free()
 */
-int zero_free(char *buf, int len, int default_err)
+int zero_free(char *buf, int len)
 {
-    int res;
+    int res = FKO_SUCCESS;
+
+    if(buf == NULL || len == 0)
+        return res;
 
     res = zero_buf(buf, len);
-
-    if(res == FKO_SUCCESS)
-        res = default_err;
 
     free(buf);
 
