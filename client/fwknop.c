@@ -58,7 +58,8 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
     unsigned int exit_status);
 static void zero_buf_wrapper(char *buf, int len);
-static int is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port);
+static int is_hostname_str_with_port(const char *str,
+        char *hostname, size_t hostname_bufsize, int *port);
 
 #define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
 #define IPV4_STR_TEMPLATE           "%u.%u.%u.%u"       /*!< Template for a string as an ipv4 address with sscanf */
@@ -1276,7 +1277,10 @@ static void
 zero_buf_wrapper(char *buf, int len)
 {
 
-    if(zero_buf(buf, len) != FKO_SUCCESS)
+    if(buf == NULL || len == 0)
+        return;
+
+    if(zero_buf(buf, len) == FKO_ERROR_ZERO_OUT_DATA)
         log_msg(LOG_VERBOSITY_ERROR,
                 "[*] Could not zero out sensitive data buffer.");
 

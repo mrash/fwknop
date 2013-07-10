@@ -423,10 +423,14 @@ zero_buf(char *buf, int len)
 {
     int i, res = FKO_SUCCESS;
 
-    if(len <= 0 || len > MAX_SPA_ENCODED_MSG_SIZE)
+    if(buf == NULL || len == 0)
+        return res;
+
+    if(len < 0 || len > MAX_SPA_ENCODED_MSG_SIZE)
         return FKO_ERROR_ZERO_OUT_DATA;
 
-    memset(buf, 0x0, len);
+    for(i=0; i < len; i++)
+        buf[i] = 0x0;
 
     for(i=0; i < len; i++)
         if(buf[i] != 0x0)
