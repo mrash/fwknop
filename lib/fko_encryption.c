@@ -417,10 +417,18 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 
     /* Done with cipher...
     */
-    res = zero_free((char *) cipher, ctx->encrypted_msg_len, FKO_SUCCESS);
-
     if(res != FKO_SUCCESS)
-        return(res);
+    {
+        if(zero_free((char *) cipher,
+                    ctx->encrypted_msg_len, FKO_SUCCESS) != FKO_SUCCESS)
+        {
+            return(FKO_ERROR_ZERO_OUT_DATA);
+        }
+        else
+        {
+            return(res);
+        }
+    }
 
     pt_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
