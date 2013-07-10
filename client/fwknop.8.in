@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/30/2013
+.\"      Date: 07/09/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "06/30/2013" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "07/09/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -65,7 +65,7 @@ Each of the above fields are separated by a ":" character due to the variable le
 .sp
 By default, the \fBfwknop\fR client sends authorization packets over UDP port 62201, but this can be altered with the \fB\-\-server\-port\fR argument (this requires \fBfwknopd\fR to be configured to acquire SPA data over the selected port)\&. Also, \fBfwknop\fR can send the SPA packet over a random port via the \fB\-\-rand\-port\fR argument\&. See \fIfwknopd(8)\fR for further details\&. See the \fBEXAMPLES\fR section for example invocations of the \fBfwknop\fR client\&.
 .sp
-The \fBfwknop\fR client is quite portable, and is known to run on various Linux distributions (all major distros and embedded ones such as OpenWRT as well), FreeBSD, OpenBSD, and Cygwin on Windows\&. There is also a library \fBlibfko\fR that both \fBfwknop\fR and \fBfwknopd\fR use for SPA packet encryption/decryption and HMAC authentication operations\&. This library can be used to allow third party applications to use SPA subject to the terms of the GNU General Public License (GPL)\&.
+The \fBfwknop\fR client is quite portable, and is known to run on various Linux distributions (all major distros and embedded ones such as OpenWRT as well), FreeBSD, OpenBSD, and Cygwin on Windows\&. There is also a library \fBlibfko\fR that both \fBfwknop\fR and \fBfwknopd\fR use for SPA packet encryption/decryption and HMAC authentication operations\&. This library can be used to allow third party applications to use SPA subject to the terms of the GNU Public License (GPL)\&.
 .SH "REQUIRED ARGUMENTS"
 .sp
 These required arguments can be specified via command\-line or from within the \fI~/\&.fwknoprc\fR file (see \fI\-n, \-\-named\-config\fR option and the FWKNOPRC FILE section below)\&.
@@ -113,7 +113,15 @@ in order to harden SPA communications against possible
 \fIREQUIRE_SOURCE_ADDRESS\fR
 variable in the
 \fI@sysconfdir@/fwknop/access\&.conf\fR
-file\&.
+file\&. Note that the most secure option is
+\fB\-a\fR
+so that
+\fBfwknop\fR
+does not have to issue an HTTP request to
+\fIhttp://www\&.cipherdyne\&.org/cgi\-bin/myip\fR
+in order to resolve the externally routable IP address\&. Using
+\fB\-a\fR
+requires that the user already knows what the external IP is for the network where fwknop is running\&.
 .RE
 .SH "GENERAL OPTIONS"
 .PP
@@ -477,7 +485,11 @@ client is being used on a system that is behind an obscure NAT address\&. Presen
 \fBfwknop\fR
 uses the URL:
 \fIhttp://www\&.cipherdyne\&.org/cgi\-bin/myip\fR
-to resolve the caller IP\&.
+to resolve the caller IP\&. Note that it is generally more secure to use the
+\fB\-a\fR
+option if the externally routable IP address for the client is already known to the user since this elminates the need for
+\fBfwknop\fR
+to issue an HTTP request\&.
 .RE
 .PP
 \fB\-\-resolve\-url\fR \fI<url>\fR

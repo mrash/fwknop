@@ -139,7 +139,11 @@ section below).
     is recommend to use the *-R* or *-a* options instead of *-s* in order
     to harden SPA communications against possible 'Man-In-The-Middle' (MITM)
     attacks, and on the server side set 'REQUIRE_SOURCE_ADDRESS' variable in
-    the '@sysconfdir@/fwknop/access.conf' file.
+    the '@sysconfdir@/fwknop/access.conf' file.  Note that the most secure
+    option is *-a* so that *fwknop* does not have to issue an HTTP request to
+    'http://www.cipherdyne.org/cgi-bin/myip' in order to resolve the externally
+    routable IP address.  Using *-a* requires that the user already knows what
+    the external IP is for the network where fwknop is running.
 
 
 GENERAL OPTIONS
@@ -389,7 +393,7 @@ SPA OPTIONS
 *-r, --rand-port*::
     Instruct the *fwknop* client to send an SPA packet over a random
     destination port between 10,000 and 65535.  The *fwknopd* server must
-    use a *PCAP_FILTER* variable that is configured to accept such packets. 
+    use a *PCAP_FILTER* variable that is configured to accept such packets.
     For example, the *PCAP_FILTER* variable could be set to: ``+udp dst
     portrange 10000-65535+''.
 
@@ -401,7 +405,10 @@ SPA OPTIONS
     iptables policy at the remote fwknopd server side.  This is useful if
     the *fwknop* client is being used on a system that is behind an obscure
     NAT address. Presently, *fwknop* uses the URL:
-    'http://www.cipherdyne.org/cgi-bin/myip' to resolve the caller IP.
+    'http://www.cipherdyne.org/cgi-bin/myip' to resolve the caller IP.  Note
+    that it is generally more secure to use the *-a* option if the externally
+    routable IP address for the client is already known to the user since this
+    elminates the need for *fwknop* to issue an HTTP request.
 
 *--resolve-url* '<url>'::
     Override the default URL used for resolving the source IP address. For
