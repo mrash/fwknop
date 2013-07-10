@@ -210,6 +210,12 @@ const char*
 fko_gpg_errstr(fko_ctx_t ctx)
 {
 #if HAVE_LIBGPGME
+
+    /* Must be initialized
+     */
+    if(!CTX_INITIALIZED(ctx))
+        return("");
+
     if(ctx->gpg_err)
         return(gpgme_strerror(ctx->gpg_err));
 #endif /* HAVE_LIBGPGME */
