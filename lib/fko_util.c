@@ -404,8 +404,14 @@ int zero_free(char *buf, int len)
 {
     int res = FKO_SUCCESS;
 
-    if(buf == NULL || len == 0)
+    if(buf == NULL)
         return res;
+
+    if(len == 0)
+    {
+        free(buf);  /* always free() if buf != NULL */
+        return res;
+    }
 
     res = zero_buf(buf, len);
 
