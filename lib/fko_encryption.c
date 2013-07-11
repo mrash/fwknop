@@ -346,7 +346,10 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
             if(zero_free((char *) cipher, cipher_len) != FKO_SUCCESS)
                 zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
-        return(res);
+        if(zero_free_rv == FKO_SUCCESS)
+            return(res);
+        else
+            return(zero_free_rv);
     }
 
     /* Now make a bucket for the base64-encoded version and populate it.
@@ -361,7 +364,10 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
             if(zero_free((char *) cipher, cipher_len) != FKO_SUCCESS)
                 zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+        if(zero_free_rv == FKO_SUCCESS)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        else
+            return(zero_free_rv);
     }
 
     b64_encode(cipher, b64cipher, cipher_len);
