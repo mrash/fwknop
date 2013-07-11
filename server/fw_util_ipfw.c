@@ -176,7 +176,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
     return(got_err);
 }
 
-void
+int
 fw_config_init(fko_srv_options_t * const opts)
 {
     int         is_err;
@@ -240,7 +240,7 @@ fw_config_init(fko_srv_options_t * const opts)
     return 1;
 }
 
-void
+int
 fw_initialize(const fko_srv_options_t * const opts)
 {
     int             res = 0, is_err;

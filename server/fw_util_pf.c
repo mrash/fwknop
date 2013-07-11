@@ -142,7 +142,7 @@ delete_all_anchor_rules(const fko_srv_options_t *opts)
     return;
 }
 
-void
+int
 fw_config_init(fko_srv_options_t * const opts)
 {
     memset(&fwc, 0x0, sizeof(struct fw_config));
@@ -162,7 +162,7 @@ fw_config_init(fko_srv_options_t * const opts)
     return 1;
 }
 
-void
+int
 fw_initialize(const fko_srv_options_t * const opts)
 {
 
