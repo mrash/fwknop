@@ -19,7 +19,7 @@ include a general difficulty in protecting against replay attacks, asymmetric
 ciphers and HMAC schemes are not usually possible to reliably support, and it
 is trivially easy to mount a DoS attack against a PK server just by spoofing an
 additional packet into a PK sequence as it traverses the network (thereby
-convincing the PK server that the client doesn’t know the proper sequence). All
+convincing the PK server that the client doesn't know the proper sequence). All
 of these limitation are solved by SPA. At the same time, SPA hides services
 behind a default-drop firewall policy, acquires SPA data passively (usually via
 libpcap or other means), and implements standard cryptographic operations for
@@ -35,7 +35,7 @@ against cryptanalytic CBC-mode padding oracle attacks such as the Vaudenay
 attack and related trickery (like the more recent "Lucky 13" attack against
 SSL), and 3) the code required by the fwknopd daemon to verify an HMAC is much
 more simplistic than the code required to decrypt an SPA packet, so an SPA
-packet without a proper HMAC isn’t even sent through the decryption routines.
+packet without a proper HMAC isn't even sent through the decryption routines.
 Reason 3) is why an HMAC should still be used even when SPA packets are
 encrypted with GnuPG due to the fact that SPA data is not sent through libgpgme
 functions unless the HMAC checks out first. GnuPG and libgpgme are relatively
@@ -73,7 +73,7 @@ Firewall Knock Operator library; `libfko', as well as the fwknop client and
 server applications.  The library provides the API and back-end functionality
 for managing the Single Packet Authorization (SPA) data that the other fwknop
 components employ.  It also can be used by other programs that need SPA
-functonality (see the `perl' directory for the FKO perl module as an example,
+functionality (see the `perl' directory for the FKO perl module as an example,
 and there are python bindings as well in the 'python' directory).
 
 
@@ -128,7 +128,7 @@ migrate to this version, there are some things to be aware of:
       accomplished through other means (i.e. use an external script
       to monitor log files and alert based on appropriate log messages).
 
-    - There are some diffences in the fwknop configuration and access
+    - There are some differences in the fwknop configuration and access
       file directives and values.  Some of these are fairly subtle. You
       should pay careful attention to the documentation and comments in
       those files.
@@ -144,6 +144,6 @@ If, for some reason, autoreconf does not work for you, the "autogen.sh"
 script should suffice.
 
 The fwknop and fwknopd man page nroff sources are included in their
-respective directorys (client and server).  These nroff files are derived
+respective directories (client and server).  These nroff files are derived
 from the asciidoc sources in the 'docs' directory.  See the README in docs
 for details.
