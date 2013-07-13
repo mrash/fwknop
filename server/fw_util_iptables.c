@@ -44,8 +44,10 @@ static char   cmd_buf[CMD_BUFSIZE];
 static char   err_buf[CMD_BUFSIZE];
 static char   cmd_out[STANDARD_CMD_OUT_BUFSIZE];
 
-static int rule_exists(const fko_srv_options_t * const opts,
-        const char * const fw_chain, const char * const fw_rule);
+/* assume 'iptables -C' is offered since only older versions
+ * don't have this (see ipt_chk_support()).
+*/
+static int have_ipt_chk_support = 1;
 
 static void
 zero_cmd_buffers(void)
@@ -60,6 +62,190 @@ chop_newline(char *str)
 {
     if(str[0] != 0x0 && str[strlen(str)-1] == 0x0a)
         str[strlen(str)-1] = 0x0;
+    return;
+}
+
+static int
+rule_exists_no_chk_support(const fko_srv_options_t * const opts,
+        const struct fw_chain * const fwc, const unsigned int proto,
+        const char * const ip, const unsigned int port,
+        const unsigned int exp_ts)
+{
+    int     rule_exists = 0;
+    char    cmd_buf[CMD_BUFSIZE]       = {0};
+    char    line_buf[CMD_BUFSIZE]      = {0};
+    char    target_search[CMD_BUFSIZE] = {0};
+    char    proto_search[CMD_BUFSIZE]  = {0};
+    char    ip_search[CMD_BUFSIZE]     = {0};
+    char    port_search[CMD_BUFSIZE]   = {0};
+    char    exp_ts_search[CMD_BUFSIZE] = {0};
+    FILE   *ipt;
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+        opts->fw_config->fw_command,
+        fwc->table,
+        fwc->to_chain
+    );
+
+    ipt = popen(cmd_buf, "r");
+
+    if(ipt == NULL)
+    {
+        log_msg(LOG_ERR,
+            "Got error %i trying to get rules list.\n", errno);
+        return(rule_exists);
+    }
+
+    snprintf(proto_search, CMD_BUFSIZE-1, " %u ", proto);
+    snprintf(port_search, CMD_BUFSIZE-1, ":%u ", port);
+    snprintf(target_search, CMD_BUFSIZE-1, " %s ", fwc->target);
+    snprintf(ip_search, CMD_BUFSIZE-1, " %s ", ip);
+    snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
+
+    while((fgets(line_buf, CMD_BUFSIZE-1, ipt)) != NULL)
+    {
+        /* Get past comments and empty lines (note: we only look at the
+         * first character).
+         */
+        if(IS_EMPTY_LINE(line_buf[0]))
+            continue;
+
+        if((strstr(line_buf, exp_ts_search) != NULL)
+                && (strstr(line_buf, proto_search) != NULL)
+                && (strstr(line_buf, ip_search) != NULL)
+                && (strstr(line_buf, target_search) != NULL)
+                && (strstr(line_buf, port_search) != NULL))
+        {
+            rule_exists = 1;
+            break;
+        }
+    }
+
+    pclose(ipt);
+
+    if(rule_exists)
+        log_msg(LOG_DEBUG, "rule_exists_no_chk_support() rule found");
+    else
+        log_msg(LOG_DEBUG, "rule_exists_no_chk_support() rule not found");
+
+   return(rule_exists);
+}
+
+static int
+rule_exists_chk_support(const fko_srv_options_t * const opts,
+        const char * const chain, const char * const rule)
+{
+    int     rule_exists = 0;
+    int     res = 0;
+
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHK_RULE_ARGS,
+            opts->fw_config->fw_command, chain, rule);
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    chop_newline(err_buf);
+
+    log_msg(LOG_DEBUG, "rule_exists_chk_support() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
+
+    if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
+    {
+        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s does not exist.",
+                rule, chain);
+    }
+    else
+    {
+        rule_exists = 1;
+        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s already exists.",
+                rule, chain);
+    }
+
+    return(rule_exists);
+}
+
+static int
+rule_exists(const fko_srv_options_t * const opts,
+        const struct fw_chain * const fwc, const char * const rule,
+        const unsigned int proto, const char * const ip,
+        const unsigned int port, const unsigned int exp_ts)
+{
+    int rule_exists = 0;
+
+    if(have_ipt_chk_support == 1)
+        rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule);
+    else
+        rule_exists = rule_exists_no_chk_support(opts, fwc, proto, ip, port, exp_ts);
+
+    return(rule_exists);
+}
+
+static void
+ipt_chk_support(const fko_srv_options_t * const opts)
+{
+    int               res = 1;
+    struct fw_chain  *in_chain = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
+
+    zero_cmd_buffers();
+
+    /* Add a harmless rule to the iptables INPUT chain and see if iptables
+     * supports '-C' to check for it.  Set "have_ipt_chk_support" accordingly,
+     * delete the rule, and return.
+    */
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_TMP_CHK_RULE_ARGS,
+        opts->fw_config->fw_command,
+        in_chain->table,
+        in_chain->from_chain,
+        1,   /* first rule */
+        in_chain->target
+    );
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    chop_newline(err_buf);
+
+    log_msg(LOG_DEBUG, "ipt_chk_support() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
+
+    zero_cmd_buffers();
+
+    /* Now see if '-C' works - any output indicates failure
+    */
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_TMP_VERIFY_CHK_ARGS,
+        opts->fw_config->fw_command,
+        in_chain->table,
+        in_chain->from_chain,
+        in_chain->target
+    );
+
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    chop_newline(err_buf);
+
+    log_msg(LOG_DEBUG, "ipt_chk_support() CMD: '%s' (res: %d, err: %s)",
+        cmd_buf, res, err_buf);
+
+    if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
+    {
+        log_msg(LOG_DEBUG, "ipt_chk_support() -C not supported");
+        have_ipt_chk_support = 0;
+    }
+    else
+    {
+        log_msg(LOG_DEBUG, "ipt_chk_support() -C supported");
+        have_ipt_chk_support = 1;
+    }
+
+    /* Delete the tmp rule
+    */
+    zero_cmd_buffers();
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
+        opts->fw_config->fw_command,
+        in_chain->table,
+        in_chain->from_chain,
+        1
+    );
+    run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
     return;
 }
 
@@ -188,25 +374,91 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
 }
 
 static int
-jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
+jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int chain_num)
 {
     int    exists = 0;
     char   rule_buf[CMD_BUFSIZE] = {0};
-
-    memset(rule_buf, 0, CMD_BUFSIZE);
 
     snprintf(rule_buf, CMD_BUFSIZE-1, IPT_CHK_JUMP_RULE_ARGS,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].to_chain
     );
 
-    if(rule_exists(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
+    if(rule_exists_chk_support(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
     {
-        log_msg(LOG_DEBUG, "jump_rule_exists() jump rule found");
+        log_msg(LOG_DEBUG, "jump_rule_exists_chk_support() jump rule found");
         exists = 1;
     }
     else
-        log_msg(LOG_DEBUG, "jump_rule_exists() jump rule not found");
+        log_msg(LOG_DEBUG, "jump_rule_exists_chk_support() jump rule not found");
+
+    return exists;
+}
+
+static int
+jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts, const int chain_num)
+{
+    int     exists = 0;
+    char    cmd_buf[CMD_BUFSIZE]      = {0};
+    char    chain_search[CMD_BUFSIZE] = {0};
+    char    line_buf[CMD_BUFSIZE]     = {0};
+    FILE   *ipt;
+
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+        fwc.fw_command,
+        fwc.chain[chain_num].table,
+        fwc.chain[chain_num].from_chain
+    );
+
+    ipt = popen(cmd_buf, "r");
+
+    if(ipt == NULL)
+    {
+        log_msg(LOG_ERR,
+            "Got error %i trying to get rules list.\n", errno);
+        return(exists);
+    }
+
+    /* include spaces on either side as produced by 'iptables -L' output
+    */
+    snprintf(chain_search, CMD_BUFSIZE-1, " %s ",
+        fwc.chain[chain_num].to_chain);
+
+    while((fgets(line_buf, CMD_BUFSIZE-1, ipt)) != NULL)
+    {
+        /* Get past comments and empty lines (note: we only look at the
+         * first character).
+         */
+        if(IS_EMPTY_LINE(line_buf[0]))
+            continue;
+
+        if(strstr(line_buf, chain_search) != NULL)
+        {
+            exists = 1;
+            break;
+        }
+    }
+
+    pclose(ipt);
+
+
+    if(exists)
+        log_msg(LOG_DEBUG, "jump_rule_exists_no_chk_support() jump rule found");
+    else
+        log_msg(LOG_DEBUG, "jump_rule_exists_no_chk_support() jump rule not found");
+
+   return(exists);
+}
+
+static int
+jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
+{
+    int    exists = 0;
+
+    if(have_ipt_chk_support == 1)
+        exists = jump_rule_exists_chk_support(opts, chain_num);
+    else
+        exists = jump_rule_exists_no_chk_support(opts, chain_num);
 
     return exists;
 }
@@ -575,6 +827,8 @@ fw_config_init(fko_srv_options_t * const opts)
 int
 fw_initialize(const fko_srv_options_t * const opts)
 {
+    int res = 1;
+
     /* Flush the chains (just in case) so we can start fresh.
     */
     if(strncasecmp(opts->config[CONF_FLUSH_IPT_AT_INIT], "Y", 1) == 0)
@@ -586,18 +840,30 @@ fw_initialize(const fko_srv_options_t * const opts)
     {
         log_msg(LOG_WARNING,
                 "Warning: Errors detected during fwknop custom chain creation.");
-        return 0;
+        res = 0;
     }
 
     /* Make sure that the 'comment' match is available
     */
-    if((strncasecmp(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK], "Y", 1) == 0)
-            && (comment_match_exists(opts) != 1))
+    if(strncasecmp(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK], "Y", 1) == 0)
     {
-        log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.");
-        return 0;
+        if(comment_match_exists(opts) == 1)
+        {
+            log_msg(LOG_INFO, "iptables 'comment' match is available.");
+        }
+        else
+        {
+            log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.");
+            res = 0;
+        }
     }
-    return 1;
+
+    /* See if iptables offers the '-C' argument (older versions don't).  If not,
+     * then switch to parsing iptables -L output to find rules.
+    */
+    ipt_chk_support(opts);
+
+    return(res);
 }
 
 int
@@ -609,39 +875,6 @@ fw_cleanup(const fko_srv_options_t * const opts)
 
     delete_all_chains(opts);
     return(0);
-}
-
-static int
-rule_exists(const fko_srv_options_t * const opts,
-        const char * const fw_chain, const char * const fw_rule)
-{
-    int     rule_exists = 0;
-    int     res = 0;
-
-    zero_cmd_buffers();
-
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHK_RULE_ARGS,
-            opts->fw_config->fw_command, fw_chain, fw_rule);
-
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
-    chop_newline(err_buf);
-
-    log_msg(LOG_DEBUG, "rule_exists() CMD: '%s' (res: %d, err: %s)",
-        cmd_buf, res, err_buf);
-
-    if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
-    {
-        log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s does not exist.",
-                fw_rule, fw_chain);
-    }
-    else
-    {
-        rule_exists = 1;
-        log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s already exists.",
-                fw_rule, fw_chain);
-    }
-
-    return rule_exists;
 }
 
 static int
@@ -769,7 +1002,8 @@ process_spa_request(const fko_srv_options_t * const opts,
                 in_chain->target
             );
 
-            if(rule_exists(opts, in_chain->to_chain, rule_buf) == 0)
+            if(rule_exists(opts, in_chain, rule_buf,
+                        ple->proto, spadat->use_src_ip, ple->port, exp_ts) == 0)
             {
                 if(create_rule(opts, in_chain->to_chain, rule_buf))
                 {
@@ -804,7 +1038,8 @@ process_spa_request(const fko_srv_options_t * const opts,
                     out_chain->target
                 );
 
-                if(rule_exists(opts, out_chain->to_chain, rule_buf) == 0)
+                if(rule_exists(opts, out_chain, rule_buf,
+                        ple->proto, spadat->use_src_ip, ple->port, exp_ts) == 0)
                 {
                     if(create_rule(opts, out_chain->to_chain, rule_buf))
                     {
@@ -816,8 +1051,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                         out_chain->active_rules++;
 
                         /* Reset the next expected expire time for this chain if it
-                        * is warranted.
-                        */
+                        * is warranted.  */
                         if(out_chain->next_expire < now || exp_ts < out_chain->next_expire)
                             out_chain->next_expire = exp_ts;
                     }
@@ -869,7 +1103,8 @@ process_spa_request(const fko_srv_options_t * const opts,
                 in_chain->target
             );
 
-            if(rule_exists(opts, in_chain->to_chain, rule_buf) == 0)
+            if(rule_exists(opts, in_chain, rule_buf,
+                        fst_proto, spadat->use_src_ip, nat_port, exp_ts) == 0)
             {
                 if(create_rule(opts, in_chain->to_chain, rule_buf))
                 {
@@ -911,7 +1146,8 @@ process_spa_request(const fko_srv_options_t * const opts,
                 fwd_chain->target
             );
 
-            if(rule_exists(opts, fwd_chain->to_chain, rule_buf) == 0)
+            if(rule_exists(opts, fwd_chain, rule_buf, fst_proto,
+                    spadat->use_src_ip, nat_port, exp_ts) == 0)
             {
                 if(create_rule(opts, fwd_chain->to_chain, rule_buf))
                 {
@@ -954,7 +1190,8 @@ process_spa_request(const fko_srv_options_t * const opts,
                 nat_port
             );
 
-            if(rule_exists(opts, dnat_chain->to_chain, rule_buf) == 0)
+            if(rule_exists(opts, dnat_chain, rule_buf, fst_proto,
+                        spadat->use_src_ip, fst_port, exp_ts) == 0)
             {
                 if(create_rule(opts, dnat_chain->to_chain, rule_buf))
                 {
@@ -1009,7 +1246,8 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_target
             );
 
-            if(rule_exists(opts, snat_chain->to_chain, rule_buf) == 0)
+            if(rule_exists(opts, snat_chain, rule_buf, fst_proto,
+                        spadat->use_src_ip, nat_port, exp_ts) == 0)
             {
                 if(create_rule(opts, snat_chain->to_chain, rule_buf))
                 {
@@ -1056,7 +1294,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
     /* Iterate over each chain and look for active rules to delete.
     */
-    for(i = 0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
+    for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
         /* If there are no active rules or we have not yet
          * reached our expected next expire time, continue.
