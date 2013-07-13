@@ -262,6 +262,10 @@ rij_encrypt(unsigned char *in, size_t in_len,
 
     ondx += in_len+pad_val;
 
+    zero_buf((char *)ctx.key, RIJNDAEL_MAX_KEYSIZE);
+    zero_buf((char *)ctx.iv, RIJNDAEL_BLOCKSIZE);
+    zero_buf((char *)ctx.salt, SALT_LEN);
+
     return(ondx - out);
 }
 
@@ -311,6 +315,10 @@ rij_decrypt(unsigned char *in, size_t in_len,
     }
 
     *ondx = '\0';
+
+    zero_buf((char *)ctx.key, RIJNDAEL_MAX_KEYSIZE);
+    zero_buf((char *)ctx.iv, RIJNDAEL_BLOCKSIZE);
+    zero_buf((char *)ctx.salt, SALT_LEN);
 
     return(ondx - out);
 }
