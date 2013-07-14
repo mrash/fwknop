@@ -312,6 +312,7 @@ our $MATCH_ANY = 1;
 our $MATCH_ALL = 2;
 our $REQUIRE_SUCCESS = 0;
 our $REQUIRE_FAILURE = 1;
+my $TIMESTAMP_DIFF = 2;
 my $ENC_RIJNDAEL = 1;
 my $ENC_GPG      = 2;
 our $LINUX   = 1;
@@ -3491,6 +3492,38 @@ sub iptables_rules_not_duplicated() {
     my $test_hr = shift;
 
     my $rv = 1;
+    my $tries = 0;
+
+    while ($tries < 5) {
+
+        $rv = &iptables_rules_not_duplicated_account_for_timestamps($test_hr);
+
+        if ($rv == 1) {
+            &write_test_file("[+] iptables rules not duplicated.\n",
+                $curr_test_file);
+            last;
+        } elsif ($rv == 0) {
+            &write_test_file("[-] iptables rules duplicated.\n",
+                $curr_test_file);
+            last;
+        } elsif ($rv == $TIMESTAMP_DIFF) {
+            &write_test_file("[-] iptables rules spanned one second " .
+                "difference in fwknopd output, try: $tries.\n", $curr_test_file);
+        }
+
+        &rm_tmp_files();
+        $tries++;
+    }
+
+    $rv = 0 if $rv == $TIMESTAMP_DIFF;
+
+    return $rv;
+}
+
+sub iptables_rules_not_duplicated_account_for_timestamps() {
+    my $test_hr = shift;
+
+    my $rv = 1;
     my $server_was_stopped = 0;
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
@@ -3525,11 +3558,12 @@ sub iptables_rules_not_duplicated() {
         = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
 
     ### make sure there aren't two iptables rule with the same creation time
-    my $time_stamp = 0;
-    open F, "< $server_test_file" or die $!;
+    my $time_stamp  = 0;
+    my $time_stamp2 = 0;
+    open F, "< $server_cmd_tmp" or die $!;
     while (<F>) {
         ### 1    ACCEPT    tcp  --  127.0.0.2    0.0.0.0/0   tcp dpt:22 /* _exp_1359688354 */
-        if (m|^\d+\s+.*$fake_ip\s+.*_exp_(\d+)|) {
+        if (m|^1\s+.*$fake_ip\s+.*_exp_(\d+)|) {
             $time_stamp = $1;
             next;
         }
@@ -3537,10 +3571,25 @@ sub iptables_rules_not_duplicated() {
             if (/^2\s+.*$fake_ip\s+.*_exp_$time_stamp/) {
                 $rv = 0;
                 last;
+            } elsif (/^2\s+.*$fake_ip\s+.*_exp_(\d+)/) {
+                $time_stamp2 = $1;
+                last;
             }
         }
     }
     close F;
+
+    if ($rv == 1) {
+        if ($time_stamp and $time_stamp2 and $time_stamp2 > $time_stamp) {
+            $rv = $TIMESTAMP_DIFF;
+        } else {
+            ### require the "already exists" string
+            unless (&file_find_regex([qr/\s$fake_ip\s.*already\s+exists/],
+                    $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
+                $rv = 0;
+            }
+        }
+    }
 
     return $rv;
 }
