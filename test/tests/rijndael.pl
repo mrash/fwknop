@@ -1191,7 +1191,8 @@
         'fatal'    => $NO
     },
 
-    ### ensure iptables rules are not duplicated for identical access requests
+    ### ensure iptables rules are not duplicated for identical (and non-replayed)
+    ### access requests
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
@@ -1200,7 +1201,6 @@
         'cmdline'  => "$default_client_args --test",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'server_negative_output_matches' => [qr/^2\s+ACCEPT\s.*$fake_ip/],
         'fatal'    => $NO
     },
 

@@ -4268,65 +4268,57 @@ sub send_packets() {
     print F Dumper $pkts_ar;
     close F;
 
-    my $received_first_packet = 0;
-
     if (-e $server_cmd_tmp) {
-        for my $pkt_hr (@$pkts_ar) {
-            my $tries = 0;
-            while (not &file_find_regex(
-                    [qr/stanza\s.*\sSPA Packet from IP/],
-                    $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
 
-                &write_test_file("[.] send_packets() looking for " .
-                    "fwknopd to receive packet, try: $tries\n",
-                    $curr_test_file);
+        &send_all_pkts($pkts_ar);
+        sleep 1;
 
-                if ($pkt_hr->{'proto'} eq 'tcp' or $pkt_hr->{'proto'} eq 'udp') {
-                    my $socket = IO::Socket::INET->new(
-                        PeerAddr => $pkt_hr->{'dst_ip'},
-                        PeerPort => $pkt_hr->{'port'},
-                        Proto    => $pkt_hr->{'proto'},
-                        Timeout  => 1
-                    ) or die "[*] Could not acquire $pkt_hr->{'proto'}/$pkt_hr->{'port'} " .
-                        "socket to $pkt_hr->{'dst_ip'}: $!";
+        my $tries = 0;
+        while (not &file_find_regex(
+                [qr/stanza\s.*\sSPA Packet from IP/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
 
-                    $socket->send($pkt_hr->{'data'});
-                    undef $socket;
+            &write_test_file("[.] send_packets() looking for " .
+                "fwknopd to receive packet(s), try: $tries\n",
+                $curr_test_file);
 
-                } elsif ($pkt_hr->{'proto'} eq 'http') {
-                    ### FIXME
-                } elsif ($pkt_hr->{'proto'} eq 'icmp') {
-                    ### FIXME
-                }
-                last if $received_first_packet;
-                $tries++;
-                last if $tries == 10;   ### should be plenty of time
-                sleep 1;
-            }
-            $received_first_packet = 1;
-            sleep $pkt_hr->{'delay'} if defined $pkt_hr->{'delay'};
+            &send_all_pkts($pkts_ar);
+
+            $tries++;
+            last if $tries == 10;   ### should be plenty of time
+            sleep 1;
         }
     } else {
-        for my $pkt_hr (@$pkts_ar) {
-            if ($pkt_hr->{'proto'} eq 'tcp' or $pkt_hr->{'proto'} eq 'udp') {
-                my $socket = IO::Socket::INET->new(
-                    PeerAddr => $pkt_hr->{'dst_ip'},
-                    PeerPort => $pkt_hr->{'port'},
-                    Proto    => $pkt_hr->{'proto'},
-                    Timeout  => 1
-                ) or die "[*] Could not acquire $pkt_hr->{'proto'}/$pkt_hr->{'port'} " .
-                    "socket to $pkt_hr->{'dst_ip'}: $!";
+        &send_all_pkts($pkts_ar);
+    }
+    return;
+}
 
-                $socket->send($pkt_hr->{'data'});
-                undef $socket;
+sub send_all_pkts() {
+    my $pkts_ar = shift;
+    for my $pkt_hr (@$pkts_ar) {
+        my $sent = 0;
+        if ($pkt_hr->{'proto'} eq 'tcp' or $pkt_hr->{'proto'} eq 'udp') {
+            my $socket = IO::Socket::INET->new(
+                PeerAddr => $pkt_hr->{'dst_ip'},
+                PeerPort => $pkt_hr->{'port'},
+                Proto    => $pkt_hr->{'proto'},
+                Timeout  => 1
+            ) or die "[*] Could not acquire $pkt_hr->{'proto'}/$pkt_hr->{'port'} " .
+                "socket to $pkt_hr->{'dst_ip'}: $!";
 
-            } elsif ($pkt_hr->{'proto'} eq 'http') {
-                ### FIXME
-            } elsif ($pkt_hr->{'proto'} eq 'icmp') {
-                ### FIXME
-            }
-            sleep $pkt_hr->{'delay'} if defined $pkt_hr->{'delay'};
+            $socket->send($pkt_hr->{'data'});
+            undef $socket;
+            $sent = 1;
+        } elsif ($pkt_hr->{'proto'} eq 'http') {
+            ### FIXME
+        } elsif ($pkt_hr->{'proto'} eq 'icmp') {
+            ### FIXME
         }
+        &write_test_file("    send_all_pkts() sent packet: $pkt_hr->{'data'}\n",
+            $curr_test_file) if $sent;
+
+        sleep $pkt_hr->{'delay'} if defined $pkt_hr->{'delay'};
     }
     return;
 }
