@@ -886,7 +886,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 /* Perform some sanity checks on an acc stanza data.
 */
 static int
-acc_data_is_valid(const acc_stanza_t *acc)
+acc_data_is_valid(acc_stanza_t * const acc)
 {
     if(acc == NULL)
     {
@@ -904,6 +904,19 @@ acc_data_is_valid(const acc_stanza_t *acc)
             "[*] No keys found for access stanza source: '%s'", acc->source
         );
         return(0);
+    }
+
+    if(acc->use_rijndael && acc->key != NULL)
+    {
+        if((acc->encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV)
+                && (acc->key_len > 16))
+        {
+            log_msg(LOG_INFO,
+                "Warning: truncating encryption key in legacy mode to 16 bytes for access stanza source: '%s'",
+                acc->source
+            );
+            acc->key_len = 16;
+        }
     }
 
     if((acc->hmac_key_len) != 0 && (acc->hmac_key != NULL))
