@@ -96,7 +96,15 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         return(rule_exists);
     }
 
-    snprintf(proto_search, CMD_BUFSIZE-1, " %u ", proto);
+    if(proto == IPPROTO_TCP)
+        snprintf(proto_search, CMD_BUFSIZE-1, " tcp ");
+    else if(proto == IPPROTO_UDP)
+        snprintf(proto_search, CMD_BUFSIZE-1, " udp ");
+    else if(proto == IPPROTO_ICMP)
+        snprintf(proto_search, CMD_BUFSIZE-1, " icmp ");
+    else
+        snprintf(proto_search, CMD_BUFSIZE-1, " %u ", proto);
+
     snprintf(port_search, CMD_BUFSIZE-1, ":%u ", port);
     snprintf(target_search, CMD_BUFSIZE-1, " %s ", fwc->target);
     snprintf(ip_search, CMD_BUFSIZE-1, " %s ", ip);
@@ -124,9 +132,13 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     pclose(ipt);
 
     if(rule_exists)
-        log_msg(LOG_DEBUG, "rule_exists_no_chk_support() rule found");
+        log_msg(LOG_DEBUG,
+                "rule_exists_no_chk_support() %s %u -> %s expires: %u rule (already exists",
+                proto_search, port, ip, exp_ts);
     else
-        log_msg(LOG_DEBUG, "rule_exists_no_chk_support() rule not found");
+        log_msg(LOG_DEBUG,
+                "rule_exists_no_chk_support() %s %u -> %s expires: %u rule does not exist",
+                proto_search, port, ip, exp_ts);
 
    return(rule_exists);
 }
@@ -151,13 +163,13 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
 
     if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
     {
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s does not exist.",
+        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s does not exist",
                 rule, chain);
     }
     else
     {
         rule_exists = 1;
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s already exists.",
+        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s already exists",
                 rule, chain);
     }
 
@@ -176,6 +188,13 @@ rule_exists(const fko_srv_options_t * const opts,
         rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule);
     else
         rule_exists = rule_exists_no_chk_support(opts, fwc, proto, ip, port, exp_ts);
+
+    if(rule_exists == 1)
+        log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s already exists",
+                rule, fwc->to_chain);
+    else
+        log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s does not exist",
+                rule, fwc->to_chain);
 
     return(rule_exists);
 }
@@ -686,7 +705,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 
     if(conf_str == NULL)
     {
-        log_msg(LOG_ERR, "[*] NULL conf_str.");
+        log_msg(LOG_ERR, "[*] NULL conf_str");
         return 0;
     }
 
@@ -839,7 +858,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(create_fw_chains(opts) != 0)
     {
         log_msg(LOG_WARNING,
-                "Warning: Errors detected during fwknop custom chain creation.");
+                "Warning: Errors detected during fwknop custom chain creation");
         res = 0;
     }
 
@@ -849,11 +868,11 @@ fw_initialize(const fko_srv_options_t * const opts)
     {
         if(comment_match_exists(opts) == 1)
         {
-            log_msg(LOG_INFO, "iptables 'comment' match is available.");
+            log_msg(LOG_INFO, "iptables 'comment' match is available");
         }
         else
         {
-            log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match.");
+            log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match");
             res = 0;
         }
     }
@@ -1335,7 +1354,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             /* we did not find an expected rule.
             */
             log_msg(LOG_ERR,
-                "Did not find expire comment in rules list %i.", i);
+                "Did not find expire comment in rules list %i", i);
 
             if (ch[i].active_rules > 0)
                 ch[i].active_rules--;
@@ -1431,7 +1450,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
                 if(EXTCMD_IS_SUCCESS(res))
                 {
-                    log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u.",
+                    log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u",
                         rule_num_str, ch[i].to_chain, rule_exp
                     );
 
