@@ -132,7 +132,7 @@ getpasswd(const char *prompt, int fd)
 
 #ifndef WIN32
     sigset_t        sig, old_sig;
-    struct termios  ts, old_ts;
+    struct termios  ts;
 #else
 	/* Force stdin on windows. */
 	fd = 0;
@@ -175,7 +175,6 @@ getpasswd(const char *prompt, int fd)
         *   - disable cannonical mode (input read line by line mode)
         */
         tcgetattr(fileno(fp), &ts);
-        old_ts = ts;
         ts.c_lflag &= ~(ECHO | ICANON | ISIG);
         tcsetattr(fileno(fp), TCSAFLUSH, &ts);
 
