@@ -1,7 +1,7 @@
 /*
  *****************************************************************************
  *
- * File:    rigndael.c
+ * File:    rijndael.c
  *
  * Purpose: rijndael - An implementation of the Rijndael cipher.
  *
