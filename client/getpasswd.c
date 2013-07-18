@@ -68,6 +68,9 @@ read_passwd_from_stream(FILE *stream)
 
     ptr = ARRAY_FIRST_ELT_ADR(password);
 
+    if(stream == NULL)
+        return password;
+
 #ifdef WIN32
     while((c = _getch()) != PW_CR_CHAR)
 #else
@@ -192,6 +195,9 @@ getpasswd(const char *prompt, int fd)
     _putch(PW_CR_CHAR);
     _putch(PW_LF_CHAR);
 #endif
+
+    fclose(fp);
+
     return (ptr);
 }
 
