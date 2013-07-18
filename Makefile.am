@@ -346,14 +346,3 @@ install-exec-hook:
 	if test -f $(DESTDIR)$(sysconfdir)/fwknop/access.conf; then \
 		chmod 600 $(DESTDIR)$(sysconfdir)/fwknop/access.conf; \
 	fi
-	if test -f $(DESTDIR)$(bindir)/fwknop; then \
-		if ! $(DESTDIR)$(bindir)/fwknop -h > /dev/null 2>&1; then \
-			ldconfig; \
-		fi \
-	else \
-		if test -f $(DESTDIR)$(sbindir)/fwknopd; then \
-			if ! $(DESTDIR)$(sbindir)/fwknopd -h > /dev/null 2>&1; then \
-				ldconfig -v; \
-			fi \
-		fi \
-	fi
