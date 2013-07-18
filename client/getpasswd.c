@@ -128,11 +128,15 @@ char*
 getpasswd(const char *prompt, int fd)
 {
     char *ptr;
+    FILE           *fp;
 
 #ifndef WIN32
     sigset_t        sig, old_sig;
     struct termios  ts, old_ts;
-    FILE           *fp;
+#else
+	/* Force stdin on windows. */
+	fd = 0;
+#endif
 
     /* If a valid file descriptor is supplied, we try to open a stream from it */
     if (FD_IS_VALID(fd))
@@ -147,6 +151,7 @@ getpasswd(const char *prompt, int fd)
         }
     }
 
+#ifndef WIN32
     /* Otherwise we are going to open a new stream */
     else
     {
@@ -179,33 +184,15 @@ getpasswd(const char *prompt, int fd)
 #else
     _cputs(prompt);
 #endif
-
     /* Read the password */
     ptr = read_passwd_from_stream(fp);
 
-#ifndef WIN32
-
-    /* If we used a new buffered stream */
-    if (FD_IS_VALID(fd) == 0)
-    {
-        /* we can go ahead and echo out a newline.
-        */
-        putc(PW_LF_CHAR, fp);
-
-        /* Restore our tty state and signal handlers.
-        */
-        tcsetattr(fileno(fp), TCSAFLUSH, &old_ts);
-        sigprocmask(SIG_BLOCK, &old_sig, NULL);
-    }
-
-    fclose(fp);
-#else
+#ifdef WIN32
     /* In Windows, it would be a CR-LF
      */
     _putch(PW_CR_CHAR);
     _putch(PW_LF_CHAR);
 #endif
-
     return (ptr);
 }
 

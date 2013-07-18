@@ -83,6 +83,7 @@
   #define snprintf		_snprintf
   #define unlink		_unlink
   #define open			_open
+  #define fdopen        _fdopen
   #define close			_close
   #define write			_write
   #define O_WRONLY		_O_WRONLY

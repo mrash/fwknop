@@ -116,7 +116,7 @@
 #ifndef BYTEORDER
   #if defined(_BIG_ENDIAN) || defined(__BIG_ENDIAN__)
     #define BYTEORDER 4321
-  #elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__)
+  #elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__) || defined(WIN32)
     #define BYTEORDER 1234
   #endif
 #endif

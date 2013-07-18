@@ -37,6 +37,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifdef WIN32
+  #define STDIN_FILENO 0
+#endif
+
 #define RC_PARAM_TEMPLATE           "%-24s    %s\n"                     /*!< Template to define param = val in a rc file */
 #define RC_SECTION_DEFAULT          "default"                           /*!< Name of the default section in fwknoprc */
 #define RC_SECTION_TEMPLATE         "[%s]\n"                            /*!< Template to define a section in a rc file */
@@ -2138,7 +2142,11 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case FD_SET_STDIN:
                 options->input_fd = STDIN_FILENO;
                 break;
-            case FD_SET:
+            case FD_SET_ALT:
+#ifdef WIN32
+                log_msg(LOG_VERBOSITY_ERROR, "Read password from FD not supported on Windows");
+                exit(EXIT_FAILURE);
+#endif
                 options->input_fd = strtol_wrapper(optarg, 0,
                         -1, EXIT_UPON_ERR, &is_err);
                 break;
