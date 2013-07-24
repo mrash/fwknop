@@ -136,6 +136,7 @@ getpasswd(const char *prompt, int fd)
 #ifndef WIN32
     sigset_t        sig, old_sig;
     struct termios  ts;
+    int             old_c_lflag;
 #else
 	/* Force stdin on windows. */
 	fd = 0;
@@ -178,6 +179,7 @@ getpasswd(const char *prompt, int fd)
         *   - disable cannonical mode (input read line by line mode)
         */
         tcgetattr(fileno(fp), &ts);
+        old_c_lflag = ts.c_lflag;
         ts.c_lflag &= ~(ECHO | ICANON | ISIG);
         tcsetattr(fileno(fp), TCSAFLUSH, &ts);
 
@@ -194,6 +196,12 @@ getpasswd(const char *prompt, int fd)
      */
     _putch(PW_CR_CHAR);
     _putch(PW_LF_CHAR);
+#else
+   /* Reset terminal settings
+   */
+   fputs("\n", fp);
+   ts.c_lflag = old_c_lflag;
+   tcsetattr(fileno(fp), TCSAFLUSH, &ts);
 #endif
 
     fclose(fp);
