@@ -1,3 +1,9 @@
+fwknop-2.5.1 (07/24/2013):
+    - [client] Bug fix to reset terminal setting to orignal values after
+      entering keys via stdin.
+    - [server] Bug fix to not print pid file existence warning.  Reported by
+      Ilya Tumaykin to the fwknop list.
+
 fwknop-2.5 (07/19/2013):
     - ***** IMPORTANT *****:  If you are upgrading from an older version of
       fwknop, you will want to read the "Backwards Compatibility" section of
