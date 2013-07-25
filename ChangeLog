@@ -1,4 +1,4 @@
-fwknop-2.5.1 (07/24/2013):
+fwknop-2.5.1 (07/25/2013):
     - [client] Bug fix to reset terminal setting to orignal values after
       entering keys via stdin.
     - [server] Bug fix to not print pid file existence warning.  Reported by
