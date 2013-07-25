@@ -130,13 +130,13 @@ read_passwd_from_stream(FILE *stream)
 char*
 getpasswd(const char *prompt, int fd)
 {
-    char *ptr;
-    FILE           *fp;
+    char           *ptr = NULL;
+    FILE           *fp  = NULL;
 
 #ifndef WIN32
     sigset_t        sig, old_sig;
     struct termios  ts;
-    int             old_c_lflag;
+    tcflag_t        old_c_lflag = 0;
 #else
 	/* Force stdin on windows. */
 	fd = 0;
@@ -197,11 +197,14 @@ getpasswd(const char *prompt, int fd)
     _putch(PW_CR_CHAR);
     _putch(PW_LF_CHAR);
 #else
-   /* Reset terminal settings
-   */
-   fputs("\n", fp);
-   ts.c_lflag = old_c_lflag;
-   tcsetattr(fileno(fp), TCSAFLUSH, &ts);
+    if(! FD_IS_VALID(fd))
+    {
+        /* Reset terminal settings
+        */
+        fputs("\n", fp);
+        ts.c_lflag = old_c_lflag;
+        tcsetattr(fileno(fp), TCSAFLUSH, &ts);
+    }
 #endif
 
     fclose(fp);
