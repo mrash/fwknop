@@ -707,7 +707,8 @@ get_running_pid(const fko_srv_options_t *opts)
 
     if(op_fd == -1)
     {
-        perror("Error trying to open PID file: ");
+        if((opts->foreground != 0) && (opts->verbose != 0))
+            perror("Error trying to open PID file: ");
         return(rpid);
     }
 
