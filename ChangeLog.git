@@ -1,4 +1,22 @@
-commit 90841762cf57504018ff4a93c85c0114f8f27bb1 (HEAD, refs/heads/master)
+commit 798b7db2da911d5968173ffc19af4748ab46a046 (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Jul 25 21:27:20 2013 -0400
+
+    added 'Release: 2' for libfko RPM versioning (since libfko did not change from 2.5 -> 2.5.1)
+
+ fwknop.spec | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit e20586dfe65d9c2f194407d2752bdd981da588e3
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Jul 25 20:36:45 2013 -0400
+
+    updated ChangeLog.git file to reflect changes from 2.5 -> 2.5.1
+
+ ChangeLog.git | 6875 +--------------------------------------------------------
+ 1 file changed, 37 insertions(+), 6838 deletions(-)
+
+commit 90841762cf57504018ff4a93c85c0114f8f27bb1
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Thu Jul 25 20:33:37 2013 -0400
 
