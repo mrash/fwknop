@@ -931,7 +931,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => 'fw rules not duplicated',
+        'detail'   => 'iptables rules not duplicated',
         'function' => \&iptables_rules_not_duplicated,
         'cmdline'  => "$default_client_hmac_args --test",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
