@@ -109,6 +109,11 @@ init_logging(fko_srv_options_t *opts) {
             || opts->fw_list_all != 0)
         static_log_flag = LOG_STDERR | LOG_WITHOUT_SYSLOG;
 
+    /* If the user forces syslog using --syslog-enable, we remove the
+     * LOG_WITHOUT_SYSLOG flag. It means all messages will go through syslog */
+    if (opts->syslog_enable != 0)
+        static_log_flag &= ~LOG_WITHOUT_SYSLOG;
+
     /* Parse the log facility as specified in the config struct. If, for some
      * reason, it is not, fac will already be set to LOG_DAEMON.
     */
@@ -154,6 +159,7 @@ log_msg(int level, char* msg, ...)
 {
     va_list ap, apse;
 
+    /* Make sure the level is in the right range */
     if ((level & LOG_VERBOSITY_MASK) > verbosity)
         return;
 
@@ -184,8 +190,7 @@ log_msg(int level, char* msg, ...)
         return;
     }
 
-    /* Remove the log to stderr flag from the log level value.
-    */
+    /* Remove the static log flags from the level */
     level &= LOG_VERBOSITY_MASK;
 
     /* Send the message to syslog.
