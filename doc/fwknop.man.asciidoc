@@ -282,6 +282,9 @@ GENERAL OPTIONS
     some extra information about the current command and the resulting SPA
     data.
 
+*--syslog-enable*::
+    Allow messages to be sent to syslog even if the foreground mode is set.
+
 *-V, --version*::
     Display version information and exit.
 

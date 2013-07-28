@@ -870,6 +870,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'v':
                 opts->verbose++;
                 break;
+            case SYSLOG_ENABLE:
+                opts->syslog_enable = 1;
+                break;
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
@@ -943,6 +946,8 @@ usage(void)
       "                           '<name>-old', and starting a new one.\n"
       " -S, --status            - Display the status of any running fwknopd process.\n"
       " -v, --verbose           - Set verbose mode.\n"
+      "     --syslog-enable     - Allow messages to be sent to syslog even if the\n"
+      "                           foreground mode is set.\n"
       " -V, --version           - Print version number.\n"
       "     --fw-list           - List all firewall rules that fwknop has created\n"
       "                           and then exit.\n"

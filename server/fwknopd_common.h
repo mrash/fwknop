@@ -492,6 +492,8 @@ typedef struct fko_srv_options
     */
     struct fw_config *fw_config;
 
+    /* Set to 1 when messages have to go through syslog, 0 otherwise */
+    unsigned char   syslog_enable;
 } fko_srv_options_t;
 
 extern fko_srv_options_t options;
