@@ -1,4 +1,12 @@
-fwknop-2.5 (//2013):
+fwknop-2.5.1 (07/25/2013):
+    - [client] Bug fix to reset terminal setting to orignal values after
+      entering keys via stdin.
+    - [server] Bug fix to not print pid file existence warning.  Reported by
+      Ilya Tumaykin to the fwknop list.
+    - [test suite] Bug fix to not run an iptables Rijndael HMAC test on
+      non-Linux systems.
+
+fwknop-2.5 (07/19/2013):
     - ***** IMPORTANT *****:  If you are upgrading from an older version of
       fwknop, you will want to read the "Backwards Compatibility" section of
       the fwknop tutorial available here:
@@ -25,17 +33,17 @@ fwknop-2.5 (//2013):
       is particularly true for GPG.  Beyond this, HMAC authenticated
       encryption in the encrypt-then-authenticate mode does not suffer from
       things like CBC-mode padding oracle attacks (see the Vaudenay attack and
-      the more recent "Lucky 13" attack against SSL).
+      the more recent "Lucky 13" attack against SSL).  HMAC verifications are
+      performed with a constant time comparison function.
     - [libfko] Significant bug fix to honor the full encryption key length for
       user-supplied Rijndael keys > 16 bytes long.  Previous to this fix,
       only the first 16 bytes of a key were actually used in the encryption/
       decryption process even if the supplied key was longer.  The result was
-      a weakening of expected security for users that had keys > 16 bytes,
-      although this is probably not too common.  Note that "passphrase" is
-      perhaps technically a better word for "user-supplied key" in this
-      context since the actual key is generated with the PBKDF1 key derivation
-      algorithm.  This issue was reported by Michael T. Dean.  Closes issue #18
-      on github.
+      a weakening of expected security for users that had keys > 16 bytes.
+      Note that "passphrase" is perhaps technically a better word for
+      "user-supplied key" in this context since the actual key is generated
+      with the PBKDF1 key derivation algorithm.  This issue was reported by
+      Michael T. Dean.  Closes issue #18 on github.
     - [libfko] Added the ability to maintain backwards compatibility with the
       now deprecated "zero padding" key derivation strategy in AES mode that
       was a hold over from the old perl fwknop implementation.  This is NOT

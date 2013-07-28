@@ -9,7 +9,7 @@
  *
  * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -176,7 +176,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
     return(got_err);
 }
 
-void
+int
 fw_config_init(fko_srv_options_t * const opts)
 {
     int         is_err;
@@ -193,7 +193,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_START_RULE_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_START_RULE_NUM], 0, RCHK_MAX_IPFW_MAX_RULES);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.max_rules = strtol_wrapper(opts->config[CONF_IPFW_MAX_RULES],
@@ -202,7 +202,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_MAX_RULES_INT '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_MAX_RULES], 0, RCHK_MAX_IPFW_MAX_RULES);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.active_set_num = strtol_wrapper(opts->config[CONF_IPFW_ACTIVE_SET_NUM],
@@ -211,7 +211,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_ACTIVE_SET_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_ACTIVE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.expire_set_num = strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_SET_NUM],
@@ -220,7 +220,7 @@ fw_config_init(fko_srv_options_t * const opts)
     {
         log_msg(LOG_ERR, "[*] IPFW_MAX_EXPIRE_SET_NUM '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_EXPIRE_SET_NUM], 0, RCHK_MAX_IPFW_SET_NUM);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     fwc.purge_interval = strtol_wrapper(opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL],
@@ -230,17 +230,17 @@ fw_config_init(fko_srv_options_t * const opts)
         log_msg(LOG_ERR, "[*] IPFW_EXPIRE_PURGE_INTERVAL '%s' out of range [%d-%d].",
                 opts->config[CONF_IPFW_EXPIRE_PURGE_INTERVAL], 0,
                 RCHK_MAX_IPFW_PURGE_INTERVAL);
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Let us find it via our opts struct as well.
     */
     opts->fw_config = &fwc;
 
-    return;
+    return 1;
 }
 
-void
+int
 fw_initialize(const fko_srv_options_t * const opts)
 {
     int             res = 0, is_err;
@@ -255,7 +255,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(res != 0)
     {
         log_msg(LOG_ERR, "[*] Fatal: Errors detected during ipfw rules initialization.");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Allocate our rule_map array for tracking active (and expired) rules.
@@ -265,7 +265,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(fwc.rule_map == NULL)
     {
         log_msg(LOG_ERR, "[*] Fatal: Memory allocation error in fw_initialize().");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Create a check-state rule if necessary.
@@ -340,7 +340,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(!EXTCMD_IS_SUCCESS(res))
     {
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
-        return;
+        return 0;
     }
 
     log_msg(LOG_DEBUG, "RULES LIST: %s", cmd_out);
@@ -352,7 +352,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     /* Assume no disabled rules if we did not see the string.
     */
     if(ndx == NULL)
-        return;
+        return 1;
 
     /* Otherwise we walk each line to pull the rule number and
      * set the appropriate rule map entries.
@@ -385,6 +385,8 @@ fw_initialize(const fko_srv_options_t * const opts)
         */
         ndx = strstr(ndx, "# DISABLED ");
     }
+
+    return 1;
 }
 
 int

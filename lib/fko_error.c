@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -111,6 +111,9 @@ fko_errstr(const int err_code)
         case FKO_ERROR_UNSUPPORTED_FEATURE:
             return("Unsupported or unimplemented feature or function");
 
+        case FKO_ERROR_ZERO_OUT_DATA:
+            return("Could not zero out sensitive data");
+
         case FKO_ERROR_UNKNOWN:
             return("Unknown/Unclassified error");
 
@@ -207,6 +210,12 @@ const char*
 fko_gpg_errstr(fko_ctx_t ctx)
 {
 #if HAVE_LIBGPGME
+
+    /* Must be initialized
+     */
+    if(!CTX_INITIALIZED(ctx))
+        return("");
+
     if(ctx->gpg_err)
         return(gpgme_strerror(ctx->gpg_err));
 #endif /* HAVE_LIBGPGME */

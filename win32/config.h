@@ -9,7 +9,7 @@
  *
  * Copyright (C) 2008 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *     This program is distributed in the hope that it will be useful,
  *     but WITHOUT ANY WARRANTY; without even the implied warranty of

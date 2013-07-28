@@ -9,7 +9,7 @@
  *
  * Copyright 2012 Michael Rash (mbr@cipherdyne.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -398,6 +398,52 @@ strtol_wrapper(const char * const str, const int min,
     return val;
 }
 
+/* zero out a buffer before free()
+*/
+int zero_free(char *buf, int len)
+{
+    int res = FKO_SUCCESS;
+
+    if(buf == NULL)
+        return res;
+
+    if(len == 0)
+    {
+        free(buf);  /* always free() if buf != NULL */
+        return res;
+    }
+
+    res = zero_buf(buf, len);
+
+    free(buf);
+
+    return res;
+}
+
+/* zero out sensitive information in a way that isn't optimized out by the compiler
+ * since we force a comparision and return an error if there is a problem (though
+ * the caller should do something with this information too).
+*/
+int
+zero_buf(char *buf, int len)
+{
+    int i, res = FKO_SUCCESS;
+
+    if(buf == NULL || len == 0)
+        return res;
+
+    if(len < 0 || len > MAX_SPA_ENCODED_MSG_SIZE)
+        return FKO_ERROR_ZERO_OUT_DATA;
+
+    for(i=0; i < len; i++)
+        buf[i] = 0x0;
+
+    for(i=0; i < len; i++)
+        if(buf[i] != 0x0)
+            res = FKO_ERROR_ZERO_OUT_DATA;
+
+    return res;
+}
 
 #if defined(WIN32) || !defined(HAVE_STRNDUP)
 /* Windows does not have strndup, so we well implement it here.

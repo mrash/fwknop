@@ -9,7 +9,7 @@
  *
  * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -631,6 +631,17 @@ free_acc_string_list(acc_string_list_t *stl)
     }
 }
 
+static void
+zero_buf_wrapper(char *buf, int len)
+{
+
+    if(zero_buf(buf, len) != FKO_SUCCESS)
+        log_msg(LOG_ERR,
+                "[*] Could not zero out sensitive data buffer.");
+
+    return;
+}
+
 /* Free any allocated content of an access stanza.
  *
  * NOTE: If a new access.conf parameter is created, and it is a string
@@ -663,16 +674,28 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->force_nat_ip);
 
     if(acc->key != NULL)
+    {
+        zero_buf_wrapper(acc->key, acc->key_len);
         free(acc->key);
+    }
 
     if(acc->key_base64 != NULL)
+    {
+        zero_buf_wrapper(acc->key_base64, strlen(acc->key_base64));
         free(acc->key_base64);
+    }
 
     if(acc->hmac_key != NULL)
+    {
+        zero_buf_wrapper(acc->hmac_key, acc->hmac_key_len);
         free(acc->hmac_key);
+    }
 
     if(acc->hmac_key_base64 != NULL)
+    {
+        zero_buf_wrapper(acc->hmac_key_base64, strlen(acc->hmac_key_base64));
         free(acc->hmac_key_base64);
+    }
 
     if(acc->cmd_exec_user != NULL)
         free(acc->cmd_exec_user);
@@ -863,7 +886,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 /* Perform some sanity checks on an acc stanza data.
 */
 static int
-acc_data_is_valid(const acc_stanza_t *acc)
+acc_data_is_valid(acc_stanza_t * const acc)
 {
     if(acc == NULL)
     {
@@ -881,6 +904,19 @@ acc_data_is_valid(const acc_stanza_t *acc)
             "[*] No keys found for access stanza source: '%s'", acc->source
         );
         return(0);
+    }
+
+    if(acc->use_rijndael && acc->key != NULL)
+    {
+        if((acc->encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV)
+                && (acc->key_len > 16))
+        {
+            log_msg(LOG_INFO,
+                "Warning: truncating encryption key in legacy mode to 16 bytes for access stanza source: '%s'",
+                acc->source
+            );
+            acc->key_len = 16;
+        }
     }
 
     if((acc->hmac_key_len) != 0 && (acc->hmac_key != NULL))
@@ -953,7 +989,8 @@ parse_access_file(fko_srv_options_t *opts)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]);
+    if(verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]) != 1)
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
     /* A note on security here: Coverity flags the following fopen() as a
      * Time of check time of use (TOCTOU) bug with a low priority due to the

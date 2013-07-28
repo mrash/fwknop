@@ -53,13 +53,11 @@ Noteworthy changes in version 0.0.0-alpha (2008-12-21)
    request that can be parsed by the Perl fwknopd server.
 
 
- Copyright 2009-2013, Damien Stuart
+ fwknop is distributed under the terms of the GNU General Public License
+ (GPL v2).
 
- This file is free software; as a special exception the author gives
- unlimited permission to copy and/or distribute it, with or without
- modifications, as long as this notice is preserved.
+ Copyright 2009-2013, Damien Stuart
 
  This file is distributed in the hope that it will be useful, but
  WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-

@@ -9,7 +9,7 @@
  *
  * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -59,7 +59,7 @@ enum {
     KEY_HMAC_BASE64,
     KEY_HMAC,
     FD_SET_STDIN,
-    FD_SET,
+    FD_SET_ALT,
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
@@ -91,7 +91,7 @@ static struct option cmd_opts[] =
     {"destination",         1, NULL, 'D'},
     {"save-args-file",      1, NULL, 'E'},
     {"encryption-mode",     1, NULL, ENCRYPTION_MODE},
-    {"fd",                  1, NULL, FD_SET},
+    {"fd",                  1, NULL, FD_SET_ALT},
     {"fw-timeout",          1, NULL, 'f'},
     {"gpg-encryption",      0, NULL, 'g'},
     {"gpg-recipient-key",   1, NULL, GPG_RECIP_KEY },

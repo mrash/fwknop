@@ -11,7 +11,7 @@ libfko_source_files = \
     gpgme_funcs.c gpgme_funcs.h strlcpy.c strlcat.c fko_util.c fko_util.h
 
 libfko_la_SOURCES   		= $(libfko_source_files)
-libfko_la_LDFLAGS   		= -version-info 1:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
+libfko_la_LDFLAGS   		= -version-info 2:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
 
 AM_CPPFLAGS         		= $(GPGME_CFLAGS) -I $(top_srcdir)/common
 

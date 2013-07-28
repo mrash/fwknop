@@ -9,7 +9,7 @@
  *
  * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -181,7 +181,8 @@ main(int argc, char **argv)
          * via fw_rules_dump() in --fw-list mode before changing around any rules
          * of an existing fwknopd process.
         */
-        fw_config_init(&opts);
+        if(fw_config_init(&opts) != 1)
+            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
         if(opts.fw_list == 1 || opts.fw_list_all == 1)
         {
@@ -286,7 +287,8 @@ main(int argc, char **argv)
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
         */
-        fw_initialize(&opts);
+        if(fw_initialize(&opts) != 1)
+            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
         /* If the TCP server option was set, fire it up here.
         */
@@ -695,13 +697,18 @@ get_running_pid(const fko_srv_options_t *opts)
     pid_t   rpid            = 0;
 
 
-    verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]);
+    if(verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]) != 1)
+    {
+        fprintf(stderr, "verify_file_perms_ownership() error\n");
+        return(rpid);
+    }
 
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 
     if(op_fd == -1)
     {
-        perror("Error trying to open PID file: ");
+        if((opts->foreground != 0) && (opts->verbose != 0))
+            perror("Error trying to open PID file: ");
         return(rpid);
     }
 

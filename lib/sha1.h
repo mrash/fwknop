@@ -10,7 +10,7 @@
  *
  * Copyright (C) 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License

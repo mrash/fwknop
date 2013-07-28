@@ -7,7 +7,7 @@
  *
  * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -202,7 +202,7 @@ is_valid_dir(const char *path)
     {
         log_msg(LOG_ERR, "[-] unable to stat() directory: %s: %s",
             path, strerror(errno));
-        exit(EXIT_FAILURE);
+        return(0);
     }
 
     if(!S_ISDIR(st.st_mode))
@@ -216,53 +216,64 @@ int
 verify_file_perms_ownership(const char *file)
 {
     int res = 1;
+
 #if HAVE_STAT
     struct stat st;
 
     /* Every file that fwknopd deals with should be owned
      * by the user and permissions set to 600 (user read/write)
     */
-    if((stat(file, &st)) != 0)
+    if((stat(file, &st)) == 0)
+    {
+        /* Make sure it is a regular file
+        */
+        if(S_ISREG(st.st_mode) != 1 && S_ISLNK(st.st_mode) != 1)
+        {
+            log_msg(LOG_WARNING,
+                "[-] file: %s is not a regular file or symbolic link.",
+                file
+            );
+            /* when we start in enforcing this instead of just warning
+             * the user
+            res = 0;
+            */
+        }
+
+        if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
+        {
+            log_msg(LOG_WARNING,
+                "[-] file: %s permissions should only be user read/write (0600, -rw-------)",
+                file
+            );
+            /* when we start in enforcing this instead of just warning
+             * the user
+            res = 0;
+            */
+        }
+
+        if(st.st_uid != getuid())
+        {
+            log_msg(LOG_WARNING, "[-] file: %s not owned by current effective user id",
+                file);
+            /* when we start in enforcing this instead of just warning
+             * the user
+            res = 0;
+            */
+        }
+    }
+    else
     {
         /* if the path doesn't exist, just return, but otherwise something
          * went wrong
         */
-        if(errno == ENOENT)
+        if(errno != ENOENT)
         {
-            return 0;
-        } else {
             log_msg(LOG_ERR, "[-] stat() against file: %s returned: %s",
                 file, strerror(errno));
-            exit(EXIT_FAILURE);
+            res = 0;
         }
     }
 
-    /* Make sure it is a regular file
-    */
-    if(S_ISREG(st.st_mode) != 1 && S_ISLNK(st.st_mode) != 1)
-    {
-        log_msg(LOG_WARNING,
-            "[-] file: %s is not a regular file or symbolic link.",
-            file
-        );
-        res = 0;
-    }
-
-    if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
-    {
-        log_msg(LOG_WARNING,
-            "[-] file: %s permissions should only be user read/write (0600, -rw-------)",
-            file
-        );
-        res = 0;
-    }
-
-    if(st.st_uid != getuid())
-    {
-        log_msg(LOG_WARNING, "[-] file: %s not owned by current effective user id",
-            file);
-        res = 0;
-    }
 #endif
 
     return res;

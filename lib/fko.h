@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -149,6 +149,7 @@ typedef enum {
     FKO_ERROR_INVALID_HMAC_KEY_LEN,
     FKO_ERROR_UNSUPPORTED_HMAC_MODE,
     FKO_ERROR_UNSUPPORTED_FEATURE,
+    FKO_ERROR_ZERO_OUT_DATA,
     FKO_ERROR_UNKNOWN,
 
     /* Start GPGME-related errors */
@@ -234,13 +235,13 @@ enum {
 
 /* Function prototypes */
 
-/* General api calls
+/* General API calls
 */
 DLL_API int fko_new(fko_ctx_t *ctx);
 DLL_API int fko_new_with_data(fko_ctx_t *ctx, const char * const enc_msg,
     const char * const dec_key, const int dec_key_len, int encryption_mode,
     const char * const hmac_key, const int hmac_key_len, const int hmac_type);
-DLL_API void fko_destroy(fko_ctx_t ctx);
+DLL_API int fko_destroy(fko_ctx_t ctx);
 DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char * const enc_key,
     const int enc_key_len, const char * const hmac_key, const int hmac_key_len);
 

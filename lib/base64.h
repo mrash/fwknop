@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License

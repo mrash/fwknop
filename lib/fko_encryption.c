@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -51,6 +51,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     unsigned char  *ciphertext;
     int             cipher_len;
     int             pt_len;
+    int             zero_free_rv = FKO_SUCCESS;
 
     if(enc_key_len > RIJNDAEL_MAX_KEYSIZE)
         return(FKO_ERROR_INVALID_KEY_LEN);
@@ -84,13 +85,14 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if(plaintext == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-
     pt_len = snprintf(plaintext, pt_len, "%s:%s", ctx->encoded_msg, ctx->digest);
 
     if(! is_valid_pt_msg_len(pt_len))
     {
-        free(plaintext);
-        return(FKO_ERROR_INVALID_DATA);
+        if(zero_free(plaintext, pt_len) == FKO_SUCCESS)
+            return(FKO_ERROR_INVALID_DATA);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
     }
 
     /* Make a bucket for the encrypted version and populate it.
@@ -98,8 +100,10 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     ciphertext = calloc(1, pt_len + 32); /* Plus padding for salt and Block */
     if(ciphertext == NULL)
     {
-        free(plaintext);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+        if(zero_free(plaintext, pt_len) == FKO_SUCCESS)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
     }
 
     cipher_len = rij_encrypt(
@@ -113,25 +117,34 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     b64ciphertext = malloc(((cipher_len / 3) * 4) + 8);
     if(b64ciphertext == NULL)
     {
-        free(ciphertext);
-        free(plaintext);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+        if(zero_free((char *) ciphertext, pt_len+32) == FKO_SUCCESS
+                && zero_free(plaintext, pt_len) == FKO_SUCCESS)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
     }
 
     b64_encode(ciphertext, b64ciphertext, cipher_len);
     strip_b64_eq(b64ciphertext);
 
     if(ctx->encrypted_msg != NULL)
-        free(ctx->encrypted_msg);
+        zero_free_rv = zero_free(ctx->encrypted_msg,
+                strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE));
 
     ctx->encrypted_msg     = strdup(b64ciphertext);
     ctx->encrypted_msg_len = strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     /* Clean-up
     */
-    free(plaintext);
-    free(ciphertext);
-    free(b64ciphertext);
+    if(zero_free(plaintext, pt_len) != FKO_SUCCESS)
+        zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
+
+    if(zero_free((char *) ciphertext, pt_len+32) != FKO_SUCCESS)
+        zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
+
+    if(zero_free(b64ciphertext, strnlen(b64ciphertext,
+                    MAX_SPA_ENCODED_MSG_SIZE)) != FKO_SUCCESS)
+        zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -139,7 +152,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if(! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
-    return(FKO_SUCCESS);
+    return(zero_free_rv);
 }
 
 /* Decode, decrypt, and parse SPA data into the context.
@@ -151,6 +164,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
     unsigned char  *ndx;
     unsigned char  *cipher;
     int             cipher_len, pt_len, i, err = 0, res = FKO_SUCCESS;
+    int             zero_free_rv = FKO_SUCCESS;
 
     if(key_len > RIJNDAEL_MAX_KEYSIZE)
         return(FKO_ERROR_INVALID_KEY_LEN);
@@ -174,8 +188,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
 
     if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
     {
-        free(cipher);
-        return(FKO_ERROR_INVALID_DATA);
+        if(zero_free((char *)cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
+            return(FKO_ERROR_INVALID_DATA);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
     }
 
     /* Since we're using AES, make sure the incoming data is a multiple of
@@ -183,12 +199,15 @@ _rijndael_decrypt(fko_ctx_t ctx,
     */
     if((cipher_len % RIJNDAEL_BLOCKSIZE) != 0)
     {
-        free(cipher);
-        return(FKO_ERROR_INVALID_DATA);
+        if(zero_free((char *)cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
+            return(FKO_ERROR_INVALID_DATA);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
     }
 
     if(ctx->encoded_msg != NULL)
-        free(ctx->encoded_msg);
+        zero_free_rv = zero_free(ctx->encoded_msg,
+                strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE));
 
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
@@ -196,8 +215,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
     ctx->encoded_msg = malloc(cipher_len);
     if(ctx->encoded_msg == NULL)
     {
-        free(cipher);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+        if(zero_free((char *)cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
     }
 
     pt_len = rij_decrypt(cipher, cipher_len, dec_key, key_len,
@@ -205,7 +226,8 @@ _rijndael_decrypt(fko_ctx_t ctx,
 
     /* Done with cipher...
     */
-    free(cipher);
+    if(zero_free((char *)cipher, ctx->encrypted_msg_len) != FKO_SUCCESS)
+        zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     /* The length of the decrypted data should be within 32 bytes of the
      * length of the encrypted version.
@@ -218,6 +240,9 @@ _rijndael_decrypt(fko_ctx_t ctx,
 
     if(! is_valid_encoded_msg_len(pt_len))
         return(FKO_ERROR_INVALID_DATA);
+
+    if(zero_free_rv != FKO_SUCCESS)
+        return(zero_free_rv);
 
     ctx->encoded_msg_len = pt_len;
 
@@ -249,7 +274,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 {
     int             res;
     char           *plain;
-    int             pt_len;
+    int             pt_len, zero_free_rv = FKO_SUCCESS;
     char           *b64cipher;
     unsigned char  *cipher = NULL;
     size_t          cipher_len;
@@ -292,8 +317,10 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 
     if(! is_valid_pt_msg_len(pt_len))
     {
-        free(plain);
-        return(FKO_ERROR_INVALID_DATA);
+        if(zero_free(plain, pt_len) == FKO_SUCCESS)
+            return(FKO_ERROR_INVALID_DATA);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
     }
 
     if (enc_key != NULL)
@@ -313,12 +340,16 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     */
     if(res != FKO_SUCCESS)
     {
-        free(plain);
+        zero_free_rv = zero_free(plain, pt_len);
 
         if(cipher != NULL)
-            free(cipher);
+            if(zero_free((char *) cipher, cipher_len) != FKO_SUCCESS)
+                zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
-        return(res);
+        if(zero_free_rv == FKO_SUCCESS)
+            return(res);
+        else
+            return(zero_free_rv);
     }
 
     /* Now make a bucket for the base64-encoded version and populate it.
@@ -326,26 +357,40 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     b64cipher = malloc(((cipher_len / 3) * 4) + 8);
     if(b64cipher == NULL)
     {
-        free(plain);
+        if(zero_free(plain, pt_len) != FKO_SUCCESS)
+            zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
+
         if(cipher != NULL)
-            free(cipher);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+            if(zero_free((char *) cipher, cipher_len) != FKO_SUCCESS)
+                zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
+
+        if(zero_free_rv == FKO_SUCCESS)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        else
+            return(zero_free_rv);
     }
 
     b64_encode(cipher, b64cipher, cipher_len);
     strip_b64_eq(b64cipher);
 
     if(ctx->encrypted_msg != NULL)
-        free(ctx->encrypted_msg);
+        zero_free_rv = zero_free(ctx->encrypted_msg,
+                strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE));
 
     ctx->encrypted_msg     = strdup(b64cipher);
     ctx->encrypted_msg_len = strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     /* Clean-up
     */
-    free(plain);
-    free(cipher);
-    free(b64cipher);
+    if(zero_free(plain, pt_len) != FKO_SUCCESS)
+        zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
+
+    if(zero_free((char *) cipher, cipher_len) != FKO_SUCCESS)
+        zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
+
+    if(zero_free(b64cipher, strnlen(b64cipher,
+                    MAX_SPA_ENCODED_MSG_SIZE)) != FKO_SUCCESS)
+        zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -353,7 +398,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     if(! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
         return(FKO_ERROR_INVALID_DATA);
 
-    return(FKO_SUCCESS);
+    return(zero_free_rv);
 }
 
 /* Prep and decrypt using gpgme
@@ -380,8 +425,11 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 
     if((b64_decode_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
     {
-        free(cipher);
-        return(FKO_ERROR_INVALID_DATA);
+        if(zero_free((char *) cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
+            return(FKO_ERROR_INVALID_DATA);
+        else
+            return(FKO_ERROR_ZERO_OUT_DATA);
+
     }
 
     cipher_len = b64_decode_len;
@@ -402,10 +450,13 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 
     /* Done with cipher...
     */
-    free(cipher);
-
     if(res != FKO_SUCCESS)
-        return(res);
+    {
+        if(zero_free((char *) cipher, ctx->encrypted_msg_len) != FKO_SUCCESS)
+            return(FKO_ERROR_ZERO_OUT_DATA);
+        else
+            return(res);
+    }
 
     pt_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
 

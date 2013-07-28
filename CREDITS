@@ -146,3 +146,6 @@ Blair Zajac
     - Reported an issue where strndup() is not available on some PPC systems
       and the fix is to use the local lib/fko_util.c implementation similarly
       to Windows builds.
+    - Suggested throwing an error in '-M legacy' mode to warn users about the
+      inability of older fwknopd daemons to handle Rijndael keys > 16 bytes.
+      Any release after and including 2.5 does not have this limitation.

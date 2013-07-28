@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -36,6 +36,10 @@
 #include "utils.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifdef WIN32
+  #define STDIN_FILENO 0
+#endif
 
 #define RC_PARAM_TEMPLATE           "%-24s    %s\n"                     /*!< Template to define param = val in a rc file */
 #define RC_SECTION_DEFAULT          "default"                           /*!< Name of the default section in fwknoprc */
@@ -612,7 +616,8 @@ set_rc_file(char *rcfile, fko_cli_options_t *options)
      * client consumes a proper rc file with strict permissions set (thanks
      * to Fernando Arnaboldi from IOActive for pointing this out).
     */
-    verify_file_perms_ownership(rcfile);
+    if(verify_file_perms_ownership(rcfile) != 1)
+        exit(EXIT_FAILURE);
 
     return;
 }
@@ -1698,6 +1703,14 @@ validate_options(fko_cli_options_t *options)
         exit(EXIT_FAILURE);
     }
 
+    if(options->encryption_mode == FKO_ENC_MODE_CBC_LEGACY_IV
+            && options->use_hmac)
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+            "Legacy encryption mode is incompatible with HMAC usage.");
+        exit(EXIT_FAILURE);
+    }
+
     /* Validate HMAC digest type
     */
     if(options->use_hmac && options->hmac_type == FKO_HMAC_UNKNOWN)
@@ -2129,10 +2142,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case FD_SET_STDIN:
                 options->input_fd = STDIN_FILENO;
                 break;
-            case FD_SET:
+            case FD_SET_ALT:
+#ifdef WIN32
+                log_msg(LOG_VERBOSITY_ERROR, "Read password from FD not supported on Windows");
+                exit(EXIT_FAILURE);
+#endif
                 options->input_fd = strtol_wrapper(optarg, 0,
                         -1, EXIT_UPON_ERR, &is_err);
-                break;                
+                break;
             default:
                 usage();
                 exit(EXIT_FAILURE);
@@ -2189,6 +2206,8 @@ usage(void)
       "                             packet (e.g. '123.2.3.4').  If \n"
       " -D, --destination           Specify the hostname or IP address of the\n"
       "                             fwknop server.\n"
+      " --use-hmac                  Add an HMAC to the outbound SPA packet for\n"
+      "                             authenticated encryption.\n"
       " -h, --help                  Print this usage message and exit.\n"
       " -B, --save-packet           Save the generated packet data to the\n"
       "                             specified file.\n"
@@ -2228,9 +2247,9 @@ usage(void)
       "                             line args as the last time it was executed\n"
       "                             (args are read from the ~/.fwknop.run file).\n"
       " -G, --get-key               Load an encryption key/password from a file.\n"
-      "     --stdin                 Read the encryption key/password from stdin\n"      
+      "     --stdin                 Read the encryption key/password from stdin\n"
       "     --fd                    Specify the file descriptor to read the\n"
-      "                             encryption key/password from.\n"      
+      "                             encryption key/password from.\n"
       " -k, --key-gen               Generate SPA Rijndael + HMAC keys.\n"
       " -K, --key-gen-file          Write generated Rijndael + HMAC keys to a\n"
       "                             file\n"

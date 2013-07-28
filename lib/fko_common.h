@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -116,7 +116,7 @@
 #ifndef BYTEORDER
   #if defined(_BIG_ENDIAN) || defined(__BIG_ENDIAN__)
     #define BYTEORDER 4321
-  #elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__)
+  #elif defined(_LITTLE_ENDIAN) || defined(__LITTLE_ENDIAN__) || defined(WIN32)
     #define BYTEORDER 1234
   #endif
 #endif

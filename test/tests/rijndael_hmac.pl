@@ -931,13 +931,12 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => 'fw rules not duplicated',
+        'detail'   => 'iptables rules not duplicated',
         'function' => \&iptables_rules_not_duplicated,
         'cmdline'  => "$default_client_hmac_args --test",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_negative_output_matches' => [qr/^2\s+ACCEPT\s.*$fake_ip/],
         'key_file' => $cf{'rc_hmac_b64_key'},
         'fatal'    => $NO
     },

@@ -10,7 +10,7 @@
  * Copyright 2011 Damien Stuart (dstuart@dstuart.org),
  *                Michael Rash (mbr@cipherdyne.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -142,7 +142,7 @@ delete_all_anchor_rules(const fko_srv_options_t *opts)
     return;
 }
 
-void
+int
 fw_config_init(fko_srv_options_t * const opts)
 {
     memset(&fwc, 0x0, sizeof(struct fw_config));
@@ -159,10 +159,10 @@ fw_config_init(fko_srv_options_t * const opts)
     */
     opts->fw_config = &fwc;
 
-    return;
+    return 1;
 }
 
-void
+int
 fw_initialize(const fko_srv_options_t * const opts)
 {
 
@@ -170,14 +170,14 @@ fw_initialize(const fko_srv_options_t * const opts)
     {
         log_msg(LOG_WARNING,
                 "Warning: the fwknop anchor is not active in the pf policy");
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* Delete any existing rules in the fwknop anchor
     */
     delete_all_anchor_rules(opts);
 
-    return;
+    return 1;
 }
 
 int

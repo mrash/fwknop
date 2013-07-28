@@ -9,7 +9,7 @@
  *
  * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -78,7 +78,7 @@ fw_config_init(fko_srv_options_t *opts)
     */
     opts->fw_config = &fwc;
 
-    return;
+    return 1;
 }
 
 void
@@ -92,8 +92,9 @@ fw_initialize(const fko_srv_options_t *opts)
     {
         log_msg(LOG_WARNING,
                 "Warning: Errors detected during fw_initialize().");
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return 0;
     }
+    return 1;
 }
 
 int

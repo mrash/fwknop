@@ -9,7 +9,7 @@
  *
  * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -83,6 +83,7 @@
   #define snprintf		_snprintf
   #define unlink		_unlink
   #define open			_open
+  #define fdopen        _fdopen
   #define close			_close
   #define write			_write
   #define O_WRONLY		_O_WRONLY

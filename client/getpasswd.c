@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -67,6 +67,9 @@ read_passwd_from_stream(FILE *stream)
     char           *ptr;
 
     ptr = ARRAY_FIRST_ELT_ADR(password);
+
+    if(stream == NULL)
+        return password;
 
 #ifdef WIN32
     while((c = _getch()) != PW_CR_CHAR)
@@ -127,12 +130,17 @@ read_passwd_from_stream(FILE *stream)
 char*
 getpasswd(const char *prompt, int fd)
 {
-    char *ptr;
-    
+    char           *ptr = NULL;
+    FILE           *fp  = NULL;
+
 #ifndef WIN32
     sigset_t        sig, old_sig;
-    struct termios  ts, old_ts;
-    FILE           *fp;
+    struct termios  ts;
+    tcflag_t        old_c_lflag = 0;
+#else
+	/* Force stdin on windows. */
+	fd = 0;
+#endif
 
     /* If a valid file descriptor is supplied, we try to open a stream from it */
     if (FD_IS_VALID(fd))
@@ -143,10 +151,11 @@ getpasswd(const char *prompt, int fd)
             log_msg(LOG_VERBOSITY_ERROR, "getpasswd() - "
                 "Unable to create a stream from the file descriptor : %s",
                 strerror(errno));
-            exit(EXIT_FAILURE);
+            return(NULL);
         }
     }
 
+#ifndef WIN32
     /* Otherwise we are going to open a new stream */
     else
     {
@@ -170,7 +179,7 @@ getpasswd(const char *prompt, int fd)
         *   - disable cannonical mode (input read line by line mode)
         */
         tcgetattr(fileno(fp), &ts);
-        old_ts = ts;
+        old_c_lflag = ts.c_lflag;
         ts.c_lflag &= ~(ECHO | ICANON | ISIG);
         tcsetattr(fileno(fp), TCSAFLUSH, &ts);
 
@@ -179,39 +188,33 @@ getpasswd(const char *prompt, int fd)
 #else
     _cputs(prompt);
 #endif
-
     /* Read the password */
     ptr = read_passwd_from_stream(fp);
 
-#ifndef WIN32
-
-    /* If we used a new buffered stream */
-    if (FD_IS_VALID(fd) == 0)
-    {
-        /* we can go ahead and echo out a newline.
-        */
-        putc(PW_LF_CHAR, fp);
-
-        /* Restore our tty state and signal handlers.
-        */
-        tcsetattr(fileno(fp), TCSAFLUSH, &old_ts);
-        sigprocmask(SIG_BLOCK, &old_sig, NULL);
-    }
-
-    fclose(fp);
-#else
+#ifdef WIN32
     /* In Windows, it would be a CR-LF
      */
     _putch(PW_CR_CHAR);
     _putch(PW_LF_CHAR);
+#else
+    if(! FD_IS_VALID(fd))
+    {
+        /* Reset terminal settings
+        */
+        fputs("\n", fp);
+        ts.c_lflag = old_c_lflag;
+        tcsetattr(fileno(fp), TCSAFLUSH, &ts);
+    }
 #endif
+
+    fclose(fp);
 
     return (ptr);
 }
 
 /* Function for accepting password input from a file
 */
-void
+int
 get_key_file(char *key, int *key_len, const char *key_file,
     fko_ctx_t ctx, const fko_cli_options_t *options)
 {
@@ -227,9 +230,7 @@ get_key_file(char *key, int *key_len, const char *key_file,
     if ((pwfile_ptr = fopen(key_file, "r")) == NULL)
     {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open config file: %s", key_file);
-        fko_destroy(ctx);
-        ctx = NULL;
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     while ((fgets(conf_line_buf, MAX_LINE_LEN, pwfile_ptr)) != NULL)
@@ -284,14 +285,12 @@ get_key_file(char *key, int *key_len, const char *key_file,
     if (key[0] == '\0') {
         log_msg(LOG_VERBOSITY_ERROR, "Could not get key for IP: %s from: %s",
             options->spa_server_str, key_file);
-        fko_destroy(ctx);
-        ctx = NULL;
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     *key_len = strlen(key);
 
-    return;
+    return 1;
 }
 
 /***EOF***/

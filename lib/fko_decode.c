@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -73,22 +73,27 @@ fko_decode_spa_data(fko_ctx_t ctx)
     {
         case MD5_B64_LEN:
             ctx->digest_type = FKO_DIGEST_MD5;
+            ctx->digest_len  = MD5_B64_LEN;
             break;
 
         case SHA1_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA1;
+            ctx->digest_len  = SHA1_B64_LEN;
             break;
 
         case SHA256_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA256;
+            ctx->digest_len  = SHA256_B64_LEN;
             break;
 
         case SHA384_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA384;
+            ctx->digest_len  = SHA384_B64_LEN;
             break;
 
         case SHA512_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA512;
+            ctx->digest_len  = SHA512_B64_LEN;
             break;
 
         default: /* Invalid or unsupported digest */

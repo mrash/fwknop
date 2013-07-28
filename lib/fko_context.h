@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -55,6 +55,7 @@ typedef struct fko_gpg_sig *fko_gpg_sig_t;
 /* The pieces we need to make an FKO  SPA data packet.
 */
 struct fko_context {
+
     /* FKO SPA user-definable message data */
     char           *rand_val;
     char           *username;

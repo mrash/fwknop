@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -45,6 +45,8 @@ short   digest_inttostr(int digest, char* digest_str, size_t digest_size);
 short   hmac_digest_strtoint(const char *dt_str);
 short   hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size);
 int     constant_runtime_cmp(const char *a, const char *b, int len);
+int     zero_free(char *buf, int len);
+int     zero_buf(char *buf, int len);
 
 const char * enc_type_inttostr(const int type);
 const char * msg_type_inttostr(const int type);

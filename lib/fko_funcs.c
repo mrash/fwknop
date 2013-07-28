@@ -9,7 +9,7 @@
  *
  * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
  *
- *  License (GNU Public License):
+ *  License (GNU General Public License):
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License
@@ -285,15 +285,17 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
 
 /* Destroy a context and free its resources
 */
-void
+int
 fko_destroy(fko_ctx_t ctx)
 {
+    int zero_free_rv = FKO_SUCCESS;
+
 #if HAVE_LIBGPGME
     fko_gpg_sig_t   gsig, tgsig;
 #endif
 
     if(!CTX_INITIALIZED(ctx))
-        return;
+        return(zero_free_rv);
 
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
@@ -314,19 +316,24 @@ fko_destroy(fko_ctx_t ctx)
         free(ctx->server_auth);
 
     if(ctx->digest != NULL)
-        free(ctx->digest);
+        if(zero_free(ctx->digest, ctx->digest_len) != FKO_SUCCESS)
+            zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->raw_digest != NULL)
-        free(ctx->raw_digest);
+        if(zero_free(ctx->raw_digest, ctx->raw_digest_len) != FKO_SUCCESS)
+            zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->encoded_msg != NULL)
-        free(ctx->encoded_msg);
+        if(zero_free(ctx->encoded_msg, ctx->encoded_msg_len) != FKO_SUCCESS)
+            zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->encrypted_msg != NULL)
-        free(ctx->encrypted_msg);
+        if(zero_free(ctx->encrypted_msg, ctx->encrypted_msg_len) != FKO_SUCCESS)
+            zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
     if(ctx->msg_hmac != NULL)
-        free(ctx->msg_hmac);
+        if(zero_free(ctx->msg_hmac, ctx->msg_hmac_len) != FKO_SUCCESS)
+            zero_free_rv = FKO_ERROR_ZERO_OUT_DATA;
 
 #if HAVE_LIBGPGME
     if(ctx->gpg_exe != NULL)
@@ -364,9 +371,11 @@ fko_destroy(fko_ctx_t ctx)
 
 #endif /* HAVE_LIBGPGME */
 
-    bzero(ctx, sizeof(*ctx));
+    memset(ctx, 0x0, sizeof(*ctx));
 
     free(ctx);
+
+    return(zero_free_rv);
 }
 
 /* Generate Rijndael and HMAC keys from /dev/random and base64
@@ -491,7 +500,8 @@ fko_spa_data_final(fko_ctx_t ctx,
 
             strlcat(tbuf, ctx->msg_hmac, data_with_hmac_len);
 
-            ctx->encrypted_msg = tbuf;
+            ctx->encrypted_msg     = tbuf;
+            ctx->encrypted_msg_len = data_with_hmac_len;
         }
     }
 
