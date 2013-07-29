@@ -139,6 +139,9 @@ COMMAND-LINE OPTIONS
     running.  If there is an existing fwknopd process then 0 is returned for the
     exit status and 1 is returned otherwise.
 
+*--syslog-enable*::
+    Allow messages to be sent to syslog even if the foreground mode is set.
+
 *-v, --verbose*::
     Run *fwknopd* in verbose mode. This can option can be specified
     multiple times to increase the verbosity of the output to the system
