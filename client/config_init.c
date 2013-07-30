@@ -566,6 +566,9 @@ is_rc_param(const char *line, rc_file_param_t *param)
 /**
  * @brief Dump available stanzas from an fwknoprc file
  *
+ * This function parses an rcfile and looks for the stanzas
+ * configured. They are a ll displayed except the default stanza.
+ * 
  * @param rcfile path to the rcfile to parse
  */
 static void
