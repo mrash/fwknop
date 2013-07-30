@@ -564,12 +564,12 @@ is_rc_param(const char *line, rc_file_param_t *param)
 }
 
 /**
- * @brief Dump available stanzas from an fwknoprc file
+ * @brief Dump available stanzas from a fwknoprc file
  *
- * This function parses an rcfile and looks for the stanzas
- * configured. They are a ll displayed except the default stanza.
+ * This function parses a rcfile and looks for configured stanzas.
+ * They are all displayed except the default stanza.
  * 
- * @param rcfile path to the rcfile to parse
+ * @param rcfile full path to the rcfile to parse
  */
 static void
 dump_configured_stanzas_from_rcfile(const char* rcfile)
