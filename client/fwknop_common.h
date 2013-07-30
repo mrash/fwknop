@@ -161,6 +161,7 @@ typedef struct fko_cli_options
     unsigned char   got_named_stanza;
     unsigned char   save_rc_stanza;
     unsigned char   force_save_rc_stanza;
+    unsigned char   stanza_list;
 
     int input_fd;
 
