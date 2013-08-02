@@ -525,10 +525,25 @@ my @tests = (
     @os_compatibility,
     @perl_FKO_module,
     @python_fko,
+
+    {
+        'category' => 'Look for crashes',
+        'detail'   => 'checking for segfaults (1)',
+        'function' => \&look_for_crashes,
+        'fatal'    => $NO
+    },
+
     @gpg_no_pw,
     @gpg_no_pw_hmac,
     @gpg,
     @gpg_hmac,
+
+    {
+        'category' => 'Look for crashes',
+        'detail'   => 'checking for segfaults (2)',
+        'function' => \&look_for_crashes,
+        'fatal'    => $NO
+    }
 );
 
 &validate_test_hashes();
@@ -1025,6 +1040,23 @@ sub test_suite_conf_files() {
                     $curr_test_file);
                 $rv = 0;
             }
+        }
+    }
+
+    return $rv;
+}
+
+sub look_for_crashes() {
+    my $rv = 1;
+
+    for my $f (glob("$output_dir/*")) {
+
+        next if -d $f;
+        next unless $f =~ /\.test$/;
+
+        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
+                $MATCH_ANY, $APPEND_RESULTS, $f)) {
+            $rv = 0;
         }
     }
 
