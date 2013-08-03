@@ -37,6 +37,8 @@ our $lib_dir = '../lib/.libs';
 
 our %cf = (
     'nat'                          => "$conf_dir/nat_fwknopd.conf",
+    'snat'                         => "$conf_dir/snat_fwknopd.conf",
+    'snat_no_translate_ip'         => "$conf_dir/snat_no_translate_ip_fwknopd.conf",
     'def'                          => "$conf_dir/default_fwknopd.conf",
     'def_access'                   => "$conf_dir/default_access.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",

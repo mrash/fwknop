@@ -699,6 +699,19 @@
     },
     {
         'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'SNAT require translate IP',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'snat_no_translate_ip'} -f -a $cf{'def_access'} -d " .
+            "$default_digest_file -p $default_pid_file --packet-limit 1 $intf_str ",
+        'positive_output_matches' => [qr/Must\sspecify\sSNAT_TRANSLATE_IP/],
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => 'encryption mode CBC',
         'function' => \&generic_exec,
