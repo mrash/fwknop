@@ -87,7 +87,7 @@ pcap_capture(fko_srv_options_t *opts)
 
     /* Set promiscuous mode if ENABLE_PCAP_PROMISC is set to 'Y'.
     */
-    if(opts->config[CONF_ENABLE_PCAP_PROMISC][0] == 'Y')
+    if(strncasecmp(opts->config[CONF_ENABLE_PCAP_PROMISC], "Y", 1) == 0)
         promisc = 1;
 
     if(opts->config[CONF_PCAP_FILE] != NULL
