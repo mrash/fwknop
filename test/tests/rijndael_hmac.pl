@@ -761,7 +761,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => "iptables SNAT $internal_nat_host",
+        'detail'   => "SNAT $internal_nat_host",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             "$cf{'rc_hmac_b64_key'} -N $internal_nat_host:22",
@@ -780,7 +780,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => "iptables SNAT MASQUERADE",
+        'detail'   => "SNAT MASQUERADE",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             "$cf{'rc_hmac_b64_key'} -N $internal_nat_host:22",

@@ -800,6 +800,43 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => "SNAT $internal_nat_host",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -N $internal_nat_host:22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'snat'} -a $cf{'open_ports_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
+            qr/to\:$internal_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'snat'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "SNAT MASQUERADE",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args -N $internal_nat_host:22",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'snat_no_translate_ip'} -a $cf{'open_ports_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
+            qr/to\:$internal_nat_host\:22/i,
+            qr/MASQUERADE\s.*to\-ports/,
+        ],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'snat_no_translate_ip'},
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => "NAT hostname->IP (tcp/22 ssh)",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N localhost:22",
