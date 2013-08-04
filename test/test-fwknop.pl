@@ -1021,10 +1021,7 @@ sub test_suite_conf_files() {
         next if -d $f;
         next unless $f =~ /\.conf/ or $f =~ /fwknop/;
         if ($f =~ m|$conf_dir/(\S+)|) {
-            if (defined $makefile_conf_files{$1}) {
-                &write_test_file("[+] test suite conf file $1 is in $make_file.\n",
-                    $curr_test_file);
-            } else {
+            unless (defined $makefile_conf_files{$1}) {
                 &write_test_file("[-] test suite conf file $1 not in $make_file.\n",
                     $curr_test_file);
                 $rv = 0;
@@ -1034,10 +1031,7 @@ sub test_suite_conf_files() {
 
     for my $f (glob("$tests_dir/*.pl")) {
         if ($f =~ m|$tests_dir/(\S+)|) {
-            if (defined $makefile_test_scripts{$1}) {
-                &write_test_file("[+] test suite script file $1 is in $make_file.\n",
-                    $curr_test_file);
-            } else {
+            unless (defined $makefile_test_scripts{$1}) {
                 &write_test_file("[-] test suite script file $1 not in $make_file.\n",
                     $curr_test_file);
                 $rv = 0;
