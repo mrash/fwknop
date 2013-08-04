@@ -1057,7 +1057,9 @@ sub look_for_crashes() {
         next unless $f =~ /\.test$/;
 
         if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
-                $MATCH_ANY, $APPEND_RESULTS, $f)) {
+                $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
+            &write_test_file("[-] segfault or core dump message found in: $f\n",
+                $curr_test_file);
             $rv = 0;
         }
     }
