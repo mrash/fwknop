@@ -1237,7 +1237,8 @@ process_spa_request(const fko_srv_options_t * const opts,
             /* Setup some parameter depending on whether we are using SNAT
              * or MASQUERADE.
             */
-            if(strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
+            if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+                && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
             {
                 /* Using static SNAT */
                 snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
