@@ -253,6 +253,7 @@ my $curr_test_file = 'init';
 my $init_file = $curr_test_file;
 my $tarfile = 'test_fwknop.tar.gz';
 our $key_gen_file = "$output_dir/key_gen";
+my $gdb_test_file = '';
 my $fuzzing_pkts_file = 'fuzzing/fuzzing_spa_packets';
 my $fuzzing_pkts_append = 0;
 my $fuzzing_key = 'testtest';
@@ -360,6 +361,7 @@ exit 1 unless GetOptions(
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
     'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
+    'gdb-test=s'        => \$gdb_test_file,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$enable_valgrind,
@@ -399,6 +401,9 @@ $enable_valgrind = 0 if $disable_valgrind;
 exit &anonymize_results() if $anonymize_results;
 
 exit &diff_test_results() if $diff_mode;
+
+### run an fwknop command under gdb from a previous test run
+exit &gdb_test_cmd() if $gdb_test_file;
 
 &identify_loopback_intf();
 
@@ -799,6 +804,30 @@ sub process_include_exclude() {
             }
         }
         return 0 if $found;
+    }
+    return 1;
+}
+
+sub gdb_test_cmd() {
+
+    die "[*] previous test file: $gdb_test_file does not exist."
+        unless -e $gdb_test_file;
+
+    my $gdb_cmd = '';
+
+    open F, "< $gdb_test_file" or die "[*] Could not open $gdb_test_file: $!";
+    while (<F>) {
+        if (/CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopCmd\s.*)/
+                or /CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopdCmd\s.*)/) {
+            $gdb_cmd = "LD_LIBRARY_PATH=$1 gdb --args $2";
+        }
+    }
+    close F;
+
+    if ($gdb_cmd) {
+        system $gdb_cmd;
+    } else {
+        die "[*] Could not extract fwknop/fwknopd command from $gdb_test_file";
     }
     return 1;
 }
@@ -6002,6 +6031,9 @@ sub usage() {
                                      default, except that --enable-valgrind
                                      must also be set if valgrind mode is
                                      desired.
+    --gdb-test <test file>         - Run the same command a previous test suite
+                                     execution through gdb by specifying the
+                                     output/ test file.
     --fuzzing-pkts-file <file>     - Specify path to fuzzing packet file.
     --fuzzing-pkts-append          - When generating new fuzzing packets,
                                      append them to the fuzzing packets file.
