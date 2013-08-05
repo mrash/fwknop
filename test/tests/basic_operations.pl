@@ -706,7 +706,6 @@
             "$fwknopdCmd -c $cf{'invalid_ipt_input_chain'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/wrong\snumber\sof\sfields/i],
         'exec_err' => $YES,
         'fatal'    => $NO
     },
@@ -719,7 +718,6 @@
             "$fwknopdCmd -c $cf{'invalid_ipt_input_chain2'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/load\starget.*AACCEPT/],
         'exec_err' => $YES,
         'fatal'    => $NO
     },
@@ -732,7 +730,6 @@
             "$fwknopdCmd -c $cf{'invalid_ipt_input_chain3'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/Table\sdoes\snot\sexist/],
         'exec_err' => $YES,
         'fatal'    => $NO
     },
@@ -757,7 +754,6 @@
             "$fwknopdCmd -c $cf{'invalid_ipt_input_chain5'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/invalid\scharacter/],
         'exec_err' => $YES,
         'fatal'    => $NO
     },
@@ -770,7 +766,6 @@
             "$fwknopdCmd -c $cf{'invalid_ipt_input_chain6'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/invalid\scharacter/],
         'exec_err' => $YES,
         'fatal'    => $NO
     },

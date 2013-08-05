@@ -728,18 +728,18 @@ set_fw_chain_conf(const int type, const char * const conf_str)
             else
                 tbuf[i++] = *ndx;
         }
-        ndx++;
         if(*ndx != '\0'
                 && *ndx != ' '
                 && *ndx != ','
                 && *ndx != '_'
                 && isalnum(*ndx) == 0)
         {
-            log_msg(LOG_ERR, "[*] Custom Chain config parse error: "
+            log_msg(LOG_ERR, "[*] Custom chain config parse error: "
                 "invalid character '%c' for chain type %i, "
                 "line: %s", *ndx, type, conf_str);
             return 0;
         }
+        ndx++;
     }
 
     /* Sanity check - j should be the number of chain fields
@@ -747,7 +747,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     */
     if(j != FW_NUM_CHAIN_FIELDS)
     {
-        log_msg(LOG_ERR, "[*] Custom Chain config parse error: "
+        log_msg(LOG_ERR, "[*] Custom chain config parse error: "
             "wrong number of fields for chain type %i, "
             "line: %s", type, conf_str);
         return 0;
@@ -1497,6 +1497,39 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         else if(min_exp)
             ch[i].next_expire = min_exp;
     }
+}
+
+int
+validate_ipt_chain_conf(const char * const chain_str)
+{
+    int         j, rv  = 1;
+    const char   *ndx  = chain_str;
+
+    j = 1;
+    while(*ndx != '\0')
+    {
+        if(*ndx == ',')
+            j++;
+
+        if(*ndx != '\0'
+                && *ndx != ' '
+                && *ndx != ','
+                && *ndx != '_'
+                && isalnum(*ndx) == 0)
+        {
+            rv = 0;
+            break;
+        }
+        ndx++;
+    }
+
+    /* Sanity check - j should be the number of chain fields
+     * (excluding the type).
+    */
+    if(j != FW_NUM_CHAIN_FIELDS)
+        rv = 0;
+
+    return rv;
 }
 
 #endif /* FIREWALL_IPTABLES */

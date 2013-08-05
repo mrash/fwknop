@@ -552,7 +552,7 @@ my @tests = (
 
     {
         'category' => 'Look for crashes',
-        'detail'   => 'checking for segfault/core dump messages (1)',
+        'detail'   => 'checking for segfault/core dump messages (2)',
         'function' => \&look_for_crashes,
         'fatal'    => $NO
     }
