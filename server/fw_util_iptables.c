@@ -729,6 +729,17 @@ set_fw_chain_conf(const int type, const char * const conf_str)
                 tbuf[i++] = *ndx;
         }
         ndx++;
+        if(*ndx != '\0'
+                && *ndx != ' '
+                && *ndx != ','
+                && *ndx != '_'
+                && isalnum(*ndx) == 0)
+        {
+            log_msg(LOG_ERR, "[*] Custom Chain config parse error: "
+                "invalid character '%c' for chain type %i, "
+                "line: %s", *ndx, type, conf_str);
+            return 0;
+        }
     }
 
     /* Sanity check - j should be the number of chain fields
@@ -736,9 +747,9 @@ set_fw_chain_conf(const int type, const char * const conf_str)
     */
     if(j != FW_NUM_CHAIN_FIELDS)
     {
-        log_msg(LOG_ERR, "[*] Custom Chain config parse error.\n"
-            "Wrong number of fields for chain type %i\n"
-            "Line: %s", type, conf_str);
+        log_msg(LOG_ERR, "[*] Custom Chain config parse error: "
+            "wrong number of fields for chain type %i, "
+            "line: %s", type, conf_str);
         return 0;
     }
 
