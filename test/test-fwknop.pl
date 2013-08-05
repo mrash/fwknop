@@ -9,7 +9,6 @@ use File::Copy;
 use File::Path;
 use IO::Socket;
 use Data::Dumper;
-use Cwd;
 use Getopt::Long 'GetOptions';
 use strict;
 
