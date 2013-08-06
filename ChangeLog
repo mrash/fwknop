@@ -1,3 +1,9 @@
+fwknop-2.5.2 (//2013):
+    - [test suite] added --gdb-test to allow a previously executed fwknop
+      or fwknopd command to be sent through gdb with the same command line
+      args as the test suite used.  This is for convenience to rapidly allow
+      gdb to be launched when investigating fwknop/fwknopd problems.
+
 fwknop-2.5.1 (07/25/2013):
     - [client] Bug fix to reset terminal setting to orignal values after
       entering keys via stdin.
