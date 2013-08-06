@@ -49,7 +49,7 @@ fko_verify_hmac(fko_ctx_t ctx,
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
     if (! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_HMAC_MSGLEN_VALIDFAIL);
 
     if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
         return(FKO_ERROR_INVALID_HMAC_KEY_LEN);
@@ -69,7 +69,7 @@ fko_verify_hmac(fko_ctx_t ctx,
 
     if((ctx->encrypted_msg_len - hmac_b64_digest_len)
             < MIN_SPA_ENCODED_MSG_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_HMAC_ENCMSGLEN_VALIDFAIL);
 
     /* Get digest value
     */
@@ -146,7 +146,7 @@ fko_verify_hmac(fko_ctx_t ctx,
             if(constant_runtime_cmp(hmac_digest_from_data,
                     ctx->msg_hmac, hmac_b64_digest_len) != 0)
             {
-                res = FKO_ERROR_INVALID_DATA;
+                res = FKO_ERROR_INVALID_DATA_HMAC_COMPAREFAIL;
             }
         }
     }
@@ -187,7 +187,7 @@ fko_set_spa_hmac_type(fko_ctx_t ctx, const short hmac_type)
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
     if(hmac_type < 0 || hmac_type >= FKO_LAST_HMAC_MODE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL);
 
     ctx->hmac_type = hmac_type;
 
@@ -296,7 +296,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
         case SHA512_B64_LEN:
             break;
         default:
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_HMAC_LEN_VALIDFAIL);
     }
 
     return FKO_SUCCESS;

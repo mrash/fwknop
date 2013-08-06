@@ -46,7 +46,7 @@ set_spa_digest_type(fko_ctx_t ctx,
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
     if(digest_type < 1 || digest_type >= FKO_LAST_DIGEST_TYPE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL);
 
     *digest_type_field = digest_type;
 
@@ -106,7 +106,7 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
     data_len = strnlen(data, MAX_SPA_ENCODED_MSG_SIZE);
 
     if(data_len == MAX_SPA_ENCODED_MSG_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_TOOBIG);
 
     switch(digest_type)
     {

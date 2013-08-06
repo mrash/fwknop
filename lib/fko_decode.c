@@ -43,13 +43,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
     int         t_size, i, is_err;
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL);
 
     /* Make sure there are no non-ascii printable chars
     */
     for (i=0; i < (int)strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE); i++)
         if(isprint(ctx->encoded_msg[i]) == 0)
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_NON_ASCII);
 
     /* Make sure there are enough fields in the SPA packet
      * delimited with ':' chars
@@ -65,7 +65,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     }
 
     if (i < MIN_SPA_FIELDS)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_LT_MIN_FIELDS);
 
     t_size = strnlen(ndx, SHA512_B64_LEN+1);
 
@@ -101,7 +101,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     }
 
     if (ctx->encoded_msg_len - t_size < 0)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE);
 
     if(ctx->digest != NULL)
         free(ctx->digest);
@@ -170,7 +170,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if((t_size = strcspn(ndx, ":")) < FKO_RAND_VAL_SIZE)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING);
     }
 
     if(ctx->rand_val != NULL)
@@ -191,13 +191,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if((t_size = strcspn(ndx, ":")) < 1)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_MISSING);
     }
 
     if (t_size > MAX_SPA_USERNAME_SIZE)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_TOOBIG);
     }
 
     strlcpy(tbuf, ndx, t_size+1);
@@ -215,12 +215,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if(b64_decode(tbuf, (unsigned char*)ctx->username) < 0)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_DECODEFAIL);
     }
     if(validate_username(ctx->username) != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_VALIDFAIL);
     }
 
     /* Extract the timestamp value.
@@ -229,13 +229,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if((t_size = strcspn(ndx, ":")) < 1)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_MISSING);
     }
 
     if (t_size > MAX_SPA_TIMESTAMP_SIZE)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_TOOBIG);
     }
 
     strlcpy(tbuf, ndx, t_size+1);
@@ -245,7 +245,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if(is_err != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_DECODEFAIL);
     }
 
     /* Extract the version string.
@@ -254,13 +254,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if((t_size = strcspn(ndx, ":")) < 1)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_VERSION_MISSING);
     }
 
     if (t_size > MAX_SPA_VERSION_SIZE)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_VERSION_TOOBIG);
     }
 
     if(ctx->version != NULL)
@@ -281,13 +281,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if((t_size = strcspn(ndx, ":")) < 1)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_MISSING);
     }
 
     if (t_size > MAX_SPA_MESSAGE_TYPE_SIZE)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_TOOBIG);
     }
 
     strlcpy(tbuf, ndx, t_size+1);
@@ -297,7 +297,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if(is_err != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL);
     }
 
     /* Extract the SPA message string.
@@ -306,13 +306,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if((t_size = strcspn(ndx, ":")) < 1)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_MISSING);
     }
 
     if (t_size > MAX_SPA_MESSAGE_SIZE)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_TOOBIG);
     }
 
     strlcpy(tbuf, ndx, t_size+1);
@@ -330,7 +330,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if(b64_decode(tbuf, (unsigned char*)ctx->message) < 0)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_DECODEFAIL);
     }
 
     if(ctx->message_type == FKO_COMMAND_MSG)
@@ -340,7 +340,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
         if(validate_cmd_msg(ctx->message) != FKO_SUCCESS)
         {
             free(tbuf);
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_VALIDFAIL);
         }
     }
     else
@@ -350,7 +350,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
         if(validate_access_msg(ctx->message) != FKO_SUCCESS)
         {
             free(tbuf);
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_ACCESS_VALIDFAIL);
         }
     }
 
@@ -365,13 +365,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
         if((t_size = strcspn(ndx, ":")) < 1)
         {
             free(tbuf);
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_MISSING);
         }
 
         if (t_size > MAX_SPA_MESSAGE_SIZE)
         {
             free(tbuf);
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_TOOBIG);
         }
 
         strlcpy(tbuf, ndx, t_size+1);
@@ -389,13 +389,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
         if(b64_decode(tbuf, (unsigned char*)ctx->nat_access) < 0)
         {
             free(tbuf);
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_DECODEFAIL);
         }
 
         if(validate_nat_access_msg(ctx->nat_access) != FKO_SUCCESS)
         {
             free(tbuf);
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_VALIDFAIL);
         }
     }
 
@@ -407,7 +407,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
         if (t_size > MAX_SPA_MESSAGE_SIZE)
         {
             free(tbuf);
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_MISSING);
         }
 
         /* There is data, but what is it?
@@ -433,7 +433,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
             {
                 free(tbuf);
-                return(FKO_ERROR_INVALID_DATA);
+                return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL);
             }
 
             /* At this point we should be done.
@@ -460,7 +460,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             if (t_size > MAX_SPA_MESSAGE_SIZE)
             {
                 free(tbuf);
-                return(FKO_ERROR_INVALID_DATA);
+                return(FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG);
             }
 
             /* Looks like we have both, so assume this is the 
@@ -480,7 +480,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
             {
                 free(tbuf);
-                return(FKO_ERROR_INVALID_DATA);
+                return(FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL);
             }
 
             ndx += t_size + 1;
@@ -495,12 +495,12 @@ fko_decode_spa_data(fko_ctx_t ctx)
             if((t_size = strlen(ndx)) < 1)
             {
                 free(tbuf);
-                return(FKO_ERROR_INVALID_DATA);
+                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_MISSING);
             }
             if (t_size > MAX_SPA_MESSAGE_SIZE)
             {
                 free(tbuf);
-                return(FKO_ERROR_INVALID_DATA);
+                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_TOOBIG);
             }
 
             /* Should be a number only.
@@ -508,7 +508,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             if(strspn(ndx, "0123456789") != t_size)
             {
                 free(tbuf);
-                return(FKO_ERROR_INVALID_DATA);
+                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_VALIDFAIL);
             }
 
             ctx->client_timeout = (unsigned int) strtol_wrapper(ndx, 0,
@@ -516,7 +516,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             if(is_err != FKO_SUCCESS)
             {
                 free(tbuf);
-                return(FKO_ERROR_INVALID_DATA);
+                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_DECODEFAIL);
             }
         }
     }

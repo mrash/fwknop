@@ -46,7 +46,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
     /* Gotta have a valid string.
     */
     if(timeout < 0)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_CLIENT_TIMEOUT_NEGATIVE);
 
     old_msg_type = ctx->message_type;
 
