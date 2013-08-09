@@ -35,6 +35,10 @@
 #include "utils.h"
 #include "log_msg.h"
 
+#if FIREWALL_IPTABLES
+  #include "fw_util_iptables.h"
+#endif
+
 /* Check to see if an integer variable has a value that is within a
  * specific range
 */
