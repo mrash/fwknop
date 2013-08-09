@@ -147,6 +147,7 @@ our %cf = (
     'rc_hmac_sha512_key'           => "$conf_dir/fwknoprc_hmac_sha512_key",
     'rc_hmac_sha512_short_key'     => "$conf_dir/fwknoprc_hmac_sha512_short_key",
     'rc_hmac_sha512_long_key'      => "$conf_dir/fwknoprc_hmac_sha512_long_key",
+    'rc_stanza_list'               => "$conf_dir/fwknoprc_stanza_list",
     'base64_key_access'            => "$conf_dir/base64_key_access.conf",
     'custom_input_chain'           => "$conf_dir/custom_input_chain_fwknopd.conf",
     'custom_nat_chain'             => "$conf_dir/custom_nat_chain_fwknopd.conf",

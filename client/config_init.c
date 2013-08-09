@@ -563,6 +563,58 @@ is_rc_param(const char *line, rc_file_param_t *param)
     return 1;
 }
 
+/**
+ * @brief Dump available stanzas from a fwknoprc file
+ *
+ * This function parses a rcfile and looks for configured stanzas.
+ * They are all displayed except the default stanza.
+ * 
+ * @param rcfile full path to the rcfile to parse
+ */
+static void
+dump_configured_stanzas_from_rcfile(const char* rcfile)
+{
+    FILE   *rc;
+    char    line[MAX_LINE_LEN]   = {0};
+    char    curr_stanza[MAX_LINE_LEN] = {0};
+
+    /* Open the rcfile in read mode */
+    if ((rc = fopen(rcfile, "r")) == NULL)
+    {
+        log_msg(LOG_VERBOSITY_WARNING, "Unable to open rc file: %s: %s",
+            rcfile, strerror(errno));
+
+        return;
+    }
+
+    log_msg(LOG_VERBOSITY_NORMAL, "The following stanzas are configured in %s :", rcfile);
+
+    /* Parse the rcfile line by line to find stanza */
+    while ((fgets(line, MAX_LINE_LEN, rc)) != NULL)
+    {
+        line[MAX_LINE_LEN-1] = '\0';
+
+        /* Get past comments and empty lines (note: we only look at the first
+         * character. */
+        if(IS_EMPTY_LINE(line[0]))
+            continue;
+
+        /* Check which section we are working on */
+        else if (is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)))
+        {
+            /* Print the stanza and continue - we exclude the default stanza */
+            if (strcasecmp(curr_stanza, RC_SECTION_DEFAULT) != 0)
+                log_msg(LOG_VERBOSITY_NORMAL, " - %s", curr_stanza);
+            continue;
+        }
+
+        /* Nothing we care about */
+        else;
+    }
+
+    fclose(rc);
+}
+
 /* Assign path to fwknop rc file
 */
 static void
@@ -1752,6 +1804,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
 {
     int                 cmd_arg, index, is_err;
     fko_var_bitmask_t   var_bitmask;
+    char                rcfile[MAX_PATH_LEN] = {0};
 
     /* Zero out options, opts_track and bitmask.
     */
@@ -1780,6 +1833,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case SAVE_RC_STANZA:
                 options->save_rc_stanza = 1;
                 break;
+            case STANZA_LIST:
+                options->stanza_list = 1;
+                break;
             case 'E':
                 strlcpy(options->args_save_file, optarg, sizeof(options->args_save_file));
                 break;
@@ -1795,6 +1851,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
 
     /* Update the verbosity level for the log module */
     log_set_verbosity(LOG_DEFAULT_VERBOSITY + options->verbose);
+
+    /* Dump the configured stanzas from an rcfile */
+    if (options->stanza_list == 1)
+    {
+        set_rc_file(rcfile, options);
+        dump_configured_stanzas_from_rcfile(rcfile);
+        exit(EXIT_SUCCESS);
+    }
 
     /* First process the .fwknoprc file.
     */
@@ -2305,6 +2369,8 @@ usage(void)
       "                             -n option.\n"
       "     --force-stanza          Used with --save-rc-stanza to overwrite all of\n"
       "                             the variables for the specified stanza\n"
+      "     --stanza-list           Dump a list of the stanzas found in\n"
+      "                             $HOME/.fwknoprc\n"
       "     --nat-local             Access a local service via a forwarded port\n"
       "                             on the fwknopd server system.\n"
       "     --nat-port              Specify the port to forward to access a\n"

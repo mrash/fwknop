@@ -860,4 +860,14 @@
         'positive_output_matches' => [qr/Value\s.*out\sof\srange/],
         'fatal'    => $NO
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '--stanza-list',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --stanza-list --rc-file $cf{'rc_stanza_list'}",
+        'positive_output_matches' => [qr/The\sfollowing\sstanzas\sare\sconfigured/i, qr/stanza_1/, qr/stanza_2/],
+        'negative_output_matches' => [qr/default/],
+        'fatal'    => $NO
+    },
 );
