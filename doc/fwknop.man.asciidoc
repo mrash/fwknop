@@ -257,7 +257,7 @@ GENERAL OPTIONS
     specified stanza
 
 *--stanza-list*::
-    Dump a list of the stanzas found in $HOME/.fwknoprc.
+    Dump a list of the stanzas found in ``$HOME/.fwknoprc''.
 
 *--show-last*::
     Display the last command-line arguments used by *fwknop*.
