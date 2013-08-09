@@ -57,7 +57,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
         return(FKO_ERROR_INVALID_KEY_LEN);
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_MSGLEN_VALIDFAIL);
 
     switch(ctx->digest_len)
     {
@@ -72,7 +72,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
         case SHA512_B64_LEN:
             break;
         default:
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_ENCRYPT_DIGESTLEN_VALIDFAIL);
     }
 
     pt_len = ctx->encoded_msg_len + ctx->digest_len + RIJNDAEL_BLOCKSIZE + 2;
@@ -90,7 +90,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     if(! is_valid_pt_msg_len(pt_len))
     {
         if(zero_free(plaintext, pt_len) == FKO_SUCCESS)
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_ENCRYPT_PTLEN_VALIDFAIL);
         else
             return(FKO_ERROR_ZERO_OUT_DATA);
     }
@@ -150,7 +150,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     if(! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_RESULT_MSGLEN_VALIDFAIL);
 
     return(zero_free_rv);
 }
@@ -189,7 +189,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
     if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
     {
         if(zero_free((char *)cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_DECODEFAIL);
         else
             return(FKO_ERROR_ZERO_OUT_DATA);
     }
@@ -200,7 +200,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
     if((cipher_len % RIJNDAEL_BLOCKSIZE) != 0)
     {
         if(zero_free((char *)cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_VALIDFAIL);
         else
             return(FKO_ERROR_ZERO_OUT_DATA);
     }
@@ -236,10 +236,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
         return(FKO_ERROR_DECRYPTION_SIZE);
 
     if(ctx->encoded_msg == NULL)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSG_NULL);
 
     if(! is_valid_encoded_msg_len(pt_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSGLEN_VALIDFAIL);
 
     if(zero_free_rv != FKO_SUCCESS)
         return(zero_free_rv);
@@ -281,7 +281,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     char           *empty_key = "";
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MESSAGE_VALIDFAIL);
 
     switch(ctx->digest_len)
     {
@@ -296,7 +296,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
         case SHA512_B64_LEN:
             break;
         default:
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_DIGEST_VALIDFAIL);
     }
 
     /* First make sure we have a recipient key set.
@@ -318,7 +318,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     if(! is_valid_pt_msg_len(pt_len))
     {
         if(zero_free(plain, pt_len) == FKO_SUCCESS)
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MSGLEN_VALIDFAIL);
         else
             return(FKO_ERROR_ZERO_OUT_DATA);
     }
@@ -396,7 +396,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     if(! is_valid_encoded_msg_len(ctx->encrypted_msg_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_RESULT_MSGLEN_VALIDFAIL);
 
     return(zero_free_rv);
 }
@@ -426,7 +426,7 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     if((b64_decode_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
     {
         if(zero_free((char *) cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_CIPHER_DECODEFAIL);
         else
             return(FKO_ERROR_ZERO_OUT_DATA);
 
@@ -461,10 +461,10 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     pt_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     if(ctx->encoded_msg == NULL)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MESSAGE_MISSING);
 
     if(! is_valid_encoded_msg_len(pt_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MSGLEN_VALIDFAIL);
 
     ctx->encoded_msg_len = pt_len;
 
@@ -486,7 +486,7 @@ fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type)
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
     if(encrypt_type < 0 || encrypt_type >= FKO_LAST_ENCRYPTION_TYPE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_VALIDFAIL);
 
     ctx->encryption_type = encrypt_type;
 
@@ -521,7 +521,7 @@ fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode)
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
     if(encrypt_mode < 0 || encrypt_mode >= FKO_LAST_ENC_MODE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_MODE_VALIDFAIL);
 
     ctx->encryption_mode = encrypt_mode;
 
@@ -621,7 +621,7 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key, const int key_le
             dec_key, key_len, ctx->encryption_mode);
     }
     else
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_UNKNOWN);
 
     return(res);
 }

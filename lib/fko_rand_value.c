@@ -70,7 +70,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     if(new_val != NULL)
     {
         if(strnlen(new_val, FKO_RAND_VAL_SIZE+1) != FKO_RAND_VAL_SIZE)
-            return(FKO_ERROR_INVALID_DATA);
+            return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
 
         if(ctx->rand_val != NULL)
             free(ctx->rand_val);

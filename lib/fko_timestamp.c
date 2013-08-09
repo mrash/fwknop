@@ -47,7 +47,7 @@ fko_set_timestamp(fko_ctx_t ctx, const int offset)
     ts = time(NULL) + offset;
 
     if(ts < 0)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL);
 
     ctx->timestamp = ts;
 

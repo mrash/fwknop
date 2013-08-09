@@ -186,7 +186,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     int         enc_msg_len;
 
     if(enc_msg == NULL)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING);
 
     ctx = calloc(1, sizeof *ctx);
     if(ctx == NULL)
@@ -197,7 +197,7 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     if(! is_valid_encoded_msg_len(enc_msg_len))
     {
         free(ctx);
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_FUNCS_NEW_MSGLEN_VALIDFAIL);
     }
 
     if(ctx->encrypted_msg != NULL)
@@ -411,21 +411,21 @@ fko_key_gen(char * const key_base64, const int key_len,
     }
 
     if((klen < 1) || (klen > RIJNDAEL_MAX_KEYSIZE))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEYLEN_VALIDFAIL);
 
     if((hmac_klen < 1) || (hmac_klen > SHA512_BLOCK_LEN))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMACLEN_VALIDFAIL);
 
     get_random_data(key, klen);
     get_random_data(hmac_key, hmac_klen);
 
     b64_len = b64_encode(key, key_base64, klen);
     if(b64_len < klen)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEY_ENCODEFAIL);
 
     b64_len = b64_encode(hmac_key, hmac_key_base64, hmac_klen);
     if(b64_len < hmac_klen)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMAC_ENCODEFAIL);
 
     return(FKO_SUCCESS);
 }
@@ -554,7 +554,7 @@ fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg)
     enc_msg_len = strnlen(enc_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     if(! is_valid_encoded_msg_len(enc_msg_len))
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_FUNCS_SET_MSGLEN_VALIDFAIL);
 
     if(ctx->encrypted_msg != NULL)
         free(ctx->encrypted_msg);
