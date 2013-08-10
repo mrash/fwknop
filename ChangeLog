@@ -5,6 +5,9 @@ fwknop-2.5.2 (//2013):
       gdb to be launched when investigating fwknop/fwknopd problems.
     - [client] (Franck Joncourt) Added --stanza-list argument to show the
       stanza names from ~/.fwknoprc.
+    - [libfko] (Hank Leininger) Contributed a patch to greatly extend libfko
+      error code descriptions at various places in order to give much better
+      information on what certain error conditions mean.  Closes #98.
 
 fwknop-2.5.1 (07/25/2013):
     - [client] Bug fix to reset terminal setting to orignal values after
