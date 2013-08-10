@@ -127,6 +127,7 @@ our %cf = (
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
     'rc_hmac_sha512_b64_key'       => "$conf_dir/fwknoprc_hmac_sha512_base64_key",
     'rc_hmac_b64_key2'             => "$conf_dir/fwknoprc_hmac_key2",
+    'rc_rand_port_hmac_b64_key'    => "$conf_dir/fwknoprc_rand_port_hmac_base64_key",
     'rc_gpg_signing_pw'            => "$conf_dir/fwknoprc_gpg_signing_pw",
     'rc_gpg_named_signing_pw'      => "$conf_dir/fwknoprc_named_gpg_signing_pw",
     'rc_gpg_hmac_b64_key'          => "$conf_dir/fwknoprc_gpg_hmac_key",
