@@ -100,7 +100,7 @@ have_port(const char *msg)
     int     startlen         = strnlen(msg, MAX_SPA_MESSAGE_SIZE), port_str_len = 0;
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_MESSAGE_PORT_MISSING);
 
     /* Must have at least one digit for the port number
     */
@@ -129,7 +129,7 @@ fko_set_spa_message_type(fko_ctx_t ctx, const short msg_type)
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
     if(msg_type < 0 || msg_type >= FKO_LAST_MSG_TYPE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL);
 
     ctx->message_type = msg_type;
 
@@ -168,7 +168,7 @@ fko_set_spa_message(fko_ctx_t ctx, const char * const msg)
     /* Gotta have a valid string.
     */
     if(msg == NULL || strnlen(msg, MAX_SPA_MESSAGE_SIZE) == 0)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_MESSAGE_EMPTY);
 
     /* --DSS XXX: Bail out for now.  But consider just
      *            truncating in the future...
@@ -227,7 +227,7 @@ validate_cmd_msg(const char *msg)
     int     startlen    = strnlen(msg, MAX_SPA_CMD_LEN);
 
     if(startlen == MAX_SPA_CMD_LEN)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_MESSAGE_CMD_MISSING);
 
     /* Should always have a valid allow IP regardless of message type
     */
@@ -253,7 +253,7 @@ validate_access_msg(const char *msg)
     int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_MESSAGE_ACCESS_MISSING);
 
     /* Should always have a valid allow IP regardless of message type
     */
@@ -287,7 +287,7 @@ validate_nat_access_msg(const char *msg)
     int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_MESSAGE_NAT_MISSING);
 
     /* Should always have a valid allow IP regardless of message type
     */
@@ -319,7 +319,7 @@ validate_proto_port_spec(const char *msg)
     const char   *ndx   = msg;
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
-        return(FKO_ERROR_INVALID_DATA);
+        return(FKO_ERROR_INVALID_DATA_MESSAGE_PORTPROTO_MISSING);
 
     /* Now check for proto/port string.
     */
