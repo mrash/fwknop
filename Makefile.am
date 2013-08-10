@@ -204,6 +204,10 @@ EXTRA_DIST = \
     test/conf/fwknoprc_hmac_sha512_short_key \
     test/conf/fwknoprc_hmac_sha512_long_key \
     test/conf/fwknoprc_hmac_simple_keys \
+    test/conf/hmac_sha256_digest1_mismatch_access.conf \
+    test/conf/hmac_sha256_digest3_mismatch_access.conf \
+    test/conf/hmac_sha256_digest2_mismatch_access.conf \
+    test/conf/hmac_sha256_digest4_mismatch_access.conf \
     test/conf/fwknoprc_rand_port_hmac_base64_key \
     test/conf/fwknoprc_invalid_base64_key \
     test/conf/fwknoprc_named_key \

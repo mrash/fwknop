@@ -697,6 +697,67 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'digest type mismatch (1)',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_sha256_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha256_digest1_mismatch_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_sha256_key'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'digest type mismatch (2)',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_sha256_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha256_digest2_mismatch_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_sha256_key'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'digest type mismatch (3)',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_sha256_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha256_digest3_mismatch_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_sha256_key'},
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'digest type mismatch (4)',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_sha256_key'}",
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha256_digest4_mismatch_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_sha256_key'},
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'dual usage access key (tcp/80 http)',
         'function' => \&spa_cycle,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
