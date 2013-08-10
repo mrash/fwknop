@@ -1,0 +1,4 @@
+[default]
+HMAC_DIGEST_TYPE    sha512
+DIGEST_TYPE         sha512
+HMAC_KEY_BASE64     Yh+xizBnl6FotC5ec7FanVGClRMlsOAPh2u6eovnerfBVKwaVKzjGoblFMHMc593TNyi0dWn4opLoTIV9q/ttg==

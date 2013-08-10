@@ -17,6 +17,24 @@
     {
         'category' => 'GPG (no pw) HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'complete cycle SHA512',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_gpg_args_no_homedir "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw "
+            . "--rc-file $cf{'rc_gpg_hmac_sha512_b64_key'}",
+        'fwknopd_cmdline' => "LD_LIBRARY_PATH=$lib_dir " .
+            "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_no_pw_hmac_sha512_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_gpg_hmac_sha512_b64_key'},
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'GPG (no pw) HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'gpg args from rc file',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_gpg_args_no_homedir "

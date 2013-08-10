@@ -150,6 +150,10 @@ EXTRA_DIST = \
     test/conf/gpg_hmac_access.conf \
     test/conf/gpg_no_pw_access.conf \
     test/conf/gpg_no_pw_hmac_access.conf \
+    test/conf/fwknoprc_gpg_hmac_sha512_key \
+    test/conf/gpg_hmac_sha512_access.conf \
+    test/conf/fwknoprc_hmac_sha512_base64_key \
+    test/conf/gpg_no_pw_hmac_sha512_access.conf \
     test/conf/no_flush_init_fwknopd.conf \
     test/conf/no_flush_exit_fwknopd.conf \
     test/conf/no_flush_init_or_exit_fwknopd.conf \
