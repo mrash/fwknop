@@ -33,11 +33,8 @@
 #include <errno.h>
 #include <stdarg.h>
 
-/* Check for a FKO error returned by a function an go to the error label */
-#define CHECK_FKO_ERROR(e, f)   do { if (((e)=(f)) != FKO_SUCCESS) { goto error; } } while(0);
-
-/* Check for an error returned by a function an go to the error label. The error is set to a specific value */
-#define CHECK_ERROR(e, v, f)    do { if (((e)=(f)) != 0)           { (e)=(v); goto error; } } while(0);
+/* Check for a FKO error returned by a function an return the error code */
+#define RETURN_ON_FKO_ERROR(e, f)   do { if (((e)=(f)) != FKO_SUCCESS) { return (e); } } while(0);
 
 #define FKO_ENCRYPTION_MODE_BUFSIZE 16                      /*!< Maximum size of an encryption mode string */
 #define FKO_ENC_MODE_SUPPORTED      0                       /*!< Defined a supported fko encryption mode */
@@ -527,6 +524,9 @@ append_msg_to_buf(char *buf, size_t buf_size, const char* msg, ...)
 /**
  * @brief Dump a FKO context to a buffer
  *
+ * This function parses a FKO context and decodes each field to dump them to a
+ * buffer in a comprehensible way.
+ *
  * @param ctx           FKO context to dump
  * @param dump_buf      Buffer where to store the dump of the context
  * @param dump_buf_len  Number of bytes available in the dump_buf array
@@ -571,33 +571,37 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
     else
     {
         /* Parse the FKO context and collect data */
-        CHECK_FKO_ERROR(err, fko_get_rand_value(ctx, &rand_val));
-        CHECK_FKO_ERROR(err, fko_get_username(ctx, &username));
-        CHECK_FKO_ERROR(err, fko_get_timestamp(ctx, &timestamp));
-        CHECK_FKO_ERROR(err, fko_get_version(ctx, &version));
-        CHECK_FKO_ERROR(err, fko_get_spa_message_type(ctx, &msg_type));
-        CHECK_FKO_ERROR(err, fko_get_spa_message(ctx, &spa_message));
-        CHECK_FKO_ERROR(err, fko_get_spa_nat_access(ctx, &nat_access));
-        CHECK_FKO_ERROR(err, fko_get_spa_server_auth(ctx, &server_auth));
-        CHECK_FKO_ERROR(err, fko_get_spa_client_timeout(ctx, &client_timeout));
-        CHECK_FKO_ERROR(err, fko_get_spa_digest_type(ctx, &digest_type));
-        CHECK_FKO_ERROR(err, fko_get_spa_hmac_type(ctx, &hmac_type));
-        CHECK_FKO_ERROR(err, fko_get_spa_encryption_type(ctx, &encryption_type));
-        CHECK_FKO_ERROR(err, fko_get_spa_encryption_mode(ctx, &encryption_mode));
-        CHECK_FKO_ERROR(err, fko_get_encoded_data(ctx, &enc_data));
-        CHECK_FKO_ERROR(err, fko_get_spa_hmac(ctx, &hmac_data));
-        CHECK_FKO_ERROR(err, fko_get_spa_digest(ctx, &spa_digest));
-        CHECK_FKO_ERROR(err, fko_get_spa_data(ctx, &spa_data));
+        RETURN_ON_FKO_ERROR(err, fko_get_rand_value(ctx, &rand_val));
+        RETURN_ON_FKO_ERROR(err, fko_get_username(ctx, &username));
+        RETURN_ON_FKO_ERROR(err, fko_get_timestamp(ctx, &timestamp));
+        RETURN_ON_FKO_ERROR(err, fko_get_version(ctx, &version));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_message_type(ctx, &msg_type));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_message(ctx, &spa_message));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_nat_access(ctx, &nat_access));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_server_auth(ctx, &server_auth));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_client_timeout(ctx, &client_timeout));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_digest_type(ctx, &digest_type));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_hmac_type(ctx, &hmac_type));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_encryption_type(ctx, &encryption_type));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_encryption_mode(ctx, &encryption_mode));
+        RETURN_ON_FKO_ERROR(err, fko_get_encoded_data(ctx, &enc_data));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_hmac(ctx, &hmac_data));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_digest(ctx, &spa_digest));
+        RETURN_ON_FKO_ERROR(err, fko_get_spa_data(ctx, &spa_data));
 
-        /* Convert integer to string for somes of the FKO fields */
-        CHECK_ERROR(err, FKO_ERROR_INVALID_DIGEST_TYPE,
-                    digest_inttostr(digest_type, digest_str, sizeof(digest_str)));
-        CHECK_ERROR(err, FKO_ERROR_INVALID_ENCRYPTION_TYPE,
-                    enc_mode_inttostr(encryption_mode, enc_mode_str, sizeof(enc_mode_str)));
+        /* Convert the digest integer to a string */
+        if (digest_inttostr(digest_type, digest_str, sizeof(digest_str)) != 0)
+            return (FKO_ERROR_INVALID_DIGEST_TYPE);
+
+        /* Convert the encryption mode integer to a string */
+        if (enc_mode_inttostr(encryption_mode, enc_mode_str, sizeof(enc_mode_str)) != 0)
+            return (FKO_ERROR_INVALID_ENCRYPTION_TYPE);
+
+        /* Convert the HMAC digest integer to a string if a HMAC message is available */
         if (ctx->msg_hmac_len != 0)
         {
-            CHECK_ERROR(err, FKO_ERROR_UNSUPPORTED_HMAC_MODE,
-                        hmac_digest_inttostr(hmac_type, hmac_str, sizeof(hmac_str)));
+            if (hmac_digest_inttostr(hmac_type, hmac_str, sizeof(hmac_str)) != 0)
+                return (FKO_ERROR_UNSUPPORTED_HMAC_MODE);
         }
 
         /* Fill in the buffer to dump */
@@ -623,9 +627,10 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "      Plaintext: %s:%s\n", enc_data, spa_digest);
 
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n", spa_data);
+
+        err = FKO_SUCCESS;
     }
 
-error:
     return (err);
 }
 
