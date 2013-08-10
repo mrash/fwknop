@@ -1572,6 +1572,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "                   HMAC_KEY:  %s\n"
             "            HMAC_KEY_BASE64:  %s\n"
             "               HMAC_KEY_LEN:  %d\n"
+            "           HMAC_DIGEST_TYPE:  %d\n"
             "          FW_ACCESS_TIMEOUT:  %i\n"
             "            ENABLE_CMD_EXEC:  %s\n"
             "              CMD_EXEC_USER:  %s\n"
@@ -1597,6 +1598,7 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->hmac_key == NULL) ? "<not set>" : "<see the access.conf file>",
             (acc->hmac_key_base64 == NULL) ? "<not set>" : "<see the access.conf file>",
             acc->hmac_key_len ? acc->hmac_key_len : 0,
+            acc->hmac_type,
             acc->fw_access_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
