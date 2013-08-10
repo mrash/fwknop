@@ -7,10 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "fko_common.h"
-#include "common.h"
-#include "fko_limits.h"
-#include "fwknop.h"
 #include "fko.h"
 
 #define ENABLE_GPG_TESTS 0

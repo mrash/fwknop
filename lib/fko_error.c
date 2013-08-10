@@ -57,6 +57,261 @@ fko_errstr(const int err_code)
         case FKO_ERROR_INVALID_DATA:
             return("Args contain invalid data");
 
+        case FKO_ERROR_INVALID_DATA_CLIENT_TIMEOUT_NEGATIVE:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_CLIENT_TIMEOUT_NEGATIVE");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_NON_ASCII:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_NON_ASCII");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_LT_MIN_FIELDS:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_LT_MIN_FIELDS");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_USERNAME_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_USERNAME_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_USERNAME_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_USERNAME_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_USERNAME_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_USERNAME_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_USERNAME_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_USERNAME_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_VERSION_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_VERSION_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_VERSION_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_VERSION_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_ACCESS_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_ACCESS_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_SPA_EXTRA_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_SPA_EXTRA_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCODE_MESSAGE_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCODE_MESSAGE_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_ENCODE_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCODE_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_TOOBIG");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_DIGESTLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_DIGESTLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_PTLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_PTLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_RESULT_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_RESULT_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MESSAGE_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MESSAGE_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MESSAGE_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MESSAGE_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_DIGEST_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_DIGEST_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_RESULT_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_RESULT_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_CIPHER_DECODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_CIPHER_DECODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSG_NULL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSG_NULL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_MODE_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_MODE_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_UNKNOWN:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_UNKNOWN");
+
+        case FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_FUNCS_NEW_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_FUNCS_NEW_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEYLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEYLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMACLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMACLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEY_ENCODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEY_ENCODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMAC_ENCODEFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMAC_ENCODEFAIL");
+
+        case FKO_ERROR_INVALID_DATA_FUNCS_SET_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_FUNCS_SET_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_HMAC_MSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_HMAC_MSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_HMAC_ENCMSGLEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_HMAC_ENCMSGLEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_HMAC_COMPAREFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_HMAC_COMPAREFAIL");
+
+        case FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_HMAC_LEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_HMAC_LEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_MESSAGE_PORT_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_MESSAGE_PORT_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_MESSAGE_EMPTY:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_MESSAGE_EMPTY");
+
+        case FKO_ERROR_INVALID_DATA_MESSAGE_CMD_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_MESSAGE_CMD_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_MESSAGE_ACCESS_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_MESSAGE_ACCESS_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_MESSAGE_NAT_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_MESSAGE_NAT_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_MESSAGE_PORTPROTO_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_MESSAGE_PORTPROTO_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_NAT_EMPTY:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_NAT_EMPTY");
+
+        case FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_SRVAUTH_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_SRVAUTH_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_USER_MISSING:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_USER_MISSING");
+
+        case FKO_ERROR_INVALID_DATA_USER_FIRSTCHAR_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_USER_FIRSTCHAR_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_USER_REMCHAR_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_USER_REMCHAR_VALIDFAIL");
+
+        case FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN");
+
+        case FKO_ERROR_INVALID_DATA_UTIL_STROL_GT_MAX:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_UTIL_STROL_GT_MAX");
+
         case FKO_ERROR_DATA_TOO_LARGE:
             return("Value or Size of the data exceeded the max allowed");
 

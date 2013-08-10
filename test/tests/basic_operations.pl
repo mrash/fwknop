@@ -699,6 +699,79 @@
     },
     {
         'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables INPUT spec',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables INPUT spec (2)',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain2'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables INPUT spec (3)',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain3'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables INPUT spec (4)',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain4'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables INPUT spec (5)',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain5'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables INPUT spec (6)',
+        'function' => \&generic_exec,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain6'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => 'encryption mode CBC',
         'function' => \&generic_exec,
@@ -785,6 +858,16 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --fd -1",
         'positive_output_matches' => [qr/Value\s.*out\sof\srange/],
+        'fatal'    => $NO
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '--stanza-list',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args . " --stanza-list --rc-file $cf{'rc_stanza_list'}",
+        'positive_output_matches' => [qr/The\sfollowing\sstanzas\sare\sconfigured/i, qr/stanza_1/, qr/stanza_2/],
+        'negative_output_matches' => [qr/default/],
         'fatal'    => $NO
     },
 );

@@ -182,7 +182,7 @@ main(int argc, char **argv)
          * of an existing fwknopd process.
         */
         if(fw_config_init(&opts) != 1)
-            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
         if(opts.fw_list == 1 || opts.fw_list_all == 1)
         {

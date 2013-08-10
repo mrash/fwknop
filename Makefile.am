@@ -209,9 +209,16 @@ EXTRA_DIST = \
     test/conf/fwknoprc_gpg_args_no_pw_hmac_key \
     test/conf/fwknoprc_gpg_signing_pw \
     test/conf/fwknoprc_named_gpg_signing_pw \
+    test/conf/fwknoprc_stanza_list \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
+    test/conf/invalid_ipt_input_chain_fwknopd.conf \
+    test/conf/invalid_ipt_input_chain_2_fwknopd.conf \
+    test/conf/invalid_ipt_input_chain_3_fwknopd.conf \
+    test/conf/invalid_ipt_input_chain_4_fwknopd.conf \
+    test/conf/invalid_ipt_input_chain_5_fwknopd.conf \
+    test/conf/invalid_ipt_input_chain_6_fwknopd.conf \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/legacy_iv_access.conf \
@@ -237,6 +244,8 @@ EXTRA_DIST = \
     test/conf/subnet_source_match_access.conf \
     test/conf/tcp_pcap_filter_fwknopd.conf \
     test/conf/tcp_server_fwknopd.conf \
+    test/conf/snat_fwknopd.conf \
+    test/conf/snat_no_translate_ip_fwknopd.conf \
     test/conf/spa_replay.pcap \
     test/fko-wrapper/Makefile \
     test/fko-wrapper/fko_wrapper.c \

@@ -136,7 +136,10 @@ Ryman
       suggested a fix derived from yaSSL:
       http://www.mail-archive.com/debian-bugs-rc@lists.debian.org/msg320402.html
 
-hlein
+Hank Leininger
+    - Contributed a patch to greatly extend libfko error code descriptions at
+      various places in order to give much better information on what certain
+      error conditions mean.  Closes #98.
     - Suggested the ability to read a passphrase from STDIN and via a new --fd
       command line argument (github #74) to allow things like:
             $ gpg -d passphrasefile.pgp | fwknop -R -n myserver

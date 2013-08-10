@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 07/09/2013
+.\"      Date: 08/08/2013
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "07/09/2013" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "08/08/2013" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -252,6 +252,11 @@ argument\&.
 Used with
 \fB\-\-save\-rc\-stanza\fR
 to overwrite all of the variables for the specified stanza
+.RE
+.PP
+\fB\-\-stanza\-list\fR
+.RS 4
+Dump a list of the stanzas found in \(lq$HOME/\&.fwknoprc\(rq\&.
 .RE
 .PP
 \fB\-\-show\-last\fR

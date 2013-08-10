@@ -35,6 +35,10 @@
 #include "utils.h"
 #include "log_msg.h"
 
+#if FIREWALL_IPTABLES
+  #include "fw_util_iptables.h"
+#endif
+
 /* Check to see if an integer variable has a value that is within a
  * specific range
 */
@@ -462,11 +466,27 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_IPT_INPUT_ACCESS,
             DEF_IPT_INPUT_ACCESS);
 
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_INPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_INPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
     /* IPT output access.
     */
     if(opts->config[CONF_IPT_OUTPUT_ACCESS] == NULL)
         set_config_entry(opts, CONF_IPT_OUTPUT_ACCESS,
             DEF_IPT_OUTPUT_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_OUTPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_OUTPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
 
     /* IPT forward access.
     */
@@ -474,11 +494,27 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_IPT_FORWARD_ACCESS,
             DEF_IPT_FORWARD_ACCESS);
 
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_FORWARD_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_FORWARD_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
     /* IPT dnat access.
     */
     if(opts->config[CONF_IPT_DNAT_ACCESS] == NULL)
         set_config_entry(opts, CONF_IPT_DNAT_ACCESS,
             DEF_IPT_DNAT_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_DNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_DNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
 
     /* IPT snat access.
     */
@@ -486,11 +522,27 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_IPT_SNAT_ACCESS,
             DEF_IPT_SNAT_ACCESS);
 
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_SNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_SNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
     /* IPT masquerade access.
     */
     if(opts->config[CONF_IPT_MASQUERADE_ACCESS] == NULL)
         set_config_entry(opts, CONF_IPT_MASQUERADE_ACCESS,
             DEF_IPT_MASQUERADE_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_MASQUERADE_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
 
     /* Check for the iptables 'comment' match at init time
     */

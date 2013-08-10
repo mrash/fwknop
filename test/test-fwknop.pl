@@ -9,7 +9,6 @@ use File::Copy;
 use File::Path;
 use IO::Socket;
 use Data::Dumper;
-use Cwd;
 use Getopt::Long 'GetOptions';
 use strict;
 
@@ -37,6 +36,8 @@ our $lib_dir = '../lib/.libs';
 
 our %cf = (
     'nat'                          => "$conf_dir/nat_fwknopd.conf",
+    'snat'                         => "$conf_dir/snat_fwknopd.conf",
+    'snat_no_translate_ip'         => "$conf_dir/snat_no_translate_ip_fwknopd.conf",
     'def'                          => "$conf_dir/default_fwknopd.conf",
     'def_access'                   => "$conf_dir/default_access.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
@@ -66,6 +67,12 @@ our %cf = (
     'future_exp_access'            => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'             => "$conf_dir/expired_epoch_stanza_access.conf",
     'invalid_exp_access'           => "$conf_dir/invalid_expire_access.conf",
+    'invalid_ipt_input_chain'      => "$conf_dir/invalid_ipt_input_chain_fwknopd.conf",
+    'invalid_ipt_input_chain2'     => "$conf_dir/invalid_ipt_input_chain_2_fwknopd.conf",
+    'invalid_ipt_input_chain3'     => "$conf_dir/invalid_ipt_input_chain_3_fwknopd.conf",
+    'invalid_ipt_input_chain4'     => "$conf_dir/invalid_ipt_input_chain_4_fwknopd.conf",
+    'invalid_ipt_input_chain5'     => "$conf_dir/invalid_ipt_input_chain_5_fwknopd.conf",
+    'invalid_ipt_input_chain6'     => "$conf_dir/invalid_ipt_input_chain_6_fwknopd.conf",
     'force_nat_access'             => "$conf_dir/force_nat_access.conf",
     'hmac_force_nat_access'        => "$conf_dir/hmac_force_nat_access.conf",
     'cmd_access'                   => "$conf_dir/cmd_access.conf",
@@ -140,6 +147,7 @@ our %cf = (
     'rc_hmac_sha512_key'           => "$conf_dir/fwknoprc_hmac_sha512_key",
     'rc_hmac_sha512_short_key'     => "$conf_dir/fwknoprc_hmac_sha512_short_key",
     'rc_hmac_sha512_long_key'      => "$conf_dir/fwknoprc_hmac_sha512_long_key",
+    'rc_stanza_list'               => "$conf_dir/fwknoprc_stanza_list",
     'base64_key_access'            => "$conf_dir/base64_key_access.conf",
     'custom_input_chain'           => "$conf_dir/custom_input_chain_fwknopd.conf",
     'custom_nat_chain'             => "$conf_dir/custom_nat_chain_fwknopd.conf",
@@ -246,6 +254,7 @@ my $curr_test_file = 'init';
 my $init_file = $curr_test_file;
 my $tarfile = 'test_fwknop.tar.gz';
 our $key_gen_file = "$output_dir/key_gen";
+my $gdb_test_file = '';
 my $fuzzing_pkts_file = 'fuzzing/fuzzing_spa_packets';
 my $fuzzing_pkts_append = 0;
 my $fuzzing_key = 'testtest';
@@ -353,6 +362,7 @@ exit 1 unless GetOptions(
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
     'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
+    'gdb-test=s'        => \$gdb_test_file,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$enable_valgrind,
@@ -392,6 +402,9 @@ $enable_valgrind = 0 if $disable_valgrind;
 exit &anonymize_results() if $anonymize_results;
 
 exit &diff_test_results() if $diff_mode;
+
+### run an fwknop command under gdb from a previous test run
+exit &gdb_test_cmd() if $gdb_test_file;
 
 &identify_loopback_intf();
 
@@ -525,10 +538,25 @@ my @tests = (
     @os_compatibility,
     @perl_FKO_module,
     @python_fko,
+
+    {
+        'category' => 'Look for crashes',
+        'detail'   => 'checking for segfault/core dump messages (1)',
+        'function' => \&look_for_crashes,
+        'fatal'    => $NO
+    },
+
     @gpg_no_pw,
     @gpg_no_pw_hmac,
     @gpg,
     @gpg_hmac,
+
+    {
+        'category' => 'Look for crashes',
+        'detail'   => 'checking for segfault/core dump messages (2)',
+        'function' => \&look_for_crashes,
+        'fatal'    => $NO
+    }
 );
 
 &validate_test_hashes();
@@ -781,6 +809,30 @@ sub process_include_exclude() {
     return 1;
 }
 
+sub gdb_test_cmd() {
+
+    die "[*] previous test file: $gdb_test_file does not exist."
+        unless -e $gdb_test_file;
+
+    my $gdb_cmd = '';
+
+    open F, "< $gdb_test_file" or die "[*] Could not open $gdb_test_file: $!";
+    while (<F>) {
+        if (/CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopCmd\s.*)/
+                or /CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopdCmd\s.*)/) {
+            $gdb_cmd = "LD_LIBRARY_PATH=$1 gdb --args $2";
+        }
+    }
+    close F;
+
+    if ($gdb_cmd) {
+        system $gdb_cmd;
+    } else {
+        die "[*] Could not extract fwknop/fwknopd command from $gdb_test_file";
+    }
+    return 1;
+}
+
 sub diff_test_results() {
 
     $diff_dir1 = "${output_dir}.last" unless $diff_dir1;
@@ -1004,10 +1056,7 @@ sub test_suite_conf_files() {
         next if -d $f;
         next unless $f =~ /\.conf/ or $f =~ /fwknop/;
         if ($f =~ m|$conf_dir/(\S+)|) {
-            if (defined $makefile_conf_files{$1}) {
-                &write_test_file("[+] test suite conf file $1 is in $make_file.\n",
-                    $curr_test_file);
-            } else {
+            unless (defined $makefile_conf_files{$1}) {
                 &write_test_file("[-] test suite conf file $1 not in $make_file.\n",
                     $curr_test_file);
                 $rv = 0;
@@ -1017,14 +1066,30 @@ sub test_suite_conf_files() {
 
     for my $f (glob("$tests_dir/*.pl")) {
         if ($f =~ m|$tests_dir/(\S+)|) {
-            if (defined $makefile_test_scripts{$1}) {
-                &write_test_file("[+] test suite script file $1 is in $make_file.\n",
-                    $curr_test_file);
-            } else {
+            unless (defined $makefile_test_scripts{$1}) {
                 &write_test_file("[-] test suite script file $1 not in $make_file.\n",
                     $curr_test_file);
                 $rv = 0;
             }
+        }
+    }
+
+    return $rv;
+}
+
+sub look_for_crashes() {
+    my $rv = 1;
+
+    for my $f (glob("$output_dir/*")) {
+
+        next if -d $f;
+        next unless $f =~ /\.test$/;
+
+        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
+                $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
+            &write_test_file("[-] segmentation fault or core dump message found in: $f\n",
+                $curr_test_file);
+            $rv = 0;
         }
     }
 
@@ -5967,6 +6032,9 @@ sub usage() {
                                      default, except that --enable-valgrind
                                      must also be set if valgrind mode is
                                      desired.
+    --gdb-test <test file>         - Run the same command a previous test suite
+                                     execution through gdb by specifying the
+                                     output/ test file.
     --fuzzing-pkts-file <file>     - Specify path to fuzzing packet file.
     --fuzzing-pkts-append          - When generating new fuzzing packets,
                                      append them to the fuzzing packets file.

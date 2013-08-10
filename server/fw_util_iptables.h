@@ -55,6 +55,8 @@
 #define IPT_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n 2>&1"
 #define IPT_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers 2>&1"
 
+int validate_ipt_chain_conf(const char * const chain_str);
+
 #endif /* FW_UTIL_IPTABLES_H */
 
 /***EOF***/
