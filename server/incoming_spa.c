@@ -44,6 +44,8 @@
 #include "fwknopd_errors.h"
 #include "replay_cache.h"
 
+#define CTX_DUMP_BUFSIZE            4096                /*!< Maximum size allocated to a FKO context dump */
+
 /* Validate and in some cases preprocess/reformat the SPA data.  Return an
  * error code value if there is any indication the data is not valid spa data.
 */
@@ -273,6 +275,7 @@ incoming_spa(fko_srv_options_t *opts)
     int             added_replay_digest = 0, pkt_data_len=0;
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
+    char            dump_buf[CTX_DUMP_BUFSIZE];
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -544,8 +547,14 @@ incoming_spa(fko_srv_options_t *opts)
         /* At this point, we assume the SPA data is valid.  Now we need to see
          * if it meets our access criteria.
         */
-        log_msg(LOG_DEBUG, "[%s] (stanza #%d) SPA Decode (res=%i):\n%s",
-            spadat.pkt_source_ip, stanza_num, res, dump_ctx(ctx));
+        log_msg(LOG_DEBUG, "[%s] (stanza #%d) SPA Decode (res=%i):",
+            spadat.pkt_source_ip, stanza_num, res);
+
+        res = dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));
+        if (res == FKO_SUCCESS)
+            log_msg(LOG_DEBUG, "%s", dump_buf);
+        else
+            log_msg(LOG_WARNING, "Unable to dump FKO context: %s", fko_errstr(res));
 
         /* First, if this is a GPG message, and GPG_REMOTE_ID list is not empty,
          * then we need to make sure this incoming message is signer ID matches

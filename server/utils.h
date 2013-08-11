@@ -33,8 +33,6 @@
 
 #include "fko.h"
 
-#define  CTX_DUMP_BUFSIZE   4096
-
 /* Some convenience macros */
 
 /* Characters allowed between a config parameter and its value.

@@ -39,7 +39,6 @@
 */
 static int get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len);
-static void display_ctx(fko_ctx_t ctx);
 static void errmsg(const char *msg, const int err);
 static int prev_exec(fko_cli_options_t *options, int argc, char **argv);
 static int get_save_file(char *args_save_file);
@@ -65,7 +64,7 @@ static int is_hostname_str_with_port(const char *str,
 #define IPV4_STR_TEMPLATE           "%u.%u.%u.%u"       /*!< Template for a string as an ipv4 address with sscanf */
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
 #define HOSTNAME_BUFSIZE            64                  /*!< Maximum size of a hostname string */
-
+#define CTX_DUMP_BUFSIZE            4096                /*!< Maximum size allocated to a FKO context dump */
 
 /**
  * @brief Check whether a string is an ipv4 address or not
@@ -183,6 +182,7 @@ main(int argc, char **argv)
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
     int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0, enc_mode;
     int                 tmp_port = 0;
+    char                dump_buf[CTX_DUMP_BUFSIZE];
 
     fko_cli_options_t   options;
 
@@ -468,7 +468,13 @@ main(int argc, char **argv)
     /* Display the context data.
     */
     if (options.verbose || options.test)
-        display_ctx(ctx);
+    {
+        res = dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));
+        if (res == FKO_SUCCESS)
+            log_msg(LOG_VERBOSITY_NORMAL, "%s", dump_buf);
+        else
+            log_msg(LOG_VERBOSITY_WARNING, "Unable to dump FKO context: %s", fko_errstr(res));
+    }
 
     /* Save packet data payload if requested.
     */
@@ -610,8 +616,11 @@ main(int argc, char **argv)
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
-        log_msg(LOG_VERBOSITY_NORMAL,"\nDump of the Decoded Data");
-        display_ctx(ctx2);
+        res = dump_ctx_to_buffer(ctx2, dump_buf, sizeof(dump_buf));
+        if (res == FKO_SUCCESS)
+            log_msg(LOG_VERBOSITY_NORMAL, "\nDump of the Decoded Data\n%s", dump_buf);
+        else
+            log_msg(LOG_VERBOSITY_WARNING, "Unable to dump FKO context: %s", fko_errstr(res));
 
         if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
             log_msg(LOG_VERBOSITY_ERROR,
@@ -1304,81 +1313,6 @@ clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     *key_len = 0;
     *hmac_key_len = 0;
     exit(exit_status);
-}
-
-/* Show the fields of the FKO context.
-*/
-static void
-display_ctx(fko_ctx_t ctx)
-{
-    char       *rand_val        = NULL;
-    char       *username        = NULL;
-    char       *version         = NULL;
-    char       *spa_message     = NULL;
-    char       *nat_access      = NULL;
-    char       *server_auth     = NULL;
-    char       *enc_data        = NULL;
-    char       *hmac_data       = NULL;
-    char       *spa_digest      = NULL;
-    char       *spa_data        = NULL;
-    char        digest_str[MAX_LINE_LEN]   = {0};
-    char        hmac_str[MAX_LINE_LEN]     = {0};
-    char        enc_mode_str[MAX_LINE_LEN] = {0};
-
-    time_t      timestamp       = 0;
-    short       msg_type        = -1;
-    short       digest_type     = -1;
-    short       hmac_type       = -1;
-    short       encryption_type = -1;
-    int         encryption_mode = -1;
-    int         client_timeout  = -1;
-
-    /* Should be checking return values, but this is temp code. --DSS
-    */
-    fko_get_rand_value(ctx, &rand_val);
-    fko_get_username(ctx, &username);
-    fko_get_timestamp(ctx, &timestamp);
-    fko_get_version(ctx, &version);
-    fko_get_spa_message_type(ctx, &msg_type);
-    fko_get_spa_message(ctx, &spa_message);
-    fko_get_spa_nat_access(ctx, &nat_access);
-    fko_get_spa_server_auth(ctx, &server_auth);
-    fko_get_spa_client_timeout(ctx, &client_timeout);
-    fko_get_spa_digest_type(ctx, &digest_type);
-    fko_get_spa_hmac_type(ctx, &hmac_type);
-    fko_get_spa_encryption_type(ctx, &encryption_type);
-    fko_get_spa_encryption_mode(ctx, &encryption_mode);
-    fko_get_encoded_data(ctx, &enc_data);
-    fko_get_spa_hmac(ctx, &hmac_data);
-    fko_get_spa_digest(ctx, &spa_digest);
-    fko_get_spa_data(ctx, &spa_data);
-
-    digest_inttostr(digest_type, digest_str, sizeof(digest_str));
-    hmac_digest_inttostr(hmac_type, hmac_str, sizeof(hmac_str));
-    enc_mode_inttostr(encryption_mode, enc_mode_str, sizeof(enc_mode_str));
-
-    log_msg(LOG_VERBOSITY_NORMAL, "\nFKO Field Values:\n=================\n");
-    log_msg(LOG_VERBOSITY_NORMAL, "   Random Value: %s", rand_val == NULL ? "<NULL>" : rand_val);
-    log_msg(LOG_VERBOSITY_NORMAL, "       Username: %s", username == NULL ? "<NULL>" : username);
-    log_msg(LOG_VERBOSITY_NORMAL, "      Timestamp: %u", (unsigned int) timestamp);
-    log_msg(LOG_VERBOSITY_NORMAL, "    FKO Version: %s", version == NULL ? "<NULL>" : version);
-    log_msg(LOG_VERBOSITY_NORMAL, "   Message Type: %i (%s)", msg_type, msg_type_inttostr(msg_type));
-    log_msg(LOG_VERBOSITY_NORMAL, " Message String: %s", spa_message == NULL ? "<NULL>" : spa_message);
-    log_msg(LOG_VERBOSITY_NORMAL, "     Nat Access: %s", nat_access == NULL ? "<NULL>" : nat_access);
-    log_msg(LOG_VERBOSITY_NORMAL, "    Server Auth: %s", server_auth == NULL ? "<NULL>" : server_auth);
-    log_msg(LOG_VERBOSITY_NORMAL, " Client Timeout: %u (seconds)", client_timeout);
-    log_msg(LOG_VERBOSITY_NORMAL, "    Digest Type: %d (%s)", digest_type, digest_str);
-    log_msg(LOG_VERBOSITY_NORMAL, "      HMAC Type: %d (%s)", hmac_type, hmac_str);
-    log_msg(LOG_VERBOSITY_NORMAL, "Encryption Type: %d (%s)", encryption_type, enc_type_inttostr(encryption_type));
-    log_msg(LOG_VERBOSITY_NORMAL, "Encryption Mode: %d (%s)", encryption_mode, enc_mode_str);
-    log_msg(LOG_VERBOSITY_NORMAL, "\n   Encoded Data: %s", enc_data == NULL ? "<NULL>" : enc_data);
-    log_msg(LOG_VERBOSITY_NORMAL, "SPA Data Digest: %s", spa_digest == NULL ? "<NULL>" : spa_digest);
-    log_msg(LOG_VERBOSITY_NORMAL, "           HMAC: %s", hmac_data == NULL ? "<NULL>" : hmac_data);
-
-    if (enc_data != NULL && spa_digest != NULL)
-        log_msg(LOG_VERBOSITY_NORMAL, "      Plaintext: %s:%s\n", enc_data, spa_digest);
-
-    log_msg(LOG_VERBOSITY_NORMAL, "\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n", spa_data);
 }
 
 /***EOF***/
