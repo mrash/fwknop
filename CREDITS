@@ -73,6 +73,12 @@ Geoff Carstairs
       user.  The result was the FORCE_NAT mode.
 
 Hank Leininger
+    - Contributed a patch to greatly extend libfko error code descriptions at
+      various places in order to give much better information on what certain
+      error conditions mean.  Closes #98.
+    - Suggested the ability to read a passphrase from STDIN and via a new --fd
+      command line argument (github #74) to allow things like:
+            $ gpg -d passphrasefile.pgp | fwknop -R -n myserver
     - For iptables firewalls, suggested a check for the 'comment' match to
       ensure the local environment will properly support fwknopd operations.
       The result is the new ENABLE_IPT_COMMENT_CHECK functionality.
@@ -135,14 +141,6 @@ Ryman
     - Reported a timing attack bug in the HMAC comparison operation (#85) and
       suggested a fix derived from yaSSL:
       http://www.mail-archive.com/debian-bugs-rc@lists.debian.org/msg320402.html
-
-Hank Leininger
-    - Contributed a patch to greatly extend libfko error code descriptions at
-      various places in order to give much better information on what certain
-      error conditions mean.  Closes #98.
-    - Suggested the ability to read a passphrase from STDIN and via a new --fd
-      command line argument (github #74) to allow things like:
-            $ gpg -d passphrasefile.pgp | fwknop -R -n myserver
 
 Blair Zajac
     - Contributed patches to handle endian issues on PPC systems.
