@@ -1,4 +1,10 @@
 fwknop-2.5.2 (//2013):
+    - [libfko] (Franck Joncourt) Consolidated FKO context dumping function into
+      lib/fko_util.c. In addition to adding a shared utility function for
+      printing an FKO context, this change also makes the FKO context output
+      slightly easier to parse by printing each FKO attribute on a single line
+      (this change affected the printing of the final SPA packet data).  The
+      test suite has been updated to account for this change as well.
     - [test suite] added --gdb-test to allow a previously executed fwknop
       or fwknopd command to be sent through gdb with the same command line
       args as the test suite used.  This is for convenience to rapidly allow

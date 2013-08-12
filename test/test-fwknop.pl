@@ -1208,7 +1208,7 @@ sub client_rc_file() {
             $cmd_out_tmp, $curr_test_file);
 
     unless ($test_hr->{'cmdline'} =~ /key\-gen/ or $test_hr->{'cmdline'} =~ /\-k/) {
-        $rv = 0 unless &file_find_regex([qr/final\spacked/i],
+        $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/i],
             $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
     }
 
@@ -1287,7 +1287,7 @@ sub validate_fko_decode() {
             next;
         }
         next unless $found_fko_field_values;
-        if (/Final\sPacked/) {
+        if (/Final\sSPA\sData/) {
             $found_fko_field_values = 0;
             last if $finished_first_section;
             $finished_first_section = 1;
@@ -1359,7 +1359,7 @@ sub client_send_spa_packet() {
 
             $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                     $cmd_out_tmp, $curr_test_file);
-            $rv = 0 unless &file_find_regex([qr/final\spacked/i],
+            $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/],
                 $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
@@ -1370,7 +1370,7 @@ sub client_send_spa_packet() {
     } else {
         $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                 $cmd_out_tmp, $curr_test_file);
-        $rv = 0 unless &file_find_regex([qr/final\spacked/i],
+        $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/i],
             $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
     }
 
@@ -4363,18 +4363,9 @@ sub get_spa_packet_from_file() {
     my $file = shift;
 
     my $spa_pkt = '';
-
-    my $found_trigger_line = 0;
     open F, "< $file" or die "[*] Could not open file $file: $!";
     while (<F>) {
-        if (/final\spacked/i) {
-            $found_trigger_line = 1;
-            next;
-        }
-        next unless $found_trigger_line;
-
-        ### the next line with non whitespace is the SPA packet
-        if (/(\S+)/) {
+        if (/Final\sSPA\sData\:\s(\S+)/) {
             $spa_pkt = $1;
             last;
         }

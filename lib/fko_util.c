@@ -93,7 +93,6 @@ constant_runtime_cmp(const char *a, const char *b, int len)
         return 0 - bad;
 }
 
-
 /* Validate encoded message length
 */
 int
@@ -494,7 +493,7 @@ append_msg_to_buf(char *buf, size_t buf_size, const char* msg, ...)
     va_list ap;
 
     /* Check if the buffer is valid */
-    if (buf_size != 0)
+    if (buf_size > 0)
     {
         va_start(ap, msg);
 
@@ -622,11 +621,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "   Encoded Data: %s\n", enc_data == NULL ? NULL_STRING : enc_data);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "SPA Data Digest: %s\n", spa_digest == NULL ? NULL_STRING : spa_digest);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "           HMAC: %s\n", hmac_data == NULL ? NULL_STRING : hmac_data);
-
-        if (enc_data != NULL && spa_digest != NULL)
-            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "      Plaintext: %s:%s\n", enc_data, spa_digest);
-
-        cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n", spa_data);
+        cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, " Final SPA Data: %s\n", spa_data);
 
         err = FKO_SUCCESS;
     }
