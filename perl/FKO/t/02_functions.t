@@ -10,28 +10,38 @@
 #
 use FKO;
 
-use Test::More tests => 96;
+#use Test::More tests => 96;
+use Test::More tests => 14;
 
 # Test spa data support vars
 #
 my (
-    $tsd, $tsd_pw, $tsd_rand, $tsd_user, $tsd_time, $tsd_ver,
+    $tsd, $tsd_pw, $tsd_pw_len, $tsd_hmac_key, $tsd_hmac_key_len,
+    $tsd_encryption_mode, $tsd_rand, $tsd_user, $tsd_time, $tsd_ver,
     $tsd_msg_type, $tsd_msg, $tsd_nat_access, $tsd_server_auth,
-    $tsd_client_timeout, $tsd_digest, $tsd_encoded,
-    $tsd_digest_type, $tsd_encryption_type
+    $tsd_client_timeout, $tsd_digest, $tsd_encoded, $tsd_digest_type,
+    $tsd_hmac_digest_type, $tsd_encryption_type
 );
 
 # Preset for test
 #
 $tuser      = 'bubba';
 $tuser_pw   = 'tsd-bubba';
+$thmac_key  = 'This is bubba\'s HMAC key.';
 
 # Defaults
 #
-my $def_tsd_msg         = '0.0.0.0,tcp/22';
-my $def_encryption_type = FKO::FKO_ENCRYPTION_RIJNDAEL;
-my $def_digest_type     = FKO::FKO_DIGEST_SHA256;
-my $def_msg_type        = FKO::FKO_ACCESS_MSG;
+my $def_tsd_msg          = '0.0.0.0,tcp/22';
+my $def_encryption_type  = FKO::FKO_ENCRYPTION_RIJNDAEL;
+my $def_digest_type      = FKO::FKO_DIGEST_SHA256;
+my $def_msg_type         = FKO::FKO_ACCESS_MSG;
+my $def_hmac_digest_type = FKO::FKO_HMAC_SHA256;
+my $def_encrption_mode   = FKO::FKO_ENC_MODE_ECB;
+
+my $test_hmac_key       = '0987654321test this is only a test';
+
+my $test_encryption_mode = $FKO::FKO_ENC_MODE_ECB;
+my $test_hmac_type = $FKO::FKO_HMAC_SHA256;
 
 my $err;
 
@@ -56,7 +66,7 @@ ok($tsd_time =~ /^\d+$/, 'timestamp format');
 ok(($tsd_time - $f1_now) < 2, 'default timestamp value');
 
 $tsd_ver = $f1->version();
-ok($tsd_ver =~ /^\d+\.\d+\.\d+$/, 'version format');
+ok($tsd_ver =~ /^\d+\.\d+(:?\.\d+)?$/, 'version format');
 
 $tsd_encryption_type = $f1->encryption_type();
 ok($tsd_encryption_type == $def_encryption_type, 'default encryption type');
@@ -79,12 +89,18 @@ $err = $f1->spa_message($def_tsd_msg);
 ok($err == 0, 'set spa message');
 ok($f1->spa_message() eq $def_tsd_msg, 'set spa message value');
 
+##--DSS
+# Set the hmac digest stuff
+$f1->hmac_type($test_hmac_type);
+$f1->encryption_mode($test_encryption_mode);
+
 # 14 - Finalize the spa data (encode fields , compute digest, encrypt,
 #      and encode all)
 #
-$err = $f1->spa_data_final($tuser_pw);
+$err = $f1->spa_data_final($tuser_pw, length($tuser_pw), $thmac_key, length($thmac_key));
 ok($err == 0, 'f1 spa data final');
 
+if(0) {
 # 15-16 - Get some of the current spa data for later tests.
 #
 $tsd = $f1->spa_data();
@@ -94,7 +110,8 @@ ok($tsd_digest, 'f1 get spa digest');
 
 #  17 - create a new object based on the spa data produced by f1.
 #
-my $f2 = FKO->new($tsd, $tuser_pw);
+my $f2 = FKO->new($tsd, $tuser_pw, length($tuser_pw), $f1->encryption_mode(),
+                  $thmac_key, length($thmac_key), $test_hmac_type);
 ok( $f2 );
 
 # 18-31 - Ensure the f2 fields match the f1 fields
@@ -192,6 +209,8 @@ is($f1->spa_server_auth(), 'crypt,bubba', 'verify server_auth message');
 ok($f1->spa_client_timeout(666) == 0, 'set client_timeout');
 is($f1->spa_client_timeout(), 666, 'verify client_timeout');
 
+#--DSS
+}
 
 ##############################################################################
 

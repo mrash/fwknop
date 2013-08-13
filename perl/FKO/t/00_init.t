@@ -16,9 +16,15 @@ BEGIN { use_ok('FKO') };
 
 # Test support vars
 #
-my $test_spa_data = '/6jQlii54itZX2d7uQb0CzKgBEKk9T9dOD5COpZM6tdL7I95+GXvbjBgCoDObwTpBSWGEPPEpLmiVIe0iQoEMRT4bDWindoHopxggByzr3aOToQZAhBgEIsMfC+ucz6sragIieQORkmr3OjtOAHI1hZjSMXadiXKo';
+my $test_spa_data = '';
+my $test_spa_data_pw = 'test1234567890';
+my $test_hmac_key    = '0987654321test this is only a test';
 
-my $test_spa_data_pw = 'sdf';
+my $test_encryption_mode = $FKO::FKO_ENC_MODE_ECB;
+my $test_hmac_type = $FKO::FKO_HMAC_SHA256;
+
+my $test_spa_data_pw_len = length($test_spa_data_pw);
+my $test_hmac_key_len = length($test_hmac_key);
 
 ##############################################################################
 
@@ -37,8 +43,11 @@ ok(!defined($f1->{_ctx}));
 
 # 5 - Init with data
 #
-my $f2 = FKO->new($test_spa_data, $test_spa_data_pw);
+my $f2 = FKO->new($test_spa_data, $test_spa_data_pw, $test_spa_data_pw_len,
+				  $test_encryption_mode, $test_hmac_key, $test_hmac_key_len,
+				  $test_hmac_type);
 isa_ok( $f2, 'FKO' );
+
 
 # 6 - Destroy full
 #

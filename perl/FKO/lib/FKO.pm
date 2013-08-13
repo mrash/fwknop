@@ -16,7 +16,7 @@ use warnings;
 use Carp;
 require Exporter;
 
-our $VERSION = '0.23';
+our $VERSION = '2.0.1';
 
 our @ISA = qw(Exporter);
 
@@ -36,18 +36,20 @@ our (
 require "FKO_Constants.pl";
 
 our %EXPORT_TAGS = (
-    'message_types' => \@MSG_TYPES,
-    'digest_types' => \@DIGEST_TYPES,
+    'message_types'     => \@MSG_TYPES,
+    'digest_types'      => \@DIGEST_TYPES,
     'hmac_digest_types' => \@HMAC_DIGEST_TYPES,
-    'encryption_types' => \@ENCRYPTION_TYPES,
-    'encryption_modes' => \@ENCRYPTION_MODES,
-    'errors' => \@ERROR_CODES,
+    'encryption_types'  => \@ENCRYPTION_TYPES,
+    'encryption_modes'  => \@ENCRYPTION_MODES,
+    'errors'            => \@ERROR_CODES,
+
     'types' => [
         @MSG_TYPES,
         @DIGEST_TYPES,
         @HMAC_DIGEST_TYPES,
         @ENCRYPTION_TYPES
     ],
+
     'all' => [
         @MSG_TYPES,
         @HMAC_DIGEST_TYPES,
@@ -84,7 +86,7 @@ sub new {
     # If data was passed, call _init_ctx_with_data.  If a password was
     # not defined, then pass 0.
     #
-    if($data) {
+    if(defined($data) and $data) {
         if(defined($dc_pw)) {
             $ctx = _init_ctx_with_data($data, $dc_pw, $dc_pw_len,
                         $enc_mode, $hmac_pw, $hmac_pw_len, $hmac_type);
