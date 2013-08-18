@@ -1716,6 +1716,33 @@ sub perl_fko_module_compile_install() {
     return $rv;
 }
 
+sub perl_fko_module_make_test() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '../perl/FKO' or die $!;
+
+    &run_cmd("make test", $cmd_out_tmp, "../../test/$curr_test_file");
+
+    chdir $curr_pwd or die $!;
+
+    if ($test_hr->{'positive_output_matches'}) {
+        unless (&file_find_regex(
+                $test_hr->{'positive_output_matches'},
+                $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    return $rv;
+}
+
 sub perl_fko_module_new_object() {
     my $test_hr = shift;
 

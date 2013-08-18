@@ -9,6 +9,15 @@
     },
     {
         'category' => 'perl FKO module',
+        'subcategory' => 'make test',
+        'detail'   => 'run built-in tests',
+        'function' => \&perl_fko_module_make_test,
+        'positive_output_matches' => [qr/All\stests\ssuccessful/i],
+        'fatal'    => $NO
+    },
+
+    {
+        'category' => 'perl FKO module',
         'subcategory' => 'FUZZING',
         'detail'   => 'generate invalid SPA pkts',
         'function' => \&perl_fko_module_assume_patches_generate_fuzzing_spa_packets,
