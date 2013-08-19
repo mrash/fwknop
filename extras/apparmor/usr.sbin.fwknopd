@@ -1,0 +1,31 @@
+# Last Modified: Sun Aug 18 22:54:57 2013
+# Assumes fwknopd was built with:
+#    './configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var'
+#include <tunables/global>
+
+/usr/sbin/fwknopd {
+  #include <abstractions/base>
+
+  capability ipc_lock,
+  capability net_admin,
+  capability net_raw,
+
+  network inet raw,
+  network packet raw,
+
+  /bin/dash rix,
+  /bin/bash rix,
+  /etc/fwknop/access.conf r,
+  /etc/fwknop/fwknopd.conf r,
+  /etc/nsswitch.conf r,
+  /etc/passwd r,
+  /etc/protocols r,
+  /root/.gnupg/* rw,
+  /run/fwknop/ rw,
+  /run/fwknop/* rwk,
+  /sbin/xtables-multi rix,
+  /usr/bin/gpg rix,
+  /usr/sbin/fwknopd mr,
+  /var/cache/nscd/passwd r,
+
+}
