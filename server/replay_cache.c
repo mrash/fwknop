@@ -730,6 +730,12 @@ add_replay(fko_srv_options_t *opts, char *digest)
     return(-1);
 #else
 
+    if(digest == NULL)
+    {
+        log_msg(LOG_WARNING, "NULL digest passed into add_replay()");
+        return(SPA_MSG_DIGEST_CACHE_ERROR);
+    }
+
 #if USE_FILE_CACHE
     return add_replay_file_cache(opts, digest);
 #else
