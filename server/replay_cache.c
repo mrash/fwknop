@@ -207,29 +207,8 @@ replay_warning(fko_srv_options_t *opts, digest_cache_info_t *digest_info)
     return;
 }
 
-int
-replay_cache_init(fko_srv_options_t *opts)
-{
-#ifdef NO_DIGEST_CACHE
-    return(-1);
-#else
-
-    /* If rotation was specified, do it.
-    */
-    if(opts->rotate_digest_cache)
-        rotate_digest_cache_file(opts);
-
 #if USE_FILE_CACHE
-    return replay_file_cache_init(opts);
-#else
-    return replay_db_cache_init(opts);
-#endif
-
-#endif /* NO_DIGEST_CACHE */
-}
-
-#if USE_FILE_CACHE
-int
+static int
 replay_file_cache_init(fko_srv_options_t *opts)
 {
     FILE           *digest_file_ptr = NULL;
@@ -383,7 +362,7 @@ replay_file_cache_init(fko_srv_options_t *opts)
 /* Check for the existence of the replay dbm file, and create it if it does
  * not exist.  Returns the number of db entries or -1 on error.
 */
-int
+static int
 replay_db_cache_init(fko_srv_options_t *opts)
 {
 #ifdef NO_DIGEST_CACHE
@@ -443,41 +422,8 @@ replay_db_cache_init(fko_srv_options_t *opts)
 }
 #endif /* USE_FILE_CACHE */
 
-/* Take an fko context, pull the digest and use it as the key to check the
- * replay db (digest cache).
-*/
-int
-is_replay(fko_srv_options_t *opts, char *digest)
-{
-#ifdef NO_DIGEST_CACHE
-    return(-1);
-#else
-
 #if USE_FILE_CACHE
-    return is_replay_file_cache(opts, digest);
-#else
-    return is_replay_dbm_cache(opts, digest);
-#endif
-#endif /* NO_DIGEST_CACHE */
-}
-
-int
-add_replay(fko_srv_options_t *opts, char *digest)
-{
-#ifdef NO_DIGEST_CACHE
-    return(-1);
-#else
-
-#if USE_FILE_CACHE
-    return add_replay_file_cache(opts, digest);
-#else
-    return add_replay_dbm_cache(opts, digest);
-#endif
-#endif /* NO_DIGEST_CACHE */
-}
-
-#if USE_FILE_CACHE
-int
+static int
 is_replay_file_cache(fko_srv_options_t *opts, char *digest)
 {
     int         digest_len = 0;
@@ -503,7 +449,7 @@ is_replay_file_cache(fko_srv_options_t *opts, char *digest)
     return(SPA_MSG_SUCCESS);
 }
 
-int
+static int
 add_replay_file_cache(fko_srv_options_t *opts, char *digest)
 {
     FILE       *digest_file_ptr = NULL;
@@ -572,7 +518,7 @@ add_replay_file_cache(fko_srv_options_t *opts, char *digest)
 #endif /* USE_FILE_CACHE */
 
 #if !USE_FILE_CACHE
-int
+static int
 is_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 {
 #ifdef NO_DIGEST_CACHE
@@ -642,7 +588,7 @@ is_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 #endif /* NO_DIGEST_CACHE */
 }
 
-int
+static int
 add_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 {
 #ifdef NO_DIGEST_CACHE
@@ -756,5 +702,58 @@ free_replay_list(fko_srv_options_t *opts)
 }
 #endif
 
+int
+replay_cache_init(fko_srv_options_t *opts)
+{
+#ifdef NO_DIGEST_CACHE
+    return(-1);
+#else
+
+    /* If rotation was specified, do it.
+    */
+    if(opts->rotate_digest_cache)
+        rotate_digest_cache_file(opts);
+
+#if USE_FILE_CACHE
+    return replay_file_cache_init(opts);
+#else
+    return replay_db_cache_init(opts);
+#endif
+
+#endif /* NO_DIGEST_CACHE */
+}
+
+int
+add_replay(fko_srv_options_t *opts, char *digest)
+{
+#ifdef NO_DIGEST_CACHE
+    return(-1);
+#else
+
+#if USE_FILE_CACHE
+    return add_replay_file_cache(opts, digest);
+#else
+    return add_replay_dbm_cache(opts, digest);
+#endif
+#endif /* NO_DIGEST_CACHE */
+}
+
+/* Take an fko context, pull the digest and use it as the key to check the
+ * replay db (digest cache).
+*/
+int
+is_replay(fko_srv_options_t *opts, char *digest)
+{
+#ifdef NO_DIGEST_CACHE
+    return(-1);
+#else
+
+#if USE_FILE_CACHE
+    return is_replay_file_cache(opts, digest);
+#else
+    return is_replay_dbm_cache(opts, digest);
+#endif
+#endif /* NO_DIGEST_CACHE */
+}
 
 /***EOF***/
