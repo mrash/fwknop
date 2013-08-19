@@ -1,4 +1,7 @@
 fwknop-2.5.2 (//2013):
+    - (Radostan Riedel) Added an AppArmor policy that is known to work on
+      Debian and Ubuntu systems.  The policy file is available in
+      extras/apparmor.
     - [libfko] (Franck Joncourt) Consolidated FKO context dumping function into
       lib/fko_util.c. In addition to adding a shared utility function for
       printing an FKO context, this change also makes the FKO context output

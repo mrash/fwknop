@@ -150,3 +150,8 @@ Blair Zajac
     - Suggested throwing an error in '-M legacy' mode to warn users about the
       inability of older fwknopd daemons to handle Rijndael keys > 16 bytes.
       Any release after and including 2.5 does not have this limitation.
+
+Radostan Riedel
+    - Contributed an AppArmor policy that is known to work on Debian and Ubuntu
+      systems.  The policy file is available in extras/apparmor.
+
