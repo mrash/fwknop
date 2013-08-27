@@ -41,7 +41,7 @@ static int  syslog_fac      = LOG_DAEMON;
  * for force log to stderr instead of syslog simply be setting this to the
  * appropriate value (which is done at init_logging().
 */
-static int  static_log_flag = 0;
+static int  static_log_flag = LOG_STDERR_ONLY;
 
 /* The name to use for ID in log messages.  This defaults to fwknopd.
 */
@@ -100,6 +100,8 @@ init_logging(fko_srv_options_t *opts) {
     else
         strlcpy(log_name, my_name, strlen(MY_NAME)+1);
 
+    static_log_flag = LOG_SYSLOG_ONLY;
+
     /* If we are running in the foreground or performing firewall operations,
      * all logging will go to stderr.
     */
@@ -107,7 +109,7 @@ init_logging(fko_srv_options_t *opts) {
             || opts->fw_flush != 0
             || opts->fw_list != 0
             || opts->fw_list_all != 0)
-        static_log_flag = LOG_STDERR | LOG_WITHOUT_SYSLOG;
+        static_log_flag = LOG_STDERR_ONLY;
 
     /* If the user forces syslog using --syslog-enable, we remove the
      * LOG_WITHOUT_SYSLOG flag. It means all messages will go through syslog */
