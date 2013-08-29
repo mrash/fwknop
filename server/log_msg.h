@@ -39,6 +39,7 @@
  * LOG_STDERR_ONLY can be set to send a message stderr with a copy to
  * syslog as well.
 */
+#define LOG_SYSLOG_ONLY         0x0000
 #define LOG_STDERR              0x1000
 #define LOG_WITHOUT_SYSLOG      0x2000
 #define LOG_STDERR_ONLY         (LOG_STDERR | LOG_WITHOUT_SYSLOG)
