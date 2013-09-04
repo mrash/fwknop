@@ -197,6 +197,7 @@ _get_hmac_type(ctx, hmac_type)
     CODE:
     RETVAL = fko_get_spa_hmac_type(ctx, &hmac_type);
     OUTPUT:
+    hmac_type
     RETVAL
 
 int

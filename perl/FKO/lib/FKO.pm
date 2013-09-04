@@ -74,10 +74,8 @@ sub new {
     my $class     = shift;
     my $data      = shift;
     my $dc_pw     = shift;
-    my $dc_pw_len = shift;
     my $enc_mode  = shift;
-    my $hmac_pw   = shift;
-    my $hmac_pw_len = shift;
+    my $hmac_pw   = shift || '';
     my $hmac_type = shift;
     my $res;
 
@@ -88,8 +86,8 @@ sub new {
     #
     if(defined($data) and $data) {
         if(defined($dc_pw)) {
-            $ctx = _init_ctx_with_data($data, $dc_pw, $dc_pw_len,
-                        $enc_mode, $hmac_pw, $hmac_pw_len, $hmac_type);
+            $ctx = _init_ctx_with_data($data, $dc_pw, length($dc_pw),
+                        $enc_mode, $hmac_pw, length($hmac_pw), $hmac_type);
         } else {
             $ctx = _init_ctx_with_data_only($data);
         }
@@ -321,12 +319,11 @@ sub spa_hmac {
     my $self = shift;
     my $recompute    = shift || 0;
     my $hmac_key     = shift || '';
-    my $hmac_key_len = shift || 0;
 
     my $val = '';
 
     return FKO::_set_spa_hmac($self->{_ctx})
-        if($recompute and $hmac_key and $hmac_key_len);
+        if($recompute and $hmac_key);
 
     $self->{_err} = FKO::_get_spa_hmac($self->{_ctx}, $val);
 
@@ -479,27 +476,23 @@ sub encoded_data {
 sub spa_data_final {
     my $self     = shift;
     my $key      = shift || '';
-    my $key_len  = shift || 0;
     my $hmac_key = shift || '';
-    my $hmac_key_len  = shift || 0;
 
-    return FKO::_spa_data_final($self->{_ctx}, $key, $key_len, $hmac_key, $hmac_key_len);
+    return FKO::_spa_data_final($self->{_ctx}, $key, length($key), $hmac_key, length($hmac_key));
 }
 
 sub encrypt_spa_data {
     my $self    = shift;
     my $key     = shift || '';
-    my $key_len = shift || 0;
 
-    return FKO::_encrypt_spa_data($self->{_ctx}, $key, $key_len)
+    return FKO::_encrypt_spa_data($self->{_ctx}, $key, length($key));
 }
 
 sub decrypt_spa_data {
     my $self    = shift;
     my $key     = shift || '';
-    my $key_len = shift || 0;
 
-    return FKO::_decrypt_spa_data($self->{_ctx}, $key, $key_len)
+    return FKO::_decrypt_spa_data($self->{_ctx}, $key, length($key));
 }
 
 sub encode_spa_data {
@@ -515,17 +508,15 @@ sub decode_spa_data {
 sub verify_hmac {
     my $self         = shift;
     my $hmac_key     = shift || '';
-    my $hmac_key_len = shift || 0;
 
-    return FKO::_verify_hmac($self->{_ctx}, $hmac_key, $hmac_key_len)
+    return FKO::_verify_hmac($self->{_ctx}, $hmac_key, length($hmac_key));
 }
 
 sub set_spa_hmac {
     my $self         = shift;
     my $hmac_key     = shift || '';
-    my $hmac_key_len = shift || 0;
 
-    return FKO::_set_spa_hmac($self->{_ctx}, $hmac_key, $hmac_key_len)
+    return FKO::_set_spa_hmac($self->{_ctx}, $hmac_key, length($hmac_key));
 }
 
 sub DESTROY {
