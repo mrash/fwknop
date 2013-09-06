@@ -39,7 +39,7 @@ fwknop-2.5 (07/19/2013):
       side, the directive "ENCRYPTION_MODE legacy" will need to be added to
       every access.conf stanza that uses Rijndael and that needs to support
       SPA packets from pre-2.5 clients.  On the client side when generating
-      Rijndael-encrypted SPA packets from a pre-2.5 server, the command line
+      Rijndael-encrypted SPA packets for a pre-2.5 server, the command line
       argument "-M legacy" will need to be given.  GnuPG operations are not
       affected however and don't require the above steps whenever the new HMAC
       authenticated encryption feature (offered in fwknop-2.5) is not used.
