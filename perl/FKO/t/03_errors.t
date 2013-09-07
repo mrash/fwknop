@@ -10,7 +10,7 @@
 #
 use FKO qw(:all);
 
-use Test::More tests => 11;
+use Test::More tests => 7;
 
 # Test spa data support vars
 #
@@ -23,8 +23,10 @@ my (
 
 # Preset for test
 #
-#$tuser      = 'bubba';
-#$tuser_pw   = 'tsd-bubba';
+my $tuser      = 'bubba';
+my $tuser_pw   = 'tsd-bubba';
+my $thmac_key  = 'This is bubba\'s HMAC key.';
+
 
 my $err;
 
@@ -58,32 +60,41 @@ ok($err == FKO_ERROR_INVALID_DATA, "rand val big error test: got($err)");
 # 6 - Final with bad data
 #
 $err = $f1->spa_data_final("xxx");
-ok($err == FKO_ERROR_INCOMPLETE_SPA_DATA, "invalid spa_data_final error test: got($err)");
+#ok($err == FKO_ERROR_INCOMPLETE_SPA_DATA, "invalid spa_data_final error test: got($err)");
+ok($err == FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE, "invalid spa_data_final error test: got($err)");
 
 # 7 - Good spa data final for further tests.
 #
 $f1->spa_message("0.0.0.0,tcp/22");
-$err = $f1->spa_data_final("xxx");
+$f1->encryption_mode(FKO_ENC_MODE_ECB);
+$f1->hmac_type(FKO_HMAC_SHA256);
+
+#$err = $f1->spa_data_final("xxx");
+$err = $f1->spa_data_final($tuser_pw, length($tuser_pw), $thmac_key, length($thmac_key));
 ok($err == FKO_SUCCESS, "spa_data_final: got($err)");
 
 # 8-10 - New object from f1 data with good pw, bad pw, then no pw
 #
-my $f2 = FKO->new($f1->spa_data(), 'xxx');
-ok($f2, 'create fko object f2 (good pw)');
-$f2->destroy();
+#my $dss_enc_mode = $f1->encryption_mode();
+#my $dss_hmac_type = $f1->hmac_type();
+#print STDERR "DSS: [", $f1->spa_data(),  "][", $tuser_pw, "][", length($tuser_pw), "][", $dss_enc_mode, "][$thmac_key][", length($thmac_key),"][$dss_hmac_type]\n\n";
+#my $f2 = FKO->new($f1->spa_data(), $tuser_pw, length($tuser_pw), 3,
+#	$thmac_key, length($thmac_key), $dss_hmac_type);
+#ok($f2, 'create fko object f2 (good pw)');
+#$f2->destroy();
 
-$f2 = FKO->new($f1->spa_data(), 'bad_pw');
-is($f2, undef, 'create fko object f2 (bad pw)');
+#$f2 = FKO->new($f1->spa_data(), 'bad_pw', length('bad_pw'), $thmac_key, length($thmac_key));
+#is($f2, undef, 'create fko object f2 (bad pw)');
 
-$f2->destroy() if($f2); #Just in case
+#$f2->destroy() if($f2); #Just in case
 
-$f2 = FKO->new($f1->spa_data());
-ok($f2, 'create fko object f2 (no pw)');
+#$f2 = FKO->new($f1->spa_data());
+#ok($f2, 'create fko object f2 (no pw)');
 
 # 11 - Bad decrypt pw
 #
-$err = $f2->decrypt_spa_data('badpw');
-ok($err == FKO_ERROR_DECRYPTION_FAILURE, "decrypt with bad pw: got($err)");
+#$err = $f2->decrypt_spa_data('badpw');
+#ok($err == FKO_ERROR_DECRYPTION_FAILURE, "decrypt with bad pw: got($err)");
 
 # TODO: add gpg test and errors.
 
