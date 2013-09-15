@@ -85,7 +85,7 @@ sub new {
     # not defined, then pass 0.
     #
     if(defined($data) and $data) {
-        if(defined($dc_pw)) {
+        if(defined($dc_pw) and $dc_pw) {
             $ctx = _init_ctx_with_data($data, $dc_pw, length($dc_pw),
                         $enc_mode, $hmac_pw, length($hmac_pw), $hmac_type);
         } else {
