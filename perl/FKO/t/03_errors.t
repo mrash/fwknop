@@ -65,7 +65,7 @@ ok($err == FKO_ERROR_INCOMPLETE_SPA_DATA, "invalid spa_data_final error test: go
 # 7 - Good spa data final for further tests.
 #
 $f1->spa_message("0.0.0.0,tcp/22");
-$f1->encryption_mode(FKO_ENC_MODE_ECB);
+$f1->encryption_mode(FKO_ENC_MODE_CBC);
 $f1->hmac_type(FKO_HMAC_SHA256);
 
 $err = $f1->spa_data_final($tuser_pw, $thmac_key);
@@ -73,17 +73,17 @@ ok($err == FKO_SUCCESS, "spa_data_final: got($err)");
 
 # 8-10 - New object from f1 data with good pw, bad pw, then no pw
 #
-my $f2 = FKO->new($f1->spa_data(), $tuser_pw, FKO_ENC_MODE_ECB, $thmac_key, FKO_HMAC_SHA256);
+my $f2 = FKO->new($f1->spa_data(), $tuser_pw, FKO_ENC_MODE_CBC, $thmac_key, FKO_HMAC_SHA256);
 ok(defined($f2), 'create fko object f2 (good pw)');
 
 $f2->destroy();
 
-$f2 = FKO->new($f1->spa_data(), 'bad_pw', FKO_ENC_MODE_ECB, $thmac_key, FKO_HMAC_SHA256);
+$f2 = FKO->new($f1->spa_data(), 'bad_pw', FKO_ENC_MODE_CBC, $thmac_key, FKO_HMAC_SHA256);
 is($f2, undef, 'create fko object f2 (bad pw)');
 
 $f2->destroy() if($f2); #Just in case
 
-$f2 = FKO->new($f1->spa_data(), undef, FKO_ENC_MODE_ECB, $thmac_key, FKO_HMAC_SHA256);
+$f2 = FKO->new($f1->spa_data(), undef, FKO_ENC_MODE_CBC, $thmac_key, FKO_HMAC_SHA256);
 ok($f2, 'create fko object f2 (no pw)');
 
 # 11 - Bad decrypt pw

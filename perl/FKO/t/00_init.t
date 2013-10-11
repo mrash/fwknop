@@ -20,7 +20,7 @@ my $test_spa_data = '';
 my $test_spa_data_pw = 'test1234567890';
 my $test_hmac_key    = '0987654321test this is only a test';
 
-my $test_encryption_mode = $FKO::FKO_ENC_MODE_ECB;
+my $test_encryption_mode = $FKO::FKO_ENC_MODE_CBC;
 my $test_hmac_type = $FKO::FKO_HMAC_SHA256;
 
 my $test_spa_data_pw_len = length($test_spa_data_pw);
