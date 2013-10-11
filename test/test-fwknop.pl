@@ -715,12 +715,16 @@ sub run_test() {
 
     $msg =~ s/REPLPKTS/-->$total_fuzzing_pkts<-- pkts/;
 
-    return unless &process_include_exclude($msg);
-
     if ($list_mode) {
-        print $msg, "\n";
+        if (&process_include_exclude($msg)) {
+            print $msg, "\n";
+        } else {
+            print "$msg (requires an --enable-* arg, see -h)\n";
+        }
         return;
     }
+
+    return unless &process_include_exclude($msg);
 
     &dots_print($msg);
 
@@ -6026,17 +6030,15 @@ sub usage() {
 
     -A   --Anonymize-results       - Prepare anonymized results at:
                                      $tarfile
-    --diff                         - Compare the results of one test run to
-                                     another.  By default this compares output
-                                     in ${output_dir}.last to $output_dir
-    --diff-dir1=<path>             - Left hand side of diff directory path,
-                                     default is: ${output_dir}.last
-    --diff-dir2=<path>             - Right hand side of diff directory path,
-                                     default is: $output_dir
-    --include=<regex>              - Specify a regex to be used over test
-                                     names that must match.
-    --exclude=<regex>              - Specify a regex to be used over test
-                                     names that must not match.
+    --enable-all                   - Enable tests that aren't enabled by
+                                     default.  This also enables running all
+                                     tests under valgrind, so if you need
+                                     fast results this can be disabled by also
+                                     specifying --disable-valgrind.
+    --enable-dist-check            - Test 'make dist' run.
+    --enable-profile-coverage      - Generate profile coverage stats with an
+                                     emphasis on finding functions that the
+                                     test suite does not call.
     --enable-recompile             - Recompile fwknop sources and look for
                                      compilation warnings.
     --enable-valgrind              - Run every test underneath valgrind.
@@ -6055,13 +6057,21 @@ sub usage() {
                                      $fuzzing_pkts_file
     --enable-openssl-checks        - Enable tests to verify that Rijndael
                                      cipher usage is compatible with openssl.
-    --enable-all                   - Enable tests that aren't enabled by
-                                     default, except that --enable-valgrind
-                                     must also be set if valgrind mode is
-                                     desired.
     --gdb-test <test file>         - Run the same command a previous test suite
                                      execution through gdb by specifying the
                                      output/ test file.
+    --test-limit <number>          - Limit the number of executed tests.
+    --diff                         - Compare the results of one test run to
+                                     another.  By default this compares output
+                                     in ${output_dir}.last to $output_dir
+    --diff-dir1=<path>             - Left hand side of diff directory path,
+                                     default is: ${output_dir}.last
+    --diff-dir2=<path>             - Right hand side of diff directory path,
+                                     default is: $output_dir
+    --include=<regex>              - Specify a regex to be used over test
+                                     names that must match.
+    --exclude=<regex>              - Specify a regex to be used over test
+                                     names that must not match.
     --fuzzing-pkts-file <file>     - Specify path to fuzzing packet file.
     --fuzzing-pkts-append          - When generating new fuzzing packets,
                                      append them to the fuzzing packets file.
