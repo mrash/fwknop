@@ -2130,7 +2130,7 @@ sub perl_fko_module_long_keys() {
             ### set message and then encrypt
             my $status = $fko_obj->spa_message($msg);
 
-            $status = $fko_obj->spa_data_final($key, length($key), '', 0);
+            $status = $fko_obj->spa_data_final($key, '');
 
             if ($status == FKO->FKO_SUCCESS) {
                 &write_test_file("[-] Accepted fuzzing key '$key' for $msg\n",
@@ -2171,8 +2171,7 @@ sub perl_fko_module_long_hmac_keys() {
                 my $status = $fko_obj->spa_message($msg);
                 $fko_obj->hmac_type($hmac_type);
 
-                $status = $fko_obj->spa_data_final($enc_dummy_key,
-                        length($enc_dummy_key), $hmac_key, length($hmac_key));
+                $status = $fko_obj->spa_data_final($enc_dummy_key, $hmac_key);
 
                 if ($status == FKO->FKO_SUCCESS) {
                     &write_test_file("[-] Accepted fuzzing hmac key '$hmac_key' for $msg\n",
@@ -2697,7 +2696,7 @@ sub perl_fko_module_key_with_null() {
     $fko_obj->username($user);
     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
     $fko_obj->digest_type($digest_type);
-    $fko_obj->spa_data_final($key_with_null, length($key_with_null), '', 0);
+    $fko_obj->spa_data_final($key_with_null, '');
 
     my $encrypted_msg = $fko_obj->spa_data();
 
@@ -2717,8 +2716,7 @@ sub perl_fko_module_key_with_null() {
         $truncated_key =~ s/^(.{$j}).*/$1/;
         &write_test_file("    Trying truncated key: $truncated_key\n",
             $curr_test_file);
-        if ($fko_obj->decrypt_spa_data($truncated_key,
-                length($truncated_key)) == FKO->FKO_SUCCESS) {
+        if ($fko_obj->decrypt_spa_data($truncated_key) == FKO->FKO_SUCCESS) {
             &write_test_file("[-] $msg decrypt success with truncated key " .
                 "($key_with_null -> $truncated_key)\n",
                 $curr_test_file);
@@ -2769,7 +2767,7 @@ sub perl_fko_module_rijndael_truncated_keys() {
             $fko_obj->username($user);
             $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
             $fko_obj->digest_type($digest_type);
-            $fko_obj->spa_data_final($key, length($key), '', 0);
+            $fko_obj->spa_data_final($key, '');
 
             my $encrypted_msg = $fko_obj->spa_data();
 
@@ -2794,8 +2792,7 @@ sub perl_fko_module_rijndael_truncated_keys() {
             $truncated_key =~ s/^(.{$j}).*/$1/;
             &write_test_file("    Trying truncated key: $truncated_key\n",
                 $curr_test_file);
-            if ($fko_obj->decrypt_spa_data($truncated_key,
-                    length($truncated_key)) == FKO->FKO_SUCCESS) {
+            if ($fko_obj->decrypt_spa_data($truncated_key) == FKO->FKO_SUCCESS) {
                 &write_test_file("[-] $msg decrypt success with truncated key " .
                     "($key -> $truncated_key)\n",
                     $curr_test_file);
@@ -2877,15 +2874,14 @@ sub perl_fko_module_complete_cycle_hmac() {
                                 if $test_hr->{'set_legacy_iv'} eq $YES;
                             $fko_obj->encryption_mode($enc_mode);
 
-                            $fko_obj->spa_data_final($key, length($key), $hmac_key, length($hmac_key));
+                            $fko_obj->spa_data_final($key, $hmac_key);
 
                             my $encrypted_msg = $fko_obj->spa_data();
 
                             $fko_obj->destroy();
 
                             ### now get new object for decryption
-                            $fko_obj = FKO->new($encrypted_msg, $key, length($key),
-                                    $enc_mode, $hmac_key, length($hmac_key), $hmac_type);
+                            $fko_obj = FKO->new($encrypted_msg, $key, $enc_mode, $hmac_key, $hmac_type);
                             unless ($fko_obj) {
                                 &write_test_file("[-] error FKO->new(): " . FKO::error_str() . "\n",
                                     $curr_test_file);
@@ -2896,7 +2892,7 @@ sub perl_fko_module_complete_cycle_hmac() {
                             $fko_obj->encryption_mode($enc_mode);
                             my $hmac_digest = $fko_obj->spa_hmac();
 
-                            $fko_obj->decrypt_spa_data($key, length($key), $hmac_key, length($hmac_key));
+                            $fko_obj->decrypt_spa_data($key);
 
                             if ($msg ne $fko_obj->spa_message()) {
                                 &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
@@ -2965,7 +2961,7 @@ sub perl_fko_module_complete_cycle() {
                     $fko_obj->digest_type($digest_type);
                     $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
                         if $test_hr->{'set_legacy_iv'} eq $YES;
-                    $fko_obj->spa_data_final($key, length($key), '', 0);
+                    $fko_obj->spa_data_final($key, '');
 
                     my $encrypted_msg = $fko_obj->spa_data();
 
@@ -2981,7 +2977,7 @@ sub perl_fko_module_complete_cycle() {
                     $fko_obj->spa_data($encrypted_msg);
                     $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
                         if $test_hr->{'set_legacy_iv'} eq $YES;
-                    $fko_obj->decrypt_spa_data($key, length($key));
+                    $fko_obj->decrypt_spa_data($key);
 
                     if ($msg ne $fko_obj->spa_message()) {
                         &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
@@ -3042,12 +3038,12 @@ sub perl_fko_module_complete_cycle_module_reuse() {
                     $fko_obj->digest_type($digest_type);
                     $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
                         if $test_hr->{'set_legacy_iv'} eq $YES;
-                    $fko_obj->spa_data_final($key, length($key), '', 0);
+                    $fko_obj->spa_data_final($key, '');
 
                     my $encrypted_msg = $fko_obj->spa_data();
 
                     $fko_obj->spa_data($encrypted_msg);
-                    $fko_obj->decrypt_spa_data($key, length($key));
+                    $fko_obj->decrypt_spa_data($key);
 
                     if ($msg ne $fko_obj->spa_message()) {
                         &write_test_file("[-] $msg encrypt/decrypt mismatch\n",
@@ -3099,7 +3095,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Bogus user: '
             . $fuzzing_test_tag
@@ -3131,7 +3127,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Bogus access_msg: '
             . $fuzzing_test_tag
@@ -3164,7 +3160,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Bogus NAT_access_msg: '
             . $fuzzing_test_tag
@@ -3196,7 +3192,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_COMMAND_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Bogus cmd_msg: '
             . $fuzzing_test_tag
@@ -3228,7 +3224,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_spa_packets() {
             next TYPE;
         }
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Bogus msg_type: '
             . $fuzzing_test_tag
@@ -3284,7 +3280,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Invalid_encoding user: '
             . $fuzzing_test_tag
@@ -3316,7 +3312,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Invalid_encoding access_msg: '
             . $fuzzing_test_tag
@@ -3349,7 +3345,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
         }
         $fko_obj->spa_message_type(FKO->FKO_NAT_ACCESS_MSG);
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Invalid_encoding NAT_access_msg: '
             . $fuzzing_test_tag
@@ -3381,7 +3377,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             next CMD;
         }
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Invalid_encoding cmd_msg: '
             . $fuzzing_test_tag
@@ -3413,7 +3409,7 @@ sub perl_fko_module_assume_patches_generate_fuzzing_encoding_spa_packets() {
             next TYPE;
         }
         $fko_obj->digest_type(FKO->FKO_DIGEST_SHA256);
-        $fko_obj->spa_data_final($fuzzing_key, length($fuzzing_key), '', 0);
+        $fko_obj->spa_data_final($fuzzing_key, '');
 
         my $fuzzing_str = '[+] Invalid_encoding msg_type: '
             . $fuzzing_test_tag
@@ -3462,7 +3458,7 @@ sub perl_fko_module_full_fuzzing_packets() {
                     if $test_hr->{'set_legacy_iv'} eq $YES;
                 $fko_obj->spa_data($encrypted_spa_pkt);
 
-                my $status = $fko_obj->decrypt_spa_data($fuzzing_key, length($fuzzing_key));
+                my $status = $fko_obj->decrypt_spa_data($fuzzing_key);
 
                 if ($status == FKO->FKO_SUCCESS) {
                     &write_test_file("[-] Accepted fuzzing $field $field_val SPA packet.\n",
@@ -3499,7 +3495,7 @@ sub perl_fko_module_client_compatibility() {
     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
     $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
         if $test_hr->{'set_legacy_iv'} eq $YES;
-    $fko_obj->spa_data_final($default_key, length($default_key), '', 0);
+    $fko_obj->spa_data_final($default_key, '');
     my $spa_pkt = $fko_obj->spa_data();
     $fko_obj->destroy();
 
