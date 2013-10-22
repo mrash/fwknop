@@ -15,6 +15,14 @@
         'positive_output_matches' => [qr/All\stests\ssuccessful/i],
         'fatal'    => $NO
     },
+    {
+        'category' => 'perl FKO module',
+        'subcategory' => 'make test',
+        'detail'   => 'Test::Valgrind',
+        'function' => \&perl_fko_module_make_test_valgrind,
+        'negative_output_matches' => [qr/fko_/i],
+        'fatal'    => $NO
+    },
 
     {
         'category' => 'perl FKO module',

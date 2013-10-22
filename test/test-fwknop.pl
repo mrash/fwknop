@@ -276,6 +276,7 @@ my $server_test_file  = '';
 my $enable_valgrind = 0;
 my $disable_valgrind = 0;
 our $valgrind_str = '';
+my $cpan_valgrind_mod = 'Test::Valgrina';
 my %prev_valgrind_cov = ();
 my %prev_valgrind_file_titles = ();
 my $fko_wrapper_dir = 'fko-wrapper';
@@ -1739,6 +1740,45 @@ sub perl_fko_module_make_test() {
                 $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
             &write_test_file(
                 "[-] positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    return $rv;
+}
+
+sub perl_fko_module_make_test_valgrind() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '../perl/FKO' or die $!;
+
+    &run_cmd("prove --exec 'perl -Iblib/lib -Iblib/arch -M$cpan_valgrind_mod' t/*.t",
+        $cmd_out_tmp, "../../test/$curr_test_file");
+
+    chdir $curr_pwd or die $!;
+
+    if ($test_hr->{'positive_output_matches'}) {
+        unless (&file_find_regex(
+                $test_hr->{'positive_output_matches'},
+                $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'negative_output_matches'}) {
+        if (&file_find_regex(
+                $test_hr->{'negative_output_matches'},
+                $MATCH_ANY, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] negative_output_matches not met, setting rv=0\n",
                 $curr_test_file);
             $rv = 0;
         }
@@ -5317,6 +5357,7 @@ sub init() {
         unless ($valgrind_path) {
             print "[-] --enable-valgrind mode requested ",
                 "but valgrind not found, disabling.\n";
+            push @tests_to_exclude, qr/$cpan_valgrind_mod/;
             $enable_valgrind = 0;
         }
     }
@@ -5349,6 +5390,16 @@ sub init() {
             }
         }
         close F;
+
+        ### check to see if the Test::Valgrind module is installed
+        if ($enable_valgrind and $valgrind_path) {
+            unless (&run_cmd("perl -e 'use $cpan_valgrind_mod'",
+                    $cmd_out_tmp, $curr_test_file) and &find_command('prove')) {
+                push @tests_to_exclude, qr/$cpan_valgrind_mod/;
+            }
+        } else {
+            push @tests_to_exclude, qr/$cpan_valgrind_mod/;
+        }
     } else {
         push @tests_to_exclude, qr/perl FKO module/;
     }
