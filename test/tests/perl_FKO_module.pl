@@ -17,7 +17,7 @@
     },
     {
         'category' => 'perl FKO module',
-        'subcategory' => 'make test',
+        'subcategory' => 'prove t/*.t',
         'detail'   => 'Test::Valgrind',
         'function' => \&perl_fko_module_make_test_valgrind,
         'negative_output_matches' => [qr/fko_/i],
