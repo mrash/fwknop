@@ -557,13 +557,13 @@ FKO - Perl module wrapper for libfko
 
   # Set the SPA message (see libfko docs for details).
   #
-  $err = $fko->spa_message('0.0.0.0,tcp/22');
+  $err = $fko->spa_message('1.2.3.4,tcp/22');
     # ..error checking, etc...
 
-  $err = $fko->spa_data_final();
+  $err = $fko->spa_data_final('mycryptkey', 'myhmackey');
     # ..error checking, etc...
 
-  # Get the encrypted and encoded SPA data.
+  # Get the encrypted/authenticated/encoded SPA data.
   #
   my $spa_data = $fko->spa_data();
 
@@ -572,7 +572,8 @@ FKO - Perl module wrapper for libfko
   # Create an FKO object to process incoming (or existing)
   # SPA data.
   #
-  my $fko_in = FKO->new($enc_spa_data, 'decrypt_pw')
+  my $fko_in = FKO->new($enc_spa_data, 'mycryptkey',
+        FKO::FKO_ENC_MODE_CBC, 'myhmackey', FKO::FKO_HMAC_SHA256)
     or die "Unable to create FKO object: $FKO::error_str\n";
 
   my $timestamp = $fko_in->timestamp();
@@ -593,7 +594,8 @@ FKO - Perl module wrapper for libfko
 
 This module is essentially a Perl wrapper for the I<Firewall Knock Operator>
 (fwknop) library, C<libfko>.  Fwknop is an open source implementation of
-I<Single Packet Authorization> (I<SPA>) for access to networked resources.
+I<Single Packet Authorization> (I<SPA>) for access to networked resources
+that are protected by a default-drop packet filter.
 
 The original I<fwknop> is implemented in Perl.  The I<libfko> library is
 an implementation of the I<fwknop> back-end data processing routines written
@@ -609,16 +611,17 @@ can be found at http://www.cipherdyne.org/fwknop.
 
 =item B<new( )>
 
-=item B<new($spa_data, $password)>
+=item B<new($spa_data, $password, $enc_type, $hmac_key, $hmac_type)>
 
 The C<new> method creates the I<FKO> object.  With no arguments, it creates
 creates and empty I<FKO> object ready to be popluated with data (i.e. create
 a new SPA data packet to send).
 
-You can also pass existing encoded/encrypted I<SPA> data and a decryption
-password to C<new>.  Passing valid data and a password will create the new
-object, decode and parse the data, and store it within the object for later
-retrieval using the various methods described below.
+You can also pass existing encoded/encrypted I<SPA> data, a decryption
+password, and an HMAC key (along with associated encryption and HMAC modes) to
+C<new>.  This will create a new object, authenticate, decrypt, and decode the
+data, and store it within the object for later retrieval using the various
+methods described below.
 
 If there are any errors during the creation or decoding of the data I<new>
 will return undef and the appropriate error message will be available in the
@@ -630,7 +633,8 @@ Create an empty object:
 
 Create an object using existing data:
 
-    my $fko = FKO->new($spa_data, 'decrypt_pw');
+    my $fko = FKO->new($spa_data, 'decrypt_pw', FKO::FKO_ENC_MODE_CBC,
+            'myhmackey', FKO::FKO_HMAC_SHA256);
 
 =back
 
@@ -665,12 +669,12 @@ If the previous I<FKO> error was from a GPG-related function, then calling
 this method may return more detailed information from the GPG error handling
 system.
 
-=item B<spa_data_final( )>
+=item B<spa_data_final($enc_key, $hmac_key)>
 
-This function is the final step in creating a complete encrypted I<SPA> data
-string suitable for transmission to an fwknop server.  It does require all
-of the requisite I<SPA> data fields be set.  Otherwise it will fail and
-return the appropriate error code.
+This function is the final step in creating a complete encrypted and
+authenticated I<SPA> data string suitable for transmission to an fwknop server.
+It does require all of the requisite I<SPA> data fields be set.  Otherwise it
+will fail and return the appropriate error code.
 
 =item B<encrypt_spa_data( )>
 
@@ -718,7 +722,7 @@ I<libfko> functions during normal processing.
 =head2 Working with SPA Data Types
 
 There are a few data and method types supported by I<libfko>, along with a
-few functions for getting and setting them.  Most of these I<types> are 
+few functions for getting and setting them.  Most of these I<types> are
 represented using constants defined in the I<FKO> module.
 
 =over
@@ -728,11 +732,11 @@ represented using constants defined in the I<FKO> module.
 =item B<encryption_type(FKO_ENCRYPTION_TYPE)>
 
 Get or set the encryption type for the current context.  If no argument is
-given, the current value is returned.  Otherwise encryption type will be set
-to the given value.
+given, the current value is returned.  Otherwise the encryption type will be
+set to the given value.
 
 The encryption type parameter is an integer value.  Constants have been
-defined to represent this values.  Currently, the only supported encryption
+defined to represent this value.  Currently, the only supported encryption
 types are:
 
 =over
@@ -746,7 +750,38 @@ The default I<libfko> encryption algorithm.
 GnuPG encryption (if supported by the underlying I<libfko> implementation).
 
 =back
- 
+
+=item B<hmac_type( )>
+
+=item B<hmac_type(FKO_HMAC_TYPE)>
+
+Get or set the HMAC digest algorithm for the current context.  If no argument
+is given, the current value is returned.  Otherwise the HMAC type will be set
+to the given value.
+
+The HMAC type parameter is an integer value.  Constants have been
+defined to represent this value.  Currently, the supported HMAC types are:
+
+=over
+
+=item * B<FKO_HMAC_SHA256>
+
+The default I<libfko> HMAC digest algorithm is SHA-256
+
+=item * B<FKO_HMAC_MD5>
+
+Use the MD5 digest algorithm (not recommended) to generate the HMAC.
+
+=item * B<FKO_HMAC_SHA1>
+
+Use the SHA-1 digest algorithm to generate the HMAC.
+
+=item * B<FKO_HMAC_SHA512>
+
+Use the SHA-512 digest algorithm to generate the HMAC.
+
+=back
+
 
 =item B<digest_type( )>
 
@@ -757,7 +792,7 @@ given, the current value is returned.  Otherwise digest type will be set
 to the given value.
 
 The digest type parameter is an integer value.  Constants have been
-defined to represent this values.  Currently, the supported digest
+defined to represent this value.  Currently, the supported digest
 types are:
 
 =over
@@ -792,7 +827,7 @@ Get or set the I<SPA> message type.  If no argument is given, the current
 value is returned.  Otherwise message type will be set to the given value.
 
 The message type parameter is an integer value.  Constants have been
-defined to represent this values.  Currently, the supported digest
+defined to represent this value.  Currently, the supported digest
 types are:
 
 =over
