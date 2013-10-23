@@ -17,6 +17,13 @@ fwknop-2.5.2 (//2013):
     - [libfko] (Hank Leininger) Contributed a patch to greatly extend libfko
       error code descriptions at various places in order to give much better
       information on what certain error conditions mean.  Closes #98.
+    - [test suite] Added the ability to run perl FKO module built-in tests in
+      the t/ directory underneath the CPAN Test::Valgrind module.  This allows
+      valgrind memory checks to be applied to libfko functions via the perl
+      FKO module (and hence rapid prototyping can be combined with memory leak
+      detection).  A check is made to see whether the Test::Valgrind module
+      has been installed, and --enable-valgrind is also required (or
+      --enable-all) on the test-fwknop.pl command line.
 
 fwknop-2.5.1 (07/25/2013):
     - [client] Bug fix to reset terminal setting to orignal values after
