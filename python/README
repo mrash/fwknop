@@ -27,24 +27,28 @@ from fko import *
 #
 fko = Fko()
 
+# Set the HMAC digest algorithm
+#
+fko.hmac_type(FKO_HMAC_SHA256)
+
 # Set the SPA message (Note: Access request is default if not specified).
 #
 fko.spa_message("0.0.0.0,tcp/22")
 
 # Create the final SPA data message string.
 #
-fko.spa_data_final("mypassword")
+fko.spa_data_final("mypassword", "myhmackey")
 
 # print the spa message.
 #
 print fko.spa_data()
 
 (prints something like this):
-81ugT7+dv6p0qKPmFKwZYz9qAtqThBib+mIeZae9FK2UYQF5CNyujAmEH2+0CBxm3DpArlyySWqdfITvmfSBd11XbFPksK3iqWAPR65lVTYXrNywOxVN65Nmm9D0Qzsczx1hkeNg+g8qxecxO1XBc/LdHEa5C0FmI
+/m4fc/3OGd1IOchWM8o/yUvoa8TdbsRgU0zrp4UWuese9DIcHl09pZ3ukrNy/2OZAH3gnRH186YVMQEB1qfx23xVMq3IXx/fBwxgLBIqNdii2yWGqUVlxw83tfiP/p3Fmr7AeM1mev62xpE8R5vdACNxIDMM51lmYKh6JtEMoHrXXFAIRqbwCXJvlTEQij4vlZ4KfhMpnxxiiUciDWB11mbVDGSsQqKU9MQ
 
 # To decode SPA data:
 #
-fko = Fko("81ugT7+dv6p0qKPmFKwZYz9qAtqThBib+mIeZae9FK2UYQF5CNyujAmEH2+0CBxm3DpArlyySWqdfITvmfSBd11XbFPksK3iqWAPR65lVTYXrNywOxVN65Nmm9D0Qzsczx1hkeNg+g8qxecxO1XBc/LdHEa5C0FmI", "mypassword")
+fko = Fko("/m4fc/3OGd1IOchWM8o/yUvoa8TdbsRgU0zrp4UWuese9DIcHl09pZ3ukrNy/2OZAH3gnRH186YVMQEB1qfx23xVMq3IXx/fBwxgLBIqNdii2yWGqUVlxw83tfiP/p3Fmr7AeM1mev62xpE8R5vdACNxIDMM51lmYKh6JtEMoHrXXFAIRqbwCXJvlTEQij4vlZ4KfhMpnxxiiUciDWB11mbVDGSsQqKU9MQ", "mypassword", "myhmackey")
 
 # Print some of the data:
 #
@@ -55,5 +59,3 @@ print "Digest Type (value):", fko.digest_type()
 print "Digest Type (string):", fko.digest_type_str()
 print "Digest:", fko.spa_digest()
 print "SPA Message:", fko.spa_message()
-
-
