@@ -42,13 +42,6 @@ fko_new(fko_ctx_t *r_ctx)
     fko_ctx_t   ctx = NULL;
     int         res;
     char       *ver;
-    char *leak = NULL;
-
-    leak = malloc(100);
-    leak[0] = 'a';
-    leak[1] = 'a';
-    leak[2] = '\0';
-    printf("%s\n", leak);
 
     ctx = calloc(1, sizeof *ctx);
     if(ctx == NULL)
