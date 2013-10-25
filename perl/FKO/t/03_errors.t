@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# File:    01_functions.t
+# File:    03_errors.t
 #
 # Author:  Damien S. Stuart <dstuart@dstuart.org>
 #

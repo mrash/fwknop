@@ -85,13 +85,13 @@ ok($tsd_encryption_mode == $def_encryption_mode, 'Encryption mode');
 # 10-11 - set and verify username
 #
 $err = $f1->username($tuser);
-ok($err == 0, 'set username');
+ok($err == FKO::FKO_SUCCESS, 'set username');
 ok($f1->username() eq $tuser, 'set username value');
 
 # 12-13 - set and verify spa message string
 #
 $err = $f1->spa_message($def_tsd_msg);
-ok($err == 0, 'set spa message');
+ok($err == FKO::FKO_SUCCESS, 'set spa message');
 ok($f1->spa_message() eq $def_tsd_msg, 'set spa message value');
 
 # Set the hmac digest stuff (none here)
@@ -101,7 +101,7 @@ $thmac_key = '';
 #      and encode all)
 #
 $err = $f1->spa_data_final($tuser_pw, $thmac_key);
-ok($err == 0, 'f1 spa data final');
+ok($err == FKO::FKO_SUCCESS, 'f1 spa data final');
 
 # 15-16 - Get some of the current spa data for later tests.
 #
@@ -124,12 +124,12 @@ compare_fko($f1, $f2, 'f1-f2');
 #         make a new fko object based on f1's spa_data.
 #
 $err = $f1->digest_type(FKO::FKO_DIGEST_SHA1);
-ok($err == 0, 'f1 set digest to sha1');
+ok($err == FKO::FKO_SUCCESS, 'f1 set digest to sha1');
 is($f1->digest_type(), FKO::FKO_DIGEST_SHA1, 'verify set digest sha1');
-ok($f1->timestamp(5) == 0, 'reset timestamp 1');
+ok($f1->timestamp(5) == FKO::FKO_SUCCESS, 'reset timestamp 1');
 isnt($f1->timestamp(), $f2->timestamp(), 'verify new timestamp 1');
 
-ok($f1->spa_data_final($tuser_pw, $thmac_key) == 0,
+ok($f1->spa_data_final($tuser_pw, $thmac_key) == FKO::FKO_SUCCESS,
     'f1 recompute spa data 1');
 
 my $f3 = FKO->new($f1->spa_data(), $tuser_pw, $f1->encryption_mode(),
@@ -148,18 +148,18 @@ $thmac_key = 'This is a bogus hmac key - 1234567890';
 $tsd_hmac_digest_type = FKO::FKO_HMAC_SHA512;
 
 $err = $f1->digest_type(FKO::FKO_DIGEST_MD5);
-ok($err == 0, 'f1 set digest to md5');
+ok($err == FKO::FKO_SUCCESS, 'f1 set digest to md5');
 is($f1->digest_type(), FKO::FKO_DIGEST_MD5, 'verify set digest md5');
 
 $err = $f1->hmac_type($tsd_hmac_digest_type);
-ok($err == 0, 'f1 set set HMAC digest to sha512');
+ok($err == FKO::FKO_SUCCESS, 'f1 set set HMAC digest to sha512');
 is($f1->hmac_type(), $tsd_hmac_digest_type, 'verify set HMAC digest sha512');
 
 my $tts = $f1->timestamp();
-ok($f1->timestamp(10) == 0, 'reset timestamp 2');
+ok($f1->timestamp(10) == FKO::FKO_SUCCESS, 'reset timestamp 2');
 isnt($f1->timestamp(), $tts, 'verify new timestamp 2');
 
-ok($f1->spa_data_final($tuser_pw, $thmac_key) == 0,
+ok($f1->spa_data_final($tuser_pw, $thmac_key) == FKO::FKO_SUCCESS,
     'f2 recompute spa data 1');
 
 my $f4 = FKO->new($f1->spa_data(), $tuser_pw, $f1->encryption_mode(),
@@ -186,7 +186,7 @@ ok($f1, 'Create f1 #2');
 
 # Force rand value.
 #
-ok($f1->rand_value('0123456789012345') == 0, 'force rand value');
+ok($f1->rand_value('0123456789012345') == FKO::FKO_SUCCESS, 'force rand value');
 is($f1->rand_value(), '0123456789012345', 'verify force rand_value');
 
 # Iterate over setting message type
@@ -202,28 +202,28 @@ my @msg_types = (
 );
 
 foreach my $mt ( @msg_types ) {
-    ok($f1->spa_message_type($mt) == 0, "set msg_type to $mt");
+    ok($f1->spa_message_type($mt) == FKO::FKO_SUCCESS, "set msg_type to $mt");
     is($f1->spa_message_type(), $mt, "verify msg_type is $mt");
 }
 
 # SPA message
 #
-ok($f1->spa_message('1.1.1.1,udp/111') == 0, 'set spa message');
+ok($f1->spa_message('1.1.1.1,udp/111') == FKO::FKO_SUCCESS, 'set spa message');
 is($f1->spa_message(), '1.1.1.1,udp/111', 'verify spa message');
 
 # Nat Access
 #
-ok($f1->spa_nat_access('1.2.1.1,211') == 0, 'set nat_access message');
+ok($f1->spa_nat_access('1.2.1.1,211') == FKO::FKO_SUCCESS, 'set nat_access message');
 is($f1->spa_nat_access(), '1.2.1.1,211', 'verify nat_access message');
 
 # Server Auth
 #
-ok($f1->spa_server_auth('crypt,bubba') == 0, 'set server_auth message');
+ok($f1->spa_server_auth('crypt,bubba') == FKO::FKO_SUCCESS, 'set server_auth message');
 is($f1->spa_server_auth(), 'crypt,bubba', 'verify server_auth message');
 
 # Client Timeout
 #
-ok($f1->spa_client_timeout(666) == 0, 'set client_timeout');
+ok($f1->spa_client_timeout(666) == FKO::FKO_SUCCESS, 'set client_timeout');
 is($f1->spa_client_timeout(), 666, 'verify client_timeout');
 
 # Now iterate over the various digest types and hmac digest types and
@@ -235,14 +235,14 @@ is($f1->spa_client_timeout(), 666, 'verify client_timeout');
 #    @ENCRYPTION_MODES,     (1-8)
 foreach my $hmac_type (1..5) {
     next if($hmac_type < 1);
-    ok($f1->hmac_type($hmac_type) == 0, "set HMAC type: $hmac_type");
+    ok($f1->hmac_type($hmac_type) == FKO::FKO_SUCCESS, "set HMAC type: $hmac_type");
     foreach my $digest_type (1..5) {
         next if($digest_type < 1);
-        ok($f1->digest_type($digest_type) == 0, "set digest type: $digest_type");
+        ok($f1->digest_type($digest_type) == FKO::FKO_SUCCESS, "set digest type: $digest_type");
         foreach my $enc_mode (1..8) {
-            ok($f1->encryption_mode($enc_mode) == 0, "set encryption mode: $enc_mode");
-            ok($f1->spa_data_final($tuser_pw, $test_hmac_key) == 0,
-                "spad_data_final (HAMC:$hmac_type, DIGEST:$digest_type), ENC_MODE: $enc_mode");
+            ok($f1->encryption_mode($enc_mode) == FKO::FKO_SUCCESS, "set encryption mode: $enc_mode");
+            ok($f1->spa_data_final($tuser_pw, $test_hmac_key) == FKO::FKO_SUCCESS,
+                "spa_data_final (HMAC:$hmac_type, DIGEST:$digest_type), ENC_MODE: $enc_mode");
         }
     }
 }
