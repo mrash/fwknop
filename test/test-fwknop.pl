@@ -5727,6 +5727,7 @@ sub parse_valgrind_flagged_functions() {
         my %file_scope_flagged_fcns = ();
         my %file_scope_flagged_fcns_unique = ();
         my $test_title = '';
+        my $is_prove_output = 0;
 
         open F, "< $file" or die $!;
         while (<F>) {
@@ -5736,9 +5737,18 @@ sub parse_valgrind_flagged_functions() {
                 $valgrind_flagged_fcns_unique{$type}{$1}++;
                 $file_scope_flagged_fcns{"$1 $2"}++;
                 $file_scope_flagged_fcns_unique{$1}++;
+            } elsif ($is_prove_output) {
+                ###     fko_decrypt_spa_data (/home/mbr/git/fwknop.git/lib/.libs/libfko.so.2.0.0) [fko_encryption.c:264]
+                if (/\s(\S+)\s\(.*\/libfko\.so\..*?\)\s(.*)/) {
+                    $valgrind_flagged_fcns{$type}{"$1 $2"}++;
+                    $valgrind_flagged_fcns_unique{$type}{$1}++;
+                    $file_scope_flagged_fcns{"$1 $2"}++;
+                    $file_scope_flagged_fcns_unique{$1}++;
+                }
             } elsif (/TEST\:\s/) {
                 $test_title = $_;
                 chomp $test_title;
+                $is_prove_output = 1 if $test_title =~ /Test\:\:Valgrind/;
                 last if $test_title =~ /valgrind\soutput/;
             }
         }
