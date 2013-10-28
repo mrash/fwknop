@@ -13,7 +13,7 @@
 #
 use FKO;
 
-use Test::More tests => 391;
+use Test::More tests => 428;
 
 my $err;
 
@@ -53,7 +53,6 @@ my @fuzzing_usernames = (
 );
 
 my @fuzzing_nat_access_msgs = (
-    '',
     '1.2.3.4',
     '-1.2.3.4',
     '1.2.3.4.',
@@ -63,6 +62,7 @@ my @fuzzing_nat_access_msgs = (
     '999.999.999.999',
     '1.2.3.4,tcp/2a2',
     '1.2.3.4,tcp/22,',
+    '-1.2.3.4,tcp/22',
     '1.2.3.4,tcp/123456',
     '1.2.3.4,tcp/123456' . '9'x100,
     '1.2.3.4,tcp//22',
@@ -79,6 +79,7 @@ my @fuzzing_nat_access_msgs = (
     '%'x1000,
     ':'x1000,
     pack('a', ""),
+    '',
     '1.1.1.p/12345',
     '1.1.1.2,,,,12345',
     '1.1.1.2,icmp/123',
@@ -91,6 +92,8 @@ my @fuzzing_nat_access_msgs = (
     '1.2.3.4,udp/-1',
     '1.2.3.4,tcp/-1',
     '1.2.3.4,icmp/-1',
+    pack('a', "") . '1.2.3.4,tcp/22',
+    '1' . pack('a', "") . '.2.3.4,tcp/22',
     '1.2.3' . pack('a', "") . '.4,tcp/22',
     '1.2.3.' . pack('a', "") . '4,tcp/22',
     '1.2.3.4' . pack('a', "") . ',tcp/22',
@@ -132,6 +135,7 @@ my @fuzzing_cmd_msgs = (
     '/'x1000,
     '%'x1000,
     ':'x1000,
+    '',
     pack('a', ""),
     ',,,',
     '----',
@@ -149,10 +153,14 @@ my @fuzzing_cmd_msgs = (
 
 my @fuzzing_server_auth = (
     '',
+    pack('a', ""),
     'A'x1000
 );
 
 my @fuzzing_enc_keys = (
+    pack('a', "")x33,
+    pack('a', "") . 'A'x32,
+    'A'x32 . pack('a', ""),
     'A'x33,
     'A'x34,
     'A'x128,
@@ -163,6 +171,9 @@ my @fuzzing_enc_keys = (
 );
 
 my @fuzzing_hmac_keys = (
+    pack('a', "")x129,
+    pack('a', "") . 'A'x128,
+    'A'x128 . pack('a', ""),
     'A'x129,
     'A'x1000,
     'A'x2000,
