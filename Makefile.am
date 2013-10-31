@@ -97,6 +97,7 @@ EXTRA_DIST = \
     perl/FKO/MANIFEST \
     perl/FKO/ppport.h \
     perl/FKO/FKO.xs \
+    perl/FKO/t/04_fuzzing.t \
     perl/FKO/t/03_errors.t \
     perl/FKO/t/02_functions.t \
     perl/FKO/t/01_constants.t \
