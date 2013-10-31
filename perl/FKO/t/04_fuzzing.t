@@ -13,7 +13,7 @@
 #
 use FKO;
 
-use Test::More tests => 428;
+use Test::More tests => 593;
 
 my $err;
 
@@ -299,6 +299,60 @@ foreach my $hmac_key ( @fuzzing_hmac_keys ) {
     ok($f1->spa_data_final('testenckey', $hmac_key) != FKO::FKO_SUCCESS, "HMAC under invalid key: $hmac_key");
     $f1->destroy();
 }
+
+my $valid_enc_key  = 'A'x32;
+my $valid_hmac_key = 'A'x128;
+$f1 = FKO->new();
+ok($f1, 'f1 valid encryption key NULL fuzzing');
+ok($f1->spa_message('1.2.3.4,tcp/22') == FKO::FKO_SUCCESS, 'set spa_message');
+$f1->encryption_mode(FKO::FKO_ENC_MODE_CBC);
+$f1->hmac_type(FKO::FKO_HMAC_SHA256);
+$err = $f1->spa_data_final($valid_enc_key, $valid_hmac_key);
+ok($err == FKO::FKO_SUCCESS, "spa_data_final: got($err)");
+
+# Test valid encryption key that is altered with embedded NULL bytes
+#
+for (my $i=0; $i<32; $i++) {
+    my $bad_key = '';
+    for (my $j=0; $j < $i; $j++) {
+        $bad_key .= 'A';
+    }
+    $bad_key .= pack('A', "");
+    for (my $j=$i+1; $j < 32; $j++) {
+        $bad_key .= 'A';
+    }
+    my $f2 = FKO->new($f1->spa_data(), $bad_key, FKO::FKO_ENC_MODE_CBC, $valid_hmac_key, FKO::FKO_HMAC_SHA256);
+    is($f2, undef, 'create fko object f2 (bad pw)');
+    $f2->destroy() if $f2;
+}
+
+my $bad_key = 'A'x32 . pack('A', "");
+my $f2 = FKO->new($f1->spa_data(), $bad_key, FKO::FKO_ENC_MODE_CBC, $valid_hmac_key, FKO::FKO_HMAC_SHA256);
+is($f2, undef, 'create fko object f2 (bad pw)');
+$f2->destroy() if $f2;
+
+# Test valid HMAC key that is altered with embedded NULL bytes
+#
+for (my $i=0; $i<128; $i++) {
+    my $bad_key = '';
+    for (my $j=0; $j < $i; $j++) {
+        $bad_key .= 'A';
+    }
+    $bad_key .= pack('A', "");
+    for (my $j=$i+1; $j < 128; $j++) {
+        $bad_key .= 'A';
+    }
+    my $f2 = FKO->new($f1->spa_data(), $valid_enc_key, FKO::FKO_ENC_MODE_CBC, $bad_key, FKO::FKO_HMAC_SHA256);
+    is($f2, undef, 'create fko object f2 (bad HMAC key)');
+    $f2->destroy() if $f2;
+}
+
+$bad_key = 'A'x128 . pack('A', "");
+$f2 = FKO->new($f1->spa_data(), $valid_enc_key, FKO::FKO_ENC_MODE_CBC, $bad_key, FKO::FKO_HMAC_SHA256);
+is($f2, undef, 'create fko object f2 (bad HMAC key)');
+$f2->destroy() if $f2;
+
+$f1->destroy();
 
 ##############################################################################
 
