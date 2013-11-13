@@ -305,6 +305,7 @@ my $fuzzing_success_ctr = 0;
 my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
 my $include_permissions_warnings = 0;
+my $lib_view_cmd = '';
 our $valgrind_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
@@ -4978,10 +4979,10 @@ sub specs() {
         'if [ -e /proc/cpuinfo ]; then cat /proc/cpuinfo; fi',
         'if [ -e /proc/config.gz ]; then zcat /proc/config.gz; fi',
         'if [ `which gpg` ]; then gpg --version; fi',
-        'if [ `which tcpdump` ]; then ldd `which tcpdump`; fi',
-        "ldd $fwknopCmd",
-        "ldd $fwknopdCmd",
-        "ldd $libfko_bin",
+        "if [ `which tcpdump` ]; then $lib_view_cmd `which tcpdump`; fi",
+        "$lib_view_cmd $fwknopCmd",
+        "$lib_view_cmd $fwknopdCmd",
+        "$lib_view_cmd $libfko_bin",
         'ls -l /usr/lib/*pcap*',
         'ls -l /usr/local/lib/*pcap*',
         'ls -l /usr/lib/*fko*',
@@ -4989,7 +4990,7 @@ sub specs() {
     ) {
         &run_cmd($cmd, $cmd_out_tmp, $curr_test_file);
 
-        if ($cmd =~ /^ldd/) {
+        if ($cmd =~ /^$lib_view_cmd/) {
             $have_gpgme++ if &file_find_regex([qr/gpgme/],
                 $MATCH_ALL, $APPEND_RESULTS, $cmd_out_tmp);
         }
@@ -5427,6 +5428,17 @@ sub init() {
     $sudo_path    = &find_command('sudo') unless $sudo_path;
     $killall_path = &find_command('killall') unless $killall_path;
     $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
+    $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
+
+    ### On Mac OS X look for otool instead of ldd
+    unless ($lib_view_cmd) {
+        $lib_view_cmd = &find_command('otool');
+        if ($lib_view_cmd) {
+            $lib_view_cmd .= ' -L';
+        } else {
+            $lib_view_cmd = '#';  ### comment out subsequent shell commands
+        }
+    }
 
     unless ((&find_command('cc') or &find_command('gcc')) and &find_command('make')) {
         ### disable compilation checks
