@@ -506,7 +506,8 @@ our $default_server_gpg_args_no_pw_hmac = "LD_LIBRARY_PATH=$lib_dir " .
 
 ### point the compiled binaries at the local libary path
 ### instead of any installed libfko instance
-$ENV{'LD_LIBRARY_PATH'} = $lib_dir;
+$ENV{'LD_LIBRARY_PATH'}   = $lib_dir;
+$ENV{'DYLD_LIBRARY_PATH'} = $lib_dir;
 
 ### import the tests from the various tests/ files
 &import_test_files();
