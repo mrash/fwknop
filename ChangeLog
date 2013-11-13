@@ -1,3 +1,8 @@
+fwknop-2.5.1.1 (11/21/2013):
+    - [libfko] Nikolay Kolev reported a build issue with Mac OS X Mavericks
+      where local fwknop copies of strlcat() and strlcpy() were conflicting
+      with those that already ship with OS X 10.9. Closes #108 on github.
+
 fwknop-2.5.1 (07/25/2013):
     - [client] Bug fix to reset terminal setting to orignal values after
       entering keys via stdin.
