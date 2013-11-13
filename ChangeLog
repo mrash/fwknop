@@ -2,6 +2,9 @@ fwknop-2.5.2 (//2013):
     - (Radostan Riedel) Added an AppArmor policy that is known to work on
       Debian and Ubuntu systems.  The policy file is available in
       extras/apparmor.
+    - [libfko] Nikolay Kolev reported a build issue with Mac OS X Mavericks
+      where local fwknop copies of strlcat() and strlcpy() were conflicting
+      with those that already ship with OS X 10.9. Closes #108 on github.
     - [libfko] (Franck Joncourt) Consolidated FKO context dumping function into
       lib/fko_util.c. In addition to adding a shared utility function for
       printing an FKO context, this change also makes the FKO context output
