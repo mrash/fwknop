@@ -6,7 +6,7 @@
 # etc.).  Execute this script from the top level fwknop sources directory.
 #
 
-if [ -x ../configure ]; then
+if [ -x ./configure ]; then
     ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var
 else
     echo "[*] Execute from the fwknop top level sources directory"
