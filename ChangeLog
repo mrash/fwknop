@@ -1,3 +1,7 @@
+fwknop-2.5.1-1 (11/17/2013):
+    - This is a minor tweak to the autoconf configuration to allow
+      fwknop-2.5.1 to build properly on Mac OS X 10.9 "Mavericks" systems.
+
 fwknop-2.5.1 (07/25/2013):
     - [client] Bug fix to reset terminal setting to orignal values after
       entering keys via stdin.

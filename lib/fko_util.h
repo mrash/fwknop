@@ -51,8 +51,13 @@ int     zero_buf(char *buf, int len);
 const char * enc_type_inttostr(const int type);
 const char * msg_type_inttostr(const int type);
 
+#if !HAVE_STRLCAT
 size_t  strlcat(char *dst, const char *src, size_t siz);
+#endif
+
+#if !HAVE_STRLCPY
 size_t  strlcpy(char *dst, const char *src, size_t siz);
+#endif
 
 #if defined(WIN32) || !defined(HAVE_STRNDUP)
 char * strndup( const char * s, size_t len );
