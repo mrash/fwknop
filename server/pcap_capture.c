@@ -165,6 +165,7 @@ pcap_capture(fko_srv_options_t *opts)
             break;
 #endif
         case DLT_NULL:
+            set_direction = 0;
             opts->data_link_offset = 4;
             break;
         default:
