@@ -25,7 +25,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -52,7 +51,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -81,7 +79,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -103,7 +100,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -125,7 +121,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -157,7 +152,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -185,7 +179,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
 
     {
@@ -208,7 +201,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -230,7 +222,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging_nat'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fatal'    => $NO
     },
 
     {
@@ -243,7 +234,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/Fatal\sinvalid/],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -255,7 +245,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/Fatal\sinvalid/],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -267,7 +256,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/Fatal\sinvalid/],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -277,7 +265,6 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -287,7 +274,6 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -297,7 +283,6 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -307,6 +292,5 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
 );

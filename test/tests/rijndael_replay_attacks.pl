@@ -8,7 +8,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -20,7 +19,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
 
     {
@@ -33,6 +31,5 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fatal'    => $NO
     },
 );

@@ -6,7 +6,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_hmac_args,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -16,7 +15,6 @@
         'cmdline'  => "$default_client_hmac_args --hmac-digest-type invalid",
         'positive_output_matches' => [qr/Invalid\shmac\sdigest\stype/i],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -27,7 +25,6 @@
             "--rc-file $cf{'rc_hmac_invalid_type'}",
         'positive_output_matches' => [qr/must\sbe\sone\sof/i],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -38,7 +35,6 @@
             "--rc-file $cf{'rc_hmac_equal_keys'}",
         'positive_output_matches' => [qr/should\snot\sbe\sidentical/i],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -50,7 +46,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/should\snot\sbe\sidentical/i],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
 
     {
@@ -63,7 +58,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/must\sbe\sone\sof/i],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
 
     {
@@ -78,7 +72,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -91,7 +84,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -105,7 +97,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -119,7 +110,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fatal'    => $NO
     },
 
     {
@@ -136,7 +126,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf'     => $cf{'custom_input_chain'},
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -155,7 +144,6 @@
             'key' => 'hmackey'},
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -170,7 +158,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -184,7 +171,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -198,7 +184,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -213,7 +198,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -223,7 +207,6 @@
         'cmdline'  => qq|$default_client_hmac_args -f "-2"|,
         'positive_output_matches' => [qr/timeout\smust\sbe\swithin/],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
 
     {
@@ -243,7 +226,6 @@
         'server_positive_output_matches' => [qr/with expire time/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -261,7 +243,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -277,7 +258,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key2'},
-        'fatal'    => $NO
     },
 
     {
@@ -294,7 +274,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -310,7 +289,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -326,7 +304,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -341,7 +318,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -358,7 +334,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_rand_port_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -374,7 +349,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_simple_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -391,7 +365,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -406,7 +379,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -417,7 +389,6 @@
             "--save-args-file $tmp_args_file " .
             "--save-packet $tmp_pkt_file",
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -427,7 +398,6 @@
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
             "--verbose --verbose",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -441,7 +411,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -455,7 +424,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -470,7 +438,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_md5_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -485,7 +452,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_md5_short_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -500,7 +466,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_md5_long_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -515,7 +480,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -530,7 +494,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha1_short_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -545,7 +508,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha1_long_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -559,7 +521,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -574,7 +535,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha256_short_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -589,7 +549,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha256_long_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -605,7 +564,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha384_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -621,7 +579,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha384_short_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -636,7 +593,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha384_long_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -649,7 +605,6 @@
         'key_file' => $cf{'rc_hmac_sha512_long_key'},
         'positive_output_matches' => [qr/Invalid\sdecoded\skey\slength/],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
 
     {
@@ -665,7 +620,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha512_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -680,7 +634,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_sha512_short_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -692,7 +645,6 @@
         'positive_output_matches' => [qr/Invalid\shmac\sdigest\stype/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -707,7 +659,6 @@
         'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_sha256_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -722,7 +673,6 @@
         'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_sha256_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -737,7 +687,6 @@
         'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_sha256_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -752,7 +701,6 @@
         'server_positive_output_matches' => [qr/stanza #1\).*\sArgs\scontain\sinvalid\sdata/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_sha256_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -772,7 +720,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -786,7 +733,6 @@
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -799,7 +745,6 @@
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -815,7 +760,6 @@
         'server_conf' => $cf{'def'},
         'key_file' => $cf{'rc_hmac_b64_key'},
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -834,7 +778,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -853,7 +796,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_conf' => $cf{'snat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -874,7 +816,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_conf' => $cf{'snat_no_translate_ip'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -893,7 +834,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_conf' => $cf{'custom_nat_chain'},
-        'fatal'    => $NO
     },
 
     {
@@ -913,7 +853,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
 
     {
@@ -925,7 +864,6 @@
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             "$cf{'rc_hmac_b64_key'} -N 999.1.1.1:22",
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -944,7 +882,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -963,7 +900,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -983,7 +919,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -1003,7 +938,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -1023,7 +957,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -1043,7 +976,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
 
     {
@@ -1056,14 +988,12 @@
             "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'function' => \&digest_cache_structure,
-        'fatal'    => $NO
     },
 
 );

@@ -14,7 +14,6 @@
         'detail'   => 'Position Independent Executable (PIE)',
         'function' => \&pie_binary,
         'binary'   => $fwknopCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -22,7 +21,6 @@
         'detail'   => 'stack protected binary',
         'function' => \&stack_protected_binary,
         'binary'   => $fwknopCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -30,7 +28,6 @@
         'detail'   => 'fortify source functions',
         'function' => \&fortify_source_functions,
         'binary'   => $fwknopCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -38,7 +35,6 @@
         'detail'   => 'read-only relocations',
         'function' => \&read_only_relocations,
         'binary'   => $fwknopCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -46,7 +42,6 @@
         'detail'   => 'immediate binding',
         'function' => \&immediate_binding,
         'binary'   => $fwknopCmd,
-        'fatal'    => $NO
     },
 );
 
@@ -65,7 +60,6 @@
         'detail'   => 'Position Independent Executable (PIE)',
         'function' => \&pie_binary,
         'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -73,7 +67,6 @@
         'detail'   => 'stack protected binary',
         'function' => \&stack_protected_binary,
         'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -81,7 +74,6 @@
         'detail'   => 'fortify source functions',
         'function' => \&fortify_source_functions,
         'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -89,7 +81,6 @@
         'detail'   => 'read-only relocations',
         'function' => \&read_only_relocations,
         'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -97,7 +88,6 @@
         'detail'   => 'immediate binding',
         'function' => \&immediate_binding,
         'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
     },
 );
 
@@ -116,7 +106,6 @@
         'detail'   => 'stack protected binary',
         'function' => \&stack_protected_binary,
         'binary'   => $libfko_bin,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -124,7 +113,6 @@
         'detail'   => 'fortify source functions',
         'function' => \&fortify_source_functions,
         'binary'   => $libfko_bin,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -132,7 +120,6 @@
         'detail'   => 'read-only relocations',
         'function' => \&read_only_relocations,
         'binary'   => $libfko_bin,
-        'fatal'    => $NO
     },
     {
         'category' => 'build security',
@@ -140,6 +127,5 @@
         'detail'   => 'immediate binding',
         'function' => \&immediate_binding,
         'binary'   => $libfko_bin,
-        'fatal'    => $NO
     },
 );

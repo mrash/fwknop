@@ -9,7 +9,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -22,7 +21,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -35,7 +33,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -49,7 +46,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -61,7 +57,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str --rotate-digest-cache",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -72,7 +67,6 @@
             "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --save-args-file $tmp_args_file --verbose " .
             "--verbose --save-packet $tmp_pkt_file",
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -82,7 +76,6 @@
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
             "--verbose --verbose",
-        'fatal'    => $NO
     },
 
     {
@@ -96,7 +89,6 @@
         'server_positive_output_matches' => [qr/permissions\sshould\sonly\sbe\suser/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -109,7 +101,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -122,7 +113,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -135,7 +125,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -147,7 +136,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -159,7 +147,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -171,7 +158,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -190,7 +176,6 @@
         'server_positive_output_matches' => [qr/with expire time/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -209,7 +194,6 @@
         'insert_rule_before_exec' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -228,7 +212,6 @@
         'search_for_rule_after_exit' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -247,7 +230,6 @@
         'search_for_rule_after_exit' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO,
     },
 
     {
@@ -258,7 +240,6 @@
         'cmdline'  => "$default_client_args -m invaliddigest",
         'positive_output_matches' => [qr/Invalid\sdigest\stype/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
 
     {
@@ -277,7 +258,6 @@
         'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -290,14 +270,12 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $tmp_rc_file,
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => "rc file created",
         'function' => \&rc_file_exists,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -311,7 +289,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_def_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -326,7 +303,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_def_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -340,7 +316,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_named_key'},
-        'fatal'    => $NO
     },
 
     ### --key-gen tests
@@ -353,7 +328,6 @@
             "$valgrind_str $fwknopCmd --key-gen",
         'positive_output_matches' => [qr/^KEY_BASE64\:?\s\S{10}/,
             qw/HMAC_KEY_BASE64\:?\s\S{10}/],
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -362,7 +336,6 @@
         'function' => \&key_gen_uniqueness,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$fwknopCmd --key-gen",   ### no valgrind string (too slow for 100 client exec's)
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -372,7 +345,6 @@
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
             "$valgrind_str $fwknopCmd --key-gen --key-gen-file $key_gen_file",
         'positive_output_matches' => [qr/Wrote.*\skeys/],
-        'fatal'    => $NO
     },
 
     ### rc file tests
@@ -385,7 +357,6 @@
             "--rc-file $cf{'rc_named_key'} -n invalidstanza",
         'positive_output_matches' => [qr/Named\sconfiguration.*not\sfound/],
         'key_file' => $cf{'rc_named_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -396,7 +367,6 @@
             "--rc-file $cf{'rc_invalid_b64_key'} -n testssh",
         'positive_output_matches' => [qr/look\slike\sbase64\-encoded/],
         'key_file' => $cf{'rc_invalide_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -409,7 +379,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/SPA\sdata\stime\sdifference/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -421,7 +390,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/SPA\sdata\stime\sdifference/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -435,7 +403,6 @@
         'server_positive_output_matches' => [qr/Fatal\serror\sparsing\sIP\sto\sint/],
         'server_exec_err' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -448,7 +415,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -462,7 +428,6 @@
         'server_positive_output_matches' => [qr/invalid\sdate\svalue/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'server_exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -475,7 +440,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Access\sstanza\shas\sexpired/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -488,7 +452,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -502,7 +465,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -515,7 +477,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/One\s+or\s+more\s+requested/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
 
     ### spoof the source IP on the SPA packet
@@ -530,7 +491,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -544,7 +504,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -558,7 +517,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -572,7 +530,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
-        'fatal'    => $NO
     },
 
     ### SPA over TCP (not really "single" packet auth since a TCP connection
@@ -588,7 +545,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -602,7 +558,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -616,7 +571,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Username\s+in\s+SPA\s+data/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -629,7 +583,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -644,7 +597,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -659,7 +611,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -673,7 +624,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -686,7 +636,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -699,7 +648,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -712,7 +660,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -725,7 +672,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -738,7 +684,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -751,7 +696,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -764,7 +708,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -778,7 +721,6 @@
         'server_positive_output_matches' => [qr/requested\sNAT\saccess.*not\senabled/i],
         'server_conf' => $cf{'def'},
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -795,7 +737,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -812,7 +753,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'snat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -831,7 +771,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'snat_no_translate_ip'},
-        'fatal'    => $NO
     },
 
     {
@@ -849,7 +788,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
 
     {
@@ -869,7 +807,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
 
     {
@@ -879,7 +816,6 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args -N 999.1.1.1:22",
-        'fatal'    => $NO
     },
 
     {
@@ -896,7 +832,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -913,7 +848,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -932,7 +866,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
-        'fatal'    => $NO
     },
 
     {
@@ -950,7 +883,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -968,7 +900,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -986,7 +917,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
-        'fatal'    => $NO
     },
 
 
@@ -1007,7 +937,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1021,7 +950,6 @@
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1035,7 +963,6 @@
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1049,7 +976,6 @@
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1063,7 +989,6 @@
         'server_negative_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -1077,7 +1002,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Decryption\sfailed/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'fatal'    => $NO
     },
 
     ### --pcap-file
@@ -1096,7 +1020,6 @@
             qr/candidate\sSPA/, qr/0x0000\:\s+2b/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -1111,7 +1034,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1125,7 +1047,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1139,7 +1060,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1153,7 +1073,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1167,7 +1086,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -1182,7 +1100,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1196,7 +1113,6 @@
         'server_positive_output_matches' => [qr/PCAP\sfilter.*\s$non_std_spa_port/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -1210,7 +1126,6 @@
             qq|-P "udp"|,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -1225,7 +1140,6 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
-        'fatal'    => $NO
     },
 
     ### ensure iptables rules are not duplicated for identical (and non-replayed)
@@ -1238,7 +1152,6 @@
         'cmdline'  => "$default_client_args --test",
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
 
     {
@@ -1246,7 +1159,6 @@
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'function' => \&digest_cache_structure,
-        'fatal'    => $NO
     },
 
     ### ipfw only tests
@@ -1260,7 +1172,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/Cannot\sset\sidentical\sipfw\sactive\sand\sexpire\ssets/],
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -1274,6 +1185,5 @@
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 );

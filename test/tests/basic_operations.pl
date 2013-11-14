@@ -8,7 +8,6 @@
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} " .
             "-a $cf{'def_access'} --dump-config",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -19,7 +18,6 @@
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args " .
             "-O $conf_dir/override_fwknopd.conf --dump-config",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -30,7 +28,6 @@
         'exec_err' => $IGNORE,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd --show-last",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -53,7 +50,6 @@
         'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -D $loopback_ip",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -64,7 +60,6 @@
         'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -75,7 +70,6 @@
         'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -86,7 +80,6 @@
         'exec_err' => $YES,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
-        'fatal'    => $NO
     },
 
     {
@@ -108,7 +101,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*MD5/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -119,7 +111,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -130,7 +121,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA256'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA256/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -141,7 +131,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA384'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA384/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -152,7 +141,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA512'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
-        'fatal'    => $NO
     },
     ### rc tests: spa server proto
     {
@@ -164,7 +152,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
         'positive_output_matches' => [qr/protocol:\sudp/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -175,7 +162,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'TCP'}}],
         'positive_output_matches' => [qr/protocol:\stcp/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -186,7 +172,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'HTTP'}}],
         'positive_output_matches' => [qr/protocol:\shttp/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -197,7 +182,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'TCPRAW'}}],
         'positive_output_matches' => [qr/protocol:\stcpraw/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -208,7 +192,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'ICMP'}}],
         'positive_output_matches' => [qr/protocol:\sicmp/],
-        'fatal'    => $NO
     },
     ### rc tests: spa server port
     {
@@ -220,7 +203,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '65421'}}],
         'positive_output_matches' => [qr/destination\sport:\s65421/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -231,7 +213,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PORT' => '22'}}],
         'positive_output_matches' => [qr/destination\sport:\s22/],
-        'fatal'    => $NO
     },
     ### rc tests: spa source port
     {
@@ -243,7 +224,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '65421'}}],
         'positive_output_matches' => [qr/source\sport:\s65421/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -254,7 +234,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'SPA_SOURCE_PORT' => '22'}}],
         'positive_output_matches' => [qr/source\sport:\s22/],
-        'fatal'    => $NO
     },
     ### rc tests: firewall timeout
     {
@@ -266,7 +245,6 @@
         'write_rc_file' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '1234'}}],
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
-        'fatal'    => $NO
     },
     ### rc tests: hmac digest
     {
@@ -279,7 +257,6 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*MD5/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -291,7 +268,6 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA1/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -303,7 +279,6 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA256'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA256/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -315,7 +290,6 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA384'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA384/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -327,7 +301,6 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA512'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA512/],
-        'fatal'    => $NO
     },
     ### rc file saving --save-rc-stanza
     {
@@ -340,7 +313,6 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*MD5/],
         'rc_positive_output_matches' => [qr/DIGEST_TYPE.*MD5/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -352,7 +324,6 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA1/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -364,7 +335,6 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA256/],
         'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA256/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -376,7 +346,6 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA384/],
         'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA384/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -388,7 +357,6 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
         'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA512/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -401,7 +369,6 @@
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*MD5/],
         'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*MD5/, qw/USE_HMAC.*Y/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -414,7 +381,6 @@
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA1/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -427,7 +393,6 @@
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA256/],
         'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA256/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -440,7 +405,6 @@
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA384/],
         'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA384/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -453,7 +417,6 @@
                     'HMAC_DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA512/],
         'rc_positive_output_matches' => [qr/HMAC_DIGEST_TYPE.*SHA512/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -466,7 +429,6 @@
         'positive_output_matches' => [qr/protocol:\sudp/],
         'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*udp/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -479,7 +441,6 @@
         'positive_output_matches' => [qr/protocol:\stcp/],
         'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*tcp/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -492,7 +453,6 @@
         'positive_output_matches' => [qr/protocol:\shttp/],
         'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*http/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -505,7 +465,6 @@
         'positive_output_matches' => [qr/protocol:\stcpraw/],
         'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*tcpraw/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -518,7 +477,6 @@
         'positive_output_matches' => [qr/protocol:\sicmp/],
         'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*icmp/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -531,7 +489,6 @@
         'positive_output_matches' => [qr/source\sport:\s65421/],
         'rc_positive_output_matches' => [qr/SPA_SOURCE_PORT.*65421/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -544,7 +501,6 @@
         'positive_output_matches' => [qr/destination\sport:\s65421/],
         'rc_positive_output_matches' => [qr/SPA_SERVER_PORT.*65421/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -557,7 +513,6 @@
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
         'rc_positive_output_matches' => [qr/FW_TIMEOUT.*1234/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -569,7 +524,6 @@
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
         'rc_positive_output_matches' => [qr/VERBOSE.*Y/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -582,7 +536,6 @@
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
         'rc_positive_output_matches' => [qr/VERBOSE.*2/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -595,7 +548,6 @@
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
         'rc_negative_output_matches' => [qr/VERBOSE/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -609,7 +561,6 @@
         'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
         'rc_positive_output_matches' => [qr/VERBOSE.*Y/,
             qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/],
-        'fatal'    => $NO
     },
 
     {
@@ -619,7 +570,6 @@
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --fw-list",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -628,7 +578,6 @@
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --fw-list-all",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -637,7 +586,6 @@
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --fw-flush",
-        'fatal'    => $NO
     },
 
     {
@@ -647,7 +595,6 @@
         'function' => \&server_start,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -656,7 +603,6 @@
         'function' => \&server_stop,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -665,7 +611,6 @@
         'function' => \&write_pid,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
-        'fatal'    => $NO
     },
 
     {
@@ -675,7 +620,6 @@
         'function' => \&server_packet_limit,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -684,7 +628,6 @@
         'function' => \&server_ignore_small_packets,
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -695,7 +638,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str " .
             qq|-P "udp port $non_std_spa_port"|,
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -707,7 +649,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -719,7 +660,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -731,7 +671,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -743,7 +682,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -755,7 +693,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -767,7 +704,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
 
     {
@@ -777,7 +713,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode CBC",
         'positive_output_matches' => [qr/Encryption\sMode\:\s.*CBC/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -786,7 +721,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode ECB",
         'positive_output_matches' => [qr/Encryption\sMode\:\s.*ECB/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -795,7 +729,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode CFB",
         'positive_output_matches' => [qr/Encryption\sMode\:\s.*CFB/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -804,7 +737,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode PCBC",
         'positive_output_matches' => [qr/Invalid\sencryption\smode:\sPCBC/],
-        'fatal'    => $NO
     },    
     {
         'category' => 'basic operations',
@@ -813,7 +745,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode OFB",
         'positive_output_matches' => [qr/Encryption\sMode\:\s.*OFB/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -822,7 +753,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode CTR",
         'positive_output_matches' => [qr/Encryption\sMode\:\s.*CTR/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -831,7 +761,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode \"Asymmetric\"",
         'positive_output_matches' => [qr/Must\sspecify\sGPG\srecipient/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -840,7 +769,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode legacy",
         'positive_output_matches' => [qr/Encryption\sMode\:\s.*legacy/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -849,7 +777,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode badmode",
         'positive_output_matches' => [qr/Invalid\sencryption\smode:\sbadmode/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -858,7 +785,6 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --fd -1",
         'positive_output_matches' => [qr/Value\s.*out\sof\srange/],
-        'fatal'    => $NO
     },
     {
         'category' => 'basic operations',
@@ -868,6 +794,5 @@
         'cmdline'  => $default_client_args . " --stanza-list --rc-file $cf{'rc_stanza_list'}",
         'positive_output_matches' => [qr/The\sfollowing\sstanzas\sare\sconfigured/i, qr/stanza_1/, qr/stanza_2/],
         'negative_output_matches' => [qr/default/],
-        'fatal'    => $NO
     },
 );

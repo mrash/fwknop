@@ -9,7 +9,6 @@
         'fwknopd_cmdline' => $default_server_gpg_args_no_pw,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -23,7 +22,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -38,7 +36,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -52,7 +49,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -66,7 +62,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -83,7 +78,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -99,7 +93,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -115,7 +108,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -132,7 +124,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -144,7 +135,6 @@
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
         'server_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -157,7 +147,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -170,7 +159,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
 
     {
@@ -181,7 +169,6 @@
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -191,7 +178,6 @@
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -201,7 +187,6 @@
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -211,7 +196,6 @@
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw)',
@@ -223,6 +207,5 @@
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw,
         'positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
-        'fatal'    => $NO
     },
 );

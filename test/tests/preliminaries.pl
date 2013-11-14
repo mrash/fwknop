@@ -5,7 +5,6 @@
         'detail'   => 'usage info',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd -h",
-        'fatal'    => $NO
     },
     {
         'category' => 'preliminaries',
@@ -14,7 +13,6 @@
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --no-such-arg",
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
     {
         'category' => 'preliminaries',
@@ -23,7 +21,6 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/test\smode\senabled/],
         'cmdline'  => "$default_client_args --test",
-        'fatal'    => $NO
     },
 
     {
@@ -32,7 +29,6 @@
         'detail'   => 'expected code version',
         'function' => \&expected_code_version,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd --version",
-        'fatal'    => $NO
     },
 
     {
@@ -41,7 +37,6 @@
         'detail'   => 'usage info',
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd -h",
-        'fatal'    => $NO
     },
     {
         'category' => 'preliminaries',
@@ -50,7 +45,6 @@
         'function' => \&generic_exec,
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd --no-such-arg",
         'exec_err' => $YES,
-        'fatal'    => $NO
     },
 
     {
@@ -61,13 +55,11 @@
         'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'def'} -a " .
             "$cf{'def_access'} --version",
-        'fatal'    => $NO
     },
     {
         'category' => 'preliminaries',
         'detail'   => 'collecting system specifics',
         'function' => \&specs,
         'binary'   => $fwknopdCmd,
-        'fatal'    => $NO
     },
 );

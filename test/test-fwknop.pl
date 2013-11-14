@@ -325,6 +325,7 @@ our $USE_CLIENT = 2;
 our $USE_PCAP_FILE = 3;
 our $REQUIRED = 1;
 our $OPTIONAL = 0;
+our $OPTIONAL_NUMERIC = 2;
 our $NEW_RULE_REQUIRED = 1;
 our $REQUIRE_NO_NEW_RULE = 2;
 our $NEW_RULE_REMOVED = 1;
@@ -521,19 +522,16 @@ my @tests = (
         'category' => 'recompilation',
         'detail'   => 'recompile and look for compilation warnings',
         'function' => \&compile_warnings,
-        'fatal'    => $NO
     },
     {
         'category' => 'make distcheck',
         'detail'   => 'ensure proper distribution creation',
         'function' => \&make_distcheck,
-        'fatal'    => $NO
     },
     {
         'category' => 'Makefile.am',
         'detail'   => 'test suite conf/ files included',
         'function' => \&test_suite_conf_files,
-        'fatal'    => $NO
     },
 
     @build_security_client,
@@ -555,7 +553,6 @@ my @tests = (
         'category' => 'Look for crashes',
         'detail'   => 'checking for segfault/core dump messages (1)',
         'function' => \&look_for_crashes,
-        'fatal'    => $NO
     },
 
     @gpg_no_pw,
@@ -567,7 +564,6 @@ my @tests = (
         'category' => 'Look for crashes',
         'detail'   => 'checking for segfault/core dump messages (2)',
         'function' => \&look_for_crashes,
-        'fatal'    => $NO
     }
 );
 
@@ -641,8 +637,7 @@ if ($enable_profile_coverage_check) {
     &run_test({
         'category' => 'profile coverage',
         'detail'   => 'gcov profile coverage',
-        'function' => \&profile_coverage,
-        'fatal'    => $NO}
+        'function' => \&profile_coverage}
     );
 }
 
@@ -651,16 +646,14 @@ if ($enable_valgrind) {
         'category' => 'valgrind',
         'subcategory' => 'fko-wrapper',
         'detail'   => 'multiple libfko calls',
-        'function' => \&compile_execute_fko_wrapper,
-        'fatal'    => $NO}
+        'function' => \&compile_execute_fko_wrapper}
     );
 
     &run_test({
         'category' => 'valgrind output',
         'subcategory' => 'flagged functions',
         'detail'   => '',
-        'function' => \&parse_valgrind_flagged_functions,
-        'fatal'    => $NO}
+        'function' => \&parse_valgrind_flagged_functions}
     );
 }
 
@@ -5226,7 +5219,7 @@ sub validate_test_hashes() {
         'binary'          => $OPTIONAL,
         'cmdline'         => $OPTIONAL,
         'fwknopd_cmdline' => $OPTIONAL,
-        'fatal'           => $OPTIONAL,
+        'fatal'           => $OPTIONAL_NUMERIC,
         'key_file'        => $OPTIONAL,
         'exec_err'        => $OPTIONAL,
         'server_exec_err' => $OPTIONAL,
@@ -5261,6 +5254,8 @@ sub validate_test_hashes() {
             if ($test_keys{$key} == $REQUIRED) {
                 die "[*] Missing '$key' element in test hash: '$msg'"
                     unless defined $test_hr->{$key};
+            } elsif ($test_keys{$key} == $OPTIONAL_NUMERIC) {
+                $test_hr->{$key} = 0 unless defined $test_hr->{$key};
             } else {
                 $test_hr->{$key} = '' unless defined $test_hr->{$key};
             }

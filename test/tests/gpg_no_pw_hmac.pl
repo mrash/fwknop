@@ -12,7 +12,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw) HMAC',
@@ -29,7 +28,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_sha512_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -43,7 +41,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_args_no_pw_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -62,7 +59,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw) HMAC',
@@ -80,7 +76,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw) HMAC',
@@ -98,7 +93,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw) HMAC',
@@ -116,7 +110,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw) HMAC',
@@ -128,7 +121,6 @@
             . "--rc-file $cf{'rc_hmac_b64_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw_hmac,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw) HMAC',
@@ -141,7 +133,6 @@
             . "--rc-file $cf{'rc_hmac_b64_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw_hmac,
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG (no pw) HMAC',
@@ -154,6 +145,5 @@
             . "--rc-file $cf{'rc_hmac_b64_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args_no_pw_hmac,
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
 );

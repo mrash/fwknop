@@ -8,7 +8,6 @@
         'detail'   => 'pinentry not required',
         'function' => \&gpg_pinentry_check,
         'cmdline'  => $default_client_gpg_args,
-        'fatal'    => $NO
     },
 
     {
@@ -22,7 +21,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -38,7 +36,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_sha512_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -51,7 +48,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_args_hmac_b64_key'},
-        'fatal'    => $NO
     },
 
     {
@@ -70,7 +66,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -88,7 +83,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -106,7 +100,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -124,7 +117,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -135,7 +127,6 @@
             . "--rc-file $cf{'rc_gpg_hmac_b64_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args_hmac,
         'key_file' => $cf{'rc_gpg_hmac_b64_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -148,7 +139,6 @@
             "--rc-file $cf{'rc_gpg_hmac_b64_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args_hmac,
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG+HMAC',
@@ -161,7 +151,6 @@
             "--rc-file $cf{'rc_gpg_hmac_b64_key'}",
         'fwknopd_cmdline'  => $default_server_gpg_args_hmac,
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
 
 );

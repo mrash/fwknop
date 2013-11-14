@@ -16,7 +16,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -34,7 +33,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -52,7 +50,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael',
@@ -70,7 +67,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -90,7 +86,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -109,7 +104,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -128,7 +122,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -147,6 +140,5 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 );

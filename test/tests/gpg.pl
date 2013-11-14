@@ -7,7 +7,6 @@
         'detail'   => 'pinentry not required',
         'function' => \&gpg_pinentry_check,
         'cmdline'  => $default_client_gpg_args,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -18,7 +17,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -31,7 +29,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_def_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -44,7 +41,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_signing_pw'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -57,7 +53,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_named_key'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -70,7 +65,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_named_signing_pw'},
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -83,7 +77,6 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_gpg_named_signing_pw'},
-        'fatal'    => $NO
     },
 
     {
@@ -98,7 +91,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -113,7 +105,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -127,7 +118,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -141,7 +131,6 @@
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -158,7 +147,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -174,7 +162,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -190,7 +177,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -207,7 +193,6 @@
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
     {
@@ -218,7 +203,6 @@
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'server_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -230,7 +214,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -242,7 +225,6 @@
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
-        'fatal'    => $NO
     },
 
     {
@@ -252,7 +234,6 @@
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -261,7 +242,6 @@
         'function' => \&altered_base64_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -270,7 +250,6 @@
         'function' => \&appended_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -279,7 +258,6 @@
         'function' => \&prepended_spa_data,
         'cmdline'  => $default_client_gpg_args,
         'fwknopd_cmdline'  => $default_server_gpg_args,
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
@@ -290,13 +268,11 @@
         'fwknopd_cmdline'  => $default_server_gpg_args,
         'positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
-        'fatal'    => $NO
     },
     {
         'category' => 'GPG',
         'subcategory' => 'server',
         'detail'   => 'digest cache structure',
         'function' => \&digest_cache_structure,
-        'fatal'    => $NO
     },
 );

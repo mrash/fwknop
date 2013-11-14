@@ -4,14 +4,12 @@
         'subcategory' => 'compile/install',
         'detail'   => 'to: ./python_fko/',
         'function' => \&python_fko_compile_install,
-        'fatal'    => $NO
     },
     {
         'category' => 'python fko extension',
         'subcategory' => 'basic exec',
         'detail'   => 'import and use fko',
         'function' => \&python_fko_basic_exec,
-        'fatal'    => $NO
     },
     {
         'category' => 'python fko extension',
@@ -23,7 +21,6 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'fatal'    => $NO
     },
 
 );
