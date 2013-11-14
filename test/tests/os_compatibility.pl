@@ -68,6 +68,23 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.5.1 OSX-10.9',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '//I+5NoTIET7LtQJ9BGhoVfBnA9vqgQ8SfvHEMOUpxHKgQa5xLFhKK2ScSXQ80K' .
+            '3P0/XwJqm6HsAyJrl7eafble0AR5T04PJPFF6ejWAKbTsCh5VYywQ+2W7eBOJuc' .
+            '8tjjKuESWqOaodALS9PaxLrVIfm6dvmwtHU',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
 
     {
         'category' => 'Rijndael+HMAC',
@@ -134,6 +151,24 @@
             'Vop4zyz0L1LQYMZ1/O3S2dqafGLIqSwk7j6YiH0ENVafQvuFVFG8ooeBRxFqzw' .
             'YnywR5R9Drrw+hMxpl40HDb1O07xN7WBOSvNgU2vi8MHT7MSZVh02PKRF8aReL' .
             'cQTD2sxRsn5tGfehC8',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.5.1 OSX-10.9',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '/yH60IrOqXpcFhwIvPndytkT40DUWwho+yuvVocfRrrOlOY0szD/Xo+veQ+Ubs' .
+            '7Y/szJ/HViJRg2LjDff2AeKz1cWMn6Zg/l+C8TZBBc5Tmwc8PIIOXwjrNHwCv3' .
+            'lc9tRToeAVdYyQfM87OgczI6OP9SgKoKfKA5ouI9eIxOlncDn+9TkShRy0+5G+' .
+            'xi2vuV4KU0DYxTRvV4',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
