@@ -22,8 +22,7 @@
             'ptSBJJUZi0tozpKHETp3AgqfzyOy5FNs38aZsV5/sDl3Pt+kF7fTZJ+YLbmYY4yCUz2' .
             'ZUYoCaJ7X78ULyJTi5eT7nug',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
     {
@@ -48,8 +47,7 @@
             '5OD8KiV6qzqLOvN4ULJjvvJJWBZ9qvo/f2Q9Wf67g2KHiwS6EeCINAuMoUw/mNRQMa4' .
             'oGnOXu3/DeWHJAwtSeh7EAr4',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
     {
@@ -76,8 +74,7 @@
             'qUvY8lkymbwvjelVok7Lvlc06cRhN4zm32D4V05g0vQS3PlX9C+mgph9DeAPVX+D8iZ' .
             '8lGrxcPSfbCOW61k0MP+q1EhLZkc1qAm5g2+2cLNZcoBNEdh3yj8OTPZJyBVw',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
     {
@@ -97,8 +94,7 @@
             '8E4lMnq+EbM2XYdhs2alpZ5bovAFojMsYRWwr/BvRO4Um4Fmo9z9sY3DR477TXNYXBR' .
             'iGXWxSL4u+AWSSePK3qiiYoRQVw',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
     {
@@ -118,8 +114,7 @@
             '07zvcT03keUhLE1Uo7Wme1nE7BfTOG5stmIK1UQI85sL52//lDHu+xCqNcL7GUKbVRz' .
             'ekw+EUscVvUkrsRcVtSvOm+fCNo',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
     {
@@ -149,8 +144,7 @@
             'F0NPQvOT3ZvpeIJnirKP1ZX9gDFinqhuzL7oqktW61e1iwe7KZEdrZV0k2KZwyb8qU5' .
             'rPAEnw',
         'server_positive_output_matches' => [qr/No\sstanza\sencryption\smode\smatch/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
     {
@@ -176,8 +170,7 @@
             'tE8QyuOXzOMftI11SUn/LwqD4RMdR21rvLrzR6ZB5eUX2UBpODyzX6n+PJJkTWCuFVT4z1' .
             'MKY',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
 
@@ -198,8 +191,7 @@
             'd/diWYKAUvdQ4DydPGlR7mwQa2W+obKpqrsTBz7D4054z6ATAOGpCtifakEVl1XRc2+' .
             'hW04WpY8mdUNu9i+PrfPr7/KxqU',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
     {
@@ -219,8 +211,7 @@
             'ATvSTpZ+qiaoN0PPfy0+7yM6KlaQIu7bfG5E2a6VJTqTZ1qYz3H7QaJfbAtOD8j' .
             'yEkDgP5+f49xrRA',
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging_nat'} -a $cf{'legacy_iv_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging_nat'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
     },
 
@@ -229,8 +220,7 @@
         'subcategory' => 'FUZZING',
         'detail'   => 'invalid SOURCE access.conf',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_source'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_source'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/Fatal\sinvalid/],
         'exec_err' => $YES,
@@ -240,8 +230,7 @@
         'subcategory' => 'FUZZING',
         'detail'   => 'invalid OPEN_PORTS access.conf',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_open_ports'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_open_ports'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/Fatal\sinvalid/],
         'exec_err' => $YES,
@@ -251,8 +240,7 @@
         'subcategory' => 'FUZZING',
         'detail'   => 'invalid RESTRICT_PORTS access.conf',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_restrict_ports'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'fuzz_restrict_ports'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'positive_output_matches' => [qr/Fatal\sinvalid/],
         'exec_err' => $YES,
@@ -263,8 +251,7 @@
         'detail'   => 'non-base64 altered SPA data',
         'function' => \&altered_non_base64_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
     {
         'category' => 'Rijndael',
@@ -272,8 +259,7 @@
         'detail'   => 'base64 altered SPA data',
         'function' => \&altered_base64_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
     {
         'category' => 'Rijndael',
@@ -281,8 +267,7 @@
         'detail'   => 'appended data to SPA pkt',
         'function' => \&appended_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
     {
         'category' => 'Rijndael',
@@ -290,7 +275,6 @@
         'detail'   => 'prepended data to SPA pkt',
         'function' => \&prepended_spa_data,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
 );

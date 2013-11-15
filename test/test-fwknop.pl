@@ -306,6 +306,7 @@ my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
 my $include_permissions_warnings = 0;
 my $lib_view_cmd = '';
+my $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
 our $valgrind_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
@@ -428,15 +429,15 @@ $valgrind_str = "$valgrind_path --leak-check=full " .
 
 our $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
 
-our $default_client_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+our $default_client_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
     "$local_key_file --no-save-args --verbose --verbose";
 
-our $default_client_args_no_get_key = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_client_args_no_get_key = "$lib_view_str " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     "--no-save-args --verbose --verbose";
 
-our $default_client_args_no_verbose = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_client_args_no_verbose = "$lib_view_str " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     '--no-save-args ';
 
@@ -452,11 +453,11 @@ our $client_save_rc_args_no_verbose = "$default_client_args_no_verbose " .
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
 
-our $client_ip_resolve_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+our $client_ip_resolve_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
     "$local_key_file --verbose --verbose";
 
-our $client_ip_resolve_hmac_args = "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
+our $client_ip_resolve_hmac_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --rc-file " .
     "$cf{'rc_hmac_b64_key'} --verbose --verbose";
 
@@ -486,22 +487,22 @@ our $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
 our $default_server_hmac_conf_args = "-c $cf{'def'} -a $cf{'hmac_access'} " .
     "-d $default_digest_file -p $default_pid_file";
 
-our $default_server_gpg_args = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_server_gpg_args = "$lib_view_str " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
-our $default_server_gpg_args_no_pw = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_server_gpg_args_no_pw = "$lib_view_str " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_no_pw_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
-our $default_server_gpg_args_hmac = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_server_gpg_args_hmac = "$lib_view_str " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_hmac_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
-our $default_server_gpg_args_no_pw_hmac = "LD_LIBRARY_PATH=$lib_dir " .
+our $default_server_gpg_args_no_pw_hmac = "$lib_view_str " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_no_pw_hmac_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
@@ -509,7 +510,7 @@ our $default_server_gpg_args_no_pw_hmac = "LD_LIBRARY_PATH=$lib_dir " .
 ### point the compiled binaries at the local libary path
 ### instead of any installed libfko instance
 $ENV{'LD_LIBRARY_PATH'}   = $lib_dir;
-$ENV{'DYLD_LIBRARY_PATH'} = $lib_dir;
+$ENV{'DYLD_LIBRARY_PATH'} = $lib_dir if $lib_view_cmd =~ /otool/;
 
 ### import the tests from the various tests/ files
 &import_test_files();
@@ -1522,7 +1523,7 @@ sub iptables_no_flush_init_exit() {
 
     my $rv = 1;
 
-    &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
+    &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
         "$default_server_conf_args --fw-flush --verbose --verbose",
         $cmd_out_tmp, $curr_test_file);
 
@@ -1537,7 +1538,7 @@ sub iptables_no_flush_init_exit() {
     $rv = &spa_cycle($test_hr);
 
     if ($test_hr->{'search_for_rule_after_exit'}) {
-        &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
+        &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
             "$default_server_conf_args --fw-list --verbose --verbose",
             $cmd_out_tmp, $curr_test_file);
         $rv = 0 unless &file_find_regex([qr/ACCEPT.*$fake_ip\s.*dpt\:1234/],
@@ -1616,7 +1617,7 @@ sub python_fko_basic_exec() {
         return 0;
     }
 
-    $rv = &run_cmd("LD_LIBRARY_PATH=$lib_dir " .
+    $rv = &run_cmd("$lib_view_str " .
         "PYTHONPATH=$site_dir $python_path ./$python_script",
         $cmd_out_tmp, $curr_test_file);
 
@@ -4957,7 +4958,7 @@ sub openssl_enc_verification() {
 
 sub specs() {
 
-     &run_cmd("LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopdCmd " .
+     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
             "$default_server_conf_args --fw-list-all",
             $cmd_out_tmp, $curr_test_file);
 
@@ -5235,6 +5236,7 @@ sub validate_test_hashes() {
         'set_legacy_iv'   => $OPTIONAL,
         'write_rc_file'   => $OPTIONAL,
         'save_rc_stanza'  => $OPTIONAL,
+        'disable_valgrind' => $OPTIONAL,
         'positive_output_matches' => $OPTIONAL,
         'negative_output_matches' => $OPTIONAL,
         'insert_rule_before_exec'    => $OPTIONAL,
@@ -5291,6 +5293,32 @@ sub validate_test_hashes() {
                 die "[*] 'server_conf' value: '$test_hr->{'server_conf'}' not matched in " .
                     "server command line '$test_hr->{'fwknopd_cmdline'}' for: $msg";
             }
+        }
+    }
+
+    ### for fwknop/fwknopd commands, prepend LD_LIBRARY_PATH and valgrind args 
+    for my $test_hr (@tests) {
+        next if $test_hr->{'disable_valgrind'} eq $YES;
+        if ($test_hr->{'cmdline'} =~ /^$fwknopCmd/) {
+            my $str = $lib_view_str;
+            unless ($test_hr->{'disable_valgrind'} eq $YES) {
+                $str .= " $valgrind_str";
+            }
+            $test_hr->{'cmdline'} = "$str $test_hr->{'cmdline'}";
+        } elsif ($test_hr->{'cmdline'} =~ /LD_LIBRARY_PATH/) {
+            if ($lib_view_cmd =~ /otool/) {
+                if ($test_hr->{'cmdline'} !~ /DYLD_LIBRARY_PATH/) {
+                    $test_hr->{'cmdline'}
+                        =~ s/(LD_LIBRARY_PATH=\S+)/$1 DYLD_LIBRARY_PATH=$lib_dir/;
+                }
+            }
+        }
+        if ($test_hr->{'fwknopd_cmdline'} =~ /^$fwknopdCmd/) {
+            my $str = $lib_view_str;
+            unless ($test_hr->{'disable_valgrind'} eq $YES) {
+                $str .= " $valgrind_str";
+            }
+            $test_hr->{'fwknopd_cmdline'} = "$str $test_hr->{'fwknopd_cmdline'}";
         }
     }
 
@@ -5429,6 +5457,7 @@ sub init() {
     unless ($lib_view_cmd) {
         $lib_view_cmd = &find_command('otool');
         if ($lib_view_cmd) {
+            $lib_view_str .= " DYLD_LIBRARY_PATH=$lib_dir";
             $lib_view_cmd .= ' -L';
         } else {
             $lib_view_cmd = '#';  ### comment out subsequent shell commands
@@ -5864,11 +5893,11 @@ sub is_fw_rule_active() {
     }
 
     if ($test_hr->{'no_ip_check'}) {
-        return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+        return 1 if &run_cmd("$lib_view_str $fwknopdCmd " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" |grep _exp_},
                 $cmd_out_tmp, $curr_test_file);
     } else {
-        return 1 if &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+        return 1 if &run_cmd("$lib_view_str $fwknopdCmd " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
                 $cmd_out_tmp, $curr_test_file);
     }
@@ -5878,7 +5907,7 @@ sub is_fw_rule_active() {
 
 sub is_fwknopd_running() {
 
-    &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd $default_server_conf_args " .
+    &run_cmd("$lib_view_str $fwknopdCmd $default_server_conf_args " .
         "--status", $cmd_out_tmp, $curr_test_file);
 
     return 1 if &file_find_regex([qr/Detected\sfwknopd\sis\srunning/i],
@@ -5900,7 +5929,7 @@ sub stop_fwknopd() {
         return;
     }
 
-    &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+    &run_cmd("$lib_view_str $fwknopdCmd " .
         "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
 
     ### look for SIGTERM receipt
@@ -5915,7 +5944,7 @@ sub stop_fwknopd() {
                 [qr/Got\sSIGTERM/],
                 $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
 
-            &run_cmd("LD_LIBRARY_PATH=$lib_dir $fwknopdCmd " .
+            &run_cmd("$lib_view_str $fwknopdCmd " .
                 "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
 
             &write_test_file("[.] stop_fwknopd() looking for fwknopd receiving " .

@@ -16,8 +16,7 @@
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args_no_pw,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
             "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -30,8 +29,7 @@
         'detail'   => 'iptables - no flush at init',
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_gpg_args_no_pw,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $cf{'no_flush_init'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_init'} " .
             "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -43,8 +41,7 @@
         'detail'   => 'iptables - no flush at exit',
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_gpg_args_no_pw,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $cf{'no_flush_exit'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_exit'} " .
             "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -56,8 +53,7 @@
         'detail'   => 'iptables - no flush at init or exit',
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_gpg_args_no_pw,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
-            "$valgrind_str $fwknopdCmd -c $cf{'no_flush_init_or_exit'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_init_or_exit'} " .
             "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -69,8 +65,7 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip " .
+        'cmdline' => "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip " .
             "--gpg-no-signing-pw --verbose --verbose " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
@@ -84,8 +79,7 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/9418 git)',
         'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip " .
+        'cmdline' => "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip " .
             "--gpg-no-signing-pw --verbose --verbose " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
@@ -99,8 +93,7 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (tcp/60001)',
         'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip " .
+        'cmdline' => "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip " .
             "--gpg-no-signing-pw --verbose --verbose " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
@@ -115,8 +108,7 @@
         'subcategory' => 'client+server',
         'detail'   => 'complete cycle (udp/53 dns)',
         'function' => \&spa_cycle,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip " .
+        'cmdline' => "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip " .
             "--gpg-no-signing-pw --verbose --verbose " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
@@ -144,8 +136,7 @@
         'pkt_prefix' => 'U2FsdGVkX1',
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
     },
     {
@@ -156,8 +147,7 @@
         'pkt_prefix' => 'hQ',
         'cmdline'  => "$default_client_gpg_args_no_homedir "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw",
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Data\sis\snot\sa\svalid\sSPA\smessage\sformat/],
     },
 

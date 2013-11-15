@@ -5,8 +5,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/SYSLOG_IDENTITY/],
         'exec_err' => $NO,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'def'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} " .
             "-a $cf{'def_access'} --dump-config",
     },
     {
@@ -15,8 +14,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/ENABLE_PCAP_PROMISC.*\'Y\'/],
         'exec_err' => $NO,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args " .
+        'cmdline' => "$fwknopdCmd $default_server_conf_args " .
             "-O $conf_dir/override_fwknopd.conf --dump-config",
     },
     {
@@ -26,8 +24,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Could\snot|Last\sfwknop/i],
         'exec_err' => $IGNORE,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd --show-last",
+        'cmdline' => "$fwknopCmd --show-last",
     },
     {
         'category' => 'basic operations',
@@ -36,8 +33,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/could\snot\sopen/i],
         'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -a $fake_ip " .
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip " .
             "-D $loopback_ip --get-key not/there",
         'fatal'    => $YES
     },
@@ -48,8 +44,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/must\suse\sone\sof/i],
         'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -D $loopback_ip",
+        'cmdline' => "$fwknopCmd -D $loopback_ip",
     },
     {
         'category' => 'basic operations',
@@ -58,8 +53,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Invalid\sallow\sIP\saddress/i],
         'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
+        'cmdline' => "$fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
     },
     {
         'category' => 'basic operations',
@@ -68,8 +62,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
         'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
+        'cmdline' => "$fwknopCmd -A invalid/22 -a $fake_ip -D $loopback_ip",
     },
     {
         'category' => 'basic operations',
@@ -78,8 +71,7 @@
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
         'exec_err' => $YES,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
+        'cmdline' => "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
     },
 
     {
@@ -568,24 +560,21 @@
         'subcategory' => 'server',
         'detail'   => 'list current fwknopd fw rules',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --fw-list",
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --fw-list",
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'list all current fw rules',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --fw-list-all",
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --fw-list-all",
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'flush current firewall rules',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --fw-flush",
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --fw-flush",
     },
 
     {
@@ -593,24 +582,21 @@
         'subcategory' => 'server',
         'detail'   => 'start',
         'function' => \&server_start,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'stop',
         'function' => \&server_stop,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'write PID',
         'function' => \&write_pid,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
 
     {
@@ -618,16 +604,14 @@
         'subcategory' => 'server',
         'detail'   => '--packet-limit 1 exit',
         'function' => \&server_packet_limit,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'ignore packets < min SPA len (140)',
         'function' => \&server_ignore_small_packets,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
     },
     {
         'category' => 'basic operations',
@@ -635,8 +619,7 @@
         'detail'   => '-P bpf filter ignore packet',
         'function' => \&server_bpf_ignore_packet,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str " .
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str " .
             qq|-P "udp port $non_std_spa_port"|,
     },
     {
@@ -644,8 +627,7 @@
         'subcategory' => 'server',
         'detail'   => 'invalid iptables INPUT spec',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain'} -a $cf{'def_access'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -655,8 +637,7 @@
         'subcategory' => 'server',
         'detail'   => 'invalid iptables INPUT spec (2)',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain2'} -a $cf{'def_access'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain2'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -666,8 +647,7 @@
         'subcategory' => 'server',
         'detail'   => 'invalid iptables INPUT spec (3)',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain3'} -a $cf{'def_access'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain3'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -677,8 +657,7 @@
         'subcategory' => 'server',
         'detail'   => 'invalid iptables INPUT spec (4)',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain4'} -a $cf{'def_access'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain4'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -688,8 +667,7 @@
         'subcategory' => 'server',
         'detail'   => 'invalid iptables INPUT spec (5)',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain5'} -a $cf{'def_access'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain5'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -699,8 +677,7 @@
         'subcategory' => 'server',
         'detail'   => 'invalid iptables INPUT spec (6)',
         'function' => \&generic_exec,
-        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
-            "$fwknopdCmd -c $cf{'invalid_ipt_input_chain6'} -a $cf{'def_access'} " .
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain6'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
