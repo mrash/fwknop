@@ -615,7 +615,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "    Server Auth: %s\n", server_auth == NULL ? NULL_STRING : server_auth);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, " Client Timeout: %u\n", client_timeout);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "    Digest Type: %u (%s)\n", digest_type, digest_str);
-        cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "      HMAC Type: %u (%s)\n", hmac_type, hmac_str);
+        cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "      HMAC Type: %u (%s)\n", hmac_type, hmac_type == 0 ? "None" : hmac_str);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_str);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "   Encoded Data: %s\n", enc_data == NULL ? NULL_STRING : enc_data);
