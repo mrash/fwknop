@@ -88,6 +88,8 @@ hex_dump(const unsigned char *data, const int size)
     {
         for(i=0; i < 16-ln; i++)
             printf("   ");
+        if(ln < 8)
+            printf(" ");
 
         printf(" %s\n\n", ascii_str);
     }
