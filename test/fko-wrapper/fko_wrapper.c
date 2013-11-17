@@ -18,9 +18,15 @@ static void display_ctx(fko_ctx_t ctx);
 static void test_loop(int destroy_ctx_flag);
 
 int main(void) {
+    int i;
 
     test_loop(NO_CTX_DESTROY);
     test_loop(CTX_DESTROY);
+
+    /* call fko_errstr() across valid and invalid values
+    */
+    for (i=-5; i < FKO_LAST_ERROR+5; i++)
+        printf("libfko error (%d): %s\n", i, fko_errstr(i));
 
     return 0;
 }
