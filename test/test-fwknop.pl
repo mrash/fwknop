@@ -206,6 +206,7 @@ my $tests_dir = 'tests';
 my @test_files = (
     "$tests_dir/build_security.pl",
     "$tests_dir/preliminaries.pl",
+    "$tests_dir/code_structure.pl",
     "$tests_dir/basic_operations.pl",
     "$tests_dir/rijndael.pl",
     "$tests_dir/rijndael_cmd_exec.pl",
@@ -227,6 +228,7 @@ our @build_security_client   = ();  ### imported from tests/build_security.pl
 our @build_security_server   = ();
 our @build_security_libfko   = ();
 our @preliminaries           = ();  ### from tests/preliminaries.pl
+our @code_structure_errstr   = ();  ### from tests/code_structure.pl (may include Coccinelle matches eventually)
 our @basic_operations        = ();  ### from tests/basic_operations.pl
 our @rijndael                = ();  ### from tests/rijndael.pl
 our @rijndael_cmd_exec       = ();  ### from tests/rijndael_cmd_exec.pl
@@ -279,6 +281,10 @@ our $valgrind_str = '';
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
 my %prev_valgrind_file_titles = ();
+my $libfko_hdr_file    = '../lib/fko.h';
+my $libfko_errstr_file = '../lib/fko_error.c';
+my $perl_libfko_constants_file   = '../perl/FKO/lib/FKO_Constants.pl';
+my $python_libfko_constants_file = '../python/fko.py';
 my $fko_wrapper_dir = 'fko-wrapper';
 my $python_spa_packet = '';
 my $enable_client_ip_resolve_test = 0;
@@ -539,6 +545,7 @@ my @tests = (
     @build_security_server,
     @build_security_libfko,
     @preliminaries,
+    @code_structure_errstr,
     @basic_operations,
     @rijndael,
     @rijndael_cmd_exec,
@@ -1102,6 +1109,75 @@ sub look_for_crashes() {
             $rv = 0;
         }
     }
+
+    return $rv;
+}
+
+sub code_structure_fko_error_strings() {
+
+    my $rv = 1;
+
+    ### parse error codes from lib/fko.h and make sure each is handled in
+    ### fko_errstr(), and that both the perl and python libfko extensions also
+    ### handle each error code.
+
+    for my $file ($libfko_hdr_file, $libfko_errstr_file,
+            $perl_libfko_constants_file, $python_libfko_constants_file) {
+        unless (-e $file) {
+            &write_test_file("[-] file: $file does not exist.\n",
+                $curr_test_file);
+            return 0;
+        }
+    }
+
+    ### this is a basic parser that relies on the current structure of fko.h
+    my $found_starting_code = 0;
+    my @fko_error_codes = ();
+    my $starting_code = 'FKO_SUCCESS';
+    open F, "< $libfko_hdr_file" or die "[*] Could not open $libfko_hdr_file: $!";
+    while (<F>) {
+        if (/$starting_code\s=\s0/) {
+            $found_starting_code = 1;
+            push @fko_error_codes, $starting_code;
+            next;
+        }
+        next unless $found_starting_code;
+        if (/^\s{4}(FKO_\S+),/) {
+            push @fko_error_codes, $1;
+        }
+        last if $found_starting_code and /^\}\sfko_error_codes_t\;/;
+    }
+    close F;
+
+    ### now make sure that lib/fko_error.c has an error string for each code
+    ### in order
+    my $found_errstr_func  = 0;
+    my $expected_var_index = 0;
+    my $prev_var = $fko_error_codes[0];
+    open F, "< $libfko_errstr_file" or die "[*] Could not open $libfko_errstr_file: $!";
+    while (<F>) {
+        if (/^fko_errstr\(/) {
+            $found_errstr_func = 1;
+            next;
+        }
+        next unless $found_errstr_func;
+        if (/^\s+case\s(\S+)\:/) {
+            my $var_str = $1;
+            if ($fko_error_codes[$expected_var_index] eq $var_str) {
+                $expected_var_index++;
+                $prev_var = $var_str;
+            } else {
+                &write_test_file("[-] expected var $fko_error_codes[$expected_var_index] " .
+                    "in position: $expected_var_index in fko_errstr(), previous var: $prev_var\n",
+                    $curr_test_file);
+                $rv = 0;
+                last;
+            }
+        }
+        last if $found_errstr_func and /^\}/;
+
+    }
+    close F;
 
     return $rv;
 }
