@@ -38,6 +38,7 @@
 int     is_valid_encoded_msg_len(const int len);
 int     is_valid_pt_msg_len(const int len);
 int     is_valid_digest_len(const int len);
+int     is_base64(const unsigned char * const buf, const unsigned short int len);
 int     enc_mode_strtoint(const char *enc_mode_str);
 short   enc_mode_inttostr(int enc_mode, char* enc_mode_str, size_t enc_mode_size);
 int     strtol_wrapper(const char * const str, const int min,

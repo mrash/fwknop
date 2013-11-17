@@ -331,6 +331,13 @@ add_salted_str(fko_ctx_t ctx)
 {
     char           *tbuf;
 
+    /* We only add the base64 encoded salt to data that is already base64
+     * encoded
+    */
+    if(is_base64((unsigned char *)ctx->encrypted_msg,
+            ctx->encrypted_msg_len) == 0)
+        return(FKO_ERROR_INVALID_DATA_ENCODE_NOTBASE64);
+
     if(constant_runtime_cmp(ctx->encrypted_msg,
             B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) != 0)
     {
@@ -366,6 +373,13 @@ int
 add_gpg_prefix(fko_ctx_t ctx)
 {
     char           *tbuf;
+
+    /* We only add the base64 encoded salt to data that is already base64
+     * encoded
+    */
+    if(is_base64((unsigned char *)ctx->encrypted_msg,
+                ctx->encrypted_msg_len) == 0)
+        return(FKO_ERROR_INVALID_DATA_ENCODE_NOTBASE64);
 
     if(constant_runtime_cmp(ctx->encrypted_msg,
             B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) != 0)

@@ -95,27 +95,6 @@ hex_dump(const unsigned char *data, const int size)
     }
 }
 
-/* Determine if a buffer contains only characters from the base64
- * encoding set
-*/
-int
-is_base64(const unsigned char *buf, const unsigned short int len)
-{
-    unsigned short int  i;
-    int                 rv = 1;
-
-    for(i=0; i<len; i++)
-    {
-        if(!(isalnum(buf[i]) || buf[i] == '/' || buf[i] == '+' || buf[i] == '='))
-        {
-            rv = 0;
-            break;
-        }
-    }
-
-    return rv;
-}
-
 int
 verify_file_perms_ownership(const char *file)
 {
