@@ -147,6 +147,9 @@ fko_errstr(const int err_code)
         case FKO_ERROR_INVALID_DATA_DECODE_SPA_EXTRA_TOOBIG:
             return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_SPA_EXTRA_TOOBIG");
 
+        case FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG");
+
         case FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL:
             return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL");
 
