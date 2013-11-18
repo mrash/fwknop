@@ -1142,7 +1142,7 @@ sub code_structure_fko_error_strings() {
             next;
         }
         next unless $found_starting_code;
-        if (/^\s{4}(FKO_\S+),/) {
+        if (/^\s{4}([A-Z]\S+),/) {
             push @fko_error_codes, $1;
         }
         last if $found_starting_code and /^\}\sfko_error_codes_t\;/;
@@ -1163,6 +1163,9 @@ sub code_structure_fko_error_strings() {
         next unless $found_errstr_func;
         if (/^\s+case\s(\S+)\:/) {
             my $var_str = $1;
+            if ($fko_error_codes[$expected_var_index] eq 'GPGME_ERR_START') {
+                $expected_var_index++;
+            }
             if ($fko_error_codes[$expected_var_index] eq $var_str) {
                 $expected_var_index++;
                 $prev_var = $var_str;
@@ -1176,6 +1179,81 @@ sub code_structure_fko_error_strings() {
         }
         last if $found_errstr_func and /^\}/;
 
+    }
+    close F;
+
+    ### validate perl error code constants
+    $expected_var_index = 0;
+    $prev_var = $fko_error_codes[0];
+    my $found_err_code_arr = 0;
+    open F, "< $perl_libfko_constants_file" or die "[*] Could not open $perl_libfko_constants_file: $!";
+    while (<F>) {
+        if (/our\s\@ERROR_CODES\s=/) {
+            $found_err_code_arr = 1;
+            next;
+        }
+        next unless $found_err_code_arr;
+        if (/^\s{4}(\S+)/) {
+            my $var_str = $1;
+            if ($fko_error_codes[$expected_var_index] eq $var_str) {
+                $expected_var_index++;
+                $prev_var = $var_str;
+            } else {
+                &write_test_file("[-] perl FKO module - expected var $fko_error_codes[$expected_var_index] " .
+                    "in position: $expected_var_index in ERROR_CODES array, previous var: $prev_var\n",
+                    $curr_test_file);
+                $rv = 0;
+                last;
+            }
+        }
+        last if $found_err_code_arr and /^\)\;/;
+    }
+    close F;
+
+    ### same thing, but now validate 'use constant' values too
+    $expected_var_index = 0;
+    $prev_var = $fko_error_codes[0];
+    my $found_use_constant = 0;
+    my $found_fko_success = 0;
+    open F, "< $perl_libfko_constants_file" or die "[*] Could not open $perl_libfko_constants_file: $!";
+    while (<F>) {
+        if (/^use\sconstant\s\{/) {
+            $found_use_constant = 1;
+            next;
+        }
+        next unless $found_use_constant;
+        if (/^\s{4}$starting_code\s+=\>\s(\d+),/) {
+            my $val = $1;
+            unless ($fko_error_codes[$val] eq $starting_code) {
+                &write_test_file("[-] perl FKO module - expected var $starting_code " .
+                    "value of zero, got $val\n", $curr_test_file);
+                $rv = 0;
+                last;
+            }
+            $found_fko_success = 1;
+        }
+        next unless $found_fko_success;
+        if (/^\s{4}([A-Z]\S+)\s+=\>\s(\d+),/) {
+            my $var_str = $1;
+            my $val     = $2;
+            if ($fko_error_codes[$val] eq $var_str) {
+                $expected_var_index++;
+                $prev_var = $var_str;
+            } else {
+                &write_test_file("[-] perl FKO module - expected var $fko_error_codes[$expected_var_index] " .
+                    "in position: $expected_var_index in 'use constants' definition, previous var: $prev_var\n",
+                    $curr_test_file);
+                $rv = 0;
+                last;
+            }
+        }
+        last if $found_fko_success and /^\)\;/;
+    }
+    close F;
+
+    ### validate python error code constants
+    open F, "< $python_libfko_constants_file" or die "[*] Could not open $python_libfko_constants_file: $!";
+    while (<F>) {
     }
     close F;
 
