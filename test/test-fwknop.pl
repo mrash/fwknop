@@ -5523,6 +5523,8 @@ sub init() {
         chmod 0600, $cf{$name} or die "[*] Could not chmod 0600 $cf{$name}";
     }
 
+    unlink $init_file if -e $init_file;
+
     if ($test_include) {
         for my $re (split /\s*,\s*/, $test_include) {
             push @tests_to_include, qr/$re/;
