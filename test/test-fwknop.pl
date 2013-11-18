@@ -1252,8 +1252,32 @@ sub code_structure_fko_error_strings() {
     close F;
 
     ### validate python error code constants
+    $expected_var_index = 0;
+    $prev_var = $fko_error_codes[0];
+    $found_use_constant = 0;
+    $found_fko_success = 0;
     open F, "< $python_libfko_constants_file" or die "[*] Could not open $python_libfko_constants_file: $!";
     while (<F>) {
+        if (/^$starting_code\s=\s0/) {
+            $found_fko_success = 1;
+            next;
+        }
+        next unless $found_fko_success;
+        if (/^([A-Z]\S+)\s=\s(\d+)/) {
+            my $var_str = $1;
+            my $val     = $2;
+            if ($fko_error_codes[$val] eq $var_str) {
+                $expected_var_index++;
+                $prev_var = $var_str;
+            } else {
+                &write_test_file("[-] python extension - expected var $fko_error_codes[$expected_var_index] " .
+                    "in position: $expected_var_index in FKO constants section, previous var: $prev_var\n",
+                    $curr_test_file);
+                $rv = 0;
+                last;
+            }
+        }
+        last if $found_fko_success and /^\s/;
     }
     close F;
 
