@@ -691,6 +691,7 @@
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
             qr/to\:$internal_nat_host\:22/i],
+        'no_ip_check' => 1,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'snat'},
@@ -708,6 +709,7 @@
             qr/to\:$internal_nat_host\:22/i,
             qr/MASQUERADE\s.*to\-ports/,
         ],
+        'no_ip_check' => 1,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'snat_no_translate_ip'},
