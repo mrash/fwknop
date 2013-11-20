@@ -48,7 +48,7 @@ fwknopd_errstr(const int err_code)
             return("Not enough data to be a valid SPA message");
 
         case SPA_MSG_NOT_SPA_DATA:
-            return("Data is not a SPA message");
+            return("Data is not an SPA message");
 
         case SPA_MSG_HTTP_NOT_ENABLED:
             return("SPA via HTTP request, but ENABLE_SPA_OVER_HTTP is not set");
@@ -57,7 +57,7 @@ fwknopd_errstr(const int err_code)
             return("Error creating FKO context for incoming data.");
 
         case SPA_MSG_DIGEST_ERROR:
-            return("Unable to retrieve digest in from the SPA data.");
+            return("Unable to retrieve digest from the SPA data.");
 
         case SPA_MSG_DIGEST_CACHE_ERROR:
             return("Error trying to access the digest.cache file");
