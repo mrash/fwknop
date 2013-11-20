@@ -643,11 +643,28 @@ incoming_spa(fko_srv_options_t *opts)
             continue;
         }
 
+        if((spa_ip_demark-spadat.spa_message) < MIN_IPV4_STR_LEN-1
+                || (spa_ip_demark-spadat.spa_message) > MAX_IPV4_STR_LEN)
+        {
+            log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+
+            if(ctx != NULL)
+            {
+                if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
+                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
+                    );
+                ctx = NULL;
+            }
+            break;
+        }
+
         strlcpy(spadat.spa_message_src_ip,
             spadat.spa_message, (spa_ip_demark-spadat.spa_message)+1);
 
-        if(strnlen(spadat.spa_message_src_ip,
-                MIN_IPV4_STR_LEN) < MIN_IPV4_STR_LEN)
+        if(! is_valid_ipv4_addr(spadat.spa_message_src_ip))
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));

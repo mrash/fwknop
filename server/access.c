@@ -180,6 +180,13 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
+    if(! is_valid_ipv4_addr(ip_str))
+    {
+        log_msg(LOG_ERR,
+            "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
     curr_acc->force_nat = 1;
     add_acc_string(&(curr_acc->force_nat_ip), ip_str);
 

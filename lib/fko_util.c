@@ -33,6 +33,14 @@
 #include <errno.h>
 #include <stdarg.h>
 
+#ifndef WIN32
+  /* for inet_aton() IP validation
+  */
+  #include <sys/socket.h>
+  #include <netinet/in.h>
+  #include <arpa/inet.h>
+#endif
+
 /* Check for a FKO error returned by a function an return the error code */
 #define RETURN_ON_FKO_ERROR(e, f)   do { if (((e)=(f)) != FKO_SUCCESS) { return (e); } } while(0);
 
@@ -102,6 +110,55 @@ is_valid_encoded_msg_len(const int len)
         return(0);
 
     return(1);
+}
+
+/* Validate an IPv4 address
+*/
+int
+is_valid_ipv4_addr(const char * const ip_str)
+{
+    const char         *ndx     = ip_str;
+    int                 dot_ctr = 0, char_ctr = 0;
+    int                 res     = 1;
+#if HAVE_SYS_SOCKET_H
+    struct in_addr      in;
+#endif
+
+    while(*ndx != '\0')
+    {
+        char_ctr++;
+        if(char_ctr >= MAX_IPV4_STR_LEN)
+        {
+            res = 0;
+            break;
+        }
+        if(*ndx == '.')
+            dot_ctr++;
+        else if(isdigit(*ndx) == 0)
+        {
+            res = 0;
+            break;
+        }
+        ndx++;
+    }
+    if(char_ctr >= MAX_IPV4_STR_LEN)
+        res = 0;
+
+    if ((res == 1) && (char_ctr < MIN_IPV4_STR_LEN))
+        res = 0;
+
+    if((res == 1) && dot_ctr != 3)
+        res = 0;
+
+#if HAVE_SYS_SOCKET_H
+    /* Stronger IP validation now that we have a candidate that looks
+     * close enough
+    */
+    if((res == 1) && (inet_aton(ip_str, &in) == 0))
+        res = 0;
+#endif
+
+    return(res);
 }
 
 /* Convert a digest_type string to its integer value.

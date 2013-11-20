@@ -444,6 +444,18 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_ENABLE_IPT_SNAT,
             DEF_ENABLE_IPT_SNAT);
 
+    /* Make sure we have a valid IP if SNAT is enabled
+    */
+    if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+        if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+            {
+                log_msg(LOG_ERR,
+                    "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
+                );
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+
     /* Enable IPT OUTPUT.
     */
     if(opts->config[CONF_ENABLE_IPT_OUTPUT] == NULL)

@@ -33,14 +33,6 @@
 #include "fko_message.h"
 #include "fko.h"
 
-#ifndef WIN32
-  /* for inet_aton() IP validation
-  */
-  #include <sys/socket.h>
-  #include <netinet/in.h>
-  #include <arpa/inet.h>
-#endif
-
 static int
 have_allow_ip(const char *msg)
 {
@@ -48,9 +40,6 @@ have_allow_ip(const char *msg)
     char                ip_str[MAX_IPV4_STR_LEN];
     int                 dot_ctr = 0, char_ctr = 0;
     int                 res     = FKO_SUCCESS;
-#if HAVE_SYS_SOCKET_H
-    struct in_addr      in;
-#endif
 
     while(*ndx != ',' && *ndx != '\0')
     {
@@ -76,19 +65,9 @@ have_allow_ip(const char *msg)
     else
         res = FKO_ERROR_INVALID_ALLOW_IP;
 
-    if ((res == FKO_SUCCESS) && (char_ctr < MIN_IPV4_STR_LEN))
-        res = FKO_ERROR_INVALID_ALLOW_IP;
-
-    if((res == FKO_SUCCESS) && dot_ctr != 3)
-        res = FKO_ERROR_INVALID_ALLOW_IP;
-
-#if HAVE_SYS_SOCKET_H
-    /* Stronger IP validation now that we have a candidate that looks
-     * close enough
-    */
-    if((res == FKO_SUCCESS) && (inet_aton(ip_str, &in) == 0))
-        res = FKO_ERROR_INVALID_ALLOW_IP;
-#endif
+    if(res == FKO_SUCCESS)
+        if (! is_valid_ipv4_addr(ip_str))
+            res = FKO_ERROR_INVALID_ALLOW_IP;
 
     return(res);
 }

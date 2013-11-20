@@ -1110,11 +1110,19 @@ process_spa_request(const fko_srv_options_t * const opts,
             if(ndx != NULL)
             {
                 strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
+                if (! is_valid_ipv4_addr(nat_ip))
+                {
+                    log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
+                    free_acc_port_list(port_list);
+                    return res;
+                }
+
                 nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
                 if(is_err != FKO_SUCCESS)
                 {
                     log_msg(LOG_INFO, "Invalid NAT port in SPA message");
                     free_acc_port_list(port_list);
+                    res = is_err;
                     return res;
                 }
             }
