@@ -177,7 +177,6 @@ our $tmp_args_file       = "$run_dir/args.save";
 
 our $fwknopCmd  = '../client/.libs/fwknop';
 our $fwknopdCmd = '../server/.libs/fwknopd';
-our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
 our $gpg_server_key = '361BBAD4';
 our $gpg_client_key = '6A3FAD56';
@@ -312,7 +311,6 @@ my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
 my $include_permissions_warnings = 0;
 my $lib_view_cmd = '';
-my $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
 our $valgrind_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
@@ -362,7 +360,7 @@ exit 1 unless GetOptions(
     'Anonymize-results' => \$anonymize_results,
     'fwknop-path=s'     => \$fwknopCmd,
     'fwknopd-path=s'    => \$fwknopdCmd,
-    'libfko-path=s'     => \$libfko_bin,
+    'lib-dir=s'         => \$lib_dir,  ### for LD_LIBRARY_PATH
     'loopback-intf=s'   => \$loopback_intf,
     'test-include=s'    => \$test_include,
     'include=s'         => \$test_include,  ### synonym
@@ -400,6 +398,9 @@ exit 1 unless GetOptions(
 );
 
 &usage() if $help;
+
+my  $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
+our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
 if ($enable_all) {
     $enable_valgrind = 1;
@@ -575,6 +576,43 @@ my @tests = (
     }
 );
 
+my %test_keys = (
+    'category'        => $REQUIRED,
+    'subcategory'     => $OPTIONAL,
+    'detail'          => $REQUIRED,
+    'function'        => $REQUIRED,
+    'binary'          => $OPTIONAL,
+    'cmdline'         => $OPTIONAL,
+    'fwknopd_cmdline' => $OPTIONAL,
+    'fatal'           => $OPTIONAL_NUMERIC,
+    'key_file'        => $OPTIONAL,
+    'exec_err'        => $OPTIONAL,
+    'server_exec_err' => $OPTIONAL,
+    'fw_rule_created' => $OPTIONAL,
+    'fw_rule_removed' => $OPTIONAL,
+    'server_conf'     => $OPTIONAL,
+    'pkt'             => $OPTIONAL,
+    'fuzzing_pkt'     => $OPTIONAL,
+    'pkt_prefix'      => $OPTIONAL,
+    'no_ip_check'     => $OPTIONAL,
+    'get_key'         => $OPTIONAL,
+    'get_hmac_key'    => $OPTIONAL,
+    'set_legacy_iv'   => $OPTIONAL,
+    'write_rc_file'   => $OPTIONAL,
+    'save_rc_stanza'  => $OPTIONAL,
+    'disable_valgrind' => $OPTIONAL,
+    'positive_output_matches' => $OPTIONAL,
+    'negative_output_matches' => $OPTIONAL,
+    'insert_rule_before_exec'    => $OPTIONAL,
+    'insert_rule_while_running'  => $OPTIONAL,
+    'search_for_rule_after_exit' => $OPTIONAL,
+    'rc_positive_output_matches' => $OPTIONAL,
+    'rc_negative_output_matches' => $OPTIONAL,
+    'mv_and_restore_replay_cache' => $OPTIONAL,
+    'server_positive_output_matches' => $OPTIONAL,
+    'server_negative_output_matches' => $OPTIONAL,
+);
+
 &validate_test_hashes();
 
 ### make sure no fwknopd instance is currently running
@@ -665,7 +703,6 @@ if ($enable_valgrind) {
     );
 }
 
-
 &logr("\n");
 
 &remove_permissions_warnings() unless $include_permissions_warnings;
@@ -711,6 +748,8 @@ exit 0;
 
 sub run_test() {
     my $test_hr = shift;
+
+    &validate_test_hash($test_hr);
 
     ### prepare for test run
     &rm_tmp_files();
@@ -5388,62 +5427,31 @@ sub dots_print() {
     return;
 }
 
-sub validate_test_hashes() {
+sub validate_test_hash() {
+    my $test_hr = shift;
+    my $msg = &get_msg($test_hr);
+    for my $key (keys %test_keys) {
+        if ($test_keys{$key} == $REQUIRED) {
+            die "[*] Missing '$key' element in test hash: '$msg'"
+                unless defined $test_hr->{$key};
+        } elsif ($test_keys{$key} == $OPTIONAL_NUMERIC) {
+            $test_hr->{$key} = 0 unless defined $test_hr->{$key};
+        } else {
+            $test_hr->{$key} = '' unless defined $test_hr->{$key};
+        }
+    }
+    for my $key (keys %$test_hr) {
+        die "[*] Unrecognized key '$key' in test hash: '$msg'"
+            unless defined $test_keys{$key};
+    }
+    return;
+}
 
-    my %test_keys = (
-        'category'        => $REQUIRED,
-        'subcategory'     => $OPTIONAL,
-        'detail'          => $REQUIRED,
-        'function'        => $REQUIRED,
-        'binary'          => $OPTIONAL,
-        'cmdline'         => $OPTIONAL,
-        'fwknopd_cmdline' => $OPTIONAL,
-        'fatal'           => $OPTIONAL_NUMERIC,
-        'key_file'        => $OPTIONAL,
-        'exec_err'        => $OPTIONAL,
-        'server_exec_err' => $OPTIONAL,
-        'fw_rule_created' => $OPTIONAL,
-        'fw_rule_removed' => $OPTIONAL,
-        'server_conf'     => $OPTIONAL,
-        'pkt'             => $OPTIONAL,
-        'fuzzing_pkt'     => $OPTIONAL,
-        'pkt_prefix'      => $OPTIONAL,
-        'no_ip_check'     => $OPTIONAL,
-        'get_key'         => $OPTIONAL,
-        'get_hmac_key'    => $OPTIONAL,
-        'set_legacy_iv'   => $OPTIONAL,
-        'write_rc_file'   => $OPTIONAL,
-        'save_rc_stanza'  => $OPTIONAL,
-        'disable_valgrind' => $OPTIONAL,
-        'positive_output_matches' => $OPTIONAL,
-        'negative_output_matches' => $OPTIONAL,
-        'insert_rule_before_exec'    => $OPTIONAL,
-        'insert_rule_while_running'  => $OPTIONAL,
-        'search_for_rule_after_exit' => $OPTIONAL,
-        'rc_positive_output_matches' => $OPTIONAL,
-        'rc_negative_output_matches' => $OPTIONAL,
-        'mv_and_restore_replay_cache' => $OPTIONAL,
-        'server_positive_output_matches' => $OPTIONAL,
-        'server_negative_output_matches' => $OPTIONAL,
-    );
+sub validate_test_hashes() {
 
     ### validate test hashes
     for my $test_hr (@tests) {
-        my $msg = &get_msg($test_hr);
-        for my $key (keys %test_keys) {
-            if ($test_keys{$key} == $REQUIRED) {
-                die "[*] Missing '$key' element in test hash: '$msg'"
-                    unless defined $test_hr->{$key};
-            } elsif ($test_keys{$key} == $OPTIONAL_NUMERIC) {
-                $test_hr->{$key} = 0 unless defined $test_hr->{$key};
-            } else {
-                $test_hr->{$key} = '' unless defined $test_hr->{$key};
-            }
-        }
-        for my $key (keys %$test_hr) {
-            die "[*] Unrecognized key '$key' in test hash: '$msg'"
-                unless defined $test_keys{$key};
-        }
+        &validate_test_hash($test_hr);
     }
 
     ### make sure test message strings are unique across all tests
@@ -5474,7 +5482,7 @@ sub validate_test_hashes() {
         }
     }
 
-    ### for fwknop/fwknopd commands, prepend LD_LIBRARY_PATH and valgrind args 
+    ### for fwknop/fwknopd commands, prepend LD_LIBRARY_PATH and valgrind args
     for my $test_hr (@tests) {
         next if $test_hr->{'disable_valgrind'} eq $YES;
         if ($test_hr->{'cmdline'} =~ /^$fwknopCmd/) {
@@ -6360,8 +6368,8 @@ sub usage() {
                                      $fwknopCmd
     --fwknopd-path=<path>          - Path to fwknopd binary, default is:
                                      $fwknopdCmd
-    --libfko-path=<path>           - Path to libfko, default is:
-                                     $libfko_bin
+    --lib-dir=<path>               - For LD_LIBRARY_PATH, default is:
+                                     $lib_dir
     --valgrind-path=<path>         - Specify path to valgrind
     --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
                                      directory (defaults to:
