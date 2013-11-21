@@ -12,6 +12,30 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => 'short IP 1.1.1.1 (ssh)',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip --get-key " .
+            "$local_key_file --no-save-args --verbose --verbose",
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'no_ip_check' => 1
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'long IP 123.123.123.123 (ssh)',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$fwknopCmd -A tcp/22 -a 123.123.123.123 -D $loopback_ip --get-key " .
+            "$local_key_file --no-save-args --verbose --verbose",
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'no_ip_check' => 1
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'use of encryption key with fd 0',
         'function' => \&spa_cycle,
         'cmdline'  => "echo $local_spa_key | $default_client_args_no_get_key " .
