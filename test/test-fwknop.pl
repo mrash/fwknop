@@ -1943,7 +1943,12 @@ sub perl_fko_module_make_test() {
 
     chdir '../perl/FKO' or die $!;
 
-    &run_cmd("make test", $cmd_out_tmp, "../../test/$curr_test_file");
+    my $lib_path_cp = $lib_view_str;
+
+    ### fix up relative path for lib directory
+    $lib_path_cp =~ s|\.\./|../../|g;
+
+    &run_cmd("$lib_path_cp make test", $cmd_out_tmp, "../../test/$curr_test_file");
 
     chdir $curr_pwd or die $!;
 
