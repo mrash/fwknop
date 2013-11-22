@@ -62,6 +62,8 @@ EXTRA_DIST = \
     extras/openwrt/package/gpgme/Makefile \
     extras/fwknop-launcher/fwknop-launcher-lsof.pl \
     extras/fwknop-launcher/fwknop-launcher.conf \
+    extras/apparmor/usr.sbin.fwknopd \
+    extras/apparmor/configure_args.sh \
     fwknop.spec \
     iphone/main.m \
     iphone/Fwknop.xcodeproj \
