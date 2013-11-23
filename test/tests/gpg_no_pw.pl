@@ -66,7 +66,7 @@
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip " .
-            "--gpg-no-signing-pw --verbose --verbose " .
+            "--gpg-no-signing-pw $verbose_str " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -80,7 +80,7 @@
         'detail'   => 'complete cycle (tcp/9418 git)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip " .
-            "--gpg-no-signing-pw --verbose --verbose " .
+            "--gpg-no-signing-pw $verbose_str " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -94,7 +94,7 @@
         'detail'   => 'complete cycle (tcp/60001)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip " .
-            "--gpg-no-signing-pw --verbose --verbose " .
+            "--gpg-no-signing-pw $verbose_str " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir_no_pw",
@@ -109,7 +109,7 @@
         'detail'   => 'complete cycle (udp/53 dns)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip " .
-            "--gpg-no-signing-pw --verbose --verbose " .
+            "--gpg-no-signing-pw $verbose_str " .
             "--gpg-recipient-key $gpg_server_key " .
             "--gpg-signer-key $gpg_client_key " .
             "--gpg-home-dir $gpg_client_home_dir_no_pw",

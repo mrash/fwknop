@@ -221,7 +221,7 @@
         'detail'   => 'short IP 1.1.1.1 (ssh)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -236,7 +236,7 @@
         'detail'   => 'long IP 123.123.123.123 (ssh)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a 123.123.123.123 -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -252,7 +252,7 @@
         'detail'   => 'complete cycle (tcp/23)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -265,7 +265,7 @@
         'detail'   => 'non-b64 HMAC key (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key2'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key2'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_no_b64_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -279,7 +279,7 @@
         'detail'   => 'complete cycle (tcp/9418)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -292,7 +292,7 @@
         'detail'   => 'complete cycle (tcp/60001)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -305,7 +305,7 @@
         'detail'   => 'multi port (tcp/60001,udp/60001)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -331,7 +331,7 @@
         'detail'   => 'random SPA port (via rc RAND_PORT)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_rand_port_hmac_b64_key'} --verbose --verbose -r",
+            "$cf{'rc_rand_port_hmac_b64_key'} $verbose_str -r",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str " .
             qq|-P "udp"|,
@@ -361,7 +361,7 @@
         'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -397,7 +397,7 @@
         'detail'   => "--last-cmd",
         'function' => \&generic_exec,
         'cmdline' => "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
-            "--verbose --verbose",
+            "$verbose_str",
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -689,7 +689,7 @@
         'detail'   => 'dual usage access key (tcp/80 http)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose",
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_dual_key_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         ### check for the first stanza that does not allow tcp/80 - the
@@ -815,7 +815,7 @@
         'detail'   => "NAT tcp/80 to $internal_nat_host tcp/22",
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose -N $internal_nat_host:22",
+            "$cf{'rc_hmac_b64_key'} $verbose_str -N $internal_nat_host:22",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'hmac_open_ports_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
@@ -876,7 +876,7 @@
         'detail'   => "local NAT non-FORCE_NAT",
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose --nat-local --nat-port 80",
+            "$cf{'rc_hmac_b64_key'} $verbose_str --nat-local --nat-port 80",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
@@ -894,7 +894,7 @@
         'detail'   => "local NAT rand port to tcp/22",
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose --nat-local --nat-rand-port",
+            "$cf{'rc_hmac_b64_key'} $verbose_str --nat-local --nat-rand-port",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
@@ -910,7 +910,7 @@
         'detail'   => "NAT rand port to tcp/22",
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose --nat-rand-port -N $internal_nat_host",
+            "$cf{'rc_hmac_b64_key'} $verbose_str --nat-rand-port -N $internal_nat_host",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
@@ -927,7 +927,7 @@
         'detail'   => "NAT rand port to -N <host>:40001",
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
-            "$cf{'rc_hmac_b64_key'} --verbose --verbose --nat-rand-port -N $internal_nat_host:40001",
+            "$cf{'rc_hmac_b64_key'} $verbose_str --nat-rand-port -N $internal_nat_host:40001",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [

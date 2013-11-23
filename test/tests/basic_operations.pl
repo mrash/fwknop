@@ -520,10 +520,10 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => '--verbose --verbose',
+        'detail'   => $verbose_str,
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
-            "--fw-timeout 1234 --verbose --verbose",
+            "--fw-timeout 1234 $verbose_str",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
@@ -547,7 +547,7 @@
         'detail'   => '--use-hmac --key-gen',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
-            "--fw-timeout 1234 --verbose --use-hmac --key-gen",
+            "--fw-timeout 1234 $verbose_str --use-hmac --key-gen",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
         'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],

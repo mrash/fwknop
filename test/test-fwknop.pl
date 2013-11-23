@@ -264,6 +264,7 @@ my $curr_test_file = 'init';
 my $init_file = $curr_test_file;
 my $tarfile = 'test_fwknop.tar.gz';
 our $key_gen_file = "$output_dir/key_gen";
+our $verbose_str  = "--verbose --verbose";
 my $gdb_test_file = '';
 my $fuzzing_pkts_file = 'fuzzing/fuzzing_spa_packets';
 my $fuzzing_pkts_append = 0;
@@ -391,6 +392,7 @@ exit 1 unless GetOptions(
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
     'openssl-path=s'    => \$openssl_path,
     'output-dir=s'      => \$output_dir,
+    'cmd-verbose=s'     => \$verbose_str,
     'diff'              => \$diff_mode,
     'diff-dir1=s'       => \$diff_dir1,
     'diff-dir2=s'       => \$diff_dir2,
@@ -434,15 +436,15 @@ exit &gdb_test_cmd() if $gdb_test_file;
 $valgrind_str = "$valgrind_path --leak-check=full " .
     "--show-reachable=yes --track-origins=yes" if $enable_valgrind;
 
-our $intf_str = "-i $loopback_intf --foreground --verbose --verbose";
+our $intf_str = "-i $loopback_intf --foreground $verbose_str";
 
 our $default_client_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
-    "$local_key_file --no-save-args --verbose --verbose";
+    "$local_key_file --no-save-args $verbose_str";
 
 our $default_client_args_no_get_key = "$lib_view_str " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
-    "--no-save-args --verbose --verbose";
+    "--no-save-args $verbose_str";
 
 our $default_client_args_no_verbose = "$lib_view_str " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
@@ -462,11 +464,11 @@ our $default_client_hmac_args = "$default_client_args_no_get_key " .
 
 our $client_ip_resolve_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
-    "$local_key_file --verbose --verbose";
+    "$local_key_file $verbose_str";
 
 our $client_ip_resolve_hmac_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --rc-file " .
-    "$cf{'rc_hmac_b64_key'} --verbose --verbose";
+    "$cf{'rc_hmac_b64_key'} $verbose_str";
 
 our $default_client_gpg_args = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
@@ -1741,7 +1743,7 @@ sub iptables_no_flush_init_exit() {
     my $rv = 1;
 
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
-        "$default_server_conf_args --fw-flush --verbose --verbose",
+        "$default_server_conf_args --fw-flush $verbose_str",
         $cmd_out_tmp, $curr_test_file);
 
     if ($test_hr->{'insert_rule_before_exec'}) {
@@ -1756,7 +1758,7 @@ sub iptables_no_flush_init_exit() {
 
     if ($test_hr->{'search_for_rule_after_exit'}) {
         &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
-            "$default_server_conf_args --fw-list --verbose --verbose",
+            "$default_server_conf_args --fw-list $verbose_str",
             $cmd_out_tmp, $curr_test_file);
         $rv = 0 unless &file_find_regex([qr/ACCEPT.*$fake_ip\s.*dpt\:1234/],
             $MATCH_ALL, $APPEND_RESULTS, $curr_test_file);
@@ -6379,6 +6381,9 @@ sub usage() {
     --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
                                      directory (defaults to:
                                      "output.last/valgrind-coverage").
+    --cmd-verbose=<str>            - Set the verbosity level of executed fwknop
+                                     commands, default is:
+                                     $verbose_str
     -h   --help                    - Display usage on STDOUT and exit.
 
 _HELP_

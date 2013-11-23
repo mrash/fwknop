@@ -15,7 +15,7 @@
         'detail'   => 'short IP 1.1.1.1 (ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip --get-key " .
-            "$local_key_file --no-save-args --verbose --verbose",
+            "$local_key_file --no-save-args $verbose_str",
         'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -27,7 +27,7 @@
         'detail'   => 'long IP 123.123.123.123 (ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a 123.123.123.123 -D $loopback_ip --get-key " .
-            "$local_key_file --no-save-args --verbose --verbose",
+            "$local_key_file --no-save-args $verbose_str",
         'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -61,7 +61,7 @@
         'detail'   => 'localhost hostname->IP (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a $fake_ip -D localhost --get-key " .
-            "$local_key_file --no-save-args --verbose --verbose",
+            "$local_key_file --no-save-args $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -82,8 +82,8 @@
         'detail'   => "--save-packet $tmp_pkt_file",
         'function' => \&client_save_spa_pkt,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --save-args-file $tmp_args_file --verbose " .
-            "--verbose --save-packet $tmp_pkt_file",
+            "$local_key_file --save-args-file $tmp_args_file $verbose_str " .
+            "--save-packet $tmp_pkt_file",
     },
     {
         'category' => 'Rijndael',
@@ -91,7 +91,7 @@
         'detail'   => "--last-cmd",
         'function' => \&generic_exec,
         'cmdline'  => "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
-            "--verbose --verbose",
+            "$verbose_str",
     },
 
     {
@@ -253,7 +253,7 @@
         'detail'   => 'dual usage access key (tcp/80 http)',
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'dual_key_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         ### check for the first stanza that does not allow tcp/80 - the
@@ -570,7 +570,7 @@
         'detail'   => 'mismatch require src (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'require_src_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/Got\s0.0.0.0\swhen\svalid\ssource\sIP/],
@@ -583,7 +583,7 @@
         'no_ip_check' => 1,
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -s -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -761,7 +761,7 @@
         'detail'   => "NAT tcp/80 to $internal_nat_host tcp/22",
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose -N $internal_nat_host:22",
+            "$local_key_file $verbose_str -N $internal_nat_host:22",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
@@ -816,7 +816,7 @@
         'detail'   => "local NAT hostname->IP (tcp/22 ssh)",
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a $fake_ip -D localhost --nat-local " .
-            "--get-key $local_key_file --no-save-args --verbose --verbose",
+            "--get-key $local_key_file --no-save-args $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i,
@@ -882,7 +882,7 @@
         'detail'   => "local NAT non-FORCE_NAT (tcp/22)",
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose --nat-local --nat-port 80",
+            "$local_key_file $verbose_str --nat-local --nat-port 80",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
@@ -962,8 +962,7 @@
         'cmdline'  => '',
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file " .
-            "--pcap-file $replay_pcap_file --foreground --verbose --verbose " .
-            "--verbose",
+            "--pcap-file $replay_pcap_file --foreground $verbose_str",
         'server_positive_output_matches' => [qr/Replay\sdetected/i,
             qr/candidate\sSPA/, qr/0x0000\:\s+2b/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -976,7 +975,7 @@
         'detail'   => 'complete cycle (tcp/23 telnet)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -987,7 +986,7 @@
         'detail'   => 'complete cycle (tcp/9418 git)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/9418 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -998,7 +997,7 @@
         'detail'   => 'complete cycle (tcp/60001)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/60001 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -1009,7 +1008,7 @@
         'detail'   => 'multi port (tcp/60001,udp/60001)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -1020,7 +1019,7 @@
         'detail'   => 'multi port (tcp/22,udp/53,tcp/1234)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -1032,7 +1031,7 @@
         'detail'   => 'complete cycle (udp/53 dns)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -1069,7 +1068,7 @@
         'function' => \&spa_cycle,
         'cmdline'  => "SPOOF_USER=$spoof_user LD_LIBRARY_PATH=$lib_dir $valgrind_str " .
             "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
-            "$local_key_file --verbose --verbose",
+            "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'positive_output_matches' => [qr/Username:\s*$spoof_user/],
         'server_positive_output_matches' => [qr/Username:\s*$spoof_user/],
@@ -1110,7 +1109,7 @@
         'detail'   => 'localhost hostname->IP spoofed',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D localhost --get-key " .
-            "$local_key_file --no-save-args --verbose --verbose -Q $spoof_ip",
+            "$local_key_file --no-save-args $verbose_str -Q $spoof_ip",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
