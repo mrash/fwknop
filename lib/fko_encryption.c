@@ -605,7 +605,8 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key, const int key_le
     */
     enc_type = fko_encryption_type(ctx->encrypted_msg);
 
-    if(enc_type == FKO_ENCRYPTION_GPG)
+    if(enc_type == FKO_ENCRYPTION_GPG
+            && ctx->encryption_mode == FKO_ENC_MODE_ASYMMETRIC)
     {
         ctx->encryption_type = FKO_ENCRYPTION_GPG;
 #if HAVE_LIBGPGME

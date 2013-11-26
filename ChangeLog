@@ -1,7 +1,7 @@
 fwknop-2.5.2 (//2013):
-    - (Radostan Riedel) Added an AppArmor policy that is known to work on
-      Debian and Ubuntu systems.  The policy file is available in
-      extras/apparmor.
+    - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to
+      work on Debian and Ubuntu systems.  The policy file is available at
+      extras/apparmor/usr.sbin/fwknopd.
     - [libfko] Nikolay Kolev reported a build issue with Mac OS X Mavericks
       where local fwknop copies of strlcat() and strlcpy() were conflicting
       with those that already ship with OS X 10.9. Closes #108 on github.
@@ -11,6 +11,15 @@ fwknop-2.5.2 (//2013):
       slightly easier to parse by printing each FKO attribute on a single line
       (this change affected the printing of the final SPA packet data).  The
       test suite has been updated to account for this change as well.
+    - [libfko] Bug fix to not attempt SPA packet decryption with GnuPG without
+      an fko object with encryption_mode set to FKO_ENC_MODE_ASYMMETRIC.  This
+      bug was caught with valgrind validation against the perl FKO extension
+      together with the set of SPA fuzzing packets in
+      test/fuzzing/fuzzing_spa_packets.  Note that this bug cannot be
+      triggered whenever HMAC protections are used, and even if an SPA packet
+      is sent through GnuPG operations, libgpgme should do the right thing.
+      However, as always, it is recommended to use HMAC authenticated
+      encryption whenever possible.
     - [test suite] added --gdb-test to allow a previously executed fwknop
       or fwknopd command to be sent through gdb with the same command line
       args as the test suite used.  This is for convenience to rapidly allow
