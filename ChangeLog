@@ -16,10 +16,16 @@ fwknop-2.5.2 (//2013):
       bug was caught with valgrind validation against the perl FKO extension
       together with the set of SPA fuzzing packets in
       test/fuzzing/fuzzing_spa_packets.  Note that this bug cannot be
-      triggered whenever HMAC protections are used, and even if an SPA packet
-      is sent through GnuPG operations, libgpgme should do the right thing.
-      However, as always, it is recommended to use HMAC authenticated
-      encryption whenever possible.
+      triggered via fwknopd because additional checks are made within fwknopd
+      itself to force FKO_ENC_MODE_ASYMMETRIC whenever an access.conf stanza
+      contains GPG key information.  This fix strengthens libfko itself to
+      independently require that the usage of fko objects without GPG key
+      information does not result in attempted GPG decryption operations.
+      Hence this fix applies mostly to third party usage of libfko - i.e.
+      stock installations of fwknopd are not affected.  As always, it is
+      recommended to use HMAC authenticated encryption whenever possible even
+      for GPG modes since this also provides a work around even for libfko
+      prior to this fix.
     - [test suite] added --gdb-test to allow a previously executed fwknop
       or fwknopd command to be sent through gdb with the same command line
       args as the test suite used.  This is for convenience to rapidly allow
