@@ -13,7 +13,7 @@
 #
 use FKO;
 
-use Test::More tests => 593;
+use Test::More tests => 9693;
 
 my $err;
 
@@ -353,6 +353,37 @@ is($f2, undef, 'create fko object f2 (bad HMAC key)');
 $f2->destroy() if $f2;
 
 $f1->destroy();
+
+my $fuzzing_pkts_file = 't/fuzzing_spa_packets';
+my %fuzzing_spa_packets = ();
+my $fuzzing_key = 'testtest';
+open F, "< $fuzzing_pkts_file" or die $!;
+while (<F>) {
+    if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
+        push @{$fuzzing_spa_packets{$1}{$2}}, $3;
+    }
+}
+close F;
+
+for my $enc_mode (FKO::FKO_ENC_MODE_CBC, FKO::FKO_ENC_MODE_CBC_LEGACY_IV) {
+    for my $field (keys %fuzzing_spa_packets) {
+        for my $field_val (keys %{$fuzzing_spa_packets{$field}}) {
+            for my $encrypted_spa_pkt (@{$fuzzing_spa_packets{$field}{$field_val}}) {
+
+                $f3 = FKO->new();
+                ok($f3, 'Create f3 full fuzzing packets');
+
+                $f3->encryption_mode($enc_mode);
+                $f3->spa_data($encrypted_spa_pkt);
+
+                ok($f3->decrypt_spa_data($fuzzing_key) != FKO::FKO_SUCCESS,
+                    "accepted fuzzing packet (enc mode: $enc_mode, $field: $field_val)");
+
+                $f3->destroy();
+            }
+        }
+    }
+}
 
 ##############################################################################
 

@@ -99,6 +99,7 @@ EXTRA_DIST = \
     perl/FKO/MANIFEST \
     perl/FKO/ppport.h \
     perl/FKO/FKO.xs \
+    perl/FKO/t/fuzzing_spa_packets \
     perl/FKO/t/04_fuzzing.t \
     perl/FKO/t/03_errors.t \
     perl/FKO/t/02_functions.t \
@@ -282,7 +283,6 @@ EXTRA_DIST = \
     test/fuzzing/patches/invalid_long_proto_define_rijndael_trigger.patch \
     test/fuzzing/patches/long_ip.patch \
     test/fuzzing/patches/non_b64_user_char.patch \
-    test/fuzzing/fuzzing_spa_packets \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
