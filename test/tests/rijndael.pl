@@ -962,7 +962,7 @@
         'cmdline'  => '',
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_access'} " .
             "-d $default_digest_file -p $default_pid_file " .
-            "--pcap-file $replay_pcap_file --foreground $verbose_str",
+            "--pcap-file $replay_pcap_file --foreground $verbose_str --verbose",
         'server_positive_output_matches' => [qr/Replay\sdetected/i,
             qr/candidate\sSPA/, qr/0x0000\:\s+2b/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,

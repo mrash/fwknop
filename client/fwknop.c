@@ -61,39 +61,9 @@ static int is_hostname_str_with_port(const char *str,
         char *hostname, size_t hostname_bufsize, int *port);
 
 #define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
-#define IPV4_STR_TEMPLATE           "%u.%u.%u.%u"       /*!< Template for a string as an ipv4 address with sscanf */
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
 #define HOSTNAME_BUFSIZE            64                  /*!< Maximum size of a hostname string */
 #define CTX_DUMP_BUFSIZE            4096                /*!< Maximum size allocated to a FKO context dump */
-
-/**
- * @brief Check whether a string is an ipv4 address or not
- *
- * @param str String to check for an ipv4 address.
- *
- * @return 1 if the string is an ipv4 address, 0 otherwise.
- */
-static int
-is_ipv4_str(char *str)
-{
-    int o1, o2, o3, o4;
-    int valid_ipv4;
-
-    /* Check format and values.
-    */
-    if((sscanf(str, IPV4_STR_TEMPLATE, &o1, &o2, &o3, &o4)) == 4
-        && o1 >= 0 && o1 <= 255
-        && o2 >= 0 && o2 <= 255
-        && o3 >= 0 && o3 <= 255
-        && o4 >= 0 && o4 <= 255)
-    {
-        valid_ipv4 = 1;
-    }
-    else
-        valid_ipv4 = 0;
-
-    return valid_ipv4;
-}
 
 /**
  * @brief Check whether a string is an ipv6 address or not
@@ -152,7 +122,7 @@ is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsi
 
         /* If the string does not match an ipv4 or ipv6 address we assume this
          * is an hostname. We make sure the port is in the good range too */
-        if (   (is_ipv4_str(buf) == 0)
+        if (   (is_valid_ipv4_addr(buf) == 0)
             && (is_ipv6_str(buf) == 0)
             && ((*port > 0) && (*port < 65536)) )
         {

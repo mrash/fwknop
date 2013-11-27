@@ -51,7 +51,7 @@
         'subcategory' => 'client',
         'detail'   => '--allow-ip <IP> valid IP',
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/Invalid\sallow\sIP\saddress/i],
+        'positive_output_matches' => [qr/Invalid\sallow\sIP/i],
         'exec_err' => $YES,
         'cmdline' => "$fwknopCmd -A tcp/22 -a invalidIP -D $loopback_ip",
     },
@@ -551,7 +551,7 @@
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
         'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
-        'rc_positive_output_matches' => [qr/VERBOSE.*Y/,
+        'rc_positive_output_matches' => [qr/VERBOSE.*(Y|\d)/,
             qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/],
     },
 

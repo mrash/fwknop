@@ -953,8 +953,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
             strlcpy(options->allow_ip_str, "0.0.0.0", sizeof(options->allow_ip_str));
         else if(strcasecmp(val, "resolve") == 0)
             options->resolve_ip_http = 1;
-        else /* Assume IP address */
+        else /* Assume IP address and validate */
+        {
             strlcpy(options->allow_ip_str, val, sizeof(options->allow_ip_str));
+            if(! is_valid_ipv4_addr(options->allow_ip_str))
+                parse_error = -1;
+        }
     }
     /* Time Offset */
     else if (var->pos == FWKNOP_CLI_ARG_TIME_OFFSET)
@@ -1720,6 +1724,22 @@ validate_options(fko_cli_options_t *options)
                 log_msg(LOG_VERBOSITY_WARNING,
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
             }
+
+            if(! is_valid_ipv4_addr(options->allow_ip_str))
+            {
+                log_msg(LOG_VERBOSITY_ERROR,
+                    "Invalid allow IP specified for SPA access");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    if (options->spoof_ip_src_str[0] != 0x00)
+    {
+        if(! is_valid_ipv4_addr(options->spoof_ip_src_str))
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "Invalid spoof IP");
+            exit(EXIT_FAILURE);
         }
     }
 
