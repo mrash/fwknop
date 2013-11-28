@@ -51,6 +51,22 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.5.1 FreeBSD-9.2',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+2qk0IIjxlblrk+mzHgS65AQQLEhtnYRZBIEzrqyjBY8dqQMCMiCZGSFP4x+tCJ' .
+            'y5Fjx+GBM2dqqdBfYfahoDnPWBieljQp5d2awzUxbC1CpLbi3+bMvguPCc3h0gA' .
+            '0f9jdWj6MlYXYJikyF/SjeuYxKnCfX2BxKI',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client->server OS compatibility',
         'detail'   => 'v2.5 OpenBSD-4.9',
         'function' => \&os_compatibility,
         'no_ip_check' => 1,
@@ -64,6 +80,23 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.5.1 OpenBSD-5.4',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '86P5MMgWXjAsHf4yPv8oRk9wqB0GFA9wp6u857/VX3kVlugK/D1k7BIjeBBKVM' .
+            'RQJ1ZouD3lC1xjNb9KkxXN5MojwUtaCVghY3IUqizQysYHPYwVyJ6INNurXXSF' .
+            'pWokVgC+ryT78/PbOoAXKTAg+/tcVbrvCiLmQ',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
     {
         'category' => 'Rijndael',
         'subcategory' => 'client->server OS compatibility',
@@ -135,6 +168,23 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.5.1 FreeBSD9.2',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+HtI50Xp3v1TtDw+GBkYCq9cXGC/qgofjPMqAX+uUg0LdQ0nfxCjpJAWoaZX+aC' .
+            'oBa9Na64c0JCRxzH9VTDY7oVkK3s+D8jI7pzXAJAE7ffMukCSeKWI3UaubuwsBt' .
+            'ku9Mf7Q5XzySHY0QeoQ/3OGd3lSCTLVxNzk/mdIZ94QX/8uOG+qippPa9JyGVp5' .
+            'nkKLD+nrVhvEy30',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client->server OS compatibility',
         'detail'   => 'v2.5 OpenBSD-4.9',
         'function' => \&os_compatibility,
         'no_ip_check' => 1,
@@ -143,6 +193,23 @@
             'Vop4zyz0L1LQYMZ1/O3S2dqafGLIqSwk7j6YiH0ENVafQvuFVFG8ooeBRxFqzw' .
             'YnywR5R9Drrw+hMxpl40HDb1O07xN7WBOSvNgU2vi8MHT7MSZVh02PKRF8aReL' .
             'cQTD2sxRsn5tGfehC8',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.5.1 OpenBSD5.4',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+ju0kG0l/Qv833iaX5HaAALB8Oh6z//u2/y7/dSnUdg00tRufyl8j96r8xKQAX' .
+            'lK5yUQejiphOsX9U7ZZC9fD1Ks1LaOYXP8Iz7WcZctByENeN09WCcQAWX8Zj0O' .
+            'XSv5C0fNf0RqMCD5Q6OEJuLfm26FDqnsE9jmUSRcRyFcsbP3po2Ru5nlHM/a8o' .
+            '1MDoskdw5VbHMIM6lU',
         'server_positive_output_matches' => [qr/with expire time/],
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
