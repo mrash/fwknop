@@ -699,7 +699,7 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/to\:$internal_nat_host\:22/i],
+            qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
@@ -714,7 +714,7 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/to\:$internal_nat_host\:22/i],
+            qr/\*\/\sto\:$internal_nat_host\:22/i],
         'no_ip_check' => 1,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -730,7 +730,7 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/to\:$internal_nat_host\:22/i,
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
             qr/MASQUERADE\s.*to\-ports/,
         ],
         'no_ip_check' => 1,
@@ -749,7 +749,7 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/to\:127.0.0.1\:22/i],
+            qr/\*\/\sto\:127.0.0.1\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
@@ -766,7 +766,7 @@
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/to\:$internal_nat_host\:22/i],
+            qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'nat'},
@@ -803,9 +803,9 @@
         'cmdline'  => "$default_client_args --nat-local",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i,
+        'server_positive_output_matches' => [qr/\*\/\sto\:$force_nat_host\:22/i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
-        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
@@ -819,9 +819,9 @@
             "--get-key $local_key_file --no-save-args $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$force_nat_host\:22/i,
+        'server_positive_output_matches' => [qr/\*\/\sto\:$force_nat_host\:22/i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
-        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
@@ -835,9 +835,9 @@
         'cmdline'  => "$default_client_args --nat-local --nat-rand-port",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
+        'server_positive_output_matches' => [qr|\s\*\/\sto\:$loopback_ip\:22|i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
-        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},
@@ -885,9 +885,9 @@
             "$local_key_file $verbose_str --nat-local --nat-port 80",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/to\:$loopback_ip\:22/i,
+        'server_positive_output_matches' => [qr|\s\*\/\sto\:$loopback_ip\:22|i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
-        'server_negative_output_matches' => [qr/to\:$internal_nat_host\:22/i],
+        'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{'local_nat'},

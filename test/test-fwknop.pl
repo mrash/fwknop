@@ -613,6 +613,7 @@ my %test_keys = (
     'mv_and_restore_replay_cache' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
     'server_negative_output_matches' => $OPTIONAL,
+    'iptables_rm_chains_after_server_start' => $OPTIONAL,
 );
 
 &validate_test_hashes();
@@ -4495,6 +4496,31 @@ sub client_server_interaction() {
     if ($test_hr->{'insert_rule_while_running'}) {
         &run_cmd("iptables -A FWKNOP_INPUT -p tcp -s $fake_ip --dport 1234 -j ACCEPT",
             $cmd_out_tmp, $curr_test_file);
+    }
+
+    if ($test_hr->{'iptables_rm_chains_after_server_start'}) {
+        ### this deletes fwknop chains out from under the running fwknopd
+        ### instance (tests whether it is able to recover with
+        ### chain_exists(), etc.)
+        if ($test_hr->{'fwknopd_cmdline'}
+                =~ /LD_LIBRARY_PATH=(\S+)\s.*\s\-c\s(\S+)\s\-a\s(\S+)/) {
+            my $lib_path     = $1;
+            my $fwknopd_conf = $2;
+            my $access_conf  = $3;
+            &write_test_file("[+] fwknopd iptables policy before flush:\n",
+                $curr_test_file);
+            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+                "$fwknopd_conf -a $access_conf --fw-list",
+                $cmd_out_tmp, $curr_test_file);
+            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+                "$fwknopd_conf -a $access_conf --fw-flush",
+                $cmd_out_tmp, $curr_test_file);
+            &write_test_file("[+] fwknopd iptables policy after flush:\n",
+                $curr_test_file);
+            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+                "$fwknopd_conf -a $access_conf --fw-list",
+                $cmd_out_tmp, $curr_test_file);
+        }
     }
 
     ### send the SPA packet(s) to the server either manually using IO::Socket or

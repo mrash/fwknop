@@ -1141,6 +1141,15 @@ process_spa_request(const fko_srv_options_t * const opts,
                 in_chain->target
             );
 
+            /* Check to make sure that the jump rules exist for each
+             * required chain
+            */
+            if(chain_exists(opts, IPT_INPUT_ACCESS) == 0)
+                create_chain(opts, IPT_INPUT_ACCESS);
+
+            if(jump_rule_exists(opts, IPT_INPUT_ACCESS) == 0)
+                add_jump_rule(opts, IPT_INPUT_ACCESS);
+
             if(rule_exists(opts, in_chain, rule_buf,
                         fst_proto, spadat->use_src_ip, nat_port, exp_ts) == 0)
             {
@@ -1207,7 +1216,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
         if(strlen(dnat_chain->to_chain))
         {
-            /* Make sure the required chain and jump rule exists
+            /* Make sure the required chain and jump rule exist
             */
             if(chain_exists(opts, IPT_DNAT_ACCESS) == 0)
                 create_chain(opts, IPT_DNAT_ACCESS);
@@ -1264,6 +1273,16 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
                     fst_port);
+
+                /* Check to make sure that the jump rules exist for each
+                 * required chain
+                */
+                if(chain_exists(opts, IPT_SNAT_ACCESS) == 0)
+                    create_chain(opts, IPT_SNAT_ACCESS);
+
+                if(jump_rule_exists(opts, IPT_SNAT_ACCESS) == 0)
+                    add_jump_rule(opts, IPT_SNAT_ACCESS);
+
             }
             else
             {
@@ -1271,6 +1290,15 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-ports %i", fst_port);
+
+                /* Check to make sure that the jump rules exist for each
+                 * required chain
+                */
+                if(chain_exists(opts, IPT_MASQUERADE_ACCESS) == 0)
+                    create_chain(opts, IPT_MASQUERADE_ACCESS);
+
+                if(jump_rule_exists(opts, IPT_MASQUERADE_ACCESS) == 0)
+                    add_jump_rule(opts, IPT_MASQUERADE_ACCESS);
             }
 
             memset(rule_buf, 0, CMD_BUFSIZE);

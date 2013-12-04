@@ -26,6 +26,9 @@ fwknop-2.5.2 (//2013):
       recommended to use HMAC authenticated encryption whenever possible even
       for GPG modes since this also provides a work around even for libfko
       prior to this fix.
+    - [server] Bug fix for SPA NAT modes on iptables firewalls to ensure that
+      custom fwknop chains are re-created if they get deleted out from under
+      the running fwknopd instance.
     - [test suite] added --gdb-test to allow a previously executed fwknop
       or fwknopd command to be sent through gdb with the same command line
       args as the test suite used.  This is for convenience to rapidly allow
