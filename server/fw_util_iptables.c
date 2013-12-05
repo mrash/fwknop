@@ -961,7 +961,7 @@ process_spa_request(const fko_srv_options_t * const opts,
     struct fw_chain * const dnat_chain = &(opts->fw_config->chain[IPT_DNAT_ACCESS]);
     struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
-    int             res = 0, is_err;
+    int             res = 0, is_err, snat_chain_num = 0;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -1260,29 +1260,27 @@ process_spa_request(const fko_srv_options_t * const opts,
 
         /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
         */
-        if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+        if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
         {
-            /* Setup some parameter depending on whether we are using SNAT
-             * or MASQUERADE.
+            /* Add SNAT or MASQUERADE rules.
             */
-            if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-                && strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)!=0)
+            if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
+            {
+                /* Using static SNAT */
+                snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
+                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                    "--to-source %s:%i", acc->force_snat_ip, fst_port);
+                snat_chain_num = IPT_SNAT_ACCESS;
+            }
+            else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+                && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
             {
                 /* Using static SNAT */
                 snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
                     fst_port);
-
-                /* Check to make sure that the jump rules exist for each
-                 * required chain
-                */
-                if(chain_exists(opts, IPT_SNAT_ACCESS) == 0)
-                    create_chain(opts, IPT_SNAT_ACCESS);
-
-                if(jump_rule_exists(opts, IPT_SNAT_ACCESS) == 0)
-                    add_jump_rule(opts, IPT_SNAT_ACCESS);
-
+                snat_chain_num = IPT_SNAT_ACCESS;
             }
             else
             {
@@ -1290,16 +1288,14 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-ports %i", fst_port);
-
-                /* Check to make sure that the jump rules exist for each
-                 * required chain
-                */
-                if(chain_exists(opts, IPT_MASQUERADE_ACCESS) == 0)
-                    create_chain(opts, IPT_MASQUERADE_ACCESS);
-
-                if(jump_rule_exists(opts, IPT_MASQUERADE_ACCESS) == 0)
-                    add_jump_rule(opts, IPT_MASQUERADE_ACCESS);
+                snat_chain_num = IPT_MASQUERADE_ACCESS;
             }
+
+            if(chain_exists(opts, snat_chain_num) == 0)
+                create_chain(opts, snat_chain_num);
+
+            if(jump_rule_exists(opts, snat_chain_num) == 0)
+                add_jump_rule(opts, snat_chain_num);
 
             memset(rule_buf, 0, CMD_BUFSIZE);
 

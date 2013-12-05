@@ -321,10 +321,19 @@ typedef struct acc_stanza
     time_t               access_expire_time;
     int                  expired;
     int                  encryption_mode;
+
+    /* DNAT parameters
+    */
     unsigned char        force_nat;
     char                *force_nat_ip;
     char                *force_nat_proto;
     unsigned int         force_nat_port;
+
+    /* SNAT parameters
+    */
+    unsigned char        force_snat;
+    char                *force_snat_ip;
+
     struct acc_stanza   *next;
 } acc_stanza_t;
 

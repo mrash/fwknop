@@ -165,7 +165,6 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
 
     if (sscanf(val, "%15s %5u", ip_str, &curr_acc->force_nat_port) != 2)
     {
-
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT arg '%s', need <IP> <PORT>",
             val
@@ -192,6 +191,32 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
 
     return;
 }
+
+static void
+add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
+{
+    char      ip_str[MAX_IPV4_STR_LEN] = {0};
+
+    if (sscanf(val, "%15s", ip_str) != 1)
+    {
+        log_msg(LOG_ERR,
+                "[*] Fatal: invalid FORCE_SNAT arg '%s', need <IP>", val);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(! is_valid_ipv4_addr(ip_str))
+    {
+        log_msg(LOG_ERR,
+            "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    curr_acc->force_snat = 1;
+    add_acc_string(&(curr_acc->force_snat_ip), ip_str);
+
+    return;
+}
+
 #endif
 
 /* Take an IP or Subnet/Mask and convert it to mask for later
@@ -680,6 +705,9 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->force_nat_ip != NULL)
         free(acc->force_nat_ip);
 
+    if(acc->force_nat_ip != NULL)
+        free(acc->force_snat_ip);
+
     if(acc->key != NULL)
     {
         zero_buf_wrapper(acc->key, acc->key_len);
@@ -953,6 +981,15 @@ acc_data_is_valid(acc_stanza_t * const acc)
                 return(0);
             }
         }
+    }
+
+    if(acc->force_snat == 1 && acc->force_nat == 0)
+    {
+        log_msg(LOG_ERR,
+                "[*] FORCE_SNAT implies FORCE_NAT must also be used for access stanza source: '%s'",
+                acc->source
+        );
+        return(0);
     }
 
     if(acc->require_source_address == 0)
@@ -1336,6 +1373,24 @@ parse_access_file(fko_srv_options_t *opts)
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_NAT not supported.");
+            fclose(file_ptr);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
+        }
+        else if(CONF_VAR_IS(var, "FORCE_SNAT"))
+        {
+#if FIREWALL_IPTABLES
+            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
+            {
+                log_msg(LOG_ERR,
+                    "[*] FORCE_SNAT_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            add_acc_force_snat(opts, curr_acc, val);
+#else
+            log_msg(LOG_ERR,
+                "[*] FORCE_SNAT not supported.");
             fclose(file_ptr);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 #endif

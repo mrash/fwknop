@@ -79,6 +79,7 @@ our %cf = (
     'invalid_ipt_input_chain6'     => "$conf_dir/invalid_ipt_input_chain_6_fwknopd.conf",
     'force_nat_access'             => "$conf_dir/force_nat_access.conf",
     'hmac_force_nat_access'        => "$conf_dir/hmac_force_nat_access.conf",
+    'hmac_force_snat_access'       => "$conf_dir/hmac_force_snat_access.conf",
     'cmd_access'                   => "$conf_dir/cmd_access.conf",
     'local_nat'                    => "$conf_dir/local_nat_fwknopd.conf",
     'no_flush_init'                => "$conf_dir/no_flush_init_fwknopd.conf",
@@ -186,6 +187,8 @@ our $fake_ip           = '127.0.0.2';
 our $spoof_ip          = '1.2.3.4';
 our $internal_nat_host = '192.168.1.2';
 our $force_nat_host    = '192.168.1.123';
+our $force_nat_host2   = '123.4.4.4';
+our $force_snat_host   = '33.3.3.3';
 our $default_spa_port  = 62201;
 our $non_std_spa_port  = 12345;
 
