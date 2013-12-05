@@ -124,6 +124,9 @@ is_valid_ipv4_addr(const char * const ip_str)
     struct in_addr      in;
 #endif
 
+    if(ip_str == NULL)
+        return 0;
+
     while(*ndx != '\0')
     {
         char_ctr++;
