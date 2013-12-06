@@ -992,6 +992,15 @@ acc_data_is_valid(acc_stanza_t * const acc)
         return(0);
     }
 
+    if(acc->force_masquerade == 1 && acc->force_nat == 0)
+    {
+        log_msg(LOG_ERR,
+                "[*] FORCE_MASQUERADE implies FORCE_NAT must also be used for access stanza source: '%s'",
+                acc->source
+        );
+        return(0);
+    }
+
     if(acc->require_source_address == 0)
     {
         log_msg(LOG_INFO,
@@ -1395,6 +1404,11 @@ parse_access_file(fko_srv_options_t *opts)
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 #endif
         }
+        else if(CONF_VAR_IS(var, "FORCE_MASQUERADE"))
+        {
+            add_acc_bool(&(curr_acc->force_masquerade), val);
+            add_acc_bool(&(curr_acc->force_snat), val);
+        }
         else
         {
             log_msg(LOG_ERR,
@@ -1643,6 +1657,8 @@ dump_access_list(const fko_srv_options_t *opts)
             "             FORCE_NAT (ip):  %s\n"
             "          FORCE_NAT (proto):  %s\n"
             "           FORCE_NAT (port):  %d\n"
+            "            FORCE_SNAT (ip):  %s\n"
+            "           FORCE_MASQUERADE:  %s\n"
             "              ACCESS_EXPIRE:  %s"  /* asctime() adds a newline */
             "               GPG_HOME_DIR:  %s\n"
             "             GPG_DECRYPT_ID:  %s\n"
@@ -1669,6 +1685,8 @@ dump_access_list(const fko_srv_options_t *opts)
             acc->force_nat ? acc->force_nat_ip : "<not set>",
             acc->force_nat && acc->force_nat_proto != NULL ? acc->force_nat_proto : "<not set>",
             acc->force_nat ? acc->force_nat_port : 0,
+            acc->force_snat ? acc->force_snat_ip : "<not set>",
+            acc->force_masquerade ? "Yes" : "No",
             (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>\n",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,

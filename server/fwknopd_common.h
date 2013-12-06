@@ -333,6 +333,7 @@ typedef struct acc_stanza
     */
     unsigned char        force_snat;
     char                *force_snat_ip;
+    unsigned char        force_masquerade;
 
     struct acc_stanza   *next;
 } acc_stanza_t;

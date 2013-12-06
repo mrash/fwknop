@@ -145,7 +145,6 @@ EXTRA_DIST = \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
     test/conf/force_nat_access.conf \
-    test/conf/force_nat_access.conf \
     test/conf/future_expired_stanza_access.conf \
     test/conf/fuzzing_open_ports_access.conf \
     test/conf/fuzzing_restrict_ports_access.conf \
@@ -186,6 +185,8 @@ EXTRA_DIST = \
     test/conf/hmac_simple_keys_access.conf \
     test/conf/hmac_sha256_open_ports_access.conf \
     test/conf/hmac_force_nat_access.conf \
+    test/conf/hmac_force_snat_access.conf \
+    test/conf/hmac_force_masq_access.conf \
     test/conf/hmac_no_b64_cygwin_access.conf \
     test/conf/fwknoprc_default_hmac_base64_key \
     test/conf/fwknoprc_hmac_key2 \

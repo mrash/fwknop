@@ -80,6 +80,7 @@ our %cf = (
     'force_nat_access'             => "$conf_dir/force_nat_access.conf",
     'hmac_force_nat_access'        => "$conf_dir/hmac_force_nat_access.conf",
     'hmac_force_snat_access'       => "$conf_dir/hmac_force_snat_access.conf",
+    'hmac_force_masq_access'       => "$conf_dir/hmac_force_masq_access.conf",
     'cmd_access'                   => "$conf_dir/cmd_access.conf",
     'local_nat'                    => "$conf_dir/local_nat_fwknopd.conf",
     'no_flush_init'                => "$conf_dir/no_flush_init_fwknopd.conf",

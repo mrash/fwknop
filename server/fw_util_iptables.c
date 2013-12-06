@@ -1272,6 +1272,14 @@ process_spa_request(const fko_srv_options_t * const opts,
                     "--to-source %s:%i", acc->force_snat_ip, fst_port);
                 snat_chain_num = IPT_SNAT_ACCESS;
             }
+            else if(acc->force_snat && acc->force_masquerade)
+            {
+                /* Using MASQUERADE */
+                snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
+                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                    "--to-ports %i", fst_port);
+                snat_chain_num = IPT_MASQUERADE_ACCESS;
+            }
             else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
                 && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
             {
