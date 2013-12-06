@@ -5721,6 +5721,7 @@ sub init() {
 
     unless ($platform eq $LINUX) {
         push @tests_to_exclude, qr/NAT/;
+        push @tests_to_exclude, qr/MASQ/;
         push @tests_to_exclude, qr/iptables/;
     }
     unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
