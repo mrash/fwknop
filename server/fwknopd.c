@@ -75,16 +75,55 @@ main(int argc, char **argv)
 
             if(old_pid > 0)
             {
-                res = kill(old_pid, SIGTERM);
-                if(res == 0)
+                res    = kill(old_pid, SIGTERM);
+                is_err = kill(old_pid, 0);
+
+                if(res == 0 && is_err != 0)
                 {
                     fprintf(stdout, "Killed fwknopd (pid=%i)\n", old_pid);
                     clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
                 }
                 else
                 {
-                    perror("Unable to kill fwknop: ");
-                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                    /* give a bit of time for process shutdown and check again
+                    */
+                    sleep(1);
+                    is_err = kill(old_pid, 0);
+                    if(is_err != 0)
+                    {
+                        fprintf(stdout, "Killed fwknopd (pid=%i) via SIGTERM\n",
+                                old_pid);
+                        clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+                    }
+                    else
+                    {
+                        res    = kill(old_pid, SIGKILL);
+                        is_err = kill(old_pid, 0);
+                        if(res == 0 && is_err != 0)
+                        {
+                            fprintf(stdout,
+                                    "Killed fwknopd (pid=%i) via SIGKILL\n",
+                                    old_pid);
+                            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+                        }
+                        else
+                        {
+                            sleep(1);
+                            is_err = kill(old_pid, 0);
+                            if(is_err != 0)
+                            {
+                                fprintf(stdout,
+                                        "Killed fwknopd (pid=%i) via SIGKILL\n",
+                                        old_pid);
+                                clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+                            }
+                            else
+                            {
+                                perror("Unable to kill fwknop: ");
+                                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                            }
+                        }
+                    }
                 }
             }
             else

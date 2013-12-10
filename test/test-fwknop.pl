@@ -4576,10 +4576,7 @@ sub client_server_interaction() {
 
     if (&is_fwknopd_running()) {
         &stop_fwknopd();
-        unless (&file_find_regex([qr/Got\sSIGTERM/],
-                $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
-            $server_was_stopped = 0;
-        }
+        $server_was_stopped = 0 if &is_fwknopd_running();
     } else {
         &write_test_file("[-] server is not running.\n",
             $curr_test_file);
@@ -6158,28 +6155,28 @@ sub stop_fwknopd() {
     &run_cmd("$lib_view_str $fwknopdCmd " .
         "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
 
-    ### look for SIGTERM receipt
-    my $tries = 0;
-    if (&file_find_regex(
+    ### look for fwknopd to be stopped
+    my $tries = 1;
+    if (not &is_pid_running($default_pid_file)
+            and &file_find_regex(
             [qr/Got\sSIGTERM/],
             $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
         &write_test_file("[+] stop_fwknopd() fwknopd received SIGTERM\n",
             $curr_test_file);
     } else {
-        while (not &file_find_regex(
-                [qr/Got\sSIGTERM/],
-                $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
-
-            &run_cmd("$lib_view_str $fwknopdCmd " .
-                "$default_server_conf_args -K", $cmd_out_tmp, $curr_test_file);
-
-            &write_test_file("[.] stop_fwknopd() looking for fwknopd receiving " .
-                "SIGTERM, try: $tries\n",
+        if (&is_pid_running($default_pid_file)) {
+            while (&is_pid_running($default_pid_file)) {
+                &write_test_file("[-] stop_fwknopd() " .
+                    "fwknopd still running, try: $tries\n", $curr_test_file);
+                &run_cmd("$lib_view_str $fwknopdCmd $default_server_conf_args -K",
+                    $cmd_out_tmp, $curr_test_file);
+                $tries++;
+                last if $tries == 10;   ### should be plenty of tries
+                sleep 1;
+            }
+        } else {
+            &write_test_file("[-] stop_fwknopd() fwknopd stopped with SIGKILL\n",
                 $curr_test_file);
-            last unless &is_pid_running($default_pid_file);
-            $tries++;
-            last if $tries == 10;   ### should be plenty of time
-            sleep 1;
         }
     }
 
@@ -6192,7 +6189,7 @@ sub stop_fwknopd() {
     if (-e $default_pid_file) {
         ### don't manually send signal immediately after
         ### fwknopd wrote 'Got SIGTERM'
-        sleep 1 if $tries == 0;
+        sleep 1 if $tries == 1;
         my $sig_tries = 0;
         while (&is_pid_running($default_pid_file)) {
             &write_test_file("[.] Manually sending pid: $pid SIGTERM.\n",
