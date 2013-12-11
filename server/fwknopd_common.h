@@ -85,7 +85,7 @@
 #define DEF_INTERFACE                   "eth0"
 #define DEF_ENABLE_PCAP_PROMISC         "N"
 #define DEF_PCAP_FILTER                 "udp port 62201"
-#define DEF_PCAP_DISPATCH_COUNT         "0"
+#define DEF_PCAP_DISPATCH_COUNT         "100"
 #define DEF_PCAP_LOOP_SLEEP             "100000" /* a tenth of a second (in microseconds) */
 #define DEF_ENABLE_PCAP_ANY_DIRECTION   "N"
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
