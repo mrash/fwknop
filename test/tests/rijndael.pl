@@ -956,7 +956,7 @@
     ### --pcap-file
     {
         'category' => 'Rijndael',
-        'subcategory' => 'client+server',
+        'subcategory' => 'server',
         'detail'   => '--pcap-file processing',
         'function' => \&process_pcap_file_directly,
         'cmdline'  => '',

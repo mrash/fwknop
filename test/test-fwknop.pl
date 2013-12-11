@@ -30,7 +30,8 @@ my $test_suite_path = 'test-fwknop.pl';
 my $gpg_dir_orig_tar = 'gpg_dirs_orig.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
-our $replay_pcap_file = "$conf_dir/spa_replay.pcap";
+our $replay_pcap_file     = "$conf_dir/spa_replay.pcap";
+our $multi_pkts_pcap_file = "$conf_dir/multi_pkts.pcap";
 
 our $lib_dir = '../lib/.libs';
 
