@@ -155,3 +155,8 @@ Radostan Riedel
     - Contributed an AppArmor policy that is known to work on Debian and Ubuntu
       systems.  The policy file is available in extras/apparmor.
 
+Les Aker
+    - Reported an issue with Arch Linux that resulted in fwknopd hanging for a
+      pcap_dispatch() packet count of zero when using libpcap-1.5.1.  This
+      issue was tracked on github as issue #110, and the default packet count
+      is now set at 100 as a result.
