@@ -382,6 +382,10 @@ typedef struct acc_stanza
   struct fw_config {
       struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
       char            fw_command[MAX_PATH_LEN];
+
+      /* Flag for iptables SNAT vs. MASQUERADE usage
+      */
+      unsigned char   use_masquerade;
   };
 
 #elif FIREWALL_IPFW
@@ -504,6 +508,7 @@ typedef struct fko_srv_options
 
     /* Set to 1 when messages have to go through syslog, 0 otherwise */
     unsigned char   syslog_enable;
+
 } fko_srv_options_t;
 
 extern fko_srv_options_t options;

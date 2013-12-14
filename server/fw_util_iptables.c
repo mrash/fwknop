@@ -825,25 +825,19 @@ fw_config_init(fko_srv_options_t * const opts)
         */
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1)==0)
         {
-            /* If an SNAT_TRANSLATE_IP is specified use the SNAT_ACCESS mode.
-             * Otherwise, use MASQUERADE_ACCESS.
-             *
-             * XXX: --DSS: Not sure if using the TRANSLATE_IP parameter as
-             *             the determining factor is the best why to handle
-             *             this.
-             *
-            */
-            if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-              && (strncasecmp(opts->config[CONF_SNAT_TRANSLATE_IP], "__CHANGEME__", 10)) != 0)
+            if(opts->fw_config->use_masquerade == 1)
+            {
+                if(set_fw_chain_conf(IPT_MASQUERADE_ACCESS, opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
+                    return 0;
+            }
+            else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+              && (is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP])))
             {
                 if(set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]) != 1)
                     return 0;
             }
             else
-            {
-                if(set_fw_chain_conf(IPT_MASQUERADE_ACCESS, opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
-                    return 0;
-            }
+                return 0;
         }
     }
 
@@ -885,6 +879,15 @@ fw_initialize(const fko_srv_options_t * const opts)
         {
             log_msg(LOG_WARNING, "Warning: Could not use the 'comment' match");
             res = 0;
+        }
+    }
+
+    if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+    {
+        if(opts->config[CONF_SNAT_TRANSLATE_IP] == NULL
+                || ! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+        {
+            opts->fw_config->use_masquerade = 1;
         }
     }
 

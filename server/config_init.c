@@ -447,7 +447,11 @@ validate_options(fko_srv_options_t *opts)
     /* Make sure we have a valid IP if SNAT is enabled
     */
     if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+    {
+        /* Note that fw_initialize() will set use_masquerade if necessary
+        */
         if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+        {
             if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
             {
                 log_msg(LOG_ERR,
@@ -455,6 +459,8 @@ validate_options(fko_srv_options_t *opts)
                 );
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
+        }
+    }
 
     /* Enable IPT OUTPUT.
     */

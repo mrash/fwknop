@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
-.\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 07/29/2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 12/14/2013
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "07/29/2013" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "12/14/2013" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -325,7 +325,8 @@ is running\&.
 \fBSNAT_TRANSLATE_IP\fR \fI<ip_address>\fR
 .RS 4
 Specify the IP address for SNAT\&. This functionality is only enabled when \(lqENABLE_IPT_SNAT\(rq is set to \(lqY\(rq and by default SNAT rules are built with the MASQUERADE target (since then the internal IP does not have to be defined here in the
-\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file), but if you want
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+file), but if you want
 \fBfwknopd\fR
 to use the SNAT target, you must also define an IP address with the \(lqSNAT_TRANSLATE_IP\(rq variable\&.
 .RE
@@ -541,6 +542,18 @@ argument\&.
 \fBFORCE_NAT\fR \fI<IP> <PORT>\fR
 .RS 4
 For any valid SPA packet, force the requested connection to be NAT\(cqd through to the specified (usually internal) IP and port value\&. This is useful if there are multiple internal systems running a service such as SSHD, and you want to give transparent access to only one internal system for each stanza in the access\&.conf file\&. This way, multiple external users can each directly access only one internal system per SPA key\&.
+.RE
+.PP
+\fBFORCE_SNAT\fR \fI<IP>\fR
+.RS 4
+For any valid SPA packet, add an SNAT rule in addition to any DNAT rule created with a corresponding (required) FORCE_NAT variable\&. This is analogous to \(lqSNAT_TRANSLATE_IP\(rq from the
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+file except that it is per access stanza and overrides any value set with \(lqSNAT_TRANSLATE_IP\(rq\&. This is useful for situations where an incoming NAT\(cqd connection may be otherwise unanswerable due to routing constraints (i\&.e\&. the system receiving the SPA authenticated connection has a default route to a different device than the SPA system itself)\&.
+.RE
+.PP
+\fBFORCE_MASQUERADE\fR \fI<Y/N>\fR
+.RS 4
+This is similar to the \(lqFORCE_SNAT\(rq variable, except that it is not necessary to also specify an IP address for SNAT rules because the MASQUERADE target is used instead\&.
 .RE
 .PP
 \fBGPG_HOME_DIR\fR \fI<path>\fR

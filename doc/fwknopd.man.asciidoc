@@ -244,9 +244,9 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
     Specify the IP address for SNAT.  This functionality is only enabled
     when ``ENABLE_IPT_SNAT'' is set to ``Y'' and by default SNAT rules are
     built with the MASQUERADE target (since then the internal IP does not
-    have to be defined here in the '@sysconfdir@/fwknop/fwknopd.conf'' file), but if you want
-    *fwknopd* to use the SNAT target, you must also define an IP address with
-    the ``SNAT_TRANSLATE_IP'' variable.
+    have to be defined here in the '@sysconfdir@/fwknop/fwknopd.conf' file),
+    but if you want *fwknopd* to use the SNAT target, you must also define an
+    IP address with the ``SNAT_TRANSLATE_IP'' variable.
 
 *ENABLE_IPT_OUTPUT* '<Y/N>'::
     Add ACCEPT rules to the FWKNOP_OUTPUT chain. This is usually only useful
@@ -446,17 +446,22 @@ directive starts a new stanza.
 *FORCE_SNAT* '<IP>'::
     For any valid SPA packet, add an SNAT rule in addition to any DNAT rule
     created with a corresponding (required) FORCE_NAT variable.  This is
-    analogous to SNAT_TRANSLATE_IP from the '@sysconfdir@/fwknop/fwknopd.conf'' file
-    except that it is per access stanza and overrides any value set with
-    SNAT_TRANSLATE_IP.  This is useful for situations where an incoming NAT'd
-    connection may be otherwise unanswerable due to routing constraints (i.e.
-    the system receiving the SPA authenticated connection has a default route
-    to a different device than the SPA system itself).
+    analogous to ``SNAT_TRANSLATE_IP'' from the '@sysconfdir@/fwknop/fwknopd.conf'
+    file except that it is per access stanza and overrides any value set with
+    ``SNAT_TRANSLATE_IP''.  This is useful for situations where an incoming
+    NAT'd connection may be otherwise unanswerable due to routing constraints
+    (i.e.  the system receiving the SPA authenticated connection has a default
+    route to a different device than the SPA system itself).
+
+*FORCE_MASQUERADE* '<Y/N>'::
+    This is similar to the ``FORCE_SNAT'' variable, except that it is not
+    necessary to also specify an IP address for SNAT rules because the
+    MASQUERADE target is used instead.
 
 *GPG_HOME_DIR* '<path>'::
     Define the path to the GnuPG directory to be used by the *fwknopd*
-    server.  If this keyword is not specified within '@sysconfdir@/fwknop/access.conf' then
-    *fwknopd* will default to using the '/root/.gnupg' directory for the
+    server.  If this keyword is not specified within '@sysconfdir@/fwknop/access.conf'
+    then *fwknopd* will default to using the '/root/.gnupg' directory for the
     server key(s) for incoming SPA packets handled by the matching
     'access.conf' stanza.
 
