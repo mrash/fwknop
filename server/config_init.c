@@ -448,7 +448,7 @@ validate_options(fko_srv_options_t *opts)
     */
     if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
     {
-        /* Note that fw_initialize() will set use_masquerade if necessary
+        /* Note that fw_config_init() will set use_masquerade if necessary
         */
         if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
         {
