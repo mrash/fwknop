@@ -1830,6 +1830,15 @@ sub python_fko_basic_exec() {
 
     my $site_dir = "$python_fko_dir/lib";
 
+    unless (-d $site_dir) {
+        $site_dir = "$python_fko_dir/lib64";
+        unless (-d $site_dir) {
+            &write_test_file("[-] $site_dir directory dir does not exist.\n",
+                $curr_test_file);
+            return 0;
+        }
+    }
+
     for my $dir (glob("$site_dir/python*")) {
         $site_dir = $dir;
         last;
