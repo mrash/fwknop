@@ -178,7 +178,7 @@ cleanup2:
     /* Log and return a string of success or error message.
      * This can be enhanced semantically with codes.
     */
-    LOGV(res_msg);
+    LOGV("%s", res_msg);
 
     return (*env)->NewStringUTF(env, res_msg);
 }
