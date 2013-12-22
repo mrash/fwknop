@@ -14,6 +14,6 @@
             </intent-filter>
         </activity>
     </application>
-    <uses-sdk android:minSdkVersion="5" android:targetSdkVersion="8"/>
+    <uses-sdk android:minSdkVersion="5" android:targetSdkVersion="19"/>
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>

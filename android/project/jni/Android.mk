@@ -19,11 +19,12 @@ LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE    := libfwknop   
+
 LOCAL_CFLAGS    := -W -g -DHAVE_CONFIG_H \
+	-I$(LOCAL_PATH)/../../../common \
 	-I$(LOCAL_PATH) \
 	-I$(LOCAL_PATH)/fwknop \
 	-I$(LOCAL_PATH)/libfwknop
-
 LOCAL_SRC_FILES := $(shell cd $(LOCAL_PATH); \
 		find ./fwknop/ -type f -name '*.c'; \
 		find ./libfwknop/ -type f -name '*.c'; \
