@@ -160,3 +160,9 @@ Les Aker
       pcap_dispatch() packet count of zero when using libpcap-1.5.1.  This
       issue was tracked on github as issue #110, and the default packet count
       is now set at 100 as a result.
+
+Gerry Reno
+    - Updated the Android client to be compatible with Android-4.4.
+    - Provided guidance on Android client issues along with testing candidate
+      patches to update various things - this work is being tracked in the
+      android4.4_support branch.
