@@ -94,6 +94,7 @@ public class Fwknop extends Activity {
     private String output;
     private Spinner mAllowip;
     private EditText mPasswd;
+    private EditText mHmac;
     private EditText mDestip;
     private Spinner mAccessProto;
     private EditText mAccessPort;
@@ -102,6 +103,7 @@ public class Fwknop extends Activity {
     private String access_str;
     private String allowip_str;
     private String passwd_str;
+    private String hmac_str;
     private String destip_str;
     private String fw_timeout_str;
     private CheckBox mCheck;
@@ -303,6 +305,15 @@ public class Fwknop extends Activity {
             return;
         }
 
+        if (this.mHmac != null && !this.mHmac.getText().toString().trim().equals("")) {
+            this.hmac_str = mHmac.getText().toString();
+            edit.putString("hmac_str", mHmac.getText().toString());
+        } else {
+            // the HMAC is currently optional
+            this.hmac_str = "";
+            edit.putString("hmac_str", this.hmac_str);
+        }
+
         if (this.mDestip != null && !this.mDestip.getText().toString().trim().equals("")) {
             this.destip_str = mDestip.getText().toString();
             edit.putString("destip_str", mDestip.getText().toString());
@@ -366,6 +377,8 @@ public class Fwknop extends Activity {
 
         this.mPasswd = (EditText) findViewById(R.id.passwd);
         this.mOutput = (TextView) findViewById(R.id.output);
+
+        this.mHmac   = (EditText) findViewById(R.id.hmac);
 
         mUnlock = (ImageButton) findViewById(R.id.unlock);
         mUnlock.setOnClickListener(new OnClickListener() {

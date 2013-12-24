@@ -133,6 +133,28 @@
             android:textSize="20dip"
             />
     </LinearLayout>
+    <LinearLayout android:id="@+id/hmacl"
+                  android:orientation="horizontal"
+                  android:layout_width="fill_parent"
+                  android:layout_height="wrap_content"
+                  >
+        <TextView
+            android:id="@+id/hmacStr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="HMAC Key: "
+            android:textSize="20dip"
+            />
+        <EditText
+            android:id="@+id/hmac"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:singleLine="true"
+            android:password="true"
+            android:textSize="20dip"
+            />
+    </LinearLayout>
     <RelativeLayout android:id="@+id/startAppl"
                     android:orientation="horizontal"
                     android:layout_width="fill_parent"

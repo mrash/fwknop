@@ -45,7 +45,7 @@ jstring Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket(JNIEnv* env,
     fko_ctx_t ctx;
     fwknop_options_t opts;
 
-    int res;
+    int res, hmac_str_len = 0;
     char res_msg[MSG_BUFSIZE+1] = {0};
     char spa_msg[MSG_BUFSIZE+1] = {0};
 
@@ -72,6 +72,10 @@ jstring Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket(JNIEnv* env,
     jstring jpasswd = (*env)->GetObjectField(env, thiz, fid);
     const char *passwd_str = (*env)->GetStringUTFChars(env, jpasswd, 0);
 
+    fid = (*env)->GetFieldID(env, c, "hmac_str", "Ljava/lang/String;");
+    jstring jhmac = (*env)->GetObjectField(env, thiz, fid);
+    const char *hmac_str = (*env)->GetStringUTFChars(env, jhmac, 0);
+
     fid = (*env)->GetFieldID(env, c, "fw_timeout_str", "Ljava/lang/String;");
     jstring jfwtimeout = (*env)->GetObjectField(env, thiz, fid);
     const char *fw_timeout_str = (*env)->GetStringUTFChars(env, jfwtimeout, 0);
@@ -97,6 +101,12 @@ jstring Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket(JNIEnv* env,
     if(fw_timeout_str == NULL) {
         sprintf(res_msg, "Error: Invalid or missing firewall timeout value");
         goto cleanup2;
+    }
+
+    /* Using an HMAC is optional (currently)
+    */
+    if(hmac_str != NULL) {
+        hmac_str_len = (int)strlen(hmac_str);
     }
 
     /* Set our spa server info
@@ -130,9 +140,20 @@ jstring Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket(JNIEnv* env,
         goto cleanup;
     }
 
+    /* Set the HMAC mode if necessary
+    */
+    if (hmac_str_len > 0) {
+        res = fko_set_spa_hmac_type(ctx, FKO_DEFAULT_HMAC_MODE);
+        if (res != FKO_SUCCESS) {
+            strcpy(res_msg, fko_errmsg("Error setting SPA HMAC type", res));
+            goto cleanup;
+        }
+    }
+
     /* Finalize the context data (Encrypt and encode).
     */
-    res = fko_spa_data_final(ctx, (char*)passwd_str);
+    res = fko_spa_data_final(ctx, (char*)passwd_str,
+            (int)strlen(passwd_str), (char *)hmac_str, hmac_str_len);
     if (res != FKO_SUCCESS) {
         strcpy(res_msg, fko_errmsg("Error generating SPA data", res));
         goto cleanup;
@@ -173,6 +194,7 @@ cleanup2:
     (*env)->ReleaseStringUTFChars(env, jallowip, allowip_str);
     (*env)->ReleaseStringUTFChars(env, jdestip, destip_str);
     (*env)->ReleaseStringUTFChars(env, jpasswd, passwd_str);
+    (*env)->ReleaseStringUTFChars(env, jhmac, hmac_str);
     (*env)->ReleaseStringUTFChars(env, jfwtimeout, fw_timeout_str);
 
     /* Log and return a string of success or error message.
