@@ -20,6 +20,7 @@ EXTRA_DIST = \
     android/Application.mk \
     android/README \
     android/project/src/com/max2idea/android/fwknop/Fwknop.java \
+    android/project/project.properties \
     android/project/build.xml \
     android/project/custom_rules.xml \
     android/project/res/values/strings.xml \
