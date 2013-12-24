@@ -128,6 +128,7 @@ EXTRA_DIST = \
     test/conf/server-gpg-no-pw/pubring.gpg \
     test/conf/server-gpg-no-pw/secring.gpg \
     test/conf/server-gpg-no-pw/trustdb.gpg \
+    test/conf/hmac_android_access.conf \
     test/conf/android_access.conf \
     test/conf/android_legacy_iv_access.conf \
     test/conf/base64_key_access.conf \
