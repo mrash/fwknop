@@ -26,8 +26,9 @@ fwknop-2.5.2 (//2013):
       recommended to use HMAC authenticated encryption whenever possible even
       for GPG modes since this also provides a work around even for libfko
       prior to this fix.
-    - [Android client] (Gerry Reno) Updated the Android client to be compatible
-      with Android-4.4.
+    - [Android] (Gerry Reno) Updated the Android client to be compatible with
+      Android-4.4.
+    - [Android] Added HMAC support (currently optional).
     - [server] Updated pcap_dispatch() default packet count from zero to 100.
       This change was made to ensure backwards compatibility with older
       versions of libpcap per the pcap_dispatch() man page, and also because

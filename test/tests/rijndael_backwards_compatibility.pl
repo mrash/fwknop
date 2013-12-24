@@ -163,4 +163,22 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'Android compatibility',
+        'detail'   => 'v4.4',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '/Nx+t6S6IDIFoYROp2V29yj9MmHVlrPKNQKuo3DTHa8/EJmu3fkp' .
+            'cv4xpiaQ82q2I2u9ia1L3SOrscltFhhNUkFdOguM+fMnd8koQL1a' .
+            '/gafXo83MiZzxzDmROiJ+qrmB4qnDgp8Vtd/E5ExEOoZggOkroak' .
+            '/PALo',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'android_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
 );

@@ -88,6 +88,7 @@ our %cf = (
     'no_flush_exit'                => "$conf_dir/no_flush_exit_fwknopd.conf",
     'no_flush_init_or_exit'        => "$conf_dir/no_flush_init_or_exit_fwknopd.conf",
     'ipfw_active_expire'           => "$conf_dir/ipfw_active_expire_equal_fwknopd.conf",
+    'hmac_android_access'          => "$conf_dir/hmac_android_access.conf",
     'android_access'               => "$conf_dir/android_access.conf",
     'android_legacy_iv_access'     => "$conf_dir/android_legacy_iv_access.conf",
     'dual_key_access'              => "$conf_dir/dual_key_usage_access.conf",
