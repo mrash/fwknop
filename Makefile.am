@@ -19,10 +19,9 @@ EXTRA_DIST = \
     android/COPYING \
     android/Application.mk \
     android/README \
-    android/project/src/com/max2idea/android/fwknop/R.java \
     android/project/src/com/max2idea/android/fwknop/Fwknop.java \
     android/project/build.xml \
-    android/project/default.properties \
+    android/project/custom_rules.xml \
     android/project/res/values/strings.xml \
     android/project/res/drawable-hdpi/icon.png \
     android/project/res/drawable-mdpi/icon.png \
@@ -38,10 +37,10 @@ EXTRA_DIST = \
     android/project/nbproject/private/private.xml \
     android/project/nbproject/private/config.properties \
     android/project/nbproject/genfiles.properties \
-    android/project/build.properties \
     android/project/AndroidManifest.xml \
     android/project/jni/fwknop/fwknop_client.c \
     android/project/jni/fwknop/fwknop_client.h \
+    android/project/jni/libfwknop/get_libfko_header.sh \
     android/project/jni/fwknop/send_spa_packet.c \
     android/project/jni/config.h \
     android/project/jni/libfwknop/README \
