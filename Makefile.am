@@ -40,7 +40,7 @@ EXTRA_DIST = \
     android/project/AndroidManifest.xml \
     android/project/jni/fwknop/fwknop_client.c \
     android/project/jni/fwknop/fwknop_client.h \
-    android/project/jni/libfwknop/get_libfko_header.sh \
+    android/project/jni/fwknop/get_libfko_header.sh \
     android/project/jni/fwknop/send_spa_packet.c \
     android/project/jni/config.h \
     android/project/jni/libfwknop/README \
