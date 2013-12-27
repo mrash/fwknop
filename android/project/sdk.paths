@@ -1,0 +1,3 @@
+export JAVA_HOME=/usr/lib/jvm/java-6-openjdk-amd64
+
+export PATH=$PATH:/usr/lib/jvm/java-6-openjdk-amd64/bin:/home/mbr/android/android-sdk-linux/tools:/home/mbr/android/android-sdk-linux/platform-tools:/home/mbr/android/android-ndk-rb9
