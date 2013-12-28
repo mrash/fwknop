@@ -11,6 +11,7 @@
 
 #define ENABLE_GPG_TESTS 0
 #define FCN_CALLS        5
+#define F_INT            100
 #define CTX_DESTROY      0
 #define NO_CTX_DESTROY   1
 #define NEW_CTX          0
@@ -55,15 +56,16 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
     printf("fko_new(): %s\n", fko_errstr(fko_new(&ctx)));
 
     spa_func_exec_int(&ctx, "fko_set_spa_client_timeout",
-            &fko_set_spa_client_timeout, -100, 100, 10,
+            &fko_set_spa_client_timeout, -F_INT, F_INT, 10,
             new_ctx_flag, destroy_ctx_flag);
 
     spa_func_exec_short(&ctx, "fko_set_spa_message_type",
-            &fko_set_spa_message_type, -100, 100, FKO_ACCESS_MSG,
+            &fko_set_spa_message_type, FKO_COMMAND_MSG-F_INT,
+            FKO_LAST_MSG_TYPE+F_INT, FKO_ACCESS_MSG,
             new_ctx_flag, destroy_ctx_flag);
 
     spa_func_exec_int(&ctx, "fko_set_timestamp",
-            &fko_set_spa_client_timeout, -100, 100, 10,
+            &fko_set_spa_client_timeout, -F_INT, F_INT, 10,
             new_ctx_flag, destroy_ctx_flag);
 
     for (i=0; i<FCN_CALLS; i++) {
@@ -97,11 +99,13 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
     }
 
     spa_func_exec_short(&ctx, "fko_set_spa_encryption_type",
-            &fko_set_spa_encryption_type, -100, 100, FKO_ENCRYPTION_RIJNDAEL,
+            &fko_set_spa_encryption_type, FKO_ENCRYPTION_INVALID_DATA-F_INT,
+            FKO_LAST_ENCRYPTION_TYPE+F_INT, FKO_ENCRYPTION_RIJNDAEL,
             new_ctx_flag, destroy_ctx_flag);
 
     spa_func_exec_int(&ctx, "fko_set_spa_encryption_mode",
-            &fko_set_spa_encryption_mode, -100, 100, FKO_ENC_MODE_CBC,
+            &fko_set_spa_encryption_mode, FKO_ENC_MODE_UNKNOWN-F_INT,
+            FKO_LAST_ENC_MODE+F_INT, FKO_ENC_MODE_CBC,
             new_ctx_flag, destroy_ctx_flag);
 
     if (ENABLE_GPG_TESTS) {
@@ -138,11 +142,13 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
     }
 
     spa_func_exec_short(&ctx, "fko_set_spa_digest_type",
-            &fko_set_spa_digest_type, -100, 100, FKO_DEFAULT_DIGEST,
+            &fko_set_spa_digest_type, FKO_DIGEST_INVALID_DATA-F_INT,
+            FKO_LAST_DIGEST_TYPE+F_INT, FKO_DEFAULT_DIGEST,
             new_ctx_flag, destroy_ctx_flag);
 
     spa_func_exec_short(&ctx, "fko_set_spa_hmac_type",
-            &fko_set_spa_hmac_type, -100, 100, FKO_HMAC_SHA256,
+            &fko_set_spa_hmac_type, FKO_HMAC_INVALID_DATA-F_INT,
+            FKO_LAST_HMAC_MODE+F_INT, FKO_HMAC_SHA256,
             new_ctx_flag, destroy_ctx_flag);
 
     for (i=0; i<FCN_CALLS; i++) {
