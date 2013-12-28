@@ -18,6 +18,7 @@
 
 static void display_ctx(fko_ctx_t ctx);
 static void test_loop(int new_ctx_flag, int destroy_ctx_flag);
+static void ctx_update(fko_ctx_t *ctx, int new_ctx_flag, int destroy_ctx_flag);
 static void spa_func_exec_int(fko_ctx_t *ctx, char *name,
         int (*spa_func)(fko_ctx_t ctx, const int modifier), int min, int max,
         int final_val, int new_ctx_flag, int destroy_ctx_flag);
@@ -230,6 +231,19 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
     return;
 }
 
+static void ctx_update(fko_ctx_t *ctx, int new_ctx_flag, int destroy_ctx_flag)
+{
+    if (destroy_ctx_flag == CTX_DESTROY) {
+        fko_destroy(*ctx);
+        *ctx = NULL;
+    }
+    if (new_ctx_flag == NEW_CTX) {
+        fko_destroy(*ctx);  /* always destroy before re-creating */
+        *ctx = NULL;
+        printf("fko_new(): %s\n", fko_errstr(fko_new(ctx)));
+    }
+    return;
+}
 
 static void spa_func_exec_int(fko_ctx_t *ctx, char *name,
         int (*spa_func)(fko_ctx_t ctx, const int modifier), int min, int max,
@@ -241,16 +255,8 @@ static void spa_func_exec_int(fko_ctx_t *ctx, char *name,
     for (i=min; i <= max; i++) {
         printf("%s(%d): %s\n", name, i, fko_errstr((spa_func)(*ctx, i)));
         printf("%s(%d): %s (DUPE)\n", name, i, fko_errstr((spa_func)(*ctx, i)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(*ctx);
-            *ctx = NULL;
-        }
-        if (new_ctx_flag == NEW_CTX) {
-            fko_destroy(*ctx);  /* always destroy before re-creating */
-            *ctx = NULL;
-            printf("fko_new(): %s\n", fko_errstr(fko_new(ctx)));
-        }
+
+        ctx_update(ctx, new_ctx_flag, destroy_ctx_flag);
     }
     printf("%s(%d): %s (FINAL)\n", name, final_val,
             fko_errstr((spa_func)(*ctx, final_val)));
@@ -268,16 +274,8 @@ static void spa_func_exec_short(fko_ctx_t *ctx, char *name,
     for (i=min; i <= max; i++) {
         printf("%s(%d): %s\n", name, i, fko_errstr((spa_func)(*ctx, i)));
         printf("%s(%d): %s (DUPE)\n", name, i, fko_errstr((spa_func)(*ctx, i)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(*ctx);
-            *ctx = NULL;
-        }
-        if (new_ctx_flag == NEW_CTX) {
-            fko_destroy(*ctx);  /* always destroy before re-creating */
-            *ctx = NULL;
-            printf("fko_new(): %s\n", fko_errstr(fko_new(ctx)));
-        }
+
+        ctx_update(ctx, new_ctx_flag, destroy_ctx_flag);
     }
     printf("%s(%d): %s (FINAL)\n", name, final_val,
             fko_errstr((spa_func)(*ctx, final_val)));
