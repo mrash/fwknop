@@ -13,15 +13,25 @@
 #define FCN_CALLS        5
 #define CTX_DESTROY      0
 #define NO_CTX_DESTROY   1
+#define NEW_CTX          0
+#define NO_NEW_CTX       1
 
 static void display_ctx(fko_ctx_t ctx);
-static void test_loop(int destroy_ctx_flag);
+static void test_loop(int new_ctx_flag, int destroy_ctx_flag);
+static void spa_func_exec_int(fko_ctx_t *ctx, char *name,
+        int (*spa_func)(fko_ctx_t ctx, const int modifier), int min, int max,
+        int final_val, int new_ctx_flag, int destroy_ctx_flag);
+static void spa_func_exec_short(fko_ctx_t *ctx, char *name,
+        int (*spa_func)(fko_ctx_t ctx, const short modifier), int min, int max,
+        int final_val, int new_ctx_flag, int destroy_ctx_flag);
 
 int main(void) {
     int i;
 
-    test_loop(NO_CTX_DESTROY);
-    test_loop(CTX_DESTROY);
+    test_loop(NO_NEW_CTX, NO_CTX_DESTROY);
+    test_loop(NEW_CTX, CTX_DESTROY);
+    test_loop(NEW_CTX, NO_CTX_DESTROY);
+    test_loop(NO_NEW_CTX, CTX_DESTROY);
 
     /* call fko_errstr() across valid and invalid values
     */
@@ -32,53 +42,28 @@ int main(void) {
 }
 
 static void
-test_loop(int destroy_ctx_flag)
+test_loop(int new_ctx_flag, int destroy_ctx_flag)
 {
     fko_ctx_t  ctx = NULL, decrypt_ctx = NULL;
     int        i;
     char       *spa_data = NULL;
 
     printf("fko_new(): %s\n", fko_errstr(fko_new(&ctx)));
+    fko_destroy(ctx);
+    ctx = NULL;
+    printf("fko_new(): %s\n", fko_errstr(fko_new(&ctx)));
 
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_spa_client_timeout(30): %s\n",
-                fko_errstr(fko_set_spa_client_timeout(ctx, 30)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
+    spa_func_exec_int(&ctx, "fko_set_spa_client_timeout",
+            &fko_set_spa_client_timeout, -100, 100, 10,
+            new_ctx_flag, destroy_ctx_flag);
 
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_spa_message_type(FKO_COMMAND_MSG): %s\n",
-                fko_errstr(fko_set_spa_message_type(ctx, FKO_COMMAND_MSG)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
+    spa_func_exec_short(&ctx, "fko_set_spa_message_type",
+            &fko_set_spa_message_type, -100, 100, FKO_ACCESS_MSG,
+            new_ctx_flag, destroy_ctx_flag);
 
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_spa_message_type(FKO_ACCESS_MSG): %s\n",
-                fko_errstr(fko_set_spa_message_type(ctx, FKO_ACCESS_MSG)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
-
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_timestamp(%d): %s\n",
-                i, fko_errstr(fko_set_timestamp(ctx, i)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
+    spa_func_exec_int(&ctx, "fko_set_timestamp",
+            &fko_set_spa_client_timeout, -100, 100, 10,
+            new_ctx_flag, destroy_ctx_flag);
 
     for (i=0; i<FCN_CALLS; i++) {
         printf("fko_set_spa_message(1.1.1.1,tcp/22): %s\n",
@@ -110,25 +95,13 @@ test_loop(int destroy_ctx_flag)
         }
     }
 
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_spa_encryption_type(FKO_ENCRYPTION_RIJNDAEL): %s\n",
-                fko_errstr(fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_RIJNDAEL)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
+    spa_func_exec_short(&ctx, "fko_set_spa_encryption_type",
+            &fko_set_spa_encryption_type, -100, 100, FKO_ENCRYPTION_RIJNDAEL,
+            new_ctx_flag, destroy_ctx_flag);
 
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_spa_encryption_mode(FKO_ENC_MODE_CBC): %s\n",
-                fko_errstr(fko_set_spa_encryption_mode(ctx, FKO_ENC_MODE_CBC)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
+    spa_func_exec_int(&ctx, "fko_set_spa_encryption_mode",
+            &fko_set_spa_encryption_mode, -100, 100, FKO_ENC_MODE_CBC,
+            new_ctx_flag, destroy_ctx_flag);
 
     if (ENABLE_GPG_TESTS) {
         for (i=0; i<FCN_CALLS; i++) {
@@ -163,25 +136,13 @@ test_loop(int destroy_ctx_flag)
         }
     }
 
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_spa_digest_type(FKO_DEFAULT_DIGEST): %s\n",
-                fko_errstr(fko_set_spa_digest_type(ctx, FKO_DEFAULT_DIGEST)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
+    spa_func_exec_short(&ctx, "fko_set_spa_digest_type",
+            &fko_set_spa_digest_type, -100, 100, FKO_DEFAULT_DIGEST,
+            new_ctx_flag, destroy_ctx_flag);
 
-    for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_set_spa_hmac_type(FKO_HMAC_SHA256): %s\n",
-                fko_errstr(fko_set_spa_hmac_type(ctx, FKO_HMAC_SHA256)));
-        if (destroy_ctx_flag == CTX_DESTROY)
-        {
-            fko_destroy(ctx);
-            ctx = NULL;
-        }
-    }
+    spa_func_exec_short(&ctx, "fko_set_spa_hmac_type",
+            &fko_set_spa_hmac_type, -100, 100, FKO_HMAC_SHA256,
+            new_ctx_flag, destroy_ctx_flag);
 
     for (i=0; i<FCN_CALLS; i++) {
         printf("fko_spa_data_final(testtest, 8, hmactest, 8): %s\n",
@@ -266,6 +227,61 @@ test_loop(int destroy_ctx_flag)
         decrypt_ctx = NULL;
     }
 
+    return;
+}
+
+
+static void spa_func_exec_int(fko_ctx_t *ctx, char *name,
+        int (*spa_func)(fko_ctx_t ctx, const int modifier), int min, int max,
+        int final_val, int new_ctx_flag, int destroy_ctx_flag)
+{
+    int i;
+
+    printf("[+] calling libfko function: %s\n", name);
+    for (i=min; i <= max; i++) {
+        printf("%s(%d): %s\n", name, i, fko_errstr((spa_func)(*ctx, i)));
+        printf("%s(%d): %s (DUPE)\n", name, i, fko_errstr((spa_func)(*ctx, i)));
+        if (destroy_ctx_flag == CTX_DESTROY)
+        {
+            fko_destroy(*ctx);
+            *ctx = NULL;
+        }
+        if (new_ctx_flag == NEW_CTX) {
+            fko_destroy(*ctx);  /* always destroy before re-creating */
+            *ctx = NULL;
+            printf("fko_new(): %s\n", fko_errstr(fko_new(ctx)));
+        }
+    }
+    printf("%s(%d): %s (FINAL)\n", name, final_val,
+            fko_errstr((spa_func)(*ctx, final_val)));
+    display_ctx(*ctx);
+    return;
+}
+
+static void spa_func_exec_short(fko_ctx_t *ctx, char *name,
+        int (*spa_func)(fko_ctx_t ctx, const short modifier), int min, int max,
+        int final_val, int new_ctx_flag, int destroy_ctx_flag)
+{
+    int i;
+
+    printf("[+] calling libfko function: %s\n", name);
+    for (i=min; i <= max; i++) {
+        printf("%s(%d): %s\n", name, i, fko_errstr((spa_func)(*ctx, i)));
+        printf("%s(%d): %s (DUPE)\n", name, i, fko_errstr((spa_func)(*ctx, i)));
+        if (destroy_ctx_flag == CTX_DESTROY)
+        {
+            fko_destroy(*ctx);
+            *ctx = NULL;
+        }
+        if (new_ctx_flag == NEW_CTX) {
+            fko_destroy(*ctx);  /* always destroy before re-creating */
+            *ctx = NULL;
+            printf("fko_new(): %s\n", fko_errstr(fko_new(ctx)));
+        }
+    }
+    printf("%s(%d): %s (FINAL)\n", name, final_val,
+            fko_errstr((spa_func)(*ctx, final_val)));
+    display_ctx(*ctx);
     return;
 }
 
