@@ -580,7 +580,11 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key,
     /* Encrypt according to type and return...
     */
     if(ctx->encryption_type == FKO_ENCRYPTION_RIJNDAEL)
+    {
+        if(enc_key == NULL)
+            return(FKO_ERROR_INVALID_KEY_LEN);
         res = _rijndael_encrypt(ctx, enc_key, enc_key_len);
+    }
     else if(ctx->encryption_type == FKO_ENCRYPTION_GPG)
 #if HAVE_LIBGPGME
         res = gpg_encrypt(ctx, enc_key);

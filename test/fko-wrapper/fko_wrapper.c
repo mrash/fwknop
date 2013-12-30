@@ -159,12 +159,16 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
     for (i=-100; i < 200; i += 10) {
         for (j=-100; j < 200; j += 10) {
             fko_spa_data_final(ctx, ENC_KEY, i, HMAC_KEY, j);
+            fko_spa_data_final(ctx, NULL, i, HMAC_KEY, j);
+            fko_spa_data_final(ctx, ENC_KEY, i, NULL, j);
+            fko_spa_data_final(ctx, NULL, i, NULL, j);
             ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, NO_PRINT);
+            spa_calls += 4;
         }
     }
 
     for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_spa_data_final(ENC_KEY, 8, HMAC_KEY, 8): %s\n",
+        printf("fko_spa_data_final(ENC_KEY, 16, HMAC_KEY, 16): %s\n",
                 fko_errstr(fko_spa_data_final(ctx, ENC_KEY, 16, HMAC_KEY, 16)));
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
@@ -233,6 +237,7 @@ static void ctx_update(fko_ctx_t *ctx, int new_ctx_flag,
             printf("fko_destroy(): %s\n", fko_errstr(fko_destroy(*ctx)));
         else
             fko_destroy(*ctx);
+        spa_calls++;
         *ctx = NULL;
     }
     if (new_ctx_flag == NEW_CTX) {
@@ -247,6 +252,7 @@ static void ctx_update(fko_ctx_t *ctx, int new_ctx_flag,
             printf("fko_new(): %s\n", fko_errstr(fko_new(ctx)));
         else
             fko_new(ctx);
+        spa_calls += 2;
     }
     return;
 }

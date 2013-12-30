@@ -188,6 +188,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     if(enc_msg == NULL)
         return(FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING);
 
+    if(dec_key_len < 0 || hmac_key_len < 0)
+        return(FKO_ERROR_INVALID_KEY_LEN);
+
     ctx = calloc(1, sizeof *ctx);
     if(ctx == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -483,10 +486,12 @@ fko_spa_data_final(fko_ctx_t ctx,
 
     /* Now calculate hmac if so configured
     */
-    if (res == FKO_SUCCESS &&
-            ctx->hmac_type != FKO_HMAC_UNKNOWN && hmac_key != NULL)
+    if (res == FKO_SUCCESS && ctx->hmac_type != FKO_HMAC_UNKNOWN)
     {
         if(hmac_key_len < 0)
+            return(FKO_ERROR_INVALID_KEY_LEN);
+
+        if(hmac_key == NULL)
             return(FKO_ERROR_INVALID_KEY_LEN);
 
         res = fko_set_spa_hmac(ctx, hmac_key, hmac_key_len);
