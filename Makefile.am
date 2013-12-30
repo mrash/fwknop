@@ -265,6 +265,7 @@ EXTRA_DIST = \
     test/fko-wrapper/Makefile \
     test/fko-wrapper/fko_wrapper.c \
     test/fko-wrapper/run_valgrind.sh \
+    test/fko-wrapper/run_no_valgrind.sh \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte_eq.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte.patch \
