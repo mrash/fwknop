@@ -277,4 +277,10 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'fko-wrapper',
+        'detail'   => 'multiple libfko calls',
+        'function' => \&compile_execute_fko_wrapper_no_valgrind
+    },
 );

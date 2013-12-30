@@ -5966,6 +5966,69 @@ sub compile_execute_fko_wrapper() {
     return $rv;
 }
 
+sub compile_execute_fko_wrapper_no_valgrind() {
+    my $rv = 1;
+
+    unless (-d $fko_wrapper_dir) {
+        &write_test_file("[-] fko wrapper directory " .
+            "$fko_wrapper_dir does not exist.\n", $curr_test_file);
+        return 0;
+    }
+
+    chdir $fko_wrapper_dir or die $!;
+
+    ### 'make clean' as root
+    unless (&run_cmd('make clean', "../$cmd_out_tmp",
+            "../$curr_test_file")) {
+        chdir '..' or die $!;
+        return 0;
+    }
+
+    if ($sudo_path) {
+        my $username = getpwuid((stat("../$test_suite_path"))[4]);
+        die "[*] Could not determine ../$test_suite_path owner"
+            unless $username;
+
+        unless (&run_cmd("$sudo_path -u $username make",
+                "../$cmd_out_tmp", "../$curr_test_file")) {
+            unless (&run_cmd('make', "../$cmd_out_tmp",
+                    "../$curr_test_file")) {
+                chdir '..' or die $!;
+                return 0;
+            }
+        }
+
+    } else {
+
+        unless (&run_cmd('make', "../$cmd_out_tmp",
+                "../$curr_test_file")) {
+            chdir '..' or die $!;
+            return 0;
+        }
+    }
+
+    unless (-e 'fko_wrapper' and -e 'run_no_valgrind.sh') {
+        &write_test_file("[-] fko_wrapper or run_valgrind.sh does not exist.\n",
+            "../$curr_test_file");
+        chdir '..' or die $!;
+        return 0;
+    }
+
+    &run_cmd('./run_no_valgrind.sh',
+        "../$cmd_out_tmp", "../$curr_test_file");
+
+    chdir '..' or die $!;
+
+    if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
+            $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
+        &write_test_file("[-] crash message found in: $curr_test_file\n",
+            $curr_test_file);
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
 sub parse_valgrind_flagged_functions() {
 
     my $rv = 1;
