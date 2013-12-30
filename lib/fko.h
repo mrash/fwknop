@@ -337,7 +337,6 @@ DLL_API int fko_destroy(fko_ctx_t ctx);
 DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char * const enc_key,
     const int enc_key_len, const char * const hmac_key, const int hmac_key_len);
 
-
 /* Set context data functions
 */
 DLL_API int fko_set_rand_value(fko_ctx_t ctx, const char * const val);
@@ -381,7 +380,6 @@ DLL_API int fko_get_spa_hmac(fko_ctx_t ctx, char **enc_data);
 
 DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
 
-
 /* Get context data functions
 */
 DLL_API int fko_get_rand_value(fko_ctx_t ctx, char **rand_val);
@@ -403,7 +401,8 @@ DLL_API int fko_get_spa_data(fko_ctx_t ctx, char **spa_data);
 
 DLL_API int fko_get_version(fko_ctx_t ctx, char **version);
 
-/* GPG-related functions */
+/* GPG-related functions
+*/
 DLL_API int fko_set_gpg_exe(fko_ctx_t ctx, const char * const gpg_exe);
 DLL_API int fko_get_gpg_exe(fko_ctx_t ctx, char **gpg_exe);
 

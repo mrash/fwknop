@@ -270,7 +270,8 @@ get_gpg_key(fko_ctx_t fko_ctx, gpgme_key_t *mykey, const int signer)
 /* The main GPG encryption routine for libfko.
 */
 int
-gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const char *pw, unsigned char **out, size_t *out_len)
+gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len,
+        const char *pw, unsigned char **out, size_t *out_len)
 {
     char               *tmp_buf;
     int                 res;
@@ -413,7 +414,8 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const cha
 /* The main GPG decryption routine for libfko.
 */
 int
-gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len, const char *pw, unsigned char **out, size_t *out_len)
+gpgme_decrypt(fko_ctx_t fko_ctx, unsigned char *indata,
+        size_t in_len, const char *pw, unsigned char **out, size_t *out_len)
 {
     char                   *tmp_buf;
     int                     res;

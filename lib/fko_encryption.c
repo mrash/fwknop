@@ -53,7 +53,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
     int             pt_len;
     int             zero_free_rv = FKO_SUCCESS;
 
-    if(enc_key_len > RIJNDAEL_MAX_KEYSIZE)
+    if(enc_key_len < 0 || enc_key_len > RIJNDAEL_MAX_KEYSIZE)
         return(FKO_ERROR_INVALID_KEY_LEN);
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
@@ -166,7 +166,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
     int             cipher_len, pt_len, i, err = 0, res = FKO_SUCCESS;
     int             zero_free_rv = FKO_SUCCESS;
 
-    if(key_len > RIJNDAEL_MAX_KEYSIZE)
+    if(key_len < 0 || key_len > RIJNDAEL_MAX_KEYSIZE)
         return(FKO_ERROR_INVALID_KEY_LEN);
 
     /* Now see if we need to add the "Salted__" string to the front of the
@@ -558,6 +558,9 @@ fko_encrypt_spa_data(fko_ctx_t ctx, const char * const enc_key,
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(enc_key_len < 0)
+        return(FKO_ERROR_INVALID_KEY_LEN);
+
     /* If there is no encoded data or the SPA data has been modified,
      * go ahead and re-encode here.
     */
@@ -599,6 +602,9 @@ fko_decrypt_spa_data(fko_ctx_t ctx, const char * const dec_key, const int key_le
 
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(key_len < 0)
+        return(FKO_ERROR_INVALID_KEY_LEN);
 
     /* Get the (assumed) type of encryption used. This will also provide
      * some data validation.

@@ -476,6 +476,9 @@ fko_spa_data_final(fko_ctx_t ctx,
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(enc_key_len < 0)
+        return(FKO_ERROR_INVALID_KEY_LEN);
+
     res = fko_encrypt_spa_data(ctx, enc_key, enc_key_len);
 
     /* Now calculate hmac if so configured
@@ -483,6 +486,9 @@ fko_spa_data_final(fko_ctx_t ctx,
     if (res == FKO_SUCCESS &&
             ctx->hmac_type != FKO_HMAC_UNKNOWN && hmac_key != NULL)
     {
+        if(hmac_key_len < 0)
+            return(FKO_ERROR_INVALID_KEY_LEN);
+
         res = fko_set_spa_hmac(ctx, hmac_key, hmac_key_len);
 
         if (res == FKO_SUCCESS)

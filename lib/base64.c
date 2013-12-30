@@ -88,7 +88,7 @@ b64_encode(unsigned char *in, char *out, int in_len)
 
     char *dst = out;
 
-    if (in_len) { /* Special edge case, what should we really do here? */
+    if (in_len > 0) { /* Special edge case, what should we really do here? */
         while (bytes_remaining) {
             i_bits = (i_bits << 8) + *in++;
             bytes_remaining--;
