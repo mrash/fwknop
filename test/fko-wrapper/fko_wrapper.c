@@ -18,6 +18,9 @@
 #define NO_NEW_CTX       1
 #define DO_PRINT         1
 #define NO_PRINT         2
+#define NO_DIGEST        0
+#define DO_DIGEST        1
+#define RAW_DIGEST       2
 #define ENC_KEY          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* 32 bytes */
 #define HMAC_KEY         "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" /* 32 bytes */
 
@@ -38,7 +41,8 @@ static void spa_func_getset_int(fko_ctx_t *ctx, char *set_name,
 static void spa_func_getset_short(fko_ctx_t *ctx, char *set_name,
         int (*spa_set)(fko_ctx_t ctx, const short modifier),
         char *get_name, int (*spa_get)(fko_ctx_t ctx, short *val),
-        int min, int max, int final_val, int new_ctx_flag, int destroy_ctx_flag);
+        int min, int max, int final_val, int digest_flag,
+        int new_ctx_flag, int destroy_ctx_flag);
 
 int spa_calls = 0;
 
@@ -81,7 +85,7 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
             &fko_set_spa_message_type, "fko_get_spa_message_type",
             &fko_get_spa_message_type, FKO_COMMAND_MSG-F_INT,
             FKO_LAST_MSG_TYPE+F_INT, FKO_ACCESS_MSG,
-            new_ctx_flag, destroy_ctx_flag);
+            NO_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
     spa_func_int(&ctx, "fko_set_timestamp",
             &fko_set_spa_client_timeout, -F_INT, F_INT, 10,
@@ -109,7 +113,7 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
             &fko_set_spa_encryption_type, "fko_get_spa_encryption_type",
             &fko_get_spa_encryption_type, FKO_ENCRYPTION_INVALID_DATA-F_INT,
             FKO_LAST_ENCRYPTION_TYPE+F_INT, FKO_ENCRYPTION_RIJNDAEL,
-            new_ctx_flag, destroy_ctx_flag);
+            NO_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
     spa_func_getset_int(&ctx, "fko_set_spa_encryption_mode",
             &fko_set_spa_encryption_mode, "fko_get_spa_encryption_mode",
@@ -141,19 +145,33 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
             &fko_set_spa_digest_type, "fko_get_spa_digest_type",
             &fko_get_spa_digest_type, FKO_DIGEST_INVALID_DATA-F_INT,
             FKO_LAST_DIGEST_TYPE+F_INT, FKO_DEFAULT_DIGEST,
-            new_ctx_flag, destroy_ctx_flag);
+            DO_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
     spa_func_getset_short(&ctx, "fko_set_raw_spa_digest_type",
             &fko_set_spa_digest_type, "fko_get_raw_spa_digest_type",
             &fko_get_spa_digest_type, FKO_DIGEST_INVALID_DATA-F_INT,
             FKO_LAST_DIGEST_TYPE+F_INT, FKO_DEFAULT_DIGEST,
-            new_ctx_flag, destroy_ctx_flag);
+            RAW_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
     spa_func_getset_short(&ctx, "fko_set_spa_hmac_type",
             &fko_set_spa_hmac_type, "fko_get_spa_hmac_type",
             &fko_get_spa_hmac_type, FKO_HMAC_INVALID_DATA-F_INT,
             FKO_LAST_HMAC_MODE+F_INT, FKO_HMAC_SHA256,
-            new_ctx_flag, destroy_ctx_flag);
+            NO_DIGEST, new_ctx_flag, destroy_ctx_flag);
+
+    /* NULL tests */
+    fko_set_rand_value(ctx, NULL);
+    fko_set_rand_value(ctx, NULL);
+    fko_set_username(ctx, NULL);
+    fko_set_username(ctx, NULL);
+    fko_set_spa_message(ctx, NULL);
+    fko_set_spa_message(ctx, NULL);
+    fko_set_spa_nat_access(ctx, NULL);
+    fko_set_spa_nat_access(ctx, NULL);
+    fko_set_spa_server_auth(ctx, NULL);
+    fko_set_spa_server_auth(ctx, NULL);
+    fko_set_spa_data(ctx, NULL);
+    fko_set_spa_data(ctx, NULL);
 
     printf("Trying encrypt / authenticate step with bogus key lengths...\n");
     for (i=-100; i < 200; i += 10) {
@@ -351,7 +369,8 @@ static void spa_func_int(fko_ctx_t *ctx, char *name,
 static void spa_func_getset_short(fko_ctx_t *ctx, char *set_name,
         int (*spa_set)(fko_ctx_t ctx, const short modifier),
         char *get_name, int (*spa_get)(fko_ctx_t ctx, short *val),
-        int min, int max, int final_val, int new_ctx_flag, int destroy_ctx_flag)
+        int min, int max, int final_val, int digest_flag,
+        int new_ctx_flag, int destroy_ctx_flag)
 {
     fko_ctx_t default_ctx = NULL;
     short get_val;
@@ -364,11 +383,20 @@ static void spa_func_getset_short(fko_ctx_t *ctx, char *set_name,
         get_val = 1234;  /* meaningless default */
         printf("%s(%d): %s\n", set_name, i, fko_errstr((spa_set)(*ctx, i)));
         printf("%s(%d): %s (DUPE)\n", set_name, i, fko_errstr((spa_set)(*ctx, i)));
+
+        if (digest_flag == DO_DIGEST)
+            fko_set_spa_digest(*ctx);
+        else if (digest_flag == RAW_DIGEST)
+            fko_set_raw_spa_digest(*ctx);
+
         res = (spa_get)(*ctx, &get_val);
         printf("%s(%d): %s\n", get_name, get_val, fko_errstr(res));
 
         ctx_update(ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
-        spa_calls += 3;
+        if (digest_flag == NO_DIGEST)
+            spa_calls += 3;
+        else
+            spa_calls += 4;
 
         /* also set on a fully populated context */
         (spa_set)(default_ctx, i);

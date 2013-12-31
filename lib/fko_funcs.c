@@ -562,6 +562,9 @@ fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg)
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
+    if(enc_msg == NULL)
+        return(FKO_ERROR_INVALID_DATA_FUNCS_SET_MSGLEN_VALIDFAIL);
+
     enc_msg_len = strnlen(enc_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     if(! is_valid_encoded_msg_len(enc_msg_len))
