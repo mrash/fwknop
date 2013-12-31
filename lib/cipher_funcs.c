@@ -74,9 +74,6 @@ get_random_data(unsigned char *data, const size_t len)
     int             do_time = 0;
     size_t          amt_read;
 
-    if(len < 0)
-        return;
-
     /* Attempt to read seed data from /dev/urandom.  If that does not
      * work, then fall back to a time-based method (less secure, but
      * probably more portable).

@@ -200,9 +200,6 @@ digest_inttostr(int digest, char* digest_str, size_t digest_size)
 {
     short digest_not_valid = 0;
 
-    if(digest_size < 0)
-        return -1;
-
     memset(digest_str, 0, digest_size);
 
     switch (digest)
@@ -303,9 +300,6 @@ hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size)
 {
     short digest_not_valid = 0;
 
-    if(digest_size < 0)
-        return -1;
-
     memset(digest_str, 0, digest_size);
 
     switch (digest)
@@ -395,9 +389,6 @@ enc_mode_inttostr(int enc_mode, char* enc_mode_str, size_t enc_mode_size)
     short                   enc_mode_error = -1;
     unsigned char           ndx_enc_mode;
     fko_enc_mode_str_t     *enc_mode_str_pt;
-
-    if(enc_mode_size < 0)
-        return enc_mode_error;
 
     /* Initialize the protocol string */
     memset(enc_mode_str, 0, enc_mode_size);
@@ -649,9 +640,6 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
     short       encryption_type = -1;
     int         encryption_mode = -1;
     int         client_timeout  = -1;
-
-    if(dump_buf_len < 0)
-        return err;
 
     /* Zero-ed the buffer */
     memset(dump_buf, 0, dump_buf_len);
