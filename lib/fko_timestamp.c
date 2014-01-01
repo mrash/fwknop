@@ -66,6 +66,9 @@ fko_get_timestamp(fko_ctx_t ctx, time_t *timestamp)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(timestamp == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *timestamp = ctx->timestamp;
 
     return(FKO_SUCCESS);

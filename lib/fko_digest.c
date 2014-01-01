@@ -77,6 +77,9 @@ fko_get_spa_digest_type(fko_ctx_t ctx, short *digest_type)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(digest_type == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *digest_type = ctx->digest_type;
 
     return(FKO_SUCCESS);
@@ -216,6 +219,9 @@ fko_get_spa_digest(fko_ctx_t ctx, char **md)
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(md == NULL)
+        return(FKO_ERROR_INVALID_DATA);
 
     *md = ctx->digest;
 

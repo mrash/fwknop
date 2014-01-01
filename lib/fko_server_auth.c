@@ -92,6 +92,9 @@ fko_get_spa_server_auth(fko_ctx_t ctx, char **server_auth)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(server_auth == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *server_auth = ctx->server_auth;
 
     return(FKO_SUCCESS);

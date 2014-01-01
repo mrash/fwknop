@@ -108,6 +108,9 @@ fko_get_spa_client_timeout(fko_ctx_t ctx, int *timeout)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(timeout == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *timeout = ctx->client_timeout;
 
     return(FKO_SUCCESS);

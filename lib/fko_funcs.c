@@ -457,6 +457,9 @@ fko_get_version(fko_ctx_t ctx, char **version)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(version == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *version = ctx->version;
 
     return(FKO_SUCCESS);
@@ -528,6 +531,9 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(spa_data == NULL)
+        return(FKO_ERROR_INVALID_DATA);
 
     /* We expect to have encrypted data to process.  If not, we bail.
     */

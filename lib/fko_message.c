@@ -127,6 +127,9 @@ fko_get_spa_message_type(fko_ctx_t ctx, short *msg_type)
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
+    if(msg_type == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *msg_type = ctx->message_type;
 
     return(FKO_SUCCESS);
@@ -190,6 +193,9 @@ fko_get_spa_message(fko_ctx_t ctx, char **msg)
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(msg == NULL)
+        return(FKO_ERROR_INVALID_DATA);
 
     *msg = ctx->message;
 

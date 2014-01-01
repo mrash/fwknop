@@ -171,6 +171,9 @@ fko_get_spa_hmac(fko_ctx_t ctx, char **hmac_data)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(hmac_data == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *hmac_data = ctx->msg_hmac;
 
     return(FKO_SUCCESS);
@@ -205,6 +208,9 @@ fko_get_spa_hmac_type(fko_ctx_t ctx, short *hmac_type)
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(hmac_type == NULL)
+        return(FKO_ERROR_INVALID_DATA);
 
     *hmac_type = ctx->hmac_type;
 

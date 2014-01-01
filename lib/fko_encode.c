@@ -230,6 +230,9 @@ fko_get_encoded_data(fko_ctx_t ctx, char **enc_msg)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(enc_msg == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *enc_msg = ctx->encoded_msg;
 
     return(FKO_SUCCESS);

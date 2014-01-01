@@ -97,6 +97,9 @@ fko_get_spa_nat_access(fko_ctx_t ctx, char **nat_access)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(nat_access == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *nat_access = ctx->nat_access;
 
     return(FKO_SUCCESS);

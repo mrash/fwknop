@@ -128,6 +128,9 @@ fko_get_username(fko_ctx_t ctx, char **username)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(username == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *username = ctx->username;
 
     return(FKO_SUCCESS);

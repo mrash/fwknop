@@ -1,7 +1,9 @@
 /*
  * This code is designed to repeatedly call libfko functions multiple times
  * with and without calling fko_destroy().  This allows valgrind to verify
- * whether memory is properly handled between calls.
+ * whether memory is properly handled between calls.  In addition, libfko
+ * functions are called with bogus inputs in order to validate how well libfko
+ * validates input arguments.
 */
 
 #include <stdio.h>
@@ -159,20 +161,6 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
             FKO_LAST_HMAC_MODE+F_INT, FKO_HMAC_SHA256,
             NO_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
-    /* NULL tests */
-    fko_set_rand_value(ctx, NULL);
-    fko_set_rand_value(ctx, NULL);
-    fko_set_username(ctx, NULL);
-    fko_set_username(ctx, NULL);
-    fko_set_spa_message(ctx, NULL);
-    fko_set_spa_message(ctx, NULL);
-    fko_set_spa_nat_access(ctx, NULL);
-    fko_set_spa_nat_access(ctx, NULL);
-    fko_set_spa_server_auth(ctx, NULL);
-    fko_set_spa_server_auth(ctx, NULL);
-    fko_set_spa_data(ctx, NULL);
-    fko_set_spa_data(ctx, NULL);
-
     printf("Trying encrypt / authenticate step with bogus key lengths...\n");
     for (i=-100; i < 200; i += 10) {
         for (j=-100; j < 200; j += 10) {
@@ -234,6 +222,21 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
 
+    /* NULL tests */
+    fko_set_rand_value(ctx, NULL);
+    fko_set_rand_value(ctx, NULL);
+    fko_set_username(ctx, NULL);
+    fko_set_username(ctx, NULL);
+    fko_set_spa_message(ctx, NULL);
+    fko_set_spa_message(ctx, NULL);
+    fko_set_spa_nat_access(ctx, NULL);
+    fko_set_spa_nat_access(ctx, NULL);
+    fko_set_spa_server_auth(ctx, NULL);
+    fko_set_spa_server_auth(ctx, NULL);
+    fko_set_spa_data(ctx, NULL);
+    fko_set_spa_data(ctx, NULL);
+    spa_calls += 12;
+
     for (i=0; i<FCN_CALLS; i++) {
         fko_destroy(ctx);
         ctx = NULL;
@@ -278,6 +281,7 @@ static void ctx_update(fko_ctx_t *ctx, int new_ctx_flag,
 static void spa_default_ctx(fko_ctx_t *ctx)
 {
     fko_new(ctx);
+    fko_set_rand_value(*ctx, NULL);
     fko_spa_data_final(*ctx, ENC_KEY, 16, HMAC_KEY, 16);
     fko_set_spa_message(*ctx, "123.123.123.123,tcp/22");
     fko_spa_data_final(*ctx, ENC_KEY, 16, HMAC_KEY, 16);
@@ -436,23 +440,40 @@ display_ctx(fko_ctx_t ctx)
     int         encryption_mode = -1;
     int         client_timeout  = -1;
 
-    /* Should be checking return values, but this is temp code. --DSS
+    /* pass in NULL to each fko_get_* function first to ensure
+     * that NULL is handled properly
     */
+    fko_get_rand_value(ctx, NULL);
     fko_get_rand_value(ctx, &rand_val);
+    fko_get_username(ctx, NULL);
     fko_get_username(ctx, &username);
+    fko_get_timestamp(ctx, NULL);
     fko_get_timestamp(ctx, &timestamp);
+    fko_get_version(ctx, NULL);
     fko_get_version(ctx, &version);
+    fko_get_spa_message_type(ctx, NULL);
     fko_get_spa_message_type(ctx, &msg_type);
+    fko_get_spa_message(ctx, NULL);
     fko_get_spa_message(ctx, &spa_message);
+    fko_get_spa_nat_access(ctx, NULL);
     fko_get_spa_nat_access(ctx, &nat_access);
+    fko_get_spa_server_auth(ctx, NULL);
     fko_get_spa_server_auth(ctx, &server_auth);
+    fko_get_spa_client_timeout(ctx, NULL);
     fko_get_spa_client_timeout(ctx, &client_timeout);
+    fko_get_spa_digest_type(ctx, NULL);
     fko_get_spa_digest_type(ctx, &digest_type);
+    fko_get_spa_hmac_type(ctx, NULL);
     fko_get_spa_hmac_type(ctx, &hmac_type);
+    fko_get_spa_encryption_mode(ctx, NULL);
     fko_get_spa_encryption_mode(ctx, &encryption_mode);
+    fko_get_encoded_data(ctx, NULL);
     fko_get_encoded_data(ctx, &enc_data);
+    fko_get_spa_hmac(ctx, NULL);
     fko_get_spa_hmac(ctx, &hmac_data);
+    fko_get_spa_digest(ctx, NULL);
     fko_get_spa_digest(ctx, &spa_digest);
+    fko_get_spa_data(ctx, NULL);
     fko_get_spa_data(ctx, &spa_data);
 
     printf("\nFKO Field Values:\n=================\n\n");

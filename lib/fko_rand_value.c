@@ -152,6 +152,9 @@ fko_get_rand_value(fko_ctx_t ctx, char **rand_value)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(rand_value == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *rand_value = ctx->rand_val;
 
     return(FKO_SUCCESS);

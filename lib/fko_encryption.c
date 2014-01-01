@@ -540,6 +540,9 @@ fko_get_spa_encryption_mode(fko_ctx_t ctx, int *enc_mode)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(enc_mode == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *enc_mode = ctx->encryption_mode;
 
     return(FKO_SUCCESS);
