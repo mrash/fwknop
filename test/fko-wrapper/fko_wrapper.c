@@ -73,6 +73,9 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
     int        i, j;
     char       *spa_data = NULL;
 
+    printf("[+] test_loop(): %s, %s\n",
+            new_ctx_flag == NEW_CTX ? "NEW_CTX" : "NO_NEW_CTX",
+            destroy_ctx_flag == CTX_DESTROY ? "DESTROY_CTX" : "NO_DESTROY_CTX");
     printf("fko_new(): %s\n", fko_errstr(fko_new(&ctx)));
     fko_destroy(ctx);
     ctx = NULL;
@@ -186,17 +189,17 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
 
-    printf("fko_new_with_data(): %s\n",
+    printf("fko_new_with_data(): %s (data: %s)\n",
         fko_errstr(fko_new_with_data(&decrypt_ctx, spa_data, NULL,
-        0, FKO_ENC_MODE_CBC, NULL, 0, FKO_HMAC_SHA256)));
+        0, FKO_ENC_MODE_CBC, NULL, 0, FKO_HMAC_SHA256)), spa_data);
 
     /* verify hmac, decrypt, and display ctx all together*/
     for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_verify_hmac(): %s\n",
-            fko_errstr(fko_verify_hmac(decrypt_ctx, "hmactest", 8)));
+        printf("fko_verify_hmac() (1): %s\n",
+            fko_errstr(fko_verify_hmac(decrypt_ctx, HMAC_KEY, 16)));
 
-        printf("fko_decrypt_spa_data(): %s\n",
-            fko_errstr(fko_decrypt_spa_data(decrypt_ctx, "testtest", 8)));
+        printf("fko_decrypt_spa_data() (1): %s\n",
+            fko_errstr(fko_decrypt_spa_data(decrypt_ctx, ENC_KEY, 16)));
 
         display_ctx(decrypt_ctx);
 
@@ -205,15 +208,15 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
 
     /* now, separately verify hmac, decrypt, and display ctx */
     for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_verify_hmac(): %s\n",
-            fko_errstr(fko_verify_hmac(decrypt_ctx, "hmactest", 8)));
+        printf("fko_verify_hmac() (2): %s\n",
+            fko_errstr(fko_verify_hmac(decrypt_ctx, HMAC_KEY, 16)));
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
 
     /* now decrypt */
     for (i=0; i<FCN_CALLS; i++) {
-        printf("fko_decrypt_spa_data(): %s\n",
-            fko_errstr(fko_decrypt_spa_data(decrypt_ctx, "testtest", 8)));
+        printf("fko_decrypt_spa_data() (2): %s\n",
+            fko_errstr(fko_decrypt_spa_data(decrypt_ctx, ENC_KEY, 16)));
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
 
@@ -489,12 +492,10 @@ display_ctx(fko_ctx_t ctx)
     printf("    Digest Type: %d\n", digest_type);
     printf("      HMAC Type: %d\n", hmac_type);
     printf("Encryption Mode: %d\n", encryption_mode);
-    printf("\n   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
+    printf("   Encoded Data: %s\n", enc_data == NULL ? "<NULL>" : enc_data);
     printf("SPA Data Digest: %s\n", spa_digest == NULL ? "<NULL>" : spa_digest);
     printf("           HMAC: %s\n", hmac_data == NULL ? "<NULL>" : hmac_data);
+    printf(" Final SPA Data: %s\n", spa_data);
 
-    if (enc_data != NULL && spa_digest != NULL)
-        printf("      Plaintext: %s:%s\n", enc_data, spa_digest);
-
-    printf("\nFinal Packed/Encrypted/Encoded Data:\n\n%s\n\n", spa_data);
+    spa_calls += 31;
 }
