@@ -195,13 +195,12 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
 
     /* verify hmac, decrypt, and display ctx all together*/
     for (i=0; i<FCN_CALLS; i++) {
+        display_ctx(decrypt_ctx);
         printf("fko_verify_hmac() (1): %s\n",
             fko_errstr(fko_verify_hmac(decrypt_ctx, HMAC_KEY, 16)));
 
         printf("fko_decrypt_spa_data() (1): %s\n",
             fko_errstr(fko_decrypt_spa_data(decrypt_ctx, ENC_KEY, 16)));
-
-        display_ctx(decrypt_ctx);
 
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
