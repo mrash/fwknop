@@ -160,3 +160,11 @@ Les Aker
       pcap_dispatch() packet count of zero when using libpcap-1.5.1.  This
       issue was tracked on github as issue #110, and the default packet count
       is now set at 100 as a result.
+
+Marek Wrzosek
+    - Suggested doc update to fwknop man pages to accurately describe the usage
+      of digits instead of bytes for SPA random data.  About 53 bits of entropy
+      are actually used, although this is in addition to the 64-bit random salt
+      in for key derivation used by PBKDF1 in Rjindael CBC mode.
+    - Various excellent feedback on crypto design, including the need to remove
+      the GPG_IGNORE_SIG_VERIFY_ERROR mode.
