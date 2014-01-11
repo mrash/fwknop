@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="fwknop-android_custom_rules" default="help">
+	<target name="-pre-build" depends="get-libfko-files, get-libfko-header">
+		<exec executable="${ndk.dir}/ndk-build" failonerror="true"/>
+	</target>
+
+	<target name="clean" depends="android_rules.clean">
+		<exec executable="${ndk.dir}/ndk-build" failonerror="true">
+			<arg value="clean"/>
+		</exec>
+		</target>
+
+	<target name="get-libfko-files">
+		<echo>Copying ../../lib files to ./jni/libfwknop</echo>
+		<exec dir="./jni/libfwknop" executable="./get_libfko_files.sh">
+		</exec>
+	</target>
+
+	<target name="get-libfko-header">
+        <echo>Copying ../../lib/fko.h file to ./jni/fwknop</echo>
+		<exec dir="./jni/fwknop" executable="./get_libfko_header.sh">
+		</exec>
+	</target>
+</project>
+

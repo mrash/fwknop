@@ -229,6 +229,24 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
     {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'Android compatibility',
+        'detail'   => 'v4.4',
+        'function' => \&backwards_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+8fP34T9Vjs50Yke5tNTz7YnsDbQUcp6zaaJTzVOgRuNXyhiZKL5' .
+            'UpaC2neRkqgjSlG6/qJSKXIuXBKR4LFS3rX2ZwrOkfBGKJeXe8S2' .
+            'uZex9RjOr/8SwS45Q+Kt3J6QsShXU4cxz09Cv+bi7+08/bGCyVdh' .
+            'vYNwogIhEkcqS79+JNR3lSBEBrOY4hoOKRRAYw41yI5cBCdc',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_android_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
 
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',

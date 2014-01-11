@@ -6,6 +6,41 @@ Max Kastanas <max2idea@users.sourceforge.net>
 Based on fwknop C implementation by Damien Stuart
 ===============================================================================
 
+- For those that are interested in Android development for the fwknop project,
+the ./project/sdk.paths file is meant to provide JAVE_HOME and PATH definitions
+for the local JVM and the Android SDK and NDK installations.  The general work
+flow is to first update the paths in in the sdk.paths file to point to the
+correct directories on your system, and you will also need to similarly update
+the sdk.dir and ndk.dir paths in the ./android/project/ant.properties file.
+Then:
+
+$ source ./project/sdk.paths
+
+- Then, start up the Android SDK:
+
+$ android &
+
+- Now, make updates to the fwknop/android/project/ files if implementing new
+functionality or fixing bugs.  Then, with an Android emulator running:
+
+$ cd ./project
+$ ant clean
+$ ant debug
+$ adb install -r bin/fwknop-android-debug.apk
+
+ - or -
+
+$ cd ./project
+$ ant clean
+$ ant release
+$ adb install bin/fwknop-android-release-unsigned.apk
+
+- With the new Android app installed now in the emulator, you can fire it up
+and use it to send SPA packets.
+
+
+### Legacy instructions follow: ###
+
 1. Requirements:
 
     a. Apache Ant (1.7.1)

@@ -168,3 +168,10 @@ Marek Wrzosek
       in for key derivation used by PBKDF1 in Rjindael CBC mode.
     - Various excellent feedback on crypto design, including the need to remove
       the GPG_IGNORE_SIG_VERIFY_ERROR mode.
+
+Gerry Reno
+    - Updated the Android client to be compatible with Android-4.4.
+    - Provided guidance on Android client issues along with testing candidate
+      patches to update various things - this work is being tracked in the
+      android4.4_support branch.
+
