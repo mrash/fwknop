@@ -13,7 +13,7 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.5.1
+Version:	2.6.0
 Epoch:		1
 Release:	1%{?dist}
 Summary:	Firewall Knock Operator client.  An implementation of Single Packet Authorization.
@@ -25,28 +25,27 @@ Source0:	fwknop-%{version}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:	gpg, gpgme-devel, libpcap-devel, gdbm-devel, iptables
-
-Requires:	libfko, iptables
+Requires:	libfko >= 2.0.1, iptables
 
 
 %package -n libfko
-Version:	2.0.0
+Version:	2.0.1
 Release:	2
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	2.0.0
+Version:	2.0.1
 Release:	2
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
-Requires:	libfko
+Requires:	libfko >= 2.0.1
 
 %package server
 Summary:	The Firewall Knock Operator server.  An implementation of Single Packet Authorization.
 Group:		System Environment/Daemons
-Requires:	libfko, libpcap, gdbm, iptables
+Requires:	libfko => 2.0.1, libpcap, gdbm, iptables
 
 
 %description
