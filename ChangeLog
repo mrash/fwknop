@@ -1,4 +1,4 @@
-fwknop-2.6.0 (01//2014):
+fwknop-2.6.0 (01/12/2014):
     - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to
       work on Debian and Ubuntu systems.  The policy file is available at
       extras/apparmor/usr.sbin/fwknopd.
