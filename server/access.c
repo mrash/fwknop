@@ -705,7 +705,7 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->force_nat_ip != NULL)
         free(acc->force_nat_ip);
 
-    if(acc->force_nat_ip != NULL)
+    if(acc->force_snat_ip != NULL)
         free(acc->force_snat_ip);
 
     if(acc->key != NULL)
