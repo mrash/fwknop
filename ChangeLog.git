@@ -1,4 +1,22 @@
-commit cf6a38ea0dc8e0c66e37da4c3eb926476738deba (HEAD, refs/heads/master)
+commit 177290c5c3c50af616aa5cb2dc5dee0bf2c611ec (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jan 12 22:27:38 2014 -0500
+
+    updated fwknop.spec file release note for 2.6.0
+
+ fwknop.spec | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+commit 56966ee832ccb21651292e0209aec23e468a8d01
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jan 12 21:41:54 2014 -0500
+
+    added Coverity finds/fixes to ChangeLog.git for 2.6.0
+
+ ChangeLog.git | 30 +++++++++++++++++++++++++++++-
+ 1 file changed, 29 insertions(+), 1 deletion(-)
+
+commit cf6a38ea0dc8e0c66e37da4c3eb926476738deba
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Sun Jan 12 21:40:20 2014 -0500
 
