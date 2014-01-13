@@ -142,6 +142,10 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Sun Jan 12 2014 <mbr@cipherdyne.org> - 2.6.0
+- Bumped libfko and libfko-devel version to 2.0.1.
+- fwknop-2.6.0 release.
+
 * Thu Jul 25 2013 <mbr@cipherdyne.org> - 2.5.1
 - fwknop-2.5.1 release.
 
