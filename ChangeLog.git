@@ -1,4 +1,32 @@
-commit 825c361958580b459d88080798bc72398f967352 (HEAD, refs/remotes/web/master, refs/remotes/origin/master, refs/remotes/origin/HEAD, refs/heads/master)
+commit cf6a38ea0dc8e0c66e37da4c3eb926476738deba (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jan 12 21:40:20 2014 -0500
+
+    [server] better checking for read() return value flagged by Coverity
+
+ server/fwknopd.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+commit 05d6e1c4a744007d3ac04be486d16f13f38cfa9e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jan 12 21:08:55 2014 -0500
+
+    [server] fixed copy-and-paste NULL check bug found by Coverity
+
+ server/access.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 431caa287a85c06521630fe6efefc4e8c1992cfd
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Jan 11 23:33:53 2014 -0500
+
+    added ChangeLog.git to show changes since 2.5.1
+
+ ChangeLog     |    2 +-
+ ChangeLog.git | 1864 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 1818 insertions(+), 48 deletions(-)
+
+commit 825c361958580b459d88080798bc72398f967352 (refs/remotes/web/master, refs/remotes/origin/master, refs/remotes/origin/HEAD)
 Merge: a347be3 1e17299
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Sat Jan 11 15:21:10 2014 -0500
