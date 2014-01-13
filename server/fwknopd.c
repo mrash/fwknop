@@ -731,7 +731,7 @@ write_pid_file(fko_srv_options_t *opts)
 static pid_t
 get_running_pid(const fko_srv_options_t *opts)
 {
-    int     op_fd, is_err;
+    int     op_fd, is_err, bytes_read = 0;
     char    buf[PID_BUFLEN] = {0};
     pid_t   rpid            = 0;
 
@@ -751,7 +751,8 @@ get_running_pid(const fko_srv_options_t *opts)
         return(rpid);
     }
 
-    if (read(op_fd, buf, PID_BUFLEN) > 0)
+    bytes_read = read(op_fd, buf, PID_BUFLEN);
+    if (bytes_read > 0)
     {
         buf[PID_BUFLEN-1] = '\0';
         /* max pid value is configurable on Linux
@@ -761,6 +762,8 @@ get_running_pid(const fko_srv_options_t *opts)
         if(is_err != FKO_SUCCESS)
             rpid = 0;
     }
+    else if (bytes_read < 0)
+        perror("Error trying to read() PID file: ");
 
     close(op_fd);
 
