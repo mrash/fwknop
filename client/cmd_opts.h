@@ -124,7 +124,8 @@ static struct option cmd_opts[] =
     {"nat-rand-port",       0, NULL, NAT_RAND_PORT},
     {"server-port",         1, NULL, 'p'},
     {"server-proto",        1, NULL, 'P'},
-    {"spoof-src",           1, NULL, 'Q'},
+    {"spoof-source",        1, NULL, 'Q'},
+    {"spoof-src",           1, NULL, 'Q'}, /* synonym */
     {"rc-file",             1, NULL, RC_FILE_PATH},
     {"rand-port",           0, NULL, 'r'},
     {"resolve-ip-http",     0, NULL, 'R'},
