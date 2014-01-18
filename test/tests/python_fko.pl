@@ -14,7 +14,7 @@
     {
         'category' => 'python fko extension',
         'subcategory' => 'compatibility',
-        'detail'   => 'python->C',
+        'detail'   => 'python -> C server',
         'function' => \&python_fko_client_to_C_server,
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_sha512_short_key2_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
