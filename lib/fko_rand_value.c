@@ -30,6 +30,7 @@
 */
 #include "fko_common.h"
 #include "fko.h"
+#include "base64.h"
 
 #ifdef WIN32
   #include <sys/timeb.h>
@@ -45,20 +46,74 @@
   #define RAND_FILE "/dev/urandom"
 #endif
 
+
+/* Get random data.
+*/
+void
+get_random_data(unsigned char *data, const size_t len)
+{
+    uint32_t    i;
+#ifdef WIN32
+	int				rnum;
+	struct _timeb	tb;
+
+	_ftime_s(&tb);
+
+	srand((uint32_t)(tb.time*1000)+tb.millitm);
+
+	for(i=0; i<len; i++)
+	{
+		rnum = rand();
+		*(data+i) = rnum % 0xff;
+	}
+#else
+    FILE           *rfd;
+    struct timeval  tv;
+    int             do_time = 0;
+    size_t          amt_read;
+
+    /* Attempt to read seed data from /dev/urandom.  If that does not
+     * work, then fall back to a time-based method (less secure, but
+     * probably more portable).
+    */
+    if((rfd = fopen(RAND_FILE, "r")) == NULL)
+    {
+        do_time = 1;
+    }
+    else
+    {
+        /* Read seed from /dev/urandom
+        */
+        amt_read = fread(data, len, 1, rfd);
+        fclose(rfd);
+
+        if (amt_read != 1)
+            do_time = 1;
+    }
+
+    if (do_time)
+    {
+        /* Seed based on time (current usecs).
+        */
+        gettimeofday(&tv, NULL);
+        srand(tv.tv_usec);
+
+        for(i=0; i<len; i++)
+            *(data+i) = rand() % 0xff;
+    }
+
+#endif
+
+}
+
+
 /* Set/Generate the SPA data random value string.
 */
 int
 fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
 {
-#ifdef WIN32
-	struct _timeb	tb;
-#else
-    FILE           *rfd;
-    struct timeval  tv;
-    size_t          amt_read;
-#endif
-    unsigned long   seed;
-    char           *tmp_buf;
+    unsigned char           *tmp_buf;
+    int                      b64_len = 0;
 
     /* Context must be initialized.
     */
@@ -69,7 +124,9 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     */
     if(new_val != NULL)
     {
-        if(strnlen(new_val, FKO_RAND_VAL_SIZE+1) != FKO_RAND_VAL_SIZE)
+        /* Must have at least FKO_RAND_VAL_SIZE bytes
+        */
+        if(strnlen(new_val, FKO_RAND_VAL_B64_SIZE+1) < FKO_RAND_VAL_SIZE)
             return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
 
         if(ctx->rand_val != NULL)
@@ -84,56 +141,30 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
         return(FKO_SUCCESS);
     }
 
-#ifdef WIN32
-	_ftime_s(&tb);
-	seed = ((tb.time * 1000) + tb.millitm) & 0xFFFFFFFF;
-#else
-    /* Attempt to read seed data from /dev/urandom.  If that does not
-     * work, then fall back to a time-based method (less secure, but
-     * probably more portable).
-    */
-    if((rfd = fopen(RAND_FILE, "r")) != NULL)
-    {
-        /* Read seed from /dev/urandom
-        */
-        amt_read = fread(&seed, 4, 1, rfd);
-        fclose(rfd);
-
-        if (amt_read != 1)
-            return(FKO_ERROR_FILESYSTEM_OPERATION);
-    }
-    else
-    {
-        /* Seed based on time (current usecs).
-        */
-        gettimeofday(&tv, NULL);
-
-        seed = tv.tv_usec;
-    }
-#endif
-
-    srand(seed);
-
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
 
-    ctx->rand_val = malloc(FKO_RAND_VAL_SIZE+1);
+    ctx->rand_val = malloc(FKO_RAND_VAL_B64_SIZE+1);
     if(ctx->rand_val == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
-    memset(ctx->rand_val, 0, FKO_RAND_VAL_SIZE+1);
+    memset(ctx->rand_val, 0, FKO_RAND_VAL_B64_SIZE+1);
 
     tmp_buf = malloc(FKO_RAND_VAL_SIZE+1);
     if(tmp_buf == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
     memset(tmp_buf, 0, FKO_RAND_VAL_SIZE+1);
 
-    snprintf(ctx->rand_val, FKO_RAND_VAL_SIZE, "%u", rand());
+    get_random_data(tmp_buf, FKO_RAND_VAL_SIZE);
 
-    while(strnlen(ctx->rand_val, FKO_RAND_VAL_SIZE+1) < FKO_RAND_VAL_SIZE)
+    b64_len = b64_encode(tmp_buf, ctx->rand_val, FKO_RAND_VAL_SIZE);
+
+    if(b64_len < FKO_RAND_VAL_SIZE)
     {
-        snprintf(tmp_buf, FKO_RAND_VAL_SIZE, "%u", rand());
-        strlcat(ctx->rand_val, tmp_buf, FKO_RAND_VAL_SIZE+1);
+        free(tmp_buf);
+        return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
     }
+
+    strip_b64_eq(ctx->rand_val);
 
     free(tmp_buf);
 

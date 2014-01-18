@@ -163,7 +163,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
 {
     unsigned char  *ndx;
     unsigned char  *cipher;
-    int             cipher_len, pt_len, i, err = 0, res = FKO_SUCCESS;
+    int             cipher_len, pt_len, i, found_marker = 0, res = FKO_SUCCESS;
     int             zero_free_rv = FKO_SUCCESS;
 
     if(key_len < 0 || key_len > RIJNDAEL_MAX_KEYSIZE)
@@ -252,11 +252,16 @@ _rijndael_decrypt(fko_ctx_t ctx,
      * are made in fko_decode_spa_data().
     */
     ndx = (unsigned char *)ctx->encoded_msg;
-    for(i=0; i<FKO_RAND_VAL_SIZE; i++)
-        if(!isdigit(*(ndx++)))
-            err++;
+    for(i=0; i<FKO_RAND_VAL_B64_SIZE; i++)
+    {
+        if(*ndx++ == ':')
+        {
+            found_marker = 1;
+            break;
+        }
+    }
 
-    if(err > 0 || *ndx != ':')
+    if(found_marker == 0)
         return(FKO_ERROR_DECRYPTION_FAILURE);
 
     /* Call fko_decode and return the results.
