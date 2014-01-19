@@ -66,6 +66,7 @@
 #define FKO_ENCODE_TMP_BUF_SIZE    1024
 #define FKO_RAND_VAL_SIZE            16
 #define FKO_RAND_VAL_B64_SIZE        25
+#define FKO_MAX_RAND_SIZE           128
 
 #endif /* FKO_LIMITS_H */
 

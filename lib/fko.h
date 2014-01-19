@@ -119,6 +119,14 @@ typedef enum {
     FKO_LAST_ENC_MODE /* Always leave this as the last one */
 } fko_encryption_mode_t;
 
+/* Randomization modes
+*/
+typedef enum {
+    FKO_RAND_MODE = 0,
+    FKO_RAND_MODE_LEGACY,  /* for the old digits-only strategy */
+    FKO_LAST_RAND_MODE /* Always leave this as the last one */
+} fko_rand_mode_t;
+
 /* FKO ERROR_CODES
  *
  * Note: If you change this list in any way, please be sure to make the
@@ -213,6 +221,7 @@ typedef enum {
     FKO_ERROR_INVALID_DATA_MESSAGE_PORTPROTO_MISSING,
     FKO_ERROR_INVALID_DATA_NAT_EMPTY,
     FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL,
+    FKO_ERROR_INVALID_DATA_RAND_MODE_VALIDFAIL,
     FKO_ERROR_INVALID_DATA_SRVAUTH_MISSING,
     FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL,
     FKO_ERROR_INVALID_DATA_USER_MISSING,
@@ -288,6 +297,7 @@ typedef enum {
 #define FKO_DEFAULT_KEY_LEN      0
 #define FKO_DEFAULT_HMAC_KEY_LEN 0
 #define FKO_DEFAULT_HMAC_MODE    FKO_HMAC_SHA256
+#define FKO_DEFAULT_RAND_MODE    FKO_RAND_MODE
 
 /* Define the consistent prefixes or salt on some encryption schemes.
 */
@@ -340,6 +350,7 @@ DLL_API int fko_spa_data_final(fko_ctx_t ctx, const char * const enc_key,
 /* Set context data functions
 */
 DLL_API int fko_set_rand_value(fko_ctx_t ctx, const char * const val);
+DLL_API int fko_set_rand_mode(fko_ctx_t ctx, const int rand_mode);
 DLL_API int fko_set_username(fko_ctx_t ctx, const char * const spoof_user);
 DLL_API int fko_set_timestamp(fko_ctx_t ctx, const int offset);
 DLL_API int fko_set_spa_message_type(fko_ctx_t ctx, const short msg_type);
@@ -383,6 +394,7 @@ DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
 /* Get context data functions
 */
 DLL_API int fko_get_rand_value(fko_ctx_t ctx, char **rand_val);
+DLL_API int fko_get_rand_mode(fko_ctx_t ctx, int *spa_rand_mode);
 DLL_API int fko_get_username(fko_ctx_t ctx, char **username);
 DLL_API int fko_get_timestamp(fko_ctx_t ctx, time_t *ts);
 DLL_API int fko_get_spa_message_type(fko_ctx_t ctx, short *spa_msg);

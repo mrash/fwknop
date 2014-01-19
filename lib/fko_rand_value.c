@@ -47,12 +47,17 @@
 #endif
 
 
-/* Get random data.
+/* Get random data and place it into a buffer.
 */
 void
-get_random_data(unsigned char *data, const size_t len)
+get_random_data(unsigned char *buf, const size_t l, const int mode)
 {
-    uint32_t    i;
+    uint32_t            i;
+    int                 len = l;
+
+    if(len > FKO_MAX_RAND_SIZE)
+        len = FKO_MAX_RAND_SIZE;
+
 #ifdef WIN32
 	int				rnum;
 	struct _timeb	tb;
@@ -64,13 +69,16 @@ get_random_data(unsigned char *data, const size_t len)
 	for(i=0; i<len; i++)
 	{
 		rnum = rand();
-		*(data+i) = rnum % 0xff;
+		*(buf+i) = rnum % 0xff;
 	}
 #else
+
     FILE           *rfd;
     struct timeval  tv;
     int             do_time = 0;
     size_t          amt_read;
+    unsigned long   seed;
+    char            tmp_buf[FKO_MAX_RAND_SIZE+1] = {0};
 
     /* Attempt to read seed data from /dev/urandom.  If that does not
      * work, then fall back to a time-based method (less secure, but
@@ -84,7 +92,7 @@ get_random_data(unsigned char *data, const size_t len)
     {
         /* Read seed from /dev/urandom
         */
-        amt_read = fread(data, len, 1, rfd);
+        amt_read = fread(&seed, 4, 1, rfd);
         fclose(rfd);
 
         if (amt_read != 1)
@@ -96,16 +104,67 @@ get_random_data(unsigned char *data, const size_t len)
         /* Seed based on time (current usecs).
         */
         gettimeofday(&tv, NULL);
-        srand(tv.tv_usec);
-
-        for(i=0; i<len; i++)
-            *(data+i) = rand() % 0xff;
+        seed = tv.tv_usec;
     }
 
-#endif
+    /* Always seed random number generation
+    */
+    srand(seed);
 
+    if(mode == FKO_RAND_MODE_LEGACY)
+    {
+        snprintf((char *)buf, len+1, "%u", rand());
+        while(strnlen((char *)buf, len+1) < len)
+        {
+            snprintf(tmp_buf, len+1, "%u", rand());
+            strlcat((char *)buf, tmp_buf, FKO_RAND_VAL_SIZE+1);
+        }
+    }
+    else
+    {
+        for(i=0; i<len; i++)
+            *(buf+i) = rand() % 0xff;
+    }
+#endif
 }
 
+/* Set the SPA randomization mode (use random length and style)
+*/
+int
+fko_set_spa_rand_mode(fko_ctx_t ctx, const int rand_mode)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(rand_mode < 0 || rand_mode >= FKO_LAST_RAND_MODE)
+        return(FKO_ERROR_INVALID_DATA_RAND_MODE_VALIDFAIL);
+
+    ctx->rand_mode = rand_mode;
+
+    ctx->state |= FKO_RAND_MODE_MODIFIED;
+
+    return(FKO_SUCCESS);
+}
+
+/* Return the SPA randomization mode.
+*/
+int
+fko_get_spa_rand_mode(fko_ctx_t ctx, int *rand_mode)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(rand_mode == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
+    *rand_mode = ctx->rand_mode;
+
+    return(FKO_SUCCESS);
+}
 
 /* Set/Generate the SPA data random value string.
 */
@@ -154,7 +213,7 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
             return(FKO_ERROR_MEMORY_ALLOCATION);
     memset(tmp_buf, 0, FKO_RAND_VAL_SIZE+1);
 
-    get_random_data(tmp_buf, FKO_RAND_VAL_SIZE);
+    get_random_data(tmp_buf, FKO_RAND_VAL_SIZE, ctx->rand_mode);
 
     b64_len = b64_encode(tmp_buf, ctx->rand_val, FKO_RAND_VAL_SIZE);
 

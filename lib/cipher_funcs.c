@@ -101,7 +101,7 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
     {
         /* Generate a random 8-byte salt.
         */
-        get_random_data(ctx->salt, SALT_LEN);
+        get_random_data(ctx->salt, SALT_LEN, FKO_DEFAULT_RAND_MODE);
     }
 
     /* Now generate the key and initialization vector.
