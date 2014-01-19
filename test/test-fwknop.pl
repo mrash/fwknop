@@ -281,6 +281,8 @@ my $fuzzing_class = 'bogus data';
 my %fuzzing_spa_packets = ();
 my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
+my $client_only_mode = 0;
+my $server_only_mode = 0;
 my $enable_valgrind = 0;
 my $disable_valgrind = 0;
 our $valgrind_str = '';
@@ -399,6 +401,8 @@ exit 1 unless GetOptions(
     'openssl-path=s'    => \$openssl_path,
     'output-dir=s'      => \$output_dir,
     'cmd-verbose=s'     => \$verbose_str,
+    'client-only-mode'  => \$client_only_mode,
+    'server-only-mode'  => \$server_only_mode,
     'diff'              => \$diff_mode,
     'diff-dir1=s'       => \$diff_dir1,
     'diff-dir2=s'       => \$diff_dir2,
@@ -434,7 +438,7 @@ exit &diff_test_results() if $diff_mode;
 ### run an fwknop command under gdb from a previous test run
 exit &gdb_test_cmd() if $gdb_test_file;
 
-&identify_loopback_intf();
+&identify_loopback_intf() unless $list_mode or $client_only_mode;
 
 ### make sure everything looks as expected before continuing
 &init();
@@ -599,6 +603,8 @@ my %test_keys = (
     'fw_rule_created' => $OPTIONAL,
     'fw_rule_removed' => $OPTIONAL,
     'server_conf'     => $OPTIONAL,
+    'client_only'     => $OPTIONAL_NUMERIC,
+    'server_only'     => $OPTIONAL_NUMERIC,
     'pkt'             => $OPTIONAL,
     'fuzzing_pkt'     => $OPTIONAL,
     'pkt_prefix'      => $OPTIONAL,
@@ -611,6 +617,7 @@ my %test_keys = (
     'disable_valgrind' => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
+    'client_and_server_mode'  => $OPTIONAL_NUMERIC,
     'insert_rule_before_exec'    => $OPTIONAL,
     'insert_rule_while_running'  => $OPTIONAL,
     'search_for_rule_after_exit' => $OPTIONAL,
@@ -766,6 +773,20 @@ sub run_test() {
     my $msg = &get_msg($test_hr);
 
     $msg =~ s/REPLPKTS/-->$total_fuzzing_pkts<-- pkts/;
+
+    if ($client_only_mode) {
+        return unless $test_hr->{'client_only'}
+            or $test_hr->{'subcategory'} eq 'client'
+            or $test_hr->{'category'} eq 'perl FKO module'
+            or $test_hr->{'category'} eq 'python fko extension';
+        return if $msg =~ /server/i;
+    } elsif ($server_only_mode) {
+        return unless $test_hr->{'server_only'}
+            or $test_hr->{'subcategory'} eq 'server'
+            or $test_hr->{'category'} eq 'perl FKO module'
+            or $test_hr->{'category'} eq 'python fko extension';
+        return if $msg =~ /client/i;
+    }
 
     if ($list_mode) {
         if (&process_include_exclude($msg)) {
@@ -5560,9 +5581,11 @@ sub init() {
 
     $|++; ### turn off buffering
 
-    $< == 0 && $> == 0 or
-        die "[*] $0: You must be root (or equivalent ",
-            "UID 0 account) to effectively test fwknop";
+    unless ($client_only_mode or $list_mode) {
+        $< == 0 && $> == 0 or
+            die "[*] $0: You must be root (or equivalent ",
+                "UID 0 account) to effectively test fwknop";
+    }
 
     die "[*] $conf_dir directory does not exist." unless -d $conf_dir;
 
