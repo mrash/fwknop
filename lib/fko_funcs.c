@@ -419,8 +419,8 @@ fko_key_gen(char * const key_base64, const int key_len,
     if((hmac_klen < 1) || (hmac_klen > SHA512_BLOCK_LEN))
         return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMACLEN_VALIDFAIL);
 
-    get_random_data(key, klen);
-    get_random_data(hmac_key, hmac_klen);
+    get_random_data(key, klen, FKO_DEFAULT_RAND_MODE);
+    get_random_data(hmac_key, hmac_klen, FKO_DEFAULT_RAND_MODE);
 
     b64_len = b64_encode(key, key_base64, klen);
     if(b64_len < klen)
