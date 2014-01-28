@@ -50,13 +50,10 @@
 /* Get random data and place it into a buffer.
 */
 void
-get_random_data(unsigned char *buf, const size_t l, const int mode)
+get_random_data(unsigned char *buf, const size_t len, const int mode)
 {
     uint32_t            i;
-    int                 len = l;
-
-    if(len > FKO_MAX_RAND_SIZE)
-        len = FKO_MAX_RAND_SIZE;
+    int                 rlen = len;
 
 #ifdef WIN32
 	int				rnum;
@@ -66,7 +63,7 @@ get_random_data(unsigned char *buf, const size_t l, const int mode)
 
 	srand((uint32_t)(tb.time*1000)+tb.millitm);
 
-	for(i=0; i<len; i++)
+	for(i=0; i<rlen; i++)
 	{
 		rnum = rand();
 		*(buf+i) = rnum % 0xff;
@@ -77,11 +74,19 @@ get_random_data(unsigned char *buf, const size_t l, const int mode)
     struct timeval  tv;
     int             do_time = 0;
     size_t          amt_read;
-    unsigned long   seed;
     char            tmp_buf[FKO_MAX_RAND_SIZE+1] = {0};
+    unsigned long   seed;  /* only used in legacy mode since
+                              we prioritize on /dev/urandom
+                           */
 
-    /* Attempt to read seed data from /dev/urandom.  If that does not
-     * work, then fall back to a time-based method (less secure, but
+    /* We should never need more the 128 bytes for our purposes
+    */
+    if(rlen > FKO_MAX_RAND_SIZE)
+        rlen = FKO_MAX_RAND_SIZE;
+
+    /* Attempt to read random data from /dev/urandom directly.  If that does
+     * not work, then fall back to seeding rand() from /dev/urandom, data
+     * and finally fall back to time-based seeding method (less secure, but
      * probably more portable).
     */
     if((rfd = fopen(RAND_FILE, "r")) == NULL)
@@ -90,9 +95,13 @@ get_random_data(unsigned char *buf, const size_t l, const int mode)
     }
     else
     {
-        /* Read seed from /dev/urandom
+        /* Read data from /dev/urandom
         */
-        amt_read = fread(&seed, 4, 1, rfd);
+        if(mode == FKO_RAND_MODE_LEGACY)
+            amt_read = fread(&seed, 4, 1, rfd);
+        else
+            amt_read = fread(buf, rlen, 1, rfd);
+
         fclose(rfd);
 
         if (amt_read != 1)
@@ -104,25 +113,26 @@ get_random_data(unsigned char *buf, const size_t l, const int mode)
         /* Seed based on time (current usecs).
         */
         gettimeofday(&tv, NULL);
-        seed = tv.tv_usec;
-    }
 
-    /* Always seed random number generation
-    */
-    srand(seed);
+        /* Always seed random number generation
+        */
+        srand(tv.tv_usec);
+    }
+    else if(mode == FKO_RAND_MODE_LEGACY)
+        srand(seed);
 
     if(mode == FKO_RAND_MODE_LEGACY)
     {
-        snprintf((char *)buf, len+1, "%u", rand());
-        while(strnlen((char *)buf, len+1) < len)
+        snprintf((char *)buf, rlen+1, "%u", rand());
+        while(strnlen((char *)buf, rlen+1) < rlen)
         {
-            snprintf(tmp_buf, len+1, "%u", rand());
+            snprintf(tmp_buf, rlen+1, "%u", rand());
             strlcat((char *)buf, tmp_buf, FKO_RAND_VAL_SIZE+1);
         }
     }
-    else
+    else if(do_time)
     {
-        for(i=0; i<len; i++)
+        for(i=0; i<rlen; i++)
             *(buf+i) = rand() % 0xff;
     }
 #endif
@@ -131,7 +141,7 @@ get_random_data(unsigned char *buf, const size_t l, const int mode)
 /* Set the SPA randomization mode (use random length and style)
 */
 int
-fko_set_spa_rand_mode(fko_ctx_t ctx, const int rand_mode)
+fko_set_rand_mode(fko_ctx_t ctx, const int rand_mode)
 {
     /* Must be initialized
     */
@@ -151,7 +161,7 @@ fko_set_spa_rand_mode(fko_ctx_t ctx, const int rand_mode)
 /* Return the SPA randomization mode.
 */
 int
-fko_get_spa_rand_mode(fko_ctx_t ctx, int *rand_mode)
+fko_get_rand_mode(fko_ctx_t ctx, int *rand_mode)
 {
     /* Must be initialized
     */
@@ -215,15 +225,22 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
 
     get_random_data(tmp_buf, FKO_RAND_VAL_SIZE, ctx->rand_mode);
 
-    b64_len = b64_encode(tmp_buf, ctx->rand_val, FKO_RAND_VAL_SIZE);
-
-    if(b64_len < FKO_RAND_VAL_SIZE)
+    if(ctx->rand_mode == FKO_RAND_MODE_LEGACY)
     {
-        free(tmp_buf);
-        return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
+        strlcpy(ctx->rand_val, (char *)tmp_buf, FKO_RAND_VAL_SIZE);
     }
+    else
+    {
+        b64_len = b64_encode(tmp_buf, ctx->rand_val, FKO_RAND_VAL_SIZE);
 
-    strip_b64_eq(ctx->rand_val);
+        if(b64_len < FKO_RAND_VAL_SIZE)
+        {
+            free(tmp_buf);
+            return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
+        }
+
+        strip_b64_eq(ctx->rand_val);
+    }
 
     free(tmp_buf);
 
