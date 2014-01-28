@@ -122,6 +122,7 @@ enum
     FWKNOP_CLI_ARG_NAT_PORT,
     FWKNOP_CLI_ARG_VERBOSE,
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTP,
+    FWKNOP_CLI_ARG_RAND_MODE_LEGACY,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
@@ -148,6 +149,7 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "ACCESS",                FWKNOP_CLI_ARG_ACCESS                },
     { "SPA_SERVER",            FWKNOP_CLI_ARG_SPA_SERVER            },
     { "RAND_PORT",             FWKNOP_CLI_ARG_RAND_PORT             },
+    { "RAND_MODE_LEGACY",      FWKNOP_CLI_ARG_RAND_MODE_LEGACY      },
     { "KEY",                   FWKNOP_CLI_ARG_KEY_RIJNDAEL          },
     { "KEY_BASE64",            FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64   },
     { "HMAC_DIGEST_TYPE",      FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE      },
@@ -1271,6 +1273,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_ENCRYPTION_MODE :
             enc_mode_inttostr(options->encryption_mode, val, sizeof(val));
             break;
+        case FWKNOP_CLI_ARG_RAND_MODE_LEGACY :
+            bool_to_yesno(options->rand_mode_legacy, val, sizeof(val));
+            break;
         case FWKNOP_CLI_ARG_USE_GPG :
             bool_to_yesno(options->use_gpg, val, sizeof(val));
             break;
@@ -2120,6 +2125,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->resolve_ip_http = 1;
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTP, &var_bitmask);
                 break;
+            case RAND_MODE_LEGACY:
+                options->rand_mode_legacy = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RAND_MODE_LEGACY, &var_bitmask);
+                break;
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
                     free(options->resolve_url);
@@ -2384,6 +2393,8 @@ usage(void)
       "                             $HOME/fwknop.run file\n"
       "     --rc-file               Specify path to the fwknop rc file (default\n"
       "                             is $HOME/.fwknoprc)\n"
+      "     --rand-mode-legacy      Use the old digits-only strategy (this mode\n"
+      "                             is provided for backwards compatibility only).\n"
       "     --save-rc-stanza        Save command line arguments to the\n"
       "                             $HOME/.fwknoprc stanza specified with the\n"
       "                             -n option.\n"
