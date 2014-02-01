@@ -1291,6 +1291,10 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_string(&(curr_acc->require_username), val);
         }
+        else if(CONF_VAR_IS(var, "RAND_MODE_LEGACY"))
+        {
+            add_acc_bool(&(curr_acc->rand_mode_legacy), val);
+        }
         else if(CONF_VAR_IS(var, "REQUIRE_SOURCE_ADDRESS"))
         {
             add_acc_bool(&(curr_acc->require_source_address), val);
@@ -1654,6 +1658,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "              CMD_EXEC_USER:  %s\n"
             "           REQUIRE_USERNAME:  %s\n"
             "     REQUIRE_SOURCE_ADDRESS:  %s\n"
+            "           RAND_MODE_LEGACY:  %s\n"
             "             FORCE_NAT (ip):  %s\n"
             "          FORCE_NAT (proto):  %s\n"
             "           FORCE_NAT (port):  %d\n"
@@ -1682,6 +1687,7 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
+            acc->rand_mode_legacy ? "Yes" : "No",
             acc->force_nat ? acc->force_nat_ip : "<not set>",
             acc->force_nat && acc->force_nat_proto != NULL ? acc->force_nat_proto : "<not set>",
             acc->force_nat ? acc->force_nat_port : 0,

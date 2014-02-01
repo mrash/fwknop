@@ -309,6 +309,7 @@ typedef struct acc_stanza
     uid_t                cmd_exec_uid;
     char                *require_username;
     unsigned char        require_source_address;
+    unsigned char        rand_mode_legacy;
     char                *gpg_home_dir;
     char                *gpg_decrypt_id;
     char                *gpg_decrypt_pw;
