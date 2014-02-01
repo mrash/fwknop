@@ -150,7 +150,9 @@ main(int argc, char **argv)
     char                access_buf[MAX_LINE_LEN] = {0};
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
-    int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0, enc_mode;
+    int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0;
+    int                 enc_mode = FKO_DEFAULT_ENC_MODE;
+    int                 rand_mode = FKO_DEFAULT_RAND_MODE;
     int                 tmp_port = 0;
     char                dump_buf[CTX_DUMP_BUFSIZE];
 
@@ -536,7 +538,8 @@ main(int argc, char **argv)
          * problems.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type);
+            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type,
+            rand_mode);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);

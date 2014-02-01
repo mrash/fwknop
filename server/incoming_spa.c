@@ -148,7 +148,7 @@ get_raw_digest(char **digest, char *pkt_data)
      * we can get the outer message digest
     */
     res = fko_new_with_data(&ctx, (char *)pkt_data, NULL, 0,
-            FKO_DEFAULT_ENC_MODE, NULL, 0, 0);
+            FKO_DEFAULT_ENC_MODE, NULL, 0, 0, FKO_DEFAULT_RAND_MODE);
 
     if(res != FKO_SUCCESS)
     {
@@ -271,7 +271,7 @@ incoming_spa(fko_srv_options_t *opts)
 
     char            *spa_ip_demark, *gpg_id, *raw_digest = NULL;
     time_t          now_ts;
-    int             res, status, ts_diff, enc_type, stanza_num=0;
+    int             res, status, ts_diff, enc_type, stanza_num=0, rand_mode=0;
     int             added_replay_digest = 0, pkt_data_len=0;
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
@@ -414,6 +414,13 @@ incoming_spa(fko_srv_options_t *opts)
         */
         enc_type = fko_encryption_type((char *)spa_pkt->packet_data);
 
+        /* Handle old digits-only random data strategy (for backwards
+         * compatibility only).
+        */
+        rand_mode = FKO_DEFAULT_RAND_MODE;
+        if(acc->rand_mode_legacy)
+            rand_mode = FKO_RAND_MODE_LEGACY;
+
         if(acc->use_rijndael)
         {
             if (acc->key == NULL)
@@ -432,10 +439,12 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data,
                     acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
-                    acc->hmac_key_len, acc->hmac_type);
+                    acc->hmac_key_len, acc->hmac_type, rand_mode);
+
                 attempted_decrypt = 1;
                 if(res == FKO_SUCCESS)
                     cmd_exec_success = 1;
+
             }
         }
 
@@ -448,7 +457,7 @@ incoming_spa(fko_srv_options_t *opts)
             {
                 res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
                         0, FKO_ENC_MODE_ASYMMETRIC, acc->hmac_key,
-                        acc->hmac_key_len, acc->hmac_type);
+                        acc->hmac_key_len, acc->hmac_type, rand_mode);
 
                 if(res != FKO_SUCCESS)
                 {
