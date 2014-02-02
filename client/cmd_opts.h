@@ -48,6 +48,7 @@ enum {
     SHOW_LAST_ARGS,
     RC_FILE_PATH,
     RESOLVE_URL,
+    RAND_MODE_LEGACY,
     USE_HMAC,
     SPA_ICMP_TYPE,
     SPA_ICMP_CODE,
@@ -128,6 +129,7 @@ static struct option cmd_opts[] =
     {"spoof-src",           1, NULL, 'Q'}, /* synonym */
     {"rc-file",             1, NULL, RC_FILE_PATH},
     {"rand-port",           0, NULL, 'r'},
+    {"rand-mode-legacy",    0, NULL, RAND_MODE_LEGACY},
     {"resolve-ip-http",     0, NULL, 'R'},
     {"resolve-url",         1, NULL, RESOLVE_URL},
     {"show-last",           0, NULL, SHOW_LAST_ARGS},

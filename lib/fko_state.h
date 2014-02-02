@@ -51,7 +51,8 @@ typedef enum {
     STATE_RESERVED_14           = 1 << 14,
     FKO_BACKWARD_COMPATIBLE     = 1 << 15,
     FKO_ENCRYPT_MODE_MODIFIED   = 1 << 16,
-    FKO_HMAC_MODE_MODIFIED      = 1 << 17
+    FKO_HMAC_MODE_MODIFIED      = 1 << 17,
+    FKO_RAND_MODE_MODIFIED      = 1 << 18
 } fko_state_flags_t;
 
 /* This is used in conjunction with the ctx->initial value as a means to

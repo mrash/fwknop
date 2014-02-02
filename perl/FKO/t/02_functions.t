@@ -19,7 +19,7 @@ my (
     $tsd_user, $tsd_time, $tsd_ver, $tsd_msg_type, $tsd_msg,
     $tsd_nat_access, $tsd_server_auth, $tsd_client_timeout,
     $tsd_digest, $tsd_encoded, $tsd_digest_type,
-    $tsd_hmac_digest_type, $tsd_encryption_type
+    $tsd_hmac_digest_type, $tsd_encryption_type, $tsd_rand_mode
 );
 
 # Preset for test
@@ -36,6 +36,7 @@ my $def_digest_type      = FKO::FKO_DIGEST_SHA256;
 my $def_msg_type         = FKO::FKO_ACCESS_MSG;
 my $def_hmac_digest_type = FKO::FKO_HMAC_UNKNOWN;
 my $def_encryption_mode  = FKO::FKO_ENC_MODE_CBC;
+my $def_rand_mode        = FKO::FKO_RAND_MODE;
 
 my $test_hmac_key       = '0987654321test this is only a test';
 
@@ -55,7 +56,7 @@ ok($f1, 'Create f1');
 # 2-9 - Check defaults exist and are correct value.
 #
 $tsd_rand = $f1->rand_value();
-ok($tsd_rand =~ /^\d{16}$/, 'rand_value format');
+ok($tsd_rand =~ /^[\x30-\x39\x41-\x5a\x61-\x7a\x2b\x2f\x3d]{22}$/, 'rand_value format');
 
 $tsd_user = $f1->username();
 ok($tsd_user =~ /^\w+/, 'username defined');
@@ -113,7 +114,7 @@ ok($tsd_digest, 'f1 get spa digest');
 #  17 - create a new object based on the spa data produced by f1.
 #
 my $f2 = FKO->new($tsd, $tuser_pw, $f1->encryption_mode(),
-                  $thmac_key, $def_hmac_digest_type);
+                  $thmac_key, $def_hmac_digest_type, $def_rand_mode);
 ok( $f2 );
 
 # 18-31 - Ensure the f2 fields match the f1 fields
@@ -133,7 +134,7 @@ ok($f1->spa_data_final($tuser_pw, $thmac_key) == FKO::FKO_SUCCESS,
     'f1 recompute spa data 1');
 
 my $f3 = FKO->new($f1->spa_data(), $tuser_pw, $f1->encryption_mode(),
-                  $thmac_key, $def_hmac_digest_type);
+                  $thmac_key, $def_hmac_digest_type, $def_rand_mode);
 ok($f3, 'create fko object f3');
 
 # 38-51 - Compare f1 and f3
@@ -163,7 +164,7 @@ ok($f1->spa_data_final($tuser_pw, $thmac_key) == FKO::FKO_SUCCESS,
     'f2 recompute spa data 1');
 
 my $f4 = FKO->new($f1->spa_data(), $tuser_pw, $f1->encryption_mode(),
-                  $thmac_key, $tsd_hmac_digest_type);
+                  $thmac_key, $tsd_hmac_digest_type, $def_rand_mode);
 ok($f4, 'create fko object f4');
 
 # 58-71 - Compare f1 and f4
@@ -186,8 +187,8 @@ ok($f1, 'Create f1 #2');
 
 # Force rand value.
 #
-ok($f1->rand_value('0123456789012345') == FKO::FKO_SUCCESS, 'force rand value');
-is($f1->rand_value(), '0123456789012345', 'verify force rand_value');
+ok($f1->rand_value('a'x22) == FKO::FKO_SUCCESS, 'force rand value');
+is($f1->rand_value(), 'a'x22, 'verify force rand_value');
 
 # Iterate over setting message type
 #

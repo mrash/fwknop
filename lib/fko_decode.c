@@ -176,13 +176,13 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
 
-    ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
+    ctx->rand_val = calloc(1, FKO_RAND_VAL_B64_SIZE+1);
     if(ctx->rand_val == NULL)
     {
         free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
-    ctx->rand_val = strncpy(ctx->rand_val, ndx, FKO_RAND_VAL_SIZE);
+    ctx->rand_val = strncpy(ctx->rand_val, ndx, t_size);
 
     /* Jump to the next field (username).  We need to use the temp buffer
      * for the base64 decode step.

@@ -179,7 +179,7 @@ int
 fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     const char * const dec_key, const int dec_key_len,
     int encryption_mode, const char * const hmac_key,
-    const int hmac_key_len, const int hmac_type)
+    const int hmac_key_len, const int hmac_type, const int rand_mode)
 {
     fko_ctx_t   ctx = NULL;
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
@@ -251,6 +251,22 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         fko_destroy(ctx);
         ctx = NULL;
         return res;
+    }
+    ctx->initval = 0;
+
+    /* Handle legacy digits-only random data for backwards
+     * compatibility only
+    */
+    ctx->initval = FKO_CTX_INITIALIZED;
+    if(rand_mode == FKO_RAND_MODE_LEGACY)
+    {
+        res = fko_set_rand_mode(ctx, rand_mode);
+        if(res != FKO_SUCCESS)
+        {
+            fko_destroy(ctx);
+            ctx = NULL;
+            return res;
+        }
     }
     ctx->initval = 0;
 
@@ -419,8 +435,8 @@ fko_key_gen(char * const key_base64, const int key_len,
     if((hmac_klen < 1) || (hmac_klen > SHA512_BLOCK_LEN))
         return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMACLEN_VALIDFAIL);
 
-    get_random_data(key, klen);
-    get_random_data(hmac_key, hmac_klen);
+    get_random_data(key, klen, FKO_DEFAULT_RAND_MODE);
+    get_random_data(hmac_key, hmac_klen, FKO_DEFAULT_RAND_MODE);
 
     b64_len = b64_encode(key, key_base64, klen);
     if(b64_len < klen)

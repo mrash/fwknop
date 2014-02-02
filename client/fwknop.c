@@ -150,7 +150,9 @@ main(int argc, char **argv)
     char                access_buf[MAX_LINE_LEN] = {0};
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
-    int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0, enc_mode;
+    int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0;
+    int                 enc_mode = FKO_DEFAULT_ENC_MODE;
+    int                 rand_mode = FKO_DEFAULT_RAND_MODE;
     int                 tmp_port = 0;
     char                dump_buf[CTX_DUMP_BUFSIZE];
 
@@ -304,6 +306,27 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_username", res);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+        }
+    }
+
+    /* Handle legacy digits-only random data for backwards
+     * compatibility only - this is not the default
+    */
+    if(options.rand_mode_legacy)
+    {
+        res = fko_set_rand_mode(ctx, FKO_RAND_MODE_LEGACY);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_rand_mode", res);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+        }
+        res = fko_set_rand_value(ctx, NULL);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_rand_value", res);
             clean_exit(ctx, &options, key, &key_len,
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
@@ -515,7 +538,8 @@ main(int argc, char **argv)
          * problems.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type);
+            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type,
+            rand_mode);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -537,6 +561,21 @@ main(int argc, char **argv)
             ctx2 = NULL;
             clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
+        }
+
+        if(options.rand_mode_legacy)
+        {
+            res = fko_set_rand_mode(ctx2, FKO_RAND_MODE_LEGACY);
+            if(res != FKO_SUCCESS)
+            {
+                if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+                    log_msg(LOG_VERBOSITY_ERROR,
+                            "[*] Could not zero out sensitive data buffer.");
+                ctx2 = NULL;
+                errmsg("fko_set_rand_mode", res);
+                clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+            }
         }
 
         /* See if we are using gpg and if we need to set the GPG home dir.
