@@ -193,10 +193,21 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     */
     if(new_val != NULL)
     {
-        /* Must have at least FKO_RAND_VAL_SIZE bytes
-        */
-        if(strnlen(new_val, FKO_RAND_VAL_B64_SIZE+1) < FKO_RAND_VAL_SIZE)
-            return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
+        if(ctx->rand_mode == FKO_RAND_MODE_LEGACY)
+        {
+            if (strnlen(new_val, FKO_RAND_VAL_SIZE+1) != FKO_RAND_VAL_SIZE)
+            {
+                return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
+            }
+        }
+        else
+        {
+            /* This looks for a 22-byte string (16 bytes of base64
+             * encoded data without the trailing '=' chars)
+            */
+            if(strnlen(new_val, FKO_RAND_VAL_B64_SIZE+1) != FKO_RAND_VAL_B64_SIZE-3)
+                return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
+        }
 
         if(ctx->rand_val != NULL)
             free(ctx->rand_val);
@@ -220,7 +231,8 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
 
     tmp_buf = malloc(FKO_RAND_VAL_SIZE+1);
     if(tmp_buf == NULL)
-            return(FKO_ERROR_MEMORY_ALLOCATION);
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
     memset(tmp_buf, 0, FKO_RAND_VAL_SIZE+1);
 
     get_random_data(tmp_buf, FKO_RAND_VAL_SIZE, ctx->rand_mode);
