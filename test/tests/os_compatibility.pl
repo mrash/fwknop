@@ -11,7 +11,7 @@
             'lAZNE2O1w83mout+oyWSj4payd0yuWckikoZYjc7tSSgHIFikOhTm9CHi8ERe9' .
             'jLEYw1wvqE2B7Vvz7XyefNILZdHa+Vx5zYM0o',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -27,7 +27,7 @@
             'GsZJPmv2e1U31SMrdgF+o7/f2qRDH2hwPU8XLKS73rXpAhZKVAF/crt00HDmaH0' .
             'p+hc3ngPtmE/j0PKeUD+GM81YQPO9NdZu4s',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -43,7 +43,7 @@
             '46kFmbdXHZCUx5iom9jOtpQnMvZJGex65vV4bSFdVwaoJ/ICkiRHbbzSTZo8qmp' .
             'FTLSYWVhTWQddj4j80Ne6GH0h3zXomg9fJU',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -59,7 +59,7 @@
             'y5Fjx+GBM2dqqdBfYfahoDnPWBieljQp5d2awzUxbC1CpLbi3+bMvguPCc3h0gA' .
             '0f9jdWj6MlYXYJikyF/SjeuYxKnCfX2BxKI',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -75,7 +75,7 @@
             'dejv3UxC/FRlHgJz4UeRkloFCQQ0tkQLx6MSoCQHKPlNxATKsfLL3UfHpKbhRG8' .
             'a8S9q8lojKxiWuLZU64h5LXjhH7rR7riyds',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -91,7 +91,7 @@
             'RQJ1ZouD3lC1xjNb9KkxXN5MojwUtaCVghY3IUqizQysYHPYwVyJ6INNurXXSF' .
             'pWokVgC+ryT78/PbOoAXKTAg+/tcVbrvCiLmQ',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -108,7 +108,7 @@
             '3P0/XwJqm6HsAyJrl7eafble0AR5T04PJPFF6ejWAKbTsCh5VYywQ+2W7eBOJuc' .
             '8tjjKuESWqOaodALS9PaxLrVIfm6dvmwtHU',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
