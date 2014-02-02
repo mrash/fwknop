@@ -68,6 +68,11 @@ our @ENCRYPTION_MODES = qw(
     FKO_ENC_MODE_CBC_LEGACY_IV
 );
 
+our @RAND_MODES = qw(
+    FKO_RAND_MODE
+    FKO_RAND_MODE_LEGACY
+);
+
 # Error codes tag list.
 #
 our @ERROR_CODES = qw(
@@ -258,6 +263,10 @@ use constant {
     FKO_ENC_MODE_CTR           => 6,
     FKO_ENC_MODE_ASYMMETRIC    => 7,
     FKO_ENC_MODE_CBC_LEGACY_IV => 8,
+
+    # Rand modes
+    FKO_RAND_MODE              => 0,
+    FKO_RAND_MODE_LEGACY       => 1,
 
     # FKO error codes
     FKO_SUCCESS                                                 => 0,
