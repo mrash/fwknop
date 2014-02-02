@@ -163,7 +163,7 @@ int
 _set_encryption_mode(ctx, encryption_mode)
     INPUT:
     fko_ctx_t ctx;
-    short    encryption_mode;
+    int    encryption_mode;
     CODE:
     RETVAL = fko_set_spa_encryption_mode(ctx, encryption_mode);
     OUTPUT:
@@ -176,6 +176,27 @@ _get_encryption_mode(ctx, val)
     int val
     CODE:
     RETVAL = fko_get_spa_encryption_mode(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_set_rand_mode(ctx, rand_mode)
+    INPUT:
+    fko_ctx_t ctx;
+    int    rand_mode;
+    CODE:
+    RETVAL = fko_set_rand_mode(ctx, rand_mode);
+    OUTPUT:
+    RETVAL
+
+int
+_get_rand_mode(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    int val
+    CODE:
+    RETVAL = fko_get_rand_mode(ctx, &val);
     OUTPUT:
     val
     RETVAL

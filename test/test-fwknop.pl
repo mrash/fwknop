@@ -3752,8 +3752,11 @@ sub perl_fko_module_client_compatibility() {
 
     $fko_obj->spa_message("$fake_ip,tcp/22");
     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
-    $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
-        if $test_hr->{'set_legacy_iv'} eq $YES;
+    if ($test_hr->{'set_legacy_iv'} eq $YES) {
+        $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV);
+        $fko_obj->rand_mode(FKO->FKO_RAND_MODE_LEGACY);
+        $fko_obj->rand_value('4'x16);
+    }
     $fko_obj->spa_data_final($default_key, '');
     my $spa_pkt = $fko_obj->spa_data();
     $fko_obj->destroy();
