@@ -215,6 +215,19 @@ sub encryption_mode {
     return($self->_check_return_val($val));
 }
 
+sub rand_mode {
+    my $self = shift;
+    my $val  = shift;
+
+    return FKO::_set_rand_mode($self->{_ctx}, $val)
+        if(defined($val));
+
+    $val = -1;
+    $self->{_err} = FKO::_get_rand_mode($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
 sub username {
     my $self = shift;
     my $val  = shift;
