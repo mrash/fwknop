@@ -311,14 +311,16 @@ init_ctx_with_data(PyObject *self, PyObject *args)
     char *hmac_key;
     int hmac_key_len;
     int hmac_type;
+    int rand_mode;
     int res;
 
     if(!PyArg_ParseTuple(args, "ss#is#", &spa_data, &dec_key, &dec_key_len,
-                         &enc_mode, &hmac_key, &hmac_key_len, &hmac_type))
+                         &enc_mode, &hmac_key, &hmac_key_len, &hmac_type,
+                         &rand_mode))
         return NULL;
 
     res = fko_new_with_data(&ctx, spa_data, dec_key, dec_key_len, enc_mode,
-                            hmac_key, hmac_key_len, hmac_type);
+                            hmac_key, hmac_key_len, hmac_type, rand_mode);
 
     if(res != FKO_SUCCESS)
     {
