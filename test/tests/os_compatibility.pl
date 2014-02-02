@@ -126,7 +126,7 @@
             'GE3C9u943F+0csrZs+ysKKca+sVBcAKhsTNsMjT9HojVMdk+r9RhJqUa2JJz7f' .
             'ZIZauvBrygBVg0yh6o',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -143,7 +143,7 @@
             'mknUjmg4+8maPhus2x7YhoPTMfMZijWKOaMWhX1G0khDqFfGU8GuehpQdwuGdX/' .
             'oGZnheeQyczK4pY',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -160,7 +160,7 @@
             'BDo3d0K5I4mhwuWVHyTZUg441+kfm7O8TesDhUoy2ftqTGR3+GHi52/NIVctEAp' .
             'WR6NZowCcHElB9E',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -177,7 +177,7 @@
             'ku9Mf7Q5XzySHY0QeoQ/3OGd3lSCTLVxNzk/mdIZ94QX/8uOG+qippPa9JyGVp5' .
             'nkKLD+nrVhvEy30',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -194,7 +194,7 @@
             'YnywR5R9Drrw+hMxpl40HDb1O07xN7WBOSvNgU2vi8MHT7MSZVh02PKRF8aReL' .
             'cQTD2sxRsn5tGfehC8',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -211,7 +211,7 @@
             'XSv5C0fNf0RqMCD5Q6OEJuLfm26FDqnsE9jmUSRcRyFcsbP3po2Ru5nlHM/a8o' .
             '1MDoskdw5VbHMIM6lU',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
@@ -228,7 +228,7 @@
             'lc9tRToeAVdYyQfM87OgczI6OP9SgKoKfKA5ouI9eIxOlncDn+9TkShRy0+5G+' .
             'xi2vuV4KU0DYxTRvV4',
         'server_positive_output_matches' => [qr/with expire time/],
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
