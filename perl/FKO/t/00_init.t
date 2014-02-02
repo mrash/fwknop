@@ -22,6 +22,7 @@ my $test_hmac_key    = '0987654321test this is only a test';
 
 my $test_encryption_mode = $FKO::FKO_ENC_MODE_CBC;
 my $test_hmac_type = $FKO::FKO_HMAC_SHA256;
+my $test_rand_mode = $FKO::FKO_RAND_MODE;
 
 ##############################################################################
 
@@ -42,7 +43,7 @@ ok(!defined($f1->{_ctx}));
 #
 my $f2 = FKO->new($test_spa_data, $test_spa_data_pw,
 				  $test_encryption_mode, $test_hmac_key,
-				  $test_hmac_type);
+				  $test_hmac_type, $test_rand_mode);
 isa_ok( $f2, 'FKO' );
 
 
