@@ -4645,14 +4645,14 @@ sub client_server_interaction() {
     if ($test_hr->{'fw_rule_removed'} eq $NEW_RULE_REMOVED) {
         unless ($fw_rule_removed) {
             &write_test_file(
-                "[-] fw_rule_removed=0 but new rule removal requied, setting rv=0\n",
+                "[-] fw_rule_removed=0 but new rule removal required, setting rv=0\n",
                 $curr_test_file);
             $rv = 0;
         }
     } elsif ($test_hr->{'fw_rule_removed'} eq $REQUIRE_NO_NEW_REMOVED) {
         if ($fw_rule_removed) {
             &write_test_file(
-                "[-] fw_rule_removed=1 but new rule removal NOT requied, setting rv=0\n",
+                "[-] fw_rule_removed=1 but new rule removal NOT required, setting rv=0\n",
                 $curr_test_file);
             $rv = 0;
         }
