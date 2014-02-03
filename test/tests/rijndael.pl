@@ -179,7 +179,7 @@
             '8GuHEQbyE4TuEbP7zL2DVsTbQv8x3jp8mdHFM0v+9ZUfgZMjuZLBvAa8NnmUdAb' .
             '/OUvCP5PFDVbLDnZ+JYUFMGexGRwlk5CEKX8KA8R1Xh5xIdbVxWzy1lY1imRQD5' .
             'wpIBx/hGB4O2G3mdJSe3w5zxGjE2JNSFKCAZzvgDmfLQM9A+tjMKPk6x',
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'legacy_rand_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/with expire time/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
