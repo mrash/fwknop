@@ -9,6 +9,6 @@
 # to work properly.
 #
 
-LD_LIBRARY_PATH=../lib/.libs DYLD_LIBRARY_PATH=../.libs ./test-fwknop.pl $@
+LD_LIBRARY_PATH=../lib/.libs DYLD_LIBRARY_PATH=../lib/.libs ./test-fwknop.pl $@
 
 exit
