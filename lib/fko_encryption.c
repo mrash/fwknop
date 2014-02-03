@@ -236,10 +236,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
         return(FKO_ERROR_DECRYPTION_SIZE);
 
     if(ctx->encoded_msg == NULL)
-        return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSG_NULL);
+        return(FKO_ERROR_MISSING_ENCODED_DATA);
 
     if(! is_valid_encoded_msg_len(pt_len))
-        return(FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSGLEN_VALIDFAIL);
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL);
 
     if(zero_free_rv != FKO_SUCCESS)
         return(zero_free_rv);
