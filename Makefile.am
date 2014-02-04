@@ -145,6 +145,7 @@ EXTRA_DIST = \
     test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
     test/conf/dual_key_legacy_iv_access.conf \
+    test/conf/hmac_legacy_rand_access.conf \
     test/conf/ecb_mode_access.conf \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
@@ -241,6 +242,8 @@ EXTRA_DIST = \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/legacy_iv_access.conf \
+    test/conf/legacy_rand_access.conf \
+    test/conf/legacy_rand_hmac_access.conf \
     test/conf/legacy_iv_long_key_access.conf \
     test/conf/legacy_iv_long_key2_access.conf \
     test/conf/local_nat_fwknopd.conf \
