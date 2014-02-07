@@ -321,6 +321,7 @@ my $fuzzing_failure_ctr = 0;
 my $fuzzing_ctr = 0;
 my $include_permissions_warnings = 0;
 my $lib_view_cmd = '';
+my $git_path = '';
 our $valgrind_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
@@ -5709,6 +5710,7 @@ sub init() {
     $killall_path = &find_command('killall') unless $killall_path;
     $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
     $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
+    $git_path     = &find_command('git') unless $git_path;
 
     ### On Mac OS X look for otool instead of ldd
     unless ($lib_view_cmd) {
@@ -5764,6 +5766,14 @@ sub init() {
         if (-e $file) {
             unlink $file;
         }
+    }
+
+    ### write out the latest git commit hash as a way to help track
+    ### what code is actually being tested
+    if ($git_path) {
+        &run_cmd("$git_path branch", $cmd_out_tmp, $curr_test_file);
+        &run_cmd("$git_path log | grep commit | head -n 1",
+            $cmd_out_tmp, $curr_test_file);
     }
 
     return;
