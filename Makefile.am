@@ -138,6 +138,7 @@ EXTRA_DIST = \
     test/conf/ctr_mode_access.conf \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
+    test/conf/portrange_fwknopd.conf \
     test/conf/custom_input_chain_fwknopd.conf \
     test/conf/custom_nat_chain_fwknopd.conf \
     test/conf/disable_aging_fwknopd.conf \
