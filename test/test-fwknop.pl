@@ -5749,6 +5749,9 @@ sub init() {
         } elsif (/freebsd/i) {
             $platform = $FREEBSD;
             last;
+        } elsif (/darwin/i) {
+            $platform = $MACOSX;
+            last;
         }
     }
     close UNAME;
