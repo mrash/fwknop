@@ -1392,7 +1392,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_SNAT_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_SNAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
