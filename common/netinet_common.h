@@ -3,13 +3,13 @@
  *
  * File:    netinet_common.h
  *
- * Author:  Damien Stuart (dstuart@dstuart.org)
- *
  * Purpose: Header file for common network packet structures.  We roll our
  *          own (actually copy) here in an effort to reduce the cross-
  *          platform "hoop-jumping" we would need to do). 
  *
- * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

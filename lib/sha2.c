@@ -5,8 +5,8 @@
  *
  * Purpose: An implementation of the SHA 26/384/512 digests.
  *
- * AUTHOR:	Aaron D. Gifford - http://www.aarongifford.com/
- * 
+ * AUTHOR: Aaron D. Gifford - http://www.aarongifford.com/
+ *
  * Copyright (c) 2000-2001, Aaron D. Gifford
  *
  * All rights reserved.

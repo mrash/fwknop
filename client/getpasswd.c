@@ -3,11 +3,11 @@
  *
  * File:    getpasswd.c
  *
- * Author:  Damien S. Stuart
- *
  * Purpose: Routines for obtaining a password from a user.
  *
- * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

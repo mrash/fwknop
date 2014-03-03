@@ -3,11 +3,11 @@
  *
  * File:    fko_hmac.c
  *
- * Author:  Michael Rash
- *
  * Purpose: Provide HMAC support to SPA communications
  *
- * Copyright 2012 Michael Rash (mbr@cipherdyne.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

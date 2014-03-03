@@ -3,12 +3,12 @@
  *
  * File:    log_msg.c
  *
- * Author:  Damien S. Stuart
- *
  * Purpose: General logging routine that can write to syslog and/or stderr
  *          and can take varibale number of args.
  *
- * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

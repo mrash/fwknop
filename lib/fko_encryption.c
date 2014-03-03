@@ -3,11 +3,11 @@
  *
  * File:    fko_encryption.c
  *
- * Author:  Damien S. Stuart
- *
  * Purpose: Set/Get the spa encryption type.
  *
- * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

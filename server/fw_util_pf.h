@@ -3,12 +3,11 @@
  *
  * File:    fw_util_pf.h
  *
- * Author:  Damien Stuart (dstuart@dstuart.org), Michael Rash
- *                                                  (mbr@cipherdyne.org)
- *
  * Purpose: Header file for fw_util_pf.c.
  *
- * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

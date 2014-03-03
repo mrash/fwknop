@@ -3,7 +3,7 @@ Jonathan Bennett
 
 Sebastien Jeanquier
     - Assisted with getting fwknop included in BackTrack Linux - the choice
-      distro for pentation testers.
+      distro for pentration testers.
 
 Ozmart
     - Suggested the idea for setting an access stanza expiration time.
@@ -174,4 +174,3 @@ Gerry Reno
     - Provided guidance on Android client issues along with testing candidate
       patches to update various things - this work is being tracked in the
       android4.4_support branch.
-

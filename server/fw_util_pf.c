@@ -3,12 +3,11 @@
  *
  * File:    fw_util_pf.c
  *
- * Author:  Damien S. Stuart, Michael Rash
- *
  * Purpose: Fwknop routines for managing pf firewall rules.
  *
- * Copyright 2011 Damien Stuart (dstuart@dstuart.org),
- *                Michael Rash (mbr@cipherdyne.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

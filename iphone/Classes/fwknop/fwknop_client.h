@@ -3,11 +3,11 @@
  *
  * File:    fwknop_client.h
  *
- * Author:  Damien Stuart (dstuart@dstuart.org)
- *
  * Purpose: Header file for fwknop_client.c fwknop client for Android.
  *
- * Copyright (C) 2010 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

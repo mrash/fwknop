@@ -3,11 +3,11 @@
  *
  * File:    fko_context.h
  *
- * Author:  Damien S. Stuart
- *
  * Purpose: fko context definition.
  *
- * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *
@@ -36,7 +36,7 @@
 #if HAVE_LIBGPGME
   #include <gpgme.h>
 #endif
- 
+
 #if HAVE_LIBGPGME
 /* Stucture to hold a list of the gpg signature information
  * we are interested in.

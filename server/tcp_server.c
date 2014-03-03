@@ -3,12 +3,12 @@
  *
  * File:    tcp_server.c
  *
- * Author:  Damien Stuart (dstuart@dstuart.org)
- *
  * Purpose: Spawns off a dummy tcp server for fwknopd.  Its purpose is
  *          to accept a tcp connection, then drop it after the first packet.
  *
- * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

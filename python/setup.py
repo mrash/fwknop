@@ -3,9 +3,11 @@
 #
 # File:    setup.py
 #
-# Author:  Damien S. Stuart <dstuart@dstuart.org>
-#
 # Purpose: Driver script for the fko module.
+#
+# Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+# Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+# list of contributors, see the file 'CREDITS'.
 #
 ##############################################################################
 #

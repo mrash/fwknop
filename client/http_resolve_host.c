@@ -3,12 +3,12 @@
  *
  * File:    http_resolve_host.c
  *
- * Author:  Damien S. Stuart
- *
  * Purpose: Routine for using an http request to obtain a client's IP
  *          address as seen from the outside world.
  *
- * Copyright 2009-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

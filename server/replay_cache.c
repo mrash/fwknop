@@ -3,15 +3,15 @@
  *
  * File:    replay_cache.c
  *
- * Author:  Damien S. Stuart
- *
  * Purpose: Provides the functions to check for possible replay attacks
  *          by using a cache of previously seen digests.  This cache is a
  *          simple file by default, but can be made to use a dbm solution
  *          (ndbm or gdbm in ndbm compatibility mode) file to store the digest
  *          of a previously received SPA packets.
  *
- * Copyright 2010-2013 Damien Stuart (dstuart@dstuart.org)
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *

@@ -1,7 +1,10 @@
 #!/bin/sh /etc/rc.common
-# Copyright (C) 2006-2010 OpenWrt.org
-# Copyright (C) 2010 Damien Stuart
 #
+# Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+# Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+# list of contributors, see the file 'CREDITS'.
+#
+
 START=60
 
 FWKNOPD_BIN=/usr/sbin/fwknopd

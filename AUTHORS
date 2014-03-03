@@ -1,19 +1,40 @@
 Package: fwknop
 Maintainer: Damien Stuart <dstuart@dstuart.org>, Michael Rash <mbr@cipherdyne.org>
 Bug reports: dstuart@dstuart.org, mbr@cipherdyne.org
+License: GPLv2, See the COPYING file
 
+Primary authors:
 
-Mike Rash <mbr@cipherdyne.org>
- - Pretty much most of the original fwknop Perl implementation.
+    Michael Rash <mbr@cipherdyne.org>
+     - Creator of the fwknop project and wrote the original fwknop Perl
+       implementation with contributions from open source developers.
+     - Continued authorship and maintenance of fwknop code.
 
-Damien Stuart <dstuart@dstuart.org>
- - The initial port to C
- - libfko, fwknop (client)
+    Damien Stuart <dstuart@dstuart.org>
+     - Ported fwknop to C.
+     - libfko, fwknop (client), fwknopd (server)
+     - Continued authorship and maintenance of fwknop code.
 
+Significant contributions from individuals are listed in the CREDITS file, and
+a special thanks is due to:
 
- Copyright 2009-2013, Damien Stuart and Michael Rash
+    Franck Joncourt (Major contributor and Debian package maintainer)
+    Sebastien Jeanquier (Masters thesis analysis of Port Knocking and SPA)
+    Hank Leininger (libfko error code patch, various architecture ideas)
+    Max Kastanas (iPhone and Android clients)
+    Gerry Reno (Android client development)
+    Ozmart (various architecture ideas)
+    Geoff Carstairs (various architecture ideas)
+    Fernando Arnaboldi (vulnerability discovery and responsible disclosure)
+    Sean Greven (FreeBSD port)
+    Vlad Glagolev (OpenBSD port)
+    Blair Zajac (PPC architecture fixes, various architecture ideas)
+    Radostan Riedel (AppArmor policy)
+    Jonathan Bennett (OpenWRT support)
+
+Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+list of contributors, see the file 'CREDITS'.
 
  This file is distributed in the hope that it will be useful, but
  WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
  implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-

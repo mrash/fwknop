@@ -2,9 +2,11 @@
  *
  * File:    Fwknop.java
  *
- * Author:  Max Kastanas <max2idea@users.sourceforge.net>
- *
  * Purpose: A JNI wrapper for Damien Stuart's implementation of fwknop client
+ *
+ *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
  *
