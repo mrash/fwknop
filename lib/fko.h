@@ -395,6 +395,7 @@ DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
 /* Get context data functions
 */
 DLL_API int fko_get_rand_value(fko_ctx_t ctx, char **rand_val);
+DLL_API int fko_rand_data(unsigned char *buf, const size_t len, const int mode);
 DLL_API int fko_get_rand_mode(fko_ctx_t ctx, int *spa_rand_mode);
 DLL_API int fko_get_username(fko_ctx_t ctx, char **username);
 DLL_API int fko_get_timestamp(fko_ctx_t ctx, time_t *ts);

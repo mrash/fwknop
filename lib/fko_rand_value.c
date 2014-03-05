@@ -261,6 +261,18 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     return(FKO_SUCCESS);
 }
 
+/* Wrapper for get_random_data(). This does not modify or require an FKO
+ * context - it merely provides a consistent interface for getting random
+ * data from the OS (used in port randomization for example by the fwknop
+ * client).
+*/
+int
+fko_rand_data(unsigned char *buf, const size_t len, const int mode)
+{
+    get_random_data(buf, len, mode);
+    return FKO_SUCCESS;
+}
+
 /* Return the current rand value.
 */
 int
