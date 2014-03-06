@@ -474,6 +474,8 @@ main(int argc, char **argv)
     if (options.save_packet_file[0] != 0x0)
         write_spa_packet_data(ctx, &options);
 
+    /* SPA packet random destination port handling
+    */
     if (options.rand_port)
     {
         tmp_port = get_rand_port();
@@ -481,6 +483,22 @@ main(int argc, char **argv)
             clean_exit(ctx, &options, key, &orig_key_len,
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
         options.spa_dst_port = tmp_port;
+    }
+
+    /* If we are using one the "raw" modes (normally because
+     * we're going to spoof the SPA packet source IP), then select
+     * a random source port unless the source port is already set
+    */
+    if ((options.spa_proto == FKO_PROTO_TCP_RAW
+            || options.spa_proto == FKO_PROTO_UDP_RAW
+            || options.spa_proto == FKO_PROTO_ICMP)
+            && !options.spa_src_port)
+    {
+        tmp_port = get_rand_port();
+        if(tmp_port < 0)
+            clean_exit(ctx, &options, key, &orig_key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+        options.spa_src_port = tmp_port;
     }
 
     res = send_spa_packet(ctx, &options);
