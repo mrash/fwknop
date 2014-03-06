@@ -353,7 +353,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
     udph->source    = saddr->sin_port;
     udph->dest      = daddr->sin_port;
     udph->check     = 0;
-    udph->len       = sd_len + sizeof(struct udphdr);
+    udph->len       = htons(sd_len + sizeof(struct udphdr));
 
     /* No we can compute our checksum.
     */
@@ -658,7 +658,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         if (options->spa_src_port)
             saddr.sin_port = htons(options->spa_src_port);
         else
-            saddr.sin_port = INADDR_ANY;  /* default */
+            saddr.sin_port = INADDR_ANY;
 
         if (options->spoof_ip_src_str[0] != 0x00) {
             saddr.sin_addr.s_addr = inet_addr(options->spoof_ip_src_str);
