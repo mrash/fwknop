@@ -652,7 +652,9 @@ if ($saved_last_results) {
         "to: ${output_dir}.last/\n\n");
 }
 
-copy $init_file, "$output_dir/init" if -e $init_file;
+unless ($list_mode) {
+    copy $init_file, "$output_dir/init" if -e $init_file;
+}
 
 if ($enable_valgrind) {
     if ($previous_valgrind_coverage_dir) {
@@ -723,8 +725,10 @@ if ($enable_valgrind) {
 
 &logr("\n");
 
-&remove_permissions_warnings() unless $include_permissions_warnings;
-&restore_gpg_dirs();
+unless ($list_mode) {
+    &remove_permissions_warnings() unless $include_permissions_warnings;
+    &restore_gpg_dirs();
+}
 
 my $total_elapsed_seconds = time() - $start_time;
 my $total_elapsed_minutes = sprintf "%.2f", ($total_elapsed_seconds / 60);
@@ -749,7 +753,9 @@ if ($fuzzing_ctr > 0) {
 }
 &logr("[+] $passed/$failed/$executed test buckets passed/failed/executed\n\n");
 
-copy $logfile, "$output_dir/$logfile" or die $!;
+unless ($list_mode) {
+    copy $logfile, "$output_dir/$logfile" or die $!;
+}
 
 if ($pinentry_fail) {
     if ($killall_path) {
@@ -5602,6 +5608,7 @@ sub init() {
     }
 
     unlink $init_file if -e $init_file;
+    unlink $logfile   if -e $logfile;
 
     if ($test_include) {
         for my $re (split /\s*,\s*/, $test_include) {
@@ -5783,40 +5790,41 @@ sub init() {
 }
 
 sub preserve_previous_test_run_results() {
-    unless ($list_mode) {
-        if (-d $output_dir) {
-            if (-d "${output_dir}.last") {
-                rmtree "${output_dir}.last"
-                    or die "[*] rmtree ${output_dir}.last $!";
-            }
-            move $output_dir, "${output_dir}.last" or die $!;
-            if (-e "$output_dir/init") {
-                copy "$output_dir/init", "${output_dir}.last/init";
-            }
-            if (-e $logfile) {
-                copy $logfile, "${output_dir}.last/$logfile" or die $!;
-            }
-            $saved_last_results = 1;
-        } else {
-            mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
-        }
 
-        if (-d $run_dir) {
-            rmtree $run_dir or die $!;
-        }
-        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+    return if $list_mode;
 
-        for my $dir ($output_dir, $run_dir) {
-            next if -d $dir;
-            mkdir $dir or die "[*] Could not mkdir $dir: $!";
+    if (-d $output_dir) {
+        if (-d "${output_dir}.last") {
+            rmtree "${output_dir}.last"
+                or die "[*] rmtree ${output_dir}.last $!";
         }
+        move $output_dir, "${output_dir}.last" or die $!;
+        if (-e "$output_dir/init") {
+            copy "$output_dir/init", "${output_dir}.last/init";
+        }
+        if (-e $logfile) {
+            copy $logfile, "${output_dir}.last/$logfile" or die $!;
+        }
+        $saved_last_results = 1;
+    } else {
+        mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
+    }
 
-        for my $file (glob("$output_dir/*.test"), "$output_dir/init",
-                $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
-                $logfile, $key_gen_file) {
-            next unless -e $file;
-            unlink $file or die "[*] Could not unlink($file)";
-        }
+    if (-d $run_dir) {
+        rmtree $run_dir or die $!;
+    }
+    mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+
+    for my $dir ($output_dir, $run_dir) {
+        next if -d $dir;
+        mkdir $dir or die "[*] Could not mkdir $dir: $!";
+    }
+
+    for my $file (glob("$output_dir/*.test"), "$output_dir/init",
+        $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
+        $logfile, $key_gen_file) {
+        next unless -e $file;
+        unlink $file or die "[*] Could not unlink($file)";
     }
     return;
 }
@@ -6445,7 +6453,8 @@ sub write_test_file() {
 sub logr() {
     my $msg = shift;
     print STDOUT $msg;
-    open F, ">> $logfile" or die $!;
+    open F, ">> $logfile"
+        or die "[*] Could not append msg '$msg' to $logfile: $!";
     print F $msg;
     close F;
     return;
