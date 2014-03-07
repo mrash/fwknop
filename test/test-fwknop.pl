@@ -6516,6 +6516,8 @@ sub usage() {
                                      $fwknopdCmd
     --lib-dir=<path>               - For LD_LIBRARY_PATH, default is:
                                      $lib_dir
+    --client-only-mode             - Run client-only tests.
+    --server-only-mode             - Run server-only tests.
     --valgrind-path=<path>         - Specify path to valgrind
     --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
                                      directory (defaults to:
