@@ -1,3 +1,12 @@
+fwknop-2.6.1 (//2014):
+    - [client] Minor bug fixes in 'udpraw' mode (normally used for spoofing the
+      SPA source IP) to set a non-zero source port and to properly set the
+      length field of the UDP header.
+    - Updated copyright and authorship information to include a standard
+      header which references both the AUTHORS and CREDITS files.  The
+      specific language in this header was created by the Debian legal team at
+      the request of Franck Joncourt.
+
 fwknop-2.6.0 (01/12/2014):
     - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to
       work on Debian and Ubuntu systems.  The policy file is available at

@@ -471,7 +471,7 @@ main(int argc, char **argv)
             || options.spa_proto == FKO_PROTO_ICMP)
             && !options.spa_src_port)
     {
-        tmp_port = get_rand_port();
+        tmp_port = get_rand_port(ctx);
         if(tmp_port < 0)
             clean_exit(ctx, &options, key, &orig_key_len,
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
