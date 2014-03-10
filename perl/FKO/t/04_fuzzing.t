@@ -40,16 +40,16 @@ my @fuzzing_client_timeouts = (
 
 my @fuzzing_usernames = (
     'A'x1000,
-    "-1",
-    -1,
-    '123%123',
-    '123$123',
-    '-user',
-    '_user',
-    '-User',
-    ',User',
-    'part1 part2',
-    'a:b',
+    ",1",
+    '123>123',
+    '123<123',
+    '123' . pack('a', "\x10"),
+    '*-user',
+    '?user',
+    'User+',
+    'U+er',
+    'part1|part2',
+    'a:b'
 );
 
 my @fuzzing_nat_access_msgs = (

@@ -2645,9 +2645,12 @@ sub valid_usernames() {
         'test_test',
         'someuser',
         'someUser',
-        'USER',
+        'part1 part2',
+        'U%ER',
         'USER001',
-        '00001'
+        -1,
+        '00001',
+        '00$01'
     );
     return \@users;
 }
@@ -2655,16 +2658,16 @@ sub valid_usernames() {
 sub fuzzing_usernames() {
     my @users = (
         'A'x1000,
-        "-1",
-        -1,
+        ",1",
 #        pack('a', ""),
-        '123%123',
-        '123$123',
-        '-user',
-        '_user',
-        '-User',
-        ',User',
-        'part1 part2',
+        '123>123',
+        '123<123',
+        '123' . pack('a', "\x10"),
+        '*-user',
+        '?user',
+        'User+',
+        'U+er',
+        'part1|part2',
         'a:b'
     );
     return \@users;

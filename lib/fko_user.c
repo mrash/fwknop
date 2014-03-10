@@ -144,15 +144,42 @@ validate_username(const char *username)
     if(username == NULL || strnlen(username, MAX_SPA_USERNAME_SIZE) == 0)
         return(FKO_ERROR_INVALID_DATA_USER_MISSING);
 
-    /* Make sure it is just alpha-numeric chars, dashes, dots, and underscores
+    /* Exclude a few chars - this list is consistent with MS guidance since
+     * libfko runs on Windows:
+     *      http://technet.microsoft.com/en-us/library/bb726984.aspx
     */
-    if(isalnum(username[0]) == 0)
-        return(FKO_ERROR_INVALID_DATA_USER_FIRSTCHAR_VALIDFAIL);
-
-    for (i=1; i < (int)strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
+    for (i=0; i < (int)strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
+    {
         if((isalnum(username[i]) == 0)
-                && username[i] != '-' && username[i] != '_' && username[i] != '.')
-            return(FKO_ERROR_INVALID_DATA_USER_REMCHAR_VALIDFAIL);
+                && ((username[i] < 0x20 || username[i] > 0x7e)
+                /* Not allowed chars: " / \ [ ] : ; | = , + * ? < >
+                */
+                || (username[i] == 0x22
+                    || username[i] == 0x2f
+                    || username[i] == 0x5c
+                    || username[i] == 0x5b
+                    || username[i] == 0x5d
+                    || username[i] == 0x3a
+                    || username[i] == 0x3b
+                    || username[i] == 0x7c
+                    || username[i] == 0x3d
+                    || username[i] == 0x2c
+                    || username[i] == 0x2b
+                    || username[i] == 0x2a
+                    || username[i] == 0x3f
+                    || username[i] == 0x3c
+                    || username[i] == 0x3e)))
+        {
+            if(i == 0)
+            {
+                return(FKO_ERROR_INVALID_DATA_USER_FIRSTCHAR_VALIDFAIL);
+            }
+            else
+            {
+                return(FKO_ERROR_INVALID_DATA_USER_REMCHAR_VALIDFAIL);
+            }
+        }
+    }
 
     return FKO_SUCCESS;
 }
