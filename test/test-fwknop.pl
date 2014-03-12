@@ -330,6 +330,7 @@ our $pgrep_path   = '';
 our $openssl_path = '';
 our $base64_path  = '';
 our $pinentry_fail = 0;
+our $perl_path = '';
 our $platform = '';
 our $help = 0;
 our $YES = 1;
@@ -1185,6 +1186,31 @@ sub look_for_crashes() {
                 $curr_test_file);
             $rv = 0;
         }
+    }
+
+    return $rv;
+}
+
+sub code_structure_search_sources_for_non_ascii_chars() {
+
+    my $rv = 1;
+
+    for my $src_dir ('client', 'server', 'win32', 'common', 'lib') {
+        next unless (glob("../$src_dir/*.c"))[0];
+        &run_cmd($perl_path . q{ -lwne 'print "non-ascii char in $ARGV" and exit 0 if /[^\w\s\x20-\x7e]/' } . "../$src_dir/*.c",
+            $cmd_out_tmp, $curr_test_file);
+        next unless (glob("../$src_dir/*.h"))[0];
+        &run_cmd($perl_path . q{ -lwne 'print "non-ascii char in $ARGV" and exit 0 if /[^\w\s\x20-\x7e]/' } . "../$src_dir/*.h",
+            $cmd_out_tmp, $curr_test_file);
+    }
+
+    if (&file_find_regex(
+            [qr/^non\-ascii/],
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+        &write_test_file(
+            "[-] non-ascii char found in source file, setting rv=0\n",
+            $curr_test_file);
+        $rv = 0;
     }
 
     return $rv;
@@ -5718,6 +5744,7 @@ sub init() {
     $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
     $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
     $git_path     = &find_command('git') unless $git_path;
+    $perl_path    = &find_command('perl') unless $perl_path;
 
     ### On Mac OS X look for otool instead of ldd
     unless ($lib_view_cmd) {
