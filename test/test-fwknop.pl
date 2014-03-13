@@ -5673,6 +5673,7 @@ sub init() {
     if ($enable_perl_module_checks) {
         open F, "< $fuzzing_pkts_file" or die $!;
         while (<F>) {
+            next if /^#/;
             if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
                 push @{$fuzzing_spa_packets{$1}{$2}}, $3;
                 $total_fuzzing_pkts++;
