@@ -13,7 +13,7 @@
 #
 use FKO;
 
-use Test::More tests => 9693;
+use Test::More tests => 9581;
 
 my $err;
 
@@ -359,6 +359,7 @@ my %fuzzing_spa_packets = ();
 my $fuzzing_key = 'testtest';
 open F, "< $fuzzing_pkts_file" or die $!;
 while (<F>) {
+    next if /^#/;
     if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
         push @{$fuzzing_spa_packets{$1}{$2}}, $3;
     }
