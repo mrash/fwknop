@@ -1100,6 +1100,23 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => "rc NAT rand port to tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
+            "$cf{'rc_hmac_nat_rand_b64_key'} $verbose_str -N $internal_nat_host",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD.*dport\s22\s.*\sACCEPT/,
+            qr/FWKNOP_PREROUTING.*\sDNAT\s.*to\-destination\s$internal_nat_host\:22/,
+        ],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{'nat'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => "NAT rand port to -N <host>:40001",
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .

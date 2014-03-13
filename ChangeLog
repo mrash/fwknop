@@ -7,6 +7,7 @@ fwknop-2.6.1 (//2014):
       specific language in this header was created by the Debian legal team at
       the request of Franck Joncourt.
     - [test suite] Added Rijndael+HMAC command execution test.
+    - [test suite] Added Rijndael+HMAC NAT rand port via client rc file test.
 
 fwknop-2.6.0 (01/12/2014):
     - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to
