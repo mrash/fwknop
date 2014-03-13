@@ -1,0 +1,6 @@
+[default]
+HMAC_DIGEST_TYPE    sha256
+KEY_BASE64          wzNP62oPPgEc+kXDPQLHPOayQBuNbYUTPP+QrErNDmg=
+HMAC_KEY_BASE64     Yh+xizBnl6FotC5ec7FanVGClRMlsOAPh2u6eovnerfBVKwaVKzjGoblFMHMc593TNyi0dWn4opLoTIV9q/ttg==
+SPOOF_SOURCE_IP     3.3.3.3
+SPA_SERVER_PROTO    udpraw

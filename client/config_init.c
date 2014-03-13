@@ -1741,6 +1741,14 @@ validate_options(fko_cli_options_t *options)
             log_msg(LOG_VERBOSITY_ERROR, "Invalid spoof IP");
             exit(EXIT_FAILURE);
         }
+        if(options->spa_proto != FKO_PROTO_TCP_RAW
+                && options->spa_proto != FKO_PROTO_UDP_RAW
+                && options->spa_proto != FKO_PROTO_ICMP)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Must set -Q <udpraw|tcpraw|icmp> with a spoofed source IP");
+            exit(EXIT_FAILURE);
+        }
     }
 
     if(options->resolve_ip_http || options->spa_proto == FKO_PROTO_HTTP)

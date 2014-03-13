@@ -136,6 +136,7 @@ our %cf = (
     'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
     'rc_hmac_nat_rand_b64_key'     => "$conf_dir/fwknoprc_hmac_nat_rand_base64_key",
+    'rc_hmac_spoof_src_b64_key'    => "$conf_dir/fwknoprc_hmac_spoof_src_base64_key",
     'rc_hmac_sha512_b64_key'       => "$conf_dir/fwknoprc_hmac_sha512_base64_key",
     'rc_hmac_b64_key2'             => "$conf_dir/fwknoprc_hmac_key2",
     'rc_rand_port_hmac_b64_key'    => "$conf_dir/fwknoprc_rand_port_hmac_base64_key",
