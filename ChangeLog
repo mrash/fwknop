@@ -6,6 +6,7 @@ fwknop-2.6.1 (//2014):
       header which references both the AUTHORS and CREDITS files.  The
       specific language in this header was created by the Debian legal team at
       the request of Franck Joncourt.
+    - [test suite] Added Rijndael+HMAC command execution test.
 
 fwknop-2.6.0 (01/12/2014):
     - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to

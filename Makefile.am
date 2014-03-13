@@ -165,6 +165,7 @@ EXTRA_DIST = \
     test/conf/no_flush_exit_fwknopd.conf \
     test/conf/no_flush_init_or_exit_fwknopd.conf \
     test/conf/hmac_access.conf \
+    test/conf/hmac_cmd_access.conf \
     test/conf/hmac_get_key_access.conf \
     test/conf/hmac_no_b64_access.conf \
     test/conf/hmac_equal_keys_access.conf \
@@ -295,6 +296,7 @@ EXTRA_DIST = \
     test/tests/code_structure.pl \
     test/tests/basic_operations.pl \
     test/tests/rijndael_hmac.pl \
+    test/tests/rijndael_hmac_cmd_exec.pl \
     test/tests/rijndael_backwards_compatibility.pl \
     test/tests/os_compatibility.pl \
     test/tests/gpg_hmac.pl \

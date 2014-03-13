@@ -43,6 +43,7 @@ our %cf = (
     'def_access'                   => "$conf_dir/default_access.conf",
     'portrange_filter'             => "$conf_dir/portrange_fwknopd.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
+    'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
     'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
     'hmac_equal_keys_access'       => "$conf_dir/hmac_equal_keys_access.conf",
     'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
@@ -216,6 +217,7 @@ my @test_files = (
     "$tests_dir/basic_operations.pl",
     "$tests_dir/rijndael.pl",
     "$tests_dir/rijndael_cmd_exec.pl",
+    "$tests_dir/rijndael_hmac_cmd_exec.pl",
     "$tests_dir/rijndael_replay_attacks.pl",
     "$tests_dir/rijndael_fuzzing.pl",
     "$tests_dir/rijndael_backwards_compatibility.pl",
@@ -238,6 +240,7 @@ our @code_structure_errstr   = ();  ### from tests/code_structure.pl (may includ
 our @basic_operations        = ();  ### from tests/basic_operations.pl
 our @rijndael                = ();  ### from tests/rijndael.pl
 our @rijndael_cmd_exec       = ();  ### from tests/rijndael_cmd_exec.pl
+our @rijndael_hmac_cmd_exec  = ();  ### from tests/rijndael_hmac_cmd_exec.pl
 our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
 our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
 our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
@@ -564,6 +567,7 @@ my @tests = (
     @basic_operations,
     @rijndael,
     @rijndael_cmd_exec,
+    @rijndael_hmac_cmd_exec,
     @rijndael_replay_attacks,
     @rijndael_backwards_compatibility,
     @rijndael_fuzzing,
@@ -3802,6 +3806,8 @@ sub get_mod_paths() {
 
 sub spa_cmd_exec_cycle() {
     my $test_hr = shift;
+
+    unlink $cmd_exec_test_file if -e $cmd_exec_test_file;
 
     my $rv = &spa_cycle($test_hr);
 
