@@ -34,13 +34,262 @@
 #include "base64.h"
 #include "digest.h"
 
+static int
+parse_msg(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    if((*t_size = strcspn(*ndx, ":")) < 1)
+        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_MISSING);
+
+    if (*t_size > MAX_SPA_MESSAGE_SIZE)
+        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_TOOBIG);
+
+    strlcpy(tbuf, *ndx, *t_size+1);
+
+    if(ctx->message != NULL)
+        free(ctx->message);
+
+    ctx->message = malloc(*t_size+1); /* Yes, more than we need */
+
+    if(ctx->message == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    if(b64_decode(tbuf, (unsigned char*)ctx->message) < 0)
+        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_DECODEFAIL);
+
+    if(ctx->message_type == FKO_COMMAND_MSG)
+    {
+        /* Require a message similar to: 1.2.3.4,<command>
+        */
+        if(validate_cmd_msg(ctx->message) != FKO_SUCCESS)
+        {
+            return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_VALIDFAIL);
+        }
+    }
+    else
+    {
+        /* Require a message similar to: 1.2.3.4,tcp/22
+        */
+        if(validate_access_msg(ctx->message) != FKO_SUCCESS)
+        {
+            return(FKO_ERROR_INVALID_DATA_DECODE_ACCESS_VALIDFAIL);
+        }
+    }
+
+    *ndx += *t_size + 1;
+    return FKO_SUCCESS;
+}
+
+static int
+parse_nat_msg(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    if(  ctx->message_type == FKO_NAT_ACCESS_MSG
+      || ctx->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+      || ctx->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
+      || ctx->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+    {
+        if((*t_size = strcspn(*ndx, ":")) < 1)
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_MISSING);
+
+        if (*t_size > MAX_SPA_MESSAGE_SIZE)
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_TOOBIG);
+
+        strlcpy(tbuf, *ndx, *t_size+1);
+
+        if(ctx->nat_access != NULL)
+            free(ctx->nat_access);
+
+        ctx->nat_access = malloc(*t_size+1); /* Yes, more than we need */
+        if(ctx->nat_access == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+        if(b64_decode(tbuf, (unsigned char*)ctx->nat_access) < 0)
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_DECODEFAIL);
+
+        if(validate_nat_access_msg(ctx->nat_access) != FKO_SUCCESS)
+            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_VALIDFAIL);
+
+        *ndx += *t_size + 1;
+    }
+
+    return FKO_SUCCESS;
+}
+
+static int
+parse_server_auth(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    strlcpy(tbuf, *ndx, *t_size+1);
+
+    if(ctx->server_auth != NULL)
+        free(ctx->server_auth);
+
+    ctx->server_auth = malloc(*t_size+1); /* Yes, more than we need */
+    if(ctx->server_auth == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
+        return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL);
+
+    return FKO_SUCCESS;
+}
+
+static int
+parse_client_timeout(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    int         is_err;
+
+    if(  ctx->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG
+      || ctx->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
+      || ctx->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+    {
+        if((*t_size = strlen(*ndx)) < 1)
+            return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_MISSING);
+
+        if (*t_size > MAX_SPA_MESSAGE_SIZE)
+            return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_TOOBIG);
+
+        /* Should be a number only.
+        */
+        if(strspn(*ndx, "0123456789") != *t_size)
+            return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_VALIDFAIL);
+
+        ctx->client_timeout = (unsigned int) strtol_wrapper(*ndx, 0,
+                (2 << 15), NO_EXIT_UPON_ERR, &is_err);
+        if(is_err != FKO_SUCCESS)
+            return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_DECODEFAIL);
+    }
+
+    return FKO_SUCCESS;
+}
+
+static int
+parse_msg_type(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    int         is_err;
+
+    if((*t_size = strcspn(*ndx, ":")) < 1)
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_MISSING);
+
+    if(*t_size > MAX_SPA_MESSAGE_TYPE_SIZE)
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_TOOBIG);
+
+    strlcpy(tbuf, *ndx, *t_size+1);
+
+    ctx->message_type = strtol_wrapper(tbuf, 0,
+            FKO_LAST_MSG_TYPE, NO_EXIT_UPON_ERR, &is_err);
+
+    if(is_err != FKO_SUCCESS)
+        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL);
+
+    *ndx += *t_size + 1;
+    return FKO_SUCCESS;
+}
+
+static int
+parse_version(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    if((*t_size = strcspn(*ndx, ":")) < 1)
+        return(FKO_ERROR_INVALID_DATA_DECODE_VERSION_MISSING);
+
+    if (*t_size > MAX_SPA_VERSION_SIZE)
+        return(FKO_ERROR_INVALID_DATA_DECODE_VERSION_TOOBIG);
+
+    if(ctx->version != NULL)
+        free(ctx->version);
+
+    ctx->version = malloc(*t_size+1);
+    if(ctx->version == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    strlcpy(ctx->version, *ndx, *t_size+1);
+
+    *ndx += *t_size + 1;
+    return FKO_SUCCESS;
+}
+
+static int
+parse_timestamp(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    int         is_err;
+
+    if((*t_size = strcspn(*ndx, ":")) < 1)
+        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_MISSING);
+
+    if (*t_size > MAX_SPA_TIMESTAMP_SIZE)
+        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_TOOBIG);
+
+    strlcpy(tbuf, *ndx, *t_size+1);
+
+    ctx->timestamp = (unsigned int) strtol_wrapper(tbuf,
+            0, -1, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_DECODEFAIL);
+
+    *ndx += *t_size + 1;
+
+    return FKO_SUCCESS;
+}
+
+static int
+parse_username(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    if((*t_size = strcspn(*ndx, ":")) < 1)
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_MISSING);
+
+    if (*t_size > MAX_SPA_USERNAME_SIZE)
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_TOOBIG);
+
+    strlcpy(tbuf, *ndx, *t_size+1);
+
+    if(ctx->username != NULL)
+        free(ctx->username);
+
+    ctx->username = malloc(*t_size+1); /* Yes, more than we need */
+    if(ctx->username == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    if(b64_decode(tbuf, (unsigned char*)ctx->username) < 0)
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_DECODEFAIL);
+
+    if(validate_username(ctx->username) != FKO_SUCCESS)
+        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_VALIDFAIL);
+
+    *ndx += *t_size + 1;
+
+    return FKO_SUCCESS;
+}
+
+static int
+parse_rand_val(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    if((*t_size = strcspn(*ndx, ":")) < FKO_RAND_VAL_SIZE)
+    {
+        free(tbuf);
+        return(FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING);
+    }
+
+    if(ctx->rand_val != NULL)
+        free(ctx->rand_val);
+
+    ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
+    if(ctx->rand_val == NULL)
+    {
+        free(tbuf);
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+    }
+    ctx->rand_val = strncpy(ctx->rand_val, *ndx, FKO_RAND_VAL_SIZE);
+
+    *ndx += *t_size + 1;
+
+    return FKO_SUCCESS;
+}
+
 /* Decode the encoded SPA data.
 */
 int
 fko_decode_spa_data(fko_ctx_t ctx)
 {
     char       *tbuf, *ndx, *tmp;
-    int         t_size, i, is_err;
+    int         t_size, i, res;
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL);
@@ -166,242 +415,73 @@ fko_decode_spa_data(fko_ctx_t ctx)
     */
     ndx = ctx->encoded_msg;
 
-    /* The rand val data */
-    if((t_size = strcspn(ndx, ":")) < FKO_RAND_VAL_SIZE)
+    /* Extract the rand val data
+    */
+    res = parse_rand_val(tbuf, &ndx, &t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING);
+        return res;
     }
-
-    if(ctx->rand_val != NULL)
-        free(ctx->rand_val);
-
-    ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
-    if(ctx->rand_val == NULL)
-    {
-        free(tbuf);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
-    }
-    ctx->rand_val = strncpy(ctx->rand_val, ndx, FKO_RAND_VAL_SIZE);
 
     /* Jump to the next field (username).  We need to use the temp buffer
      * for the base64 decode step.
     */
-    ndx += t_size + 1;
-    if((t_size = strcspn(ndx, ":")) < 1)
+    res = parse_username(tbuf, &ndx, &t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_MISSING);
-    }
-
-    if (t_size > MAX_SPA_USERNAME_SIZE)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_TOOBIG);
-    }
-
-    strlcpy(tbuf, ndx, t_size+1);
-
-    if(ctx->username != NULL)
-        free(ctx->username);
-
-    ctx->username = malloc(t_size+1); /* Yes, more than we need */
-    if(ctx->username == NULL)
-    {
-        free(tbuf);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
-    }
-
-    if(b64_decode(tbuf, (unsigned char*)ctx->username) < 0)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_DECODEFAIL);
-    }
-    if(validate_username(ctx->username) != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_USERNAME_VALIDFAIL);
+        return res;
     }
 
     /* Extract the timestamp value.
     */
-    ndx += t_size + 1;
-    if((t_size = strcspn(ndx, ":")) < 1)
+    res = parse_timestamp(tbuf, &ndx, &t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_MISSING);
-    }
-
-    if (t_size > MAX_SPA_TIMESTAMP_SIZE)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_TOOBIG);
-    }
-
-    strlcpy(tbuf, ndx, t_size+1);
-
-    ctx->timestamp = (unsigned int) strtol_wrapper(tbuf,
-            0, -1, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_DECODEFAIL);
+        return res;
     }
 
     /* Extract the version string.
     */
-    ndx += t_size + 1;
-    if((t_size = strcspn(ndx, ":")) < 1)
+    res = parse_version(tbuf, &ndx, &t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_VERSION_MISSING);
+        return res;
     }
-
-    if (t_size > MAX_SPA_VERSION_SIZE)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_VERSION_TOOBIG);
-    }
-
-    if(ctx->version != NULL)
-        free(ctx->version);
-
-    ctx->version = malloc(t_size+1);
-    if(ctx->version == NULL)
-    {
-        free(tbuf);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
-    }
-
-    strlcpy(ctx->version, ndx, t_size+1);
 
     /* Extract the message type value.
     */
-    ndx += t_size + 1;
-    if((t_size = strcspn(ndx, ":")) < 1)
+    res = parse_msg_type(tbuf, &ndx, &t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_MISSING);
-    }
-
-    if (t_size > MAX_SPA_MESSAGE_TYPE_SIZE)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_TOOBIG);
-    }
-
-    strlcpy(tbuf, ndx, t_size+1);
-
-    ctx->message_type = strtol_wrapper(tbuf, 0,
-            FKO_LAST_MSG_TYPE, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL);
+        return res;
     }
 
     /* Extract the SPA message string.
     */
-    ndx += t_size + 1;
-    if((t_size = strcspn(ndx, ":")) < 1)
+    res = parse_msg(tbuf, &ndx, &t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
         free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_MISSING);
+        return res;
     }
 
-    if (t_size > MAX_SPA_MESSAGE_SIZE)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_TOOBIG);
-    }
-
-    strlcpy(tbuf, ndx, t_size+1);
-
-    if(ctx->message != NULL)
-        free(ctx->message);
-
-    ctx->message = malloc(t_size+1); /* Yes, more than we need */
-    if(ctx->message == NULL)
-    {
-        free(tbuf);
-        return(FKO_ERROR_MEMORY_ALLOCATION);
-    }
-
-    if(b64_decode(tbuf, (unsigned char*)ctx->message) < 0)
-    {
-        free(tbuf);
-        return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_DECODEFAIL);
-    }
-
-    if(ctx->message_type == FKO_COMMAND_MSG)
-    {
-        /* Require a message similar to: 1.2.3.4,<command>
-        */
-        if(validate_cmd_msg(ctx->message) != FKO_SUCCESS)
-        {
-            free(tbuf);
-            return(FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_VALIDFAIL);
-        }
-    }
-    else
-    {
-        /* Require a message similar to: 1.2.3.4,tcp/22
-        */
-        if(validate_access_msg(ctx->message) != FKO_SUCCESS)
-        {
-            free(tbuf);
-            return(FKO_ERROR_INVALID_DATA_DECODE_ACCESS_VALIDFAIL);
-        }
-    }
-
-    /* Extract nat_access string if the message_type indicates so.
+    /* Extract nat_access string (a check is done against the
+     * message type)
     */
-    if(  ctx->message_type == FKO_NAT_ACCESS_MSG
-      || ctx->message_type == FKO_LOCAL_NAT_ACCESS_MSG
-      || ctx->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
-      || ctx->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+    res = parse_nat_msg(tbuf, &ndx, &t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
-        ndx += t_size + 1;
-        if((t_size = strcspn(ndx, ":")) < 1)
-        {
-            free(tbuf);
-            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_MISSING);
-        }
-
-        if (t_size > MAX_SPA_MESSAGE_SIZE)
-        {
-            free(tbuf);
-            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_TOOBIG);
-        }
-
-        strlcpy(tbuf, ndx, t_size+1);
-
-        if(ctx->nat_access != NULL)
-            free(ctx->nat_access);
-
-        ctx->nat_access = malloc(t_size+1); /* Yes, more than we need */
-        if(ctx->nat_access == NULL)
-        {
-            free(tbuf);
-            return(FKO_ERROR_MEMORY_ALLOCATION);
-        }
-
-        if(b64_decode(tbuf, (unsigned char*)ctx->nat_access) < 0)
-        {
-            free(tbuf);
-            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_DECODEFAIL);
-        }
-
-        if(validate_nat_access_msg(ctx->nat_access) != FKO_SUCCESS)
-        {
-            free(tbuf);
-            return(FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_VALIDFAIL);
-        }
+        free(tbuf);
+        return res;
     }
 
     /* Now look for a server_auth string.
     */
-    ndx += t_size + 1;
     if((t_size = strlen(ndx)) > 0)
     {
         if (t_size > MAX_SPA_MESSAGE_SIZE)
@@ -418,34 +498,20 @@ fko_decode_spa_data(fko_ctx_t ctx)
           && ctx->message_type != FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
           && ctx->message_type != FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
         {
-            strlcpy(tbuf, ndx, t_size+1);
-
-            if(ctx->server_auth != NULL)
-                free(ctx->server_auth);
-
-            ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
-            if(ctx->server_auth == NULL)
-            {
-                free(tbuf);
-                return(FKO_ERROR_MEMORY_ALLOCATION);
-            }
-
-            if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
-            {
-                free(tbuf);
-                return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL);
-            }
+            res = parse_server_auth(tbuf, &ndx, &t_size, ctx);
 
             /* At this point we should be done.
             */
             free(tbuf);
 
-            /* Call the context initialized.
-            */
-            ctx->initval = FKO_CTX_INITIALIZED;
-            FKO_SET_CTX_INITIALIZED(ctx);
-
-            return(FKO_SUCCESS);
+            if(res == FKO_SUCCESS)
+            {
+                /* Call the context initialized.
+                */
+                ctx->initval = FKO_CTX_INITIALIZED;
+                FKO_SET_CTX_INITIALIZED(ctx);
+            }
+            return(res);
         }
 
         /* If we are here then we may still have a server_auth string,
@@ -463,8 +529,6 @@ fko_decode_spa_data(fko_ctx_t ctx)
                 return(FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG);
             }
 
-            /* Looks like we have both, so assume this is the 
-            */
             strlcpy(tbuf, ndx, t_size+1);
 
             if(ctx->server_auth != NULL)
@@ -488,36 +552,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
         /* Now we look for a timeout value if one is supposed to be there.
         */
-        if(  ctx->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG
-          || ctx->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
-          || ctx->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+        res = parse_client_timeout(tbuf, &ndx, &t_size, ctx);
+        if(res != FKO_SUCCESS)
         {
-            if((t_size = strlen(ndx)) < 1)
-            {
-                free(tbuf);
-                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_MISSING);
-            }
-            if (t_size > MAX_SPA_MESSAGE_SIZE)
-            {
-                free(tbuf);
-                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_TOOBIG);
-            }
-
-            /* Should be a number only.
-            */
-            if(strspn(ndx, "0123456789") != t_size)
-            {
-                free(tbuf);
-                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_VALIDFAIL);
-            }
-
-            ctx->client_timeout = (unsigned int) strtol_wrapper(ndx, 0,
-                    (2 << 15), NO_EXIT_UPON_ERR, &is_err);
-            if(is_err != FKO_SUCCESS)
-            {
-                free(tbuf);
-                return(FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_DECODEFAIL);
-            }
+            free(tbuf);
+            return res;
         }
     }
 
