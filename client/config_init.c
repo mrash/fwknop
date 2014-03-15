@@ -6,7 +6,7 @@
  * \brief   Command-line and config file processing for fwknop client.
  *
  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
- *  Copyright (C) 2009–2014 fwknop developers and contributors. For a full
+ *  Copyright (C) 2009-2014 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
@@ -1744,6 +1744,14 @@ validate_options(fko_cli_options_t *options)
         if(! is_valid_ipv4_addr(options->spoof_ip_src_str))
         {
             log_msg(LOG_VERBOSITY_ERROR, "Invalid spoof IP");
+            exit(EXIT_FAILURE);
+        }
+        if(options->spa_proto != FKO_PROTO_TCP_RAW
+                && options->spa_proto != FKO_PROTO_UDP_RAW
+                && options->spa_proto != FKO_PROTO_ICMP)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Must set -Q <udpraw|tcpraw|icmp> with a spoofed source IP");
             exit(EXIT_FAILURE);
         }
     }

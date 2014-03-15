@@ -1,3 +1,20 @@
+fwknop-2.6.1 (//2014):
+    - Updated copyright and authorship information to include a standard
+      header which references both the AUTHORS and CREDITS files.  The
+      specific language in this header was created by the Debian legal team at
+      the request of Franck Joncourt.
+    - [libfko] Allow usernames that are compatible with Microsoft guidelines as
+      defined here: http://technet.microsoft.com/en-us/library/bb726984.aspx
+      This allows for greater compatibility between fwknop clients on Windows
+      (for example that may be deployed with Cygwin) and fwknopd on other
+      systems.  This change was suggested by Gerry Reno, and closes Github
+      issue #114.
+    - [client] Minor bug fixes in 'udpraw' mode (normally used for spoofing the
+      SPA source IP) to set a non-zero source port and to properly set the
+      length field of the UDP header.
+    - [test suite] Added Rijndael+HMAC command execution test.
+    - [test suite] Added Rijndael+HMAC NAT rand port via client rc file test.
+
 fwknop-2.6.0 (01/12/2014):
     - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to
       work on Debian and Ubuntu systems.  The policy file is available at

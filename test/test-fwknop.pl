@@ -44,6 +44,7 @@ our %cf = (
     'portrange_filter'             => "$conf_dir/portrange_fwknopd.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
     'hmac_legacy_rand_access'      => "$conf_dir/hmac_legacy_rand_access.conf",
+    'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
     'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
     'hmac_equal_keys_access'       => "$conf_dir/hmac_equal_keys_access.conf",
     'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
@@ -137,6 +138,8 @@ our %cf = (
     'rc_hmac_equal_keys'           => "$conf_dir/fwknoprc_hmac_equal_keys",
     'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
+    'rc_hmac_nat_rand_b64_key'     => "$conf_dir/fwknoprc_hmac_nat_rand_base64_key",
+    'rc_hmac_spoof_src_b64_key'    => "$conf_dir/fwknoprc_hmac_spoof_src_base64_key",
     'rc_hmac_sha512_b64_key'       => "$conf_dir/fwknoprc_hmac_sha512_base64_key",
     'rc_hmac_b64_key2'             => "$conf_dir/fwknoprc_hmac_key2",
     'rc_rand_port_hmac_b64_key'    => "$conf_dir/fwknoprc_rand_port_hmac_base64_key",
@@ -219,6 +222,7 @@ my @test_files = (
     "$tests_dir/basic_operations.pl",
     "$tests_dir/rijndael.pl",
     "$tests_dir/rijndael_cmd_exec.pl",
+    "$tests_dir/rijndael_hmac_cmd_exec.pl",
     "$tests_dir/rijndael_replay_attacks.pl",
     "$tests_dir/rijndael_fuzzing.pl",
     "$tests_dir/rijndael_backwards_compatibility.pl",
@@ -241,6 +245,7 @@ our @code_structure_errstr   = ();  ### from tests/code_structure.pl (may includ
 our @basic_operations        = ();  ### from tests/basic_operations.pl
 our @rijndael                = ();  ### from tests/rijndael.pl
 our @rijndael_cmd_exec       = ();  ### from tests/rijndael_cmd_exec.pl
+our @rijndael_hmac_cmd_exec  = ();  ### from tests/rijndael_hmac_cmd_exec.pl
 our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
 our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
 our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
@@ -333,6 +338,7 @@ our $pgrep_path   = '';
 our $openssl_path = '';
 our $base64_path  = '';
 our $pinentry_fail = 0;
+our $perl_path = '';
 our $platform = '';
 our $help = 0;
 our $YES = 1;
@@ -567,6 +573,7 @@ my @tests = (
     @basic_operations,
     @rijndael,
     @rijndael_cmd_exec,
+    @rijndael_hmac_cmd_exec,
     @rijndael_replay_attacks,
     @rijndael_backwards_compatibility,
     @rijndael_fuzzing,
@@ -655,7 +662,9 @@ if ($saved_last_results) {
         "to: ${output_dir}.last/\n\n");
 }
 
-copy $init_file, "$output_dir/init" if -e $init_file;
+unless ($list_mode) {
+    copy $init_file, "$output_dir/init" if -e $init_file;
+}
 
 if ($enable_valgrind) {
     if ($previous_valgrind_coverage_dir) {
@@ -726,8 +735,10 @@ if ($enable_valgrind) {
 
 &logr("\n");
 
-&remove_permissions_warnings() unless $include_permissions_warnings;
-&restore_gpg_dirs();
+unless ($list_mode) {
+    &remove_permissions_warnings() unless $include_permissions_warnings;
+    &restore_gpg_dirs();
+}
 
 my $total_elapsed_seconds = time() - $start_time;
 my $total_elapsed_minutes = sprintf "%.2f", ($total_elapsed_seconds / 60);
@@ -752,7 +763,9 @@ if ($fuzzing_ctr > 0) {
 }
 &logr("[+] $passed/$failed/$executed test buckets passed/failed/executed\n\n");
 
-copy $logfile, "$output_dir/$logfile" or die $!;
+unless ($list_mode) {
+    copy $logfile, "$output_dir/$logfile" or die $!;
+}
 
 if ($pinentry_fail) {
     if ($killall_path) {
@@ -1182,6 +1195,31 @@ sub look_for_crashes() {
                 $curr_test_file);
             $rv = 0;
         }
+    }
+
+    return $rv;
+}
+
+sub code_structure_search_sources_for_non_ascii_chars() {
+
+    my $rv = 1;
+
+    for my $src_dir ('client', 'server', 'win32', 'common', 'lib') {
+        next unless (glob("../$src_dir/*.c"))[0];
+        &run_cmd($perl_path . q{ -lwne 'print "non-ascii char in $ARGV" and exit 0 if /[^\w\s\x20-\x7e]/' } . "../$src_dir/*.c",
+            $cmd_out_tmp, $curr_test_file);
+        next unless (glob("../$src_dir/*.h"))[0];
+        &run_cmd($perl_path . q{ -lwne 'print "non-ascii char in $ARGV" and exit 0 if /[^\w\s\x20-\x7e]/' } . "../$src_dir/*.h",
+            $cmd_out_tmp, $curr_test_file);
+    }
+
+    if (&file_find_regex(
+            [qr/^non\-ascii/],
+            $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+        &write_test_file(
+            "[-] non-ascii char found in source file, setting rv=0\n",
+            $curr_test_file);
+        $rv = 0;
     }
 
     return $rv;
@@ -2642,9 +2680,12 @@ sub valid_usernames() {
         'test_test',
         'someuser',
         'someUser',
-        'USER',
+        'part1 part2',
+        'U%ER',
         'USER001',
-        '00001'
+        -1,
+        '00001',
+        '00$01'
     );
     return \@users;
 }
@@ -2652,16 +2693,16 @@ sub valid_usernames() {
 sub fuzzing_usernames() {
     my @users = (
         'A'x1000,
-        "-1",
-        -1,
+        ",1",
 #        pack('a', ""),
-        '123%123',
-        '123$123',
-        '-user',
-        '_user',
-        '-User',
-        ',User',
-        'part1 part2',
+        '123>123',
+        '123<123',
+        '123' . pack('a', "\x10"),
+        '*-user',
+        '?user',
+        'User+',
+        'U+er',
+        'part1|part2',
         'a:b'
     );
     return \@users;
@@ -3802,6 +3843,8 @@ sub get_mod_paths() {
 
 sub spa_cmd_exec_cycle() {
     my $test_hr = shift;
+
+    unlink $cmd_exec_test_file if -e $cmd_exec_test_file;
 
     my $rv = &spa_cycle($test_hr);
 
@@ -5608,6 +5651,7 @@ sub init() {
     }
 
     unlink $init_file if -e $init_file;
+    unlink $logfile   if -e $logfile;
 
     if ($test_include) {
         for my $re (split /\s*,\s*/, $test_include) {
@@ -5669,6 +5713,7 @@ sub init() {
     if ($enable_perl_module_checks) {
         open F, "< $fuzzing_pkts_file" or die $!;
         while (<F>) {
+            next if /^#/;
             if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
                 push @{$fuzzing_spa_packets{$1}{$2}}, $3;
                 $total_fuzzing_pkts++;
@@ -5717,6 +5762,7 @@ sub init() {
     $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
     $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
     $git_path     = &find_command('git') unless $git_path;
+    $perl_path    = &find_command('perl') unless $perl_path;
 
     ### On Mac OS X look for otool instead of ldd
     unless ($lib_view_cmd) {
@@ -5789,40 +5835,41 @@ sub init() {
 }
 
 sub preserve_previous_test_run_results() {
-    unless ($list_mode) {
-        if (-d $output_dir) {
-            if (-d "${output_dir}.last") {
-                rmtree "${output_dir}.last"
-                    or die "[*] rmtree ${output_dir}.last $!";
-            }
-            move $output_dir, "${output_dir}.last" or die $!;
-            if (-e "$output_dir/init") {
-                copy "$output_dir/init", "${output_dir}.last/init";
-            }
-            if (-e $logfile) {
-                copy $logfile, "${output_dir}.last/$logfile" or die $!;
-            }
-            $saved_last_results = 1;
-        } else {
-            mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
-        }
 
-        if (-d $run_dir) {
-            rmtree $run_dir or die $!;
-        }
-        mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+    return if $list_mode;
 
-        for my $dir ($output_dir, $run_dir) {
-            next if -d $dir;
-            mkdir $dir or die "[*] Could not mkdir $dir: $!";
+    if (-d $output_dir) {
+        if (-d "${output_dir}.last") {
+            rmtree "${output_dir}.last"
+                or die "[*] rmtree ${output_dir}.last $!";
         }
+        move $output_dir, "${output_dir}.last" or die $!;
+        if (-e "$output_dir/init") {
+            copy "$output_dir/init", "${output_dir}.last/init";
+        }
+        if (-e $logfile) {
+            copy $logfile, "${output_dir}.last/$logfile" or die $!;
+        }
+        $saved_last_results = 1;
+    } else {
+        mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
+    }
 
-        for my $file (glob("$output_dir/*.test"), "$output_dir/init",
-                $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
-                $logfile, $key_gen_file) {
-            next unless -e $file;
-            unlink $file or die "[*] Could not unlink($file)";
-        }
+    if (-d $run_dir) {
+        rmtree $run_dir or die $!;
+    }
+    mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
+
+    for my $dir ($output_dir, $run_dir) {
+        next if -d $dir;
+        mkdir $dir or die "[*] Could not mkdir $dir: $!";
+    }
+
+    for my $file (glob("$output_dir/*.test"), "$output_dir/init",
+        $tmp_rc_file, $tmp_pkt_file, $tmp_args_file,
+        $logfile, $key_gen_file) {
+        next unless -e $file;
+        unlink $file or die "[*] Could not unlink($file)";
     }
     return;
 }
@@ -6451,7 +6498,8 @@ sub write_test_file() {
 sub logr() {
     my $msg = shift;
     print STDOUT $msg;
-    open F, ">> $logfile" or die $!;
+    open F, ">> $logfile"
+        or die "[*] Could not append msg '$msg' to $logfile: $!";
     print F $msg;
     close F;
     return;
@@ -6522,6 +6570,8 @@ sub usage() {
                                      $fwknopdCmd
     --lib-dir=<path>               - For LD_LIBRARY_PATH, default is:
                                      $lib_dir
+    --client-only-mode             - Run client-only tests.
+    --server-only-mode             - Run server-only tests.
     --valgrind-path=<path>         - Specify path to valgrind
     --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
                                      directory (defaults to:

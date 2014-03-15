@@ -13,7 +13,7 @@
 #
 use FKO;
 
-use Test::More tests => 9693;
+use Test::More tests => 9581;
 
 my $err;
 
@@ -40,16 +40,16 @@ my @fuzzing_client_timeouts = (
 
 my @fuzzing_usernames = (
     'A'x1000,
-    "-1",
-    -1,
-    '123%123',
-    '123$123',
-    '-user',
-    '_user',
-    '-User',
-    ',User',
-    'part1 part2',
-    'a:b',
+    ",1",
+    '123>123',
+    '123<123',
+    '123' . pack('a', "\x10"),
+    '*-user',
+    '?user',
+    'User+',
+    'U+er',
+    'part1|part2',
+    'a:b'
 );
 
 my @fuzzing_nat_access_msgs = (
@@ -359,6 +359,7 @@ my %fuzzing_spa_packets = ();
 my $fuzzing_key = 'testtest';
 open F, "< $fuzzing_pkts_file" or die $!;
 while (<F>) {
+    next if /^#/;
     if (/(?:Bogus|Invalid_encoding)\s(\S+)\:\s+(.*)\,\sSPA\spacket\:\s(\S+)/) {
         push @{$fuzzing_spa_packets{$1}{$2}}, $3;
     }
