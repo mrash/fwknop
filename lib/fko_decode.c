@@ -34,6 +34,8 @@
 #include "base64.h"
 #include "digest.h"
 
+#define LOOP_PARSERS 7
+
 static int
 parse_msg(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 {
@@ -291,6 +293,17 @@ fko_decode_spa_data(fko_ctx_t ctx)
     char       *tbuf, *ndx, *tmp;
     int         t_size, i, res;
 
+    /* Array of function pointers to SPA field parsing functions
+    */
+    int (*field_parser[LOOP_PARSERS])(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+        = { parse_rand_val,   /* Extract random value */
+            parse_username,   /* Extract username */
+            parse_timestamp,  /* Client timestamp */
+            parse_version,    /* SPA version */
+            parse_msg_type,   /* SPA msg type */
+            parse_msg,        /* SPA msg string */
+            parse_nat_msg };
+
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL);
 
@@ -415,69 +428,14 @@ fko_decode_spa_data(fko_ctx_t ctx)
     */
     ndx = ctx->encoded_msg;
 
-    /* Extract the rand val data
-    */
-    res = parse_rand_val(tbuf, &ndx, &t_size, ctx);
-    if(res != FKO_SUCCESS)
+    for (i=0; i < LOOP_PARSERS; i++)
     {
-        free(tbuf);
-        return res;
-    }
-
-    /* Jump to the next field (username).  We need to use the temp buffer
-     * for the base64 decode step.
-    */
-    res = parse_username(tbuf, &ndx, &t_size, ctx);
-    if(res != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return res;
-    }
-
-    /* Extract the timestamp value.
-    */
-    res = parse_timestamp(tbuf, &ndx, &t_size, ctx);
-    if(res != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return res;
-    }
-
-    /* Extract the version string.
-    */
-    res = parse_version(tbuf, &ndx, &t_size, ctx);
-    if(res != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return res;
-    }
-
-    /* Extract the message type value.
-    */
-    res = parse_msg_type(tbuf, &ndx, &t_size, ctx);
-    if(res != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return res;
-    }
-
-    /* Extract the SPA message string.
-    */
-    res = parse_msg(tbuf, &ndx, &t_size, ctx);
-    if(res != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return res;
-    }
-
-    /* Extract nat_access string (a check is done against the
-     * message type)
-    */
-    res = parse_nat_msg(tbuf, &ndx, &t_size, ctx);
-    if(res != FKO_SUCCESS)
-    {
-        free(tbuf);
-        return res;
+        res = (*field_parser[i])(tbuf, &ndx, &t_size, ctx);
+        if(res != FKO_SUCCESS)
+        {
+            free(tbuf);
+            return res;
+        }
     }
 
     /* Now look for a server_auth string.
