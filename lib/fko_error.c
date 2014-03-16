@@ -315,8 +315,8 @@ fko_errstr(const int err_code)
         case FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN:
             return("Args contain invalid data: FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN");
 
-        case FKO_ERROR_INVALID_DATA_UTIL_STROL_GT_MAX:
-            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_UTIL_STROL_GT_MAX");
+        case FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX");
 
         case FKO_ERROR_DATA_TOO_LARGE:
             return("Value or Size of the data exceeded the max allowed");

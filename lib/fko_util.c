@@ -450,7 +450,7 @@ strtol_wrapper(const char * const str, const int min,
     */
     if((max >= 0) && (val > max))
     {
-        *err = FKO_ERROR_INVALID_DATA_UTIL_STROL_GT_MAX;
+        *err = FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX;
         if(exit_upon_err == EXIT_UPON_ERR)
         {
             fprintf(stderr, "[*] Value %d out of range %d - %d\n",
