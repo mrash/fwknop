@@ -34,7 +34,7 @@
 #include "base64.h"
 #include "digest.h"
 
-#define LOOP_PARSERS 7
+#define FIELD_PARSERS 9
 
 static int
 verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
@@ -194,17 +194,61 @@ parse_nat_msg(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 static int
 parse_server_auth(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 {
-    strlcpy(tbuf, *ndx, *t_size+1);
+    if((*t_size = strlen(*ndx)) > 0)
+    {
+        if (*t_size > MAX_SPA_MESSAGE_SIZE)
+        {
+            return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_MISSING);
+        }
+    }
+    else
+        return FKO_SUCCESS;
 
-    if(ctx->server_auth != NULL)
-        free(ctx->server_auth);
+    if(  ctx->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG
+      || ctx->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
+      || ctx->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+    {
+        /* If we are here then we may still have a server_auth string,
+         * or a timeout, or both. So we look for a ':' delimiter.  If
+         * it is there we have both, if not we check the message_type
+         * again.
+        */
+        if(strchr(*ndx, ':'))
+        {
+            *t_size = strcspn(*ndx, ":");
 
-    ctx->server_auth = calloc(1, *t_size+1); /* Yes, more than we need */
-    if(ctx->server_auth == NULL)
-        return(FKO_ERROR_MEMORY_ALLOCATION);
+            if (*t_size > MAX_SPA_MESSAGE_SIZE)
+                return(FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG);
 
-    if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
-        return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL);
+            strlcpy(tbuf, *ndx, *t_size+1);
+
+            if(ctx->server_auth != NULL)
+                free(ctx->server_auth);
+
+            ctx->server_auth = calloc(1, *t_size+1); /* Yes, more than we need */
+            if(ctx->server_auth == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
+                return(FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL);
+
+            *ndx += *t_size + 1;
+        }
+    }
+    else
+    {
+        strlcpy(tbuf, *ndx, *t_size+1);
+
+        if(ctx->server_auth != NULL)
+            free(ctx->server_auth);
+
+        ctx->server_auth = calloc(1, *t_size+1); /* Yes, more than we need */
+        if(ctx->server_auth == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+        if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
+            return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL);
+    }
 
     return FKO_SUCCESS;
 }
@@ -370,14 +414,17 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     /* Array of function pointers to SPA field parsing functions
     */
-    int (*field_parser[LOOP_PARSERS])(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
-        = { parse_rand_val,   /* Extract random value */
-            parse_username,   /* Extract username */
-            parse_timestamp,  /* Client timestamp */
-            parse_version,    /* SPA version */
-            parse_msg_type,   /* SPA msg type */
-            parse_msg,        /* SPA msg string */
-            parse_nat_msg };
+    int (*field_parser[FIELD_PARSERS])(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+        = { parse_rand_val,       /* Extract random value */
+            parse_username,       /* Extract username */
+            parse_timestamp,      /* Client timestamp */
+            parse_version,        /* SPA version */
+            parse_msg_type,       /* SPA msg type */
+            parse_msg,            /* SPA msg string */
+            parse_nat_msg,        /* SPA NAT msg string */
+            parse_server_auth,    /* optional server authentication method */
+            parse_client_timeout  /* client defined timeout */
+          };
 
     if (! is_valid_encoded_msg_len(ctx->encoded_msg_len))
         return(FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL);
@@ -450,89 +497,9 @@ fko_decode_spa_data(fko_ctx_t ctx)
     */
     ndx = ctx->encoded_msg;
 
-    for (i=0; i < LOOP_PARSERS; i++)
+    for (i=0; i < FIELD_PARSERS; i++)
     {
         res = (*field_parser[i])(tbuf, &ndx, &t_size, ctx);
-        if(res != FKO_SUCCESS)
-        {
-            free(tbuf);
-            return res;
-        }
-    }
-
-    /* Now look for a server_auth string.
-    */
-    if((t_size = strlen(ndx)) > 0)
-    {
-        if (t_size > MAX_SPA_MESSAGE_SIZE)
-        {
-            free(tbuf);
-            return(FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_MISSING);
-        }
-
-        /* There is data, but what is it?
-         * If the message_type does not have a timeout, assume it is a
-         * server_auth field.
-        */
-        if(  ctx->message_type != FKO_CLIENT_TIMEOUT_ACCESS_MSG
-          && ctx->message_type != FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
-          && ctx->message_type != FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
-        {
-            res = parse_server_auth(tbuf, &ndx, &t_size, ctx);
-
-            /* At this point we should be done.
-            */
-            free(tbuf);
-
-            if(res == FKO_SUCCESS)
-            {
-                /* Call the context initialized.
-                */
-                ctx->initval = FKO_CTX_INITIALIZED;
-                FKO_SET_CTX_INITIALIZED(ctx);
-            }
-            return(res);
-        }
-
-        /* If we are here then we may still have a server_auth string,
-         * or a timeout, or both. So we look for a ':' delimiter.  If
-         * it is there we have both, if not we check the message_type
-         * again.
-        */
-        if(strchr(ndx, ':'))
-        {
-            t_size = strcspn(ndx, ":");
-
-            if (t_size > MAX_SPA_MESSAGE_SIZE)
-            {
-                free(tbuf);
-                return(FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG);
-            }
-
-            strlcpy(tbuf, ndx, t_size+1);
-
-            if(ctx->server_auth != NULL)
-                free(ctx->server_auth);
-
-            ctx->server_auth = calloc(1, t_size+1); /* Yes, more than we need */
-            if(ctx->server_auth == NULL)
-            {
-                free(tbuf);
-                return(FKO_ERROR_MEMORY_ALLOCATION);
-            }
-
-            if(b64_decode(tbuf, (unsigned char*)ctx->server_auth) < 0)
-            {
-                free(tbuf);
-                return(FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL);
-            }
-
-            ndx += t_size + 1;
-        }
-
-        /* Now we look for a timeout value if one is supposed to be there.
-        */
-        res = parse_client_timeout(tbuf, &ndx, &t_size, ctx);
         if(res != FKO_SUCCESS)
         {
             free(tbuf);
