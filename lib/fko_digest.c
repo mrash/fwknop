@@ -114,7 +114,7 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
     switch(digest_type)
     {
         case FKO_DIGEST_MD5:
-            md = malloc(MD_HEX_SIZE(MD5_DIGEST_LEN)+1);
+            md = calloc(1, MD_HEX_SIZE(MD5_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -124,7 +124,7 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
             break;
 
         case FKO_DIGEST_SHA1:
-            md = malloc(MD_HEX_SIZE(SHA1_DIGEST_LEN)+1);
+            md = calloc(1, MD_HEX_SIZE(SHA1_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -134,7 +134,7 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
             break;
 
         case FKO_DIGEST_SHA256:
-            md = malloc(MD_HEX_SIZE(SHA256_DIGEST_LEN)+1);
+            md = calloc(1, MD_HEX_SIZE(SHA256_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -144,7 +144,7 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
             break;
 
         case FKO_DIGEST_SHA384:
-            md = malloc(MD_HEX_SIZE(SHA384_DIGEST_LEN)+1);
+            md = calloc(1, MD_HEX_SIZE(SHA384_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -154,7 +154,7 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
             break;
 
         case FKO_DIGEST_SHA512:
-            md = malloc(MD_HEX_SIZE(SHA512_DIGEST_LEN)+1);
+            md = calloc(1, MD_HEX_SIZE(SHA512_DIGEST_LEN)+1);
             if(md == NULL)
                 return(FKO_ERROR_MEMORY_ALLOCATION);
 

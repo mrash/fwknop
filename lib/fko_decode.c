@@ -125,7 +125,7 @@ parse_msg(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
     if(ctx->message != NULL)
         free(ctx->message);
 
-    ctx->message = malloc(*t_size+1); /* Yes, more than we need */
+    ctx->message = calloc(1, *t_size+1); /* Yes, more than we need */
 
     if(ctx->message == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -175,7 +175,7 @@ parse_nat_msg(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
         if(ctx->nat_access != NULL)
             free(ctx->nat_access);
 
-        ctx->nat_access = malloc(*t_size+1); /* Yes, more than we need */
+        ctx->nat_access = calloc(1, *t_size+1); /* Yes, more than we need */
         if(ctx->nat_access == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -199,7 +199,7 @@ parse_server_auth(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
     if(ctx->server_auth != NULL)
         free(ctx->server_auth);
 
-    ctx->server_auth = malloc(*t_size+1); /* Yes, more than we need */
+    ctx->server_auth = calloc(1, *t_size+1); /* Yes, more than we need */
     if(ctx->server_auth == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -273,7 +273,7 @@ parse_version(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
     if(ctx->version != NULL)
         free(ctx->version);
 
-    ctx->version = malloc(*t_size+1);
+    ctx->version = calloc(1, *t_size+1);
     if(ctx->version == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -320,7 +320,7 @@ parse_username(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
     if(ctx->username != NULL)
         free(ctx->username);
 
-    ctx->username = malloc(*t_size+1); /* Yes, more than we need */
+    ctx->username = calloc(1, *t_size+1); /* Yes, more than we need */
     if(ctx->username == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -432,7 +432,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     /* Make a tmp bucket for processing base64 encoded data and
      * other general use.
     */
-    tbuf = malloc(FKO_ENCODE_TMP_BUF_SIZE);
+    tbuf = calloc(1, FKO_ENCODE_TMP_BUF_SIZE);
     if(tbuf == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -514,7 +514,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             if(ctx->server_auth != NULL)
                 free(ctx->server_auth);
 
-            ctx->server_auth = malloc(t_size+1); /* Yes, more than we need */
+            ctx->server_auth = calloc(1, t_size+1); /* Yes, more than we need */
             if(ctx->server_auth == NULL)
             {
                 free(tbuf);

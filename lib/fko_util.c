@@ -518,7 +518,7 @@ char
 {
     char* ns = NULL;
     if(s) {
-        ns = malloc(len + 1);
+        ns = calloc(1, len + 1);
         if(ns) {
             ns[len] = 0;
             // strncpy to be pedantic about modification in multithreaded 

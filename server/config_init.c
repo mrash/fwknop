@@ -92,7 +92,7 @@ set_config_entry(fko_srv_options_t *opts, const int var_ndx, const char *value)
     */
     space_needed = strlen(value) + 1;
 
-    opts->config[var_ndx] = malloc(space_needed);
+    opts->config[var_ndx] = calloc(1, space_needed);
 
     if(opts->config[var_ndx] == NULL)
     {

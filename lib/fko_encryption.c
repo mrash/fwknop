@@ -114,7 +114,7 @@ _rijndael_encrypt(fko_ctx_t ctx, const char *enc_key, const int enc_key_len)
 
     /* Now make a bucket for the base64-encoded version and populate it.
     */
-    b64ciphertext = malloc(((cipher_len / 3) * 4) + 8);
+    b64ciphertext = calloc(1, ((cipher_len / 3) * 4) + 8);
     if(b64ciphertext == NULL)
     {
         if(zero_free((char *) ciphertext, pt_len+32) == FKO_SUCCESS
@@ -182,7 +182,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.
     */
-    cipher = malloc(ctx->encrypted_msg_len);
+    cipher = calloc(1, ctx->encrypted_msg_len);
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -212,7 +212,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
     /* Create a bucket for the plaintext data and decrypt the message
      * data into it.
     */
-    ctx->encoded_msg = malloc(cipher_len);
+    ctx->encoded_msg = calloc(1, cipher_len);
     if(ctx->encoded_msg == NULL)
     {
         if(zero_free((char *)cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
@@ -309,7 +309,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plain = malloc(ctx->encoded_msg_len + ctx->digest_len + 2);
+    plain = calloc(1, ctx->encoded_msg_len + ctx->digest_len + 2);
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
@@ -354,7 +354,7 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
 
     /* Now make a bucket for the base64-encoded version and populate it.
     */
-    b64cipher = malloc(((cipher_len / 3) * 4) + 8);
+    b64cipher = calloc(1, ((cipher_len / 3) * 4) + 8);
     if(b64cipher == NULL)
     {
         if(zero_free(plain, pt_len) != FKO_SUCCESS)
@@ -419,7 +419,7 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
     /* Create a bucket for the (base64) decoded encrypted data and get the
      * raw cipher data.
     */
-    cipher = malloc(ctx->encrypted_msg_len);
+    cipher = calloc(1, ctx->encrypted_msg_len);
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 

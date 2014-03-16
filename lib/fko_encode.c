@@ -47,7 +47,7 @@ append_b64(char* tbuf, char *str)
     if(len >= MAX_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_INVALID_DATA_ENCODE_MESSAGE_TOOBIG);
 
-    bs = malloc(((len/3)*4)+8);
+    bs = calloc(1, ((len/3)*4)+8);
     if(bs == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 

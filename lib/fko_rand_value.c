@@ -117,15 +117,13 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
 
-    ctx->rand_val = malloc(FKO_RAND_VAL_SIZE+1);
+    ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
     if(ctx->rand_val == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
-    memset(ctx->rand_val, 0, FKO_RAND_VAL_SIZE+1);
 
-    tmp_buf = malloc(FKO_RAND_VAL_SIZE+1);
+    tmp_buf = calloc(1, FKO_RAND_VAL_SIZE+1);
     if(tmp_buf == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
-    memset(tmp_buf, 0, FKO_RAND_VAL_SIZE+1);
 
     snprintf(ctx->rand_val, FKO_RAND_VAL_SIZE, "%u", rand());
 

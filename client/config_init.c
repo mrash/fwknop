@@ -1153,7 +1153,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if(options->resolve_url != NULL)
             free(options->resolve_url);
         tmpint = strlen(val)+1;
-        options->resolve_url = malloc(tmpint);
+        options->resolve_url = calloc(1, tmpint);
         if(options->resolve_url == NULL)
         {
             log_msg(LOG_VERBOSITY_ERROR,"Memory allocation error for resolve URL.");
@@ -2131,7 +2131,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
                     free(options->resolve_url);
-                options->resolve_url = malloc(strlen(optarg)+1);
+                options->resolve_url = calloc(1, strlen(optarg)+1);
                 if(options->resolve_url == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "Memory allocation error for resolve URL.");

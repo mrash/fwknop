@@ -78,13 +78,13 @@ init_logging(fko_srv_options_t *opts) {
       && opts->config[CONF_SYSLOG_IDENTITY][0] != '\0')
     {
         my_name  = opts->config[CONF_SYSLOG_IDENTITY];
-        log_name = malloc(strlen(opts->config[CONF_SYSLOG_IDENTITY])+1);
+        log_name = calloc(1, strlen(opts->config[CONF_SYSLOG_IDENTITY])+1);
         is_syslog = 1;
     }
     else
     {
         my_name  = (char*)&MY_NAME;
-        log_name = malloc(strlen(MY_NAME)+1);
+        log_name = calloc(1, strlen(MY_NAME)+1);
     }
 
     if(log_name == NULL)

@@ -93,9 +93,9 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
     log_msg(LOG_INFO, "Rotating digest cache file.");
 
 #if USE_FILE_CACHE
-    new_file = malloc(strlen(opts->config[CONF_DIGEST_FILE])+5);
+    new_file = calloc(1, strlen(opts->config[CONF_DIGEST_FILE])+5);
 #else
-    new_file = malloc(strlen(opts->config[CONF_DIGEST_DB_FILE])+5);
+    new_file = calloc(1, strlen(opts->config[CONF_DIGEST_DB_FILE])+5);
 #endif
 
     if(new_file == NULL)

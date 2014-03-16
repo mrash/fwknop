@@ -397,7 +397,7 @@ gpgme_encrypt(fko_ctx_t fko_ctx, unsigned char *indata, size_t in_len,
     */
     tmp_buf = gpgme_data_release_and_get_mem(cipher, out_len);
 
-    *out = malloc(*out_len); /* This is freed upon fko_ctx destruction. */
+    *out = calloc(1, *out_len); /* This is freed upon fko_ctx destruction. */
     if(*out == NULL)
         res = FKO_ERROR_MEMORY_ALLOCATION;
     else

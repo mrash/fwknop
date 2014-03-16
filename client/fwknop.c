@@ -972,10 +972,10 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
             else
             {
                 arg_tmp[current_arg_ctr] = '\0';
-                argv_new[argc_new] = malloc(strlen(arg_tmp)+1);
+                argv_new[argc_new] = calloc(1, strlen(arg_tmp)+1);
                 if (argv_new[argc_new] == NULL)
                 {
-                    log_msg(LOG_VERBOSITY_ERROR, "[*] malloc failure for cmd line arg.");
+                    log_msg(LOG_VERBOSITY_ERROR, "[*] calloc failure for cmd line arg.");
                     fclose(args_file_ptr);
                     return 0;
                 }
