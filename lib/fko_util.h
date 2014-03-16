@@ -37,7 +37,6 @@
 */
 int     is_valid_encoded_msg_len(const int len);
 int     is_valid_pt_msg_len(const int len);
-int     is_valid_digest_len(const int len);
 int     is_valid_ipv4_addr(const char * const ip_str);
 int     is_base64(const unsigned char * const buf, const unsigned short int len);
 int     enc_mode_strtoint(const char *enc_mode_str);

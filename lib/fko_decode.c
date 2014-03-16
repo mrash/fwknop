@@ -37,6 +37,81 @@
 #define LOOP_PARSERS 7
 
 static int
+verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
+{
+    switch(ctx->digest_type)
+    {
+        case FKO_DIGEST_MD5:
+            md5_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
+            break;
+
+        case FKO_DIGEST_SHA1:
+            sha1_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
+            break;
+
+        case FKO_DIGEST_SHA256:
+            sha256_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
+            break;
+
+        case FKO_DIGEST_SHA384:
+            sha384_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
+            break;
+
+        case FKO_DIGEST_SHA512:
+            sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
+            break;
+    }
+
+    /* We give up here if the computed digest does not match the
+     * digest in the message data.
+    */
+    if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
+        return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
+
+    return FKO_SUCCESS;
+}
+
+static int
+is_valid_digest_len(int t_size, fko_ctx_t ctx)
+{
+    switch(t_size)
+    {
+        case MD5_B64_LEN:
+            ctx->digest_type = FKO_DIGEST_MD5;
+            ctx->digest_len  = MD5_B64_LEN;
+            break;
+
+        case SHA1_B64_LEN:
+            ctx->digest_type = FKO_DIGEST_SHA1;
+            ctx->digest_len  = SHA1_B64_LEN;
+            break;
+
+        case SHA256_B64_LEN:
+            ctx->digest_type = FKO_DIGEST_SHA256;
+            ctx->digest_len  = SHA256_B64_LEN;
+            break;
+
+        case SHA384_B64_LEN:
+            ctx->digest_type = FKO_DIGEST_SHA384;
+            ctx->digest_len  = SHA384_B64_LEN;
+            break;
+
+        case SHA512_B64_LEN:
+            ctx->digest_type = FKO_DIGEST_SHA512;
+            ctx->digest_len  = SHA512_B64_LEN;
+            break;
+
+        default: /* Invalid or unsupported digest */
+            return(FKO_ERROR_INVALID_DIGEST_TYPE);
+    }
+
+    if (ctx->encoded_msg_len - t_size < 0)
+        return(FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE);
+
+    return FKO_SUCCESS;
+}
+
+static int
 parse_msg(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 {
     if((*t_size = strcspn(*ndx, ":")) < 1)
@@ -331,39 +406,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     t_size = strnlen(ndx, SHA512_B64_LEN+1);
 
-    switch(t_size)
-    {
-        case MD5_B64_LEN:
-            ctx->digest_type = FKO_DIGEST_MD5;
-            ctx->digest_len  = MD5_B64_LEN;
-            break;
-
-        case SHA1_B64_LEN:
-            ctx->digest_type = FKO_DIGEST_SHA1;
-            ctx->digest_len  = SHA1_B64_LEN;
-            break;
-
-        case SHA256_B64_LEN:
-            ctx->digest_type = FKO_DIGEST_SHA256;
-            ctx->digest_len  = SHA256_B64_LEN;
-            break;
-
-        case SHA384_B64_LEN:
-            ctx->digest_type = FKO_DIGEST_SHA384;
-            ctx->digest_len  = SHA384_B64_LEN;
-            break;
-
-        case SHA512_B64_LEN:
-            ctx->digest_type = FKO_DIGEST_SHA512;
-            ctx->digest_len  = SHA512_B64_LEN;
-            break;
-
-        default: /* Invalid or unsupported digest */
-            return(FKO_ERROR_INVALID_DIGEST_TYPE);
-    }
-
-    if (ctx->encoded_msg_len - t_size < 0)
-        return(FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE);
+    /* Validate digest length
+    */
+    res = is_valid_digest_len(t_size, ctx);
+    if(res != FKO_SUCCESS)
+        return res;
 
     if(ctx->digest != NULL)
         free(ctx->digest);
@@ -391,33 +438,8 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     /* Can now verify the digest.
     */
-    switch(ctx->digest_type)
-    {
-        case FKO_DIGEST_MD5:
-            md5_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
-            break;
-
-        case FKO_DIGEST_SHA1:
-            sha1_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
-            break;
-
-        case FKO_DIGEST_SHA256:
-            sha256_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
-            break;
-
-        case FKO_DIGEST_SHA384:
-            sha384_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
-            break;
-
-        case FKO_DIGEST_SHA512:
-            sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
-            break;
-    }
-
-    /* We give up here if the computed digest does not match the
-     * digest in the message data.
-    */
-    if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
+    res = verify_digest(tbuf, t_size, ctx);
+    if(res != FKO_SUCCESS)
     {
         free(tbuf);
         return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
