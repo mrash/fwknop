@@ -1109,7 +1109,7 @@
         'detail'   => 'localhost hostname->IP spoofed',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D localhost --get-key " .
-            "$local_key_file --no-save-args $verbose_str -Q $spoof_ip",
+            "$local_key_file --no-save-args $verbose_str -P udpraw -Q $spoof_ip",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
