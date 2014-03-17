@@ -69,6 +69,12 @@ fko_errstr(const int err_code)
         case FKO_ERROR_INVALID_DATA_DECODE_LT_MIN_FIELDS:
             return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_LT_MIN_FIELDS");
 
+        case FKO_ERROR_INVALID_DATA_DECODE_GT_MAX_FIELDS:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_GT_MAX_FIELDS");
+
+        case FKO_ERROR_INVALID_DATA_DECODE_WRONG_NUM_FIELDS:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_WRONG_NUM_FIELDS");
+
         case FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE:
             return("Args contain invalid data: FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE");
 

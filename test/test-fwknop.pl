@@ -1279,7 +1279,7 @@ sub code_structure_fko_error_strings() {
                 $expected_var_index++;
                 $prev_var = $var_str;
             } else {
-                &write_test_file("[-] expected var $fko_error_codes[$expected_var_index] " .
+                &write_test_file("[-] $libfko_errstr_file: expected var $fko_error_codes[$expected_var_index] " .
                     "in position: $expected_var_index in fko_errstr(), previous var: $prev_var\n",
                     $curr_test_file);
                 $rv = 0;
@@ -1308,8 +1308,9 @@ sub code_structure_fko_error_strings() {
                 $expected_var_index++;
                 $prev_var = $var_str;
             } else {
-                &write_test_file("[-] perl FKO module - expected var $fko_error_codes[$expected_var_index] " .
-                    "in position: $expected_var_index in ERROR_CODES array, previous var: $prev_var\n",
+                &write_test_file("[-] $perl_libfko_constants_file: perl FKO module - " .
+                    "expected var $fko_error_codes[$expected_var_index] " .
+                    "at position: $expected_var_index in ERROR_CODES array, previous var: $prev_var\n",
                     $curr_test_file);
                 $rv = 0;
                 last;
@@ -1334,7 +1335,8 @@ sub code_structure_fko_error_strings() {
         if (/^\s{4}$starting_code\s+=\>\s(\d+),/) {
             my $val = $1;
             unless ($fko_error_codes[$val] eq $starting_code) {
-                &write_test_file("[-] perl FKO module - expected var $starting_code " .
+                &write_test_file("[-] $perl_libfko_constants_file: perl FKO module " .
+                    "- expected var $starting_code " .
                     "value of zero, got $val\n", $curr_test_file);
                 $rv = 0;
                 last;
@@ -1349,7 +1351,8 @@ sub code_structure_fko_error_strings() {
                 $expected_var_index++;
                 $prev_var = $var_str;
             } else {
-                &write_test_file("[-] perl FKO module - expected var $fko_error_codes[$expected_var_index] " .
+                &write_test_file("[-] $perl_libfko_constants_file: perl FKO module " .
+                    "- expected var $fko_error_codes[$expected_var_index] " .
                     "in position: $expected_var_index in 'use constants' definition, previous var: $prev_var\n",
                     $curr_test_file);
                 $rv = 0;

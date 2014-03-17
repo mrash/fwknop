@@ -53,7 +53,7 @@
 
 #define MIN_GNUPG_MSG_SIZE          400
 #define MIN_SPA_FIELDS                6
-#define MAX_SPA_FIELDS               10
+#define MAX_SPA_FIELDS                9
 
 #define MAX_IPV4_STR_LEN             16
 #define MIN_IPV4_STR_LEN              7

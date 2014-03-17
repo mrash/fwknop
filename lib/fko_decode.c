@@ -37,6 +37,42 @@
 #define FIELD_PARSERS 9
 
 static int
+num_fields(char *str)
+{
+    int    i=0;
+    char   *tmp = NULL;
+
+    /* Count the number of remaining SPA packet fields
+    */
+    for (i=0; i <= MAX_SPA_FIELDS+1; i++)
+    {
+        if ((tmp = strchr(str, ':')) == NULL)
+            break;
+        str = tmp + 1;
+    }
+    return i;
+}
+
+static int
+last_field(char *str)
+{
+    int    i=0, pos_last=0;
+    char   *tmp = NULL;
+
+    /* Count the number of bytes to the last ':' char
+    */
+    for (i=0; i <= MAX_SPA_FIELDS+1; i++)
+    {
+        if ((tmp = strchr(str, ':')) == NULL)
+            break;
+
+        pos_last += (tmp - str) + 1;
+        str = tmp + 1;
+    }
+    return pos_last;
+}
+
+static int
 verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
 {
     switch(ctx->digest_type)
@@ -60,6 +96,9 @@ verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
         case FKO_DIGEST_SHA512:
             sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
+
+        default: /* Invalid or unsupported digest */
+            return(FKO_ERROR_INVALID_DIGEST_TYPE);
     }
 
     /* We give up here if the computed digest does not match the
@@ -285,7 +324,7 @@ parse_client_timeout(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 static int
 parse_msg_type(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 {
-    int         is_err;
+    int    is_err, remaining_fields;
 
     if((*t_size = strcspn(*ndx, ":")) < 1)
         return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_MISSING);
@@ -296,10 +335,43 @@ parse_msg_type(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
     strlcpy(tbuf, *ndx, *t_size+1);
 
     ctx->message_type = strtol_wrapper(tbuf, 0,
-            FKO_LAST_MSG_TYPE, NO_EXIT_UPON_ERR, &is_err);
+            FKO_LAST_MSG_TYPE-1, NO_EXIT_UPON_ERR, &is_err);
 
     if(is_err != FKO_SUCCESS)
         return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL);
+
+    /* Now that we have a valid type, ensure that the total
+     * number of SPA fields is also valid for the type
+    */
+    remaining_fields = num_fields(*ndx);
+
+    switch(ctx->message_type)
+    {
+        /* optional server_auth + digest */
+        case FKO_COMMAND_MSG:
+        case FKO_ACCESS_MSG:
+            if(remaining_fields > 2)
+                return FKO_ERROR_INVALID_DATA_DECODE_WRONG_NUM_FIELDS;
+            break;
+
+        /* nat or client timeout + optional server_auth + digest */
+        case FKO_NAT_ACCESS_MSG:
+        case FKO_LOCAL_NAT_ACCESS_MSG:
+        case FKO_CLIENT_TIMEOUT_ACCESS_MSG:
+            if(remaining_fields > 3)
+                return FKO_ERROR_INVALID_DATA_DECODE_WRONG_NUM_FIELDS;
+            break;
+
+        /* client timeout + nat + optional server_auth + digest */
+        case FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG:
+        case FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG:
+            if(remaining_fields > 4)
+                return FKO_ERROR_INVALID_DATA_DECODE_WRONG_NUM_FIELDS;
+            break;
+
+        default: /* Should not reach here */
+            return(FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL);
+    }
 
     *ndx += *t_size + 1;
     return FKO_SUCCESS;
@@ -409,7 +481,7 @@ parse_rand_val(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 int
 fko_decode_spa_data(fko_ctx_t ctx)
 {
-    char       *tbuf, *ndx, *tmp;
+    char       *tbuf, *ndx;
     int         t_size, i, res;
 
     /* Array of function pointers to SPA field parsing functions
@@ -439,17 +511,11 @@ fko_decode_spa_data(fko_ctx_t ctx)
      * delimited with ':' chars
     */
     ndx = ctx->encoded_msg;
-    for (i=0; i < MAX_SPA_FIELDS; i++)
-    {
-        if ((tmp = strchr(ndx, ':')) == NULL)
-            break;
 
-        ndx = tmp;
-        ndx++;
-    }
-
-    if (i < MIN_SPA_FIELDS)
+    if (num_fields(ndx) < MIN_SPA_FIELDS)
         return(FKO_ERROR_INVALID_DATA_DECODE_LT_MIN_FIELDS);
+
+    ndx += last_field(ndx);
 
     t_size = strnlen(ndx, SHA512_B64_LEN+1);
 
@@ -470,7 +536,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     if(ctx->digest == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    /* Zero out the rest of the encoded_msg bucket...
+    /* Chop the digest off of the encoded_msg bucket...
     */
     bzero((ndx-1), t_size);
 
