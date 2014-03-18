@@ -202,6 +202,7 @@ our $non_std_spa_port  = 12345;
 our $spoof_user = 'testuser';
 
 my $valgrind_cov_dir = 'valgrind-coverage';
+my $lcov_results_dir = 'lcov-results';
 
 my $perl_mod_fko_dir = 'FKO';
 my $python_fko_dir   = 'python_fko';
@@ -330,6 +331,8 @@ my $git_path = '';
 our $valgrind_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
+my  $lcov_path = '';
+my  $genhtml_path = '';
 our $killall_path = '';
 our $pgrep_path   = '';
 our $openssl_path = '';
@@ -1124,6 +1127,19 @@ sub profile_coverage() {
         chdir $curr_dir or die $!;
 
         &run_cmd(qq|grep "called 0 returned" $dir/*.gcov|,
+                $cmd_out_tmp, $curr_test_file);
+    }
+
+    ### if lcov has been installed then use it to build profile
+    ### result HTML pages
+    if ($lcov_path) {
+        mkdir "$output_dir/$lcov_results_dir"
+            unless -d "$output_dir/$lcov_results_dir";
+        &run_cmd(qq|$lcov_path --capture --directory .. | .
+            qq|--output-file $output_dir/lcov_coverage.info|,
+                $cmd_out_tmp, $curr_test_file);
+        &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage.info | .
+            qq|--output-directory $output_dir/$lcov_results_dir|,
                 $cmd_out_tmp, $curr_test_file);
     }
 
@@ -5695,6 +5711,10 @@ sub init() {
         $fuzzing_test_tag .= '_' unless $fuzzing_test_tag =~ /_$/;
     }
 
+    unless ($enable_valgrind) {
+        push @tests_to_exclude, qr/with valgrind/;
+    }
+
     unless ($enable_recompilation_warnings_check) {
         push @tests_to_exclude, qr/recompilation/;
     }
@@ -5778,6 +5798,8 @@ sub init() {
     }
 
     $gcov_path = &find_command('gcov') unless $gcov_path;
+    $lcov_path = &find_command('lcov') unless $lcov_path;
+    $genhtml_path = &find_command('genhtml') unless $genhtml_path;
 
     if ($gcov_path) {
         if ($enable_profile_coverage_check) {
