@@ -130,8 +130,9 @@ AC_ARG_ENABLE([profile-coverage],
   [])
 
 if test "x$want_profile_coverage" = "xyes"; then
-    CFLAGS="-g -O0"
+    CFLAGS="-g"
     FKO_CHECK_COMPILER_ARG([-fprofile-arcs -ftest-coverage -fno-inline])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lgcov])
 fi
 
 dnl Decide whether or not to enable all warnings with -Wall
