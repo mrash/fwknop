@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS = subdir-objects
+
 noinst_LIBRARIES         	= libfko_util.a
 
 libfko_util_source_files 	= ../lib/strlcpy.c ../lib/strlcat.c ../lib/fko_util.c ../lib/fko_util.h
