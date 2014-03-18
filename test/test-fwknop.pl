@@ -310,6 +310,7 @@ my $enc_dummy_key = 'A'x8;
 my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_profile_coverage_check = 0;
+my $preserve_previous_coverage_files = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -395,6 +396,7 @@ exit 1 unless GetOptions(
     'fuzzing-class=s'     => \$fuzzing_class,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
+    'preserve-previous-profile-files' => \$preserve_previous_coverage_files,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
@@ -5802,7 +5804,8 @@ sub init() {
     $genhtml_path = &find_command('genhtml') unless $genhtml_path;
 
     if ($gcov_path) {
-        if ($enable_profile_coverage_check) {
+        if ($enable_profile_coverage_check
+                and not $preserve_previous_coverage_files) {
             for my $extension ('*.gcov', '*.gcda') {
                 ### remove profile output from any previous run
                 system qq{find .. -name $extension | xargs rm 2> /dev/null};
@@ -6540,6 +6543,8 @@ sub usage() {
     --enable-profile-coverage      - Generate profile coverage stats with an
                                      emphasis on finding functions that the
                                      test suite does not call.
+    --preserve-previous-profile    - In --enable-profile-coverage mode,
+                                     preserve previous coverage files.
     --enable-recompile             - Recompile fwknop sources and look for
                                      compilation warnings.
     --enable-valgrind              - Run every test underneath valgrind.
