@@ -280,6 +280,12 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'fko-wrapper',
+        'detail'   => 'multiple libfko calls (with valgrind)',
+        'function' => \&compile_execute_fko_wrapper
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'fko-wrapper',
         'detail'   => 'multiple libfko calls',
         'function' => \&compile_execute_fko_wrapper_no_valgrind
     },
