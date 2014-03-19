@@ -49,17 +49,11 @@ static void spa_func_getset_short(fko_ctx_t *ctx, char *set_name,
 int spa_calls = 0;
 
 int main(void) {
-    int i;
 
     test_loop(NO_NEW_CTX, NO_CTX_DESTROY);
     test_loop(NEW_CTX, CTX_DESTROY);
     test_loop(NEW_CTX, NO_CTX_DESTROY);
     test_loop(NO_NEW_CTX, CTX_DESTROY);
-
-    /* call fko_errstr() across valid and invalid values
-    */
-    for (i=-5; i < FKO_LAST_ERROR+5; i++)
-        printf("libfko error (%d): %s\n", i, fko_errstr(i));
 
     printf("\n[+] Total libfko function calls: %d\n\n", spa_calls);
 
@@ -71,7 +65,7 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
 {
     fko_ctx_t  ctx = NULL, decrypt_ctx = NULL;
     int        i, j;
-    char       *spa_data = NULL;
+    char       *spa_data = NULL, encode_buf[100], decode_buf[100];
 
     printf("[+] test_loop(): %s, %s\n",
             new_ctx_flag == NEW_CTX ? "NEW_CTX" : "NO_NEW_CTX",
@@ -247,6 +241,18 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
     for (i=0; i<FCN_CALLS; i++) {
         fko_destroy(decrypt_ctx);
         decrypt_ctx = NULL;
+    }
+
+    /* exercise the base64 encode/decode wrapper
+    */
+    fko_base64_encode((unsigned char *)ENC_KEY, encode_buf, 16);
+    fko_base64_decode(encode_buf, (unsigned char *)decode_buf);
+
+    /* call fko_errstr() across valid and invalid values
+    */
+    for (i=-5; i < FKO_LAST_ERROR+5; i++) {
+        printf("libfko error (%d): %s\n", i, fko_errstr(i));
+        spa_calls++;
     }
 
     return;
