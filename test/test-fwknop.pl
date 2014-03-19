@@ -5805,7 +5805,8 @@ sub init() {
 
     if ($gcov_path) {
         if ($enable_profile_coverage_check
-                and not $preserve_previous_coverage_files) {
+                and not $preserve_previous_coverage_files
+                and not $list_mode) {
             for my $extension ('*.gcov', '*.gcda') {
                 ### remove profile output from any previous run
                 system qq{find .. -name $extension | xargs rm 2> /dev/null};
