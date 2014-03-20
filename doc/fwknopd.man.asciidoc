@@ -267,11 +267,14 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
 
 *GPG_HOME_DIR* '<path>'::
     If GPG keys are used instead of a Rijndael symmetric key, this is
-    the default GPG keys directory.  Note that each access block in
+    the default GPG keys directory.  Note that each access stanza in
     '@sysconfdir@/fwknop/access.conf' can specify its own GPG directory to override
     this default. If not set here or in an 'access.conf' stanza, then
     the '$HOME/.gnupg' directory of the user running *fwknopd* (most
     likely root).
+
+GPG_EXE* '<path>'::
+    Specify the path to GPG, and defaults to '/usr/bin/gpg' if not set.
 
 *LOCALE* '<locale>'::
     Set the locale (via the LC_ALL variable).  This can be set to override
@@ -458,13 +461,6 @@ directive starts a new stanza.
     necessary to also specify an IP address for SNAT rules because the
     MASQUERADE target is used instead.
 
-*GPG_HOME_DIR* '<path>'::
-    Define the path to the GnuPG directory to be used by the *fwknopd*
-    server.  If this keyword is not specified within '@sysconfdir@/fwknop/access.conf'
-    then *fwknopd* will default to using the '/root/.gnupg' directory for the
-    server key(s) for incoming SPA packets handled by the matching
-    'access.conf' stanza.
-
 *GPG_DECRYPT_ID* '<keyID>'::
     Define a GnuPG key ID to use for decrypting SPA messages that
     have been encrypted by an *fwknop* client.  This keyword is
@@ -515,6 +511,17 @@ directive starts a new stanza.
     This setting only applies if the ``GPG_REQUIRE_SIG'' is set to 'Y'.
     Separate multiple entries with a comma.
 
+*GPG_HOME_DIR* '<path>'::
+    Define the path to the GnuPG directory to be used by the *fwknopd*
+    server.  If this keyword is not specified within '@sysconfdir@/fwknop/access.conf'
+    then *fwknopd* will default to using the '/root/.gnupg' directory for the
+    server key(s) for incoming SPA packets handled by the matching
+    'access.conf' stanza.
+
+*GPG_EXE* '<path>'::
+    Define the path to the GnuPG executable. If this keyword is not specified
+    within '@sysconfdir@/fwknop/access.conf' then *fwknopd* will default to
+    using '/usr/bin/gpg'.
 
 FILES
 -----
@@ -532,7 +539,7 @@ binary distributions, and is a dedicated library developed by the fwknop
 project.
 
 For packet sniffing, *fwknopd* currently requires libpcap, but future versions
-still remove this as a dependency.
+will (optionally) remove this as a dependency.
 
 For GPG functionality, GnuPG must also be correctly installed and configured
 along with the libgpgme library.

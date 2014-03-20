@@ -101,6 +101,7 @@ typedef struct fko_cli_options
     char gpg_recipient_key[MAX_GPG_KEY_ID];
     char gpg_signer_key[MAX_GPG_KEY_ID];
     char gpg_home_dir[MAX_PATH_LEN];
+    char gpg_exe[MAX_PATH_LEN];
 
     /* Encryption keys read from a .fwknoprc stanza
     */

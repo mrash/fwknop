@@ -692,6 +692,9 @@ description and its matching command-line option(s):
 *GPG_HOMEDIR* '<dir>'::
     Specify the GPG home directory ('--gpg-home-dir').  Defaults to '~/.gnupg'.
 
+*GPG_EXE* '<path>'::
+    Specify the path to GPG ('--gpg-exe').  Defaults to '/usr/bin/gpg'.
+
 *SPOOF_USER* '<user>'::
     Set the username in the SPA data to the specified value ('-U,
     --spoof-user').

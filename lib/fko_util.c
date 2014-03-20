@@ -628,7 +628,18 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
     char       *enc_data        = NULL;
     char       *hmac_data       = NULL;
     char       *spa_digest      = NULL;
-    char       *spa_data        = NULL;
+#if HAVE_LIBGPGME
+    char          *gpg_signer        = NULL;
+    char          *gpg_recip         = NULL;
+    char          *gpg_sig_id        = NULL;
+    unsigned char  gpg_sig_verify    = 0;
+    unsigned char  gpg_ignore_verify = 0;
+    char          *gpg_sig_fpr       = NULL;
+    char          *gpg_home_dir      = NULL;
+    char          *gpg_exe           = NULL;
+    int            gpg_sigsum        = -1;
+#endif
+    char       *spa_data         = NULL;
     char        digest_str[24]   = {0};
     char        hmac_str[24]     = {0};
     char        enc_mode_str[FKO_ENCRYPTION_MODE_BUFSIZE] = {0};
@@ -669,6 +680,26 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
         RETURN_ON_FKO_ERROR(err, fko_get_spa_digest(ctx, &spa_digest));
         RETURN_ON_FKO_ERROR(err, fko_get_spa_data(ctx, &spa_data));
 
+#if HAVE_LIBGPGME
+        if(encryption_mode == FKO_ENC_MODE_ASYMMETRIC)
+        {
+            /* Populate GPG variables
+            */
+            RETURN_ON_FKO_ERROR(err, fko_get_gpg_signer(ctx, &gpg_signer));
+            RETURN_ON_FKO_ERROR(err, fko_get_gpg_recipient(ctx, &gpg_recip));
+            RETURN_ON_FKO_ERROR(err, fko_get_gpg_signature_verify(ctx, &gpg_sig_verify));
+            RETURN_ON_FKO_ERROR(err, fko_get_gpg_ignore_verify_error(ctx, &gpg_ignore_verify));
+            RETURN_ON_FKO_ERROR(err, fko_get_gpg_home_dir(ctx, &gpg_home_dir));
+            RETURN_ON_FKO_ERROR(err, fko_get_gpg_exe(ctx, &gpg_exe));
+            if(fko_get_gpg_signature_id(ctx, &gpg_sig_id) != FKO_SUCCESS)
+                gpg_sig_id = NULL;
+            if(fko_get_gpg_signature_summary(ctx, &gpg_sigsum) != FKO_SUCCESS)
+                gpg_sigsum = -1;
+            if(fko_get_gpg_signature_fpr(ctx, &gpg_sig_fpr) != FKO_SUCCESS)
+                gpg_sig_fpr = NULL;
+        }
+#endif
+
         /* Convert the digest integer to a string */
         if (digest_inttostr(digest_type, digest_str, sizeof(digest_str)) != 0)
             return (FKO_ERROR_INVALID_DIGEST_TYPE);
@@ -699,6 +730,20 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "      HMAC Type: %u (%s)\n", hmac_type, hmac_type == 0 ? "None" : hmac_str);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "Encryption Type: %d (%s)\n", encryption_type, enc_type_inttostr(encryption_type));
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "Encryption Mode: %d (%s)\n", encryption_mode, enc_mode_str);
+#if HAVE_LIBGPGME
+        if(encryption_mode == FKO_ENC_MODE_ASYMMETRIC)
+        {
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "     GPG signer: %s\n", gpg_signer == NULL ? NULL_STRING : gpg_signer);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "  GPG recipient: %s\n", gpg_recip == NULL ? NULL_STRING : gpg_recip);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, " GPG sig verify: %s\n", gpg_sig_verify == 0 ? "No" : "Yes");
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, " GPG ignore sig: %s\n", gpg_ignore_verify == 0 ? "No" : "Yes");
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "     GPG sig ID: %s\n", gpg_sig_id == NULL ? NULL_STRING : gpg_sig_id);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "    GPG sig fpr: %s\n", gpg_sig_fpr == NULL ? NULL_STRING : gpg_sig_fpr);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "GPG sig summary: %d\n", gpg_sigsum);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "   GPG home dir: %s\n", gpg_home_dir == NULL ? NULL_STRING : gpg_home_dir);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "        GPG exe: %s\n", gpg_exe == NULL ? GPG_EXE : gpg_exe);
+        }
+#endif
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "   Encoded Data: %s\n", enc_data == NULL ? NULL_STRING : enc_data);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "SPA Data Digest: %s\n", spa_digest == NULL ? NULL_STRING : spa_digest);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "           HMAC: %s\n", hmac_data == NULL ? NULL_STRING : hmac_data);

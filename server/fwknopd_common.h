@@ -93,6 +93,11 @@
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
 #define DEF_MAX_SNIFF_BYTES             "1500"
 #define DEF_GPG_HOME_DIR                "/root/.gnupg"
+#ifdef  GPG_EXE
+  #define DEF_GPG_EXE                   GPG_EXE
+#else
+  #define DEF_GPG_EXE                   "/usr/bin/gpg"
+#endif
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
 #define DEF_TCPSERV_PORT                "62201"
@@ -250,6 +255,7 @@ enum {
     CONF_DIGEST_DB_FILE,
 #endif
     CONF_GPG_HOME_DIR,
+    CONF_GPG_EXE,
     CONF_FIREWALL_EXE,
     CONF_VERBOSE,
 
@@ -310,9 +316,11 @@ typedef struct acc_stanza
     char                *require_username;
     unsigned char        require_source_address;
     char                *gpg_home_dir;
+    char                *gpg_exe;
     char                *gpg_decrypt_id;
     char                *gpg_decrypt_pw;
     unsigned char        gpg_require_sig;
+    unsigned char        gpg_disable_sig;
     unsigned char        gpg_ignore_sig_error;
     unsigned char        use_gpg;
     unsigned char        gpg_allow_no_pw;

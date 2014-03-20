@@ -329,6 +329,19 @@ main(int argc, char **argv)
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
 
+        /* Set gpg path if necessary
+        */
+        if(strlen(options.gpg_exe) > 0)
+        {
+            res = fko_set_gpg_exe(ctx, options.gpg_exe);
+            if(res != FKO_SUCCESS)
+            {
+                errmsg("fko_set_gpg_exe", res);
+                clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+            }
+        }
+
         /* If a GPG home dir was specified, set it here.  Note: Setting
          * this has to occur before calling any of the other GPG-related
          * functions.

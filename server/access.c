@@ -741,6 +741,9 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->gpg_home_dir != NULL)
         free(acc->gpg_home_dir);
 
+    if(acc->gpg_exe != NULL)
+        free(acc->gpg_exe);
+
     if(acc->gpg_decrypt_id != NULL)
         free(acc->gpg_decrypt_id);
 
@@ -875,13 +878,14 @@ acc_stanza_add(fko_srv_options_t *opts)
     return(new_acc);
 }
 
-/* Scan the access options for entries that have not bees set, but need
+/* Scan the access options for entries that have not been set, but need
  * a default value.
 */
 static void
 set_acc_defaults(fko_srv_options_t *opts)
 {
     acc_stanza_t    *acc = opts->acc_stanzas;
+    int              i=1;
 
     if(!acc)
         return;
@@ -899,6 +903,33 @@ set_acc_defaults(fko_srv_options_t *opts)
         {
             if(acc->gpg_home_dir == NULL)
                 add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]);
+
+            if(! acc->gpg_require_sig)
+            {
+                if (acc->gpg_disable_sig)
+                {
+                    log_msg(LOG_INFO,
+                        "Warning: GPG_REQUIRE_SIG should really be enabled for stanza source: '%s' (#%d)",
+                        acc->source, i
+                    );
+                }
+                else
+                {
+                    /* Make this the default unless explicitly disabled
+                    */
+                    acc->gpg_require_sig = 1;
+                }
+            }
+            else
+            {
+                if (acc->gpg_disable_sig)
+                {
+                    log_msg(LOG_INFO,
+                        "Warning: GPG_REQUIRE_SIG and GPG_DISABLE_SIG are both set, will check sigs (stanza source: '%s' #%d)",
+                        acc->source, i
+                    );
+                }
+            }
         }
 
         if(acc->encryption_mode == FKO_ENC_MODE_UNKNOWN)
@@ -915,6 +946,7 @@ set_acc_defaults(fko_srv_options_t *opts)
         }
 
         acc = acc->next;
+        i++;
     }
 }
 
@@ -1314,6 +1346,10 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
+        else if(CONF_VAR_IS(var, "GPG_EXE"))
+        {
+            add_acc_string(&(curr_acc->gpg_exe), val);
+        }
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_ID"))
         {
             add_acc_string(&(curr_acc->gpg_decrypt_id), val);
@@ -1343,6 +1379,10 @@ parse_access_file(fko_srv_options_t *opts)
         else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
         {
             add_acc_bool(&(curr_acc->gpg_require_sig), val);
+        }
+        else if(CONF_VAR_IS(var, "GPG_DISABLE_SIG"))
+        {
+            add_acc_bool(&(curr_acc->gpg_disable_sig), val);
         }
         else if(CONF_VAR_IS(var, "GPG_IGNORE_SIG_VERIFY_ERROR"))
         {
@@ -1661,6 +1701,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "           FORCE_MASQUERADE:  %s\n"
             "              ACCESS_EXPIRE:  %s"  /* asctime() adds a newline */
             "               GPG_HOME_DIR:  %s\n"
+            "                    GPG_EXE:  %s\n"
             "             GPG_DECRYPT_ID:  %s\n"
             "             GPG_DECRYPT_PW:  %s\n"
             "            GPG_REQUIRE_SIG:  %s\n"
@@ -1689,6 +1730,7 @@ dump_access_list(const fko_srv_options_t *opts)
             acc->force_masquerade ? "Yes" : "No",
             (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>\n",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
+            (acc->gpg_exe == NULL) ? "<not set>" : acc->gpg_exe,
             (acc->gpg_decrypt_id == NULL) ? "<not set>" : acc->gpg_decrypt_id,
             (acc->gpg_decrypt_pw == NULL) ? "<not set>" : "<see the access.conf file>",
             acc->gpg_require_sig ? "Yes" : "No",

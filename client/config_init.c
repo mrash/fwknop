@@ -99,6 +99,7 @@ enum
     FWKNOP_CLI_ARG_GPG_RECIPIENT,
     FWKNOP_CLI_ARG_GPG_SIGNER,
     FWKNOP_CLI_ARG_GPG_HOMEDIR,
+    FWKNOP_CLI_ARG_GPG_EXE_PATH,
     FWKNOP_CLI_ARG_SPOOF_USER,
     FWKNOP_CLI_ARG_SPOOF_SOURCE_IP,
     FWKNOP_CLI_ARG_ACCESS,
@@ -140,6 +141,7 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "GPG_RECIPIENT",         FWKNOP_CLI_ARG_GPG_RECIPIENT         },
     { "GPG_SIGNER",            FWKNOP_CLI_ARG_GPG_SIGNER            },
     { "GPG_HOMEDIR",           FWKNOP_CLI_ARG_GPG_HOMEDIR           },
+    { "GPG_EXE",               FWKNOP_CLI_ARG_GPG_EXE_PATH          },
     { "GPG_SIGNING_PW",        FWKNOP_CLI_ARG_GPG_SIGNING_PW        },
     { "GPG_SIGNING_PW_BASE64", FWKNOP_CLI_ARG_GPG_SIGNING_PW_BASE64 },
     { "GPG_NO_SIGNING_PW",     FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW     },
@@ -198,7 +200,7 @@ generate_keys(fko_cli_options_t *options)
         memset(&(options->key_base64), 0x00, sizeof(options->key_base64));
         memset(&(options->hmac_key_base64), 0x00, sizeof(options->hmac_key_base64));
 
-        /* Generate the key with through libfko */
+        /* Generate the key through libfko */
         res = fko_key_gen(options->key_base64, options->key_len,
                 options->hmac_key_base64, options->hmac_key_len,
                 options->hmac_type);
@@ -849,6 +851,7 @@ create_fwknoprc(const char *rcfile)
         "#TIME_OFFSET         0\n"
         "#USE_GPG             N\n"
         "#GPG_HOMEDIR         /path/to/.gnupg\n"
+        "#GPG_EXE             /path/to/gpg\n"
         "#GPG_SIGNER          <signer ID>\n"
         "#GPG_RECIPIENT       <recipient ID>\n"
         "\n"
@@ -1015,6 +1018,11 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
     else if (var->pos == FWKNOP_CLI_ARG_GPG_HOMEDIR)
     {
         strlcpy(options->gpg_home_dir, val, sizeof(options->gpg_home_dir));
+    }
+    /* GPG path */
+    else if (var->pos == FWKNOP_CLI_ARG_GPG_EXE_PATH)
+    {
+        strlcpy(options->gpg_exe, val, sizeof(options->gpg_exe));
     }
     /* Spoof User */
     else if (var->pos == FWKNOP_CLI_ARG_SPOOF_USER)
@@ -1285,6 +1293,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             break;
         case FWKNOP_CLI_ARG_GPG_HOMEDIR :
             strlcpy(val, options->gpg_home_dir, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_GPG_EXE_PATH :
+            strlcpy(val, options->gpg_exe, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_GPG_NO_SIGNING_PW :
             bool_to_yesno(options->gpg_no_signing_pw, val, sizeof(val));
@@ -2191,6 +2202,12 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_HOMEDIR, &var_bitmask);
                 break;
+            case GPG_EXE_PATH:
+                options->use_gpg = 1;
+                strlcpy(options->gpg_exe, optarg, sizeof(options->gpg_exe));
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_EXE_PATH, &var_bitmask);
+                break;
             case GPG_AGENT:
                 options->use_gpg = 1;
                 options->use_gpg_agent = 1;
@@ -2388,6 +2405,7 @@ usage(void)
       "     --gpg-signer-key        Specify the signer's GPG key name or ID.\n"
       "     --gpg-home-dir          Specify the GPG home directory.\n"
       "     --gpg-agent             Use GPG agent if available.\n"
+      "     --gpg-exe               Set path to GPG binary.\n"
       "     --no-save-args          Do not save fwknop command line args to the\n"
       "                             $HOME/fwknop.run file\n"
       "     --rc-file               Specify path to the fwknop rc file (default\n"

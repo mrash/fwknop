@@ -25,6 +25,53 @@
     {
         'category' => 'GPG+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => '--gpg-exe invalid path',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_gpg_args
+            . " --rc-file $cf{'rc_gpg_hmac_b64_key'} --gpg-exe /invalid/bin/gpg",
+        'positive_output_matches' => [qr/Unable\sto\sstat/i],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_gpg_hmac_b64_key'},
+    },
+    {
+        'category' => 'GPG+HMAC',
+        'subcategory' => 'client',
+        'detail'   => '--gpg-exe invalid rc path',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_gpg_args
+            . " --rc-file $cf{'rc_gpg_invalid_gpg_exe'}",
+        'positive_output_matches' => [qr/Unable\sto\sstat/i],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_gpg_invalid_gpg_exe'},
+    },
+    {
+        'category' => 'GPG+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle invalid gpg path',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args
+            . " --rc-file $cf{'rc_gpg_hmac_b64_key'} --gpg-exe /usr/bin/gpg",
+        'fwknopd_cmdline' => $invalid_gpg_exe_server_args,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_gpg_hmac_b64_key'},
+        'client_pkt_tries' => 1,
+    },
+    {
+        'category' => 'GPG+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle --gpg-exe path',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args
+            . " --rc-file $cf{'rc_gpg_hmac_b64_key'} --gpg-exe /usr/bin/gpg",
+        'fwknopd_cmdline' => $default_server_gpg_args_hmac,
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_gpg_hmac_b64_key'},
+    },
+
+    {
+        'category' => 'GPG+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'complete cycle SHA512',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args

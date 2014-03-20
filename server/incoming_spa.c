@@ -462,6 +462,21 @@ incoming_spa(fko_srv_options_t *opts)
 
                 /* Set whatever GPG parameters we have.
                 */
+                if(acc->gpg_exe != NULL)
+                {
+                    res = fko_set_gpg_exe(ctx, acc->gpg_exe);
+                    if(res != FKO_SUCCESS)
+                    {
+                        log_msg(LOG_WARNING,
+                            "[%s] (stanza #%d) Error setting GPG path %s: %s",
+                            spadat.pkt_source_ip, stanza_num, acc->gpg_exe,
+                            fko_errstr(res)
+                        );
+                        acc = acc->next;
+                        continue;
+                    }
+                }
+
                 if(acc->gpg_home_dir != NULL)
                 {
                     res = fko_set_gpg_home_dir(ctx, acc->gpg_home_dir);
@@ -469,7 +484,8 @@ incoming_spa(fko_srv_options_t *opts)
                     {
                         log_msg(LOG_WARNING,
                             "[%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
-                            spadat.pkt_source_ip, stanza_num, acc->gpg_home_dir, fko_errstr(res)
+                            spadat.pkt_source_ip, stanza_num, acc->gpg_home_dir,
+                            fko_errstr(res)
                         );
                         acc = acc->next;
                         continue;

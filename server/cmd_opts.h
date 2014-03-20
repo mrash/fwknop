@@ -106,6 +106,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "DIGEST_DB_FILE",
 #endif
     "GPG_HOME_DIR",
+    "GPG_EXE",
     "FIREWALL_EXE",
     "VERBOSE"
 };
@@ -118,6 +119,7 @@ enum {
     FW_LIST_ALL,
     FW_FLUSH,
     GPG_HOME_DIR,
+    GPG_EXE_PATH,
     PCAP_FILE,
     ENABLE_PCAP_ANY_DIRECTION,
     ROTATE_DIGEST_CACHE,
@@ -147,6 +149,7 @@ static struct option cmd_opts[] =
     {"fw-list",             0, NULL, FW_LIST },
     {"fw-list-all",         0, NULL, FW_LIST_ALL },
     {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
+    {"gpg-exe",             1, NULL, GPG_EXE_PATH },
     {"locale",              1, NULL, 'l' },
     {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },
     {"override-config",     1, NULL, 'O' },

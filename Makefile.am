@@ -141,6 +141,7 @@ EXTRA_DIST = \
     test/conf/portrange_fwknopd.conf \
     test/conf/custom_input_chain_fwknopd.conf \
     test/conf/custom_nat_chain_fwknopd.conf \
+    test/conf/gpg_invalid_exe_access.conf \
     test/conf/disable_aging_fwknopd.conf \
     test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
@@ -157,6 +158,7 @@ EXTRA_DIST = \
     test/conf/gpg_hmac_access.conf \
     test/conf/gpg_no_pw_access.conf \
     test/conf/gpg_no_pw_hmac_access.conf \
+    test/conf/fwknoprc_gpg_invalid_exe \
     test/conf/fwknoprc_gpg_hmac_sha512_key \
     test/conf/gpg_hmac_sha512_access.conf \
     test/conf/fwknoprc_hmac_sha512_base64_key \

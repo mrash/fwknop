@@ -98,6 +98,7 @@ our %cf = (
     'hmac_dual_key_access'         => "$conf_dir/hmac_dual_key_usage_access.conf",
     'gpg_access'                   => "$conf_dir/gpg_access.conf",
     'gpg_hmac_access'              => "$conf_dir/gpg_hmac_access.conf",
+    'gpg_invalid_exe_access'       => "$conf_dir/gpg_invalid_exe_access.conf",
     'gpg_hmac_sha512_access'       => "$conf_dir/gpg_hmac_sha512_access.conf",
     'legacy_iv_access'             => "$conf_dir/legacy_iv_access.conf",
     'legacy_iv_long_key_access'    => "$conf_dir/legacy_iv_long_key_access.conf",
@@ -143,6 +144,7 @@ our %cf = (
     'rc_gpg_signing_pw'            => "$conf_dir/fwknoprc_gpg_signing_pw",
     'rc_gpg_named_signing_pw'      => "$conf_dir/fwknoprc_named_gpg_signing_pw",
     'rc_gpg_hmac_b64_key'          => "$conf_dir/fwknoprc_gpg_hmac_key",
+    'rc_gpg_invalid_gpg_exe'       => "$conf_dir/fwknoprc_gpg_invalid_exe",
     'rc_gpg_hmac_sha512_b64_key'   => "$conf_dir/fwknoprc_gpg_hmac_sha512_key",
     'rc_gpg_args_hmac_b64_key'     => "$conf_dir/fwknoprc_gpg_args_hmac_key",
     'rc_gpg_args_no_pw_hmac_b64_key' => "$conf_dir/fwknoprc_gpg_args_no_pw_hmac_key",
@@ -534,6 +536,11 @@ our $default_server_gpg_args_hmac = "$lib_view_str " .
     "-a $cf{'gpg_hmac_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
+our $invalid_gpg_exe_server_args = "$lib_view_str " .
+    "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
+    "-a $cf{'gpg_invalid_exe_access'} $intf_str " .
+    "-d $default_digest_file -p $default_pid_file";
+
 our $default_server_gpg_args_no_pw_hmac = "$lib_view_str " .
     "$valgrind_str $fwknopdCmd -c $cf{'def'} " .
     "-a $cf{'gpg_no_pw_hmac_access'} $intf_str " .
@@ -628,6 +635,7 @@ my %test_keys = (
     'set_legacy_iv'   => $OPTIONAL,
     'write_rc_file'   => $OPTIONAL,
     'save_rc_stanza'  => $OPTIONAL,
+    'client_pkt_tries' => $OPTIONAL_NUMERIC,
     'disable_valgrind' => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
@@ -1673,7 +1681,11 @@ sub client_send_spa_packet() {
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
             $tries++;
-            last if $tries == 10;   ### should be plenty of time
+            if ($test_hr->{'client_pkt_tries'} > 0) {
+                last if $tries == $test_hr->{'client_pkt_tries'};
+            } else {
+                last if $tries == 10;
+            }
             sleep 1;
         }
     } else {

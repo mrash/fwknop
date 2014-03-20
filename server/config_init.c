@@ -639,6 +639,11 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_GPG_HOME_DIR] == NULL)
         set_config_entry(opts, CONF_GPG_HOME_DIR, DEF_GPG_HOME_DIR);
 
+    /* GPG executable
+    */
+    if(opts->config[CONF_GPG_EXE] == NULL)
+        set_config_entry(opts, CONF_GPG_EXE, DEF_GPG_EXE);
+
     /* Enable SPA over HTTP.
     */
     if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL)

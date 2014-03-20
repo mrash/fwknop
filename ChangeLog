@@ -3,6 +3,16 @@ fwknop-2.6.1 (//2014):
       header which references both the AUTHORS and CREDITS files.  The
       specific language in this header was created by the Debian legal team at
       the request of Franck Joncourt.
+    - [server] When GnuPG is used, the default now is to require that incoming
+      SPA packets are signed by a key listed in GPG_REMOTE_ID for each
+      access.conf stanza. In other words, the usage of GPG_REQUIRE_SIG is no
+      longer necessary in order to authenticate SPA packets via the GnuPG
+      signature. Verification of GnuPG signatures can be disabled with a new
+      access.conf variable GPG_DISABLE_SIG, but this is NOT a recommended
+      configuration.
+    - [client+server] Add --gpg-exe command line argument and GPG_EXE config
+      variable to ~/.fwknoprc and the access.conf file so that the path to
+      GnuPG can be changed from the default /usr/bin/gpg path.
     - [libfko] Allow usernames that are compatible with Microsoft guidelines as
       defined here: http://technet.microsoft.com/en-us/library/bb726984.aspx
       This allows for greater compatibility between fwknop clients on Windows
