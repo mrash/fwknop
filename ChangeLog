@@ -10,6 +10,24 @@ fwknop-2.6.1 (//2014):
       signature. Verification of GnuPG signatures can be disabled with a new
       access.conf variable GPG_DISABLE_SIG, but this is NOT a recommended
       configuration.
+    - [libfko] Bug fix to correct a memory leak in GnuPG SPA packet handling
+      within the gpg_decrypt() function.  Here is the specific valgrind leak
+      record that enabled the bug to be found (note that the new valgrind
+      suppressions usage was critical for finding this bug among all other
+      libgpgme memory leaks):
+
+      ==23983== 1,044 bytes in 1 blocks are definitely lost in loss record 7 of 8
+      ==23983==    at 0x4C2C494: calloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+      ==23983==    by 0x4E41D3A: gpg_decrypt (fko_encryption.c:422)
+      ==23983==    by 0x4E42520: fko_decrypt_spa_data (fko_encryption.c:626)
+      ==23983==    by 0x1155B0: incoming_spa (incoming_spa.c:519)
+      ==23983==    by 0x1180A7: process_packet (process_packet.c:211)
+      ==23983==    by 0x506D857: ??? (in /usr/lib/x86_64-linux-gnu/libpcap.so.1.4.0)
+      ==23983==    by 0x117865: pcap_capture (pcap_capture.c:270)
+      ==23983==    by 0x10F937: main (fwknopd.c:353)
+
+    - [libfko] Better SPA packet dumping output to include GnuPG specifics
+      whenever SPA packets are encrypted/authenticated via GnuPG.
     - [client+server] Add --gpg-exe command line argument and GPG_EXE config
       variable to ~/.fwknoprc and the access.conf file so that the path to
       GnuPG can be changed from the default /usr/bin/gpg path.
@@ -22,6 +40,8 @@ fwknop-2.6.1 (//2014):
     - [client] Minor bug fixes in 'udpraw' mode (normally used for spoofing the
       SPA source IP) to set a non-zero source port and to properly set the
       length field of the UDP header.
+    - [test suite] Added valgrind suppressions for gpgme library function
+      calls.
     - [test suite] Added Rijndael+HMAC command execution test.
     - [test suite] Added Rijndael+HMAC NAT rand port via client rc file test.
 
