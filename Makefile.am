@@ -318,6 +318,7 @@ EXTRA_DIST = \
     test/test-fwknop.pl \
     test/fko-python.py \
     test/run-test-suite.sh \
+    test/valgrind_suppressions \
     test/README \
     VERSION \
     win32/config.h \

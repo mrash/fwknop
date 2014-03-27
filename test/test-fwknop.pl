@@ -294,6 +294,9 @@ my $client_only_mode = 0;
 my $server_only_mode = 0;
 my $enable_valgrind = 0;
 my $disable_valgrind = 0;
+my $valgrind_disable_suppressions = 0;
+my $valgrind_disable_child_silent = 0;
+my $valgrind_suppressions_file = 'valgrind_suppressions';
 our $valgrind_str = '';
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
@@ -398,7 +401,7 @@ exit 1 unless GetOptions(
     'fuzzing-class=s'     => \$fuzzing_class,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
-    'preserve-previous-profile-files' => \$preserve_previous_coverage_files,
+    'profile-coverage-preserve' => \$preserve_previous_coverage_files,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
@@ -408,8 +411,11 @@ exit 1 unless GetOptions(
     'test-limit=i'      => \$test_limit,
     'enable-valgrind'   => \$enable_valgrind,
     'disable-valgrind'  => \$disable_valgrind,
+    'valgrind-disable-suppressions'  => \$valgrind_disable_suppressions,
+    'valgrind-disable-child-silent'  => \$valgrind_disable_child_silent,
     'enable-all'        => \$enable_all,
     'valgrind-path=s'   => \$valgrind_path,
+    'valgrind-suppression-file' => \$valgrind_suppressions_file,
     ### can set the following to "output.last/valgrind-coverage" if
     ### a full test suite run has already been executed with --enable-valgrind
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
@@ -458,8 +464,16 @@ exit &gdb_test_cmd() if $gdb_test_file;
 ### make sure everything looks as expected before continuing
 &init();
 
-$valgrind_str = "$valgrind_path --leak-check=full " .
-    "--show-reachable=yes --track-origins=yes" if $enable_valgrind;
+if ($enable_valgrind) {
+    $valgrind_str = "$valgrind_path --leak-check=full " .
+        "--show-reachable=yes --track-origins=yes";
+    unless ($valgrind_disable_suppressions) {
+        $valgrind_str .= " --suppressions=$valgrind_suppressions_file";
+    }
+    unless ($valgrind_disable_child_silent) {
+        $valgrind_str .= ' --child-silent-after-fork=yes';
+    }
+}
 
 our $intf_str = "-i $loopback_intf --foreground $verbose_str";
 
@@ -6556,7 +6570,7 @@ sub usage() {
     --enable-profile-coverage      - Generate profile coverage stats with an
                                      emphasis on finding functions that the
                                      test suite does not call.
-    --preserve-previous-profile    - In --enable-profile-coverage mode,
+    --profile-coverage-preserve    - In --enable-profile-coverage mode,
                                      preserve previous coverage files.
     --enable-recompile             - Recompile fwknop sources and look for
                                      compilation warnings.
@@ -6613,6 +6627,12 @@ sub usage() {
     --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
                                      directory (defaults to:
                                      "output.last/valgrind-coverage").
+    --valgrind-suppressions-file   - Path to the valgrind suppressions file,
+                                     default is: $valgrind_suppressions_file
+    --valgrind-disable-suppressions - Disable valgrind suppressions (current
+                                      suppressions are for gpgme).
+    --valgrind-disable-child-silent - Disable valgrind --child-silent-after-fork
+                                      option (enabled because of gpgme).
     --cmd-verbose=<str>            - Set the verbosity level of executed fwknop
                                      commands, default is:
                                      $verbose_str
