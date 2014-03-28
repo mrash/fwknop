@@ -264,7 +264,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
                 return 0;
             }
 
-            mask = strtol_wrapper(ndx+1, 0, -1, NO_EXIT_UPON_ERR, &is_err);
+            mask = strtol_wrapper(ndx+1, 1, 32, NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
             {
                 log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
