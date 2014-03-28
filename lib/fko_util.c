@@ -650,6 +650,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
     short       hmac_type       = -1;
     short       encryption_type = -1;
     int         encryption_mode = -1;
+    int         rand_mode       = -1;
     int         client_timeout  = -1;
 
     /* Zero-ed the buffer */
@@ -675,6 +676,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
         RETURN_ON_FKO_ERROR(err, fko_get_spa_hmac_type(ctx, &hmac_type));
         RETURN_ON_FKO_ERROR(err, fko_get_spa_encryption_type(ctx, &encryption_type));
         RETURN_ON_FKO_ERROR(err, fko_get_spa_encryption_mode(ctx, &encryption_mode));
+        RETURN_ON_FKO_ERROR(err, fko_get_rand_mode(ctx, &rand_mode));
         RETURN_ON_FKO_ERROR(err, fko_get_encoded_data(ctx, &enc_data));
         RETURN_ON_FKO_ERROR(err, fko_get_spa_hmac(ctx, &hmac_data));
         RETURN_ON_FKO_ERROR(err, fko_get_spa_digest(ctx, &spa_digest));
@@ -718,6 +720,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
         /* Fill in the buffer to dump */
         cp  = append_msg_to_buf(dump_buf,    dump_buf_len,    "SPA Field Values:\n=================\n");
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "   Random Value: %s\n", rand_val == NULL ? NULL_STRING : rand_val);
+        cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "      Rand Mode: %d\n", rand_mode);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "       Username: %s\n", username == NULL ? NULL_STRING : username);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "      Timestamp: %u\n", (unsigned int) timestamp);
         cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "    FKO Version: %s\n", version == NULL ? NULL_STRING : version);

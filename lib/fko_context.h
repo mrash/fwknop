@@ -70,6 +70,7 @@ struct fko_context {
     short  digest_type;
     short  encryption_type;
     int    encryption_mode;
+    int    rand_mode;
     short  hmac_type;
 
     /* Computed or predefined data */

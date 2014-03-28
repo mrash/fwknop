@@ -18,7 +18,7 @@ my (
     $tsd, $tsd_pw, $tsd_rand, $tsd_user, $tsd_time, $tsd_ver,
     $tsd_msg_type, $tsd_msg, $tsd_nat_access, $tsd_server_auth,
     $tsd_client_timeout, $tsd_digest, $tsd_encoded,
-    $tsd_digest_type, $tsd_encryption_type
+    $tsd_digest_type, $tsd_encryption_type, $tsd_rand_mode
 );
 
 # Preset for test
@@ -54,7 +54,7 @@ ok($err == FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL, "invalid message type 
 #
 $err = $f1->rand_value('666');
 ok($err == FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL, "rand val small error test: got($err)");
-$err = $f1->rand_value('66666666666666666');
+$err = $f1->rand_value('6'x30);
 ok($err == FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL, "rand val big error test: got($err)");
 
 # 6 - Final with bad data
@@ -73,17 +73,20 @@ ok($err == FKO_SUCCESS, "spa_data_final: got($err)");
 
 # 8-10 - New object from f1 data with good pw, bad pw, then no pw
 #
-my $f2 = FKO->new($f1->spa_data(), $tuser_pw, FKO_ENC_MODE_CBC, $thmac_key, FKO_HMAC_SHA256);
+my $f2 = FKO->new($f1->spa_data(), $tuser_pw, FKO_ENC_MODE_CBC,
+            $thmac_key, FKO_HMAC_SHA256, FKO_RAND_MODE);
 ok(defined($f2), 'create fko object f2 (good pw)');
 
 $f2->destroy();
 
-$f2 = FKO->new($f1->spa_data(), 'bad_pw', FKO_ENC_MODE_CBC, $thmac_key, FKO_HMAC_SHA256);
+$f2 = FKO->new($f1->spa_data(), 'bad_pw', FKO_ENC_MODE_CBC,
+            $thmac_key, FKO_HMAC_SHA256, FKO_RAND_MODE);
 is($f2, undef, 'create fko object f2 (bad pw)');
 
 $f2->destroy() if($f2); #Just in case
 
-$f2 = FKO->new($f1->spa_data(), undef, FKO_ENC_MODE_CBC, $thmac_key, FKO_HMAC_SHA256);
+$f2 = FKO->new($f1->spa_data(), undef, FKO_ENC_MODE_CBC,
+            $thmac_key, FKO_HMAC_SHA256, FKO_RAND_MODE);
 ok($f2, 'create fko object f2 (no pw)');
 
 # 11 - Bad decrypt pw

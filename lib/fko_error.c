@@ -303,6 +303,9 @@ fko_errstr(const int err_code)
         case FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL:
             return("Args contain invalid data: FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL");
 
+        case FKO_ERROR_INVALID_DATA_RAND_MODE_VALIDFAIL:
+            return("Args contain invalid data: FKO_ERROR_INVALID_DATA_RAND_MODE_VALIDFAIL");
+
         case FKO_ERROR_INVALID_DATA_SRVAUTH_MISSING:
             return("Args contain invalid data: FKO_ERROR_INVALID_DATA_SRVAUTH_MISSING");
 

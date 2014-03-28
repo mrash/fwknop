@@ -28,6 +28,7 @@ our (
     @HMAC_DIGEST_TYPES,
     @ENCRYPTION_TYPES,
     @ENCRYPTION_MODES,
+    @RAND_MODES,
     @ERROR_CODES
 );
 
@@ -41,6 +42,7 @@ our %EXPORT_TAGS = (
     'hmac_digest_types' => \@HMAC_DIGEST_TYPES,
     'encryption_types'  => \@ENCRYPTION_TYPES,
     'encryption_modes'  => \@ENCRYPTION_MODES,
+    'rand_modes'        => \@RAND_MODES,
     'errors'            => \@ERROR_CODES,
 
     'types' => [
@@ -55,6 +57,7 @@ our %EXPORT_TAGS = (
         @HMAC_DIGEST_TYPES,
         @ENCRYPTION_TYPES,
         @ENCRYPTION_MODES,
+        @RAND_MODES,
         @ERROR_CODES
     ]
 );
@@ -77,6 +80,7 @@ sub new {
     my $enc_mode  = shift;
     my $hmac_pw   = shift || '';
     my $hmac_type = shift;
+    my $rand_mode = shift || 0;
     my $res;
 
     my $ctx;
@@ -87,7 +91,8 @@ sub new {
     if(defined($data) and $data) {
         if(defined($dc_pw) and $dc_pw) {
             $ctx = _init_ctx_with_data($data, $dc_pw, length($dc_pw),
-                        $enc_mode, $hmac_pw, length($hmac_pw), $hmac_type);
+                        $enc_mode, $hmac_pw, length($hmac_pw),
+                        $hmac_type, $rand_mode);
         } else {
             $ctx = _init_ctx_with_data_only($data);
         }
@@ -206,6 +211,19 @@ sub encryption_mode {
 
     $val = -1;
     $self->{_err} = FKO::_get_encryption_mode($self->{_ctx}, $val);
+
+    return($self->_check_return_val($val));
+}
+
+sub rand_mode {
+    my $self = shift;
+    my $val  = shift;
+
+    return FKO::_set_rand_mode($self->{_ctx}, $val)
+        if(defined($val));
+
+    $val = -1;
+    $self->{_err} = FKO::_get_rand_mode($self->{_ctx}, $val);
 
     return($self->_check_return_val($val));
 }

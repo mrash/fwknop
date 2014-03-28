@@ -43,72 +43,6 @@
 #include "cipher_funcs.h"
 #include "digest.h"
 
-#ifndef WIN32
-  #ifndef RAND_FILE
-    #define RAND_FILE "/dev/urandom"
-  #endif
-#endif
-
-/* Get random data.
-*/
-void
-get_random_data(unsigned char *data, const size_t len)
-{
-    uint32_t    i;
-#ifdef WIN32
-	int				rnum;
-	struct _timeb	tb;
-
-	_ftime_s(&tb);
-
-	srand((uint32_t)(tb.time*1000)+tb.millitm);
-
-	for(i=0; i<len; i++)
-	{
-		rnum = rand();
-        *(data+i) = rnum % 0xff;
-	}
-#else
-	FILE           *rfd;
-    struct timeval  tv;
-    int             do_time = 0;
-    size_t          amt_read;
-
-    /* Attempt to read seed data from /dev/urandom.  If that does not
-     * work, then fall back to a time-based method (less secure, but
-     * probably more portable).
-    */
-    if((rfd = fopen(RAND_FILE, "r")) == NULL)
-    {
-        do_time = 1;
-    }
-    else
-    {
-        /* Read seed from /dev/urandom
-        */
-        amt_read = fread(data, len, 1, rfd);
-        fclose(rfd);
-
-        if (amt_read != 1)
-            do_time = 1;
-    }
-
-    if (do_time)
-    {
-        /* Seed based on time (current usecs).
-        */
-        gettimeofday(&tv, NULL);
-        srand(tv.tv_usec);
-
-        for(i=0; i<len; i++)
-            *(data+i) = rand() % 0xff;
-    }
-
-#endif
-
-}
-
-
 /*** These are Rijndael-specific functions ***/
 
 /* Rijndael function to generate initial salt and initialization vector
@@ -167,7 +101,7 @@ rij_salt_and_iv(RIJNDAEL_context *ctx, const char *key,
     {
         /* Generate a random 8-byte salt.
         */
-        get_random_data(ctx->salt, SALT_LEN);
+        get_random_data(ctx->salt, SALT_LEN, FKO_DEFAULT_RAND_MODE);
     }
 
     /* Now generate the key and initialization vector.

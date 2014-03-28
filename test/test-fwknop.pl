@@ -43,6 +43,7 @@ our %cf = (
     'def_access'                   => "$conf_dir/default_access.conf",
     'portrange_filter'             => "$conf_dir/portrange_fwknopd.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
+    'hmac_legacy_rand_access'      => "$conf_dir/hmac_legacy_rand_access.conf",
     'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
     'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
     'hmac_equal_keys_access'       => "$conf_dir/hmac_equal_keys_access.conf",
@@ -101,6 +102,8 @@ our %cf = (
     'gpg_invalid_exe_access'       => "$conf_dir/gpg_invalid_exe_access.conf",
     'gpg_hmac_sha512_access'       => "$conf_dir/gpg_hmac_sha512_access.conf",
     'legacy_iv_access'             => "$conf_dir/legacy_iv_access.conf",
+    'legacy_rand_access'           => "$conf_dir/legacy_rand_access.conf",
+    'legacy_rand_hmac_access'      => "$conf_dir/legacy_rand_hmac_access.conf",
     'legacy_iv_long_key_access'    => "$conf_dir/legacy_iv_long_key_access.conf",
     'legacy_iv_long_key2_access'   => "$conf_dir/legacy_iv_long_key2_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
@@ -3840,8 +3843,11 @@ sub perl_fko_module_client_compatibility() {
 
     $fko_obj->spa_message("$fake_ip,tcp/22");
     $fko_obj->spa_message_type(FKO->FKO_ACCESS_MSG);
-    $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV)
-        if $test_hr->{'set_legacy_iv'} eq $YES;
+    if ($test_hr->{'set_legacy_iv'} eq $YES) {
+        $fko_obj->encryption_mode(FKO->FKO_ENC_MODE_CBC_LEGACY_IV);
+        $fko_obj->rand_mode(FKO->FKO_RAND_MODE_LEGACY);
+        $fko_obj->rand_value('4'x16);
+    }
     $fko_obj->spa_data_final($default_key, '');
     my $spa_pkt = $fko_obj->spa_data();
     $fko_obj->destroy();

@@ -14,7 +14,8 @@ BEGIN {
                   + scalar(@FKO::DIGEST_TYPES)
                   + scalar(@FKO::HMAC_DIGEST_TYPES)
                   + scalar(@FKO::ENCRYPTION_TYPES)
-                  + scalar(@FKO::ENCRYPTION_MODE)
+                  + scalar(@FKO::ENCRYPTION_MODES)
+                  + scalar(@FKO::RAND_MODES)
                   + scalar(@FKO::ERROR_CODES);
 }
 
@@ -28,7 +29,7 @@ foreach my $mt (@FKO::MSG_TYPES) {
     $tc_cnt++;
     my $val = eval $mt;
     ok(defined($val), "Message Type Constant: $mt");
-} 
+}
 
 # Digest type constants
 #
@@ -36,7 +37,7 @@ foreach my $dt (@FKO::DIGEST_TYPES) {
     $tc_cnt++;
     my $val = eval $dt;
     ok(defined($val), "Digest Type Constant: $dt");
-} 
+}
 
 # HMAC digest type constants
 #
@@ -44,7 +45,7 @@ foreach my $dt (@FKO::HMAC_DIGEST_TYPES) {
     $tc_cnt++;
     my $val = eval $dt;
     ok(defined($val), "HMAC digest Type Constant: $dt");
-} 
+}
 
 # Encryption type constants
 #
@@ -52,15 +53,15 @@ foreach my $et (@FKO::ENCRYPTION_TYPES) {
     $tc_cnt++;
     my $val = eval $et;
     ok(defined($val), "Encryption Type Constant: $et");
-} 
+}
 
 # Encryption mode constants
 #
-foreach my $et (@FKO::ENCRYPTION_MODE) {
+foreach my $et (@FKO::ENCRYPTION_MODES) {
     $tc_cnt++;
     my $val = eval $et;
     ok(defined($val), "Encryption Mode Constant: $et");
-} 
+}
 
 # - Encryption type constants
 #
@@ -68,7 +69,15 @@ foreach my $ec (@FKO::ERROR_CODES) {
     $tc_cnt++;
     my $val = eval $ec;
     ok(defined($val), "Error Code Constant: $ec");
-} 
+}
+
+# Rand mode constants
+#
+foreach my $et (@FKO::RAND_MODES) {
+    $tc_cnt++;
+    my $val = eval $et;
+    ok(defined($val), "Rand Mode Constant: $et");
+}
 
 # Did we test all of the constants?
 #

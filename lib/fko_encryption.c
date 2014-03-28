@@ -251,10 +251,20 @@ _rijndael_decrypt(fko_ctx_t ctx,
      * value) is valid and is followed by a colon.  Additional checks
      * are made in fko_decode_spa_data().
     */
-    ndx = (unsigned char *)ctx->encoded_msg;
-    for(i=0; i<FKO_RAND_VAL_SIZE; i++)
-        if(!isdigit(*(ndx++)))
-            err++;
+
+    if(ctx->rand_mode == FKO_RAND_MODE_LEGACY)
+    {
+        ndx = (unsigned char *)ctx->encoded_msg;
+        for(i=0; i<FKO_RAND_VAL_SIZE; i++)
+            if(!isdigit(*(ndx++)))
+                err++;
+    }
+    else
+    {
+        /* accounts for stripped '=' chars
+        */
+        ndx = (unsigned char *) &ctx->encoded_msg[FKO_RAND_VAL_B64_SIZE-3];
+    }
 
     if(err > 0 || *ndx != ':')
         return(FKO_ERROR_DECRYPTION_FAILURE);

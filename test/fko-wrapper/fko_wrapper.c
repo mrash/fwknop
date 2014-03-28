@@ -185,7 +185,8 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
 
     printf("fko_new_with_data(): %s (data: %s)\n",
         fko_errstr(fko_new_with_data(&decrypt_ctx, spa_data, NULL,
-        0, FKO_ENC_MODE_CBC, NULL, 0, FKO_HMAC_SHA256)), spa_data);
+        0, FKO_ENC_MODE_CBC, NULL, 0, FKO_HMAC_SHA256, FKO_DEFAULT_RAND_MODE)),
+        spa_data);
 
     /* verify hmac, decrypt, and display ctx all together*/
     for (i=0; i<FCN_CALLS; i++) {

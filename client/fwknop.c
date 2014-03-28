@@ -51,7 +51,7 @@ static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options,
         const char * const access_buf);
 static int set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options,
         char *access_buf);
-static int get_rand_port(fko_ctx_t ctx);
+static int get_rand_port(void);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
@@ -150,7 +150,9 @@ main(int argc, char **argv)
     char                access_buf[MAX_LINE_LEN] = {0};
     char                key[MAX_KEY_LEN+1]       = {0};
     char                hmac_key[MAX_KEY_LEN+1]  = {0};
-    int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0, enc_mode;
+    int                 key_len = 0, orig_key_len = 0, hmac_key_len = 0;
+    int                 enc_mode = FKO_DEFAULT_ENC_MODE;
+    int                 rand_mode = FKO_DEFAULT_RAND_MODE;
     int                 tmp_port = 0;
     char                dump_buf[CTX_DUMP_BUFSIZE];
 
@@ -304,6 +306,27 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_set_username", res);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+        }
+    }
+
+    /* Handle legacy digits-only random data for backwards
+     * compatibility only - this is not the default
+    */
+    if(options.rand_mode_legacy)
+    {
+        res = fko_set_rand_mode(ctx, FKO_RAND_MODE_LEGACY);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_rand_mode", res);
+            clean_exit(ctx, &options, key, &key_len,
+                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+        }
+        res = fko_set_rand_value(ctx, NULL);
+        if(res != FKO_SUCCESS)
+        {
+            errmsg("fko_set_rand_value", res);
             clean_exit(ctx, &options, key, &key_len,
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
@@ -468,7 +491,7 @@ main(int argc, char **argv)
     */
     if (options.rand_port)
     {
-        tmp_port = get_rand_port(ctx);
+        tmp_port = get_rand_port();
         if(tmp_port < 0)
             clean_exit(ctx, &options, key, &orig_key_len,
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
@@ -484,7 +507,7 @@ main(int argc, char **argv)
             || options.spa_proto == FKO_PROTO_ICMP)
             && !options.spa_src_port)
     {
-        tmp_port = get_rand_port(ctx);
+        tmp_port = get_rand_port();
         if(tmp_port < 0)
             clean_exit(ctx, &options, key, &orig_key_len,
                     hmac_key, &hmac_key_len, EXIT_FAILURE);
@@ -546,7 +569,8 @@ main(int argc, char **argv)
          * problems.
         */
         res = fko_new_with_data(&ctx2, spa_data, NULL,
-            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type);
+            0, enc_mode, hmac_key, hmac_key_len, options.hmac_type,
+            rand_mode);
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_new_with_data", res);
@@ -568,6 +592,21 @@ main(int argc, char **argv)
             ctx2 = NULL;
             clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
+        }
+
+        if(options.rand_mode_legacy)
+        {
+            res = fko_set_rand_mode(ctx2, FKO_RAND_MODE_LEGACY);
+            if(res != FKO_SUCCESS)
+            {
+                if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+                    log_msg(LOG_VERBOSITY_ERROR,
+                            "[*] Could not zero out sensitive data buffer.");
+                ctx2 = NULL;
+                errmsg("fko_set_rand_mode", res);
+                clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+            }
         }
 
         /* See if we are using gpg and if we need to set the GPG home dir.
@@ -651,48 +690,33 @@ free_configs(fko_cli_options_t *opts)
 }
 
 static int
-get_rand_port(fko_ctx_t ctx)
+get_rand_port(void)
 {
-    char *rand_val = NULL;
-    char  port_str[MAX_PORT_STR_LEN+1] = {0};
-    int   tmpint, is_err;
-    int   port     = 0;
-    int   res      = 0;
+    unsigned char  port_str[MAX_PORT_STR_LEN+1] = {0};
+    int            tmpint, is_err;
+    int            res = 0;
 
-    res = fko_get_rand_value(ctx, &rand_val);
+    res = fko_rand_data(port_str, MAX_PORT_STR_LEN+1,
+            FKO_RAND_MODE_LEGACY);  /* digits only */
     if(res != FKO_SUCCESS)
     {
         errmsg("get_rand_port(), fko_get_rand_value", res);
         return -1;
     }
+    port_str[MAX_PORT_STR_LEN] = '\0';
 
-    strlcpy(port_str, rand_val, sizeof(port_str));
-
-    tmpint = strtol_wrapper(port_str, 0, -1, NO_EXIT_UPON_ERR, &is_err);
+    tmpint = strtol_wrapper((char *) port_str, 0, -1, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_VERBOSITY_ERROR,
-            "[*] get_rand_port(), could not convert rand_val str '%s', to integer",
-            rand_val);
+            "[*] get_rand_port(), could not convert port str '%s', to integer",
+            port_str);
         return -1;
     }
 
-    /* Convert to a random value between 1024 and 65535
+    /* Convert to a random value between 10000 and 65535
     */
-    port = (MIN_HIGH_PORT + (tmpint % (MAX_PORT - MIN_HIGH_PORT)));
-
-    /* Force libfko to calculate a new random value since we don't want to
-     * give anyone a hint (via the port value) about the contents of the
-     * encrypted SPA data.
-    */
-    res = fko_set_rand_value(ctx, NULL);
-    if(res != FKO_SUCCESS)
-    {
-        errmsg("get_rand_port(), fko_get_rand_value", res);
-        return -1;
-    }
-
-    return port;
+    return (MIN_HIGH_PORT + (tmpint % (MAX_PORT - MIN_HIGH_PORT)));
 }
 
 /* See if the string is of the format "<ipv4 addr>:<port>",
@@ -735,7 +759,7 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
     {
         if (options->nat_rand_port)
         {
-            nat_port = get_rand_port(ctx);
+            nat_port = get_rand_port();
             options->nat_port = nat_port;
         }
         else if (options->nat_port)

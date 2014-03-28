@@ -44,7 +44,7 @@ _init_ctx()
     RETVAL
 
 fko_ctx_t
-_init_ctx_with_data(enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len, hmac_type)
+_init_ctx_with_data(enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len, hmac_type, rand_mode)
     INPUT:
     char*   enc_msg;
     char*   dec_key;
@@ -53,10 +53,11 @@ _init_ctx_with_data(enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_
     char*   hmac_key;
     int     hmac_key_len;
     int     hmac_type;
+    int     rand_mode;
     INIT:
     fko_ctx_t ctx;
     CODE:
-    g_ec = fko_new_with_data(&ctx, enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len, hmac_type);
+    g_ec = fko_new_with_data(&ctx, enc_msg, dec_key, dec_key_len, enc_mode, hmac_key, hmac_key_len, hmac_type, rand_mode);
     if(g_ec == 0)
         RETVAL = ctx;
     else
@@ -71,7 +72,7 @@ _init_ctx_with_data_only(data)
     INIT:
     fko_ctx_t ctx;
     CODE:
-    g_ec = fko_new_with_data(&ctx, data, NULL, 0, FKO_ENCRYPTION_RIJNDAEL, NULL, 0, 0);
+    g_ec = fko_new_with_data(&ctx, data, NULL, 0, FKO_DEFAULT_ENC_MODE, NULL, 0, 0, FKO_DEFAULT_RAND_MODE);
     if(g_ec == 0)
         RETVAL = ctx;
     else
@@ -162,7 +163,7 @@ int
 _set_encryption_mode(ctx, encryption_mode)
     INPUT:
     fko_ctx_t ctx;
-    short    encryption_mode;
+    int    encryption_mode;
     CODE:
     RETVAL = fko_set_spa_encryption_mode(ctx, encryption_mode);
     OUTPUT:
@@ -175,6 +176,27 @@ _get_encryption_mode(ctx, val)
     int val
     CODE:
     RETVAL = fko_get_spa_encryption_mode(ctx, &val);
+    OUTPUT:
+    val
+    RETVAL
+
+int
+_set_rand_mode(ctx, rand_mode)
+    INPUT:
+    fko_ctx_t ctx;
+    int    rand_mode;
+    CODE:
+    RETVAL = fko_set_rand_mode(ctx, rand_mode);
+    OUTPUT:
+    RETVAL
+
+int
+_get_rand_mode(ctx, val)
+    INPUT:
+    fko_ctx_t ctx;
+    int val
+    CODE:
+    RETVAL = fko_get_rand_mode(ctx, &val);
     OUTPUT:
     val
     RETVAL

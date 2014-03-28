@@ -463,13 +463,13 @@ parse_rand_val(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
 
-    ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
+    ctx->rand_val = calloc(1, FKO_RAND_VAL_B64_SIZE+1);
     if(ctx->rand_val == NULL)
     {
         free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
-    ctx->rand_val = strncpy(ctx->rand_val, *ndx, FKO_RAND_VAL_SIZE);
+    ctx->rand_val = strncpy(ctx->rand_val, *ndx, *t_size);
 
     *ndx += *t_size + 1;
 
