@@ -105,6 +105,17 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'SPA through HTTP proxy',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args -H $resolve_url_with_port --test",
+        'no_ip_check' => 1,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',

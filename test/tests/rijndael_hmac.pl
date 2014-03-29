@@ -498,6 +498,17 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'SPA through HTTP proxy',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_hmac_args -H $resolve_url_with_port --test",
+        'no_ip_check' => 1,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
