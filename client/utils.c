@@ -56,45 +56,6 @@ static fko_protocol_t fko_protocol_array[] =
     { "http",   FKO_PROTO_HTTP      }
 };
 
-/* Generic hex dump function.
-*/
-void
-hex_dump(const unsigned char *data, const int size)
-{
-    int ln, i, j = 0;
-    char ascii_str[17] = {0};
-
-    for(i=0; i<size; i++)
-    {
-        if((i % 16) == 0)
-        {
-            printf(" %s\n  0x%.4x:  ", ascii_str, i);
-            memset(ascii_str, 0x0, 17);
-            j = 0;
-        }
-
-        printf("%.2x ", data[i]);
-
-        ascii_str[j++] = (data[i] < 0x20 || data[i] > 0x7e) ? '.' : data[i];
-
-        if(j == 8)
-            printf(" ");
-    }
-
-    /* Remainder...
-    */
-    ln = strlen(ascii_str);
-    if(ln > 0)
-    {
-        for(i=0; i < 16-ln; i++)
-            printf("   ");
-        if(ln < 8)
-            printf(" ");
-
-        printf(" %s\n\n", ascii_str);
-    }
-}
-
 int
 verify_file_perms_ownership(const char *file)
 {
