@@ -417,7 +417,7 @@
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $cf{'rc_invalid_b64_key'} -n testssh",
         'positive_output_matches' => [qr/look\slike\sbase64\-encoded/],
-        'key_file' => $cf{'rc_invalide_b64_key'},
+        'key_file' => $cf{'rc_invalid_b64_key'},
     },
 
     {
