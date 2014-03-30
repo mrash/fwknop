@@ -136,6 +136,7 @@ our %cf = (
     'rc_hmac_equal_keys'           => "$conf_dir/fwknoprc_hmac_equal_keys",
     'rc_invalid_b64_key'           => "$conf_dir/fwknoprc_invalid_base64_key",
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
+    'rc_hmac_defaults'             => "$conf_dir/fwknoprc_hmac_defaults",
     'rc_hmac_nat_rand_b64_key'     => "$conf_dir/fwknoprc_hmac_nat_rand_base64_key",
     'rc_hmac_spoof_src_b64_key'    => "$conf_dir/fwknoprc_hmac_spoof_src_base64_key",
     'rc_hmac_sha512_b64_key'       => "$conf_dir/fwknoprc_hmac_sha512_base64_key",
@@ -502,6 +503,9 @@ our $client_save_rc_args_no_verbose = "$default_client_args_no_verbose " .
 
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
+
+our $client_hmac_rc_defaults = "$lib_view_str $valgrind_str " .
+    "$fwknopCmd --no-save-args --rc-file $cf{'rc_hmac_defaults'}";
 
 our $client_ip_resolve_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
