@@ -1172,7 +1172,13 @@ sub profile_coverage() {
         &run_cmd(qq|$lcov_path --capture --directory .. | .
             qq|--output-file $output_dir/lcov_coverage.info|,
                 $cmd_out_tmp, $curr_test_file);
-        &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage.info | .
+
+        ### exclude /usr/include/* files
+        &run_cmd(qq|$lcov_path -r $output_dir/lcov_coverage.info | .
+            qq|/usr/include/\* --output-file $output_dir/lcov_coverage_final.info|,
+                $cmd_out_tmp, $curr_test_file);
+
+        &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage_final.info | .
             qq|--output-directory $output_dir/$lcov_results_dir|,
                 $cmd_out_tmp, $curr_test_file);
     }
