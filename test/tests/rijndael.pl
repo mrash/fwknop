@@ -36,6 +36,18 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => 'complete cycle legacy truncated key',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_long_key -M legacy",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_long_key_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'use of encryption key with fd 0',
         'function' => \&spa_cycle,
         'cmdline'  => "echo $local_spa_key | $default_client_args_no_get_key " .

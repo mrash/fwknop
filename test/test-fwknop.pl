@@ -15,6 +15,7 @@ use strict;
 #==================== config =====================
 my $logfile         = 'test.log';
 our $local_key_file = 'local_spa.key';
+our $long_key_file  = 'long_spa.key';  ### > 16 bytes
 our $local_spa_key  = 'fwknoptest';
 our $local_hmac_key_file = 'local_hmac_spa.key';
 my $output_dir      = 'output';
@@ -488,6 +489,10 @@ our $intf_str = "-i $loopback_intf --foreground $verbose_str";
 our $default_client_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
     "$local_key_file --no-save-args $verbose_str";
+
+our $default_client_args_long_key = "$lib_view_str $valgrind_str " .
+    "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+    "$long_key_file --no-save-args $verbose_str";
 
 our $default_client_args_no_get_key = "$lib_view_str " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
