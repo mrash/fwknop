@@ -317,6 +317,7 @@ EXTRA_DIST = \
     test/tests/rijndael_cmd_exec.pl \
     test/hardening-check \
     test/local_spa.key \
+    test/long_spa.key \
     test/test-fwknop.pl \
     test/fko-python.py \
     test/run-test-suite.sh \
