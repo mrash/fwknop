@@ -320,6 +320,7 @@ my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_profile_coverage_check = 0;
 my $preserve_previous_coverage_files = 0;
+my $profile_coverage_init = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -406,6 +407,7 @@ exit 1 unless GetOptions(
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'profile-coverage-preserve' => \$preserve_previous_coverage_files,
+    'profile-coverage-init' => \$profile_coverage_init,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
@@ -449,10 +451,12 @@ if ($enable_all) {
     $enable_openssl_compatibility_tests = 1;
 }
 
+$enable_valgrind = 0 if $disable_valgrind;
+$enable_profile_coverage_check = 1 if $profile_coverage_init;
+
 unless (-d $output_dir) {
     mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
 }
-$enable_valgrind = 0 if $disable_valgrind;
 
 ### create an anonymized tar file of test suite results that can be
 ### emailed around to assist in debugging fwknop communications
@@ -5897,9 +5901,26 @@ sub init() {
         if ($enable_profile_coverage_check
                 and not $preserve_previous_coverage_files
                 and not $list_mode) {
+            if ($profile_coverage_init) {
+                print "[+] --profile-coverage-init mode, ",
+                    "removing existing .gcov and .gcda files...\n";
+            }
             for my $extension ('*.gcov', '*.gcda') {
                 ### remove profile output from any previous run
                 system qq{find .. -name $extension | xargs rm 2> /dev/null};
+            }
+            if ($profile_coverage_init) {
+                print "[+] Recompiling fwknop...\n";
+                &compile_warnings();
+                if (&file_find_regex([qr/profile\-arcs.*test\-coverage/],
+                        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+                    print "[+] Found -fprofile-args -ftest-coverage\n";
+                } else {
+                    print "[-] Warning: -fprofile-args -ftest-coverage not ",
+                        "found, use ./configure --enable-profile-coverage?\n";
+                }
+                print "[+] Exiting.\n";
+                exit(0);
             }
         }
     } else {
@@ -6636,6 +6657,8 @@ sub usage() {
                                      test suite does not call.
     --profile-coverage-preserve    - In --enable-profile-coverage mode,
                                      preserve previous coverage files.
+    --profile-coverage-init        - Remove old .gcov and .gcda files and
+                                     recompile fwknop.
     --enable-recompile             - Recompile fwknop sources and look for
                                      compilation warnings.
     --enable-valgrind              - Run every test underneath valgrind.
