@@ -502,6 +502,9 @@ our $client_save_rc_args = "$default_client_args_no_get_key " .
 our $client_save_rc_args_no_verbose = "$default_client_args_no_verbose " .
     "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test";
 
+our $client_save_rc_args_no_force = "$default_client_args_no_get_key " .
+    "--rc-file $save_rc_file --save-rc-stanza --test";
+
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
 
@@ -660,6 +663,7 @@ my %test_keys = (
     'write_rc_file'   => $OPTIONAL,
     'save_rc_stanza'  => $OPTIONAL,
     'client_pkt_tries' => $OPTIONAL_NUMERIC,
+    'client_popen'     => $OPTIONAL,
     'disable_valgrind' => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
@@ -1551,8 +1555,12 @@ sub client_rc_file() {
         return 0;
     }
 
-    $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
-            $cmd_out_tmp, $curr_test_file);
+    if ($test_hr->{'client_popen'}) {
+        $rv = &popen_cmd($test_hr, $cmd_out_tmp, $curr_test_file);
+    } else {
+        $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
+                $cmd_out_tmp, $curr_test_file);
+    }
 
     unless ($test_hr->{'cmdline'} =~ /key\-gen/ or $test_hr->{'cmdline'} =~ /\-k/) {
         $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/i],
@@ -5530,6 +5538,46 @@ sub dump_pids() {
     &run_cmd("ps auxww | grep knop |grep -v grep",
         $cmd_out_tmp, $curr_test_file);
     return;
+}
+
+sub popen_cmd() {
+    my ($test_hr, $cmd_out, $file) = @_;
+
+    unlink $cmd_out if -e $cmd_out;
+
+    my $cmd = $test_hr->{'cmdline'};
+
+    if (-e $file) {
+        open F, ">> $file"
+            or die "[*] Could not open $file: $!";
+        print F localtime() . " CMD: $cmd\n";
+        close F;
+    } else {
+        open F, "> $file"
+            or die "[*] Could not open $file: $!";
+        print F localtime() . " CMD: $cmd\n";
+        close F;
+    }
+
+    open CMD, "| $cmd > $cmd_out 2>&1" or die $!;
+    print CMD $test_hr->{'client_popen'}, "\n";
+    close CMD;
+
+    open C, "< $cmd_out" or die "[*] Could not open $cmd_out: $!";
+    my @cmd_lines = <C>;
+    close C;
+
+    open F, ">> $file" or die "[*] Could not open $file: $!";
+    for (@cmd_lines) {
+        if (/\n/) {
+            print F $_;
+        } else {
+            print F $_, "\n";
+        }
+    }
+    close F;
+
+    return 1;
 }
 
 sub run_cmd() {

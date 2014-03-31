@@ -320,6 +320,20 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => 'digest SHA1 no force save',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
+            "--digest-type SHA1 --use-hmac",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'client_popen' => 'y',  ### interact with ask overwrite feature
+        'positive_output_matches' => [qr/Updating\sparam.*SHA1/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA1/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => 'digest SHA256',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default --digest-type SHA256",
