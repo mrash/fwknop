@@ -5559,12 +5559,12 @@ sub popen_cmd() {
     if (-e $file) {
         open F, ">> $file"
             or die "[*] Could not open $file: $!";
-        print F localtime() . " CMD: $cmd\n";
+        print F localtime() . " CMD (popen): | $cmd > $cmd_out 2>&1\n";
         close F;
     } else {
         open F, "> $file"
             or die "[*] Could not open $file: $!";
-        print F localtime() . " CMD: $cmd\n";
+        print F localtime() . " CMD (popen): | $cmd > $cmd_out 2>&1\n";
         close F;
     }
 
