@@ -5911,9 +5911,9 @@ sub init() {
                 and not $list_mode) {
             if ($profile_coverage_init) {
                 print "[+] --profile-coverage-init mode, ",
-                    "removing existing .gcov and .gcda files...\n";
+                    "removing existing .gcda, .gcno, and .gcov files...\n";
             }
-            for my $extension ('*.gcov', '*.gcda') {
+            for my $extension ('*.gcno', '*.gcda', '*.gcov') {
                 ### remove profile output from any previous run
                 system qq{find .. -name $extension | xargs rm 2> /dev/null};
             }
@@ -6665,8 +6665,8 @@ sub usage() {
                                      test suite does not call.
     --profile-coverage-preserve    - In --enable-profile-coverage mode,
                                      preserve previous coverage files.
-    --profile-coverage-init        - Remove old .gcov and .gcda files and
-                                     recompile fwknop.
+    --profile-coverage-init        - Remove old .gcno, .gcda, and .gcov files
+                                     and recompile fwknop.
     --enable-recompile             - Recompile fwknop sources and look for
                                      compilation warnings.
     --enable-valgrind              - Run every test underneath valgrind.
