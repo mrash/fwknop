@@ -472,6 +472,17 @@
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/TIME_OFFSET.*86400/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--time-offset-minus 1M',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --time-offset-minus 1M",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/TIME_OFFSET.*\-60/],
+    },
 
     {
         'category' => 'basic operations',
