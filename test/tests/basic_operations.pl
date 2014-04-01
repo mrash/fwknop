@@ -483,6 +483,28 @@
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/TIME_OFFSET.*\-60/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--encryption-mode legacy',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --encryption-mode legacy",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/ENCRYPTION_MODE.*legacy/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--encryption-mode CBC',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --encryption-mode CBC",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/ENCRYPTION_MODE.*CBC/],
+    },
 
     {
         'category' => 'basic operations',
