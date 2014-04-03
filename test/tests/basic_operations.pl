@@ -610,6 +610,20 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => '--time-offset-plus invalid',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --time-offset-plus invalid",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
+                'TIME_OFFSET' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid/],
+        'rc_positive_output_matches' => [qr/TIME_OFFSET.*invalid/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => '--time-offset-plus 1H',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default --time-offset-plus 1H",
@@ -866,6 +880,80 @@
         'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
         'rc_positive_output_matches' => [qr/VERBOSE.*(Y|\d)/,
             qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG same signing key',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_gpg_args_same_key_signer --gpg-encryption "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNER' => 'invalid'}}],
+        'positive_output_matches' => [qr/GPG sig verify/],
+        'rc_positive_output_matches' => [qr/GPG_SIGNER/, qr/GPG_RECIPIENT/,
+                            qr/GPG_HOMEDIR/]
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG invalid exe',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_gpg_args_same_key_signer "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
+            . "--gpg-exe invalidpath "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNER' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Unable\sto\sstat/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG invalid homedir',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_gpg_args_same_key_signer "
+            . "--gpg-home-dir invalidpath --gpg-no-signing-pw "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNER' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Unable\sto\sstat/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG invalid recip',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_args "
+            . "--gpg-recipient-key invalid --gpg-signer-key $gpg_client_key "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNER' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/key\sfor.*not\sfound/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG invalid signer',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_args "
+            . "--gpg-recipient-key $gpg_client_key --gpg-signer-key invalid "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNER' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/key\sfor.*not\sfound/],
     },
 
     {

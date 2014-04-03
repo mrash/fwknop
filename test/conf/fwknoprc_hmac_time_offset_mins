@@ -1,0 +1,18 @@
+[default]
+ACCESS                      tcp/22
+SPA_SERVER                  127.0.0.1
+ALLOW_IP                    127.0.0.2
+USE_HMAC                    Y
+HMAC_DIGEST_TYPE            sha256
+KEY_BASE64                  wzNP62oPPgEc+kXDPQLHPOayQBuNbYUTPP+QrErNDmg=
+HMAC_KEY_BASE64             Yh+xizBnl6FotC5ec7FanVGClRMlsOAPh2u6eovnerfBVKwaVKzjGoblFMHMc593TNyi0dWn4opLoTIV9q/ttg==
+DIGEST_TYPE                 sha256
+SPA_SERVER_PROTO            udp
+SPA_SERVER_PORT             62201
+SPOOF_USER                  mbrtest
+VERBOSE                     Y
+TIME_OFFSET                 -1M
+ENCRYPTION_MODE             CBC
+USE_GPG                     N
+USE_GPG_AGENT               N
+RESOLVE_IP_HTTP             N

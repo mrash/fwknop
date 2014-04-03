@@ -106,6 +106,8 @@ our %cf = (
     'legacy_iv_long_key2_access'   => "$conf_dir/legacy_iv_long_key2_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
     'gpg_no_pw_hmac_access'        => "$conf_dir/gpg_no_pw_hmac_access.conf",
+    'gpg_no_pw_hmac_clientdir_access' => "$conf_dir/gpg_no_pw_hmac_clientdir_access.conf",
+    'gpg_no_pw_hmac_serverdir_access' => "$conf_dir/gpg_no_pw_hmac_serverdir_access.conf",
     'gpg_no_pw_hmac_sha512_access' => "$conf_dir/gpg_no_pw_hmac_sha512_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
@@ -542,6 +544,14 @@ our $default_client_gpg_args = "$default_client_args " .
 our $default_client_gpg_args_no_homedir = "$default_client_args " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key ";
+
+our $default_client_gpg_args_same_key_signer = "$default_client_args " .
+    "--gpg-recipient-key $gpg_client_key " .
+    "--gpg-signer-key $gpg_client_key ";
+
+our $default_client_gpg_args_same_key_recip = "$default_client_args " .
+    "--gpg-recipient-key $gpg_server_key " .
+    "--gpg-signer-key $gpg_server_key ";
 
 our $default_client_gpg_args_no_get_key = "$default_client_args_no_get_key " .
     "--gpg-recipient-key $gpg_server_key " .
@@ -1573,8 +1583,12 @@ sub client_rc_file() {
         $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                 $cmd_out_tmp, $curr_test_file);
     }
+    if ($rv == 0) {
+        $rv = 1 if $test_hr->{'exec_err'} eq $YES;
+    }
 
-    unless ($test_hr->{'cmdline'} =~ /key\-gen/ or $test_hr->{'cmdline'} =~ /\-k/) {
+    unless ($test_hr->{'cmdline'} =~ /key\-gen/ or $test_hr->{'cmdline'} =~ /\-k/
+            or $test_hr->{'exec_err'} eq $YES) {
         $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/i],
             $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
     }
@@ -1813,7 +1827,8 @@ sub client_send_spa_packet() {
 
         if ($is_hmac_type and $hmac_key) {
             my $enc_mode = $ENC_RIJNDAEL;
-            $enc_mode = $ENC_GPG if $test_hr->{'msg'} =~ /GPG/;
+            $enc_mode = $ENC_GPG if $test_hr->{'msg'} =~ /gpg/i
+                    or $test_hr->{'msg'} =~ /gnupg/i;
             unless (&openssl_hmac_verification($encrypted_msg,
                     $encoded_msg, '', $hmac_key, $b64_decode_key,
                     $hmac_digest, $hmac_mode, $enc_mode)) {
@@ -1933,7 +1948,8 @@ sub gpg_pinentry_check() {
         alarm 0;
         if ($@) {
             $rv = 0;
-            push @tests_to_exclude, qr/GPG/;
+            push @tests_to_exclude, qr/gpg/i;
+            push @tests_to_exclude, qr/gnupg/i;
             $pinentry_fail = 1;
         }
     } else {
@@ -5404,7 +5420,8 @@ sub specs() {
     ### all three of fwknop/fwknopd/libfko must link against gpgme in order
     ### to enable gpg tests
     unless ($have_gpgme == 3) {
-        push @tests_to_exclude, qr/GPG/;
+        push @tests_to_exclude, qr/gpg/i;
+        push @tests_to_exclude, qr/gnupg/i;
     }
 
     return 1;

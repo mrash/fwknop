@@ -605,7 +605,10 @@ main(int argc, char **argv)
                  * expected, return 0 instead of an error condition (so calling
                  * programs like the fwknop test suite don't interpret this as
                  * an unrecoverable error), but print the error string for
-                 debugging purposes. */
+                 * debugging purposes. The test suite does run a series of
+                 * tests that use a single key pair for encryption and
+                 * authentication, so decryption become possible for these
+                 * tests. */
                 log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s\n%s", fko_gpg_errstr(ctx2),
                     "No access to recipient private key?");
             }
