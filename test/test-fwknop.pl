@@ -5819,7 +5819,11 @@ sub init() {
         push @tests_to_exclude, qr/with valgrind/;
     }
 
-    unless ($enable_recompilation_warnings_check) {
+    unless ($enable_recompilation_warnings_check
+            or $enable_profile_coverage_check) {
+        push @tests_to_exclude, qr/recompilation/;
+    }
+    if ($preserve_previous_coverage_files) {
         push @tests_to_exclude, qr/recompilation/;
     }
 
@@ -5930,6 +5934,7 @@ sub init() {
                 print "[+] Exiting.\n";
                 exit(0);
             }
+            push @tests_to_exclude, qr/distcheck/;
         }
     } else {
         push @tests_to_exclude, qr/profile coverage/;
