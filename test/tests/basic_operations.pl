@@ -320,7 +320,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => 'digest SHA1 ask y/n (1)',
+        'detail'   => 'digest SHA1 ask (y)/n (1)',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
             "--digest-type SHA1 --use-hmac",
@@ -333,7 +333,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => 'digest SHA1 ask y/n (2)',
+        'detail'   => 'digest SHA1 ask (y)/n (2)',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
             "--digest-type SHA1 --use-hmac",
@@ -346,7 +346,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => 'digest SHA1 ask y/n (3)',
+        'detail'   => 'digest SHA1 ask (y)/n (3)',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
             "--digest-type SHA1 --use-hmac",
@@ -359,7 +359,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => 'digest SHA1 ask y/n (4)',
+        'detail'   => 'digest SHA1 ask (y)/n (4)',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
             "--digest-type SHA1 --use-hmac",
@@ -368,6 +368,19 @@
         'client_popen' => 'y',  ### interact with ask overwrite feature
         'positive_output_matches' => [qr/Updating\sparam.*SHA1/],
         'rc_positive_output_matches' => [qr/DIGEST_TYPE.*SHA1/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'digest SHA1 ask y/(n) (1)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
+            "--digest-type SHA1 --use-hmac",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY_BASE64' => 'dGVzdHRlc3Q=', 'DIGEST_TYPE' => 'MD5'}}],
+        'client_popen' => 'n',  ### interact with ask overwrite feature
+        'positive_output_matches' => [qr/Updating\sparam.*SHA1/],
+        'rc_positive_output_matches' => [qr/KEY_BASE64.*dGVzdHRlc3Q=/],
     },
 
     {
