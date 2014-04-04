@@ -82,6 +82,71 @@
         'cmdline'  => $default_client_args,
         'fatal'    => $YES
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA packet --key-rijndael',
+        'function' => \&client_send_spa_packet,
+        'cmdline'  => "$default_client_args_no_get_key --key-rijndael fwknoptest",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA --key-rijndael --key-len',
+        'function' => \&client_send_spa_packet,
+        'cmdline'  => "$default_client_args_no_get_key --key-rijndael fwknoptest --key-len 10",
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA --key-rijndael --key-hmac',
+        'function' => \&client_send_spa_packet,
+        'cmdline'  => "$default_client_args_no_get_key --key-rijndael " .
+            "fwknoptest --key-hmac testing",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA --key-hmac --hmac-key-len',
+        'function' => \&client_send_spa_packet,
+        'cmdline'  => "$default_client_args_no_get_key --key-rijndael " .
+            "fwknoptest --key-hmac testing --hmac-key-len 7",
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA packet --key-base64-rijndael',
+        'function' => \&client_send_spa_packet,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--key-base64-rijndael Zndrbm9wdGVzdA==",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA packet base64 --key-hmac',
+        'function' => \&client_send_spa_packet,
+        'cmdline'  => "$default_client_args_no_get_key --key-base64-rijndael " .
+            "Zndrbm9wdGVzdA== --key-base64-hmac dGVzdGluZw==",
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA --key-base64-rijndael invalid',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args_no_get_key --key-base64-rijndael a%aaaaaaaaaaa"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA --key-base64-hmac invalid',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args_no_get_key --key-base64-rijndael aaaaaaaaaaaaa --key-base64-hmac a%aaaaaaa"
+    },
 
     ### rc tests: digest
     {
@@ -455,6 +520,35 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => '--spoof-source invalid',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -P udpraw --spoof-source invalid",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1',
+                    'SPOOF_SOURCE_IP' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sspoof/],
+        'rc_positive_output_matches' => [qr/SPOOF_SOURCE_IP.*invalid/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--spoof-source invalid -P',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -P invalid --spoof-source 3.3.3.3",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1',
+                    'SPOOF_SOURCE_IP' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Unrecognized\sproto/],
+        'rc_positive_output_matches' => [qr/SPOOF_SOURCE_IP.*invalid/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => '-r rand port',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default -r",
@@ -472,7 +566,7 @@
         'cmdline'  => "$client_save_rc_args -n default --nat-local",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
-                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_LOCAL' => 'N'}}],
+                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_LOCAL' => 'Y'}}],
         'positive_output_matches' => [qr/Nat\sAccess\:\s127.0.0.1\,22/],
         'rc_positive_output_matches' => [qr/NAT_LOCAL.*Y/],
     },
@@ -610,7 +704,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => '--time-offset-plus invalid',
+        'detail'   => 'time offset invalid (1)',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default --time-offset-plus invalid",
         'save_rc_stanza' => [{'name' => 'default',
@@ -619,6 +713,19 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Invalid/],
         'rc_positive_output_matches' => [qr/TIME_OFFSET.*invalid/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'time offset invalid (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --time-offset-plus 123456789999",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
+                'TIME_OFFSET' => '123456789999'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid/],
+        'rc_positive_output_matches' => [qr/TIME_OFFSET.*123456789999/],
     },
 
     {
@@ -665,6 +772,20 @@
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/ENCRYPTION_MODE.*legacy/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--encryption-mode invalid',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --encryption-mode invalid",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
+                'ENCRYPTION_MODE' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+        'rc_positive_output_matches' => [qr/ENCRYPTION_MODE.*invalid/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
@@ -884,7 +1005,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => 'GPG same signing key',
+        'detail'   => 'GPG same signing key (1)',
         'function' => \&client_rc_file,
         'cmdline'  => "$default_client_gpg_args_same_key_signer --gpg-encryption "
             . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
@@ -896,6 +1017,38 @@
         'rc_positive_output_matches' => [qr/GPG_SIGNER/, qr/GPG_RECIPIENT/,
                             qr/GPG_HOMEDIR/]
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG same signing key (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_gpg_args_same_key_signer --gpg-encryption "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNER' => 'invalid',
+                'GPG_AGENT' => 'N'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+        'rc_positive_output_matches' => [qr/GPG_SIGNER/, qr/GPG_HOMEDIR/]
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG same signing key (3)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_gpg_args_same_key_signer --gpg-encryption "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNER' => 'invalid',
+                'USE_GPG_AGENT' => 'N', 'GPG_NO_SIGNING_PW' => 'Y'}}],
+        'positive_output_matches' => [qr/GPG sig verify/],
+        'rc_positive_output_matches' => [qr/GPG_SIGNER/, qr/GPG_HOMEDIR/]
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
