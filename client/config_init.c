@@ -1757,7 +1757,7 @@ validate_options(fko_cli_options_t *options)
                 && options->spa_proto != FKO_PROTO_ICMP)
         {
             log_msg(LOG_VERBOSITY_ERROR,
-                    "Must set -Q <udpraw|tcpraw|icmp> with a spoofed source IP");
+                    "Must set -P <udpraw|tcpraw|icmp> with a spoofed source IP");
             exit(EXIT_FAILURE);
         }
     }
