@@ -573,7 +573,7 @@ is_rc_param(const char *line, rc_file_param_t *param)
  * 
  * @param rcfile full path to the rcfile to parse
  */
-static void
+static int
 dump_configured_stanzas_from_rcfile(const char* rcfile)
 {
     FILE   *rc;
@@ -586,7 +586,7 @@ dump_configured_stanzas_from_rcfile(const char* rcfile)
         log_msg(LOG_VERBOSITY_WARNING, "Unable to open rc file: %s: %s",
             rcfile, strerror(errno));
 
-        return;
+        return EXIT_FAILURE;
     }
 
     log_msg(LOG_VERBOSITY_NORMAL, "The following stanzas are configured in %s :", rcfile);
@@ -615,6 +615,8 @@ dump_configured_stanzas_from_rcfile(const char* rcfile)
     }
 
     fclose(rc);
+
+    return EXIT_SUCCESS;
 }
 
 /* Assign path to fwknop rc file
@@ -1895,8 +1897,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     if (options->stanza_list == 1)
     {
         set_rc_file(rcfile, options);
-        dump_configured_stanzas_from_rcfile(rcfile);
-        exit(EXIT_SUCCESS);
+        exit(dump_configured_stanzas_from_rcfile(rcfile));
     }
 
     /* First process the .fwknoprc file.
