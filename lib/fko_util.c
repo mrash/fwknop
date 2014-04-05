@@ -638,6 +638,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
     char          *gpg_home_dir      = NULL;
     char          *gpg_exe           = NULL;
     int            gpg_sigsum        = -1;
+    int            gpg_sig_stat      = -1;
 #endif
     char       *spa_data         = NULL;
     char        digest_str[24]   = {0};
@@ -695,6 +696,8 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
                 gpg_sig_id = NULL;
             if(fko_get_gpg_signature_summary(ctx, &gpg_sigsum) != FKO_SUCCESS)
                 gpg_sigsum = -1;
+            if(fko_get_gpg_signature_status(ctx, &gpg_sig_stat) != FKO_SUCCESS)
+                gpg_sig_stat = -1;
             if(fko_get_gpg_signature_fpr(ctx, &gpg_sig_fpr) != FKO_SUCCESS)
                 gpg_sig_fpr = NULL;
         }
@@ -740,6 +743,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "     GPG sig ID: %s\n", gpg_sig_id == NULL ? NULL_STRING : gpg_sig_id);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "    GPG sig fpr: %s\n", gpg_sig_fpr == NULL ? NULL_STRING : gpg_sig_fpr);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "GPG sig summary: %d\n", gpg_sigsum);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, " GPG sig status: %d\n", gpg_sig_stat);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "   GPG home dir: %s\n", gpg_home_dir == NULL ? NULL_STRING : gpg_home_dir);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "        GPG exe: %s\n", gpg_exe == NULL ? GPG_EXE : gpg_exe);
         }
