@@ -113,6 +113,24 @@
         'cmdline'  => "$default_client_args_no_get_key --key-rijndael " .
             "fwknoptest --key-hmac testing --hmac-key-len 7",
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA invalid --hmac-key-len',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args_no_get_key --key-rijndael " .
+            "fwknoptest --key-hmac testing --hmac-key-len 999999",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA invalid --key-len',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args_no_get_key --key-rijndael " .
+            "fwknoptest --key-len 999999",
+    },
 
     {
         'category' => 'basic operations',
@@ -145,7 +163,32 @@
         'detail'   => 'SPA --key-base64-hmac invalid',
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'cmdline'  => "$default_client_args_no_get_key --key-base64-rijndael aaaaaaaaaaaaa --key-base64-hmac a%aaaaaaa"
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--key-base64-rijndael aaaaaaaaaaaaa --key-base64-hmac a%aaaaaaa"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid rc file path stanza list',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args --rc-file invalidpath --stanza-list"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'GPG missing recipient',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args_no_get_key --gpg-encryption",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'HTTP proxy proto mismatch',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args --http-proxy invalid -P udp",
     },
 
     ### rc tests: digest
@@ -303,6 +346,28 @@
                 'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '1234'}}],
         'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'firewall timeout 0s',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '0'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s0/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'timeout --fw-timeout 1234s',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '1234'}}],
+        'positive_output_matches' => [qr/Client\sTimeout:\s1234/],
+    },
+
     ### rc tests: hmac digest
     {
         'category' => 'basic operations',
@@ -573,6 +638,20 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => '--nat-local -f 1234',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --nat-local --fw-timeout 1234",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_LOCAL' => 'Y',
+                    'FW_TIMEOUT' => '1111'}}],
+        'positive_output_matches' => [qr/Nat\sAccess\:\s127.0.0.1\,22/],
+        'rc_positive_output_matches' => [qr/NAT_LOCAL.*Y/, qr/FW_TIMEOUT.*1234/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => '--nat 192.168.10.1:12345',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default -N 192.168.10.1:12345",
@@ -582,6 +661,48 @@
         'positive_output_matches' => [qr/Nat\sAccess\:\s192.168.10.1\,12345/],
         'rc_positive_output_matches' => [qr/NAT_ACCESS.*192.168.10.1\:12345/],
     },
+#    {
+#        'category' => 'basic operations',
+#        'subcategory' => 'client save rc file',
+#        'detail'   => '--nat 192.168.10.1:99999',
+#        'function' => \&client_rc_file,
+#        'cmdline'  => "$client_save_rc_args -n default -N 192.168.10.1:99999",
+#        'save_rc_stanza' => [{'name' => 'default',
+#                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+#                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+#        'positive_output_matches' => [qr/Nat\sAccess\:\s192.168.10.1\,12345/],
+#        'rc_positive_output_matches' => [qr/NAT_ACCESS.*192.168.10.1\:12345/],
+#    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--nat client timeout 1234s',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -N 192.168.10.1:12345 -f 1234",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1',
+                    'FW_TIMEOUT' => '1111'}}],
+        'positive_output_matches' => [qr/Nat\sAccess\:\s192.168.10.1\,12345/],
+        'rc_positive_output_matches' => [qr/NAT_ACCESS.*192.168.10.1\:12345/,
+                                        qr/FW_TIMEOUT.*1234/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--nat client timeout 0s',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -N 192.168.10.1:12345 -f 0",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1',
+                    'FW_TIMEOUT' => '0'}}],
+        'positive_output_matches' => [qr/Nat\sAccess\:\s192.168.10.1\,12345/],
+        'rc_positive_output_matches' => [qr/NAT_ACCESS.*192.168.10.1\:12345/,
+                                        qr/FW_TIMEOUT.*0/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
@@ -590,7 +711,7 @@
         'cmdline'  => "$client_save_rc_args -n default -N 192.168.10.1:12345 --nat-rand-port",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
-                'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_RAND_PORT' => 'N',
+                'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_RAND_PORT' => '0',
                 'NAT_ACCESS' => '192.168.10.1:33333'}}],
         'positive_output_matches' => [qr/Nat\sAccess\:\s192.168.10.1\,12345/],
         'rc_positive_output_matches' => [qr/NAT_ACCESS.*192.168.10.1\:12345/, qr/NAT_RAND_PORT.*Y/],
@@ -764,7 +885,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => '--encryption-mode legacy',
+        'detail'   => 'encryption mode legacy',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default --encryption-mode legacy",
         'save_rc_stanza' => [{'name' => 'default',
@@ -772,6 +893,21 @@
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/ENCRYPTION_MODE.*legacy/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'encryption mode legacy (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --encryption-mode legacy",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
+                'ENCRYPTION_MODE' => 'legacy', 'USE_HMAC' => 'Y'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/incompatible\swith\sHMAC/],
+        'rc_positive_output_matches' => [qr/ENCRYPTION_MODE.*legacy/],
+    },
+
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
@@ -785,7 +921,6 @@
         'positive_output_matches' => [qr/Parameter\serror/],
         'rc_positive_output_matches' => [qr/ENCRYPTION_MODE.*invalid/],
     },
-
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
@@ -918,6 +1053,31 @@
         'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*icmp/],
         'rc_negative_output_matches' => [qr/USE_HMAC/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'invalid ICMP type',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-proto ICMP --icmp-type 9999",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sicmp/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*UDP/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'invalid ICMP code',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --server-proto ICMP --icmp-code 9999",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'UDP'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sicmp/],
+        'rc_positive_output_matches' => [qr/SPA_SERVER_PROTO.*UDP/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
