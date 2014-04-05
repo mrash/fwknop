@@ -177,6 +177,15 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
+        'detail'   => 'invalid rc file path too long',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args --rc-file " . 'A'x1030 . " --stanza-list"
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
         'detail'   => 'GPG missing recipient',
         'function' => \&generic_exec,
         'exec_err' => $YES,
