@@ -29,36 +29,6 @@
 #include "digest.h"
 #include "base64.h"
 
-
-/* Convert a raw digest into its hex string representation.
-*/
-static void
-digest_to_hex(char *out, size_t size_out, const unsigned char *in, const size_t size_in)
-{
-    size_t i;
-
-    /* Assume the output buffer must be a NULL terminated string */
-    memset(out, 0, size_out);
-    size_out -= 1;
-
-    /* The hex string representation must be long enough */
-    if (size_out >= (size_in * 2))
-    {
-        /* For each byte... */
-        for(i=0; i<size_in; i++)
-        {
-            /* Append the hex string to the output buffer */
-            snprintf(out, 2, "%02x", in[i]);
-
-            /* Moved the pointer on the output buffer to the next place  */
-            out += 2;
-        }
-    }
-
-    /* Not enough space in the output buffer - Should not occur */
-    else;
-}
-
 /* Compute MD5 hash on in and store result in out.
 */
 void
@@ -69,17 +39,6 @@ md5(unsigned char *out, unsigned char *in, size_t size)
     MD5Init(&ctx);
     MD5Update(&ctx, (unsigned char*)in, size);
     MD5Final(out, &ctx);
-}
-
-/* Compute MD5 hash on in and store the hex string result in out.
-*/
-void
-md5_hex(char *out, size_t size_out, unsigned char *in, size_t size_in)
-{
-    uint8_t      md[MD5_DIGEST_LEN];
-
-    md5(md, in, size_in);
-    digest_to_hex(out, size_out, md, MD5_DIGEST_LEN);
 }
 
 /* Compute MD5 hash on in and store the base64 string result in out.
@@ -107,17 +66,6 @@ sha1(unsigned char *out, unsigned char *in, size_t size)
     sha1_final(out, &sha1_info);
 }
 
-/* Compute SHA1 hash on in and store the hex string result in out.
-*/
-void
-sha1_hex(char *out, size_t size_out, unsigned char *in, size_t size_in)
-{
-    uint8_t       md[SHA1_DIGEST_LEN];
-
-    sha1(md, in, size_in);
-    digest_to_hex(out, size_out, md, SHA1_DIGEST_LEN);
-}
-
 /* Compute SHA1 hash on in and store the base64 string result in out.
 */
 void
@@ -141,17 +89,6 @@ sha256(unsigned char *out, unsigned char *in, size_t size)
     SHA256_Init(&sha256_ctx);
     SHA256_Update(&sha256_ctx, (const uint8_t*)in, size);
     SHA256_Final(out, &sha256_ctx);
-}
-
-/* Compute SHA256 hash on in and store the hex string result in out.
-*/
-void
-sha256_hex(char *out, size_t size_out, unsigned char *in, size_t size_in)
-{
-    uint8_t       md[SHA256_DIGEST_LEN];
-
-    sha256(md, in, size_in);
-    digest_to_hex(out, size_out, md, SHA256_DIGEST_LEN);
 }
 
 /* Compute SHA256 hash on in and store the base64 string result in out.
@@ -179,17 +116,6 @@ sha384(unsigned char *out, unsigned char *in, size_t size)
     SHA384_Final(out, &sha384_ctx);
 }
 
-/* Compute SHA384 hash on in and store the hex string result in out.
-*/
-void
-sha384_hex(char *out, size_t size_out, unsigned char *in, size_t size_in)
-{
-    uint8_t       md[SHA384_DIGEST_LEN];
-
-    sha384(md, in, size_in);
-    digest_to_hex(out, size_out, md, SHA384_DIGEST_LEN);
-}
-
 /* Compute SHA384 hash on in and store the base64 string result in out.
 */
 void
@@ -213,17 +139,6 @@ sha512(unsigned char *out, unsigned char *in, size_t size)
     SHA512_Init(&sha512_ctx);
     SHA512_Update(&sha512_ctx, (const uint8_t*)in, size);
     SHA512_Final(out, &sha512_ctx);
-}
-
-/* Compute SHA512 hash on in and store the hex string result in out.
-*/
-void
-sha512_hex(char *out, size_t size_out, unsigned char *in, size_t size_in)
-{
-    uint8_t       md[SHA512_DIGEST_LEN];
-
-    sha512(md, in, size_in);
-    digest_to_hex(out, size_out, md, SHA512_DIGEST_LEN);
 }
 
 /* Compute SHA512 hash on in and store the base64 string result in out.

@@ -345,12 +345,6 @@ const static sha2_word64 sha512_initial_hash_value[8] = {
 	0x5be0cd19137e2179ULL
 };
 
-/*
- * Constant used by SHA256/384/512_End() functions for converting the
- * digest to a readable hexadecimal character string:
- */
-static const char *sha2_hex_digits = "0123456789abcdef";
-
 
 /*** SHA-256: *********************************************************/
 void SHA256_Init(SHA256_CTX* context) {
@@ -647,38 +641,6 @@ void SHA256_Final(sha2_byte digest[], SHA256_CTX* context) {
 	MEMSET_BZERO(context, sizeof(*context));
 	usedspace = 0;
 }
-
-char *SHA256_End(SHA256_CTX* context, char buffer[]) {
-	sha2_byte	digest[SHA256_DIGEST_LEN], *d = digest;
-	int		i;
-
-	/* Sanity check: */
-	assert(context != (SHA256_CTX*)0);
-
-	if (buffer != (char*)0) {
-		SHA256_Final(digest, context);
-
-		for (i = 0; i < SHA256_DIGEST_LEN; i++) {
-			*buffer++ = sha2_hex_digits[(*d & 0xf0) >> 4];
-			*buffer++ = sha2_hex_digits[*d & 0x0f];
-			d++;
-		}
-		*buffer = (char)0;
-	} else {
-		MEMSET_BZERO(context, sizeof(*context));
-	}
-	MEMSET_BZERO(digest, SHA256_DIGEST_LEN);
-	return buffer;
-}
-
-char* SHA256_Data(const sha2_byte* data, size_t len, char digest[SHA256_DIGEST_STR_LEN]) {
-	SHA256_CTX	context;
-
-	SHA256_Init(&context);
-	SHA256_Update(&context, data, len);
-	return SHA256_End(&context, digest);
-}
-
 
 /*** SHA-512: *********************************************************/
 void SHA512_Init(SHA512_CTX* context) {
@@ -977,37 +939,6 @@ void SHA512_Final(sha2_byte digest[], SHA512_CTX* context) {
 	MEMSET_BZERO(context, sizeof(*context));
 }
 
-char *SHA512_End(SHA512_CTX* context, char buffer[]) {
-	sha2_byte	digest[SHA512_DIGEST_LEN], *d = digest;
-	int		i;
-
-	/* Sanity check: */
-	assert(context != (SHA512_CTX*)0);
-
-	if (buffer != (char*)0) {
-		SHA512_Final(digest, context);
-
-		for (i = 0; i < SHA512_DIGEST_LEN; i++) {
-			*buffer++ = sha2_hex_digits[(*d & 0xf0) >> 4];
-			*buffer++ = sha2_hex_digits[*d & 0x0f];
-			d++;
-		}
-		*buffer = (char)0;
-	} else {
-		MEMSET_BZERO(context, sizeof(*context));
-	}
-	MEMSET_BZERO(digest, SHA512_DIGEST_LEN);
-	return buffer;
-}
-
-char* SHA512_Data(const sha2_byte* data, size_t len, char digest[SHA512_DIGEST_STR_LEN]) {
-	SHA512_CTX	context;
-
-	SHA512_Init(&context);
-	SHA512_Update(&context, data, len);
-	return SHA512_End(&context, digest);
-}
-
 
 /*** SHA-384: *********************************************************/
 void SHA384_Init(SHA384_CTX* context) {
@@ -1051,35 +982,3 @@ void SHA384_Final(sha2_byte digest[], SHA384_CTX* context) {
 	/* Zero out state data */
 	MEMSET_BZERO(context, sizeof(*context));
 }
-
-char *SHA384_End(SHA384_CTX* context, char buffer[]) {
-	sha2_byte	digest[SHA384_DIGEST_LEN], *d = digest;
-	int		i;
-
-	/* Sanity check: */
-	assert(context != (SHA384_CTX*)0);
-
-	if (buffer != (char*)0) {
-		SHA384_Final(digest, context);
-
-		for (i = 0; i < SHA384_DIGEST_LEN; i++) {
-			*buffer++ = sha2_hex_digits[(*d & 0xf0) >> 4];
-			*buffer++ = sha2_hex_digits[*d & 0x0f];
-			d++;
-		}
-		*buffer = (char)0;
-	} else {
-		MEMSET_BZERO(context, sizeof(*context));
-	}
-	MEMSET_BZERO(digest, SHA384_DIGEST_LEN);
-	return buffer;
-}
-
-char* SHA384_Data(const sha2_byte* data, size_t len, char digest[SHA384_DIGEST_STR_LEN]) {
-	SHA384_CTX	context;
-
-	SHA384_Init(&context);
-	SHA384_Update(&context, data, len);
-	return SHA384_End(&context, digest);
-}
-
