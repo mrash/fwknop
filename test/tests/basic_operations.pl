@@ -182,6 +182,14 @@
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args --rc-file " . 'A'x1030 . " --stanza-list"
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '--key-gen file path (-K) too long',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args --key-gen -K " . 'A'x1030
+    },
 
     {
         'category' => 'basic operations',
