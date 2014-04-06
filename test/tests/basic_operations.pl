@@ -208,7 +208,40 @@
         'cmdline'  => "$default_client_args --http-proxy invalid -P udp",
     },
 
-    ### rc tests: digest
+    ### rc tests
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'invalid var format',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => '#'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sentry/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'invalid digest val',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'invalid proto val',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'SPA_SERVER_PROTO' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
@@ -477,6 +510,61 @@
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/DIGEST_TYPE.*MD5/, qr/DIGEST_TYPE.*SHA1/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'require stanza name or -D',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+            "--no-save-args $verbose_str --key-gen --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY_BASE64' => 'testtest', 'HMAC_KEY_BASE64' => 'aaa%aaaa',
+                    'DIGEST_TYPE' => 'MD5'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Must\suse.*destination/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'require SPA destination',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+            "--no-save-args $verbose_str",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY_BASE64' => 'testtest', 'HMAC_KEY_BASE64' => 'aaa%aaaa',
+                    'DIGEST_TYPE' => 'MD5'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Must\suse.*destination/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'invalid base64 HMAC key',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
+            "--digest-type SHA1 --use-hmac",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY_BASE64' => 'testtest', 'HMAC_KEY_BASE64' => 'aaa%aaaa',
+                    'DIGEST_TYPE' => 'MD5'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/look\slike\sbase64/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*MD5/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'invalid base64 key',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
+            "--digest-type SHA1 --use-hmac",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY_BASE64' => 'tes%test', 'DIGEST_TYPE' => 'MD5'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/look\slike\sbase64/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*MD5/],
+    },
+
 
     {
         'category' => 'basic operations',
