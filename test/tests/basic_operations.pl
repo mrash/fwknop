@@ -467,6 +467,20 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => 'non-default update',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n nondefault --digest-type SHA1",
+        'save_rc_stanza' => [
+            {'name' => 'default', 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}},        ### with extraneous spaces
+            {'name' => '  nondefault', 'vars' => {'KEY' => 'testtest', '  DIGEST_TYPE' => 'MD5'}}  ### with extraneous spaces
+        ],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*MD5/, qr/DIGEST_TYPE.*SHA1/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => 'digest SHA1 ask (y)/n (1)',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args_no_force --key-gen -n default " .
