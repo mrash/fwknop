@@ -811,6 +811,19 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => 'key file too long',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --get-key " . 'A'x1030,
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Could\snot\sopen/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*2/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => '--get-hmac-key',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default --get-hmac-key somefile",
@@ -820,6 +833,19 @@
         'positive_output_matches' => [qr/HMAC\sType\:\s.*SHA1/],
         'rc_positive_output_matches' => [qr/KEY.*somefile/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'HMAC key file too long',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --get-hmac-key " . 'A'x1030,
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Could\snot\sopen/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*2/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
