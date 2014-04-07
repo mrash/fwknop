@@ -207,6 +207,14 @@
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args --http-proxy invalid -P udp",
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'resolve HTTP proxy invalid port',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args --http-proxy http://www.cipherdyne.org:99999/cgi-bin/myip -P http",
+    },
 
     ### rc tests
     {
@@ -252,6 +260,7 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*MD5/],
     },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
@@ -516,10 +525,10 @@
         'detail'   => 'require stanza name or -D',
         'function' => \&client_rc_file,
         'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
-            "--no-save-args $verbose_str --key-gen --save-rc-stanza --force-stanza --test",
+            "--no-save-args $verbose_str --rc-file $save_rc_file --key-gen " .
+            "--save-rc-stanza --force-stanza --test",
         'save_rc_stanza' => [{'name' => 'default',
-                'vars' => {'KEY_BASE64' => 'testtest', 'HMAC_KEY_BASE64' => 'aaa%aaaa',
-                    'DIGEST_TYPE' => 'MD5'}}],
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Must\suse.*destination/],
     },
@@ -529,12 +538,25 @@
         'detail'   => 'require SPA destination',
         'function' => \&client_rc_file,
         'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
-            "--no-save-args $verbose_str",
+            "--no-save-args $verbose_str --rc-file $save_rc_file " .
+            "--save-rc-stanza --force-stanza --test",
         'save_rc_stanza' => [{'name' => 'default',
-                'vars' => {'KEY_BASE64' => 'testtest', 'HMAC_KEY_BASE64' => 'aaa%aaaa',
-                    'DIGEST_TYPE' => 'MD5'}}],
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Must\suse.*destination/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid SPA destination',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+            "--no-save-args $verbose_str -D .168.10.1 -n default " .
+            "--rc-file $save_rc_file --save-rc-stanza --force-stanza",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/packet\snot\ssent/],
     },
 
     {
@@ -847,6 +869,78 @@
         'positive_output_matches' => [qr/Nat\sAccess\:\s192.168.10.1\,12345/, qr/Message.*22211/],
         'rc_positive_output_matches' => [qr/NAT_ACCESS.*192.168.10.1\:12345/, qr/NAT_PORT.*22211/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'NAT invalid access (1)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -N 192.168.10.1:12345 --nat-port 22211",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_PORT' => '11111'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Expecting.*A\sarg/]
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'NAT invalid access (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -N 192.168.10.1:12345 --nat-port 22211",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_PORT' => '11111'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sSPA\saccess/]
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'NAT invalid access (3)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -N .168.10.1 --nat-port 22211",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_PORT' => '11111'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Unable\sto\sresolve/]
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'NAT invalid access (4)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/99999 -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -N 192.168.10.1:99999 --nat-port 22211",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_PORT' => '11111'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sport/]
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'NAT invalid multi-port -A',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22,tcp/123 -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -N 192.168.10.1:12345 --nat-port 22211",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_PORT' => '11111'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/NAT\sfor\smultiple/]
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
