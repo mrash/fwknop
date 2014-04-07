@@ -231,6 +231,28 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
+        'detail'   => 'KEY_FILE path',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY_FILE' => $local_key_file, 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Random\sValue/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'HMAC_KEY_FILE path',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY_FILE'
+                    => $local_hmac_key_file, 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Random\sValue/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
         'detail'   => 'invalid digest val',
         'function' => \&client_rc_file,
         'cmdline'  => $client_rewrite_rc_args,
