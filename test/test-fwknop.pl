@@ -444,7 +444,7 @@ exit 1 unless GetOptions(
 
 &usage() if $help;
 
-my  $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
+our $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
 our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
 if ($enable_all) {
