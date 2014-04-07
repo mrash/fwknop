@@ -1966,9 +1966,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->use_hmac = 1;
                 add_var_to_bitmask(FWKNOP_CLI_ARG_HMAC_KEY_FILE, &var_bitmask);
                 break;
-            case 'h':
-                usage();
-                exit(EXIT_SUCCESS);
             case 'H':
                 options->spa_proto = FKO_PROTO_HTTP;
                 strlcpy(options->http_proxy, optarg, sizeof(options->http_proxy));

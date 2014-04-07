@@ -487,6 +487,29 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => '--key-rijndael',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --key-rijndael newkey",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/KEY.*newkey/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--key-hmac',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --key-hmac hmackey",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/HMAC_KEY.*hmackey/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => 'digest MD5',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default --digest-type MD5",
@@ -1404,6 +1427,21 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => 'GPG use agent',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_gpg_args_same_key_signer --gpg-encryption "
+            . "--gpg-agent --gpg-home-dir $gpg_client_home_dir_no_pw --gpg-no-signing-pw "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'USE_GPG_AGENT' => 'Y', 'GPG_SIGNER' => 'invalid'}}],
+        'positive_output_matches' => [qr/GPG sig verify/],
+        'rc_positive_output_matches' => [qr/GPG_SIGNER/, qr/GPG_RECIPIENT/,
+                            qr/GPG_HOMEDIR/]
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => 'GPG same signing key (1)',
         'function' => \&client_rc_file,
         'cmdline'  => "$default_client_gpg_args_same_key_signer --gpg-encryption "
@@ -1446,6 +1484,22 @@
                 'USE_GPG_AGENT' => 'N', 'GPG_NO_SIGNING_PW' => 'Y'}}],
         'positive_output_matches' => [qr/GPG sig verify/],
         'rc_positive_output_matches' => [qr/GPG_SIGNER/, qr/GPG_HOMEDIR/]
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG invalid sign pw',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$default_client_gpg_args_same_key_signer "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw "
+            . "--gpg-exe invalidpath "
+            . "--rc-file $save_rc_file --save-rc-stanza --force-stanza --test",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30',
+                'GPG_HOMEDIR' => 'somepath', 'GPG_SIGNING_PW_BASE64' => 'aaa%aaa'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
     },
 
     {
