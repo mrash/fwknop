@@ -169,11 +169,57 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
+        'detail'   => 'invalid key file path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+                "-D $loopback_ip --get-key invalidpath --no-save-args $verbose_str"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid key file format',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+                "-D $loopback_ip --get-key $invalid_key_file --no-save-args $verbose_str"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid key file format (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+                "-D $loopback_ip --get-key $invalid_key_file2 --no-save-args $verbose_str"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid key file format (3)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+                "-D $loopback_ip --get-key $invalid_key_file3 --no-save-args $verbose_str"
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
         'detail'   => 'invalid rc file path stanza list',
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args --rc-file invalidpath --stanza-list"
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid rc file path /dev/null',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$fwknopCmd --rc-file /dev/null"
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -228,6 +274,19 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Invalid\sentry/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'invalid verbose val',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
+                'VERBOSE' => 100}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
@@ -567,6 +626,21 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => 'non-default update (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n nondefault --digest-type SHA1",
+        'save_rc_stanza' => [
+            {'name' => 'default', 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}},
+            {'name' => 'nondefault', 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}},
+            {'name' => 'nondefault2', 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}
+        ],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA1/],
+        'rc_positive_output_matches' => [qr/DIGEST_TYPE.*MD5/, qr/DIGEST_TYPE.*SHA1/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => 'require stanza name or -D',
         'function' => \&client_rc_file,
         'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
@@ -794,6 +868,20 @@
                     'SPOOF_SOURCE_IP' => 'invalid'}}],
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Unrecognized\sproto/],
+        'rc_positive_output_matches' => [qr/SPOOF_SOURCE_IP.*invalid/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--spoof-src.. invalid -P',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -P tcp --spoof-source 3.3.3.3",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1',
+                    'SPOOF_SOURCE_IP' => 'invalid'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Must\sset.*udpraw/],
         'rc_positive_output_matches' => [qr/SPOOF_SOURCE_IP.*invalid/],
     },
 
@@ -1043,6 +1131,42 @@
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
         'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*cipherdyne.org.*myip/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '-R resolve http (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url www.cipherdyne.org/cgi-bin/myip",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Resolved/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*cipherdyne.org.*myip/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '-R resolve invalid url (1)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://127.0.0.1" . '1'x300 . '/test.cgi',
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Error\sparsing/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '-R resolve invalid url (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://127.0.0.1/" . 'A'x1200,
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Error\sparsing/],
     },
 
     {

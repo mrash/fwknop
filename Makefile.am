@@ -322,6 +322,9 @@ EXTRA_DIST = \
     test/tests/rijndael_cmd_exec.pl \
     test/hardening-check \
     test/local_spa.key \
+    test/invalid.key \
+    test/invalid2.key \
+    test/invalid3.key \
     test/long_spa.key \
     test/test-fwknop.pl \
     test/fko-python.py \

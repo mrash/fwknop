@@ -208,6 +208,9 @@ our $force_nat_host2   = '123.4.4.4';
 our $force_snat_host   = '33.3.3.3';
 our $default_spa_port  = 62201;
 our $non_std_spa_port  = 12345;
+our $invalid_key_file  = 'invalid.key';
+our $invalid_key_file2 = 'invalid2.key';
+our $invalid_key_file3 = 'invalid2.key';
 
 our $spoof_user = 'testuser';
 
