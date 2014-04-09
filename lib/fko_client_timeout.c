@@ -43,7 +43,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
-    /* Gotta have a valid string.
+    /* The timeout should not be negative
     */
     if(timeout < 0)
         return(FKO_ERROR_INVALID_DATA_CLIENT_TIMEOUT_NEGATIVE);
