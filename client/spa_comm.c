@@ -597,7 +597,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     char               *spa_data;
     struct sockaddr_in  saddr, daddr;
     char                ip_str[INET_ADDRSTRLEN] = {0};  /* String used to contain the ip addres of an hostname */
-    struct addrinfo     hints;                          /* Structure used to set hints to reslove hostname */
+    struct addrinfo     hints;                          /* Structure used to set hints to resolve hostname */
 #ifdef WIN32
     WSADATA wsa_data;
 #endif
@@ -675,7 +675,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         */
         daddr.sin_port = htons(options->spa_dst_port);
 
-        /* Set destination address. We use the default protocol to reslove
+        /* Set destination address. We use the default protocol to resolve
          * the ip address */
         hints.ai_family = AF_INET;
 
