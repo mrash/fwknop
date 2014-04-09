@@ -326,6 +326,7 @@ EXTRA_DIST = \
     test/invalid2.key \
     test/invalid3.key \
     test/long_spa.key \
+    test/invalid.args \
     test/test-fwknop.pl \
     test/fko-python.py \
     test/run-test-suite.sh \

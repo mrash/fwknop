@@ -40,11 +40,46 @@
         'subcategory' => 'client',
         'detail'   => 'show last args (3)',
         'function' => \&rm_last_args,
-        'positive_output_matches' => [qr/Unable\sto.*HOME/i],
+        'positive_output_matches' => [qr/Unable\sto\sdetermine/i],
         'exec_err' => $YES,
-        'cmdline' => "env -u HOME $fwknopCmd --show-last",
+        'cmdline' => "env -u HOME $fwknopCmd --show-last --rc-file $cf{'rc_def_key'}",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'show last args (4)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd --save-args-file empty.args " .
+            "--show-last --rc-file $cf{'rc_def_key'}",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'save args too long',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+            "--get-key $local_key_file --save-args-file too_long.args " . "-A tcp/22 "x300
     },
 
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'previous args (1)',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/max\scommand\sline\sargs/i],
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -l --save-args-file invalid.args",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'previous args (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -l --save-args-file /dev/null",
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -171,7 +206,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
-        'detail'   => 'SPA --key-base64-rijndael invalid',
+        'detail'   => 'SPA --key-base64-rijndael invalid (1)',
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args_no_get_key --key-base64-rijndael a%aaaaaaaaaaa"
@@ -179,12 +214,31 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
-        'detail'   => 'SPA --key-base64-hmac invalid',
+        'detail'   => 'SPA --key-base64-rijndael invalid (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args_no_get_key --key-base64-rijndael " . 'QUFB'x100 ### 'A' base64 encoded
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA --key-base64-hmac invalid (1)',
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args_no_get_key " .
             "--key-base64-rijndael aaaaaaaaaaaaa --key-base64-hmac a%aaaaaaa"
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA --key-base64-hmac invalid (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$default_client_args_no_get_key " .
+            "--key-base64-rijndael aaaaaaaaaaaaa --key-base64-hmac " . 'QUFB'x300 ### 'A' base64 encoded
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -720,10 +774,23 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
-        'detail'   => 'invalid SPA destination',
+        'detail'   => 'invalid SPA destination (1)',
         'function' => \&client_rc_file,
         'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
             "--no-save-args $verbose_str -D .168.10.1 -n default " .
+            "--rc-file $save_rc_file --save-rc-stanza --force-stanza",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/packet\snot\ssent/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid SPA destination (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+            "--no-save-args $verbose_str -D badhost -n default " .
             "--rc-file $save_rc_file --save-rc-stanza --force-stanza",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
@@ -883,6 +950,19 @@
         'positive_output_matches' => [qr/Username\:\ssomeuser/],
         'rc_positive_output_matches' => [qr/SPOOF_USER.*someuser/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--spoof-user invalid',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --spoof-user some=user",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Args\scontain\sinvalid/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
@@ -2005,11 +2085,66 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
-        'detail'   => 'bad file descriptor',
+        'detail'   => 'pw bad file descriptor (1)',
         'function' => \&generic_exec,
-        'cmdline'  => $default_client_args . " --test --fd -1",
+        'cmdline'  => $default_client_args_no_get_key . " --test --fd -1",
         'positive_output_matches' => [qr/Value\s.*out\sof\srange/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw bad file descriptor (2)',
+        'function' => \&generic_exec,
+        'cmdline'  => $default_client_args_no_get_key . " --test --fd 100",
+        'positive_output_matches' => [qr/Bad\sfile\sdescriptor/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 PW_BS_CHAR',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/perl -e 'print "test\x08test"' |/
+                . $default_client_args_no_get_key . " --test --fd 0",
+        'positive_output_matches' => [qr/FKO\sVersion/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 PW_BREAK_CHAR',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/perl -e 'print "test\x03test"' |/
+                . $default_client_args_no_get_key . " --test --fd 0",
+        'positive_output_matches' => [qr/FKO\sVersion/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 PW_LF_CHAR',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/perl -e 'print "test\x0atest"' |/
+                . $default_client_args_no_get_key . " --test --fd 0",
+        'positive_output_matches' => [qr/FKO\sVersion/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 PW_CR_CHAR',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/perl -e 'print "test\x0dtest"' |/
+                . $default_client_args_no_get_key . " --test --fd 0",
+        'positive_output_matches' => [qr/FKO\sVersion/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 PW_CLEAR_CHAR',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/perl -e 'print "test\x15test"' |/
+                . $default_client_args_no_get_key . " --test --fd 0",
+        'positive_output_matches' => [qr/FKO\sVersion/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client',

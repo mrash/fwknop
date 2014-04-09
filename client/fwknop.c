@@ -940,9 +940,13 @@ show_last_command(const char * const args_save_file)
     }
 
     if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
-        log_msg(LOG_VERBOSITY_NORMAL, "Last fwknop client command line: %s", args_str);
+        log_msg(LOG_VERBOSITY_NORMAL,
+                "Last fwknop client command line: %s", args_str);
     } else {
-        log_msg(LOG_VERBOSITY_NORMAL, "Could not read line from file: %s", args_save_file);
+        log_msg(LOG_VERBOSITY_NORMAL,
+                "Could not read line from file: %s", args_save_file);
+        fclose(args_file_ptr);
+        return 0;
     }
     fclose(args_file_ptr);
 
@@ -957,7 +961,7 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
     FILE           *args_file_ptr = NULL;
 
     int             current_arg_ctr = 0;
-    int             argc_new = 0;
+    int             argc_new = 0, args_broken = 0;
     int             i = 0;
 
     char            args_str[MAX_LINE_LEN] = {0};
@@ -1002,18 +1006,22 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] max command line args exceeded.");
                     fclose(args_file_ptr);
-                    return 0;
+                    args_broken = 1;
+                    break;
                 }
             }
         }
     }
     fclose(args_file_ptr);
 
-    /* Reset the options index so we can run through them again.
-    */
-    optind = 0;
+    if(! args_broken)
+    {
+        /* Reset the options index so we can run through them again.
+        */
+        optind = 0;
 
-    config_init(options, argc_new, argv_new);
+        config_init(options, argc_new, argv_new);
+    }
 
     /* Since we passed in our own copies, free up malloc'd memory
     */
@@ -1024,6 +1032,9 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
         else
             free(argv_new[i]);
     }
+
+    if(args_broken)
+        return 0;
 
     return 1;
 }
