@@ -4959,6 +4959,23 @@ sub client_save_spa_pkt() {
     return $rv;
 }
 
+sub rm_last_args() {
+    my $test_hr = shift;
+
+    my $last_args_file = $ENV{'HOME'} . '/.fwknop.run';
+    if (-e $last_args_file) {
+        move $last_args_file, $last_args_file . '.orig';
+    }
+
+    my $rv = &generic_exec($test_hr);
+
+    if (-e $last_args_file . '.orig') {
+        move $last_args_file . '.orig', $last_args_file;
+    }
+
+    return $rv;
+}
+
 sub generic_exec() {
     my $test_hr = shift;
 

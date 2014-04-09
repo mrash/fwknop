@@ -20,12 +20,31 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
-        'detail'   => 'show last args',
+        'detail'   => 'show last args (1)',
         'function' => \&generic_exec,
         'positive_output_matches' => [qr/Could\snot|Last\sfwknop/i],
         'exec_err' => $IGNORE,
         'cmdline' => "$fwknopCmd --show-last",
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'show last args (2)',
+        'function' => \&rm_last_args,
+        'positive_output_matches' => [qr/Could\snot|Last\sfwknop/i],
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd --show-last",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'show last args (3)',
+        'function' => \&rm_last_args,
+        'positive_output_matches' => [qr/Unable\sto.*HOME/i],
+        'exec_err' => $YES,
+        'cmdline' => "env -u HOME $fwknopCmd --show-last",
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -206,6 +225,14 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
+        'detail'   => 'invalid home dir path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "HOME=" . 'A'x1050 . " $default_client_args --stanza-list"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
         'detail'   => 'invalid rc file path stanza list',
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -266,6 +293,31 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
+        'detail'   => 'invalid var',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'BADVAR' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'invalid var (2)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_rewrite_rc_args -n nondefault",
+        'write_rc_file' => [
+            {'name' => 'default', 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}},
+            {'name' => 'nondefault', 'vars' => {'BADKEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1'}}
+        ],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
         'detail'   => 'invalid var format',
         'function' => \&client_rc_file,
         'cmdline'  => $client_rewrite_rc_args,
@@ -274,6 +326,7 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Invalid\sentry/],
     },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
@@ -1058,6 +1111,20 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Invalid\sport/]
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'NAT invalid access (5)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -N 192.168.10.1:12345",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/]
+    },
 
     {
         'category' => 'basic operations',
@@ -1123,7 +1190,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
-        'detail'   => '-R resolve --resolve-url',
+        'detail'   => '-R resolve http (1)',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://www.cipherdyne.org/cgi-bin/myip",
         'save_rc_stanza' => [{'name' => 'default',
@@ -1144,6 +1211,33 @@
         'positive_output_matches' => [qr/Resolved/],
         'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*cipherdyne.org.*myip/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '-R resolve http (3)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://127.0.0.1//",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sIP/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*127.0.0.1/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '-R resolve http (4)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://127.0.0.1",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid\sIP/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*127.0.0.1/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
