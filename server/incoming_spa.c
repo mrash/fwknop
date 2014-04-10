@@ -143,6 +143,7 @@ get_raw_digest(char **digest, char *pkt_data)
     fko_ctx_t    ctx = NULL;
     char        *tmp_digest = NULL;
     int          res = FKO_SUCCESS;
+    short        raw_digest_type = -1;
 
     /* initialize an FKO context with no decryption key just so
      * we can get the outer message digest
@@ -161,6 +162,27 @@ get_raw_digest(char **digest, char *pkt_data)
 
     res = fko_set_raw_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);
     if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error setting digest type for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        ctx = NULL;
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    res = fko_get_raw_spa_digest_type(ctx, &raw_digest_type);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error getting digest type for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        ctx = NULL;
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    /* Make sure the digest type is what we expect
+    */
+    if(raw_digest_type != FKO_DEFAULT_DIGEST)
     {
         log_msg(LOG_WARNING, "Error setting digest type for SPA data: %s",
             fko_errstr(res));
@@ -285,7 +307,9 @@ incoming_spa(fko_srv_options_t *opts)
 
     /* Loop through all access stanzas looking for a match
     */
-    acc_stanza_t    *acc = opts->acc_stanzas;
+    acc_stanza_t        *acc = opts->acc_stanzas;
+    acc_string_list_t   *gpg_id_ndx;
+    unsigned char        is_gpg_match = 0;
 
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
@@ -593,13 +617,34 @@ incoming_spa(fko_srv_options_t *opts)
             log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s'.",
                 spadat.pkt_source_ip, stanza_num, gpg_id);
 
-            if(acc->gpg_remote_id != NULL && !acc_check_gpg_remote_id(acc, gpg_id))
+            if(acc->gpg_remote_id != NULL)
             {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
-                    spadat.pkt_source_ip, stanza_num, gpg_id);
-                acc = acc->next;
-                continue;
+                is_gpg_match = 0;
+                for(gpg_id_ndx = acc->gpg_remote_id_list;
+                        gpg_id_ndx != NULL; gpg_id_ndx=gpg_id_ndx->next)
+                {
+                    res = fko_gpg_signature_id_match(ctx,
+                            gpg_id_ndx->str, &is_gpg_match);
+                    if(res != FKO_SUCCESS)
+                    {
+                        log_msg(LOG_WARNING,
+                            "[%s] (stanza #%d) Error in GPG siganture comparision: %s",
+                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+                        acc = acc->next;
+                        continue;
+                    }
+                    if(is_gpg_match)
+                        break;
+                }
+
+                if(! is_gpg_match)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
+                        spadat.pkt_source_ip, stanza_num, gpg_id);
+                    acc = acc->next;
+                    continue;
+                }
             }
         }
 

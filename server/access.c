@@ -1641,23 +1641,6 @@ cleanup_and_bail:
     return(res);
 }
 
-/* Take a GPG ID string and check it against the list of allowed
- * GPG_REMOTE_ID's.
- *
- * Return 1 if we are allowed
-*/
-int
-acc_check_gpg_remote_id(acc_stanza_t *acc, const char *gpg_id)
-{
-    acc_string_list_t *ndx;
-
-    for(ndx = acc->gpg_remote_id_list; ndx != NULL; ndx=ndx->next)
-        if(strcasecmp(ndx->str, gpg_id) == 0)
-            return(1);
-
-    return(0);
-}
-
 /* Dump the configuration
 */
 void

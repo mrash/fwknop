@@ -28,6 +28,9 @@ fwknop-2.6.1 (//2014):
 
     - [libfko] Better SPA packet dumping output to include GnuPG specifics
       whenever SPA packets are encrypted/authenticated via GnuPG.
+    - [server] Validate SPA packet GnuPG signatures with the libfko
+      fko_gpg_signature_id_match() function instead of server code doing this
+      independently.
     - [client+server] Add --gpg-exe command line argument and GPG_EXE config
       variable to ~/.fwknoprc and the access.conf file so that the path to
       GnuPG can be changed from the default /usr/bin/gpg path.

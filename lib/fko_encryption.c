@@ -1102,6 +1102,7 @@ fko_gpg_signature_id_match(fko_ctx_t ctx, const char * const id,
 {
 #if HAVE_LIBGPGME
     char *curr_id;
+    int   rv = FKO_SUCCESS;
 
     /* Must be initialized
     */
@@ -1123,7 +1124,9 @@ fko_gpg_signature_id_match(fko_ctx_t ctx, const char * const id,
     if(ctx->gpg_sigs == NULL)
         return(FKO_ERROR_GPGME_NO_SIGNATURE);
 
-    fko_get_gpg_signature_id(ctx, &curr_id);
+    rv = fko_get_gpg_signature_id(ctx, &curr_id);
+    if(rv != FKO_SUCCESS)
+        return rv;
 
     *result = strcmp(id, curr_id) == 0 ? 1 : 0;
 
