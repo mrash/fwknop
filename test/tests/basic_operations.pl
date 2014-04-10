@@ -1881,6 +1881,16 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/key\sfor.*not\sfound/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'GPG signer pw fd 0',
+        'function' => \&generic_exec,
+        'cmdline'  => "echo test | $default_client_args_no_get_key "
+            . "--gpg-recipient-key $gpg_client_key --gpg-signer-key $gpg_client_key "
+            . "--gpg-home-dir $gpg_client_home_dir_no_pw --fd 0 --test",
+        'positive_output_matches' => [qr/sig\sID/],
+    },
 
     {
         'category' => 'basic operations',
@@ -2041,7 +2051,7 @@
         'function' => \&generic_exec,
         'cmdline'  => $default_client_args . " --test --encryption-mode PCBC",
         'positive_output_matches' => [qr/Invalid\sencryption\smode:\sPCBC/],
-    },    
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -2143,6 +2153,33 @@
         'cmdline'  => qq/perl -e 'print "test\x15test"' |/
                 . $default_client_args_no_get_key . " --test --fd 0",
         'positive_output_matches' => [qr/FKO\sVersion/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 HMAC key',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/echo "hmackey" |/
+                . "$default_client_args_no_get_key --use-hmac --key-rijndael enckey --test --fd 0",
+        'positive_output_matches' => [qr/HMAC.*SHA256/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 HMAC key long',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/perl -e 'print "A"x1500' |/
+                . "$default_client_args_no_get_key --use-hmac --key-rijndael enckey --test --fd 0",
+        'positive_output_matches' => [qr/HMAC.*SHA256/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'pw fd 0 HMAC key NULL',
+        'function' => \&generic_exec,
+        'cmdline'  => qq/perl -e '' |/
+                . "$default_client_args_no_get_key --use-hmac --key-rijndael enckey --test --fd 0",
+        'positive_output_matches' => [qr/HMAC.*SHA256/],
     },
 
     {
