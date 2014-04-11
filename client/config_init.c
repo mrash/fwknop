@@ -1479,7 +1479,10 @@ process_rc_section(char *section_name, fko_cli_options_t *options)
 
         /* We have not found a valid parameter */
         else if (is_rc_param(line, &param) == 0)
-            continue;
+        {
+            do_exit = 1;  /* We don't allow improperly formatted lines */
+            break;
+        }
 
         /* We have a valid parameter */
         else
@@ -1569,6 +1572,12 @@ update_rc(fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
     {
         line[MAX_LINE_LEN-1] = '\0';
 
+        /* Get past comments and empty lines (note: we only look at the
+         * first character.
+        */
+        if(IS_EMPTY_LINE(line[0]))
+            continue;
+
         /* If we find a section... */
         if(is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 1)
         {
@@ -1616,13 +1625,18 @@ update_rc(fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
                 else
                     continue;
             }
-
-            /* discard all other lines */
             else
-                continue;
+            {
+                /* is_rc_param() returns false only when there is an
+                 * improperly formatted line - bail
+                */
+                fclose(rc);
+                fclose(rc_update);
+                return;
+            }
         }
 
-        /* We re not processing any important variables from our stanza and no new
+        /* We're not processing any important variables from our stanza and no new
          * stanza */
         else;
 
