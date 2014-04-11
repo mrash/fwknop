@@ -526,10 +526,10 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_encryption_mode", res);
-            if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+            if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
                 log_msg(LOG_VERBOSITY_ERROR,
                         "[*] Could not zero out sensitive data buffer.");
-            ctx2 = NULL;
+            ctx = NULL;
             clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
