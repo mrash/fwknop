@@ -207,7 +207,7 @@ add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *
     if(! is_valid_ipv4_addr(ip_str))
     {
         log_msg(LOG_ERR,
-            "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
+            "[*] Fatal: invalid FORCE_SNAT IP '%s'", ip_str);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -1124,7 +1124,8 @@ parse_access_file(fko_srv_options_t *opts)
                 "[*] Invalid access file entry in %s at line %i.\n - '%s'",
                 opts->config[CONF_ACCESS_FILE], num_lines, access_line_buf
             );
-            continue;
+            fclose(file_ptr);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
 
         /* Remove any colon that may be on the end of the var
