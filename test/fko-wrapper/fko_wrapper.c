@@ -28,6 +28,7 @@
 
 static void display_ctx(fko_ctx_t ctx);
 static void test_loop(int new_ctx_flag, int destroy_ctx_flag);
+static void test_loop_compounded(void);
 static void ctx_update(fko_ctx_t *ctx, int new_ctx_flag,
         int destroy_ctx_flag, int print_flag);
 static void spa_default_ctx(fko_ctx_t *ctx);
@@ -47,6 +48,7 @@ static void spa_func_getset_short(fko_ctx_t *ctx, char *set_name,
         int new_ctx_flag, int destroy_ctx_flag);
 
 int spa_calls = 0;
+int spa_compounded_calls = 0;
 
 int main(void) {
 
@@ -55,9 +57,105 @@ int main(void) {
     test_loop(NEW_CTX, NO_CTX_DESTROY);
     test_loop(NO_NEW_CTX, CTX_DESTROY);
 
-    printf("\n[+] Total libfko function calls: %d\n\n", spa_calls);
+    printf("\n[+] Total libfko function calls (before compounded tests): %d\n\n",
+            spa_calls);
+
+    printf("[+] Running compounded tests via: test_loop_compounded()...\n");
+    test_loop_compounded();
+
+    printf("\n[+] Total compounded function calls: %d\n", spa_compounded_calls);
+    printf("[+] Total libfko function calls (after compounded tests): %d\n\n",
+            spa_calls);
 
     return 0;
+}
+
+static void
+test_loop_compounded(void)
+{
+    fko_ctx_t  ctx = NULL, decrypt_ctx = NULL;
+    char *spa_data = NULL;
+    int i, j, k, l, res;
+
+    for (i=0; i<FCN_CALLS; i++) {
+
+        fko_new(&ctx);
+
+        res = fko_set_spa_client_timeout(ctx, i);
+        if (res != FKO_SUCCESS)
+            printf("fko_set_spa_client_timeout(): %s\n", fko_errstr(res));
+
+        for (j=-1; j<FKO_LAST_MSG_TYPE+1; j++) {
+
+            res = fko_set_spa_message_type(ctx, j);
+            if (res != FKO_SUCCESS)
+                printf("fko_set_spa_message_type(): %s\n", fko_errstr(res));
+
+            res = fko_set_timestamp(ctx, 100);
+            if (res != FKO_SUCCESS)
+                printf("fko_set_timestamp(): %s\n", fko_errstr(res));
+
+            fko_set_spa_message(ctx, "1.1.1.1,tcp/22");
+            res = fko_set_spa_message(ctx, "123.123.123.123,tcp/22");
+            if (res != FKO_SUCCESS)
+                printf("fko_set_spa_message(): %s\n", fko_errstr(res));
+
+            res = fko_set_spa_nat_access(ctx, "1.2.3.4,1234");
+            if (res != FKO_SUCCESS)
+                printf("fko_set_spa_nat_access(): %s\n", fko_errstr(res));
+
+            res = fko_set_username(ctx, "someuser");
+            if (res != FKO_SUCCESS)
+                printf("fko_set_username(): %s\n", fko_errstr(res));
+
+            res = fko_set_spa_server_auth(ctx, "passwd");
+            if (res != FKO_SUCCESS)
+                printf("fko_set_spa_server_auth(): %s\n", fko_errstr(res));
+
+            res = fko_set_spa_hmac_type(ctx, FKO_HMAC_SHA256);
+            if (res != FKO_SUCCESS)
+                printf("fko_set_spa_hmac_type(): %s\n", fko_errstr(res));
+
+            for (k=-4; k<=16; k+=4) {
+                for (l=-4; l<=16; l+=4) {
+
+                    res = fko_spa_data_final(ctx, ENC_KEY, k, HMAC_KEY, l);
+                    if (res == FKO_SUCCESS) {
+                        res = fko_get_spa_data(ctx, &spa_data);
+                        if (res == FKO_SUCCESS) {
+
+                            res = fko_new_with_data(&decrypt_ctx, spa_data, NULL,
+                                0, FKO_ENC_MODE_CBC, HMAC_KEY, l, FKO_HMAC_SHA256);
+
+                            if (res == FKO_SUCCESS) {
+                                res = fko_decrypt_spa_data(decrypt_ctx, ENC_KEY, k);
+                                if (res != FKO_SUCCESS)
+                                    printf("fko_decrypt_spa_data(): %s\n", fko_errstr(res));
+
+                                fko_destroy(decrypt_ctx);
+                                decrypt_ctx = NULL;
+                                spa_calls += 13;
+                                spa_compounded_calls += 13;
+
+                            } else {
+                                printf("fko_new_with_data(): %s\n", fko_errstr(res));
+                            }
+                        } else {
+                            printf("fko_get_spa_data(): %s\n", fko_errstr(res));
+                        }
+
+                    } else {
+                        printf("fko_spa_data_final(): %s\n", fko_errstr(res));
+                    }
+                }
+            }
+        }
+        fko_destroy(ctx);
+        ctx = NULL;
+
+        spa_calls += 3;
+        spa_compounded_calls += 3;
+    }
 }
 
 static void
@@ -87,7 +185,7 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
             NO_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
     spa_func_int(&ctx, "fko_set_timestamp",
-            &fko_set_spa_client_timeout, -F_INT, F_INT, 10,
+            &fko_set_timestamp, -F_INT, F_INT, 10,
             new_ctx_flag, destroy_ctx_flag);
 
     for (i=0; i<FCN_CALLS; i++) {
