@@ -2019,6 +2019,234 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'no access SOURCE',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            '  DUMMY   fdsafds#'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/not\sfind.*SOURCE/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     1.1.1.1/aaaaaaaaaaaaaaaaaaaaa',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid\sIP\smask/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     aaaaaaaaaaaaaaaaaaaaa',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Error\sparsing.*IP/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'OPEN_PORTS format (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE       1.1.1.1',
+            'OPEN_PORTS   tcp',
+            'KEY          testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Parse\serror/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'OPEN_PORTS format (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE       1.1.1.1',
+            'OPEN_PORTS   icmp/22',
+            'KEY          testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid\sproto/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'OPEN_PORTS format (3)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE       1.1.1.1',
+            'OPEN_PORTS   tcp/22, udp/53, tcp/12345, udp/123, icmp/1, tcp/23',
+            'KEY          testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid\sproto/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE key',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     1.1.1.1',
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/No\skeys\sfound/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access var too long',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    ' . 'A'x1200
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid\saccess\sfile\sentry/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_NAT format (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'FORCE_NAT a a'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/requires\s.*IPT_FORWARDING/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_NAT format (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'FORCE_NAT a a'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      Y'
+        ],
+        'positive_output_matches' => [qr/need.*IP.*PORT/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_NAT format (3)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'FORCE_NAT 1.2.3.4 999999'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      Y'
+        ],
+        'positive_output_matches' => [qr/invalid\sFORCE_NAT\sport/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_NAT format (4)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'FORCE_NAT 1.2.3.4.9 1234'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      Y'
+        ],
+        'positive_output_matches' => [qr/invalid\sFORCE_NAT\sIP/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_SNAT format (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'FORCE_SNAT 1.2.3.4.9 1234'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      Y'
+        ],
+        'positive_output_matches' => [qr/invalid\sFORCE_SNAT\sIP/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_SNAT format (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'FORCE_SNAT a'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      Y'
+        ],
+        'positive_output_matches' => [qr/invalid\sFORCE_SNAT\sIP/],
+    },
+
 
     {
         'category' => 'basic operations',

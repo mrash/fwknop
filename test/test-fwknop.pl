@@ -185,13 +185,15 @@ our %cf = (
     'fuzz_restrict_ports'          => "$conf_dir/fuzzing_restrict_ports_access.conf",
 );
 
-our $default_digest_file = "$run_dir/digest.cache";
-our $default_pid_file    = "$run_dir/fwknopd.pid";
-our $tmp_rc_file         = "$run_dir/fwknoprc";
-our $rewrite_rc_file     = "$run_dir/rewrite_fwknoprc";
-our $save_rc_file        = "$run_dir/save_fwknoprc";
-our $tmp_pkt_file        = "$run_dir/tmp_spa.pkt";
-our $tmp_args_file       = "$run_dir/args.save";
+our $default_digest_file  = "$run_dir/digest.cache";
+our $default_pid_file     = "$run_dir/fwknopd.pid";
+our $tmp_rc_file          = "$run_dir/fwknoprc";
+our $rewrite_rc_file      = "$run_dir/rewrite_fwknoprc";
+our $rewrite_fwknopd_conf = "$run_dir/rewrite_fwknopd.conf";
+our $rewrite_access_conf  = "$run_dir/rewrite_access.conf";
+our $save_rc_file         = "$run_dir/save_fwknoprc";
+our $tmp_pkt_file         = "$run_dir/tmp_spa.pkt";
+our $tmp_args_file        = "$run_dir/args.save";
 
 our $fwknopCmd  = '../client/.libs/fwknop';
 our $fwknopdCmd = '../server/.libs/fwknopd';
@@ -522,6 +524,10 @@ our $client_save_rc_args_no_verbose = "$default_client_args_no_verbose " .
 our $client_save_rc_args_no_force = "$default_client_args_no_get_key " .
     "--rc-file $save_rc_file --save-rc-stanza --test";
 
+our $server_rewrite_conf_files = "$lib_view_str $valgrind_str $fwknopdCmd " .
+    "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+    "-d $default_digest_file -p $default_pid_file $intf_str";
+
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
 
@@ -690,6 +696,8 @@ my %test_keys = (
     'client_pkt_tries' => $OPTIONAL_NUMERIC,
     'client_popen'     => $OPTIONAL,
     'disable_valgrind' => $OPTIONAL,
+    'server_access_file' => $OPTIONAL,
+    'server_conf_file'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
@@ -1557,6 +1565,65 @@ sub write_rc_file() {
         }
     }
     close RC;
+
+    return;
+}
+
+sub server_conf_files() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    if ($test_hr->{'server_access_file'}) {
+        &write_server_conf_file($test_hr->{'server_access_file'}, $rewrite_access_conf);
+    }
+
+    if ($test_hr->{'server_conf_file'}) {
+        &write_server_conf_file($test_hr->{'server_conf_file'}, $rewrite_fwknopd_conf);
+    }
+
+    $rv = 0 unless &run_cmd($test_hr->{'fwknopd_cmdline'},
+            $cmd_out_tmp, $curr_test_file);
+
+    if ($rv == 0) {
+        $rv = 1 if $test_hr->{'exec_err'} eq $YES;
+    }
+
+    if ($test_hr->{'positive_output_matches'}) {
+        unless (&file_find_regex(
+                $test_hr->{'positive_output_matches'},
+                $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] positive_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'negative_output_matches'}) {
+        if (&file_find_regex(
+                $test_hr->{'negative_output_matches'},
+                $MATCH_ANY, $APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file(
+                "[-] negative_output_matches not met, setting rv=0\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+
+    return $rv;
+}
+
+sub write_server_conf_file() {
+    my ($lines_ar, $file) = @_;
+
+    open F, "> $file"
+        or die "[*] Could not open $file $!";
+    for my $line (@$lines_ar) {
+        print F $line, "\n";
+    }
+    close F;
 
     return;
 }
