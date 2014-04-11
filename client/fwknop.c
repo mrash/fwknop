@@ -1005,7 +1005,6 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
                 if(argc_new >= MAX_CMDLINE_ARGS)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] max command line args exceeded.");
-                    fclose(args_file_ptr);
                     args_broken = 1;
                     break;
                 }
