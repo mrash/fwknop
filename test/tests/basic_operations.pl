@@ -2069,6 +2069,71 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (3)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     123.123.123.123/255.255.255.258',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/error\sparsing.*IP/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (4)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     123.123.123.123/33',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid\sIP\smask/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (5)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     1.1.1.1/1234.1.1.1',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/error\sparsing.*IP/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (6)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     1.1.1.1/255.255.255.0, 2.2.2.2/33, 123.123.123.123/24',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid\sIP\smask/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'OPEN_PORTS format (1)',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,

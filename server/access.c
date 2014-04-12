@@ -227,10 +227,12 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
 {
     char                *ndx;
     char                ip_str[MAX_IPV4_STR_LEN] = {0};
+    char                ip_mask_str[MAX_IPV4_STR_LEN] = {0};
     uint32_t            mask;
-    int                 is_err;
+    int                 is_err, mask_len = 0, need_shift = 1;
 
     struct in_addr      in;
+    struct in_addr      mask_in;
 
     acc_int_list_t      *last_sle, *new_sle, *tmp_sle;
 
@@ -242,7 +244,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    /* Convert the IP data into the appropriate mask
+    /* Convert the IP data into the appropriate IP + (optional) mask
     */
     if(strcasecmp(ip, "ANY") == 0)
     {
@@ -264,13 +266,57 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
                 return 0;
             }
 
-            mask = strtol_wrapper(ndx+1, 1, 32, NO_EXIT_UPON_ERR, &is_err);
-            if(is_err != FKO_SUCCESS)
+            mask_len = strlen(ip) - (ndx-ip+1);
+
+            if(mask_len > 2)
             {
-                log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
-                free(new_sle);
-                new_sle = NULL;
-                return 0;
+                if(mask_len >= MIN_IPV4_STR_LEN && mask_len < MAX_IPV4_STR_LEN)
+                {
+                    /* IP formatted mask
+                    */
+                    strlcpy(ip_mask_str, (ip + (ndx-ip) + 1), mask_len+1);
+                    if(inet_aton(ip_mask_str, &mask_in) == 0)
+                    {
+                        log_msg(LOG_ERR,
+                            "[*] Fatal error parsing IP mask to int for: %s", ip_mask_str
+                        );
+                        free(new_sle);
+                        new_sle = NULL;
+                        return 0;
+                    }
+                    mask = ntohl(mask_in.s_addr);
+                    need_shift = 0;
+                }
+                else
+                {
+                    log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
+                    free(new_sle);
+                    new_sle = NULL;
+                    return 0;
+                }
+            }
+            else
+            {
+                if(mask_len > 0)
+                {
+                    /* CIDR mask
+                    */
+                    mask = strtol_wrapper(ndx+1, 1, 32, NO_EXIT_UPON_ERR, &is_err);
+                    if(is_err != FKO_SUCCESS)
+                    {
+                        log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
+                        free(new_sle);
+                        new_sle = NULL;
+                        return 0;
+                    }
+                }
+                else
+                {
+                    log_msg(LOG_ERR, "[*] Missing mask value.");
+                    free(new_sle);
+                    new_sle = NULL;
+                    return 0;
+                }
             }
 
             strlcpy(ip_str, ip, (ndx-ip)+1);
@@ -302,7 +348,10 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
 
         /* Store our mask converted from CIDR to a 32-bit value.
         */
-        new_sle->mask  = (0xFFFFFFFF << (32 - mask));
+        if(need_shift)
+            new_sle->mask = (0xFFFFFFFF << (32 - mask));
+        else
+            new_sle->mask = mask;
 
         /* Store our masked address for comparisons with future incoming
          * packets.
@@ -768,7 +817,7 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
     */
     while(acc)
     {
-        /* Expand the source string to 32-bit integer masks foreach entry.
+        /* Expand the source string to 32-bit integer IP + masks for each entry.
         */
         if(expand_acc_source(opts, acc) == 0)
         {
