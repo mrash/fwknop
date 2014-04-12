@@ -726,13 +726,12 @@ keys_status(fko_cli_options_t *options)
 /* Parse any time offset from the command line
 */
 static int
-parse_time_offset(const char *offset_str)
+parse_time_offset(const char *offset_str, int *offset)
 {
     int i, j;
-    int offset      = 0;
     int offset_type = TIME_OFFSET_SECONDS;
     int os_len      = strlen(offset_str);
-    int is_err;
+    int is_err = 0;
 
     char offset_digits[MAX_TIME_STR_LEN] = {0};
 
@@ -743,8 +742,7 @@ parse_time_offset(const char *offset_str)
             j++;
             if(j >= MAX_TIME_STR_LEN)
             {
-                log_msg(LOG_VERBOSITY_ERROR, "Invalid time offset: %s", offset_str);
-                exit(EXIT_FAILURE);
+                return 0;
             }
         } else if (offset_str[i] == 'm' || offset_str[i] == 'M') {
             offset_type = TIME_OFFSET_MINUTES;
@@ -760,19 +758,17 @@ parse_time_offset(const char *offset_str)
 
     offset_digits[j] = '\0';
 
-    if (j < 1) {
-        log_msg(LOG_VERBOSITY_ERROR, "Invalid time offset: %s", offset_str);
-        exit(EXIT_FAILURE);
-    }
+    if (j < 1)
+        return 0;
 
-    offset = strtol_wrapper(offset_digits, 0, (2 << 15),
-            EXIT_UPON_ERR, &is_err);
+    *offset = strtol_wrapper(offset_digits, 0, (2 << 15),
+            NO_EXIT_UPON_ERR, &is_err);
 
-    /* Apply the offset_type value
+    /* Apply the offset_type multiplier
     */
-    offset *= offset_type;
+    *offset *= offset_type;
 
-    return offset;
+    return is_err == 0 ? 1 : 0;
 }
 
 static int
@@ -971,10 +967,16 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if(val[0] == '-')
         {
             val++;
-            options->time_offset_minus = parse_time_offset(val);
+            if(! parse_time_offset(val, &options->time_offset_minus))
+                parse_error = -1;
         }
         else
-            options->time_offset_plus = parse_time_offset(val);
+            if (! parse_time_offset(val, &options->time_offset_plus))
+                parse_error = -1;
+
+        if(parse_error == -1)
+            log_msg(LOG_VERBOSITY_WARNING,
+                    "TIME_OFFSET argument '%s' invalid.", val);
     }
     /* symmetric encryption mode */
     else if (var->pos == FWKNOP_CLI_ARG_ENCRYPTION_MODE)
@@ -2246,11 +2248,21 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 add_var_to_bitmask(FWKNOP_CLI_ARG_NAT_PORT, &var_bitmask);
                 break;
             case TIME_OFFSET_PLUS:
-                options->time_offset_plus = parse_time_offset(optarg);
+                if (! parse_time_offset(optarg, &options->time_offset_plus))
+                {
+                    log_msg(LOG_VERBOSITY_WARNING,
+                        "Invalid time offset: '%s'", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 add_var_to_bitmask(FWKNOP_CLI_ARG_TIME_OFFSET, &var_bitmask);
                 break;
             case TIME_OFFSET_MINUS:
-                options->time_offset_minus = parse_time_offset(optarg);
+                if (! parse_time_offset(optarg, &options->time_offset_minus))
+                {
+                    log_msg(LOG_VERBOSITY_WARNING,
+                        "Invalid time offset: '%s'", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 add_var_to_bitmask(FWKNOP_CLI_ARG_TIME_OFFSET, &var_bitmask);
                 break;
             case USE_HMAC:

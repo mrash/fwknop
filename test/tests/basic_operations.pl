@@ -1414,7 +1414,7 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
                 'TIME_OFFSET' => 'invalid'}}],
         'exec_err' => $YES,
-        'positive_output_matches' => [qr/Invalid/],
+        'positive_output_matches' => [qr/Parameter\serror/],
         'rc_positive_output_matches' => [qr/TIME_OFFSET.*invalid/],
     },
     {
@@ -1427,7 +1427,7 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
                 'TIME_OFFSET' => '123456789999'}}],
         'exec_err' => $YES,
-        'positive_output_matches' => [qr/Invalid/],
+        'positive_output_matches' => [qr/Parameter\serror/],
         'rc_positive_output_matches' => [qr/TIME_OFFSET.*123456789999/],
     },
 
