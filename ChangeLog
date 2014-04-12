@@ -1,4 +1,4 @@
-fwknop-2.6.1 (//2014):
+fwknop-2.6.1 (04/12//2014):
     - Updated copyright and authorship information to include a standard
       header which references both the AUTHORS and CREDITS files.  The
       specific language in this header was created by the Debian legal team at
@@ -45,8 +45,9 @@ fwknop-2.6.1 (//2014):
       length field of the UDP header.
     - [test suite] Added valgrind suppressions for gpgme library function
       calls.
-    - [test suite] Added Rijndael+HMAC command execution test.
-    - [test suite] Added Rijndael+HMAC NAT rand port via client rc file test.
+    - [test suite] Added the ability to run the 'lcov' tool against fwknop
+      when compiled in --enable-profile-coverage mode.  This enabled lots of
+      new tests to be developed for better code coverage.
 
 fwknop-2.6.0 (01/12/2014):
     - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to

@@ -13,7 +13,7 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.6.0
+Version:	2.6.1
 Epoch:		1
 Release:	1%{?dist}
 Summary:	Firewall Knock Operator client.  An implementation of Single Packet Authorization.
@@ -142,6 +142,9 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Sat Apr 12 2014 <mbr@cipherdyne.org> - 2.6.1
+- fwknop-2.6.1 release.
+
 * Sun Jan 12 2014 <mbr@cipherdyne.org> - 2.6.0
 - Bumped libfko and libfko-devel version to 2.0.1.
 - fwknop-2.6.0 release.
