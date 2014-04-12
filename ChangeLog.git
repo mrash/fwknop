@@ -1,1902 +1,1462 @@
-commit 177290c5c3c50af616aa5cb2dc5dee0bf2c611ec (HEAD, refs/heads/master)
+commit 67dd1d5bddce484824ae57b4cac679a17401c3a8 (HEAD, refs/heads/master)
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Jan 12 22:27:38 2014 -0500
+Date:   Sat Apr 12 15:21:00 2014 -0400
 
-    updated fwknop.spec file release note for 2.6.0
+    [server] bug fix to allow IP-formatted masks for SOURCE lines in access.conf
 
- fwknop.spec | 4 ++++
- 1 file changed, 4 insertions(+)
+ server/access.c                        |  69 ++++++++++++++++++++++++++++-----
+ test/conf/client-gpg-no-pw/trustdb.gpg | Bin 1360 -> 1360 bytes
+ test/tests/basic_operations.pl         |  65 +++++++++++++++++++++++++++++++
+ 3 files changed, 124 insertions(+), 10 deletions(-)
 
-commit 56966ee832ccb21651292e0209aec23e468a8d01
+commit 55965dd1a40c8fba91119ed7916085a1f9db5480
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Jan 12 21:41:54 2014 -0500
+Date:   Sat Apr 12 15:20:31 2014 -0400
 
-    added Coverity finds/fixes to ChangeLog.git for 2.6.0
-
- ChangeLog.git | 30 +++++++++++++++++++++++++++++-
- 1 file changed, 29 insertions(+), 1 deletion(-)
-
-commit cf6a38ea0dc8e0c66e37da4c3eb926476738deba
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Jan 12 21:40:20 2014 -0500
-
-    [server] better checking for read() return value flagged by Coverity
-
- server/fwknopd.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-commit 05d6e1c4a744007d3ac04be486d16f13f38cfa9e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Jan 12 21:08:55 2014 -0500
-
-    [server] fixed copy-and-paste NULL check bug found by Coverity
-
- server/access.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 431caa287a85c06521630fe6efefc4e8c1992cfd
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Jan 11 23:33:53 2014 -0500
-
-    added ChangeLog.git to show changes since 2.5.1
-
- ChangeLog     |    2 +-
- ChangeLog.git | 1864 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
- 2 files changed, 1818 insertions(+), 48 deletions(-)
-
-commit 825c361958580b459d88080798bc72398f967352 (refs/remotes/web/master, refs/remotes/origin/master, refs/remotes/origin/HEAD)
-Merge: a347be3 1e17299
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Jan 11 15:21:10 2014 -0500
-
-    Merge branch 'master' of https://github.com/mrash/fwknop
-
-commit 1e1729905e27d7b71f5ea75faed97efa12424034
-Author: Damien Stuart <dstuart@dstuart.org>
-Date:   Sat Jan 11 10:58:01 2014 -0500
-
-    Bumped libfko and protocol versions to 2.0.1.  Added dependencies for this version to the fwknop.spec file.
-
- fwknop.spec     | 13 ++++++-------
- lib/Makefile.am |  2 +-
- lib/fko.h       |  2 +-
- 3 files changed, 8 insertions(+), 9 deletions(-)
-
-commit a347be354d646d29e304f668eb5aa8f94863d18d
-Merge: 551b243 bd0b8a1
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Jan 10 22:46:54 2014 -0500
-
-    merged android4.4_support branch
-
-commit 551b243007d8e481e284a9d90ab9372fefc09b87 (tag: refs/tags/2.6.0-pre1, refs/remotes/minastirith/master)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Jan 2 20:47:41 2014 -0500
-
-    (Marek Wrzosek) Update docs to reflect random 'digits' use instead of 'bytes'
-    
-    Suggested doc update to fwknop man pages to accurately describe the usage
-    of digits instead of bytes for SPA random data.  About 53 bits of entropy
-    are actually used, although this is in addition to the 64-bit random salt
-    in for key derivation used by PBKDF1 in Rjindael CBC mode.
-
- CREDITS                 |  8 ++++++++
- client/fwknop.8.in      | 10 +++++-----
- doc/fwknop.man.asciidoc | 15 ++++++++-------
- 3 files changed, 21 insertions(+), 12 deletions(-)
-
-commit 6add06f76cbe2de3650d85ddf738c0f0327b9887
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Jan 1 22:27:07 2014 -0500
-
-    bumped version to 2.6.0
-
- ChangeLog    | 2 +-
- VERSION      | 2 +-
- configure.ac | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
-
-commit 3820b6439478ff9b1b090120859bbb56918ec594
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Jan 1 19:45:38 2014 -0500
-
-    [libfko] ensure a NULL HMAC key is properly handled
-
- lib/fko_hmac.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-commit 34a3808b99e0008728777c97d00d28216f56c9b9
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Jan 1 19:45:02 2014 -0500
-
-    [test suite] minor display_ctx() call position update
-
- test/fko-wrapper/fko_wrapper.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-commit f5fd8de48204e3a3c2a0fcdb11e81ffef614e553
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Jan 1 14:07:39 2014 -0500
-
-    [test suite] better loop output for fko-wrapper
-
- test/fko-wrapper/fko_wrapper.c | 31 ++++++++++++++++---------------
- 1 file changed, 16 insertions(+), 15 deletions(-)
-
-commit 3adb3599323ae4b1abc7e4a1537e753addf1d99c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Jan 1 13:42:13 2014 -0500
-
-    minor README update
-
- README | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-commit 227d0ab947f82a579aa2c55ba934256e9d64a078
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Dec 31 23:27:05 2013 -0500
-
-    [libfko] ensure NULL is handled properly for all fko_get_* functions
-
- lib/fko_client_timeout.c       |  3 +++
- lib/fko_digest.c               |  6 +++++
- lib/fko_encode.c               |  3 +++
- lib/fko_encryption.c           |  3 +++
- lib/fko_funcs.c                |  6 +++++
- lib/fko_hmac.c                 |  6 +++++
- lib/fko_message.c              |  6 +++++
- lib/fko_nat_access.c           |  3 +++
- lib/fko_rand_value.c           |  3 +++
- lib/fko_server_auth.c          |  3 +++
- lib/fko_timestamp.c            |  3 +++
- lib/fko_user.c                 |  3 +++
- test/fko-wrapper/fko_wrapper.c | 53 +++++++++++++++++++++++++++++-------------
- 13 files changed, 85 insertions(+), 16 deletions(-)
-
-commit 7aa6d37fff7e638b4845ce97ac0e85a17b507f6f
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 30 21:56:08 2013 -0500
-
-    [libfko] added NULL check for fko_set_spa_data() data arg
-
- lib/fko_funcs.c                |  3 +++
- test/fko-wrapper/fko_wrapper.c | 44 ++++++++++++++++++++++++++++++++++--------
- 2 files changed, 39 insertions(+), 8 deletions(-)
-
-commit 5022beaf12902c0c0aeef089f4cf9ec74727c8c7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 30 21:09:27 2013 -0500
-
-    [libfko] < 0 checks not needed for size_t vars which are unsigned
-
- lib/cipher_funcs.c |  3 ---
- lib/fko_util.c     | 12 ------------
- 2 files changed, 15 deletions(-)
-
-commit 297d7d00fe4d6e6b6fd9aa3b8b1a042e1571bd2d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Dec 29 22:44:16 2013 -0500
-
-    [libfko] enc key NULL checks with fko-wrapper test support
-
- lib/fko_encryption.c           | 4 ++++
- lib/fko_funcs.c                | 9 +++++++--
- test/fko-wrapper/fko_wrapper.c | 8 +++++++-
- 3 files changed, 18 insertions(+), 3 deletions(-)
-
-commit 0c6911941b18cc9eb9a41d5a31770260b7baa13f
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Dec 29 21:05:04 2013 -0500
-
-    [libfko] reject negative length values
-    
-    Integer lengths that are negative are never valid.  This commit also
-    extends the fuzzing capabilities of the test/fko-wrapper code to
-    validate libfko calls with negative length arguments, and one crash
-    scenario with a negative length for the encryption key was found (and
-    fixed) this way.
-
- lib/base64.c                   |   2 +-
- lib/cipher_funcs.c             |   3 +
- lib/fko.h                      |   5 +-
- lib/fko_encryption.c           |  10 ++-
- lib/fko_funcs.c                |   6 ++
- lib/fko_hmac.c                 |   4 +-
- lib/fko_util.c                 |  12 ++++
- lib/gpgme_funcs.c              |   6 +-
- test/fko-wrapper/fko_wrapper.c | 145 ++++++++++++++++++++++++++++++++---------
- 9 files changed, 154 insertions(+), 39 deletions(-)
-
-commit d09e2786461dbbeee79237d8719932a0a3a064e5
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Dec 29 20:02:56 2013 -0500
-
-    added fko-wrapper no valgrind script
-
- Makefile.am | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 283c72e4636b74a3ad0f8ff40bacb685c426ff45
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Dec 29 19:59:16 2013 -0500
-
-    [test suite] run fko-wrapper without valgrind, closes #113
-
- test/fko-wrapper/run_no_valgrind.sh |  3 ++
- test/test-fwknop.pl                 | 63 +++++++++++++++++++++++++++++++++++++
- test/tests/rijndael_fuzzing.pl      |  6 ++++
- 3 files changed, 72 insertions(+)
-
-commit 8a7ca121e9052a70ff293fef9c1293d270dea4c7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Dec 28 15:22:01 2013 -0500
-
-    [test suite] use ctx_update() where possible for fko-wrapper
-
- test/fko-wrapper/fko_wrapper.c | 101 ++++++-----------------------------------
- 1 file changed, 15 insertions(+), 86 deletions(-)
-
-commit bf9fa57ca81fda211de61e120d42f30a39163f2a
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Dec 28 14:56:35 2013 -0500
-
-    [test suite] added 'getset' versions of fko_ int/short wrapper functions
-
- test/fko-wrapper/fko_wrapper.c | 110 ++++++++++++++++++++++++++++++++++-------
- 1 file changed, 92 insertions(+), 18 deletions(-)
-
-commit 8f3ea42b3fe5c41d78f730617c033e206c2b43a9
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Dec 28 14:20:11 2013 -0500
-
-    [test suite] update fko-wrapper to use constants from fko.h
-
- test/fko-wrapper/fko_wrapper.c | 20 +++++++++++++-------
- 1 file changed, 13 insertions(+), 7 deletions(-)
-
-commit 4c42d5575e8a0c98156c0af0250c12ba0427e8d5
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Dec 28 14:10:47 2013 -0500
-
-    [test suite] added ctx_update() function to fko-wrapper test
-
- test/fko-wrapper/fko_wrapper.c | 38 ++++++++++++++++++--------------------
- 1 file changed, 18 insertions(+), 20 deletions(-)
-
-commit 05eb4ebb7b4802d99818d7586979c4e1f21b2e1e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Dec 27 23:24:05 2013 -0500
-
-    [test suite] call FKO functions via function pointers (interim commit)
-
- test/fko-wrapper/fko_wrapper.c | 170 ++++++++++++++++++++++-------------------
- 1 file changed, 93 insertions(+), 77 deletions(-)
-
-commit bd0b8a1953b12bcabdf15f9c7a3c049fa7c71969 (refs/remotes/minastirith/android4.4_support)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Dec 26 20:44:35 2013 -0500
-
-    [android] updated README file, added project/sdk.paths file
-
- Makefile.am               |  1 +
- android/README            | 35 +++++++++++++++++++++++++++++++++++
- android/project/sdk.paths |  3 +++
- 3 files changed, 39 insertions(+)
-
-commit db58f2008efbafc4f8a0acc39254772c2fcfb0e3
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 23:16:03 2013 -0500
-
-    [android] Added test/conf/hmac_android_access.conf file to Makefile.am
-
- Makefile.am | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 509dcf93ddf9a9bef73d2f18b239d7f50643d190
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 23:15:11 2013 -0500
-
-    [android] added HMAC test along with non-legacy Rijndael test
-
- ChangeLog                                      |  5 +++--
- test/conf/android_access.conf                  |  2 +-
- test/conf/hmac_android_access.conf             |  4 ++++
- test/test-fwknop.pl                            |  1 +
- test/tests/rijndael_backwards_compatibility.pl | 18 ++++++++++++++++++
- test/tests/rijndael_hmac.pl                    | 18 ++++++++++++++++++
- 6 files changed, 45 insertions(+), 3 deletions(-)
-
-commit 8fdb5d63958ad5de2d85f03a66843f5cae5eda7f
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 22:51:26 2013 -0500
-
-    [android] added ant.properties file
-
- Makefile.am                    |  1 +
- android/project/ant.properties | 22 ++++++++++++++++++++++
- 2 files changed, 23 insertions(+)
-
-commit 171da60f238a4c2c6ff84a7f345053ce74a2dc55
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 22:44:53 2013 -0500
-
-    [android] added project.properties file
-
- Makefile.am                        |  1 +
- android/project/project.properties | 14 ++++++++++++++
- 2 files changed, 15 insertions(+)
-
-commit 3b330f2036cb2680af4d37a1351fe698cbf812db
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 22:40:18 2013 -0500
-
-    [android] Makefile.am minor script path update
-
- Makefile.am | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit e25d05f05007a00d44e106ae4ef75d19d8e61e5b
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 22:39:21 2013 -0500
-
-    [android] update Makefile.am for latest Android directory tree
-
- Makefile.am | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-commit 204bc6e58f286fac65cf23e916d1ce74cc1f1921
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 22:29:51 2013 -0500
-
-    [android] add HMAC support (currently optional)
-
- android/project/jni/fwknop/fwknop_client.c         | 26 ++++++++++++++++++++--
- android/project/res/layout/main.xml                | 22 ++++++++++++++++++
- .../src/com/max2idea/android/fwknop/Fwknop.java    | 13 +++++++++++
- 3 files changed, 59 insertions(+), 2 deletions(-)
-
-commit dc19e07d65c0826907bffd9e8fd8d0ac71327e46
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 23 20:38:04 2013 -0500
-
-    [android] update to copy fko.h and associated files to jni/fwknop/ via get_libfko_header.sh
-
- android/project/custom_rules.xml                |  25 +++
- android/project/jni/fwknop/fko.h                | 286 ------------------------
- android/project/jni/fwknop/fko_limits.h         |  67 ------
- android/project/jni/fwknop/fko_message.h        |  44 ----
- android/project/jni/fwknop/get_libfko_header.sh |  37 +++
- 5 files changed, 62 insertions(+), 397 deletions(-)
-
-commit 8dfd57677aee237bf36b7f15c982326fb518b6a7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Dec 22 21:12:26 2013 -0500
-
-    added Gerry Reno
-
- CREDITS   | 6 ++++++
- ChangeLog | 2 ++
- 2 files changed, 8 insertions(+)
-
-commit d43d2fc8175f073094cfeb20f14055c78bd52800
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Dec 22 15:25:32 2013 -0500
-
-    [android] applied Gerry Reno's patch for Android-4.4
-
- android/project/AndroidManifest.xml                |   2 +-
- android/project/build-4.1.2.properties             |  16 ---
- android/project/build.properties                   |  16 ---
- android/project/build.xml                          | 129 +++++++++++++--------
- android/project/default.properties                 |  11 --
- android/project/jni/Android.mk                     |   3 +-
- .../project/src/com/max2idea/android/fwknop/R.java |  52 ---------
- 7 files changed, 81 insertions(+), 148 deletions(-)
-
-commit 8ed0d9d8d929b07b6843dc153a1493521be05502
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Dec 22 15:10:23 2013 -0500
-
-    Fix 'string literal' warning for Android client
-    
-    Under Android-4.4 this commit fixes the following warning:
-    
-         [exec] jni/./fwknop/fwknop_client.c: In function 'Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket':
-         [exec] jni/./fwknop/fwknop_client.c:181:5: error: format not a string literal and no format arguments [-Werror=format-security]
-         [exec] cc1: some warnings being treated as errors
-
- android/project/jni/fwknop/fwknop_client.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 6cba5d2ec92bfda5074767611019912d3fdc67bf
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 16 22:33:55 2013 -0500
-
-    [test suite] bug fix for python FKO extension library path (found on Fedora 19)
-
- test/test-fwknop.pl | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-commit 919f25f85d53fa6b550241be36ab5f11cb9f5b24
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Dec 14 19:41:00 2013 -0500
-
-    [server] fw_initialize() vs. fw_config_init() bug fix for use_masquerade
-
- server/config_init.c      |  2 +-
- server/fw_util_iptables.c | 28 ++++++++++++----------------
- 2 files changed, 13 insertions(+), 17 deletions(-)
-
-commit 92cdb47ff7eb34ebf4924d0eed75ac3ea7ce1429
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Dec 14 15:44:39 2013 -0500
-
-    [server] added FORCE_MASQUERADE to fwknopd(8) man page, closes #101
-    
-    This commit completes the addition of generalized NAT (both DNAT and
-    SNAT) capabilities to access.conf stanzas.
-
- doc/fwknopd.man.asciidoc  | 27 ++++++++++++++++-----------
- server/config_init.c      |  6 ++++++
- server/fw_util_iptables.c | 29 ++++++++++++++++-------------
- server/fwknopd.8.in       | 21 +++++++++++++++++----
- server/fwknopd_common.h   |  5 +++++
- 5 files changed, 60 insertions(+), 28 deletions(-)
-
-commit 3a2c33cd3c9ee0c45a2a0173f5cb1966d2ada33d (refs/remotes/github/master)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Dec 11 23:01:44 2013 -0600
-
-    Added Les Aker to credits file
-
- CREDITS | 5 +++++
- 1 file changed, 5 insertions(+)
-
-commit 3b2cd063fe45232d1ac346a80257570435a0eed2
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Dec 10 22:24:39 2013 -0600
-
-    [server] pcap_dispatch() packet count default to 100
-    
-    Updated pcap_dispatch() default packet count from zero to 100.
-    This change was made to ensure backwards compatibility with older
-    versions of libpcap per the pcap_dispatch() man page, and also because
-    some of a report from Les Aker of an unexpected crash on Arch Linux with
-    libpcap-1.5.1 that is fixed by this change (closes #110).
-
- ChangeLog               | 5 +++++
- server/fwknopd_common.h | 2 +-
- 2 files changed, 6 insertions(+), 1 deletion(-)
-
-commit aeed8323f7c1cf3c69f85432b0118b6932e79ce4
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Dec 10 21:31:03 2013 -0600
-
-    [test suite] multi-packet pcap test for pcap_dispatch() validation
-    
-    This commit adds a new pcap file to the test suite with an SPA packet after
-    99 other garbage packets.  This can be used for pcap_dispatch() testing,
-    though this is not meant to be super instensive - it is just to ensure that
-    if a PCAP_DISPATCH_COUNT of, say, 10 is selected that the SPA is still seen
-    by fwknopd.  This commit is in support of #110.
-
- Makefile.am                 |   1 +
- test/conf/multi_pkts.pcap   | Bin 0 -> 46890 bytes
- test/test-fwknop.pl         |   3 ++-
- test/tests/rijndael.pl      |   2 +-
- test/tests/rijndael_hmac.pl |  14 ++++++++++++++
- 5 files changed, 18 insertions(+), 2 deletions(-)
-
-commit 5f50ac22dbec45cbe625c11c19a4c006469745f4
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Dec 9 22:10:46 2013 -0600
-
-    [server] use SIGKILL if necessary for -K
-    
-    This change sends SIGKILL to fwknopd under -K if SIGTERM does not do the job
-    first.  This can be necessary in some cases if libpcap does not properly handle
-    a packet count of zero in pcap_dispatch() (see github issue #110).  On a side
-    note, the default packet dispatch count of zero will likely be changed because
-    of that issue too.
-
- server/fwknopd.c    | 47 +++++++++++++++++++++++++++++++++++++++++++----
- test/test-fwknop.pl | 39 ++++++++++++++++++---------------------
- 2 files changed, 61 insertions(+), 25 deletions(-)
-
-commit 3ef9e5645bbcb39559424dfe211b3531d6fb3089
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Dec 5 23:37:10 2013 -0500
-
-    [test suite] added masquerade exception for non-Linux systems
-
- test/test-fwknop.pl | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 0319b723343f6cab6214a274153a87c14e9e173e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Dec 5 23:01:12 2013 -0500
-
-    [test suite] added missing config files
-
- test/conf/hmac_force_masq_access.conf | 6 ++++++
- test/conf/hmac_force_snat_access.conf | 6 ++++++
- 2 files changed, 12 insertions(+)
-
-commit 46b5f2ecaf475cb1a58acbf5d47e6afbcaaa02b8
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Dec 5 23:00:19 2013 -0500
-
-    [server] added the ability to use FORCE_MASQUERADE to access.conf stanzas
-
- Makefile.am                 |  3 ++-
- server/access.c             | 18 ++++++++++++++++++
- server/fw_util_iptables.c   |  8 ++++++++
- server/fwknopd_common.h     |  1 +
- test/test-fwknop.pl         |  1 +
- test/tests/rijndael_hmac.pl | 39 +++++++++++++++++++++++++++++++++++++++
- 6 files changed, 69 insertions(+), 1 deletion(-)
-
-commit 79f0cb898639fca71e43d95c231181075e1135bd
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Dec 4 23:11:11 2013 -0500
-
-    [libfko] added defensive NULL check for is_valid_ipv4_addr()
-
- lib/fko_util.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-commit e0114e60c26727268b2b16b3098e8fb117d4a449
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Dec 4 21:52:07 2013 -0500
-
-    [server] Added FORCE_SNAT to access.conf stanzas.
-    
-    Added FORCE_SNAT to the access.conf file so that per-access stanza SNAT
-    criteria can be specified for SPA access.
-
- ChangeLog                   |  2 ++
- doc/fwknopd.man.asciidoc    | 10 ++++++++
- server/access.c             | 57 ++++++++++++++++++++++++++++++++++++++++++++-
- server/fw_util_iptables.c   | 44 ++++++++++++++++------------------
- server/fwknopd_common.h     |  9 +++++++
- test/test-fwknop.pl         |  3 +++
- test/tests/rijndael_hmac.pl | 47 +++++++++++++++++++++++++++++++++----
- 7 files changed, 143 insertions(+), 29 deletions(-)
-
-commit d7aa820e33e5e65fb87c86f1b8f9e1ca9b1af435
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Dec 3 21:42:23 2013 -0500
-
-    [server] Bug fix for SPA NAT modes on iptables firewalls for chain re-creation
-    
-    For SPA NAT modes this commit ensures that custom fwknop chains are re-created
-    if they get deleted out from under the running fwknopd instance.
-
- ChangeLog                   |  3 ++
- server/fw_util_iptables.c   | 30 ++++++++++++++++-
- test/test-fwknop.pl         | 26 ++++++++++++++
- test/tests/rijndael.pl      | 26 +++++++-------
- test/tests/rijndael_hmac.pl | 82 +++++++++++++++++++++++++++++++++++++--------
- 5 files changed, 139 insertions(+), 28 deletions(-)
-
-commit bd73ceb5bd6fc0a907141f3da63e180960424f8e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Nov 27 21:58:13 2013 -0500
-
-    [test suite] added FreeBSD-9.2 and OpenBSD-5.4 compatibility tests
-
- test/tests/os_compatibility.pl | 67 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
-
-commit c382febf3dac5f6acbe79565c08661885c263761
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 26 23:48:56 2013 -0500
-
-    [client] use libfko is_valid_ipv4_addr() for IP address validation
-
- client/config_init.c           | 22 +++++++++++++++++++++-
- client/fwknop.c                | 32 +-------------------------------
- test/tests/basic_operations.pl |  4 ++--
- test/tests/rijndael.pl         |  2 +-
- 4 files changed, 25 insertions(+), 35 deletions(-)
-
-commit aeb415d0e0f91fc08e6b2d831b25e1ca9a1e5d08
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 26 21:44:53 2013 -0500
-
-    move fuzzing_spa_packets file to perl/FKO/t/ for fuzzing tests
-    
-    This change moves the fuzzing_spa_packets file from the test/fuzzing/
-    directory into the perl FKO extension t/ directory and is now referenced
-    directly by the t/04_fuzzing.t test file.  The test suite itself also uses
-    this file for fuzzing tests as well, but having the FKO built-in tests
-    enables Test::Valgrind memory checks so it is useful to have this included
-    in the FKO sources.  (When the FKO module is submitted to CPAN, it should
-    not depend on non-local files, but it's ok for the test suite to reference
-    the ../perl/FKO/t/ directory.)
-
- Makefile.am                      |    2 +-
- perl/FKO/MANIFEST                |    2 +
- perl/FKO/t/04_fuzzing.t          |   33 +-
- perl/FKO/t/fuzzing_spa_packets   | 2275 ++++++++++++++++++++++++++++++++++++++
- test/fuzzing/fuzzing_spa_packets | 2275 --------------------------------------
- test/test-fwknop.pl              |    2 +-
- 6 files changed, 2311 insertions(+), 2278 deletions(-)
-
-commit a15be4005e5c064ed758a7512d127566ed5b60a7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Nov 25 23:15:35 2013 -0500
-
-    minor ChangeLog rewording for GPG fix
-
- ChangeLog | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-commit be904769c48fa591fb25b5c87677617a2fded8fb
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Nov 25 23:11:01 2013 -0500
-
-    [libfko] Bug fix to not decrypt with GnuGP without FKO_ENC_MODE_ASYMMETRIC
-    
-    [libfko] Bug fix to not attempt SPA packet decryption with GnuPG without
-    an fko object with encryption_mode set to FKO_ENC_MODE_ASYMMETRIC.  This
-    bug was caught with valgrind validation against the perl FKO extension
-    together with the set of SPA fuzzing packets in
-    test/fuzzing/fuzzing_spa_packets.  Note that this bug cannot be
-    triggered via fwknopd because additional checks are made within fwknopd
-    itself to force FKO_ENC_MODE_ASYMMETRIC whenever an access.conf stanza
-    contains GPG key information.  This fix strengthens libfko itself to
-    independently require that the usage of fko objects without GPG key
-    information does not result in attempted GPG decryption operations.  Hence
-    this fix applies mostly to third party usage of libfko - i.e. stock
-    installations of fwknopd are not affected.  As always, it is recommended to
-    use HMAC authenticated encryption whenever possible even for GPG modes since
-    this also provides a work around even for libfko prior to this fix.
-
- ChangeLog            | 15 ++++++++++++---
- lib/fko_encryption.c |  3 ++-
- 2 files changed, 14 insertions(+), 4 deletions(-)
-
-commit 6dd5ab8e359c61e83ccb9311c7086b07ac6040c9
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Nov 22 23:00:20 2013 -0500
-
-    [test suite] added --cmd-verbose to control fwknop command verbosity levels
-    
-    This commit provides an easy way to control how verbose fwknop command
-    execution will be.  For example, fwknopd only calls hex_dump() against
-    SPA packets when --verbose > 2, so invoking the tests suite as follows
-    will result in hex_dump() being included in fwknopd output (see the
-    output/1_fwknopd.test file:
-    
-    ./test-fwknop.pl --include "Rijndael.*complete.*22" --test-limit 1 --cmd-verbose "--verbose --verbose --verbose"
-    
-    [+] candidate SPA packet payload:
-    
-      0x0000:  39 62 72 51 58 75 7a 4b  57 54 53 67 57 56 35 66 9brQXuzKWTSgWV5f
-      0x0010:  73 63 78 42 35 78 69 51  65 6c 55 4f 53 78 69 45 scxB5xiQelUOSxiE
-      0x0020:  51 30 59 6a 41 50 70 31  4f 70 43 62 32 51 4a 4c Q0YjAPp1OpCb2QJL
-      0x0030:  48 34 42 65 68 64 6d 47  35 49 31 50 36 2f 5a 69 H4BehdmG5I1P6/Zi
-      0x0040:  6a 34 4b 41 62 34 53 68  6a 59 66 4f 71 2b 46 6c j4KAb4ShjYfOq+Fl
-      0x0050:  4a 35 52 75 70 33 39 6f  6e 65 42 79 72 51 46 57 J5Rup39oneByrQFW
-      0x0060:  61 38 6c 37 63 48 6e 38  5a 54 36 59 6e 55 56 47 a8l7cHn8ZT6YnUVG
-      0x0070:  50 36 6e 53 6f 69 30 61  70 72 32 52 39 62 6b 56 P6nSoi0apr2R9bkV
-      0x0080:  37 50 61 67 41 61 6b 49  44 63 58 59 44 6b 2f 64 7PagAakIDcXYDk/d
-      0x0090:  67 51 45 61 37 39 32 6f  30 4d 38 6e 30 30 6e 35 gQEa792o0M8n00n5
-      0x00a0:  55                                               U
-
- test/test-fwknop.pl             | 19 +++++++++++-------
- test/tests/basic_operations.pl  |  6 +++---
- test/tests/gpg.pl               |  8 ++++----
- test/tests/gpg_hmac.pl          |  8 ++++----
- test/tests/gpg_no_pw.pl         |  8 ++++----
- test/tests/gpg_no_pw_hmac.pl    |  8 ++++----
- test/tests/rijndael.pl          | 43 ++++++++++++++++++++---------------------
- test/tests/rijndael_cmd_exec.pl |  2 +-
- test/tests/rijndael_hmac.pl     | 32 +++++++++++++++---------------
- 9 files changed, 69 insertions(+), 65 deletions(-)
-
-commit cba2873e2285b52c83faf7f7981fea2679c150bc
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Nov 22 22:36:17 2013 -0500
-
-    AppArmor profile update to allow GnuPG link operations, closes #109
-    
-    This fix was submitted by Raybuntu through github.
-
- extras/apparmor/usr.sbin.fwknopd | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 72eb3421b6751b051b2d04ed68074a4fb96d9892
-Merge: f396b81 65195d7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 21 21:02:08 2013 -0500
-
-    Merge branch 'master' of ssh://192.168.10.1/home/mbr/git/fwknop
-
-commit f396b816a1225313a1f55a26bdea544ba71fe637
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 21 21:01:17 2013 -0500
-
-    [test suite] fix LD_LIBRARY_PATH for perl FKO 'make test' run
-
- test/test-fwknop.pl | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-commit 65195d74aeac623eccc8913e07ee8edbaae93c1c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 21 20:47:50 2013 -0500
-
-    added AppArmor policy to Makefile.am
-
- Makefile.am | 2 ++
- 1 file changed, 2 insertions(+)
-
-commit eeda4e0f10ddf7a3a627f28d15dfdd37b900b08d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Nov 20 23:14:57 2013 -0500
-
-    [test suite] better --lib-dir support for non-default LD_LIBRARY_PATH values
-    
-    This commit allow the test suite to easily use a non-default LD_LIBRARY_PATH
-    in order to test mixed combinations of newly compiled fwknop client/server
-    binaries and previously installed versions of libfko.  This allows backwards
-    compatibility (and forwards compatibility) to be verified by the test suite.
-    
-    For example, after compiling the fwknop client and server for the 2.5.2
-    release, one could use libfko from 2.5.1 to verify compatibility:
-    
-    ./test-fwknop.pl --enable-all --lib-path /home/mbr/install/fwknop-2.0.4/lib
-    
-    See the --fwknop-path and --fwknopd-path args as well in order to support
-    arbitrary client/server/libfko combinations.
-
- test/test-fwknop.pl | 126 ++++++++++++++++++++++++++++------------------------
- 1 file changed, 67 insertions(+), 59 deletions(-)
-
-commit 28a915c8c8720053d6b0fdd5f54bd40847083fca
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Nov 20 23:10:36 2013 -0500
-
-    [test suite] added short and long IP tests (1.1.1.1 and 123.123.123.123)
-
- test/tests/rijndael.pl      | 24 ++++++++++++++++++++++++
- test/tests/rijndael_hmac.pl | 30 ++++++++++++++++++++++++++++++
- 2 files changed, 54 insertions(+)
-
-commit 78f696b2f75b57393328bdae7dead5aec7751fce
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 19 23:31:09 2013 -0500
-
-    [libfko] implemented shared utility function for ipv4 address checking
-    
-    This commit implements a single shared utility function for checking the
-    validaty of an IPv4 address, and both libfko and the fwknopd server use it
-    now.  The client will be updated as well.
-
- lib/fko_message.c         | 27 +++-------------------
- lib/fko_util.c            | 57 +++++++++++++++++++++++++++++++++++++++++++++++
- lib/fko_util.h            |  1 +
- server/access.c           |  7 ++++++
- server/config_init.c      | 12 ++++++++++
- server/fw_util_iptables.c |  8 +++++++
- server/incoming_spa.c     | 21 +++++++++++++++--
- 7 files changed, 107 insertions(+), 26 deletions(-)
-
-commit 5f5367cf6261f9191498df1d92a71c963d53de78
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 19 23:14:46 2013 -0500
-
-    [server] minor error code text typo fixes
-
- server/fwknopd_errors.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-commit 8cb5653d5e919b972e4a64cee024ce1e1dd1b512
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Nov 18 22:22:02 2013 -0500
-
-    [test suite] minor update for SNAT tests to not restrict --fw-list search to 127.0.0.2
-
- test/tests/rijndael.pl      | 2 ++
- test/tests/rijndael_hmac.pl | 2 ++
- 2 files changed, 4 insertions(+)
-
-commit 71d19031e6f8126c116a426815ca7a196d2ab306
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 17 22:27:07 2013 -0500
-
-    [test suite] remove init file before starting test run
-
- test/test-fwknop.pl | 2 ++
- 1 file changed, 2 insertions(+)
-
-commit 38fe23c398ea4feda57eb2490864427c0462c8b7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 17 21:26:51 2013 -0500
-
-    added tests/code_structure.pl file to Makefile.am
-
- Makefile.am | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 796bd761a943f5918b999026b0033e09d15c9397
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 17 20:44:41 2013 -0500
-
-    [python extension] bug fix for missing error code constants (caught with code structure test)
-
- python/fko.py | 177 ++++++++++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 134 insertions(+), 43 deletions(-)
-
-commit 93c0faafeb26ba11a94a5ca78afb99958e652167
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 17 20:43:28 2013 -0500
-
-    [test suite] extended code structure errstr test to validate python extention error code constants
-
- test/test-fwknop.pl | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-commit 6469f818600bf5013c024d458a4c56a26d237b5a
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 17 19:52:09 2013 -0500
-
-    [perl FKO module] bug fix for missing error code constants (caught with code structure test)
-
- perl/FKO/lib/FKO_Constants.pl | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-commit eebfa8924d649c5b2f1fba34d277492a4a47a78e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 17 19:50:42 2013 -0500
-
-    [test suite] extended code structure errstr test to validate perl FKO constants
-
- test/test-fwknop.pl | 80 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 79 insertions(+), 1 deletion(-)
-
-commit c019a4380893719b4c9427f0e7aedb9db7e3acc3
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 16 23:23:32 2013 -0500
-
-    [libfko] bug fix caught by new code structure error str test to add string for FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG
-
- lib/fko_error.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-commit a9cc97cd2a3c60fbe06ac9627c1fab02b21a74d2
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 16 23:22:25 2013 -0500
-
-    [test suite] added tests/code_structure.pl with a test for expected lib/fko.h error code fko_errstr() handling
-
- test/test-fwknop.pl          | 76 ++++++++++++++++++++++++++++++++++++++++++++
- test/tests/code_structure.pl |  9 ++++++
- 2 files changed, 85 insertions(+)
-
-commit cd15502bf179f43b81e6e0e262e1ac67d693ee89
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 16 20:36:39 2013 -0500
-
-    [test suite] minor addition to fko-wrapper to call fko_errstr() across valid and invalid values
-
- test/fko-wrapper/fko_wrapper.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-commit 196fef65b6d5d4d6805d177bc50b4cad2c5b99c8
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 16 19:20:08 2013 -0500
-
-    [libfko] move is_base64 check to libfko
-    
-    This commit replaces the separately implemented client/server
-    is_base64() check with a single libfko function, and libfko itself now
-    uses it as well before prepending Rijndael or GnuPG base64 encoded
-    prefixes.
-
- client/utils.c                |  21 -----
- client/utils.h                |   1 -
- lib/cipher_funcs.c            |  14 ++++
- lib/fko.h                     |   1 +
- lib/fko_error.c               |   3 +
- lib/fko_util.c                |  21 +++++
- lib/fko_util.h                |   1 +
- perl/FKO/lib/FKO_Constants.pl | 185 +++++++++++++++++++++---------------------
- server/utils.c                |  21 -----
- server/utils.h                |   1 -
- 10 files changed, 133 insertions(+), 136 deletions(-)
-
-commit 173b7518e11949f47d0c2eb0b46b76f8d265ec94 (refs/remotes/minastirith/mac_os_x_mavericks_build)
-Merge: 6d78c49 63568d0
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Nov 15 14:55:28 2013 -0500
-
-    Merge branch 'mac_os_x_mavericks_build' of ssh://10.211.55.3/home/parallels/git/fwknop into mac_os_x_mavericks_build
-
-commit 63568d061b0e842e0721858a995b959bb782a0e4
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 14 22:55:51 2013 -0500
-
-    minor hex_dump() formatting bug fix to properly align ascii remainder output
-
- client/utils.c | 2 ++
- server/utils.c | 2 ++
- 2 files changed, 4 insertions(+)
-
-commit 6d78c49ef90e3635e6111644e85f924865ef2443
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 14 23:13:33 2013 -0500
-
-    [libfko] minor update to print 'None' for the HMAC type when an HMAC is not used instead of just diplaying '()'
-
- lib/fko_util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit cb2fc3abbe0ddaebfa1962957425caee91c22e87
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 14 22:47:13 2013 -0500
-
-    [test suite] handle LD_LIBRARY_PATH from the main test-fwknop.pl script
-
- test/test-fwknop.pl                            |  67 ++++--
- test/tests/basic_operations.pl                 |  69 ++----
- test/tests/gpg.pl                              |  32 +--
- test/tests/gpg_hmac.pl                         |  15 +-
- test/tests/gpg_no_pw.pl                        |  30 +--
- test/tests/gpg_no_pw_hmac.pl                   |  12 +-
- test/tests/os_compatibility.pl                 |  30 +--
- test/tests/perl_FKO_module.pl                  |   9 +-
- test/tests/preliminaries.pl                    |  13 +-
- test/tests/python_fko.pl                       |   3 +-
- test/tests/rijndael.pl                         | 295 +++++++++----------------
- test/tests/rijndael_backwards_compatibility.pl |  30 +--
- test/tests/rijndael_cmd_exec.pl                |   6 +-
- test/tests/rijndael_fuzzing.pl                 |  48 ++--
- test/tests/rijndael_hmac.pl                    | 216 ++++++------------
- test/tests/rijndael_replay_attacks.pl          |   9 +-
- 16 files changed, 323 insertions(+), 561 deletions(-)
-
-commit a6f030412f6d9866cb13c2701521e7c433c2b074
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Nov 13 23:17:09 2013 -0500
-
-    [test suite] added Rijndael/HMAC compatibility tests for Mac OS X 10.9
-
- test/tests/os_compatibility.pl | 35 +++++++++++++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
-
-commit 6870e65800e3f18140bd57e8125f517662546b8c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Nov 13 23:11:43 2013 -0500
-
-    [test suite] minor cleanup to remove uncessary 'fatal' test hash keys
-
- test/test-fwknop.pl                            | 19 ++----
- test/tests/basic_operations.pl                 | 75 ---------------------
- test/tests/build_security.pl                   | 14 ----
- test/tests/gpg.pl                              | 24 -------
- test/tests/gpg_hmac.pl                         | 11 ----
- test/tests/gpg_no_pw.pl                        | 17 -----
- test/tests/gpg_no_pw_hmac.pl                   | 10 ---
- test/tests/os_compatibility.pl                 |  8 ---
- test/tests/perl_FKO_module.pl                  | 30 ---------
- test/tests/preliminaries.pl                    |  8 ---
- test/tests/python_fko.pl                       |  3 -
- test/tests/rijndael.pl                         | 90 --------------------------
- test/tests/rijndael_backwards_compatibility.pl | 10 ---
- test/tests/rijndael_cmd_exec.pl                |  1 -
- test/tests/rijndael_fuzzing.pl                 | 16 -----
- test/tests/rijndael_hmac.pl                    | 70 --------------------
- test/tests/rijndael_replay_attacks.pl          |  3 -
- 17 files changed, 7 insertions(+), 402 deletions(-)
-
-commit 5f51d7b3ebf57b962bc3563d9a42c8b15067f925
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 12 23:32:24 2013 -0500
-
-    [test suite] added support for 'otool' instead of 'ldd' on Mac OS X systems
-
- test/test-fwknop.pl | 22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
-
-commit af3d4fa9266862095ad22e59363dd35e64962f59
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 12 23:26:58 2013 -0500
-
-    minor extras/apparmor configure_args.sh path typo fix
-
- extras/apparmor/configure_args.sh | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 10ac35b344136a178511a2194926e683b382b5cd
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 12 23:26:54 2013 -0500
-
-    added extras/apparmor configure_args.sh helper script for building fwknop with args that AppArmor expects
-
- extras/apparmor/configure_args.sh | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-commit 1299a8ee8772d5fb46465d46f9a52199632e11ea (refs/remotes/origin/mac_os_x_mavericks_build)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 12 23:05:16 2013 -0500
-
-    [test suite] added DYLD_LIBRARY_PATH for Mac OS X 10.9
-
- test/run-test-suite.sh | 2 +-
- test/test-fwknop.pl    | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
-
-commit e75117616e067030d57d6c4a649438a5f28b10f0
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 12 23:04:35 2013 -0500
-
-    [server] ignore pcap direction for sniffing link type DLT_NULL interfaces (fixes OS X 10.9 test suite runs)
-
- server/pcap_capture.c | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 23ef1d4e59833e3c0a7dc53cd374eb699a4663b8
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 12 21:36:14 2013 -0500
-
-    [libfko] Candidate build fix for Mac OS X 10.9 (closes #108)
-    
-    Nikolay Kolev reported a build issue on Mac OS X 10.9 (Mavericks) where fwknop
-    copies of strlcpy() and strlcat() functions were conflicting with those that ship
-    with OS X 10.9.
-    
-    The solution was to add a configure.ac check for strlcat() and strlcpy() and
-    wrap "#if !HAVE_..." checks around those functions.
-    
-    A portion of the build errors looked like this:
-    
-    /Applications/Xcode.app/Contents/Developer/usr/bin/make  all-recursive
-    Making all in lib
-    /bin/sh ../libtool  --tag=CC   --mode=compile gcc -DHAVE_CONFIG_H -I. -I..   -I ../common   -g -O2 -Wall -Wformat -Wformat-security -fstack-protector-all -fstack-protector -fPIE -D_FORTIFY_SOURCE=2 -MT base64.lo -MD -MP -MF .deps/base64.Tpo -c -o base64.lo base64.c
-    libtool: compile:  gcc -DHAVE_CONFIG_H -I. -I.. -I ../common -g -O2 -Wall -Wformat -Wformat-security -fstack-protector-all -fstack-protector -D_FORTIFY_SOURCE=2 -MT base64.lo -MD -MP -MF .deps/base64.Tpo -c base64.c  -fno-common -DPIC -o .libs/base64.o
-    In file included from base64.c:34:
-    In file included from ./fko_common.h:149:
-    ./fko_util.h:56:9: error: expected parameter declarator
-    size_t  strlcat(char *dst, const char *src, size_t siz);
-            ^
-    /usr/include/secure/_string.h:111:44: note: expanded from macro 'strlcat'
-      __builtin___strlcat_chk (dest, src, len, __darwin_obsz (dest))
-                                               ^
-    /usr/include/secure/_common.h:39:62: note: expanded from macro '__darwin_obsz'
-     #define __darwin_obsz(object) __builtin_object_size (object, _USE_FORTIFY_LEVEL > 1 ? 1 : 0)
-                                                                 ^
-
- ChangeLog      | 3 +++
- configure.ac   | 2 +-
- lib/fko_util.h | 5 +++++
- lib/strlcat.c  | 2 ++
- lib/strlcpy.c  | 2 ++
- 5 files changed, 13 insertions(+), 1 deletion(-)
-
-commit 5cfbcce7d34a1d5ea3d52be2ca210cc1d0ed9621
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Oct 30 23:39:48 2013 -0400
-
-    [perl FKO module] added a series of encryption + HMAC key tests with single bytes converted to NULL
-
- perl/FKO/t/04_fuzzing.t | 56 ++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 55 insertions(+), 1 deletion(-)
-
-commit 6785462573f0cf298a338facc46964dba1e788f7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Oct 30 23:30:31 2013 -0400
-
-    added perl FKO t/04_fuzzing.t tests file
-
- Makefile.am | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 2f2156d54f933e1d9d35f9b77c6e0022c5ae7086
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 27 22:24:12 2013 -0400
-
-    [perl FKO module] additional fuzzing tests
-
- perl/FKO/t/04_fuzzing.t | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-commit a98317d367d147273840422aae0fb98969258fa8
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 27 15:08:01 2013 -0400
-
-    [test suite] minor negative output match addition for Test::Valgrind test
-
- test/tests/perl_FKO_module.pl | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 0451a7394c2cd411b6423c0ef244cd70aa66c925
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Oct 25 22:38:09 2013 -0400
-
-    [test suite] added valgrind output interpretation for Test::Valgrind output for previous run comparisons
-
- test/test-fwknop.pl | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-commit 66f3c1236b0a2dd24f8e1d59495dd76b5da96e3b
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 24 23:17:51 2013 -0400
-
-    [perl FKO module] added t/04_fuzzing tests
-
- perl/FKO/t/02_functions.t |  42 +++----
- perl/FKO/t/03_errors.t    |   2 +-
- perl/FKO/t/04_fuzzing.t   | 295 ++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 317 insertions(+), 22 deletions(-)
-
-commit 55bceaddc877b06f927420121f92a48e09f9ddd1
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 22 23:05:36 2013 -0400
-
-    [test suite] minor wording update for Test::Valgrind test
-
- test/tests/perl_FKO_module.pl | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit b063bd57349e4e71e2f2cec527482487d27f1d51
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 22 22:58:58 2013 -0400
-
-    added Test::Valgrind note to the ChangeLog
-
- ChangeLog | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-commit ceb213d545103d72631a81fd10a3489599524c7d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 22 22:24:47 2013 -0400
-
-    [perl FKO] interim commit to update the perldoc info
-
- perl/FKO/lib/FKO.pm | 81 ++++++++++++++++++++++++++++++++++++++---------------
- 1 file changed, 58 insertions(+), 23 deletions(-)
-
-commit 62939521ac731ab401db1dc3722e6d3300694f20
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 22 21:38:47 2013 -0400
-
-    [test suite] minor python update to use a main() function
-
- python/README      | 12 ++++++-----
- test/fko-python.py | 59 ++++++++++++++++++++++++++++++------------------------
- 2 files changed, 40 insertions(+), 31 deletions(-)
-
-commit 682966469cbf617d142d46f0dac6853e3e144551
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 22 20:37:58 2013 -0400
-
-    [test suite] minor Test::Valgrind name typo fix
-
- test/test-fwknop.pl | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 0d80f72c005fcc24f98e72242bb6fb48bdb7d206
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 22 20:36:30 2013 -0400
-
-    Revert "[test suite] minor Test::Valgrind name typo fix"
-    
-    This reverts commit 642024041534d79c897a21b2e19ef3e1ed7b2a61.
-
- lib/fko_funcs.c     | 7 -------
- test/test-fwknop.pl | 2 +-
- 2 files changed, 1 insertion(+), 8 deletions(-)
-
-commit 642024041534d79c897a21b2e19ef3e1ed7b2a61
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 21 20:47:01 2013 -0400
-
-    [test suite] minor Test::Valgrind name typo fix
-
- lib/fko_funcs.c     | 7 +++++++
- test/test-fwknop.pl | 2 +-
- 2 files changed, 8 insertions(+), 1 deletion(-)
-
-commit b091a1a1bcc8b926109196add75d63fbcca6a784
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 21 20:45:21 2013 -0400
-
-    [test suite, FKO module] new(), spa_data_final(), and other fcns don't require key length args
-
- perl/FKO/t/00_init.t |  7 ++-----
- test/test-fwknop.pl  | 54 ++++++++++++++++++++++++----------------------------
- 2 files changed, 27 insertions(+), 34 deletions(-)
-
-commit e77a02882e380e9b6f031b1b79da395a1c89f600
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 21 20:34:22 2013 -0400
-
-    [test suite] Add support for Test::Valgrind against the perl FKO module
-    
-    When --enable-valgrind is used, this commit adds support for running the
-    perl FKO built-in tests (in the t/ directory) under the CPAN
-    Test::Valgrind module.  A check is performed to see whether
-    Test::Valgrind is install before attempting to use it.  Any 'fko_'
-    function that shows up under the test output is flagged and causes the
-    test-suite test to fail.
-
- test/test-fwknop.pl           | 51 +++++++++++++++++++++++++++++++++++++++++++
- test/tests/perl_FKO_module.pl |  8 +++++++
- 2 files changed, 59 insertions(+)
-
-commit 431a5e3ecdc8838c18aa495cd096258e78e7fe5a
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 10 22:43:45 2013 -0400
-
-    [perl FKO module] switch to CBC mode tests from ECB
-
- perl/FKO/t/00_init.t   | 2 +-
- perl/FKO/t/03_errors.t | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
-
-commit ab0d5ac3e289404137cc01a066216fad62363261
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 10 22:34:25 2013 -0400
-
-    [test suite] display all possible tests under --list (with a --enable-* note)
-
- test/test-fwknop.pl | 46 ++++++++++++++++++++++++++++------------------
- 1 file changed, 28 insertions(+), 18 deletions(-)
-
-commit 0dc47f7e5c446aefe3f972bf7d06f69c22ab3cd5
-Author: Damien Stuart <dstuart@dstuart.org>
-Date:   Sun Sep 15 14:33:42 2013 -0400
-
-    Fixed missing error codes and error tests.
-
- perl/FKO/lib/FKO.pm           |   2 +-
- perl/FKO/lib/FKO_Constants.pl | 259 +++++++++++++++++++++---------------------
- perl/FKO/t/03_errors.t        |  53 ++++-----
- 3 files changed, 158 insertions(+), 156 deletions(-)
-
-commit a36bfab7809947529c636e271e228ed0415590a9
-Merge: 6daabaf 1047146
-Author: Damien Stuart <dstuart@dstuart.org>
-Date:   Fri Sep 6 23:18:39 2013 -0400
-
-    Merge branch 'perl_module'
-
-commit 6daabaf3bef15ddd706108cd88b47e079832ce69
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Sep 5 20:31:08 2013 -0400
-
-    minor ChangeLog typo update
+    minor typo fix
 
  ChangeLog | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit 1047146b2351d56ea3b73dfb5d7b180d2280f0d4 (refs/remotes/origin/perl_module)
-Author: Damien Stuart <dstuart@dstuart.org>
-Date:   Wed Sep 4 15:19:43 2013 -0400
-
-    Updated Perl FKO tests for lastest changes to libfko.  Fixed bug where $fko->hmac() was always returning -1.
-
- perl/FKO/FKO.xs           |   1 +
- perl/FKO/lib/FKO.pm       |  27 ++++-------
- perl/FKO/t/02_functions.t | 113 +++++++++++++++++++++++++++++++---------------
- 3 files changed, 86 insertions(+), 55 deletions(-)
-
-commit 85140f2048a7ef7d25ec396256c8ddbb9d4e411c
-Merge: 83952fc 5693b05
-Author: Michael Rash <michael.rash@gmail.com>
-Date:   Wed Aug 28 21:55:39 2013 -0700
-
-    Merge pull request #105 from fjoncourt/master
-    
-    Make sure log_msg() sends messages to STDERR until the context gets initialized.
-
-commit 5693b0536a9a52b2ecc5a3ac85a68a123a9f9e87
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Aug 27 20:45:17 2013 +0200
-
-    Fixed *Value stored is never read* warning found by clang.
-
- lib/fko_util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 69ed30edb4a0f4fae266fda5eddb3f0163277588
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Aug 27 20:39:03 2013 +0200
-
-    Make sure all calls to log_msg() send messages to STDERR until the config files are parsed.
-    (mrash/fwknop#102)
-
- server/log_msg.c | 6 ++++--
- server/log_msg.h | 1 +
- 2 files changed, 5 insertions(+), 2 deletions(-)
-
-commit 83952fc734a0838b593ae8a6e961da6dbaa00914
+commit b243bb4bb79d022c72184035b2962a5e1b06966f
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 18 23:02:44 2013 -0400
+Date:   Fri Apr 11 22:45:27 2014 -0400
 
-    added Radostan Riedel's AppArmor policy note
+    [client] fix minor memory leak before exit() in parsing invalid time offsets
 
- CREDITS   | 5 +++++
- ChangeLog | 3 +++
- 2 files changed, 8 insertions(+)
+ client/config_init.c           | 48 ++++++++++++++++++++++++++----------------
+ test/tests/basic_operations.pl |  4 ++--
+ 2 files changed, 32 insertions(+), 20 deletions(-)
 
-commit a5c308f9c55e6f04da889675e435502dbcde53ef
+commit 2cafdad9686c319c374f54ebf64293127ea0c0cb
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 18 22:58:10 2013 -0400
+Date:   Fri Apr 11 22:41:00 2014 -0400
 
-    Added AppArmor policy
-    
-    This commit adds an AppArmor policy that is known to work in Debian and Ubuntu
-    systems.  The original version of this policy was contributed by Radostan Riedel
-    to the fwknop mailing list.
+    bump version to 2.6.1
 
- extras/apparmor/usr.sbin.fwknopd | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ ChangeLog    | 7 ++++---
+ VERSION      | 2 +-
+ configure.ac | 2 +-
+ fwknop.spec  | 5 ++++-
+ 4 files changed, 10 insertions(+), 6 deletions(-)
 
-commit a68503c7c9d7e01c3a0dcad1eae09032ca3ce62d
+commit b97484734ecb8c3a8581d69bd28375e5845d486b
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 18 22:15:15 2013 -0400
+Date:   Thu Apr 10 23:18:44 2014 -0400
 
-    [server] fix crash if replay digest tracking init() fails
-    
-    This commit fixes a crash if the replay digest init() routine fails - fwknopd
-    attempted to make use of replay tracking anyway.  The crash was discovered
-    during testing fwknopd with an AppArmor enforce policy deployed.  The
-    following stack trace shows the crash (taken before the previous static
-    function commit):
-    
-     Program received signal SIGSEGV, Segmentation fault.
-     __strlen_sse2 () at ../sysdeps/x86_64/multiarch/../strlen.S:31
-     31      ../sysdeps/x86_64/multiarch/../strlen.S: No such file or directory.
-     (gdb) where
-     #0  __strlen_sse2 () at ../sysdeps/x86_64/multiarch/../strlen.S:31
-     #1  0x00007f59cabd8b26 in add_replay_file_cache (opts=opts@entry=0x7fff3eaa0bb0, digest=digest@entry=0x0) at replay_cache.c:516
-     #2  0x00007f59cabd8cf5 in add_replay (opts=opts@entry=0x7fff3eaa0bb0, digest=digest@entry=0x0) at replay_cache.c:472
-     #3  0x00007f59cabd62eb in incoming_spa (opts=0x7fff3eaa0bb0) at incoming_spa.c:536
-     #4  0x00007f59ca56164e in ?? () from /usr/lib/x86_64-linux-gnu/libpcap.so.0.8
-     #5  0x00007f59cabd7175 in pcap_capture (opts=opts@entry=0x7fff3eaa0bb0) at pcap_capture.c:269
-     #6  0x00007f59cabd3d4d in main (argc=5, argv=0x7fff3eaa1458) at fwknopd.c:314
+    [client] fix memory leak introduced in 0ff210099
 
- server/incoming_spa.c | 4 +++-
- server/replay_cache.c | 6 ++++++
- 2 files changed, 9 insertions(+), 1 deletion(-)
-
-commit 5d49f30c01d42de961071f2d2918431fe9518b09
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 18 21:56:53 2013 -0400
-
-    [server] minor replay code update to make functions static where possible
-
- server/replay_cache.c | 119 +++++++++++++++++++++++++-------------------------
- server/replay_cache.h |   7 ---
- 2 files changed, 59 insertions(+), 67 deletions(-)
-
-commit c271f01d0094065f99bc93dbf8f49f6a6a7a474b
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 17 23:51:23 2013 -0400
-
-    [test suite] added 'make test' check for FKO perl module
-    
-    All built-in tests in the FKO module must pass for this new test to pass.  This commit
-    is in support of #103
-
- test/test-fwknop.pl           | 27 +++++++++++++++++++++++++++
- test/tests/perl_FKO_module.pl |  9 +++++++++
- 2 files changed, 36 insertions(+)
-
-commit 89c5e88219d72f67a424b0a427dea3eb74f42d1e
-Author: Damien Stuart <dstuart@dstuart.org>
-Date:   Mon Aug 12 20:53:29 2013 -0400
-
-    First round of updates to get the Perl module up-to-date with the new libfko.  Added new error refs and commented out bad/invalid tests.
-
- perl/FKO/lib/FKO.pm           |  16 ++-
- perl/FKO/lib/FKO_Constants.pl | 301 +++++++++++++++++++++++++++++++++---------
- perl/FKO/t/00_init.t          |  15 ++-
- perl/FKO/t/01_constants.t     |  34 +++--
- perl/FKO/t/02_functions.t     |  41 ++++--
- perl/FKO/t/03_errors.t        |  41 +++---
- 6 files changed, 345 insertions(+), 103 deletions(-)
-
-commit e8fe29bbe1941276fe6e6cc251c47b10ab0554b6
-Merge: c0c8048 12916f2
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 11 22:09:22 2013 -0400
-
-    Merge branch 'master' of github.com:mrash/fwknop
-
-commit c0c8048ee1c33e8c40a8b9b2a335f353178d1ea8
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 11 22:07:02 2013 -0400
-
-    Added fko context dumper change to ChangeLog, updated test suite to account for single line printing of final SPA data
-
- ChangeLog           |  6 ++++++
- lib/fko_util.c      |  9 ++-------
- test/test-fwknop.pl | 19 +++++--------------
- 3 files changed, 13 insertions(+), 21 deletions(-)
-
-commit 12916f21efc25935a1a3806cedb896db3d7a3848
-Author: Damien Stuart <dstuart@dstuart.org>
-Date:   Sun Aug 11 22:02:50 2013 -0400
-
-    Moved new invalid data error definitions above the GPGME_ERR_START marker.
-
- lib/fko.h | 103 ++++++++++++++++++++++++++++++++------------------------------
- 1 file changed, 53 insertions(+), 50 deletions(-)
-
-commit fa985c19434f37b1f806b4a275399970ba5fe5c6
-Merge: 45e29f6 f8ae3b8
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 11 15:02:01 2013 -0400
-
-    Merge remote-tracking branch 'fjoncourt/fko_dump'
-    
-    This implements an FKO context dumping function in lib/fko_utils.c, and closes #100
-
-commit 45e29f6450b49587db66cc08a0e86d8f4de3b01c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 11 14:30:37 2013 -0400
-
-    minor edit to credits file for Hank Leininger
-
- CREDITS | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
-
-commit be2bb71c7408d6ae677fceff9bb233afdff7caeb
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 10 21:03:07 2013 -0400
-
-    [test suite] minor bug fix for GPG no password HMAC test rc file
-
- test/tests/gpg_no_pw_hmac.pl | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 5176f9e04bd27bce35f09bb66717332a3bf35252
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 10 16:08:19 2013 -0400
-
-    [server] minor addition to access stanza dump output to include hmac digest type
-
- server/access.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-commit c04efc20dd8ad5471285366e58715537eb8b18ee
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 10 15:45:51 2013 -0400
-
-    [test suite] added Rijndael HMAC digest mismatch tests
-
- Makefile.am                                        |  4 ++
- test/conf/hmac_sha256_digest1_mismatch_access.conf |  5 ++
- test/conf/hmac_sha256_digest2_mismatch_access.conf |  5 ++
- test/conf/hmac_sha256_digest3_mismatch_access.conf |  5 ++
- test/conf/hmac_sha256_digest4_mismatch_access.conf |  5 ++
- test/test-fwknop.pl                                |  4 ++
- test/tests/rijndael_hmac.pl                        | 61 ++++++++++++++++++++++
- 7 files changed, 89 insertions(+)
-
-commit dfc2a0654777510086842061af9df5b8c422ccff
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 10 14:27:10 2013 -0400
-
-    [test suite] added Rijndael HMAC + RAND_PORT test
-
- Makefile.am                                  |  1 +
- test/conf/fwknoprc_rand_port_hmac_base64_key |  5 +++++
- test/test-fwknop.pl                          |  1 +
- test/tests/rijndael_hmac.pl                  | 17 +++++++++++++++++
- 4 files changed, 24 insertions(+)
-
-commit 4775327d985a3d6907cb8b6f7af5fd7418d9277c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 10 13:54:03 2013 -0400
-
-    [test suite] added two GnuPG HMAC SHA512 tests
-
- Makefile.am                                 |  4 ++++
- test/conf/fwknoprc_gpg_hmac_sha512_key      |  4 ++++
- test/conf/fwknoprc_hmac_sha512_base64_key   |  4 ++++
- test/conf/gpg_hmac_sha512_access.conf       |  9 +++++++++
- test/conf/gpg_no_pw_hmac_sha512_access.conf |  8 ++++++++
- test/test-fwknop.pl                         |  4 ++++
- test/tests/gpg_hmac.pl                      | 16 ++++++++++++++++
- test/tests/gpg_no_pw_hmac.pl                | 18 ++++++++++++++++++
- 8 files changed, 67 insertions(+)
-
-commit f8ae3b8da37b4c5d04f3a30613a4d31601737aeb
-Merge: b590932 333302a
-Author: Franck Joncourt <franck@debian.org>
-Date:   Sat Aug 10 14:32:34 2013 +0200
-
-    Merge remote-tracking branch 'upstream/master' into fko_dump
-
-commit b590932fb67e061836d64b0adb952447da3f0415
-Author: Franck Joncourt <franck@debian.org>
-Date:   Sat Aug 10 14:30:40 2013 +0200
-
-    * Removed goto statements. We do not do any further processings
-      when we reach the error label.
-
- lib/fko_util.c | 67 +++++++++++++++++++++++++++++++---------------------------
- 1 file changed, 36 insertions(+), 31 deletions(-)
-
-commit 333302a7cf694a3f5968d4609794d8fdc0cb29e7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 9 21:47:38 2013 -0400
-
-    ChangeLog/CREDITS update for Hank's libfko error code patch
-
- CREDITS   | 5 ++++-
- ChangeLog | 3 +++
- 2 files changed, 7 insertions(+), 1 deletion(-)
-
-commit 4023da87d60dc0d3f7aa51b6c2aa32b97fe0ce71
-Merge: eb7914d bc907e0
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 9 21:46:49 2013 -0400
-
-    Merge remote-tracking branch 'hlein/unique_errors'
-    
-    [libfko] (Hank Leininger) Contributed a patch to greatly extend libfko
-    error code descriptions at various places in order to give much better
-    information on what certain error conditions mean.  Closes #98.
-
-commit eb7914d45cd08e861848cd63ea7ea328936648cc
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 8 21:37:44 2013 -0400
-
-    minor ChangeLog update for --stanza-list
-
- ChangeLog               | 2 ++
- client/fwknop.8.in      | 9 +++++++--
- doc/fwknop.man.asciidoc | 2 +-
- 3 files changed, 10 insertions(+), 3 deletions(-)
-
-commit d9ba40d48f23ac0f8ec2f4b9d89f24ad7594c44b
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 8 20:55:10 2013 -0400
-
-    [server] fix compilation warning dealing with new iptables chain validation
-
- server/config_init.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-commit 05e7d52a5f75d62391cc769772f2442965d9df11
-Merge: 320008b 04f72ea
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 8 20:54:07 2013 -0400
-
-    [client] merged --stanza-list changes from Franck, closes #94
-
-commit bc907e0b24146ba98d2aa04480a2114f1d0a06c4
-Author: Hank Leininger <hlein@korelogic.com>
-Date:   Mon Aug 5 22:21:10 2013 -0400
-
-    Add unique errors for every FKO_ERROR_INVALID_DATA.  Needed this to
-    track down mystery errors (#98).
-
- lib/fko.h                |  88 ++++++++++++++++
- lib/fko_client_timeout.c |   2 +-
- lib/fko_decode.c         |  68 ++++++-------
- lib/fko_digest.c         |   4 +-
- lib/fko_encode.c         |   4 +-
- lib/fko_encryption.c     |  36 +++----
- lib/fko_error.c          | 255 +++++++++++++++++++++++++++++++++++++++++++++++
- lib/fko_funcs.c          |  14 +--
- lib/fko_hmac.c           |  10 +-
- lib/fko_message.c        |  14 +--
- lib/fko_nat_access.c     |   2 +-
- lib/fko_rand_value.c     |   2 +-
- lib/fko_server_auth.c    |   2 +-
- lib/fko_timestamp.c      |   2 +-
- lib/fko_user.c           |   6 +-
- lib/fko_util.c           |   4 +-
- 16 files changed, 428 insertions(+), 85 deletions(-)
-
-commit 320008b8de4034f523555f8ab2996cbb7d28efa3
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Aug 5 21:08:40 2013 -0400
-
-    minor ChangeLog update for the test suite --gdb-test feature
-
- ChangeLog | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-commit 7296d3f3bf13cb65a6dde52276a608b6b2f4b92f
-Author: Franck Joncourt <franck@debian.org>
-Date:   Mon Aug 5 23:28:07 2013 +0200
-
-    * Interim commit to add a dump function to dump the FKO context shared
-      by both the server and client. mrash/fwknop#95
-
- client/fwknop.c       |  94 +++++-----------------------
- lib/fko_util.c        | 165 +++++++++++++++++++++++++++++++++++++++++++++++++-
- lib/fko_util.h        |   4 ++
- server/incoming_spa.c |  13 +++-
- server/utils.c        | 120 ------------------------------------
- server/utils.h        |   2 -
- 6 files changed, 193 insertions(+), 205 deletions(-)
-
-commit 8c73c7801ba0dd718da5ce4a2b763523a28496c7
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Aug 5 00:00:45 2013 -0400
-
-    [server] send IPT_*_ACCESS vars through basic validation at fwknopd.conf parse time
-
- server/config_init.c           | 48 ++++++++++++++++++++++++++++++++++++++++++
- server/fw_util_iptables.c      | 39 +++++++++++++++++++++++++++++++---
- server/fw_util_iptables.h      |  2 ++
- server/fwknopd.conf            |  2 +-
- test/test-fwknop.pl            |  2 +-
- test/tests/basic_operations.pl |  5 -----
- 6 files changed, 88 insertions(+), 10 deletions(-)
-
-commit 5fa93c621a371820032d3672de37d9dd79f6e992
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 23:23:07 2013 -0400
-
-    [test suite] minor seg fault test message update
-
- test/test-fwknop.pl | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-commit 131c643caddba7e130ed8c15a08afc86dc1a6927
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 23:20:53 2013 -0400
-
-    [server] make IPT_INPUT_ACCESS validation more strict on allowed chars
-
- server/fw_util_iptables.c      | 17 ++++++++++++++---
- test/tests/basic_operations.pl |  6 +++---
- 2 files changed, 17 insertions(+), 6 deletions(-)
-
-commit 39fa4cc012b8f93dab78619beca17d4601e12631
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 23:01:33 2013 -0400
-
-    [server] if iptables init fails then no need to remove fwknop chains
-    
-    This commit fixes a crash at init time in fwknopd if an improperly formatted
-    IPT_INPUT_ACCESS variable is used in fwknopd.conf file.  fwknopd should not
-    try to delete chains with a bogus IPT_INPUT_ACCESS variable, and valgrind
-    verifies that this change does not introduce any memory leaks (see the
-    'invalid iptables INPUT spec' tests run in --enable-valgrind mode).
-
- server/fwknopd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit a7030b038ad181c2a71a073342ddcb78edc2de45
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 21:46:38 2013 -0400
-
-    [test suite] added --gdb-test mode
-    
-    This commit allows the test suite to execute the same fwknop/fwknopd command
-    used in a specified test output file under gdb.  This is a convenience
-    measure to allow the user to more rapidly execute fwknop/fwknopd commands
-    under gdb in the same way the test suite does without having to copy and paste
-    command line args.
-    
-    Here is a basic example:
-    
-    root@lorien:/home/mbr/git/fwknop.git/test# ./test-fwknop.pl --gdb output/6.test
-    GNU gdb
-    Copyright (C) 2012 Free Software Foundation, Inc.
-    License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
-    This is free software: you are free to change and redistribute it.
-    There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
-    and "show warranty" for details.
-    This GDB was configured as "i686-linux-gnu".
-    For bug reporting instructions, please see:
-    <http://bugs.launchpad.net/gdb-linaro/>...
-    Reading symbols from /home/mbr/git/fwknop.git/server/.libs/fwknopd...done.
-    (gdb) run
-    Starting program: /home/mbr/git/fwknop.git/server/.libs/fwknopd -c conf/invalid_ipt_input_chain_6_fwknopd.conf -a conf/default_access.conf -d run/digest.cache -p run/fwknopd.pid -i lo --foreground --verbose --verbose
-
- test/test-fwknop.pl | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
-commit 92e888a34fd5db7d00a619598aa8d5f24ff14333
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 21:24:44 2013 -0400
-
-    [test suite] minor removal of duplicate Cwd usage
-
- test/test-fwknop.pl | 1 -
+ client/fwknop.c | 1 -
  1 file changed, 1 deletion(-)
 
-commit 870a08c9f5c33d84d3673e5ef2082449c0f6236a
+commit b422f1b9a7103ae391df299ac15d768405bf4047
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 21:22:35 2013 -0400
+Date:   Thu Apr 10 23:10:11 2014 -0400
 
-    [test suite] added invalid IPT input chain specification tests
+    [test suite] implement new fwknopd access/fwknopd.conf file writing feature similar to client rc file writing/testing
 
- Makefile.am                                      |  8 +++
- test/conf/invalid_ipt_input_chain_2_fwknopd.conf |  2 +
- test/conf/invalid_ipt_input_chain_3_fwknopd.conf |  2 +
- test/conf/invalid_ipt_input_chain_4_fwknopd.conf |  2 +
- test/conf/invalid_ipt_input_chain_5_fwknopd.conf |  2 +
- test/conf/invalid_ipt_input_chain_6_fwknopd.conf |  2 +
- test/conf/invalid_ipt_input_chain_fwknopd.conf   |  2 +
- test/test-fwknop.pl                              |  6 ++
- test/tests/basic_operations.pl                   | 77 ++++++++++++++++++++++++
- 9 files changed, 103 insertions(+)
+ test/test-fwknop.pl            |  81 +++++++++++++--
+ test/tests/basic_operations.pl | 228 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 302 insertions(+), 7 deletions(-)
 
-commit ce3a7bc16d4ba8b53587d03ed6e7ac7c173be41b
+commit c75cbdddef39ae011aacdccf38a01bf853679ad4
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 17:55:41 2013 -0400
+Date:   Thu Apr 10 23:08:51 2014 -0400
 
-    [test suite] have Makefile.am test/conf/ file inclusion only write errors
+    [test suite] add compounded tests for fko-wrapper
 
- test/test-fwknop.pl | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ test/fko-wrapper/fko_wrapper.c | 102 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 100 insertions(+), 2 deletions(-)
 
-commit 3395e5c1326d8edc013725ccc4bca18923ce5952
+commit fdb8c890e90bae0f4f66fd341b7be706711e711a
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 11:25:58 2013 -0400
+Date:   Thu Apr 10 23:08:19 2014 -0400
 
-    [test suite] don't append segfault searches to every test output file
+    [server] make parse_access_file() exit if there is a variable formatting problem
 
- test/test-fwknop.pl | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ server/access.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-commit 433b18501c2b2e512202b7c3b517064b2627828d
+commit 4b86edbbe25eccfb9d4fbe4362cbc98f61521d41
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Aug 4 04:51:39 2013 -0400
+Date:   Thu Apr 10 23:07:39 2014 -0400
 
-    [test suite] additional non-HMAC SNAT tests
+    [client] ensure to call fko_destroy() on the correct context if encryption mode could not be determined
 
- test/tests/rijndael.pl      | 37 +++++++++++++++++++++++++++++++++++++
- test/tests/rijndael_hmac.pl |  4 ++--
- 2 files changed, 39 insertions(+), 2 deletions(-)
+ client/fwknop.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-commit 2f7a3f0a8af1f9c2bf36986f94b2ac049b9aea23
+commit f539afc750dd4d4b4e64151ae5e9925470b1fb38
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 3 20:52:27 2013 -0400
+Date:   Thu Apr 10 20:48:05 2014 -0400
 
-    [test suite] SNAT MASQUERADE test
+    [client] make is_rc_param() error condition fatal
 
- test/tests/basic_operations.pl | 12 ------------
- test/tests/rijndael_hmac.pl    | 23 ++++++++++++++++++++++-
- 2 files changed, 22 insertions(+), 13 deletions(-)
+ client/config_init.c | 24 +++++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
-commit 24101ac33ae5faeda87cd8d7f8cab1fdf8ff2898
+commit 55d1ee3fd953088dda61f1ad1d3bac41bcab1cf2
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 3 20:37:50 2013 -0400
+Date:   Wed Apr 9 23:56:50 2014 -0400
 
-    [server] add NULL check for SNAT translate IP
+    [test suite] --key-* arg validation with --fd 0
 
- server/fw_util_iptables.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ test/tests/basic_operations.pl | 39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
 
-commit 0200169dfdb35e7ce8fa9b30a1f82751d6818c68
+commit ac6ffe2ec798e93bb06e08a046be24704b58c9d2
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Aug 3 13:36:32 2013 -0400
+Date:   Wed Apr 9 23:56:03 2014 -0400
 
-    [test suite] started on SNAT tests
+    [server] Validate GPG sigs with libfko fko_gpg_signature_id_match() function
 
- test/conf/snat_fwknopd.conf                 |  3 +++
- test/conf/snat_no_translate_ip_fwknopd.conf |  2 ++
- test/test-fwknop.pl                         |  2 ++
- test/tests/basic_operations.pl              | 13 +++++++++++++
- test/tests/rijndael_hmac.pl                 | 19 +++++++++++++++++++
- 5 files changed, 39 insertions(+)
+ ChangeLog             |  3 +++
+ lib/fko_encryption.c  |  5 ++++-
+ server/access.c       | 17 ---------------
+ server/access.h       |  1 -
+ server/incoming_spa.c | 59 +++++++++++++++++++++++++++++++++++++++++++++------
+ 5 files changed, 59 insertions(+), 26 deletions(-)
 
-commit f062ac570643efce3b24197d6830b90d63a34674
+commit 0ff2100993e8722e0e62ec616fc84396bd7808c3
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 2 23:22:10 2013 -0400
+Date:   Tue Apr 8 21:12:46 2014 -0400
 
-    [server] minor enable check via strncasecmp()
+    [test suite/client] memory leak bug fix and test coverage
+    
+    This commit fixes a minor memory leak in the fwknop client before
+    calling exit() when an abnormally large number of command line arguments
+    are given.  The leak was found with valgrind together with the test
+    suite (specifically the 'show last args (4)' test):
+    
+    ==23748== 175 bytes in 50 blocks are definitely lost in loss record 1 of 1
+    ==23748==    at 0x4C2C494: calloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+    ==23748==    by 0x1112F1: run_last_args (fwknop.c:991)
+    ==23748==    by 0x110D36: prev_exec (fwknop.c:916)
+    ==23748==    by 0x10D953: main (fwknop.c:170)
+    
+    Additional test coverage was added for the client via the
+    basic_operations.pl tests.
 
- server/pcap_capture.c | 2 +-
+ Makefile.am                    |   1 +
+ client/fwknop.c                |  27 +++++---
+ test/invalid.args              |   1 +
+ test/tests/basic_operations.pl | 149 +++++++++++++++++++++++++++++++++++++++--
+ 4 files changed, 163 insertions(+), 15 deletions(-)
+
+commit 2e4eea8d496e14dfb64feb01fe09e02a1fa08cbc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Apr 8 21:08:24 2014 -0400
+
+    [libfko] minor formating update for strtol_wrapper() range output messages
+
+ lib/fko_util.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 5752433420605202e143e42359f2a2d40fdb8973
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Apr 8 21:06:45 2014 -0400
+
+    [libfko] minor comment re-wording
+
+ lib/fko_client_timeout.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit cc896bbcdeb0ecd244c8b8b8e6ea3e9d3ebf3298
+commit d327f99efbcaa17b423c8f42cd4a1bb6f7639362
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Aug 2 15:09:00 2013 -0400
+Date:   Tue Apr 8 21:06:18 2014 -0400
 
-    [test suite] added checks to look for segfaults/crashes
+    [client] minor typo fix
 
- test/test-fwknop.pl | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ client/spa_comm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-commit 2f0ad7c4be76f71e0d13c95e83f894895b3b1aac
+commit e5169d0878172113bbd7e2f5d4d5f7fa4702a0b8
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Jul 31 13:57:49 2013 -0400
+Date:   Tue Apr 8 20:45:13 2014 -0400
 
-    [test suite] have fko_wrapper only require fko.h
+    [test suite] env HOME tests, -R http resolve tests
 
- test/fko-wrapper/Makefile      | 2 +-
- test/fko-wrapper/fko_wrapper.c | 4 ----
- 2 files changed, 1 insertion(+), 5 deletions(-)
+ test/test-fwknop.pl            | 17 ++++++++
+ test/tests/basic_operations.pl | 98 +++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 113 insertions(+), 2 deletions(-)
 
-commit 04f72ea7241679c71f0757b469fe61a8e6875697
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Jul 30 23:00:19 2013 +0200
+commit d9c1eb8f5134fe0d2be895e22f53a14d4016951b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Apr 7 22:31:56 2014 -0400
 
-    * Fixed typos.
+    [test suite] more client/config_init.c test coverage
 
- client/config_init.c | 8 ++++----
+ Makefile.am                    |   3 +
+ test/invalid.key               |   2 +
+ test/invalid2.key              |   1 +
+ test/invalid3.key              |   1 +
+ test/test-fwknop.pl            |   3 +
+ test/tests/basic_operations.pl | 124 +++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 134 insertions(+)
+
+commit 5da38165effbe8a3e4200835374231f0433d4361
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Apr 6 22:21:14 2014 -0400
+
+    [test suite] KEY_FILE and HMAC_KEY_FILE tests
+
+ test/tests/basic_operations.pl | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+commit c6cb892a0574562202f787c5388703976c2929e1
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Apr 6 22:14:10 2014 -0400
+
+    [test suite] more client/config_init.c test coverage
+
+ client/config_init.c           |  3 ---
+ test/tests/basic_operations.pl | 54 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 54 insertions(+), 3 deletions(-)
+
+commit 5176cd09760fbb4de87cbbbbd4ea8bb00cb8dd8c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Apr 6 21:27:15 2014 -0400
+
+    [test suite] additional test coverage for client/config_init.c
+
+ test/tests/basic_operations.pl | 106 ++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 100 insertions(+), 6 deletions(-)
+
+commit 09fb2dd2405b3dfb3fd47f94c70ac1ce058e5924
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Apr 6 21:27:07 2014 -0400
+
+    [test suite] allow tests/*.pl files to use lib_view_str variable directly
+
+ test/test-fwknop.pl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 4d63644ce72d3a161332bd141e22a9f86335107a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Apr 6 15:42:22 2014 -0400
+
+    [test suite] additional test coverage for client/config_init.c
+
+ test/tests/basic_operations.pl | 90 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 89 insertions(+), 1 deletion(-)
+
+commit 710720b237f5d791e9a7e79fdb18da280b3a75a8
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Apr 5 23:09:04 2014 -0400
+
+    [test suite] non-default stanza digest update test
+
+ test/tests/basic_operations.pl | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+commit e95d601a4808817479b9b564e9578752393734ac
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Apr 5 21:51:56 2014 -0400
+
+    [test suite] added --key-gen -K file path too long test
+
+ test/tests/basic_operations.pl | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+commit 48eb5fcc942d67ee8fff11f3c02dfc6efcecf9a2
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Apr 5 21:29:24 2014 -0400
+
+    [test suite] added key file path too long tests
+
+ test/tests/basic_operations.pl | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+commit d0d77ba67f6a2c5df15adb39b96d1258076e6b09
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Apr 5 08:19:20 2014 -0400
+
+    [test suite] added rc file path too long test
+
+ test/tests/basic_operations.pl | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+commit 1ec1443768831feb7c1934d6b2ad2e5df5328495
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Apr 4 23:03:03 2014 -0400
+
+    [test suite] add several validation tests to exercise various client/config_init.c lines
+
+ test/tests/basic_operations.pl | 168 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 164 insertions(+), 4 deletions(-)
+
+commit a65324bad1c5bfbf0bc59e96904e34cc71262db3
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Apr 4 23:02:09 2014 -0400
+
+    [client] return error exit status if --stanza-list cannot open the rc file
+
+ client/config_init.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+commit 0b6a407392f40cbbd59721bdbed437001426a76c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Apr 4 22:54:38 2014 -0400
+
+    [libfko] remove unused digest *_End(), *_Data(), and *_hex() functions in favor of better test coverage (always can be reinstantiated if needed)
+
+ lib/digest.c |  85 -------------------------------------------------
+ lib/digest.h |   5 ---
+ lib/sha2.c   | 101 -----------------------------------------------------------
+ lib/sha2.h   |  18 -----------
+ 4 files changed, 209 deletions(-)
+
+commit f9885d0657f936fbcce68a666af0cd4d409d4e2f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Apr 4 22:50:41 2014 -0400
+
+    [libfko] add GPG sig status to fko dump context function
+
+ lib/fko_util.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+commit b8492d43191e53f715ae6edabc7c1d9704e1612e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Apr 3 22:52:53 2014 -0400
+
+    [test suite] added --key-rijndael and --key-hmac tests
+
+ test/tests/basic_operations.pl | 159 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 156 insertions(+), 3 deletions(-)
+
+commit 956199a3cb260c3138dd542ae5c273b1c952e137
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Apr 3 22:52:11 2014 -0400
+
+    [client] minor typo fix for -P requirement under spoofed src mode
+
+ client/config_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 2da2704d4c09651f1b88bc3b57c6244b23b2a875
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Apr 3 19:29:14 2014 -0400
+
+    [test suite] fwknoprc GPG tests, more time offset tests
+
+ Makefile.am                                    |  2 +
+ client/fwknop.c                                |  5 +-
+ test/conf/fwknoprc_hmac_time_offset_days       | 18 ++++++
+ test/conf/fwknoprc_hmac_time_offset_hours      | 18 ++++++
+ test/conf/fwknoprc_hmac_time_offset_mins       | 18 ++++++
+ test/conf/gpg_no_pw_hmac_clientdir_access.conf |  8 +++
+ test/conf/gpg_no_pw_hmac_serverdir_access.conf |  8 +++
+ test/test-fwknop.pl                            | 25 ++++++--
+ test/tests/basic_operations.pl                 | 88 ++++++++++++++++++++++++++
+ test/tests/gpg_no_pw_hmac.pl                   | 27 ++++++++
+ 10 files changed, 212 insertions(+), 5 deletions(-)
+
+commit d4c696d24a14335778533d13cfc77f1f1c7c567a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Apr 3 19:27:44 2014 -0400
+
+    [client] minor update to comment out unused function
+
+ client/log_msg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit e4a382a87fec21f2d234f388b70a9fe11a2a7c7b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Apr 3 00:10:22 2014 -0400
+
+    [test suite] save pkt to file tests
+
+ test/tests/basic_operations.pl | 63 ++++++++++++++++++++++++++++++++----------
+ 1 file changed, 49 insertions(+), 14 deletions(-)
+
+commit 083db46416adc5629af64da8fdf1239e8b226e4d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Apr 2 23:58:03 2014 -0400
+
+    [test suite] added popen() 'n' answer test
+
+ test/tests/basic_operations.pl | 21 +++++++++++++++++----
+ 1 file changed, 17 insertions(+), 4 deletions(-)
+
+commit 00fed6132c2045415cccd983068599553314c6fc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Apr 2 23:55:00 2014 -0400
+
+    [test suite] additional save rc file variable coverage
+
+ test/tests/basic_operations.pl | 109 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 109 insertions(+)
+
+commit f121dc5e8a5cd61b915cd5b7001375ec86cdf442
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Apr 2 23:54:33 2014 -0400
+
+    [test suite] ensure to recompile for gcov coverage analysis
+
+ test/test-fwknop.pl | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+commit 9be5c24cad4c544a8345c803b84375ba94849e1f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 31 23:40:11 2014 -0400
+
+    [test suite] remove .gcno files in --profile-coverage-init mode
+
+ test/test-fwknop.pl | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-commit 836921a9ea1b634c7c4cd1ce312671b213fb3bcc
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Jul 30 22:54:10 2013 +0200
-
-    * Added new test to validate --stanza-list
-
- test/conf/fwknoprc_stanza_list |  8 ++++++++
- test/test-fwknop.pl            |  1 +
- test/tests/basic_operations.pl | 10 ++++++++++
- 3 files changed, 19 insertions(+)
-
-commit ccee56b99894c8893d5948444aa938e1b6e69483
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Jul 30 21:49:33 2013 +0200
-
-    * A bit more of documentation.
-
- client/config_init.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-commit 80528e21f6cc9f9daade525d9513b9e4fdf7424f
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Jul 30 21:45:24 2013 +0200
-
-    * Updated fwknop manpage to mention the new --stanza-list.
-
- doc/fwknop.man.asciidoc | 3 +++
- 1 file changed, 3 insertions(+)
-
-commit d74cc9927630b2d4825d719bc8b838b528015f95
-Merge: 4c478c1 fc39de6
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Jul 30 21:42:42 2013 +0200
-
-    Merge remote-tracking branch 'upstream/master'
-
-commit 4c478c1bb6a45488629e1f04a03dea4b5631954b
-Author: Franck Joncourt <franck@debian.org>
-Date:   Tue Jul 30 21:38:54 2013 +0200
-
-    * Added a new --stanza-list command line to fwknop to dump the stanzas
-      configured in ./fwknoprc. The default stanza is not displayed.
-
- client/cmd_opts.h      |  2 ++
- client/config_init.c   | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++
- client/fwknop_common.h |  1 +
- 3 files changed, 66 insertions(+)
-
-commit fc39de607cb258efac7cabe593b4dcfa094ae8b3
+commit e60d49186459fe508c71bbead365d9c57fe3ffca
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Jul 29 00:06:52 2013 -0400
+Date:   Mon Mar 31 23:15:34 2014 -0400
 
-    minor man page update to move --syslog-enable to the server man page
+    [test suite] basic ops save rc stanza --encryption-mode tests
 
- doc/fwknop.man.asciidoc  | 3 ---
- doc/fwknopd.man.asciidoc | 3 +++
- server/fwknopd.8.in      | 9 +++++++--
- 3 files changed, 10 insertions(+), 5 deletions(-)
+ test/tests/basic_operations.pl | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-commit f1cee780d29521c9701a8ed5382a992427dd4ab5
-Merge: 1977973 54ab33a
-Author: Franck Joncourt <franck@debian.org>
-Date:   Sun Jul 28 22:11:16 2013 +0200
+commit 78dd3ea43bc489b471c7190c9f9482b7db42d942
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 31 23:09:57 2014 -0400
 
-    Merge remote-tracking branch 'upstream/master'
+    [test suite] basic ops save rc stanza time offset minus test
 
-commit 197797302041b6f65c9b82510a9eb44f43886cc8
-Author: Franck Joncourt <franck@debian.org>
-Date:   Sun Jul 28 22:07:14 2013 +0200
+ test/tests/basic_operations.pl | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-    * Allow messages to be sent to syslog even if the foreground mode is invoked.
+commit 9f10c3ede6c6c1b645a38850d7cdbfa08907ec0f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 31 23:09:25 2014 -0400
 
- doc/fwknop.man.asciidoc | 3 +++
- server/cmd_opts.h       | 2 ++
- server/config_init.c    | 5 +++++
- server/fwknopd_common.h | 2 ++
- server/log_msg.c        | 9 +++++++--
- 5 files changed, 19 insertions(+), 2 deletions(-)
+    [test suite] basic ops save rc stanza time offset tests
+
+ test/tests/basic_operations.pl | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+commit b005287aa685960e748119dced9efb7f94099080
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 31 23:01:44 2014 -0400
+
+    [test suite] basic ops get key tests
+
+ test/tests/basic_operations.pl | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+commit f2484e599fd5074f0c3aded00603581652f8f326
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 31 22:21:58 2014 -0400
+
+    [test suite] rc file time offset tests
+
+ Makefile.am                 |  3 +++
+ test/test-fwknop.pl         |  3 +++
+ test/tests/rijndael_hmac.pl | 39 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 45 insertions(+)
+
+commit cfa15f3961a0ae4b3519a35e2aa67e7fa5525f1e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 31 22:12:01 2014 -0400
+
+    [test suite] minor popen_cmd() status update
+
+ test/test-fwknop.pl | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 7e1f3aad691a93f2ea0c15bc6b1cd88c5e8bb67e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 30 21:12:01 2014 -0400
+
+    [test suite] add long_spa.key file
+
+ Makefile.am       | 1 +
+ test/long_spa.key | 3 +++
+ 2 files changed, 4 insertions(+)
+
+commit 50e454216c7c75ce21190f34edd6e57840b255f4
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 30 21:10:17 2014 -0400
+
+    [test suite] additional critical var popen() tests
+
+ test/tests/basic_operations.pl | 41 ++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 40 insertions(+), 1 deletion(-)
+
+commit 8ed9728fd35c50d16a9b40c3701aafe91c64accc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 30 20:59:33 2014 -0400
+
+    [test suite] add coverage test for client -M legacy truncated key
+
+ test/test-fwknop.pl    |  5 +++++
+ test/tests/rijndael.pl | 12 ++++++++++++
+ 2 files changed, 17 insertions(+)
+
+commit e09e091f71db5067321899532c55db049307b981
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 30 20:45:23 2014 -0400
+
+    [test suite] add --profile-coverage-init to recompile and remove old .gcov and .gcda files
+
+ test/test-fwknop.pl | 25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
+
+commit 5b6c3768fbea989d6f6b6ef6f4eef90ae4873478
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 30 20:34:11 2014 -0400
+
+    [test suite] exercise client rc file ask overwrite feature via popen()
+
+ test/test-fwknop.pl            | 52 ++++++++++++++++++++++++++++++++++++++++--
+ test/tests/basic_operations.pl | 14 ++++++++++++
+ 2 files changed, 64 insertions(+), 2 deletions(-)
+
+commit bfa1704072e1192f1b13d0d7ba7349d14784a789
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 30 16:06:46 2014 -0400
+
+    [test suite] exclude /usr/include/* files from lcov coverage analysis
+
+ test/test-fwknop.pl | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+commit 3ca546092b5953d6e893b1aaae98807f6e2c5299
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 29 22:23:45 2014 -0400
+
+    [test suite] additional rc file code coverage tests
+
+ Makefile.am                          |  1 +
+ test/conf/fwknoprc_hmac_http_resolve | 40 ++++++++++++++++++++++++++++++++++++
+ test/test-fwknop.pl                  |  4 ++++
+ test/tests/rijndael_hmac.pl          | 25 ++++++++++++++++++++++
+ 4 files changed, 70 insertions(+)
+
+commit a9fb3c05db0382bf782058ac1cc2a334e3fd82bf
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 29 21:45:10 2014 -0400
+
+    [test suite] minor typo fix
+
+ test/tests/rijndael.pl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 22b1b2d9d267655a29a844ae6612e1aa1fc39660
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 29 21:44:24 2014 -0400
+
+    [test suite] additional client/config_init.c code coverage test for fwknoprc file parsing
+
+ Makefile.am                      |  1 +
+ test/conf/fwknoprc_hmac_defaults | 40 ++++++++++++++++++++++++++++++++++++++++
+ test/test-fwknop.pl              |  4 ++++
+ test/tests/rijndael_hmac.pl      | 13 +++++++++++++
+ 4 files changed, 58 insertions(+)
+
+commit 9c86477e72ada37824117bf85619f4294deef51a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 29 15:05:52 2014 -0400
+
+    [test suite] HTTP proxy tests for client/spa_comm.c test coverage
+
+ test/tests/rijndael.pl      | 11 +++++++++++
+ test/tests/rijndael_hmac.pl | 11 +++++++++++
+ 2 files changed, 22 insertions(+)
+
+commit 535bcdf2a6ff1111d674c24df3f821b08ce61529
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 29 14:53:52 2014 -0400
+
+    [test suite] IP resolution tests for client/http_resolve_host.c coverage
+
+ test/test-fwknop.pl         |  2 ++
+ test/tests/rijndael.pl      | 43 +++++++++++++++++++++++++++++++++++++++++++
+ test/tests/rijndael_hmac.pl | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 90 insertions(+)
+
+commit ef0eb18fd3d9062ff892a6ab13d41cf1b405f601
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 29 14:04:09 2014 -0400
+
+    [client] removed unused hex_dump() function
+
+ client/utils.c | 39 ---------------------------------------
+ 1 file changed, 39 deletions(-)
+
+commit c4a59ec90fdf8a00de2f2365de4f2ed8a017ec31
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Mar 27 21:59:30 2014 -0400
+
+    [server] fix IP subnet mask CIDR range restriction bug found by Coverity
+
+ server/access.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 6b87710397af65261f16fdbb99fa5e68eb44f467
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Mar 27 21:21:17 2014 -0400
+
+    [libfko] fix memory leak in fko_encode_spa_data() caught by Coverity
+
+ lib/fko_encode.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 41f12eba81869814ceb6f5c809e90442d6a56b40
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 26 21:14:11 2014 -0400
+
+    [libfko] Memory leak bug fix in GnuPG handling
+    
+    Bug fix to correct a memory leak in GnuPG SPA packet handling within
+    the gpg_decrypt() function.  Here is the specific valgrind leak record
+    that enabled the bug to be found (note that the new valgrind
+    suppressions usage was critical for finding this bug among all other
+    libgpgme memory leaks):
+    
+    ==23983== 1,044 bytes in 1 blocks are definitely lost in loss record 7 of 8
+    ==23983==    at 0x4C2C494: calloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+    ==23983==    by 0x4E41D3A: gpg_decrypt (fko_encryption.c:422)
+    ==23983==    by 0x4E42520: fko_decrypt_spa_data (fko_encryption.c:626)
+    ==23983==    by 0x1155B0: incoming_spa (incoming_spa.c:519)
+    ==23983==    by 0x1180A7: process_packet (process_packet.c:211)
+    ==23983==    by 0x506D857: ??? (in /usr/lib/x86_64-linux-gnu/libpcap.so.1.4.0)
+    ==23983==    by 0x117865: pcap_capture (pcap_capture.c:270)
+    ==23983==    by 0x10F937: main (fwknopd.c:353)
+
+ ChangeLog            | 20 ++++++++++++++++++++
+ lib/fko_encryption.c | 10 ++++------
+ 2 files changed, 24 insertions(+), 6 deletions(-)
+
+commit 74a4cabb9c8bfbe1d49fbff6abde24265007bc37
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 26 20:51:10 2014 -0400
+
+    [test suite] Added valgrind suppressions for gpgme
+    
+    Running the test suite with --enable-valgrind resulted in large numbers
+    of leaks detected in gpgme functions.  This commit adds a valgrind
+    suppressions file to squash these errors (which are not fwknop's fault),
+    and also enables the valgrind --child-slient-after-fork option by
+    default.  Both of these can disable in test suite execution with two
+    new options: --valgrind-disable-suppressions and
+    --valgrind-disable-child-silent.
+
+ Makefile.am                |  1 +
+ test/test-fwknop.pl        | 28 ++++++++++++++++++++++++----
+ test/valgrind_suppressions |  8 ++++++++
+ 3 files changed, 33 insertions(+), 4 deletions(-)
+
+commit 73bc473563154ea1445c7a9010f5593785401a14
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 19 23:12:01 2014 -0400
+
+    [client+server] verify GnuPG signatures by default
+    
+    - [server] When GnuPG is used, the default now is to require that
+    incoming SPA packets are signed by a key listed in GPG_REMOTE_ID for each
+    access.conf stanza. In other words, the usage of GPG_REQUIRE_SIG
+    is no longer necessary in order to authenticate SPA packets via the
+    GnuPG signature. Verification of GnuPG signatures can be disabled with a
+    new access.conf variable GPG_DISABLE_SIG, but this is NOT a
+    recommended configuration.
+    - [client+server] Add --gpg-exe command line argument and GPG_EXE
+    config variable to ~/.fwknoprc and the access.conf file so that the path
+    to GnuPG can be changed from the default /usr/bin/gpg path.
+
+ ChangeLog                             | 10 ++++++++
+ Makefile.am                           |  2 ++
+ client/cmd_opts.h                     |  2 ++
+ client/config_init.c                  | 20 ++++++++++++++-
+ client/fwknop.c                       | 13 ++++++++++
+ client/fwknop_common.h                |  1 +
+ doc/fwknop.man.asciidoc               |  3 +++
+ doc/fwknopd.man.asciidoc              | 25 ++++++++++++-------
+ lib/fko_util.c                        | 47 ++++++++++++++++++++++++++++++++++-
+ server/access.c                       | 44 +++++++++++++++++++++++++++++++-
+ server/cmd_opts.h                     |  3 +++
+ server/config_init.c                  |  5 ++++
+ server/fwknopd.conf                   |  7 +++++-
+ server/fwknopd_common.h               |  8 ++++++
+ server/incoming_spa.c                 | 18 +++++++++++++-
+ test/conf/fwknoprc_gpg_invalid_exe    |  4 +++
+ test/conf/gpg_invalid_exe_access.conf |  9 +++++++
+ test/test-fwknop.pl                   | 14 ++++++++++-
+ test/tests/gpg_hmac.pl                | 47 +++++++++++++++++++++++++++++++++++
+ 19 files changed, 267 insertions(+), 15 deletions(-)
+
+commit a52aa8d54a478f7d0bc2d07351302c2d54451574
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Mar 18 20:39:25 2014 -0400
+
+    [test suite] don't remove .gcov/.gcda profiling files in --list-mode
+
+ test/test-fwknop.pl | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 6875d0092cf642ecd5c3c2bb6c8c5a456e37bbe6
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Mar 18 20:37:47 2014 -0400
+
+    [test suite] exercise fko_base64_encode() and fko_base64_decode() in fko-wrapper
+
+ test/fko-wrapper/fko_wrapper.c | 20 +++++++++++++-------
+ 1 file changed, 13 insertions(+), 7 deletions(-)
+
+commit 00f878c5edf34ef2b87daeb8e839dd394399dea0
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 17 22:36:49 2014 -0400
+
+    [test suite] add --spoof-user test
+
+ test/tests/rijndael_hmac.pl | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+commit d98cb7fd2c622635d92d77f8820aab55aab45be7
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 17 22:36:17 2014 -0400
+
+    [test suite] add --preserve-previous-profile-files
+
+ test/test-fwknop.pl | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+commit a3762926b59e1ee07335941926fe74253f49569e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 17 22:07:42 2014 -0400
+
+    for --enable-profile-coverage add -lgcov to LDFLAGS and remove -O0 optimization switch
+
+ configure.ac | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 46e8428e010fea4141ba72845495b5695f4746a1
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 17 22:06:31 2014 -0400
+
+    [extras] allow configure wrapper to pass on args to the configure script
+
+ extras/apparmor/configure_args.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 4ba55d6814c1ef2963a88416a093041db31604ff
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 17 22:05:45 2014 -0400
+
+    fix automake subdir-objects warning on Mac OS X, fixes part of #115
+
+ common/Makefile.am | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit b33a6e4c22964e681ef9aa83042e367858378a23
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 17 21:43:36 2014 -0400
+
+    [test suite] ensure the fko multi-call wrapper is executed under valgrind
+
+ test/tests/rijndael_fuzzing.pl | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+commit 490b8e31063de831cb081057a89c377dd1fee011
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Mar 17 21:42:31 2014 -0400
+
+    [test suite] add lcov html results for gcov profile coverage in --enable-profile-coverage mode
+
+ test/test-fwknop.pl | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+commit 7e290245b2bdc0dc561d56c857328cdf373129d5 (refs/remotes/origin/master, refs/remotes/origin/HEAD)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 16 21:47:19 2014 -0400
+
+    [libfko] per-SPA message type field count validation
+    
+    This commit implements more rigorous SPA packet field count validation
+    that takes into account expected field counts for each SPA message type.
+    Two new libfko error codes have been added in support of this, and the
+    corresponding changes made in the perl and python modules.
+
+ lib/fko.h                     |   2 +
+ lib/fko_decode.c              |  92 ++++++++++++---
+ lib/fko_error.c               |   6 +
+ lib/fko_limits.h              |   2 +-
+ perl/FKO/lib/FKO_Constants.pl | 262 +++++++++++++++++++++---------------------
+ python/fko.py                 | 260 ++++++++++++++++++++---------------------
+ test/test-fwknop.pl           |  13 ++-
+ 7 files changed, 360 insertions(+), 277 deletions(-)
+
+commit 6de811cbc69b59dba04d183762648eeeb88dc39c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 16 16:37:21 2014 -0400
+
+    [libfko] minor error constant label typo fix
+
+ lib/fko.h                     | 2 +-
+ lib/fko_error.c               | 4 ++--
+ lib/fko_util.c                | 2 +-
+ perl/FKO/lib/FKO_Constants.pl | 4 ++--
+ python/fko.py                 | 2 +-
+ 5 files changed, 7 insertions(+), 7 deletions(-)
+
+commit 2f9c20fb2764a120b49166e326f48849f7ff8d8d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 16 09:11:31 2014 -0400
+
+    [test suite] minor bug fix to add udpraw mode for spoofed src test
+
+ test/tests/rijndael.pl | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit da09ba7300e1ceb8fdc147dcf65d0b9a6899087b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 16 09:08:33 2014 -0400
+
+    [libfko] dedicated parsing functions for decoding client timeout and server auth SPA fields
+
+ lib/fko_decode.c | 163 ++++++++++++++++++++++---------------------------------
+ 1 file changed, 65 insertions(+), 98 deletions(-)
+
+commit 5baf8a3fa9fba6fefc861207bdff8bdb29800253
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 15 22:02:57 2014 -0400
+
+    replace malloc() with calloc() calls
+
+ client/config_init.c  |  4 ++--
+ client/fwknop.c       |  4 ++--
+ lib/fko_decode.c      | 14 +++++++-------
+ lib/fko_digest.c      | 10 +++++-----
+ lib/fko_encode.c      |  2 +-
+ lib/fko_encryption.c  | 12 ++++++------
+ lib/fko_rand_value.c  |  6 ++----
+ lib/fko_util.c        |  2 +-
+ lib/gpgme_funcs.c     |  2 +-
+ server/config_init.c  |  2 +-
+ server/log_msg.c      |  4 ++--
+ server/replay_cache.c |  4 ++--
+ 12 files changed, 32 insertions(+), 34 deletions(-)
+
+commit 2556433bba9b1c923394f95119a208fe58000a60
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 15 21:37:30 2014 -0400
+
+    [libfko] add digest verification and length fcns to decode routine
+
+ lib/fko_decode.c | 142 ++++++++++++++++++++++++++++++++-----------------------
+ lib/fko_util.h   |   1 -
+ 2 files changed, 82 insertions(+), 61 deletions(-)
+
+commit ded2443b0085dab91443b6c68af442e23c889a79
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Mar 14 23:08:34 2014 -0400
+
+    ChangeLog updates for 2.6.1
+
+ ChangeLog | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+commit 5fff8a7f4f803eaae1ad131f34469c69a4b98a24
+Merge: f5bb439 f82a7e3
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Mar 14 23:02:47 2014 -0400
+
+    Merge branch 'ms_compatible_usernames'
+    
+    This merges in work on #114 to allow MS compatible usernames, and should
+    help Cygwin (and Windows) users.
+
+commit f5bb43927d31561bac586c0a2ea9325e5e4a8b9a
+Merge: 0897bd5 cbc7584
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Mar 14 22:57:53 2014 -0400
+
+    Merge branch 'master' of https://github.com/mrash/fwknop
+
+commit 0897bd54e155ee35e06edfe14700a1cbe50d0998
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Mar 14 22:57:36 2014 -0400
+
+    [libfko] call SPA field parsers via function pointers in fko_decode_spa_data()
+
+ lib/fko_decode.c | 82 ++++++++++++++------------------------------------------
+ 1 file changed, 20 insertions(+), 62 deletions(-)
+
+commit 2eff0c01aa445644f76779c6a175f1b1910ebc90
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Mar 14 19:21:33 2014 -0400
+
+    [libfko] start on refactoring fko_decode_spa_data() to put SPA field parsing into dedicated functions
+
+ lib/fko_decode.c | 539 +++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 289 insertions(+), 250 deletions(-)
+
+commit cbc75844459300c4c4fa6d6872815974cef7ae03
+Merge: 9e990c9 d963f74
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Mar 14 09:16:18 2014 -0400
+
+    Merge branch 'master' of ssh://github.com/mrash/fwknop
+
+commit 9e990c9be01dbda86d5687cf58e41418cc3cd11f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Mar 11 21:29:33 2014 -0400
+
+    fix header non-ascii chars, and introduce test suite support for detecting this in source files
+
+ AUTHORS                                            |  2 +-
+ android/project/jni/config.h                       |  2 +-
+ android/project/jni/fwknop/fwknop_client.c         |  2 +-
+ android/project/jni/fwknop/fwknop_client.h         |  2 +-
+ android/project/jni/fwknop/send_spa_packet.c       |  2 +-
+ android/project/jni/logutils.h                     |  2 +-
+ .../src/com/max2idea/android/fwknop/Fwknop.java    |  2 +-
+ client/cmd_opts.h                                  |  2 +-
+ client/config_init.c                               |  2 +-
+ client/config_init.h                               |  2 +-
+ client/fwknop.c                                    |  2 +-
+ client/fwknop.h                                    |  2 +-
+ client/fwknop_common.h                             |  2 +-
+ client/getpasswd.c                                 |  2 +-
+ client/getpasswd.h                                 |  2 +-
+ client/http_resolve_host.c                         |  2 +-
+ client/log_msg.c                                   |  2 +-
+ client/log_msg.h                                   |  2 +-
+ client/spa_comm.c                                  |  2 +-
+ client/spa_comm.h                                  |  2 +-
+ client/utils.c                                     |  2 +-
+ client/utils.h                                     |  2 +-
+ common/common.h                                    |  2 +-
+ common/netinet_common.h                            |  2 +-
+ extras/fwknop.init.openwrt                         |  2 +-
+ extras/openwrt/package/fwknop/files/fwknopd.init   |  2 +-
+ iphone/Classes/fwknop/fwknop_client.c              |  2 +-
+ iphone/Classes/fwknop/fwknop_client.h              |  2 +-
+ iphone/Classes/fwknop/send_spa_packet.c            |  2 +-
+ iphone/Classes/libfwknop/fko_common.b              |  2 +-
+ lib/base64.c                                       |  2 +-
+ lib/base64.h                                       |  2 +-
+ lib/cipher_funcs.c                                 |  2 +-
+ lib/cipher_funcs.h                                 |  2 +-
+ lib/digest.c                                       |  2 +-
+ lib/digest.h                                       |  2 +-
+ lib/fko.h                                          |  2 +-
+ lib/fko_client_timeout.c                           |  2 +-
+ lib/fko_common.h                                   |  2 +-
+ lib/fko_context.h                                  |  2 +-
+ lib/fko_decode.c                                   |  2 +-
+ lib/fko_digest.c                                   |  2 +-
+ lib/fko_encode.c                                   |  2 +-
+ lib/fko_encryption.c                               |  2 +-
+ lib/fko_error.c                                    |  2 +-
+ lib/fko_funcs.c                                    |  2 +-
+ lib/fko_hmac.c                                     |  2 +-
+ lib/fko_limits.h                                   |  2 +-
+ lib/fko_message.c                                  |  2 +-
+ lib/fko_message.h                                  |  2 +-
+ lib/fko_nat_access.c                               |  2 +-
+ lib/fko_rand_value.c                               |  2 +-
+ lib/fko_server_auth.c                              |  2 +-
+ lib/fko_state.h                                    |  2 +-
+ lib/fko_timestamp.c                                |  2 +-
+ lib/fko_user.c                                     |  2 +-
+ lib/fko_user.h                                     |  2 +-
+ lib/fko_util.c                                     |  2 +-
+ lib/fko_util.h                                     |  2 +-
+ lib/gpgme_funcs.c                                  |  2 +-
+ lib/gpgme_funcs.h                                  |  2 +-
+ lib/hmac.c                                         |  2 +-
+ lib/hmac.h                                         |  2 +-
+ python/fkomodule.c                                 |  2 +-
+ python/setup.py                                    |  2 +-
+ server/access.c                                    |  2 +-
+ server/access.h                                    |  2 +-
+ server/cmd_opts.h                                  |  2 +-
+ server/config_init.c                               |  2 +-
+ server/config_init.h                               |  2 +-
+ server/extcmd.c                                    |  2 +-
+ server/extcmd.h                                    |  2 +-
+ server/fw_util.c                                   |  2 +-
+ server/fw_util.h                                   |  2 +-
+ server/fw_util_ipf.c                               |  2 +-
+ server/fw_util_ipf.h                               |  2 +-
+ server/fw_util_ipfw.c                              |  2 +-
+ server/fw_util_ipfw.h                              |  2 +-
+ server/fw_util_iptables.c                          |  2 +-
+ server/fw_util_iptables.h                          |  2 +-
+ server/fw_util_pf.c                                |  2 +-
+ server/fw_util_pf.h                                |  2 +-
+ server/fwknopd.c                                   |  2 +-
+ server/fwknopd.h                                   |  2 +-
+ server/fwknopd_common.h                            |  2 +-
+ server/fwknopd_errors.c                            |  2 +-
+ server/fwknopd_errors.h                            |  2 +-
+ server/incoming_spa.c                              |  2 +-
+ server/incoming_spa.h                              |  2 +-
+ server/log_msg.c                                   |  2 +-
+ server/log_msg.h                                   |  2 +-
+ server/pcap_capture.c                              |  2 +-
+ server/pcap_capture.h                              |  2 +-
+ server/process_packet.c                            |  2 +-
+ server/process_packet.h                            |  2 +-
+ server/replay_cache.c                              |  2 +-
+ server/replay_cache.h                              |  2 +-
+ server/sig_handler.c                               |  2 +-
+ server/sig_handler.h                               |  2 +-
+ server/tcp_server.c                                |  2 +-
+ server/tcp_server.h                                |  2 +-
+ server/utils.c                                     |  2 +-
+ server/utils.h                                     |  2 +-
+ test/test-fwknop.pl                                | 27 ++++++++++++++++++++++
+ test/tests/code_structure.pl                       |  6 +++++
+ win32/config.h                                     |  2 +-
+ win32/getlogin.h                                   |  2 +-
+ 107 files changed, 138 insertions(+), 105 deletions(-)
+
+commit ad512ff6e78e6d4c28bc202b9b6ba379389d139f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Mar 13 00:10:22 2014 -0400
+
+    [test suite] added Rijndael+HMAC SPOOF_SRC fwknoprc file test
+
+ Makefile.am                                  |  1 +
+ client/config_init.c                         |  8 ++++++++
+ test/conf/fwknoprc_hmac_spoof_src_base64_key |  6 ++++++
+ test/test-fwknop.pl                          |  1 +
+ test/tests/rijndael_hmac.pl                  | 28 ++++++++++++++++++++++++++++
+ 5 files changed, 44 insertions(+)
+
+commit 4181b43f55a10e037a60cee021e31b09423adf4c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 12 23:59:01 2014 -0400
+
+    [test suite] Added Rijndael+HMAC NAT rand port via client rc file test
+
+ ChangeLog                                   |  1 +
+ Makefile.am                                 |  1 +
+ test/conf/fwknoprc_hmac_nat_rand_base64_key |  5 +++++
+ test/test-fwknop.pl                         |  1 +
+ test/tests/rijndael_hmac.pl                 | 17 +++++++++++++++++
+ 5 files changed, 25 insertions(+)
+
+commit 83595bdabbecd78f479247c30df2db5c909edf0d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 12 23:56:12 2014 -0400
+
+    [test suite] Added Rijndael+HMAC command execution test
+
+ ChangeLog                            |  1 +
+ Makefile.am                          |  2 ++
+ test/conf/hmac_cmd_access.conf       |  5 +++++
+ test/test-fwknop.pl                  |  6 ++++++
+ test/tests/rijndael_hmac_cmd_exec.pl | 18 ++++++++++++++++++
+ 5 files changed, 32 insertions(+)
+
+commit f82a7e3558714cd7eb81a8c1584f8925e1f547a6
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 12 23:43:11 2014 -0400
+
+    [perl FKO module] comment out username fuzzing packets that are now acceptable to libfko
+
+ perl/FKO/t/04_fuzzing.t        |  3 ++-
+ perl/FKO/t/fuzzing_spa_packets | 56 +++++++++++++++++++++---------------------
+ 2 files changed, 30 insertions(+), 29 deletions(-)
+
+commit 1213eae92637bad8012108b3b8d1f0ce79e70e90
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 12 23:41:01 2014 -0400
+
+    [test suite] allow fuzzing_spa_packet file comments to skip particular packets
+
+ test/test-fwknop.pl | 1 +
+ 1 file changed, 1 insertion(+)
+
+commit d963f74c46c9964137392927204ea4cc11401cc5
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Mar 11 21:29:33 2014 -0400
+
+    fix header non-ascii chars, and introduce test suite support for detecting this in source files
+
+ AUTHORS                                            |  2 +-
+ android/project/jni/config.h                       |  2 +-
+ android/project/jni/fwknop/fwknop_client.c         |  2 +-
+ android/project/jni/fwknop/fwknop_client.h         |  2 +-
+ android/project/jni/fwknop/send_spa_packet.c       |  2 +-
+ android/project/jni/logutils.h                     |  2 +-
+ .../src/com/max2idea/android/fwknop/Fwknop.java    |  2 +-
+ client/cmd_opts.h                                  |  2 +-
+ client/config_init.c                               |  2 +-
+ client/config_init.h                               |  2 +-
+ client/fwknop.c                                    |  2 +-
+ client/fwknop.h                                    |  2 +-
+ client/fwknop_common.h                             |  2 +-
+ client/getpasswd.c                                 |  2 +-
+ client/getpasswd.h                                 |  2 +-
+ client/http_resolve_host.c                         |  2 +-
+ client/log_msg.c                                   |  2 +-
+ client/log_msg.h                                   |  2 +-
+ client/spa_comm.c                                  |  2 +-
+ client/spa_comm.h                                  |  2 +-
+ client/utils.c                                     |  2 +-
+ client/utils.h                                     |  2 +-
+ common/common.h                                    |  2 +-
+ common/netinet_common.h                            |  2 +-
+ extras/fwknop.init.openwrt                         |  2 +-
+ extras/openwrt/package/fwknop/files/fwknopd.init   |  2 +-
+ iphone/Classes/fwknop/fwknop_client.c              |  2 +-
+ iphone/Classes/fwknop/fwknop_client.h              |  2 +-
+ iphone/Classes/fwknop/send_spa_packet.c            |  2 +-
+ iphone/Classes/libfwknop/fko_common.b              |  2 +-
+ lib/base64.c                                       |  2 +-
+ lib/base64.h                                       |  2 +-
+ lib/cipher_funcs.c                                 |  2 +-
+ lib/cipher_funcs.h                                 |  2 +-
+ lib/digest.c                                       |  2 +-
+ lib/digest.h                                       |  2 +-
+ lib/fko.h                                          |  2 +-
+ lib/fko_client_timeout.c                           |  2 +-
+ lib/fko_common.h                                   |  2 +-
+ lib/fko_context.h                                  |  2 +-
+ lib/fko_decode.c                                   |  2 +-
+ lib/fko_digest.c                                   |  2 +-
+ lib/fko_encode.c                                   |  2 +-
+ lib/fko_encryption.c                               |  2 +-
+ lib/fko_error.c                                    |  2 +-
+ lib/fko_funcs.c                                    |  2 +-
+ lib/fko_hmac.c                                     |  2 +-
+ lib/fko_limits.h                                   |  2 +-
+ lib/fko_message.c                                  |  2 +-
+ lib/fko_message.h                                  |  2 +-
+ lib/fko_nat_access.c                               |  2 +-
+ lib/fko_rand_value.c                               |  2 +-
+ lib/fko_server_auth.c                              |  2 +-
+ lib/fko_state.h                                    |  2 +-
+ lib/fko_timestamp.c                                |  2 +-
+ lib/fko_user.c                                     |  2 +-
+ lib/fko_user.h                                     |  2 +-
+ lib/fko_util.c                                     |  2 +-
+ lib/fko_util.h                                     |  2 +-
+ lib/gpgme_funcs.c                                  |  2 +-
+ lib/gpgme_funcs.h                                  |  2 +-
+ lib/hmac.c                                         |  2 +-
+ lib/hmac.h                                         |  2 +-
+ python/fkomodule.c                                 |  2 +-
+ python/setup.py                                    |  2 +-
+ server/access.c                                    |  2 +-
+ server/access.h                                    |  2 +-
+ server/cmd_opts.h                                  |  2 +-
+ server/config_init.c                               |  2 +-
+ server/config_init.h                               |  2 +-
+ server/extcmd.c                                    |  2 +-
+ server/extcmd.h                                    |  2 +-
+ server/fw_util.c                                   |  2 +-
+ server/fw_util.h                                   |  2 +-
+ server/fw_util_ipf.c                               |  2 +-
+ server/fw_util_ipf.h                               |  2 +-
+ server/fw_util_ipfw.c                              |  2 +-
+ server/fw_util_ipfw.h                              |  2 +-
+ server/fw_util_iptables.c                          |  2 +-
+ server/fw_util_iptables.h                          |  2 +-
+ server/fw_util_pf.c                                |  2 +-
+ server/fw_util_pf.h                                |  2 +-
+ server/fwknopd.c                                   |  2 +-
+ server/fwknopd.h                                   |  2 +-
+ server/fwknopd_common.h                            |  2 +-
+ server/fwknopd_errors.c                            |  2 +-
+ server/fwknopd_errors.h                            |  2 +-
+ server/incoming_spa.c                              |  2 +-
+ server/incoming_spa.h                              |  2 +-
+ server/log_msg.c                                   |  2 +-
+ server/log_msg.h                                   |  2 +-
+ server/pcap_capture.c                              |  2 +-
+ server/pcap_capture.h                              |  2 +-
+ server/process_packet.c                            |  2 +-
+ server/process_packet.h                            |  2 +-
+ server/replay_cache.c                              |  2 +-
+ server/replay_cache.h                              |  2 +-
+ server/sig_handler.c                               |  2 +-
+ server/sig_handler.h                               |  2 +-
+ server/tcp_server.c                                |  2 +-
+ server/tcp_server.h                                |  2 +-
+ server/utils.c                                     |  2 +-
+ server/utils.h                                     |  2 +-
+ test/test-fwknop.pl                                | 27 ++++++++++++++++++++++
+ test/tests/code_structure.pl                       |  6 +++++
+ win32/config.h                                     |  2 +-
+ win32/getlogin.h                                   |  2 +-
+ 107 files changed, 138 insertions(+), 105 deletions(-)
+
+commit b5eb857533b907f71474b10aecfc9b94000fb7bc (refs/remotes/origin/ms_compatible_usernames)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 9 23:12:53 2014 -0400
+
+    [libfko] allow MS compatible usernames
+    
+    Allow usernames that are compatible with Microsoft guidelines as defined
+    here:
+    
+    http://technet.microsoft.com/en-us/library/bb726984.aspx
+    
+    This allows for greater compatibility between fwknop clients on Windows
+    (for example that may be deployed with Cygwin) and fwknopd on other
+    systems.  This change was suggested by Gerry Reno, and tracked by Github
+    issue #114.
+
+ lib/fko_user.c          | 41 ++++++++++++++++++++++++++++++++++-------
+ perl/FKO/t/04_fuzzing.t | 20 ++++++++++----------
+ test/test-fwknop.pl     | 25 ++++++++++++++-----------
+ 3 files changed, 58 insertions(+), 28 deletions(-)
+
+commit 0bae1a5a1bd172794dbfa88ab3e6d53c2835588c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 9 19:16:36 2014 -0400
+
+    started on 2.6.1 ChangeLog entries
+
+ ChangeLog       | 9 +++++++++
+ client/fwknop.c | 2 +-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+commit 08e5c9252cba9367f1122f834bf79f499ea4e050
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 5 23:10:47 2014 -0500
+
+    [client] bug fix to set non-zero random source port for UDP raw SPA mode
+
+ client/fwknop.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+commit be971e2ec8ffd703a31a82d49c2e9d8273c80b9e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Mar 5 23:11:42 2014 -0500
+
+    [client] bug fix to convert UDP length header field to network byte order in UDP raw mode
+
+ client/spa_comm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit f3a02b5d2d48005be87ee82ca16615ac14f86cb2
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Mar 6 23:52:56 2014 -0500
+
+    [test suite] establish new test.log file in --list mode
+
+ test/test-fwknop.pl | 79 +++++++++++++++++++++++++++++------------------------
+ 1 file changed, 44 insertions(+), 35 deletions(-)
+
+commit f476570b2afb8f93c64e06ecbb4ea60c74eb0552
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Mar 6 23:41:01 2014 -0500
+
+    [test suite] minor --help update to include missed options
+
+ test/test-fwknop.pl | 2 ++
+ 1 file changed, 2 insertions(+)
+
+commit bfdbb8f2609b219e1d3c72bdec3979103f0a104b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Mar 2 22:54:31 2014 -0500
+
+    Updated authorship and copyright information
+    
+    This commit updates all authorship and copyright information to include a
+    standard header that references the AUTHORS and CREDITS file. This standard
+    header was written by the Debian legal team at the request of Franck Joncourt.
+
+ AUTHORS                                            | 35 +++++++++++++++++-----
+ CREDITS                                            |  3 +-
+ android/project/jni/config.h                       |  6 ++--
+ android/project/jni/fwknop/fwknop_client.c         |  6 ++--
+ android/project/jni/fwknop/fwknop_client.h         |  6 ++--
+ android/project/jni/fwknop/send_spa_packet.c       |  6 ++--
+ android/project/jni/logutils.h                     |  6 ++--
+ .../src/com/max2idea/android/fwknop/Fwknop.java    |  6 ++--
+ client/cmd_opts.h                                  |  6 ++--
+ client/config_init.c                               |  6 ++--
+ client/config_init.h                               |  6 ++--
+ client/fwknop.c                                    |  8 ++---
+ client/fwknop.h                                    |  7 ++---
+ client/fwknop_common.h                             |  6 ++--
+ client/getpasswd.c                                 |  6 ++--
+ client/getpasswd.h                                 |  6 ++--
+ client/http_resolve_host.c                         |  6 ++--
+ client/log_msg.c                                   |  6 ++--
+ client/log_msg.h                                   |  6 ++--
+ client/spa_comm.c                                  |  7 ++---
+ client/spa_comm.h                                  |  6 ++--
+ client/utils.c                                     |  6 ++--
+ client/utils.h                                     |  6 ++--
+ common/common.h                                    |  6 ++--
+ common/netinet_common.h                            |  6 ++--
+ extras/fwknop.init.openwrt                         |  7 +++--
+ extras/openwrt/package/fwknop/files/fwknopd.init   |  7 +++--
+ iphone/Classes/fwknop/fwknop_client.c              |  6 ++--
+ iphone/Classes/fwknop/fwknop_client.h              |  6 ++--
+ iphone/Classes/fwknop/send_spa_packet.c            |  6 ++--
+ iphone/Classes/libfwknop/fko_common.b              |  6 ++--
+ lib/base64.c                                       |  5 +++-
+ lib/base64.h                                       |  6 ++--
+ lib/cipher_funcs.c                                 |  6 ++--
+ lib/cipher_funcs.h                                 |  6 ++--
+ lib/digest.c                                       |  6 ++--
+ lib/digest.h                                       |  6 ++--
+ lib/fko.h                                          |  6 ++--
+ lib/fko_client_timeout.c                           |  6 ++--
+ lib/fko_common.h                                   |  6 ++--
+ lib/fko_context.h                                  |  8 ++---
+ lib/fko_decode.c                                   |  6 ++--
+ lib/fko_digest.c                                   |  6 ++--
+ lib/fko_encode.c                                   |  6 ++--
+ lib/fko_encryption.c                               |  6 ++--
+ lib/fko_error.c                                    |  6 ++--
+ lib/fko_funcs.c                                    |  6 ++--
+ lib/fko_hmac.c                                     |  6 ++--
+ lib/fko_limits.h                                   |  6 ++--
+ lib/fko_message.c                                  |  6 ++--
+ lib/fko_message.h                                  |  6 ++--
+ lib/fko_nat_access.c                               |  6 ++--
+ lib/fko_rand_value.c                               |  6 ++--
+ lib/fko_server_auth.c                              |  6 ++--
+ lib/fko_state.h                                    |  6 ++--
+ lib/fko_timestamp.c                                |  6 ++--
+ lib/fko_user.c                                     |  6 ++--
+ lib/fko_user.h                                     |  6 ++--
+ lib/fko_util.c                                     |  6 ++--
+ lib/fko_util.h                                     |  6 ++--
+ lib/gpgme_funcs.c                                  |  6 ++--
+ lib/gpgme_funcs.h                                  |  6 ++--
+ lib/hmac.c                                         |  6 ++--
+ lib/hmac.h                                         |  8 ++---
+ lib/sha2.c                                         |  4 +--
+ python/fkomodule.c                                 |  6 ++--
+ python/setup.py                                    |  6 ++--
+ server/access.c                                    |  6 ++--
+ server/access.h                                    |  6 ++--
+ server/cmd_opts.h                                  |  6 ++--
+ server/config_init.c                               |  6 ++--
+ server/config_init.h                               |  6 ++--
+ server/extcmd.c                                    |  6 ++--
+ server/extcmd.h                                    |  6 ++--
+ server/fw_util.c                                   |  6 ++--
+ server/fw_util.h                                   |  6 ++--
+ server/fw_util_ipf.c                               |  6 ++--
+ server/fw_util_ipf.h                               |  6 ++--
+ server/fw_util_ipfw.c                              |  6 ++--
+ server/fw_util_ipfw.h                              |  6 ++--
+ server/fw_util_iptables.c                          |  6 ++--
+ server/fw_util_iptables.h                          |  6 ++--
+ server/fw_util_pf.c                                |  7 ++---
+ server/fw_util_pf.h                                |  7 ++---
+ server/fwknopd.c                                   |  6 ++--
+ server/fwknopd.h                                   |  7 ++---
+ server/fwknopd_common.h                            |  6 ++--
+ server/fwknopd_errors.c                            |  6 ++--
+ server/fwknopd_errors.h                            |  6 ++--
+ server/incoming_spa.c                              |  6 ++--
+ server/incoming_spa.h                              |  6 ++--
+ server/log_msg.c                                   |  6 ++--
+ server/log_msg.h                                   |  6 ++--
+ server/pcap_capture.c                              |  6 ++--
+ server/pcap_capture.h                              |  6 ++--
+ server/process_packet.c                            |  6 ++--
+ server/process_packet.h                            |  6 ++--
+ server/replay_cache.c                              |  6 ++--
+ server/replay_cache.h                              |  6 ++--
+ server/sig_handler.c                               |  6 ++--
+ server/sig_handler.h                               |  6 ++--
+ server/tcp_server.c                                |  6 ++--
+ server/tcp_server.h                                |  6 ++--
+ server/utils.c                                     |  6 ++--
+ server/utils.h                                     |  6 ++--
+ win32/config.h                                     |  6 ++--
+ win32/getlogin.h                                   |  8 ++---
+ 107 files changed, 357 insertions(+), 323 deletions(-)
+
+commit 3eeca9b2e34b820cb19e192ca37cc936ea3e6d91
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Mar 1 14:34:20 2014 -0500
+
+    [server] minor comment typo fix
+
+ server/access.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 14dc8c6ea2c8ff7db9d2307333535150cb3ae726
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Feb 9 21:39:52 2014 -0500
+
+    [test suite] check for Darwin uname output for Mac OS X
+
+ test/test-fwknop.pl | 3 +++
+ 1 file changed, 3 insertions(+)
+
+commit 6409216d3435e633967e169c1e8f55d05b1b780b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Feb 6 22:20:40 2014 -0500
+
+    [test suite] added git branch and commit values to init
+
+ test/test-fwknop.pl | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+commit 873b06b4223b8e4d4ce854c4655a2366bd5dac8b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Thu Feb 6 22:12:23 2014 -0500
+
+    [test suite] added portrange bpf filter test
+
+ Makefile.am                      |  1 +
+ test/conf/portrange_fwknopd.conf |  1 +
+ test/test-fwknop.pl              |  1 +
+ test/tests/rijndael_hmac.pl      | 12 ++++++++++++
+ 4 files changed, 15 insertions(+)
+
+commit 7bb5811651bd833b2a991c3dda0b3a1c85505bdc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Feb 2 20:32:02 2014 -0500
+
+    [libfko] minor bug fix to not return GPG error codes from _rijndael_decrypt()
+
+ lib/fko_encryption.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 8922c279d32db63ba1c58f674c425caaebe4a708
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Feb 2 20:29:14 2014 -0500
+
+    [test suite] buf fix for DYLD_LIBRARY_PATH on Mac OS X systems
+
+ test/run-test-suite.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 55dec8532a7399c2da1b8da551766348ae734321
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Feb 2 20:28:02 2014 -0500
+
+    [test suite] minor spelling typo fix
+
+ test/test-fwknop.pl | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+commit 86873441db0422804105a5d323961747f1340142
+Merge: d79fcea 63a8298
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Jan 18 23:13:56 2014 -0500
+
+    Merge branch 'master' of ssh://10.211.55.11/home/mbr/git/fwknop
+
+commit d79fcea6d71fbfbc50901fada8f88f44149fb502
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Jan 17 21:10:36 2014 -0500
+
+    [client] minor bug fix to add --spoof-source synonym for --spoof-src to match man page
+
+ client/cmd_opts.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+commit 63a829803ea72180a1575b70533f8fbf1e165a17
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Jan 17 23:43:11 2014 -0500
+
+    [test suite] added --client-only mode for the test suite
+
+ test/test-fwknop.pl      | 31 +++++++++++++++++++++++++++----
+ test/tests/python_fko.pl |  2 +-
+ 2 files changed, 28 insertions(+), 5 deletions(-)
