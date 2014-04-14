@@ -143,6 +143,7 @@ Ryman
       http://www.mail-archive.com/debian-bugs-rc@lists.debian.org/msg320402.html
 
 Blair Zajac
+    - MacPorts fwknop package maintainer for Mac OS X systems.
     - Contributed patches to handle endian issues on PPC systems.
     - Reported an issue where strndup() is not available on some PPC systems
       and the fix is to use the local lib/fko_util.c implementation similarly
@@ -174,3 +175,8 @@ Gerry Reno
     - Provided guidance on Android client issues along with testing candidate
       patches to update various things - this work is being tracked in the
       android4.4_support branch.
+
+Tim Heckman
+    - Homebrew fwknop package maintainer for Mac OS X systems.
+    - Suggested that fwknop support nftables when it is integrated into the
+      mainline Linux kernel.
