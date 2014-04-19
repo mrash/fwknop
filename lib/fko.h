@@ -381,6 +381,8 @@ DLL_API int fko_set_spa_hmac(fko_ctx_t ctx, const char * const hmac_key,
 DLL_API int fko_get_spa_hmac(fko_ctx_t ctx, char **enc_data);
 
 DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
+DLL_API int fko_set_encoded_data(fko_ctx_t ctx, const char * const encoded_msg,
+        const int msg_len, const int do_digest, const int digest_type);
 
 /* Get context data functions
 */

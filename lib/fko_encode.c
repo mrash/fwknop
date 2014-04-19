@@ -241,4 +241,74 @@ fko_get_encoded_data(fko_ctx_t ctx, char **enc_msg)
     return(FKO_SUCCESS);
 }
 
+/* Set the fko SPA encoded data (this is a convenience
+ * function mostly used for tests that involve fuzzing).
+*/
+int
+fko_set_encoded_data(fko_ctx_t ctx,
+        const char * const encoded_msg, const int msg_len,
+        const int require_digest, const int digest_type)
+{
+    char *tbuf   = NULL;
+    int          res = FKO_SUCCESS, mlen;
+
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+    if(encoded_msg == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
+    ctx->encoded_msg = strdup(encoded_msg);
+
+    ctx->state |= FKO_DATA_MODIFIED;
+
+    if(ctx->encoded_msg == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    /* allow arbitrary length (i.e. let the decode routines validate
+     * SPA message length).
+    */
+    ctx->encoded_msg_len = msg_len;
+
+    if(require_digest)
+    {
+        fko_set_spa_digest_type(ctx, FKO_DIGEST_SHA256);
+        if((res = fko_set_spa_digest(ctx)) != FKO_SUCCESS)
+        {
+            return res;
+        }
+
+        /* append the digest to the encoded message buffer
+        */
+        mlen = ctx->encoded_msg_len + ctx->digest_len + 2;
+        tbuf = calloc(1, mlen);
+        if(tbuf == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+
+        /* memcpy since the provided encoded buffer might
+         * have an embedded NULL?
+        */
+        mlen = snprintf(tbuf, mlen, "%s:%s", ctx->encoded_msg, ctx->digest);
+
+        if(ctx->encoded_msg != NULL)
+            free(ctx->encoded_msg);
+
+        ctx->encoded_msg = strdup(tbuf);
+        if(ctx->encoded_msg == NULL)
+        {
+            free(tbuf);
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        }
+
+        ctx->encoded_msg_len = mlen;
+        free(tbuf);
+    }
+
+    FKO_CLEAR_SPA_DATA_MODIFIED(ctx);
+
+    return(FKO_SUCCESS);
+}
+
 /***EOF***/
