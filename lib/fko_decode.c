@@ -455,20 +455,15 @@ static int
 parse_rand_val(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 {
     if((*t_size = strcspn(*ndx, ":")) < FKO_RAND_VAL_SIZE)
-    {
-        free(tbuf);
         return(FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING);
-    }
 
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
 
     ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
     if(ctx->rand_val == NULL)
-    {
-        free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
-    }
+
     ctx->rand_val = strncpy(ctx->rand_val, *ndx, FKO_RAND_VAL_SIZE);
 
     *ndx += *t_size + 1;
