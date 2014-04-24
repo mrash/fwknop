@@ -34,6 +34,7 @@ def main():
 
     spa_payloads = [
         "1716411011200157:cm9vdA:1397329899:2.0.1:1:MTI3LjAuMC4yLHRjcC8yMw",
+        "3145808919615481:cm9vdA:1397329998:2.0.1:0:MTI3LjAuMC4yLGVjaG8gZndrbm9wdGVzdCA+IC90bXAvZndrbm9wdGVzdA",
         "1642197848921959:cm9vdA:1397329740:2.0.1:2:MTI3LjAuMC4yLHRjcC8yMg:MTkyLjE2OC4xLjIsMjI",
         "1548062350109656:cm9vdA:1397330450:2.0.1:3:MTI3LjAuMC4yLHRjcC8yMg:2",
         "1414212790438062:cm9vdA:1397329054:2.0.1:4:MTI3LjAuMC4yLHRjcC8yMg:MTkyLjE2OC4xMC4xLDEyMzQ1:1234",
@@ -75,6 +76,15 @@ def main():
             print str(pkt_id), str(spa_failure), str(do_digest), \
                     str(spa_sha256), base64.b64encode(spa_payload[l:])
             pkt_id += 1
+
+        ### blocks of spliced chars out of the original SPA payload
+        print "# payload " + str(payload_num) + " splice blocks of chars..."
+        for bl in range(1, 20):
+            for l in range(0, len(spa_payload)):
+                new_payload = spa_payload[:l] + spa_payload[l+bl:]
+                print str(pkt_id), str(spa_failure), str(do_digest), \
+                        str(spa_sha256), base64.b64encode(new_payload)
+                pkt_id += 1
 
         ### SPA payloads that are too long
         print "# payload " + str(payload_num) + " payloads too long..."
