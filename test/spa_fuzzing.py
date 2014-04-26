@@ -75,7 +75,7 @@ def main():
         pkt_id = embedded_separators(args, spa_payload, payload_num, pkt_id)
 
         ### non-ascii char tests
-        pkt_id = embedded_non_ascii(args, spa_payload, payload_num, pkt_id)
+        pkt_id = embedded_chars(args, spa_payload, payload_num, pkt_id)
 
     return
 
@@ -86,11 +86,16 @@ def field_fuzzing(args, spa_payload, payload_num, pkt_id):
     for idx in range(0, len(spa_payload)):
         if spa_payload[idx] == ':' or idx == len(spa_payload)-1:
             field_num += 1
+            if repl_end > 0:
+                orig_field = spa_payload[repl_end+1:idx]
+            else:
+                orig_field = spa_payload[repl_end:idx]
+
             repl_start = repl_end
             repl_end = idx
 
             ### now generate fuzzing data for this field
-            for c in range(1, 255):
+            for c in range(0, 3) + range(33, 47) + range(65, 67) + range(127, 130) + range(252, 256):
                 for l in [1, 2, 3, 4, 5, 6, 10, 14, 15, 16, 17, 24, 31, 32, 33, \
                         63, 64, 127, 128, 129, 250]:
 
@@ -100,18 +105,46 @@ def field_fuzzing(args, spa_payload, payload_num, pkt_id):
                         fuzzing_field += chr(c)
 
                     if idx == len(spa_payload)-1:
-                        new_payload = spa_payload[:repl_start] + ":" + base64.b64encode(fuzzing_field)
+                        new_payload1 = spa_payload[:repl_start] + ":" + \
+                                base64.b64encode(fuzzing_field)
+                        new_payload2 = spa_payload[:repl_start] + ":" + \
+                                base64.b64encode(fuzzing_field+base64.b64decode(orig_field))
+                        new_payload3 = spa_payload[:repl_start] + ":" + \
+                        base64.b64encode(base64.b64decode(orig_field)+fuzzing_field)
                     else:
                         if field_num == 1:
-                            new_payload = spa_payload[:repl_start] + fuzzing_field + spa_payload[repl_end:]
+                            new_payload1 = spa_payload[:repl_start] + \
+                                    fuzzing_field + spa_payload[repl_end:]
+                            new_payload2 = spa_payload[:repl_start] + \
+                                    fuzzing_field+orig_field + spa_payload[repl_end:]
+                            new_payload3 = spa_payload[:repl_start] + \
+                                    orig_field+fuzzing_field + spa_payload[repl_end:]
                         elif field_num == 2 or field_num >= 6:  ### user or access request
-                            new_payload = spa_payload[:repl_start] + ":" + base64.b64encode(fuzzing_field) + spa_payload[repl_end:]
+                            new_payload1 = spa_payload[:repl_start] + ":" + \
+                                    base64.b64encode(fuzzing_field) + spa_payload[repl_end:]
+                            new_payload2 = spa_payload[:repl_start] + ":" + \
+                                    base64.b64encode(fuzzing_field+base64.b64decode(orig_field)) \
+                                    + spa_payload[repl_end:]
+                            new_payload3 = spa_payload[:repl_start] + ":" + \
+                                    base64.b64encode(base64.b64decode(orig_field)+fuzzing_field) \
+                                    + spa_payload[repl_end:]
                         else:
                             ### time stamp, version, and SPA type fields aren't base64 encoded
-                            new_payload = spa_payload[:repl_start] + ":" + fuzzing_field + spa_payload[repl_end:]
+                            new_payload1 = spa_payload[:repl_start] + ":" + \
+                                    fuzzing_field + spa_payload[repl_end:]
+                            new_payload2 = spa_payload[:repl_start] + ":" + \
+                                    fuzzing_field+orig_field + spa_payload[repl_end:]
+                            new_payload3 = spa_payload[:repl_start] + ":" + \
+                                    orig_field+fuzzing_field + spa_payload[repl_end:]
 
                     print str(pkt_id), str(spa_failure), str(do_digest), \
-                            str(spa_sha256), base64.b64encode(new_payload)
+                            str(spa_sha256), base64.b64encode(new_payload1)
+                    pkt_id += 1
+                    print str(pkt_id), str(spa_failure), str(do_digest), \
+                            str(spa_sha256), base64.b64encode(new_payload2)
+                    pkt_id += 1
+                    print str(pkt_id), str(spa_failure), str(do_digest), \
+                            str(spa_sha256), base64.b64encode(new_payload3)
                     pkt_id += 1
 
     return pkt_id
@@ -181,10 +214,10 @@ def embedded_separators(args, spa_payload, payload_num, pkt_id):
         pkt_id += 1
     return pkt_id
 
-def embedded_non_ascii(args, spa_payload, payload_num, pkt_id):
+def embedded_chars(args, spa_payload, payload_num, pkt_id):
     print "# payload " + str(payload_num) + " non-ascii char tests..."
     for pos in range(0, len(spa_payload)):
-        for non_ascii in range(0, 31) + range(127, 256):
+        for non_ascii in range(0, 31) + range(44, 48) + range(127, 131) + range(253, 255):
             new_payload = list(spa_payload)
             new_payload[pos] = chr(non_ascii)
             ### write out the fuzzing line
