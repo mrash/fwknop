@@ -100,54 +100,62 @@ def field_fuzzing(args, spa_payload, payload_num, pkt_id):
                         63, 64, 127, 128, 129, 250]:
 
                     fuzzing_field = ''
+                    require_b64 = orig_field.isdigit()
 
                     for n in range(0, l):
                         fuzzing_field += chr(c)
 
-                    if idx == len(spa_payload)-1:
-                        new_payload1 = spa_payload[:repl_start] + ":" + \
-                                base64.b64encode(fuzzing_field)
-                        new_payload2 = spa_payload[:repl_start] + ":" + \
-                                base64.b64encode(fuzzing_field+base64.b64decode(orig_field))
-                        new_payload3 = spa_payload[:repl_start] + ":" + \
-                        base64.b64encode(base64.b64decode(orig_field)+fuzzing_field)
-                    else:
-                        if field_num == 1:
-                            new_payload1 = spa_payload[:repl_start] + \
-                                    fuzzing_field + spa_payload[repl_end:]
-                            new_payload2 = spa_payload[:repl_start] + \
-                                    fuzzing_field+orig_field + spa_payload[repl_end:]
-                            new_payload3 = spa_payload[:repl_start] + \
-                                    orig_field+fuzzing_field + spa_payload[repl_end:]
-                        elif field_num == 2 or field_num >= 6:  ### user or access request
-                            new_payload1 = spa_payload[:repl_start] + ":" + \
-                                    base64.b64encode(fuzzing_field) + spa_payload[repl_end:]
-                            new_payload2 = spa_payload[:repl_start] + ":" + \
-                                    base64.b64encode(fuzzing_field+base64.b64decode(orig_field)) \
-                                    + spa_payload[repl_end:]
-                            new_payload3 = spa_payload[:repl_start] + ":" + \
-                                    base64.b64encode(base64.b64decode(orig_field)+fuzzing_field) \
-                                    + spa_payload[repl_end:]
-                        else:
-                            ### time stamp, version, and SPA type fields aren't base64 encoded
-                            new_payload1 = spa_payload[:repl_start] + ":" + \
-                                    fuzzing_field + spa_payload[repl_end:]
-                            new_payload2 = spa_payload[:repl_start] + ":" + \
-                                    fuzzing_field+orig_field + spa_payload[repl_end:]
-                            new_payload3 = spa_payload[:repl_start] + ":" + \
-                                    orig_field+fuzzing_field + spa_payload[repl_end:]
+                    new_payloads = [
+                            spa_payload[:repl_start],  ### for payloads without original field
+                            spa_payload[:repl_start],  ### prepend fuzzing field with original
+                            spa_payload[:repl_start]   ### append fuzzing field to original
+                    ]
 
-                    print str(pkt_id), str(spa_failure), str(do_digest), \
-                            str(spa_sha256), base64.b64encode(new_payload1)
-                    pkt_id += 1
-                    print str(pkt_id), str(spa_failure), str(do_digest), \
-                            str(spa_sha256), base64.b64encode(new_payload2)
-                    pkt_id += 1
-                    print str(pkt_id), str(spa_failure), str(do_digest), \
-                            str(spa_sha256), base64.b64encode(new_payload3)
-                    pkt_id += 1
+                    if field_num > 1:
+                        for i in range(0, len(new_payloads)):
+                            new_payloads[i] += ':'
+
+                    if idx == len(spa_payload)-1:
+                        field_variants(new_payloads, fuzzing_field, orig_field, require_b64)
+                    else:
+                        if field_num == 1 or field_num in range(3, 6):
+                            ### fields: rand val, time stamp, version, and SPA type
+                            field_variants(new_payloads, fuzzing_field, orig_field, False)
+                        elif field_num == 2: ### user field
+                            field_variants(new_payloads, fuzzing_field, orig_field, True)
+                        else:
+                            field_variants(new_payloads, fuzzing_field, orig_field, require_b64)
+
+                        for i in range(0, len(new_payloads)):
+                            new_payloads[i] += spa_payload[repl_end:]
+
+                    for s in new_payloads:
+                        print str(pkt_id), str(spa_failure), str(do_digest), \
+                                str(spa_sha256), base64.b64encode(s)
+                        pkt_id += 1
 
     return pkt_id
+
+def field_variants(new_payloads, fuzzing_field, orig_field, require_b64):
+    if require_b64:
+        decoded_orig_field = spa_base64_decode(orig_field)
+        new_payloads[0] += base64.b64encode(fuzzing_field)
+        new_payloads[1] += base64.b64encode(fuzzing_field+decoded_orig_field)
+        new_payloads[2] += base64.b64encode(decoded_orig_field+fuzzing_field)
+    else:
+        new_payloads[0] += fuzzing_field
+        new_payloads[1] += fuzzing_field+orig_field
+        new_payloads[2] += orig_field+fuzzing_field
+    return
+
+def spa_base64_decode(b64str):
+    ### account for how fwknop strips '=' chars
+    remainder = len(b64str) % 4
+    if remainder != 0:
+        for i in range(0, remainder):
+            b64str += '='
+
+    return base64.b64decode(b64str)
 
 def valid_payloads(args, spa_payload, payload_num, pkt_id):
     print "# payload " + str(payload_num) + " valid payload + valid digest types..."
