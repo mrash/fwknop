@@ -34,6 +34,7 @@ def main():
 
     spa_payloads = [
         "1716411011200157:cm9vdA:1397329899:2.0.1:1:MTI3LjAuMC4yLHRjcC8yMw",
+        "1716411011200157:cm9vdA:1397329899:2.0.1:1:MTI3LjAuMC4yLHRjcC8yMw:cGFzc3dk",
         "3145808919615481:cm9vdA:1397329998:2.0.1:0:MTI3LjAuMC4yLGVjaG8gZndrbm9wdGVzdCA+IC90bXAvZndrbm9wdGVzdA",
         "1642197848921959:cm9vdA:1397329740:2.0.1:2:MTI3LjAuMC4yLHRjcC8yMg:MTkyLjE2OC4xLjIsMjI",
         "1548062350109656:cm9vdA:1397330450:2.0.1:3:MTI3LjAuMC4yLHRjcC8yMg:2",
@@ -97,7 +98,7 @@ def field_fuzzing(args, spa_payload, payload_num, pkt_id):
             ### now generate fuzzing data for this field
             for c in range(0, 3) + range(33, 47) + range(65, 67) + range(127, 130) + range(252, 256):
                 for l in [1, 2, 3, 4, 5, 6, 10, 14, 15, 16, 17, 24, 31, 32, 33, \
-                        63, 64, 127, 128, 129, 250]:
+                        63, 64, 127, 128, 129, 150, 220, 230, 254, 255, 256, 257, 258]:
 
                     fuzzing_field = ''
                     require_b64 = orig_field.isdigit()
