@@ -793,13 +793,6 @@ if ($enable_profile_coverage_check) {
 
 if ($enable_valgrind) {
     &run_test({
-        'category' => 'valgrind',
-        'subcategory' => 'fko-wrapper',
-        'detail'   => 'multiple libfko calls',
-        'function' => \&compile_execute_fko_wrapper}
-    );
-
-    &run_test({
         'category' => 'valgrind output',
         'subcategory' => 'flagged functions',
         'detail'   => '',
