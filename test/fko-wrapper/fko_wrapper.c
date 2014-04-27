@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include "fko.h"
 
 #define ENABLE_GPG_TESTS 0
@@ -23,12 +24,20 @@
 #define NO_DIGEST        0
 #define DO_DIGEST        1
 #define RAW_DIGEST       2
+#define MAX_LINE_LEN     3000 /* really long for fuzzing tests */
 #define ENC_KEY          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* 32 bytes */
 #define HMAC_KEY         "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" /* 32 bytes */
+
+#define IS_EMPTY_LINE(x) ( \
+    x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
+)
 
 static void display_ctx(fko_ctx_t ctx);
 static void test_loop(int new_ctx_flag, int destroy_ctx_flag);
 static void test_loop_compounded(void);
+#if FUZZING_INTERFACES
+static void spa_encoded_msg_fuzzing(void);
+#endif
 static void ctx_update(fko_ctx_t *ctx, int new_ctx_flag,
         int destroy_ctx_flag, int print_flag);
 static void spa_default_ctx(fko_ctx_t *ctx);
@@ -67,8 +76,89 @@ int main(void) {
     printf("[+] Total libfko function calls (after compounded tests): %d\n\n",
             spa_calls);
 
+#if FUZZING_INTERFACES
+    printf("[+] libfko fuzzing by setting SPA buffer manually...\n");
+    spa_encoded_msg_fuzzing();
+#endif
+
     return 0;
 }
+
+#if FUZZING_INTERFACES
+static void
+spa_encoded_msg_fuzzing(void)
+{
+    fko_ctx_t      decode_ctx = NULL;
+    int            res = 0, pkt_id, require_success, require_digest, digest_type, msg_len;
+    int            line_ctr = 0, spa_payload_ctr = 0;
+    FILE          *fz  = NULL;
+    char           line[MAX_LINE_LEN] = {0};
+    char           b64_encoded_msg[MAX_LINE_LEN] = {0};
+    unsigned char  b64_decoded_msg[MAX_LINE_LEN] = {0};
+
+    /* fuzzing file contents (or from stdin) are formatted like this:
+     *
+     * <pkt_ID> <status: success|fail> <digest: yes|no> <digest type> <base64_SPA_payload>
+    */
+
+    if ((fz = fopen("fuzz_spa_payloads", "r")) == NULL)
+        return;
+
+    while ((fgets(line, MAX_LINE_LEN, fz)) != NULL)
+    {
+        line_ctr++;
+        line[MAX_LINE_LEN-1] = '\0';
+
+        if (line[strlen(line)-1] == '\n')
+            line[strlen(line)-1] = '\0';
+
+        if(IS_EMPTY_LINE(line[0]))
+            continue;
+
+        if(sscanf(line, "%d %d %d %d %s", &pkt_id, &require_success,
+                    &require_digest, &digest_type, b64_encoded_msg) != 5)
+        {
+            printf("[+] fuzzing parsing error at line: %d\n", line_ctr);
+            continue;
+        }
+
+        msg_len = fko_base64_decode(b64_encoded_msg, b64_decoded_msg);
+
+        spa_payload_ctr++;
+
+        fko_new(&decode_ctx);
+
+        if ((res = fko_set_encoded_data(decode_ctx, (char *) b64_decoded_msg,
+                        msg_len, require_digest, digest_type)) != FKO_SUCCESS) {
+            printf("[-] pkt_id: %d, fko_set_encoded_data(): %s\n", pkt_id, fko_errstr(res));
+        }
+
+        res = fko_decode_spa_data(decode_ctx);
+        if (require_success) {
+            if (res != FKO_SUCCESS) {
+                printf("[-] pkt_id: %d, expected decode success but: fko_decode_spa_data(): %s\n",
+                        pkt_id, fko_errstr(res));
+            }
+        } else {
+            if (res == FKO_SUCCESS) {
+                printf("[-] pkt_id: %d, expected decode failure but: fko_decode_spa_data(): %s\n",
+                        pkt_id, fko_errstr(res));
+            }
+        }
+
+        fko_destroy(decode_ctx);
+
+        memset(line, 0x0, MAX_LINE_LEN);
+        memset(b64_encoded_msg, 0x0, MAX_LINE_LEN);
+    }
+
+    fclose(fz);
+
+    printf("[+] Sent %d SPA payloads through libfko encode/decode cycle...\n",
+            spa_payload_ctr);
+    return;
+}
+#endif
 
 static void
 test_loop_compounded(void)

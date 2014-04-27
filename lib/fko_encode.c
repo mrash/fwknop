@@ -244,6 +244,7 @@ fko_get_encoded_data(fko_ctx_t ctx, char **enc_msg)
 /* Set the fko SPA encoded data (this is a convenience
  * function mostly used for tests that involve fuzzing).
 */
+#if FUZZING_INTERFACES
 int
 fko_set_encoded_data(fko_ctx_t ctx,
         const char * const encoded_msg, const int msg_len,
@@ -274,7 +275,7 @@ fko_set_encoded_data(fko_ctx_t ctx,
 
     if(require_digest)
     {
-        fko_set_spa_digest_type(ctx, FKO_DIGEST_SHA256);
+        fko_set_spa_digest_type(ctx, digest_type);
         if((res = fko_set_spa_digest(ctx)) != FKO_SUCCESS)
         {
             return res;
@@ -310,5 +311,6 @@ fko_set_encoded_data(fko_ctx_t ctx,
 
     return(FKO_SUCCESS);
 }
+#endif
 
 /***EOF***/
