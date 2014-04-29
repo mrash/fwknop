@@ -135,6 +135,20 @@ if test "x$want_profile_coverage" = "xyes"; then
     FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lgcov])
 fi
 
+dnl Decide whether or not to compile in certain features that enable fuzzing
+dnl of fwknop code - this is for testing purposes only.
+dnl
+want_fuzzing_interfaces=no
+AC_ARG_ENABLE([fuzzing-interfaces],
+  [AS_HELP_STRING([--enable-fuzzing-interfaces],
+    [Build fwknop binaries with support for fuzzing interfaces @<:@default is to disable@:>@])],
+  [want_fuzzing_interfaces=$enableval],
+  [])
+
+if test "x$want_fuzzing_interfaces" = "xyes"; then
+    AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
+fi
+
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
 use_wall=yes

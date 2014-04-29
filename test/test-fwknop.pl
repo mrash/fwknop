@@ -28,6 +28,7 @@ my $data_tmp        = 'data.tmp';
 my $key_tmp         = 'key.tmp';
 my $enc_save_tmp    = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
+my $username        = '';
 my $gpg_dir_orig_tar = 'gpg_dirs_orig.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
@@ -322,6 +323,7 @@ my $perl_libfko_constants_file   = '../perl/FKO/lib/FKO_Constants.pl';
 my $python_libfko_constants_file = '../python/fko.py';
 my $fko_wrapper_dir = 'fko-wrapper';
 my $python_spa_packet = '';
+my $enable_fuzzing_interfaces_tests = 0;
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
 my $saved_last_results = 0;
@@ -431,6 +433,7 @@ exit 1 unless GetOptions(
     'valgrind-disable-suppressions'  => \$valgrind_disable_suppressions,
     'valgrind-disable-child-silent'  => \$valgrind_disable_child_silent,
     'enable-all'        => \$enable_all,
+    'enable-fuzzing-interfaces-tests' => \$enable_fuzzing_interfaces_tests,
     'valgrind-path=s'   => \$valgrind_path,
     'valgrind-suppression-file' => \$valgrind_suppressions_file,
     ### can set the following to "output.last/valgrind-coverage" if
@@ -790,13 +793,6 @@ if ($enable_profile_coverage_check) {
 
 if ($enable_valgrind) {
     &run_test({
-        'category' => 'valgrind',
-        'subcategory' => 'fko-wrapper',
-        'detail'   => 'multiple libfko calls',
-        'function' => \&compile_execute_fko_wrapper}
-    );
-
-    &run_test({
         'category' => 'valgrind output',
         'subcategory' => 'flagged functions',
         'detail'   => '',
@@ -1123,6 +1119,15 @@ sub compile_warnings() {
 
     my $curr_pwd = cwd() or die $!;
 
+    if ($enable_profile_coverage_check) {
+        ### we're recompiling, so remove any existing profile coverage
+        ### files since they will be invalidated by the recompile
+        for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+            ### remove profile output from any previous run
+            system qq{find .. -name $extension | xargs rm 2> /dev/null};
+        }
+    }
+
     chdir '..' or die $!;
 
     ### 'make clean' as root
@@ -1133,10 +1138,6 @@ sub compile_warnings() {
     }
 
     if ($sudo_path) {
-        my $username = getpwuid((stat("test/$test_suite_path"))[4]);
-        die "[*] Could not determine test/$test_suite_path owner"
-            unless $username;
-
         unless (&run_cmd("$sudo_path -u $username make",
                 $cmd_out_tmp, "test/$curr_test_file")) {
             unless (&run_cmd('make', $cmd_out_tmp,
@@ -1218,6 +1219,13 @@ sub profile_coverage() {
         &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage_final.info | .
             qq|--output-directory $output_dir/$lcov_results_dir|,
                 $cmd_out_tmp, $curr_test_file);
+    }
+
+    if ($username) {
+        for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+            ### remove profile output from any previous run
+            system qq{find .. -name $extension | xargs chown $username};
+        }
     }
 
     return 1;
@@ -5993,6 +6001,12 @@ sub init() {
     $git_path     = &find_command('git') unless $git_path;
     $perl_path    = &find_command('perl') unless $perl_path;
 
+    if ($sudo_path) {
+        $username = getpwuid((stat($test_suite_path))[4]);
+        die "[*] Could not determine $test_suite_path owner"
+            unless $username;
+    }
+
     ### On Mac OS X look for otool instead of ldd
     unless ($lib_view_cmd) {
         $lib_view_cmd = &find_command('otool');
@@ -6015,18 +6029,11 @@ sub init() {
 
     if ($gcov_path) {
         if ($enable_profile_coverage_check
-                and not $preserve_previous_coverage_files
                 and not $list_mode) {
             if ($profile_coverage_init) {
-                print "[+] --profile-coverage-init mode, ",
-                    "removing existing .gcda, .gcno, and .gcov files...\n";
-            }
-            for my $extension ('*.gcno', '*.gcda', '*.gcov') {
-                ### remove profile output from any previous run
-                system qq{find .. -name $extension | xargs rm 2> /dev/null};
-            }
-            if ($profile_coverage_init) {
-                print "[+] Recompiling fwknop...\n";
+                print "[+] Recompiling fwknop and removing previous coverage files...\n";
+                ### if we recompile then remove the .gcno files (which are
+                ### generated at compile time)
                 &compile_warnings();
                 if (&file_find_regex([qr/profile\-arcs.*test\-coverage/],
                         $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
@@ -6250,8 +6257,7 @@ sub import_previous_valgrind_coverage_info() {
     return;
 }
 
-sub compile_execute_fko_wrapper() {
-    my $rv = 1;
+sub compile_wrapper() {
 
     unless (-d $fko_wrapper_dir) {
         &write_test_file("[-] fko wrapper directory " .
@@ -6268,14 +6274,13 @@ sub compile_execute_fko_wrapper() {
         return 0;
     }
 
-    if ($sudo_path) {
-        my $username = getpwuid((stat("../$test_suite_path"))[4]);
-        die "[*] Could not determine ../$test_suite_path owner"
-            unless $username;
+    my $make_str = 'make';
+    $make_str .= ' fuzzing' if $enable_fuzzing_interfaces_tests;
 
-        unless (&run_cmd("$sudo_path -u $username make",
+    if ($sudo_path) {
+        unless (&run_cmd("$sudo_path -u $username $make_str",
                 "../$cmd_out_tmp", "../$curr_test_file")) {
-            unless (&run_cmd('make', "../$cmd_out_tmp",
+            unless (&run_cmd($make_str, "../$cmd_out_tmp",
                     "../$curr_test_file")) {
                 chdir '..' or die $!;
                 return 0;
@@ -6284,7 +6289,7 @@ sub compile_execute_fko_wrapper() {
 
     } else {
 
-        unless (&run_cmd('make', "../$cmd_out_tmp",
+        unless (&run_cmd($make_str, "../$cmd_out_tmp",
                 "../$curr_test_file")) {
             chdir '..' or die $!;
             return 0;
@@ -6298,74 +6303,45 @@ sub compile_execute_fko_wrapper() {
         return 0;
     }
 
-    &run_cmd('./run_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
-
-    $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
-        $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
-
     chdir '..' or die $!;
+    return 1;
+}
+
+sub compile_execute_fko_wrapper() {
+
+    my $rv = &compile_wrapper();
+
+    if ($rv) {
+
+        chdir $fko_wrapper_dir or die $!;
+        &run_cmd('./run_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
+
+        $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
+            $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
+
+        chdir '..' or die $!;
+    }
 
     return $rv;
 }
 
 sub compile_execute_fko_wrapper_no_valgrind() {
-    my $rv = 1;
 
-    unless (-d $fko_wrapper_dir) {
-        &write_test_file("[-] fko wrapper directory " .
-            "$fko_wrapper_dir does not exist.\n", $curr_test_file);
-        return 0;
-    }
+    my $rv = &compile_wrapper();
 
-    chdir $fko_wrapper_dir or die $!;
+    if ($rv) {
 
-    ### 'make clean' as root
-    unless (&run_cmd('make clean', "../$cmd_out_tmp",
-            "../$curr_test_file")) {
+        chdir $fko_wrapper_dir or die $!;
+        &run_cmd('./run_no_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
+
         chdir '..' or die $!;
-        return 0;
-    }
 
-    if ($sudo_path) {
-        my $username = getpwuid((stat("../$test_suite_path"))[4]);
-        die "[*] Could not determine ../$test_suite_path owner"
-            unless $username;
-
-        unless (&run_cmd("$sudo_path -u $username make",
-                "../$cmd_out_tmp", "../$curr_test_file")) {
-            unless (&run_cmd('make', "../$cmd_out_tmp",
-                    "../$curr_test_file")) {
-                chdir '..' or die $!;
-                return 0;
-            }
+        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
+                $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file("[-] crash message found in: $curr_test_file\n",
+                $curr_test_file);
+            $rv = 0;
         }
-
-    } else {
-
-        unless (&run_cmd('make', "../$cmd_out_tmp",
-                "../$curr_test_file")) {
-            chdir '..' or die $!;
-            return 0;
-        }
-    }
-
-    unless (-e 'fko_wrapper' and -e 'run_no_valgrind.sh') {
-        &write_test_file("[-] fko_wrapper or run_valgrind.sh does not exist.\n",
-            "../$curr_test_file");
-        chdir '..' or die $!;
-        return 0;
-    }
-
-    &run_cmd('./run_no_valgrind.sh',
-        "../$cmd_out_tmp", "../$curr_test_file");
-
-    chdir '..' or die $!;
-
-    if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
-            $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
-        &write_test_file("[-] crash message found in: $curr_test_file\n",
-            $curr_test_file);
-        $rv = 0;
     }
 
     return $rv;
