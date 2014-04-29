@@ -1,4 +1,23 @@
-commit 30f30a91ac6ee447b913a516669bb5ae4c993527 (HEAD, refs/heads/master)
+commit d996c4514190777e9267eff62168b760617bf88c (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Apr 28 20:26:05 2014 -0400
+
+    minor 2.6.2 release date change
+
+ ChangeLog   | 7 ++++---
+ fwknop.spec | 2 +-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+commit 000e02f03933c93ca95376912b8f52e466e275aa
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Apr 26 23:46:40 2014 -0400
+
+    changes since 2.6.1
+
+ ChangeLog.git | 1465 +--------------------------------------------------------
+ 1 file changed, 24 insertions(+), 1441 deletions(-)
+
+commit 30f30a91ac6ee447b913a516669bb5ae4c993527
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Sat Apr 26 23:43:32 2014 -0400
 
