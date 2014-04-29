@@ -1,13 +1,14 @@
-fwknop-2.6.2 (04/27/2014):
+fwknop-2.6.2 (04/28/2014):
     - [libfko] fix double free bug in SPA parser discovered with the new
       python SPA payload fuzzer (see the 'spa_encoding_fuzzing' branch which
       is not merged into the master branch yet).  This bug could be triggered
       in fwknopd with a malicious SPA payload, but only when GnuPG is used and
       when an attacker is in possession of valid GnuPG keys listed in the
-      access.conf file. In other words, and arbitrary attacker cannot trigger
+      access.conf file. In other words, an arbitrary attacker cannot trigger
       this bug. Further, when Rijndael is used for SPA packet encryption, this
       bug cannot be triggered at all due to an length/format check towards the
-      end of _rijndael_decrypt().
+      end of _rijndael_decrypt(). This bug was introduced in the 2.6.1
+      development series, and no previous versions of fwknop are affected.
 
 fwknop-2.6.1 (04/12/2014):
     - Updated copyright and authorship information to include a standard
