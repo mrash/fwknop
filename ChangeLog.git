@@ -1,4 +1,24 @@
-commit d996c4514190777e9267eff62168b760617bf88c (HEAD, refs/heads/master)
+commit 7442002a89372e47206247de7e9c68396c3ebc01 (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Apr 28 21:08:27 2014 -0400
+
+    [libfko] bumped version to 2.0.2
+
+ fwknop.spec     | 11 ++++++-----
+ lib/Makefile.am |  2 +-
+ lib/fko.h       |  2 +-
+ 3 files changed, 8 insertions(+), 7 deletions(-)
+
+commit 6dca4468687a5d622b9c46d040e5c0c50d900e32
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Apr 28 20:43:18 2014 -0400
+
+    changes since 2.6.1
+
+ ChangeLog.git | 21 ++++++++++++++++++++-
+ 1 file changed, 20 insertions(+), 1 deletion(-)
+
+commit d996c4514190777e9267eff62168b760617bf88c
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Mon Apr 28 20:26:05 2014 -0400
 
