@@ -30,14 +30,14 @@ Requires:	libfko >= 2.0.2, iptables
 
 %package -n libfko
 Version:	2.0.2
-Release:	2
+Release:	1
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
 Version:	2.0.2
-Release:	2
+Release:	1
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
 Requires:	libfko >= 2.0.2
