@@ -480,6 +480,8 @@ typedef struct fko_srv_options
     unsigned char   test;               /* Test mode flag */
     unsigned char   verbose;            /* Verbose mode flag */
 
+    unsigned char   ipt_disable_check_support; /* Don't use iptables -C */
+
     /* Flag for permitting SPA packets regardless of directionality test
      * w.r.t. the sniffing interface.  This can sometimes be useful for SPA
      * packets that are sent _through_ a system and fwknopd is sniffing on

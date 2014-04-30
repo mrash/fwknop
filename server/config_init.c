@@ -912,6 +912,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'i':
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);
                 break;
+            case IPT_DISABLE_CHECK_SUPPORT:
+                opts->ipt_disable_check_support = 1;
+                break;
             case 'K':
                 opts->kill = 1;
                 break;

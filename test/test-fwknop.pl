@@ -21,6 +21,7 @@ our $local_hmac_key_file = 'local_hmac_spa.key';
 my $output_dir      = 'output';
 our $conf_dir       = 'conf';
 my $run_dir         = 'run';
+our $run_tmp_dir    = 'runtmp';
 my $cmd_out_tmp     = 'cmd.out';
 my $server_cmd_tmp  = 'server_cmd.out';
 my $openssl_cmd_tmp = 'openssl_cmd.out';
@@ -5831,7 +5832,8 @@ sub validate_test_hashes() {
     ### for fwknop/fwknopd commands, prepend LD_LIBRARY_PATH and valgrind args
     for my $test_hr (@tests) {
         next if $test_hr->{'disable_valgrind'} eq $YES;
-        if ($test_hr->{'cmdline'} =~ /^$fwknopCmd/) {
+        if ($test_hr->{'cmdline'} =~ /^$fwknopCmd/
+                or $test_hr->{'cmdline'} =~ /^$fwknopdCmd/) {
             my $str = $lib_view_str;
             unless ($test_hr->{'disable_valgrind'} eq $YES) {
                 $str .= " $valgrind_str";
@@ -6113,10 +6115,11 @@ sub preserve_previous_test_run_results() {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
     }
 
-    if (-d $run_dir) {
-        rmtree $run_dir or die $!;
+    for my $dir ($run_dir, $run_tmp_dir) {
+        if (-d $dir) {
+            rmtree $dir or die $!;
+        }
     }
-    mkdir $run_dir or die "[*] Could not mkdir $run_dir: $!";
 
     for my $dir ($output_dir, $run_dir) {
         next if -d $dir;

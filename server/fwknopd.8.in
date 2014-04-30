@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12/14/2013
+.\"      Date: 04/29/2014
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "12/14/2013" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "04/29/2014" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -134,6 +134,15 @@ without having to look in the process table\&.
 \fB\-l, \-\-locale\fR=\fI<locale>\fR
 .RS 4
 Set/override the system default locale setting\&.
+.RE
+.PP
+\fB\-\-no\-ipt\-check\-support\fR
+.RS 4
+Disable the usage of the iptables
+\fI\-C\fR
+option\&. This is not normally needed, and is only useful on older Linux distributions where iptables does not have
+\fI\-C\fR
+support\&.
 .RE
 .PP
 \fB\-O, \-\-override\-config\fR=\fI<file>\fR
@@ -357,7 +366,7 @@ is stopped or otherwise exits cleanly\&. The default is \(lqY\(rq\&.
 .PP
 \fBGPG_HOME_DIR\fR \fI<path>\fR
 .RS 4
-If GPG keys are used instead of a Rijndael symmetric key, this is the default GPG keys directory\&. Note that each access block in
+If GPG keys are used instead of a Rijndael symmetric key, this is the default GPG keys directory\&. Note that each access stanza in
 \fI@sysconfdir@/fwknop/access\&.conf\fR
 can specify its own GPG directory to override this default\&. If not set here or in an
 \fIaccess\&.conf\fR
@@ -366,6 +375,13 @@ stanza, then the
 directory of the user running
 \fBfwknopd\fR
 (most likely root)\&.
+.RE
+.PP
+GPG_EXE* \fI<path>\fR
+.RS 4
+Specify the path to GPG, and defaults to
+\fI/usr/bin/gpg\fR
+if not set\&.
 .RE
 .PP
 \fBLOCALE\fR \fI<locale>\fR
@@ -556,21 +572,6 @@ file except that it is per access stanza and overrides any value set with \(lqSN
 This is similar to the \(lqFORCE_SNAT\(rq variable, except that it is not necessary to also specify an IP address for SNAT rules because the MASQUERADE target is used instead\&.
 .RE
 .PP
-\fBGPG_HOME_DIR\fR \fI<path>\fR
-.RS 4
-Define the path to the GnuPG directory to be used by the
-\fBfwknopd\fR
-server\&. If this keyword is not specified within
-\fI@sysconfdir@/fwknop/access\&.conf\fR
-then
-\fBfwknopd\fR
-will default to using the
-\fI/root/\&.gnupg\fR
-directory for the server key(s) for incoming SPA packets handled by the matching
-\fIaccess\&.conf\fR
-stanza\&.
-.RE
-.PP
 \fBGPG_DECRYPT_ID\fR \fI<keyID>\fR
 .RS 4
 Define a GnuPG key ID to use for decrypting SPA messages that have been encrypted by an
@@ -618,6 +619,31 @@ Define a list of gpg key ID\(cqs that are required to have signed any incoming S
 server key\&. This ensures that the verification of the remote user is accomplished via a strong cryptographic mechanism\&. This setting only applies if the \(lqGPG_REQUIRE_SIG\(rq is set to
 \fIY\fR\&. Separate multiple entries with a comma\&.
 .RE
+.PP
+\fBGPG_HOME_DIR\fR \fI<path>\fR
+.RS 4
+Define the path to the GnuPG directory to be used by the
+\fBfwknopd\fR
+server\&. If this keyword is not specified within
+\fI@sysconfdir@/fwknop/access\&.conf\fR
+then
+\fBfwknopd\fR
+will default to using the
+\fI/root/\&.gnupg\fR
+directory for the server key(s) for incoming SPA packets handled by the matching
+\fIaccess\&.conf\fR
+stanza\&.
+.RE
+.PP
+\fBGPG_EXE\fR \fI<path>\fR
+.RS 4
+Define the path to the GnuPG executable\&. If this keyword is not specified within
+\fI@sysconfdir@/fwknop/access\&.conf\fR
+then
+\fBfwknopd\fR
+will default to using
+\fI/usr/bin/gpg\fR\&.
+.RE
 .SH "FILES"
 .PP
 \fB@sysconfdir@/fwknop/fwknopd\&.conf\fR
@@ -633,7 +659,7 @@ Defines all knock sequences and access control directives\&.
 .sp
 \fBfwknopd\fR requires \fIlibfko\fR which is normally included with both source and binary distributions, and is a dedicated library developed by the fwknop project\&.
 .sp
-For packet sniffing, \fBfwknopd\fR currently requires libpcap, but future versions still remove this as a dependency\&.
+For packet sniffing, \fBfwknopd\fR currently requires libpcap, but future versions will (optionally) remove this as a dependency\&.
 .sp
 For GPG functionality, GnuPG must also be correctly installed and configured along with the libgpgme library\&.
 .sp

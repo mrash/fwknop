@@ -1317,7 +1317,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(strcasecmp(val, "__CHANGEME__") == 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
+                    "[*] HMAC_KEY value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);

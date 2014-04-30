@@ -1747,6 +1747,88 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => '--key-gen HMAC MD5',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 $verbose_str --use-hmac --key-gen --hmac-digest-type MD5",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*(Y|\d)/,
+            qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/,
+            qr/HMAC_DIGEST_TYPE.*MD5/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--key-gen HMAC SHA1',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 $verbose_str --use-hmac --key-gen --hmac-digest-type SHA1",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*(Y|\d)/,
+            qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/,
+            qr/HMAC_DIGEST_TYPE.*SHA1/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--key-gen HMAC SHA256',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 $verbose_str --use-hmac --key-gen --hmac-digest-type SHA256",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*(Y|\d)/,
+            qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/,
+            qr/HMAC_DIGEST_TYPE.*SHA256/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--key-gen HMAC SHA384',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 $verbose_str --use-hmac --key-gen --hmac-digest-type SHA384",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*(Y|\d)/,
+            qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/,
+            qr/HMAC_DIGEST_TYPE.*SHA384/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--key-gen HMAC SHA512',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 $verbose_str --use-hmac --key-gen --hmac-digest-type SHA512",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'positive_output_matches' => [qr/Wrote.*HMAC.*keys/],
+        'rc_positive_output_matches' => [qr/VERBOSE.*(Y|\d)/,
+            qr/USE_HMAC.*Y/, qr/KEY_BASE64/, qr/HMAC_KEY_BASE64/,
+            qr/HMAC_DIGEST_TYPE.*SHA512/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--key-gen HMAC invalid',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args_no_verbose -n default " .
+            "--fw-timeout 1234 $verbose_str --use-hmac --key-gen --hmac-digest-type invalid",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'FW_TIMEOUT' => '30'}}],
+        'exec_err' => $YES,
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => 'GPG use agent',
         'function' => \&client_rc_file,
         'cmdline'  => "$default_client_gpg_args_same_key_signer --gpg-encryption "
@@ -1902,6 +1984,23 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'list current fw rules (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --fw-list",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_conf_file' => [
+            'FWKNOP_RUN_DIR      ' . cwd() . "/$run_tmp_dir"  ### test coverage for mkdir
+        ],
+        'positive_output_matches' => [qr/to\screate/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'list all current fw rules',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd $default_server_conf_args --fw-list-all",
@@ -1913,6 +2012,69 @@
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd $default_server_conf_args --fw-flush",
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid -C packet count',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        ### add a few additional command line args for test coverage
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f " .
+            "-l somelocale --pcap-any-direction --syslog-enable -C 999999999999",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'mutually exclusive -K and -R',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        ### add a few additional command line args for test coverage
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -K -R"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'mutually exclusive -D and -R',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        ### add a few additional command line args for test coverage
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -D -R"
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid config file path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd -f -c invalid",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid access.conf file path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd -f -a invalid",
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG invalid --gpg-home-dir path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f --gpg-home-dir invalidpath",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG invalid --gpg-home-dir path (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f --gpg-home-dir " . 'A'x1200
+    },
+
 
     {
         'category' => 'basic operations',
@@ -2037,6 +2199,311 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'invalid VERBOSE var setting',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'VERBOSE     -1'
+        ],
+        'positive_output_matches' => [qr/not\sin\sthe\srange/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => '__CHANGEME__ key (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        __CHANGEME__'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/KEY\s.*not\sproperly/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => '__CHANGEME__ key (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE      any',
+            'KEY_BASE64  __CHANGEME__'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/KEY_BASE64\s.*not\sproperly/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'non-base64 key',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE      any',
+            'KEY_BASE64  %%%%%%%%%%%%%'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/look\slike\sbase64/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'HMAC key __CHANGEME__ (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE      any',
+            'KEY         testtest',
+            'HMAC_KEY    __CHANGEME__'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/KEY\s.*not\sproperly/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'HMAC key __CHANGEME__ (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE             any',
+            'KEY                testtest',
+            'HMAC_KEY_BASE64    __CHANGEME__'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/KEY_BASE64\s.*not\sproperly/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'HMAC non-base64 key',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE      any',
+            'KEY         testtest',
+            'HMAC_KEY_BASE64  %%%%%%%%%%%%%'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/look\slike\sbase64/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG key __CHANGEME__',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                         any',
+            'REQUIRE_SOURCE                 Y',
+            'KEY                            testtest',
+            'GPG_REQUIRE_SIG                Y',  ### additional test coverage
+            'GPG_DISABLE_SIG                N',
+            'GPG_IGNORE_SIG_VERIFY_ERROR    N',
+            'GPG_DECRYPT_PW                 __CHANGEME__'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/PW\s.*not\sproperly/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid FW_ACCESS_TIMEOUT',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                 any',
+            'KEY                    testtest',
+            'FW_ACCESS_TIMEOUT      999999999999'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/not\sin\srange/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid ENCRYPTION_MODE',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                 any',
+            'KEY                    testtest',
+            'ENCRYPTION_MODE        invalid'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Unrecognized.*MODE/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid CMD_EXEC_USER',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                 any',
+            'KEY                    testtest',
+            'CMD_EXEC_USER          invalid'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Unable.*UID/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables IPT_FORWARD_ACCESS',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'IPT_FORWARD_ACCESS     invalid'
+        ],
+        'positive_output_matches' => [qr/ACCESS\sspecification/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables IPT_DNAT_ACCESS',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'IPT_DNAT_ACCESS     invalid'
+        ],
+        'positive_output_matches' => [qr/ACCESS\sspecification/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables IPT_SNAT_ACCESS',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'IPT_SNAT_ACCESS     invalid'
+        ],
+        'positive_output_matches' => [qr/ACCESS\sspecification/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables IPT_SNAT_TRANSLATE_IP',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING     Y',
+            'ENABLE_IPT_SNAT           Y',
+            'SNAT_TRANSLATE_IP         invalid'
+        ],
+        'positive_output_matches' => [qr/Invalid\sIPv4/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables IPT_MASQUERADE_ACCESS',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'IPT_MASQUERADE_ACCESS     invalid'
+        ],
+        'positive_output_matches' => [qr/ACCESS\sspecification/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid iptables IPT_OUTPUT_ACCESS',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'IPT_OUTPUT_ACCESS     invalid'
+        ],
+        'positive_output_matches' => [qr/ACCESS\sspecification/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid PCAP_LOOP_SLEEP',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'PCAP_LOOP_SLEEP     9999999999999'
+        ],
+        'positive_output_matches' => [qr/not\sin\sthe\srange/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'access SOURCE format (1)',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
@@ -2129,6 +2596,22 @@
             '### comment line'
         ],
         'positive_output_matches' => [qr/Invalid\sIP\smask/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (7)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     1.1.1.1/',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Missing\smask/],
     },
 
     {
@@ -2311,7 +2794,22 @@
         ],
         'positive_output_matches' => [qr/invalid\sFORCE_SNAT\sIP/],
     },
-
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_SNAT format (3)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'FORCE_SNAT a'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      N'
+        ],
+        'positive_output_matches' => [qr/requires.*enabled/],
+    },
 
     {
         'category' => 'basic operations',

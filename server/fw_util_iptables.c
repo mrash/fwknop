@@ -890,7 +890,10 @@ fw_initialize(const fko_srv_options_t * const opts)
     /* See if iptables offers the '-C' argument (older versions don't).  If not,
      * then switch to parsing iptables -L output to find rules.
     */
-    ipt_chk_support(opts);
+    if(opts->ipt_disable_check_support)
+        have_ipt_chk_support = 0;
+    else
+        ipt_chk_support(opts);
 
     return(res);
 }

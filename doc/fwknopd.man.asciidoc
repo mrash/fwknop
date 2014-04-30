@@ -90,6 +90,11 @@ COMMAND-LINE OPTIONS
 *-l, --locale*='<locale>'::
    Set/override the system default locale setting.
 
+*--no-ipt-check-support*::
+    Disable the usage of the iptables '-C' option. This is not normally needed,
+    and is only useful on older Linux distributions where iptables does not
+    have '-C' support.
+
 *-O, --override-config*='<file>'::
     Override config variable values that are normally read from the
     '@sysconfdir@/fwknop/fwknopd.conf'' file with values from the specified file.  Multiple
