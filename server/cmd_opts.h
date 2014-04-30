@@ -125,6 +125,7 @@ enum {
     ENABLE_PCAP_ANY_DIRECTION,
     ROTATE_DIGEST_CACHE,
     SYSLOG_ENABLE,
+    DUMP_SERVER_ERR_CODES,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -141,7 +142,8 @@ static struct option cmd_opts[] =
     {"packet-limit",         1, NULL, 'C'},
     {"digest-file",          1, NULL, 'd'},
     {"dump-config",          0, NULL, 'D'},
-    {"syslog-enable",        0, NULL,  SYSLOG_ENABLE },
+    {"dump-serv-err-codes",  0, NULL, DUMP_SERVER_ERR_CODES },
+    {"syslog-enable",        0, NULL, SYSLOG_ENABLE },
     {"foreground",           0, NULL, 'f'},
     {"help",                 0, NULL, 'h'},
     {"interface",            1, NULL, 'i'},

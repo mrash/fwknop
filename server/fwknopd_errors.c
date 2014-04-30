@@ -106,4 +106,24 @@ get_errstr(const int err_code)
     return(fwknopd_errstr(err_code));
 }
 
+/* print all server errors (from server/fwknopd_errors.c) to stdout
+*/
+void
+dump_server_errors(void)
+{
+    int i;
+    for (i=SPA_MSG_BAD_DATA; i<=SPA_MSG_ERROR; i++)
+    {
+        fprintf(stdout, "err code: %d, err string: '%s'\n",
+                i, fwknopd_errstr(i));
+    }
+    for (i=FW_RULE_ADD_ERROR; i<=FW_RULE_UNKNOWN_ERROR; i++)
+    {
+        fprintf(stdout, "err code: %d, err string: '%s'\n",
+                i, fwknopd_errstr(i));
+    }
+    fflush(stdout);
+    return;
+}
+
 /***EOF***/

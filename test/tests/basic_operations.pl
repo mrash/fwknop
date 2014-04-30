@@ -19,6 +19,16 @@
     },
     {
         'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'dump error codes ',
+        'function' => \&generic_exec,
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args " .
+            "--dump-serv-err-codes",
+    },
+
+    {
+        'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => 'show last args (1)',
         'function' => \&generic_exec,
