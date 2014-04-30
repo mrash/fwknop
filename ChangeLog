@@ -1,3 +1,8 @@
+fwknop-2.6.3 (05//2014):
+    - [server] Bug fix to handle SPA packets over HTTP by making sure to honor
+      the ENABLE_SPA_OVER_HTTP fwknopd.conf variable and to properly account
+      for SPA packet lengths when delivered via HTTP.
+
 fwknop-2.6.2 (04/28/2014):
     - [libfko] fix double free bug in SPA parser discovered with the new
       python SPA payload fuzzer (see the 'spa_encoding_fuzzing' branch which

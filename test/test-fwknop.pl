@@ -35,6 +35,7 @@ our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $replay_pcap_file     = "$conf_dir/spa_replay.pcap";
 our $multi_pkts_pcap_file = "$conf_dir/multi_pkts.pcap";
+our $spa_over_http_pcap_file = "$conf_dir/spa_over_http.pcap";
 
 our $lib_dir = '../lib/.libs';
 
@@ -112,6 +113,7 @@ our %cf = (
     'gpg_no_pw_hmac_serverdir_access' => "$conf_dir/gpg_no_pw_hmac_serverdir_access.conf",
     'gpg_no_pw_hmac_sha512_access' => "$conf_dir/gpg_no_pw_hmac_sha512_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
+    'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
     'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
     'icmp_pcap_filter'             => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
     'open_ports_access'            => "$conf_dir/open_ports_access.conf",

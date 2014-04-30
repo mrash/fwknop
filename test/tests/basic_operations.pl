@@ -2336,6 +2336,24 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'GPG pw != HMAC key',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                         any',
+            'HMAC_KEY                       testtest',
+            'GPG_DECRYPT_PW                 testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/encryption\spassphrase/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'invalid FW_ACCESS_TIMEOUT',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
@@ -2809,6 +2827,40 @@
             'ENABLE_IPT_FORWARDING      N'
         ],
         'positive_output_matches' => [qr/requires.*enabled/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_SNAT + NAT',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE         any',
+            'KEY            testtest',
+            'FORCE_SNAT     1.2.3.4'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      Y'
+        ],
+        'positive_output_matches' => [qr/must\salso\sbe\sused/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'iptables FORCE_MASQUERADE + NAT',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                 any',
+            'KEY                    testtest',
+            'FORCE_MASQUERADE       Y'
+        ],
+        'server_conf_file' => [
+            'ENABLE_IPT_FORWARDING      Y'
+        ],
+        'positive_output_matches' => [qr/must\salso\sbe\sused/],
     },
 
     {

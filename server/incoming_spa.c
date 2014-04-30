@@ -91,7 +91,7 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
      * starts with "GET /" and the user agent starts with "Fwknop", then
      * assume it is a SPA over HTTP request.
     */
-    if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "N", 1) == 0
+    if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "Y", 1) == 0
       && strncasecmp(ndx, "GET /", 5) == 0
       && strstr(ndx, "User-Agent: Fwknop") != NULL)
     {
@@ -104,6 +104,7 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
          * client), and reset the SPA message itself.
         */
         strlcpy((char *)spa_pkt->packet_data, ndx+5, pkt_data_len);
+        pkt_data_len -= 5;
 
         for(i=0; i<pkt_data_len; i++)
         {
@@ -119,6 +120,8 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
 
             ndx++;
         }
+
+        spa_pkt->packet_data_len = pkt_data_len = i;
     }
 
     /* Require base64-encoded data
