@@ -121,6 +121,9 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
             ndx++;
         }
 
+        if(i < MIN_SPA_DATA_SIZE)
+            return(SPA_MSG_BAD_DATA);
+
         spa_pkt->packet_data_len = pkt_data_len = i;
     }
 

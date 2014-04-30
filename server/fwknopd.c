@@ -333,18 +333,10 @@ main(int argc, char **argv)
         */
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
-
-            strtol_wrapper(opts.config[CONF_TCPSERV_PORT],
-                    1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
-            if(is_err == FKO_SUCCESS)
+            if(run_tcp_server(&opts) < 0)
             {
-                run_tcp_server(&opts);
-            }
-            else
-            {
-                log_msg(LOG_WARNING,
-                    "WARNING: ENABLE_TCP_SERVER is set, but TCPSERV_PORT is not valid. TCP server not started!"
-                );
+                log_msg(LOG_ERR, "Fatal run_tcp_server() error");
+                clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
             }
         }
 
