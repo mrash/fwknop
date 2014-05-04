@@ -195,6 +195,7 @@ our $tmp_rc_file          = "$run_dir/fwknoprc";
 our $rewrite_rc_file      = "$run_dir/rewrite_fwknoprc";
 our $rewrite_fwknopd_conf = "$run_dir/rewrite_fwknopd.conf";
 our $rewrite_access_conf  = "$run_dir/rewrite_access.conf";
+our $rewrite_digest_file  = "$run_dir/rewrite_digest.cache";
 our $save_rc_file         = "$run_dir/save_fwknoprc";
 our $tmp_pkt_file         = "$run_dir/tmp_spa.pkt";
 our $tmp_args_file        = "$run_dir/args.save";
@@ -704,6 +705,7 @@ my %test_keys = (
     'disable_valgrind' => $OPTIONAL,
     'server_access_file' => $OPTIONAL,
     'server_conf_file'   => $OPTIONAL,
+    'digest_cache_file'  => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
@@ -1585,6 +1587,10 @@ sub server_conf_files() {
 
     my $rv = 1;
 
+    if ($test_hr->{'digest_cache_file'}) {
+        &write_server_conf_file($test_hr->{'digest_cache_file'}, $rewrite_digest_file);
+    }
+
     if ($test_hr->{'server_access_file'}) {
         &write_server_conf_file($test_hr->{'server_access_file'}, $rewrite_access_conf);
     }
@@ -1621,7 +1627,6 @@ sub server_conf_files() {
             $rv = 0;
         }
     }
-
 
     return $rv;
 }

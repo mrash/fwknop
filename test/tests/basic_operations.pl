@@ -2025,6 +2025,34 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'invalid pcap filter',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -P proto invalid",
+        'exec_err' => $YES,
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'digest cache validation',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
+            "-p $default_pid_file $intf_str --exit-parse-config " .
+            "-d $rewrite_digest_file -v -v -v -v",
+        'exec_err' => $YES,
+        'digest_cache_file' => [
+            'ybbYzHw4QMLd3rAlifxSAIedifnchUyuU0NW02hC6Zs 17 127.0.0.1 37246 127.0.0.1 62201 1399089310',
+            'rrrrrrrrU369w8emmAyP4NMx9CvgkvplpfRt1306fns 17 -127.0.0.1 58901 127.0.0.1 62201 1399089319',
+            'ttttttttU369w8emmAyP4NMx9CvgkvplpfRt1306fns 17 -127..0.1 58901 127.0.0.1 62201 1399089319',
+            'kVpIRhGJU369w8emmAyP4NMx9CvgkvplpfRt1306fns 17 127.0.0.1 58901 127. 62201 1399089319',
+            'cXzry4ouzEAymxSRaUqTcRNniIMRCXOn7OhNMps0Bag 17',
+            'YuoJRQDtKF7EdnA8JGCsVa5YsLu1az/oPeBTJ7J6Qws 17 127.0.0.1 36767 127.0.0.1 62201 1399089338'
+        ],
+        'positive_output_matches' => [qr/invalid\sdigest\sfile\sentry/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'invalid -C packet count',
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -2194,6 +2222,23 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'invalid pcap dispatch count',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    testtest',
+        ],
+        'server_conf_file' => [
+            'PCAP_DISPATCH_COUNT        9999999999'
+        ],
+        'positive_output_matches' => [qr/invalid\sPCAP_DISPATCH_COUNT/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'no access SOURCE',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
@@ -2206,6 +2251,39 @@
         ],
         'positive_output_matches' => [qr/not\sfind.*SOURCE/],
     },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid config line format',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'PCAP_FILTER'
+        ],
+        'positive_output_matches' => [qr/Invalid\sconfig\sfile\sentry/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'variable substitution',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'PCAP_FILTER       $NOVAR proto test'
+        ],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
