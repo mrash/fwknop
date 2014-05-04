@@ -479,6 +479,7 @@ typedef struct fko_srv_options
     unsigned char   fw_flush;           /* Flush current firewall rules */
     unsigned char   test;               /* Test mode flag */
     unsigned char   verbose;            /* Verbose mode flag */
+    unsigned char   exit_after_parse_config; /* Parse config and exit */
 
     unsigned char   ipt_disable_check_support; /* Don't use iptables -C */
 

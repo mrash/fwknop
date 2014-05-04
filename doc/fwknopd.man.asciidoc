@@ -25,12 +25,12 @@ configurable timeout.
 
 The main application of this program is to conceal services such as 'SSH'
 with an additional layer of security in order to make the exploitation of
-vulnerabilities (both 0-day and unpatched code) much more difficult.  In
+vulnerabilities (both 0-day and unpatched code) much more difficult. In
 addition, services that are concealed in this fashion naturally cannot be
 scanned for with 'Nmap'.
 
 The main configuration for *fwknopd* is maintained within two files:
-'fwknopd.conf' and 'access.conf'.  The default location for these files
+'fwknopd.conf' and 'access.conf'. The default location for these files
 is determined at package configuration (typically '@sysconfdir@/fwknop').
 The configuration variables within these files are described below.
 
@@ -38,7 +38,7 @@ The configuration variables within these files are described below.
 COMMAND-LINE OPTIONS
 --------------------
 *-i, --interface*='<interface>'::
-    Manually specify interface on which to sniff, e.g. ``-i eth0''.  This
+    Manually specify interface on which to sniff, e.g. ``-i eth0''. This
     option is not usually needed because the ``PCAP_INTF'' keyword in the
     'fwknopd.conf' file defines the sniffing interface.
 
@@ -52,12 +52,12 @@ COMMAND-LINE OPTIONS
     and then exit.
 
 *-a, --access-file*='<access-file>'::
-    Specify the location of the 'access.conf' file.  If this option is
+    Specify the location of the 'access.conf' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
     '@sysconfdir@/fwknop/access.conf').
 
 *-c, --config*='<config-file>'::
-    Specify the location of the 'fwknopd.conf' file.  If this option is
+    Specify the location of the 'fwknopd.conf' file. If this option is
     not given, 'fwknopd' will use the default location (typically
     '@sysconfdir@/fwknop/fwknopd.conf'.
 
@@ -66,7 +66,7 @@ COMMAND-LINE OPTIONS
     this limit is reached.
 
 *-d, --digest-file*='<digest-file>'::
-    Specify the location of the 'digest.cache' file.  If this option is
+    Specify the location of the 'digest.cache' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
     '@localstatedir@/run/fwknop/digest.cache').
 
@@ -74,18 +74,28 @@ COMMAND-LINE OPTIONS
     Dump the configuration values that *fwknopd* derives from the
     '@sysconfdir@/fwknop/fwknopd.conf'' (or override files) and '@sysconfdir@/fwknop/access.conf' on stderr.
 
+*--dump-serv-err-codes*::
+    Dump all possible *fwknopd* error codes to stdout and exit. This option is
+    rarely needed in practice, and was added to assist with test coverage.
+
 *--fw-list-all*::
     List all firewall rules including those that have nothing to do with
     *fwknopd*.
 
 *--fw-flush*::
-    Flush any firewall rules created by a running *fwknopd* process.  This
+    Flush any firewall rules created by a running *fwknopd* process. This
     option allows the used to easily delete *fwknopd* firewall rules without
     having to wait for them to be timed out.
 
 *-K, --kill*::
-    Kill the current *fwknopd* process.  This provides a quick and easy
+    Kill the current *fwknopd* process. This provides a quick and easy
     way to stop *fwknopd* without having to look in the process table.
+
+*--exit-parse-config*::
+    Parse config files ('@sysconfdir@/fwknop/fwknopd.conf', '@sysconfdir@/fwknop/access.conf',
+    the digest cache file, etc.) and exit. This provides a way to test whether
+    the config files are properly structured without having to start processing
+    network traffic.
 
 *-l, --locale*='<locale>'::
    Set/override the system default locale setting.
@@ -97,51 +107,51 @@ COMMAND-LINE OPTIONS
 
 *-O, --override-config*='<file>'::
     Override config variable values that are normally read from the
-    '@sysconfdir@/fwknop/fwknopd.conf'' file with values from the specified file.  Multiple
+    '@sysconfdir@/fwknop/fwknopd.conf'' file with values from the specified file. Multiple
     override config files can be given as a comma-separated list.
 
 *-p, --pid-file*='<pid-file>'::
-    Specify the location of the 'fwknopd.pid' file.  If this option is
+    Specify the location of the 'fwknopd.pid' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
     '@localstatedir@/run/fwknop/fwknopd.pid).
 
 *-P, --pcap-filter*='<filter>'::
     Specify a Berkeley packet filter statement on the *fwknopd* command
-    line.  This overrides the value of the PCAP_FILTER variable taken
+    line. This overrides the value of the PCAP_FILTER variable taken
     from the '@sysconfdir@/fwknop/fwknopd.conf'' file.
 
 *--pcap-file*='<pcap-file>'::
     This option instructs *fwknopd* to read packet data from a pcap file
-    instead of sniffing an interface directly.  This mode is usually used for
+    instead of sniffing an interface directly. This mode is usually used for
     debugging purposes, and will disable SPA packet age checking unless it is
     manually enabled in the '@sysconfdir@/fwknop/fwknopd.conf' file.
 
 *--pcap-any-direction*::
     Allow *fwknopd* to sniff SPA packets regardless of whether they are
-    received on the sniffing interface or sent from the sniffing interface.  In
+    received on the sniffing interface or sent from the sniffing interface. In
     the later case, this can be useful to have fwknopd sniff SPA packets that
-    are forwarded through a system and destined for a different network.  If
+    are forwarded through a system and destined for a different network. If
     the sniffing interface is the egress interface for such packets (and hence
     SPA packets are sent by this interface instead of received), then this
-    option will need to used in order for *fwknopd* to see them.  The default
-    is to only sniff packets that are received on the sniffing interface.  Note
+    option will need to used in order for *fwknopd* to see them. The default
+    is to only sniff packets that are received on the sniffing interface. Note
     that this setting is independent of promiscuous mode.
 
 *-R, --restart*::
-    Restart the currently running *fwknopd* processes.  This option
+    Restart the currently running *fwknopd* processes. This option
     will preserve the command line options that were supplied to the
     original *fwknopd* process but will force *fwknopd* to re-read the
-    'fwknopd.conf' and '@sysconfdir@/fwknop/access.conf' files.  This will also force a
+    'fwknopd.conf' and '@sysconfdir@/fwknop/access.conf' files. This will also force a
     flush of the current ``FWKNOP'' iptables chain(s).
 
 *--rotate-digest-cache*::
     Rotate the digest cache file by renaming it to ``<name>-old'', and
-    starting a new one.  The digest cache file is typically found in
+    starting a new one. The digest cache file is typically found in
     '@localstatedir@/run/fwknop/digest.cache'.
 
 *-S, --status*::
     Display the status of any *fwknopd* processes that may or not be
-    running.  If there is an existing fwknopd process then 0 is returned for the
+    running. If there is an existing fwknopd process then 0 is returned for the
     exit status and 1 is returned otherwise.
 
 *--syslog-enable*::
@@ -174,8 +184,8 @@ SPA message.
 FWKNOPD.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~~
 This section list the more prominent configuration variables used by
-*fwknopd*.  It is not a complete list.  There are directives for the type
-of firewall used by *fwknopd* (i.e. _iptables_, _ipfw_, or _pf_).  You will
+*fwknopd*. It is not a complete list. There are directives for the type
+of firewall used by *fwknopd* (i.e. _iptables_, _ipfw_, or _pf_). You will
 want to make sure to check these to make sure they have appropriate values.
 See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and corresponding details.
 
@@ -188,37 +198,37 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
 
 *PCAP_FILTER* '<pcap filter spec>'::
     Define the filter used for 'PCAP' modes; *fwknopd* defaults to UDP
-    port 62201.  However, if an *fwknop* client uses the *--rand-port* option
+    port 62201. However, if an *fwknop* client uses the *--rand-port* option
     to send the SPA packet over a random port, then this variable should be
     updated to something like ``udp dst portrange 10000-65535''.
 
 *ENABLE_SPA_PACKET_AGING* '<Y/N>'::
     This instructs *fwknopd* to not honor SPA packets that have an old time
-    stamp.  The value for ``old'' is defined by the ``MAX_SPA_PACKET_AGE''
-    variable.  If ``ENABLE_SPA_PACKET_AGING'' is set to ``N'', *fwknopd*
+    stamp. The value for ``old'' is defined by the ``MAX_SPA_PACKET_AGE''
+    variable. If ``ENABLE_SPA_PACKET_AGING'' is set to ``N'', *fwknopd*
     will not use the client time stamp at all.
 
 *MAX_SPA_PACKET_AGE* '<seconds>'::
     Defines the maximum age (in seconds) that an SPA packet will be accepted.
     This requires that the client system is in relatively close time
-    synchronization with the *fwknopd* server system (NTP is good).  The
+    synchronization with the *fwknopd* server system (NTP is good). The
     default age is 120 seconds (two minutes).
 
 *ACCESS_EXPIRE* '<MM/DD/YYYY>'::
     Defines an expiration date for the access stanza in MM/DD/YYYY format.
-    All SPA packets that match an expired stanza will be ignored.  This
+    All SPA packets that match an expired stanza will be ignored. This
     parameter is optional.
 
 *ACCESS_EXPIRE_EPOCH* '<seconds>'::
     Defines an expiration date for the access stanza as the epoch time, and is
     useful if a more accurate expiration time needs to be given than the day
-    resolution offered by the ACCESS_EXPIRE variable above.  All SPA packets
-    that match an expired stanza will be ignored.  This parameter is optional.
+    resolution offered by the ACCESS_EXPIRE variable above. All SPA packets
+    that match an expired stanza will be ignored. This parameter is optional.
 
 *ENABLE_DIGEST_PERSISTENCE* '<Y/N>'::
     Track digest sums associated with previous SPA packets processed by
-    *fwknopd*.  This allows digest sums to remain persistent across
-    executions of *fwknopd*.  The default is ``Y''.  If set to ``N'',
+    *fwknopd*. This allows digest sums to remain persistent across
+    executions of *fwknopd*. The default is ``Y''. If set to ``N'',
     *fwknopd* will not check incoming SPA packet data against any
     previously save digests. It is a good idea to leave this feature on
     to reduce the possibility of being vulnerable to a replay attack.
@@ -229,14 +239,14 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
     chain instead of the INPUT chain).
 
 *ENABLE_IPT_LOCAL_NAT* '<Y/N>'::
-    Allow SPA clients to request access to a local socket via NAT.  This
+    Allow SPA clients to request access to a local socket via NAT. This
     still puts an ACCEPT rule into the FWKNOP_INPUT chain, but a different
-    port is translated via DNAT rules to the real one.  So, the user would
+    port is translated via DNAT rules to the real one. So, the user would
     do ``ssh -p <port>'' to access the local service (see the *--NAT-local*
     and *--NAT-rand-port* on the *fwknop* client command line).
 
 *ENABLE_IPT_SNAT* '<Y/N>'::
-    Set this to ``Y'' to enable a corresponding SNAT rule.  By default, if
+    Set this to ``Y'' to enable a corresponding SNAT rule. By default, if
     forwarding access is enabled (see the ``ENABLE_IPT_FORWARDING'' variable
     above), then *fwknopd* creates DNAT rules for incoming connections, but
     does not also complement these rules with SNAT rules at the same time.
@@ -246,7 +256,7 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
     internal interface where *fwknopd* is running.
 
 *SNAT_TRANSLATE_IP* '<ip_address>'::
-    Specify the IP address for SNAT.  This functionality is only enabled
+    Specify the IP address for SNAT. This functionality is only enabled
     when ``ENABLE_IPT_SNAT'' is set to ``Y'' and by default SNAT rules are
     built with the MASQUERADE target (since then the internal IP does not
     have to be defined here in the '@sysconfdir@/fwknop/fwknopd.conf' file),
@@ -259,7 +269,7 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
     and the OUTPUT chain has a default-drop stance.
 
 *MAX_SNIFF_BYTES* '<bytes>'::
-    Specify the the maximum number of bytes to sniff per frame.  1500
+    Specify the the maximum number of bytes to sniff per frame. 1500
     is the default.
 
 *FLUSH_IPT_AT_INIT* '<Y/N>'::
@@ -268,11 +278,11 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
 
 *FLUSH_IPT_AT_EXIT* '<Y/N>'::
     Flush all existing rules in the fwknop chains when *fwknopd* is stopped
-    or otherwise exits cleanly.  The default is ``Y''.
+    or otherwise exits cleanly. The default is ``Y''.
 
 *GPG_HOME_DIR* '<path>'::
     If GPG keys are used instead of a Rijndael symmetric key, this is
-    the default GPG keys directory.  Note that each access stanza in
+    the default GPG keys directory. Note that each access stanza in
     '@sysconfdir@/fwknop/access.conf' can specify its own GPG directory to override
     this default. If not set here or in an 'access.conf' stanza, then
     the '$HOME/.gnupg' directory of the user running *fwknopd* (most
@@ -282,22 +292,22 @@ GPG_EXE* '<path>'::
     Specify the path to GPG, and defaults to '/usr/bin/gpg' if not set.
 
 *LOCALE* '<locale>'::
-    Set the locale (via the LC_ALL variable).  This can be set to override
+    Set the locale (via the LC_ALL variable). This can be set to override
     the default system locale.
 
 *ENABLE_SPA_OVER_HTTP* '<Y/N>'::
     Allow *fwknopd* to acquire SPA data from HTTP requests (generated with
-    the fwknop client in *--HTTP* mode).  Note that when this is enabled,
+    the fwknop client in *--HTTP* mode). Note that when this is enabled,
     the ``PCAP_FILTER'' variable would need to be updated to sniff traffic
     over TCP/80 connections and a web server should be running on the same
     server as *fwknopd*.
 
 *ENABLE_TCP_SERVER* '<Y/N>'::
-    Enable the fwknopd TCP server.  This is a "dummy" TCP server that will
+    Enable the fwknopd TCP server. This is a "dummy" TCP server that will
      accept TCP connection requests on the specified TCPSERV_PORT.
      If set to "Y", fwknopd will fork off a child process to listen for, and
-     accept incoming TCP request.  This server only accepts the
-     request.  It does not otherwise communicate. This is only to allow the
+     accept incoming TCP request. This server only accepts the
+     request. It does not otherwise communicate. This is only to allow the
      incoming SPA over TCP packet which is detected via PCAP. The connection
      is closed after 1 second regardless.
      Note that fwknopd still only gets its data via pcap, so the filter
@@ -305,26 +315,26 @@ GPG_EXE* '<path>'::
 
 *PCAP_DISPATCH_COUNT* '<count>'::
     Sets the number of packets that are processed when the *pcap_dispatch()*
-    call is made.  The default is zero, since this allows *fwknopd* to process
+    call is made. The default is zero, since this allows *fwknopd* to process
     as many packets as possible in the corresponding callback where the SPA
     handling routine is called for packets that pass a set of prerequisite
-    checks.  However, if *fwknopd* is running on a platform with an old
+    checks. However, if *fwknopd* is running on a platform with an old
     version of libpcap, it may be necessary to change this value to a positive
-    non-zero integer.  More information can be found in the *pcap_dispatch(3)*
+    non-zero integer. More information can be found in the *pcap_dispatch(3)*
     man page.
 
 *PCAP_LOOP_SLEEP* '<microseconds>'::
     Sets the number of microseconds to passed as an argument to usleep() in
-    the pcap loop.  The default is 10000, or 1/10th of a second.
+    the pcap loop. The default is 10000, or 1/10th of a second.
 
 *ENABLE_PCAP_ANY_DIRECTION* '<Y/N>'::
     Controls whether fwknopd is permitted to sniff SPA packets regardless of
     whether they are received on the sniffing interface or sent from the
-    sniffing interface.  In the later case, this can be useful to have fwknopd
+    sniffing interface. In the later case, this can be useful to have fwknopd
     sniff SPA packets that are forwarded through a system and destined for a
-    different network.  If the sniffing interface is the egress interface for
+    different network. If the sniffing interface is the egress interface for
     such packets, then this variable will need to be set to "Y" in order for
-    fwknopd to see them.  The default is "N" so that fwknopd only looks for SPA
+    fwknopd to see them. The default is "N" so that fwknopd only looks for SPA
     packets that are received on the sniffing interface (note that this is
     independent of promiscuous mode).
 
@@ -333,40 +343,40 @@ GPG_EXE* '<path>'::
     is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
 
 *SYSLOG_IDENTITY* '<identity>'::
-    Override syslog identity on message logged by *fwknopd*.  The defaults
+    Override syslog identity on message logged by *fwknopd*. The defaults
     are usually ok.
 
 *SYSLOG_FACILITY* '<facility>'::
-    Override syslog facility.  The ``SYSLOG_FACILITY'' variable can be set to
+    Override syslog facility. The ``SYSLOG_FACILITY'' variable can be set to
     one of ``LOG_LOCAL{0-7}'' or ``LOG_DAEMON'' (the default).
 
 
 ACCESS.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~
 This section describes the access control directives in the '@sysconfdir@/fwknop/access.conf'
-file.  Theses directives define encryption keys and level of access that
+file. Theses directives define encryption keys and level of access that
 is granted to *fwknop* clients that have generated the appropriate
 encrypted message.
 
 The 'access.conf' variables described below provide the access directives
 for the SPA packets with a source (or embedded request) IP that matches an
-address or network range defined by the ``SOURCE'' variable.  All variables
-following ``SOURCE'' apply to the source 'stanza'.  Each ``SOURCE''
+address or network range defined by the ``SOURCE'' variable. All variables
+following ``SOURCE'' apply to the source 'stanza'. Each ``SOURCE''
 directive starts a new stanza.
 
 *SOURCE* '<IP,..,IP/NET,..,NET/ANY>'::
     This defines the source address from which the SPA packet will be
-    accepted.  The string ``ANY'' is also accepted if a valid SPA packet
-    should be honored from any source IP.  Every authorization stanza in
+    accepted. The string ``ANY'' is also accepted if a valid SPA packet
+    should be honored from any source IP. Every authorization stanza in
     '@sysconfdir@/fwknop/access.conf' definition must start with the ``SOURCE'' keyword.
     Networks should be specified in CIDR notation (e.g. ``192.168.10.0/24''),
-    and individual IP addresses can be specified as well.  Also, multiple
+    and individual IP addresses can be specified as well. Also, multiple
     IP's and/or networks can be defined as a comma separated list (e.g.
     ``192.168.10.0/24,10.1.1.123'')
 
 *OPEN_PORTS* '<proto/port>,...,<proto/port>'::
     Define a set of ports and protocols (tcp or udp) that will be
-    opened if a valid knock sequence is seen.  If this entry is not set,
+    opened if a valid knock sequence is seen. If this entry is not set,
     *fwknopd* will attempt to honor any proto/port request specified in the
     SPA data (unless of it matches any ``RESTRICT_PORTS'' entries). Multiple
     entries are comma-separated.
@@ -378,66 +388,66 @@ directive starts a new stanza.
 
 *KEY* '<passphrase>'::
     Define the symmetric key used for decrypting an incoming SPA packet that is
-    encrypted by the *fwknop* client with Rijndael.  The actual encryption key
-    that is used is derived from the standard PBKDF1 algorithm.  This variable
+    encrypted by the *fwknop* client with Rijndael. The actual encryption key
+    that is used is derived from the standard PBKDF1 algorithm. This variable
     is required for all SPA packets unless GnuPG is used instead (see the GPG
     variables below).
 
 *KEY_BASE64* '<base64 encoded passphrase>'::
     Same as the *KEY* option above, but specify the symmetric key as a base64
-    encoded string.  This allows non-ascii characters to be included in the
+    encoded string. This allows non-ascii characters to be included in the
     base64-decoded key.
 
 *HMAC_KEY* '<key>'::
-    Specify the HMAC key for authenticated encryption of SPA packets.  This
+    Specify the HMAC key for authenticated encryption of SPA packets. This
     supports both Rijndael and GPG encryption modes, and is applied according
     to the encrypt-then-authenticate model.
 
 *HMAC_KEY_BASE64* '<base64 encoded key>'::
-    Specify the HMAC key as a base64 encoded string.  This allows non-ascii
+    Specify the HMAC key as a base64 encoded string. This allows non-ascii
     characters to be included in the base64-decoded key.
 
 *FW_ACCESS_TIMEOUT* '<seconds>'::
     Define the length of time access will be granted by *fwknopd* through the
-    firewall after a valid knock sequence from a source IP address.  If
+    firewall after a valid knock sequence from a source IP address. If
     ``FW_ACCESS_TIMEOUT'' is not set then the default timeout of 30 seconds
     will automatically be set.
 
 *ENCRYPTION_MODE* '<mode>'::
-    Specify the encryption mode when AES is used.  The default is CBC mode,
-    but other modes can be selected such as OFB and CFB.  In general, it is
-    recommended to not use this variable and leave it as the default.  Note
+    Specify the encryption mode when AES is used. The default is CBC mode,
+    but other modes can be selected such as OFB and CFB. In general, it is
+    recommended to not use this variable and leave it as the default. Note
     that the string ``legacy'' can be specified in order to generate SPA
     packets with the old initialization vector strategy used by versions of
-    *fwknop* before 2.5.  With the 2.5 release, *fwknop* uses PBKDF1 for key
+    *fwknop* before 2.5. With the 2.5 release, *fwknop* uses PBKDF1 for key
     derivation.
 
 *HMAC_DIGEST_TYPE* '<digest algorithm>'::
-    Specify the digest algorithm for incoming SPA packet authentication.  Must
-    be one of *MD5*, *SHA1*, *SHA256*, *SHA384*, or *SHA512*.  This is an
+    Specify the digest algorithm for incoming SPA packet authentication. Must
+    be one of *MD5*, *SHA1*, *SHA256*, *SHA384*, or *SHA512*. This is an
     optional field, and if not specified then *fwknopd* defaults to using
     SHA256 if the access stanza requires an HMAC.
 
 *ENABLE_CMD_EXEC* '<Y/N>'::
     This instructs *fwknopd* to accept complete commands that are contained
-    within an authorization packet.  Any such command will be executed on
+    within an authorization packet. Any such command will be executed on
     the *fwknopd* server as the user specified by the ``CMD_EXEC_USER'' or
     as the user that started *fwknopd* if that is not set.
 
 *CMD_EXEC_USER* '<username>'::
      This specifies the user that will execute commands contained within a SPA
-     packet.  If not specified, fwknopd will execute it as the user it is
+     packet. If not specified, fwknopd will execute it as the user it is
      running as (most likely root). Setting this to a non-root user is highly
      recommended.
 
 *REQUIRE_USERNAME* '<username>'::
     Require a specific username from the client system as encoded in the SPA
-    data.  This variable is optional and if not specified, the username data
+    data. This variable is optional and if not specified, the username data
     in the SPA data is ignored.
 
 *REQUIRE_SOURCE_ADDRESS* '<Y/N>'::
     Force all SPA packets to contain a real IP address within the
-    encrypted data.  This makes it impossible to use the *-s* command
+    encrypted data. This makes it impossible to use the *-s* command
     line argument on the *fwknop* client command line, so either *-R* has
     to be used to automatically resolve the external address (if the
     client behind a NAT) or the client must know the external IP and set it
@@ -445,20 +455,20 @@ directive starts a new stanza.
 
 *FORCE_NAT* '<IP> <PORT>'::
     For any valid SPA packet, force the requested connection to be NAT'd
-    through to the specified (usually internal) IP and port value.  This is
+    through to the specified (usually internal) IP and port value. This is
     useful if there are multiple internal systems running a service such as
     SSHD, and you want to give transparent access to only one internal system
-    for each stanza in the access.conf file.  This way, multiple external
+    for each stanza in the access.conf file. This way, multiple external
     users can each directly access only one internal system per SPA key.
 
 *FORCE_SNAT* '<IP>'::
     For any valid SPA packet, add an SNAT rule in addition to any DNAT rule
-    created with a corresponding (required) FORCE_NAT variable.  This is
+    created with a corresponding (required) FORCE_NAT variable. This is
     analogous to ``SNAT_TRANSLATE_IP'' from the '@sysconfdir@/fwknop/fwknopd.conf'
     file except that it is per access stanza and overrides any value set with
-    ``SNAT_TRANSLATE_IP''.  This is useful for situations where an incoming
+    ``SNAT_TRANSLATE_IP''. This is useful for situations where an incoming
     NAT'd connection may be otherwise unanswerable due to routing constraints
-    (i.e.  the system receiving the SPA authenticated connection has a default
+    (i.e. the system receiving the SPA authenticated connection has a default
     route to a different device than the SPA system itself).
 
 *FORCE_MASQUERADE* '<Y/N>'::
@@ -468,13 +478,13 @@ directive starts a new stanza.
 
 *GPG_DECRYPT_ID* '<keyID>'::
     Define a GnuPG key ID to use for decrypting SPA messages that
-    have been encrypted by an *fwknop* client.  This keyword is
-    required for authentication that is based on GPG keys.  The GPG
+    have been encrypted by an *fwknop* client. This keyword is
+    required for authentication that is based on GPG keys. The GPG
     key ring on the client must have imported and signed the *fwknopd*
-    server key, and vice versa.  It is ok to use a sensitive
+    server key, and vice versa. It is ok to use a sensitive
     personal GPG key on the client, but each *fwknopd* server should
     have its own GPG key that is generated specifically for fwknop
-    communications.  The reason for this is that the decryption
+    communications. The reason for this is that the decryption
     password for the server key must be placed within the '@sysconfdir@/fwknop/access.conf'
     file for *fwknopd* to function (it has to be able to decrypt SPA
     messages that have been encrypted with the server's public key).
@@ -483,12 +493,12 @@ directive starts a new stanza.
 
 *GPG_DECRYPT_PW* '<decrypt password>'::
     Specify the decryption password for the gpg key defined by the
-    ``GPG_DECRYPT_ID'' above.  This is a required field for gpg-based
+    ``GPG_DECRYPT_ID'' above. This is a required field for gpg-based
     authentication.
 
 *GPG_ALLOW_NO_PW* '<Y/N>'::
     Allow *fwknopd* to leverage a GnuPG key pair that does not have an
-    associated password.  While this may sound like a controversial deployment
+    associated password. While this may sound like a controversial deployment
     mode, in automated environments it makes sense because "there is usually no
     way to store a password more securely than on the secret keyring itself"
     according to: ``http://www.gnupg.org/faq/GnuPG-FAQ.html#how-can-i-use-gnupg-in-an-automated-environment''.
@@ -498,27 +508,27 @@ directive starts a new stanza.
 
 *GPG_REQUIRE_SIG* '<Y/N>'::
     With this setting set to 'Y',  fwknopd check all GPG-encrypted SPA
-    messages for a signature (signed by the sender's key).  If the incoming
-    message is not signed, the decryption process will fail.  If not set, the
+    messages for a signature (signed by the sender's key). If the incoming
+    message is not signed, the decryption process will fail. If not set, the
     default is 'N'.
 
 *GPG_IGNORE_SIG_VERIFY_ERROR* '<Y/N>'::
     Setting this will allow fwknopd to accept incoming GPG-encrypted packets
     that are signed, but the signature did not pass verification (i.e. the
-    signer key was expired, etc.).  This setting only applies if the
+    signer key was expired, etc.). This setting only applies if the
     GPG_REQUIRE_SIG is also set to 'Y'.
 
 *GPG_REMOTE_ID* '<keyID,...,keyID>'::
     Define a list of gpg key ID's that are required to have signed
     any incoming SPA message that has been encrypted with the
-    *fwknopd* server key.  This ensures that the verification of the
+    *fwknopd* server key. This ensures that the verification of the
     remote user is accomplished via a strong cryptographic mechanism.
     This setting only applies if the ``GPG_REQUIRE_SIG'' is set to 'Y'.
     Separate multiple entries with a comma.
 
 *GPG_HOME_DIR* '<path>'::
     Define the path to the GnuPG directory to be used by the *fwknopd*
-    server.  If this keyword is not specified within '@sysconfdir@/fwknop/access.conf'
+    server. If this keyword is not specified within '@sysconfdir@/fwknop/access.conf'
     then *fwknopd* will default to using the '/root/.gnupg' directory for the
     server key(s) for incoming SPA packets handled by the matching
     'access.conf' stanza.
@@ -557,13 +567,13 @@ firewall is required on the underlying operating system.
 DIAGNOSTICS
 -----------
 *fwknopd* can be run in debug mode by combining the *-f, --foreground* and
-the *-v, --verbose* command line options.  This will disable daemon mode
+the *-v, --verbose* command line options. This will disable daemon mode
 execution, and print verbose information to the screen on stderr as packets
 are received.
 
 The most comprehensive way to gain diagnostic information on *fwknopd* is to run
 the test suite 'test-fwknop.pl' script located in the 'test/' directory in the fwknop
-sources.  The test suite runs sends fwknop through a large number of run time
+sources. The test suite runs sends fwknop through a large number of run time
 tests, has 'valgrind' support, validates both SPA encryption and HMAC results
 against OpenSSL, and even has its own built in fuzzer for SPA communications.
 
@@ -574,9 +584,9 @@ fwknopd(8), iptables(8), pf(4), pfctl(8), ipfw(8), gpg(1), libfko documentation.
 
 More information on Single Packet Authorization can be found in the paper
 ``Single Packet Authorization with fwknop'' available at
-'http://www.cipherdyne.org/fwknop/docs/SPA.html'.  A comprehensive tutorial
+'http://www.cipherdyne.org/fwknop/docs/SPA.html'. A comprehensive tutorial
 on *fwknop* operations and theory can be found at
-'http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html'.  This tutorial
+'http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html'. This tutorial
 also includes information about the design of *fwknop* that may be worth
 reading for those interested in why fwknop is different from other SPA
 implementations.
@@ -602,9 +612,9 @@ CONTRIBUTORS
 ------------
 This ``C'' version of fwknop was derived from the original Perl-based version
 on which many people who are active in the open source community have
-contributed.  See the CREDITS file in the fwknop sources, or visit
+contributed. See the CREDITS file in the fwknop sources, or visit
 'http://www.cipherdyne.org/fwknop/docs/contributors.html' to view the online
-list of contributors.  A few contributors deserve to be singled out including:
+list of contributors. A few contributors deserve to be singled out including:
 Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger,
 Fernando Arnaboldi, and Erik Gomez.
 
@@ -615,8 +625,8 @@ Nomad at the BlackHat Briefings of 2005.
 BUGS
 ----
 Send bug reports to dstuart@dstuart.org or mbr@cipherdyne.org, or open a new
-issue on Github (see 'https://github.com/mrash/fwknop.git').  Suggestions
-and/or comments are always welcome as well.  Additional information may be
+issue on Github (see 'https://github.com/mrash/fwknop.git'). Suggestions
+and/or comments are always welcome as well. Additional information may be
 found in the *fwknop* mailing list archives (see:
 'https://lists.sourceforge.net/lists/listinfo/fwknop-discuss').
 

@@ -323,6 +323,12 @@ main(int argc, char **argv)
                 );
         }
 
+        if(opts.exit_after_parse_config)
+        {
+            log_msg(LOG_INFO, "Configs parsed, exiting.");
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+        }
+
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
         */

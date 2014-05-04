@@ -887,6 +887,10 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case DUMP_SERVER_ERR_CODES:
                 dump_server_errors();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+            case EXIT_AFTER_PARSE_CONFIG:
+                opts->exit_after_parse_config = 1;
+                opts->foreground = 1;
+                break;
             case 'f':
                 opts->foreground = 1;
                 break;

@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 01/02/2014
+.\"      Date: 05/04/2014
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "01/02/2014" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "05/04/2014" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -861,6 +861,12 @@ Specify the GPG key name or ID for the recipient of the GPG\-encrypted SPA data 
 .RS 4
 Specify the GPG home directory (\fI\-\-gpg\-home\-dir\fR)\&. Defaults to
 \fI~/\&.gnupg\fR\&.
+.RE
+.PP
+\fBGPG_EXE\fR \fI<path>\fR
+.RS 4
+Specify the path to GPG (\fI\-\-gpg\-exe\fR)\&. Defaults to
+\fI/usr/bin/gpg\fR\&.
 .RE
 .PP
 \fBSPOOF_USER\fR \fI<user>\fR

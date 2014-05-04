@@ -126,6 +126,7 @@ enum {
     ROTATE_DIGEST_CACHE,
     SYSLOG_ENABLE,
     DUMP_SERVER_ERR_CODES,
+    EXIT_AFTER_PARSE_CONFIG,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -143,6 +144,7 @@ static struct option cmd_opts[] =
     {"digest-file",          1, NULL, 'd'},
     {"dump-config",          0, NULL, 'D'},
     {"dump-serv-err-codes",  0, NULL, DUMP_SERVER_ERR_CODES },
+    {"exit-parse-config",    0, NULL, EXIT_AFTER_PARSE_CONFIG },
     {"syslog-enable",        0, NULL, SYSLOG_ENABLE },
     {"foreground",           0, NULL, 'f'},
     {"help",                 0, NULL, 'h'},
