@@ -88,11 +88,12 @@ int main(void) {
 static void
 spa_encoded_msg_fuzzing(void)
 {
-    fko_ctx_t      decode_ctx = NULL;
+    fko_ctx_t      decode_ctx = NULL, decrypt_ctx = NULL;
     int            res = 0, pkt_id, require_success, require_digest, digest_type, msg_len;
     int            line_ctr = 0, spa_payload_ctr = 0;
     FILE          *fz  = NULL;
     char           line[MAX_LINE_LEN] = {0};
+    char          *spa_data_final = NULL, *spa_data_copy = NULL;
     char           b64_encoded_msg[MAX_LINE_LEN] = {0};
     unsigned char  b64_decoded_msg[MAX_LINE_LEN] = {0};
 
@@ -146,10 +147,55 @@ spa_encoded_msg_fuzzing(void)
             }
         }
 
-        fko_destroy(decode_ctx);
+        if (0) {
+                fko_destroy(decode_ctx);
+                decode_ctx = NULL;
+        }
+
+        fko_set_spa_hmac_type(decode_ctx, FKO_HMAC_SHA256);
+
+        res = fko_spa_data_final(decode_ctx, ENC_KEY, strlen(ENC_KEY),
+                    HMAC_KEY, strlen(HMAC_KEY));
+
+        if (res == FKO_SUCCESS) {
+            if ((res = fko_get_spa_data(decode_ctx, &spa_data_final)) != FKO_SUCCESS) {
+                printf("fko_get_spa_data(): %s\n", fko_errstr(res));
+            } else {
+                printf("PKT_ID: %d, PKT: %s\n", pkt_id, spa_data_final);
+
+                spa_data_copy = strdup(spa_data_final);
+
+                if (spa_data_final != NULL)
+                    memset(spa_data_final, 0x0, strlen(spa_data_final));
+                fko_destroy(decode_ctx);
+                decode_ctx = NULL;
+
+                res = fko_new_with_data(&decrypt_ctx, spa_data_copy, ENC_KEY,
+                    strlen(ENC_KEY), FKO_ENC_MODE_CBC, HMAC_KEY, strlen(HMAC_KEY),
+                    FKO_HMAC_SHA256);
+
+                if (spa_data_copy != NULL)
+                {
+                    memset(spa_data_copy, 0x0, strlen(spa_data_copy));
+                    free(spa_data_copy);
+                }
+
+                if (res == FKO_SUCCESS) {
+                    printf("pkt_id: %d Success\n", pkt_id);
+                } else {
+                    printf("fko_new_with_data(): %s\n", fko_errstr(res));
+                }
+
+                fko_destroy(decrypt_ctx);
+                decrypt_ctx = NULL;
+            }
+        } else {
+            printf("fko_spa_data_final(): %s\n", fko_errstr(res));
+        }
 
         memset(line, 0x0, MAX_LINE_LEN);
         memset(b64_encoded_msg, 0x0, MAX_LINE_LEN);
+        memset(b64_decoded_msg, 0x0, MAX_LINE_LEN);
     }
 
     fclose(fz);
