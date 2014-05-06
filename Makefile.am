@@ -154,6 +154,7 @@ EXTRA_DIST = \
     test/conf/fuzzing_open_ports_access.conf \
     test/conf/fuzzing_restrict_ports_access.conf \
     test/conf/fuzzing_source_access.conf \
+    test/conf/hmac_fuzzing_access.conf \
     test/conf/gpg_access.conf \
     test/conf/gpg_hmac_access.conf \
     test/conf/gpg_no_pw_access.conf \
@@ -309,6 +310,7 @@ EXTRA_DIST = \
     test/tests/code_structure.pl \
     test/tests/basic_operations.pl \
     test/tests/rijndael_hmac.pl \
+    test/tests/rijndael_hmac_fuzzing.pl \
     test/tests/rijndael_hmac_cmd_exec.pl \
     test/tests/rijndael_backwards_compatibility.pl \
     test/tests/os_compatibility.pl \
