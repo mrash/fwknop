@@ -55,11 +55,11 @@ def main():
         print "# start tests with payload:       ", spa_payload + "\n" \
             "# base64 encoded original payload:", base64.b64encode(spa_payload)
 
-        ### fuzz individual payload fields
-        pkt_id = field_fuzzing(args, spa_payload, payload_num, pkt_id)
-
         ### valid payload tests - all digest types
         pkt_id = valid_payloads(args, spa_payload, payload_num, pkt_id)
+
+        ### fuzz individual payload fields
+        pkt_id = field_fuzzing(args, spa_payload, payload_num, pkt_id)
 
         ### invalid digest types
         pkt_id = invalid_digest_types(args, spa_payload, payload_num, pkt_id)
@@ -71,7 +71,7 @@ def main():
         pkt_id = rm_chunks(args, spa_payload, payload_num, pkt_id)
 
         ### SPA payloads that are too long
-        pkt_id = append_data_to_end(args, spa_payload, payload_num, pkt_id)
+        pkt_id = data_extensions(args, spa_payload, payload_num, pkt_id)
 
         ### additional embedded ':' chars
         pkt_id = embedded_separators(args, spa_payload, payload_num, pkt_id)
@@ -82,6 +82,9 @@ def main():
     return
 
 def field_fuzzing(args, spa_payload, payload_num, pkt_id):
+
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") field fuzzing..."
+
     repl_start = 0
     repl_end   = 0
     field_num  = 0
@@ -89,12 +92,71 @@ def field_fuzzing(args, spa_payload, payload_num, pkt_id):
         if spa_payload[idx] == ':' or idx == len(spa_payload)-1:
             field_num += 1
             if repl_end > 0:
-                orig_field = spa_payload[repl_end+1:idx]
+                if idx == len(spa_payload)-1:
+                    orig_field = spa_payload[repl_end+1:]
+                else:
+                    orig_field = spa_payload[repl_end+1:idx]
             else:
                 orig_field = spa_payload[repl_end:idx]
 
             repl_start = repl_end
             repl_end = idx
+
+            decoded = orig_field
+            if is_field_b64(orig_field, field_num):
+                decoded = spa_base64_decode(orig_field)
+
+            ### first round of fuzzing for this field is to take the original
+            ### field and permute it in various ways
+
+            ### truncation
+            for l in range(1, len(decoded)):
+                pkt_id = write_fuzzing_payload(field_num, decoded[:l], \
+                    orig_field, repl_start, repl_end, spa_payload, \
+                    pkt_id, idx)
+                pkt_id = write_fuzzing_payload(field_num, decoded[l:], \
+                    orig_field, repl_start, repl_end, spa_payload, \
+                    pkt_id, idx)
+
+            ### remove chunks
+            for bl in range(1, len(decoded)):
+                for l in range(0, bl):
+                    fuzzing_field = decoded[:l] + decoded[l+bl:]
+                    pkt_id = write_fuzzing_payload(field_num, fuzzing_field, \
+                        orig_field, repl_start, repl_end, spa_payload, \
+                        pkt_id, idx)
+
+            ### append/prepend data
+            for l in [1, 10, 50, 127, 128, 129, 200, 399, \
+                    400, 401, 500, 800, 1000, 1023, 1024, 1025, \
+                    1200, 1499, 1500, 1501, 2000]:
+                for non_ascii in range(0, 5) + range(127, 130) + range(252, 256):
+                    new_data = ''
+                    for p in range(0, l):
+                        new_data += chr(non_ascii)
+                    pkt_id = write_fuzzing_payload(field_num, decoded + new_data, \
+                        orig_field, repl_start, repl_end, spa_payload, \
+                        pkt_id, idx)
+                    pkt_id = write_fuzzing_payload(field_num, new_data + decoded, \
+                        orig_field, repl_start, repl_end, spa_payload, \
+                        pkt_id, idx)
+
+            ### embedded separators
+            for pos in range(0, len(decoded)):
+                fuzzing_field = list(decoded)
+                fuzzing_field[pos] = ':'
+                pkt_id = write_fuzzing_payload(field_num, str(fuzzing_field), \
+                    orig_field, repl_start, repl_end, spa_payload, \
+                    pkt_id, idx)
+
+            ### embedded chars
+            for pos in range(0, len(decoded)):
+                for c in range(0, 31) + range(44, 48) + range(127, 131) + range(253, 255):
+                    fuzzing_field = list(decoded)
+                    fuzzing_field[pos] = chr(c)
+                    pkt_id = write_fuzzing_payload(field_num, str(fuzzing_field), \
+                        orig_field, repl_start, repl_end, spa_payload, \
+                        pkt_id, idx)
 
             ### now generate fuzzing data for this field
             for c in range(0, 3) + range(33, 47) + range(65, 67) + range(127, 130) + range(252, 256):
@@ -102,48 +164,61 @@ def field_fuzzing(args, spa_payload, payload_num, pkt_id):
                         63, 64, 127, 128, 129, 150, 220, 230, 254, 255, 256, 257, 258]:
 
                     fuzzing_field = ''
-                    require_b64 = orig_field.isdigit()
-
                     for n in range(0, l):
                         fuzzing_field += chr(c)
-
-                    new_payloads = [
-                            spa_payload[:repl_start],  ### for payloads without original field
-                            spa_payload[:repl_start],  ### prepend fuzzing field with original
-                            spa_payload[:repl_start]   ### append fuzzing field to original
-                    ]
-
-                    if field_num > 1:
-                        for i in range(0, len(new_payloads)):
-                            new_payloads[i] += ':'
-
-                    if idx == len(spa_payload)-1:
-                        field_variants(new_payloads, fuzzing_field, orig_field, require_b64)
-                    else:
-                        if field_num == 1 or field_num in range(3, 6):
-                            ### fields: rand val, time stamp, version, and SPA type
-                            field_variants(new_payloads, fuzzing_field, orig_field, False)
-                        elif field_num == 2: ### user field
-                            field_variants(new_payloads, fuzzing_field, orig_field, True)
-                        else:
-                            field_variants(new_payloads, fuzzing_field, orig_field, require_b64)
-
-                        for i in range(0, len(new_payloads)):
-                            new_payloads[i] += spa_payload[repl_end:]
-
-                    for s in new_payloads:
-                        print str(pkt_id), str(spa_failure), str(do_digest), \
-                                str(spa_sha256), base64.b64encode(s)
-                        pkt_id += 1
+                    pkt_id = write_fuzzing_payload(field_num, fuzzing_field, \
+                            orig_field, repl_start, repl_end, spa_payload, \
+                            pkt_id, idx)
 
     return pkt_id
+
+def write_fuzzing_payload(field_num, fuzzing_field, orig_field, \
+        repl_start, repl_end, spa_payload, pkt_id, idx):
+
+    new_payloads = [
+            spa_payload[:repl_start],  ### replace original field with fuzzing field
+            spa_payload[:repl_start],  ### prepend fuzzing field to original
+            spa_payload[:repl_start]   ### append fuzzing field to original
+    ]
+
+    if field_num > 1:
+        for i in range(0, len(new_payloads)):
+            new_payloads[i] += ':'
+
+    field_variants(new_payloads, fuzzing_field, \
+            orig_field, is_field_b64(orig_field, field_num))
+
+    if idx != len(spa_payload)-1:
+        for i in range(0, len(new_payloads)):
+            new_payloads[i] += spa_payload[repl_end:]
+
+    for s in new_payloads:
+        print str(pkt_id), str(spa_failure), str(do_digest), \
+                str(spa_sha256), base64.b64encode(s)
+        pkt_id += 1
+
+    return pkt_id
+
+def is_field_b64(orig_field, field_num):
+
+    ### this accounts for SPA packets with an optional client defined
+    ### firewall timeout field at the end
+    require_b64 = not orig_field.isdigit()
+
+    if field_num == 1 or field_num in range(3, 6):
+        ### fields: rand val, time stamp, version, and SPA type
+        require_b64 = False
+    elif field_num == 2:  ### user field
+        require_b64 = True
+
+    return require_b64
 
 def field_variants(new_payloads, fuzzing_field, orig_field, require_b64):
     if require_b64:
         decoded_orig_field = spa_base64_decode(orig_field)
-        new_payloads[0] += base64.b64encode(fuzzing_field)
-        new_payloads[1] += base64.b64encode(fuzzing_field+decoded_orig_field)
-        new_payloads[2] += base64.b64encode(decoded_orig_field+fuzzing_field)
+        new_payloads[0] += spa_base64_encode(fuzzing_field)
+        new_payloads[1] += spa_base64_encode(fuzzing_field+decoded_orig_field)
+        new_payloads[2] += spa_base64_encode(decoded_orig_field+fuzzing_field)
     else:
         new_payloads[0] += fuzzing_field
         new_payloads[1] += fuzzing_field+orig_field
@@ -156,11 +231,14 @@ def spa_base64_decode(b64str):
     if remainder != 0:
         for i in range(0, remainder):
             b64str += '='
-
     return base64.b64decode(b64str)
 
+def spa_base64_encode(nonb64str):
+    ### strip '=' chars like fwknop does
+    return base64.b64encode(nonb64str).replace('=', '')
+
 def valid_payloads(args, spa_payload, payload_num, pkt_id):
-    print "# payload " + str(payload_num) + " valid payload + valid digest types..."
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") valid payload + valid digest types..."
     for digest_type in range(0, 6):
         print str(pkt_id), str(spa_success), str(do_digest), \
                 str(digest_type), base64.b64encode(spa_payload)
@@ -168,7 +246,7 @@ def valid_payloads(args, spa_payload, payload_num, pkt_id):
     return pkt_id
 
 def invalid_digest_types(args, spa_payload, payload_num, pkt_id):
-    print "# payload " + str(payload_num) + " invalid digest types..."
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") invalid digest types..."
     for digest_type in [-1, 6, 7]:
         print str(pkt_id), str(spa_success), str(do_digest), \
                 str(digest_type), base64.b64encode(spa_payload)
@@ -176,7 +254,7 @@ def invalid_digest_types(args, spa_payload, payload_num, pkt_id):
     return pkt_id
 
 def truncated_lengths(args, spa_payload, payload_num, pkt_id):
-    print "# payload " + str(payload_num) + " truncated lengths..."
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") truncated lengths..."
     for l in range(1, len(spa_payload)):
         print str(pkt_id), str(spa_failure), str(do_digest), \
                 str(spa_sha256), base64.b64encode(spa_payload[:l])
@@ -189,7 +267,7 @@ def truncated_lengths(args, spa_payload, payload_num, pkt_id):
     return pkt_id
 
 def rm_chunks(args, spa_payload, payload_num, pkt_id):
-    print "# payload " + str(payload_num) + " splice blocks of chars..."
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") splice blocks of chars..."
     for bl in range(1, 20):
         for l in range(0, len(spa_payload)):
             new_payload = spa_payload[:l] + spa_payload[l+bl:]
@@ -198,22 +276,26 @@ def rm_chunks(args, spa_payload, payload_num, pkt_id):
             pkt_id += 1
     return pkt_id
 
-def append_data_to_end(args, spa_payload, payload_num, pkt_id):
-    print "# payload " + str(payload_num) + " payloads too long..."
+def data_extensions(args, spa_payload, payload_num, pkt_id):
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") payloads too long..."
     for l in [1, 10, 50, 127, 128, 129, 200, 399, \
             400, 401, 500, 800, 1000, 1023, 1024, 1025, \
             1200, 1499, 1500, 1501, 2000]:
         for non_ascii in range(0, 5) + range(127, 130) + range(252, 256):
-            new_payload = spa_payload
+            new_data = ''
             for p in range(0, l):
-                new_payload += chr(non_ascii)
+                new_data += chr(non_ascii)
+            ### append
             print str(pkt_id), str(spa_failure), str(do_digest), \
-                    str(spa_sha256), base64.b64encode(new_payload)
-            pkt_id += 1
+                    str(spa_sha256), base64.b64encode(spa_payload + new_data)
+            ### prepend
+            print str(pkt_id), str(spa_failure), str(do_digest), \
+                    str(spa_sha256), base64.b64encode(new_data + spa_payload)
+            pkt_id += 2
     return pkt_id
 
 def embedded_separators(args, spa_payload, payload_num, pkt_id):
-    print "# payload " + str(payload_num) + " additional embedded : chars..."
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") additional embedded : chars..."
     for pos in range(0, len(spa_payload)):
         if spa_payload[pos] == ':':
             continue
@@ -225,11 +307,11 @@ def embedded_separators(args, spa_payload, payload_num, pkt_id):
     return pkt_id
 
 def embedded_chars(args, spa_payload, payload_num, pkt_id):
-    print "# payload " + str(payload_num) + " non-ascii char tests..."
+    print "# payload " + str(payload_num) + " (" + spa_payload + ") non-ascii char tests..."
     for pos in range(0, len(spa_payload)):
-        for non_ascii in range(0, 31) + range(44, 48) + range(127, 131) + range(253, 255):
+        for c in range(0, 31) + range(44, 48) + range(127, 131) + range(253, 255):
             new_payload = list(spa_payload)
-            new_payload[pos] = chr(non_ascii)
+            new_payload[pos] = chr(c)
             ### write out the fuzzing line
             print str(pkt_id), str(spa_failure), str(do_digest), \
                     str(spa_sha256), base64.b64encode(''.join(new_payload))

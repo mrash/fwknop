@@ -105,6 +105,7 @@ our %cf = (
     'gpg_invalid_exe_access'       => "$conf_dir/gpg_invalid_exe_access.conf",
     'gpg_hmac_sha512_access'       => "$conf_dir/gpg_hmac_sha512_access.conf",
     'legacy_iv_access'             => "$conf_dir/legacy_iv_access.conf",
+    'hmac_fuzzing_access'          => "$conf_dir/hmac_fuzzing_access.conf",
     'legacy_iv_long_key_access'    => "$conf_dir/legacy_iv_long_key_access.conf",
     'legacy_iv_long_key2_access'   => "$conf_dir/legacy_iv_long_key2_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
@@ -245,6 +246,7 @@ my @test_files = (
     "$tests_dir/rijndael_fuzzing.pl",
     "$tests_dir/rijndael_backwards_compatibility.pl",
     "$tests_dir/rijndael_hmac.pl",
+    "$tests_dir/rijndael_hmac_fuzzing.pl",
     "$tests_dir/os_compatibility.pl",
     "$tests_dir/perl_FKO_module.pl",
     "$tests_dir/python_fko.pl",
@@ -267,6 +269,7 @@ our @rijndael_hmac_cmd_exec  = ();  ### from tests/rijndael_hmac_cmd_exec.pl
 our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
 our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
 our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
+our @rijndael_hmac_fuzzing   = ();  ### from tests/rijndael_hmac_fuzzing.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
 our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
 our @gpg                     = ();  ### from tests/gpg.pl
@@ -327,6 +330,7 @@ my $perl_libfko_constants_file   = '../perl/FKO/lib/FKO_Constants.pl';
 my $python_libfko_constants_file = '../python/fko.py';
 my $fko_wrapper_dir = 'fko-wrapper';
 my $python_spa_packet = '';
+my $pkts_file = '';
 my $enable_fuzzing_interfaces_tests = 0;
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
@@ -374,6 +378,7 @@ our $NO  = 0;
 our $IGNORE = 2;
 our $PRINT_LEN = 68;
 our $USE_PREDEF_PKTS = 1;
+our $READ_PKTS_FROM_FILE = 4;
 our $USE_CLIENT = 2;
 our $USE_PCAP_FILE = 3;
 our $REQUIRED = 1;
@@ -652,6 +657,7 @@ my @tests = (
     @rijndael_backwards_compatibility,
     @rijndael_fuzzing,
     @rijndael_hmac,
+    @rijndael_hmac_fuzzing,
     @os_compatibility,
     @perl_FKO_module,
     @python_fko,
@@ -692,6 +698,7 @@ my %test_keys = (
     'client_only'     => $OPTIONAL_NUMERIC,
     'server_only'     => $OPTIONAL_NUMERIC,
     'pkt'             => $OPTIONAL,
+    'spa_pkts_file'   => $OPTIONAL,
     'fuzzing_pkt'     => $OPTIONAL,
     'pkt_prefix'      => $OPTIONAL,
     'no_ip_check'     => $OPTIONAL,
@@ -1580,6 +1587,36 @@ sub write_rc_file() {
     close RC;
 
     return;
+}
+
+sub server_start_stop_cycle() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    &run_cmd("$fwknopdCmd $default_server_conf_args -S",
+            $cmd_out_tmp, $curr_test_file);
+    &run_cmd("$fwknopdCmd $default_server_conf_args -K",
+            $cmd_out_tmp, $curr_test_file);
+    &run_cmd("$fwknopdCmd $default_server_conf_args -R",
+            $cmd_out_tmp, $curr_test_file);
+
+    ### start fwknopd as a daemon then restart then stop
+    $rv = 0 unless &run_cmd("$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf $verbose_str",
+            $cmd_out_tmp, $curr_test_file);
+
+    if ($rv) {
+        sleep 2;
+        &run_cmd("$fwknopdCmd $default_server_conf_args -R",
+                $cmd_out_tmp, $curr_test_file);
+    }
+    &run_cmd("$fwknopdCmd $default_server_conf_args -S",
+            $cmd_out_tmp, $curr_test_file);
+    &run_cmd("$fwknopdCmd $default_server_conf_args -K",
+            $cmd_out_tmp, $curr_test_file);
+
+    return $rv;
 }
 
 sub server_conf_files() {
@@ -4398,6 +4435,40 @@ sub fuzzer() {
     return $rv;
 }
 
+sub cached_pkts_fuzzer() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created = 0;
+    my $fw_rule_removed = 0;
+
+    $pkts_file = $test_hr->{'spa_pkts_file'};
+
+    ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+        = &client_server_interaction($test_hr, {}, $READ_PKTS_FROM_FILE);
+
+    $pkts_file = '';
+
+    $rv = 0 unless $server_was_stopped;
+
+    if ($fw_rule_created) {
+        &write_test_file("[-] new fw rule created.\n", $curr_test_file);
+        $rv = 0;
+    } else {
+        &write_test_file("[+] new fw rule not created.\n", $curr_test_file);
+    }
+
+    if ($rv) {
+        $fuzzing_success_ctr++;
+    } else {
+        $fuzzing_failure_ctr++;
+    }
+    $fuzzing_ctr++;
+
+    return $rv;
+}
+
 sub altered_base64_spa_data() {
     my $test_hr = shift;
 
@@ -4805,6 +4876,8 @@ sub client_server_interaction() {
         }
     } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
         &send_packets($pkts_hr);
+    } elsif ($spa_client_flag == $READ_PKTS_FROM_FILE) {
+        &send_packets_from_file();
     } else {
         ### pcap file mode, nothing to do
     }
@@ -4949,6 +5022,40 @@ sub get_spa_packet_from_file() {
     close F;
 
     return $spa_pkt;
+}
+
+sub send_packets_from_file() {
+
+    ### send 100 SPA packets at a time
+    my @packets = ();
+    open F, "< $pkts_file" or die $!;
+    my @lines = <F>;
+    close F;
+
+    my $pkt_ctr = 1;
+    for (@lines) {
+        ### PKT_ID: 60, PKT: +h1JUC/aipIDfugDoVpsOqChr5KBwbP...
+        if (/PKT_ID\:\s+(\d+)\,\sPKT\:\s(\S+)/) {
+            push @packets,
+                {
+                    'proto'  => 'udp',
+                    'port'   => $default_spa_port,
+                    'dst_ip' => $loopback_ip,
+                    'data'   => $2,
+                };
+            if (($pkt_ctr % 100) == 0) {
+                &send_all_pkts(\@packets);
+                @packets = ();
+            }
+            $pkt_ctr++;
+        }
+    }
+    close F;
+
+    if ($#packets > -1) {
+        &send_all_pkts(\@packets);
+    }
+    return;
 }
 
 sub send_packets() {

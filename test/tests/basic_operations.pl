@@ -20,11 +20,18 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'dump error codes ',
+        'detail'   => 'dump error codes',
         'function' => \&generic_exec,
         'exec_err' => $NO,
         'cmdline' => "$fwknopdCmd $default_server_conf_args " .
             "--dump-serv-err-codes",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'start restart stop cycle',
+        'function' => \&server_start_stop_cycle,
+        'exec_err' => $YES,
     },
 
     {
@@ -2281,6 +2288,20 @@
         ],
         'server_conf_file' => [
             'PCAP_FILTER       $NOVAR proto test'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'locale setting',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'LOCALE     C'
         ],
     },
 
