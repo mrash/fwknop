@@ -831,6 +831,15 @@ incoming_spa(fko_srv_options_t *opts)
                 acc = acc->next;
                 continue;
             }
+            else if(opts->test)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) --test mode enabled, skipping command execution.",
+                    spadat.pkt_source_ip, stanza_num
+                );
+                acc = acc->next;
+                continue;
+            }
             else
             {
                 log_msg(LOG_INFO,
@@ -905,7 +914,20 @@ incoming_spa(fko_srv_options_t *opts)
          * access stanza loop (first valid access stanza stops us looking
          * for others).
         */
-        process_spa_request(opts, acc, &spadat);
+        if(opts->test)  /* no firewall changes in --test mode */
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) --test mode enabled, skipping firewall manipulation.",
+                spadat.pkt_source_ip, stanza_num
+            );
+            acc = acc->next;
+            continue;
+        }
+        else
+        {
+            process_spa_request(opts, acc, &spadat);
+        }
+
         if(ctx != NULL)
         {
             if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)

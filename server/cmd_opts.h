@@ -132,7 +132,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:c:C:d:Dfhi:Kl:O:p:P:RSvV"
+#define GETOPTS_OPTION_STRING "a:c:C:d:Dfhi:Kl:O:p:P:RStvV"
 
 /* Our program command-line options...
 */
@@ -165,6 +165,7 @@ static struct option cmd_opts[] =
     {"pid-file",             1, NULL, 'p'},
     {"restart",              0, NULL, 'R'},
     {"status",               0, NULL, 'S'},
+    {"test",                 0, NULL, 't'},
     {"verbose",              0, NULL, 'v'},
     {"version",              0, NULL, 'V'},
     {0, 0, 0, 0}

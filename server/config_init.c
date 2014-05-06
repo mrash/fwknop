@@ -953,6 +953,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'S':
                 opts->status = 1;
                 break;
+            case 't':
+                opts->test = 1;
+                break;
             /* Verbosity level */
             case 'v':
                 opts->verbose++;

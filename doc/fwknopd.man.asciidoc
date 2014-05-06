@@ -157,6 +157,12 @@ COMMAND-LINE OPTIONS
 *--syslog-enable*::
     Allow messages to be sent to syslog even if the foreground mode is set.
 
+*-t, --test*::
+    Run *fwknopd* in test mode. This instructs *fwknopd* to acquire and process
+    SPA packets, but not manipulate firewall rules or execute commands that are
+    provided by SPA clients. This option is mostly useful for the fuzzing tests
+    in the test suite to ensure broad code coverage under adverse conditions.
+
 *-v, --verbose*::
     Run *fwknopd* in verbose mode. This can option can be specified
     multiple times to increase the verbosity of the output to the system
