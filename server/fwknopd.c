@@ -153,7 +153,7 @@ main(int argc, char **argv)
 
         /* Restart the currently running fwknopd?
         */
-        if(opts.restart == 1 || opts.status == 1)
+        if(opts.restart == 1)
         {
             old_pid = get_running_pid(&opts);
 
