@@ -404,6 +404,11 @@ my $SERVER_RECEIVE_CHECK    = 1;
 my $NO_SERVER_RECEIVE_CHECK = 2;
 my $APPEND_RESULTS    = 1;
 my $NO_APPEND_RESULTS = 2;
+my %sigs = (
+    'SIGINT'  => 2,
+    'SIGUSR1' => 10,
+    'SIGUSR2' => 12,
+);
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
 
@@ -1607,9 +1612,22 @@ sub server_start_stop_cycle() {
             $cmd_out_tmp, $curr_test_file);
 
     if ($rv) {
-        sleep 2;
-        &run_cmd("$fwknopdCmd $default_server_conf_args -R",
-                $cmd_out_tmp, $curr_test_file);
+        ### send additional signals for code coverage
+        if (-e $default_pid_file) {
+            sleep 1;
+            for my $sig ($sigs{'SIGINT'}, $sigs{'SIGUSR1'},
+                        $sigs{'SIGUSR2'}) {
+                &run_cmd("$fwknopdCmd $default_server_conf_args -R",
+                        $cmd_out_tmp, $curr_test_file);
+                sleep 1;
+                open F, "< $default_pid_file" or
+                    die "[*] Could not open $default_pid_file: $!";
+                my $pid = <F>;
+                close F;
+                chomp $pid;
+                kill $sig, $pid;
+            }
+        }
     }
     &run_cmd("$fwknopdCmd $default_server_conf_args -S",
             $cmd_out_tmp, $curr_test_file);

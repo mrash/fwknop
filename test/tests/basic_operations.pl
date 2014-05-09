@@ -31,7 +31,6 @@
         'subcategory' => 'server',
         'detail'   => 'start restart stop cycle',
         'function' => \&server_start_stop_cycle,
-        'exec_err' => $YES,
     },
 
     {
