@@ -1599,15 +1599,15 @@ sub server_start_stop_cycle() {
 
     my $rv = 1;
 
-    &run_cmd("$fwknopdCmd $default_server_conf_args -S",
+    &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -S",
             $cmd_out_tmp, $curr_test_file);
-    &run_cmd("$fwknopdCmd $default_server_conf_args -K",
+    &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
             $cmd_out_tmp, $curr_test_file);
-    &run_cmd("$fwknopdCmd $default_server_conf_args -R",
+    &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -R",
             $cmd_out_tmp, $curr_test_file);
 
     ### start fwknopd as a daemon then restart then stop
-    $rv = 0 unless &run_cmd("$fwknopdCmd $default_server_conf_args " .
+    $rv = 0 unless &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf $verbose_str",
             $cmd_out_tmp, $curr_test_file);
 
@@ -1617,7 +1617,7 @@ sub server_start_stop_cycle() {
             sleep 1;
             for my $sig ($sigs{'SIGINT'}, $sigs{'SIGUSR1'},
                         $sigs{'SIGUSR2'}) {
-                &run_cmd("$fwknopdCmd $default_server_conf_args -R",
+                &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -R",
                         $cmd_out_tmp, $curr_test_file);
                 sleep 1;
                 open F, "< $default_pid_file" or
@@ -1629,9 +1629,9 @@ sub server_start_stop_cycle() {
             }
         }
     }
-    &run_cmd("$fwknopdCmd $default_server_conf_args -S",
+    &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -S",
             $cmd_out_tmp, $curr_test_file);
-    &run_cmd("$fwknopdCmd $default_server_conf_args -K",
+    &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
             $cmd_out_tmp, $curr_test_file);
 
     return $rv;
