@@ -5,4 +5,30 @@
    fun:gpgme*
    ...
 }
-
+{
+   pcap_supression1
+   Memcheck:Cond
+   ...
+   fun:pcap_activate
+   fun:pcap_open_live
+   fun:pcap_capture
+   fun:main
+}
+{
+   pcap_suppression2
+   Memcheck:Param
+   socketcall.setsockopt(optval)
+   fun:setsockopt
+   ...
+   fun:pcap_capture
+   fun:main
+}
+{
+   pcap_suppression3
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:pcap_compile
+   fun:pcap_capture
+   fun:main
+}

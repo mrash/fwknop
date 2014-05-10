@@ -317,6 +317,7 @@ my $client_only_mode = 0;
 my $server_only_mode = 0;
 my $enable_valgrind = 0;
 my $disable_valgrind = 0;
+my $enable_valgrind_gen_suppressions = 0;
 my $valgrind_disable_suppressions = 0;
 my $valgrind_disable_child_silent = 0;
 my $valgrind_suppressions_file = 'valgrind_suppressions';
@@ -450,6 +451,7 @@ exit 1 unless GetOptions(
     'enable-fuzzing-interfaces-tests' => \$enable_fuzzing_interfaces_tests,
     'valgrind-path=s'   => \$valgrind_path,
     'valgrind-suppression-file' => \$valgrind_suppressions_file,
+    'enable-valgrind-gen-suppressions' => \$enable_valgrind_gen_suppressions,
     ### can set the following to "output.last/valgrind-coverage" if
     ### a full test suite run has already been executed with --enable-valgrind
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
@@ -505,6 +507,9 @@ if ($enable_valgrind) {
         "--show-reachable=yes --track-origins=yes";
     unless ($valgrind_disable_suppressions) {
         $valgrind_str .= " --suppressions=$valgrind_suppressions_file";
+    }
+    if ($enable_valgrind_gen_suppressions) {
+        $valgrind_str .= ' --gen-suppressions=all';
     }
     unless ($valgrind_disable_child_silent) {
         $valgrind_str .= ' --child-silent-after-fork=yes';
@@ -917,7 +922,26 @@ sub run_test() {
         move $default_digest_file, "${default_digest_file}.mv";
     }
 
-    if (&{$test_hr->{'function'}}($test_hr)) {
+    my $rv = &{$test_hr->{'function'}}($test_hr);
+
+    ### if we're in valgrind mode, make sure there were no memory leaks
+    if ($enable_valgrind) {
+        for my $file ($curr_test_file, $server_test_file) {
+            next unless -e $file;
+            if (&file_find_regex([qr/^==\d+==\sHEAP\sSUMMARY/],
+                    $MATCH_ALL, $NO_APPEND_RESULTS, $file)) {
+                unless (&file_find_regex(
+                    [qr/no\sleaks\sare\spossible/],
+                        $MATCH_ALL, $APPEND_RESULTS, $file)) {
+                    $rv = 0 if &file_find_regex(
+                        [qr/still\sreachable\sin\sloss\srecord/],
+                        $MATCH_ALL, $APPEND_RESULTS, $file);
+                }
+            }
+        }
+    }
+
+    if ($rv) {
         &logr("pass ($executed)\n");
         $passed++;
     } else {
@@ -6872,86 +6896,88 @@ sub usage() {
 
 [+] $0 <options>
 
-    -A   --Anonymize-results       - Prepare anonymized results at:
-                                     $tarfile
-    --enable-all                   - Enable tests that aren't enabled by
-                                     default.  This also enables running all
-                                     tests under valgrind, so if you need
-                                     fast results this can be disabled by also
-                                     specifying --disable-valgrind.
-    --enable-dist-check            - Test 'make dist' run.
-    --enable-profile-coverage      - Generate profile coverage stats with an
-                                     emphasis on finding functions that the
-                                     test suite does not call.
-    --profile-coverage-preserve    - In --enable-profile-coverage mode,
-                                     preserve previous coverage files.
-    --profile-coverage-init        - Remove old .gcno, .gcda, and .gcov files
-                                     and recompile fwknop.
-    --enable-recompile             - Recompile fwknop sources and look for
-                                     compilation warnings.
-    --enable-valgrind              - Run every test underneath valgrind.
-    --disable-valgrind             - Disable valgrind mode (useful sometimes
-                                     when --enable-all is used to have
-                                     everything except for valgrind enabled).
-    --enable-ip-resolve            - Enable client IP resolution (-R) test -
-                                     this requires internet access.
-    --enable-distcheck             - Enable 'make dist' check.
-    --enable-perl-module-checks    - Run a series of tests against libfko via
-                                     the perl FKO module.
-    --enable-perl-module-pkt-gen   - Generate a series of fuzzing packets via
-                                     the perl FKO module (assumes a patched
-                                     libfko code to accept fuzzing values).
-                                     The generated packets are placed in:
-                                     $fuzzing_pkts_file
-    --enable-openssl-checks        - Enable tests to verify that Rijndael
-                                     cipher usage is compatible with openssl.
-    --gdb-test <test file>         - Run the same command a previous test suite
-                                     execution through gdb by specifying the
-                                     output/ test file.
-    --test-limit <number>          - Limit the number of executed tests.
-    --diff                         - Compare the results of one test run to
-                                     another.  By default this compares output
-                                     in ${output_dir}.last to $output_dir
-    --diff-dir1=<path>             - Left hand side of diff directory path,
-                                     default is: ${output_dir}.last
-    --diff-dir2=<path>             - Right hand side of diff directory path,
-                                     default is: $output_dir
-    --include=<regex>              - Specify a regex to be used over test
-                                     names that must match.
-    --exclude=<regex>              - Specify a regex to be used over test
-                                     names that must not match.
-    --fuzzing-pkts-file <file>     - Specify path to fuzzing packet file.
-    --fuzzing-pkts-append          - When generating new fuzzing packets,
-                                     append them to the fuzzing packets file.
-    --List                         - List test names.
-    --test-limit=<num>             - Limit the number of tests that will run.
-    --loopback-intf=<intf>         - Specify loopback interface name (default
-                                     depends on the OS where the test suite
-                                     is executed).
-    --output-dir=<path>            - Path to output directory, default is:
-                                     $output_dir
-    --fwknop-path=<path>           - Path to fwknop binary, default is:
-                                     $fwknopCmd
-    --fwknopd-path=<path>          - Path to fwknopd binary, default is:
-                                     $fwknopdCmd
-    --lib-dir=<path>               - For LD_LIBRARY_PATH, default is:
-                                     $lib_dir
-    --client-only-mode             - Run client-only tests.
-    --server-only-mode             - Run server-only tests.
-    --valgrind-path=<path>         - Specify path to valgrind
-    --valgrind-prev-cov-dir=<path> - Path to previous valgrind-coverage
-                                     directory (defaults to:
-                                     "output.last/valgrind-coverage").
-    --valgrind-suppressions-file   - Path to the valgrind suppressions file,
-                                     default is: $valgrind_suppressions_file
-    --valgrind-disable-suppressions - Disable valgrind suppressions (current
-                                      suppressions are for gpgme).
-    --valgrind-disable-child-silent - Disable valgrind --child-silent-after-fork
-                                      option (enabled because of gpgme).
-    --cmd-verbose=<str>            - Set the verbosity level of executed fwknop
-                                     commands, default is:
-                                     $verbose_str
-    -h   --help                    - Display usage on STDOUT and exit.
+    -A   --Anonymize-results           - Prepare anonymized results at:
+                                         $tarfile
+    --enable-all                       - Enable tests that aren't enabled by
+                                         default.  This also enables running all
+                                         tests under valgrind, so if you need
+                                         fast results this can be disabled by also
+                                         specifying --disable-valgrind.
+    --enable-dist-check                - Test 'make dist' run.
+    --enable-profile-coverage          - Generate profile coverage stats with an
+                                         emphasis on finding functions that the
+                                         test suite does not call.
+    --profile-coverage-preserve        - In --enable-profile-coverage mode,
+                                         preserve previous coverage files.
+    --profile-coverage-init            - Remove old .gcno, .gcda, and .gcov files
+                                         and recompile fwknop.
+    --enable-recompile                 - Recompile fwknop sources and look for
+                                         compilation warnings.
+    --enable-valgrind                  - Run every test underneath valgrind.
+    --disable-valgrind                 - Disable valgrind mode (useful sometimes
+                                         when --enable-all is used to have
+                                         everything except for valgrind enabled).
+    --enable-ip-resolve                - Enable client IP resolution (-R) test -
+                                         this requires internet access.
+    --enable-distcheck                 - Enable 'make dist' check.
+    --enable-perl-module-checks        - Run a series of tests against libfko via
+                                         the perl FKO module.
+    --enable-perl-module-pkt-gen       - Generate a series of fuzzing packets via
+                                         the perl FKO module (assumes a patched
+                                         libfko code to accept fuzzing values).
+                                         The generated packets are placed in:
+                                         $fuzzing_pkts_file
+    --enable-openssl-checks            - Enable tests to verify that Rijndael
+                                         cipher usage is compatible with openssl.
+    --gdb-test <test file>             - Run the same command a previous test suite
+                                         execution through gdb by specifying the
+                                         output/ test file.
+    --test-limit <number>              - Limit the number of executed tests.
+    --diff                             - Compare the results of one test run to
+                                         another.  By default this compares output
+                                         in ${output_dir}.last to $output_dir
+    --diff-dir1=<path>                 - Left hand side of diff directory path,
+                                         default is: ${output_dir}.last
+    --diff-dir2=<path>                 - Right hand side of diff directory path,
+                                         default is: $output_dir
+    --include=<regex>                  - Specify a regex to be used over test
+                                         names that must match.
+    --exclude=<regex>                  - Specify a regex to be used over test
+                                         names that must not match.
+    --fuzzing-pkts-file <file>         - Specify path to fuzzing packet file.
+    --fuzzing-pkts-append              - When generating new fuzzing packets,
+                                         append them to the fuzzing packets file.
+    --List                             - List test names.
+    --test-limit=<num>                 - Limit the number of tests that will run.
+    --loopback-intf=<intf>             - Specify loopback interface name (default
+                                         depends on the OS where the test suite
+                                         is executed).
+    --output-dir=<path>                - Path to output directory, default is:
+                                         $output_dir
+    --fwknop-path=<path>               - Path to fwknop binary, default is:
+                                         $fwknopCmd
+    --fwknopd-path=<path>              - Path to fwknopd binary, default is:
+                                         $fwknopdCmd
+    --lib-dir=<path>                   - For LD_LIBRARY_PATH, default is:
+                                         $lib_dir
+    --client-only-mode                 - Run client-only tests.
+    --server-only-mode                 - Run server-only tests.
+    --valgrind-path=<path>             - Specify path to valgrind
+    --valgrind-prev-cov-dir=<path>     - Path to previous valgrind-coverage
+                                         directory (defaults to:
+                                         "output.last/valgrind-coverage").
+    --valgrind-suppressions-file       - Path to the valgrind suppressions file,
+                                         default is: $valgrind_suppressions_file
+    --valgrind-disable-suppressions    - Disable valgrind suppressions (current
+                                         suppressions are for gpgme).
+    --valgrind-disable-child-silent    - Disable valgrind --child-silent-after-fork
+                                         option (enabled because of gpgme).
+    --enable-valgrind-gen-suppressions - Generate valgrind suppressions for any
+                                         valgrind error discoveries.
+    --cmd-verbose=<str>                - Set the verbosity level of executed fwknop
+                                         commands, default is:
+                                         $verbose_str
+    -h   --help                        - Display usage on STDOUT and exit.
 
 _HELP_
     exit 0;
