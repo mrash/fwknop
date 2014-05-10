@@ -191,6 +191,8 @@ spa_encoded_msg_fuzzing(void)
             }
         } else {
             printf("fko_spa_data_final(): %s\n", fko_errstr(res));
+            fko_destroy(decode_ctx);
+            decode_ctx = NULL;
         }
 
         memset(line, 0x0, MAX_LINE_LEN);
