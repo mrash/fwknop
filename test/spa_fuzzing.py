@@ -288,10 +288,11 @@ def data_extensions(args, spa_payload, payload_num, pkt_id):
             ### append
             print str(pkt_id), str(spa_failure), str(do_digest), \
                     str(spa_sha256), base64.b64encode(spa_payload + new_data)
+            pkt_id += 1
             ### prepend
             print str(pkt_id), str(spa_failure), str(do_digest), \
                     str(spa_sha256), base64.b64encode(new_data + spa_payload)
-            pkt_id += 2
+            pkt_id += 1
     return pkt_id
 
 def embedded_separators(args, spa_payload, payload_num, pkt_id):
