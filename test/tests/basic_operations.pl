@@ -218,6 +218,15 @@
         'cmdline'  => "$default_client_args_no_get_key --key-base64-rijndael " .
             "Zndrbm9wdGVzdA== --key-base64-hmac dGVzdGluZw==",
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'SPA packet undef LOGNAME',
+        'function' => \&client_send_spa_packet,
+        'cmdline'  => "env -u LOGNAME $default_client_args_no_get_key --key-base64-rijndael " .
+            "Zndrbm9wdGVzdA== --key-base64-hmac dGVzdGluZw==",
+    },
+
 
     {
         'category' => 'basic operations',
