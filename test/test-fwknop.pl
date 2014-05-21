@@ -247,6 +247,7 @@ my @test_files = (
     "$tests_dir/rijndael_backwards_compatibility.pl",
     "$tests_dir/rijndael_hmac.pl",
     "$tests_dir/rijndael_hmac_fuzzing.pl",
+    "$tests_dir/fault_injection.pl",
     "$tests_dir/os_compatibility.pl",
     "$tests_dir/perl_FKO_module.pl",
     "$tests_dir/python_fko.pl",
@@ -270,6 +271,7 @@ our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
 our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
 our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
 our @rijndael_hmac_fuzzing   = ();  ### from tests/rijndael_hmac_fuzzing.pl
+our @fault_injection         = ();  ### from tests/fault_injection.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
 our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
 our @gpg                     = ();  ### from tests/gpg.pl
@@ -315,6 +317,8 @@ my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
 my $client_only_mode = 0;
 my $server_only_mode = 0;
+my $enable_fault_injection = 0;
+my $disable_fault_injection = 0;
 my $enable_valgrind = 0;
 my $disable_valgrind = 0;
 my $enable_valgrind_gen_suppressions = 0;
@@ -330,6 +334,8 @@ my $libfko_errstr_file = '../lib/fko_error.c';
 my $perl_libfko_constants_file   = '../perl/FKO/lib/FKO_Constants.pl';
 my $python_libfko_constants_file = '../python/fko.py';
 my $fko_wrapper_dir = 'fko-wrapper';
+our $wrapper_exec_script = 'run.sh';
+our $wrapper_exec_script_valgrind = 'run_valgrind.sh';
 my $python_spa_packet = '';
 my $pkts_file = '';
 my $enable_fuzzing_interfaces_tests = 0;
@@ -443,6 +449,8 @@ exit 1 unless GetOptions(
     'gdb-test=s'        => \$gdb_test_file,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
+    'enable-fault-injection'   => \$enable_fault_injection,
+    'disable-fault-injection'  => \$disable_fault_injection,
     'enable-valgrind'   => \$enable_valgrind,
     'disable-valgrind'  => \$disable_valgrind,
     'valgrind-disable-suppressions'  => \$valgrind_disable_suppressions,
@@ -473,6 +481,7 @@ our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
 if ($enable_all) {
     $enable_valgrind = 1;
+    $enable_fault_injection = 1;
     $enable_recompilation_warnings_check = 1;
     $enable_make_distcheck = 1;
     $enable_client_ip_resolve_test = 1;
@@ -482,6 +491,7 @@ if ($enable_all) {
 }
 
 $enable_valgrind = 0 if $disable_valgrind;
+$enable_fault_injection = 0 if $disable_fault_injection;
 $enable_profile_coverage_check = 1 if $profile_coverage_init;
 
 unless (-d $output_dir) {
@@ -668,6 +678,7 @@ my @tests = (
     @rijndael_fuzzing,
     @rijndael_hmac,
     @rijndael_hmac_fuzzing,
+    @fault_injection,
     @os_compatibility,
     @perl_FKO_module,
     @python_fko,
@@ -720,6 +731,9 @@ my %test_keys = (
     'client_pkt_tries' => $OPTIONAL_NUMERIC,
     'client_popen'     => $OPTIONAL,
     'disable_valgrind' => $OPTIONAL,
+    'wrapper_compile'  => $OPTIONAL,
+    'wrapper_script'   => $OPTIONAL,
+    'wrapper_binary'   => $OPTIONAL,
     'server_access_file' => $OPTIONAL,
     'server_conf_file'   => $OPTIONAL,
     'digest_cache_file'  => $OPTIONAL,
@@ -1265,11 +1279,46 @@ sub profile_coverage() {
     if ($username) {
         for my $extension ('*.gcno', '*.gcda', '*.gcov') {
             ### remove profile output from any previous run
-            system qq{find .. -name $extension | xargs chown $username};
+            system qq/find .. -name $extension | xargs -r chown $username/;
         }
     }
 
     return 1;
+}
+
+sub fko_wrapper_exec() {
+    my $test_hr = shift;
+
+    my $make_arg = $test_hr->{'wrapper_compile'};
+
+    if ($test_hr->{'wrapper_binary'} eq 'fko_wrapper') {
+        $make_arg = 'fuzzing' if $enable_fuzzing_interfaces_tests;
+    }
+
+    my $rv = &compile_wrapper($test_hr->{'wrapper_compile'});
+
+    if ($rv) {
+        chdir $fko_wrapper_dir or die $!;
+
+        &run_cmd("./$test_hr->{'wrapper_script'} ./$test_hr->{'wrapper_binary'}",
+            "../$cmd_out_tmp", "../$curr_test_file");
+
+        if ($test_hr->{'wrapper_script'} =~ /valgrind/) {
+            $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
+                $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
+        }
+
+        chdir '..' or die $!;
+
+        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
+                $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file("[-] crash message found in: $curr_test_file\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    return $rv;
 }
 
 sub test_suite_conf_files() {
@@ -6089,6 +6138,10 @@ sub init() {
         push @tests_to_exclude, qr/with valgrind/;
     }
 
+    unless ($enable_fault_injection) {
+        push @tests_to_exclude, qr/fault injection/;
+    }
+
     unless ($enable_recompilation_warnings_check
             or $enable_profile_coverage_check) {
         push @tests_to_exclude, qr/recompilation/;
@@ -6417,6 +6470,7 @@ sub import_previous_valgrind_coverage_info() {
 }
 
 sub compile_wrapper() {
+    my $make_arg = shift;
 
     unless (-d $fko_wrapper_dir) {
         &write_test_file("[-] fko wrapper directory " .
@@ -6434,7 +6488,7 @@ sub compile_wrapper() {
     }
 
     my $make_str = 'make';
-    $make_str .= ' fuzzing' if $enable_fuzzing_interfaces_tests;
+    $make_str .= " $make_arg" if $make_arg;
 
     if ($sudo_path) {
         unless (&run_cmd("$sudo_path -u $username $make_str",
@@ -6455,55 +6509,8 @@ sub compile_wrapper() {
         }
     }
 
-    unless (-e 'fko_wrapper' and -e 'run_valgrind.sh') {
-        &write_test_file("[-] fko_wrapper or run_valgrind.sh does not exist.\n",
-            "../$curr_test_file");
-        chdir '..' or die $!;
-        return 0;
-    }
-
     chdir '..' or die $!;
     return 1;
-}
-
-sub compile_execute_fko_wrapper() {
-
-    my $rv = &compile_wrapper();
-
-    if ($rv) {
-
-        chdir $fko_wrapper_dir or die $!;
-        &run_cmd('./run_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
-
-        $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
-            $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
-
-        chdir '..' or die $!;
-    }
-
-    return $rv;
-}
-
-sub compile_execute_fko_wrapper_no_valgrind() {
-
-    my $rv = &compile_wrapper();
-
-    if ($rv) {
-
-        chdir $fko_wrapper_dir or die $!;
-        &run_cmd('./run_no_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
-
-        chdir '..' or die $!;
-
-        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
-                $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
-            &write_test_file("[-] crash message found in: $curr_test_file\n",
-                $curr_test_file);
-            $rv = 0;
-        }
-    }
-
-    return $rv;
 }
 
 sub parse_valgrind_flagged_functions() {

@@ -227,6 +227,24 @@
             "Zndrbm9wdGVzdA== --key-base64-hmac dGVzdGluZw==",
     },
 
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'libfko',
+        'detail'   => 'acquire FKO context',
+        'function' => \&fko_wrapper_exec,
+        'wrapper_compile' => 'all',
+        'wrapper_script'  => $wrapper_exec_script,
+        'wrapper_binary'  => 'fko_basic',
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'libfko',
+        'detail'   => 'acquire FKO context (with valgrind)',
+        'function' => \&fko_wrapper_exec,
+        'wrapper_compile' => 'all',
+        'wrapper_script'  => $wrapper_exec_script_valgrind,
+        'wrapper_binary'  => 'fko_basic',
+    },
 
     {
         'category' => 'basic operations',
