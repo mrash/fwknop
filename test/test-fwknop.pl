@@ -6802,11 +6802,13 @@ sub file_find_regex() {
 
     for my $re (@$re_ar) {
         my $matched = 0;
+        my $line_ctr = 0;
         for my $line (@file_lines) {
+            $line_ctr++;
             next if $line =~ /file_find_regex\(\)/;
             if ($line =~ $re) {
                 push @write_lines, "[.] file_find_regex() " .
-                    "Matched '$re' with line: $line";
+                    "Matched '$re' with line $line_ctr: $line";
                 $matched = 1;
                 $found_single_match = 1;
                 last if $append_results_flag == $NO_APPEND_RESULTS;
