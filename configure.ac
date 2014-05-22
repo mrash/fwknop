@@ -130,9 +130,9 @@ AC_ARG_ENABLE([profile-coverage],
   [])
 
 if test "x$want_profile_coverage" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-g -pg])
     FKO_CHECK_COMPILER_ARG([-fprofile-arcs -ftest-coverage -fno-inline])
-    FKO_CHECK_COMPILER_ARG([-g])
-    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lgcov])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lgcov -pg])
 fi
 
 dnl Decide whether or not to build binaries with fault injection support
