@@ -284,7 +284,7 @@
         'function' => \&fko_wrapper_exec,
         'wrapper_compile' => 'all',
         'wrapper_script'  => $wrapper_exec_script_valgrind,
-        'wrapper_binary'  => 'fko_wrapper',
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_wrapper',
     },
     {
         'category' => 'Rijndael',
@@ -293,6 +293,6 @@
         'function' => \&fko_wrapper_exec,
         'wrapper_compile' => 'all',
         'wrapper_script'  => $wrapper_exec_script,
-        'wrapper_binary'  => 'fko_wrapper',
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_wrapper',
     },
 );
