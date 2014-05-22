@@ -234,7 +234,7 @@
         'function' => \&fko_wrapper_exec,
         'wrapper_compile' => 'all',
         'wrapper_script'  => $wrapper_exec_script,
-        'wrapper_binary'  => 'fko_basic',
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_basic',
     },
     {
         'category' => 'basic operations',
@@ -243,7 +243,7 @@
         'function' => \&fko_wrapper_exec,
         'wrapper_compile' => 'all',
         'wrapper_script'  => $wrapper_exec_script_valgrind,
-        'wrapper_binary'  => 'fko_basic',
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_basic',
     },
 
     {
