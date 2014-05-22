@@ -324,7 +324,7 @@ my $disable_valgrind = 0;
 my $enable_valgrind_gen_suppressions = 0;
 my $valgrind_disable_suppressions = 0;
 my $valgrind_disable_child_silent = 0;
-my $valgrind_suppressions_file = 'valgrind_suppressions';
+my $valgrind_suppressions_file = cwd() . '/valgrind_suppressions';
 our $valgrind_str = '';
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
@@ -333,7 +333,7 @@ my $libfko_hdr_file    = '../lib/fko.h';
 my $libfko_errstr_file = '../lib/fko_error.c';
 my $perl_libfko_constants_file   = '../perl/FKO/lib/FKO_Constants.pl';
 my $python_libfko_constants_file = '../python/fko.py';
-my $fko_wrapper_dir = 'fko-wrapper';
+our $fko_wrapper_dir = 'fko-wrapper';
 our $wrapper_exec_script = 'run.sh';
 our $wrapper_exec_script_valgrind = 'run_valgrind.sh';
 my $python_spa_packet = '';
@@ -368,6 +368,7 @@ my $include_permissions_warnings = 0;
 my $lib_view_cmd = '';
 my $git_path = '';
 our $valgrind_path = '';
+our $fiu_run_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
 my  $lcov_path = '';
@@ -464,6 +465,7 @@ exit 1 unless GetOptions(
     ### a full test suite run has already been executed with --enable-valgrind
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
     'openssl-path=s'    => \$openssl_path,
+    'fiu-run-path=s'    => \$fiu_run_path,
     'output-dir=s'      => \$output_dir,
     'cmd-verbose=s'     => \$verbose_str,
     'client-only-mode'  => \$client_only_mode,
@@ -481,7 +483,6 @@ our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
 if ($enable_all) {
     $enable_valgrind = 1;
-    $enable_fault_injection = 1;
     $enable_recompilation_warnings_check = 1;
     $enable_make_distcheck = 1;
     $enable_client_ip_resolve_test = 1;
@@ -734,9 +735,12 @@ my %test_keys = (
     'wrapper_compile'  => $OPTIONAL,
     'wrapper_script'   => $OPTIONAL,
     'wrapper_binary'   => $OPTIONAL,
-    'server_access_file' => $OPTIONAL,
-    'server_conf_file'   => $OPTIONAL,
-    'digest_cache_file'  => $OPTIONAL,
+    'fiu_run'             => $OPTIONAL_NUMERIC,
+    'fiu_injection_style' => $OPTIONAL,
+    'fiu_iterations'      => $OPTIONAL_NUMERIC,
+    'server_access_file'  => $OPTIONAL,
+    'server_conf_file'    => $OPTIONAL,
+    'digest_cache_file'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
@@ -1298,14 +1302,26 @@ sub fko_wrapper_exec() {
     my $rv = &compile_wrapper($test_hr->{'wrapper_compile'});
 
     if ($rv) {
+
         chdir $fko_wrapper_dir or die $!;
 
-        &run_cmd("./$test_hr->{'wrapper_script'} ./$test_hr->{'wrapper_binary'}",
-            "../$cmd_out_tmp", "../$curr_test_file");
+        my $iterations = $test_hr->{'fiu_iterations'};
+        $iterations = 1 if $iterations < 1;  ### assume we want at least 1
 
-        if ($test_hr->{'wrapper_script'} =~ /valgrind/) {
-            $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
-                $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
+        if ($test_hr->{'fiu_run'} == $YES) {
+            for (my $i=0; $i < $iterations; $i++) {
+                &run_cmd("$lib_view_str $fiu_run_path -x " .
+                    "-c '$test_hr->{'fiu_injection_style'}' $test_hr->{'wrapper_binary'}",
+                    "../$cmd_out_tmp", "../$curr_test_file");
+            }
+        } else {
+            &run_cmd("./$test_hr->{'wrapper_script'} $test_hr->{'wrapper_binary'}",
+                "../$cmd_out_tmp", "../$curr_test_file");
+
+            if ($test_hr->{'wrapper_script'} =~ /valgrind/) {
+                $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
+                    $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
+            }
         }
 
         chdir '..' or die $!;
@@ -6125,6 +6141,11 @@ sub init() {
             push @tests_to_exclude, qr/$cpan_valgrind_mod/;
             $enable_valgrind = 0;
         }
+    }
+
+    if ($enable_fault_injection) {
+        $fiu_run_path = &find_command('fiu-run') unless $fiu_run_path;
+        $enable_fault_injection = 0 unless $fiu_run_path;
     }
 
     $enable_perl_module_checks = 1
