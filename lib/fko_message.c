@@ -102,11 +102,19 @@ have_port(const char *msg)
 int
 fko_set_spa_message_type(fko_ctx_t ctx, const short msg_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_message_type_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_message_type_val",
+            FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL);
+#endif
     if(msg_type < 0 || msg_type >= FKO_LAST_MSG_TYPE)
         return(FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL);
 

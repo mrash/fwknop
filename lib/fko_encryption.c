@@ -478,11 +478,19 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
 int
 fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_encryption_type_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_encryption_type_val",
+            FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_VALIDFAIL);
+#endif
     if(encrypt_type < 0 || encrypt_type >= FKO_LAST_ENCRYPTION_TYPE)
         return(FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_VALIDFAIL);
 
@@ -513,11 +521,19 @@ fko_get_spa_encryption_type(fko_ctx_t ctx, short *enc_type)
 int
 fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_encryption_mode_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_encryption_mode_val",
+            FKO_ERROR_INVALID_DATA_ENCRYPT_MODE_VALIDFAIL);
+#endif
     if(encrypt_mode < 0 || encrypt_mode >= FKO_LAST_ENC_MODE)
         return(FKO_ERROR_INVALID_DATA_ENCRYPT_MODE_VALIDFAIL);
 

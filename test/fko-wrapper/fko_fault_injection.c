@@ -16,7 +16,19 @@ const char *fiu_tags[] = {
     "fko_set_username_init",
     "fko_set_username_strdup1",
     "fko_set_username_valuser",
-    "fko_set_username_strdup2"
+    "fko_set_username_strdup2",
+    "fko_set_timestamp_init",
+    "fko_set_timestamp_val",
+    "set_spa_digest_type_init",
+    "set_spa_digest_type_val",
+    "fko_set_spa_encryption_type_init",
+    "fko_set_spa_encryption_type_val",
+    "fko_set_spa_encryption_mode_init",
+    "fko_set_spa_encryption_mode_val",
+    "fko_set_spa_message_type_init",
+    "fko_set_spa_message_type_val",
+    "fko_set_timestamp_init",
+    "fko_set_timestamp_val"
 };
 const int fiu_rvs[] = {
     FKO_ERROR_MEMORY_ALLOCATION,
@@ -30,7 +42,19 @@ const int fiu_rvs[] = {
     FKO_ERROR_CTX_NOT_INITIALIZED,
     FKO_ERROR_MEMORY_ALLOCATION,
     FKO_ERROR_INVALID_DATA,
-    FKO_ERROR_MEMORY_ALLOCATION
+    FKO_ERROR_MEMORY_ALLOCATION,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_VALIDFAIL,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_INVALID_DATA_ENCRYPT_MODE_VALIDFAIL,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL
 };
 
 int main(void) {

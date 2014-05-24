@@ -39,6 +39,10 @@ fko_set_timestamp(fko_ctx_t ctx, const int offset)
 {
     time_t ts;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_timestamp_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -46,6 +50,10 @@ fko_set_timestamp(fko_ctx_t ctx, const int offset)
 
     ts = time(NULL) + offset;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_timestamp_val",
+            FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL);
+#endif
     if(ts < 0)
         return(FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL);
 

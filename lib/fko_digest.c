@@ -40,11 +40,18 @@ static int
 set_spa_digest_type(fko_ctx_t ctx,
     short *digest_type_field, const short digest_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("set_spa_digest_type_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+#if HAVE_LIBFIU
+    fiu_return_on("set_spa_digest_type_val",
+            FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL);
+#endif
     if(digest_type < 1 || digest_type >= FKO_LAST_DIGEST_TYPE)
         return(FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL);
 
