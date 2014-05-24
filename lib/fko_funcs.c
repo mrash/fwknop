@@ -43,6 +43,10 @@ fko_new(fko_ctx_t *r_ctx)
     int         res;
     char       *ver;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_new_calloc", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
+
     ctx = calloc(1, sizeof *ctx);
     if(ctx == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -59,6 +63,11 @@ fko_new(fko_ctx_t *r_ctx)
     /* Set the version string.
     */
     ctx->initval = FKO_CTX_INITIALIZED;
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_new_strdup", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
+
     ver = strdup(FKO_PROTOCOL_VERSION);
     ctx->initval = 0;
     if(ver == NULL)
