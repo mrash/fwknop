@@ -993,6 +993,17 @@ sub run_test() {
         }
     }
 
+    if ($enable_profile_coverage_check) {
+        if ($username) {
+            for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+                system qq/find .. -name $extension | xargs -r chown $username/;
+            }
+        }
+        for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+            system qq/find .. -name $extension | xargs -r chmod a+w/;
+        }
+    }
+
     ### clean up tmp files now that the test is complete
     &rm_tmp_files();
 
@@ -1282,12 +1293,31 @@ sub profile_coverage() {
 
     if ($username) {
         for my $extension ('*.gcno', '*.gcda', '*.gcov') {
-            ### remove profile output from any previous run
             system qq/find .. -name $extension | xargs -r chown $username/;
         }
     }
 
+    for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+        system qq/find .. -name $extension | xargs -r chmod a+w/;
+    }
+
     return 1;
+}
+
+sub fiu_run_fault_injection() {
+    my $test_hr = shift;
+    my $rv = 1;
+
+     my $iterations = $test_hr->{'fiu_iterations'};
+     $iterations = 1 if $iterations < 1;  ### assume we want at least 1
+
+     for (my $i=0; $i < $iterations; $i++) {
+         &run_cmd("$lib_view_str $fiu_run_path -x " .
+             "-c '$test_hr->{'fiu_injection_style'}' $test_hr->{'cmdline'}",
+             $cmd_out_tmp, $curr_test_file);
+     }
+
+    return $rv;
 }
 
 sub fko_wrapper_exec() {
@@ -6053,6 +6083,10 @@ sub validate_test_hashes() {
     ### for fwknop/fwknopd commands, prepend LD_LIBRARY_PATH and valgrind args
     for my $test_hr (@tests) {
         next if $test_hr->{'disable_valgrind'} eq $YES;
+
+        ### don't add LD_LIBRARY_PATH for tests run underneath fiu-run
+        next if $test_hr->{'subcategory'} =~ /fiu\-run/;
+
         if ($test_hr->{'cmdline'} =~ /^$fwknopCmd/
                 or $test_hr->{'cmdline'} =~ /^$fwknopdCmd/) {
             my $str = $lib_view_str;
