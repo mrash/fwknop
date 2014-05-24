@@ -6,13 +6,25 @@
 
 const char *fiu_tags[] = {
     "fko_new_calloc",
-    "fko_new_strdup"
+    "fko_new_strdup",
+    "fko_set_rand_value_init",
+    "fko_set_rand_value_lenval",
+    "fko_set_rand_value_strdup",
+    "fko_set_rand_value_read",
+    "fko_set_rand_value_calloc1",
+    "fko_set_rand_value_calloc2"
 };
 const int fiu_rvs[] = {
     FKO_ERROR_MEMORY_ALLOCATION,
+    FKO_ERROR_MEMORY_ALLOCATION,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL,
+    FKO_ERROR_MEMORY_ALLOCATION,
+    FKO_ERROR_FILESYSTEM_OPERATION,
+    FKO_ERROR_MEMORY_ALLOCATION,
     FKO_ERROR_MEMORY_ALLOCATION
 };
-const int num_fiu_tags = 2;
+const int num_fiu_tags = 8;
 
 int main(void) {
     fko_ctx_t       ctx = NULL;

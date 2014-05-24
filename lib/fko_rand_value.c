@@ -60,6 +60,10 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     unsigned long   seed;
     char           *tmp_buf;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_rand_value_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Context must be initialized.
     */
     if(!CTX_INITIALIZED(ctx))
@@ -69,12 +73,19 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     */
     if(new_val != NULL)
     {
+
+#if HAVE_LIBFIU
+        fiu_return_on("fko_set_rand_value_lenval", FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
+#endif
         if(strnlen(new_val, FKO_RAND_VAL_SIZE+1) != FKO_RAND_VAL_SIZE)
             return(FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL);
 
         if(ctx->rand_val != NULL)
             free(ctx->rand_val);
 
+#if HAVE_LIBFIU
+        fiu_return_on("fko_set_rand_value_strdup", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
         ctx->rand_val = strdup(new_val);
         if(ctx->rand_val == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -99,6 +110,9 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
         amt_read = fread(&seed, 4, 1, rfd);
         fclose(rfd);
 
+#if HAVE_LIBFIU
+        fiu_return_on("fko_set_rand_value_read", FKO_ERROR_FILESYSTEM_OPERATION);
+#endif
         if (amt_read != 1)
             return(FKO_ERROR_FILESYSTEM_OPERATION);
     }
@@ -117,10 +131,16 @@ fko_set_rand_value(fko_ctx_t ctx, const char * const new_val)
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
 
+#if HAVE_LIBFIU
+        fiu_return_on("fko_set_rand_value_calloc1", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
     ctx->rand_val = calloc(1, FKO_RAND_VAL_SIZE+1);
     if(ctx->rand_val == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
 
+#if HAVE_LIBFIU
+        fiu_return_on("fko_set_rand_value_calloc2", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
     tmp_buf = calloc(1, FKO_RAND_VAL_SIZE+1);
     if(tmp_buf == NULL)
             return(FKO_ERROR_MEMORY_ALLOCATION);
