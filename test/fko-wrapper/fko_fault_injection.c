@@ -12,7 +12,11 @@ const char *fiu_tags[] = {
     "fko_set_rand_value_strdup",
     "fko_set_rand_value_read",
     "fko_set_rand_value_calloc1",
-    "fko_set_rand_value_calloc2"
+    "fko_set_rand_value_calloc2",
+    "fko_set_username_init",
+    "fko_set_username_strdup1",
+    "fko_set_username_valuser",
+    "fko_set_username_strdup2"
 };
 const int fiu_rvs[] = {
     FKO_ERROR_MEMORY_ALLOCATION,
@@ -22,9 +26,12 @@ const int fiu_rvs[] = {
     FKO_ERROR_MEMORY_ALLOCATION,
     FKO_ERROR_FILESYSTEM_OPERATION,
     FKO_ERROR_MEMORY_ALLOCATION,
+    FKO_ERROR_MEMORY_ALLOCATION,
+    FKO_ERROR_CTX_NOT_INITIALIZED,
+    FKO_ERROR_MEMORY_ALLOCATION,
+    FKO_ERROR_INVALID_DATA,
     FKO_ERROR_MEMORY_ALLOCATION
 };
-const int num_fiu_tags = 8;
 
 int main(void) {
     fko_ctx_t       ctx = NULL;
@@ -32,7 +39,7 @@ int main(void) {
 
     fiu_init(0);
 
-    for (i=0; i < num_fiu_tags; i++) {
+    for (i=0; i < sizeof(fiu_rvs)/sizeof(int); i++) {
         printf("[+] libfiu injection tag: %s\n", fiu_tags[i]);
 
         fiu_enable(fiu_tags[i], fiu_rvs[i], NULL, 0);
