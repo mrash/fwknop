@@ -341,13 +341,13 @@ my $pkts_file = '';
 my $enable_fuzzing_interfaces_tests = 0;
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
+my $enable_complete = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enc_dummy_key = 'A'x8;
 my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_profile_coverage_check = 0;
-my $preserve_previous_coverage_files = 0;
 my $profile_coverage_init = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
@@ -441,7 +441,6 @@ exit 1 unless GetOptions(
     'fuzzing-class=s'     => \$fuzzing_class,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
-    'profile-coverage-preserve' => \$preserve_previous_coverage_files,
     'profile-coverage-init' => \$profile_coverage_init,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
@@ -457,6 +456,7 @@ exit 1 unless GetOptions(
     'valgrind-disable-suppressions'  => \$valgrind_disable_suppressions,
     'valgrind-disable-child-silent'  => \$valgrind_disable_child_silent,
     'enable-all'        => \$enable_all,
+    'enable-complete'   => \$enable_complete,
     'enable-fuzzing-interfaces-tests' => \$enable_fuzzing_interfaces_tests,
     'valgrind-path=s'   => \$valgrind_path,
     'valgrind-suppression-file' => \$valgrind_suppressions_file,
@@ -481,7 +481,7 @@ exit 1 unless GetOptions(
 our $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
 our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
-if ($enable_all) {
+if ($enable_all or $enable_complete) {
     $enable_valgrind = 1;
     $enable_recompilation_warnings_check = 1;
     $enable_make_distcheck = 1;
@@ -489,6 +489,12 @@ if ($enable_all) {
     $enable_perl_module_checks = 1;
     $enable_python_module_checks = 1;
     $enable_openssl_compatibility_tests = 1;
+}
+
+if ($enable_complete) {
+    $enable_fault_injection = 1;
+    $enable_profile_coverage_check = 1;
+    $enable_fuzzing_interfaces_tests = 1;
 }
 
 $enable_valgrind = 0 if $disable_valgrind;
@@ -6199,9 +6205,9 @@ sub init() {
 
     unless ($enable_recompilation_warnings_check
             or $enable_profile_coverage_check) {
-        push @tests_to_exclude, qr/recompilation/;
-    }
-    if ($preserve_previous_coverage_files) {
+        ### don't recompile if we're in looking at code
+        ### coverage - that is what --profile-coverage-init
+        ### is for
         push @tests_to_exclude, qr/recompilation/;
     }
 
@@ -6967,6 +6973,9 @@ sub usage() {
                                          tests under valgrind, so if you need
                                          fast results this can be disabled by also
                                          specifying --disable-valgrind.
+    --enable-complete                  - Enable even more tests --enable-all such
+                                         fuzzing interfaces, fault injection, and
+                                         code coverage.
     --enable-dist-check                - Test 'make dist' run.
     --enable-profile-coverage          - Generate profile coverage stats with an
                                          emphasis on finding functions that the
