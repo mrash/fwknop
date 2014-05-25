@@ -281,7 +281,6 @@ test_loop_compounded(void)
                         } else {
                             printf("fko_get_spa_data(): %s\n", fko_errstr(res));
                         }
-
                     } else {
                         printf("fko_spa_data_final(): %s\n", fko_errstr(res));
                     }
@@ -490,6 +489,11 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
         printf("libfko error (%d): %s\n", i, fko_errstr(i));
         spa_calls++;
     }
+
+    printf("fko_new_with_data(): %s (data: %s)\n",
+        fko_errstr(fko_new_with_data(&decrypt_ctx, "tooshort", ENC_KEY,
+        strlen(ENC_KEY), FKO_ENC_MODE_CBC, HMAC_KEY, strlen(HMAC_KEY),
+        FKO_HMAC_SHA256)), "tooshort");
 
     return;
 }
