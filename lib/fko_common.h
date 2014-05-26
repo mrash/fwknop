@@ -36,7 +36,7 @@
 #endif
 
 #if HAVE_LIBFIU
-  #include <fiu-local.h>
+  #include <fiu.h>
 #endif
 
 #include <stdio.h>

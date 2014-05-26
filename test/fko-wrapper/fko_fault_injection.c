@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <fiu-local.h>
+#include <fiu.h>
 #include <fiu-control.h>
 #include "fko.h"
 

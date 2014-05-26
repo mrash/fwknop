@@ -38,7 +38,7 @@
 #endif
 
 #if HAVE_LIBFIU
-  #include <fiu-local.h>
+  #include <fiu.h>
   #include <fiu-control.h>
 #endif
 

@@ -57,8 +57,8 @@
         'function' => \&fiu_run_fault_injection,
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file --no-save-args $verbose_str",
-        'fiu_injection_style' => 'enable_random name=libc/mm/*,probability=1',
-        'fiu_iterations' => 10
+        'fiu_injection_style' => 'enable_random name=libc/mm/*,probability=0.05',
+        'fiu_iterations' => 1000
     },
 
 );
