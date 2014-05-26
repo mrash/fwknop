@@ -36,7 +36,7 @@
         'wrapper_compile' => 'all',
         'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_basic',
         'fiu_run' => $YES,
-        'fiu_injection_style' => 'enable_random name=libc/str/strdup,probability=0.5',
+        'fiu_injection_style' => 'enable_random name=libc/str/strdup,probability=0.05',
         'fiu_iterations' => 1000
     },
     {
@@ -49,6 +49,16 @@
         'fiu_run' => $YES,
         'fiu_injection_style' => 'enable_random name=posix/io/rw/*,probability=0.05',
         'fiu_iterations' => 1000
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'fiu-run libc/mm/*',
+        'detail'   => 'client',
+        'function' => \&fiu_run_fault_injection,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --no-save-args $verbose_str",
+        'fiu_injection_style' => 'enable_random name=libc/mm/*,probability=1',
+        'fiu_iterations' => 10
     },
 
 );
