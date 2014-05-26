@@ -37,6 +37,11 @@
   #include "config.h"
 #endif
 
+#if HAVE_LIBFIU
+  #include <fiu-local.h>
+  #include <fiu-control.h>
+#endif
+
 #include <stdio.h>
 
 #if HAVE_SYS_TYPES_H
