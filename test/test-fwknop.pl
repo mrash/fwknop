@@ -336,6 +336,8 @@ my $python_libfko_constants_file = '../python/fko.py';
 our $fko_wrapper_dir = 'fko-wrapper';
 our $wrapper_exec_script = 'run.sh';
 our $wrapper_exec_script_valgrind = 'run_valgrind.sh';
+my $fuzz_spa_payloads_file = $fko_wrapper_dir . '/fuzz_spa_payloads';
+our $send_fuzz_payloads_file = $fko_wrapper_dir . '/send_spa_payloads';
 my $python_spa_packet = '';
 my $pkts_file = '';
 my $enable_fuzzing_interfaces_tests = 0;
@@ -1331,11 +1333,22 @@ sub fko_wrapper_exec() {
 
     my $make_arg = $test_hr->{'wrapper_compile'};
 
-    if ($test_hr->{'wrapper_binary'} eq 'fko_wrapper') {
-        $make_arg = 'fuzzing' if $enable_fuzzing_interfaces_tests;
+    if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
+        if ($enable_fuzzing_interfaces_tests) {
+            $make_arg = 'fuzzing';
+            ### generate the fko-wrapper/fuzz_spa_payloads file
+            ### if necessary - it is consumed by the wrapper in
+            ### -DFUZZING_INTERFACES mode
+            &write_test_file("[-] Generating SPA fuzzing packets " .
+                "file: $fuzz_spa_payloads_file with ./spa_fuzzing.py...\n",
+                $curr_test_file);
+            unless (-e $fuzz_spa_payloads_file) {
+                system "./spa_fuzzing.py > $fuzz_spa_payloads_file";
+            }
+        }
     }
 
-    my $rv = &compile_wrapper($test_hr->{'wrapper_compile'});
+    my $rv = &compile_wrapper($make_arg);
 
     if ($rv) {
 
@@ -4587,6 +4600,13 @@ sub cached_pkts_fuzzer() {
     my $fw_rule_removed = 0;
 
     $pkts_file = $test_hr->{'spa_pkts_file'};
+
+    unless (-e $pkts_file) {
+        &write_test_file("[-] The SPA packets file: $pkts_file does not exist, " .
+            "create with 'grep PKT_ID output/<fko-wrapper-test-num>.test > $pkts_file'\n",
+            $curr_test_file);
+        return 0;
+    }
 
     ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, {}, $READ_PKTS_FROM_FILE);
