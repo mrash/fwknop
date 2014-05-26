@@ -1375,6 +1375,20 @@ sub fko_wrapper_exec() {
 
         chdir '..' or die $!;
 
+        if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
+            if ($enable_fuzzing_interfaces_tests) {
+                ### make sure the send_spa_payloads file exists
+                unless (-e $send_fuzz_payloads_file) {
+                    &write_test_file("[-] Generating SPA fuzzing packets " .
+                        "file: $send_fuzz_payloads_file for fwknopd consumption...\n",
+                        $curr_test_file);
+                    unless (-e $send_fuzz_payloads_file) {
+                        system "grep PKT_ID $curr_test_file > $send_fuzz_payloads_file";
+                    }
+                }
+            }
+        }
+
         if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
                 $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
             &write_test_file("[-] crash message found in: $curr_test_file\n",
