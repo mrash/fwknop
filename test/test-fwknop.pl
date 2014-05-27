@@ -1291,7 +1291,7 @@ sub profile_coverage() {
 
         ### exclude /usr/include/* files
         &run_cmd(qq|$lcov_path -r $output_dir/lcov_coverage.info | .
-            qq|/usr/include/\* --output-file $output_dir/lcov_coverage_final.info|,
+            qq|/usr/include/\\* --output-file $output_dir/lcov_coverage_final.info|,
                 $cmd_out_tmp, $curr_test_file);
 
         &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage_final.info | .
