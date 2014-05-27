@@ -1358,8 +1358,10 @@ sub fko_wrapper_exec() {
         $iterations = 1 if $iterations < 1;  ### assume we want at least 1
 
         if ($test_hr->{'fiu_run'} == $YES) {
+            my $lib_path = $lib_view_str;
+            $lib_path =~ s|_PATH=|_PATH=../|; ### hack
             for (my $i=0; $i < $iterations; $i++) {
-                &run_cmd("$lib_view_str $fiu_run_path -x " .
+                &run_cmd("$lib_path $fiu_run_path -x " .
                     "-c '$test_hr->{'fiu_injection_style'}' $test_hr->{'wrapper_binary'}",
                     "../$cmd_out_tmp", "../$curr_test_file");
             }
