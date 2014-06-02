@@ -374,6 +374,7 @@ our $fiu_run_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
 my  $lcov_path = '';
+my  $coverage_diff_path = 'coverage_diff.py';
 my  $genhtml_path = '';
 our $killall_path = '';
 our $pgrep_path   = '';
@@ -1297,6 +1298,10 @@ sub profile_coverage() {
         &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage_final.info | .
             qq|--output-directory $output_dir/$lcov_results_dir|,
                 $cmd_out_tmp, $curr_test_file);
+
+        if (-d "${output_dir}.last") {
+            &run_cmd("./$coverage_diff_path", $cmd_out_tmp, $curr_test_file);
+        }
     }
 
     if ($username) {
