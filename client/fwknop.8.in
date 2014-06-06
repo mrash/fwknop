@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/04/2014
+.\"      Date: 06/05/2014
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "05/04/2014" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/05/2014" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -297,6 +297,14 @@ client to write a newly created SPA packet out to the specified file so that it 
 Append the generated packet data to the file specified with the
 \fB\-B\fR
 option\&.
+.RE
+.PP
+\fB\-\-fault\-injection\-tag\fR=\fI<tag>\fR
+.RS 4
+This option is only used for fault injection testing when
+\fBfwknop\fR
+is compiled to support the libfiu library (see:
+\fIhttp://blitiri\&.com\&.ar/p/libfiu/\fR)\&. Under normal circumstances this option is not used, and any packaged version of fwknop will not have code compiled in so this capability is not enabled at run time\&. It is documented here for completeness\&.
 .RE
 .PP
 \fB\-v, \-\-verbose\fR

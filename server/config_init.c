@@ -894,6 +894,14 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'f':
                 opts->foreground = 1;
                 break;
+            case FAULT_INJECTION_TAG:
+#if HAVE_LIBFIU
+                set_config_entry(opts, CONF_FAULT_INJECTION_TAG, optarg);
+#else
+                log_msg(LOG_ERR, "[*] fwknopd not compiled with libfiu support");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
+                break;
             case FW_LIST:
                 opts->fw_list = 1;
                 break;

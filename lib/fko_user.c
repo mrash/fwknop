@@ -137,6 +137,11 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
 int
 fko_get_username(fko_ctx_t ctx, char **username)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_username_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -144,6 +149,10 @@ fko_get_username(fko_ctx_t ctx, char **username)
 
     if(username == NULL)
         return(FKO_ERROR_INVALID_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_username_val", FKO_ERROR_INVALID_DATA);
+#endif
 
     *username = ctx->username;
 

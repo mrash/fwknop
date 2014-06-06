@@ -102,6 +102,9 @@ typedef struct fko_cli_options
     char gpg_signer_key[MAX_GPG_KEY_ID];
     char gpg_home_dir[MAX_PATH_LEN];
     char gpg_exe[MAX_PATH_LEN];
+#if HAVE_LIBFIU
+    char fault_injection_tag[MAX_FAULT_TAG_LEN];
+#endif
 
     /* Encryption keys read from a .fwknoprc stanza
     */

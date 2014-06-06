@@ -59,6 +59,9 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
 static void zero_buf_wrapper(char *buf, int len);
 static int is_hostname_str_with_port(const char *str,
         char *hostname, size_t hostname_bufsize, int *port);
+#if HAVE_LIBFIU
+static void enable_fault_injections(fko_cli_options_t * const opts);
+#endif
 
 #define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
@@ -164,6 +167,12 @@ main(int argc, char **argv)
     /* Handle command line
     */
     config_init(&options, argc, argv);
+
+#if HAVE_LIBFIU
+        /* Set any fault injection points early
+        */
+        enable_fault_injections(&options);
+#endif
 
     /* Handle previous execution arguments if required
     */
@@ -1310,6 +1319,19 @@ zero_buf_wrapper(char *buf, int len)
     return;
 }
 
+#if HAVE_LIBFIU
+static void
+enable_fault_injections(fko_cli_options_t * const opts)
+{
+    if(opts->fault_injection_tag != NULL)
+    {
+        fiu_init(0);
+        fiu_enable(opts->fault_injection_tag, 1, NULL, 0);
+    }
+    return;
+}
+#endif
+
 /* free up memory and exit
 */
 static void
@@ -1317,6 +1339,13 @@ clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
         char *key, int *key_len, char *hmac_key, int *hmac_key_len,
         unsigned int exit_status)
 {
+#if HAVE_LIBFIU
+    if(opts->fault_injection_tag != NULL)
+    {
+        fiu_disable(opts->fault_injection_tag);
+    }
+#endif
+
     if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
         log_msg(LOG_VERBOSITY_ERROR,
                 "[*] Could not zero out sensitive data buffer.");

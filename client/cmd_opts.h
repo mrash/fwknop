@@ -61,6 +61,8 @@ enum {
     KEY_HMAC,
     FD_SET_STDIN,
     FD_SET_ALT,
+    FAULT_INJECTION_TAG,
+
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
@@ -96,6 +98,7 @@ static struct option cmd_opts[] =
     {"encryption-mode",     1, NULL, ENCRYPTION_MODE},
     {"fd",                  1, NULL, FD_SET_ALT},
     {"fw-timeout",          1, NULL, 'f'},
+    {"fault-injection-tag", 1, NULL, FAULT_INJECTION_TAG },
     {"gpg-encryption",      0, NULL, 'g'},
     {"gpg-recipient-key",   1, NULL, GPG_RECIP_KEY },
     {"gpg-signer-key",      1, NULL, GPG_SIGNER_KEY },

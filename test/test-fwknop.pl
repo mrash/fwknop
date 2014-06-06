@@ -739,6 +739,7 @@ my %test_keys = (
     'write_rc_file'   => $OPTIONAL,
     'save_rc_stanza'  => $OPTIONAL,
     'client_pkt_tries' => $OPTIONAL_NUMERIC,
+    'max_pkt_tries'    => $OPTIONAL_NUMERIC,
     'client_popen'     => $OPTIONAL,
     'disable_valgrind' => $OPTIONAL,
     'wrapper_compile'  => $OPTIONAL,
@@ -1329,6 +1330,58 @@ sub fiu_run_fault_injection() {
              "-c '$test_hr->{'fiu_injection_style'}' $test_hr->{'cmdline'}",
              $cmd_out_tmp, $curr_test_file);
      }
+
+    return $rv;
+}
+
+sub fault_injection_tag() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created    = 0;
+    my $fw_rule_removed    = 0;
+
+    if ($test_hr->{'pkt'}
+            or ($test_hr->{'cmdline'} and $test_hr->{'fwknopd_cmdline'})) {
+
+        ### we are testing the fwknopd server
+
+        if ($test_hr->{'pkt'}) {
+            my @packets = (
+                {
+                    'proto'  => 'udp',
+                    'port'   => $default_spa_port,
+                    'dst_ip' => $loopback_ip,
+                    'data'   => $test_hr->{'pkt'},
+                },
+            );
+
+            ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+                    = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+        } else {
+            ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+                    = &client_server_interaction($test_hr, [], $USE_CLIENT);
+        }
+
+        $rv = 0 unless $server_was_stopped;
+
+    } else {
+
+        ### we are testing the fwknop client and expect an error
+        $rv = not &run_cmd($test_hr->{'cmdline'}, $cmd_out_tmp, $curr_test_file);
+
+        if ($test_hr->{'positive_output_matches'}) {
+            unless (&file_find_regex(
+                    $test_hr->{'positive_output_matches'},
+                    $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+                &write_test_file(
+                    "[-] positive_output_matches not met, setting rv=0\n",
+                    $curr_test_file);
+                $rv = 0;
+            }
+        }
+    }
 
     return $rv;
 }
@@ -5000,6 +5053,10 @@ sub client_server_interaction() {
     my $server_was_stopped = 1;
     my $fw_rule_created = 1;
     my $fw_rule_removed = 0;
+    my $max_pkt_tries = 10;
+
+    $max_pkt_tries = $test_hr->{'max_pkt_tries'}
+        if $test_hr->{'max_pkt_tries'};
 
     ### start fwknopd to monitor for the SPA packet over the loopback interface
     my $fwknopd_parent_pid = &start_fwknopd($test_hr);
@@ -5059,7 +5116,7 @@ sub client_server_interaction() {
             $rv = 0;
         }
     } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
-        &send_packets($pkts_hr);
+        &send_packets($pkts_hr, $max_pkt_tries);
     } elsif ($spa_client_flag == $READ_PKTS_FROM_FILE) {
         &send_packets_from_file();
     } else {
@@ -5243,7 +5300,7 @@ sub send_packets_from_file() {
 }
 
 sub send_packets() {
-    my $pkts_ar = shift;
+    my ($pkts_ar, $max_tries) = @_;
 
     open F, ">> $curr_test_file" or die $!;
     print F "[+] send_packets(): Sending the following packets...\n";
@@ -5267,7 +5324,7 @@ sub send_packets() {
             &send_all_pkts($pkts_ar);
 
             $tries++;
-            last if $tries == 10;   ### should be plenty of time
+            last if $tries == $max_tries;   ### should be plenty of time
             sleep 1;
         }
     } else {

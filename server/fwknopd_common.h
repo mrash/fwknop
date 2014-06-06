@@ -258,6 +258,7 @@ enum {
     CONF_GPG_EXE,
     CONF_FIREWALL_EXE,
     CONF_VERBOSE,
+    CONF_FAULT_INJECTION_TAG,
 
     NUMBER_OF_CONFIG_ENTRIES  /* Marks the end and number of entries */
 };

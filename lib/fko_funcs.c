@@ -461,6 +461,11 @@ fko_base64_decode(const char * const in, unsigned char *out)
 int
 fko_get_version(fko_ctx_t ctx, char **version)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_version_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -468,6 +473,10 @@ fko_get_version(fko_ctx_t ctx, char **version)
 
     if(version == NULL)
         return(FKO_ERROR_INVALID_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_version_val", FKO_ERROR_INVALID_DATA);
+#endif
 
     *version = ctx->version;
 
@@ -536,6 +545,11 @@ fko_spa_data_final(fko_ctx_t ctx,
 int
 fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_data_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -544,11 +558,19 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
     if(spa_data == NULL)
         return(FKO_ERROR_INVALID_DATA);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_data_val", FKO_ERROR_INVALID_DATA);
+#endif
+
     /* We expect to have encrypted data to process.  If not, we bail.
     */
     if(ctx->encrypted_msg == NULL || ! is_valid_encoded_msg_len(
                 strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE)))
         return(FKO_ERROR_MISSING_ENCODED_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_data_encoded", FKO_ERROR_MISSING_ENCODED_DATA);
+#endif
 
     *spa_data = ctx->encrypted_msg;
 

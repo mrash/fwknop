@@ -148,6 +148,10 @@ enum {
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
 
+#if HAVE_LIBFIU
+  #define MAX_FAULT_TAG_LEN 128
+#endif
+
 /* Some convenience macros */
 
 /* Get the number of elements of an array

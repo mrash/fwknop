@@ -108,7 +108,8 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "GPG_HOME_DIR",
     "GPG_EXE",
     "FIREWALL_EXE",
-    "VERBOSE"
+    "VERBOSE",
+    "FAULT_INJECTION_TAG"
 };
 
 
@@ -127,6 +128,7 @@ enum {
     SYSLOG_ENABLE,
     DUMP_SERVER_ERR_CODES,
     EXIT_AFTER_PARSE_CONFIG,
+    FAULT_INJECTION_TAG,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -147,6 +149,7 @@ static struct option cmd_opts[] =
     {"exit-parse-config",    0, NULL, EXIT_AFTER_PARSE_CONFIG },
     {"syslog-enable",        0, NULL, SYSLOG_ENABLE },
     {"foreground",           0, NULL, 'f'},
+    {"fault-injection-tag",  1, NULL, FAULT_INJECTION_TAG},
     {"help",                 0, NULL, 'h'},
     {"interface",            1, NULL, 'i'},
     {"kill",                 0, NULL, 'K'},

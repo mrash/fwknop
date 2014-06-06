@@ -285,6 +285,13 @@ GENERAL OPTIONS
     Append the generated packet data to the file specified with the *-B*
     option.
 
+*--fault-injection-tag*='<tag>'::
+    This option is only used for fault injection testing when *fwknop* is
+    compiled to support the libfiu library (see: 'http://blitiri.com.ar/p/libfiu/').
+    Under normal circumstances this option is not used, and any packaged
+    version of fwknop will not have code compiled in so this capability is not
+    enabled at run time. It is documented here for completeness.
+
 *-v, --verbose*::
     Run the *fwknop* client in verbose mode. This causes *fwknop* to print
     some extra information about the current command and the resulting SPA

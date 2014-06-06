@@ -49,6 +49,10 @@ static void daemonize_process(fko_srv_options_t * const opts);
 static int write_pid_file(fko_srv_options_t *opts);
 static pid_t get_running_pid(const fko_srv_options_t *opts);
 
+#if HAVE_LIBFIU
+static void enable_fault_injections(fko_srv_options_t * const opts);
+#endif
+
 int
 main(int argc, char **argv)
 {
@@ -63,6 +67,12 @@ main(int argc, char **argv)
         /* Handle command line
         */
         config_init(&opts, argc, argv);
+
+#if HAVE_LIBFIU
+        /* Set any fault injection points early
+        */
+        enable_fault_injections(&opts);
+#endif
 
         /* Process any options that do their thing and exit.
         */
@@ -768,9 +778,29 @@ get_running_pid(const fko_srv_options_t *opts)
     return(rpid);
 }
 
+#if HAVE_LIBFIU
+static void
+enable_fault_injections(fko_srv_options_t * const opts)
+{
+    if(opts->config[CONF_FAULT_INJECTION_TAG] != NULL)
+    {
+        fiu_init(0);
+        fiu_enable(opts->config[CONF_FAULT_INJECTION_TAG], 1, NULL, 0);
+    }
+    return;
+}
+#endif
+
 void
 clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int exit_status)
 {
+#if HAVE_LIBFIU
+    if(opts->config[CONF_FAULT_INJECTION_TAG] != NULL)
+    {
+        fiu_disable(opts->config[CONF_FAULT_INJECTION_TAG]);
+    }
+#endif
+
     if(fw_cleanup_flag == FW_CLEANUP)
         fw_cleanup(opts);
 

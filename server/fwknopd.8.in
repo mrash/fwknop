@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/08/2014
+.\"      Date: 06/05/2014
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "05/08/2014" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "06/05/2014" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -112,6 +112,14 @@ on stderr\&.
 Dump all possible
 \fBfwknopd\fR
 error codes to stdout and exit\&. This option is rarely needed in practice, and was added to assist with test coverage\&.
+.RE
+.PP
+\fB\-\-fault\-injection\-tag\fR=\fI<tag>\fR
+.RS 4
+This option is only used for fault injection testing when
+\fBfwknop\fR
+is compiled to support the libfiu library (see:
+\fIhttp://blitiri\&.com\&.ar/p/libfiu/\fR)\&. Under normal circumstances this option is not used, and any packaged version of fwknop will not have code compiled in so this capability is not enabled at run time\&. It is documented here for completeness\&. version of fwknop will not have code compiled in to enable this capability at run time\&. It is documented here for completeness\&.
 .RE
 .PP
 \fB\-\-fw\-list\-all\fR

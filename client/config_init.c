@@ -1967,6 +1967,15 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 }
                 add_var_to_bitmask(FWKNOP_CLI_ARG_FW_TIMEOUT, &var_bitmask);
                 break;
+            case FAULT_INJECTION_TAG:
+#if HAVE_LIBFIU
+                strlcpy(options->fault_injection_tag, optarg, sizeof(options->fault_injection_tag));
+#else
+                log_msg(LOG_VERBOSITY_ERROR,
+                    "fwknop not compiled with fault injection support.", optarg);
+                exit(EXIT_FAILURE);
+#endif
+                break;
             case 'g':
             case GPG_ENCRYPTION:
                 options->use_gpg = 1;
