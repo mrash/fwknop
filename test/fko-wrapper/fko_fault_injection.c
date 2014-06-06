@@ -26,9 +26,7 @@ const char *fiu_tags[] = {
     "fko_set_spa_encryption_mode_init",
     "fko_set_spa_encryption_mode_val",
     "fko_set_spa_message_type_init",
-    "fko_set_spa_message_type_val",
-    "fko_set_timestamp_init",
-    "fko_set_timestamp_val"
+    "fko_set_spa_message_type_val"
 };
 const int fiu_rvs[] = {
     FKO_ERROR_MEMORY_ALLOCATION,
