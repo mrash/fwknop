@@ -53,14 +53,10 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Set default values and state.
      *
-     * Note: We have to explicitly set the ctx->state to initialized
-     *       just before making an fko_xxx function call, then set it
-     *       back to zero just afer.  During initialization, we need
-     *       to make these functions think they are operating on an
-     *       initialized context, or else they would fail.
-    */
-
-    /* Set the version string.
+     * Note: We initialize the context early so that the fko_set_xxx
+     *       functions can operate properly. If there are any problems during
+     *       initialization, then fko_destroy() is called which will clean up
+     *       the context.
     */
     ctx->initval = FKO_CTX_INITIALIZED;
 
@@ -68,21 +64,20 @@ fko_new(fko_ctx_t *r_ctx)
     fiu_return_on("fko_new_strdup", FKO_ERROR_MEMORY_ALLOCATION);
 #endif
 
+    /* Set the version string.
+    */
     ver = strdup(FKO_PROTOCOL_VERSION);
-    ctx->initval = 0;
     if(ver == NULL)
     {
-        free(ctx);
+        fko_destroy(ctx);
+        ctx = NULL;
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
-
     ctx->version = ver;
 
     /* Rand value.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_rand_value(ctx, NULL);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -92,9 +87,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Username.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_username(ctx, NULL);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -104,9 +97,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Timestamp.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_timestamp(ctx, 0);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -116,9 +107,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default Digest Type.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -128,9 +117,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default Message Type.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_message_type(ctx, FKO_DEFAULT_MSG_TYPE);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -140,9 +127,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default Encryption Type.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_type(ctx, FKO_DEFAULT_ENCRYPTION);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -152,9 +137,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default is Rijndael in CBC mode
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_mode(ctx, FKO_DEFAULT_ENC_MODE);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -168,10 +151,6 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->verify_gpg_sigs = 1;
 
 #endif /* HAVE_LIBGPGME */
-
-    /* Now we mean it.
-    */
-    ctx->initval = FKO_CTX_INITIALIZED;
 
     FKO_SET_CTX_INITIALIZED(ctx);
 
