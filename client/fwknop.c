@@ -1323,7 +1323,7 @@ zero_buf_wrapper(char *buf, int len)
 static void
 enable_fault_injections(fko_cli_options_t * const opts)
 {
-    if(opts->fault_injection_tag != NULL)
+    if(opts->fault_injection_tag[0] != 0x0)
     {
         fiu_init(0);
         fiu_enable(opts->fault_injection_tag, 1, NULL, 0);
@@ -1340,10 +1340,8 @@ clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
         unsigned int exit_status)
 {
 #if HAVE_LIBFIU
-    if(opts->fault_injection_tag != NULL)
-    {
+    if(opts->fault_injection_tag[0] != 0x0)
         fiu_disable(opts->fault_injection_tag);
-    }
 #endif
 
     if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
