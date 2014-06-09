@@ -961,8 +961,11 @@ sub run_test() {
                 unless (&file_find_regex(
                     [qr/no\sleaks\sare\spossible/],
                         $MATCH_ALL, $APPEND_RESULTS, $file)) {
-                    $rv = 0 if &file_find_regex(
-                        [qr/still\sreachable\sin\sloss\srecord/],
+                    $rv = 0 unless &file_find_regex(
+                        [qr/definitely\slost\:\s0\sbytes/],
+                        $MATCH_ALL, $APPEND_RESULTS, $file);
+                    $rv = 0 unless &file_find_regex(
+                        [qr/indirectly\slost\:\s0\sbytes/],
                         $MATCH_ALL, $APPEND_RESULTS, $file);
                 }
             }
