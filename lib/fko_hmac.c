@@ -290,10 +290,14 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     if(ctx->msg_hmac != NULL)
         free(ctx->msg_hmac);
 
-    ctx->msg_hmac     = strdup(hmac_base64);
-    ctx->msg_hmac_len = strnlen(ctx->msg_hmac, hmac_digest_str_len);
+    ctx->msg_hmac = strdup(hmac_base64);
 
     free(hmac_base64);
+
+    if(ctx->msg_hmac == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    ctx->msg_hmac_len = strnlen(ctx->msg_hmac, hmac_digest_str_len);
 
     switch(ctx->msg_hmac_len)
     {
