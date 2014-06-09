@@ -27,8 +27,54 @@
    pcap_suppression3
    Memcheck:Leak
    fun:malloc
+   obj:*libpcap*
    ...
+   obj:*libpcap*
    fun:pcap_compile
+   fun:pcap_capture
+   fun:main
+}
+{
+   pcap_supression4
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   obj:*libpcap*
+   obj:*libpcap*
+   fun:pcap_create
+   fun:pcap_open_live
+   fun:pcap_capture
+   fun:main
+}
+{
+   pcap_supression5
+   Memcheck:Leak
+   fun:malloc
+   fun:strdup
+   obj:*libpcap*
+   fun:pcap_activate
+   fun:pcap_open_live
+   fun:pcap_capture
+   fun:main
+}
+{
+   pcap_supression6
+   Memcheck:Leak
+   fun:malloc
+   obj:*libpcap*
+   ...
+   obj:*libpcap*
+   fun:pcap_capture
+   fun:main
+}
+{
+   pcap_supression7
+   Memcheck:Leak
+   fun:malloc
+   obj:*libpcap*
+   obj:*libpcap*
+   fun:pcap_create
+   fun:pcap_open_live
    fun:pcap_capture
    fun:main
 }
