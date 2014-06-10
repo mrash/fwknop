@@ -342,7 +342,7 @@ main(int argc, char **argv)
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
         */
-        if(fw_initialize(&opts) != 1)
+        if(!opts.test && (fw_initialize(&opts) != 1))
             clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
         /* If the TCP server option was set, fire it up here.
@@ -426,18 +426,9 @@ main(int argc, char **argv)
         kill(opts.tcp_server_pid, SIGKILL);
     }
 
-    /* Other cleanup.
-    */
-    fw_cleanup(&opts);
-    free_logging();
+    clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
 
-#if USE_FILE_CACHE
-    free_replay_list(&opts);
-#endif
-
-    free_configs(&opts);
-
-    return(0);
+    return(EXIT_SUCCESS);  /* This never gets called */
 }
 
 /* Ensure the specified directory exists.  If not, create it or die.
@@ -801,7 +792,7 @@ clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int e
     }
 #endif
 
-    if(fw_cleanup_flag == FW_CLEANUP)
+    if(!opts->test && (fw_cleanup_flag == FW_CLEANUP))
         fw_cleanup(opts);
 
 #if USE_FILE_CACHE
