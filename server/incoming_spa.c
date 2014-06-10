@@ -577,7 +577,7 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Add this SPA packet into the replay detection cache
         */
-        if (added_replay_digest == 0
+        if (!opts->test && added_replay_digest == 0
                 && strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
         {
 
