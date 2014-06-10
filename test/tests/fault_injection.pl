@@ -62,6 +62,62 @@
     },
     {
         'category' => 'fault injection',
+        'subcategory' => 'fiu-run posix/io/rw/*',
+        'detail'   => 'client',
+        'function' => \&fiu_run_fault_injection,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file --no-save-args $verbose_str",
+        'fiu_injection_style' => 'enable_random name=posix/io/rw/*,probability=0.05',
+        'fiu_iterations' => 1000
+    },
+
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'fiu-run libc/mm/*',
+        'detail'   => 'server',
+        'function' => \&fiu_run_fault_injection,
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --exit-parse-config",
+        'fiu_injection_style' => 'enable_random name=libc/mm/*,probability=0.05',
+        'fiu_iterations' => 1000
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'fiu-run posix/io/rw/*',
+        'detail'   => 'server',
+        'function' => \&fiu_run_fault_injection,
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --exit-parse-config",
+        'fiu_injection_style' => 'enable_random name=posix/io/rw/*,probability=0.05',
+        'fiu_iterations' => 1000
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'fiu-run libc/mm/*',
+        'detail'   => 'server pcap file',
+        'function' => \&fiu_run_fault_injection,
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --exit-parse-config",
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} -C 100 " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "--pcap-file $multi_pkts_pcap_file --foreground $verbose_str --test " .
+            "--no-ipt-check-support",
+        'fiu_injection_style' => 'enable_random name=libc/mm/*,probability=0.05',
+        'fiu_iterations' => 1000
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'fiu-run posix/io/rw/*',
+        'detail'   => 'server pcap file',
+        'function' => \&fiu_run_fault_injection,
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --exit-parse-config",
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} -C 100 " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "--pcap-file $multi_pkts_pcap_file --foreground $verbose_str --test " .
+            "--no-ipt-check-support",
+        'fiu_injection_style' => 'enable_random name=posix/io/rw/*,probability=0.05',
+        'fiu_iterations' => 10
+    },
+
+    {
+        'category' => 'fault injection',
         'subcategory' => 'client',
         'detail' => 'tag fko_new_calloc',
         'function' => \&fault_injection_tag,
