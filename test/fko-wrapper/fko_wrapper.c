@@ -220,15 +220,15 @@ test_loop_compounded(void)
 
         fko_new(&ctx);
 
-        res = fko_set_spa_client_timeout(ctx, i);
-        if (res != FKO_SUCCESS)
-            printf("fko_set_spa_client_timeout(): %s\n", fko_errstr(res));
-
         for (j=-1; j<FKO_LAST_MSG_TYPE+1; j++) {
 
             res = fko_set_spa_message_type(ctx, j);
             if (res != FKO_SUCCESS)
                 printf("fko_set_spa_message_type(): %s\n", fko_errstr(res));
+
+            res = fko_set_spa_client_timeout(ctx, i);
+            if (res != FKO_SUCCESS)
+                printf("fko_set_spa_client_timeout(): %s\n", fko_errstr(res));
 
             res = fko_set_timestamp(ctx, 100);
             if (res != FKO_SUCCESS)

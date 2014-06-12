@@ -152,6 +152,8 @@
             "--fault-injection-tag fko_set_rand_value_read",
         'positive_output_matches' => [qr/write bytes mismatch/]
     },
+
+    ### rand tags
     {
         'category' => 'fault injection',
         'subcategory' => 'client',
@@ -170,6 +172,8 @@
             "--fault-injection-tag fko_set_rand_value_calloc2",
         'positive_output_matches' => [qr/Unable to allocate memory/]
     },
+
+    ### username tags
     {
         'category' => 'fault injection',
         'subcategory' => 'client',
@@ -188,6 +192,57 @@
             "--fault-injection-tag fko_set_username_strdup2",
         'positive_output_matches' => [qr/Unable to allocate memory/]
     },
+
+    ### append_b64 tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag append_b64_toobig',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag append_b64_toobig",
+        'positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_ENCODE_MESSAGE_TOOBIG/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag append_b64_calloc',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag append_b64_calloc",
+        'positive_output_matches' => [qr/Unable to allocate memory/]
+    },
+
+    ### fko_encode_spa_data tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag fko_encode_spa_data_init',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag fko_encode_spa_data_init",
+        'positive_output_matches' => [qr/FKO Context is not initialized/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag fko_encode_spa_data_valid',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag fko_encode_spa_data_valid",
+        'positive_output_matches' => [qr/Missing or incomplete SPA data/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag fko_encode_spa_data_calloc',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag fko_encode_spa_data_calloc",
+        'positive_output_matches' => [qr/Unable to allocate memory/]
+    },
+
+    ### timestamp tags
     {
         'category' => 'fault injection',
         'subcategory' => 'client',
@@ -206,6 +261,8 @@
             "--fault-injection-tag fko_set_timestamp_val",
         'positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL/]
     },
+
+    ### digest type
     {
         'category' => 'fault injection',
         'subcategory' => 'client',
@@ -224,6 +281,54 @@
             "--fault-injection-tag set_spa_digest_type_val",
         'positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL/]
     },
+
+    ### set digest
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag fko_set_spa_digest_init',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag fko_set_spa_digest_init",
+        'positive_output_matches' => [qr/FKO Context is not initialized/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag fko_set_spa_digest_encoded',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag fko_set_spa_digest_encoded",
+        'positive_output_matches' => [qr/There is no encoded data to process/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag set_digest_toobig',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag set_digest_toobig",
+        'positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_TOOBIG/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag set_digest_invalidtype',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag set_digest_invalidtype",
+        'positive_output_matches' => [qr/Invalid digest type/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag set_digest_calloc',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag set_digest_calloc",
+        'positive_output_matches' => [qr/Unable to allocate memory/]
+    },
+
     {
         'category' => 'fault injection',
         'subcategory' => 'client',
@@ -280,9 +385,7 @@
     },
 
     ### fwknopd injections
-
-
-
+    ### username tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -312,6 +415,7 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### timestamp tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -341,6 +445,7 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### message type tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -369,6 +474,8 @@
         'server_positive_output_matches' => [qr/Args contain invalid data/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
+
+    ### message tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -398,7 +505,7 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
-
+    ### nat access tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -428,6 +535,7 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### server auth tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -457,6 +565,87 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### raw digest type tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_get_raw_spa_digest_type_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_get_raw_spa_digest_type_init",
+        'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    ### digest type tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_get_spa_digest_type_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_get_spa_digest_type_init --test",
+            ### --test above since tag only triggered when dumping context
+        'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_get_spa_digest_type_val',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_get_spa_digest_type_val --test",
+            ### --test above since tag only triggered when dumping context
+        'server_positive_output_matches' => [qr/Args contain invalid data/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    ### digest tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_get_spa_digest_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_get_spa_digest_init --test",
+            ### --test above since tag only triggered when dumping context
+        'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_get_spa_digest_val',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_get_spa_digest_val --test",
+            ### --test above since tag only triggered when dumping context
+        'server_positive_output_matches' => [qr/Args contain invalid data/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    ### client timeout tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -486,6 +675,7 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### version tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -515,6 +705,7 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### digest type tags
     {
         'category' => 'fault injection',
         'subcategory' => 'server',
@@ -541,6 +732,50 @@
             "-d $default_digest_file -p $default_pid_file $intf_str " .
             "--fault-injection-tag set_spa_digest_type_val",
         'server_positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    ### raw digest tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_set_raw_spa_digest_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_set_raw_spa_digest_init",
+        'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_get_raw_spa_digest_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_get_raw_spa_digest_init",
+        'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    ### fw_config_init
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fw_config_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fw_config_init",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 

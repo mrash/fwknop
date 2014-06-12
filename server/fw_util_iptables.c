@@ -797,6 +797,10 @@ fw_config_init(fko_srv_options_t * const opts)
     */
     strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
 
+#if HAVE_LIBFIU
+    fiu_return_on("fw_config_init", 0);
+#endif
+
     /* Pull the fwknop chain config info and setup our internal
      * config struct.  The IPT_INPUT is the only one that is
      * required. The rest are optional.

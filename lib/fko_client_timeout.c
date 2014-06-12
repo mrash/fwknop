@@ -74,7 +74,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
                 break;
         }
     }
-    else  /* Timeout is 0, which means no timeout. */
+    else  /* Timeout is 0, which means ignore it. */
     {
         switch(ctx->message_type)
         {
