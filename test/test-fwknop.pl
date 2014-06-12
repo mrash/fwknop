@@ -288,6 +288,7 @@ my $test_include = '';
 my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
+my $do_crash_check = 1;
 my %valgrind_flagged_fcns = ();
 my %valgrind_flagged_fcns_unique = ();
 my $previous_valgrind_coverage_dir = '';
@@ -692,23 +693,10 @@ my @tests = (
     @os_compatibility,
     @perl_FKO_module,
     @python_fko,
-
-    {
-        'category' => 'Look for crashes',
-        'detail'   => 'checking for segfault/core dump messages (1)',
-        'function' => \&look_for_crashes,
-    },
-
     @gpg_no_pw,
     @gpg_no_pw_hmac,
     @gpg,
     @gpg_hmac,
-
-    {
-        'category' => 'Look for crashes',
-        'detail'   => 'checking for segfault/core dump messages (2)',
-        'function' => \&look_for_crashes,
-    }
 );
 
 my %test_keys = (
@@ -847,6 +835,14 @@ if ($enable_valgrind) {
         'subcategory' => 'flagged functions',
         'detail'   => '',
         'function' => \&parse_valgrind_flagged_functions}
+    );
+}
+
+if ($do_crash_check) {
+    &run_test({
+        'category' => 'Look for crashes',
+        'detail'   => 'checking for segfault/core dump messages',
+        'function' => \&look_for_crashes}
     );
 }
 
@@ -1043,6 +1039,7 @@ sub process_include_exclude() {
             if ($msg =~ $test
                     or ($enable_valgrind and $msg =~ /valgrind\soutput/)
                     or ($enable_profile_coverage_check and $msg =~ /profile\scoverage/)
+                    or ($msg =~ /segfault.*dump\smessages/)
             ) {
                 $found = 1;
                 last;
@@ -1371,7 +1368,8 @@ sub fault_injection_tag() {
 
     } else {
 
-        ### we are testing the fwknop client and expect an error
+        ### we are testing the fwknop client, server, or other command
+        ### and expect an error
         $rv = not &run_cmd($test_hr->{'cmdline'}, $cmd_out_tmp, $curr_test_file);
 
         if ($test_hr->{'positive_output_matches'}) {
@@ -1526,6 +1524,8 @@ sub look_for_crashes() {
             $rv = 0;
         }
     }
+
+    $do_crash_check = 0;
 
     return $rv;
 }
