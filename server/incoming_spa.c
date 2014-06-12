@@ -399,7 +399,7 @@ incoming_spa(fko_srv_options_t *opts)
             if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
                 log_msg(LOG_WARNING,
                     "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                    spadat.pkt_source_ip, stanza_num, fko_errstr(res)
+                    spadat.pkt_source_ip, stanza_num
                 );
             ctx = NULL;
         }
@@ -554,8 +554,8 @@ incoming_spa(fko_srv_options_t *opts)
         if(attempted_decrypt == 0)
         {
             log_msg(LOG_ERR,
-                "(stanza #%d) No stanza encryption mode match for encryption type: %i.",
-                stanza_num, enc_type);
+                "[%s] (stanza #%d) No stanza encryption mode match for encryption type: %i.",
+                spadat.pkt_source_ip, stanza_num, enc_type);
             acc = acc->next;
             continue;
         }
@@ -714,17 +714,7 @@ incoming_spa(fko_srv_options_t *opts)
                 || (spa_ip_demark-spadat.spa_message) > MAX_IPV4_STR_LEN)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
-                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
-
-            if(ctx != NULL)
-            {
-                if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                    );
-                ctx = NULL;
-            }
+                spadat.pkt_source_ip, stanza_num);
             break;
         }
 
@@ -735,16 +725,6 @@ incoming_spa(fko_srv_options_t *opts)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
-
-            if(ctx != NULL)
-            {
-                if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                    );
-                ctx = NULL;
-            }
             break;
         }
 
@@ -761,7 +741,6 @@ incoming_spa(fko_srv_options_t *opts)
                     "[%s] (stanza #%d) Got 0.0.0.0 when valid source IP was required.",
                     spadat.pkt_source_ip, stanza_num
                 );
-
                 acc = acc->next;
                 continue;
             }
@@ -782,7 +761,6 @@ incoming_spa(fko_srv_options_t *opts)
                     "[%s] (stanza #%d) Username in SPA data (%s) does not match required username: %s",
                     spadat.pkt_source_ip, stanza_num, spadat.username, acc->require_username
                 );
-
                 acc = acc->next;
                 continue;
             }
@@ -802,7 +780,6 @@ incoming_spa(fko_srv_options_t *opts)
                     "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
                     stanza_num, spadat.pkt_source_ip
                 );
-
                 acc = acc->next;
                 continue;
             }
@@ -811,7 +788,6 @@ incoming_spa(fko_srv_options_t *opts)
                 "(stanza #%d) SPA packet from %s requested unsupported NAT access",
                 stanza_num, spadat.pkt_source_ip
             );
-
             acc = acc->next;
             continue;
 #endif
@@ -827,7 +803,6 @@ incoming_spa(fko_srv_options_t *opts)
                     "[%s] (stanza #%d) SPA Command message are not allowed in the current configuration.",
                     spadat.pkt_source_ip, stanza_num
                 );
-
                 acc = acc->next;
                 continue;
             }
@@ -876,16 +851,6 @@ incoming_spa(fko_srv_options_t *opts)
                 if(status != 0)
                     res = SPA_MSG_COMMAND_ERROR;
 
-                if(ctx != NULL)
-                {
-                    if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                            spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                        );
-                    ctx = NULL;
-                }
-
                 /* we processed the command on a matching access stanza, so we
                  * don't look for anything else to do with this SPA packet
                 */
@@ -905,7 +870,6 @@ incoming_spa(fko_srv_options_t *opts)
                 "[%s] (stanza #%d) One or more requested protocol/ports was denied per access.conf.",
                 spadat.pkt_source_ip, stanza_num
             );
-
             acc = acc->next;
             continue;
         }
@@ -928,15 +892,6 @@ incoming_spa(fko_srv_options_t *opts)
             process_spa_request(opts, acc, &spadat);
         }
 
-        if(ctx != NULL)
-        {
-            if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                    spadat.pkt_source_ip, stanza_num
-                );
-            ctx = NULL;
-        }
         break;
     }
 
@@ -947,8 +902,8 @@ incoming_spa(fko_srv_options_t *opts)
     {
         if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
             log_msg(LOG_WARNING,
-                "[%s] fko_destroy() could not zero out sensitive data buffer.",
-                spadat.pkt_source_ip
+                "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
+                spadat.pkt_source_ip, stanza_num
             );
         ctx = NULL;
     }
