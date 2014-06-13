@@ -1519,7 +1519,7 @@ sub look_for_crashes() {
 
         if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
                 $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
-            &write_test_file("[-] segmentation fault or core dump message found in: $f\n",
+            &write_test_file("[-] crash message found in: $f\n",
                 $curr_test_file);
             $rv = 0;
         }
