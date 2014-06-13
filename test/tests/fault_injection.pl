@@ -384,6 +384,34 @@
         'positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL/]
     },
 
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag is_valid_pt_msg_len_val',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag is_valid_pt_msg_len_val",
+        'positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_ENCRYPT_PTLEN_VALIDFAIL/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag zero_buf_err',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag zero_buf_err",
+        'positive_output_matches' => [qr/Could not zero out sensitive data/]
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'client',
+        'detail' => 'tag zero_free_err',
+        'function' => \&fault_injection_tag,
+        'cmdline'  => "$default_client_hmac_args " .
+            "--fault-injection-tag zero_free_err",
+        'positive_output_matches' => [qr/Could not zero out sensitive data/]
+    },
+
     ### fwknopd injections
     ### username tags
     {
@@ -762,6 +790,36 @@
             "-d $default_digest_file -p $default_pid_file $intf_str " .
             "--fault-injection-tag fko_get_raw_spa_digest_init",
         'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    ### zero out buffer tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag zero_free_err',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag zero_free_err",
+        'server_positive_output_matches' => [qr/Could not zero out sensitive data/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag zero_buf_err',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag zero_buf_err",
+        'server_positive_output_matches' => [qr/Could not zero out sensitive data/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 

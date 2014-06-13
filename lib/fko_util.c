@@ -333,6 +333,9 @@ hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size)
 int
 is_valid_pt_msg_len(const int len)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("is_valid_pt_msg_len_val", 0);
+#endif
     if(len < MIN_SPA_PLAINTEXT_MSG_SIZE || len >= MAX_SPA_PLAINTEXT_MSG_SIZE)
         return(0);
 
@@ -481,6 +484,10 @@ int zero_free(char *buf, int len)
 
     free(buf);
 
+#if HAVE_LIBFIU
+    fiu_return_on("zero_free_err", FKO_ERROR_ZERO_OUT_DATA);
+#endif
+
     return res;
 }
 
@@ -492,6 +499,10 @@ int
 zero_buf(char *buf, int len)
 {
     int i, res = FKO_SUCCESS;
+
+#if HAVE_LIBFIU
+    fiu_return_on("zero_buf_err", FKO_ERROR_ZERO_OUT_DATA);
+#endif
 
     if(buf == NULL || len == 0)
         return res;
