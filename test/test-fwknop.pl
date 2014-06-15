@@ -954,16 +954,8 @@ sub run_test() {
             next unless -e $file;
             if (&file_find_regex([qr/^==\d+==\sHEAP\sSUMMARY/],
                     $MATCH_ALL, $NO_APPEND_RESULTS, $file)) {
-                unless (&file_find_regex(
-                    [qr/no\sleaks\sare\spossible/],
-                        $MATCH_ALL, $APPEND_RESULTS, $file)) {
-                    $rv = 0 unless &file_find_regex(
-                        [qr/definitely\slost\:\s0\sbytes/],
-                        $MATCH_ALL, $APPEND_RESULTS, $file);
-                    $rv = 0 unless &file_find_regex(
-                        [qr/indirectly\slost\:\s0\sbytes/],
-                        $MATCH_ALL, $APPEND_RESULTS, $file);
-                }
+
+                $rv = 0 unless &valgrind_results($file);
             }
         }
     }
@@ -1429,8 +1421,7 @@ sub fko_wrapper_exec() {
                 "../$cmd_out_tmp", "../$curr_test_file");
 
             if ($test_hr->{'wrapper_script'} =~ /valgrind/) {
-                $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
-                    $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
+                $rv = 0 unless &valgrind_results("../$curr_test_file");
             }
         }
 
@@ -1458,6 +1449,24 @@ sub fko_wrapper_exec() {
         }
     }
 
+    return $rv;
+}
+
+sub valgrind_results() {
+    my $file = shift;
+
+    my $rv = 1;
+
+    unless (&file_find_regex(
+        [qr/no\sleaks\sare\spossible/],
+            $MATCH_ALL, $APPEND_RESULTS, $file)) {
+        $rv = 0 unless &file_find_regex(
+            [qr/definitely\slost\:\s0\sbytes/],
+            $MATCH_ALL, $APPEND_RESULTS, $file);
+        $rv = 0 unless &file_find_regex(
+            [qr/indirectly\slost\:\s0\sbytes/],
+            $MATCH_ALL, $APPEND_RESULTS, $file);
+    }
     return $rv;
 }
 
