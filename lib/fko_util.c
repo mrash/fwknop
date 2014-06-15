@@ -106,6 +106,9 @@ constant_runtime_cmp(const char *a, const char *b, int len)
 int
 is_valid_encoded_msg_len(const int len)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("is_valid_encoded_msg_len_val", 0);
+#endif
     if(len < MIN_SPA_ENCODED_MSG_SIZE || len >= MAX_SPA_ENCODED_MSG_SIZE)
         return(0);
 
@@ -461,6 +464,13 @@ strtol_wrapper(const char * const str, const int min,
             exit(EXIT_FAILURE);
         }
     }
+
+#if HAVE_LIBFIU
+    fiu_return_on("strtol_wrapper_lt_min",
+            FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN);
+    fiu_return_on("strtol_wrapper_gt_max",
+            FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX);
+#endif
 
     return val;
 }
