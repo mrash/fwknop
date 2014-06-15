@@ -173,8 +173,18 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
     int         enc_msg_len;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_new_with_data_msg",
+            FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING);
+#endif
+
     if(enc_msg == NULL)
         return(FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_new_with_data_keylen",
+            FKO_ERROR_INVALID_KEY_LEN);
+#endif
 
     if(dec_key_len < 0 || hmac_key_len < 0)
         return(FKO_ERROR_INVALID_KEY_LEN);
@@ -190,9 +200,6 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         free(ctx);
         return(FKO_ERROR_INVALID_DATA_FUNCS_NEW_MSGLEN_VALIDFAIL);
     }
-
-    if(ctx->encrypted_msg != NULL)
-        free(ctx->encrypted_msg);
 
     /* First, add the data to the context.
     */
@@ -215,11 +222,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         ctx = NULL;
         return res;
     }
-    ctx->initval = 0;
 
     /* HMAC digest type
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_hmac_type(ctx, hmac_type);
     if(res != FKO_SUCCESS)
     {
@@ -227,11 +232,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         ctx = NULL;
         return res;
     }
-    ctx->initval = 0;
 
     /* Check HMAC if the access stanza had an HMAC key
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     if(hmac_key_len > 0 && hmac_key != NULL)
         res = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
     if(res != FKO_SUCCESS)
@@ -240,11 +243,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         ctx = NULL;
         return res;
     }
-    ctx->initval = 0;
 
     /* Consider it initialized here.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     FKO_SET_CTX_INITIALIZED(ctx);
 
     /* If a decryption key is provided, go ahead and decrypt and decode.

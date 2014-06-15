@@ -533,6 +533,66 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### encryption mode tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_set_spa_encryption_mode_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_set_spa_encryption_mode_init",
+        'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_set_spa_encryption_mode_val',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_set_spa_encryption_mode_val",
+        'server_positive_output_matches' => [qr/Args contain invalid data/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    ### set hmac type tags
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_set_spa_hmac_type_init',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_set_spa_hmac_type_init",
+        'server_positive_output_matches' => [qr/FKO Context is not initialized/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_set_spa_hmac_type_val',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_set_spa_hmac_type_val",
+        'server_positive_output_matches' => [qr/Args contain invalid data/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
     ### nat access tags
     {
         'category' => 'fault injection',
@@ -820,6 +880,49 @@
             "-d $default_digest_file -p $default_pid_file $intf_str " .
             "--fault-injection-tag zero_buf_err",
         'server_positive_output_matches' => [qr/Could not zero out sensitive data/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag is_valid_encoded_msg_len_val',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag is_valid_encoded_msg_len_val",
+        'server_positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_FUNCS_NEW_MSGLEN_VALIDFAIL/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_new_with_data_msg',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_new_with_data_msg",
+        'server_positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag fko_new_with_data_keylen',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag fko_new_with_data_keylen",
+        'server_positive_output_matches' => [qr/Invalid key length/],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 

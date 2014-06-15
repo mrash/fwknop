@@ -187,10 +187,20 @@ fko_get_spa_hmac(fko_ctx_t ctx, char **hmac_data)
 int
 fko_set_spa_hmac_type(fko_ctx_t ctx, const short hmac_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_hmac_type_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_hmac_type_val",
+            FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL);
+#endif
 
     if(hmac_type < 0 || hmac_type >= FKO_LAST_HMAC_MODE)
         return(FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL);
