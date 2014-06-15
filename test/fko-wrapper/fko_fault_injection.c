@@ -6,7 +6,6 @@
 
 const char *fiu_tags[] = {
     "fko_new_calloc",
-    "fko_new_strdup",
     "fko_set_rand_value_init",
     "fko_set_rand_value_lenval",
     "fko_set_rand_value_strdup",
@@ -29,7 +28,6 @@ const char *fiu_tags[] = {
     "fko_set_spa_message_type_val"
 };
 const int fiu_rvs[] = {
-    FKO_ERROR_MEMORY_ALLOCATION,
     FKO_ERROR_MEMORY_ALLOCATION,
     FKO_ERROR_CTX_NOT_INITIALIZED,
     FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL,
@@ -70,6 +68,7 @@ int main(void) {
         else
             printf("[+] fko_new(): %s\n", fko_errstr(res));
         fko_destroy(ctx);
+        ctx = NULL;
 
         fiu_disable(fiu_tags[i]);
     }

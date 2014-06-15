@@ -128,15 +128,6 @@
     {
         'category' => 'fault injection',
         'subcategory' => 'client',
-        'detail' => 'tag fko_new_strdup',
-        'function' => \&fault_injection_tag,
-        'cmdline'  => "$default_client_hmac_args " .
-            "--fault-injection-tag fko_new_strdup",
-        'positive_output_matches' => [qr/Unable to allocate memory/]
-    },
-    {
-        'category' => 'fault injection',
-        'subcategory' => 'client',
         'detail' => 'tag fko_set_rand_value_init',
         'function' => \&fault_injection_tag,
         'cmdline'  => "$default_client_hmac_args " .

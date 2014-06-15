@@ -60,10 +60,6 @@ fko_new(fko_ctx_t *r_ctx)
     */
     ctx->initval = FKO_CTX_INITIALIZED;
 
-#if HAVE_LIBFIU
-    fiu_return_on("fko_new_strdup", FKO_ERROR_MEMORY_ALLOCATION);
-#endif
-
     /* Set the version string.
     */
     ver = strdup(FKO_PROTOCOL_VERSION);
