@@ -1,12 +1,15 @@
+### suppressions for libgpgme
 {
-   gpgme_suppression1
+   gpgme1
    Memcheck:Leak
    ...
    fun:gpgme*
    ...
 }
+
+### suppressions for libpcap
 {
-   pcap_supression1
+   pcap1
    Memcheck:Cond
    ...
    fun:pcap_activate
@@ -15,7 +18,7 @@
    fun:main
 }
 {
-   pcap_suppression2
+   pcap2
    Memcheck:Param
    socketcall.setsockopt(optval)
    fun:setsockopt
@@ -24,7 +27,7 @@
    fun:main
 }
 {
-   pcap_suppression3
+   pcap3
    Memcheck:Leak
    fun:malloc
    obj:*libpcap*
@@ -35,7 +38,7 @@
    fun:main
 }
 {
-   pcap_supression4
+   pcap4
    Memcheck:Leak
    fun:malloc
    fun:strdup
@@ -47,7 +50,7 @@
    fun:main
 }
 {
-   pcap_supression5
+   pcap5
    Memcheck:Leak
    fun:malloc
    fun:strdup
@@ -58,7 +61,7 @@
    fun:main
 }
 {
-   pcap_supression6
+   pcap6
    Memcheck:Leak
    fun:malloc
    obj:*libpcap*
@@ -68,7 +71,7 @@
    fun:main
 }
 {
-   pcap_supression7
+   pcap7
    Memcheck:Leak
    fun:malloc
    obj:*libpcap*
@@ -77,4 +80,23 @@
    fun:pcap_open_live
    fun:pcap_capture
    fun:main
+}
+
+### libfiu fault injection suppressions
+{
+   libfiu1
+   Memcheck:Leak
+   ...
+   obj:*libfiu*
+   obj:*libfiu*
+   obj:*libfiu*
+   ...
+}
+{
+   libfiu2
+   Memcheck:Leak
+   ...
+   fun:wtable_create
+   fun:fiu_init
+   ...
 }
