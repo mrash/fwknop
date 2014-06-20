@@ -41,6 +41,8 @@
 #include "utils.h"
 #include "log_msg.h"
 
+#define FATAL_ERR -1
+
 /* Add an access string entry
 */
 static void
@@ -158,7 +160,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
 }
 
 #if FIREWALL_IPTABLES
-static void
+static int
 add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
 {
     char      ip_str[MAX_IPV4_STR_LEN] = {0};
@@ -169,27 +171,27 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
             "[*] Fatal: invalid FORCE_NAT arg '%s', need <IP> <PORT>",
             val
         );
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     if (curr_acc->force_nat_port > MAX_PORT)
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT port '%d'", curr_acc->force_nat_port);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     if(! is_valid_ipv4_addr(ip_str))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     curr_acc->force_nat = 1;
     add_acc_string(&(curr_acc->force_nat_ip), ip_str);
 
-    return;
+    return 1;
 }
 
 static void
@@ -1468,7 +1470,11 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_force_nat(opts, curr_acc, val);
+            if(add_acc_force_nat(opts, curr_acc, val) != 1)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_NAT not supported.");
