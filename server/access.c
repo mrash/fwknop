@@ -43,6 +43,10 @@
 
 #define FATAL_ERR -1
 
+#ifndef SUCCESS
+  #define SUCCESS    1
+#endif
+
 /* Add an access string entry
 */
 static void
@@ -68,7 +72,7 @@ add_acc_string(char **var, const char *val)
 
 /* Decode base64 encoded string into access entry
 */
-static void
+static int
 add_acc_b64_string(char **var, int *len, const char *val)
 {
     if((*var = strdup(val)) == NULL)
@@ -76,7 +80,7 @@ add_acc_b64_string(char **var, int *len, const char *val)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding access list entry: %s", *var
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
     memset(*var, 0x0, strlen(val));
     *len = fko_base64_decode(val, (unsigned char *) *var);
@@ -86,8 +90,9 @@ add_acc_b64_string(char **var, int *len, const char *val)
         log_msg(LOG_ERR,
             "[*] base64 decoding returned error for: %s", *var
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
+    return SUCCESS;
 }
 
 /* Add an access bool entry (unsigned char of 1 or 0)
@@ -114,7 +119,7 @@ add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const c
             "[*] Fatal: invalid date value '%s' (need MM/DD/YYYY) for access stanza expiration time",
             val
         );
-        return 0;
+        return FATAL_ERR;
     }
 
     if(tm.tm_mon > 0)
@@ -151,7 +156,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
             "[*] Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
             val
         );
-        return 0;
+        return FATAL_ERR;
     }
 
     *access_expire_time = (time_t) expire_time;
@@ -1275,8 +1280,12 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->key_base64), val);
-            add_acc_b64_string(&(curr_acc->key),
-                &(curr_acc->key_len), curr_acc->key_base64);
+            if(add_acc_b64_string(&(curr_acc->key),
+                    &(curr_acc->key_len), curr_acc->key_base64) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
             add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
         /* HMAC digest type */
@@ -1311,8 +1320,12 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
             add_acc_string(&(curr_acc->hmac_key_base64), val);
-            add_acc_b64_string(&(curr_acc->hmac_key),
-                &(curr_acc->hmac_key_len), curr_acc->hmac_key_base64);
+            if(add_acc_b64_string(&(curr_acc->hmac_key),
+                    &(curr_acc->hmac_key_len), curr_acc->hmac_key_base64) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY"))
         {
