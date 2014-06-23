@@ -533,7 +533,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 
 /* Add a string list entry to the given acc_string_list.
 */
-static void
+static int
 add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
 {
     acc_string_list_t   *last_stlist, *new_stlist, *tmp_stlist;
@@ -543,7 +543,7 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error creating string list entry"
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     /* If this is not the first entry, we walk our pointer to the
@@ -574,9 +574,9 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding string list entry item"
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
-
+    return SUCCESS;
 }
 
 /* Expand a proto/port access string to a list of access proto-port struct.
@@ -646,10 +646,12 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
                 start++;
 
             if(((ndx-start)+1) >= MAX_LINE_LEN)
-                return 0;
+                return FATAL_ERR;
 
             strlcpy(buf, start, (ndx-start)+1);
-            add_string_list_ent(stlist, buf);
+            if(add_string_list_ent(stlist, buf) != SUCCESS)
+                return FATAL_ERR;
+
             start = ndx+1;
         }
     }
@@ -660,13 +662,14 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
         start++;
 
     if(((ndx-start)+1) >= MAX_LINE_LEN)
-        return 0;
+        return FATAL_ERR;
 
     strlcpy(buf, start, (ndx-start)+1);
 
-    add_string_list_ent(stlist, buf);
+    if(add_string_list_ent(stlist, buf) != SUCCESS)
+        return FATAL_ERR;
 
-    return 1;
+    return SUCCESS;
 }
 
 /* Free the acc source_list
@@ -854,7 +857,14 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         /* Expand the GPG_REMOTE_ID string.
         */
         if(acc->gpg_remote_id != NULL && strlen(acc->gpg_remote_id))
-            expand_acc_string_list(&(acc->gpg_remote_id_list), acc->gpg_remote_id);
+        {
+            if(expand_acc_string_list(&(acc->gpg_remote_id_list),
+                        acc->gpg_remote_id) != SUCCESS)
+            {
+                log_msg(LOG_ERR, "[*] Fatal invalid GPG_REMOTE_ID list in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
 
         acc = acc->next;
     }
@@ -1196,8 +1206,6 @@ parse_access_file(fko_srv_options_t *opts)
         var[MAX_LINE_LEN-1] = 0x0;
         val[MAX_LINE_LEN-1] = 0x0;
 
-        /*
-        */
         if (opts->verbose > 3)
             log_msg(LOG_DEBUG,
                 "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'",
@@ -1209,7 +1217,6 @@ parse_access_file(fko_srv_options_t *opts)
          * NOTE: If a new access.conf parameter is created.  It also needs
          *       to be accounted for in the following if/if else construct.
         */
-
         if(CONF_VAR_IS(var, "SOURCE"))
         {
             /* If this is not the first stanza, sanity check the previous
