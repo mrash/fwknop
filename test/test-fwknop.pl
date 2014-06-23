@@ -1064,9 +1064,12 @@ sub gdb_test_cmd() {
         if (/CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopCmd\s.*)/
                 or /CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopdCmd\s.*)/) {
             $gdb_cmd = "LD_LIBRARY_PATH=$1 gdb --args $2";
+            last;
         }
     }
     close F;
+
+    print "\n[+] Running the following command under gdb: $gdb_cmd\n\n";
 
     if ($gdb_cmd) {
         system $gdb_cmd;
