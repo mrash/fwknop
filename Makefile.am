@@ -245,6 +245,7 @@ EXTRA_DIST = \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
+    test/conf/ipt_output_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_2_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_3_fwknopd.conf \

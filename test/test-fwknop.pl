@@ -78,6 +78,7 @@ our %cf = (
     'future_exp_access'            => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'             => "$conf_dir/expired_epoch_stanza_access.conf",
     'invalid_exp_access'           => "$conf_dir/invalid_expire_access.conf",
+    'ipt_output_chain'             => "$conf_dir/ipt_output_chain_fwknopd.conf",
     'invalid_ipt_input_chain'      => "$conf_dir/invalid_ipt_input_chain_fwknopd.conf",
     'invalid_ipt_input_chain2'     => "$conf_dir/invalid_ipt_input_chain_2_fwknopd.conf",
     'invalid_ipt_input_chain3'     => "$conf_dir/invalid_ipt_input_chain_3_fwknopd.conf",
