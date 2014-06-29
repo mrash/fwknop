@@ -599,11 +599,11 @@ daemonize_process(fko_srv_options_t * const opts)
     if ((pid = fork()) < 0)
     {
         perror("Unable to fork: ");
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
     else if (pid != 0) /* parent */
     {
-        exit(EXIT_SUCCESS);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
     }
 
     /* Child process from here on out */
@@ -620,8 +620,7 @@ daemonize_process(fko_srv_options_t * const opts)
         fprintf(stderr,
             "[*] An instance of fwknopd is already running: (PID=%i).\n", old_pid
         );
-
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
     else if(old_pid < 0)
     {
@@ -633,7 +632,7 @@ daemonize_process(fko_srv_options_t * const opts)
     */
     if ((chdir("/")) < 0) {
         perror("Could not chdir() to /: ");
-        exit(EXIT_FAILURE);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     /* Close un-needed file handles
