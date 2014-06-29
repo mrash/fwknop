@@ -14,6 +14,12 @@ fwknop-2.6.3 (05//2014):
 
       GPG_FINGERPRINT_ID            00CC95F05BC146B6AC4038C9E36F443C6A3FAD56
 
+    - [server] When validating access.conf stanzas make sure that one of
+      GPG_REMOTE_ID or GPG_FINGERPRINT_ID is specified whenever GnuPG
+      signatures are to be verified for incoming SPA packets. Signature
+      verification is the default, and can only be disabled with
+      GPG_DISABLE_SIG but this is NOT recommended.
+
 fwknop-2.6.2 (04/28/2014):
     - [libfko] fix double free bug in SPA parser discovered with the new
       python SPA payload fuzzer (see the 'spa_encoding_fuzzing' branch which

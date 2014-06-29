@@ -1015,6 +1015,19 @@ set_acc_defaults(fko_srv_options_t *opts)
                     );
                 }
             }
+
+            /* If signature checking is enabled, make sure we either have sig ID's or
+             * fingerprint ID's to check
+            */
+            if(! acc->gpg_disable_sig
+                    && (acc->gpg_remote_id == NULL && acc->gpg_remote_fpr == NULL))
+            {
+                log_msg(LOG_INFO,
+                    "Warning: Must have either sig ID's or fingerprints to check via GPG_REMOTE_ID or GPG_FINGERPRINT_ID (stanza source: '%s' #%d)",
+                    acc->source, i
+                );
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
 
         if(acc->encryption_mode == FKO_ENC_MODE_UNKNOWN)
@@ -1033,6 +1046,7 @@ set_acc_defaults(fko_srv_options_t *opts)
         acc = acc->next;
         i++;
     }
+    return;
 }
 
 /* Perform some sanity checks on an acc stanza data.

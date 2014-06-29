@@ -2145,6 +2145,16 @@
         'exec_err' => $YES,
         'cmdline' => "$fwknopdCmd $default_server_conf_args -f --gpg-home-dir " . 'A'x1200
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG require sig ID or fingerprint',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'gpg_no_pw_no_fpr_access'} " .
+            "-d $default_digest_file -p $default_pid_file -f",
+        'positive_output_matches' => [qr/Must have either sig/],
+    },
 
 
     {
