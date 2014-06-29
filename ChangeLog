@@ -7,6 +7,12 @@ fwknop-2.6.3 (05//2014):
       are provided by SPA clients. This option is mostly useful for the fuzzing
       tests in the test suite to ensure broad code coverage under adverse
       conditions.
+    - [server] Add a new GPG_FINGERPRINT_ID variable to the access.conf file
+      so that full GnuPG fingerprints can be required for incoming SPA packets
+      in addition to the appreviated GnuPG signatures listed in GPG_REMOTE_ID.
+      From the test suite, an example fingerprint is
+
+      GPG_FINGERPRINT_ID            00CC95F05BC146B6AC4038C9E36F443C6A3FAD56
 
 fwknop-2.6.2 (04/28/2014):
     - [libfko] fix double free bug in SPA parser discovered with the new

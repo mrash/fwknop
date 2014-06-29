@@ -297,7 +297,7 @@ incoming_spa(fko_srv_options_t *opts)
     */
     fko_ctx_t       ctx = NULL;
 
-    char            *spa_ip_demark, *gpg_id, *raw_digest = NULL;
+    char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;
     time_t          now_ts;
     int             res, status, ts_diff, enc_type, stanza_num=0;
     int             added_replay_digest = 0, pkt_data_len=0;
@@ -315,6 +315,7 @@ incoming_spa(fko_srv_options_t *opts)
     */
     acc_stanza_t        *acc = opts->acc_stanzas;
     acc_string_list_t   *gpg_id_ndx;
+    acc_string_list_t   *gpg_fpr_ndx;
     unsigned char        is_gpg_match = 0;
 
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
@@ -620,8 +621,49 @@ incoming_spa(fko_srv_options_t *opts)
                 continue;
             }
 
-            log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s'.",
-                spadat.pkt_source_ip, stanza_num, gpg_id);
+            res = fko_get_gpg_signature_fpr(ctx, &gpg_fpr);
+            if(res != FKO_SUCCESS)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Error pulling the GPG fingerprint from the context: %s",
+                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+                acc = acc->next;
+                continue;
+            }
+
+            log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s' (fingerprint '%s').",
+                spadat.pkt_source_ip, stanza_num, gpg_id, gpg_fpr);
+
+            /* prefer GnuPG fingerprint match if so configured
+            */
+            if(acc->gpg_remote_fpr != NULL)
+            {
+                is_gpg_match = 0;
+                for(gpg_fpr_ndx = acc->gpg_remote_fpr_list;
+                        gpg_fpr_ndx != NULL; gpg_fpr_ndx=gpg_fpr_ndx->next)
+                {
+                    res = fko_gpg_signature_fpr_match(ctx,
+                            gpg_fpr_ndx->str, &is_gpg_match);
+                    if(res != FKO_SUCCESS)
+                    {
+                        log_msg(LOG_WARNING,
+                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+                        acc = acc->next;
+                        continue;
+                    }
+                    if(is_gpg_match)
+                        break;
+                }
+                if(! is_gpg_match)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Incoming SPA packet signed by: %s, but that fingerprint is not in the GPG_FINGERPRINT_ID list.",
+                        spadat.pkt_source_ip, stanza_num, gpg_fpr);
+                    acc = acc->next;
+                    continue;
+                }
+            }
 
             if(acc->gpg_remote_id != NULL)
             {
@@ -634,7 +676,7 @@ incoming_spa(fko_srv_options_t *opts)
                     if(res != FKO_SUCCESS)
                     {
                         log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error in GPG siganture comparision: %s",
+                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
                             spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
                         acc = acc->next;
                         continue;
@@ -646,7 +688,7 @@ incoming_spa(fko_srv_options_t *opts)
                 if(! is_gpg_match)
                 {
                     log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
+                        "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not in the GPG_REMOTE_ID list.",
                         spadat.pkt_source_ip, stanza_num, gpg_id);
                     acc = acc->next;
                     continue;

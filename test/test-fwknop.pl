@@ -110,6 +110,8 @@ our %cf = (
     'legacy_iv_long_key_access'    => "$conf_dir/legacy_iv_long_key_access.conf",
     'legacy_iv_long_key2_access'   => "$conf_dir/legacy_iv_long_key2_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
+    'gpg_no_pw_fpr_access'         => "$conf_dir/gpg_no_pw_fpr_access.conf",
+    'gpg_no_pw_bad_fpr_access'     => "$conf_dir/gpg_no_pw_bad_fpr_access.conf",
     'gpg_no_pw_hmac_access'        => "$conf_dir/gpg_no_pw_hmac_access.conf",
     'gpg_no_pw_hmac_clientdir_access' => "$conf_dir/gpg_no_pw_hmac_clientdir_access.conf",
     'gpg_no_pw_hmac_serverdir_access' => "$conf_dir/gpg_no_pw_hmac_serverdir_access.conf",
@@ -955,8 +957,11 @@ sub run_test() {
             next unless -e $file;
             if (&file_find_regex([qr/^==\d+==\sHEAP\sSUMMARY/],
                     $MATCH_ALL, $NO_APPEND_RESULTS, $file)) {
-
-                $rv = 0 unless &valgrind_results($file);
+                unless (&valgrind_results($file)) {
+                    &write_test_file("[-] valgrind criteria failed, setting rv=0.\n",
+                        $file);
+                    $rv = 0;
+                }
             }
         }
     }

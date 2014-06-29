@@ -813,6 +813,12 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->gpg_remote_id);
         free_acc_string_list(acc->gpg_remote_id_list);
     }
+    if(acc->gpg_remote_fpr != NULL)
+    {
+        free(acc->gpg_remote_fpr);
+        free_acc_string_list(acc->gpg_remote_fpr_list);
+    }
+    return;
 }
 
 /* Expand any access entries that may be multi-value.
@@ -866,8 +872,21 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
             }
         }
 
+        /* Expand the GPG_FINGERPRINT_ID string.
+        */
+        if(acc->gpg_remote_fpr != NULL && strlen(acc->gpg_remote_fpr))
+        {
+            if(expand_acc_string_list(&(acc->gpg_remote_fpr_list),
+                        acc->gpg_remote_fpr) != SUCCESS)
+            {
+                log_msg(LOG_ERR, "[*] Fatal invalid GPG_FINGERPRINT_ID list in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+
         acc = acc->next;
     }
+    return;
 }
 
 void
@@ -1524,6 +1543,14 @@ parse_access_file(fko_srv_options_t *opts)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
         }
+        else if(CONF_VAR_IS(var, "GPG_FINGERPRINT_ID"))
+        {
+            if(add_acc_string(&(curr_acc->gpg_remote_fpr), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE"))
         {
             if (add_acc_expire_time(opts, &(curr_acc->access_expire_time), val) != 1)
@@ -1829,7 +1856,8 @@ dump_access_list(const fko_srv_options_t *opts)
             "             GPG_DECRYPT_PW:  %s\n"
             "            GPG_REQUIRE_SIG:  %s\n"
             "GPG_IGNORE_SIG_VERIFY_ERROR:  %s\n"
-            "              GPG_REMOTE_ID:  %s\n",
+            "              GPG_REMOTE_ID:  %s\n"
+            "         GPG_FINGERPRINT_ID:  %s\n",
             ++i,
             acc->source,
             (acc->open_ports == NULL) ? "<not set>" : acc->open_ports,
@@ -1858,7 +1886,8 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->gpg_decrypt_pw == NULL) ? "<not set>" : "<see the access.conf file>",
             acc->gpg_require_sig ? "Yes" : "No",
             acc->gpg_ignore_sig_error  ? "Yes" : "No",
-            (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id
+            (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id,
+            (acc->gpg_remote_fpr == NULL) ? "<not set>" : acc->gpg_remote_fpr
         );
 
         fprintf(stdout, "\n");

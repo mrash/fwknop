@@ -13,6 +13,31 @@
     {
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
+        'detail'   => 'fingerprint complete cycle tcp/22',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_no_pw_fpr_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => 'invalid fingerprint',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_no_pw_bad_fpr_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'server_positive_output_matches' => [qr/not in the GPG_FINGERPRINT/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args_no_pw,
