@@ -2103,6 +2103,16 @@
             "-l somelocale --dump-config",
         'positive_output_matches' => [qr/Unable to set locale/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid run dir path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_run_dir_path'} " .
+            "-a $cf{'def_access'} -f --dump-config",
+        'positive_output_matches' => [qr/is not absolute/],
+    },
 
     {
         'category' => 'basic operations',

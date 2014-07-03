@@ -85,6 +85,7 @@ our %cf = (
     'invalid_ipt_input_chain4'     => "$conf_dir/invalid_ipt_input_chain_4_fwknopd.conf",
     'invalid_ipt_input_chain5'     => "$conf_dir/invalid_ipt_input_chain_5_fwknopd.conf",
     'invalid_ipt_input_chain6'     => "$conf_dir/invalid_ipt_input_chain_6_fwknopd.conf",
+    'invalid_run_dir_path'         => "$conf_dir/invalid_run_dir_path_fwknopd.conf",
     'force_nat_access'             => "$conf_dir/force_nat_access.conf",
     'hmac_force_nat_access'        => "$conf_dir/hmac_force_nat_access.conf",
     'hmac_force_snat_access'       => "$conf_dir/hmac_force_snat_access.conf",

@@ -42,7 +42,7 @@
 
 /* Prototypes
 */
-static void check_dir_path(const char * const path,
+static int check_dir_path(const char * const path,
         const char * const path_name, const unsigned char use_basename);
 static int make_dir_path(const char * const path);
 static void daemonize_process(fko_srv_options_t * const opts);
@@ -222,7 +222,8 @@ main(int argc, char **argv)
         /* Make sure we have a valid run dir and path leading to digest file
          * in case it configured to be somewhere other than the run dir.
         */
-        check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0);
+        if(! check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0))
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
         /* Initialize the firewall rules handler based on the fwknopd.conf
          * file, but (for iptables firewalls) don't flush any rules or create
@@ -433,7 +434,7 @@ main(int argc, char **argv)
 
 /* Ensure the specified directory exists.  If not, create it or die.
 */
-static void
+static int
 check_dir_path(const char * const filepath, const char * const fp_desc, const unsigned char use_basename)
 {
     struct stat     st;
@@ -451,7 +452,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
         log_msg(LOG_ERR,
             "Path '%s' is not absolute.", filepath
         );
-        exit(EXIT_FAILURE);
+        return 0;
     }
 
     /* If this is a file path that we want to use only the basename, strip
@@ -466,7 +467,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
      * PATH_SEP.  If it is not, silently return.
     */
     if(strlen(tmp_path) < 2)
-        return;
+        return 1;
 
     /* Make sure we have a valid directory.
     */
@@ -489,7 +490,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
                     "Unable to create %s directory: %s (error: %i)",
                     fp_desc, tmp_path, errno
                 );
-                exit(EXIT_FAILURE);
+                return 0;
             }
 
             log_msg(LOG_ERR,
@@ -501,7 +502,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
             log_msg(LOG_ERR,
                 "Stat of %s returned error %i", tmp_path, errno
             );
-            exit(EXIT_FAILURE);
+            return 0;
         }
     }
     else
@@ -513,9 +514,10 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
             log_msg(LOG_ERR,
                 "Specified %s directory: %s is NOT a directory", fp_desc, tmp_path
             );
-            exit(EXIT_FAILURE);
+            return 0;
         }
     }
+    return 1;
 }
 
 static int

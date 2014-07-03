@@ -255,6 +255,7 @@ EXTRA_DIST = \
     test/conf/invalid_ipt_input_chain_4_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_5_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_6_fwknopd.conf \
+    test/conf/invalid_run_dir_path_fwknopd.conf \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/legacy_iv_access.conf \
