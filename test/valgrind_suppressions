@@ -81,6 +81,15 @@
    fun:pcap_capture
    fun:main
 }
+{
+   pcap8
+   Memcheck:Cond
+   fun:strlcpy
+   fun:process_packet
+   obj:*libpcap*
+   fun:pcap_capture
+   fun:main
+}
 
 ### libfiu fault injection suppressions
 {
