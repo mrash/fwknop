@@ -2096,6 +2096,17 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'invalid locale',
+        'function' => \&generic_exec,
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f " .
+            "-l somelocale --dump-config",
+        'positive_output_matches' => [qr/Unable to set locale/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'mutually exclusive -K and -R',
         'function' => \&generic_exec,
         'exec_err' => $YES,
