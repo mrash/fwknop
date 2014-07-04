@@ -164,6 +164,7 @@ EXTRA_DIST = \
     test/conf/gpg_no_pw_fpr_access.conf \
     test/conf/gpg_no_pw_bad_fpr_access.conf \
     test/conf/gpg_no_pw_no_fpr_access.conf \
+    test/conf/gpg_no_sig_verify_access.conf \
     test/conf/fwknoprc_gpg_invalid_exe \
     test/conf/fwknoprc_hmac_defaults \
     test/conf/fwknoprc_hmac_time_offset_mins \
