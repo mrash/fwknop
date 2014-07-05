@@ -119,6 +119,7 @@ our %cf = (
     'gpg_no_pw_hmac_serverdir_access' => "$conf_dir/gpg_no_pw_hmac_serverdir_access.conf",
     'gpg_no_pw_hmac_sha512_access' => "$conf_dir/gpg_no_pw_hmac_sha512_access.conf",
     'gpg_no_sig_verify_access'     => "$conf_dir/gpg_no_sig_verify_access.conf",
+    'gpg_invalid_sig_id_access'    => "$conf_dir/gpg_invalid_sig_id_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
     'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",

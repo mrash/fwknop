@@ -22,6 +22,17 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => 'invalid sig list',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_invalid_sig_id_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
 
     {
         'category' => 'GPG (no pw)',
