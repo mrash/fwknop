@@ -2113,6 +2113,15 @@
             "-a $cf{'def_access'} -f --dump-config",
         'positive_output_matches' => [qr/is not absolute/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sniff invalid interface',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -i invalidintf -f",
+        'positive_output_matches' => [qr/pcap_open_live.*error/],
+    },
 
     {
         'category' => 'basic operations',
