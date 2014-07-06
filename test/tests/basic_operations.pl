@@ -2117,10 +2117,19 @@
         'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'sniff invalid interface',
-        'function' => \&generic_exec,
+        'function' => \&server_conf_files,
         'exec_err' => $YES,
-        'cmdline' => "$fwknopdCmd $default_server_conf_args -i invalidintf -f",
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -i invalidintf -f",
         'positive_output_matches' => [qr/pcap_open_live.*error/],
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'ENABLE_PCAP_PROMISC       Y'
+        ],
     },
 
     {
