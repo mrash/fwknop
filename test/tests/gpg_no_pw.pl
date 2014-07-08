@@ -72,7 +72,7 @@
             '7F+A59xJREA8pfYtd9SXzlou39AAMtqi90pvWlAMrTgBGWiRFsDbR0V4F+dgqcFvX7Ir' .
             'tcznNnYMt8cOrZsRlkURdSIhx8',
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} " .
-            "-a $cf{'gpg_no_pw_fpr_access'} $intf_str " .
+            "-a $cf{'gpg_no_pw_fpr_access'} $intf_str --gpg-home-dir conf/server-gpg-no-pw " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
