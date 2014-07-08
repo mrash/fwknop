@@ -257,13 +257,6 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
             continue;
         }
 
-        /*
-        fprintf(stderr,
-            "CONF FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
-            config_file, conf_line_buf, var, val
-        );
-        */
-
         good_ent = 0;
         for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         {
@@ -281,6 +274,15 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
                         {
                             strlcpy(val, opts->config[cndx], sizeof(val));
                             strlcat(val, tmp2, sizeof(val));
+                        }
+                        else
+                        {
+                            /* We didn't map the embedded variable to a valid
+                             * config parameter
+                            */
+                            log_msg(LOG_ERR,
+                                "[*] Invalid embedded variable in: '%s'", val);
+                            break;
                         }
                     }
                 }
@@ -760,7 +762,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'h':
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                break;
 
             /* Look for configuration file arg.
             */
@@ -974,7 +975,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                break;
             default:
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
