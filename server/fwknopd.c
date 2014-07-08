@@ -50,6 +50,7 @@ static int stop_fwknopd(fko_srv_options_t * const opts);
 static int status_fwknopd(fko_srv_options_t * const opts);
 static int restart_fwknopd(fko_srv_options_t * const opts);
 static int write_pid_file(fko_srv_options_t *opts);
+static int handle_signals(fko_srv_options_t *opts);
 static void setup_pid(fko_srv_options_t *opts);
 static void init_digest_cache(fko_srv_options_t *opts);
 static void set_locale(fko_srv_options_t *opts);
@@ -62,8 +63,6 @@ static void enable_fault_injections(fko_srv_options_t * const opts);
 int
 main(int argc, char **argv)
 {
-    int                 last_sig;
-
     fko_srv_options_t   opts;
 
     while(1)
@@ -194,51 +193,11 @@ main(int argc, char **argv)
         */
         pcap_capture(&opts);
 
-        if(got_signal) {
-            last_sig   = got_signal;
-            got_signal = 0;
-
-            if(got_sighup)
-            {
-                log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");
-                free_configs(&opts);
-                kill(opts.tcp_server_pid, SIGTERM);
-                usleep(1000000);
-                got_sighup = 0;
-            }
-            else if(got_sigint)
-            {
-                log_msg(LOG_WARNING, "Got SIGINT.  Exiting...");
-                got_sigint = 0;
-                break;
-            }
-            else if(got_sigterm)
-            {
-                log_msg(LOG_WARNING, "Got SIGTERM.  Exiting...");
-                got_sigterm = 0;
-                break;
-            }
-            else
-            {
-                log_msg(LOG_WARNING,
-                    "Got signal %i. No defined action but to exit.", last_sig);
-                break;
-            }
-        }
-        else if (opts.packet_ctr_limit > 0
-            && opts.packet_ctr >= opts.packet_ctr_limit)
-        {
-            log_msg(LOG_INFO,
-                "Packet count limit (%d) reached.  Exiting...",
-                opts.packet_ctr_limit);
+        /* Deal with any signals that we've received and break out
+         * of the loop for any terminating signals
+        */
+        if(handle_signals(&opts) == 1)
             break;
-        }
-        else    /* got_signal was not set (should be if we are here) */
-        {
-            log_msg(LOG_WARNING,
-                "Capture ended without signal.  Exiting...");
-            break;
-        }
     }
 
     log_msg(LOG_INFO, "Shutting Down fwknopd.");
@@ -408,6 +367,54 @@ static int status_fwknopd(fko_srv_options_t * const opts)
 
     fprintf(stdout, "No running fwknopd detected.\n");
     return EXIT_FAILURE;
+}
+
+static int handle_signals(fko_srv_options_t *opts)
+{
+    int      last_sig = 0, rv = 1;
+
+    if(got_signal) {
+        last_sig   = got_signal;
+        got_signal = 0;
+
+        if(got_sighup)
+        {
+            log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");
+            free_configs(opts);
+            kill(opts->tcp_server_pid, SIGTERM);
+            usleep(1000000);
+            got_sighup = 0;
+            rv = 0;  /* this means fwknopd will not exit */
+        }
+        else if(got_sigint)
+        {
+            log_msg(LOG_WARNING, "Got SIGINT.  Exiting...");
+            got_sigint = 0;
+        }
+        else if(got_sigterm)
+        {
+            log_msg(LOG_WARNING, "Got SIGTERM.  Exiting...");
+            got_sigterm = 0;
+        }
+        else
+        {
+            log_msg(LOG_WARNING,
+                "Got signal %i. No defined action but to exit.", last_sig);
+        }
+    }
+    else if (opts->packet_ctr_limit > 0
+        && opts->packet_ctr >= opts->packet_ctr_limit)
+    {
+        log_msg(LOG_INFO,
+            "Packet count limit (%d) reached.  Exiting...",
+            opts->packet_ctr_limit);
+    }
+    else    /* got_signal was not set (should be if we are here) */
+    {
+        log_msg(LOG_WARNING,
+            "Capture ended without signal.  Exiting...");
+    }
+    return rv;
 }
 
 static int stop_fwknopd(fko_srv_options_t * const opts)
