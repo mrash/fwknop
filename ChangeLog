@@ -19,6 +19,19 @@ fwknop-2.6.3 (05//2014):
       signatures are to be verified for incoming SPA packets. Signature
       verification is the default, and can only be disabled with
       GPG_DISABLE_SIG but this is NOT recommended.
+    - [server] Bug fix discovered with the libfiu fault injection tag
+      "fko_get_username_init" combined with valgrind analysis. This bug is
+      only triggered after a valid authenticated and decrypted SPA packet is
+      sniffed by fwknopd:
+
+        ==11181== Conditional jump or move depends on uninitialised value(s)
+        ==11181==    at 0x113B6D: incoming_spa (incoming_spa.c:707)
+        ==11181==    by 0x11559F: process_packet (process_packet.c:211)
+        ==11181==    by 0x5270857: ??? (in /usr/lib/x86_64-linux-gnu/libpcap.so.1.4.0)
+        ==11181==    by 0x114BCC: pcap_capture (pcap_capture.c:270)
+        ==11181==    by 0x10F32C: main (fwknopd.c:195)
+        ==11181==  Uninitialised value was created by a stack allocation
+        ==11181==    at 0x113476: incoming_spa (incoming_spa.c:294)
 
 fwknop-2.6.2 (04/28/2014):
     - [libfko] fix double free bug in SPA parser discovered with the new

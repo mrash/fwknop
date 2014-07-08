@@ -700,6 +700,15 @@ incoming_spa(fko_srv_options_t *opts)
         */
         res = get_spa_data_fields(ctx, &spadat);
 
+        if(res != FKO_SUCCESS)
+        {
+            log_msg(LOG_ERR, "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+
+            acc = acc->next;
+            continue;
+        }
+
         /* Figure out what our timeout will be. If it is specified in the SPA
          * data, then use that.  If not, try the FW_ACCESS_TIMEOUT from the
          * access.conf file (if there is one).  Otherwise use the default.
@@ -710,15 +719,6 @@ incoming_spa(fko_srv_options_t *opts)
             spadat.fw_access_timeout = acc->fw_access_timeout;
         else
             spadat.fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
-
-        if(res != FKO_SUCCESS)
-        {
-            log_msg(LOG_ERR, "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
-                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
-
-            acc = acc->next;
-            continue;
-        }
 
         /* Check packet age if so configured.
         */
