@@ -46,7 +46,13 @@ static int check_dir_path(const char * const path,
         const char * const path_name, const unsigned char use_basename);
 static int make_dir_path(const char * const path);
 static void daemonize_process(fko_srv_options_t * const opts);
+static int stop_fwknopd(fko_srv_options_t * const opts);
+static int status_fwknopd(fko_srv_options_t * const opts);
+static int restart_fwknopd(fko_srv_options_t * const opts);
 static int write_pid_file(fko_srv_options_t *opts);
+static void setup_pid(fko_srv_options_t *opts);
+static void init_digest_cache(fko_srv_options_t *opts);
+static void set_locale(fko_srv_options_t *opts);
 static pid_t get_running_pid(const fko_srv_options_t *opts);
 
 #if HAVE_LIBFIU
@@ -56,9 +62,7 @@ static void enable_fault_injections(fko_srv_options_t * const opts);
 int
 main(int argc, char **argv)
 {
-    int                 res, last_sig, rp_cache_count, is_err;
-    char               *locale;
-    pid_t               old_pid;
+    int                 last_sig;
 
     fko_srv_options_t   opts;
 
@@ -77,116 +81,20 @@ main(int argc, char **argv)
         /* Process any options that do their thing and exit.
         */
 
-        /* Kill the currently running fwknopd?
+        /* Kill the currently running fwknopd process?
         */
         if(opts.kill == 1)
-        {
-            old_pid = get_running_pid(&opts);
+            clean_exit(&opts, NO_FW_CLEANUP, stop_fwknopd(&opts));
 
-            if(old_pid > 0)
-            {
-                res    = kill(old_pid, SIGTERM);
-                is_err = kill(old_pid, 0);
-
-                if(res == 0 && is_err != 0)
-                {
-                    fprintf(stdout, "Killed fwknopd (pid=%i)\n", old_pid);
-                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                }
-                else
-                {
-                    /* give a bit of time for process shutdown and check again
-                    */
-                    sleep(1);
-                    is_err = kill(old_pid, 0);
-                    if(is_err != 0)
-                    {
-                        fprintf(stdout, "Killed fwknopd (pid=%i) via SIGTERM\n",
-                                old_pid);
-                        clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                    }
-                    else
-                    {
-                        res    = kill(old_pid, SIGKILL);
-                        is_err = kill(old_pid, 0);
-                        if(res == 0 && is_err != 0)
-                        {
-                            fprintf(stdout,
-                                    "Killed fwknopd (pid=%i) via SIGKILL\n",
-                                    old_pid);
-                            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                        }
-                        else
-                        {
-                            sleep(1);
-                            is_err = kill(old_pid, 0);
-                            if(is_err != 0)
-                            {
-                                fprintf(stdout,
-                                        "Killed fwknopd (pid=%i) via SIGKILL\n",
-                                        old_pid);
-                                clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                            }
-                            else
-                            {
-                                perror("Unable to kill fwknop: ");
-                                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                fprintf(stderr, "No running fwknopd detected.\n");
-                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
-
-        /* Status of the currently running fwknopd?
+        /* Status of the currently running fwknopd process?
         */
         if(opts.status == 1)
-        {
-            old_pid = write_pid_file(&opts);
+            clean_exit(&opts, NO_FW_CLEANUP, status_fwknopd(&opts));
 
-            if(old_pid > 0)
-            {
-                fprintf(stdout, "Detected fwknopd is running (pid=%i).\n", old_pid);
-                clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-            }
-            else
-            {
-                fprintf(stdout, "No running fwknopd detected.\n");
-                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
-
-        /* Restart the currently running fwknopd?
+        /* Restart the currently running fwknopd process?
         */
         if(opts.restart == 1)
-        {
-            old_pid = get_running_pid(&opts);
-
-            if(old_pid > 0)
-            {
-                res = kill(old_pid, SIGHUP);
-                if(res == 0)
-                {
-                    fprintf(stdout, "Sent restart signal to fwknopd (pid=%i)\n", old_pid);
-                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                }
-                else
-                {
-                    perror("Unable to send signal to fwknop: ");
-                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
-                }
-            }
-            else
-            {
-                fprintf(stdout, "No running fwknopd detected.\n");
-                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            clean_exit(&opts, NO_FW_CLEANUP, restart_fwknopd(&opts));
 
         /* Initialize logging.
         */
@@ -198,25 +106,7 @@ main(int argc, char **argv)
 #if HAVE_LOCALE_H
         /* Set the locale if specified.
         */
-        if(opts.config[CONF_LOCALE] != NULL
-          && strncasecmp(opts.config[CONF_LOCALE], "NONE", 4) != 0)
-        {
-            locale = setlocale(LC_ALL, opts.config[CONF_LOCALE]);
-
-            if(locale == NULL)
-            {
-                log_msg(LOG_ERR,
-                    "WARNING: Unable to set locale to '%s'.",
-                    opts.config[CONF_LOCALE]
-                );
-            }
-            else
-            {
-                log_msg(LOG_INFO,
-                    "Locale set to '%s'.", opts.config[CONF_LOCALE]
-                );
-            }
-        }
+        set_locale(&opts);
 #endif
 
         /* Make sure we have a valid run dir and path leading to digest file
@@ -260,42 +150,10 @@ main(int argc, char **argv)
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
-        /* If we are a new process (just being started), proceed with normal
-         * start-up.  Otherwise, we are here as a result of a signal sent to an
-         * existing process and we want to restart.
+        /* Acquire pid, become a daemon or run in the foreground, write pid
+         * to pid file.
         */
-        if(get_running_pid(&opts) != getpid())
-        {
-            /* If foreground mode is not set, then fork off and become a daemon.
-            * Otherwise, attempt to get the pid file lock and go on.
-            */
-            if(opts.foreground == 0)
-            {
-                daemonize_process(&opts);
-            }
-            else
-            {
-                old_pid = write_pid_file(&opts);
-                if(old_pid > 0)
-                {
-                    fprintf(stderr,
-                        "[*] An instance of fwknopd is already running: (PID=%i).\n", old_pid
-                    );
-
-                    clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
-                }
-                else if(old_pid < 0)
-                {
-                    fprintf(stderr, "[*] PID file error. The lock may not be effective.\n");
-                }
-            }
-
-            log_msg(LOG_INFO, "Starting %s", MY_NAME);
-        }
-        else
-        {
-            log_msg(LOG_INFO, "Re-starting %s", MY_NAME);
-        }
+        setup_pid(&opts);
 
         if(opts.verbose > 1 && opts.foreground)
         {
@@ -307,32 +165,7 @@ main(int argc, char **argv)
          * with dbm support or with the default simple cache file strategy)
          * if so configured.
         */
-        if(strncasecmp(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
-        {
-            rp_cache_count = replay_cache_init(&opts);
-
-            if(rp_cache_count < 0)
-            {
-                log_msg(LOG_WARNING,
-                    "Error opening digest cache file. Incoming digests will not be remembered."
-                );
-                /* Destination points to heap memory, and is guaranteed to be
-                 * at least two bytes large via validate_options(),
-                 * DEF_ENABLE_DIGEST_PERSISTENCE, and set_config_entry()
-                */
-                strlcpy(opts.config[CONF_ENABLE_DIGEST_PERSISTENCE], "N", 2);
-            }
-
-            if(opts.verbose)
-                log_msg(LOG_ERR,
-                    "Using Digest Cache: '%s' (entry count = %i)",
-#if USE_FILE_CACHE
-                    opts.config[CONF_DIGEST_FILE], rp_cache_count
-#else
-                    opts.config[CONF_DIGEST_DB_FILE], rp_cache_count
-#endif
-                );
-        }
+        init_digest_cache(&opts);
 
         if(opts.exit_after_parse_config)
         {
@@ -430,6 +263,216 @@ main(int argc, char **argv)
     clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
 
     return(EXIT_SUCCESS);  /* This never gets called */
+}
+
+static void set_locale(fko_srv_options_t *opts)
+{
+    char               *locale;
+
+    if(opts->config[CONF_LOCALE] != NULL
+      && strncasecmp(opts->config[CONF_LOCALE], "NONE", 4) != 0)
+    {
+        locale = setlocale(LC_ALL, opts->config[CONF_LOCALE]);
+
+        if(locale == NULL)
+        {
+            log_msg(LOG_ERR,
+                "WARNING: Unable to set locale to '%s'.",
+                opts->config[CONF_LOCALE]
+            );
+        }
+        else
+        {
+            log_msg(LOG_INFO,
+                "Locale set to '%s'.", opts->config[CONF_LOCALE]
+            );
+        }
+    }
+    return;
+}
+
+static void init_digest_cache(fko_srv_options_t *opts)
+{
+    int     rp_cache_count;
+
+    if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+    {
+        rp_cache_count = replay_cache_init(opts);
+
+        if(rp_cache_count < 0)
+        {
+            log_msg(LOG_WARNING,
+                "Error opening digest cache file. Incoming digests will not be remembered."
+            );
+            /* Destination points to heap memory, and is guaranteed to be
+             * at least two bytes large via validate_options(),
+             * DEF_ENABLE_DIGEST_PERSISTENCE, and set_config_entry()
+            */
+            strlcpy(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "N", 2);
+        }
+
+        if(opts->verbose)
+            log_msg(LOG_ERR,
+                "Using Digest Cache: '%s' (entry count = %i)",
+#if USE_FILE_CACHE
+                opts->config[CONF_DIGEST_FILE], rp_cache_count
+#else
+                opts->config[CONF_DIGEST_DB_FILE], rp_cache_count
+#endif
+            );
+    }
+    return;
+}
+
+static void setup_pid(fko_srv_options_t *opts)
+{
+    pid_t    old_pid;
+
+    /* If we are a new process (just being started), proceed with normal
+     * start-up.  Otherwise, we are here as a result of a signal sent to an
+     * existing process and we want to restart.
+    */
+    if(get_running_pid(opts) != getpid())
+    {
+        /* If foreground mode is not set, then fork off and become a daemon.
+        * Otherwise, attempt to get the pid file lock and go on.
+        */
+        if(opts->foreground == 0)
+        {
+            daemonize_process(opts);
+        }
+        else
+        {
+            old_pid = write_pid_file(opts);
+            if(old_pid > 0)
+            {
+                fprintf(stderr,
+                    "[*] An instance of fwknopd is already running: (PID=%i).\n", old_pid
+                );
+
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            else if(old_pid < 0)
+            {
+                fprintf(stderr, "[*] PID file error. The lock may not be effective.\n");
+            }
+        }
+
+        log_msg(LOG_INFO, "Starting %s", MY_NAME);
+    }
+    else
+    {
+        log_msg(LOG_INFO, "Re-starting %s", MY_NAME);
+    }
+
+    return;
+}
+
+static int restart_fwknopd(fko_srv_options_t * const opts)
+{
+    int      res = 0;
+    pid_t    old_pid;
+
+    old_pid = get_running_pid(opts);
+
+    if(old_pid > 0)
+    {
+        res = kill(old_pid, SIGHUP);
+        if(res == 0)
+        {
+            fprintf(stdout, "Sent restart signal to fwknopd (pid=%i)\n", old_pid);
+            return EXIT_SUCCESS;
+        }
+        else
+        {
+            perror("Unable to send signal to fwknop: ");
+            return EXIT_FAILURE;
+        }
+    }
+
+    fprintf(stdout, "No running fwknopd detected.\n");
+    return EXIT_FAILURE;
+}
+
+static int status_fwknopd(fko_srv_options_t * const opts)
+{
+    pid_t    old_pid;
+
+    old_pid = write_pid_file(opts);
+
+    if(old_pid > 0)
+    {
+        fprintf(stdout, "Detected fwknopd is running (pid=%i).\n", old_pid);
+        return EXIT_SUCCESS;
+    }
+
+    fprintf(stdout, "No running fwknopd detected.\n");
+    return EXIT_FAILURE;
+}
+
+static int stop_fwknopd(fko_srv_options_t * const opts)
+{
+    int      res = 0, is_err = 0;
+    pid_t    old_pid;
+
+    old_pid = get_running_pid(opts);
+
+    if(old_pid > 0)
+    {
+        res    = kill(old_pid, SIGTERM);
+        is_err = kill(old_pid, 0);
+
+        if(res == 0 && is_err != 0)
+        {
+            fprintf(stdout, "Killed fwknopd (pid=%i)\n", old_pid);
+            return EXIT_SUCCESS;
+        }
+        else
+        {
+            /* give a bit of time for process shutdown and check again
+            */
+            sleep(1);
+            is_err = kill(old_pid, 0);
+            if(is_err != 0)
+            {
+                fprintf(stdout, "Killed fwknopd (pid=%i) via SIGTERM\n",
+                        old_pid);
+                return EXIT_SUCCESS;
+            }
+            else
+            {
+                res    = kill(old_pid, SIGKILL);
+                is_err = kill(old_pid, 0);
+                if(res == 0 && is_err != 0)
+                {
+                    fprintf(stdout,
+                            "Killed fwknopd (pid=%i) via SIGKILL\n",
+                            old_pid);
+                    return EXIT_SUCCESS;
+                }
+                else
+                {
+                    sleep(1);
+                    is_err = kill(old_pid, 0);
+                    if(is_err != 0)
+                    {
+                        fprintf(stdout,
+                                "Killed fwknopd (pid=%i) via SIGKILL\n",
+                                old_pid);
+                        return EXIT_SUCCESS;
+                    }
+                    else
+                    {
+                        perror("Unable to kill fwknop: ");
+                        return EXIT_FAILURE;
+                    }
+                }
+            }
+        }
+    }
+
+    fprintf(stderr, "No running fwknopd detected.\n");
+    return EXIT_FAILURE;
 }
 
 /* Ensure the specified directory exists.  If not, create it or die.
