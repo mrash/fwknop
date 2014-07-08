@@ -19,6 +19,36 @@
     },
     {
         'category' => 'basic operations',
+        'detail'   => 'multiple override configs',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/ENABLE_PCAP_PROMISC.*\'N\'/,
+            qr/FILTER.*1234/],
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} -d $default_digest_file " .
+            "-p $default_pid_file --dump-config " .
+            "-O $conf_dir/override_fwknopd.conf,$conf_dir/override2_fwknopd.conf",
+    },
+    {
+        'category' => 'basic operations',
+        'detail'   => 'config var expansion',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/test\.pid/],
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd -c $conf_dir/var_expansion_fwknopd.conf " .
+            "-d $default_digest_file --dump-config "
+    },
+    {
+        'category' => 'basic operations',
+        'detail'   => 'invalid config var expansion',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Invalid embedded/],
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd -c $conf_dir/var_expansion_invalid_fwknopd.conf " .
+            "-d $default_digest_file --dump-config "
+    },
+
+    {
+        'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'dump error codes',
         'function' => \&generic_exec,

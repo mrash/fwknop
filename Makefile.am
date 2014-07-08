@@ -278,6 +278,9 @@ EXTRA_DIST = \
     test/conf/ofb_mode_access.conf \
     test/conf/open_ports_access.conf \
     test/conf/override_fwknopd.conf \
+    test/conf/override2_fwknopd.conf \
+    test/conf/var_expansion_fwknopd.conf \
+    test/conf/var_expansion_invalid_fwknopd.conf \
     test/conf/require_src_access.conf \
     test/conf/require_user_access.conf \
     test/conf/subnet_source_match_access.conf \
