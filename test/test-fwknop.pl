@@ -1871,6 +1871,24 @@ sub server_start_stop_cycle() {
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
             $cmd_out_tmp, $curr_test_file);
 
+    ### now send the signals against a non-daemon fwknopd process
+    for my $sig ($sigs{'SIGINT'}, $sigs{'SIGUSR1'}, $sigs{'SIGUSR2'}) {
+
+        &do_fwknopd_cmd("$lib_view_str $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args -f");
+
+        open F, "< $default_pid_file" or
+            die "[*] Could not open $default_pid_file: $!";
+        my $pid = <F>;
+        close F;
+        chomp $pid;
+        kill $sig, $pid;
+
+        sleep 1;
+        &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
+            $cmd_out_tmp, $curr_test_file);
+    }
+
     return $rv;
 }
 
@@ -5977,10 +5995,8 @@ sub write_pid() {
     return 0;
 }
 
-sub start_fwknopd() {
-    my $test_hr = shift;
-
-    &write_test_file("[+] TEST: $test_hr->{'msg'}\n", $server_test_file);
+sub do_fwknopd_cmd() {
+    my $cmdline = shift;
 
     my $pid = fork();
     die "[*] Could not fork: $!" unless defined $pid;
@@ -5988,8 +6004,7 @@ sub start_fwknopd() {
     if ($pid == 0) {
 
         ### we are the child, so start fwknopd
-        exit &run_cmd($test_hr->{'fwknopd_cmdline'},
-            $server_cmd_tmp, $server_test_file);
+        exit &run_cmd($cmdline, $server_cmd_tmp, $server_test_file);
     }
 
     ### look for 'fwknopd main event loop' as the indicator that fwknopd
@@ -6021,6 +6036,14 @@ sub start_fwknopd() {
     }
 
     return $pid;
+}
+
+sub start_fwknopd() {
+    my $test_hr = shift;
+
+    &write_test_file("[+] TEST: $test_hr->{'msg'}\n", $server_test_file);
+
+    return &do_fwknopd_cmd($test_hr->{'fwknopd_cmdline'});
 }
 
 sub write_key() {
