@@ -2132,6 +2132,170 @@
         ],
     },
 
+    ### test syslog config
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_DAEMON',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_DAEMON',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL0',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL0',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL1',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL1',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL2',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL2',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL3',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL3',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL4',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL4',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL5',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL5',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL6',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL6',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL7',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL7',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL8',
+        'function' => \&server_conf_files,
+        'exec_err' => $YES,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D --syslog-enable",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL8',
+        ],
+        'positive_output_matches' => [qr/Invalid SYSLOG_FACILITY/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
