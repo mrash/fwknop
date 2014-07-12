@@ -1,5 +1,4 @@
-# fwknop
-### This is the top-level directory for the fwknop project.
+# fwknop - Single Packet Authorization
 
 ## Introduction
 fwknop implements an authorization scheme known as Single Packet Authorization
