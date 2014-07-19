@@ -337,7 +337,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
                 new_sle = NULL;
                 return 0;
             }
-            strlcpy(ip_str, ip, strlen(ip)+1);
+            strlcpy(ip_str, ip, sizeof(ip_str));
         }
 
         if(inet_aton(ip_str, &in) == 0)

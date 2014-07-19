@@ -1859,7 +1859,7 @@ set_defaults(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int                 cmd_arg, index, is_err;
+    int                 cmd_arg, index, is_err, rlen=0;
     fko_var_bitmask_t   var_bitmask;
     char                rcfile[MAX_PATH_LEN] = {0};
 
@@ -2165,13 +2165,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
                     free(options->resolve_url);
-                options->resolve_url = calloc(1, strlen(optarg)+1);
+                rlen = strlen(optarg) + 1;
+                options->resolve_url = calloc(1, rlen);
                 if(options->resolve_url == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "Memory allocation error for resolve URL.");
                     exit(EXIT_FAILURE);
                 }
-                strlcpy(options->resolve_url, optarg, strlen(optarg)+1);
+                strlcpy(options->resolve_url, optarg, rlen);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_URL, &var_bitmask);
                 break;
             case SHOW_LAST_ARGS:
