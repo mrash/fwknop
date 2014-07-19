@@ -1,16 +1,26 @@
 fwknop-2.6.3 (05//2014):
-    - [server] Bug fix to handle SPA packets over HTTP by making sure to honor
-      the ENABLE_SPA_OVER_HTTP fwknopd.conf variable and to properly account
-      for SPA packet lengths when delivered via HTTP.
-    - [server] Add --test mode to instruct fwknopd to acquire and process
-      SPA packets, but not manipulate firewall rules or execute commands that
-      are provided by SPA clients. This option is mostly useful for the fuzzing
-      tests in the test suite to ensure broad code coverage under adverse
-      conditions.
-    - [server] Bug fix for PF firewalls without ALTQ support on FreeBSD. With
-      this fix it doesn't matter whether ALTQ support is available or not.
-      Thanks to Barry Allard for discovering and reporting this issue.
-      Closes issue #121 on github.
+    - Integrated the 'libfiu' fault injection library available from
+      http://blitiri.com.ar/p/libfiu/  This feature is disabled by default,
+      and requires the --enable-libfiu-support argument to the 'configure'
+      script in order to enable it. With fwknop compiled against libfiu, fault
+      injections are done at various locations within the fwknop sources and
+      the test suite verifies that the faults are properly handled at run time
+      via test/fko-wrapper/fko_fault_injection.c. In addition, the libfiu tool
+      'fiu-run' is used against the fwknop binaries to ensure they handle
+      faults that libfiu introduces into libc functions. For example, fiu-run
+      can force malloc() to fail even without huge memory pressure on the
+      local system, and the test suite ensures the fwknop binaries properly
+      handle this.
+    - [test suite] Integrated a new python fuzzer for fwknop SPA packets (see
+      test/spa_fuzzing.py). This greatly extends the ability of the test suite
+      to validate libfko operations since SPA fuzzing packets are sent through
+      libfko routines directly (indendepently of encryption and
+      authentication) with a special 'configure' option
+      --enable-fuzzing-interfaces. The python fuzzer generates over 300K SPA
+      packets, and when used by the test suite consumes about 400MB of disk.
+      For reference, to use both the libfiu fault injection feature mentioned
+      above and the python fuzzer, use the --enable-complete option to the
+      test suite.
     - [server] Add a new GPG_FINGERPRINT_ID variable to the access.conf file
       so that full GnuPG fingerprints can be required for incoming SPA packets
       in addition to the appreviated GnuPG signatures listed in GPG_REMOTE_ID.
@@ -23,6 +33,10 @@ fwknop-2.6.3 (05//2014):
       signatures are to be verified for incoming SPA packets. Signature
       verification is the default, and can only be disabled with
       GPG_DISABLE_SIG but this is NOT recommended.
+    - [server] Bug fix for PF firewalls without ALTQ support on FreeBSD. With
+      this fix it doesn't matter whether ALTQ support is available or not.
+      Thanks to Barry Allard for discovering and reporting this issue.
+      Closes issue #121 on github.
     - [server] Bug fix discovered with the libfiu fault injection tag
       "fko_get_username_init" combined with valgrind analysis. This bug is
       only triggered after a valid authenticated and decrypted SPA packet is
@@ -36,6 +50,15 @@ fwknop-2.6.3 (05//2014):
         ==11181==    by 0x10F32C: main (fwknopd.c:195)
         ==11181==  Uninitialised value was created by a stack allocation
         ==11181==    at 0x113476: incoming_spa (incoming_spa.c:294)
+
+    - [server] Bug fix to handle SPA packets over HTTP by making sure to honor
+      the ENABLE_SPA_OVER_HTTP fwknopd.conf variable and to properly account
+      for SPA packet lengths when delivered via HTTP.
+    - [server] Add --test mode to instruct fwknopd to acquire and process
+      SPA packets, but not manipulate firewall rules or execute commands that
+      are provided by SPA clients. This option is mostly useful for the fuzzing
+      tests in the test suite to ensure broad code coverage under adverse
+      conditions.
 
 fwknop-2.6.2 (04/28/2014):
     - [libfko] fix double free bug in SPA parser discovered with the new
