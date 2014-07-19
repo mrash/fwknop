@@ -18,7 +18,7 @@ SUBDIRS = \
 EXTRA_DIST = \
     android/COPYING \
     android/Application.mk \
-    android/README.md \
+    android/README \
     android/project/src/com/max2idea/android/fwknop/Fwknop.java \
     android/project/project.properties \
     android/project/sdk.paths \
