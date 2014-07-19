@@ -7,6 +7,10 @@ fwknop-2.6.3 (05//2014):
       are provided by SPA clients. This option is mostly useful for the fuzzing
       tests in the test suite to ensure broad code coverage under adverse
       conditions.
+    - [server] Bug fix for PF firewalls without ALTQ support on FreeBSD. With
+      this fix it doesn't matter whether ALTQ support is available or not.
+      Thanks to Barry Allard for discovering and reporting this issue.
+      Closes issue #121 on github.
     - [server] Add a new GPG_FINGERPRINT_ID variable to the access.conf file
       so that full GnuPG fingerprints can be required for incoming SPA packets
       in addition to the appreviated GnuPG signatures listed in GPG_REMOTE_ID.
