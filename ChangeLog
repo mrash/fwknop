@@ -21,6 +21,10 @@ fwknop-2.6.3 (05//2014):
       For reference, to use both the libfiu fault injection feature mentioned
       above and the python fuzzer, use the --enable-complete option to the
       test suite.
+    - [test suite] With the libfiu fault injection support and the new python
+      fuzzer, automated testing of fwknop achieves 99.7% function coverage and
+      90.2% line coverage as determined by 'gcov'. The full report may be
+      viewed here: http://www.cipherdyne.org/fwknop/lcov-results/
     - [server] Add a new GPG_FINGERPRINT_ID variable to the access.conf file
       so that full GnuPG fingerprints can be required for incoming SPA packets
       in addition to the appreviated GnuPG signatures listed in GPG_REMOTE_ID.
