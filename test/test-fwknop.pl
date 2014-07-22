@@ -6491,6 +6491,27 @@ sub init() {
     }
     unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
         push @tests_to_exclude, qr|active/expire sets|;
+        push @tests_to_exclude, qr|ipfw|;
+    }
+
+    ### unless we are in client only mode, see if the target firewall
+    ### if PF - FreeBSD can be either ipfw or PF for example
+    if (-e $fwknopdCmd) {
+        my $fw = '';
+        my $cmd = "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} -D";
+        open F, "$cmd |" or die "[*] Could not execute $cmd $!";
+        while (<F>) {
+            if (m|FIREWALL_EXE.*/(\S+)'|) {
+                $fw = $1;
+                last;
+            }
+        }
+        close F;
+
+        if ($fw eq 'pfctl') {
+            push @tests_to_exclude, qr|active/expire sets|;
+            push @tests_to_exclude, qr|ipfw|;
+        }
     }
 
     for my $file ($default_digest_file, "${default_digest_file}-old") {
