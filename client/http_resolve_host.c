@@ -54,7 +54,7 @@ struct url
 static int
 try_url(struct url *url, fko_cli_options_t *options)
 {
-    int     sock, res, error, http_buf_len, i;
+    int     sock=-1, res, error, http_buf_len, i;
     int     bytes_read = 0, position = 0;
     int     o1, o2, o3, o4;
     struct  addrinfo *result, *rp, hints;
@@ -117,8 +117,10 @@ try_url(struct url *url, fko_cli_options_t *options)
 #endif
     }
 
-    if (rp == NULL) {
+    if (rp == NULL)
+    {
         log_msg(LOG_VERBOSITY_ERROR, "resolve_ip_http: Could not create socket: ", strerror(errno));
+        close(sock);
         return(-1);
     }
 

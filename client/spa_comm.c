@@ -147,6 +147,11 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
         log_msg(LOG_VERBOSITY_ERROR,
                 "send_spa_packet_tcp_or_udp: Could not create socket: ",
                 strerror(errno));
+#ifdef WIN32
+        closesocket(sock);
+#else
+        close(sock);
+#endif
         return -1;
     }
 
