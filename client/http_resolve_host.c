@@ -57,7 +57,7 @@ try_url(struct url *url, fko_cli_options_t *options)
     int     sock=-1, sock_success=0, res, error, http_buf_len, i;
     int     bytes_read = 0, position = 0;
     int     o1, o2, o3, o4;
-    struct  addrinfo *result, *rp, hints;
+    struct  addrinfo *result=NULL, *rp, hints;
     char    http_buf[HTTP_MAX_REQUEST_LEN]       = {0};
     char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
     char   *ndx;
@@ -112,20 +112,24 @@ try_url(struct url *url, fko_cli_options_t *options)
             sock_success = 1;
             break;  /* made it */
         }
+        else /* close the open socket if there was a connect error */
+        {
+#ifdef WIN32
+            closesocket(sock);
+#else
+            close(sock);
+#endif
+        }
+
     }
+    if(result != NULL)
+        freeaddrinfo(result);
 
     if (! sock_success)
     {
         log_msg(LOG_VERBOSITY_ERROR, "resolve_ip_http: Could not create socket: ", strerror(errno));
-#ifdef WIN32
-        closesocket(sock);
-#else
-        close(sock);
-#endif
         return(-1);
     }
-
-    freeaddrinfo(result);
 
     log_msg(LOG_VERBOSITY_DEBUG, "\nHTTP request: %s", http_buf);
 

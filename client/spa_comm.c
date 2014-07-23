@@ -87,7 +87,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
     const fko_cli_options_t *options)
 {
     int     sock=-1, sock_success=0, res=0, error;
-    struct  addrinfo *result, *rp, hints;
+    struct  addrinfo *result=NULL, *rp, hints;
     char    port_str[MAX_PORT_STR_LEN+1] = {0};
 
     if (options->test)
@@ -138,21 +138,24 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
             sock_success = 1;
             break;  /* made it */
         }
+        else /* close the open socket if there was a connect error */
+        {
+#ifdef WIN32
+            closesocket(sock);
+#else
+            close(sock);
+#endif
+        }
     }
+    if(result != NULL)
+        freeaddrinfo(result);
 
     if (! sock_success) {
         log_msg(LOG_VERBOSITY_ERROR,
                 "send_spa_packet_tcp_or_udp: Could not create socket: ",
                 strerror(errno));
-#ifdef WIN32
-        closesocket(sock);
-#else
-        close(sock);
-#endif
         return -1;
     }
-
-    freeaddrinfo(result);
 
     res = send(sock, spa_data, sd_len, 0);
 
