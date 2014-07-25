@@ -52,6 +52,7 @@ static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options,
 static int set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options,
         char *access_buf);
 static int get_rand_port(fko_ctx_t ctx);
+int resolve_ip_https(fko_cli_options_t *options);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
@@ -266,12 +267,24 @@ main(int argc, char **argv)
         /* Resolve the client's public facing IP address if requestesd.
          * if this fails, consider it fatal.
         */
-        if (options.resolve_ip_http)
+        if (options.resolve_ip_http_https)
         {
-            if(resolve_ip_http(&options) < 0)
+            if(options.resolve_http_only)
             {
-                clean_exit(ctx, &options, key, &key_len,
-                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+                if(resolve_ip_http(&options) < 0)
+                {
+                    clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                /* Default to HTTPS */
+                if(resolve_ip_https(&options) < 0)
+                {
+                    clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+                }
             }
         }
 

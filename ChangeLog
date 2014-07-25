@@ -1,4 +1,10 @@
 fwknop-2.6.3 (05//2014):
+    - [client] External IP resolution via '-R' (or '--resolve-ip-http') is now
+      done via SSL by default. The IP resolution URL is now
+      'https://www.cipherdyne.org/cgi-gin/myip', and a warning is generated
+      in '-R' mode whenever a non-HTTPS URL is specified (it is safer just to
+      use the default). The fwknop client leverages 'wget' for this operation
+      since that is cleaner than having fwknop link against an SSL library.
     - Integrated the 'libfiu' fault injection library available from
       http://blitiri.com.ar/p/libfiu/  This feature is disabled by default,
       and requires the --enable-libfiu-support argument to the 'configure'

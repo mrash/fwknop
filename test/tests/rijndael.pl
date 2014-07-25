@@ -142,6 +142,32 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => 'client IP --resolve-url <def>',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$client_ip_resolve_args " .
+            "--resolve-url https://www.cipherdyne.org/cgi-bin/myip",
+        'no_ip_check' => 1,
+        'positive_output_matches' => [qr/wget/],
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP --resolve-http-only',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$client_ip_resolve_args --resolve-http-only",
+        'no_ip_check' => 1,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'client IP resolve manual URL',
         'function' => \&spa_cycle,
         'cmdline'  => "$client_ip_resolve_args --resolve-url $resolve_url",
@@ -165,9 +191,10 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client',
-        'detail'   => 'client IP resolve HTTPS unsupported',
+        'detail'   => 'client IP --resolve-http-only vs HTTPS',
         'function' => \&generic_exec,
-        'cmdline'  => "$client_ip_resolve_args --resolve-url https://somedomain.com/myip",
+        'cmdline'  => "$client_ip_resolve_args --resolve-http-only " .
+            "--resolve-url https://somedomain.com/myip",
         'no_ip_check' => 1,
         'positive_output_matches' => [qr/not.*supported/i],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,

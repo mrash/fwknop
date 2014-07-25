@@ -136,15 +136,16 @@ section below).
 
 *-R|-a|-s*::
     One of these options (see below) is required to tell the remote
-    *fwknopd* daemon what IP should be allowed through the local firewall. It
+    *fwknopd* daemon what IP should be allowed through the firewall. It
     is recommend to use the *-R* or *-a* options instead of *-s* in order
     to harden SPA communications against possible 'Man-In-The-Middle' (MITM)
     attacks, and on the server side set 'REQUIRE_SOURCE_ADDRESS' variable in
     the '@sysconfdir@/fwknop/access.conf' file. Note that the most secure
-    option is *-a* so that *fwknop* does not have to issue an HTTP request to
-    'http://www.cipherdyne.org/cgi-bin/myip' in order to resolve the externally
-    routable IP address. Using *-a* requires that the user already knows what
-    the external IP is for the network where fwknop is running.
+    option is *-a* so that *fwknop* does not have to issue any HTTPS request
+    to 'https://www.cipherdyne.org/cgi-bin/myip' in order to resolve the
+    externally routable IP address. Using *-a* requires that the user
+    already knows what the external IP is for the network where fwknop is
+    running.
 
 
 GENERAL OPTIONS
@@ -321,8 +322,8 @@ SPA OPTIONS
     SPA packet itself is spoofed with the *--spoof-src* option. Another
     related option is *-R* (see below) which instructs the *fwknop* client
     to automatically resolve the externally routable IP address the local
-    system is connected to by querying a website that returns the actual
-    IP address it sees from the calling system.
+    system is connected to by querying 'https://www.cipherdyne.org/cgi-bin/myip'.
+    This returns the actual IP address it sees from the calling system.
 
 *-g, --gpg-encryption*::
     Use GPG encryption on the SPA packet (default if not specified is
@@ -408,23 +409,33 @@ SPA OPTIONS
     For example, the *PCAP_FILTER* variable could be set to: ``+udp dst
     portrange 10000-65535+''.
 
-*-R, --resolve-ip-http*::
-    This is an important option, and instructs the *fwknop* client and
-    the *fwknopd* daemon/service to query a web server that returns the
-    caller's IP address (as seen by the web server). In some cases, this is
+*-R, --resolve-ip-https*::
+    This is an important option, and instructs the *fwknop* client to issue
+    an HTTPS request to a script running on 'cipherdyne.org' that returns the
+    client's IP address (as seen by the web server). In some cases, this is
     needed to determine the IP address that should be allowed through the
-    iptables policy at the remote fwknopd server side. This is useful if
-    the *fwknop* client is being used on a system that is behind an obscure
-    NAT address. Presently, *fwknop* uses the URL:
-    'http://www.cipherdyne.org/cgi-bin/myip' to resolve the caller IP. Note
-    that it is generally more secure to use the *-a* option if the externally
+    firewall policy at the remote *fwknopd* server side. This option is useful
+    if the *fwknop* client is being used on a system that is behind an obscure
+    NAT address, and the external Internet facing IP is not known to the user.
+    The full resolution URL is: 'https://www.cipherdyne.org/cgi-bin/myip', and
+    is accessed by *fwknop* via 'wget' in *--secure-protocol* mode. Note that
+    it is generally more secure to use the *-a* option if the externally
     routable IP address for the client is already known to the user since this
-    elminates the need for *fwknop* to issue an HTTP request.
+    elminates the need for *fwknop* to issue any sort of HTTPS request.
 
 *--resolve-url* '<url>'::
     Override the default URL used for resolving the source IP address. For
     best results, the URL specified here should point to a web service that
     provides just an IP address in the body of the HTTP response.
+
+*--resolve-http-only*::
+    This option forces the *fwknop* client to resolve the external IP via
+    HTTP instead of HTTPS. There are some circumstances where this might be
+    necessary such as when 'wget' is not available (or hasn't been compiled
+    with SSL support), but generally this is not recommeded since it opens
+    the possibility of a MITM attack through manipulation of the IP resolution
+    HTTP response. Either specify the IP manually with *-a*, or use *-R*
+    and omit this option.
 
 *-s, --source-ip*::
     Instruct the *fwknop* client to form an SPA packet that contains the
@@ -792,7 +803,7 @@ is what the new '2.2.2.2' stanza looks like in the '~/.fwknoprc' file:
     HMAC_KEY_BASE64             DLeLf93a3yBT2vhEpM+dWlirGta5GU+jdyG5uXp4461HgOtbqMem4gX0Bp2PJGzYZlbbcavcOM00UPm+0GqkXA==
     USE_HMAC                    Y
     VERBOSE                     Y
-    RESOLVE_IP_HTTP             Y
+    RESOLVE_IP_HTTPS            Y
 ..........................
 
 The keys are base64 encoded blobs of random data, and both the *KEY_BASE64* and
@@ -883,7 +894,7 @@ example of requesting access to both 'SSH' and 'OpenVPN' on '3.3.3.3':
 There are many cases where an *fwknop* client is deployed on a network behind
 a NAT device and the externally routable IP is not known to the user. In this
 case, use the IP resolution service available at
-'http://www.cipherdyne.org/cgi-bin/myip' via the *-R* command line switch in
+'https://www.cipherdyne.org/cgi-bin/myip' via the *-R* command line switch in
 order to derive the external client IP address. This is a safer method of
 acquiring the client IP address than using the *-s* option mentioned earlier
 in this manual page because the source IP is put within the encrypted packet

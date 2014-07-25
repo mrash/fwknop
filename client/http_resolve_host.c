@@ -227,17 +227,11 @@ parse_url(char *res_url, struct url* url)
     char *s_ndx, *e_ndx;
     int  tlen, tlen_offset, port, is_err;
 
-    /* https is not supported.
+    /* Strip off https:// or http:// portion if necessary
     */
-    if(strncasecmp(res_url, "https", 5) == 0)
-    {
-        log_msg(LOG_VERBOSITY_ERROR, "[*] https is not yet supported for http-resolve-ip.");
-        return(-1);
-    }
-
-    /* Strip off http:// portion if necessary
-    */
-    if(strncasecmp(res_url, "http://", 7) == 0)
+    if(strncasecmp(res_url, "https://", 8) == 0)
+        s_ndx = res_url + 8;
+    else if(strncasecmp(res_url, "http://", 7) == 0)
         s_ndx = res_url + 7;
     else
         s_ndx = res_url;
@@ -310,6 +304,94 @@ parse_url(char *res_url, struct url* url)
 }
 
 int
+resolve_ip_https(fko_cli_options_t *options)
+{
+    int     o1, o2, o3, o4, got_resp=0, i;
+    char   *ndx, resp[MAX_IPV4_STR_LEN+1] = {0};
+    char    wget_cmd[MAX_URL_PATH_LEN] = {0};
+    struct  url url; /* for validation only */
+    FILE   *wget;
+
+    memset(&url, 0, sizeof(url));
+
+    strlcpy(wget_cmd, WGET_RESOLVE_CMD, sizeof(wget_cmd));
+
+    if(options->resolve_url != NULL)
+    {
+        if(strncasecmp(options->resolve_url, "https", 5) != 0)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "[-] Warning: IP resolution URL '%s' should begin with 'https://' in -R mode.",
+                    options->resolve_url);
+        }
+
+        if(parse_url(options->resolve_url, &url) < 0)
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "Error parsing resolve-url");
+            return(-1);
+        }
+        /* tack on the original URL to the wget command
+        */
+        strlcat(wget_cmd, options->resolve_url, sizeof(wget_cmd));
+    }
+    else
+    {
+        /* tack on the default URL to the wget command
+        */
+        strlcat(wget_cmd, WGET_RESOLVE_URL_SSL, sizeof(wget_cmd));
+    }
+
+    /* We drive wget to resolve the external IP via SSL. This may not
+     * work on all platforms, but is a better strategy for now than
+     * requiring that fwknop link against an SSL library.
+    */
+    wget = popen(wget_cmd, "r");
+
+    if(wget == NULL)
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "[*] Could not run cmd: %s",
+                wget_cmd);
+        return -1;
+    }
+
+    /* Expecting one line of wget output that contains the resolved IP.
+    */
+    if ((fgets(resp, sizeof(resp), wget)) != NULL)
+    {
+        got_resp = 1;
+    }
+    pclose(wget);
+
+    ndx = resp;
+    for(i=0; i<MAX_IPV4_STR_LEN; i++) {
+        if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
+            break;
+    }
+    *(ndx+i) = '\0';
+
+    if(got_resp)
+    {
+        if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
+                && o1 >= 0 && o1 <= 255
+                && o2 >= 0 && o2 <= 255
+                && o3 >= 0 && o3 <= 255
+                && o4 >= 0 && o4 <= 255)
+        {
+            strlcpy(options->allow_ip_str, ndx, sizeof(options->allow_ip_str));
+
+            log_msg(LOG_VERBOSITY_INFO,
+                        "\n[+] Resolved external IP (via '%s') as: %s",
+                        wget_cmd, options->allow_ip_str);
+            return 1;
+        }
+    }
+
+    log_msg(LOG_VERBOSITY_ERROR,
+        "[-] Could not resolve IP via: '%s'", wget_cmd);
+    return -1;
+}
+
+int
 resolve_ip_http(fko_cli_options_t *options)
 {
     int     res;
@@ -319,6 +401,16 @@ resolve_ip_http(fko_cli_options_t *options)
 
     if(options->resolve_url != NULL)
     {
+        /* we only enter this function when the user forces non-HTTPS
+         * IP resolution
+        */
+        if(strncasecmp(options->resolve_url, "https", 5) == 0)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "[*] https is not supported for --resolve-http-only.");
+            return(-1);
+        }
+
         if(parse_url(options->resolve_url, &url) < 0)
         {
             log_msg(LOG_VERBOSITY_ERROR, "Error parsing resolve-url");
