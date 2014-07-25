@@ -13,6 +13,86 @@
     {
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
+        'detail'   => 'complete cycle no sig verify',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_no_sig_verify_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => 'invalid sig list',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_invalid_sig_id_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => 'fingerprint complete cycle tcp/22',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_no_pw_fpr_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => 'altered SPA packet',
+        'function' => \&fuzzer,
+        'no_ip_check' => 1,
+        'fuzzing_pkt' =>
+            'IOA3yoH1L5ONECEAf+L9UYYzzaj1uhy8IdHYVEnJaQuUuttUbtzXKjBfWShyXwgSIoq5' .
+            '3TUIGvrQME356SRtG4Pfy1wv6Z2hi/Gn2zDnycJBSWtYZ+QGfkJQrv+RDmUafuRnW7Me' .
+            'nnHekStRjFh05/2ojEz3/YrWG87JtpkPq1MTQFQkLg4TDc9liS39VUHQ8GW/c4iMQHKb' .
+            'tZaW/d8w8YU6x98d0LltibnEL0zsjPs2KR9gEJRPr0TYMiPzSnBzlIKanTDaJwY33ycH' .
+            'iBvFnqKLThIkDE3gz0mVTOMVuXgAkFQl9O8Lpw19B5kILBN3IxQdaVOBGi824fEQk7Ov' .
+#            '/V3g1tIGDP3D/HkMDFOAf9FYWZJG4L5KsQGL2wpUpdnpZN2kjZt08q2cgqfDTzi0Lfst' .
+            'AV3g1tIGDP3D/HkMDFOAf9FYWZJG4L5KsQGL2wpUpdnpZN2kjZt08q2cgqfDTzi0Lfst' .  ### the first byte was altered to 'A'
+            '2i1raz3EPljOYhMcQBHjuMi+pC9D2KDCzCJBCaUIVskZ5PjBRgU+RrOaWtzLe65Bz1AM' .
+            'exeDhr7Ap5S8Z1Zb9JDY5nA+ZrG5KPPG5VEn8K9LDSSPDp03XU5fdtG2UBEDVIz/zm42' .
+            '9ii8cZkgFsKf8agX+dPdkiQqF1GRi6uj2FE1WtbXiGGUWcw+2uiXxHcV9k2fp9dSa7BZ' .
+            'lNEN+hYxNETkkS8ohFEF0U4F2Dpi4tx0ajXjNKW+N1rK84zBxasH9hbiiMD+Yrc54HWZ' .
+            '+LW53nUqMT3UH7+Dg6KTSUUNLAPgEyuliGtw1AX62qBcwCK8hRasMaYfB856xdPFDFQD' .
+            'A7ZSBSDjXs1dBYR8n47lftru97zZDSZRfLLtJteeHB8eoiu9RwaqRd7x548nGxmIrlBw' .
+            'zvovRVytMYMml1OcjCPdR9PsAUJm92m+6TeBSMMG3Hp4pkE85nqbrrjqTYzrnDekZYYX' .
+            '6W8z6pU3JBDOu+B7HeI9HzxaKB77Q7fyOUCNZy0d/nH8ehcUebu7yz434zrOI/+WYeJB' .
+            '7F+A59xJREA8pfYtd9SXzlou39AAMtqi90pvWlAMrTgBGWiRFsDbR0V4F+dgqcFvX7Ir' .
+            'tcznNnYMt8cOrZsRlkURdSIhx8',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} " .
+            "-a $cf{'gpg_no_pw_fpr_access'} $intf_str --gpg-home-dir conf/server-gpg-no-pw " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => 'invalid fingerprint',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_gpg_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_no_pw_bad_fpr_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'server_positive_output_matches' => [qr/not in the GPG_FINGERPRINT/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
         'detail'   => 'multi gpg-IDs (tcp/22 ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_gpg_args_no_pw,

@@ -130,9 +130,26 @@ AC_ARG_ENABLE([profile-coverage],
   [])
 
 if test "x$want_profile_coverage" = "xyes"; then
-    CFLAGS="-g"
     FKO_CHECK_COMPILER_ARG([-fprofile-arcs -ftest-coverage -fno-inline])
+    FKO_CHECK_COMPILER_ARG([-g])
     FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lgcov])
+fi
+
+dnl Decide whether or not to build binaries with fault injection support
+dnl provided by libfiu (see: http://blitiri.com.ar/p/libfiu/) for fault
+dnl testing
+dnl
+want_libfiu_support=no
+AC_ARG_ENABLE([libfiu-support],
+  [AS_HELP_STRING([--enable-libfiu-support],
+    [Build fwknop binaries with fault injection testing support @<:@default is to disable@:>@])],
+  [want_libfiu_support=$enableval],
+  [])
+
+if test "x$want_libfiu_support" = "xyes"; then
+    AC_DEFINE([HAVE_LIBFIU], [1], [Define for fault injection testing support])
+    FKO_CHECK_COMPILER_ARG([-DFIU_ENABLE])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lfiu])
 fi
 
 dnl Decide whether or not to compile in certain features that enable fuzzing

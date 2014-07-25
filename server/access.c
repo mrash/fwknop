@@ -41,15 +41,21 @@
 #include "utils.h"
 #include "log_msg.h"
 
+#define FATAL_ERR -1
+
+#ifndef SUCCESS
+  #define SUCCESS    1
+#endif
+
 /* Add an access string entry
 */
-static void
+static int
 add_acc_string(char **var, const char *val)
 {
     if(var == NULL)
     {
         log_msg(LOG_ERR, "[*] add_acc_string() called with NULL variable");
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     if(*var != NULL)
@@ -60,13 +66,14 @@ add_acc_string(char **var, const char *val)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding access list entry: %s", *var
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
+    return SUCCESS;
 }
 
 /* Decode base64 encoded string into access entry
 */
-static void
+static int
 add_acc_b64_string(char **var, int *len, const char *val)
 {
     if((*var = strdup(val)) == NULL)
@@ -74,7 +81,7 @@ add_acc_b64_string(char **var, int *len, const char *val)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding access list entry: %s", *var
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
     memset(*var, 0x0, strlen(val));
     *len = fko_base64_decode(val, (unsigned char *) *var);
@@ -84,8 +91,9 @@ add_acc_b64_string(char **var, int *len, const char *val)
         log_msg(LOG_ERR,
             "[*] base64 decoding returned error for: %s", *var
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
+    return SUCCESS;
 }
 
 /* Add an access bool entry (unsigned char of 1 or 0)
@@ -112,7 +120,7 @@ add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const c
             "[*] Fatal: invalid date value '%s' (need MM/DD/YYYY) for access stanza expiration time",
             val
         );
-        return 0;
+        return FATAL_ERR;
     }
 
     if(tm.tm_mon > 0)
@@ -149,7 +157,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
             "[*] Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
             val
         );
-        return 0;
+        return FATAL_ERR;
     }
 
     *access_expire_time = (time_t) expire_time;
@@ -158,7 +166,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
 }
 
 #if FIREWALL_IPTABLES
-static void
+static int
 add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
 {
     char      ip_str[MAX_IPV4_STR_LEN] = {0};
@@ -169,30 +177,29 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
             "[*] Fatal: invalid FORCE_NAT arg '%s', need <IP> <PORT>",
             val
         );
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     if (curr_acc->force_nat_port > MAX_PORT)
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT port '%d'", curr_acc->force_nat_port);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     if(! is_valid_ipv4_addr(ip_str))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     curr_acc->force_nat = 1;
-    add_acc_string(&(curr_acc->force_nat_ip), ip_str);
 
-    return;
+    return add_acc_string(&(curr_acc->force_nat_ip), ip_str);
 }
 
-static void
+static int
 add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
 {
     char      ip_str[MAX_IPV4_STR_LEN] = {0};
@@ -201,20 +208,19 @@ add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *
     {
         log_msg(LOG_ERR,
                 "[*] Fatal: invalid FORCE_SNAT arg '%s', need <IP>", val);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     if(! is_valid_ipv4_addr(ip_str))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_SNAT IP '%s'", ip_str);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     curr_acc->force_snat = 1;
-    add_acc_string(&(curr_acc->force_snat_ip), ip_str);
 
-    return;
+    return add_acc_string(&(curr_acc->force_snat_ip), ip_str);
 }
 
 #endif
@@ -331,7 +337,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
                 new_sle = NULL;
                 return 0;
             }
-            strlcpy(ip_str, ip, strlen(ip)+1);
+            strlcpy(ip_str, ip, sizeof(ip_str));
         }
 
         if(inet_aton(ip_str, &in) == 0)
@@ -527,7 +533,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
 
 /* Add a string list entry to the given acc_string_list.
 */
-static void
+static int
 add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
 {
     acc_string_list_t   *last_stlist, *new_stlist, *tmp_stlist;
@@ -537,7 +543,7 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error creating string list entry"
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
 
     /* If this is not the first entry, we walk our pointer to the
@@ -568,9 +574,9 @@ add_string_list_ent(acc_string_list_t **stlist, const char *str_str)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding string list entry item"
         );
-        exit(EXIT_FAILURE);
+        return FATAL_ERR;
     }
-
+    return SUCCESS;
 }
 
 /* Expand a proto/port access string to a list of access proto-port struct.
@@ -640,10 +646,12 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
                 start++;
 
             if(((ndx-start)+1) >= MAX_LINE_LEN)
-                return 0;
+                return FATAL_ERR;
 
             strlcpy(buf, start, (ndx-start)+1);
-            add_string_list_ent(stlist, buf);
+            if(add_string_list_ent(stlist, buf) != SUCCESS)
+                return FATAL_ERR;
+
             start = ndx+1;
         }
     }
@@ -654,13 +662,14 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
         start++;
 
     if(((ndx-start)+1) >= MAX_LINE_LEN)
-        return 0;
+        return FATAL_ERR;
 
     strlcpy(buf, start, (ndx-start)+1);
 
-    add_string_list_ent(stlist, buf);
+    if(add_string_list_ent(stlist, buf) != SUCCESS)
+        return FATAL_ERR;
 
-    return 1;
+    return SUCCESS;
 }
 
 /* Free the acc source_list
@@ -804,6 +813,12 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->gpg_remote_id);
         free_acc_string_list(acc->gpg_remote_id_list);
     }
+    if(acc->gpg_remote_fpr != NULL)
+    {
+        free(acc->gpg_remote_fpr);
+        free_acc_string_list(acc->gpg_remote_fpr_list);
+    }
+    return;
 }
 
 /* Expand any access entries that may be multi-value.
@@ -848,10 +863,30 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
         /* Expand the GPG_REMOTE_ID string.
         */
         if(acc->gpg_remote_id != NULL && strlen(acc->gpg_remote_id))
-            expand_acc_string_list(&(acc->gpg_remote_id_list), acc->gpg_remote_id);
+        {
+            if(expand_acc_string_list(&(acc->gpg_remote_id_list),
+                        acc->gpg_remote_id) != SUCCESS)
+            {
+                log_msg(LOG_ERR, "[*] Fatal invalid GPG_REMOTE_ID list in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+
+        /* Expand the GPG_FINGERPRINT_ID string.
+        */
+        if(acc->gpg_remote_fpr != NULL && strlen(acc->gpg_remote_fpr))
+        {
+            if(expand_acc_string_list(&(acc->gpg_remote_fpr_list),
+                        acc->gpg_remote_fpr) != SUCCESS)
+            {
+                log_msg(LOG_ERR, "[*] Fatal invalid GPG_FINGERPRINT_ID list in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
 
         acc = acc->next;
     }
+    return;
 }
 
 void
@@ -951,7 +986,8 @@ set_acc_defaults(fko_srv_options_t *opts)
         if(acc->gpg_decrypt_pw != NULL)
         {
             if(acc->gpg_home_dir == NULL)
-                add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]);
+                if(add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]) != SUCCESS)
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
             if(! acc->gpg_require_sig)
             {
@@ -979,6 +1015,19 @@ set_acc_defaults(fko_srv_options_t *opts)
                     );
                 }
             }
+
+            /* If signature checking is enabled, make sure we either have sig ID's or
+             * fingerprint ID's to check
+            */
+            if(! acc->gpg_disable_sig
+                    && (acc->gpg_remote_id == NULL && acc->gpg_remote_fpr == NULL))
+            {
+                log_msg(LOG_INFO,
+                    "Warning: Must have either sig ID's or fingerprints to check via GPG_REMOTE_ID or GPG_FINGERPRINT_ID (stanza source: '%s' #%d)",
+                    acc->source, i
+                );
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
 
         if(acc->encryption_mode == FKO_ENC_MODE_UNKNOWN)
@@ -997,6 +1046,7 @@ set_acc_defaults(fko_srv_options_t *opts)
         acc = acc->next;
         i++;
     }
+    return;
 }
 
 /* Perform some sanity checks on an acc stanza data.
@@ -1189,8 +1239,6 @@ parse_access_file(fko_srv_options_t *opts)
         var[MAX_LINE_LEN-1] = 0x0;
         val[MAX_LINE_LEN-1] = 0x0;
 
-        /*
-        */
         if (opts->verbose > 3)
             log_msg(LOG_DEBUG,
                 "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'",
@@ -1202,7 +1250,6 @@ parse_access_file(fko_srv_options_t *opts)
          * NOTE: If a new access.conf parameter is created.  It also needs
          *       to be accounted for in the following if/if else construct.
         */
-
         if(CONF_VAR_IS(var, "SOURCE"))
         {
             /* If this is not the first stanza, sanity check the previous
@@ -1222,7 +1269,11 @@ parse_access_file(fko_srv_options_t *opts)
             */
             curr_acc = acc_stanza_add(opts);
 
-            add_acc_string(&(curr_acc->source), val);
+            if(add_acc_string(&(curr_acc->source), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
 
             got_source++;
         }
@@ -1234,11 +1285,19 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "OPEN_PORTS"))
         {
-            add_acc_string(&(curr_acc->open_ports), val);
+            if(add_acc_string(&(curr_acc->open_ports), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "RESTRICT_PORTS"))
         {
-            add_acc_string(&(curr_acc->restrict_ports), val);
+            if(add_acc_string(&(curr_acc->restrict_ports), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "KEY"))
         {
@@ -1250,7 +1309,11 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_string(&(curr_acc->key), val);
+            if(add_acc_string(&(curr_acc->key), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
             curr_acc->key_len = strlen(curr_acc->key);
             add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
@@ -1272,9 +1335,17 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_string(&(curr_acc->key_base64), val);
-            add_acc_b64_string(&(curr_acc->key),
-                &(curr_acc->key_len), curr_acc->key_base64);
+            if(add_acc_string(&(curr_acc->key_base64), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            if(add_acc_b64_string(&(curr_acc->key),
+                    &(curr_acc->key_len), curr_acc->key_base64) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
             add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
         /* HMAC digest type */
@@ -1308,9 +1379,17 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_string(&(curr_acc->hmac_key_base64), val);
-            add_acc_b64_string(&(curr_acc->hmac_key),
-                &(curr_acc->hmac_key_len), curr_acc->hmac_key_base64);
+            if(add_acc_string(&(curr_acc->hmac_key_base64), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            if(add_acc_b64_string(&(curr_acc->hmac_key),
+                    &(curr_acc->hmac_key_len), curr_acc->hmac_key_base64) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY"))
         {
@@ -1322,7 +1401,11 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_string(&(curr_acc->hmac_key), val);
+            if(add_acc_string(&(curr_acc->hmac_key), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
             curr_acc->hmac_key_len = strlen(curr_acc->hmac_key);
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
@@ -1354,7 +1437,11 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "CMD_EXEC_USER"))
         {
-            add_acc_string(&(curr_acc->cmd_exec_user), val);
+            if(add_acc_string(&(curr_acc->cmd_exec_user), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
 
             errno = 0;
             pw = getpwnam(val);
@@ -1371,7 +1458,11 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
         {
-            add_acc_string(&(curr_acc->require_username), val);
+            if(add_acc_string(&(curr_acc->require_username), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "REQUIRE_SOURCE_ADDRESS"))
         {
@@ -1385,7 +1476,11 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if (is_valid_dir(val))
             {
-                add_acc_string(&(curr_acc->gpg_home_dir), val);
+                if(add_acc_string(&(curr_acc->gpg_home_dir), val) != SUCCESS)
+                {
+                    fclose(file_ptr);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
             }
             else
             {
@@ -1398,11 +1493,19 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "GPG_EXE"))
         {
-            add_acc_string(&(curr_acc->gpg_exe), val);
+            if(add_acc_string(&(curr_acc->gpg_exe), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_ID"))
         {
-            add_acc_string(&(curr_acc->gpg_decrypt_id), val);
+            if(add_acc_string(&(curr_acc->gpg_decrypt_id), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_PW"))
         {
@@ -1414,7 +1517,11 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_string(&(curr_acc->gpg_decrypt_pw), val);
+            if(add_acc_string(&(curr_acc->gpg_decrypt_pw), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
             add_acc_bool(&(curr_acc->use_gpg), "Y");
         }
         else if(CONF_VAR_IS(var, "GPG_ALLOW_NO_PW"))
@@ -1423,7 +1530,11 @@ parse_access_file(fko_srv_options_t *opts)
             if(curr_acc->gpg_allow_no_pw == 1)
             {
                 add_acc_bool(&(curr_acc->use_gpg), "Y");
-                add_acc_string(&(curr_acc->gpg_decrypt_pw), "");
+                if(add_acc_string(&(curr_acc->gpg_decrypt_pw), "") != SUCCESS)
+                {
+                    fclose(file_ptr);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
             }
         }
         else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
@@ -1440,7 +1551,19 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "GPG_REMOTE_ID"))
         {
-            add_acc_string(&(curr_acc->gpg_remote_id), val);
+            if(add_acc_string(&(curr_acc->gpg_remote_id), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+        else if(CONF_VAR_IS(var, "GPG_FINGERPRINT_ID"))
+        {
+            if(add_acc_string(&(curr_acc->gpg_remote_fpr), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE"))
         {
@@ -1468,7 +1591,11 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_force_nat(opts, curr_acc, val);
+            if(add_acc_force_nat(opts, curr_acc, val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_NAT not supported.");
@@ -1486,7 +1613,11 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            add_acc_force_snat(opts, curr_acc, val);
+            if(add_acc_force_snat(opts, curr_acc, val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_SNAT not supported.");
@@ -1739,7 +1870,8 @@ dump_access_list(const fko_srv_options_t *opts)
             "             GPG_DECRYPT_PW:  %s\n"
             "            GPG_REQUIRE_SIG:  %s\n"
             "GPG_IGNORE_SIG_VERIFY_ERROR:  %s\n"
-            "              GPG_REMOTE_ID:  %s\n",
+            "              GPG_REMOTE_ID:  %s\n"
+            "         GPG_FINGERPRINT_ID:  %s\n",
             ++i,
             acc->source,
             (acc->open_ports == NULL) ? "<not set>" : acc->open_ports,
@@ -1768,7 +1900,8 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->gpg_decrypt_pw == NULL) ? "<not set>" : "<see the access.conf file>",
             acc->gpg_require_sig ? "Yes" : "No",
             acc->gpg_ignore_sig_error  ? "Yes" : "No",
-            (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id
+            (acc->gpg_remote_id == NULL) ? "<not set>" : acc->gpg_remote_id,
+            (acc->gpg_remote_fpr == NULL) ? "<not set>" : acc->gpg_remote_fpr
         );
 
         fprintf(stdout, "\n");

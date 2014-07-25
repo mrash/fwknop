@@ -78,6 +78,15 @@ COMMAND-LINE OPTIONS
     Dump all possible *fwknopd* error codes to stdout and exit. This option is
     rarely needed in practice, and was added to assist with test coverage.
 
+*--fault-injection-tag*='<tag>'::
+    This option is only used for fault injection testing when *fwknop* is
+    compiled to support the libfiu library (see: 'http://blitiri.com.ar/p/libfiu/').
+    Under normal circumstances this option is not used, and any packaged
+    version of fwknop will not have code compiled in so this capability is not
+    enabled at run time. It is documented here for completeness.
+    version of fwknop will not have code compiled in to enable this capability
+    at run time. It is documented here for completeness.
+
 *--fw-list-all*::
     List all firewall rules including those that have nothing to do with
     *fwknopd*.

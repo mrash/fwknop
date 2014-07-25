@@ -321,7 +321,8 @@ pcap_capture(fko_srv_options_t *opts)
 
         /* Check for any expired firewall rules and deal with them.
         */
-        check_firewall_rules(opts);
+        if(!opts->test)
+            check_firewall_rules(opts);
 
 #if FIREWALL_IPFW
         /* Purge expired rules that no longer have any corresponding

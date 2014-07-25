@@ -258,6 +258,7 @@ enum {
     CONF_GPG_EXE,
     CONF_FIREWALL_EXE,
     CONF_VERBOSE,
+    CONF_FAULT_INJECTION_TAG,
 
     NUMBER_OF_CONFIG_ENTRIES  /* Marks the end and number of entries */
 };
@@ -326,6 +327,8 @@ typedef struct acc_stanza
     unsigned char        gpg_allow_no_pw;
     char                *gpg_remote_id;
     acc_string_list_t   *gpg_remote_id_list;
+    char                *gpg_remote_fpr;
+    acc_string_list_t   *gpg_remote_fpr_list;
     time_t               access_expire_time;
     int                  expired;
     int                  encryption_mode;

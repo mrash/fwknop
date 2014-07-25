@@ -78,12 +78,14 @@ our %cf = (
     'future_exp_access'            => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'             => "$conf_dir/expired_epoch_stanza_access.conf",
     'invalid_exp_access'           => "$conf_dir/invalid_expire_access.conf",
+    'ipt_output_chain'             => "$conf_dir/ipt_output_chain_fwknopd.conf",
     'invalid_ipt_input_chain'      => "$conf_dir/invalid_ipt_input_chain_fwknopd.conf",
     'invalid_ipt_input_chain2'     => "$conf_dir/invalid_ipt_input_chain_2_fwknopd.conf",
     'invalid_ipt_input_chain3'     => "$conf_dir/invalid_ipt_input_chain_3_fwknopd.conf",
     'invalid_ipt_input_chain4'     => "$conf_dir/invalid_ipt_input_chain_4_fwknopd.conf",
     'invalid_ipt_input_chain5'     => "$conf_dir/invalid_ipt_input_chain_5_fwknopd.conf",
     'invalid_ipt_input_chain6'     => "$conf_dir/invalid_ipt_input_chain_6_fwknopd.conf",
+    'invalid_run_dir_path'         => "$conf_dir/invalid_run_dir_path_fwknopd.conf",
     'force_nat_access'             => "$conf_dir/force_nat_access.conf",
     'hmac_force_nat_access'        => "$conf_dir/hmac_force_nat_access.conf",
     'hmac_force_snat_access'       => "$conf_dir/hmac_force_snat_access.conf",
@@ -109,10 +111,15 @@ our %cf = (
     'legacy_iv_long_key_access'    => "$conf_dir/legacy_iv_long_key_access.conf",
     'legacy_iv_long_key2_access'   => "$conf_dir/legacy_iv_long_key2_access.conf",
     'gpg_no_pw_access'             => "$conf_dir/gpg_no_pw_access.conf",
+    'gpg_no_pw_fpr_access'         => "$conf_dir/gpg_no_pw_fpr_access.conf",
+    'gpg_no_pw_bad_fpr_access'     => "$conf_dir/gpg_no_pw_bad_fpr_access.conf",
+    'gpg_no_pw_no_fpr_access'      => "$conf_dir/gpg_no_pw_no_fpr_access.conf",
     'gpg_no_pw_hmac_access'        => "$conf_dir/gpg_no_pw_hmac_access.conf",
     'gpg_no_pw_hmac_clientdir_access' => "$conf_dir/gpg_no_pw_hmac_clientdir_access.conf",
     'gpg_no_pw_hmac_serverdir_access' => "$conf_dir/gpg_no_pw_hmac_serverdir_access.conf",
     'gpg_no_pw_hmac_sha512_access' => "$conf_dir/gpg_no_pw_hmac_sha512_access.conf",
+    'gpg_no_sig_verify_access'     => "$conf_dir/gpg_no_sig_verify_access.conf",
+    'gpg_invalid_sig_id_access'    => "$conf_dir/gpg_invalid_sig_id_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
     'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
@@ -146,6 +153,7 @@ our %cf = (
     'rc_hmac_b64_key'              => "$conf_dir/fwknoprc_default_hmac_base64_key",
     'rc_hmac_defaults'             => "$conf_dir/fwknoprc_hmac_defaults",
     'rc_hmac_http_resolve'         => "$conf_dir/fwknoprc_hmac_http_resolve",
+    'rc_hmac_https_resolve'        => "$conf_dir/fwknoprc_hmac_https_resolve",
     'rc_hmac_nat_rand_b64_key'     => "$conf_dir/fwknoprc_hmac_nat_rand_base64_key",
     'rc_hmac_spoof_src_b64_key'    => "$conf_dir/fwknoprc_hmac_spoof_src_base64_key",
     'rc_hmac_sha512_b64_key'       => "$conf_dir/fwknoprc_hmac_sha512_base64_key",
@@ -247,6 +255,7 @@ my @test_files = (
     "$tests_dir/rijndael_backwards_compatibility.pl",
     "$tests_dir/rijndael_hmac.pl",
     "$tests_dir/rijndael_hmac_fuzzing.pl",
+    "$tests_dir/fault_injection.pl",
     "$tests_dir/os_compatibility.pl",
     "$tests_dir/perl_FKO_module.pl",
     "$tests_dir/python_fko.pl",
@@ -270,6 +279,7 @@ our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
 our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
 our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
 our @rijndael_hmac_fuzzing   = ();  ### from tests/rijndael_hmac_fuzzing.pl
+our @fault_injection         = ();  ### from tests/fault_injection.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
 our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
 our @gpg                     = ();  ### from tests/gpg.pl
@@ -286,6 +296,7 @@ my $test_include = '';
 my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
+my $do_crash_check = 1;
 my %valgrind_flagged_fcns = ();
 my %valgrind_flagged_fcns_unique = ();
 my $previous_valgrind_coverage_dir = '';
@@ -315,12 +326,14 @@ my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
 my $client_only_mode = 0;
 my $server_only_mode = 0;
+my $enable_fault_injection = 0;
+my $disable_fault_injection = 0;
 my $enable_valgrind = 0;
 my $disable_valgrind = 0;
 my $enable_valgrind_gen_suppressions = 0;
 my $valgrind_disable_suppressions = 0;
 my $valgrind_disable_child_silent = 0;
-my $valgrind_suppressions_file = 'valgrind_suppressions';
+my $valgrind_suppressions_file = cwd() . '/valgrind_suppressions';
 our $valgrind_str = '';
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
@@ -329,19 +342,23 @@ my $libfko_hdr_file    = '../lib/fko.h';
 my $libfko_errstr_file = '../lib/fko_error.c';
 my $perl_libfko_constants_file   = '../perl/FKO/lib/FKO_Constants.pl';
 my $python_libfko_constants_file = '../python/fko.py';
-my $fko_wrapper_dir = 'fko-wrapper';
+our $fko_wrapper_dir = 'fko-wrapper';
+our $wrapper_exec_script = 'run.sh';
+our $wrapper_exec_script_valgrind = 'run_valgrind.sh';
+my $fuzz_spa_payloads_file = $fko_wrapper_dir . '/fuzz_spa_payloads';
+our $send_fuzz_payloads_file = $fko_wrapper_dir . '/send_spa_payloads';
 my $python_spa_packet = '';
 my $pkts_file = '';
 my $enable_fuzzing_interfaces_tests = 0;
 my $enable_client_ip_resolve_test = 0;
 my $enable_all = 0;
+my $enable_complete = 0;
 my $saved_last_results = 0;
 my $diff_mode = 0;
 my $enc_dummy_key = 'A'x8;
 my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_profile_coverage_check = 0;
-my $preserve_previous_coverage_files = 0;
 my $profile_coverage_init = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
@@ -362,9 +379,11 @@ my $include_permissions_warnings = 0;
 my $lib_view_cmd = '';
 my $git_path = '';
 our $valgrind_path = '';
+our $fiu_run_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
 my  $lcov_path = '';
+my  $coverage_diff_path = 'coverage_diff.py';
 my  $genhtml_path = '';
 our $killall_path = '';
 our $pgrep_path   = '';
@@ -434,7 +453,6 @@ exit 1 unless GetOptions(
     'fuzzing-class=s'     => \$fuzzing_class,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
-    'profile-coverage-preserve' => \$preserve_previous_coverage_files,
     'profile-coverage-init' => \$profile_coverage_init,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
@@ -443,11 +461,14 @@ exit 1 unless GetOptions(
     'gdb-test=s'        => \$gdb_test_file,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
+    'enable-fault-injection'   => \$enable_fault_injection,
+    'disable-fault-injection'  => \$disable_fault_injection,
     'enable-valgrind'   => \$enable_valgrind,
     'disable-valgrind'  => \$disable_valgrind,
     'valgrind-disable-suppressions'  => \$valgrind_disable_suppressions,
     'valgrind-disable-child-silent'  => \$valgrind_disable_child_silent,
     'enable-all'        => \$enable_all,
+    'enable-complete'   => \$enable_complete,
     'enable-fuzzing-interfaces-tests' => \$enable_fuzzing_interfaces_tests,
     'valgrind-path=s'   => \$valgrind_path,
     'valgrind-suppression-file' => \$valgrind_suppressions_file,
@@ -456,6 +477,7 @@ exit 1 unless GetOptions(
     ### a full test suite run has already been executed with --enable-valgrind
     'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
     'openssl-path=s'    => \$openssl_path,
+    'fiu-run-path=s'    => \$fiu_run_path,
     'output-dir=s'      => \$output_dir,
     'cmd-verbose=s'     => \$verbose_str,
     'client-only-mode'  => \$client_only_mode,
@@ -471,7 +493,7 @@ exit 1 unless GetOptions(
 our $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
 our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 
-if ($enable_all) {
+if ($enable_all or $enable_complete) {
     $enable_valgrind = 1;
     $enable_recompilation_warnings_check = 1;
     $enable_make_distcheck = 1;
@@ -481,7 +503,14 @@ if ($enable_all) {
     $enable_openssl_compatibility_tests = 1;
 }
 
+if ($enable_complete) {
+    $enable_fault_injection = 1;
+    $enable_profile_coverage_check = 1;
+    $enable_fuzzing_interfaces_tests = 1;
+}
+
 $enable_valgrind = 0 if $disable_valgrind;
+$enable_fault_injection = 0 if $disable_fault_injection;
 $enable_profile_coverage_check = 1 if $profile_coverage_init;
 
 unless (-d $output_dir) {
@@ -558,6 +587,9 @@ our $client_hmac_rc_defaults = "$lib_view_str $valgrind_str " .
 
 our $client_hmac_rc_http_resolve = "$lib_view_str $valgrind_str " .
     "$fwknopCmd --no-save-args --rc-file $cf{'rc_hmac_http_resolve'}";
+
+our $client_hmac_rc_https_resolve = "$lib_view_str $valgrind_str " .
+    "$fwknopCmd --no-save-args --rc-file $cf{'rc_hmac_https_resolve'}";
 
 our $client_ip_resolve_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .
@@ -668,26 +700,14 @@ my @tests = (
     @rijndael_fuzzing,
     @rijndael_hmac,
     @rijndael_hmac_fuzzing,
+    @fault_injection,
     @os_compatibility,
     @perl_FKO_module,
     @python_fko,
-
-    {
-        'category' => 'Look for crashes',
-        'detail'   => 'checking for segfault/core dump messages (1)',
-        'function' => \&look_for_crashes,
-    },
-
     @gpg_no_pw,
     @gpg_no_pw_hmac,
     @gpg,
     @gpg_hmac,
-
-    {
-        'category' => 'Look for crashes',
-        'detail'   => 'checking for segfault/core dump messages (2)',
-        'function' => \&look_for_crashes,
-    }
 );
 
 my %test_keys = (
@@ -718,11 +738,18 @@ my %test_keys = (
     'write_rc_file'   => $OPTIONAL,
     'save_rc_stanza'  => $OPTIONAL,
     'client_pkt_tries' => $OPTIONAL_NUMERIC,
+    'max_pkt_tries'    => $OPTIONAL_NUMERIC,
     'client_popen'     => $OPTIONAL,
     'disable_valgrind' => $OPTIONAL,
-    'server_access_file' => $OPTIONAL,
-    'server_conf_file'   => $OPTIONAL,
-    'digest_cache_file'  => $OPTIONAL,
+    'wrapper_compile'  => $OPTIONAL,
+    'wrapper_script'   => $OPTIONAL,
+    'wrapper_binary'   => $OPTIONAL,
+    'fiu_run'             => $OPTIONAL_NUMERIC,
+    'fiu_injection_style' => $OPTIONAL,
+    'fiu_iterations'      => $OPTIONAL_NUMERIC,
+    'server_access_file'  => $OPTIONAL,
+    'server_conf_file'    => $OPTIONAL,
+    'digest_cache_file'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
@@ -819,6 +846,14 @@ if ($enable_valgrind) {
         'subcategory' => 'flagged functions',
         'detail'   => '',
         'function' => \&parse_valgrind_flagged_functions}
+    );
+}
+
+if ($do_crash_check) {
+    &run_test({
+        'category' => 'Look for crashes',
+        'detail'   => 'checking for segfault/core dump messages',
+        'function' => \&look_for_crashes}
     );
 }
 
@@ -930,12 +965,10 @@ sub run_test() {
             next unless -e $file;
             if (&file_find_regex([qr/^==\d+==\sHEAP\sSUMMARY/],
                     $MATCH_ALL, $NO_APPEND_RESULTS, $file)) {
-                unless (&file_find_regex(
-                    [qr/no\sleaks\sare\spossible/],
-                        $MATCH_ALL, $APPEND_RESULTS, $file)) {
-                    $rv = 0 if &file_find_regex(
-                        [qr/still\sreachable\sin\sloss\srecord/],
-                        $MATCH_ALL, $APPEND_RESULTS, $file);
+                unless (&valgrind_results($file)) {
+                    &write_test_file("[-] valgrind criteria failed, setting rv=0.\n",
+                        $file);
+                    $rv = 0;
                 }
             }
         }
@@ -975,6 +1008,17 @@ sub run_test() {
         }
     }
 
+    if ($enable_profile_coverage_check) {
+        if ($username) {
+            for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+                system qq/find .. -name $extension | xargs -r chown $username/;
+            }
+        }
+        for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+            system qq/find .. -name $extension | xargs -r chmod a+w/;
+        }
+    }
+
     ### clean up tmp files now that the test is complete
     &rm_tmp_files();
 
@@ -1001,6 +1045,7 @@ sub process_include_exclude() {
             if ($msg =~ $test
                     or ($enable_valgrind and $msg =~ /valgrind\soutput/)
                     or ($enable_profile_coverage_check and $msg =~ /profile\scoverage/)
+                    or ($msg =~ /segfault.*dump\smessages/)
             ) {
                 $found = 1;
                 last;
@@ -1033,9 +1078,12 @@ sub gdb_test_cmd() {
         if (/CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopCmd\s.*)/
                 or /CMD\:\sLD_LIBRARY_PATH=(\S+).*\s($fwknopdCmd\s.*)/) {
             $gdb_cmd = "LD_LIBRARY_PATH=$1 gdb --args $2";
+            last;
         }
     }
     close F;
+
+    print "\n[+] Running the following command under gdb: $gdb_cmd\n\n";
 
     if ($gdb_cmd) {
         system $gdb_cmd;
@@ -1254,22 +1302,189 @@ sub profile_coverage() {
 
         ### exclude /usr/include/* files
         &run_cmd(qq|$lcov_path -r $output_dir/lcov_coverage.info | .
-            qq|/usr/include/\* --output-file $output_dir/lcov_coverage_final.info|,
+            qq|/usr/include/\\* --output-file $output_dir/lcov_coverage_final.info|,
                 $cmd_out_tmp, $curr_test_file);
 
         &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage_final.info | .
             qq|--output-directory $output_dir/$lcov_results_dir|,
                 $cmd_out_tmp, $curr_test_file);
+
+        if (-d "${output_dir}.last") {
+            &run_cmd("./$coverage_diff_path", $cmd_out_tmp, $curr_test_file);
+        }
     }
 
     if ($username) {
         for my $extension ('*.gcno', '*.gcda', '*.gcov') {
-            ### remove profile output from any previous run
-            system qq{find .. -name $extension | xargs chown $username};
+            system qq/find .. -name $extension | xargs -r chown $username/;
         }
     }
 
+    for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+        system qq/find .. -name $extension | xargs -r chmod a+w/;
+    }
+
     return 1;
+}
+
+sub fiu_run_fault_injection() {
+    my $test_hr = shift;
+    my $rv = 1;
+
+     my $iterations = $test_hr->{'fiu_iterations'};
+     $iterations = 1 if $iterations < 1;  ### assume we want at least 1
+
+     for (my $i=0; $i < $iterations; $i++) {
+         &run_cmd("$lib_view_str $fiu_run_path -x " .
+             "-c '$test_hr->{'fiu_injection_style'}' $test_hr->{'cmdline'}",
+             $cmd_out_tmp, $curr_test_file);
+     }
+
+    return $rv;
+}
+
+sub fault_injection_tag() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+    my $server_was_stopped = 0;
+    my $fw_rule_created    = 0;
+    my $fw_rule_removed    = 0;
+
+    if ($test_hr->{'pkt'}
+            or ($test_hr->{'cmdline'} and $test_hr->{'fwknopd_cmdline'})) {
+
+        ### we are testing the fwknopd server
+
+        if ($test_hr->{'pkt'}) {
+            my @packets = (
+                {
+                    'proto'  => 'udp',
+                    'port'   => $default_spa_port,
+                    'dst_ip' => $loopback_ip,
+                    'data'   => $test_hr->{'pkt'},
+                },
+            );
+
+            ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+                    = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+        } else {
+            ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+                    = &client_server_interaction($test_hr, [], $USE_CLIENT);
+        }
+
+        $rv = 0 unless $server_was_stopped;
+
+    } else {
+
+        ### we are testing the fwknop client, server, or other command
+        ### and expect an error
+        $rv = not &run_cmd($test_hr->{'cmdline'}, $cmd_out_tmp, $curr_test_file);
+
+        if ($test_hr->{'positive_output_matches'}) {
+            unless (&file_find_regex(
+                    $test_hr->{'positive_output_matches'},
+                    $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
+                &write_test_file(
+                    "[-] positive_output_matches not met, setting rv=0\n",
+                    $curr_test_file);
+                $rv = 0;
+            }
+        }
+    }
+
+    return $rv;
+}
+
+sub fko_wrapper_exec() {
+    my $test_hr = shift;
+
+    my $make_arg = $test_hr->{'wrapper_compile'};
+
+    if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
+        if ($enable_fuzzing_interfaces_tests) {
+            $make_arg = 'fuzzing';
+            ### generate the fko-wrapper/fuzz_spa_payloads file
+            ### if necessary - it is consumed by the wrapper in
+            ### -DFUZZING_INTERFACES mode
+            &write_test_file("[-] Generating SPA fuzzing packets " .
+                "file: $fuzz_spa_payloads_file with ./spa_fuzzing.py...\n",
+                $curr_test_file);
+            unless (-e $fuzz_spa_payloads_file) {
+                system "./spa_fuzzing.py > $fuzz_spa_payloads_file";
+            }
+        }
+    }
+
+    my $rv = &compile_wrapper($make_arg);
+
+    if ($rv) {
+
+        chdir $fko_wrapper_dir or die $!;
+
+        my $iterations = $test_hr->{'fiu_iterations'};
+        $iterations = 1 if $iterations < 1;  ### assume we want at least 1
+
+        if ($test_hr->{'fiu_run'} == $YES) {
+            my $lib_path = $lib_view_str;
+            $lib_path =~ s|_PATH=|_PATH=../|; ### hack
+            for (my $i=0; $i < $iterations; $i++) {
+                &run_cmd("$lib_path $fiu_run_path -x " .
+                    "-c '$test_hr->{'fiu_injection_style'}' $test_hr->{'wrapper_binary'}",
+                    "../$cmd_out_tmp", "../$curr_test_file");
+            }
+        } else {
+            &run_cmd("./$test_hr->{'wrapper_script'} $test_hr->{'wrapper_binary'}",
+                "../$cmd_out_tmp", "../$curr_test_file");
+
+            if ($test_hr->{'wrapper_script'} =~ /valgrind/) {
+                $rv = 0 unless &valgrind_results("../$curr_test_file");
+            }
+        }
+
+        chdir '..' or die $!;
+
+        if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
+            if ($enable_fuzzing_interfaces_tests) {
+                ### make sure the send_spa_payloads file exists
+                unless (-e $send_fuzz_payloads_file) {
+                    &write_test_file("[-] Generating SPA fuzzing packets " .
+                        "file: $send_fuzz_payloads_file for fwknopd consumption...\n",
+                        $curr_test_file);
+                    unless (-e $send_fuzz_payloads_file) {
+                        system "grep PKT_ID $curr_test_file > $send_fuzz_payloads_file";
+                    }
+                }
+            }
+        }
+
+        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
+                $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
+            &write_test_file("[-] crash message found in: $curr_test_file\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    return $rv;
+}
+
+sub valgrind_results() {
+    my $file = shift;
+
+    my $rv = 1;
+
+    unless (&file_find_regex(
+        [qr/no\sleaks\sare\spossible/],
+            $MATCH_ALL, $APPEND_RESULTS, $file)) {
+        $rv = 0 unless &file_find_regex(
+            [qr/definitely\slost\:\s0\sbytes/],
+            $MATCH_ALL, $APPEND_RESULTS, $file);
+        $rv = 0 unless &file_find_regex(
+            [qr/indirectly\slost\:\s0\sbytes/],
+            $MATCH_ALL, $APPEND_RESULTS, $file);
+    }
+    return $rv;
 }
 
 sub test_suite_conf_files() {
@@ -1330,11 +1545,13 @@ sub look_for_crashes() {
 
         if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
                 $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
-            &write_test_file("[-] segmentation fault or core dump message found in: $f\n",
+            &write_test_file("[-] crash message found in: $f\n",
                 $curr_test_file);
             $rv = 0;
         }
     }
+
+    $do_crash_check = 0;
 
     return $rv;
 }
@@ -1657,6 +1874,24 @@ sub server_start_stop_cycle() {
             $cmd_out_tmp, $curr_test_file);
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
             $cmd_out_tmp, $curr_test_file);
+
+    ### now send the signals against a non-daemon fwknopd process
+    for my $sig ($sigs{'SIGINT'}, $sigs{'SIGUSR1'}, $sigs{'SIGUSR2'}) {
+
+        &do_fwknopd_cmd("$lib_view_str $valgrind_str " .
+            "$fwknopdCmd $default_server_conf_args -f");
+
+        open F, "< $default_pid_file" or
+            die "[*] Could not open $default_pid_file: $!";
+        my $pid = <F>;
+        close F;
+        chomp $pid;
+        kill $sig, $pid;
+
+        sleep 1;
+        &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
+            $cmd_out_tmp, $curr_test_file);
+    }
 
     return $rv;
 }
@@ -4487,6 +4722,13 @@ sub cached_pkts_fuzzer() {
 
     $pkts_file = $test_hr->{'spa_pkts_file'};
 
+    unless (-e $pkts_file) {
+        &write_test_file("[-] The SPA packets file: $pkts_file does not exist, " .
+            "create with 'grep PKT_ID output/<fko-wrapper-test-num>.test > $pkts_file'\n",
+            $curr_test_file);
+        return 0;
+    }
+
     ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
         = &client_server_interaction($test_hr, {}, $READ_PKTS_FROM_FILE);
 
@@ -4858,6 +5100,10 @@ sub client_server_interaction() {
     my $server_was_stopped = 1;
     my $fw_rule_created = 1;
     my $fw_rule_removed = 0;
+    my $max_pkt_tries = 10;
+
+    $max_pkt_tries = $test_hr->{'max_pkt_tries'}
+        if $test_hr->{'max_pkt_tries'};
 
     ### start fwknopd to monitor for the SPA packet over the loopback interface
     my $fwknopd_parent_pid = &start_fwknopd($test_hr);
@@ -4917,7 +5163,7 @@ sub client_server_interaction() {
             $rv = 0;
         }
     } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
-        &send_packets($pkts_hr);
+        &send_packets($pkts_hr, $max_pkt_tries);
     } elsif ($spa_client_flag == $READ_PKTS_FROM_FILE) {
         &send_packets_from_file();
     } else {
@@ -5101,7 +5347,7 @@ sub send_packets_from_file() {
 }
 
 sub send_packets() {
-    my $pkts_ar = shift;
+    my ($pkts_ar, $max_tries) = @_;
 
     open F, ">> $curr_test_file" or die $!;
     print F "[+] send_packets(): Sending the following packets...\n";
@@ -5125,7 +5371,7 @@ sub send_packets() {
             &send_all_pkts($pkts_ar);
 
             $tries++;
-            last if $tries == 10;   ### should be plenty of time
+            last if $tries == $max_tries;   ### should be plenty of time
             sleep 1;
         }
     } else {
@@ -5753,10 +5999,8 @@ sub write_pid() {
     return 0;
 }
 
-sub start_fwknopd() {
-    my $test_hr = shift;
-
-    &write_test_file("[+] TEST: $test_hr->{'msg'}\n", $server_test_file);
+sub do_fwknopd_cmd() {
+    my $cmdline = shift;
 
     my $pid = fork();
     die "[*] Could not fork: $!" unless defined $pid;
@@ -5764,8 +6008,7 @@ sub start_fwknopd() {
     if ($pid == 0) {
 
         ### we are the child, so start fwknopd
-        exit &run_cmd($test_hr->{'fwknopd_cmdline'},
-            $server_cmd_tmp, $server_test_file);
+        exit &run_cmd($cmdline, $server_cmd_tmp, $server_test_file);
     }
 
     ### look for 'fwknopd main event loop' as the indicator that fwknopd
@@ -5797,6 +6040,14 @@ sub start_fwknopd() {
     }
 
     return $pid;
+}
+
+sub start_fwknopd() {
+    my $test_hr = shift;
+
+    &write_test_file("[+] TEST: $test_hr->{'msg'}\n", $server_test_file);
+
+    return &do_fwknopd_cmd($test_hr->{'fwknopd_cmdline'});
 }
 
 sub write_key() {
@@ -5988,6 +6239,10 @@ sub validate_test_hashes() {
     ### for fwknop/fwknopd commands, prepend LD_LIBRARY_PATH and valgrind args
     for my $test_hr (@tests) {
         next if $test_hr->{'disable_valgrind'} eq $YES;
+
+        ### don't add LD_LIBRARY_PATH for tests run underneath fiu-run
+        next if $test_hr->{'subcategory'} =~ /fiu\-run/;
+
         if ($test_hr->{'cmdline'} =~ /^$fwknopCmd/
                 or $test_hr->{'cmdline'} =~ /^$fwknopdCmd/) {
             my $str = $lib_view_str;
@@ -6078,6 +6333,11 @@ sub init() {
         }
     }
 
+    if ($enable_fault_injection) {
+        $fiu_run_path = &find_command('fiu-run') unless $fiu_run_path;
+        $enable_fault_injection = 0 unless $fiu_run_path;
+    }
+
     $enable_perl_module_checks = 1
         if $enable_perl_module_fuzzing_spa_pkt_generation;
 
@@ -6089,11 +6349,15 @@ sub init() {
         push @tests_to_exclude, qr/with valgrind/;
     }
 
+    unless ($enable_fault_injection) {
+        push @tests_to_exclude, qr/fault injection/;
+    }
+
     unless ($enable_recompilation_warnings_check
             or $enable_profile_coverage_check) {
-        push @tests_to_exclude, qr/recompilation/;
-    }
-    if ($preserve_previous_coverage_files) {
+        ### don't recompile if we're in looking at code
+        ### coverage - that is what --profile-coverage-init
+        ### is for
         push @tests_to_exclude, qr/recompilation/;
     }
 
@@ -6231,6 +6495,27 @@ sub init() {
     }
     unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
         push @tests_to_exclude, qr|active/expire sets|;
+        push @tests_to_exclude, qr|ipfw|;
+    }
+
+    ### unless we are in client only mode, see if the target firewall
+    ### if PF - FreeBSD can be either ipfw or PF for example
+    if (-e $fwknopdCmd) {
+        my $fw = '';
+        my $cmd = "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} -D";
+        open F, "$cmd 2>&1 |" or die "[*] Could not execute $cmd $!";
+        while (<F>) {
+            if (m|FIREWALL_EXE.*/(\S+)'|) {
+                $fw = $1;
+                last;
+            }
+        }
+        close F;
+
+        if ($fw eq 'pfctl') {
+            push @tests_to_exclude, qr|active/expire sets|;
+            push @tests_to_exclude, qr|ipfw|;
+        }
     }
 
     for my $file ($default_digest_file, "${default_digest_file}-old") {
@@ -6417,6 +6702,7 @@ sub import_previous_valgrind_coverage_info() {
 }
 
 sub compile_wrapper() {
+    my $make_arg = shift;
 
     unless (-d $fko_wrapper_dir) {
         &write_test_file("[-] fko wrapper directory " .
@@ -6434,7 +6720,7 @@ sub compile_wrapper() {
     }
 
     my $make_str = 'make';
-    $make_str .= ' fuzzing' if $enable_fuzzing_interfaces_tests;
+    $make_str .= " $make_arg" if $make_arg;
 
     if ($sudo_path) {
         unless (&run_cmd("$sudo_path -u $username $make_str",
@@ -6455,55 +6741,8 @@ sub compile_wrapper() {
         }
     }
 
-    unless (-e 'fko_wrapper' and -e 'run_valgrind.sh') {
-        &write_test_file("[-] fko_wrapper or run_valgrind.sh does not exist.\n",
-            "../$curr_test_file");
-        chdir '..' or die $!;
-        return 0;
-    }
-
     chdir '..' or die $!;
     return 1;
-}
-
-sub compile_execute_fko_wrapper() {
-
-    my $rv = &compile_wrapper();
-
-    if ($rv) {
-
-        chdir $fko_wrapper_dir or die $!;
-        &run_cmd('./run_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
-
-        $rv = 0 unless &file_find_regex([qr/no\sleaks\sare\spossible/],
-            $MATCH_ALL, $APPEND_RESULTS, "../$curr_test_file");
-
-        chdir '..' or die $!;
-    }
-
-    return $rv;
-}
-
-sub compile_execute_fko_wrapper_no_valgrind() {
-
-    my $rv = &compile_wrapper();
-
-    if ($rv) {
-
-        chdir $fko_wrapper_dir or die $!;
-        &run_cmd('./run_no_valgrind.sh', "../$cmd_out_tmp", "../$curr_test_file");
-
-        chdir '..' or die $!;
-
-        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
-                $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
-            &write_test_file("[-] crash message found in: $curr_test_file\n",
-                $curr_test_file);
-            $rv = 0;
-        }
-    }
-
-    return $rv;
 }
 
 sub parse_valgrind_flagged_functions() {
@@ -6795,11 +7034,13 @@ sub file_find_regex() {
 
     for my $re (@$re_ar) {
         my $matched = 0;
+        my $line_ctr = 0;
         for my $line (@file_lines) {
+            $line_ctr++;
             next if $line =~ /file_find_regex\(\)/;
             if ($line =~ $re) {
                 push @write_lines, "[.] file_find_regex() " .
-                    "Matched '$re' with line: $line";
+                    "Matched '$re' with line $line_ctr: $line";
                 $matched = 1;
                 $found_single_match = 1;
                 last if $append_results_flag == $NO_APPEND_RESULTS;
@@ -6903,6 +7144,9 @@ sub usage() {
                                          tests under valgrind, so if you need
                                          fast results this can be disabled by also
                                          specifying --disable-valgrind.
+    --enable-complete                  - Enable even more tests --enable-all such
+                                         fuzzing interfaces, fault injection, and
+                                         code coverage.
     --enable-dist-check                - Test 'make dist' run.
     --enable-profile-coverage          - Generate profile coverage stats with an
                                          emphasis on finding functions that the

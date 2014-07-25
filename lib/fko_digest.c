@@ -40,11 +40,18 @@ static int
 set_spa_digest_type(fko_ctx_t ctx,
     short *digest_type_field, const short digest_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("set_spa_digest_type_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+#if HAVE_LIBFIU
+    fiu_return_on("set_spa_digest_type_val",
+            FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL);
+#endif
     if(digest_type < 1 || digest_type >= FKO_LAST_DIGEST_TYPE)
         return(FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL);
 
@@ -72,10 +79,19 @@ fko_set_raw_spa_digest_type(fko_ctx_t ctx, const short raw_digest_type)
 int
 fko_get_spa_digest_type(fko_ctx_t ctx, short *digest_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_digest_type_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_digest_type_val",
+            FKO_ERROR_INVALID_DATA);
+#endif
 
     if(digest_type == NULL)
         return(FKO_ERROR_INVALID_DATA);
@@ -90,6 +106,10 @@ fko_get_spa_digest_type(fko_ctx_t ctx, short *digest_type)
 int
 fko_get_raw_spa_digest_type(fko_ctx_t ctx, short *raw_digest_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_raw_spa_digest_type_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -108,8 +128,18 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
 
     data_len = strnlen(data, MAX_SPA_ENCODED_MSG_SIZE);
 
+#if HAVE_LIBFIU
+    fiu_return_on("set_digest_toobig",
+            FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_TOOBIG);
+#endif
+
     if(data_len == MAX_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_TOOBIG);
+
+#if HAVE_LIBFIU
+    fiu_return_on("set_digest_invalidtype", FKO_ERROR_INVALID_DIGEST_TYPE);
+    fiu_return_on("set_digest_calloc", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
 
     switch(digest_type)
     {
@@ -181,6 +211,9 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
 int
 fko_set_spa_digest(fko_ctx_t ctx)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_digest_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -191,6 +224,10 @@ fko_set_spa_digest(fko_ctx_t ctx)
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_digest_encoded", FKO_ERROR_MISSING_ENCODED_DATA);
+#endif
+
     return set_digest(ctx->encoded_msg, &ctx->digest,
         ctx->digest_type, &ctx->digest_len);
 }
@@ -198,6 +235,9 @@ fko_set_spa_digest(fko_ctx_t ctx)
 int
 fko_set_raw_spa_digest(fko_ctx_t ctx)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_raw_spa_digest_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -208,6 +248,10 @@ fko_set_raw_spa_digest(fko_ctx_t ctx)
     if(ctx->encrypted_msg == NULL)
         return(FKO_ERROR_MISSING_ENCODED_DATA);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_raw_spa_digest_val", FKO_ERROR_MISSING_ENCODED_DATA);
+#endif
+
     return set_digest(ctx->encrypted_msg, &ctx->raw_digest,
         ctx->raw_digest_type, &ctx->raw_digest_len);
 }
@@ -215,11 +259,17 @@ fko_set_raw_spa_digest(fko_ctx_t ctx)
 int
 fko_get_spa_digest(fko_ctx_t ctx, char **md)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_digest_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_digest_val", FKO_ERROR_INVALID_DATA);
+#endif
     if(md == NULL)
         return(FKO_ERROR_INVALID_DATA);
 
@@ -231,6 +281,9 @@ fko_get_spa_digest(fko_ctx_t ctx, char **md)
 int
 fko_get_raw_spa_digest(fko_ctx_t ctx, char **md)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_raw_spa_digest_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))

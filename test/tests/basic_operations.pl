@@ -19,6 +19,36 @@
     },
     {
         'category' => 'basic operations',
+        'detail'   => 'multiple override configs',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/ENABLE_PCAP_PROMISC.*\'N\'/,
+            qr/FILTER.*1234/],
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file --dump-config " .
+            "-O $conf_dir/override_fwknopd.conf,$conf_dir/override2_fwknopd.conf",
+    },
+    {
+        'category' => 'basic operations',
+        'detail'   => 'config var expansion',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/test\.pid/],
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd -c $conf_dir/var_expansion_fwknopd.conf " .
+            "-a $cf{'def_access'} -d $default_digest_file --dump-config "
+    },
+    {
+        'category' => 'basic operations',
+        'detail'   => 'invalid config var expansion',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Invalid embedded/],
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd -c $conf_dir/var_expansion_invalid_fwknopd.conf " .
+            "-a $cf{'def_access'} -d $default_digest_file --dump-config "
+    },
+
+    {
+        'category' => 'basic operations',
         'subcategory' => 'server',
         'detail'   => 'dump error codes',
         'function' => \&generic_exec,
@@ -227,6 +257,24 @@
             "Zndrbm9wdGVzdA== --key-base64-hmac dGVzdGluZw==",
     },
 
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'libfko',
+        'detail'   => 'acquire FKO context',
+        'function' => \&fko_wrapper_exec,
+        'wrapper_compile' => 'all',
+        'wrapper_script'  => $wrapper_exec_script,
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_basic',
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'libfko',
+        'detail'   => 'acquire FKO context (with valgrind)',
+        'function' => \&fko_wrapper_exec,
+        'wrapper_compile' => 'all',
+        'wrapper_script'  => $wrapper_exec_script_valgrind,
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_basic',
+    },
 
     {
         'category' => 'basic operations',
@@ -1314,19 +1362,19 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
-        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*cipherdyne.org.*myip/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*\swww.cipherdyne.org.*myip/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
         'detail'   => '-R resolve http (3)',
         'function' => \&client_rc_file,
-        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://127.0.0.1//",
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://127.0.0.1/",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'exec_err' => $YES,
-        'positive_output_matches' => [qr/Invalid\sIP/],
+        'positive_output_matches' => [qr/Could not resolve IP.*wget/],
         'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*127.0.0.1/],
     },
     {
@@ -1339,8 +1387,32 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'exec_err' => $YES,
-        'positive_output_matches' => [qr/Invalid\sIP/],
+        'positive_output_matches' => [qr/Could not resolve IP.*wget/],
         'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*127.0.0.1/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '-R resolve http (5)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url http://www.cipherdyne.org/cgi-bin/myip",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Warning.*IP resolution URL/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTPS.*Y/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '-R resolve http (6)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --resolve-url https://www.cipherdyne.org/cgi-bin/myip",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Resolved/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTPS.*Y/],
     },
 
     {
@@ -2078,6 +2150,209 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'invalid locale',
+        'function' => \&generic_exec,
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f " .
+            "-l somelocale --dump-config",
+        'positive_output_matches' => [qr/Unable to set locale/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid run dir path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd -c $cf{'invalid_run_dir_path'} " .
+            "-a $cf{'def_access'} -f --dump-config",
+        'positive_output_matches' => [qr/is not absolute/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sniff invalid interface',
+        'function' => \&server_conf_files,
+        'exec_err' => $YES,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -i invalidintf -f",
+        'positive_output_matches' => [qr/pcap_open_live.*error/],
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'ENABLE_PCAP_PROMISC       Y'
+        ],
+    },
+
+    ### test syslog config
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_DAEMON',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_DAEMON',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL0',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL0',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL1',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL1',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL2',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL2',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL3',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL3',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL4',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL4',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL5',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL5',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL6',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL6',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL7',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL7',
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'syslog LOG_LOCAL8',
+        'function' => \&server_conf_files,
+        'exec_err' => $YES,
+        'fwknopd_cmdline' => "$lib_view_str $valgrind_str $fwknopdCmd " .
+                "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
+                "-d $default_digest_file -p $default_pid_file -D --syslog-enable",
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            'SYSLOG_FACILITY        LOG_LOCAL8',
+        ],
+        'positive_output_matches' => [qr/Invalid SYSLOG_FACILITY/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'mutually exclusive -K and -R',
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -2126,6 +2401,16 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline' => "$fwknopdCmd $default_server_conf_args -f --gpg-home-dir " . 'A'x1200
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG require sig ID or fingerprint',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'gpg_no_pw_no_fpr_access'} " .
+            "-d $default_digest_file -p $default_pid_file -f",
+        'positive_output_matches' => [qr/Must have either sig/],
     },
 
 

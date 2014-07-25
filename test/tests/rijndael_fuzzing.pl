@@ -281,12 +281,18 @@
         'category' => 'Rijndael',
         'subcategory' => 'fko-wrapper',
         'detail'   => 'multiple libfko calls (with valgrind)',
-        'function' => \&compile_execute_fko_wrapper
+        'function' => \&fko_wrapper_exec,
+        'wrapper_compile' => 'all',
+        'wrapper_script'  => $wrapper_exec_script_valgrind,
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_wrapper',
     },
     {
         'category' => 'Rijndael',
         'subcategory' => 'fko-wrapper',
         'detail'   => 'multiple libfko calls',
-        'function' => \&compile_execute_fko_wrapper_no_valgrind
+        'function' => \&fko_wrapper_exec,
+        'wrapper_compile' => 'all',
+        'wrapper_script'  => $wrapper_exec_script,
+        'wrapper_binary'  => cwd() . '/' . $fko_wrapper_dir . '/fko_wrapper',
     },
 );

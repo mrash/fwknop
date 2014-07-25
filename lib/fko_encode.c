@@ -44,8 +44,17 @@ append_b64(char* tbuf, char *str)
     int   len = strnlen(str, MAX_SPA_ENCODED_MSG_SIZE);
     char *bs;
 
+#if HAVE_LIBFIU
+    fiu_return_on("append_b64_toobig",
+            FKO_ERROR_INVALID_DATA_ENCODE_MESSAGE_TOOBIG);
+#endif
+
     if(len >= MAX_SPA_ENCODED_MSG_SIZE)
         return(FKO_ERROR_INVALID_DATA_ENCODE_MESSAGE_TOOBIG);
+
+#if HAVE_LIBFIU
+    fiu_return_on("append_b64_calloc", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
 
     bs = calloc(1, ((len/3)*4)+8);
     if(bs == NULL)
@@ -73,6 +82,9 @@ fko_encode_spa_data(fko_ctx_t ctx)
     int     res, offset = 0;
     char   *tbuf;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_encode_spa_data_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -83,6 +95,9 @@ fko_encode_spa_data(fko_ctx_t ctx)
      *             (at leaset expand the error reporting for the missing
      *             data).
     */
+#if HAVE_LIBFIU
+    fiu_return_on("fko_encode_spa_data_valid", FKO_ERROR_INCOMPLETE_SPA_DATA);
+#endif
     if(  validate_username(ctx->username) != FKO_SUCCESS
       || ctx->version  == NULL || strnlen(ctx->version, MAX_SPA_VERSION_SIZE)  == 0
       || ctx->message  == NULL || strnlen(ctx->message, MAX_SPA_MESSAGE_SIZE)  == 0)
@@ -96,6 +111,9 @@ fko_encode_spa_data(fko_ctx_t ctx)
             return(FKO_ERROR_INCOMPLETE_SPA_DATA);
     }
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_encode_spa_data_calloc", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
     /* Allocate our initial tmp buffer.
     */
     tbuf = calloc(1, FKO_ENCODE_TMP_BUF_SIZE);
@@ -118,7 +136,8 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Add the timestamp.
     */
     offset = strlen(tbuf);
-    snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset, ":%u:", (unsigned int) ctx->timestamp);
+    snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset,
+            ":%u:", (unsigned int) ctx->timestamp);
 
     /* Add the version string.
     */
@@ -138,7 +157,8 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Add the message type value.
     */
     offset = strlen(tbuf);
-    snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset, ":%i:", ctx->message_type);
+    snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset,
+            ":%i:", ctx->message_type);
 
     /* Add the base64-encoded SPA message.
     */
@@ -180,7 +200,8 @@ fko_encode_spa_data(fko_ctx_t ctx)
     if(ctx->client_timeout > 0 && ctx->message_type != FKO_COMMAND_MSG)
     {
         offset = strlen(tbuf);
-        snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset, ":%i", ctx->client_timeout);
+        snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset,
+                ":%i", ctx->client_timeout);
     }
 
     /* If encoded_msg is not null, then we assume it needs to
@@ -192,33 +213,24 @@ fko_encode_spa_data(fko_ctx_t ctx)
     /* Copy our encoded data into the context.
     */
     ctx->encoded_msg = strdup(tbuf);
+    free(tbuf);
+
     if(ctx->encoded_msg == NULL)
-    {
-        free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
-    }
 
     ctx->encoded_msg_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     if(! is_valid_encoded_msg_len(ctx->encoded_msg_len))
-    {
-        free(tbuf);
         return(FKO_ERROR_INVALID_DATA_ENCODE_MSGLEN_VALIDFAIL);
-    }
 
     /* At this point we can compute the digest for this SPA data.
     */
     if((res = fko_set_spa_digest(ctx)) != FKO_SUCCESS)
-    {
-        free(tbuf);
         return(res);
-    }
 
     /* Here we can clear the modified flags on the SPA data fields.
     */
     FKO_CLEAR_SPA_DATA_MODIFIED(ctx);
-
-    free(tbuf);
 
     return(FKO_SUCCESS);
 }
@@ -297,14 +309,12 @@ fko_set_encoded_data(fko_ctx_t ctx,
             free(ctx->encoded_msg);
 
         ctx->encoded_msg = strdup(tbuf);
+        free(tbuf);
+
         if(ctx->encoded_msg == NULL)
-        {
-            free(tbuf);
             return(FKO_ERROR_MEMORY_ALLOCATION);
-        }
 
         ctx->encoded_msg_len = mlen;
-        free(tbuf);
     }
 
     FKO_CLEAR_SPA_DATA_MODIFIED(ctx);

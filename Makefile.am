@@ -161,12 +161,18 @@ EXTRA_DIST = \
     test/conf/gpg_no_pw_hmac_access.conf \
     test/conf/gpg_no_pw_hmac_clientdir_access.conf \
     test/conf/gpg_no_pw_hmac_serverdir_access.conf \
+    test/conf/gpg_no_pw_fpr_access.conf \
+    test/conf/gpg_no_pw_bad_fpr_access.conf \
+    test/conf/gpg_no_pw_no_fpr_access.conf \
+    test/conf/gpg_no_sig_verify_access.conf \
+    test/conf/gpg_invalid_sig_id_access.conf \
     test/conf/fwknoprc_gpg_invalid_exe \
     test/conf/fwknoprc_hmac_defaults \
     test/conf/fwknoprc_hmac_time_offset_mins \
     test/conf/fwknoprc_hmac_time_offset_hours \
     test/conf/fwknoprc_hmac_time_offset_days \
     test/conf/fwknoprc_hmac_http_resolve \
+    test/conf/fwknoprc_hmac_https_resolve \
     test/conf/fwknoprc_gpg_hmac_sha512_key \
     test/conf/gpg_hmac_sha512_access.conf \
     test/conf/fwknoprc_hmac_sha512_base64_key \
@@ -245,12 +251,14 @@ EXTRA_DIST = \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
+    test/conf/ipt_output_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_2_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_3_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_4_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_5_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_6_fwknopd.conf \
+    test/conf/invalid_run_dir_path_fwknopd.conf \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/legacy_iv_access.conf \
@@ -271,6 +279,9 @@ EXTRA_DIST = \
     test/conf/ofb_mode_access.conf \
     test/conf/open_ports_access.conf \
     test/conf/override_fwknopd.conf \
+    test/conf/override2_fwknopd.conf \
+    test/conf/var_expansion_fwknopd.conf \
+    test/conf/var_expansion_invalid_fwknopd.conf \
     test/conf/require_src_access.conf \
     test/conf/require_user_access.conf \
     test/conf/subnet_source_match_access.conf \
@@ -283,8 +294,9 @@ EXTRA_DIST = \
     test/conf/spa_replay.pcap \
     test/fko-wrapper/Makefile \
     test/fko-wrapper/fko_wrapper.c \
+    test/fko-wrapper/fko_basic.c \
+    test/fko-wrapper/run.sh \
     test/fko-wrapper/run_valgrind.sh \
-    test/fko-wrapper/run_no_valgrind.sh \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte_eq.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte.patch \
@@ -314,6 +326,7 @@ EXTRA_DIST = \
     test/tests/rijndael_hmac_cmd_exec.pl \
     test/tests/rijndael_backwards_compatibility.pl \
     test/tests/os_compatibility.pl \
+    test/tests/fault_injection.pl \
     test/tests/gpg_hmac.pl \
     test/tests/gpg_no_pw.pl \
     test/tests/gpg_no_pw_hmac.pl \

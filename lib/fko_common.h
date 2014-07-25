@@ -35,6 +35,10 @@
   #include "config.h"
 #endif
 
+#if HAVE_LIBFIU
+  #include <fiu.h>
+#endif
+
 #include <stdio.h>
 #include <sys/types.h>
 

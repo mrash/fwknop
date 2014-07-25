@@ -1,4 +1,66 @@
 fwknop-2.6.3 (05//2014):
+    - [client] External IP resolution via '-R' (or '--resolve-ip-http') is now
+      done via SSL by default. The IP resolution URL is now
+      'https://www.cipherdyne.org/cgi-gin/myip', and a warning is generated
+      in '-R' mode whenever a non-HTTPS URL is specified (it is safer just to
+      use the default). The fwknop client leverages 'wget' for this operation
+      since that is cleaner than having fwknop link against an SSL library.
+    - Integrated the 'libfiu' fault injection library available from
+      http://blitiri.com.ar/p/libfiu/  This feature is disabled by default,
+      and requires the --enable-libfiu-support argument to the 'configure'
+      script in order to enable it. With fwknop compiled against libfiu, fault
+      injections are done at various locations within the fwknop sources and
+      the test suite verifies that the faults are properly handled at run time
+      via test/fko-wrapper/fko_fault_injection.c. In addition, the libfiu tool
+      'fiu-run' is used against the fwknop binaries to ensure they handle
+      faults that libfiu introduces into libc functions. For example, fiu-run
+      can force malloc() to fail even without huge memory pressure on the
+      local system, and the test suite ensures the fwknop binaries properly
+      handle this.
+    - [test suite] Integrated a new python fuzzer for fwknop SPA packets (see
+      test/spa_fuzzing.py). This greatly extends the ability of the test suite
+      to validate libfko operations since SPA fuzzing packets are sent through
+      libfko routines directly (indendepently of encryption and
+      authentication) with a special 'configure' option
+      --enable-fuzzing-interfaces. The python fuzzer generates over 300K SPA
+      packets, and when used by the test suite consumes about 400MB of disk.
+      For reference, to use both the libfiu fault injection feature mentioned
+      above and the python fuzzer, use the --enable-complete option to the
+      test suite.
+    - [test suite] With the libfiu fault injection support and the new python
+      fuzzer, automated testing of fwknop achieves 99.7% function coverage and
+      90.2% line coverage as determined by 'gcov'. The full report may be
+      viewed here: http://www.cipherdyne.org/fwknop/lcov-results/
+    - [server] Add a new GPG_FINGERPRINT_ID variable to the access.conf file
+      so that full GnuPG fingerprints can be required for incoming SPA packets
+      in addition to the appreviated GnuPG signatures listed in GPG_REMOTE_ID.
+      From the test suite, an example fingerprint is
+
+      GPG_FINGERPRINT_ID            00CC95F05BC146B6AC4038C9E36F443C6A3FAD56
+
+    - [server] When validating access.conf stanzas make sure that one of
+      GPG_REMOTE_ID or GPG_FINGERPRINT_ID is specified whenever GnuPG
+      signatures are to be verified for incoming SPA packets. Signature
+      verification is the default, and can only be disabled with
+      GPG_DISABLE_SIG but this is NOT recommended.
+    - [server] Bug fix for PF firewalls without ALTQ support on FreeBSD. With
+      this fix it doesn't matter whether ALTQ support is available or not.
+      Thanks to Barry Allard for discovering and reporting this issue.
+      Closes issue #121 on github.
+    - [server] Bug fix discovered with the libfiu fault injection tag
+      "fko_get_username_init" combined with valgrind analysis. This bug is
+      only triggered after a valid authenticated and decrypted SPA packet is
+      sniffed by fwknopd:
+
+        ==11181== Conditional jump or move depends on uninitialised value(s)
+        ==11181==    at 0x113B6D: incoming_spa (incoming_spa.c:707)
+        ==11181==    by 0x11559F: process_packet (process_packet.c:211)
+        ==11181==    by 0x5270857: ??? (in /usr/lib/x86_64-linux-gnu/libpcap.so.1.4.0)
+        ==11181==    by 0x114BCC: pcap_capture (pcap_capture.c:270)
+        ==11181==    by 0x10F32C: main (fwknopd.c:195)
+        ==11181==  Uninitialised value was created by a stack allocation
+        ==11181==    at 0x113476: incoming_spa (incoming_spa.c:294)
+
     - [server] Bug fix to handle SPA packets over HTTP by making sure to honor
       the ENABLE_SPA_OVER_HTTP fwknopd.conf variable and to properly account
       for SPA packet lengths when delivered via HTTP.

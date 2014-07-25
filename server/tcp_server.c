@@ -116,6 +116,7 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: setsockopt error: %s",
             strerror(errno));
+        close(s_sock);
         return -1;
     }
 
@@ -126,6 +127,7 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: fcntl F_GETFL error: %s",
             strerror(errno));
+        close(s_sock);
         return -1;
     }
 
@@ -136,6 +138,7 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: fcntl F_SETFL error setting O_NONBLOCK: %s",
             strerror(errno));
+        close(s_sock);
         return -1;
     }
 #endif
@@ -151,6 +154,7 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: bind() failed: %s",
             strerror(errno));
+        close(s_sock);
         return -1;
     }
 
@@ -161,6 +165,7 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: listen() failed: %s",
             strerror(errno));
+        close(s_sock);
         return -1;
     }
 
@@ -189,6 +194,7 @@ run_tcp_server(fko_srv_options_t *opts)
             */
             log_msg(LOG_ERR, "run_tcp_server: select error socket: %s",
                 strerror(errno));
+            close(s_sock);
             return -1;
         }
 
@@ -199,7 +205,10 @@ run_tcp_server(fko_srv_options_t *opts)
              *           using kill(ppid, 0) and checking the return value.
             */
             if(kill(ppid, 0) != 0 && errno == ESRCH)
+            {
+                close(s_sock);
                 return -1;
+            }
 
             continue;
         }
@@ -211,6 +220,7 @@ run_tcp_server(fko_srv_options_t *opts)
         {
             log_msg(LOG_ERR, "run_tcp_server: accept() failed: %s",
                 strerror(errno));
+            close(s_sock);
             return -1;
         }
 
@@ -232,9 +242,11 @@ run_tcp_server(fko_srv_options_t *opts)
         close(c_sock);
 
 #if FUZZING_INTERFACES
+        close(s_sock);
         return 1;
 #endif
-    }
+    } /* infinite while loop */
+    return 1;
 }
 
 /***EOF***/

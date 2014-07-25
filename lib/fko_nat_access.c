@@ -38,6 +38,10 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char * const msg)
 {
     int res = FKO_SUCCESS;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_nat_access_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Context must be initialized.
     */
     if(!CTX_INITIALIZED(ctx))
@@ -48,11 +52,19 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char * const msg)
     if(msg == NULL || strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == 0)
         return(FKO_ERROR_INVALID_DATA_NAT_EMPTY);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_nat_access_empty", FKO_ERROR_INVALID_DATA_NAT_EMPTY);
+#endif
+
     /* --DSS XXX: Bail out for now.  But consider just
      *            truncating in the future...
     */
     if(strnlen(msg, MAX_SPA_NAT_ACCESS_SIZE) == MAX_SPA_NAT_ACCESS_SIZE)
         return(FKO_ERROR_DATA_TOO_LARGE);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_nat_access_large", FKO_ERROR_DATA_TOO_LARGE);
+#endif
 
     if((res = validate_nat_access_msg(msg)) != FKO_SUCCESS)
         return(res);
@@ -92,6 +104,11 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char * const msg)
 int
 fko_get_spa_nat_access(fko_ctx_t ctx, char **nat_access)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_nat_access_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -99,6 +116,10 @@ fko_get_spa_nat_access(fko_ctx_t ctx, char **nat_access)
 
     if(nat_access == NULL)
         return(FKO_ERROR_INVALID_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_nat_access_val", FKO_ERROR_INVALID_DATA);
+#endif
 
     *nat_access = ctx->nat_access;
 

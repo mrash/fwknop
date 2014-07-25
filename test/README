@@ -15,3 +15,16 @@ Additional detail on the test suite (including --diff and --enable-valgrind
 modes) may be found in the fwknop tutorial available here:
 
 http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html#3.5
+
+For even more comprehensive testing than the --enable-all switch, you can use
+--enable-complete.  However, before doing this, you will want to install the
+'libfiu' fault injection library (available here: http://blitiri.com.ar/p/libfiu/),
+and then compile fwknop with the 'test/configure_max_coverage.sh' script. This
+provides additional arguments to the 'configure' script to build fwknop with a
+maximal testing and code coverage stance. Once fwknop is compiled, then run:
+
+# ./run-test-suite.sh --enable-complete
+
+Note that in this mode the test suite will consume about close to 500MB of disk
+space in the test/output/ directory. The main source of this data consumption
+is the usage of the python SPA packet fuzzer 'test/spa_fuzzing.py'.

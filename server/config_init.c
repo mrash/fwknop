@@ -257,13 +257,6 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
             continue;
         }
 
-        /*
-        fprintf(stderr,
-            "CONF FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
-            config_file, conf_line_buf, var, val
-        );
-        */
-
         good_ent = 0;
         for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         {
@@ -281,6 +274,15 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
                         {
                             strlcpy(val, opts->config[cndx], sizeof(val));
                             strlcat(val, tmp2, sizeof(val));
+                        }
+                        else
+                        {
+                            /* We didn't map the embedded variable to a valid
+                             * config parameter
+                            */
+                            log_msg(LOG_ERR,
+                                "[*] Invalid embedded variable in: '%s'", val);
+                            break;
                         }
                     }
                 }
@@ -760,7 +762,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'h':
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                break;
 
             /* Look for configuration file arg.
             */
@@ -894,6 +895,14 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'f':
                 opts->foreground = 1;
                 break;
+            case FAULT_INJECTION_TAG:
+#if HAVE_LIBFIU
+                set_config_entry(opts, CONF_FAULT_INJECTION_TAG, optarg);
+#else
+                log_msg(LOG_ERR, "[*] fwknopd not compiled with libfiu support");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
+                break;
             case FW_LIST:
                 opts->fw_list = 1;
                 break;
@@ -966,7 +975,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                break;
             default:
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1022,7 +1030,6 @@ usage(void)
       " -i, --interface         - Specify interface to listen for incoming SPA\n"
       "                           packets.\n"
       " -K, --kill              - Kill the currently running fwknopd.\n"
-      "     --gpg-home-dir      - Specify the GPG home directory.\n"
       " -l, --locale            - Provide a locale setting other than the system\n"
       "                           default.\n"
       " -O, --override-config   - Specify a file with configuration entries that will\n"
@@ -1035,16 +1042,34 @@ usage(void)
       "                         - Rotate the digest cache file by renaming it to\n"
       "                           '<name>-old', and starting a new one.\n"
       " -S, --status            - Display the status of any running fwknopd process.\n"
+      " -t, --test              - Test mode, process SPA packets but do not make any\n"
+      "                           firewall modifications.\n"
       " -v, --verbose           - Set verbose mode.\n"
       "     --syslog-enable     - Allow messages to be sent to syslog even if the\n"
       "                           foreground mode is set.\n"
       " -V, --version           - Print version number.\n"
+      " --dump-serv-err-codes   - List all server error codes (only needed by the\n"
+      "                           test suite).\n"
+      " --exit-parse-config     - Parse config files and exit.\n"
+      " --fault-injection-tag   - Enable a fault injection tag (only needed by the\n"
+      "                           test suite).\n"
+      " --pcap-file             - Read potential SPA packets from an existing pcap\n"
+      "                           file.\n"
+      " --pcap-any-direction    - By default fwknopd processes packets that are\n"
+      "                           sent to the sniffing interface, but this option\n"
+      "                           enables processing of packets that originate from\n"
+      "                           an interface (such as in a forwarding situation).\n"
       "     --fw-list           - List all firewall rules that fwknop has created\n"
       "                           and then exit.\n"
       "     --fw-list-all       - List all firewall rules in the complete policy,\n"
       "                           including those that have nothing to do with\n"
       "                           fwknop.\n"
       "     --fw-flush          - Flush all firewall rules created by fwknop.\n"
+      "     --gpg-home-dir      - Specify the GPG home directory (this is normally\n"
+      "                           done in the access.conf file).\n"
+      "     --gpg-exe           - Specify the path to GPG (this is normally done in\n"
+      "                           the access.conf file).\n"
+      " --no-ipt-check-support  - Disable test for 'iptables -C' support.\n"
       "\n"
     );
 

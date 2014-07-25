@@ -59,7 +59,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 {
     int     res, got_err = 0;
 
-    printf("Listing fwknopd pf rules...\n");
+    fprintf(stdout, "Listing fwknopd pf rules...\n");
+    fflush(stdout);
 
     zero_cmd_buffers();
 
@@ -70,7 +71,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         opts->fw_config->anchor
     );
 
-    printf("\nActive Rules in PF anchor '%s':\n", opts->fw_config->anchor);
+    fprintf(stdout, "\nActive Rules in PF anchor '%s':\n", opts->fw_config->anchor);
+    fflush(stdout);
     res = system(cmd_buf);
 
     /* Expect full success on this */

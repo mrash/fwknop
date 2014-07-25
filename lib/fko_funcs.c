@@ -43,37 +43,37 @@ fko_new(fko_ctx_t *r_ctx)
     int         res;
     char       *ver;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_new_calloc", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
+
     ctx = calloc(1, sizeof *ctx);
     if(ctx == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     /* Set default values and state.
      *
-     * Note: We have to explicitly set the ctx->state to initialized
-     *       just before making an fko_xxx function call, then set it
-     *       back to zero just afer.  During initialization, we need
-     *       to make these functions think they are operating on an
-     *       initialized context, or else they would fail.
+     * Note: We initialize the context early so that the fko_set_xxx
+     *       functions can operate properly. If there are any problems during
+     *       initialization, then fko_destroy() is called which will clean up
+     *       the context.
     */
+    ctx->initval = FKO_CTX_INITIALIZED;
 
     /* Set the version string.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     ver = strdup(FKO_PROTOCOL_VERSION);
-    ctx->initval = 0;
     if(ver == NULL)
     {
-        free(ctx);
+        fko_destroy(ctx);
+        ctx = NULL;
         return(FKO_ERROR_MEMORY_ALLOCATION);
     }
-
     ctx->version = ver;
 
     /* Rand value.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_rand_value(ctx, NULL);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -83,9 +83,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Username.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_username(ctx, NULL);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -95,9 +93,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Timestamp.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_timestamp(ctx, 0);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -107,9 +103,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default Digest Type.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -119,9 +113,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default Message Type.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_message_type(ctx, FKO_DEFAULT_MSG_TYPE);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -131,9 +123,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default Encryption Type.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_type(ctx, FKO_DEFAULT_ENCRYPTION);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -143,9 +133,7 @@ fko_new(fko_ctx_t *r_ctx)
 
     /* Default is Rijndael in CBC mode
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_encryption_mode(ctx, FKO_DEFAULT_ENC_MODE);
-    ctx->initval = 0;
     if(res != FKO_SUCCESS)
     {
         fko_destroy(ctx);
@@ -159,10 +147,6 @@ fko_new(fko_ctx_t *r_ctx)
     ctx->verify_gpg_sigs = 1;
 
 #endif /* HAVE_LIBGPGME */
-
-    /* Now we mean it.
-    */
-    ctx->initval = FKO_CTX_INITIALIZED;
 
     FKO_SET_CTX_INITIALIZED(ctx);
 
@@ -185,8 +169,18 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
     int         res = FKO_SUCCESS; /* Are we optimistic or what? */
     int         enc_msg_len;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_new_with_data_msg",
+            FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING);
+#endif
+
     if(enc_msg == NULL)
         return(FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_new_with_data_keylen",
+            FKO_ERROR_INVALID_KEY_LEN);
+#endif
 
     if(dec_key_len < 0 || hmac_key_len < 0)
         return(FKO_ERROR_INVALID_KEY_LEN);
@@ -202,9 +196,6 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         free(ctx);
         return(FKO_ERROR_INVALID_DATA_FUNCS_NEW_MSGLEN_VALIDFAIL);
     }
-
-    if(ctx->encrypted_msg != NULL)
-        free(ctx->encrypted_msg);
 
     /* First, add the data to the context.
     */
@@ -227,11 +218,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         ctx = NULL;
         return res;
     }
-    ctx->initval = 0;
 
     /* HMAC digest type
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     res = fko_set_spa_hmac_type(ctx, hmac_type);
     if(res != FKO_SUCCESS)
     {
@@ -239,11 +228,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         ctx = NULL;
         return res;
     }
-    ctx->initval = 0;
 
     /* Check HMAC if the access stanza had an HMAC key
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     if(hmac_key_len > 0 && hmac_key != NULL)
         res = fko_verify_hmac(ctx, hmac_key, hmac_key_len);
     if(res != FKO_SUCCESS)
@@ -252,11 +239,9 @@ fko_new_with_data(fko_ctx_t *r_ctx, const char * const enc_msg,
         ctx = NULL;
         return res;
     }
-    ctx->initval = 0;
 
     /* Consider it initialized here.
     */
-    ctx->initval = FKO_CTX_INITIALIZED;
     FKO_SET_CTX_INITIALIZED(ctx);
 
     /* If a decryption key is provided, go ahead and decrypt and decode.
@@ -452,6 +437,11 @@ fko_base64_decode(const char * const in, unsigned char *out)
 int
 fko_get_version(fko_ctx_t ctx, char **version)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_version_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -459,6 +449,10 @@ fko_get_version(fko_ctx_t ctx, char **version)
 
     if(version == NULL)
         return(FKO_ERROR_INVALID_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_version_val", FKO_ERROR_INVALID_DATA);
+#endif
 
     *version = ctx->version;
 
@@ -527,6 +521,11 @@ fko_spa_data_final(fko_ctx_t ctx,
 int
 fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_data_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -535,11 +534,19 @@ fko_get_spa_data(fko_ctx_t ctx, char **spa_data)
     if(spa_data == NULL)
         return(FKO_ERROR_INVALID_DATA);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_data_val", FKO_ERROR_INVALID_DATA);
+#endif
+
     /* We expect to have encrypted data to process.  If not, we bail.
     */
     if(ctx->encrypted_msg == NULL || ! is_valid_encoded_msg_len(
                 strnlen(ctx->encrypted_msg, MAX_SPA_ENCODED_MSG_SIZE)))
         return(FKO_ERROR_MISSING_ENCODED_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_data_encoded", FKO_ERROR_MISSING_ENCODED_DATA);
+#endif
 
     *spa_data = ctx->encrypted_msg;
 

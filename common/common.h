@@ -37,6 +37,11 @@
   #include "config.h"
 #endif
 
+#if HAVE_LIBFIU
+  #include <fiu.h>
+  #include <fiu-control.h>
+#endif
+
 #include <stdio.h>
 
 #if HAVE_SYS_TYPES_H
@@ -142,6 +147,10 @@ enum {
 #define MAX_PATH_LEN        1024
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
+
+#if HAVE_LIBFIU
+  #define MAX_FAULT_TAG_LEN 128
+#endif
 
 /* Some convenience macros */
 

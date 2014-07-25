@@ -180,3 +180,7 @@ Tim Heckman
     - Homebrew fwknop package maintainer for Mac OS X systems.
     - Suggested that fwknop support nftables when it is integrated into the
       mainline Linux kernel.
+
+Barry Allard
+    - Reported bug in PF support on FreeBSD systems where ALTQ is not available
+      would cause new PF rules to not be added (github issue #121).

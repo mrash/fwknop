@@ -123,6 +123,8 @@ enum
     FWKNOP_CLI_ARG_NAT_PORT,
     FWKNOP_CLI_ARG_VERBOSE,
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTP,
+    FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS,
+    FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
@@ -165,7 +167,9 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "NAT_RAND_PORT",         FWKNOP_CLI_ARG_NAT_RAND_PORT         },
     { "NAT_PORT",              FWKNOP_CLI_ARG_NAT_PORT              },
     { "VERBOSE",               FWKNOP_CLI_ARG_VERBOSE               },
-    { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       }
+    { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       },
+    { "RESOLVE_IP_HTTPS",      FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS      },
+    { "RESOLVE_HTTP_ONLY",     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY     }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -946,14 +950,14 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
     {
         /* In case this was set previously
         */
-        options->resolve_ip_http = 0;
+        options->resolve_ip_http_https = 0;
 
         /* use source, resolve, or an actual IP
         */
         if(strcasecmp(val, "source") == 0)
             strlcpy(options->allow_ip_str, "0.0.0.0", sizeof(options->allow_ip_str));
         else if(strcasecmp(val, "resolve") == 0)
-            options->resolve_ip_http = 1;
+            options->resolve_ip_http_https = 1;
         else /* Assume IP address and validate */
         {
             strlcpy(options->allow_ip_str, val, sizeof(options->allow_ip_str));
@@ -1213,11 +1217,20 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if (parse_error == 0)
             log_set_verbosity(LOG_DEFAULT_VERBOSITY + options->verbose);
     }
-    /* RESOLVE_IP_HTTP ? */
+    /* RESOLVE_IP_HTTPS ? */
+    else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS)
+    {
+        if (is_yes_str(val))
+            options->resolve_ip_http_https = 1;
+        else;
+    }
+    /* RESOLVE_IP_HTTP ? This actually results in HTTPS resolution by default
+     * unless --resolve-http-only is also given
+    */
     else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTP)
     {
         if (is_yes_str(val))
-            options->resolve_ip_http = 1;
+            options->resolve_ip_http_https = 1;
         else;
     }
     /* The variable is not a configuration variable */
@@ -1369,8 +1382,11 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             else
                 snprintf(val, sizeof(val)-1, "%d", options->verbose);
             break;
+        case FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS:
+            bool_to_yesno(options->resolve_ip_http_https, val, sizeof(val));
+            break;
         case FWKNOP_CLI_ARG_RESOLVE_IP_HTTP:
-            bool_to_yesno(options->resolve_ip_http, val, sizeof(val));
+            bool_to_yesno(options->resolve_ip_http_https, val, sizeof(val));
             break;
         default:
             log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
@@ -1737,9 +1753,9 @@ validate_options(fko_cli_options_t *options)
         }
 
         if (options->resolve_url != NULL)
-            options->resolve_ip_http = 1;
+            options->resolve_ip_http_https = 1;
 
-        if (!options->resolve_ip_http)
+        if (!options->resolve_ip_http_https)
         {
             if(options->allow_ip_str[0] == 0x0)
             {
@@ -1780,7 +1796,7 @@ validate_options(fko_cli_options_t *options)
         }
     }
 
-    if(options->resolve_ip_http || options->spa_proto == FKO_PROTO_HTTP)
+    if(options->resolve_ip_http_https || options->spa_proto == FKO_PROTO_HTTP)
         if (options->http_user_agent[0] == '\0')
             snprintf(options->http_user_agent, HTTP_MAX_USER_AGENT_LEN,
                 "%s%s", "Fwknop/", MY_VERSION);
@@ -1859,7 +1875,7 @@ set_defaults(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int                 cmd_arg, index, is_err;
+    int                 cmd_arg, index, is_err, rlen=0;
     fko_var_bitmask_t   var_bitmask;
     char                rcfile[MAX_PATH_LEN] = {0};
 
@@ -1966,6 +1982,15 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                     exit(EXIT_FAILURE);
                 }
                 add_var_to_bitmask(FWKNOP_CLI_ARG_FW_TIMEOUT, &var_bitmask);
+                break;
+            case FAULT_INJECTION_TAG:
+#if HAVE_LIBFIU
+                strlcpy(options->fault_injection_tag, optarg, sizeof(options->fault_injection_tag));
+#else
+                log_msg(LOG_VERBOSITY_ERROR,
+                    "fwknop not compiled with fault injection support.", optarg);
+                exit(EXIT_FAILURE);
+#endif
                 break;
             case 'g':
             case GPG_ENCRYPTION:
@@ -2150,19 +2175,26 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RAND_PORT, &var_bitmask);
                 break;
             case 'R':
-                options->resolve_ip_http = 1;
+                options->resolve_ip_http_https = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS, &var_bitmask);
+                break;
+            case RESOLVE_HTTP_ONLY:
+                options->resolve_http_only = 1;
+                options->resolve_ip_http_https = 1;
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTP, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY, &var_bitmask);
                 break;
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
                     free(options->resolve_url);
-                options->resolve_url = calloc(1, strlen(optarg)+1);
+                rlen = strlen(optarg) + 1;
+                options->resolve_url = calloc(1, rlen);
                 if(options->resolve_url == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "Memory allocation error for resolve URL.");
                     exit(EXIT_FAILURE);
                 }
-                strlcpy(options->resolve_url, optarg, strlen(optarg)+1);
+                strlcpy(options->resolve_url, optarg, rlen);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_URL, &var_bitmask);
                 break;
             case SHOW_LAST_ARGS:
@@ -2361,11 +2393,18 @@ usage(void)
       "                             fwknopd server can ignore such requests).\n"
       " -S, --source-port           Set the source port for outgoing SPA packet.\n"
       " -Q, --spoof-source          Set the source IP for outgoing SPA packet.\n"
-      " -R, --resolve-ip-http       Resolve the external network IP by\n"
+      " -R, --resolve-ip-https      Resolve the external network IP by\n"
       "                             connecting to a URL such as the default of:\n"
-      "                             http://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL "\n"
-      "                             This can be overridden with the --resolve-url\n"
-      "                             option.\n"
+      "                             https://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL "\n"
+      "                             with wget in --secure-protocol mode (SSL).\n"
+      "                             The URL can be overridden with the\n"
+      "                             --resolve-url option.\n"
+      "     --resolve-http-only     Force external IP resolution via HTTP instead\n"
+      "                             HTTPS (via the URL mentioned above). This is\n"
+      "                             not recommended since it would open fwknop\n"
+      "                             to potential MITM attacks if the IP resolution\n"
+      "                             HTTP connection is altered en-route by a third\n"
+      "                             party.\n"
       "     --resolve-url           Override the default URL used for resolving\n"
       "                             the source IP address.\n"
       " -u, --user-agent            Set the HTTP User-Agent for resolving the\n"

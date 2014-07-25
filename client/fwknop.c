@@ -52,6 +52,7 @@ static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options,
 static int set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options,
         char *access_buf);
 static int get_rand_port(fko_ctx_t ctx);
+int resolve_ip_https(fko_cli_options_t *options);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
@@ -59,6 +60,9 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
 static void zero_buf_wrapper(char *buf, int len);
 static int is_hostname_str_with_port(const char *str,
         char *hostname, size_t hostname_bufsize, int *port);
+#if HAVE_LIBFIU
+static void enable_fault_injections(fko_cli_options_t * const opts);
+#endif
 
 #define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
@@ -165,6 +169,12 @@ main(int argc, char **argv)
     */
     config_init(&options, argc, argv);
 
+#if HAVE_LIBFIU
+        /* Set any fault injection points early
+        */
+        enable_fault_injections(&options);
+#endif
+
     /* Handle previous execution arguments if required
     */
     if(prev_exec(&options, argc, argv) != 1)
@@ -257,12 +267,24 @@ main(int argc, char **argv)
         /* Resolve the client's public facing IP address if requestesd.
          * if this fails, consider it fatal.
         */
-        if (options.resolve_ip_http)
+        if (options.resolve_ip_http_https)
         {
-            if(resolve_ip_http(&options) < 0)
+            if(options.resolve_http_only)
             {
-                clean_exit(ctx, &options, key, &key_len,
-                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+                if(resolve_ip_http(&options) < 0)
+                {
+                    clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                /* Default to HTTPS */
+                if(resolve_ip_https(&options) < 0)
+                {
+                    clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+                }
             }
         }
 
@@ -961,7 +983,7 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
     FILE           *args_file_ptr = NULL;
 
     int             current_arg_ctr = 0;
-    int             argc_new = 0, args_broken = 0;
+    int             argc_new = 0, args_broken = 0, buf_size=0;
     int             i = 0;
 
     char            args_str[MAX_LINE_LEN] = {0};
@@ -992,14 +1014,15 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
             else
             {
                 arg_tmp[current_arg_ctr] = '\0';
-                argv_new[argc_new] = calloc(1, strlen(arg_tmp)+1);
+                buf_size = strlen(arg_tmp) + 1;
+                argv_new[argc_new] = calloc(1, buf_size);
                 if (argv_new[argc_new] == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] calloc failure for cmd line arg.");
                     fclose(args_file_ptr);
                     return 0;
                 }
-                strlcpy(argv_new[argc_new], arg_tmp, strlen(arg_tmp)+1);
+                strlcpy(argv_new[argc_new], arg_tmp, buf_size);
                 current_arg_ctr = 0;
                 argc_new++;
                 if(argc_new >= MAX_CMDLINE_ARGS)
@@ -1310,6 +1333,19 @@ zero_buf_wrapper(char *buf, int len)
     return;
 }
 
+#if HAVE_LIBFIU
+static void
+enable_fault_injections(fko_cli_options_t * const opts)
+{
+    if(opts->fault_injection_tag[0] != 0x0)
+    {
+        fiu_init(0);
+        fiu_enable(opts->fault_injection_tag, 1, NULL, 0);
+    }
+    return;
+}
+#endif
+
 /* free up memory and exit
 */
 static void
@@ -1317,6 +1353,11 @@ clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
         char *key, int *key_len, char *hmac_key, int *hmac_key_len,
         unsigned int exit_status)
 {
+#if HAVE_LIBFIU
+    if(opts->fault_injection_tag[0] != 0x0)
+        fiu_disable(opts->fault_injection_tag);
+#endif
+
     if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
         log_msg(LOG_VERBOSITY_ERROR,
                 "[*] Could not zero out sensitive data buffer.");
