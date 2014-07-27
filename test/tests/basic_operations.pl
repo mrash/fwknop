@@ -3033,6 +3033,38 @@
         ],
         'positive_output_matches' => [qr/Missing\smask/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (8)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     1.1.1.1/0',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid IP mask/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access SOURCE format (9)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     1.1.1.1/299.255.255.0',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/error parsing IP mask/],
+    },
 
     {
         'category' => 'basic operations',

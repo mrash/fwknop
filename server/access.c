@@ -354,7 +354,9 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
 
         /* Store our mask converted from CIDR to a 32-bit value.
         */
-        if(need_shift)
+        if(mask == 32)
+            new_sle->mask = 0xFFFFFFFF;
+        else if(need_shift && (mask > 0 && mask < 32))
             new_sle->mask = (0xFFFFFFFF << (32 - mask));
         else
             new_sle->mask = mask;
