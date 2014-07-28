@@ -96,6 +96,22 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.6.3 OpenBSD-5.5',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '+Cf1jjCWmISEhw9vQgWnbmqOtHl2rJ0398ILuJSdSHOTnnbkK65sBikWyIEmj4' .
+            'K13ISVG+z7k/bA5+r7Wo1boe02DLjTzkHjryzC8NiWCAUJZoyJu345/eGd+9Dd' .
+            'K1InVWjQFqwC9g8V7cGCogZLAAPqyRC7ZnMvU',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
 
     {
         'category' => 'Rijndael',
@@ -185,6 +201,24 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.6.3 FreeBSD10',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '87ujK1b1aOKxWWI3IWAYUhhimid7In1SQO60K3Kz3BWouDAHVJrthrx8qZbOoNubB' .
+            'nOT06p9lTWhkKirgMRySEFBQ9ypGPYnraysdlqmYuRDJ3ZIL0IWaJywgVPDJlxxPu' .
+            'I8MD6wm4bHHJ8BkSeWqix97DnU215iUkPlD/ks85jHMD5EarLcijkV5OBwilCcVsD' .
+            'j7i6q0PKQ',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client->server OS compatibility',
         'detail'   => 'v2.5 OpenBSD-4.9',
         'function' => \&os_compatibility,
         'no_ip_check' => 1,
@@ -216,6 +250,24 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client->server OS compatibility',
+        'detail'   => 'v2.6.3 OpenBSD5.5',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+            '9/sg0eyMETZhbucySDpiApzeCT5QM02kMzdDqOL8VxsR3/sPHwIW3i5F7RS1v4CI' .
+            'kOTdBojvY9o/z0xCmMOpmmyCy0eA8ns4OAl4TKq3NlZCYKPeOgHq80wGB2C0XcEz' .
+            '3hy0QW1sfETjHH/plAlInptHExeyh11PAv1Ef7nMhoz7LGoht867nBKW+Kf9NT54' .
+            'U6ksmbKjeib4',
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client->server OS compatibility',
