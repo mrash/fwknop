@@ -437,6 +437,11 @@ SPA OPTIONS
     HTTP response. Either specify the IP manually with *-a*, or use *-R*
     and omit this option.
 
+*-w, --wget-cmd*='<wget full path>'::
+    Manually set the full path to the 'wget' command. Normally the 'configure'
+    script finds the 'wget' command, but this option can be used to specify
+    the path if it is located in a non-standard place.
+
 *-s, --source-ip*::
     Instruct the *fwknop* client to form an SPA packet that contains the
     special-case IP address ``+0.0.0.0+'' which will inform the destination
@@ -660,9 +665,25 @@ description and its matching command-line option(s):
 *FW_TIMEOUT* '<seconds>'::
     Set the firewall rule timeout value ('-f, --fw-timeout').
 
+*RESOLVE_IP_HTTPS* '<Y/N>'::
+    Set to 'Y' to automatically resolve the externally routable IP associated
+    with the *fwknop* client. This is done over SSL via 'wget' in
+    '--secure-protocol' mode against the IP resolution service available at
+    'https://www.cipherdyne.org/cgi-bin/myip'.
+
+*RESOLVE_HTTP_ONLY* '<Y/N>'::
+    When the *fwknop* client is instructed to resolve the external client IP,
+    this option can be used to force an 'HTTP' connection instead of an 'HTTPS'
+    connection when set to 'Y'. This option is useful when 'wget' is not
+    installed on the local OS, or when it is not compiled against an SSL
+    library.
+
 *RESOLVE_URL* '<url>'::
     Set to a URL that will be used for resolving the source IP address
-    (--resolve-url).
+    ('--resolve-url').
+
+*WGET_CMD* '<wget full path>'::
+    Set the full path to the 'wget' command (used for client IP resolution).
 
 *TIME_OFFSET* '<time>'::
     Set a value to apply to the timestamp in the SPA packet. This can

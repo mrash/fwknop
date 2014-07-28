@@ -405,6 +405,28 @@ case "$host" in
 esac
 fi
 
+dnl Check for wget (used by the fwknop client for SSL external IP resolution)
+dnl
+AC_ARG_WITH([wget],
+  [AS_HELP_STRING([--with-wget=/path/to/wget],
+    [Specify path to the wget executable @<:@default=check path@:>@])],
+  [
+      AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+        [AC_MSG_ERROR([--with-wget requires an argument specifying a path to wget])],
+        [ WGET_EXE=$withval ]
+      )
+  ],
+  [
+      AC_PATH_PROG(WGET_EXE, [wget], [], [$APP_PATH])
+  ]
+)
+AS_IF([test "x$WGET_EXE" != x],
+  [
+    AC_DEFINE_UNQUOTED([WGET_EXE], ["$WGET_EXE"], [Path to wget executable])
+    wget_exe=$WGET_EXE
+  ], [ wget_exe="(not found)"]
+)
+
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [

@@ -78,7 +78,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:E:f:gG:hH:kK:lm:M:n:N:p:P:Q:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:E:f:gG:hH:kK:lm:M:n:N:p:P:Q:rRsS:Tu:U:vVw:"
 
 /* Our program command-line options...
 */
@@ -150,6 +150,7 @@ static struct option cmd_opts[] =
     {"spoof-user",          1, NULL, 'U'},
     {"verbose",             0, NULL, 'v'},
     {"version",             0, NULL, 'V'},
+    {"wget-cmd",            1, NULL, 'w'},
     {0, 0, 0, 0}
 };
 

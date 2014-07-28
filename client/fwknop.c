@@ -665,6 +665,8 @@ free_configs(fko_cli_options_t *opts)
 {
     if (opts->resolve_url != NULL)
         free(opts->resolve_url);
+    if (opts->wget_bin != NULL)
+        free(opts->wget_bin);
     zero_buf_wrapper(opts->key, MAX_KEY_LEN+1);
     zero_buf_wrapper(opts->key_base64, MAX_B64_KEY_LEN+1);
     zero_buf_wrapper(opts->hmac_key, MAX_KEY_LEN+1);

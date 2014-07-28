@@ -308,13 +308,28 @@ resolve_ip_https(fko_cli_options_t *options)
 {
     int     o1, o2, o3, o4, got_resp=0, i;
     char   *ndx, resp[MAX_IPV4_STR_LEN+1] = {0};
-    char    wget_cmd[MAX_URL_PATH_LEN] = {0};
+    char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};
     struct  url url; /* for validation only */
     FILE   *wget;
 
     memset(&url, 0, sizeof(url));
 
-    strlcpy(wget_cmd, WGET_RESOLVE_CMD, sizeof(wget_cmd));
+    if(options->wget_bin != NULL)
+        strlcpy(wget_ssl_cmd, options->wget_bin, sizeof(wget_ssl_cmd));
+    else
+    {
+#ifdef WGET_EXE
+        strlcpy(wget_ssl_cmd, WGET_EXE, sizeof(wget_ssl_cmd));
+#else
+        log_msg(LOG_VERBOSITY_ERROR,
+                "[*] Use --wget-cmd <path> to specify path to the wget command.");
+        return(-1);
+#endif
+    }
+
+    /* Tack on the SSL args to wget
+    */
+    strlcat(wget_ssl_cmd, WGET_RESOLVE_ARGS, sizeof(wget_ssl_cmd));
 
     if(options->resolve_url != NULL)
     {
@@ -332,25 +347,25 @@ resolve_ip_https(fko_cli_options_t *options)
         }
         /* tack on the original URL to the wget command
         */
-        strlcat(wget_cmd, options->resolve_url, sizeof(wget_cmd));
+        strlcat(wget_ssl_cmd, options->resolve_url, sizeof(wget_ssl_cmd));
     }
     else
     {
         /* tack on the default URL to the wget command
         */
-        strlcat(wget_cmd, WGET_RESOLVE_URL_SSL, sizeof(wget_cmd));
+        strlcat(wget_ssl_cmd, WGET_RESOLVE_URL_SSL, sizeof(wget_ssl_cmd));
     }
 
     /* We drive wget to resolve the external IP via SSL. This may not
      * work on all platforms, but is a better strategy for now than
      * requiring that fwknop link against an SSL library.
     */
-    wget = popen(wget_cmd, "r");
+    wget = popen(wget_ssl_cmd, "r");
 
     if(wget == NULL)
     {
         log_msg(LOG_VERBOSITY_ERROR, "[*] Could not run cmd: %s",
-                wget_cmd);
+                wget_ssl_cmd);
         return -1;
     }
 
@@ -381,13 +396,13 @@ resolve_ip_https(fko_cli_options_t *options)
 
             log_msg(LOG_VERBOSITY_INFO,
                         "\n[+] Resolved external IP (via '%s') as: %s",
-                        wget_cmd, options->allow_ip_str);
+                        wget_ssl_cmd, options->allow_ip_str);
             return 1;
         }
     }
 
     log_msg(LOG_VERBOSITY_ERROR,
-        "[-] Could not resolve IP via: '%s'", wget_cmd);
+        "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
     return -1;
 }
 

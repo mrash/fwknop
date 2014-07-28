@@ -125,6 +125,7 @@ enum
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTP,
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS,
     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY,
+    FWKNOP_CLI_ARG_WGET_CMD,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
@@ -169,7 +170,8 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "VERBOSE",               FWKNOP_CLI_ARG_VERBOSE               },
     { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       },
     { "RESOLVE_IP_HTTPS",      FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS      },
-    { "RESOLVE_HTTP_ONLY",     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY     }
+    { "RESOLVE_HTTP_ONLY",     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY     },
+    { "WGET_CMD",              FWKNOP_CLI_ARG_WGET_CMD              }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -1177,6 +1179,20 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         }
         strlcpy(options->resolve_url, val, tmpint);
     }
+    /* wget command */
+    else if (var->pos == FWKNOP_CLI_ARG_WGET_CMD)
+    {
+        if(options->wget_bin != NULL)
+            free(options->wget_bin);
+        tmpint = strlen(val)+1;
+        options->wget_bin = calloc(1, tmpint);
+        if(options->wget_bin == NULL)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,"Memory allocation error for wget command path.");
+            exit(EXIT_FAILURE);
+        }
+        strlcpy(options->wget_bin, val, tmpint);
+    }
     /* NAT Local ? */
     else if (var->pos == FWKNOP_CLI_ARG_NAT_LOCAL)
     {
@@ -1231,6 +1247,14 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
     {
         if (is_yes_str(val))
             options->resolve_ip_http_https = 1;
+        else;
+    }
+    /* RESOLVE_HTTP_ONLY ?  Force HTTP instead of HTTPS IP resolution.
+    */
+    else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY)
+    {
+        if (is_yes_str(val))
+            options->resolve_http_only = 1;
         else;
     }
     /* The variable is not a configuration variable */
@@ -1387,6 +1411,13 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             break;
         case FWKNOP_CLI_ARG_RESOLVE_IP_HTTP:
             bool_to_yesno(options->resolve_ip_http_https, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY:
+            bool_to_yesno(options->resolve_http_only, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_WGET_CMD :
+            if (options->wget_bin != NULL)
+                strlcpy(val, options->wget_bin, sizeof(val));
             break;
         default:
             log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
@@ -2181,8 +2212,8 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case RESOLVE_HTTP_ONLY:
                 options->resolve_http_only = 1;
                 options->resolve_ip_http_https = 1;
-                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTP, &var_bitmask);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS, &var_bitmask);
                 break;
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
@@ -2196,6 +2227,19 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 }
                 strlcpy(options->resolve_url, optarg, rlen);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_URL, &var_bitmask);
+                break;
+            case 'w':
+                if(options->wget_bin != NULL)
+                    free(options->wget_bin);
+                rlen = strlen(optarg) + 1;
+                options->wget_bin = calloc(1, rlen);
+                if(options->wget_bin == NULL)
+                {
+                    log_msg(LOG_VERBOSITY_ERROR, "Memory allocation error for resolve URL.");
+                    exit(EXIT_FAILURE);
+                }
+                strlcpy(options->wget_bin, optarg, rlen);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_WGET_CMD, &var_bitmask);
                 break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;

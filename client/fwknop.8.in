@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 07/25/2014
+.\"      Date: 07/27/2014
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "07/25/2014" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "07/27/2014" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -528,6 +528,17 @@ is not available (or hasn\(cqt been compiled with SSL support), but generally th
 and omit this option\&.
 .RE
 .PP
+\fB\-w, \-\-wget\-cmd\fR=\fI<wget full path>\fR
+.RS 4
+Manually set the full path to the
+\fIwget\fR
+command\&. Normally the
+\fIconfigure\fR
+script finds the
+\fIwget\fR
+command, but this option can be used to specify the path if it is located in a non\-standard place\&.
+.RE
+.PP
 \fB\-s, \-\-source\-ip\fR
 .RS 4
 Instruct the
@@ -811,9 +822,44 @@ Set the source port to use for sending the SPA packet (\fI\-S, \-\-source\-port\
 Set the firewall rule timeout value (\fI\-f, \-\-fw\-timeout\fR)\&.
 .RE
 .PP
+\fBRESOLVE_IP_HTTPS\fR \fI<Y/N>\fR
+.RS 4
+Set to
+\fIY\fR
+to automatically resolve the externally routable IP associated with the
+\fBfwknop\fR
+client\&. This is done over SSL via
+\fIwget\fR
+in
+\fI\-\-secure\-protocol\fR
+mode against the IP resolution service available at
+\fIhttps://www\&.cipherdyne\&.org/cgi\-bin/myip\fR\&.
+.RE
+.PP
+\fBRESOLVE_HTTP_ONLY\fR \fI<Y/N>\fR
+.RS 4
+When the
+\fBfwknop\fR
+client is instructed to resolve the external client IP, this option can be used to force an
+\fIHTTP\fR
+connection instead of an
+\fIHTTPS\fR
+connection when set to
+\fIY\fR\&. This option is useful when
+\fIwget\fR
+is not installed on the local OS, or when it is not compiled against an SSL library\&.
+.RE
+.PP
 \fBRESOLVE_URL\fR \fI<url>\fR
 .RS 4
-Set to a URL that will be used for resolving the source IP address (\-\-resolve\-url)\&.
+Set to a URL that will be used for resolving the source IP address (\fI\-\-resolve\-url\fR)\&.
+.RE
+.PP
+\fBWGET_CMD\fR \fI<wget full path>\fR
+.RS 4
+Set the full path to the
+\fIwget\fR
+command (used for client IP resolution)\&.
 .RE
 .PP
 \fBTIME_OFFSET\fR \fI<time>\fR
