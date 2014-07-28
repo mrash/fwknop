@@ -154,6 +154,7 @@ our %cf = (
     'rc_hmac_defaults'             => "$conf_dir/fwknoprc_hmac_defaults",
     'rc_hmac_http_resolve'         => "$conf_dir/fwknoprc_hmac_http_resolve",
     'rc_hmac_https_resolve'        => "$conf_dir/fwknoprc_hmac_https_resolve",
+    'rc_hmac_http_only_resolve'    => "$conf_dir/fwknoprc_hmac_http_only_resolve",
     'rc_hmac_nat_rand_b64_key'     => "$conf_dir/fwknoprc_hmac_nat_rand_base64_key",
     'rc_hmac_spoof_src_b64_key'    => "$conf_dir/fwknoprc_hmac_spoof_src_base64_key",
     'rc_hmac_sha512_b64_key'       => "$conf_dir/fwknoprc_hmac_sha512_base64_key",
@@ -590,6 +591,9 @@ our $client_hmac_rc_http_resolve = "$lib_view_str $valgrind_str " .
 
 our $client_hmac_rc_https_resolve = "$lib_view_str $valgrind_str " .
     "$fwknopCmd --no-save-args --rc-file $cf{'rc_hmac_https_resolve'}";
+
+our $client_hmac_rc_http_only_resolve = "$lib_view_str $valgrind_str " .
+    "$fwknopCmd --no-save-args --rc-file $cf{'rc_hmac_http_only_resolve'}";
 
 our $client_ip_resolve_args = "$lib_view_str $valgrind_str " .
     "$fwknopCmd -A tcp/22 -R -D $loopback_ip --get-key " .

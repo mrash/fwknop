@@ -173,6 +173,7 @@ EXTRA_DIST = \
     test/conf/fwknoprc_hmac_time_offset_days \
     test/conf/fwknoprc_hmac_http_resolve \
     test/conf/fwknoprc_hmac_https_resolve \
+    test/conf/fwknoprc_hmac_http_only_resolve \
     test/conf/fwknoprc_gpg_hmac_sha512_key \
     test/conf/gpg_hmac_sha512_access.conf \
     test/conf/fwknoprc_hmac_sha512_base64_key \

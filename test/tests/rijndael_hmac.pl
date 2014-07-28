@@ -713,6 +713,18 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_https_resolve'},
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP resolve rc file (3)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $client_hmac_rc_http_only_resolve,
+        'no_ip_check' => 1,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_hmac_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_http_only_resolve'},
+    },
 
     {
         'category' => 'Rijndael+HMAC',

@@ -16,6 +16,7 @@ ENCRYPTION_MODE             CBC
 USE_GPG                     N
 USE_GPG_AGENT               N
 RESOLVE_IP_HTTPS            Y
+RESOLVE_HTTP_ONLY           Y
 HTTP_USER_AGENT             FwknopTestSuite/2.6
 WGET_CMD                    wget
-RESOLVE_URL                 https://www.cipherdyne.org/cgi-bin/myip
+RESOLVE_URL                 http://www.cipherdyne.org/cgi-bin/myip
