@@ -349,6 +349,7 @@ EXTRA_DIST = \
     test/fko-python.py \
     test/run-test-suite.sh \
     test/valgrind_suppressions \
+    test/configure_max_coverage.sh \
     test/README \
     VERSION \
     win32/config.h \
