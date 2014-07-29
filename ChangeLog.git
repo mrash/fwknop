@@ -1,4 +1,22 @@
-commit 03000dde5dda307ea421d19181cf7638240d8fbc (HEAD, refs/heads/master)
+commit 71b97b6cad00223b2061309c2e87e2ede5a2da2f (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 28 21:46:32 2014 -0400
+
+    bumped libfko version to 2.0.3
+
+ lib/Makefile.am | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 67ca2f69ea8c59495e9b6a341d258eb2851e5828
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Jul 27 23:20:55 2014 -0400
+
+    changes since 2.6.2 to ChangeLog.git
+
+ ChangeLog.git | 1676 +++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 1627 insertions(+), 49 deletions(-)
+
+commit 03000dde5dda307ea421d19181cf7638240d8fbc
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Sun Jul 27 23:03:11 2014 -0400
 
