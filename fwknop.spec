@@ -24,28 +24,28 @@ URL:		http://www.cipherdyne.org/fwknop/
 Source0:	fwknop-%{version}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:	gpg, gpgme-devel, libpcap-devel, gdbm-devel, iptables
-Requires:	libfko >= 2.0.2, iptables
+BuildRequires:	gpg, gpgme-devel, libpcap-devel, iptables
+Requires:	libfko >= 2.0.3, iptables
 
 
 %package -n libfko
-Version:	2.0.2
+Version:	2.0.3
 Release:	1
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	2.0.2
+Version:	2.0.3
 Release:	1
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
-Requires:	libfko >= 2.0.2
+Requires:	libfko >= 2.0.3
 
 %package server
 Summary:	The Firewall Knock Operator server.  An implementation of Single Packet Authorization.
 Group:		System Environment/Daemons
-Requires:	libfko => 2.0.2, libpcap, gdbm, iptables
+Requires:	libfko => 2.0.3, libpcap, iptables
 
 
 %description
@@ -143,6 +143,11 @@ fi
 
 %changelog
 * Mon Jul 28 2014 <mbr@cipherdyne.org> - 2.6.3
+- Removed gdbm and gdbm-devel dependencies since these are only
+  needed if a user compiles fwknopd with the --disable-file-cache
+  argument to the 'configure' script, and the RPM's are not built
+  with this.
+- Bumped libfko and libfko-devel version to 2.0.3.
 - fwknop-2.6.3 release.
 
 * Mon Apr 28 2014 <mbr@cipherdyne.org> - 2.6.2
