@@ -1,4 +1,22 @@
-commit 71b97b6cad00223b2061309c2e87e2ede5a2da2f (HEAD, refs/heads/master)
+commit 5befed6bae9228ab649e41217df21b5b32740fe0 (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 28 22:40:13 2014 -0400
+
+    removed gdbm/gdbm-devel dependencies for the RPM, bumped libfko to 2.0.3 for the RPM
+
+ fwknop.spec | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
+
+commit 96e16cf6f4b690fda1cb90b1bba6aba95bc8919d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Jul 28 22:28:46 2014 -0400
+
+    extended ChangeLog.git to include libfko version bump
+
+ ChangeLog.git | 20 +++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+commit 71b97b6cad00223b2061309c2e87e2ede5a2da2f
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Mon Jul 28 21:46:32 2014 -0400
 
