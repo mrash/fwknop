@@ -134,6 +134,33 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     if (ip_hdr_words < MIN_IPV4_WORDS)
         return;
 
+
+
+    /* Workaround for libpcap returning a length that is 4 bytes longer than
+     * the packet on the wire. Observed on:
+     *
+     * Linux beaglebone 3.8.13-bone50 #1 SMP Tue May 13 13:24:52 UTC 2014 armv7l GNU/Linux
+     * ldd fwknopd
+     *    libfko.so.2 => /usr/local/lib/libfko.so.2 (0xb6f62000)
+     *    libpcap.so.0.8 => /usr/lib/arm-linux-gnueabihf/libpcap.so.0.8 (0xb6f20000)
+     *    libc.so.6 => /lib/arm-linux-gnueabihf/libc.so.6 (0xb6e3b000)
+     *    /lib/ld-linux-armhf.so.3 (0xb6f94000)
+     *    libgcc_s.so.1 => /lib/arm-linux-gnueabihf/libgcc_s.so.1 (0xb6e17000)
+     *
+     * Calculate the new pkt_end from the length in the ip header.
+    */
+    unsigned char *pcap_bug_workaround_pkt_end =
+        ((unsigned char*)iph_p) + ntohs(iph_p->tot_len);
+
+    /* Only accept the new end if it is shorter than the original pkt_end
+     * provided by libpcap.
+    */
+    if(pcap_bug_workaround_pkt_end < pkt_end) {
+        pkt_end = pcap_bug_workaround_pkt_end;
+    }
+
+
+
     /* Now, find the packet data payload (depending on IPPROTO).
     */
     src_ip = iph_p->saddr;
