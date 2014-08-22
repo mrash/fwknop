@@ -135,7 +135,6 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     if (ip_hdr_words < MIN_IPV4_WORDS)
         return;
 
-
     /* Support for the cases where libpcap returns the Ethernet Frame Check
      * Sequence (4 bytes at the end of the Ethernet frame) as part of the
      * capture. libpcap returning the FCS is fairly rare. Default settings on
@@ -145,17 +144,10 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
      *
      * Calculate the new pkt_end from the length in the ip header.
     */
-    unsigned char *pcap_with_fcs_workaround_pkt_end =
-        ((unsigned char*)iph_p) + ntohs(iph_p->tot_len);
-
-    /* Only accept the new end if it is shorter than the original pkt_end
-     * provided by libpcap.
-    */
-    if(pcap_with_fcs_workaround_pkt_end < pkt_end) {
-        log_msg(LOG_DEBUG, "Adjusting packet end from %u to %u (likely due to Ethernet FCS being included in the capture)", pkt_end, pcap_with_fcs_workaround_pkt_end);
-        pkt_end = pcap_with_fcs_workaround_pkt_end;
+    if(((unsigned char*)iph_p)+ntohs(iph_p->tot_len) == pkt_end-FCS_HEADER_LEN) {
+        log_msg(LOG_DEBUG, "Adjusting packet end to account for FCS header on Ethernet frame");
+        pkt_end -= FCS_HEADER_LEN;
     }
-
 
     /* Now, find the packet data payload (depending on IPPROTO).
     */

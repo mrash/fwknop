@@ -33,6 +33,7 @@
 
 #define IPV4_VER_MASK   0x15
 #define MIN_IPV4_WORDS  0x05
+#define FCS_HEADER_LEN  0x04
 
 /* For items not defined by this system
 */
