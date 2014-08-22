@@ -1,3 +1,14 @@
+fwknop-2.6.4 (09//2014):
+    - (Bill Stubbs) submitted a patch to fix a bug where fwknopd could not
+      handle Ethernet frames that include the Frame Check Sequence (FCS)
+      header. This header is four bytes long, and is placed at the end of each
+      Ethernet frame. Normally the FCS header is not visible to libpcap, but
+      some card/driver combinations result in it being included. Bill noticed
+      this on the following platform:
+
+          BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
+          13:24:52 UTC 2014 armv7l GNU/Linux
+
 fwknop-2.6.3 (07/28/2014):
     - [client] External IP resolution via '-R' (or '--resolve-ip-http') is now
       done via SSL by default. The IP resolution URL is now
