@@ -223,6 +223,19 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'server',
+        'detail'   => '--pcap-file with Ethernet FCS header',
+        'function' => \&process_pcap_file_directly,
+        'cmdline'  => '',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "--pcap-file $fcs_pcap_file --foreground $verbose_str " .
+            "--verbose --verbose --verbose",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
 
     {
         'category' => 'Rijndael+HMAC',

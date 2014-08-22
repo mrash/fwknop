@@ -35,6 +35,7 @@ our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $replay_pcap_file     = "$conf_dir/spa_replay.pcap";
 our $multi_pkts_pcap_file = "$conf_dir/multi_pkts.pcap";
+our $fcs_pcap_file        = "$conf_dir/fcs_spa.pcap";
 our $spa_over_http_pcap_file = "$conf_dir/spa_over_http.pcap";
 
 our $lib_dir = '../lib/.libs';
