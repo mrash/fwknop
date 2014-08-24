@@ -5,11 +5,14 @@
 #include "getpasswd.h"
 
 /**
- * Register test suites from FKO files
+ * Register test suites from FKO files.
+ * 
+ * The module should fetch functions according to used modules. All of them follow the same
+ * naming convetion.
  */
 static void register_test_suites(void)
 {
-	register_ts_config_init();
+    register_ts_config_init();
     register_ts_getpassword();
 }
 
@@ -23,7 +26,7 @@ int main()
    if (CUE_SUCCESS != CU_initialize_registry())
       return CU_get_error();
 
-	/* Register test suites from fko files */
+    /* Register test suites from fko files */
     register_test_suites();
 
    /* Run all tests using the CUnit Basic interface */
