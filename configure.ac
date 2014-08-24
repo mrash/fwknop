@@ -152,6 +152,21 @@ if test "x$want_libfiu_support" = "xyes"; then
     FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lfiu])
 fi
 
+dnl Decide whether or not to enable C unit testing
+dnl
+want_c_unit_tests=no
+AC_ARG_ENABLE([c-unit-tests],
+  [AS_HELP_STRING([--enable-c-unit-tests],
+    [Enable C unit testing with libcunit support @<:@default is to disable@:>@])],
+  [want_c_unit_tests=$enableval],
+  [])
+
+if test "x$want_c_unit_tests" = "xyes"; then
+    AC_DEFINE([HAVE_C_UNIT_TESTS], [1], [Define for C unit testing support])
+	FKO_CHECK_COMPILER_ARG([-DHAVE_C_UNIT_TESTS])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lcunit])
+fi
+
 dnl Decide whether or not to compile in certain features that enable fuzzing
 dnl of fwknop code - this is for testing purposes only.
 dnl
@@ -622,6 +637,7 @@ AC_CONFIG_FILES([Makefile
                  client/Makefile
                  server/Makefile
                  common/Makefile
+                 test/c-unit-tests/Makefile
                  doc/Makefile])
 
 AC_OUTPUT

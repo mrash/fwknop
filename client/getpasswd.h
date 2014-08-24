@@ -40,4 +40,8 @@ char* getpasswd(const char *prompt, int fd);
 int get_key_file(char *key, int *key_len, const char *key_file,
     fko_ctx_t ctx, const fko_cli_options_t *options);
 
+#ifdef HAVE_C_UNIT_TESTS
+int register_ts_getpassword(void);
+#endif
+
 #endif  /* GETPASSWD_H */

@@ -42,6 +42,11 @@
   #include <fiu-control.h>
 #endif
 
+/* Include cunit header if c unit testing support is enabled. */
+#ifdef HAVE_C_UNIT_TESTS
+    #include "CUnit/Basic.h"
+#endif
+
 #include <stdio.h>
 
 #if HAVE_SYS_TYPES_H
@@ -177,6 +182,16 @@ enum {
 */
 #if !HAVE_STRNLEN
   #define strnlen(s, l) (strlen(s) < l ? strlen(s) : l)
+#endif
+
+/* Add some constant helpers for c unit support */
+#ifdef HAVE_C_UNIT_TESTS
+    #define UTEST_DESCR(name)       descr_##name
+    #define UTEST_FCT(name)         ut_##name
+
+    #define DECLARE_UTEST(name, description)    static const char descr_##name[] = description;  \
+                                                static void ut_##name(void)
+
 #endif
 
 #endif /* _COMMON_H */
