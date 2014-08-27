@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 06/05/2014
+.\"      Date: 08/26/2014
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "06/05/2014" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "08/26/2014" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -317,16 +317,6 @@ Defines the maximum age (in seconds) that an SPA packet will be accepted\&. This
 server system (NTP is good)\&. The default age is 120 seconds (two minutes)\&.
 .RE
 .PP
-\fBACCESS_EXPIRE\fR \fI<MM/DD/YYYY>\fR
-.RS 4
-Defines an expiration date for the access stanza in MM/DD/YYYY format\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
-.RE
-.PP
-\fBACCESS_EXPIRE_EPOCH\fR \fI<seconds>\fR
-.RS 4
-Defines an expiration date for the access stanza as the epoch time, and is useful if a more accurate expiration time needs to be given than the day resolution offered by the ACCESS_EXPIRE variable above\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
-.RE
-.PP
 \fBENABLE_DIGEST_PERSISTENCE\fR \fI<Y/N>\fR
 .RS 4
 Track digest sums associated with previous SPA packets processed by
@@ -407,7 +397,7 @@ directory of the user running
 (most likely root)\&.
 .RE
 .PP
-GPG_EXE* \fI<path>\fR
+\fBGPG_EXE\fR \fI<path>\fR
 .RS 4
 Specify the path to GPG, and defaults to
 \fI/usr/bin/gpg\fR
@@ -551,6 +541,16 @@ Specify the digest algorithm for incoming SPA packet authentication\&. Must be o
 defaults to using SHA256 if the access stanza requires an HMAC\&.
 .RE
 .PP
+\fBACCESS_EXPIRE\fR \fI<MM/DD/YYYY>\fR
+.RS 4
+Defines an expiration date for the access stanza in MM/DD/YYYY format\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
+.RE
+.PP
+\fBACCESS_EXPIRE_EPOCH\fR \fI<seconds>\fR
+.RS 4
+Defines an expiration date for the access stanza as the epoch time, and is useful if a more accurate expiration time needs to be given than the day resolution offered by the ACCESS_EXPIRE variable above\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
+.RE
+.PP
 \fBENABLE_CMD_EXEC\fR \fI<Y/N>\fR
 .RS 4
 This instructs
@@ -583,6 +583,11 @@ client command line, so either
 has to be used to automatically resolve the external address (if the client behind a NAT) or the client must know the external IP and set it via the
 \fB\-a\fR
 argument\&.
+.RE
+.PP
+\fBREQUIRE_SOURCE_ADDRESS\fR \fI<Y/N>\fR
+.RS 4
+Synonym for \(lqREQUIRE_SOURCE_ADDRESS\(rq\&.
 .RE
 .PP
 \fBFORCE_NAT\fR \fI<IP> <PORT>\fR
@@ -633,6 +638,12 @@ to leverage a GnuPG key pair that does not have an associated password\&. While 
 .RS 4
 With this setting set to
 \fIY\fR, fwknopd check all GPG\-encrypted SPA messages for a signature (signed by the sender\(cqs key)\&. If the incoming message is not signed, the decryption process will fail\&. If not set, the default is
+\fIY\fR\&.
+.RE
+.PP
+\fBGPG_DISABLE_SIG\fR \fI<Y/N>\fR
+.RS 4
+Disable signature verification for incoming SPA messages\&. This is not a recommended setting, and the default is
 \fIN\fR\&.
 .RE
 .PP
@@ -646,8 +657,15 @@ Setting this will allow fwknopd to accept incoming GPG\-encrypted packets that a
 .RS 4
 Define a list of gpg key ID\(cqs that are required to have signed any incoming SPA message that has been encrypted with the
 \fBfwknopd\fR
-server key\&. This ensures that the verification of the remote user is accomplished via a strong cryptographic mechanism\&. This setting only applies if the \(lqGPG_REQUIRE_SIG\(rq is set to
-\fIY\fR\&. Separate multiple entries with a comma\&.
+server key\&. This ensures that the verification of the remote user is accomplished via a strong cryptographic mechanism\&. Signature verification is enabled by default, and can only be disabled if \(lqGPG_DISABLE_SIG\(rq is set to
+\fIY\fR
+(not a recommended setting)\&. Separate multiple entries with a comma\&.
+.RE
+.PP
+\fBGPG_FINGERPRINT_ID\fR \fI<keyID,\&...,keyID>\fR
+.RS 4
+Specify a set of full\-length GnuPG key fingerprints instead of the shorter key identifiers set with the \(lqGPG_REMOTE_ID\(rq variable\&. Here is an example fingerprint for one of the fwknop test suite keys:
+\fI00CC95F05BC146B6AC4038C9E36F443C6A3FAD56\fR\&.
 .RE
 .PP
 \fBGPG_HOME_DIR\fR \fI<path>\fR

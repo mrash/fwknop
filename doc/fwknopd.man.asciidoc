@@ -229,17 +229,6 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
     synchronization with the *fwknopd* server system (NTP is good). The
     default age is 120 seconds (two minutes).
 
-*ACCESS_EXPIRE* '<MM/DD/YYYY>'::
-    Defines an expiration date for the access stanza in MM/DD/YYYY format.
-    All SPA packets that match an expired stanza will be ignored. This
-    parameter is optional.
-
-*ACCESS_EXPIRE_EPOCH* '<seconds>'::
-    Defines an expiration date for the access stanza as the epoch time, and is
-    useful if a more accurate expiration time needs to be given than the day
-    resolution offered by the ACCESS_EXPIRE variable above. All SPA packets
-    that match an expired stanza will be ignored. This parameter is optional.
-
 *ENABLE_DIGEST_PERSISTENCE* '<Y/N>'::
     Track digest sums associated with previous SPA packets processed by
     *fwknopd*. This allows digest sums to remain persistent across
@@ -303,7 +292,7 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
     the '$HOME/.gnupg' directory of the user running *fwknopd* (most
     likely root).
 
-GPG_EXE* '<path>'::
+*GPG_EXE* '<path>'::
     Specify the path to GPG, and defaults to '/usr/bin/gpg' if not set.
 
 *LOCALE* '<locale>'::
@@ -443,6 +432,17 @@ directive starts a new stanza.
     optional field, and if not specified then *fwknopd* defaults to using
     SHA256 if the access stanza requires an HMAC.
 
+*ACCESS_EXPIRE* '<MM/DD/YYYY>'::
+    Defines an expiration date for the access stanza in MM/DD/YYYY format.
+    All SPA packets that match an expired stanza will be ignored. This
+    parameter is optional.
+
+*ACCESS_EXPIRE_EPOCH* '<seconds>'::
+    Defines an expiration date for the access stanza as the epoch time, and is
+    useful if a more accurate expiration time needs to be given than the day
+    resolution offered by the ACCESS_EXPIRE variable above. All SPA packets
+    that match an expired stanza will be ignored. This parameter is optional.
+
 *ENABLE_CMD_EXEC* '<Y/N>'::
     This instructs *fwknopd* to accept complete commands that are contained
     within an authorization packet. Any such command will be executed on
@@ -467,6 +467,9 @@ directive starts a new stanza.
     to be used to automatically resolve the external address (if the
     client behind a NAT) or the client must know the external IP and set it
     via the *-a* argument.
+
+*REQUIRE_SOURCE_ADDRESS* '<Y/N>'::
+    Synonym for ``REQUIRE_SOURCE_ADDRESS''.
 
 *FORCE_NAT* '<IP> <PORT>'::
     For any valid SPA packet, force the requested connection to be NAT'd
@@ -522,10 +525,14 @@ directive starts a new stanza.
     and/or pinentry to collect a passphrase.
 
 *GPG_REQUIRE_SIG* '<Y/N>'::
-    With this setting set to 'Y',  fwknopd check all GPG-encrypted SPA
+    With this setting set to 'Y', fwknopd check all GPG-encrypted SPA
     messages for a signature (signed by the sender's key). If the incoming
     message is not signed, the decryption process will fail. If not set, the
-    default is 'N'.
+    default is 'Y'.
+
+*GPG_DISABLE_SIG* '<Y/N>'::
+    Disable signature verification for incoming SPA messages. This is not a
+    recommended setting, and the default is 'N'.
 
 *GPG_IGNORE_SIG_VERIFY_ERROR* '<Y/N>'::
     Setting this will allow fwknopd to accept incoming GPG-encrypted packets
@@ -538,8 +545,15 @@ directive starts a new stanza.
     any incoming SPA message that has been encrypted with the
     *fwknopd* server key. This ensures that the verification of the
     remote user is accomplished via a strong cryptographic mechanism.
-    This setting only applies if the ``GPG_REQUIRE_SIG'' is set to 'Y'.
+    Signature verification is enabled by default, and can only be disabled
+    if ``GPG_DISABLE_SIG'' is set to 'Y' (not a recommended setting).
     Separate multiple entries with a comma.
+
+*GPG_FINGERPRINT_ID* '<keyID,...,keyID>'::
+    Specify a set of full-length GnuPG key fingerprints instead of the shorter
+    key identifiers set with the ``GPG_REMOTE_ID'' variable. Here is an
+    example fingerprint for one of the fwknop test suite keys:
+    '00CC95F05BC146B6AC4038C9E36F443C6A3FAD56'.
 
 *GPG_HOME_DIR* '<path>'::
     Define the path to the GnuPG directory to be used by the *fwknopd*
