@@ -115,9 +115,9 @@
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
 #define RCHK_MAX_FW_TIMEOUT             (2 << 22)
 
-/* Iptables-specific defines
+/* FirewallD or Iptables-specific defines
 */
-#if FIREWALL_IPTABLES
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
 
   #define DEF_FLUSH_IPT_AT_INIT         "Y"
   #define DEF_FLUSH_IPT_AT_EXIT         "Y"
@@ -215,7 +215,7 @@ enum {
     //CONF_EXTERNAL_CMD_ALARM,
     //CONF_ENABLE_EXT_CMD_PREFIX,
     //CONF_EXT_CMD_PREFIX,
-#if FIREWALL_IPTABLES
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
     CONF_ENABLE_IPT_FORWARDING,
     CONF_ENABLE_IPT_LOCAL_NAT,
     CONF_ENABLE_IPT_SNAT,
@@ -352,7 +352,7 @@ typedef struct acc_stanza
 
 /* Firewall-related data and types. */
 
-#if FIREWALL_IPTABLES
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
   /* --DSS XXX: These are arbitrary. We should determine appropriate values.
   */
   #define MAX_TABLE_NAME_LEN      64

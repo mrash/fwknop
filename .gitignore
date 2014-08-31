@@ -35,7 +35,36 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
+# autoconf
+*.m4
+Makefile.in
+autom4te.cache/
+client/.deps/
+client/Makefile.in
+common/Makefile.in
+config.h
+config.h.in
+config.log
+config.status
+config/
+configure
+doc/Makefile.in
+lib/.deps/
+lib/.dirstamp
+lib/.libs/
+lib/Makefile.in
+libtool
+server/.deps/
+server/Makefile.in
+stamp-h1
+
+# C, C++
+*.o
+*.lo
+
 #project generated files
+common/libfko_util.a
+lib/libfko.la
 android/project/libs
 android/project/obj
 android/project/jni/fwknop/fko.h

@@ -36,7 +36,9 @@
 #include "utils.h"
 #include "log_msg.h"
 
-#if FIREWALL_IPTABLES
+#if FIREWALL_FIREWALLD
+  #include "fw_util_firewalld.h"
+#elif FIREWALL_IPTABLES
   #include "fw_util_iptables.h"
 #endif
 
@@ -428,7 +430,7 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_MAX_SNIFF_BYTES] == NULL)
         set_config_entry(opts, CONF_MAX_SNIFF_BYTES, DEF_MAX_SNIFF_BYTES);
 
-#if FIREWALL_IPTABLES
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
     /* Enable IPT forwarding.
     */
     if(opts->config[CONF_ENABLE_IPT_FORWARDING] == NULL)

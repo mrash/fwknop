@@ -165,7 +165,7 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
     return 1;
 }
 
-#if FIREWALL_IPTABLES
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
 static int
 add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
 {
@@ -1585,7 +1585,7 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "FORCE_NAT"))
         {
-#if FIREWALL_IPTABLES
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
                 log_msg(LOG_ERR,
@@ -1607,7 +1607,7 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "FORCE_SNAT"))
         {
-#if FIREWALL_IPTABLES
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
                 log_msg(LOG_ERR,
