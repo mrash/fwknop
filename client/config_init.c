@@ -53,9 +53,8 @@
 #define LF_CHAR                     0x0A                                /*!< Hexadecimal value associated to the LF char */
 
 #ifdef HAVE_C_UNIT_TESTS
-    #define TEST_SUITE_DESCRIPTION  "Config init module"
+DECLARE_TEST_SUITE(config_init, "Config init test suite");
 #endif
-
 
 /**
  * Structure to handle long bitmask.
@@ -2556,42 +2555,46 @@ static int ut_clean_test_suite(void)
     return 0;
 }
 
-DECLARE_UTEST(test1, "Description de ut1 dans config_init.c")
+DECLARE_UTEST(critical_var, "Check critcial vars")
 {
-    CU_ASSERT(var_is_critical(0) == 0);
+    CU_ASSERT(var_is_critical(FWKNOP_CLI_ARG_KEY_RIJNDAEL) == 1);
+	CU_ASSERT(var_is_critical(FWKNOP_CLI_ARG_WGET_CMD) == 0);
 }
 
-DECLARE_UTEST(test2, "Description de ut2 dans config_init.c")
+DECLARE_UTEST(check_var_bitmask, "Check var_bitmask functions")
 {
-    CU_ASSERT(0);
+	fko_var_bitmask_t   var_bitmask;
+
+	memset(&var_bitmask, 0x00, sizeof(fko_var_bitmask_t));
+	
+	add_var_to_bitmask(FWKNOP_CLI_FIRST_ARG, &var_bitmask);
+	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_FIRST_ARG, &var_bitmask) == 1);
+	CU_ASSERT(var_bitmask.dw[0] == 1);
+	remove_var_from_bitmask(FWKNOP_CLI_FIRST_ARG, &var_bitmask);
+	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_FIRST_ARG, &var_bitmask) == 0);
+	CU_ASSERT(var_bitmask.dw[0] == 0);	
+	
+	add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
+	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask) == 1);
+	remove_var_from_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
+	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask) == 0);
+	
+	add_var_to_bitmask(FWKNOP_CLI_LAST_ARG, &var_bitmask);
+	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG, &var_bitmask) == 1);
+	remove_var_from_bitmask(FWKNOP_CLI_LAST_ARG, &var_bitmask);
+	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG, &var_bitmask) == 0);
+	
+	add_var_to_bitmask(FWKNOP_CLI_LAST_ARG+32, &var_bitmask);
+	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG+32, &var_bitmask) == 0);
 }
 
-DECLARE_UTEST(test3, "Description de ut3 dans config_init.c")
-{   CU_ASSERT(1);
-}
-
-/* TODO add a generic function to go through a tab which contains all utests */
 int register_ts_config_init(void)
 {
-   CU_pSuite pSuite = NULL;
-
-   /* add a suite to the registry */
-   pSuite = CU_add_suite(TEST_SUITE_DESCRIPTION, ut_init_test_suite, ut_clean_test_suite);
-   if (NULL == pSuite) {
-      CU_cleanup_registry();
-      return CU_get_error();
-   }
-
-   /* add the tests to the suite */
-   if ((NULL == CU_add_test(pSuite, UTEST_DESCR(test1), UTEST_FCT(test1))) ||
-       (NULL == CU_add_test(pSuite, UTEST_DESCR(test2), UTEST_FCT(test2))) ||
-       (NULL == CU_add_test(pSuite, UTEST_DESCR(test3), UTEST_FCT(test3))))
-   {
-      CU_cleanup_registry();
-      return CU_get_error();
-   }
-
-   return 0;
+   	ts_init(&TEST_SUITE(config_init), TEST_SUITE_DESCR(config_init));
+	ts_add_utest(&TEST_SUITE(config_init), UTEST_FCT(critical_var), UTEST_DESCR(critical_var));
+	ts_add_utest(&TEST_SUITE(config_init), UTEST_FCT(check_var_bitmask), UTEST_DESCR(check_var_bitmask));
+   
+   return register_ts(&TEST_SUITE(config_init));
 }
 
 #endif /* HAVE_C_UNIT_TESTS */

@@ -1286,7 +1286,7 @@ sub profile_coverage() {
     my $curr_dir = getcwd() or die $!;
 
     ### gcov -b ../client/*.gcno
-    for my $dir ('../client', '../server', '../lib/.libs') {
+    for my $dir ('../client', '../server', '../lib/.libs', '../test/c-unit-tests') {
         next unless -d $dir;
         chdir $dir or die $!;
         system "$gcov_path -b -u *.gcno > /dev/null 2>&1";

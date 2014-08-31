@@ -48,6 +48,10 @@ int expand_acc_port_list(acc_port_list_t **plist, char *plist_str);
 void free_acc_stanzas(fko_srv_options_t *opts);
 void free_acc_port_list(acc_port_list_t *plist);
 
+#ifdef HAVE_C_UNIT_TESTS
+int register_ts_access(void);
+#endif
+
 #endif /* ACCESS_H */
 
 /***EOF***/

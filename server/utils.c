@@ -28,6 +28,10 @@
 #include "fwknopd_common.h"
 #include "utils.h"
 #include "log_msg.h"
+#include "replay_cache.h"
+#include "config_init.h"
+#include "fw_util.h"
+
 #include <stdarg.h>
 
 /* Generic hex dump function.
@@ -159,6 +163,28 @@ verify_file_perms_ownership(const char *file)
 #endif
 
     return res;
+}
+
+void
+clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int exit_status)
+{
+#if HAVE_LIBFIU
+    if(opts->config[CONF_FAULT_INJECTION_TAG] != NULL)
+    {
+        fiu_disable(opts->config[CONF_FAULT_INJECTION_TAG]);
+    }
+#endif
+
+    if(!opts->test && (fw_cleanup_flag == FW_CLEANUP))
+        fw_cleanup(opts);
+
+#if USE_FILE_CACHE
+    free_replay_list(opts);
+#endif
+
+    free_logging();
+    free_configs(opts);
+    exit(exit_status);
 }
 
 /***EOF***/

@@ -1,19 +1,17 @@
 #include "CUnit/Basic.h"
 
-#include "fwknop.h"
+#include "fwknop_common.h"
 #include "config_init.h"
-#include "getpasswd.h"
 
 /**
  * Register test suites from FKO files.
  * 
  * The module should fetch functions according to used modules. All of them follow the same
- * naming convetion.
+ * naming convention.
  */
 static void register_test_suites(void)
 {
     register_ts_config_init();
-    register_ts_getpassword();
 }
 
 /* The main() function for setting up and running the tests.

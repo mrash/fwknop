@@ -8,7 +8,8 @@ libfko_source_files = \
     fko.h fko_limits.h fko_timestamp.c fko_hmac.c hmac.c hmac.h \
     fko_user.c fko_user.h md5.c md5.h rijndael.c rijndael.h sha1.c \
     sha1.h sha2.c sha2.h fko_context.h fko_state.h fko_context.h \
-    gpgme_funcs.c gpgme_funcs.h strlcpy.c strlcat.c fko_util.c fko_util.h
+    gpgme_funcs.c gpgme_funcs.h strlcpy.c strlcat.c fko_util.c fko_util.h \
+	cunit_common.c cunit_common.h
 
 libfko_la_SOURCES   		= $(libfko_source_files)
 libfko_la_LDFLAGS   		= -version-info 2:3:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'

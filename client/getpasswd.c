@@ -52,10 +52,6 @@
 #define ARRAY_FIRST_ELT_ADR(t)  &((t)[0])           /*!< Macro to get the first element of an array */
 #define ARRAY_LAST_ELT_ADR(t)   &((t)[sizeof(t)-1]) /*!< Macro to get the last element of an array */
 
-#ifdef HAVE_C_UNIT_TESTS
-    #define TEST_SUITE_DESCRIPTION  "Get password module"
-#endif
-
 /**
  * @brief Read a password from a stream object
  *
@@ -296,53 +292,5 @@ get_key_file(char *key, int *key_len, const char *key_file,
 
     return 1;
 }
-
-
-#ifdef HAVE_C_UNIT_TESTS
-
-static int ut_init_test_suite(void)
-{
-    return 0;
-}
-
-static int ut_clean_test_suite(void)
-{
-    return 0;
-}
-
-DECLARE_UTEST(test1, "Description de ut1 dans getpassword.c")
-{
-    CU_ASSERT(1 == 0);
-}
-
-DECLARE_UTEST(test2, "Description de ut2 dans getpassword.c")
-{
-    CU_ASSERT(0);
-}
-
-/* TODO add a generic function to go through a tab which contains all utests */
-int register_ts_getpassword(void)
-{
-   CU_pSuite pSuite = NULL;
-
-   /* add a suite to the registry */
-   pSuite = CU_add_suite(TEST_SUITE_DESCRIPTION, ut_init_test_suite, ut_clean_test_suite);
-   if (NULL == pSuite) {
-      CU_cleanup_registry();
-      return CU_get_error();
-   }
-
-   /* add the tests to the suite */
-   if ((NULL == CU_add_test(pSuite, UTEST_DESCR(test1), UTEST_FCT(test1))) ||
-       (NULL == CU_add_test(pSuite, UTEST_DESCR(test2), UTEST_FCT(test2))))
-   {
-      CU_cleanup_registry();
-      return CU_get_error();
-   }
-
-   return 0;
-}
-
-#endif /* HAVE_C_UNIT_TESTS */
 
 /***EOF***/

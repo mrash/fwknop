@@ -163,9 +163,11 @@ AC_ARG_ENABLE([c-unit-tests],
 
 if test "x$want_c_unit_tests" = "xyes"; then
     AC_DEFINE([HAVE_C_UNIT_TESTS], [1], [Define for C unit testing support])
-	FKO_CHECK_COMPILER_ARG([-DHAVE_C_UNIT_TESTS])
+    FKO_CHECK_COMPILER_ARG([-DHAVE_C_UNIT_TESTS])
     FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lcunit])
 fi
+
+AM_CONDITIONAL([WANT_C_UNIT_TESTS], [test "$want_c_unit_tests" = yes])
 
 dnl Decide whether or not to compile in certain features that enable fuzzing
 dnl of fwknop code - this is for testing purposes only.
