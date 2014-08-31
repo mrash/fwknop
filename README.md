@@ -9,9 +9,9 @@ default-drop filtering stance. The main application of SPA is to use a firewall
 to drop all attempts to connect to services such as SSH in order to make the
 exploitation of vulnerabilities (both 0-day and unpatched code) more difficult.
 Because there are no open ports, any service that is concealed by SPA naturally
-cannot be scanned for with Nmap. The fwknop project supports three different
-firewalls: iptables on Linux systems, pf on OpenBSD, and ipfw on FreeBSD and
-Mac OS X.
+cannot be scanned for with Nmap. The fwknop project supports four different
+firewalls: firewalld and iptables on Linux systems, pf on OpenBSD, and ipfw on
+FreeBSD and Mac OS X.
 
 SPA is essentially next generation Port Knocking (PK), but solves many of the
 limitations exhibited by PK while retaining its core benefits. PK limitations
@@ -103,6 +103,9 @@ the `INSTALL` file for the general basics on using autoconf.
       --with-gpgme-prefix=PFX prefix where GPGME is installed (optional)
       --with-gpg=/path/to/gpg Specify path to the gpg executable that gpgme will
                               use [default=check path]
+      --with-firewalld=/path/to/firewalld
+                              Specify path to the firewalld executable
+                              [default=check path]
       --with-iptables=/path/to/iptables
                               Specify path to the iptables executable
                               [default=check path]

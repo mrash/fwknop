@@ -50,11 +50,11 @@ Requires:	libfko => 2.0.3, libpcap, iptables
 
 %description
 Fwknop implements an authorization scheme known as Single Packet Authorization
-(SPA) for Linux systems running iptables.  This mechanism requires only a
-single encrypted and non-replayed packet to communicate various pieces of
-information including desired access through an iptables policy. The main
-application of this program is to use iptables in a default-drop stance to
-protect services such as SSH with an additional layer of security in order
+(SPA) for Linux systems running firewalld or iptables.  This mechanism requires
+only a single encrypted and non-replayed packet to communicate various pieces of
+information including desired access through a firewalld or iptables policy. The
+main application of this program is to use firewalld or iptables in a default-drop
+stance to protect services such as SSH with an additional layer of security in order
 to make the exploitation of vulnerabilities (both 0-day and unpatched code)
 much more difficult.
 
