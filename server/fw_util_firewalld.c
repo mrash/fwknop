@@ -793,9 +793,15 @@ fw_config_init(fko_srv_options_t * const opts)
 
     memset(&fwc, 0x0, sizeof(struct fw_config));
 
-    /* Set our firewall exe command path (firewalld in most cases).
+    /* Set our firewall exe command path (firewall-cmd or iptables in most cases).
     */
+#if FIREWALL_FIREWALLD
+    char cmd_passthru[512];
+    snprintf(cmd_passthru, sizeof cmd_passthru, "%s %s ", opts->config[CONF_FIREWALL_EXE], " --direct --passthrough ipv4 ");
+    strlcpy(fwc.fw_command, cmd_passthru, sizeof(fwc.fw_command));
+#else
     strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
+#endif
 
 #if HAVE_LIBFIU
     fiu_return_on("fw_config_init", 0);
