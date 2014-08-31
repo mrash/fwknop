@@ -1585,7 +1585,20 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "FORCE_NAT"))
         {
-#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
+#if FIREWALL_FIREWALLD
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0 )
+            {
+                log_msg(LOG_ERR,
+                    "[*] FORCE_NAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            if(add_acc_force_nat(opts, curr_acc, val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+#elif FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
                 log_msg(LOG_ERR,
@@ -1607,7 +1620,20 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "FORCE_SNAT"))
         {
-#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
+#if FIREWALL_FIREWALLD
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0 )
+            {
+                log_msg(LOG_ERR,
+                    "[*] FORCE_SNAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+            if(add_acc_force_snat(opts, curr_acc, val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+#elif FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
                 log_msg(LOG_ERR,

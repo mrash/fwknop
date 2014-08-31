@@ -35,12 +35,16 @@ Makefile
 cmake_install.cmake
 install_manifest.txt
 
-# autoconf
-*.m4
-Makefile.in
+# C, C++
+*.o
+*.lo
+
+#project generated files
 autom4te.cache/
+*.m4
 client/.deps/
 client/Makefile.in
+common/libfko_util.a
 common/Makefile.in
 config.h
 config.h.in
@@ -48,23 +52,24 @@ config.log
 config.status
 config/
 configure
+doc/libfko.info
 doc/Makefile.in
+doc/stamp-vti
+doc/version.texi
+lib/libfko.la
 lib/.deps/
 lib/.dirstamp
 lib/.libs/
 lib/Makefile.in
 libtool
+Makefile.in
 server/.deps/
+server/.libs/
+server/fwknopd
+server/fwknopd.8
 server/Makefile.in
 stamp-h1
 
-# C, C++
-*.o
-*.lo
-
-#project generated files
-common/libfko_util.a
-lib/libfko.la
 android/project/libs
 android/project/obj
 android/project/jni/fwknop/fko.h

@@ -430,7 +430,150 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_MAX_SNIFF_BYTES] == NULL)
         set_config_entry(opts, CONF_MAX_SNIFF_BYTES, DEF_MAX_SNIFF_BYTES);
 
-#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
+#if FIREWALL_FIREWALLD
+    /* Enable FIREWD forwarding.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_FORWARDING] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_FORWARDING,
+            DEF_ENABLE_FIREWD_FORWARDING);
+
+    /* Enable FIREWD local NAT.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_LOCAL_NAT,
+            DEF_ENABLE_FIREWD_LOCAL_NAT);
+
+    /* Enable FIREWD SNAT.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_SNAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_SNAT,
+            DEF_ENABLE_FIREWD_SNAT);
+
+    /* Make sure we have a valid IP if SNAT is enabled
+    */
+    if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_SNAT], "Y", 1) == 0)
+    {
+        /* Note that fw_config_init() will set use_masquerade if necessary
+        */
+        if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+        {
+            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+            {
+                log_msg(LOG_ERR,
+                    "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
+                );
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+    }
+
+    /* Enable FIREWD OUTPUT.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_OUTPUT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_OUTPUT,
+            DEF_ENABLE_FIREWD_OUTPUT);
+
+    /* Flush FIREWD at init.
+    */
+    if(opts->config[CONF_FLUSH_FIREWD_AT_INIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_FIREWD_AT_INIT, DEF_FLUSH_FIREWD_AT_INIT);
+
+    /* Flush FIREWD at exit.
+    */
+    if(opts->config[CONF_FLUSH_FIREWD_AT_EXIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_FIREWD_AT_EXIT, DEF_FLUSH_FIREWD_AT_EXIT);
+
+    /* FIREWD input access.
+    */
+    if(opts->config[CONF_FIREWD_INPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_INPUT_ACCESS,
+            DEF_FIREWD_INPUT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_INPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_INPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD output access.
+    */
+    if(opts->config[CONF_FIREWD_OUTPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_OUTPUT_ACCESS,
+            DEF_FIREWD_OUTPUT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_OUTPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_OUTPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD forward access.
+    */
+    if(opts->config[CONF_FIREWD_FORWARD_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_FORWARD_ACCESS,
+            DEF_FIREWD_FORWARD_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_FORWARD_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_FORWARD_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD dnat access.
+    */
+    if(opts->config[CONF_FIREWD_DNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_DNAT_ACCESS,
+            DEF_FIREWD_DNAT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_DNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_DNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD snat access.
+    */
+    if(opts->config[CONF_FIREWD_SNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_SNAT_ACCESS,
+            DEF_FIREWD_SNAT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_SNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_SNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD masquerade access.
+    */
+    if(opts->config[CONF_FIREWD_MASQUERADE_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_MASQUERADE_ACCESS,
+            DEF_FIREWD_MASQUERADE_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_MASQUERADE_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_MASQUERADE_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* Check for the firewalld 'comment' match at init time
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_COMMENT_CHECK] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_COMMENT_CHECK,
+            DEF_ENABLE_FIREWD_COMMENT_CHECK);
+
+#elif FIREWALL_IPTABLES
     /* Enable IPT forwarding.
     */
     if(opts->config[CONF_ENABLE_IPT_FORWARDING] == NULL)
@@ -931,6 +1074,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'i':
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);
                 break;
+            case FIREWD_DISABLE_CHECK_SUPPORT:
+                opts->firewd_disable_check_support = 1;
+                break;
             case IPT_DISABLE_CHECK_SUPPORT:
                 opts->ipt_disable_check_support = 1;
                 break;
@@ -1071,6 +1217,8 @@ usage(void)
       "                           done in the access.conf file).\n"
       "     --gpg-exe           - Specify the path to GPG (this is normally done in\n"
       "                           the access.conf file).\n"
+      " --no-firewd-check-support\n"
+      "                         - Disable test for 'firewall-cmd ... -C' support.\n"
       " --no-ipt-check-support  - Disable test for 'iptables -C' support.\n"
       "\n"
     );

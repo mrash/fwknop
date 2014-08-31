@@ -115,9 +115,29 @@
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
 #define RCHK_MAX_FW_TIMEOUT             (2 << 22)
 
-/* FirewallD or Iptables-specific defines
+/* FirewallD-specific defines
 */
-#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
+#if FIREWALL_FIREWALLD
+
+  #define DEF_FLUSH_FIREWD_AT_INIT         "Y"
+  #define DEF_FLUSH_FIREWD_AT_EXIT         "Y"
+  #define DEF_ENABLE_FIREWD_FORWARDING     "N"
+  #define DEF_ENABLE_FIREWD_LOCAL_NAT      "Y"
+  #define DEF_ENABLE_FIREWD_SNAT           "N"
+  #define DEF_ENABLE_FIREWD_OUTPUT         "N"
+  #define DEF_ENABLE_FIREWD_COMMENT_CHECK  "Y"
+  #define DEF_FIREWD_INPUT_ACCESS          "ACCEPT, filter, INPUT, 1, FWKNOP_INPUT, 1"
+  #define DEF_FIREWD_OUTPUT_ACCESS         "ACCEPT, filter, OUTPUT, 1, FWKNOP_OUTPUT, 1"
+  #define DEF_FIREWD_FORWARD_ACCESS        "ACCEPT, filter, FORWARD, 1, FWKNOP_FORWARD, 1"
+  #define DEF_FIREWD_DNAT_ACCESS           "DNAT, nat, PREROUTING, 1, FWKNOP_PREROUTING, 1"
+  #define DEF_FIREWD_SNAT_ACCESS           "SNAT, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+  #define DEF_FIREWD_MASQUERADE_ACCESS     "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+
+  #define RCHK_MAX_FIREWD_RULE_NUM         (2 << 15)
+
+/* Iptables-specific defines
+*/
+#elif FIREWALL_IPTABLES
 
   #define DEF_FLUSH_IPT_AT_INIT         "Y"
   #define DEF_FLUSH_IPT_AT_EXIT         "Y"
@@ -215,7 +235,22 @@ enum {
     //CONF_EXTERNAL_CMD_ALARM,
     //CONF_ENABLE_EXT_CMD_PREFIX,
     //CONF_EXT_CMD_PREFIX,
-#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
+#if FIREWALL_FIREWALLD
+    CONF_ENABLE_FIREWD_FORWARDING,
+    CONF_ENABLE_FIREWD_LOCAL_NAT,
+    CONF_ENABLE_FIREWD_SNAT,
+    CONF_SNAT_TRANSLATE_IP,
+    CONF_ENABLE_FIREWD_OUTPUT,
+    CONF_FLUSH_FIREWD_AT_INIT,
+    CONF_FLUSH_FIREWD_AT_EXIT,
+    CONF_FIREWD_INPUT_ACCESS,
+    CONF_FIREWD_OUTPUT_ACCESS,
+    CONF_FIREWD_FORWARD_ACCESS,
+    CONF_FIREWD_DNAT_ACCESS,
+    CONF_FIREWD_SNAT_ACCESS,
+    CONF_FIREWD_MASQUERADE_ACCESS,
+    CONF_ENABLE_FIREWD_COMMENT_CHECK,
+#elif FIREWALL_IPTABLES
     CONF_ENABLE_IPT_FORWARDING,
     CONF_ENABLE_IPT_LOCAL_NAT,
     CONF_ENABLE_IPT_SNAT,
@@ -352,7 +387,54 @@ typedef struct acc_stanza
 
 /* Firewall-related data and types. */
 
-#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
+#if FIREWALL_FIREWALLD
+  /* --DSS XXX: These are arbitrary. We should determine appropriate values.
+  */
+  #define MAX_TABLE_NAME_LEN      64
+  #define MAX_CHAIN_NAME_LEN      64
+  #define MAX_TARGET_NAME_LEN     64
+
+  /* Fwknop custom chain types
+  */
+  enum {
+      FIREWD_INPUT_ACCESS,
+      FIREWD_OUTPUT_ACCESS,
+      FIREWD_FORWARD_ACCESS,
+      FIREWD_DNAT_ACCESS,
+      FIREWD_SNAT_ACCESS,
+      FIREWD_MASQUERADE_ACCESS,
+      NUM_FWKNOP_ACCESS_TYPES  /* Leave this entry last */
+  };
+
+  /* Structure to define an fwknop firewall chain configuration.
+  */
+  struct fw_chain {
+      int     type;
+      char    target[MAX_TARGET_NAME_LEN];
+      //int     direction;
+      char    table[MAX_TABLE_NAME_LEN];
+      char    from_chain[MAX_CHAIN_NAME_LEN];
+      int     jump_rule_pos;
+      char    to_chain[MAX_CHAIN_NAME_LEN];
+      int     rule_pos;
+      int     active_rules;
+      time_t  next_expire;
+  };
+
+  /* Based on the fw_chain fields (not counting type)
+  */
+  #define FW_NUM_CHAIN_FIELDS 6
+
+  struct fw_config {
+      struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
+      char            fw_command[MAX_PATH_LEN];
+
+      /* Flag for firewalld SNAT vs. MASQUERADE usage
+      */
+      unsigned char   use_masquerade;
+  };
+
+#elif FIREWALL_IPTABLES
   /* --DSS XXX: These are arbitrary. We should determine appropriate values.
   */
   #define MAX_TABLE_NAME_LEN      64
@@ -484,6 +566,7 @@ typedef struct fko_srv_options
     unsigned char   verbose;            /* Verbose mode flag */
     unsigned char   exit_after_parse_config; /* Parse config and exit */
 
+    unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
     unsigned char   ipt_disable_check_support; /* Don't use iptables -C */
 
     /* Flag for permitting SPA packets regardless of directionality test

@@ -55,7 +55,7 @@
 #define FIREWD_LIST_RULES_ARGS     "--direct --passthrough ipv4 -t %s -L %s --line-numbers -n 2>&1"
 #define FIREWD_LIST_ALL_RULES_ARGS "--direct --passthrough ipv4 -t %s -v -n -L --line-numbers 2>&1"
 
-int validate_ipt_chain_conf(const char * const chain_str);
+int validate_firewd_chain_conf(const char * const chain_str);
 
 #endif /* FW_UTIL_FIREWALLD_H */
 
