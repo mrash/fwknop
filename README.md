@@ -118,6 +118,10 @@ the `INSTALL` file for the general basics on using autoconf.
       --with-ipf=/path/to/ipf Specify path to the ipf executable [default=check
                               path]
 
+    Examples:
+
+    ./configure --disable-client --with-firewalld=/bin/firewall-cmd
+    ./configure --disable-client --with-iptables=/sbin/iptables --with-firewalld=no
 
 ## Notes
 ### Migrating from the Perl version of fwknop
