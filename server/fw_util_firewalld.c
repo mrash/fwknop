@@ -161,15 +161,15 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
     log_msg(LOG_DEBUG, "rule_exists_chk_support() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
-    if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
+    if(strncmp(err_buf, "success", strlen("success")) == 0)
     {
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s does not exist",
+        rule_exists = 1;
+        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s already exists",
                 rule, chain);
     }
     else
     {
-        rule_exists = 1;
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s already exists",
+        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s does not exist",
                 rule, chain);
     }
 
@@ -242,15 +242,15 @@ firewd_chk_support(const fko_srv_options_t * const opts)
     log_msg(LOG_DEBUG, "firewd_chk_support() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
-    if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
-    {
-        log_msg(LOG_DEBUG, "firewd_chk_support() -C not supported");
-        have_firewd_chk_support = 0;
-    }
-    else
+    if(strncmp(err_buf, "success", strlen("success")) == 0)
     {
         log_msg(LOG_DEBUG, "firewd_chk_support() -C supported");
         have_firewd_chk_support = 1;
+    }
+    else
+    {
+        log_msg(LOG_DEBUG, "firewd_chk_support() -C not supported");
+        have_firewd_chk_support = 0;
     }
 
     /* Delete the tmp rule
