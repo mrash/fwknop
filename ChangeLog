@@ -1,4 +1,11 @@
 fwknop-2.6.4 (09//2014):
+    - (Gerry Reno) Added support for firewalld to the fwknopd daemon on RHEL 7
+      CentOS 7. This is implemented using the current firewalld '--direct
+      --passthrough' capability which accepts raw iptables commands. More
+      information on firewalld can be found here:
+
+      https://fedoraproject.org/wiki/FirewallD
+
     - (Bill Stubbs) submitted a patch to fix a bug where fwknopd could not
       handle Ethernet frames that include the Frame Check Sequence (FCS)
       header. This header is four bytes long, and is placed at the end of each

@@ -175,6 +175,9 @@ Gerry Reno
     - Provided guidance on Android client issues along with testing candidate
       patches to update various things - this work is being tracked in the
       android4.4_support branch.
+    - Implemented support for firewalld in the fwknopd daemon running on RHEL 7
+      and CentOS 7 systems. This is a major addition to handle yet another
+      firewall architecture.
 
 Tim Heckman
     - Homebrew fwknop package maintainer for Mac OS X systems.
