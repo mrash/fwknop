@@ -2546,12 +2546,13 @@ usage(void)
 
 #ifdef HAVE_C_UNIT_TESTS
 
-static int ut_init_test_suite(void)
+DECLARE_TEST_SUITE_INIT(config_init)
 {
+    log_set_verbosity(LOG_VERBOSITY_ERROR);
     return 0;
 }
 
-static int ut_clean_test_suite(void)
+DECLARE_TEST_SUITE_CLEANUP(config_init)
 {
     return 0;
 }
@@ -2559,43 +2560,46 @@ static int ut_clean_test_suite(void)
 DECLARE_UTEST(critical_var, "Check critcial vars")
 {
     CU_ASSERT(var_is_critical(FWKNOP_CLI_ARG_KEY_RIJNDAEL) == 1);
-	CU_ASSERT(var_is_critical(FWKNOP_CLI_ARG_WGET_CMD) == 0);
+    CU_ASSERT(var_is_critical(FWKNOP_CLI_ARG_WGET_CMD) == 0);
 }
 
 DECLARE_UTEST(check_var_bitmask, "Check var_bitmask functions")
 {
-	fko_var_bitmask_t   var_bitmask;
+    fko_var_bitmask_t   var_bitmask;
 
-	memset(&var_bitmask, 0x00, sizeof(fko_var_bitmask_t));
-	
-	add_var_to_bitmask(FWKNOP_CLI_FIRST_ARG, &var_bitmask);
-	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_FIRST_ARG, &var_bitmask) == 1);
-	CU_ASSERT(var_bitmask.dw[0] == 1);
-	remove_var_from_bitmask(FWKNOP_CLI_FIRST_ARG, &var_bitmask);
-	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_FIRST_ARG, &var_bitmask) == 0);
-	CU_ASSERT(var_bitmask.dw[0] == 0);	
-	
-	add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
-	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask) == 1);
-	remove_var_from_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
-	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask) == 0);
-	
-	add_var_to_bitmask(FWKNOP_CLI_LAST_ARG, &var_bitmask);
-	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG, &var_bitmask) == 1);
-	remove_var_from_bitmask(FWKNOP_CLI_LAST_ARG, &var_bitmask);
-	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG, &var_bitmask) == 0);
-	
-	add_var_to_bitmask(FWKNOP_CLI_LAST_ARG+32, &var_bitmask);
-	CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG+32, &var_bitmask) == 0);
+    memset(&var_bitmask, 0x00, sizeof(fko_var_bitmask_t));
+
+    add_var_to_bitmask(FWKNOP_CLI_FIRST_ARG, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_FIRST_ARG, &var_bitmask) == 1);
+    CU_ASSERT(var_bitmask.dw[0] == 1);
+    remove_var_from_bitmask(FWKNOP_CLI_FIRST_ARG, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_FIRST_ARG, &var_bitmask) == 0);
+    CU_ASSERT(var_bitmask.dw[0] == 0);	
+
+    add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask) == 1);
+    remove_var_from_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask) == 0);
+
+    add_var_to_bitmask(FWKNOP_CLI_LAST_ARG, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG, &var_bitmask) == 1);
+    remove_var_from_bitmask(FWKNOP_CLI_LAST_ARG, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG, &var_bitmask) == 0);
+
+    add_var_to_bitmask(FWKNOP_CLI_LAST_ARG+32, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG+32, &var_bitmask) == 0);
+
+    add_var_to_bitmask(FWKNOP_CLI_LAST_ARG+34, &var_bitmask);
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG+34, &var_bitmask) == 0);    
 }
 
 int register_ts_config_init(void)
 {
-   	ts_init(&TEST_SUITE(config_init), TEST_SUITE_DESCR(config_init));
-	ts_add_utest(&TEST_SUITE(config_init), UTEST_FCT(critical_var), UTEST_DESCR(critical_var));
-	ts_add_utest(&TEST_SUITE(config_init), UTEST_FCT(check_var_bitmask), UTEST_DESCR(check_var_bitmask));
-   
-   return register_ts(&TEST_SUITE(config_init));
+    ts_init(&TEST_SUITE(config_init), TEST_SUITE_DESCR(config_init), TEST_SUITE_INIT(config_init), TEST_SUITE_CLEANUP(config_init));
+    ts_add_utest(&TEST_SUITE(config_init), UTEST_FCT(critical_var), UTEST_DESCR(critical_var));
+    ts_add_utest(&TEST_SUITE(config_init), UTEST_FCT(check_var_bitmask), UTEST_DESCR(check_var_bitmask));
+
+    return register_ts(&TEST_SUITE(config_init));
 }
 
 #endif /* HAVE_C_UNIT_TESTS */
