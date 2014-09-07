@@ -378,9 +378,12 @@ public class Fwknop extends Activity {
         this.mCheck.setChecked(prefs.getBoolean("app_start", false));
 
         this.mPasswd = (EditText) findViewById(R.id.passwd);
+        this.mPasswd.setText(prefs.getString("passwd_str", ""));
+
         this.mOutput = (TextView) findViewById(R.id.output);
 
         this.mHmac   = (EditText) findViewById(R.id.hmac);
+        this.mHmac.setText(prefs.getString("hmac_str", ""));
 
         mUnlock = (ImageButton) findViewById(R.id.unlock);
         mUnlock.setOnClickListener(new OnClickListener() {

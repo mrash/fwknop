@@ -97,6 +97,8 @@
   #define fdopen        _fdopen
   #define close			_close
   #define write			_write
+  #define popen			_popen
+  #define pclose		_pclose
   #define O_WRONLY		_O_WRONLY
   #define O_RDONLY		_O_RDONLY
   #define O_RDWR		_O_RDWR

@@ -493,6 +493,24 @@ AS_IF([test "$want_server" = yes], [
   AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xyes])
   AM_CONDITIONAL([CONFIG_FILE_CACHE], [test x$want_file_cache = xyes])
 
+dnl Check for firewalld
+dnl
+  AC_ARG_WITH([firewall-cmd],
+    [AS_HELP_STRING([--with-firewall-cmd=/path/to/firewall-cmd],
+      [Specify path to the firewall-cmd executable @<:@default=check path@:>@])],
+    [
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
+          [AC_MSG_ERROR([--with-firewall-cmd requires an argument specifying a path to firewall-cmd])],
+          [ FORCE_FIREWALLD_EXE=$withval ]
+        )
+      )
+    ],
+    [
+      AC_PATH_PROG(FIREWALLD_EXE, [firewall-cmd], [], [$APP_PATH])
+    ]
+  )
+
 dnl Check for iptables
 dnl
   AC_ARG_WITH([iptables],
@@ -567,6 +585,9 @@ dnl
 
 dnl If a firewall was forced. set the appropriate _EXE var and clear the others.
 dnl
+  AS_IF([test "x$FORCE_FIREWALLD_EXE" != x], [
+    FIREWALLD_EXE="$FORCE_FIREWALLD_EXE"    
+  ],[
   AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
     IPTABLES_EXE="$FORCE_IPTABLES_EXE"    
   ],[
@@ -588,12 +609,19 @@ dnl
       ]
     ]
   ]
-  ))))
+  ]
+  )))))
 
 dnl Determine which firewall exe we use (if we have one).
-dnl If iptables was found or specified, it wins, then we fallback to ipfw,
-dnl then pf, and otherwise we try ipf.
+dnl If firewalld was found or specified, it wins, then we fallback to iptables,
+dnl then ipfw, pf, and otherwise we try ipf.
 dnl
+  AS_IF([test "x$FIREWALLD_EXE" != x], [
+      FW_DEF="FW_FIREWALLD"
+      FIREWALL_TYPE="firewalld" 
+      FIREWALL_EXE=$FIREWALLD_EXE
+      AC_DEFINE_UNQUOTED([FIREWALL_FIREWALLD], [1], [The firewall type: firewalld.])
+  ],[
   AS_IF([test "x$IPTABLES_EXE" != x], [
       FW_DEF="FW_IPTABLES"
       FIREWALL_TYPE="iptables" 
@@ -621,7 +649,8 @@ dnl
         ]
     ]
   ]
-  ))))
+  ]
+  )))))
 
   AC_DEFINE_UNQUOTED([FIREWALL_EXE], ["$FIREWALL_EXE"],
     [Path to firewall command executable (it should match the firewall type).])

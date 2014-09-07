@@ -815,7 +815,17 @@ incoming_spa(fko_srv_options_t *opts)
               || spadat.message_type == FKO_NAT_ACCESS_MSG
               || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
         {
-#if FIREWALL_IPTABLES
+#if FIREWALL_FIREWALLD
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1)!=0)
+            {
+                log_msg(LOG_WARNING,
+                    "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
+                    stanza_num, spadat.pkt_source_ip
+                );
+                acc = acc->next;
+                continue;
+            }
+#elif FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
             {
                 log_msg(LOG_WARNING,
