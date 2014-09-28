@@ -960,6 +960,30 @@
 
     {
         'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server --udp-server / tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str --udp-server",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server conf / tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'udp_server'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+
+    {
+        'category' => 'Rijndael+HMAC',
         'subcategory' => 'client',
         'detail'   => 'validate digest type arg',
         'function' => \&generic_exec,
