@@ -1,9 +1,9 @@
 /*
  *****************************************************************************
  *
- * File:    process_packet.h
+ * File:    udp_server.h
  *
- * Purpose: Header file for process_packet and other fwknopd code.
+ * Purpose: Header file for udp_server.c.
  *
  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2014 fwknop developers and contributors. For a full
@@ -28,26 +28,13 @@
  *
  *****************************************************************************
 */
-#ifndef PROCESS_PACKET_H
-#define PROCESS_PACKET_H
+#ifndef UDP_SERVER_H
+#define UDP_SERVER_H
 
-#define IPV4_VER_MASK   0x15
-#define MIN_IPV4_WORDS  0x05
-#define FCS_HEADER_LEN  0x04
-
-/* For items not defined by this system
+/* Function prototypes
 */
-#ifndef ETHER_CRC_LEN
-  #define ETHER_CRC_LEN 4
-#endif
-#ifndef ETHER_HDR_LEN
-  #define ETHER_HDR_LEN 14
-#endif
+int run_udp_server(fko_srv_options_t *opts);
 
-/* Prototypes
-*/
-#if HAVE_LIBPCAP
-void process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header, const unsigned char *packet);
-#endif
+#endif /* UDP_SERVER_H */
 
-#endif  /* PROCESS_PACKET_H */
+/***EOF***/

@@ -31,7 +31,6 @@
 #include "fwknopd.h"
 #include "access.h"
 #include "config_init.h"
-#include "process_packet.h"
 #include "pcap_capture.h"
 #include "log_msg.h"
 #include "utils.h"
@@ -39,6 +38,7 @@
 #include "sig_handler.h"
 #include "replay_cache.h"
 #include "tcp_server.h"
+#include "udp_server.h"
 
 /* Prototypes
 */
@@ -178,7 +178,20 @@ main(int argc, char **argv)
         if(!opts.test && (fw_initialize(&opts) != 1))
             clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
-        /* If the TCP server option was set, fire it up here.
+        /* If we are to acquire SPA data via a UDP socket, start it up here.
+        */
+        if(1 || strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "Y", 1) == 0)
+        {
+            if(run_udp_server(&opts) < 0)
+            {
+                log_msg(LOG_ERR, "Fatal run_udp_server() error");
+                clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+
+        /* If the TCP server option was set, fire it up here. Note that in
+         * this mode, fwknopd still acquires SPA packets via libpcap. If you
+         * want to use UDP only without the libpcap dependency, see the FIXME...
         */
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
@@ -189,9 +202,12 @@ main(int argc, char **argv)
             }
         }
 
+#if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
-        pcap_capture(&opts);
+        if(strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
+            pcap_capture(&opts);
+#endif
 
         /* Deal with any signals that we've received and break out
          * of the loop for any terminating signals

@@ -57,6 +57,8 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "ENABLE_SPA_OVER_HTTP",
     "ENABLE_TCP_SERVER",
     "TCPSERV_PORT",
+    "ENABLE_UDP_SERVER",
+    "UDPSERV_PORT",
     "LOCALE",
     "SYSLOG_IDENTITY",
     "SYSLOG_FACILITY",
@@ -186,6 +188,7 @@ static struct option cmd_opts[] =
     {"restart",              0, NULL, 'R'},
     {"status",               0, NULL, 'S'},
     {"test",                 0, NULL, 't'},
+    {"udp-server",           0, NULL, 'U'},
     {"verbose",              0, NULL, 'v'},
     {"version",              0, NULL, 'V'},
     {0, 0, 0, 0}

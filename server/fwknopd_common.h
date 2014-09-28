@@ -101,6 +101,8 @@
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
 #define DEF_TCPSERV_PORT                "62201"
+#define DEF_ENABLE_UDP_SERVER           "N"
+#define DEF_UDPSERV_PORT                "62201"
 #define DEF_SYSLOG_IDENTITY             MY_NAME
 #define DEF_SYSLOG_FACILITY             "LOG_DAEMON"
 
@@ -112,6 +114,7 @@
 #define RCHK_MAX_SPA_PACKET_AGE         100000  /* seconds, can disable */
 #define RCHK_MAX_SNIFF_BYTES            (2 << 14)
 #define RCHK_MAX_TCPSERV_PORT           ((2 << 16) - 1)
+#define RCHK_MAX_UDPSERV_PORT           ((2 << 16) - 1)
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
 #define RCHK_MAX_FW_TIMEOUT             (2 << 22)
 
@@ -225,6 +228,8 @@ enum {
     CONF_ENABLE_SPA_OVER_HTTP,
     CONF_ENABLE_TCP_SERVER,
     CONF_TCPSERV_PORT,
+    CONF_ENABLE_UDP_SERVER,
+    CONF_UDPSERV_PORT,
     CONF_LOCALE,
     CONF_SYSLOG_IDENTITY,
     CONF_SYSLOG_FACILITY,
@@ -565,6 +570,7 @@ typedef struct fko_srv_options
     unsigned char   test;               /* Test mode flag */
     unsigned char   verbose;            /* Verbose mode flag */
     unsigned char   exit_after_parse_config; /* Parse config and exit */
+    unsigned char   enable_udp_server;  /* Enable UDP server mode */
 
     unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
     unsigned char   ipt_disable_check_support; /* Don't use iptables -C */

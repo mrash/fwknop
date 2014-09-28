@@ -28,6 +28,9 @@
  *
  *****************************************************************************
 */
+
+#if HAVE_LIBPCAP
+
 #include <pcap.h>
 
 #include "fwknopd_common.h"
@@ -346,5 +349,7 @@ pcap_capture(fko_srv_options_t *opts)
 
     return(0);
 }
+
+#endif /* HAVE_LIBPCAP */
 
 /***EOF***/
