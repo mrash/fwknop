@@ -52,7 +52,6 @@ int
 run_udp_server(fko_srv_options_t *opts)
 {
     int                 s_sock, sfd_flags, selval, pkt_len;
-    //int                 reuse_addr = 1, is_err;
     int                 is_err;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
@@ -81,18 +80,8 @@ run_udp_server(fko_srv_options_t *opts)
         return -1;
     }
 
-    /* So that we can re-bind to it without TIME_WAIT problems
-    if(setsockopt(s_sock, SOL_SOCKET, SO_REUSEADDR, &reuse_addr, sizeof(reuse_addr)) == -1)
-    {
-        log_msg(LOG_ERR, "run_udp_server: setsockopt error: %s",
-            strerror(errno));
-        close(s_sock);
-        return -1;
-    }
-    */
-
     /* Make our main socket non-blocking so we don't have to be stuck on
-     * listening for incoming connections.
+     * listening for incoming datagrams.
     */
     if((sfd_flags = fcntl(s_sock, F_GETFL, 0)) < 0)
     {
@@ -126,17 +115,6 @@ run_udp_server(fko_srv_options_t *opts)
         close(s_sock);
         return -1;
     }
-
-    /* Mark the socket so it will listen for incoming connections
-     * (but only one at a time)
-    if (listen(s_sock, 1) < 0)
-    {
-        log_msg(LOG_ERR, "run_udp_server: listen() failed: %s",
-            strerror(errno));
-        close(s_sock);
-        return -1;
-    }
-    */
 
     /* Now loop and receive SPA packets
     */
@@ -190,6 +168,11 @@ run_udp_server(fko_srv_options_t *opts)
             log_msg(LOG_INFO, "udp_server: Got UDP connection from %s.", sipbuf);
         }
 
+        /* Expect the data to not be too large
+        */
+        if(pkt_len > MAX_SPA_PACKET_LEN)
+            continue;
+
         /* Copy the packet for SPA processing
         */
         strlcpy((char *)opts->spa_pkt.packet_data, msg, pkt_len+1);
@@ -202,9 +185,8 @@ run_udp_server(fko_srv_options_t *opts)
 
         incoming_spa(opts);
 
-        usleep(1000000);
-
     } /* infinite while loop */
+
     return 1;
 }
 
