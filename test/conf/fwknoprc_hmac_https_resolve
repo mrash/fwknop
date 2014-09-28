@@ -18,4 +18,5 @@ USE_GPG_AGENT               N
 RESOLVE_IP_HTTPS            Y
 HTTP_USER_AGENT             FwknopTestSuite/2.6
 WGET_CMD                    wget
+USE_WGET_USER_AGENT         Y
 RESOLVE_URL                 https://www.cipherdyne.org/cgi-bin/myip

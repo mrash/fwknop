@@ -331,6 +331,19 @@ resolve_ip_https(fko_cli_options_t *options)
     */
     strlcat(wget_ssl_cmd, WGET_RESOLVE_ARGS, sizeof(wget_ssl_cmd));
 
+    /* See whether we're supposed to change the default wget user agent
+    */
+    if(! options->use_wget_user_agent)
+    {
+        strlcat(wget_ssl_cmd, " -U '", sizeof(wget_ssl_cmd));
+        strlcat(wget_ssl_cmd, options->http_user_agent, sizeof(wget_ssl_cmd));
+        strlcat(wget_ssl_cmd, "'", sizeof(wget_ssl_cmd));
+    }
+
+    /* We collect the IP from wget's stdout
+    */
+    strlcat(wget_ssl_cmd, " -O - ", sizeof(wget_ssl_cmd));
+
     if(options->resolve_url != NULL)
     {
         if(strncasecmp(options->resolve_url, "https", 5) != 0)

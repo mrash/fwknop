@@ -1429,6 +1429,19 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
+        'detail'   => '-R wget user-agent',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -R --use-wget-user-agent",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'exec_err' => $NO,
+        'rc_positive_output_matches' => [qr/USE_WGET_USER_AGENT.*Y/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
         'detail'   => '-R resolve http only',
         'function' => \&client_rc_file,
         'cmdline'  => "$client_save_rc_args -n default -R --resolve-http-only",

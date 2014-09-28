@@ -1,4 +1,11 @@
-fwknop-2.6.4 (09//2014):
+fwknop-2.6.4 (10//2014):
+    - Bug fix to ensure that a User-Agent string can be specified when the
+      fwknop client uses wget via SSL to resolve the external IP address. This
+      closes issue #134 on github reported by Barry Allard. The fwknop now
+      uses the wget '-U' option to specify the User-Agent string with a
+      default of "Fwknop/<version>". In addition, a new command line argument
+      "--use-wget-user-agent" to allow the default wget User-Agent string to
+      apply instead.
     - (Gerry Reno) Added support for firewalld to the fwknopd daemon on RHEL 7
       CentOS 7. This is implemented using the current firewalld '--direct
       --passthrough' capability which accepts raw iptables commands. More

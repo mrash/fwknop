@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 07/27/2014
+.\"      Date: 09/27/2014
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "07/27/2014" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "09/27/2014" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -637,6 +637,22 @@ Set the HTTP User\-Agent for resolving the external IP via
 \fB\-R\fR, or for sending SPA packets over HTTP\&.
 .RE
 .PP
+\fB\-\-use\-wget\-user\-agent\fR
+.RS 4
+By default when the
+\fBfwknop\fR
+client resolves the external IP with
+\fBwget\fR
+via SSL, it sets the User\-Agent to \(lqFwknop/<version>\(rq unless it was already manually specified with the
+\fB\-\-user\-agent\fR
+option mentioned above\&. However, the
+\fB\-\-user\-wget\-user\-agent\fR
+option lets the default
+\fBwget\fR
+User\-Agent string apply without influence from
+\fBfwknop\fR\&.
+.RE
+.PP
 \fB\-U, \-\-spoof\-user\fR=\fI<user>\fR
 .RS 4
 Specify the username that is included within SPA packet\&. This allows the
@@ -964,6 +980,15 @@ Load an encryption key/password from a file (\fI\-G, \-\-get\-key\fR)\&.
 \fBHTTP_USER_AGENT\fR \fI<agent string>\fR
 .RS 4
 Set the HTTP User\-Agent for resolving the external IP via \-R, or for sending SPA packets over HTTP (\fI\-u, \-\-user\-agent\fR)\&.
+.RE
+.PP
+\fBUSE_WGET_USER_AGENT\fR \fI<Y/N>\fR
+.RS 4
+Allow default
+\fBwget\fR
+User\-Agent string to be used when resolving the external IP instead of a User\-Agent supplied by the
+\fBfwknop\fR
+client\&.
 .RE
 .PP
 \fBNAT_ACCESS\fR \fI<internalIP:forwardPort>\fR

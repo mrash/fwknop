@@ -187,6 +187,8 @@ Tim Heckman
 Barry Allard
     - Reported bug in PF support on FreeBSD systems where ALTQ is not available
       would cause new PF rules to not be added (github issue #121).
+    - Suggested the abiliy to specify the HTTP User-Agent when wget is used to
+      resolve the external IP via SSL (github issue #134).
 
 Bill Stubbs
     - Submitted a patch to fix a bug where fwknopd could not handle Ethernet

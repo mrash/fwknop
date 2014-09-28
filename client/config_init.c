@@ -113,6 +113,7 @@ enum
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_KEY_HMAC,
     FWKNOP_CLI_ARG_USE_HMAC,
+    FWKNOP_CLI_ARG_USE_WGET_USER_AGENT,
     FWKNOP_CLI_ARG_KEY_FILE,
     FWKNOP_CLI_ARG_HMAC_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
@@ -159,6 +160,7 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "HMAC_KEY_BASE64",       FWKNOP_CLI_ARG_KEY_HMAC_BASE64       },
     { "HMAC_KEY",              FWKNOP_CLI_ARG_KEY_HMAC              },
     { "USE_HMAC",              FWKNOP_CLI_ARG_USE_HMAC              },
+    { "USE_WGET_USER_AGENT",   FWKNOP_CLI_ARG_USE_WGET_USER_AGENT   },
     { "KEY_FILE",              FWKNOP_CLI_ARG_KEY_FILE              },
     { "HMAC_KEY_FILE",         FWKNOP_CLI_ARG_HMAC_KEY_FILE         },
     { "NAT_ACCESS",            FWKNOP_CLI_ARG_NAT_ACCESS            },
@@ -1144,6 +1146,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if (is_yes_str(val))
             options->use_hmac = 1;
     }
+    /* --use-wget-user-agent */
+    else if (var->pos == FWKNOP_CLI_ARG_USE_WGET_USER_AGENT)
+    {
+        if (is_yes_str(val))
+            options->use_wget_user_agent = 1;
+    }
     /* Key file */
     else if (var->pos == FWKNOP_CLI_ARG_KEY_FILE)
     {
@@ -1379,6 +1387,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             break;
         case FWKNOP_CLI_ARG_USE_HMAC :
             bool_to_yesno(options->use_hmac, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_USE_WGET_USER_AGENT :
+            bool_to_yesno(options->use_wget_user_agent, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_NAT_ACCESS :
             strlcpy(val, options->nat_access_str, sizeof(val));
@@ -2344,6 +2355,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case USE_HMAC:
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 options->use_hmac = 1;
+                break;
+            case USE_WGET_USER_AGENT:
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_WGET_USER_AGENT, &var_bitmask);
+                options->use_wget_user_agent = 1;
                 break;
             case FORCE_SAVE_RC_STANZA:
                 options->force_save_rc_stanza = 1;

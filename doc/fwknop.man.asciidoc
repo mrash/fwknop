@@ -515,6 +515,13 @@ SPA OPTIONS
     Set the HTTP User-Agent for resolving the external IP via *-R*, or for
     sending SPA packets over HTTP.
 
+*--use-wget-user-agent*::
+    By default when the *fwknop* client resolves the external IP with *wget*
+    via SSL, it sets the User-Agent to ``Fwknop/<version>'' unless it was
+    already manually specified with the *--user-agent* option mentioned above.
+    However, the *--user-wget-user-agent* option lets the default *wget*
+    User-Agent string apply without influence from *fwknop*.
+
 *-U, --spoof-user*='<user>'::
     Specify the username that is included within SPA packet. This allows
     the *fwknop* client to satisfy any non-root *REQUIRE_USERNAME* keyword
@@ -751,6 +758,10 @@ description and its matching command-line option(s):
 *HTTP_USER_AGENT* '<agent string>'::
     Set the HTTP User-Agent for resolving the external IP via -R, or for
     sending SPA packets over HTTP ('-u, --user-agent').
+
+*USE_WGET_USER_AGENT* '<Y/N>'::
+    Allow default *wget* User-Agent string to be used when resolving the
+    external IP instead of a User-Agent supplied by the *fwknop* client.
 
 *NAT_ACCESS* '<internalIP:forwardPort>'::
     Gain NAT access to an internal service protected by the fwknop server
