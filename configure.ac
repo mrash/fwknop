@@ -441,7 +441,6 @@ dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
 
-  have_libpcap=no
   AS_IF([test "$want_udp_server" = no], [
     # Looking for libpcap
     #
@@ -449,7 +448,6 @@ AS_IF([test "$want_server" = yes], [
       [ AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap]) ],
       [ AC_MSG_ERROR([fwknopd needs libpcap])]
     )
-    have_libpcap=yes
   ])
 
   AS_IF([test "$want_digest_cache" = yes], [
