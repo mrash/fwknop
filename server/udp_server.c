@@ -180,6 +180,8 @@ run_udp_server(fko_srv_options_t *opts)
         if(selval == 0)
             continue;
 
+        /* If we make it here then there is a datagram to process
+        */
         pkt_len = recvfrom(s_sock, msg, 5000, 0, (struct sockaddr *)&caddr, &clen);
 
         printf("-------------------------------------------------------\n");
@@ -198,20 +200,37 @@ run_udp_server(fko_srv_options_t *opts)
 
         /* Expect the data to not be too large
         */
-        if(pkt_len > MAX_SPA_PACKET_LEN)
-            continue;
+        if(pkt_len <= MAX_SPA_PACKET_LEN)
+        {
+            /* Copy the packet for SPA processing
+            */
+            strlcpy((char *)opts->spa_pkt.packet_data, msg, pkt_len+1);
+            opts->spa_pkt.packet_data_len = pkt_len;
+            opts->spa_pkt.packet_proto    = IPPROTO_UDP;
+            opts->spa_pkt.packet_src_ip   = caddr.sin_addr.s_addr;
+            opts->spa_pkt.packet_dst_ip   = saddr.sin_addr.s_addr;
+            opts->spa_pkt.packet_src_port = ntohs(caddr.sin_port);
+            opts->spa_pkt.packet_dst_port = ntohs(saddr.sin_port);
 
-        /* Copy the packet for SPA processing
+            incoming_spa(opts);
+        }
+
+        opts->packet_ctr += 1;
+        if(opts->foreground == 1 && opts->verbose > 2)
+            log_msg(LOG_DEBUG, "run_udp_server() processed: %d packets", opts->packet_ctr);
+
+        /* Count the set of processed packets (pcap_dispatch() return
+         * value) - we use this as a comparison for --packet-limit regardless
+         * of SPA packet validity at this point.
         */
-        strlcpy((char *)opts->spa_pkt.packet_data, msg, pkt_len+1);
-        opts->spa_pkt.packet_data_len = pkt_len;
-        opts->spa_pkt.packet_proto    = IPPROTO_UDP;
-        opts->spa_pkt.packet_src_ip   = caddr.sin_addr.s_addr;
-        opts->spa_pkt.packet_dst_ip   = saddr.sin_addr.s_addr;
-        opts->spa_pkt.packet_src_port = ntohs(caddr.sin_port);
-        opts->spa_pkt.packet_dst_port = ntohs(saddr.sin_port);
-
-        incoming_spa(opts);
+        if (opts->packet_ctr_limit && opts->packet_ctr >= opts->packet_ctr_limit)
+        {
+            log_msg(LOG_WARNING,
+                "* Incoming packet count limit of %i reached",
+                opts->packet_ctr_limit
+            );
+            return 1;
+        }
 
     } /* infinite while loop */
 

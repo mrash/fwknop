@@ -2485,6 +2485,14 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'UDP server --packet-limit 1 exit',
+        'function' => \&server_packet_limit,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args --udp-server --packet-limit 1 $intf_str",
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'ignore packets < min SPA len (140)',
         'function' => \&server_ignore_small_packets,
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
