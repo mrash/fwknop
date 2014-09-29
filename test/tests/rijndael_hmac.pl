@@ -974,7 +974,7 @@
         'subcategory' => 'client+server',
         'detail'   => "UDP server conf / tcp/22",
         'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
+        'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'udp_server'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
