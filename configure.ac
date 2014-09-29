@@ -169,8 +169,8 @@ fi
 dnl Decide whether or not to enable UDP listener mode (no libpcap dependency)
 dnl
 want_udp_listener=no
-AC_ARG_ENABLE([udp-listener],
-  [AS_HELP_STRING([--enable-udp-listener],
+AC_ARG_ENABLE([udp-server],
+  [AS_HELP_STRING([--enable-udp-server],
     [Enable UDP listener mode (no libpcap dependency) @<:@default is to disable@:>@])],
   [want_udp_listener=$enableval],
   [])

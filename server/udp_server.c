@@ -53,7 +53,7 @@ int
 run_udp_server(fko_srv_options_t *opts)
 {
     int                 s_sock, sfd_flags, selval, pkt_len;
-    int                 is_err;
+    int                 is_err, s_timeout;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
@@ -69,6 +69,14 @@ run_udp_server(fko_srv_options_t *opts)
         log_msg(LOG_ERR, "[*] Invalid max UDPSERV_PORT value.");
         return -1;
     }
+    s_timeout = strtol_wrapper(opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
+            1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] Invalid max UDPSERV_SELECT_TIMEOUT value.");
+        return -1;
+    }
+
     log_msg(LOG_INFO, "Kicking off UDP server to listen on port %i.", port);
 
     /* Now, let's make a UDP server
@@ -146,7 +154,7 @@ run_udp_server(fko_srv_options_t *opts)
         /* Set our select timeout to (500ms by default).
         */
         tv.tv_sec = 0;
-        tv.tv_usec = 500000;
+        tv.tv_usec = s_timeout;
 
         selval = select(s_sock+1, &sfd_set, NULL, NULL, &tv);
 
