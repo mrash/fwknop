@@ -180,12 +180,17 @@ main(int argc, char **argv)
 
         /* If we are to acquire SPA data via a UDP socket, start it up here.
         */
-        if(1 || strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "Y", 1) == 0)
+        if(opts.enable_udp_server ||
+                strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "Y", 1) == 0)
         {
             if(run_udp_server(&opts) < 0)
             {
                 log_msg(LOG_ERR, "Fatal run_udp_server() error");
                 clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
+            }
+            else
+            {
+                break;
             }
         }
 
@@ -395,7 +400,7 @@ static int handle_signals(fko_srv_options_t *opts)
 
         if(got_sighup)
         {
-            log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");
+            log_msg(LOG_WARNING, "Got SIGHUP. Re-reading configs.");
             free_configs(opts);
             kill(opts->tcp_server_pid, SIGTERM);
             usleep(1000000);
@@ -404,12 +409,12 @@ static int handle_signals(fko_srv_options_t *opts)
         }
         else if(got_sigint)
         {
-            log_msg(LOG_WARNING, "Got SIGINT.  Exiting...");
+            log_msg(LOG_WARNING, "Got SIGINT. Exiting...");
             got_sigint = 0;
         }
         else if(got_sigterm)
         {
-            log_msg(LOG_WARNING, "Got SIGTERM.  Exiting...");
+            log_msg(LOG_WARNING, "Got SIGTERM. Exiting...");
             got_sigterm = 0;
         }
         else
@@ -422,13 +427,13 @@ static int handle_signals(fko_srv_options_t *opts)
         && opts->packet_ctr >= opts->packet_ctr_limit)
     {
         log_msg(LOG_INFO,
-            "Packet count limit (%d) reached.  Exiting...",
+            "Packet count limit (%d) reached. Exiting...",
             opts->packet_ctr_limit);
     }
     else    /* got_signal was not set (should be if we are here) */
     {
         log_msg(LOG_WARNING,
-            "Capture ended without signal.  Exiting...");
+            "Capture ended without signal. Exiting...");
     }
     return rv;
 }

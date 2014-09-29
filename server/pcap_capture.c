@@ -36,7 +36,6 @@
 #include "fwknopd_common.h"
 #include "pcap_capture.h"
 #include "process_packet.h"
-#include "sig_handler.h"
 #include "fw_util.h"
 #include "log_msg.h"
 #include "fwknopd_errors.h"

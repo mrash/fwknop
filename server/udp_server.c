@@ -29,6 +29,7 @@
  *****************************************************************************
 */
 #include "fwknopd_common.h"
+#include "sig_handler.h"
 #include "incoming_spa.h"
 #include "log_msg.h"
 #include "fw_util.h"
@@ -116,10 +117,36 @@ run_udp_server(fko_srv_options_t *opts)
         return -1;
     }
 
+    /* Initialize our signal handlers. You can check the return value for
+     * the number of signals that were *not* set.  Those that were not set
+     * will be listed in the log/stderr output.
+    */
+    if(set_sig_handlers() > 0)
+        log_msg(LOG_ERR, "Errors encountered when setting signal handlers.");
+
     /* Now loop and receive SPA packets
     */
     while(1)
     {
+        /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
+        */
+        if(got_signal != 0)
+        {
+            if(got_sigint || got_sigterm || got_sighup)
+            {
+                close(s_sock);
+                return 1;
+            }
+            else if(got_sigusr1 || got_sigusr2)
+            {
+                /* Not doing anything with these yet.
+                */
+                got_sigusr1 = got_sigusr2 = 0;
+                got_signal = 0;
+            }
+            else
+                got_signal = 0;
+        }
 
         /* Check for any expired firewall rules and deal with them.
         */
@@ -165,7 +192,8 @@ run_udp_server(fko_srv_options_t *opts)
         {
             memset(sipbuf, 0x0, MAX_IPV4_STR_LEN);
             inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IPV4_STR_LEN);
-            log_msg(LOG_INFO, "udp_server: Got UDP connection from %s.", sipbuf);
+            log_msg(LOG_INFO, "udp_server: Got UDP datagram (%d bytes) from: %s",
+                    pkt_len, sipbuf);
         }
 
         /* Expect the data to not be too large
@@ -187,6 +215,7 @@ run_udp_server(fko_srv_options_t *opts)
 
     } /* infinite while loop */
 
+    close(s_sock);
     return 1;
 }
 
