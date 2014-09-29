@@ -46,7 +46,7 @@
 
 /* Prototypes
 */
-#if HAVE_LIBPCAP
+#if USE_LIBPCAP
 void process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header, const unsigned char *packet);
 #endif
 

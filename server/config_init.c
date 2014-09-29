@@ -815,7 +815,15 @@ validate_options(fko_srv_options_t *opts)
     /* Enable UDP server.
     */
     if(opts->config[CONF_ENABLE_UDP_SERVER] == NULL)
+    {
+        if((strncasecmp(DEF_ENABLE_UDP_SERVER, "Y", 1) == 0) &&
+                !opts->enable_udp_server)
+        {
+            log_msg(LOG_ERR, "pcap capture not enabled, forcing UDP server mode");
+            opts->enable_udp_server = 1;
+        }
         set_config_entry(opts, CONF_ENABLE_UDP_SERVER, DEF_ENABLE_UDP_SERVER);
+    }
 
     /* UDP Server port.
     */

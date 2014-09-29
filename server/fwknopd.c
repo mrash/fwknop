@@ -31,7 +31,6 @@
 #include "fwknopd.h"
 #include "access.h"
 #include "config_init.h"
-#include "pcap_capture.h"
 #include "log_msg.h"
 #include "utils.h"
 #include "fw_util.h"
@@ -39,6 +38,10 @@
 #include "replay_cache.h"
 #include "tcp_server.h"
 #include "udp_server.h"
+
+#if USE_LIBPCAP
+  #include "pcap_capture.h"
+#endif
 
 /* Prototypes
 */

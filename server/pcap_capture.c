@@ -29,7 +29,6 @@
  *****************************************************************************
 */
 
-#if HAVE_LIBPCAP
 
 #include <pcap.h>
 
@@ -45,6 +44,8 @@
 #if HAVE_SYS_WAIT_H
   #include <sys/wait.h>
 #endif
+
+#if USE_LIBPCAP
 
 /* The pcap capture routine.
 */
@@ -335,6 +336,6 @@ pcap_capture(fko_srv_options_t *opts)
     return(0);
 }
 
-#endif /* HAVE_LIBPCAP */
+#endif /* USE_LIBPCAP */
 
 /***EOF***/

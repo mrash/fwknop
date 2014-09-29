@@ -166,19 +166,15 @@ if test "x$want_fuzzing_interfaces" = "xyes"; then
     AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
 fi
 
-dnl Decide whether or not to enable UDP listener mode (no libpcap dependency)
+dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
 dnl
-want_udp_listener=no
+want_udp_server=no
 AC_ARG_ENABLE([udp-server],
   [AS_HELP_STRING([--enable-udp-server],
-    [Enable UDP listener mode (no libpcap dependency) @<:@default is to disable@:>@])],
-  [want_udp_listener=$enableval],
+    [Enable UDP server mode for no libpcap dependency @<:@default is to disable@:>@])],
+  [want_udp_server=$enableval],
   [])
-AM_CONDITIONAL([UDP_LISTENER], [test "$want_udp_listener" = yes])
-
-#if test "$want_udp_listener" = yes; then
-#    AC_DEFINE([UDP_LISTENER], [1], [Define for UDP listener mode])
-#fi
+AM_CONDITIONAL([UDP_SERVER], [test "$want_udp_server" = yes])
 
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
@@ -445,17 +441,16 @@ dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
 
-  use_libpcap=no
-  AS_IF([test "$want_udp_listener" = no], [
+  have_libpcap=no
+  AS_IF([test "$want_udp_server" = no], [
     # Looking for libpcap
     #
     AC_CHECK_LIB([pcap],[pcap_open_live],
-      [ AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]) ],
+      [ AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap]) ],
       [ AC_MSG_ERROR([fwknopd needs libpcap])]
     )
-    use_libpcap=yes
+    have_libpcap=yes
   ])
-  AM_CONDITIONAL([USE_LIBPCAP], [test x$use_libpcap = xyes])
 
   AS_IF([test "$want_digest_cache" = yes], [
     use_ndbm=no
@@ -694,8 +689,8 @@ if [test "$want_server" = "yes" ]; then
         firewall type:              $FIREWALL_TYPE
         firewall program path:      $FIREWALL_EXE
 "
-if [test "$want_udp_listener" = "yes" ]; then
-  echo "    UDP listener mode enabled, no libpcap dependency
+if [test "$want_udp_server" = "yes" ]; then
+  echo "    UDP server mode enabled, no libpcap dependency
 "
     fi
 

@@ -41,7 +41,7 @@
   #include <sys/stat.h>
 #endif
 
-#if HAVE_LIBPCAP
+#if USE_LIBPCAP
   #include <pcap.h>
 #endif
 
@@ -101,7 +101,11 @@
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
 #define DEF_TCPSERV_PORT                "62201"
-#define DEF_ENABLE_UDP_SERVER           "N"
+#if USE_LIBPCAP
+  #define DEF_ENABLE_UDP_SERVER           "N"
+#else
+  #define DEF_ENABLE_UDP_SERVER           "Y"
+#endif
 #define DEF_UDPSERV_PORT                "62201"
 #define DEF_UDPSERV_SELECT_TIMEOUT      "500000" /* half a second (in microseconds) */
 #define DEF_SYSLOG_IDENTITY             MY_NAME
