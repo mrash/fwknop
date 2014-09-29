@@ -2582,6 +2582,38 @@
         ],
         'positive_output_matches' => [qr/invalid\sPCAP_DISPATCH_COUNT/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid tcp server port',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    testtest',
+        ],
+        'server_conf_file' => [
+            'TCPSERV_PORT        9999999999'
+        ],
+        'positive_output_matches' => [qr/not in the range/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid udp server port',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    testtest',
+        ],
+        'server_conf_file' => [
+            'UDPSERV_PORT        9999999999'
+        ],
+        'positive_output_matches' => [qr/not in the range/],
+    },
 
     {
         'category' => 'basic operations',
