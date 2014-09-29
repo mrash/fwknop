@@ -58,10 +58,9 @@ run_udp_server(fko_srv_options_t *opts)
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
     char                sipbuf[MAX_IPV4_STR_LEN] = {0};
-    char msg[5000];
-    socklen_t clen;
-
+    char                dgram_msg[MAX_SPA_PACKET_LEN+1] = {0};
     unsigned short      port;
+    socklen_t           clen;
 
     port = strtol_wrapper(opts->config[CONF_UDPSERV_PORT],
             1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
@@ -103,7 +102,7 @@ run_udp_server(fko_srv_options_t *opts)
     }
 
     /* Construct local address structure */
-    memset(&saddr, 0, sizeof(saddr));
+    memset(&saddr, 0x0, sizeof(saddr));
     saddr.sin_family      = AF_INET;           /* Internet address family */
     saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
     saddr.sin_port        = htons(port);       /* Local port */
@@ -128,24 +127,10 @@ run_udp_server(fko_srv_options_t *opts)
     */
     while(1)
     {
-        /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
-        */
-        if(got_signal != 0)
+        if(sig_do_stop())
         {
-            if(got_sigint || got_sigterm || got_sighup)
-            {
-                close(s_sock);
-                return 1;
-            }
-            else if(got_sigusr1 || got_sigusr2)
-            {
-                /* Not doing anything with these yet.
-                */
-                got_sigusr1 = got_sigusr2 = 0;
-                got_signal = 0;
-            }
-            else
-                got_signal = 0;
+            close(s_sock);
+            return 1;
         }
 
         /* Check for any expired firewall rules and deal with them.
@@ -153,14 +138,12 @@ run_udp_server(fko_srv_options_t *opts)
         if(!opts->test)
             check_firewall_rules(opts);
 
-        clen = sizeof(caddr);
-
         /* Initialize and setup the socket for select.
         */
         FD_ZERO(&sfd_set);
         FD_SET(s_sock, &sfd_set);
 
-        /* Set our select timeout to 500 ms.
+        /* Set our select timeout to (500ms by default).
         */
         tv.tv_sec = 0;
         tv.tv_usec = 500000;
@@ -182,13 +165,12 @@ run_udp_server(fko_srv_options_t *opts)
 
         /* If we make it here then there is a datagram to process
         */
-        pkt_len = recvfrom(s_sock, msg, 5000, 0, (struct sockaddr *)&caddr, &clen);
+        clen = sizeof(caddr);
 
-        printf("-------------------------------------------------------\n");
-        msg[pkt_len] = 0;
-        printf("Received %d bytes:\n", pkt_len);
-        printf("%s",msg);
-        printf("\n-------------------------------------------------------\n");
+        pkt_len = recvfrom(s_sock, dgram_msg, MAX_SPA_PACKET_LEN,
+                0, (struct sockaddr *)&caddr, &clen);
+
+        dgram_msg[pkt_len] = 0x0;
 
         if(opts->verbose)
         {
@@ -204,7 +186,7 @@ run_udp_server(fko_srv_options_t *opts)
         {
             /* Copy the packet for SPA processing
             */
-            strlcpy((char *)opts->spa_pkt.packet_data, msg, pkt_len+1);
+            strlcpy((char *)opts->spa_pkt.packet_data, dgram_msg, pkt_len+1);
             opts->spa_pkt.packet_data_len = pkt_len;
             opts->spa_pkt.packet_proto    = IPPROTO_UDP;
             opts->spa_pkt.packet_src_ip   = caddr.sin_addr.s_addr;
@@ -215,9 +197,12 @@ run_udp_server(fko_srv_options_t *opts)
             incoming_spa(opts);
         }
 
+        memset(dgram_msg, 0x0, sizeof(dgram_msg));
+
         opts->packet_ctr += 1;
         if(opts->foreground == 1 && opts->verbose > 2)
-            log_msg(LOG_DEBUG, "run_udp_server() processed: %d packets", opts->packet_ctr);
+            log_msg(LOG_DEBUG, "run_udp_server() processed: %d packets",
+                    opts->packet_ctr);
 
         /* Count the set of processed packets (pcap_dispatch() return
          * value) - we use this as a comparison for --packet-limit regardless

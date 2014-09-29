@@ -44,6 +44,7 @@ extern sig_atomic_t got_sigchld;
 
 void sig_handler(int sig);
 int set_sig_handlers(void);
+int sig_do_stop(void);
 
 #endif /* SIG_HANDLER_H */
 
