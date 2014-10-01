@@ -275,4 +275,54 @@ proto_strtoint(const char *pr_str)
     return proto_int;
 }
 
+int
+add_argv(char **argv_new, int *argc_new,
+        const char *new_arg, fko_cli_options_t *opts)
+{
+    int buf_size = 0;
+
+    if(opts->verbose > 2)
+        log_msg(LOG_VERBOSITY_NORMAL, "[+] add_argv() + arg: %s", new_arg);
+
+    buf_size = strlen(new_arg) + 1;
+    argv_new[*argc_new] = calloc(1, buf_size);
+
+    if(argv_new[*argc_new] == NULL)
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "[*] Memory allocation error.");
+        return 0;
+    }
+    strlcpy(argv_new[*argc_new], new_arg, buf_size);
+
+    *argc_new += 1;
+
+    if(*argc_new >= MAX_CMDLINE_ARGS-1)
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "[*] max command line args exceeded.");
+        return 0;
+    }
+
+    argv_new[*argc_new] = NULL;
+
+    return 1;
+}
+
+void
+free_argv(char **argv_new, int *argc_new)
+{
+    int i;
+
+    if(argv_new == NULL || *argv_new == NULL)
+        return;
+
+    for (i=0; i < *argc_new; i++)
+    {
+        if(argv_new[i] == NULL)
+            break;
+        else
+            free(argv_new[i]);
+    }
+    return;
+}
+
 /***EOF***/

@@ -64,7 +64,6 @@ static int is_hostname_str_with_port(const char *str,
 static void enable_fault_injections(fko_cli_options_t * const opts);
 #endif
 
-#define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
 #define HOSTNAME_BUFSIZE            64                  /*!< Maximum size of a hostname string */
 #define CTX_DUMP_BUFSIZE            4096                /*!< Maximum size allocated to a FKO context dump */
@@ -985,12 +984,14 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
     FILE           *args_file_ptr = NULL;
 
     int             current_arg_ctr = 0;
-    int             argc_new = 0, args_broken = 0, buf_size=0;
+    int             argc_new = 0;
     int             i = 0;
 
     char            args_str[MAX_LINE_LEN] = {0};
     char            arg_tmp[MAX_LINE_LEN]  = {0};
     char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
+
+    memset(argv_new, 0x0, sizeof(argv_new));
 
     if(verify_file_perms_ownership(args_save_file) != 1)
         return 0;
@@ -1016,49 +1017,26 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
             else
             {
                 arg_tmp[current_arg_ctr] = '\0';
-                buf_size = strlen(arg_tmp) + 1;
-                argv_new[argc_new] = calloc(1, buf_size);
-                if (argv_new[argc_new] == NULL)
+                if (add_argv(argv_new, &argc_new, arg_tmp, options) != 1)
                 {
-                    log_msg(LOG_VERBOSITY_ERROR, "[*] calloc failure for cmd line arg.");
                     fclose(args_file_ptr);
                     return 0;
                 }
-                strlcpy(argv_new[argc_new], arg_tmp, buf_size);
                 current_arg_ctr = 0;
-                argc_new++;
-                if(argc_new >= MAX_CMDLINE_ARGS)
-                {
-                    log_msg(LOG_VERBOSITY_ERROR, "[*] max command line args exceeded.");
-                    args_broken = 1;
-                    break;
-                }
             }
         }
     }
     fclose(args_file_ptr);
 
-    if(! args_broken)
-    {
-        /* Reset the options index so we can run through them again.
-        */
-        optind = 0;
+    /* Reset the options index so we can run through them again.
+    */
+    optind = 0;
 
-        config_init(options, argc_new, argv_new);
-    }
+    config_init(options, argc_new, argv_new);
 
     /* Since we passed in our own copies, free up malloc'd memory
     */
-    for (i=0; i < argc_new; i++)
-    {
-        if(argv_new[i] == NULL)
-            break;
-        else
-            free(argv_new[i]);
-    }
-
-    if(args_broken)
-        return 0;
+    free_argv(argv_new, &argc_new);
 
     return 1;
 }

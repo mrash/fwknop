@@ -59,5 +59,7 @@ int     verify_file_perms_ownership(const char *file);
 int     resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_str, size_t ip_bufsize);
 short   proto_inttostr(int proto, char *proto_str, size_t proto_size);
 short   proto_strtoint(const char *pr_str);
+int     add_argv(char **argv_new, int *argc_new, const char *new_arg, fko_cli_options_t *opts);
+void    free_argv(char **argv_new, int *argc_new);
 
 #endif  /* UTILS_H */

@@ -31,6 +31,7 @@
 */
 #include "fwknop_common.h"
 #include "utils.h"
+#include <sys/wait.h>
 
 #include <errno.h>
 
@@ -306,20 +307,40 @@ parse_url(char *res_url, struct url* url)
 int
 resolve_ip_https(fko_cli_options_t *options)
 {
-    int     o1, o2, o3, o4, got_resp=0, i;
+    int     o1, o2, o3, o4, got_resp=0, i=0;
     char   *ndx, resp[MAX_IPV4_STR_LEN+1] = {0};
-    char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};
     struct  url url; /* for validation only */
-    FILE   *wget;
+    char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
-    memset(&url, 0, sizeof(url));
+    char   *wget_argv[MAX_CMDLINE_ARGS]; /* for execvpe() with no environment */
+    char   *output_args[4] = {"--secure-protocol=auto", "--quiet", "-O", "-"};
+    int     wget_argc=0;
+    int     pipe_fd[2];
+    pid_t   pid=0;
+    FILE   *output;
+    int     status;
+
+    memset(&url, 0x0, sizeof(url));
+    memset(wget_argv, 0x0, sizeof(wget_argv));
 
     if(options->wget_bin != NULL)
+    {
         strlcpy(wget_ssl_cmd, options->wget_bin, sizeof(wget_ssl_cmd));
+        if (add_argv(wget_argv, &wget_argc, options->wget_bin, options) != 1)
+        {
+            free_argv(wget_argv, &wget_argc);
+            return -1;
+        }
+    }
     else
     {
 #ifdef WGET_EXE
         strlcpy(wget_ssl_cmd, WGET_EXE, sizeof(wget_ssl_cmd));
+        if (add_argv(wget_argv, &wget_argc, WGET_EXE, options) != 1)
+        {
+            free_argv(wget_argv, &wget_argc);
+            return -1;
+        }
 #else
         log_msg(LOG_VERBOSITY_ERROR,
                 "[*] Use --wget-cmd <path> to specify path to the wget command.");
@@ -327,22 +348,36 @@ resolve_ip_https(fko_cli_options_t *options)
 #endif
     }
 
-    /* Tack on the SSL args to wget
-    */
-    strlcat(wget_ssl_cmd, WGET_RESOLVE_ARGS, sizeof(wget_ssl_cmd));
-
     /* See whether we're supposed to change the default wget user agent
     */
     if(! options->use_wget_user_agent)
     {
-        strlcat(wget_ssl_cmd, " -U '", sizeof(wget_ssl_cmd));
+        strlcat(wget_ssl_cmd, " -U ", sizeof(wget_ssl_cmd));
         strlcat(wget_ssl_cmd, options->http_user_agent, sizeof(wget_ssl_cmd));
-        strlcat(wget_ssl_cmd, "'", sizeof(wget_ssl_cmd));
+        if (add_argv(wget_argv, &wget_argc, "-U", options) != 1)
+        {
+            free_argv(wget_argv, &wget_argc);
+            return -1;
+        }
+        if (add_argv(wget_argv, &wget_argc, options->http_user_agent, options) != 1)
+        {
+            free_argv(wget_argv, &wget_argc);
+            return -1;
+        }
     }
 
     /* We collect the IP from wget's stdout
     */
-    strlcat(wget_ssl_cmd, " -O - ", sizeof(wget_ssl_cmd));
+    strlcat(wget_ssl_cmd,
+            " --secure-protocol=auto --quiet -O - ", sizeof(wget_ssl_cmd));
+    for (i=0; i < 4; i++)
+    {
+        if (add_argv(wget_argv, &wget_argc, output_args[i], options) != 1)
+        {
+            free_argv(wget_argv, &wget_argc);
+            return -1;
+        }
+    }
 
     if(options->resolve_url != NULL)
     {
@@ -361,44 +396,79 @@ resolve_ip_https(fko_cli_options_t *options)
         /* tack on the original URL to the wget command
         */
         strlcat(wget_ssl_cmd, options->resolve_url, sizeof(wget_ssl_cmd));
+        if (add_argv(wget_argv, &wget_argc, options->resolve_url, options) != 1)
+        {
+            free_argv(wget_argv, &wget_argc);
+            return -1;
+        }
     }
     else
     {
         /* tack on the default URL to the wget command
         */
         strlcat(wget_ssl_cmd, WGET_RESOLVE_URL_SSL, sizeof(wget_ssl_cmd));
+        if (add_argv(wget_argv, &wget_argc, WGET_RESOLVE_URL_SSL, options) != 1)
+        {
+            free_argv(wget_argv, &wget_argc);
+            return -1;
+        }
     }
 
     /* We drive wget to resolve the external IP via SSL. This may not
      * work on all platforms, but is a better strategy for now than
      * requiring that fwknop link against an SSL library.
     */
-    wget = popen(wget_ssl_cmd, "r");
-
-    if(wget == NULL)
+    if(pipe(pipe_fd) < 0)
     {
-        log_msg(LOG_VERBOSITY_ERROR, "[*] Could not run cmd: %s",
-                wget_ssl_cmd);
+        log_msg(LOG_VERBOSITY_ERROR, "[*] pipe() error");
         return -1;
     }
 
-    /* Expecting one line of wget output that contains the resolved IP.
-    */
-    if ((fgets(resp, sizeof(resp), wget)) != NULL)
+    pid = fork();
+    if (pid == 0)
     {
-        got_resp = 1;
+        close(pipe_fd[0]);
+        dup2(pipe_fd[1], STDOUT_FILENO);
+        dup2(pipe_fd[1], STDERR_FILENO);
+        execvpe(wget_argv[0], wget_argv, (char * const *)NULL);
     }
-    pclose(wget);
+    else if(pid == -1)
+    {
+        log_msg(LOG_VERBOSITY_INFO, "[*] Could not fork() for wget.");
+        return -1;
+    }
 
-    ndx = resp;
-    for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-        if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
-            break;
+    /* Only the parent process makes it here
+    */
+    close(pipe_fd[1]);
+    if ((output = fdopen(pipe_fd[0], "r")) != NULL)
+    {
+        if(fgets(resp, sizeof(resp), output) != NULL)
+        {
+            got_resp = 1;
+        }
     }
-    *(ndx+i) = '\0';
+    else
+    {
+        log_msg(LOG_VERBOSITY_INFO,
+                "[*] Could not fdopen() pipe output file descriptor.");
+        return -1;
+    }
+    fclose(output);
+
+    waitpid(pid, &status, 0);
+
+    free_argv(wget_argv, &wget_argc);
 
     if(got_resp)
     {
+        ndx = resp;
+        for(i=0; i<MAX_IPV4_STR_LEN; i++) {
+            if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
+                break;
+        }
+        *(ndx+i) = '\0';
+
         if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
                 && o1 >= 0 && o1 <= 255
                 && o2 >= 0 && o2 <= 255
@@ -413,7 +483,6 @@ resolve_ip_https(fko_cli_options_t *options)
             return 1;
         }
     }
-
     log_msg(LOG_VERBOSITY_ERROR,
         "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
     return -1;

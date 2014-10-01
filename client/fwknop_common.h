@@ -47,6 +47,10 @@
 */
 #define DEF_CONFIG_FILE MY_NAME".conf"
 
+/* Command line argument / argv handling
+*/
+#define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
+
 /* For time offset handling
 */
 #define MAX_TIME_STR_LEN        9
@@ -63,7 +67,6 @@
 #define HTTP_BACKUP_RESOLVE_HOST    "www.cipherdyne.com"
 #define HTTP_RESOLVE_URL            "/cgi-bin/myip"
 #define WGET_RESOLVE_URL_SSL        "https://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL
-#define WGET_RESOLVE_ARGS           " --secure-protocol=auto --quiet"
 #define HTTP_MAX_REQUEST_LEN        2000
 #define HTTP_MAX_RESPONSE_LEN       2000
 #define HTTP_MAX_USER_AGENT_LEN     100
