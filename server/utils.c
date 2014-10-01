@@ -30,20 +30,22 @@
 #include "log_msg.h"
 #include <stdarg.h>
 
+#define ASCII_LEN 17
+
 /* Generic hex dump function.
 */
 void
 hex_dump(const unsigned char *data, const int size)
 {
     int ln, i, j = 0;
-    char ascii_str[17] = {0};
+    char ascii_str[ASCII_LEN] = {0};
 
     for(i=0; i<size; i++)
     {
-        if((i % 16) == 0)
+        if((i % ASCII_LEN-1) == 0)
         {
             printf(" %s\n  0x%.4x:  ", ascii_str, i);
-            memset(ascii_str, 0x0, 17);
+            memset(ascii_str, 0x0, ASCII_LEN);
             j = 0;
         }
 
@@ -60,7 +62,7 @@ hex_dump(const unsigned char *data, const int size)
     ln = strlen(ascii_str);
     if(ln > 0)
     {
-        for(i=0; i < 16-ln; i++)
+        for(i=0; i < ASCII_LEN-ln-1; i++)
             printf("   ");
         if(ln < 8)
             printf(" ");
