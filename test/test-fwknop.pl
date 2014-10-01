@@ -5442,6 +5442,17 @@ sub client_save_spa_pkt() {
     return $rv;
 }
 
+sub run_last_args() {
+    my $test_hr = shift;
+
+    unlink $tmp_args_file if -e $tmp_args_file;
+
+    &write_test_file("fwknop -A tcp/22 -s -D 127.0.0.1 --verbose " .
+        "--get-key $local_key_file\n", $tmp_args_file);
+
+    return &generic_exec($test_hr);
+}
+
 sub rm_last_args() {
     my $test_hr = shift;
 

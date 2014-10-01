@@ -101,7 +101,7 @@
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--last-cmd",
-        'function' => \&generic_exec,
+        'function' => \&run_last_args,
         'cmdline'  => "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
             "$verbose_str",
     },
