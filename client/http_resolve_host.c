@@ -313,7 +313,6 @@ resolve_ip_https(fko_cli_options_t *options)
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
     char   *wget_argv[MAX_CMDLINE_ARGS]; /* for execvpe() with no environment */
-    char   *output_args[4] = {"--secure-protocol=auto", "--quiet", "-O", "-"};
     int     wget_argc=0;
     int     pipe_fd[2];
     pid_t   pid=0;
@@ -326,21 +325,11 @@ resolve_ip_https(fko_cli_options_t *options)
     if(options->wget_bin != NULL)
     {
         strlcpy(wget_ssl_cmd, options->wget_bin, sizeof(wget_ssl_cmd));
-        if (add_argv(wget_argv, &wget_argc, options->wget_bin, options) != 1)
-        {
-            free_argv(wget_argv, &wget_argc);
-            return -1;
-        }
     }
     else
     {
 #ifdef WGET_EXE
         strlcpy(wget_ssl_cmd, WGET_EXE, sizeof(wget_ssl_cmd));
-        if (add_argv(wget_argv, &wget_argc, WGET_EXE, options) != 1)
-        {
-            free_argv(wget_argv, &wget_argc);
-            return -1;
-        }
 #else
         log_msg(LOG_VERBOSITY_ERROR,
                 "[*] Use --wget-cmd <path> to specify path to the wget command.");
@@ -354,30 +343,12 @@ resolve_ip_https(fko_cli_options_t *options)
     {
         strlcat(wget_ssl_cmd, " -U ", sizeof(wget_ssl_cmd));
         strlcat(wget_ssl_cmd, options->http_user_agent, sizeof(wget_ssl_cmd));
-        if (add_argv(wget_argv, &wget_argc, "-U", options) != 1)
-        {
-            free_argv(wget_argv, &wget_argc);
-            return -1;
-        }
-        if (add_argv(wget_argv, &wget_argc, options->http_user_agent, options) != 1)
-        {
-            free_argv(wget_argv, &wget_argc);
-            return -1;
-        }
     }
 
     /* We collect the IP from wget's stdout
     */
     strlcat(wget_ssl_cmd,
             " --secure-protocol=auto --quiet -O - ", sizeof(wget_ssl_cmd));
-    for (i=0; i < 4; i++)
-    {
-        if (add_argv(wget_argv, &wget_argc, output_args[i], options) != 1)
-        {
-            free_argv(wget_argv, &wget_argc);
-            return -1;
-        }
-    }
 
     if(options->resolve_url != NULL)
     {
@@ -396,22 +367,18 @@ resolve_ip_https(fko_cli_options_t *options)
         /* tack on the original URL to the wget command
         */
         strlcat(wget_ssl_cmd, options->resolve_url, sizeof(wget_ssl_cmd));
-        if (add_argv(wget_argv, &wget_argc, options->resolve_url, options) != 1)
-        {
-            free_argv(wget_argv, &wget_argc);
-            return -1;
-        }
     }
     else
     {
         /* tack on the default URL to the wget command
         */
         strlcat(wget_ssl_cmd, WGET_RESOLVE_URL_SSL, sizeof(wget_ssl_cmd));
-        if (add_argv(wget_argv, &wget_argc, WGET_RESOLVE_URL_SSL, options) != 1)
-        {
-            free_argv(wget_argv, &wget_argc);
-            return -1;
-        }
+    }
+
+    if(strtoargv(wget_ssl_cmd, wget_argv, &wget_argc, options) != 1)
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "Error converting wget cmd str to argv");
+        return(-1);
     }
 
     /* We drive wget to resolve the external IP via SSL. This may not
@@ -421,6 +388,7 @@ resolve_ip_https(fko_cli_options_t *options)
     if(pipe(pipe_fd) < 0)
     {
         log_msg(LOG_VERBOSITY_ERROR, "[*] pipe() error");
+        free_argv(wget_argv, &wget_argc);
         return -1;
     }
 
@@ -435,6 +403,7 @@ resolve_ip_https(fko_cli_options_t *options)
     else if(pid == -1)
     {
         log_msg(LOG_VERBOSITY_INFO, "[*] Could not fork() for wget.");
+        free_argv(wget_argv, &wget_argc);
         return -1;
     }
 
@@ -452,6 +421,7 @@ resolve_ip_https(fko_cli_options_t *options)
     {
         log_msg(LOG_VERBOSITY_INFO,
                 "[*] Could not fdopen() pipe output file descriptor.");
+        free_argv(wget_argv, &wget_argc);
         return -1;
     }
     fclose(output);

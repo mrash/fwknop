@@ -276,6 +276,49 @@ proto_strtoint(const char *pr_str)
 }
 
 int
+strtoargv(char *args_str, char **argv_new, int *argc_new,
+        fko_cli_options_t *opts)
+{
+    int       current_arg_ctr = 0, i;
+    char      arg_tmp[MAX_LINE_LEN] = {0};
+
+    for (i=0; i < (int)strlen(args_str); i++)
+    {
+        if (!isspace(args_str[i]))
+        {
+            arg_tmp[current_arg_ctr] = args_str[i];
+            current_arg_ctr++;
+        }
+        else
+        {
+            if(current_arg_ctr > 0)
+            {
+                arg_tmp[current_arg_ctr] = '\0';
+                if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
+                {
+                    free_argv(argv_new, argc_new);
+                    return 0;
+                }
+                current_arg_ctr = 0;
+            }
+        }
+    }
+
+    /* pick up the last argument in the string
+    */
+    if(current_arg_ctr > 0)
+    {
+        arg_tmp[current_arg_ctr] = '\0';
+        if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
+        {
+            free_argv(argv_new, argc_new);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int
 add_argv(char **argv_new, int *argc_new,
         const char *new_arg, fko_cli_options_t *opts)
 {

@@ -982,13 +982,9 @@ static int
 run_last_args(fko_cli_options_t *options, const char * const args_save_file)
 {
     FILE           *args_file_ptr = NULL;
-
-    int             current_arg_ctr = 0;
-    int             argc_new = 0;
+    int             argc_new = 0, args_broken = 0;
     int             i = 0;
-
     char            args_str[MAX_LINE_LEN] = {0};
-    char            arg_tmp[MAX_LINE_LEN]  = {0};
     char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
 
     memset(argv_new, 0x0, sizeof(argv_new));
@@ -1007,26 +1003,15 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
         args_str[MAX_LINE_LEN-1] = '\0';
         if (options->verbose)
             log_msg(LOG_VERBOSITY_NORMAL, "Executing: %s", args_str);
-        for (i=0; i < (int)strlen(args_str); i++)
+        if(strtoargv(args_str, argv_new, &argc_new, options) != 1)
         {
-            if (!isspace(args_str[i]))
-            {
-                arg_tmp[current_arg_ctr] = args_str[i];
-                current_arg_ctr++;
-            }
-            else
-            {
-                arg_tmp[current_arg_ctr] = '\0';
-                if (add_argv(argv_new, &argc_new, arg_tmp, options) != 1)
-                {
-                    fclose(args_file_ptr);
-                    return 0;
-                }
-                current_arg_ctr = 0;
-            }
+            args_broken = 1;
         }
     }
     fclose(args_file_ptr);
+
+    if(args_broken)
+        return 0;
 
     /* Reset the options index so we can run through them again.
     */
