@@ -862,6 +862,7 @@ create_fwknoprc(const char *rcfile)
         "#GPG_EXE             /path/to/gpg\n"
         "#GPG_SIGNER          <signer ID>\n"
         "#GPG_RECIPIENT       <recipient ID>\n"
+		"#NO_SAVE_ARGS        N\n"
         "\n"
         "# User-provided named stanzas:\n"
         "\n"
