@@ -25,20 +25,20 @@
             android:textSize="20dip"
             />
     </LinearLayout>
-    <LinearLayout android:id="@+id/accessProtol"
+    <LinearLayout android:id="@+id/tcpAccessPortsl"
                   android:orientation="horizontal"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   >
         <TextView
-            android:id="@+id/accessProtoStr"
+            android:id="@+id/tcpAccessPortsStr"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Access Protocol: "
+            android:text="TCP Access Ports: "
             android:textSize="20dip"
             />
-        <Spinner
-            android:id="@+id/accessProto"
+        <EditText
+            android:id="@+id/tcpAccessPorts"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text=""
@@ -46,24 +46,23 @@
             android:textSize="20dip"
             />
     </LinearLayout>
-    <LinearLayout android:id="@+id/accessPortl"
+    <LinearLayout android:id="@+id/udpAccessPortsl"
                   android:orientation="horizontal"
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   >
         <TextView
-            android:id="@+id/accessPortStr"
+            android:id="@+id/udpAccessPortsStr"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Access Port: "
+            android:text="UDP Access Ports: "
             android:textSize="20dip"
             />
         <EditText
-            android:id="@+id/accessPort"
+            android:id="@+id/udpAccessPorts"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:text=""
-            android:inputType="numberDecimal"
             android:singleLine="true"
             android:textSize="20dip"
             />
