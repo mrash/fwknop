@@ -127,6 +127,7 @@ enum
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS,
     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY,
     FWKNOP_CLI_ARG_WGET_CMD,
+    FWKNOP_CLI_ARG_NO_SAVE_ARGS,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
@@ -173,7 +174,8 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       },
     { "RESOLVE_IP_HTTPS",      FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS      },
     { "RESOLVE_HTTP_ONLY",     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY     },
-    { "WGET_CMD",              FWKNOP_CLI_ARG_WGET_CMD              }
+    { "WGET_CMD",              FWKNOP_CLI_ARG_WGET_CMD              },
+    { "NO_SAVE_ARGS",          FWKNOP_CLI_ARG_NO_SAVE_ARGS          }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -860,6 +862,7 @@ create_fwknoprc(const char *rcfile)
         "#GPG_EXE             /path/to/gpg\n"
         "#GPG_SIGNER          <signer ID>\n"
         "#GPG_RECIPIENT       <recipient ID>\n"
+		"#NO_SAVE_ARGS        N\n"
         "\n"
         "# User-provided named stanzas:\n"
         "\n"
@@ -1265,6 +1268,13 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
             options->resolve_http_only = 1;
         else;
     }
+    /* avoid saving .fwknop.run by default */
+    else if (var->pos == FWKNOP_CLI_ARG_NO_SAVE_ARGS)
+    {
+        if (is_yes_str(val))
+            options->no_save_args = 1;
+        else;
+    }
     /* The variable is not a configuration variable */
     else
     {
@@ -1429,6 +1439,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_WGET_CMD :
             if (options->wget_bin != NULL)
                 strlcpy(val, options->wget_bin, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_NO_SAVE_ARGS :
+            bool_to_yesno(options->no_save_args, val, sizeof(val));
             break;
         default:
             log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
@@ -2183,6 +2196,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case NO_SAVE_ARGS:
                 options->no_save_args = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_NO_SAVE_ARGS, &var_bitmask);
                 break;
             case 'n':
                 /* We already handled this earlier, so we do nothing here
