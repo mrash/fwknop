@@ -75,6 +75,8 @@ int run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
     const int timeout, const fko_srv_options_t * const opts);
 int run_extcmd_as(uid_t uid, const char *cmd, char *so_buf,
     const size_t so_buf_sz, const int timeout, const fko_srv_options_t * const opts);
+int search_extcmd(const char *cmd, const int timeout, const char *substr_search,
+        const fko_srv_options_t * const opts);
 
 #endif /* EXTCMD_H */
 

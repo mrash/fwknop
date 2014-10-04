@@ -420,46 +420,19 @@ jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts, const int 
     int     exists = 0;
     char    cmd_buf[CMD_BUFSIZE]      = {0};
     char    chain_search[CMD_BUFSIZE] = {0};
-    char    line_buf[CMD_BUFSIZE]     = {0};
-    FILE   *ipt;
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS " 2>&1",
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
         fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].from_chain
     );
-
-    ipt = popen(cmd_buf, "r");
-
-    if(ipt == NULL)
-    {
-        log_msg(LOG_ERR,
-            "Got error %i trying to get rules list.\n", errno);
-        return(exists);
-    }
 
     /* include spaces on either side as produced by 'iptables -L' output
     */
     snprintf(chain_search, CMD_BUFSIZE-1, " %s ",
         fwc.chain[chain_num].to_chain);
 
-    while((fgets(line_buf, CMD_BUFSIZE-1, ipt)) != NULL)
-    {
-        /* Get past comments and empty lines (note: we only look at the
-         * first character).
-         */
-        if(IS_EMPTY_LINE(line_buf[0]))
-            continue;
-
-        if(strstr(line_buf, chain_search) != NULL)
-        {
-            exists = 1;
-            break;
-        }
-    }
-
-    pclose(ipt);
-
+    exists = search_extcmd(cmd_buf, 0, chain_search, opts);
 
     if(exists)
         log_msg(LOG_DEBUG, "jump_rule_exists_no_chk_support() jump rule found");
@@ -612,10 +585,26 @@ delete_all_chains(const fko_srv_options_t * const opts)
         /* Now flush and remove the chain.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1,
-            "(%s " IPT_FLUSH_CHAIN_ARGS "; %s " IPT_DEL_CHAIN_ARGS ")", // > /dev/null 2>&1",
+            "%s " IPT_FLUSH_CHAIN_ARGS,
             fwc.fw_command,
             fwc.chain[i].table,
-            fwc.chain[i].to_chain,
+            fwc.chain[i].to_chain
+        );
+
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
+        chop_newline(err_buf);
+
+        log_msg(LOG_DEBUG, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+        zero_cmd_buffers();
+
+        snprintf(cmd_buf, CMD_BUFSIZE-1,
+            "%s " IPT_DEL_CHAIN_ARGS,
             fwc.fw_command,
             fwc.chain[i].table,
             fwc.chain[i].to_chain
@@ -631,6 +620,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
         if(! EXTCMD_IS_SUCCESS(res))
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
     }
+    return;
 }
 
 static int

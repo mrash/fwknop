@@ -82,33 +82,31 @@ alarm_handler(int sig)
 */
 static int
 _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz,
-        const int timeout, const fko_srv_options_t * const opts)
+        const int timeout, const char *substr_search, const fko_srv_options_t * const opts)
 {
-    FILE   *ipt;
-    int     retval = 0;
     char    so_read_buf[IO_READ_BUF_LEN] = {0};
-    int     res;
-
     char   *argv_new[MAX_CMDLINE_ARGS]; /* for execvpe() */
     int     argc_new=0;
     int     pipe_fd[2];
     pid_t   pid=0;
     FILE   *output;
-    int     status;
+    int     retval = 0, status;
+    int     line_ctr = 0, found_str = 0;
 
     memset(argv_new, 0x0, sizeof(argv_new));
 
     if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
     {
-        log_msg(LOG_ERR, "Error converting cmd str to argv");
+        log_msg(LOG_ERR,
+                "run_extcmd: Error converting cmd str to argv via strtoargv()");
         return(-1);
     }
 
-    if(so_buf != NULL)
+    if(so_buf != NULL || substr_search != NULL)
     {
         if(pipe(pipe_fd) < 0)
         {
-            log_msg(LOG_ERR, "[*] pipe() error");
+            log_msg(LOG_ERR, "run_extcmd: pipe() failed: %s", strerror(errno));
             free_argv(argv_new, &argc_new);
             return -1;
         }
@@ -117,12 +115,25 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     pid = fork();
     if (pid == 0)
     {
-        if(so_buf != NULL)
+        if(so_buf != NULL || substr_search != NULL)
         {
             close(pipe_fd[0]);
             dup2(pipe_fd[1], STDOUT_FILENO);
             dup2(pipe_fd[1], STDERR_FILENO);
         }
+
+        /* If user is not null, then we setuid to that user before running the
+        * command.
+        */
+#if 0
+        if(user_uid > 0)
+        {
+            if(setuid(user_uid) < 0)
+            {
+                exit(EXTCMD_SETUID_ERROR);
+            }
+        }
+#endif
 
         /* don't use env
         */
@@ -130,106 +141,72 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     }
     else if(pid == -1)
     {
-        log_msg(LOG_ERR, "[*] Could not fork() for cmd.");
+        log_msg(LOG_ERR, "run_extcmd: fork() failed: %s", strerror(errno));
         free_argv(argv_new, &argc_new);
         return -1;
     }
 
     /* Only the parent process makes it here
     */
-    if(so_buf != NULL)
+    if(so_buf != NULL || substr_search != NULL)
     {
         close(pipe_fd[1]);
         if ((output = fdopen(pipe_fd[0], "r")) != NULL)
         {
-            memset(so_buf, 0x0, so_buf_sz);
+            if(so_buf != NULL)
+                memset(so_buf, 0x0, so_buf_sz);
 
             while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
             {
-                strlcat(so_buf, so_read_buf, so_buf_sz);
+                line_ctr++;
 
-                if(strlen(so_buf) >= so_buf_sz-1)
-                    break;
+                if(so_buf != NULL)
+                {
+                    strlcat(so_buf, so_read_buf, so_buf_sz);
+
+                    if(strlen(so_buf) >= so_buf_sz-1)
+                        break;
+                }
+                else /* we are looking for a substring */
+                {
+                    /* Get past comments and empty lines (note: we only look at the
+                     * first character).
+                     */
+                    if(IS_EMPTY_LINE(so_read_buf[0]))
+                        continue;
+
+                    if(strstr(so_read_buf, substr_search) != NULL)
+                    {
+                        found_str = 1;
+                        break;
+                    }
+                }
             }
             fclose(output);
         }
         else
         {
             log_msg(LOG_ERR,
-                    "[*] Could not fdopen() pipe output file descriptor.");
+                    "run_extcmd: could not fdopen() pipe output file descriptor.");
             free_argv(argv_new, &argc_new);
             return -1;
         }
     }
 
-    waitpid(pid, &status, 0);
-
     free_argv(argv_new, &argc_new);
 
-    return(retval);
+    waitpid(pid, &status, 0);
 
-
-
-    if(so_buf == NULL)
+    if(substr_search != NULL)
     {
-
-        /* Since we do not have to capture output, we will fork here (which we
-         * would have to do anyway if we are running as another user as well).
-        */
-        pid = fork();
-        if(pid == -1)
-        {
-            log_msg(LOG_ERR, "run_extcmd: fork failed: %s", strerror(errno));
-            return(EXTCMD_FORK_ERROR);
-        }
-        else if (pid == 0)
-        {
-            /* We are the child */
-            /* If user is not null, then we setuid to that user before running the
-            * command.
-            */
-            if(user_uid > 0)
-            {
-                if(setuid(user_uid) < 0)
-                {
-                    exit(EXTCMD_SETUID_ERROR);
-                }
-            }
-            res = system(cmd);
-            exit(WEXITSTATUS(res));
-        }
-
-        /* Retval is forced to 0 as we don't care about the exit status of
-         * the child (for now)>
-        */
-        retval = 0;
+        if(found_str)
+            retval = line_ctr;
+        else
+            retval = 0;
     }
     else
-    {
-        /* Looking for output use popen and fill the buffer to its limit.
-        */
-        ipt = popen(cmd, "r");
-
-        if(ipt == NULL)
-        {
-            log_msg(LOG_ERR, "Got popen error %i:  %s", errno, strerror(errno));
-            retval = -1;
-        }
-        else
-        {
-            memset(so_buf, 0x0, so_buf_sz);
-
-            while((fgets(so_read_buf, IO_READ_BUF_LEN, ipt)) != NULL)
-            {
-                strlcat(so_buf, so_read_buf, so_buf_sz);
-
-                if(strlen(so_buf) >= so_buf_sz-1)
-                    break;
-            }
-
-            pclose(ipt);
-        }
-    }
+        //retval = status;
+        retval = 0;
 
     return(retval);
 }
@@ -445,20 +422,29 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
 }
 #endif
 
-/* Run an external command.  This is wrapper around _run_extcmd()
+/* _run_extcmd() wrapper, run an external command.
 */
 int
 run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
         const int timeout, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout, opts);
+    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout, NULL, opts);
 }
 
-/* Run an external command as the specified user.  This is wrapper around _run_extcmd()
+/* _run_extcmd() wrapper, run an external command as the specified user.
 */
 int
 run_extcmd_as(uid_t user_uid, const char *cmd,char *so_buf, const size_t so_buf_sz,
         const int timeout, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout, opts);
+    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout, NULL, opts);
+}
+
+/* _run_extcmd() wrapper, search command output for a substring.
+*/
+int
+search_extcmd(const char *cmd, const int timeout, const char *substr_search,
+        const fko_srv_options_t * const opts)
+{
+    return _run_extcmd(0, cmd, NULL, 0, timeout, substr_search, opts);
 }
