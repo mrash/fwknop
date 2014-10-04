@@ -95,10 +95,13 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
 
     memset(argv_new, 0x0, sizeof(argv_new));
 
+    if(opts->verbose > 2)
+        log_msg(LOG_INFO, "run_extcmd(): running CMD: %s", cmd);
+
     if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
     {
         log_msg(LOG_ERR,
-                "run_extcmd: Error converting cmd str to argv via strtoargv()");
+                "run_extcmd(): Error converting cmd str to argv via strtoargv()");
         return(-1);
     }
 
@@ -106,7 +109,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     {
         if(pipe(pipe_fd) < 0)
         {
-            log_msg(LOG_ERR, "run_extcmd: pipe() failed: %s", strerror(errno));
+            log_msg(LOG_ERR, "run_extcmd(): pipe() failed: %s", strerror(errno));
             free_argv(argv_new, &argc_new);
             return -1;
         }
@@ -141,7 +144,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     }
     else if(pid == -1)
     {
-        log_msg(LOG_ERR, "run_extcmd: fork() failed: %s", strerror(errno));
+        log_msg(LOG_ERR, "run_extcmd(): fork() failed: %s", strerror(errno));
         free_argv(argv_new, &argc_new);
         return -1;
     }
@@ -187,7 +190,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         else
         {
             log_msg(LOG_ERR,
-                    "run_extcmd: could not fdopen() pipe output file descriptor.");
+                    "run_extcmd(): could not fdopen() pipe output file descriptor.");
             free_argv(argv_new, &argc_new);
             return -1;
         }

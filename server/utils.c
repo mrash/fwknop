@@ -30,22 +30,22 @@
 #include "log_msg.h"
 #include <stdarg.h>
 
-#define ASCII_LEN 17
+#define ASCII_LEN 16
 
 /* Generic hex dump function.
 */
 void
 hex_dump(const unsigned char *data, const int size)
 {
-    int ln, i, j = 0;
-    char ascii_str[ASCII_LEN] = {0};
+    int ln=0, i=0, j=0;
+    char ascii_str[ASCII_LEN+1] = {0};
 
     for(i=0; i<size; i++)
     {
-        if((i % ASCII_LEN-1) == 0)
+        if((i % ASCII_LEN) == 0)
         {
             printf(" %s\n  0x%.4x:  ", ascii_str, i);
-            memset(ascii_str, 0x0, ASCII_LEN);
+            memset(ascii_str, 0x0, ASCII_LEN-1);
             j = 0;
         }
 
@@ -62,13 +62,14 @@ hex_dump(const unsigned char *data, const int size)
     ln = strlen(ascii_str);
     if(ln > 0)
     {
-        for(i=0; i < ASCII_LEN-ln-1; i++)
+        for(i=0; i < ASCII_LEN-ln; i++)
             printf("   ");
         if(ln < 8)
             printf(" ");
 
         printf(" %s\n\n", ascii_str);
     }
+    return;
 }
 
 /* Basic directory checks (stat() and whether the path is actually
@@ -169,7 +170,7 @@ add_argv(char **argv_new, int *argc_new,
 {
     int buf_size = 0;
 
-    if(opts->verbose > 2)
+    if(opts->verbose > 3)
         log_msg(LOG_INFO, "[+] add_argv() + arg: %s", new_arg);
 
     buf_size = strlen(new_arg) + 1;
