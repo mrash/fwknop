@@ -47,10 +47,6 @@
 */
 #define DEF_CONFIG_FILE MY_NAME".conf"
 
-/* Command line argument / argv handling
-*/
-#define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
-
 /* For time offset handling
 */
 #define MAX_TIME_STR_LEN        9

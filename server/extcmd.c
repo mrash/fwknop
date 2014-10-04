@@ -33,15 +33,6 @@
 #include "log_msg.h"
 #include "utils.h"
 
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/select.h>
-*/
 #include <errno.h>
 #include <signal.h>
 
@@ -83,20 +74,101 @@ alarm_handler(int sig)
 }
 */
 
-/* Run en external command returning exit status, and optionally filling
+/* Run an external command returning exit status, and optionally filling
  * provided  buffer with STDOUT output up to the size provided.
  *
  * Note: XXX: We are not using the timeout parameter at present. We still need
  *       to implement a reliable timeout mechanism.
 */
 static int
-_run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
+_run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz,
+        const int timeout, const fko_srv_options_t * const opts)
 {
     FILE   *ipt;
     int     retval = 0;
     char    so_read_buf[IO_READ_BUF_LEN] = {0};
-    pid_t   pid;
     int     res;
+
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for execvpe() */
+    int     argc_new=0;
+    int     pipe_fd[2];
+    pid_t   pid=0;
+    FILE   *output;
+    int     status;
+
+    memset(argv_new, 0x0, sizeof(argv_new));
+
+    if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
+    {
+        log_msg(LOG_ERR, "Error converting cmd str to argv");
+        return(-1);
+    }
+
+    if(so_buf != NULL)
+    {
+        if(pipe(pipe_fd) < 0)
+        {
+            log_msg(LOG_ERR, "[*] pipe() error");
+            free_argv(argv_new, &argc_new);
+            return -1;
+        }
+    }
+
+    pid = fork();
+    if (pid == 0)
+    {
+        if(so_buf != NULL)
+        {
+            close(pipe_fd[0]);
+            dup2(pipe_fd[1], STDOUT_FILENO);
+            dup2(pipe_fd[1], STDERR_FILENO);
+        }
+
+        /* don't use env
+        */
+        execvpe(argv_new[0], argv_new, (char * const *)NULL);
+    }
+    else if(pid == -1)
+    {
+        log_msg(LOG_ERR, "[*] Could not fork() for cmd.");
+        free_argv(argv_new, &argc_new);
+        return -1;
+    }
+
+    /* Only the parent process makes it here
+    */
+    if(so_buf != NULL)
+    {
+        close(pipe_fd[1]);
+        if ((output = fdopen(pipe_fd[0], "r")) != NULL)
+        {
+            memset(so_buf, 0x0, so_buf_sz);
+
+            while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
+            {
+                strlcat(so_buf, so_read_buf, so_buf_sz);
+
+                if(strlen(so_buf) >= so_buf_sz-1)
+                    break;
+            }
+            fclose(output);
+        }
+        else
+        {
+            log_msg(LOG_ERR,
+                    "[*] Could not fdopen() pipe output file descriptor.");
+            free_argv(argv_new, &argc_new);
+            return -1;
+        }
+    }
+
+    waitpid(pid, &status, 0);
+
+    free_argv(argv_new, &argc_new);
+
+    return(retval);
+
+
 
     if(so_buf == NULL)
     {
@@ -376,16 +448,17 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
 /* Run an external command.  This is wrapper around _run_extcmd()
 */
 int
-run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
+run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
+        const int timeout, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout);
+    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout, opts);
 }
 
 /* Run an external command as the specified user.  This is wrapper around _run_extcmd()
 */
 int
-run_extcmd_as(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
+run_extcmd_as(uid_t user_uid, const char *cmd,char *so_buf, const size_t so_buf_sz,
+        const int timeout, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout);
+    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout, opts);
 }
-

@@ -150,6 +150,10 @@ enum {
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
 
+/* Command line argument / argv handling
+*/
+#define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
+
 #if HAVE_LIBFIU
   #define MAX_FAULT_TAG_LEN 128
 #endif

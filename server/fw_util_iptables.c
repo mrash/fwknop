@@ -81,7 +81,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     char    exp_ts_search[CMD_BUFSIZE] = {0};
     FILE   *ipt;
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS " 2>&1",
         opts->fw_config->fw_command,
         fwc->table,
         fwc->to_chain
@@ -155,7 +155,7 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHK_RULE_ARGS,
             opts->fw_config->fw_command, chain, rule);
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     chop_newline(err_buf);
 
     log_msg(LOG_DEBUG, "rule_exists_chk_support() CMD: '%s' (res: %d, err: %s)",
@@ -219,7 +219,7 @@ ipt_chk_support(const fko_srv_options_t * const opts)
         in_chain->target
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     chop_newline(err_buf);
 
     log_msg(LOG_DEBUG, "ipt_chk_support() CMD: '%s' (res: %d, err: %s)",
@@ -236,7 +236,7 @@ ipt_chk_support(const fko_srv_options_t * const opts)
         in_chain->target
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     chop_newline(err_buf);
 
     log_msg(LOG_DEBUG, "ipt_chk_support() CMD: '%s' (res: %d, err: %s)",
@@ -263,7 +263,7 @@ ipt_chk_support(const fko_srv_options_t * const opts)
         in_chain->from_chain,
         1
     );
-    run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
 
     return;
 }
@@ -289,7 +289,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
         in_chain->target
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     chop_newline(err_buf);
 
     log_msg(LOG_DEBUG, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
@@ -303,7 +303,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
         in_chain->from_chain
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0, opts);
     chop_newline(cmd_out);
 
     if(!EXTCMD_IS_SUCCESS(res))
@@ -327,7 +327,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
             in_chain->from_chain,
             1
         );
-        run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     }
 
     return res;
@@ -348,7 +348,7 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
         fwc.chain[chain_num].to_chain
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
 
     log_msg(LOG_DEBUG, "add_jump_rule() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
@@ -376,7 +376,7 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
         fwc.chain[chain_num].to_chain
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     chop_newline(err_buf);
 
     log_msg(LOG_DEBUG, "chain_exists() CMD: '%s' (res: %d, err: %s)",
@@ -423,7 +423,7 @@ jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts, const int 
     char    line_buf[CMD_BUFSIZE]     = {0};
     FILE   *ipt;
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS " 2>&1",
         fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].from_chain
@@ -513,7 +513,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
                 ch[i].table
             );
 
-            res = system(cmd_buf);
+            res = run_extcmd(cmd_buf, NULL, 0, 0, opts);
 
             log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
                 cmd_buf, res);
@@ -549,7 +549,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 
             fprintf(stdout, "\n");
             fflush(stdout);
-            res = system(cmd_buf);
+
+            res = run_extcmd(cmd_buf, NULL, 0, 0, opts);
 
             log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
                 cmd_buf, res);
@@ -593,7 +594,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
                 fwc.chain[i].to_chain
             );
 
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
             chop_newline(err_buf);
 
             log_msg(LOG_DEBUG, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
@@ -620,7 +621,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
             fwc.chain[i].to_chain
         );
 
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
         chop_newline(err_buf);
 
         log_msg(LOG_DEBUG, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
@@ -647,7 +648,7 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
         fwc.chain[chain_num].to_chain
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     chop_newline(err_buf);
 
     log_msg(LOG_DEBUG, "create_chain() CMD: '%s' (res: %d, err: %s)",
@@ -923,7 +924,7 @@ create_rule(const fko_srv_options_t * const opts,
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -A %s %s", opts->fw_config->fw_command, fw_chain, fw_rule);
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
     chop_newline(err_buf);
 
     log_msg(LOG_DEBUG, "create_rule() CMD: '%s' (res: %d, err: %s)",
@@ -1392,7 +1393,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             ch[i].to_chain
         );
 
-        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0, opts);
         chop_newline(cmd_out);
 
         log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
@@ -1500,7 +1501,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                     rule_num - rn_offset
                 );
 
-                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, opts);
                 chop_newline(err_buf);
 
                 log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",

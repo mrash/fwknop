@@ -312,7 +312,7 @@ resolve_ip_https(fko_cli_options_t *options)
     struct  url url; /* for validation only */
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
-    char   *wget_argv[MAX_CMDLINE_ARGS]; /* for execvpe() with no environment */
+    char   *wget_argv[MAX_CMDLINE_ARGS]; /* for execvpe() */
     int     wget_argc=0;
     int     pipe_fd[2];
     pid_t   pid=0;
@@ -398,7 +398,7 @@ resolve_ip_https(fko_cli_options_t *options)
         close(pipe_fd[0]);
         dup2(pipe_fd[1], STDOUT_FILENO);
         dup2(pipe_fd[1], STDERR_FILENO);
-        execvpe(wget_argv[0], wget_argv, (char * const *)NULL);
+        execvpe(wget_argv[0], wget_argv, (char * const *)NULL); /* don't use env */
     }
     else if(pid == -1)
     {
@@ -416,6 +416,7 @@ resolve_ip_https(fko_cli_options_t *options)
         {
             got_resp = 1;
         }
+        fclose(output);
     }
     else
     {
@@ -424,7 +425,6 @@ resolve_ip_https(fko_cli_options_t *options)
         free_argv(wget_argv, &wget_argc);
         return -1;
     }
-    fclose(output);
 
     waitpid(pid, &status, 0);
 

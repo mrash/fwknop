@@ -882,11 +882,11 @@ incoming_spa(fko_srv_options_t *opts)
                     log_msg(LOG_INFO, "[%s] (stanza #%d) Setting effective user to %s (UID=%i) before running command.",
                         spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
 
-                    res = run_extcmd_as(acc->cmd_exec_uid,
-                                        spadat.spa_message_remain, NULL, 0, 0);
+                    res = run_extcmd_as(acc->cmd_exec_uid, spadat.spa_message_remain,
+                            NULL, 0, 0, opts);
                 }
                 else /* Just run it as we are (root that is). */
-                    res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5);
+                    res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5, opts);
 
                 /* --DSS XXX: I have found that the status (and res for that
                  *            matter) have been unreliable indicators of the

@@ -60,7 +60,6 @@ int     resolve_dest_adr(const char *dns_str, struct addrinfo *hints, char *ip_s
 short   proto_inttostr(int proto, char *proto_str, size_t proto_size);
 short   proto_strtoint(const char *pr_str);
 int     strtoargv(char *args_str, char **argv_new, int *argc_new, fko_cli_options_t *opts);
-int     add_argv(char **argv_new, int *argc_new, const char *new_arg, fko_cli_options_t *opts);
 void    free_argv(char **argv_new, int *argc_new);
 
 #endif  /* UTILS_H */

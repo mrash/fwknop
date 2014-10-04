@@ -35,25 +35,25 @@
 
 /* iptables command args
 */
-#define IPT_CHK_RULE_ARGS       "-C %s %s"  /* 2>&1 is always added in the second %s */
-#define IPT_RULE_ARGS           "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s 2>&1"
-#define IPT_OUT_RULE_ARGS       "-t %s -p %i -d %s --sport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s 2>&1"
-#define IPT_FWD_RULE_ARGS       "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s 2>&1"
-#define IPT_DNAT_RULE_ARGS      "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i 2>&1"
-#define IPT_SNAT_RULE_ARGS      "-t %s -p %i -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s 2>&1"
-#define IPT_TMP_COMMENT_ARGS    "-t %s -I %s %i -s 127.0.0.2 -m comment --comment " TMP_COMMENT " -j %s 2>&1"
-#define IPT_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s 127.0.0.2 -p udp -j %s 2>&1"
-#define IPT_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s 127.0.0.2 -p udp -j %s 2>&1"
-#define IPT_DEL_RULE_ARGS       "-t %s -D %s %i 2>&1"
-#define IPT_NEW_CHAIN_ARGS      "-t %s -N %s 2>&1"
-#define IPT_FLUSH_CHAIN_ARGS    "-t %s -F %s 2>&1"
-#define IPT_CHAIN_EXISTS_ARGS   "-t %s -L %s -n 2>&1"
-#define IPT_DEL_CHAIN_ARGS      "-t %s -X %s 2>&1"
-#define IPT_CHK_JUMP_RULE_ARGS  "-t %s -j %s 2>&1"
-#define IPT_ADD_JUMP_RULE_ARGS  "-t %s -I %s %i -j %s 2>&1"
-#define IPT_DEL_JUMP_RULE_ARGS  "-t %s -D %s -j %s 2>&1"  /* let iptables work out the rule number */
-#define IPT_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n 2>&1"
-#define IPT_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers 2>&1"
+#define IPT_CHK_RULE_ARGS       "-C %s %s"
+#define IPT_RULE_ARGS           "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s"
+#define IPT_OUT_RULE_ARGS       "-t %s -p %i -d %s --sport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s"
+#define IPT_FWD_RULE_ARGS       "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s"
+#define IPT_DNAT_RULE_ARGS      "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i"
+#define IPT_SNAT_RULE_ARGS      "-t %s -p %i -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s"
+#define IPT_TMP_COMMENT_ARGS    "-t %s -I %s %i -s 127.0.0.2 -m comment --comment " TMP_COMMENT " -j %s"
+#define IPT_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s 127.0.0.2 -p udp -j %s"
+#define IPT_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s 127.0.0.2 -p udp -j %s"
+#define IPT_DEL_RULE_ARGS       "-t %s -D %s %i"
+#define IPT_NEW_CHAIN_ARGS      "-t %s -N %s"
+#define IPT_FLUSH_CHAIN_ARGS    "-t %s -F %s"
+#define IPT_CHAIN_EXISTS_ARGS   "-t %s -L %s -n"
+#define IPT_DEL_CHAIN_ARGS      "-t %s -X %s"
+#define IPT_CHK_JUMP_RULE_ARGS  "-t %s -j %s"
+#define IPT_ADD_JUMP_RULE_ARGS  "-t %s -I %s %i -j %s"
+#define IPT_DEL_JUMP_RULE_ARGS  "-t %s -D %s -j %s"  /* let iptables work out the rule number */
+#define IPT_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n"
+#define IPT_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers"
 
 int validate_ipt_chain_conf(const char * const chain_str);
 

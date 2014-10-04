@@ -163,4 +163,97 @@ verify_file_perms_ownership(const char *file)
     return res;
 }
 
+static int
+add_argv(char **argv_new, int *argc_new,
+        const char *new_arg, const fko_srv_options_t * const opts)
+{
+    int buf_size = 0;
+
+    if(opts->verbose > 2)
+        log_msg(LOG_INFO, "[+] add_argv() + arg: %s", new_arg);
+
+    buf_size = strlen(new_arg) + 1;
+    argv_new[*argc_new] = calloc(1, buf_size);
+
+    if(argv_new[*argc_new] == NULL)
+    {
+        log_msg(LOG_INFO, "[*] Memory allocation error.");
+        return 0;
+    }
+    strlcpy(argv_new[*argc_new], new_arg, buf_size);
+
+    *argc_new += 1;
+
+    if(*argc_new >= MAX_CMDLINE_ARGS-1)
+    {
+        log_msg(LOG_ERR, "[*] max command line args exceeded.");
+        return 0;
+    }
+
+    argv_new[*argc_new] = NULL;
+
+    return 1;
+}
+
+int
+strtoargv(const char * const args_str, char **argv_new, int *argc_new,
+        const fko_srv_options_t * const opts)
+{
+    int       current_arg_ctr = 0, i;
+    char      arg_tmp[MAX_LINE_LEN] = {0};
+
+    for (i=0; i < (int)strlen(args_str); i++)
+    {
+        if (!isspace(args_str[i]))
+        {
+            arg_tmp[current_arg_ctr] = args_str[i];
+            current_arg_ctr++;
+        }
+        else
+        {
+            if(current_arg_ctr > 0)
+            {
+                arg_tmp[current_arg_ctr] = '\0';
+                if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
+                {
+                    free_argv(argv_new, argc_new);
+                    return 0;
+                }
+                current_arg_ctr = 0;
+            }
+        }
+    }
+
+    /* pick up the last argument in the string
+    */
+    if(current_arg_ctr > 0)
+    {
+        arg_tmp[current_arg_ctr] = '\0';
+        if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
+        {
+            free_argv(argv_new, argc_new);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void
+free_argv(char **argv_new, int *argc_new)
+{
+    int i;
+
+    if(argv_new == NULL || *argv_new == NULL)
+        return;
+
+    for (i=0; i < *argc_new; i++)
+    {
+        if(argv_new[i] == NULL)
+            break;
+        else
+            free(argv_new[i]);
+    }
+    return;
+}
+
 /***EOF***/

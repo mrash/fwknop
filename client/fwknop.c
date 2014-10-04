@@ -983,7 +983,6 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
 {
     FILE           *args_file_ptr = NULL;
     int             argc_new = 0, args_broken = 0;
-    int             i = 0;
     char            args_str[MAX_LINE_LEN] = {0};
     char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
 
