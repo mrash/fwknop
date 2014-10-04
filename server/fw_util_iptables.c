@@ -71,30 +71,19 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         const char * const ip, const unsigned int port,
         const unsigned int exp_ts)
 {
-    int     rule_exists = 0;
+    int     rule_exists=0, rule_num=0, rtmp=0;
     char    cmd_buf[CMD_BUFSIZE]       = {0};
-    char    line_buf[CMD_BUFSIZE]      = {0};
     char    target_search[CMD_BUFSIZE] = {0};
     char    proto_search[CMD_BUFSIZE]  = {0};
     char    ip_search[CMD_BUFSIZE]     = {0};
     char    port_search[CMD_BUFSIZE]   = {0};
     char    exp_ts_search[CMD_BUFSIZE] = {0};
-    FILE   *ipt;
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS " 2>&1",
         opts->fw_config->fw_command,
         fwc->table,
         fwc->to_chain
     );
-
-    ipt = popen(cmd_buf, "r");
-
-    if(ipt == NULL)
-    {
-        log_msg(LOG_ERR,
-            "Got error %i trying to get rules list.\n", errno);
-        return(rule_exists);
-    }
 
     if(proto == IPPROTO_TCP)
         snprintf(proto_search, CMD_BUFSIZE-1, " tcp ");
@@ -110,26 +99,24 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     snprintf(ip_search, CMD_BUFSIZE-1, " %s ", ip);
     snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
 
-    while((fgets(line_buf, CMD_BUFSIZE-1, ipt)) != NULL)
+    /* search for each of the substrings, and require the returned
+     * rule number to be the same across all searches to return true
+    */
+    rtmp = search_extcmd(cmd_buf, 0, exp_ts_search, opts);
+
+    if(rtmp > 0)
     {
-        /* Get past comments and empty lines (note: we only look at the
-         * first character).
-         */
-        if(IS_EMPTY_LINE(line_buf[0]))
-            continue;
-
-        if((strstr(line_buf, exp_ts_search) != NULL)
-                && (strstr(line_buf, proto_search) != NULL)
-                && (strstr(line_buf, ip_search) != NULL)
-                && (strstr(line_buf, target_search) != NULL)
-                && (strstr(line_buf, port_search) != NULL))
-        {
-            rule_exists = 1;
-            break;
-        }
+        rule_num = rtmp;
+        rtmp = search_extcmd(cmd_buf, 0, proto_search, opts);
+        if(rtmp == rule_num)
+            rtmp = search_extcmd(cmd_buf, 0, ip_search, opts);
+            if(rtmp == rule_num)
+                rtmp = search_extcmd(cmd_buf, 0, target_search, opts);
+                if(rtmp == rule_num)
+                    rtmp = search_extcmd(cmd_buf, 0, port_search, opts);
+                    if(rtmp == rule_num)
+                        rule_exists = 1;
     }
-
-    pclose(ipt);
 
     if(rule_exists)
         log_msg(LOG_DEBUG,
@@ -432,7 +419,8 @@ jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts, const int 
     snprintf(chain_search, CMD_BUFSIZE-1, " %s ",
         fwc.chain[chain_num].to_chain);
 
-    exists = search_extcmd(cmd_buf, 0, chain_search, opts);
+    if(search_extcmd(cmd_buf, 0, chain_search, opts) > 0)
+        exists = 1;
 
     if(exists)
         log_msg(LOG_DEBUG, "jump_rule_exists_no_chk_support() jump rule found");
@@ -853,6 +841,14 @@ fw_initialize(const fko_srv_options_t * const opts)
 {
     int res = 1;
 
+    /* See if iptables offers the '-C' argument (older versions don't).  If not,
+     * then switch to parsing iptables -L output to find rules.
+    */
+    if(opts->ipt_disable_check_support)
+        have_ipt_chk_support = 0;
+    else
+        ipt_chk_support(opts);
+
     /* Flush the chains (just in case) so we can start fresh.
     */
     if(strncasecmp(opts->config[CONF_FLUSH_IPT_AT_INIT], "Y", 1) == 0)
@@ -881,14 +877,6 @@ fw_initialize(const fko_srv_options_t * const opts)
             res = 0;
         }
     }
-
-    /* See if iptables offers the '-C' argument (older versions don't).  If not,
-     * then switch to parsing iptables -L output to find rules.
-    */
-    if(opts->ipt_disable_check_support)
-        have_ipt_chk_support = 0;
-    else
-        ipt_chk_support(opts);
 
     return(res);
 }
