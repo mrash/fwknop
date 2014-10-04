@@ -98,8 +98,8 @@ public class Fwknop extends Activity {
     private EditText mPasswd;
     private EditText mHmac;
     private EditText mDestip;
-    private Spinner mAccessProto;
-    private EditText mAccessPort;
+    private EditText mTCPAccessPorts;
+    private EditText mUDPAccessPorts;
     private EditText mFwTimeout;
     private ImageButton mUnlock;
     private String access_str;
@@ -264,28 +264,48 @@ public class Fwknop extends Activity {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor edit = prefs.edit();
 //
-        if (this.mAccessProto != null
-                && (this.mAccessProto.getSelectedItem().toString().trim().toLowerCase().equals("tcp")
-                || this.mAccessProto.getSelectedItem().toString().trim().toLowerCase().equals("udp"))) {
-            this.access_str = mAccessProto.getSelectedItem().toString().toLowerCase() + "";
-            edit.putString("accessProto_str", mAccessProto.getSelectedItem().toString());
-        } else {
-            this.UIAlert("Input error", "Please enter a valip protocol (tcp/udp)", this);
+        this.access_str = "";
+        if (this.mTCPAccessPorts != null) {
+            if(!this.mTCPAccessPorts.getText().toString().equals("")){
+                String[] ports = this.mTCPAccessPorts.getText().toString().split(",");
+                for(int i = 0; i < ports.length; i++){
+                    try {
+                        int port = Integer.parseInt(ports[i]);
+                        if(i > 0)
+                            this.access_str = this.access_str + ",";
+                        this.access_str = this.access_str + "tcp/" + port;
+                    } catch (Exception e) {
+                        this.UIAlert("Input error", ports[i] + " is not a valid port number", this);
+                        return;
+                    }
+                }
+            }
+            edit.putString("tcpAccessPorts_str", mTCPAccessPorts.getText().toString());
+        }
+
+        if (this.mUDPAccessPorts != null) {
+            if(!this.mUDPAccessPorts.getText().toString().equals("")){
+                String[] ports = this.mUDPAccessPorts.getText().toString().split(",");
+                for(int i = 0; i < ports.length; i++){
+                    try {
+                        int port = Integer.parseInt(ports[i]);
+                        if(this.access_str != null && !this.access_str.equals(""))
+                            this.access_str = this.access_str + ",";
+                        this.access_str = this.access_str + "udp/" + port;
+                    } catch (Exception e) {
+                        this.UIAlert("Input error", ports[i] + " is not a valid port number", this);
+                        return;
+                    }
+                }
+            }
+            edit.putString("udpAccessPorts_str", mUDPAccessPorts.getText().toString());
+        }
+
+        if(this.access_str.equals("")){
+            this.UIAlert("Input error", "Please enter a TCP or UDP port", this);
             return;
         }
-
-        if (this.mAccessPort != null) {
-            int port;
-            try {
-                Integer.parseInt(this.mAccessPort.getText().toString());
-            } catch (Exception e) {
-                this.UIAlert("Input error", "Please enter a valid port number", this);
-                return;
-            }
-            this.access_str = this.access_str + "/" + mAccessPort.getText();
-            edit.putString("accessPort_str", mAccessPort.getText().toString());
-        }
-
+        
         if (this.mAllowip != null && this.mAllowip.getSelectedItem() != null && !this.mAllowip.getSelectedItem().toString().trim().equals("")) {
             if(mAllowip.getSelectedItem().toString().trim().equals("Source IP")) {
                 this.allowip_str = "0.0.0.0";
@@ -351,20 +371,10 @@ public class Fwknop extends Activity {
     public void setupWidgets() {
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        this.mAccessPort = (EditText) findViewById(R.id.accessPort);
-        this.mAccessPort.setText(prefs.getString("accessPort_str", "22"));
-
-        this.mAccessProto = (Spinner) findViewById(R.id.accessProto);
-        String[] arraySpinner = new String[]{"tcp", "udp"};
-        ArrayAdapter adapter = new ArrayAdapter(this, android.R.layout.simple_spinner_item, arraySpinner);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        this.mAccessProto.setAdapter(adapter);
-        if (prefs.getString("accessProto_str", "tcp").equals("tcp")) {
-            this.mAccessProto.setSelection(0);
-        }
-        if (prefs.getString("accessProto_str", "tcp").equals("udp")) {
-            this.mAccessProto.setSelection(1);
-        }
+        this.mTCPAccessPorts = (EditText) findViewById(R.id.tcpAccessPorts);
+        this.mTCPAccessPorts.setText(prefs.getString("tcpAccessPorts_str", "22"));
+        this.mUDPAccessPorts = (EditText) findViewById(R.id.udpAccessPorts);
+        this.mUDPAccessPorts.setText(prefs.getString("udpAccessPorts_str", null));
 
         this.mAllowip = (Spinner) findViewById(R.id.allowip);
 
