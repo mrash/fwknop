@@ -38,6 +38,8 @@
  * may end up in.
 */
 enum {
+    EXTCMD_OPEN_ERROR               =   -6,
+    EXTCMD_ARGV_ERROR               =   -5,
     EXTCMD_SETUID_ERROR             =   -4,
     EXTCMD_SELECT_ERROR             =   -3,
     EXTCMD_PIPE_ERROR               =   -2,

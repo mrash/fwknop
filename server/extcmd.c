@@ -102,7 +102,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     {
         log_msg(LOG_ERR,
                 "run_extcmd(): Error converting cmd str to argv via strtoargv()");
-        return(-1);
+        return EXTCMD_ARGV_ERROR;
     }
 
     if(so_buf != NULL || substr_search != NULL)
@@ -111,7 +111,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         {
             log_msg(LOG_ERR, "run_extcmd(): pipe() failed: %s", strerror(errno));
             free_argv(argv_new, &argc_new);
-            return -1;
+            return EXTCMD_PIPE_ERROR;
         }
     }
 
@@ -146,7 +146,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     {
         log_msg(LOG_ERR, "run_extcmd(): fork() failed: %s", strerror(errno));
         free_argv(argv_new, &argc_new);
-        return -1;
+        return EXTCMD_FORK_ERROR;
     }
 
     /* Only the parent process makes it here
@@ -208,8 +208,18 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
             retval = 0;
     }
     else
-        //retval = status;
-        retval = 0;
+    {
+        if(WIFEXITED(status))
+        {
+            /* Even if the child exited with an error condition, if we make it here
+             * then the child exited normally as far as the OS is concerned (i.e. didn't
+             * crash or get hit with a signal)
+            */
+            retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+        }
+        else
+            retval = EXTCMD_EXECUTION_ERROR;
+    }
 
     return(retval);
 }
