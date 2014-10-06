@@ -82,7 +82,8 @@ alarm_handler(int sig)
 */
 static int
 _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz,
-        const int timeout, const char *substr_search, const fko_srv_options_t * const opts)
+        const int timeout, const char *substr_search, int *pid_status,
+        const fko_srv_options_t * const opts)
 {
     char    so_read_buf[IO_READ_BUF_LEN] = {0};
     char   *argv_new[MAX_CMDLINE_ARGS]; /* for execvpe() */
@@ -90,12 +91,13 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     int     pipe_fd[2];
     pid_t   pid=0;
     FILE   *output;
-    int     retval = 0, status;
+    int     retval = 0;
     int     line_ctr = 0, found_str = 0;
 
+    *pid_status = 0;
     memset(argv_new, 0x0, sizeof(argv_new));
 
-    if(opts->verbose > 2)
+    if(opts->verbose > 1)
         log_msg(LOG_INFO, "run_extcmd(): running CMD: %s", cmd);
 
     if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
@@ -128,7 +130,6 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         /* If user is not null, then we setuid to that user before running the
         * command.
         */
-#if 0
         if(user_uid > 0)
         {
             if(setuid(user_uid) < 0)
@@ -136,7 +137,6 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
                 exit(EXTCMD_SETUID_ERROR);
             }
         }
-#endif
 
         /* don't use env
         */
@@ -192,16 +192,19 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
             log_msg(LOG_ERR,
                     "run_extcmd(): could not fdopen() pipe output file descriptor.");
             free_argv(argv_new, &argc_new);
-            return -1;
+            return EXTCMD_OPEN_ERROR;
         }
     }
 
     free_argv(argv_new, &argc_new);
 
-    waitpid(pid, &status, 0);
+    waitpid(pid, pid_status, 0);
 
     if(substr_search != NULL)
     {
+        /* The semantics of the return value changes in search mode to the line
+         * number where the substring match was found, or zero if it wasn't found
+        */
         if(found_str)
             retval = line_ctr;
         else
@@ -209,7 +212,7 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     }
     else
     {
-        if(WIFEXITED(status))
+        if(WIFEXITED(*pid_status))
         {
             /* Even if the child exited with an error condition, if we make it here
              * then the child exited normally as far as the OS is concerned (i.e. didn't
@@ -220,6 +223,11 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         else
             retval = EXTCMD_EXECUTION_ERROR;
     }
+
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO,
+            "run_extcmd(): returning %d, pid_status: %d",
+            retval, WIFEXITED(*pid_status) ? WEXITSTATUS(*pid_status) : *pid_status);
 
     return(retval);
 }
@@ -439,25 +447,28 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
 */
 int
 run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
-        const int timeout, const fko_srv_options_t * const opts)
+        const int timeout, int *pid_status, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout, NULL, opts);
+    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout,
+            NULL, pid_status, opts);
 }
 
 /* _run_extcmd() wrapper, run an external command as the specified user.
 */
 int
 run_extcmd_as(uid_t user_uid, const char *cmd,char *so_buf, const size_t so_buf_sz,
-        const int timeout, const fko_srv_options_t * const opts)
+        const int timeout, int *pid_status, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout, NULL, opts);
+    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout, NULL,
+            pid_status, opts);
 }
 
 /* _run_extcmd() wrapper, search command output for a substring.
 */
 int
 search_extcmd(const char *cmd, const int timeout, const char *substr_search,
-        const fko_srv_options_t * const opts)
+        int *pid_status, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, cmd, NULL, 0, timeout, substr_search, opts);
+    return _run_extcmd(0, cmd, NULL, 0, timeout, substr_search,
+            pid_status, opts);
 }

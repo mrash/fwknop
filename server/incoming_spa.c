@@ -299,7 +299,7 @@ incoming_spa(fko_srv_options_t *opts)
 
     char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;
     time_t          now_ts;
-    int             res, status, ts_diff, enc_type, stanza_num=0;
+    int             res, ts_diff, enc_type, stanza_num=0, pid_status=0;
     int             added_replay_digest = 0, pkt_data_len=0;
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
@@ -883,24 +883,24 @@ incoming_spa(fko_srv_options_t *opts)
                         spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
 
                     res = run_extcmd_as(acc->cmd_exec_uid, spadat.spa_message_remain,
-                            NULL, 0, 0, opts);
+                            NULL, 0, 0, &pid_status, opts);
                 }
                 else /* Just run it as we are (root that is). */
-                    res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5, opts);
+                    res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5, &pid_status, opts);
 
-                /* --DSS XXX: I have found that the status (and res for that
-                 *            matter) have been unreliable indicators of the
-                 *            actual exit status of some commands.  Not sure
-                 *            why yet.  For now, we will take what we get.
+                /* should only call WEXITSTATUS() if WIFEXITED() is true
                 */
-                status = WEXITSTATUS(res);
+                log_msg(LOG_INFO,
+                    "[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d",
+                    spadat.pkt_source_ip, stanza_num, res,
+                    WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);
 
-                if(opts->verbose > 1)
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) CMD_EXEC: command returned %i",
-                        spadat.pkt_source_ip, stanza_num, status);
-
-                if(status != 0)
+                if(WIFEXITED(pid_status))
+                {
+                    if(WEXITSTATUS(pid_status) != 0)
+                        res = SPA_MSG_COMMAND_ERROR;
+                }
+                else
                     res = SPA_MSG_COMMAND_ERROR;
 
                 /* we processed the command on a matching access stanza, so we
