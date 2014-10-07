@@ -312,15 +312,21 @@ resolve_ip_https(fko_cli_options_t *options)
     struct  url url; /* for validation only */
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
+#if HAVE_EXECVPE
     char   *wget_argv[MAX_CMDLINE_ARGS]; /* for execvpe() */
     int     wget_argc=0;
     int     pipe_fd[2];
     pid_t   pid=0;
     FILE   *output;
     int     status;
+#else
+    FILE *wget;
+#endif
 
-    memset(&url, 0x0, sizeof(url));
+#if HAVE_EXECVPE
     memset(wget_argv, 0x0, sizeof(wget_argv));
+#endif
+    memset(&url, 0x0, sizeof(url));
 
     if(options->wget_bin != NULL)
     {
@@ -375,6 +381,7 @@ resolve_ip_https(fko_cli_options_t *options)
         strlcat(wget_ssl_cmd, WGET_RESOLVE_URL_SSL, sizeof(wget_ssl_cmd));
     }
 
+#if HAVE_EXECVPE
     if(strtoargv(wget_ssl_cmd, wget_argv, &wget_argc, options) != 1)
     {
         log_msg(LOG_VERBOSITY_ERROR, "Error converting wget cmd str to argv");
@@ -429,6 +436,23 @@ resolve_ip_https(fko_cli_options_t *options)
     waitpid(pid, &status, 0);
 
     free_argv(wget_argv, &wget_argc);
+
+#else /* fall back to popen() */
+    wget = popen(wget_ssl_cmd, "r");
+    if(wget == NULL)
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "[*] Could not run cmd: %s",
+                wget_ssl_cmd);
+        return -1;
+    }
+    /* Expecting one line of wget output that contains the resolved IP.
+     * */
+    if ((fgets(resp, sizeof(resp), wget)) != NULL)
+    {
+        got_resp = 1;
+    }
+    pclose(wget);
+#endif
 
     if(got_resp)
     {

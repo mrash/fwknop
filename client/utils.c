@@ -307,7 +307,6 @@ add_argv(char **argv_new, int *argc_new,
     return 1;
 }
 
-
 int
 strtoargv(char *args_str, char **argv_new, int *argc_new,
         fko_cli_options_t *opts)

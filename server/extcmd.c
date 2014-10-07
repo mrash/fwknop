@@ -86,19 +86,26 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         const fko_srv_options_t * const opts)
 {
     char    so_read_buf[IO_READ_BUF_LEN] = {0};
+
+#if HAVE_EXECVPE
     char   *argv_new[MAX_CMDLINE_ARGS]; /* for execvpe() */
     int     argc_new=0;
     int     pipe_fd[2];
+#endif
+
     pid_t   pid=0;
     FILE   *output;
     int     retval = 0;
     int     line_ctr = 0, found_str = 0;
 
     *pid_status = 0;
-    memset(argv_new, 0x0, sizeof(argv_new));
+
+#if HAVE_EXECVPE
 
     if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd(): running CMD: %s", cmd);
+        log_msg(LOG_INFO, "run_extcmd() (with execvpe()): running CMD: %s", cmd);
+
+    memset(argv_new, 0x0, sizeof(argv_new));
 
     if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
     {
@@ -199,6 +206,85 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     free_argv(argv_new, &argc_new);
 
     waitpid(pid, pid_status, 0);
+
+#else
+
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd() (without execvpe()): running CMD: %s", cmd);
+
+    if(so_buf == NULL && substr_search == NULL)
+    {
+        /* Since we do not have to capture output, we will fork here (which we
+         * * would have to do anyway if we are running as another user as well).
+         * */
+        pid = fork();
+        if(pid == -1)
+        {
+            log_msg(LOG_ERR, "run_extcmd: fork failed: %s", strerror(errno));
+            return(EXTCMD_FORK_ERROR);
+        }
+        else if (pid == 0)
+        {
+            /* We are the child */
+            /* If user is not null, then we setuid to that user before running the
+             * command.
+            */
+            if(user_uid > 0)
+            {
+                if(setuid(user_uid) < 0)
+                {
+                    exit(EXTCMD_SETUID_ERROR);
+                }
+            }
+            *pid_status = system(cmd);
+            exit(*pid_status);
+        }
+        /* Retval is forced to 0 as we don't care about the exit status of
+         * the child (for now)
+        */
+        retval = 0;
+    }
+    else
+    {
+        /* Looking for output use popen and fill the buffer to its limit.
+         */
+        output = popen(cmd, "r");
+        if(output == NULL)
+        {
+            log_msg(LOG_ERR, "Got popen error %i: %s", errno, strerror(errno));
+            retval = -1;
+        }
+        else
+        {
+            memset(so_buf, 0x0, so_buf_sz);
+            while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
+            {
+                if(so_buf != NULL)
+                {
+                    strlcat(so_buf, so_read_buf, so_buf_sz);
+                    if(strlen(so_buf) >= so_buf_sz-1)
+                        break;
+                }
+                else /* we are looking for a substring */
+                {
+                    /* Get past comments and empty lines (note: we only look at the
+                     * first character).
+                     */
+                    if(IS_EMPTY_LINE(so_read_buf[0]))
+                        continue;
+
+                    if(strstr(so_read_buf, substr_search) != NULL)
+                    {
+                        found_str = 1;
+                        break;
+                    }
+                }
+            }
+            pclose(output);
+        }
+    }
+
+#endif
 
     if(substr_search != NULL)
     {

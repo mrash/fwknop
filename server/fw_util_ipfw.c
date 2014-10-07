@@ -69,7 +69,7 @@ static int
 ipfw_set_exists(const fko_srv_options_t *opts,
     const char *fw_command, const unsigned short set_num)
 {
-    int res = 0;
+    int res = 0, pid_status=0;
 
     zero_cmd_buffers();
 
@@ -78,7 +78,8 @@ ipfw_set_exists(const fko_srv_options_t *opts,
         set_num
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+            0, &pid_status, opts);
 
     log_msg(LOG_DEBUG, "ipfw_set_exists() CMD: '%s' (res: %d)",
         cmd_buf, res);
@@ -98,7 +99,7 @@ ipfw_set_exists(const fko_srv_options_t *opts,
 int
 fw_dump_rules(const fko_srv_options_t * const opts)
 {
-    int     res, got_err = 0;
+    int     res, got_err = 0, pid_status = 0;
 
     if (opts->fw_list_all)
     {
@@ -113,7 +114,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             opts->fw_config->fw_command
         );
 
-        res = system(cmd_buf);
+        res = run_extcmd(cmd_buf, NULL, 0, 0, &pid_status, opts);
 
         log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
             cmd_buf, res);
@@ -140,7 +141,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         );
 
         printf("\nActive Rules:\n");
-        res = system(cmd_buf);
+        res = run_extcmd(cmd_buf, NULL, 0, 0, &pid_status, opts);
 
         log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
             cmd_buf, res);
@@ -160,7 +161,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         );
 
         printf("\nExpired Rules:\n");
-        res = system(cmd_buf);
+        res = run_extcmd(cmd_buf, NULL, 0, 0, &pid_status, opts);
 
         log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
             cmd_buf, res);
@@ -243,7 +244,7 @@ fw_config_init(fko_srv_options_t * const opts)
 int
 fw_initialize(const fko_srv_options_t * const opts)
 {
-    int             res = 0, is_err;
+    int             res = 0, is_err, pid_status=0;
     unsigned short  curr_rule;
     char           *ndx;
 
@@ -280,7 +281,7 @@ fw_initialize(const fko_srv_options_t * const opts)
             fwc.active_set_num
         );
 
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, &pid_status, opts);
 
         log_msg(LOG_DEBUG, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
             cmd_buf, res, err_buf);
@@ -310,7 +311,7 @@ fw_initialize(const fko_srv_options_t * const opts)
             fwc.expire_set_num
         );
 
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, &pid_status, opts);
 
         log_msg(LOG_DEBUG, "fw_initialize() CMD: '%s' (res: %d, err: %s)",
             cmd_buf, res, err_buf);
@@ -332,7 +333,8 @@ fw_initialize(const fko_srv_options_t * const opts)
         fwc.expire_set_num
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+            0, &pid_status, opts);
 
     log_msg(LOG_DEBUG, "fw_initialize() CMD: '%s' (res: %d)",
         cmd_buf, res);
@@ -392,7 +394,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 int
 fw_cleanup(const fko_srv_options_t * const opts)
 {
-    int     res, got_err = 0;
+    int     res, got_err = 0, pid_status = 0;
 
     if(strncasecmp(opts->config[CONF_FLUSH_IPFW_AT_EXIT], "N", 1) == 0)
     {
@@ -413,7 +415,7 @@ fw_cleanup(const fko_srv_options_t * const opts)
             fwc.active_set_num
         );
 
-        res = system(cmd_buf);
+        res = run_extcmd(cmd_buf, NULL, 0, 0, &pid_status, opts);
 
         log_msg(LOG_DEBUG, "fw_cleanup() CMD: '%s' (res: %d)",
             cmd_buf, res);
@@ -472,7 +474,7 @@ process_spa_request(const fko_srv_options_t * const opts,
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
 
-    int             res = 0;
+    int             res = 0, pid_status=0;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -526,7 +528,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 exp_ts
             );
 
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, &pid_status, opts);
 
             log_msg(LOG_DEBUG, "process_spa_request() CMD: '%s' (res: %d, err: %s)",
                 cmd_buf, res, err_buf);
@@ -590,7 +592,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char            rule_num_str[6] = {0};
     char           *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i=0, res=0, is_err;
+    int             i=0, res=0, is_err, pid_status=0;
     time_t          now, rule_exp, min_exp = 0;
     unsigned short  curr_rule;
 
@@ -620,7 +622,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         fwc.active_set_num
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+            0, &pid_status, opts);
 
     log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d)",
         cmd_buf, res);
@@ -726,7 +729,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                     fwc.expire_set_num
                 );
 
-                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0, &pid_status, opts);
 
                 log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
                     cmd_buf, res, err_buf);
@@ -780,7 +783,7 @@ void
 ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 {
     char           *ndx, *co_end;
-    int             i, res, is_err;
+    int             i, res, is_err, pid_status=0;
     unsigned short  curr_rule;
 
     /* First, we get the current active dynamic rules for the expired rule
@@ -794,7 +797,8 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
         fwc.expire_set_num
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+            0, &pid_status, opts);
 
     log_msg(LOG_DEBUG, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
         cmd_buf, res);
@@ -901,7 +905,8 @@ ipfw_purge_expired_rules(const fko_srv_options_t *opts)
             curr_rule
         );
 
-        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+                0, &pid_status, opts);
 
         log_msg(LOG_DEBUG, "ipfw_purge_expired_rules() CMD: '%s' (res: %d)",
             cmd_buf, res);
