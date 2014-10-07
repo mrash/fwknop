@@ -328,6 +328,8 @@ my $total_fuzzing_pkts = 0;
 my $server_test_file  = '';
 my $client_only_mode = 0;
 my $server_only_mode = 0;
+my $enable_cores_pattern_mode = 0;
+my $cores_pattern_sh = './generate_cores.sh';
 my $enable_fault_injection = 0;
 my $disable_fault_injection = 0;
 my $enable_valgrind = 0;
@@ -455,6 +457,7 @@ exit 1 unless GetOptions(
     'fuzzing-class=s'     => \$fuzzing_class,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
+    'enable-cores-pattern' => \$enable_cores_pattern_mode,
     'profile-coverage-init' => \$profile_coverage_init,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
@@ -509,6 +512,7 @@ if ($enable_complete) {
     $enable_fault_injection = 1;
     $enable_profile_coverage_check = 1;
     $enable_fuzzing_interfaces_tests = 1;
+    $enable_cores_pattern_mode = 1;
 }
 
 $enable_valgrind = 0 if $disable_valgrind;
@@ -6548,6 +6552,8 @@ sub init() {
         &run_cmd("$git_path log | grep commit | head -n 1",
             $cmd_out_tmp, $curr_test_file);
     }
+
+    system $cores_pattern_sh if $enable_cores_pattern_mode;
 
     return;
 }

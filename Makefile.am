@@ -346,6 +346,7 @@ EXTRA_DIST = \
     test/long_spa.key \
     test/invalid.args \
     test/test-fwknop.pl \
+    test/generate_cores.sh \
     test/fko-python.py \
     test/run-test-suite.sh \
     test/valgrind_suppressions \
