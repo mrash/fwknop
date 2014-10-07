@@ -49,6 +49,7 @@ our %cf = (
     'portrange_filter'             => "$conf_dir/portrange_fwknopd.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
     'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
+    'hmac_cmd_setuid_access'       => "$conf_dir/hmac_cmd_setuid_access.conf",
     'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
     'hmac_equal_keys_access'       => "$conf_dir/hmac_equal_keys_access.conf",
     'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
@@ -759,6 +760,7 @@ my %test_keys = (
     'server_access_file'  => $OPTIONAL,
     'server_conf_file'    => $OPTIONAL,
     'digest_cache_file'   => $OPTIONAL,
+    'cmd_exec_file_owner' => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
@@ -4351,6 +4353,15 @@ sub spa_cmd_exec_cycle() {
     my $rv = &spa_cycle($test_hr);
 
     if (-e $cmd_exec_test_file) {
+        if ($test_hr->{'cmd_exec_file_owner'}) {
+            my $user = getpwuid((stat($cmd_exec_test_file))[4]);
+            if ($user and $user eq 'nobody') {
+                &write_test_file("[+] $cmd_exec_test_file is owned by user 'nobody'\n",
+                    $curr_test_file);
+                &run_cmd("ls -l $cmd_exec_test_file", $cmd_out_tmp, $curr_test_file);
+                $rv = 1;
+            }
+        }
         unlink $cmd_exec_test_file;
     } else {
         $rv = 0;
@@ -6448,6 +6459,11 @@ sub init() {
         $username = getpwuid((stat($test_suite_path))[4]);
         die "[*] Could not determine $test_suite_path owner"
             unless $username;
+    }
+
+    ### see if the 'nobody' user is on the system
+    unless (getpwuid('nobody')) {
+        push @tests_to_exclude, qr/setuid nobody/;
     }
 
     ### On Mac OS X look for otool instead of ldd
