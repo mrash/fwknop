@@ -879,11 +879,14 @@ incoming_spa(fko_srv_options_t *opts)
                 */
                 if(acc->cmd_exec_user != NULL && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
                 {
-                    log_msg(LOG_INFO, "[%s] (stanza #%d) Setting effective user to %s (UID=%i) before running command.",
-                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
+                    log_msg(LOG_INFO,
+                            "[%s] (stanza #%d) setuid/setgid user/group to %s/%s (UID=%i,GID=%i) before running command.",
+                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user,
+                        acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
+                        acc->cmd_exec_uid, acc->cmd_exec_gid);
 
-                    res = run_extcmd_as(acc->cmd_exec_uid, spadat.spa_message_remain,
-                            NULL, 0, 0, &pid_status, opts);
+                    res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
+                            spadat.spa_message_remain, NULL, 0, 0, &pid_status, opts);
                 }
                 else /* Just run it as we are (root that is). */
                     res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5, &pid_status, opts);

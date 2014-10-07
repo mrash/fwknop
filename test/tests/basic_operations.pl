@@ -2856,6 +2856,23 @@
         ],
         'positive_output_matches' => [qr/Unable.*UID/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid CMD_EXEC_GROUP',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                 any',
+            'KEY                    testtest',
+            'CMD_EXEC_GROUP         invalid'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Unable.*GID/],
+    },
 
     {
         'category' => 'basic operations',

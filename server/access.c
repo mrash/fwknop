@@ -795,6 +795,9 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->cmd_exec_user != NULL)
         free(acc->cmd_exec_user);
 
+    if(acc->cmd_exec_group != NULL)
+        free(acc->cmd_exec_group);
+
     if(acc->require_username != NULL)
         free(acc->require_username);
 
@@ -1054,7 +1057,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 /* Perform some sanity checks on an acc stanza data.
 */
 static int
-acc_data_is_valid(acc_stanza_t * const acc)
+acc_data_is_valid(struct passwd *user_pw, acc_stanza_t * const acc)
 {
     if(acc == NULL)
     {
@@ -1142,6 +1145,16 @@ acc_data_is_valid(acc_stanza_t * const acc)
         );
     }
 
+    if(user_pw != NULL && acc->cmd_exec_uid != 0 && acc->cmd_exec_gid == 0)
+    {
+        log_msg(LOG_INFO,
+            "Setting gid to group associated with CMD_EXEC_USER '%s' for setgid() execution in stanza source: '%s'",
+            acc->cmd_exec_user,
+            acc->source
+        );
+        acc->cmd_exec_gid = user_pw->pw_gid;
+    }
+
     return(1);
 }
 
@@ -1159,7 +1172,8 @@ parse_access_file(fko_srv_options_t *opts)
     char            var[MAX_LINE_LEN] = {0};
     char            val[MAX_LINE_LEN] = {0};
 
-    struct passwd  *pw;
+    struct passwd  *pw = NULL;
+    struct passwd  *user_pw = NULL;
     struct stat     st;
 
     acc_stanza_t   *curr_acc = NULL;
@@ -1258,7 +1272,7 @@ parse_access_file(fko_srv_options_t *opts)
              * stanza for the minimum required data.
             */
             if(curr_acc != NULL) {
-                if(!acc_data_is_valid(curr_acc))
+                if(!acc_data_is_valid(user_pw, curr_acc))
                 {
                     log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
                         opts->config[CONF_ACCESS_FILE]);
@@ -1446,7 +1460,7 @@ parse_access_file(fko_srv_options_t *opts)
             }
 
             errno = 0;
-            pw = getpwnam(val);
+            user_pw = pw = getpwnam(val);
 
             if(pw == NULL)
             {
@@ -1457,6 +1471,27 @@ parse_access_file(fko_srv_options_t *opts)
             }
 
             curr_acc->cmd_exec_uid = pw->pw_uid;
+        }
+        else if(CONF_VAR_IS(var, "CMD_EXEC_GROUP"))
+        {
+            if(add_acc_string(&(curr_acc->cmd_exec_group), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+
+            errno = 0;
+            pw = getpwnam(val);
+
+            if(pw == NULL)
+            {
+                log_msg(LOG_ERR, "[*] Unable to determine GID for CMD_EXEC_GROUP: %s.",
+                    errno ? strerror(errno) : "Not a group on this system");
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+
+            curr_acc->cmd_exec_gid = pw->pw_gid;
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
         {
@@ -1683,7 +1718,7 @@ parse_access_file(fko_srv_options_t *opts)
 
     /* Sanity check the last stanza
     */
-    if(!acc_data_is_valid(curr_acc))
+    if(!acc_data_is_valid(user_pw, curr_acc))
     {
         log_msg(LOG_ERR,
             "[*] Data error in access file: '%s'",

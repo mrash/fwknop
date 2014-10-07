@@ -38,8 +38,10 @@
  * may end up in.
 */
 enum {
-    EXTCMD_OPEN_ERROR               =   -6,
-    EXTCMD_ARGV_ERROR               =   -5,
+    EXTCMD_CHDIR_ERROR              =   -8,
+    EXTCMD_OPEN_ERROR               =   -7,
+    EXTCMD_ARGV_ERROR               =   -6,
+    EXTCMD_SETGID_ERROR             =   -5,
     EXTCMD_SETUID_ERROR             =   -4,
     EXTCMD_SELECT_ERROR             =   -3,
     EXTCMD_PIPE_ERROR               =   -2,
@@ -75,7 +77,7 @@ enum {
 */
 int run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
     const int timeout, int *pid_status, const fko_srv_options_t * const opts);
-int run_extcmd_as(uid_t uid, const char *cmd, char *so_buf,
+int run_extcmd_as(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
     const size_t so_buf_sz, const int timeout, int *pid_status,
     const fko_srv_options_t * const opts);
 int search_extcmd(const char *cmd, const int timeout, const char *substr_search,

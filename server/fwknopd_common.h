@@ -348,7 +348,9 @@ typedef struct acc_stanza
     int                  fw_access_timeout;
     unsigned char        enable_cmd_exec;
     char                *cmd_exec_user;
+    char                *cmd_exec_group;
     uid_t                cmd_exec_uid;
+    gid_t                cmd_exec_gid;
     char                *require_username;
     unsigned char        require_source_address;
     char                *gpg_home_dir;

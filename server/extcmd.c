@@ -81,7 +81,7 @@ alarm_handler(int sig)
  *       to implement a reliable timeout mechanism.
 */
 static int
-_run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz,
+_run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf, const size_t so_buf_sz,
         const int timeout, const char *substr_search, int *pid_status,
         const fko_srv_options_t * const opts)
 {
@@ -127,6 +127,9 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
     pid = fork();
     if (pid == 0)
     {
+        if(chdir("/") != 0)
+            exit(EXTCMD_CHDIR_ERROR);
+
         if(so_buf != NULL || substr_search != NULL)
         {
             close(pipe_fd[0]);
@@ -134,12 +137,19 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
             dup2(pipe_fd[1], STDERR_FILENO);
         }
 
-        /* If user is not null, then we setuid to that user before running the
-        * command.
+        /* Take care of gid/uid settings before running the command.
         */
-        if(user_uid > 0)
+        if(gid > 0)
         {
-            if(setuid(user_uid) < 0)
+            if(setgid(gid) < 0)
+            {
+                exit(EXTCMD_SETGID_ERROR);
+            }
+        }
+
+        if(uid > 0)
+        {
+            if(setuid(uid) < 0)
             {
                 exit(EXTCMD_SETUID_ERROR);
             }
@@ -226,12 +236,23 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         else if (pid == 0)
         {
             /* We are the child */
-            /* If user is not null, then we setuid to that user before running the
-             * command.
+
+            if(chdir("/") != 0)
+                exit(EXTCMD_CHDIR_ERROR);
+
+            /* Take care of gid/uid settings before running the command.
             */
-            if(user_uid > 0)
+            if(gid > 0)
             {
-                if(setuid(user_uid) < 0)
+                if(setgid(gid) < 0)
+                {
+                    exit(EXTCMD_SETGID_ERROR);
+                }
+            }
+
+            if(uid > 0)
+            {
+                if(setuid(uid) < 0)
                 {
                     exit(EXTCMD_SETUID_ERROR);
                 }
@@ -354,9 +375,9 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         /* If user is not null, then we setuid to that user before running the
          * command.
         */
-        if(user_uid > 0)
+        if(uid > 0)
         {
-            if(setuid(user_uid) < 0)
+            if(setuid(uid) < 0)
             {
                 exit(EXTCMD_SETUID_ERROR);
             }
@@ -535,18 +556,19 @@ int
 run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
         const int timeout, int *pid_status, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout,
+    return _run_extcmd(0, 0, cmd, so_buf, so_buf_sz, timeout,
             NULL, pid_status, opts);
 }
 
 /* _run_extcmd() wrapper, run an external command as the specified user.
 */
 int
-run_extcmd_as(uid_t user_uid, const char *cmd,char *so_buf, const size_t so_buf_sz,
-        const int timeout, int *pid_status, const fko_srv_options_t * const opts)
+run_extcmd_as(uid_t uid, gid_t gid, const char *cmd,char *so_buf,
+        const size_t so_buf_sz, const int timeout, int *pid_status,
+        const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout, NULL,
-            pid_status, opts);
+    return _run_extcmd(uid, gid, cmd, so_buf, so_buf_sz,
+            timeout, NULL, pid_status, opts);
 }
 
 /* _run_extcmd() wrapper, search command output for a substring.
@@ -555,6 +577,6 @@ int
 search_extcmd(const char *cmd, const int timeout, const char *substr_search,
         int *pid_status, const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, cmd, NULL, 0, timeout, substr_search,
+    return _run_extcmd(0, 0, cmd, NULL, 0, timeout, substr_search,
             pid_status, opts);
 }

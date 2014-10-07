@@ -50,6 +50,7 @@ our %cf = (
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
     'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
     'hmac_cmd_setuid_access'       => "$conf_dir/hmac_cmd_setuid_access.conf",
+    'hmac_cmd_giduid_access'       => "$conf_dir/hmac_cmd_giduid_access.conf",
     'hmac_get_key_access'          => "$conf_dir/hmac_get_key_access.conf",
     'hmac_equal_keys_access'       => "$conf_dir/hmac_equal_keys_access.conf",
     'hmac_no_b64_access'           => "$conf_dir/hmac_no_b64_access.conf",
@@ -4354,7 +4355,7 @@ sub spa_cmd_exec_cycle() {
 
     if (-e $cmd_exec_test_file) {
         if ($test_hr->{'cmd_exec_file_owner'}) {
-            my $user = getpwuid((stat($cmd_exec_test_file))[4]);
+            my $user = (getpwuid((stat($cmd_exec_test_file))[4]))[0];
             if ($user and $user eq 'nobody') {
                 &write_test_file("[+] $cmd_exec_test_file is owned by user 'nobody'\n",
                     $curr_test_file);
@@ -6456,13 +6457,13 @@ sub init() {
     $perl_path    = &find_command('perl') unless $perl_path;
 
     if ($sudo_path) {
-        $username = getpwuid((stat($test_suite_path))[4]);
+        $username = (getpwuid((stat($test_suite_path))[4]))[0];
         die "[*] Could not determine $test_suite_path owner"
             unless $username;
     }
 
     ### see if the 'nobody' user is on the system
-    unless (getpwuid('nobody')) {
+    unless (getpwnam('nobody')) {
         push @tests_to_exclude, qr/setuid nobody/;
     }
 
