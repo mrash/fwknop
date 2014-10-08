@@ -488,7 +488,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
                 ch[i].table
             );
 
-            res = run_extcmd(cmd_buf, NULL, 0, 0, 0, &pid_status, opts);
+            res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR,
+                        NO_TIMEOUT, &pid_status, opts);
 
             log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
                 cmd_buf, res);
@@ -525,7 +526,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             fprintf(stdout, "\n");
             fflush(stdout);
 
-            res = run_extcmd(cmd_buf, NULL, 0, 0, 0, &pid_status, opts);
+            res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR,
+                        NO_TIMEOUT, &pid_status, opts);
 
             log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
                 cmd_buf, res);
