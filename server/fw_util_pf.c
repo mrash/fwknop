@@ -73,7 +73,10 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 
     fprintf(stdout, "\nActive Rules in PF anchor '%s':\n", opts->fw_config->anchor);
     fflush(stdout);
-    res = run_extcmd(cmd_buf, NULL, 0, 0, &pid_status, opts);
+
+    /* exclude stderr because ALTQ may not be available
+    */
+    res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR, NO_TIMEOUT, &pid_status, opts);
 
     /* Expect full success on this */
     if(! EXTCMD_IS_SUCCESS(res))
@@ -91,7 +94,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 static int
 anchor_active(const fko_srv_options_t *opts)
 {
-    int    res = 0;
+    int    res = 0, pid_status = 0;
     char   anchor_search_str[MAX_PF_ANCHOR_SEARCH_LEN] = {0};
 
     /* Build our anchor search string
@@ -105,27 +108,18 @@ anchor_active(const fko_srv_options_t *opts)
         opts->fw_config->fw_command
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
-
-    if(!EXTCMD_IS_SUCCESS(res))
-    {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
-        return 0;
-    }
-
     /* Check to see if the anchor exists and is linked into the main policy
     */
-
-    if(strstr(cmd_out, anchor_search_str) == NULL)
-        return 0;
-
-    return 1;
+    if(search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT,
+            anchor_search_str, &pid_status, opts) > 0)
+        return 1;
+    return 0;
 }
 
 static void
 delete_all_anchor_rules(const fko_srv_options_t *opts)
 {
-    int res = 0;
+    int res = 0, pid_status = 0;
 
     zero_cmd_buffers();
 
@@ -134,7 +128,8 @@ delete_all_anchor_rules(const fko_srv_options_t *opts)
         fwc.anchor
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
+                WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
 
     /* Expect full success on this */
     if(! EXTCMD_IS_SUCCESS(res))
@@ -204,7 +199,7 @@ process_spa_request(const fko_srv_options_t * const opts,
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
 
-    int             res = 0;
+    int             res = 0, pid_status = 0;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -240,7 +235,8 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             /* Cache the current anchor rule set
             */
-            res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+                        WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
 
             /* Build the new rule string
             */
@@ -347,7 +343,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char           *ndx, *tmp_mark, *tmp_ndx, *newline_tmp_ndx;
 
     time_t          now, rule_exp, min_exp=0;
-    int             i=0, res=0, anchor_ndx=0, is_delete=0;
+    int             i=0, res=0, anchor_ndx=0, is_delete=0, pid_status=0;
 
     FILE            *pfctl_fd = NULL;
 
@@ -372,8 +368,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         opts->fw_config->anchor
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
-
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+                WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
     if(!EXTCMD_IS_SUCCESS(res))
     {
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
