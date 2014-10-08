@@ -81,8 +81,9 @@ alarm_handler(int sig)
  *       to implement a reliable timeout mechanism.
 */
 static int
-_run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf, const size_t so_buf_sz,
-        const int timeout, const char *substr_search, int *pid_status,
+_run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
+        const size_t so_buf_sz, const int want_stderr, const int timeout,
+        const char *substr_search, int *pid_status,
         const fko_srv_options_t * const opts)
 {
     char    so_read_buf[IO_READ_BUF_LEN] = {0};
@@ -134,26 +135,21 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf, const size_t so
         {
             close(pipe_fd[0]);
             dup2(pipe_fd[1], STDOUT_FILENO);
-            dup2(pipe_fd[1], STDERR_FILENO);
+            if(want_stderr)
+                dup2(pipe_fd[1], STDERR_FILENO);
+            else
+                close(STDERR_FILENO);
         }
 
         /* Take care of gid/uid settings before running the command.
         */
         if(gid > 0)
-        {
             if(setgid(gid) < 0)
-            {
                 exit(EXTCMD_SETGID_ERROR);
-            }
-        }
 
         if(uid > 0)
-        {
             if(setuid(uid) < 0)
-            {
                 exit(EXTCMD_SETUID_ERROR);
-            }
-        }
 
         /* don't use env
         */
@@ -243,20 +239,13 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf, const size_t so
             /* Take care of gid/uid settings before running the command.
             */
             if(gid > 0)
-            {
                 if(setgid(gid) < 0)
-                {
                     exit(EXTCMD_SETGID_ERROR);
-                }
-            }
 
             if(uid > 0)
-            {
                 if(setuid(uid) < 0)
-                {
                     exit(EXTCMD_SETUID_ERROR);
-                }
-            }
+
             *pid_status = system(cmd);
             exit(*pid_status);
         }
@@ -554,29 +543,31 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf, const size_t so
 */
 int
 run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
-        const int timeout, int *pid_status, const fko_srv_options_t * const opts)
+        const int want_stderr, const int timeout, int *pid_status,
+        const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, 0, cmd, so_buf, so_buf_sz, timeout,
-            NULL, pid_status, opts);
+    return _run_extcmd(0, 0, cmd, so_buf, so_buf_sz, want_stderr,
+            timeout, NULL, pid_status, opts);
 }
 
 /* _run_extcmd() wrapper, run an external command as the specified user.
 */
 int
 run_extcmd_as(uid_t uid, gid_t gid, const char *cmd,char *so_buf,
-        const size_t so_buf_sz, const int timeout, int *pid_status,
-        const fko_srv_options_t * const opts)
+        const size_t so_buf_sz, const int want_stderr, const int timeout,
+        int *pid_status, const fko_srv_options_t * const opts)
 {
     return _run_extcmd(uid, gid, cmd, so_buf, so_buf_sz,
-            timeout, NULL, pid_status, opts);
+            want_stderr, timeout, NULL, pid_status, opts);
 }
 
 /* _run_extcmd() wrapper, search command output for a substring.
 */
 int
-search_extcmd(const char *cmd, const int timeout, const char *substr_search,
-        int *pid_status, const fko_srv_options_t * const opts)
+search_extcmd(const char *cmd, const int want_stderr, const int timeout,
+        const char *substr_search, int *pid_status,
+        const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, 0, cmd, NULL, 0, timeout, substr_search,
-            pid_status, opts);
+    return _run_extcmd(0, 0, cmd, NULL, 0, want_stderr, timeout,
+            substr_search, pid_status, opts);
 }

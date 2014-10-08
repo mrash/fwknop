@@ -886,10 +886,12 @@ incoming_spa(fko_srv_options_t *opts)
                         acc->cmd_exec_uid, acc->cmd_exec_gid);
 
                     res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
-                            spadat.spa_message_remain, NULL, 0, 0, &pid_status, opts);
+                            spadat.spa_message_remain, NULL, 0,
+                            WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
                 }
                 else /* Just run it as we are (root that is). */
-                    res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5, &pid_status, opts);
+                    res = run_extcmd(spadat.spa_message_remain, NULL, 0,
+                            WANT_STDERR, 5, &pid_status, opts);
 
                 /* should only call WEXITSTATUS() if WIFEXITED() is true
                 */
