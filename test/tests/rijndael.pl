@@ -102,8 +102,7 @@
         'subcategory' => 'client',
         'detail'   => "--last-cmd",
         'function' => \&run_last_args,
-        'cmdline'  => "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
-            "$verbose_str",
+        'cmdline'  => "$fwknopCmd --last-cmd --save-args-file $tmp_args_file -v -v -v"
     },
 
     {

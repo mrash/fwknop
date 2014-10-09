@@ -94,6 +94,8 @@ our %cf = (
     'hmac_force_snat_access'       => "$conf_dir/hmac_force_snat_access.conf",
     'hmac_force_masq_access'       => "$conf_dir/hmac_force_masq_access.conf",
     'cmd_access'                   => "$conf_dir/cmd_access.conf",
+    'cmd_setuid_access'            => "$conf_dir/cmd_setuid_access.conf",
+    'cmd_giduid_access'            => "$conf_dir/cmd_giduid_access.conf",
     'local_nat'                    => "$conf_dir/local_nat_fwknopd.conf",
     'no_flush_init'                => "$conf_dir/no_flush_init_fwknopd.conf",
     'no_flush_exit'                => "$conf_dir/no_flush_exit_fwknopd.conf",
@@ -681,6 +683,12 @@ $ENV{'DYLD_LIBRARY_PATH'} = $lib_dir if $lib_view_cmd =~ /otool/;
 ### main array that defines the tests we will run
 ###
 my @tests = (
+    {
+        'category' => 'max coverage',
+        'detail'   => 'interact with terminal for pw - TYPE ANY KEY HERE:',
+        'cmdline'  => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip -v -v -v ",
+        'function' => \&use_terminal_run_client,
+    },
     {
         'category' => 'recompilation',
         'detail'   => 'recompile and look for compilation warnings',
@@ -2304,6 +2312,12 @@ sub rotate_digest_file() {
     }
 
     return $rv;
+}
+
+sub use_terminal_run_client() {
+    my $test_hr = shift;
+
+    return &run_cmd($test_hr->{'cmdline'}, $cmd_out_tmp, $curr_test_file);
 }
 
 sub spa_cycle() {
