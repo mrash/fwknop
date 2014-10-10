@@ -65,11 +65,13 @@ zero_cmd_buffers(void)
     memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 }
 
+static int pid_status = 0;
+
 static int
 ipfw_set_exists(const fko_srv_options_t *opts,
     const char *fw_command, const unsigned short set_num)
 {
-    int res = 0, pid_status=0;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -99,7 +101,7 @@ ipfw_set_exists(const fko_srv_options_t *opts,
 int
 fw_dump_rules(const fko_srv_options_t * const opts)
 {
-    int     res, got_err = 0, pid_status = 0;
+    int     res, got_err = 0;
 
     if (opts->fw_list_all)
     {
@@ -247,7 +249,7 @@ fw_config_init(fko_srv_options_t * const opts)
 int
 fw_initialize(const fko_srv_options_t * const opts)
 {
-    int             res = 0, is_err, pid_status=0;
+    int             res = 0, is_err;
     unsigned short  curr_rule;
     char           *ndx;
 
@@ -399,7 +401,7 @@ fw_initialize(const fko_srv_options_t * const opts)
 int
 fw_cleanup(const fko_srv_options_t * const opts)
 {
-    int     res, got_err = 0, pid_status = 0;
+    int     res, got_err = 0;
 
     if(strncasecmp(opts->config[CONF_FLUSH_IPFW_AT_EXIT], "N", 1) == 0)
     {
@@ -480,7 +482,7 @@ process_spa_request(const fko_srv_options_t * const opts,
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
 
-    int             res = 0, pid_status=0;
+    int             res = 0;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -599,7 +601,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char            rule_num_str[6] = {0};
     char           *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i=0, res=0, is_err, pid_status=0;
+    int             i=0, res=0, is_err;
     time_t          now, rule_exp, min_exp = 0;
     unsigned short  curr_rule;
 
@@ -791,7 +793,7 @@ void
 ipfw_purge_expired_rules(const fko_srv_options_t *opts)
 {
     char           *ndx, *co_end;
-    int             i, res, is_err, pid_status=0;
+    int             i, res, is_err;
     unsigned short  curr_rule;
 
     /* First, we get the current active dynamic rules for the expired rule

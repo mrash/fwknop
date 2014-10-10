@@ -57,6 +57,8 @@ zero_cmd_buffers(void)
     memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 }
 
+static int pid_status = 0;
+
 static void
 chop_newline(char *str)
 {
@@ -71,7 +73,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         const char * const ip, const unsigned int port,
         const unsigned int exp_ts)
 {
-    int     rule_exists=0, rule_num=0, rtmp=0, pid_status=0;
+    int     rule_exists=0, rule_num=0, rtmp=0;
     char    cmd_buf[CMD_BUFSIZE]       = {0};
     char    target_search[CMD_BUFSIZE] = {0};
     char    proto_search[CMD_BUFSIZE]  = {0};
@@ -79,7 +81,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     char    port_search[CMD_BUFSIZE]   = {0};
     char    exp_ts_search[CMD_BUFSIZE] = {0};
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS " 2>&1",
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
         opts->fw_config->fw_command,
         fwc->table,
         fwc->to_chain
@@ -140,7 +142,7 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
         const char * const chain, const char * const rule)
 {
     int     rule_exists = 0;
-    int     res = 0, pid_status=0;
+    int     res = 0;
 
     zero_cmd_buffers();
 
@@ -195,7 +197,7 @@ rule_exists(const fko_srv_options_t * const opts,
 static void
 ipt_chk_support(const fko_srv_options_t * const opts)
 {
-    int               res = 1, pid_status = 0;
+    int               res = 1;
     struct fw_chain  *in_chain = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
 
     zero_cmd_buffers();
@@ -267,7 +269,7 @@ ipt_chk_support(const fko_srv_options_t * const opts)
 static int
 comment_match_exists(const fko_srv_options_t * const opts)
 {
-    int               res = 1, pid_status = 0;
+    int               res = 1;
     char             *ndx = NULL;
     struct fw_chain  *in_chain  = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
 
@@ -335,7 +337,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
 static int
 add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0, pid_status = 0;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -366,7 +368,7 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 static int
 chain_exists(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0, pid_status = 0;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -418,7 +420,7 @@ jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int cha
 static int
 jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int     exists = 0, pid_status = 0;
+    int     exists = 0;
     char    cmd_buf[CMD_BUFSIZE]      = {0};
     char    chain_search[CMD_BUFSIZE] = {0};
 
@@ -464,7 +466,7 @@ jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
 int
 fw_dump_rules(const fko_srv_options_t * const opts)
 {
-    int     i, res, got_err = 0, pid_status;
+    int     i, res, got_err = 0;
 
     struct fw_chain *ch = opts->fw_config->chain;
 
@@ -549,7 +551,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 static void
 delete_all_chains(const fko_srv_options_t * const opts)
 {
-    int     i, res, cmd_ctr = 0, pid_status=0;
+    int     i, res, cmd_ctr = 0;
 
     for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
     {
@@ -633,7 +635,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 static int
 create_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0, pid_status = 0;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -916,7 +918,7 @@ static int
 create_rule(const fko_srv_options_t * const opts,
         const char * const fw_chain, const char * const fw_rule)
 {
-    int res = 0, pid_status = 0;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -1362,7 +1364,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char             rule_num_str[6] = {0};
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
 
-    int             i, res, rn_offset, rule_num, is_err, pid_status=0;
+    int             i, res, rn_offset, rule_num, is_err;
     time_t          now, rule_exp, min_exp = 0;
 
     struct fw_chain *ch = opts->fw_config->chain;

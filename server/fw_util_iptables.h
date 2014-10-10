@@ -41,7 +41,7 @@
 
 /* iptables command args
 */
-#define IPT_CHK_RULE_ARGS       "-C %s %s"
+#define IPT_CHK_RULE_ARGS       "-C %s %s" /* the other macros add SH_REDIR if necessary */
 #define IPT_RULE_ARGS           "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define IPT_OUT_RULE_ARGS       "-t %s -p %i -d %s --sport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define IPT_FWD_RULE_ARGS       "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
