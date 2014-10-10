@@ -8,7 +8,7 @@
         'subcategory' => 'client+server',
         'detail'   => 'command execution',
         'function' => \&spa_cmd_exec_cycle,
-        'cmdline'  => qq|$fwknopCmd --server-cmd "echo fwknoptest > $cmd_exec_test_file" | .
+        'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
             "-a $fake_ip -D $loopback_ip --get-key $local_key_file " .
             "$verbose_str",
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $cf{'cmd_access'} " .
