@@ -135,6 +135,8 @@ EXTRA_DIST = \
     test/conf/base64_key_access.conf \
     test/conf/cfb_mode_access.conf \
     test/conf/cmd_access.conf \
+    test/conf/cmd_setuid_access.conf \
+    test/conf/cmd_giduid_access.conf \
     test/conf/ctr_mode_access.conf \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
