@@ -289,7 +289,20 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STAT
 
-AC_CHECK_FUNCS([bzero execvpe gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen stat chmod chown strlcat strlcpy])
+AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen stat chmod chown strlcat strlcpy])
+
+dnl Decide whether or not to check for the execvpe() function
+dnl
+use_execvpe=yes
+AC_ARG_ENABLE([execvpe],
+  [AS_HELP_STRING([--disable-execvpe],
+    [Do not check for the execvpe() function for command execution @<:@default is on@:>@])],
+  [use_execvpe=$enableval],
+  [])
+
+if test "x$use_execvpe" = "xyes"; then
+    AC_CHECK_FUNCS([execvpe])
+fi
 
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
