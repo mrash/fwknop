@@ -591,8 +591,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
         /* Now flush and remove the chain.
         */
-        snprintf(cmd_buf, CMD_BUFSIZE-1,
-            "%s " IPT_FLUSH_CHAIN_ARGS,
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
             fwc.fw_command,
             fwc.chain[i].table,
             fwc.chain[i].to_chain
@@ -611,8 +610,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
         zero_cmd_buffers();
 
-        snprintf(cmd_buf, CMD_BUFSIZE-1,
-            "%s " IPT_DEL_CHAIN_ARGS,
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
             fwc.fw_command,
             fwc.chain[i].table,
             fwc.chain[i].to_chain
