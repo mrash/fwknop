@@ -234,6 +234,9 @@ our $invalid_key_file  = 'invalid.key';
 our $invalid_key_file2 = 'invalid2.key';
 our $invalid_key_file3 = 'invalid2.key';
 
+our $FW_TYPE   = 'iptables'; ### default to iptables
+our $FW_PREFIX = 'IPT_';
+
 our $spoof_user = 'testuser';
 
 my $valgrind_cov_dir = 'valgrind-coverage';
@@ -6540,10 +6543,16 @@ sub init() {
     }
     close UNAME;
 
-    unless ($platform eq $LINUX) {
+    if ($platform eq $LINUX) {
+        if (&find_command('firewalld')) {
+            $FW_TYPE   = 'firewalld';
+            $FW_PREFIX = 'FIREWD';
+        }
+    } else {
         push @tests_to_exclude, qr/NAT/;
         push @tests_to_exclude, qr/MASQ/;
         push @tests_to_exclude, qr/iptables/;
+        push @tests_to_exclude, qr/firewalld/;
     }
     unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
         push @tests_to_exclude, qr|active/expire sets|;

@@ -2513,7 +2513,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables INPUT spec',
+        'detail'   => "invalid $FW_TYPE INPUT spec",
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
@@ -2523,7 +2523,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables INPUT spec (2)',
+        'detail'   => "invalid $FW_TYPE INPUT spec (2)",
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain2'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
@@ -2533,7 +2533,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables INPUT spec (3)',
+        'detail'   => "invalid $FW_TYPE INPUT spec (3)",
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain3'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
@@ -2543,7 +2543,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables INPUT spec (4)',
+        'detail'   => "invalid $FW_TYPE INPUT spec (4)",
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain4'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
@@ -2553,7 +2553,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables INPUT spec (5)',
+        'detail'   => "invalid $FW_TYPE INPUT spec (5)",
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain5'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
@@ -2563,7 +2563,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables INPUT spec (6)',
+        'detail'   => "invalid $FW_TYPE INPUT spec (6)",
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain6'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
@@ -2876,65 +2876,65 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables IPT_FORWARD_ACCESS',
+        'detail'   => "invalid $FW_TYPE ${FW_PREFIX}_FORWARD_ACCESS",
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     any',
             'KEY        testtest'
         ],
         'server_conf_file' => [
-            'IPT_FORWARD_ACCESS     invalid'
+            "${FW_PREFIX}_FORWARD_ACCESS     invalid"
         ],
         'positive_output_matches' => [qr/ACCESS\sspecification/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables IPT_DNAT_ACCESS',
+        'detail'   => "invalid $FW_TYPE ${FW_PREFIX}_DNAT_ACCESS",
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     any',
             'KEY        testtest'
         ],
         'server_conf_file' => [
-            'IPT_DNAT_ACCESS     invalid'
+            "${FW_PREFIX}_DNAT_ACCESS     invalid"
         ],
         'positive_output_matches' => [qr/ACCESS\sspecification/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables IPT_SNAT_ACCESS',
+        'detail'   => "invalid $FW_TYPE ${FW_PREFIX}_SNAT_ACCESS",
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     any',
             'KEY        testtest'
         ],
         'server_conf_file' => [
-            'IPT_SNAT_ACCESS     invalid'
+            "${FW_PREFIX}_SNAT_ACCESS     invalid"
         ],
         'positive_output_matches' => [qr/ACCESS\sspecification/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables IPT_SNAT_TRANSLATE_IP',
+        'detail'   => "invalid $FW_TYPE ${FW_PREFIX}_SNAT_TRANSLATE_IP",
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     any',
             'KEY        testtest'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING     Y',
-            'ENABLE_IPT_SNAT           Y',
+            "ENABLE_${FW_PREFIX}_FORWARDING     Y",
+            "ENABLE_${FW_PREFIX}_SNAT           Y",
             'SNAT_TRANSLATE_IP         invalid'
         ],
         'positive_output_matches' => [qr/Invalid\sIPv4/],
@@ -2943,32 +2943,32 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables IPT_MASQUERADE_ACCESS',
+        'detail'   => "invalid $FW_TYPE ${FW_PREFIX}_MASQUERADE_ACCESS",
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     any',
             'KEY        testtest'
         ],
         'server_conf_file' => [
-            'IPT_MASQUERADE_ACCESS     invalid'
+            "${FW_PREFIX}_MASQUERADE_ACCESS     invalid"
         ],
         'positive_output_matches' => [qr/ACCESS\sspecification/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'invalid iptables IPT_OUTPUT_ACCESS',
+        'detail'   => "invalid $FW_TYPE ${FW_PREFIX}_OUTPUT_ACCESS",
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     any',
             'KEY        testtest'
         ],
         'server_conf_file' => [
-            'IPT_OUTPUT_ACCESS     invalid'
+            "${FW_PREFIX}_OUTPUT_ACCESS     invalid"
         ],
         'positive_output_matches' => [qr/ACCESS\sspecification/],
     },
@@ -3221,7 +3221,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_NAT format (1)',
+        'detail'   => "$FW_TYPE FORCE_NAT format (1)",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3232,12 +3232,12 @@
         'server_conf_file' => [
             '### comment line'
         ],
-        'positive_output_matches' => [qr/requires\s.*IPT_FORWARDING/],
+        'positive_output_matches' => [qr/requires\s.*${FW_PREFIX}_FORWARDING/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_NAT format (2)',
+        'detail'   => "$FW_TYPE FORCE_NAT format (2)",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3246,14 +3246,14 @@
             'FORCE_NAT a a'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      Y'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
         'positive_output_matches' => [qr/need.*IP.*PORT/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_NAT format (3)',
+        'detail'   => "$FW_TYPE FORCE_NAT format (3)",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3262,14 +3262,14 @@
             'FORCE_NAT 1.2.3.4 999999'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      Y'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
         'positive_output_matches' => [qr/invalid\sFORCE_NAT\sport/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_NAT format (4)',
+        'detail'   => "$FW_TYPE FORCE_NAT format (4)",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3278,14 +3278,14 @@
             'FORCE_NAT 1.2.3.4.9 1234'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      Y'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
         'positive_output_matches' => [qr/invalid\sFORCE_NAT\sIP/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_SNAT format (1)',
+        'detail'   => "$FW_TYPE FORCE_SNAT format (1)",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3294,14 +3294,14 @@
             'FORCE_SNAT 1.2.3.4.9 1234'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      Y'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
         'positive_output_matches' => [qr/invalid\sFORCE_SNAT\sIP/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_SNAT format (2)',
+        'detail'   => "$FW_TYPE FORCE_SNAT format (2)",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3310,14 +3310,14 @@
             'FORCE_SNAT a'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      Y'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
         'positive_output_matches' => [qr/invalid\sFORCE_SNAT\sIP/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_SNAT format (3)',
+        'detail'   => "$FW_TYPE FORCE_SNAT format (3)",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3326,14 +3326,14 @@
             'FORCE_SNAT a'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      N'
+            "ENABLE_${FW_PREFIX}_FORWARDING      N"
         ],
         'positive_output_matches' => [qr/requires.*enabled/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_SNAT + NAT',
+        'detail'   => "$FW_TYPE FORCE_SNAT + NAT",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3343,14 +3343,14 @@
             'FORCE_SNAT     1.2.3.4'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      Y'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
         'positive_output_matches' => [qr/must\salso\sbe\sused/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'iptables FORCE_MASQUERADE + NAT',
+        'detail'   => "$FW_TYPE FORCE_MASQUERADE + NAT",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
         'exec_err' => $YES,
@@ -3360,7 +3360,7 @@
             'FORCE_MASQUERADE       Y'
         ],
         'server_conf_file' => [
-            'ENABLE_IPT_FORWARDING      Y'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
         'positive_output_matches' => [qr/must\salso\sbe\sused/],
     },
