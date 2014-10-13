@@ -2409,7 +2409,7 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
         ### add a few additional command line args for test coverage
-        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -K -R"
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -K -R --exit-parse-config"
     },
     {
         'category' => 'basic operations',
@@ -2418,7 +2418,7 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
         ### add a few additional command line args for test coverage
-        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -D -R"
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -D -R --exit-parse-config"
     },
 
     {
@@ -2427,7 +2427,7 @@
         'detail'   => 'invalid config file path',
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'cmdline' => "$fwknopdCmd -f -c invalid",
+        'cmdline' => "$fwknopdCmd -f -c invalid --exit-parse-config",
     },
     {
         'category' => 'basic operations',
@@ -2435,7 +2435,7 @@
         'detail'   => 'invalid access.conf file path',
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'cmdline' => "$fwknopdCmd -f -a invalid",
+        'cmdline' => "$fwknopdCmd -f -a invalid --exit-parse-config",
     },
 
     {
@@ -2444,7 +2444,7 @@
         'detail'   => 'GPG invalid --gpg-home-dir path',
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'cmdline' => "$fwknopdCmd $default_server_conf_args -f --gpg-home-dir invalidpath",
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f --gpg-home-dir invalidpath --exit-parse-config",
     },
     {
         'category' => 'basic operations',
@@ -2452,7 +2452,7 @@
         'detail'   => 'GPG invalid --gpg-home-dir path (2)',
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'cmdline' => "$fwknopdCmd $default_server_conf_args -f --gpg-home-dir " . 'A'x1200
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -f --exit-parse-config --gpg-home-dir " . 'A'x1200
     },
     {
         'category' => 'basic operations',
@@ -2461,10 +2461,9 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'gpg_no_pw_no_fpr_access'} " .
-            "-d $default_digest_file -p $default_pid_file -f",
+            "-d $default_digest_file -p $default_pid_file -f --exit-parse-config",
         'positive_output_matches' => [qr/Must have either sig/],
     },
-
 
     {
         'category' => 'basic operations',
@@ -2517,7 +2516,7 @@
         'detail'   => 'invalid iptables INPUT spec',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2527,7 +2526,7 @@
         'detail'   => 'invalid iptables INPUT spec (2)',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain2'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2537,7 +2536,7 @@
         'detail'   => 'invalid iptables INPUT spec (3)',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain3'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2547,7 +2546,7 @@
         'detail'   => 'invalid iptables INPUT spec (4)',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain4'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2557,7 +2556,7 @@
         'detail'   => 'invalid iptables INPUT spec (5)',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain5'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2567,7 +2566,7 @@
         'detail'   => 'invalid iptables INPUT spec (6)',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain6'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
