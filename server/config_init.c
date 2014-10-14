@@ -151,6 +151,10 @@ validate_int_var_ranges(fko_srv_options_t *opts)
         1, RCHK_MAX_SNIFF_BYTES);
     range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
         1, RCHK_MAX_TCPSERV_PORT);
+    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
+        1, RCHK_MAX_UDPSERV_PORT);
+    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
+        1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
 
 #if FIREWALL_IPFW
     range_check(opts, "IPFW_START_RULE_NUM", opts->config[CONF_IPFW_START_RULE_NUM],
@@ -808,6 +812,30 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_TCPSERV_PORT] == NULL)
         set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
 
+    /* Enable UDP server.
+    */
+    if(opts->config[CONF_ENABLE_UDP_SERVER] == NULL)
+    {
+        if((strncasecmp(DEF_ENABLE_UDP_SERVER, "Y", 1) == 0) &&
+                !opts->enable_udp_server)
+        {
+            log_msg(LOG_ERR, "pcap capture not enabled, forcing UDP server mode");
+            opts->enable_udp_server = 1;
+        }
+        set_config_entry(opts, CONF_ENABLE_UDP_SERVER, DEF_ENABLE_UDP_SERVER);
+    }
+
+    /* UDP Server port.
+    */
+    if(opts->config[CONF_UDPSERV_PORT] == NULL)
+        set_config_entry(opts, CONF_UDPSERV_PORT, DEF_UDPSERV_PORT);
+
+    /* UDP server select() timeout in microseconds
+    */
+    if(opts->config[CONF_UDPSERV_SELECT_TIMEOUT] == NULL)
+        set_config_entry(opts, CONF_UDPSERV_SELECT_TIMEOUT,
+            DEF_UDPSERV_SELECT_TIMEOUT);
+
     /* Syslog identity.
     */
     if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
@@ -1112,6 +1140,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case 't':
                 opts->test = 1;
+                break;
+            case 'U':
+                opts->enable_udp_server = 1;
                 break;
             /* Verbosity level */
             case 'v':

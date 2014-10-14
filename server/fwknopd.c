@@ -31,14 +31,17 @@
 #include "fwknopd.h"
 #include "access.h"
 #include "config_init.h"
-#include "process_packet.h"
-#include "pcap_capture.h"
 #include "log_msg.h"
 #include "utils.h"
 #include "fw_util.h"
 #include "sig_handler.h"
 #include "replay_cache.h"
 #include "tcp_server.h"
+#include "udp_server.h"
+
+#if USE_LIBPCAP
+  #include "pcap_capture.h"
+#endif
 
 /* Prototypes
 */
@@ -178,7 +181,25 @@ main(int argc, char **argv)
         if(!opts.test && (fw_initialize(&opts) != 1))
             clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
-        /* If the TCP server option was set, fire it up here.
+        /* If we are to acquire SPA data via a UDP socket, start it up here.
+        */
+        if(opts.enable_udp_server ||
+                strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "Y", 1) == 0)
+        {
+            if(run_udp_server(&opts) < 0)
+            {
+                log_msg(LOG_ERR, "Fatal run_udp_server() error");
+                clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        /* If the TCP server option was set, fire it up here. Note that in
+         * this mode, fwknopd still acquires SPA packets via libpcap. If you
+         * want to use UDP only without the libpcap dependency, see the FIXME...
         */
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
@@ -189,9 +210,12 @@ main(int argc, char **argv)
             }
         }
 
+#if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
-        pcap_capture(&opts);
+        if(strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
+            pcap_capture(&opts);
+#endif
 
         /* Deal with any signals that we've received and break out
          * of the loop for any terminating signals
@@ -379,7 +403,7 @@ static int handle_signals(fko_srv_options_t *opts)
 
         if(got_sighup)
         {
-            log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");
+            log_msg(LOG_WARNING, "Got SIGHUP. Re-reading configs.");
             free_configs(opts);
             kill(opts->tcp_server_pid, SIGTERM);
             usleep(1000000);
@@ -388,12 +412,12 @@ static int handle_signals(fko_srv_options_t *opts)
         }
         else if(got_sigint)
         {
-            log_msg(LOG_WARNING, "Got SIGINT.  Exiting...");
+            log_msg(LOG_WARNING, "Got SIGINT. Exiting...");
             got_sigint = 0;
         }
         else if(got_sigterm)
         {
-            log_msg(LOG_WARNING, "Got SIGTERM.  Exiting...");
+            log_msg(LOG_WARNING, "Got SIGTERM. Exiting...");
             got_sigterm = 0;
         }
         else
@@ -406,13 +430,13 @@ static int handle_signals(fko_srv_options_t *opts)
         && opts->packet_ctr >= opts->packet_ctr_limit)
     {
         log_msg(LOG_INFO,
-            "Packet count limit (%d) reached.  Exiting...",
+            "Packet count limit (%d) reached. Exiting...",
             opts->packet_ctr_limit);
     }
     else    /* got_signal was not set (should be if we are here) */
     {
         log_msg(LOG_WARNING,
-            "Capture ended without signal.  Exiting...");
+            "Capture ended without signal. Exiting...");
     }
     return rv;
 }

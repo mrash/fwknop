@@ -169,13 +169,13 @@ run_tcp_server(fko_srv_options_t *opts)
         return -1;
     }
 
-    clen = sizeof(caddr);
-
     /* Now loop and accept and drop connections after the first packet or a
      * short timeout.
     */
     while(1)
     {
+        clen = sizeof(caddr);
+
         /* Initialize and setup the socket for select.
         */
         FD_ZERO(&sfd_set);

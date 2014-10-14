@@ -2497,6 +2497,14 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'UDP server --packet-limit 1 exit',
+        'function' => \&server_packet_limit,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args --udp-server --packet-limit 1 $intf_str",
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'ignore packets < min SPA len (140)',
         'function' => \&server_ignore_small_packets,
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args --packet-limit 1 $intf_str",
@@ -2585,6 +2593,38 @@
             'PCAP_DISPATCH_COUNT        9999999999'
         ],
         'positive_output_matches' => [qr/invalid\sPCAP_DISPATCH_COUNT/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid tcp server port',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    testtest',
+        ],
+        'server_conf_file' => [
+            'TCPSERV_PORT        9999999999'
+        ],
+        'positive_output_matches' => [qr/not in the range/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid udp server port',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    testtest',
+        ],
+        'server_conf_file' => [
+            'UDPSERV_PORT        9999999999'
+        ],
+        'positive_output_matches' => [qr/not in the range/],
     },
 
     {

@@ -621,6 +621,27 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server --udp-server / tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --udp-server",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server conf / tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'udp_server'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
 
     {
         'category' => 'Rijndael',

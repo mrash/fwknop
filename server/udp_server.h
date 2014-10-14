@@ -1,9 +1,9 @@
 /*
  *****************************************************************************
  *
- * File:    sig_handler.h
+ * File:    udp_server.h
  *
- * Purpose: Header file for sig_handler functions and data.
+ * Purpose: Header file for udp_server.c.
  *
  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2014 fwknop developers and contributors. For a full
@@ -28,24 +28,13 @@
  *
  *****************************************************************************
 */
-#ifndef SIG_HANDLER_H
-#define SIG_HANDLER_H
+#ifndef UDP_SERVER_H
+#define UDP_SERVER_H
 
-#include <signal.h>
+/* Function prototypes
+*/
+int run_udp_server(fko_srv_options_t *opts);
 
-extern sig_atomic_t got_signal;
-
-extern sig_atomic_t got_sighup;
-extern sig_atomic_t got_sigint;
-extern sig_atomic_t got_sigterm;
-extern sig_atomic_t got_sigusr1;
-extern sig_atomic_t got_sigusr2;
-extern sig_atomic_t got_sigchld;
-
-void sig_handler(int sig);
-int set_sig_handlers(void);
-int sig_do_stop(void);
-
-#endif /* SIG_HANDLER_H */
+#endif /* UDP_SERVER_H */
 
 /***EOF***/

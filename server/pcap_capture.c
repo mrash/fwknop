@@ -28,12 +28,13 @@
  *
  *****************************************************************************
 */
+
+
 #include <pcap.h>
 
 #include "fwknopd_common.h"
 #include "pcap_capture.h"
 #include "process_packet.h"
-#include "sig_handler.h"
 #include "fw_util.h"
 #include "log_msg.h"
 #include "fwknopd_errors.h"
@@ -43,6 +44,8 @@
 #if HAVE_SYS_WAIT_H
   #include <sys/wait.h>
 #endif
+
+#if USE_LIBPCAP
 
 /* The pcap capture routine.
 */
@@ -247,24 +250,10 @@ pcap_capture(fko_srv_options_t *opts)
             got_sigchld = 0;
         }
 
-        /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
-        */
-        if(got_signal != 0)
+        if(sig_do_stop())
         {
-            if(got_sigint || got_sigterm || got_sighup)
-            {
-                pcap_breakloop(pcap);
-                pending_break = 1;
-            }
-            else if(got_sigusr1 || got_sigusr2)
-            {
-                /* Not doing anything with these yet.
-                */
-                got_sigusr1 = got_sigusr2 = 0;
-                got_signal = 0;
-            }
-            else
-                got_signal = 0;
+            pcap_breakloop(pcap);
+            pending_break = 1;
         }
 
         res = pcap_dispatch(pcap, pcap_dispatch_count,
@@ -346,5 +335,7 @@ pcap_capture(fko_srv_options_t *opts)
 
     return(0);
 }
+
+#endif /* USE_LIBPCAP */
 
 /***EOF***/

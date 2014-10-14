@@ -308,14 +308,14 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
 
 *ENABLE_TCP_SERVER* '<Y/N>'::
     Enable the fwknopd TCP server. This is a "dummy" TCP server that will
-     accept TCP connection requests on the specified TCPSERV_PORT.
-     If set to "Y", fwknopd will fork off a child process to listen for, and
-     accept incoming TCP request. This server only accepts the
-     request. It does not otherwise communicate. This is only to allow the
-     incoming SPA over TCP packet which is detected via PCAP. The connection
-     is closed after 1 second regardless.
-     Note that fwknopd still only gets its data via pcap, so the filter
-     defined by PCAP_FILTER needs to be updated to include this TCP port.
+    accept TCP connection requests on the specified TCPSERV_PORT.
+    If set to "Y", fwknopd will fork off a child process to listen for, and
+    accept incoming TCP request. This server only accepts the
+    request. It does not otherwise communicate. This is only to allow the
+    incoming SPA over TCP packet which is detected via PCAP. The connection
+    is closed after 1 second regardless.
+    Note that fwknopd still only gets its data via pcap, so the filter
+    defined by PCAP_FILTER needs to be updated to include this TCP port.
 
 *PCAP_DISPATCH_COUNT* '<count>'::
     Sets the number of packets that are processed when the *pcap_dispatch()*
@@ -345,6 +345,19 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
 *TCPSERV_PORT* '<port>'::
     Set the port number that the ``dummy'' TCP server listens on. This server
     is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
+
+*ENABLE_UDP_SERVER* '<Y/N>'::
+    Enable the *fwknopd* UDP server. This enables *fwknopd* to acquire SPA
+    packets via a UDP socket directly without having to use libpcap. When this
+    mode is enabled, *fwknop* should be compiled with *--enable-udp-server*
+    (passed to the *configure* script) so that libpcap can be removed as a
+    dependency. As one would expect, when the UDP server is used, no incoming
+    packets are ever acknowledged by *fwknopd* and therefore collecting SPA
+    packets in this mode is a good alternative to sniffing the wire directly.
+
+*UDPSERV_PORT* '<port>'::
+    Set the port number that the UDP server listens on. This server
+    is only spawned when ``ENABLE_UDP_SERVER'' is set to ``Y''.
 
 *SYSLOG_IDENTITY* '<identity>'::
     Override syslog identity on message logged by *fwknopd*. The defaults

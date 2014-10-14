@@ -166,6 +166,16 @@ if test "x$want_fuzzing_interfaces" = "xyes"; then
     AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
 fi
 
+dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
+dnl
+want_udp_server=no
+AC_ARG_ENABLE([udp-server],
+  [AS_HELP_STRING([--enable-udp-server],
+    [Enable UDP server mode for no libpcap dependency @<:@default is to disable@:>@])],
+  [want_udp_server=$enableval],
+  [])
+AM_CONDITIONAL([UDP_SERVER], [test "$want_udp_server" = yes])
+
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
 use_wall=yes
@@ -443,12 +453,15 @@ AS_IF([test "x$WGET_EXE" != x],
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
+
+  AS_IF([test "$want_udp_server" = no], [
     # Looking for libpcap
     #
     AC_CHECK_LIB([pcap],[pcap_open_live],
-      [ AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]) ],
+      [ AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap]) ],
       [ AC_MSG_ERROR([fwknopd needs libpcap])]
     )
+  ])
 
   AS_IF([test "$want_digest_cache" = yes], [
     use_ndbm=no
@@ -687,6 +700,10 @@ if [test "$want_server" = "yes" ]; then
         firewall type:              $FIREWALL_TYPE
         firewall program path:      $FIREWALL_EXE
 "
+if [test "$want_udp_server" = "yes" ]; then
+  echo "    UDP server mode enabled, no libpcap dependency
+"
+    fi
 
     if [test "$want_digest_cache" = "no" ]; then
         echo "    *WARNING*
