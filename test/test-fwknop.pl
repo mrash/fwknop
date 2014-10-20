@@ -273,6 +273,7 @@ my @test_files = (
     "$tests_dir/gpg_no_pw_hmac.pl",
     "$tests_dir/gpg.pl",
     "$tests_dir/gpg_hmac.pl",
+    "$tests_dir/configure_args.pl",
 );
 #================== end config ===================
 
@@ -281,6 +282,7 @@ our @build_security_server   = ();
 our @build_security_libfko   = ();
 our @preliminaries           = ();  ### from tests/preliminaries.pl
 our @code_structure_errstr   = ();  ### from tests/code_structure.pl (may include Coccinelle matches eventually)
+our @configure_args          = ();  ### from tests/configure_args.pl
 our @basic_operations        = ();  ### from tests/basic_operations.pl
 our @rijndael                = ();  ### from tests/rijndael.pl
 our @rijndael_cmd_exec       = ();  ### from tests/rijndael_cmd_exec.pl
@@ -370,6 +372,7 @@ my $diff_mode = 0;
 my $enc_dummy_key = 'A'x8;
 my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
+my $enable_configure_args_checks = 0;
 my $enable_profile_coverage_check = 0;
 my $profile_coverage_init = 0;
 my $enable_make_distcheck = 0;
@@ -464,6 +467,7 @@ exit 1 unless GetOptions(
     'fuzzing-test-tag=s'  => \$fuzzing_test_tag,
     'fuzzing-class=s'     => \$fuzzing_class,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
+    'enable-configure-args-checks' => \$enable_configure_args_checks,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'enable-cores-pattern' => \$enable_cores_pattern_mode,
     'profile-coverage-init' => \$profile_coverage_init,
@@ -509,6 +513,7 @@ our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
 if ($enable_all or $enable_complete) {
     $enable_valgrind = 1;
     $enable_recompilation_warnings_check = 1;
+    $enable_configure_args_checks = 1;
     $enable_make_distcheck = 1;
     $enable_client_ip_resolve_test = 1;
     $enable_perl_module_checks = 1;
@@ -731,6 +736,7 @@ my @tests = (
     @gpg_no_pw_hmac,
     @gpg,
     @gpg_hmac,
+    @configure_args,
 );
 
 my %test_keys = (
@@ -1576,6 +1582,49 @@ sub look_for_crashes() {
     }
 
     $do_crash_check = 0;
+
+    return $rv;
+}
+
+sub configure_args_udp_server_no_libpcap() {
+    my $rv = 1;
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '..' or die $!;
+
+    &run_cmd('make clean', $cmd_out_tmp, "test/$curr_test_file");
+
+    &run_cmd("./extras/apparmor/configure_args.sh --enable-udp-server",
+        $cmd_out_tmp, "test/$curr_test_file");
+
+    if ($sudo_path) {
+        unless (&run_cmd("$sudo_path -u $username make",
+                $cmd_out_tmp, "test/$curr_test_file")) {
+            unless (&run_cmd('make', $cmd_out_tmp,
+                    "test/$curr_test_file")) {
+                chdir $curr_pwd or die $!;
+                return 0;
+            }
+        }
+
+    } else {
+        unless (&run_cmd('make', $cmd_out_tmp,
+                "test/$curr_test_file")) {
+            chdir $curr_pwd or die $!;
+            return 0;
+        }
+    }
+
+    &run_cmd("$lib_view_cmd ./server/.libs/fwknopd", $cmd_out_tmp, "test/$curr_test_file");
+
+    if (&file_find_regex([qr/pcap/], $MATCH_ALL, $APPEND_RESULTS, $cmd_out_tmp)) {
+        &write_test_file("[-] fwknopd appears to still link against libpcap.\n",
+            "test/$curr_test_file");
+        $rv = 0;
+    }
+
+    chdir $curr_pwd or die $!;
 
     return $rv;
 }
@@ -6412,6 +6461,10 @@ sub init() {
         push @tests_to_exclude, qr/recompilation/;
     }
 
+    unless ($enable_configure_args_checks) {
+        push @tests_to_exclude, qr/configure args/;
+    }
+
     unless ($enable_make_distcheck) {
         push @tests_to_exclude, qr/distcheck/;
     }
@@ -7221,6 +7274,9 @@ sub usage() {
                                          and recompile fwknop.
     --enable-recompile                 - Recompile fwknop sources and look for
                                          compilation warnings.
+    --enable-configure-args-checks     - Run the autoconf configure script with
+                                         various args to check compilation
+                                         results.
     --enable-valgrind                  - Run every test underneath valgrind.
     --disable-valgrind                 - Disable valgrind mode (useful sometimes
                                          when --enable-all is used to have

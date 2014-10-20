@@ -325,6 +325,7 @@ EXTRA_DIST = \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
+    test/tests/configure_args.pl \
     test/tests/basic_operations.pl \
     test/tests/rijndael_hmac.pl \
     test/tests/rijndael_hmac_fuzzing.pl \
