@@ -292,6 +292,7 @@ EXTRA_DIST = \
     test/conf/subnet_source_match_access.conf \
     test/conf/tcp_pcap_filter_fwknopd.conf \
     test/conf/tcp_server_fwknopd.conf \
+    test/conf/udp_server_fwknopd.conf \
     test/conf/spa_over_http_fwknopd.conf \
     test/conf/spa_over_http.pcap \
     test/conf/snat_fwknopd.conf \

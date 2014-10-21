@@ -253,6 +253,7 @@ my $default_key = 'fwknoptest';
 my $tests_dir = 'tests';
 
 my @test_files = (
+    "$tests_dir/configure_args.pl",
     "$tests_dir/build_security.pl",
     "$tests_dir/preliminaries.pl",
     "$tests_dir/code_structure.pl",
@@ -273,7 +274,6 @@ my @test_files = (
     "$tests_dir/gpg_no_pw_hmac.pl",
     "$tests_dir/gpg.pl",
     "$tests_dir/gpg_hmac.pl",
-    "$tests_dir/configure_args.pl",
 );
 #================== end config ===================
 
@@ -319,6 +319,7 @@ my $diff_dir1 = '';
 my $diff_dir2 = '';
 my $loopback_intf = '';
 my $anonymize_results = 0;
+my $orig_config_args = '';
 my $curr_test_file = 'init';
 my $init_file = $curr_test_file;
 my $tarfile = 'test_fwknop.tar.gz';
@@ -693,12 +694,6 @@ $ENV{'DYLD_LIBRARY_PATH'} = $lib_dir if $lib_view_cmd =~ /otool/;
 ###
 my @tests = (
     {
-        'category' => 'max coverage',
-        'detail'   => 'interact with terminal for pw - TYPE ANY KEY HERE:',
-        'cmdline'  => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip -v -v -v ",
-        'function' => \&use_terminal_run_client,
-    },
-    {
         'category' => 'recompilation',
         'detail'   => 'recompile and look for compilation warnings',
         'function' => \&compile_warnings,
@@ -713,7 +708,12 @@ my @tests = (
         'detail'   => 'test suite conf/ files included',
         'function' => \&test_suite_conf_files,
     },
-
+    {
+        'category' => 'max coverage',
+        'detail'   => 'interact with terminal for pw - TYPE ANY KEY HERE:',
+        'cmdline'  => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip -v -v -v ",
+        'function' => \&use_terminal_run_client,
+    },
     @build_security_client,
     @build_security_server,
     @build_security_libfko,
@@ -736,8 +736,40 @@ my @tests = (
     @gpg_no_pw_hmac,
     @gpg,
     @gpg_hmac,
-    @configure_args,
 );
+
+if ($enable_profile_coverage_check) {
+    push @tests,
+    {
+        'category' => 'profile coverage',
+        'detail'   => 'gcov profile coverage',
+        'function' => \&profile_coverage
+    };
+}
+
+### the configure args tests recompile fwknop, so only do this
+### after the profile coverage stats have been created for the main
+### test run
+push @tests, @configure_args;
+
+if ($enable_valgrind) {
+    push @tests,
+    {
+        'category' => 'valgrind output',
+        'subcategory' => 'flagged functions',
+        'detail'   => '',
+        'function' => \&parse_valgrind_flagged_functions
+    };
+}
+
+if ($do_crash_check) {
+    push @tests,
+    {
+        'category' => 'Look for crashes',
+        'detail'   => 'checking for segfault/core dump messages',
+        'function' => \&look_for_crashes
+    };
+}
 
 my %test_keys = (
     'category'        => $REQUIRED,
@@ -860,31 +892,6 @@ for my $test_hr (@tests) {
     if ($test_limit > 0) {
         last if $executed >= $test_limit;
     }
-}
-
-if ($enable_profile_coverage_check) {
-    &run_test({
-        'category' => 'profile coverage',
-        'detail'   => 'gcov profile coverage',
-        'function' => \&profile_coverage}
-    );
-}
-
-if ($enable_valgrind) {
-    &run_test({
-        'category' => 'valgrind output',
-        'subcategory' => 'flagged functions',
-        'detail'   => '',
-        'function' => \&parse_valgrind_flagged_functions}
-    );
-}
-
-if ($do_crash_check) {
-    &run_test({
-        'category' => 'Look for crashes',
-        'detail'   => 'checking for segfault/core dump messages',
-        'function' => \&look_for_crashes}
-    );
 }
 
 &logr("\n");
@@ -1237,43 +1244,9 @@ sub build_results_hash() {
 sub compile_warnings() {
 
     my $curr_pwd = cwd() or die $!;
-
-    if ($enable_profile_coverage_check) {
-        ### we're recompiling, so remove any existing profile coverage
-        ### files since they will be invalidated by the recompile
-        for my $extension ('*.gcno', '*.gcda', '*.gcov') {
-            ### remove profile output from any previous run
-            system qq{find .. -name $extension | xargs rm 2> /dev/null};
-        }
-    }
-
     chdir '..' or die $!;
 
-    ### 'make clean' as root
-    unless (&run_cmd('make clean', $cmd_out_tmp,
-            "test/$curr_test_file")) {
-        chdir $curr_pwd or die $!;
-        return 0;
-    }
-
-    if ($sudo_path) {
-        unless (&run_cmd("$sudo_path -u $username make",
-                $cmd_out_tmp, "test/$curr_test_file")) {
-            unless (&run_cmd('make', $cmd_out_tmp,
-                    "test/$curr_test_file")) {
-                chdir $curr_pwd or die $!;
-                return 0;
-            }
-        }
-
-    } else {
-
-        unless (&run_cmd('make', $cmd_out_tmp,
-                "test/$curr_test_file")) {
-            chdir $curr_pwd or die $!;
-            return 0;
-        }
-    }
+    &config_recompile('');
 
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
@@ -1586,6 +1559,76 @@ sub look_for_crashes() {
     return $rv;
 }
 
+sub config_recompile() {
+    my $config_cmd = shift;
+
+    if ($enable_profile_coverage_check) {
+        ### we're recompiling, so remove any existing profile coverage
+        ### files since they will be invalidated by the recompile
+        for my $extension ('*.gcno', '*.gcda', '*.gcov') {
+            ### remove profile output from any previous run
+            system qq{find . -name $extension | xargs rm 2> /dev/null};
+        }
+    }
+
+    &run_cmd('make clean', $cmd_out_tmp, "test/$curr_test_file");
+
+    if ($config_cmd) {
+        &run_cmd($config_cmd, $cmd_out_tmp, "test/$curr_test_file");
+    }
+
+    if ($sudo_path) {
+        unless (&run_cmd("$sudo_path -u $username make",
+                $cmd_out_tmp, "test/$curr_test_file")) {
+            return 0 unless &run_cmd('make', $cmd_out_tmp,
+                    "test/$curr_test_file");
+        }
+    } else {
+        return 0 unless &run_cmd('make', $cmd_out_tmp,
+            "test/$curr_test_file");
+    }
+
+    return 1;
+}
+
+sub configure_args_restore_orig() {
+    my $rv = 1;
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '..' or die $!;
+
+    unless (&config_recompile($orig_config_args)) {
+        &write_test_file("[-] configure/recompile failure.\n",
+            "test/$curr_test_file");
+        chdir $curr_pwd or die $!;
+        $rv = 0;
+    }
+
+    chdir $curr_pwd or die $!;
+
+    return $rv;
+}
+
+sub configure_args_disable_execvpe() {
+    my $rv = 1;
+
+    my $curr_pwd = cwd() or die $!;
+
+    chdir '..' or die $!;
+
+    unless (&config_recompile('./extras/apparmor/configure_args.sh --disable-execvpe')) {
+        &write_test_file("[-] configure/recompile failure.\n",
+            "test/$curr_test_file");
+        chdir $curr_pwd or die $!;
+        $rv = 0;
+    }
+
+    chdir $curr_pwd or die $!;
+
+    return $rv;
+}
+
 sub configure_args_udp_server_no_libpcap() {
     my $rv = 1;
 
@@ -1593,27 +1636,11 @@ sub configure_args_udp_server_no_libpcap() {
 
     chdir '..' or die $!;
 
-    &run_cmd('make clean', $cmd_out_tmp, "test/$curr_test_file");
-
-    &run_cmd("./extras/apparmor/configure_args.sh --enable-udp-server",
-        $cmd_out_tmp, "test/$curr_test_file");
-
-    if ($sudo_path) {
-        unless (&run_cmd("$sudo_path -u $username make",
-                $cmd_out_tmp, "test/$curr_test_file")) {
-            unless (&run_cmd('make', $cmd_out_tmp,
-                    "test/$curr_test_file")) {
-                chdir $curr_pwd or die $!;
-                return 0;
-            }
-        }
-
-    } else {
-        unless (&run_cmd('make', $cmd_out_tmp,
-                "test/$curr_test_file")) {
-            chdir $curr_pwd or die $!;
-            return 0;
-        }
+    unless (&config_recompile('./extras/apparmor/configure_args.sh --enable-udp-server')) {
+        &write_test_file("[-] configure/recompile failure.\n",
+            "test/$curr_test_file");
+        chdir $curr_pwd or die $!;
+        $rv = 0;
     }
 
     &run_cmd("$lib_view_cmd ./server/.libs/fwknopd", $cmd_out_tmp, "test/$curr_test_file");
@@ -6404,6 +6431,21 @@ sub init() {
         for my $re (split /\s*,\s*/, $test_exclude) {
             push @tests_to_exclude, qr/$re/;
         }
+    }
+
+    ### cache the configure args that were used before running the
+    ### test suite
+    my $config_log_file = '../config.log';
+    if (-e $config_log_file) {
+        open F, "< $config_log_file" or die $!;
+        while (<F>) {
+            ###   $ ./configure --prefix=/usr --sysconfdir=/etc ...
+            if (m/^\s+[\$#]\s+(\.\/configure.*)/) {
+                $orig_config_args = $1;
+                last;
+            }
+        }
+        close F;
     }
 
     if ($enable_openssl_compatibility_tests) {
