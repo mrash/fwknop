@@ -182,9 +182,12 @@ EXTRA_DIST = \
     test/conf/gpg_hmac_sha512_access.conf \
     test/conf/fwknoprc_hmac_sha512_base64_key \
     test/conf/gpg_no_pw_hmac_sha512_access.conf \
-    test/conf/no_flush_init_fwknopd.conf \
-    test/conf/no_flush_exit_fwknopd.conf \
-    test/conf/no_flush_init_or_exit_fwknopd.conf \
+    test/conf/ipt_no_flush_init_fwknopd.conf \
+    test/conf/ipt_no_flush_exit_fwknopd.conf \
+    test/conf/ipt_no_flush_init_or_exit_fwknopd.conf \
+    test/conf/firewd_no_flush_init_fwknopd.conf \
+    test/conf/firewd_no_flush_exit_fwknopd.conf \
+    test/conf/firewd_no_flush_init_or_exit_fwknopd.conf \
     test/conf/hmac_access.conf \
     test/conf/hmac_cmd_access.conf \
     test/conf/hmac_cmd_setuid_access.conf \
@@ -259,12 +262,19 @@ EXTRA_DIST = \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
     test/conf/ipt_output_chain_fwknopd.conf \
+    test/conf/firewd_output_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_2_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_3_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_4_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_5_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_6_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_2_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_3_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_4_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_5_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_6_fwknopd.conf \
     test/conf/invalid_run_dir_path_fwknopd.conf \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
