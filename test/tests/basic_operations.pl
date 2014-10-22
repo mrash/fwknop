@@ -2523,7 +2523,7 @@
         'subcategory' => 'server',
         'detail'   => "invalid $FW_TYPE INPUT spec",
         'function' => \&generic_exec,
-        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain'} -a $cf{'def_access'} " .
+        'cmdline' => qq/$fwknopdCmd -c $cf{"invalid_${fw_conf_prefix}_input_chain"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -2533,8 +2533,8 @@
         'subcategory' => 'server',
         'detail'   => "invalid $FW_TYPE INPUT spec (2)",
         'function' => \&generic_exec,
-        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain2'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
+        'cmdline' => qq/$fwknopdCmd -c $cf{"invalid_${fw_conf_prefix}_input_chain2"} -a $cf{'def_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2543,8 +2543,8 @@
         'subcategory' => 'server',
         'detail'   => "invalid $FW_TYPE INPUT spec (3)",
         'function' => \&generic_exec,
-        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain3'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
+        'cmdline' => qq/$fwknopdCmd -c $cf{"invalid_${fw_conf_prefix}_input_chain3"} -a $cf{'def_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2553,8 +2553,8 @@
         'subcategory' => 'server',
         'detail'   => "invalid $FW_TYPE INPUT spec (4)",
         'function' => \&generic_exec,
-        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain4'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
+        'cmdline' => qq/$fwknopdCmd -c $cf{"invalid_${fw_conf_prefix}_input_chain4"} -a $cf{'def_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
         'function' => \&generic_exec,
         'exec_err' => $YES,
     },
@@ -2563,7 +2563,7 @@
         'subcategory' => 'server',
         'detail'   => "invalid $FW_TYPE INPUT spec (5)",
         'function' => \&generic_exec,
-        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain5'} -a $cf{'def_access'} " .
+        'cmdline' => qq/$fwknopdCmd -c $cf{"invalid_${fw_conf_prefix}_input_chain5"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,
@@ -2573,7 +2573,7 @@
         'subcategory' => 'server',
         'detail'   => "invalid $FW_TYPE INPUT spec (6)",
         'function' => \&generic_exec,
-        'cmdline' => "$fwknopdCmd -c $cf{'invalid_ipt_input_chain6'} -a $cf{'def_access'} " .
+        'cmdline' => qq/$fwknopdCmd -c $cf{"invalid_${fw_conf_prefix}_input_chain6"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
         'function' => \&generic_exec,
         'exec_err' => $YES,

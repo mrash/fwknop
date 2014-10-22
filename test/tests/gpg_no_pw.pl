@@ -106,10 +106,10 @@
     {
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
-        'detail'   => 'iptables - no flush at init',
+        'detail'   => "$FW_TYPE - no flush at init",
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_gpg_args_no_pw,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_init'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_no_flush_init"} / .
             "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -118,10 +118,10 @@
     {
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
-        'detail'   => 'iptables - no flush at exit',
+        'detail'   => "$FW_TYPE - no flush at exit",
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_gpg_args_no_pw,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_exit'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_no_flush_exit"} / .
             "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -130,10 +130,10 @@
     {
         'category' => 'GPG (no pw)',
         'subcategory' => 'client+server',
-        'detail'   => 'iptables - no flush at init or exit',
+        'detail'   => "$FW_TYPE - no flush at init or exit",
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_gpg_args_no_pw,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_init_or_exit'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_no_flush_init_or_exit"} / .
             "-a $cf{'multi_gpg_no_pw_access'} $intf_str " .
             "-d $default_digest_file -p $default_pid_file",
         'fw_rule_created' => $NEW_RULE_REQUIRED,

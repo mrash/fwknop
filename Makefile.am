@@ -141,8 +141,10 @@ EXTRA_DIST = \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
     test/conf/portrange_fwknopd.conf \
-    test/conf/custom_input_chain_fwknopd.conf \
-    test/conf/custom_nat_chain_fwknopd.conf \
+    test/conf/ipt_custom_input_chain_fwknopd.conf \
+    test/conf/firewd_custom_input_chain_fwknopd.conf \
+    test/conf/ipt_custom_nat_chain_fwknopd.conf \
+    test/conf/firewd_custom_nat_chain_fwknopd.conf \
     test/conf/gpg_invalid_exe_access.conf \
     test/conf/disable_aging_fwknopd.conf \
     test/conf/disable_aging_nat_fwknopd.conf \
@@ -269,7 +271,8 @@ EXTRA_DIST = \
     test/conf/legacy_iv_access.conf \
     test/conf/legacy_iv_long_key_access.conf \
     test/conf/legacy_iv_long_key2_access.conf \
-    test/conf/local_nat_fwknopd.conf \
+    test/conf/ipt_local_nat_fwknopd.conf \
+    test/conf/firewd_local_nat_fwknopd.conf \
     test/conf/mismatch_open_ports_access.conf \
     test/conf/mismatch_user_access.conf \
     test/conf/multi_gpg_access.conf \
@@ -277,7 +280,8 @@ EXTRA_DIST = \
     test/conf/multi_source_match_access.conf \
     test/conf/multi_stanzas_access.conf \
     test/conf/multi_stanzas_with_broken_keys.conf \
-    test/conf/nat_fwknopd.conf \
+    test/conf/ipt_nat_fwknopd.conf \
+    test/conf/firewd_nat_fwknopd.conf \
     test/conf/no_multi_source_match_access.conf \
     test/conf/no_source_match_access.conf \
     test/conf/no_subnet_source_match_access.conf \
@@ -295,8 +299,10 @@ EXTRA_DIST = \
     test/conf/udp_server_fwknopd.conf \
     test/conf/spa_over_http_fwknopd.conf \
     test/conf/spa_over_http.pcap \
-    test/conf/snat_fwknopd.conf \
-    test/conf/snat_no_translate_ip_fwknopd.conf \
+    test/conf/ipt_snat_fwknopd.conf \
+    test/conf/firewd_snat_fwknopd.conf \
+    test/conf/ipt_snat_no_translate_ip_fwknopd.conf \
+    test/conf/firewd_snat_no_translate_ip_fwknopd.conf \
     test/conf/spa_replay.pcap \
     test/fko-wrapper/Makefile \
     test/fko-wrapper/fko_wrapper.c \
