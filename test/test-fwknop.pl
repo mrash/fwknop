@@ -71,7 +71,7 @@ our $invalid_key_file2 = 'invalid2.key';
 our $invalid_key_file3 = 'invalid2.key';
 
 our $FW_TYPE   = 'iptables'; ### default to iptables
-our $FW_PREFIX = 'IPT_';
+our $FW_PREFIX = 'IPT';
 our $fw_conf_prefix = 'ipt';
 
 our $spoof_user = 'testuser';
