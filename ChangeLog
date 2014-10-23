@@ -1,13 +1,13 @@
 fwknop-2.6.4 (10//2014):
-    - Bug fix to ensure that a User-Agent string can be specified when the
-      fwknop client uses wget via SSL to resolve the external IP address. This
-      closes issue #134 on github reported by Barry Allard. The fwknop now
-      uses the wget '-U' option to specify the User-Agent string with a
-      default of "Fwknop/<version>". In addition, a new command line argument
-      "--use-wget-user-agent" to allow the default wget User-Agent string to
-      apply instead.
+    - [client] Bug fix to ensure that a User-Agent string can be specified
+      when the fwknop client uses wget via SSL to resolve the external IP
+      address. This closes issue #134 on github reported by Barry Allard. The
+      fwknop client now uses the wget '-U' option to specify the User-Agent
+      string with a default of "Fwknop/<version>". In addition, a new command
+      line argument "--use-wget-user-agent" to allow the default wget
+      User-Agent string to apply instead.
     - (Gerry Reno) Added support for firewalld to the fwknopd daemon on RHEL 7
-      CentOS 7. This is implemented using the current firewalld '--direct
+      and CentOS 7. This is implemented using the current firewalld '--direct
       --passthrough' capability which accepts raw iptables commands. More
       information on firewalld can be found here:
 
@@ -22,6 +22,9 @@ fwknop-2.6.4 (10//2014):
 
           BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
           13:24:52 UTC 2014 armv7l GNU/Linux
+
+    - [python module] When an HMAC key is passed to spa_data_final() then
+      default to HMAC SHA256 if no HMAC mode was specified.
 
 fwknop-2.6.3 (07/28/2014):
     - [client] External IP resolution via '-R' (or '--resolve-ip-http') is now
