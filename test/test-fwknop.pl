@@ -1303,16 +1303,18 @@ sub profile_coverage() {
     if ($lcov_path) {
         mkdir "$output_dir/$lcov_results_dir"
             unless -d "$output_dir/$lcov_results_dir";
-        &run_cmd(qq|$lcov_path --capture --directory .. | .
+        &run_cmd(qq|$lcov_path --rc lcov_branch_coverage=1 --capture --directory .. | .
             qq|--output-file $output_dir/lcov_coverage.info|,
                 $cmd_out_tmp, $curr_test_file);
 
         ### exclude /usr/include/* files
-        &run_cmd(qq|$lcov_path -r $output_dir/lcov_coverage.info | .
+        &run_cmd(qq|$lcov_path --rc lcov_branch_coverage=1 | .
+            qq|-r $output_dir/lcov_coverage.info | .
             qq|/usr/include/\\* --output-file $output_dir/lcov_coverage_final.info|,
                 $cmd_out_tmp, $curr_test_file);
 
-        &run_cmd(qq|$genhtml_path $output_dir/lcov_coverage_final.info | .
+        &run_cmd(qq|$genhtml_path --rc genhtml_branch_coverage=1 | .
+            qq|$output_dir/lcov_coverage_final.info | .
             qq|--output-directory $output_dir/$lcov_results_dir|,
                 $cmd_out_tmp, $curr_test_file);
 
