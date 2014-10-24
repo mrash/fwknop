@@ -53,7 +53,7 @@ int
 run_udp_server(fko_srv_options_t *opts)
 {
     int                 s_sock, sfd_flags, selval, pkt_len;
-    int                 is_err, s_timeout;
+    int                 is_err, s_timeout, rv=1;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
@@ -136,10 +136,7 @@ run_udp_server(fko_srv_options_t *opts)
     while(1)
     {
         if(sig_do_stop())
-        {
-            close(s_sock);
-            return 1;
-        }
+            break;
 
         /* Check for any expired firewall rules and deal with them.
         */
@@ -164,8 +161,8 @@ run_udp_server(fko_srv_options_t *opts)
             */
             log_msg(LOG_ERR, "run_udp_server: select error socket: %s",
                 strerror(errno));
-            close(s_sock);
-            return -1;
+            rv = -1;
+            break;
         }
 
         if(selval == 0)
@@ -212,23 +209,19 @@ run_udp_server(fko_srv_options_t *opts)
             log_msg(LOG_DEBUG, "run_udp_server() processed: %d packets",
                     opts->packet_ctr);
 
-        /* Count the set of processed packets (pcap_dispatch() return
-         * value) - we use this as a comparison for --packet-limit regardless
-         * of SPA packet validity at this point.
-        */
         if (opts->packet_ctr_limit && opts->packet_ctr >= opts->packet_ctr_limit)
         {
             log_msg(LOG_WARNING,
                 "* Incoming packet count limit of %i reached",
                 opts->packet_ctr_limit
             );
-            return 1;
+            break;
         }
 
     } /* infinite while loop */
 
     close(s_sock);
-    return 1;
+    return rv;
 }
 
 /***EOF***/
