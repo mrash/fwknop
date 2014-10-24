@@ -211,7 +211,7 @@ my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_configure_args_checks = 0;
 my $enable_profile_coverage_check = 0;
-my $profile_coverage_init = 0;
+my $disable_profile_coverage_init = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -307,7 +307,7 @@ exit 1 unless GetOptions(
     'enable-configure-args-checks' => \$enable_configure_args_checks,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'enable-cores-pattern' => \$enable_cores_pattern_mode,
-    'profile-coverage-init' => \$profile_coverage_init,
+    'disable-profile-coverage-init' => \$disable_profile_coverage_init,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
@@ -535,7 +535,6 @@ if ($enable_complete) {
 
 $enable_valgrind = 0 if $disable_valgrind;
 $enable_fault_injection = 0 if $disable_fault_injection;
-$enable_profile_coverage_check = 1 if $profile_coverage_init;
 
 unless (-d $output_dir) {
     mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
@@ -6609,8 +6608,8 @@ sub init() {
     if ($gcov_path) {
         if ($enable_profile_coverage_check
                 and not $list_mode) {
-            if ($profile_coverage_init) {
-                print "[+] Recompiling fwknop and removing previous coverage files...\n";
+            unless ($disable_profile_coverage_init) {
+                print "[+] Recompiling fwknop and removing any previous coverage files...\n";
                 ### if we recompile then remove the .gcno files (which are
                 ### generated at compile time)
                 &compile_warnings();
@@ -6621,8 +6620,6 @@ sub init() {
                     print "[-] Warning: -fprofile-args -ftest-coverage not ",
                         "found, use ./configure --enable-profile-coverage?\n";
                 }
-                print "[+] Exiting.\n";
-                exit(0);
             }
             push @tests_to_exclude, qr/distcheck/;
         }
