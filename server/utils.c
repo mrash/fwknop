@@ -100,8 +100,6 @@ is_valid_dir(const char *path)
 int
 verify_file_perms_ownership(const char *file)
 {
-    int res = 1;
-
 #if HAVE_STAT
     struct stat st;
 
@@ -118,10 +116,7 @@ verify_file_perms_ownership(const char *file)
                 "[-] file: %s is not a regular file or symbolic link.",
                 file
             );
-            /* when we start in enforcing this instead of just warning
-             * the user
-            res = 0;
-            */
+            return 0;
         }
 
         if((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != (S_IRUSR|S_IWUSR))
@@ -155,13 +150,13 @@ verify_file_perms_ownership(const char *file)
         {
             log_msg(LOG_ERR, "[-] stat() against file: %s returned: %s",
                 file, strerror(errno));
-            res = 0;
+            return 0;
         }
     }
 
 #endif
 
-    return res;
+    return 1;
 }
 
 static int

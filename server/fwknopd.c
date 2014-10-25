@@ -119,7 +119,7 @@ main(int argc, char **argv)
 
         /* Initialize the firewall rules handler based on the fwknopd.conf
          * file, but (for iptables firewalls) don't flush any rules or create
-         * any chains yet.  This allows us to dump the current firewall rules
+         * any chains yet. This allows us to dump the current firewall rules
          * via fw_rules_dump() in --fw-list mode before changing around any rules
          * of an existing fwknopd process.
         */
@@ -236,7 +236,7 @@ main(int argc, char **argv)
         kill(opts.tcp_server_pid, SIGTERM);
 
         /* --DSS XXX: This seems to be necessary if the tcp server
-         *            was restarted by this program.  We need to
+         *            was restarted by this program. We need to
          *            investigate and fix this. For now, this works
          *            (it is kludgy, but does no harm afaik).
         */
@@ -312,7 +312,7 @@ static void setup_pid(fko_srv_options_t *opts)
     pid_t    old_pid;
 
     /* If we are a new process (just being started), proceed with normal
-     * start-up.  Otherwise, we are here as a result of a signal sent to an
+     * start-up. Otherwise, we are here as a result of a signal sent to an
      * existing process and we want to restart.
     */
     if(get_running_pid(opts) != getpid())
@@ -506,7 +506,7 @@ static int stop_fwknopd(fko_srv_options_t * const opts)
     return EXIT_FAILURE;
 }
 
-/* Ensure the specified directory exists.  If not, create it or die.
+/* Ensure the specified directory exists. If not, create it or die.
 */
 static int
 check_dir_path(const char * const filepath, const char * const fp_desc, const unsigned char use_basename)
@@ -538,7 +538,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
         strlcpy(tmp_path, filepath, sizeof(tmp_path));
 
     /* At this point, we should make the path is more than just the
-     * PATH_SEP.  If it is not, silently return.
+     * PATH_SEP. If it is not, silently return.
     */
     if(strlen(tmp_path) < 2)
         return 1;
@@ -551,7 +551,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
         if(errno == ENOENT)
         {
             log_msg(LOG_WARNING,
-                "%s directory: %s does not exist.  Attempting to create it.",
+                "%s directory: %s does not exist. Attempting to create it.",
                 fp_desc, tmp_path
             );
 
@@ -619,7 +619,7 @@ make_dir_path(const char * const run_dir)
 
             /* Stat this part of the path to see if it is a valid directory.
              * If it does not exist, attempt to create it. If it does, and
-             * it is a directory, go on.  Otherwise, any other error cause it
+             * it is a directory, go on. Otherwise, any other error cause it
              * to bail.
             */
             if(stat(tmp_path, &st) != 0)
@@ -750,7 +750,7 @@ write_pid_file(fko_srv_options_t *opts)
         return -1;
     }
 
-    /* Attempt to lock the PID file.  If we get an EWOULDBLOCK
+    /* Attempt to lock the PID file. If we get an EWOULDBLOCK
      * error, another instance already has the lock. So we grab
      * the pid from the existing lock file, complain and bail.
     */

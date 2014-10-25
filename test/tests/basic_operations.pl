@@ -2146,6 +2146,22 @@
         ],
         'positive_output_matches' => [qr/to\screate/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'run dir non-directory',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --fw-list",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_conf_file' => [
+            'FWKNOP_RUN_DIR      ' . cwd() . "/$cf{'def'}"
+        ],
+        'positive_output_matches' => [qr/NOT a directory/],
+    },
 
     {
         'category' => 'basic operations',
@@ -2169,6 +2185,16 @@
         'cmdline' => "$fwknopdCmd $default_server_conf_args -f -P proto invalid",
         'exec_err' => $YES,
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid config path /dev/null',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c /dev/null -a $cf{'def_access'} " .
+            "-p $default_pid_file $intf_str --exit-parse-config ",
+        'exec_err' => $YES,
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
