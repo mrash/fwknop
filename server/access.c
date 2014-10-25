@@ -1119,19 +1119,10 @@ acc_data_is_valid(struct passwd *user_pw, acc_stanza_t * const acc)
         }
     }
 
-    if(acc->force_snat == 1 && acc->force_nat == 0)
+    if((acc->force_snat == 1 || acc->force_masquerade == 1) && acc->force_nat == 0)
     {
         log_msg(LOG_ERR,
-                "[*] FORCE_SNAT implies FORCE_NAT must also be used for access stanza source: '%s'",
-                acc->source
-        );
-        return(0);
-    }
-
-    if(acc->force_masquerade == 1 && acc->force_nat == 0)
-    {
-        log_msg(LOG_ERR,
-                "[*] FORCE_MASQUERADE implies FORCE_NAT must also be used for access stanza source: '%s'",
+                "[*] FORCE_SNAT/FORCE_MASQUERADE implies FORCE_NAT must also be used for access stanza source: '%s'",
                 acc->source
         );
         return(0);

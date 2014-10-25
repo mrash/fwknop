@@ -2435,7 +2435,7 @@
         'detail'   => 'invalid access.conf file path',
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'cmdline' => "$fwknopdCmd -f -a invalid --exit-parse-config",
+        'cmdline' => "$fwknopdCmd -f -c $cf{'def'} -a invalid --exit-parse-config",
     },
 
     {
@@ -2463,6 +2463,15 @@
         'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'gpg_no_pw_no_fpr_access'} " .
             "-d $default_digest_file -p $default_pid_file -f --exit-parse-config",
         'positive_output_matches' => [qr/Must have either sig/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG require sig and disable sig set',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'gpg_no_sig_no_fpr_access'} " .
+            "-d $default_digest_file -p $default_pid_file -f --exit-parse-config",
+        'positive_output_matches' => [qr/GPG_REQUIRE_SIG and GPG_DISABLE_SIG are both set/],
     },
 
     {
@@ -2842,6 +2851,24 @@
             '### comment'
         ],
         'positive_output_matches' => [qr/encryption\spassphrase/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG invalid home dir path',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                         any',
+            'HMAC_KEY                       hmactest',
+            'GPG_DECRYPT_PW                 testtest',
+            'GPG_HOME_DIR                   somedir'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/unable to stat/],
     },
 
     {

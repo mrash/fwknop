@@ -426,6 +426,7 @@ our %cf = (
     'gpg_no_pw_fpr_access'         => "$conf_dir/gpg_no_pw_fpr_access.conf",
     'gpg_no_pw_bad_fpr_access'     => "$conf_dir/gpg_no_pw_bad_fpr_access.conf",
     'gpg_no_pw_no_fpr_access'      => "$conf_dir/gpg_no_pw_no_fpr_access.conf",
+    'gpg_no_sig_no_fpr_access'     => "$conf_dir/gpg_no_sig_no_fpr_access.conf",
     'gpg_no_pw_hmac_access'        => "$conf_dir/gpg_no_pw_hmac_access.conf",
     'gpg_no_pw_hmac_clientdir_access' => "$conf_dir/gpg_no_pw_hmac_clientdir_access.conf",
     'gpg_no_pw_hmac_serverdir_access' => "$conf_dir/gpg_no_pw_hmac_serverdir_access.conf",
