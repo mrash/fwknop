@@ -75,8 +75,10 @@ have_allow_ip(const char *msg)
 static int
 have_port(const char *msg)
 {
-    const char         *ndx  = msg;
-    int     startlen         = strnlen(msg, MAX_SPA_MESSAGE_SIZE), port_str_len = 0;
+    const char  *ndx = msg;
+    char        port_str[MAX_PORT_STR_LEN+1] = {0};
+    int         startlen = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
+    int         port_str_len=0, i=0, is_err;
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
         return(FKO_ERROR_INVALID_DATA_MESSAGE_PORT_MISSING);
@@ -91,8 +93,15 @@ have_port(const char *msg)
         port_str_len++;
         if((isdigit(*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN))
             return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
+        port_str[i] = *ndx;
         ndx++;
+        i++;
     }
+    port_str[i] = '\0';
+
+    strtol_wrapper(port_str, 1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+        return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
 
     return FKO_SUCCESS;
 }
