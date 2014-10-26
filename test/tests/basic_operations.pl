@@ -2166,6 +2166,13 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'unrecognized arg displays usage',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args -X",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'list all current fw rules',
         'function' => \&generic_exec,
         'cmdline' => "$fwknopdCmd $default_server_conf_args --fw-list-all",
@@ -2676,6 +2683,39 @@
             '### comment line'
         ],
         'positive_output_matches' => [qr/not\sfind.*SOURCE/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => "$FW_TYPE invalid jump rule position",
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            "${FW_PREFIX}_INPUT_ACCESS        ACCEPT, filter, INPUT, 400000, FWKNOP_INPUT_TEST, 1;"
+        ],
+        'positive_output_matches' => [qr/invalid jump rule position/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => "$FW_TYPE invalid chain rule position",
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            "${FW_PREFIX}_INPUT_ACCESS        ACCEPT, filter, INPUT, 1, FWKNOP_INPUT_TEST, 400000;"
+        ],
+        'positive_output_matches' => [qr/invalid chain rule position/],
     },
 
     {
