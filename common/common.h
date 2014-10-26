@@ -151,7 +151,7 @@ enum {
 
 /* Command line argument / argv handling
 */
-#define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
+#define MAX_CMDLINE_ARGS            30                  /*!< should be way more than enough */
 
 #if HAVE_LIBFIU
   #define MAX_FAULT_TAG_LEN 128
