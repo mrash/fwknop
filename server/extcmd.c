@@ -96,7 +96,7 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 
     pid_t   pid=0;
     FILE   *output;
-    int     retval = 0;
+    int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;
     int     line_ctr = 0, found_str = 0;
 
     *pid_status = 0;
@@ -252,7 +252,7 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
         /* Retval is forced to 0 as we don't care about the exit status of
          * the child (for now)
         */
-        retval = 0;
+        retval = EXTCMD_SUCCESS_ALL_OUTPUT;
     }
     else
     {
@@ -262,13 +262,14 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
         if(output == NULL)
         {
             log_msg(LOG_ERR, "Got popen error %i: %s", errno, strerror(errno));
-            retval = -1;
+            retval = EXTCMD_OPEN_ERROR;
         }
         else
         {
             memset(so_buf, 0x0, so_buf_sz);
             while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
             {
+                line_ctr++;
                 if(so_buf != NULL)
                 {
                     strlcat(so_buf, so_read_buf, so_buf_sz);
@@ -539,6 +540,91 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 }
 #endif
 
+int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
+        const fko_srv_options_t * const opts)
+{
+    int         retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+
+#if HAVE_EXECVPE
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for execvpe() */
+    int     argc_new=0;
+    int     pipe_fd[2];
+    pid_t   pid=0;
+#else
+    FILE       *fd = NULL;
+#endif
+
+    *pid_status = 0;
+
+#if HAVE_EXECVPE
+
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd_write() (with execvpe()): running CMD: %s", cmd);
+
+    memset(argv_new, 0x0, sizeof(argv_new));
+
+    if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
+    {
+        log_msg(LOG_ERR,
+                "run_extcmd_write(): Error converting cmd str to argv via strtoargv()");
+        return EXTCMD_ARGV_ERROR;
+    }
+
+    if(pipe(pipe_fd) < 0)
+    {
+        log_msg(LOG_ERR, "run_extcmd_write(): pipe() failed: %s", strerror(errno));
+        free_argv(argv_new, &argc_new);
+        return EXTCMD_PIPE_ERROR;
+    }
+
+    pid = fork();
+    if (pid == 0)
+    {
+        if(chdir("/") != 0)
+            exit(EXTCMD_CHDIR_ERROR);
+
+        close(pipe_fd[1]);
+        dup2(pipe_fd[0], STDIN_FILENO);
+
+        /* don't use env
+        */
+        execvpe(argv_new[0], argv_new, (char * const *)NULL);
+    }
+    else if(pid == -1)
+    {
+        log_msg(LOG_ERR, "run_extcmd_write(): fork() failed: %s", strerror(errno));
+        free_argv(argv_new, &argc_new);
+        return EXTCMD_FORK_ERROR;
+    }
+
+    close(pipe_fd[0]);
+    if(write(pipe_fd[1], cmd_write, strlen(cmd_write)) < 0)
+        retval = EXTCMD_WRITE_ERROR;
+
+    free_argv(argv_new, &argc_new);
+
+    waitpid(pid, pid_status, 0);
+
+#else
+    if ((fd = popen(cmd, "w")) == NULL)
+    {
+        log_msg(LOG_ERR, "Got popen error %i: %s", errno, strerror(errno));
+        retval = EXTCMD_OPEN_ERROR;
+    }
+    else
+    {
+        if (fwrite(cmd_write, strlen(cmd_write), 1, fd) != 1)
+        {
+            log_msg(LOG_ERR, "Could not write to cmd stdin");
+            retval = -1;
+        }
+        pclose(fd);
+    }
+
+#endif
+    return retval;
+}
+
 /* _run_extcmd() wrapper, run an external command.
 */
 int
@@ -570,4 +656,12 @@ search_extcmd(const char *cmd, const int want_stderr, const int timeout,
 {
     return _run_extcmd(0, 0, cmd, NULL, 0, want_stderr, timeout,
             substr_search, pid_status, opts);
+}
+
+/* _run_extcmd_write() wrapper, run a command which is expecting input via stdin
+*/
+int run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
+        const fko_srv_options_t * const opts)
+{
+    return _run_extcmd_write(cmd, cmd_write, pid_status, opts);
 }

@@ -45,9 +45,9 @@
 #define PF_ADD_RULE_ARGS              "pass in quick proto %u from %s to any port %u keep state label " EXPIRE_COMMENT_PREFIX "%u"
 #define PF_WRITE_ANCHOR_RULES_ARGS    "-a %s -f -"
 #if HAVE_EXECVPE
-  #define PF_LIST_ANCHOR_RULES_ARGS   "-a %s -s rules 2> /dev/null"
-#else
   #define PF_LIST_ANCHOR_RULES_ARGS   "-a %s -s rules"
+#else
+  #define PF_LIST_ANCHOR_RULES_ARGS   "-a %s -s rules 2> /dev/null"
 #endif
 #define PF_ANCHOR_CHECK_ARGS          "-s Anchor" SH_REDIR  /* to check for fwknop anchor */
 #define PF_DEL_ALL_ANCHOR_RULES       "-a %s -F all" SH_REDIR

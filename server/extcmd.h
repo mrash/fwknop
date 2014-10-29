@@ -41,6 +41,7 @@
  * may end up in.
 */
 enum {
+    EXTCMD_WRITE_ERROR              =   -9,
     EXTCMD_CHDIR_ERROR              =   -8,
     EXTCMD_OPEN_ERROR               =   -7,
     EXTCMD_ARGV_ERROR               =   -6,
@@ -87,7 +88,8 @@ int run_extcmd_as(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 int search_extcmd(const char *cmd, const int want_stderr,
         const int timeout, const char *substr_search,
         int *pid_status, const fko_srv_options_t * const opts);
-
+int run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
+        const fko_srv_options_t * const opts);
 #endif /* EXTCMD_H */
 
 /***EOF***/
