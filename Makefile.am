@@ -315,6 +315,7 @@ EXTRA_DIST = \
     test/conf/ipt_snat_no_translate_ip_fwknopd.conf \
     test/conf/firewd_snat_no_translate_ip_fwknopd.conf \
     test/conf/spa_replay.pcap \
+    test/conf/fcs_spa.pcap \
     test/fko-wrapper/Makefile \
     test/fko-wrapper/fko_wrapper.c \
     test/fko-wrapper/fko_basic.c \
