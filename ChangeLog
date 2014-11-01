@@ -1,11 +1,18 @@
 fwknop-2.6.4 (10//2014):
-    - [client] Bug fix to ensure that a User-Agent string can be specified
-      when the fwknop client uses wget via SSL to resolve the external IP
-      address. This closes issue #134 on github reported by Barry Allard. The
-      fwknop client now uses the wget '-U' option to specify the User-Agent
-      string with a default of "Fwknop/<version>". In addition, a new command
-      line argument "--use-wget-user-agent" to allow the default wget
-      User-Agent string to apply instead.
+    - [server] Added a UDP server mode so that SPA packets can be acquired via
+      UDP directly without having to use libpcap. This is an optional feature
+      since it opens a UDP port, but fwknopd is careful to never send anything
+      back to a client that sends data to this port. So, from the perspective
+      of an attacker or scanner, fwknopd remains invisible. This feature is
+      enabled in fwknopd either with a new command line argument --udp-server
+      or in the fwknopd.conf file with the ENABLE_UDP_SERVER variable. When
+      deployed in this mode, it is advisable to recompile fwknop beforehand
+      with './configure --enable-udp-server' so that fwknopd does not link
+      against libpcap.
+    - [server] Replaced all popen() and system() calls with execvpe() with no
+      usage of the environment. This is a security measure to not make use of
+      the shell for firewall command execution, and is supported on systems
+      where execvpe() is available.
     - (Gerry Reno) Added support for firewalld to the fwknopd daemon on RHEL 7
       and CentOS 7. This is implemented using the current firewalld '--direct
       --passthrough' capability which accepts raw iptables commands. More
@@ -23,6 +30,13 @@ fwknop-2.6.4 (10//2014):
           BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
           13:24:52 UTC 2014 armv7l GNU/Linux
 
+    - [client] Bug fix to ensure that a User-Agent string can be specified
+      when the fwknop client uses wget via SSL to resolve the external IP
+      address. This closes issue #134 on github reported by Barry Allard. The
+      fwknop client now uses the wget '-U' option to specify the User-Agent
+      string with a default of "Fwknop/<version>". In addition, a new command
+      line argument "--use-wget-user-agent" to allow the default wget
+      User-Agent string to apply instead.
     - [python module] When an HMAC key is passed to spa_data_final() then
       default to HMAC SHA256 if no HMAC mode was specified.
 
