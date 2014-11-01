@@ -600,6 +600,7 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
     close(pipe_fd[0]);
     if(write(pipe_fd[1], cmd_write, strlen(cmd_write)) < 0)
         retval = EXTCMD_WRITE_ERROR;
+    close(pipe_fd[1]);
 
     free_argv(argv_new, &argc_new);
 
