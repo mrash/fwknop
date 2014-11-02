@@ -321,6 +321,7 @@ EXTRA_DIST = \
     test/fko-wrapper/fko_basic.c \
     test/fko-wrapper/run.sh \
     test/fko-wrapper/run_valgrind.sh \
+    test/spa_fuzzing.py \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte_eq.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte.patch \
@@ -341,6 +342,9 @@ EXTRA_DIST = \
     test/fuzzing/patches/invalid_long_proto_define_rijndael_trigger.patch \
     test/fuzzing/patches/long_ip.patch \
     test/fuzzing/patches/non_b64_user_char.patch \
+    test/misc/freebsd_rc.conf \
+    test/misc/pf.rules \
+    test/misc/pf.sh \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
