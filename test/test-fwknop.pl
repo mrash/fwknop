@@ -1649,15 +1649,15 @@ sub configure_args_udp_server_no_libpcap() {
         $rv = 0;
     }
 
-    &run_cmd("$lib_view_cmd ./server/.libs/fwknopd", $cmd_out_tmp, "test/$curr_test_file");
+    chdir $curr_pwd or die $!;
+
+    &run_cmd("$lib_view_str $lib_view_cmd $fwknopdCmd", $cmd_out_tmp, $curr_test_file);
 
     if (&file_find_regex([qr/pcap/], $MATCH_ALL, $APPEND_RESULTS, $cmd_out_tmp)) {
         &write_test_file("[-] fwknopd appears to still link against libpcap.\n",
-            "test/$curr_test_file");
+            $curr_test_file);
         $rv = 0;
     }
-
-    chdir $curr_pwd or die $!;
 
     return $rv;
 }
