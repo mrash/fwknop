@@ -4465,6 +4465,8 @@ sub spa_cmd_exec_cycle() {
         }
         unlink $cmd_exec_test_file;
     } else {
+        &write_test_file("[-] $cmd_exec_test_file file does not exist, setting rv=0.\n",
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -6162,9 +6164,11 @@ sub do_fwknopd_cmd() {
     } else {
         $tries = 0;
         while (not &file_find_regex([qr/fwknopd\smain\sevent\sloop/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp) and
+                not &file_find_regex([qr/Kicking\soff.*server/],
                 $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
             &write_test_file("[.] start_fwknopd() looking " .
-                "for 'main event loop' string, try: $tries\n",
+                "for 'main event loop' or 'Kicking off.*server', try: $tries\n",
                 $curr_test_file);
             $tries++;
             last if $tries == 10;  ### shouldn't reasonably get here
