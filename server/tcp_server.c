@@ -58,7 +58,7 @@ run_tcp_server(fko_srv_options_t *opts)
     pid_t               pid, ppid;
 #endif
     int                 s_sock, c_sock, sfd_flags, clen, selval;
-    int                 reuse_addr = 1, is_err;
+    int                 reuse_addr = 1, is_err, rv=1;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
@@ -169,6 +169,8 @@ run_tcp_server(fko_srv_options_t *opts)
         return -1;
     }
 
+    FD_ZERO(&sfd_set);
+
     /* Now loop and accept and drop connections after the first packet or a
      * short timeout.
     */
@@ -178,7 +180,6 @@ run_tcp_server(fko_srv_options_t *opts)
 
         /* Initialize and setup the socket for select.
         */
-        FD_ZERO(&sfd_set);
         FD_SET(s_sock, &sfd_set);
 
         /* Set our select timeout to 200 ms.
@@ -194,8 +195,8 @@ run_tcp_server(fko_srv_options_t *opts)
             */
             log_msg(LOG_ERR, "run_tcp_server: select error socket: %s",
                 strerror(errno));
-            close(s_sock);
-            return -1;
+            rv = -1;
+            break;
         }
 
 #if !FUZZING_INTERFACES
@@ -206,13 +207,15 @@ run_tcp_server(fko_srv_options_t *opts)
             */
             if(kill(ppid, 0) != 0 && errno == ESRCH)
             {
-                close(s_sock);
-                return -1;
+                rv = -1;
+                break;
             }
-
             continue;
         }
 #endif
+
+        if(! FD_ISSET(s_sock, &sfd_set))
+            continue;
 
         /* Wait for a client to connect
         */
@@ -220,8 +223,8 @@ run_tcp_server(fko_srv_options_t *opts)
         {
             log_msg(LOG_ERR, "run_tcp_server: accept() failed: %s",
                 strerror(errno));
-            close(s_sock);
-            return -1;
+            rv = -1;
+            break;
         }
 
         if(opts->verbose)
@@ -242,11 +245,12 @@ run_tcp_server(fko_srv_options_t *opts)
         close(c_sock);
 
 #if FUZZING_INTERFACES
-        close(s_sock);
-        return 1;
+        break;
 #endif
     } /* infinite while loop */
-    return 1;
+
+    close(s_sock);
+    return rv;
 }
 
 /***EOF***/
