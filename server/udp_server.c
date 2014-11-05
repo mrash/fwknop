@@ -131,12 +131,19 @@ run_udp_server(fko_srv_options_t *opts)
     if(set_sig_handlers() > 0)
         log_msg(LOG_ERR, "Errors encountered when setting signal handlers.");
 
+    FD_ZERO(&sfd_set);
+
     /* Now loop and receive SPA packets
     */
     while(1)
     {
         if(sig_do_stop())
+        {
+            if(opts->verbose)
+                log_msg(LOG_INFO,
+                        "udp_server: terminating signal received, will stop.");
             break;
+        }
 
         /* Check for any expired firewall rules and deal with them.
         */
@@ -145,7 +152,6 @@ run_udp_server(fko_srv_options_t *opts)
 
         /* Initialize and setup the socket for select.
         */
-        FD_ZERO(&sfd_set);
         FD_SET(s_sock, &sfd_set);
 
         /* Set our select timeout to (500ms by default).
@@ -157,15 +163,26 @@ run_udp_server(fko_srv_options_t *opts)
 
         if(selval == -1)
         {
-            /* Select error so bail
-            */
-            log_msg(LOG_ERR, "run_udp_server: select error socket: %s",
-                strerror(errno));
-            rv = -1;
-            break;
+            if(errno == EINTR)
+            {
+                /* restart loop but only after we check for a terminating
+                 * signal above in sig_do_stop()
+                */
+                continue;
+            }
+            else
+            {
+                log_msg(LOG_ERR, "run_udp_server: select error socket: %s",
+                    strerror(errno));
+                rv = -1;
+                break;
+            }
         }
 
         if(selval == 0)
+            continue;
+
+        if(! FD_ISSET(s_sock, &sfd_set))
             continue;
 
         /* If we make it here then there is a datagram to process
