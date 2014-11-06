@@ -87,25 +87,23 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
         const fko_srv_options_t * const opts)
 {
     char    so_read_buf[IO_READ_BUF_LEN] = {0};
-
-#if HAVE_EXECVPE
-    char   *argv_new[MAX_CMDLINE_ARGS]; /* for execvpe() */
-    int     argc_new=0;
-    int     pipe_fd[2];
-#endif
-
     pid_t   pid=0;
     FILE   *output;
     int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;
     int     line_ctr = 0, found_str = 0;
 
-    *pid_status = 0;
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+    int     argc_new=0;
 
 #if HAVE_EXECVPE
+    int     pipe_fd[2];
+#endif
 
-    if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd() (with execvpe()): running CMD: %s", cmd);
+    *pid_status = 0;
 
+    /* Even without execvpe() we examine the command for basic validity
+     * in term of number of args
+    */
     memset(argv_new, 0x0, sizeof(argv_new));
 
     if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
@@ -114,6 +112,17 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
                 "run_extcmd(): Error converting cmd str to argv via strtoargv()");
         return EXTCMD_ARGV_ERROR;
     }
+
+#if !HAVE_EXECVPE
+    /* if we are not using execvpe() then free up argv_new unconditionally
+     * since was used only for validation
+    */
+    free_argv(argv_new, &argc_new);
+#endif
+
+#if HAVE_EXECVPE
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd() (with execvpe()): running CMD: %s", cmd);
 
     if(so_buf != NULL || substr_search != NULL)
     {
@@ -266,7 +275,9 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
         }
         else
         {
-            memset(so_buf, 0x0, so_buf_sz);
+            if(so_buf != NULL)
+                memset(so_buf, 0x0, so_buf_sz);
+
             while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
             {
                 line_ctr++;
@@ -544,10 +555,10 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
         const fko_srv_options_t * const opts)
 {
     int         retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+    int     argc_new=0;
 
 #if HAVE_EXECVPE
-    char   *argv_new[MAX_CMDLINE_ARGS]; /* for execvpe() */
-    int     argc_new=0;
     int     pipe_fd[2];
     pid_t   pid=0;
 #else
@@ -556,11 +567,9 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
 
     *pid_status = 0;
 
-#if HAVE_EXECVPE
-
-    if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd_write() (with execvpe()): running CMD: %s", cmd);
-
+    /* Even without execvpe() we examine the command for basic validity
+     * in term of number of args
+    */
     memset(argv_new, 0x0, sizeof(argv_new));
 
     if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
@@ -569,6 +578,17 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
                 "run_extcmd_write(): Error converting cmd str to argv via strtoargv()");
         return EXTCMD_ARGV_ERROR;
     }
+
+#if !HAVE_EXECVPE
+    /* if we are not using execvpe() then free up argv_new unconditionally
+     * since was used only for validation
+    */
+    free_argv(argv_new, &argc_new);
+#endif
+
+#if HAVE_EXECVPE
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd_write() (with execvpe()): running CMD: %s", cmd);
 
     if(pipe(pipe_fd) < 0)
     {
