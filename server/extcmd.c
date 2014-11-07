@@ -554,7 +554,7 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
         const fko_srv_options_t * const opts)
 {
-    int         retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+    int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;
     char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
     int     argc_new=0;
 
@@ -588,7 +588,8 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
 
 #if HAVE_EXECVPE
     if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd_write() (with execvpe()): running CMD: %s", cmd);
+        log_msg(LOG_INFO, "run_extcmd_write() (with execvpe()): running CMD: %s | %s",
+                cmd_write, cmd);
 
     if(pipe(pipe_fd) < 0)
     {
@@ -627,6 +628,10 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
     waitpid(pid, pid_status, 0);
 
 #else
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd_write() (without execvpe()): running CMD: %s | %s",
+                cmd_write, cmd);
+
     if ((fd = popen(cmd, "w")) == NULL)
     {
         log_msg(LOG_ERR, "Got popen error %i: %s", errno, strerror(errno));
