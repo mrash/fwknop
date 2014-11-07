@@ -891,10 +891,16 @@ for my $test_hr (@tests) {
 &logr("[+] Total test buckets to execute: $test_buckets\n\n");
 
 ### main loop through all of the tests
+my $run_flag = 1;
 for my $test_hr (@tests) {
-    &run_test($test_hr);
+    if ($run_flag
+            or $test_hr->{'category'} eq 'valgrind output'
+            or $test_hr->{'category'} eq 'Look for crashes'
+            or $test_hr->{'category'} eq 'profile coverage') {
+        &run_test($test_hr);
+    }
     if ($test_limit > 0) {
-        last if $executed >= $test_limit;
+        $run_flag = 0 if $executed >= $test_limit;
     }
 }
 
