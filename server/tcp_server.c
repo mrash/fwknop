@@ -54,7 +54,7 @@
 int
 run_tcp_server(fko_srv_options_t *opts)
 {
-#if !FUZZING_INTERFACES
+#if !CODE_COVERAGE
     pid_t               pid, ppid;
 #endif
     int                 s_sock, c_sock, sfd_flags, clen, selval;
@@ -75,7 +75,7 @@ run_tcp_server(fko_srv_options_t *opts)
     }
     log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.", port);
 
-#if !FUZZING_INTERFACES
+#if !CODE_COVERAGE
     /* Fork off a child process to run the command and provide its outputs.
     */
     pid = fork();
@@ -131,7 +131,7 @@ run_tcp_server(fko_srv_options_t *opts)
         return -1;
     }
 
-#if !FUZZING_INTERFACES
+#if !CODE_COVERAGE
     sfd_flags |= O_NONBLOCK;
 
     if(fcntl(s_sock, F_SETFL, sfd_flags) < 0)
@@ -199,7 +199,7 @@ run_tcp_server(fko_srv_options_t *opts)
             break;
         }
 
-#if !FUZZING_INTERFACES
+#if !CODE_COVERAGE
         if(selval == 0)
         {
             /* Timeout - So we check to make sure our parent is still there by simply
@@ -244,7 +244,7 @@ run_tcp_server(fko_srv_options_t *opts)
         shutdown(c_sock, SHUT_RDWR);
         close(c_sock);
 
-#if FUZZING_INTERFACES
+#if CODE_COVERAGE
         break;
 #endif
     } /* infinite while loop */
