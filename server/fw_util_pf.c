@@ -432,24 +432,19 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             }
 
             if(*tmp_ndx == '\n')
-            {
                 tmp_ndx++;
-            }
 
             /* may sure the rule begins with the string "pass", and make sure
              * it ends with a newline.  Bail if either test fails.
             */
             if (strlen(tmp_ndx) <= strlen("pass")
-                || strncmp(tmp_ndx, "pass", strlen("pass")) != 0)
-            {
+                    || strncmp(tmp_ndx, "pass", strlen("pass")) != 0)
                 break;
-            }
 
             newline_tmp_ndx = tmp_ndx;
+
             while (*newline_tmp_ndx != '\n' && *newline_tmp_ndx != '\0')
-            {
                 newline_tmp_ndx++;
-            }
 
             if (*newline_tmp_ndx != '\n')
                 break;
@@ -477,7 +472,6 @@ check_firewall_rules(const fko_srv_options_t * const opts)
          * string so we can continue to the next rule in the list.
         */
         ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
-
     }
 
     if (is_delete)
@@ -486,7 +480,6 @@ check_firewall_rules(const fko_srv_options_t * const opts)
          * has the rule(s) deleted.  If there isn't at least one "pass" rule,
          * then we just flush the anchor.
         */
-
         if (strlen(anchor_rules_copy) > strlen("pass")
             && strncmp(anchor_rules_copy, "pass", strlen("pass")) == 0)
         {
@@ -509,7 +502,6 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         {
             delete_all_anchor_rules(opts);
         }
-
     }
 
     /* Set the next pending expire time accordingly. 0 if there are no
