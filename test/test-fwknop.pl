@@ -825,8 +825,11 @@ my %test_keys = (
     'rc_positive_output_matches' => $OPTIONAL,
     'rc_negative_output_matches' => $OPTIONAL,
     'mv_and_restore_replay_cache' => $OPTIONAL,
+    'client_positive_output_matches' => $OPTIONAL,
+    'client_negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
     'server_negative_output_matches' => $OPTIONAL,
+    'client_cycles_per_server_instance' => $OPTIONAL_NUMERIC,
     'iptables_rm_chains_after_server_start' => $OPTIONAL,
 );
 
@@ -1010,6 +1013,11 @@ sub run_test() {
     if ($enable_valgrind) {
         for my $file ($curr_test_file, $server_test_file) {
             next unless -e $file;
+            if ($rv) {
+                &write_test_file("[+] VERDICT: pass ($executed)\n", $file);
+            } else {
+                &write_test_file("[-] VERDICT: fail ($executed)\n", $file);
+            }
             if (&file_find_regex([qr/^==\d+==\sHEAP\sSUMMARY/],
                     $MATCH_ALL, $NO_APPEND_RESULTS, $file)) {
                 unless (&valgrind_results($file)) {
@@ -2218,10 +2226,15 @@ sub validate_fko_decode() {
 }
 
 sub client_send_spa_packet() {
-    my ($test_hr, $server_receive_check) = @_;
+    my $test_hr = shift;
+    my $client_cycles = 1;
+    $client_cycles = $test_hr->{'client_cycles_per_server_instance'}
+        if $test_hr->{'client_cycles_per_server_instance'} > 0;
+    return &_client_send_spa_packet($test_hr, $client_cycles, $SERVER_RECEIVE_CHECK);
+}
 
-    $server_receive_check = $NO_SERVER_RECEIVE_CHECK
-        unless defined $server_receive_check;
+sub _client_send_spa_packet() {
+    my ($test_hr, $cycle_ctr, $server_receive_check) = @_;
 
     my $rv = 1;
 
@@ -2241,9 +2254,9 @@ sub client_send_spa_packet() {
 
     if (-e $server_cmd_tmp) {
         my $tries = 0;
-        while (not &file_find_regex(
-                [qr/stanza\s.*\sSPA Packet from IP/],
-                $MATCH_ALL, $NO_APPEND_RESULTS, $server_cmd_tmp)) {
+        while (&file_find_num_matches(
+                qr/stanza\s.*\sSPA Packet from IP/,
+                $NO_APPEND_RESULTS, $server_cmd_tmp) != $cycle_ctr+1) {
 
             &write_test_file("[.] client_send_spa_packet() " .
                 "executing client and looking for fwknopd receiving " .
@@ -2252,8 +2265,8 @@ sub client_send_spa_packet() {
 
             $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                     $cmd_out_tmp, $curr_test_file);
-            $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/],
-                $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
+            $rv = 0 unless &file_find_num_matches(qr/Final\sSPA\sData/,
+                $NO_APPEND_RESULTS, $curr_test_file) == $cycle_ctr+1;
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
             $tries++;
@@ -2265,14 +2278,25 @@ sub client_send_spa_packet() {
             sleep 1;
         }
     } else {
+        &write_test_file("[.] client_send_spa_packet() " .
+            "server tmp file $server_cmd_tmp does not exist.\n",
+            $curr_test_file);
+
         $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                 $cmd_out_tmp, $curr_test_file);
         $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/i],
             $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
     }
 
-    &write_test_file("[+] fwknopd received SPA packet.\n", $curr_test_file)
-        unless $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
+    unless ($server_receive_check == $NO_SERVER_RECEIVE_CHECK) {
+        if ($rv) {
+            &write_test_file("[+] fwknopd received SPA packet.\n",
+                $curr_test_file);
+        } else {
+            &write_test_file("[-] fwknopd did not receive SPA packet.\n",
+                $curr_test_file);
+        }
+    }
 
     if ($enable_openssl_compatibility_tests) {
 
@@ -2370,11 +2394,6 @@ sub permissions_check() {
         chmod 0600, $cf{$f} or die $!;
     }
 
-    if ($test_hr->{'server_positive_output_matches'}) {
-        $rv = 0 unless &file_find_regex(
-            $test_hr->{'server_positive_output_matches'},
-            $MATCH_ALL, $APPEND_RESULTS, $server_test_file);
-    }
     return $rv;
 }
 
@@ -2417,6 +2436,8 @@ sub spa_cycle() {
 
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
             = &client_server_interaction($test_hr, [], $USE_CLIENT);
+
+    $rv = 0 unless &process_output_matches($test_hr);
 
     return $rv;
 }
@@ -3329,8 +3350,8 @@ sub fuzzing_encryption_keys() {
         'A'x128,
         'A'x1000,
         'A'x2000,
-        'asdfasdfsafsdafasdfasdfsafsdaffdjskalfjdsklafjsldkafjdsajdkajsklfdafsklfjjdkljdsafjdjd' .
-        'sklfjsfdsafjdslfdkjdljsajdskjdskafjdldsljdkafdsljdslafdslaldldajdskajlddslajsl',
+        'as3fa3dfs2fsda3as2fasdfsa3sdaffdjskalfjdsklafjsldkafjdsajdkajsklfdafsklfjjdkljdsafjdjd' .
+        'sklfjsf3safjdslfdkjdljsajdskjdskafjdldsljdkafdsljdslafdslaldldajdskajlddslajsl',
     );
     return \@keys;
 }
@@ -4603,7 +4624,7 @@ sub iptables_rules_not_duplicated_account_for_timestamps() {
     my @packets = ();
 
     for (my $i=0; $i < 3; $i++) {
-        unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
+        unless (&_client_send_spa_packet($test_hr, 1, $NO_SERVER_RECEIVE_CHECK)) {
             &write_test_file("[-] fwknop client execution error.\n",
                 $curr_test_file);
             $rv = 0;
@@ -4674,7 +4695,7 @@ sub server_bpf_ignore_packet() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
+    unless (&_client_send_spa_packet($test_hr, 1, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -4716,7 +4737,7 @@ sub altered_non_base64_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr, $SERVER_RECEIVE_CHECK)) {
+    unless (&_client_send_spa_packet($test_hr, 1, $SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -4890,7 +4911,7 @@ sub altered_base64_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
+    unless (&_client_send_spa_packet($test_hr, 1, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -4943,7 +4964,7 @@ sub altered_hmac_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
+    unless (&_client_send_spa_packet($test_hr, 1, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -4997,7 +5018,7 @@ sub altered_pkt_hmac_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
+    unless (&_client_send_spa_packet($test_hr, 1, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -5051,7 +5072,7 @@ sub appended_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
+    unless (&_client_send_spa_packet($test_hr, 1, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -5104,7 +5125,7 @@ sub prepended_spa_data() {
     my $fw_rule_created = 0;
     my $fw_rule_removed = 0;
 
-    unless (&client_send_spa_packet($test_hr, $NO_SERVER_RECEIVE_CHECK)) {
+    unless (&_client_send_spa_packet($test_hr, 1, $NO_SERVER_RECEIVE_CHECK)) {
         &write_test_file("[-] fwknop client execution error.\n",
             $curr_test_file);
         $rv = 0;
@@ -5252,77 +5273,77 @@ sub client_server_interaction() {
             $cmd_out_tmp, $curr_test_file);
     }
 
-    if ($test_hr->{'iptables_rm_chains_after_server_start'}) {
-        ### this deletes fwknop chains out from under the running fwknopd
-        ### instance (tests whether it is able to recover with
-        ### chain_exists(), etc.)
-        if ($test_hr->{'fwknopd_cmdline'}
-                =~ /LD_LIBRARY_PATH=(\S+)\s.*\s\-c\s(\S+)\s\-a\s(\S+)/) {
-            my $lib_path     = $1;
-            my $fwknopd_conf = $2;
-            my $access_conf  = $3;
-            &write_test_file("[+] fwknopd iptables policy before flush:\n",
-                $curr_test_file);
-            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
-                "$fwknopd_conf -a $access_conf --fw-list",
-                $cmd_out_tmp, $curr_test_file);
-            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
-                "$fwknopd_conf -a $access_conf --fw-flush",
-                $cmd_out_tmp, $curr_test_file);
-            &write_test_file("[+] fwknopd iptables policy after flush:\n",
-                $curr_test_file);
-            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
-                "$fwknopd_conf -a $access_conf --fw-list",
-                $cmd_out_tmp, $curr_test_file);
-        }
-    }
+    &iptables_rm_chains($test_hr)
+        if $test_hr->{'iptables_rm_chains_after_server_start'};
 
-    ### send the SPA packet(s) to the server either manually using IO::Socket or
-    ### with the fwknopd client
-    if ($spa_client_flag == $USE_CLIENT) {
-        unless (&client_send_spa_packet($test_hr, $SERVER_RECEIVE_CHECK)) {
-            if ($enable_openssl_compatibility_tests) {
-                &write_test_file(
-                    "[-] fwknop client execution and/or OpenSSL error.\n",
-                    $curr_test_file);
-            } else {
-                &write_test_file("[-] fwknop client execution error.\n",
-                    $curr_test_file);
+    my $client_cycles = 1; ### default
+    $client_cycles = $test_hr->{'client_cycles_per_server_instance'}
+        if $test_hr->{'client_cycles_per_server_instance'} > 0;
+
+    for (my $cycle_ctr=0; $cycle_ctr < $client_cycles; $cycle_ctr++) {
+
+        if ($client_cycles > 1) {
+            &write_test_file("[+] Start client cycle: " . ($cycle_ctr+1) . "\n",
+                $curr_test_file);
+        }
+
+        ### send the SPA packet(s) to the server either manually using IO::Socket or
+        ### with the fwknopd client
+        if ($spa_client_flag == $USE_CLIENT) {
+            unless (&_client_send_spa_packet($test_hr, $cycle_ctr, $SERVER_RECEIVE_CHECK)) {
+                if ($enable_openssl_compatibility_tests) {
+                    &write_test_file(
+                        "[-] fwknop client execution and/or OpenSSL error.\n",
+                        $curr_test_file);
+                } else {
+                    &write_test_file("[-] fwknop client execution error.\n",
+                        $curr_test_file);
+                }
+                $rv = 0;
             }
-            $rv = 0;
-        }
-    } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
-        &send_packets($pkts_hr, $max_pkt_tries);
-    } elsif ($spa_client_flag == $READ_PKTS_FROM_FILE) {
-        &send_packets_from_file();
-    } else {
-        ### pcap file mode, nothing to do
-    }
-
-    ### check to see if the SPA packet resulted in a new fw access rule
-    my $ctr = 0;
-    while (not &is_fw_rule_active($test_hr)) {
-        &write_test_file("[.] new fw rule does not exist.\n",
-            $curr_test_file);
-        $ctr++;
-        last if $ctr == 3;
-        sleep 1;
-    }
-    if ($ctr == 3) {
-        $fw_rule_created = 0;
-        $fw_rule_removed = 0;
-    }
-
-    if ($fw_rule_created) {
-        sleep 3;  ### allow time for rule time out.
-        if (&is_fw_rule_active($test_hr)) {
-            &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
-                $curr_test_file);
-            $rv = 0;
+        } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
+            &send_packets($pkts_hr, $max_pkt_tries);
+        } elsif ($spa_client_flag == $READ_PKTS_FROM_FILE) {
+            &send_packets_from_file();
         } else {
-            &write_test_file("[+] new fw rule timed out.\n",
+            ### pcap file mode, nothing to do
+        }
+
+        ### check to see if the SPA packet resulted in a new fw access rule
+        my $ctr = 0;
+        while (not &is_fw_rule_active($test_hr)) {
+            &write_test_file("[.] new fw rule does not exist.\n",
                 $curr_test_file);
-            $fw_rule_removed = 1;
+            $ctr++;
+            last if $ctr == 3;
+            sleep 1;
+        }
+        if ($ctr == 3) {
+            $fw_rule_created = 0;
+            $fw_rule_removed = 0;
+        }
+
+        if ($fw_rule_created) {
+            sleep 3;  ### allow time for rule time out.
+            if (&is_fw_rule_active($test_hr)) {
+                &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
+                    $curr_test_file);
+                $rv = 0;
+            } else {
+                &write_test_file("[+] new fw rule timed out.\n", $curr_test_file);
+                $fw_rule_removed = 1;
+            }
+        }
+
+        $rv = 0 unless &fw_rule_criteria($fw_rule_created,
+                $fw_rule_removed, $test_hr);
+
+        if ($cycle_ctr < $client_cycles - 1) {
+            ### set up for the next cycle (same defaults as at the top of
+            ### this function)
+            $server_was_stopped = 1;
+            $fw_rule_created = 1;
+            $fw_rule_removed = 0;
         }
     }
 
@@ -5330,8 +5351,7 @@ sub client_server_interaction() {
         &stop_fwknopd();
         $server_was_stopped = 0 if &is_fwknopd_running();
     } else {
-        &write_test_file("[-] server is not running.\n",
-            $curr_test_file);
+        &write_test_file("[-] server is not running.\n", $curr_test_file);
         $server_was_stopped = 0;
     }
 
@@ -5340,6 +5360,19 @@ sub client_server_interaction() {
             $curr_test_file);
         $rv = 0;
     }
+
+    &write_test_file("[.] client_server_interaction() summary: rv: $rv, " .
+        "server_was_stopped: $server_was_stopped, " .
+        "fw_rule_created: $fw_rule_created, fw_rule_removed: $fw_rule_removed\n",
+        $curr_test_file);
+
+    return ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed);
+}
+
+sub fw_rule_criteria() {
+    my ($fw_rule_created, $fw_rule_removed, $test_hr) = @_;
+
+    my $rv = 1;
 
     if ($test_hr->{'fw_rule_created'} eq $NEW_RULE_REQUIRED) {
         unless ($fw_rule_created) {
@@ -5372,6 +5405,15 @@ sub client_server_interaction() {
             $rv = 0;
         }
     }
+
+
+    return $rv;
+}
+
+sub process_output_matches() {
+    my $test_hr = shift;
+
+    my $rv = 1;
 
     if ($test_hr->{'client_positive_output_matches'}) {
         unless (&file_find_regex(
@@ -5417,12 +5459,35 @@ sub client_server_interaction() {
         }
     }
 
-    &write_test_file("[.] client_server_interaction() rv: $rv, " .
-        "server_was_stopped: $server_was_stopped, " .
-        "fw_rule_created: $fw_rule_created, fw_rule_removed: $fw_rule_removed\n",
-        $curr_test_file);
+    return $rv;
+}
 
-    return ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed);
+sub iptables_rm_chains() {
+    my $test_hr = shift;
+
+    ### this deletes fwknop chains out from under the running fwknopd
+    ### instance (tests whether it is able to recover with
+    ### chain_exists(), etc.)
+    if ($test_hr->{'fwknopd_cmdline'}
+            =~ /LD_LIBRARY_PATH=(\S+)\s.*\s\-c\s(\S+)\s\-a\s(\S+)/) {
+        my $lib_path     = $1;
+        my $fwknopd_conf = $2;
+        my $access_conf  = $3;
+        &write_test_file("[+] fwknopd iptables policy before flush:\n",
+            $curr_test_file);
+        &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+            "$fwknopd_conf -a $access_conf --fw-list",
+            $cmd_out_tmp, $curr_test_file);
+        &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+            "$fwknopd_conf -a $access_conf --fw-flush",
+            $cmd_out_tmp, $curr_test_file);
+        &write_test_file("[+] fwknopd iptables policy after flush:\n",
+            $curr_test_file);
+        &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+            "$fwknopd_conf -a $access_conf --fw-list",
+            $cmd_out_tmp, $curr_test_file);
+    }
+    return;
 }
 
 sub get_spa_packet_from_file() {
@@ -7185,6 +7250,36 @@ sub is_pid_running() {
         return $pid;
     }
     return 0;
+}
+
+sub file_find_num_matches() {
+    my ($re, $append_results_flag, $file) = @_;
+
+    my $num_matches = 0;
+
+    my $tries = 0;
+    while (not -e $file) {
+        $tries++;
+        sleep 1;
+        return 0 if $tries == 5;
+    }
+
+    open F, "< $file" or
+        (&write_test_file("[-] Could not open $file: $!\n", $curr_test_file) and return 0);
+    while (<F>) {
+        next if /file_find_num_matches\(\)/;
+        if (/$re/) {
+            $num_matches++;
+        }
+    }
+    close F;
+
+    if ($append_results_flag == $APPEND_RESULTS) {
+        &write_test_file("[.] file_find_num_matches() Matched '$re' $num_matches times.",
+            $file);
+    }
+
+    return $num_matches;
 }
 
 sub file_find_regex() {

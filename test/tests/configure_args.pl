@@ -23,6 +23,19 @@
     {
         'category' => 'configure args',
         'subcategory' => 'Rijndael+HMAC',
+        'detail'   => "3 cycles UDP server / tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str --udp-server",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'client_cycles_per_server_instance' => 3,
+    },
+
+    {
+        'category' => 'configure args',
+        'subcategory' => 'Rijndael+HMAC',
         'detail'   => 'command execution (UDP server)',
         'function' => \&spa_cmd_exec_cycle,
         'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
@@ -53,6 +66,21 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_positive_output_matches' => [qr/without execvpe/],
     },
+    {
+        'category' => 'configure args',
+        'subcategory' => 'Rijndael+HMAC',
+        'detail'   => '3 cycles (tcp/22 ssh)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [qr/without execvpe/],
+        'client_cycles_per_server_instance' => 3,
+    },
+
     {
         'category' => 'configure args',
         'subcategory' => 'Rijndael+HMAC',

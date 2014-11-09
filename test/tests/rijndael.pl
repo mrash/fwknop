@@ -12,6 +12,17 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => '3 cycles (tcp/22 ssh)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'client_cycles_per_server_instance' => 3,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'short IP 1.1.1.1 (ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip --get-key " .
