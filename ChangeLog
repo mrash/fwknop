@@ -1,16 +1,17 @@
 fwknop-2.6.4 (10//2014):
     - [server] Added a UDP server mode so that SPA packets can be acquired via
       UDP directly without having to use libpcap. This is an optional feature
-      since it opens a UDP port, but fwknopd is careful to never send anything
-      back to a client that sends data to this port. So, from the perspective
-      of an attacker or scanner, fwknopd remains invisible. This feature is
-      enabled in fwknopd either with a new command line argument --udp-server
-      or in the fwknopd.conf file with the ENABLE_UDP_SERVER variable. When
-      deployed in this mode, it is advisable to recompile fwknop beforehand
-      with './configure --enable-udp-server' so that fwknopd does not link
-      against libpcap.
+      since it opens a UDP port (and therefore requires the local firewall be
+      opened for communications to this port), but fwknopd is careful to never
+      send anything back to a client that sends data to this port. So, from the
+      perspective of an attacker or scanner, fwknopd remains invisible. This
+      feature is enabled in fwknopd either with a new command line argument
+      --udp-server or in the fwknopd.conf file with the ENABLE_UDP_SERVER
+      variable. When deployed in this mode, it is advisable to recompile fwknop
+      beforehand with './configure --enable-udp-server' so that fwknopd does
+      not link against libpcap.
     - [server] Replaced all popen() and system() calls with execvpe() with no
-      usage of the environment. This is a security measure to not make use of
+      usage of the environment. This is a defensive measure to not make use of
       the shell for firewall command execution, and is supported on systems
       where execvpe() is available.
     - (Gerry Reno) Added support for firewalld to the fwknopd daemon on RHEL 7
