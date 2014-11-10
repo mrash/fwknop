@@ -816,11 +816,13 @@ my %test_keys = (
     'server_conf_file'    => $OPTIONAL,
     'digest_cache_file'   => $OPTIONAL,
     'cmd_exec_file_owner' => $OPTIONAL,
+    'server_receive_re'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
     'insert_rule_before_exec'    => $OPTIONAL,
     'insert_rule_while_running'  => $OPTIONAL,
+    'weak_server_receive_check'  => $OPTIONAL,
     'search_for_rule_after_exit' => $OPTIONAL,
     'rc_positive_output_matches' => $OPTIONAL,
     'rc_negative_output_matches' => $OPTIONAL,
@@ -2253,10 +2255,23 @@ sub _client_send_spa_packet() {
     }
 
     if (-e $server_cmd_tmp) {
+
         my $tries = 0;
-        while (&file_find_num_matches(
-                qr/stanza\s.*\sSPA Packet from IP/,
-                $NO_APPEND_RESULTS, $server_cmd_tmp) != $cycle_ctr+1) {
+        for (;;) {
+            $tries++;
+
+            my $server_receive_re = qr/stanza\s.*\sSPA Packet from IP/;
+            $server_receive_re = $test_hr->{'server_receive_re'}
+                if $test_hr->{'server_receive_re'};
+
+            my $matches = &file_find_num_matches($server_receive_re,
+                $NO_APPEND_RESULTS, $server_cmd_tmp);
+
+            if ($test_hr->{'weak_server_receive_check'}) {
+                last if $matches > 0;
+            } else {
+                last if $matches == $cycle_ctr+1;
+            }
 
             &write_test_file("[.] client_send_spa_packet() " .
                 "executing client and looking for fwknopd receiving " .
@@ -2269,7 +2284,6 @@ sub _client_send_spa_packet() {
                 $NO_APPEND_RESULTS, $curr_test_file) == $cycle_ctr+1;
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
-            $tries++;
             if ($test_hr->{'client_pkt_tries'} > 0) {
                 last if $tries == $test_hr->{'client_pkt_tries'};
             } else {

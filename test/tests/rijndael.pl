@@ -362,6 +362,7 @@
         ### check for the first stanza that does not allow tcp/80 - the
         ### second stanza allows this
         'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
@@ -722,6 +723,8 @@
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'no_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'server_receive_re' => qr/No\saccess\sdata\sfound/,
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
     {
@@ -732,7 +735,8 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'no_subnet_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'server_receive_re' => qr/No\saccess\sdata\sfound/,
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
     {
@@ -743,7 +747,8 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'no_multi_src'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'server_receive_re' => qr/No\saccess\sdata\sfound/,
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
     {
@@ -798,6 +803,7 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'broken_keys_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
