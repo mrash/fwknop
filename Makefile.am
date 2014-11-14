@@ -356,6 +356,7 @@ EXTRA_DIST = \
     test/tests/rijndael_backwards_compatibility.pl \
     test/tests/os_compatibility.pl \
     test/tests/fault_injection.pl \
+    test/tests/afl_fuzzing.pl \
     test/tests/gpg_hmac.pl \
     test/tests/gpg_no_pw.pl \
     test/tests/gpg_no_pw_hmac.pl \

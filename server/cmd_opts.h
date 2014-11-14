@@ -153,13 +153,14 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:c:C:d:Dfhi:Kl:O:p:P:RStvV"
+#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:RStvV"
 
 /* Our program command-line options...
 */
 static struct option cmd_opts[] =
 {
     {"access-file",          1, NULL, 'a'},
+    {"afl-fuzzing",          0, NULL, 'A'},
     {"config-file",          1, NULL, 'c'},
     {"packet-limit",         1, NULL, 'C'},
     {"digest-file",          1, NULL, 'd'},

@@ -103,6 +103,7 @@ my @test_files = (
     "$tests_dir/rijndael_hmac.pl",
     "$tests_dir/rijndael_hmac_fuzzing.pl",
     "$tests_dir/fault_injection.pl",
+    "$tests_dir/afl_fuzzing.pl",
     "$tests_dir/os_compatibility.pl",
     "$tests_dir/perl_FKO_module.pl",
     "$tests_dir/python_fko.pl",
@@ -128,6 +129,7 @@ our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
 our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
 our @rijndael_hmac_fuzzing   = ();  ### from tests/rijndael_hmac_fuzzing.pl
 our @fault_injection         = ();  ### from tests/fault_injection.pl
+our @afl_fuzzing             = ();  ### from tests/alf_fuzzing.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
 our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
 our @gpg                     = ();  ### from tests/gpg.pl
@@ -733,6 +735,7 @@ my @tests = (
     @rijndael_hmac,
     @rijndael_hmac_fuzzing,
     @fault_injection,
+    @afl_fuzzing,
     @os_compatibility,
     @perl_FKO_module,
     @python_fko,

@@ -58,9 +58,17 @@ static void setup_pid(fko_srv_options_t *opts);
 static void init_digest_cache(fko_srv_options_t *opts);
 static void set_locale(fko_srv_options_t *opts);
 static pid_t get_running_pid(const fko_srv_options_t *opts);
+#if AFL_FUZZING
+static void afl_pkt_from_stdin(fko_srv_options_t *opts);
+#endif
 
 #if HAVE_LIBFIU
 static void enable_fault_injections(fko_srv_options_t * const opts);
+#endif
+
+#if AFL_FUZZING
+#define AFL_MAX_PKT_SIZE  1024
+#define AFL_DUMP_CTX_SIZE 4096
 #endif
 
 int
@@ -114,7 +122,8 @@ main(int argc, char **argv)
         /* Make sure we have a valid run dir and path leading to digest file
          * in case it configured to be somewhere other than the run dir.
         */
-        if(! check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0))
+        if(!opts.afl_fuzzing
+                && ! check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0))
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
         /* Initialize the firewall rules handler based on the fwknopd.conf
@@ -174,6 +183,12 @@ main(int argc, char **argv)
             log_msg(LOG_INFO, "Configs parsed, exiting.");
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
+
+#if AFL_FUZZING
+        /* SPA data from STDIN. */
+        if(opts.afl_fuzzing)
+            afl_pkt_from_stdin(&opts);
+#endif
 
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
@@ -274,9 +289,68 @@ static void set_locale(fko_srv_options_t *opts)
     return;
 }
 
+#if AFL_FUZZING
+static void afl_pkt_from_stdin(fko_srv_options_t *opts)
+{
+    FILE                *fp = NULL;
+    fko_ctx_t           decode_ctx = NULL;
+    unsigned char       spa_pkt[AFL_MAX_PKT_SIZE] = {0};
+    int                 res = 0, es = EXIT_SUCCESS;
+    char                dump_buf[AFL_DUMP_CTX_SIZE];
+
+    fp = fdopen(STDIN_FILENO, "r");
+    if(fp != NULL)
+    {
+        if(fgets((char *)spa_pkt, AFL_MAX_PKT_SIZE, fp) == NULL)
+        {
+            fclose(fp);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+
+        fclose(fp);
+
+        fko_new(&decode_ctx);
+
+        res = fko_set_encoded_data(decode_ctx, (char *) spa_pkt,
+                strlen((char *)spa_pkt), 0, FKO_DIGEST_SHA256);
+
+        if(res == FKO_SUCCESS)
+            res = fko_set_spa_data(decode_ctx, (const char *) spa_pkt);
+        if(res == FKO_SUCCESS)
+            res = fko_decode_spa_data(decode_ctx);
+        if(res == FKO_SUCCESS)
+            res = dump_ctx_to_buffer(decode_ctx, dump_buf, sizeof(dump_buf));
+        if(res == FKO_SUCCESS)
+            log_msg(LOG_INFO, "%s", dump_buf);
+
+        fko_destroy(decode_ctx);
+
+        if(res == FKO_SUCCESS)
+        {
+            log_msg(LOG_INFO, "SPA packet decode success: %s", fko_errstr(res));
+            es = EXIT_SUCCESS;
+        }
+        else
+        {
+            log_msg(LOG_ERR, "Could not decode SPA packet: %s", fko_errstr(res));
+            es = EXIT_FAILURE;
+        }
+    }
+    else
+        log_msg(LOG_ERR, "Could not acquire SPA packet from stdin.");
+
+    clean_exit(opts, NO_FW_CLEANUP, es);
+}
+#endif
+
 static void init_digest_cache(fko_srv_options_t *opts)
 {
     int     rp_cache_count;
+
+#if AFL_FUZZING
+    if(opts->afl_fuzzing)
+        return;
+#endif
 
     if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
     {
@@ -310,6 +384,11 @@ static void init_digest_cache(fko_srv_options_t *opts)
 static void setup_pid(fko_srv_options_t *opts)
 {
     pid_t    old_pid;
+
+#if AFL_FUZZING
+    if(opts->afl_fuzzing)
+        return;
+#endif
 
     /* If we are a new process (just being started), proceed with normal
      * start-up. Otherwise, we are here as a result of a signal sent to an

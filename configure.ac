@@ -167,6 +167,21 @@ if test "x$want_fuzzing_interfaces" = "xyes"; then
     AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
 fi
 
+dnl Decide whether or not to compile in support for the 'American Fuzzy Lop'
+dnl fuzzer from Michal Zalewski - this is for testing purposes only
+dnl
+want_afl_fuzzing_support=no
+AC_ARG_ENABLE([afl-fuzzing],
+  [AS_HELP_STRING([--enable-afl-fuzzing],
+    [Build fwknop binaries with support for the American Fuzzy Lop fuzzer @<:@default is to disable@:>@])],
+  [want_afl_fuzzing_support=$enableval],
+  [])
+
+if test "x$want_afl_fuzzing_support" = "xyes"; then
+    AC_DEFINE([AFL_FUZZING], [1], [Define for AFL fuzzing support])
+    AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
+fi
+
 dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
 dnl
 want_udp_server=no
