@@ -1038,8 +1038,9 @@ The most comprehensive way to gain diagnostic information on *fwknop* is to run
 the test suite 'test-fwknop.pl' script located in the 'test/' directory in the fwknop
 sources. The test suite sends fwknop through a large number of run time
 tests, has 'valgrind' support, validates both SPA encryption and HMAC results
-against OpenSSL, and even has its own built in fuzzer for SPA communications.
-For more basic diagnostic information, *fwknop* can be executed with the *-T*
+against OpenSSL, and even has its own built in fuzzer for SPA communications (and
+fwknop in version 2.6.4 supports the 'American Fuzzy Lop' (AFL) from Michal Zalewski
+as well).  For more basic diagnostic information, *fwknop* can be executed with the *-T*
 (or *--test*) command line option. This will have *fwknop* simply create and
 print the SPA packet information, then run it through a decrypt/decode cycle
 and print it again. In addition, the *--verbose* command line switch is useful

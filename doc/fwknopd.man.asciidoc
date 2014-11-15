@@ -72,7 +72,7 @@ COMMAND-LINE OPTIONS
 
 *-D, --dump-config*::
     Dump the configuration values that *fwknopd* derives from the
-    '@sysconfdir@/fwknop/fwknopd.conf'' (or override files) and '@sysconfdir@/fwknop/access.conf' on stderr.
+    '@sysconfdir@/fwknop/fwknopd.conf' (or override files) and '@sysconfdir@/fwknop/access.conf' on stderr.
 
 *--dump-serv-err-codes*::
     Dump all possible *fwknopd* error codes to stdout and exit. This option is
@@ -86,6 +86,15 @@ COMMAND-LINE OPTIONS
     enabled at run time. It is documented here for completeness.
     version of fwknop will not have code compiled in to enable this capability
     at run time. It is documented here for completeness.
+
+*-A, --afl-fuzzing*::
+    Instruct *fwknopd* to acquire SPA packets directly from stdin in support of
+    fuzzing operations from the 'American Fuzzy Lop' (AFL) fuzzer written by Michal
+    Zalewski. This requires that *fwknop* is compiled with the '--enable-afl-fuzzing'
+    argument to the *configure* script as this allows encryption/digest short
+    circuiting in a manner necessary for AFL to function properly. The benefit of
+    this strategy is that AFL can fuzz the SPA packet decoding routines implemented
+    by *libfko*.
 
 *--fw-list-all*::
     List all firewall rules including those that have nothing to do with
@@ -116,7 +125,7 @@ COMMAND-LINE OPTIONS
 
 *-O, --override-config*='<file>'::
     Override config variable values that are normally read from the
-    '@sysconfdir@/fwknop/fwknopd.conf'' file with values from the specified file. Multiple
+    '@sysconfdir@/fwknop/fwknopd.conf' file with values from the specified file. Multiple
     override config files can be given as a comma-separated list.
 
 *-p, --pid-file*='<pid-file>'::
@@ -127,7 +136,7 @@ COMMAND-LINE OPTIONS
 *-P, --pcap-filter*='<filter>'::
     Specify a Berkeley packet filter statement on the *fwknopd* command
     line. This overrides the value of the PCAP_FILTER variable taken
-    from the '@sysconfdir@/fwknop/fwknopd.conf'' file.
+    from the '@sysconfdir@/fwknop/fwknopd.conf' file.
 
 *--pcap-file*='<pcap-file>'::
     This option instructs *fwknopd* to read packet data from a pcap file
@@ -186,7 +195,7 @@ COMMAND-LINE OPTIONS
 
 FWKNOPD CONFIG AND ACCESS VARIABLES
 -----------------------------------
-*fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf'' file for configuration variables
+*fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf' file for configuration variables
 that define its operational parameters (what network interface and port
 to sniff, what features to enable/disable, etc.). The 'fwknopd.conf' file
 does not define any access control directives.
@@ -202,7 +211,7 @@ This section list the more prominent configuration variables used by
 *fwknopd*. It is not a complete list. There are directives for the type
 of firewall used by *fwknopd* (i.e. _iptables_, _ipfw_, or _pf_). You will
 want to make sure to check these to make sure they have appropriate values.
-See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and corresponding details.
+See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and corresponding details.
 
 *PCAP_INTF* '<interface>'::
     Specify the ethernet interface on which *fwknopd* will sniff packets.

@@ -21,6 +21,13 @@ fwknop-2.6.4 (10//2014):
 
       https://fedoraproject.org/wiki/FirewallD
 
+    - [server] Added support for the 'American Fuzzy Lop' (AFL) fuzzer from
+      Michal Zalewski. This requires that fwknop is compiled with the
+      '--enable-afl-fuzzing' argument to the configure script as this allows
+      encryption/digest short circuiting in a manner necessary for AFL to
+      function properly. The benefit of this strategy is that AFL can fuzz the
+      SPA packet decoding routines implemented by libfko. See the test/afl/
+      directory for some automation around AFL fuzzing.
     - (Bill Stubbs) submitted a patch to fix a bug where fwknopd could not
       handle Ethernet frames that include the Frame Check Sequence (FCS)
       header. This header is four bytes long, and is placed at the end of each
