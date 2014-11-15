@@ -12,11 +12,21 @@ This directory contains enabling scripts in order to make it easy to fuzz
 fwknop with AFL. It is assumed that AFL is installed and in your path. The
 files are in this directory are organized as follows:
 
+afl-fuzzing.in   - Directory for initial AFL test case(s).
+afl-fuzzing.out  - Directory for AFL results after a fuzzing run.
+
 afl-compile.sh   - Script to compile fwknop underneath afl-gcc.
 afl-fuzzing.in   - AFL input directory which contains input test cases.
 afl-fuzzing.out  - AFL output directory.
 afl-run.sh       - Script to invoke AFL with proper command line arguments to
                    fwknopd for fuzzing enablement.
+
+For gcov code coverage only:
+
+afl-compile-code-coverage.sh    - Compile fwknop with code coverage support.
+afl-gen-code-coverage.sh        - Generate code coverage report after running
+                                  afl-run.sh (and with coverage support
+                                  compiled in)
 
 Here is an example of what fwknopd produces when compiled for AFL support when
 a dummy SPA packet is provided in non-encoded/encrypted form via fwknopd's
@@ -47,4 +57,4 @@ SPA Data Digest: AAAAA
            HMAC: <NULL>
  Final SPA Data: 200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
 
-SPA packet decode success: Success
+SPA packet decode: Success
