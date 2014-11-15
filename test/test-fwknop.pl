@@ -214,6 +214,8 @@ my $enable_recompilation_warnings_check = 0;
 my $enable_configure_args_checks = 0;
 my $enable_profile_coverage_check = 0;
 my $disable_profile_coverage_init = 0;
+my $profile_rm_prev_sh = 'rm-coverage-files.sh';
+my $profile_gen_report_sh = 'gen-coverage-report.sh';
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -1296,6 +1298,8 @@ sub compile_warnings() {
 
 sub profile_coverage() {
 
+    my $rv = 1;
+
     ### check for any *.gcno files - if they don't exist, then fwknop was
     ### not compiled with profile support
     unless (glob('../client/*.gcno') and glob('../server/*.gcno')) {
@@ -1306,40 +1310,28 @@ sub profile_coverage() {
 
     my $curr_dir = getcwd() or die $!;
 
-    ### gcov -b ../client/*.gcno
-    for my $dir ('../client', '../server', '../lib/.libs') {
-        next unless -d $dir;
-        chdir $dir or die $!;
-        system "$gcov_path -b -u *.gcno > /dev/null 2>&1";
-        chdir $curr_dir or die $!;
-
-        &run_cmd(qq|grep "called 0 returned" $dir/*.gcov|,
-                $cmd_out_tmp, $curr_test_file);
+    unless ($lcov_path) {
+        &write_test_file(
+            "[-] lcov command not found, skipping code coverage report generation.",
+            $curr_test_file);
+        return 0;
     }
 
-    ### if lcov has been installed then use it to build profile
-    ### result HTML pages
-    if ($lcov_path) {
-        mkdir "$output_dir/$lcov_results_dir"
-            unless -d "$output_dir/$lcov_results_dir";
-        &run_cmd(qq|$lcov_path --rc lcov_branch_coverage=1 --capture --directory .. | .
-            qq|--output-file $output_dir/lcov_coverage.info|,
-                $cmd_out_tmp, $curr_test_file);
+    &run_cmd("./$profile_gen_report_sh", $cmd_out_tmp, $curr_test_file);
 
-        ### exclude /usr/include/* files
-        &run_cmd(qq|$lcov_path --rc lcov_branch_coverage=1 | .
-            qq|-r $output_dir/lcov_coverage.info | .
-            qq|/usr/include/\\* --output-file $output_dir/lcov_coverage_final.info|,
-                $cmd_out_tmp, $curr_test_file);
-
-        &run_cmd(qq|$genhtml_path --rc genhtml_branch_coverage=1 | .
-            qq|$output_dir/lcov_coverage_final.info | .
-            qq|--output-directory $output_dir/$lcov_results_dir|,
-                $cmd_out_tmp, $curr_test_file);
-
-        if (-d "${output_dir}.last") {
-            &run_cmd("./$coverage_diff_path", $cmd_out_tmp, $curr_test_file);
+    if (-d $lcov_results_dir) {
+        move $lcov_results_dir, "$output_dir/$lcov_results_dir";
+        for my $f ('lcov_coverage.info', 'lcov_coverage_final.info') {
+            move $f, "$output_dir/$f" if -e $f;
         }
+    } else {
+        &write_test_file("[-] $lcov_results_dir does not exist.",
+            $cmd_out_tmp, $curr_test_file);
+        $rv = 0;
+    }
+
+    if (-d "${output_dir}.last") {
+        &run_cmd("./$coverage_diff_path", $cmd_out_tmp, $curr_test_file);
     }
 
     if ($username) {
@@ -1352,7 +1344,7 @@ sub profile_coverage() {
         system qq/find .. -name $extension | xargs -r chmod a+w/;
     }
 
-    return 1;
+    return $rv;
 }
 
 sub fiu_run_fault_injection() {
@@ -1588,12 +1580,11 @@ sub config_recompile() {
     my $config_cmd = shift;
 
     if ($enable_profile_coverage_check) {
+        chdir 'test' or die $!;
         ### we're recompiling, so remove any existing profile coverage
         ### files since they will be invalidated by the recompile
-        for my $extension ('*.gcno', '*.gcda', '*.gcov') {
-            ### remove profile output from any previous run
-            system qq{find . -name $extension | xargs rm 2> /dev/null};
-        }
+        &run_cmd("./test/$profile_rm_prev_sh", $cmd_out_tmp, $curr_test_file);
+        chdir '..' or die $!;
     }
 
     &run_cmd('make clean', $cmd_out_tmp, "test/$curr_test_file");
