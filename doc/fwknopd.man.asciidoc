@@ -181,6 +181,11 @@ COMMAND-LINE OPTIONS
     provided by SPA clients. This option is mostly useful for the fuzzing tests
     in the test suite to ensure broad code coverage under adverse conditions.
 
+*-U, --udp-server*::
+    Run *fwknopd* in UDP server mode so that SPA packets are acquired via a
+    UDP socket directly without having to use libpcap. See the discussion of
+    the ``ENABLE_UDP_SERVER'' configuration variable below for more information.
+
 *-v, --verbose*::
     Run *fwknopd* in verbose mode. This can option can be specified
     multiple times to increase the verbosity of the output to the system
@@ -356,7 +361,7 @@ See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and correspond
     is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
 
 *ENABLE_UDP_SERVER* '<Y/N>'::
-    Enable the *fwknopd* UDP server. This enables *fwknopd* to acquire SPA
+    Enable the *fwknopd* UDP server. This instructs *fwknopd* to acquire SPA
     packets via a UDP socket directly without having to use libpcap. When this
     mode is enabled, *fwknop* should be compiled with *--enable-udp-server*
     (passed to the *configure* script) so that libpcap can be removed as a

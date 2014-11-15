@@ -153,7 +153,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:RStvV"
+#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:RStUvV"
 
 /* Our program command-line options...
 */
