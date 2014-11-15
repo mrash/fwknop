@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 08/26/2014
+.\"      Date: 11/15/2014
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "08/26/2014" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "11/15/2014" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -102,7 +102,8 @@ will use the compile\-time default location (typically
 Dump the configuration values that
 \fBfwknopd\fR
 derives from the
-\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq (or override files) and
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+(or override files) and
 \fI@sysconfdir@/fwknop/access\&.conf\fR
 on stderr\&.
 .RE
@@ -120,6 +121,22 @@ This option is only used for fault injection testing when
 \fBfwknop\fR
 is compiled to support the libfiu library (see:
 \fIhttp://blitiri\&.com\&.ar/p/libfiu/\fR)\&. Under normal circumstances this option is not used, and any packaged version of fwknop will not have code compiled in so this capability is not enabled at run time\&. It is documented here for completeness\&. version of fwknop will not have code compiled in to enable this capability at run time\&. It is documented here for completeness\&.
+.RE
+.PP
+\fB\-A, \-\-afl\-fuzzing\fR
+.RS 4
+Instruct
+\fBfwknopd\fR
+to acquire SPA packets directly from stdin in support of fuzzing operations from the
+\fIAmerican Fuzzy Lop\fR
+(AFL) fuzzer written by Michal Zalewski\&. This requires that
+\fBfwknop\fR
+is compiled with the
+\fI\-\-enable\-afl\-fuzzing\fR
+argument to the
+\fBconfigure\fR
+script as this allows encryption/digest short circuiting in a manner necessary for AFL to function properly\&. The benefit of this strategy is that AFL can fuzz the SPA packet decoding routines implemented by
+\fBlibfko\fR\&.
 .RE
 .PP
 \fB\-\-fw\-list\-all\fR
@@ -169,7 +186,8 @@ support\&.
 \fB\-O, \-\-override\-config\fR=\fI<file>\fR
 .RS 4
 Override config variable values that are normally read from the
-\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file with values from the specified file\&. Multiple override config files can be given as a comma\-separated list\&.
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+file with values from the specified file\&. Multiple override config files can be given as a comma\-separated list\&.
 .RE
 .PP
 \fB\-p, \-\-pid\-file\fR=\fI<pid\-file>\fR
@@ -186,7 +204,8 @@ will use the compile\-time default location (typically \*(Aq@localstatedir@/run/
 Specify a Berkeley packet filter statement on the
 \fBfwknopd\fR
 command line\&. This overrides the value of the PCAP_FILTER variable taken from the
-\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file\&.
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+file\&.
 .RE
 .PP
 \fB\-\-pcap\-file\fR=\fI<pcap\-file>\fR
@@ -249,6 +268,13 @@ in test mode\&. This instructs
 to acquire and process SPA packets, but not manipulate firewall rules or execute commands that are provided by SPA clients\&. This option is mostly useful for the fuzzing tests in the test suite to ensure broad code coverage under adverse conditions\&.
 .RE
 .PP
+\fB\-U, \-\-udp\-server\fR
+.RS 4
+Run
+\fBfwknopd\fR
+in UDP server mode so that SPA packets are acquired via a UDP socket directly without having to use libpcap\&. See the discussion of the \(lqENABLE_UDP_SERVER\(rq configuration variable below for more information\&.
+.RE
+.PP
 \fB\-v, \-\-verbose\fR
 .RS 4
 Run
@@ -267,12 +293,12 @@ Display version information and exit\&.
 .RE
 .SH "FWKNOPD CONFIG AND ACCESS VARIABLES"
 .sp
-\fBfwknopd\fR references the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file for configuration variables that define its operational parameters (what network interface and port to sniff, what features to enable/disable, etc\&.)\&. The \fIfwknopd\&.conf\fR file does not define any access control directives\&.
+\fBfwknopd\fR references the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR file for configuration variables that define its operational parameters (what network interface and port to sniff, what features to enable/disable, etc\&.)\&. The \fIfwknopd\&.conf\fR file does not define any access control directives\&.
 .sp
 The access control directives are contained in the \fI@sysconfdir@/fwknop/access\&.conf\fR file\&. Access control directives define encryption keys and level of access that is granted to an fwknop client that has generated the appropriate encrypted SPA message\&.
 .SS "FWKNOPD\&.CONF VARIABLES"
 .sp
-This section list the more prominent configuration variables used by \fBfwknopd\fR\&. It is not a complete list\&. There are directives for the type of firewall used by \fBfwknopd\fR (i\&.e\&. \fIiptables\fR, \fIipfw\fR, or \fIpf\fR)\&. You will want to make sure to check these to make sure they have appropriate values\&. See the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file for the full list and corresponding details\&.
+This section list the more prominent configuration variables used by \fBfwknopd\fR\&. It is not a complete list\&. There are directives for the type of firewall used by \fBfwknopd\fR (i\&.e\&. \fIiptables\fR, \fIipfw\fR, or \fIpf\fR)\&. You will want to make sure to check these to make sure they have appropriate values\&. See the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR file for the full list and corresponding details\&.
 .PP
 \fBPCAP_INTF\fR \fI<interface>\fR
 .RS 4
@@ -450,6 +476,28 @@ Controls whether fwknopd is permitted to sniff SPA packets regardless of whether
 \fBTCPSERV_PORT\fR \fI<port>\fR
 .RS 4
 Set the port number that the \(lqdummy\(rq TCP server listens on\&. This server is only spawned when \(lqENABLE_TCP_SERVER\(rq is set to \(lqY\(rq\&.
+.RE
+.PP
+\fBENABLE_UDP_SERVER\fR \fI<Y/N>\fR
+.RS 4
+Enable the
+\fBfwknopd\fR
+UDP server\&. This instructs
+\fBfwknopd\fR
+to acquire SPA packets via a UDP socket directly without having to use libpcap\&. When this mode is enabled,
+\fBfwknop\fR
+should be compiled with
+\fB\-\-enable\-udp\-server\fR
+(passed to the
+\fBconfigure\fR
+script) so that libpcap can be removed as a dependency\&. As one would expect, when the UDP server is used, no incoming packets are ever acknowledged by
+\fBfwknopd\fR
+and therefore collecting SPA packets in this mode is a good alternative to sniffing the wire directly\&.
+.RE
+.PP
+\fBUDPSERV_PORT\fR \fI<port>\fR
+.RS 4
+Set the port number that the UDP server listens on\&. This server is only spawned when \(lqENABLE_UDP_SERVER\(rq is set to \(lqY\(rq\&.
 .RE
 .PP
 \fBSYSLOG_IDENTITY\fR \fI<identity>\fR

@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 09/27/2014
+.\"      Date: 11/15/2014
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "09/27/2014" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "11/15/2014" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1231,7 +1231,7 @@ For GPG functionality, GnuPG must also be correctly installed and configured alo
 To take advantage of all of the authentication and access management features of the \fBfwknopd\fR daemon/service a functioning \fIiptables\fR, \fIipfw\fR, or \fIpf\fR firewall is required on the underlying operating system\&.
 .SH "DIAGNOSTICS"
 .sp
-The most comprehensive way to gain diagnostic information on \fBfwknop\fR is to run the test suite \fItest\-fwknop\&.pl\fR script located in the \fItest/\fR directory in the fwknop sources\&. The test suite sends fwknop through a large number of run time tests, has \fIvalgrind\fR support, validates both SPA encryption and HMAC results against OpenSSL, and even has its own built in fuzzer for SPA communications\&. For more basic diagnostic information, \fBfwknop\fR can be executed with the \fB\-T\fR (or \fB\-\-test\fR) command line option\&. This will have \fBfwknop\fR simply create and print the SPA packet information, then run it through a decrypt/decode cycle and print it again\&. In addition, the \fB\-\-verbose\fR command line switch is useful to see various SPA packet specifics printed to stdout\&.
+The most comprehensive way to gain diagnostic information on \fBfwknop\fR is to run the test suite \fItest\-fwknop\&.pl\fR script located in the \fItest/\fR directory in the fwknop sources\&. The test suite sends fwknop through a large number of run time tests, has \fIvalgrind\fR support, validates both SPA encryption and HMAC results against OpenSSL, and even has its own built in fuzzer for SPA communications (and fwknop in version 2\&.6\&.4 supports the \fIAmerican Fuzzy Lop\fR (AFL) from Michal Zalewski as well)\&. For more basic diagnostic information, \fBfwknop\fR can be executed with the \fB\-T\fR (or \fB\-\-test\fR) command line option\&. This will have \fBfwknop\fR simply create and print the SPA packet information, then run it through a decrypt/decode cycle and print it again\&. In addition, the \fB\-\-verbose\fR command line switch is useful to see various SPA packet specifics printed to stdout\&.
 .SH "SEE ALSO"
 .sp
 fwknopd(8), iptables(8), pf(4), pfctl(8), ipfw(8), gpg(1), libfko documentation\&.
