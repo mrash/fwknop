@@ -327,7 +327,7 @@ static void afl_pkt_from_stdin(fko_srv_options_t *opts)
 
         if(res == FKO_SUCCESS)
         {
-            log_msg(LOG_INFO, "SPA packet decode success: %s", fko_errstr(res));
+            log_msg(LOG_INFO, "SPA packet decode: %s", fko_errstr(res));
             es = EXIT_SUCCESS;
         }
         else
