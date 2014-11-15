@@ -142,7 +142,7 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
-* Mon Nov 10 2014 <mbr@cipherdyne.org> - 2.6.4
+* Sat Nov 15 2014 <mbr@cipherdyne.org> - 2.6.4
 - fwknop-2.6.4 release.
 
 * Mon Jul 28 2014 <mbr@cipherdyne.org> - 2.6.3

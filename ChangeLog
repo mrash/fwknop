@@ -1,4 +1,4 @@
-fwknop-2.6.4 (10//2014):
+fwknop-2.6.4 (11/15/2014):
     - [server] Added a UDP server mode so that SPA packets can be acquired via
       UDP directly without having to use libpcap. This is an optional feature
       since it opens a UDP port (and therefore requires the local firewall be
