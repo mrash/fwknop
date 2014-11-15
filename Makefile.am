@@ -345,6 +345,15 @@ EXTRA_DIST = \
     test/misc/freebsd_rc.conf \
     test/misc/pf.rules \
     test/misc/pf.sh \
+    test/afl/README \
+    test/afl/afl-compile.sh \
+    test/afl/afl-compile-code-coverage.sh \
+    test/afl/afl-gen-code-coverage.sh \
+    test/afl/afl-run.sh \
+    test/afl/fwknopd-stdin-test.sh \
+    test/afl/afl-fuzzing.in/spa.start \
+    test/afl/afl-fuzzing.in/spa2.start \
+    test/afl/afl-fuzzing.in/spa3.start \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
@@ -379,6 +388,9 @@ EXTRA_DIST = \
     test/fko-python.py \
     test/run-test-suite.sh \
     test/valgrind_suppressions \
+    test/configure_max_coverage.sh \
+    test/rm-coverage-files.sh \
+    test/gen-coverage-report.sh \
     test/configure_max_coverage.sh \
     test/README \
     VERSION \
