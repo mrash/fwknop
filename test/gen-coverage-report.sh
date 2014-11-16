@@ -17,9 +17,9 @@ do
     cd ..
 done
 
-cd lib/.libs
-gcov -b -u *.gcno
-cd ../..
+cd lib
+gcov -b -u .libs/*.gcno
+cd ..
 
 lcov --rc lcov_branch_coverage=1 --capture --directory . --output-file $LCOV_INFO
 lcov --rc lcov_branch_coverage=1 -r $LCOV_INFO /usr/include/\* --output-file $LCOV_INFO_FINAL
