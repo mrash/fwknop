@@ -1,4 +1,53 @@
-commit d2880021ca6a42d7d0e040e6f0de840b55fb51a1 (HEAD, refs/heads/master)
+commit 9860aebfab874e7a22c75d4b3ebd60940267c2f2 (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 16 16:31:40 2014 -0500
+
+    minor date update for the 2.6.4 release
+
+ ChangeLog   | 2 +-
+ fwknop.spec | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit a90bc544ba5851a341be6a2c2b14be0a28c428ca
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 16 15:47:07 2014 -0500
+
+    Revert "[test suite] minor path update for gcov"
+    
+    This reverts commit 978bc4e3e1eab4e2fd82eb88391024177685fd26.
+
+ test/gen-coverage-report.sh | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit 978bc4e3e1eab4e2fd82eb88391024177685fd26
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 16 09:19:15 2014 -0500
+
+    [test suite] minor path update for gcov
+
+ test/gen-coverage-report.sh | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+commit a72b69eee73f408b77bbd090f194f411f55a194a (refs/remotes/origin/master, refs/remotes/origin/HEAD)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 15 10:51:48 2014 -0500
+
+    manpage updates
+
+ client/fwknop.8.in  |  6 +++---
+ server/fwknopd.8.in | 62 +++++++++++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 58 insertions(+), 10 deletions(-)
+
+commit 90bed88863397a21295f323aebdfa11719bae5a8
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 15 10:49:20 2014 -0500
+
+    changes since 2.6.3
+
+ ChangeLog.git | 2124 +++++++++++++++++++++++----------------------------------
+ 1 file changed, 857 insertions(+), 1267 deletions(-)
+
+commit d2880021ca6a42d7d0e040e6f0de840b55fb51a1
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Sat Nov 15 10:45:59 2014 -0500
 
@@ -71,7 +120,7 @@ Date:   Sat Nov 15 00:15:55 2014 -0500
  doc/fwknopd.man.asciidoc | 19 ++++++++++++++-----
  3 files changed, 24 insertions(+), 7 deletions(-)
 
-commit aaa44656bcfcb705d80768a7b9aa0d45a0e55e21 (refs/remotes/origin/master, refs/remotes/origin/HEAD)
+commit aaa44656bcfcb705d80768a7b9aa0d45a0e55e21
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Thu Nov 13 20:55:04 2014 -0500
 
