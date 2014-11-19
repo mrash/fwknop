@@ -1824,6 +1824,14 @@ validate_options(fko_cli_options_t *options)
                 log_msg(LOG_VERBOSITY_WARNING,
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
             }
+        }
+
+        /* Make sure -a overrides IP resolution
+        */
+        if(options->allow_ip_str[0] != 0x0
+                && strncasecmp(options->allow_ip_str, "resolve", strlen("resolve")) != 0)
+        {
+            options->resolve_ip_http_https = 1;
 
             if(! is_valid_ipv4_addr(options->allow_ip_str))
             {
@@ -1855,6 +1863,12 @@ validate_options(fko_cli_options_t *options)
         if (options->http_user_agent[0] == '\0')
             snprintf(options->http_user_agent, HTTP_MAX_USER_AGENT_LEN,
                 "%s%s", "Fwknop/", MY_VERSION);
+
+#if AFL_FUZZING
+    /* Don't issue IP resolution requests in AFL fuzzing mode
+    */
+    options->resolve_ip_http_https = 0;
+#endif
 
     if(options->http_proxy[0] != 0x0 && options->spa_proto != FKO_PROTO_HTTP)
     {
