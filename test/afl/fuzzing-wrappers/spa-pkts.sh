@@ -9,7 +9,7 @@ IN_DIR="test-cases/spa-pkts"
 SERVER="../../server/.libs/fwknopd"
 LIB_DIR="../../lib/.libs"
 
-[ ! -d $ARCHIVE_DIR ] && echo "[*] $ARCHIVE_DIR does not exist" && exit
+[ ! -d $ARCHIVE_DIR ] && mkdir -p $ARCHIVE_DIR
 TS=`date +"%m%d%y%H%M%S"`
 [ -d $OUT_DIR ] && mv $OUT_DIR "$ARCHIVE_DIR/$FDIR-$TS"
 mkdir $OUT_DIR
