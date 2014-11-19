@@ -1791,7 +1791,7 @@ validate_options(fko_cli_options_t *options)
         strlcpy(options->use_rc_stanza, options->spa_server_str, sizeof(options->use_rc_stanza));
     }
 
-    /* Gotta have a Destination unless we are just testing or getting the
+    /* Must have a destination unless we are just testing or getting the
      * the version, and must use one of [-s|-R|-a].
     */
     if(!options->test
@@ -1825,20 +1825,20 @@ validate_options(fko_cli_options_t *options)
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
             }
         }
+    }
 
-        /* Make sure -a overrides IP resolution
-        */
-        if(options->allow_ip_str[0] != 0x0
-                && strncasecmp(options->allow_ip_str, "resolve", strlen("resolve")) != 0)
+    /* Make sure -a overrides IP resolution
+    */
+    if(options->allow_ip_str[0] != 0x0
+            && strncasecmp(options->allow_ip_str, "resolve", strlen("resolve")) != 0)
+    {
+        options->resolve_ip_http_https = 0;
+
+        if(! is_valid_ipv4_addr(options->allow_ip_str))
         {
-            options->resolve_ip_http_https = 1;
-
-            if(! is_valid_ipv4_addr(options->allow_ip_str))
-            {
-                log_msg(LOG_VERBOSITY_ERROR,
-                    "Invalid allow IP specified for SPA access");
-                exit(EXIT_FAILURE);
-            }
+            log_msg(LOG_VERBOSITY_ERROR,
+                "Invalid allow IP specified for SPA access");
+            exit(EXIT_FAILURE);
         }
     }
 
