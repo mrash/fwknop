@@ -52,6 +52,7 @@ static int set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options,
 static int set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options,
         char *access_buf);
 static int get_rand_port(void);
+int resolve_ip_https(fko_cli_options_t *options);
 int resolve_ip_http(fko_cli_options_t *options);
 static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
@@ -59,8 +60,10 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
 static void zero_buf_wrapper(char *buf, int len);
 static int is_hostname_str_with_port(const char *str,
         char *hostname, size_t hostname_bufsize, int *port);
+#if HAVE_LIBFIU
+static void enable_fault_injections(fko_cli_options_t * const opts);
+#endif
 
-#define MAX_CMDLINE_ARGS            50                  /*!< should be way more than enough */
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
 #define HOSTNAME_BUFSIZE            64                  /*!< Maximum size of a hostname string */
 #define CTX_DUMP_BUFSIZE            4096                /*!< Maximum size allocated to a FKO context dump */
@@ -167,6 +170,12 @@ main(int argc, char **argv)
     */
     config_init(&options, argc, argv);
 
+#if HAVE_LIBFIU
+        /* Set any fault injection points early
+        */
+        enable_fault_injections(&options);
+#endif
+
     /* Handle previous execution arguments if required
     */
     if(prev_exec(&options, argc, argv) != 1)
@@ -259,12 +268,24 @@ main(int argc, char **argv)
         /* Resolve the client's public facing IP address if requestesd.
          * if this fails, consider it fatal.
         */
-        if (options.resolve_ip_http)
+        if (options.resolve_ip_http_https)
         {
-            if(resolve_ip_http(&options) < 0)
+            if(options.resolve_http_only)
             {
-                clean_exit(ctx, &options, key, &key_len,
-                    hmac_key, &hmac_key_len, EXIT_FAILURE);
+                if(resolve_ip_http(&options) < 0)
+                {
+                    clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+                }
+            }
+            else
+            {
+                /* Default to HTTPS */
+                if(resolve_ip_https(&options) < 0)
+                {
+                    clean_exit(ctx, &options, key, &key_len,
+                        hmac_key, &hmac_key_len, EXIT_FAILURE);
+                }
             }
         }
 
@@ -549,10 +570,10 @@ main(int argc, char **argv)
         if(res != FKO_SUCCESS)
         {
             errmsg("fko_get_spa_encryption_mode", res);
-            if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
+            if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
                 log_msg(LOG_VERBOSITY_ERROR,
                         "[*] Could not zero out sensitive data buffer.");
-            ctx2 = NULL;
+            ctx = NULL;
             clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
@@ -644,7 +665,10 @@ main(int argc, char **argv)
                  * expected, return 0 instead of an error condition (so calling
                  * programs like the fwknop test suite don't interpret this as
                  * an unrecoverable error), but print the error string for
-                 debugging purposes. */
+                 * debugging purposes. The test suite does run a series of
+                 * tests that use a single key pair for encryption and
+                 * authentication, so decryption become possible for these
+                 * tests. */
                 log_msg(LOG_VERBOSITY_ERROR, "GPG ERR: %s\n%s", fko_gpg_errstr(ctx2),
                     "No access to recipient private key?");
             }
@@ -679,6 +703,8 @@ free_configs(fko_cli_options_t *opts)
 {
     if (opts->resolve_url != NULL)
         free(opts->resolve_url);
+    if (opts->wget_bin != NULL)
+        free(opts->wget_bin);
     zero_buf_wrapper(opts->key, MAX_KEY_LEN+1);
     zero_buf_wrapper(opts->key_base64, MAX_B64_KEY_LEN+1);
     zero_buf_wrapper(opts->hmac_key, MAX_KEY_LEN+1);
@@ -961,9 +987,13 @@ show_last_command(const char * const args_save_file)
     }
 
     if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL) {
-        log_msg(LOG_VERBOSITY_NORMAL, "Last fwknop client command line: %s", args_str);
+        log_msg(LOG_VERBOSITY_NORMAL,
+                "Last fwknop client command line: %s", args_str);
     } else {
-        log_msg(LOG_VERBOSITY_NORMAL, "Could not read line from file: %s", args_save_file);
+        log_msg(LOG_VERBOSITY_NORMAL,
+                "Could not read line from file: %s", args_save_file);
+        fclose(args_file_ptr);
+        return 0;
     }
     fclose(args_file_ptr);
 
@@ -976,14 +1006,11 @@ static int
 run_last_args(fko_cli_options_t *options, const char * const args_save_file)
 {
     FILE           *args_file_ptr = NULL;
-
-    int             current_arg_ctr = 0;
-    int             argc_new = 0;
-    int             i = 0;
-
+    int             argc_new = 0, args_broken = 0;
     char            args_str[MAX_LINE_LEN] = {0};
-    char            arg_tmp[MAX_LINE_LEN]  = {0};
     char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
+
+    memset(argv_new, 0x0, sizeof(argv_new));
 
     if(verify_file_perms_ownership(args_save_file) != 1)
         return 0;
@@ -999,36 +1026,15 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
         args_str[MAX_LINE_LEN-1] = '\0';
         if (options->verbose)
             log_msg(LOG_VERBOSITY_NORMAL, "Executing: %s", args_str);
-        for (i=0; i < (int)strlen(args_str); i++)
+        if(strtoargv(args_str, argv_new, &argc_new, options) != 1)
         {
-            if (!isspace(args_str[i]))
-            {
-                arg_tmp[current_arg_ctr] = args_str[i];
-                current_arg_ctr++;
-            }
-            else
-            {
-                arg_tmp[current_arg_ctr] = '\0';
-                argv_new[argc_new] = calloc(1, strlen(arg_tmp)+1);
-                if (argv_new[argc_new] == NULL)
-                {
-                    log_msg(LOG_VERBOSITY_ERROR, "[*] calloc failure for cmd line arg.");
-                    fclose(args_file_ptr);
-                    return 0;
-                }
-                strlcpy(argv_new[argc_new], arg_tmp, strlen(arg_tmp)+1);
-                current_arg_ctr = 0;
-                argc_new++;
-                if(argc_new >= MAX_CMDLINE_ARGS)
-                {
-                    log_msg(LOG_VERBOSITY_ERROR, "[*] max command line args exceeded.");
-                    fclose(args_file_ptr);
-                    return 0;
-                }
-            }
+            args_broken = 1;
         }
     }
     fclose(args_file_ptr);
+
+    if(args_broken)
+        return 0;
 
     /* Reset the options index so we can run through them again.
     */
@@ -1038,13 +1044,7 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
 
     /* Since we passed in our own copies, free up malloc'd memory
     */
-    for (i=0; i < argc_new; i++)
-    {
-        if(argv_new[i] == NULL)
-            break;
-        else
-            free(argv_new[i]);
-    }
+    free_argv(argv_new, &argc_new);
 
     return 1;
 }
@@ -1321,6 +1321,19 @@ zero_buf_wrapper(char *buf, int len)
     return;
 }
 
+#if HAVE_LIBFIU
+static void
+enable_fault_injections(fko_cli_options_t * const opts)
+{
+    if(opts->fault_injection_tag[0] != 0x0)
+    {
+        fiu_init(0);
+        fiu_enable(opts->fault_injection_tag, 1, NULL, 0);
+    }
+    return;
+}
+#endif
+
 /* free up memory and exit
 */
 static void
@@ -1328,6 +1341,11 @@ clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
         char *key, int *key_len, char *hmac_key, int *hmac_key_len,
         unsigned int exit_status)
 {
+#if HAVE_LIBFIU
+    if(opts->fault_injection_tag[0] != 0x0)
+        fiu_disable(opts->fault_injection_tag);
+#endif
+
     if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
         log_msg(LOG_VERBOSITY_ERROR,
                 "[*] Could not zero out sensitive data buffer.");

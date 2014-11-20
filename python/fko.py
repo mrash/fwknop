@@ -32,7 +32,7 @@ Example simple minimal fknop client:
 
     # Generate the final SPA data string.
     #
-    f.spa_data_final('put_pw_here')
+    f.spa_data_final('put_pw_here', 'put_hmac_pw_here')
 
     # Display the final SPA data string.
     #
@@ -562,7 +562,7 @@ class Fko:
         else:
             return _fko.get_raw_spa_digest(self.ctx)
 
-    def spa_encryption_mode(self, val=None):
+    def encryption_mode(self, val=None):
         """Get or set the spa_encryption mode
 
         This is an integer value. If no argument is given, the current value
@@ -573,6 +573,11 @@ class Fko:
             _fko.set_spa_encryption_mode(self.ctx, val)
         else:
             return _fko.get_spa_encryption_mode(self.ctx)
+
+    def spa_encryption_mode(self, val=None):
+        """Alias for encryption_mode() to maintain backwards compatibility
+        """
+        return self.encryption_mode(val)
 
     def hmac_type(self, val=None):
         """Get or set the spa_hmac_type
@@ -592,8 +597,13 @@ class Fko:
         This function is the final step in creating a complete encrypted
         SPA data string suitable for transmission to an fwknop server.  It
         does require all of the requisite SPA data fields be set. Otherwise,
-        it will fail and throw an fko.error exception.
+        it will fail and throw an fko.error exception. We do set the default
+        HMAC digest to SHA256 if an HMAC key was provided and the HMAC mode
+        was not already set.
         """
+        if hmac_key and not _fko.get_spa_hmac_type(self.ctx):
+            _fko.set_spa_hmac_type(self.ctx, FKO_HMAC_SHA256)
+
         _fko.spa_data_final(self.ctx, key, hmac_key)
 
     def gen_spa_data(self, key):
@@ -658,11 +668,6 @@ class Fko:
 
 # --DSS
 
-    def encryption_type(self, enc_data):
-        """Return the assumed encryption type based on the encryptped data
-        """
-        _fko.encryption_type(enc_data)
-
     def key_gen(self, keyb64, hmac_keyb64):
         """Generate Rijndael and HMAC keys and base64 encode them
         """
@@ -691,7 +696,7 @@ class Fko:
     def get_spa_hmac(self):
         """Return the HMAC for the data in the current context
         """
-        _fko.get_spa_hmac(self.ctx)
+        return _fko.get_spa_hmac(self.ctx)
 
 
     # GPG-related functions.

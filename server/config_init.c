@@ -29,13 +29,16 @@
  ******************************************************************************
 */
 #include "fwknopd_common.h"
+#include "fwknopd_errors.h"
 #include "config_init.h"
 #include "access.h"
 #include "cmd_opts.h"
 #include "utils.h"
 #include "log_msg.h"
 
-#if FIREWALL_IPTABLES
+#if FIREWALL_FIREWALLD
+  #include "fw_util_firewalld.h"
+#elif FIREWALL_IPTABLES
   #include "fw_util_iptables.h"
 #endif
 
@@ -148,6 +151,10 @@ validate_int_var_ranges(fko_srv_options_t *opts)
         1, RCHK_MAX_SNIFF_BYTES);
     range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
         1, RCHK_MAX_TCPSERV_PORT);
+    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
+        1, RCHK_MAX_UDPSERV_PORT);
+    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
+        1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
 
 #if FIREWALL_IPFW
     range_check(opts, "IPFW_START_RULE_NUM", opts->config[CONF_IPFW_START_RULE_NUM],
@@ -256,13 +263,6 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
             continue;
         }
 
-        /*
-        fprintf(stderr,
-            "CONF FILE: %s, LINE: %s\tVar: %s, Val: '%s'\n",
-            config_file, conf_line_buf, var, val
-        );
-        */
-
         good_ent = 0;
         for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
         {
@@ -280,6 +280,15 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
                         {
                             strlcpy(val, opts->config[cndx], sizeof(val));
                             strlcat(val, tmp2, sizeof(val));
+                        }
+                        else
+                        {
+                            /* We didn't map the embedded variable to a valid
+                             * config parameter
+                            */
+                            log_msg(LOG_ERR,
+                                "[*] Invalid embedded variable in: '%s'", val);
+                            break;
                         }
                     }
                 }
@@ -425,7 +434,150 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_MAX_SNIFF_BYTES] == NULL)
         set_config_entry(opts, CONF_MAX_SNIFF_BYTES, DEF_MAX_SNIFF_BYTES);
 
-#if FIREWALL_IPTABLES
+#if FIREWALL_FIREWALLD
+    /* Enable FIREWD forwarding.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_FORWARDING] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_FORWARDING,
+            DEF_ENABLE_FIREWD_FORWARDING);
+
+    /* Enable FIREWD local NAT.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_LOCAL_NAT,
+            DEF_ENABLE_FIREWD_LOCAL_NAT);
+
+    /* Enable FIREWD SNAT.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_SNAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_SNAT,
+            DEF_ENABLE_FIREWD_SNAT);
+
+    /* Make sure we have a valid IP if SNAT is enabled
+    */
+    if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_SNAT], "Y", 1) == 0)
+    {
+        /* Note that fw_config_init() will set use_masquerade if necessary
+        */
+        if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+        {
+            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+            {
+                log_msg(LOG_ERR,
+                    "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
+                );
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+    }
+
+    /* Enable FIREWD OUTPUT.
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_OUTPUT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_OUTPUT,
+            DEF_ENABLE_FIREWD_OUTPUT);
+
+    /* Flush FIREWD at init.
+    */
+    if(opts->config[CONF_FLUSH_FIREWD_AT_INIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_FIREWD_AT_INIT, DEF_FLUSH_FIREWD_AT_INIT);
+
+    /* Flush FIREWD at exit.
+    */
+    if(opts->config[CONF_FLUSH_FIREWD_AT_EXIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_FIREWD_AT_EXIT, DEF_FLUSH_FIREWD_AT_EXIT);
+
+    /* FIREWD input access.
+    */
+    if(opts->config[CONF_FIREWD_INPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_INPUT_ACCESS,
+            DEF_FIREWD_INPUT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_INPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_INPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD output access.
+    */
+    if(opts->config[CONF_FIREWD_OUTPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_OUTPUT_ACCESS,
+            DEF_FIREWD_OUTPUT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_OUTPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_OUTPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD forward access.
+    */
+    if(opts->config[CONF_FIREWD_FORWARD_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_FORWARD_ACCESS,
+            DEF_FIREWD_FORWARD_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_FORWARD_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_FORWARD_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD dnat access.
+    */
+    if(opts->config[CONF_FIREWD_DNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_DNAT_ACCESS,
+            DEF_FIREWD_DNAT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_DNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_DNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD snat access.
+    */
+    if(opts->config[CONF_FIREWD_SNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_SNAT_ACCESS,
+            DEF_FIREWD_SNAT_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_SNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_SNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* FIREWD masquerade access.
+    */
+    if(opts->config[CONF_FIREWD_MASQUERADE_ACCESS] == NULL)
+        set_config_entry(opts, CONF_FIREWD_MASQUERADE_ACCESS,
+            DEF_FIREWD_MASQUERADE_ACCESS);
+
+    if(validate_firewd_chain_conf(opts->config[CONF_FIREWD_MASQUERADE_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid FIREWD_MASQUERADE_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* Check for the firewalld 'comment' match at init time
+    */
+    if(opts->config[CONF_ENABLE_FIREWD_COMMENT_CHECK] == NULL)
+        set_config_entry(opts, CONF_ENABLE_FIREWD_COMMENT_CHECK,
+            DEF_ENABLE_FIREWD_COMMENT_CHECK);
+
+#elif FIREWALL_IPTABLES
     /* Enable IPT forwarding.
     */
     if(opts->config[CONF_ENABLE_IPT_FORWARDING] == NULL)
@@ -660,6 +812,30 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_TCPSERV_PORT] == NULL)
         set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
 
+    /* Enable UDP server.
+    */
+    if(opts->config[CONF_ENABLE_UDP_SERVER] == NULL)
+    {
+        if((strncasecmp(DEF_ENABLE_UDP_SERVER, "Y", 1) == 0) &&
+                !opts->enable_udp_server)
+        {
+            log_msg(LOG_ERR, "pcap capture not compiled in, forcing UDP server mode");
+            opts->enable_udp_server = 1;
+        }
+        set_config_entry(opts, CONF_ENABLE_UDP_SERVER, DEF_ENABLE_UDP_SERVER);
+    }
+
+    /* UDP Server port.
+    */
+    if(opts->config[CONF_UDPSERV_PORT] == NULL)
+        set_config_entry(opts, CONF_UDPSERV_PORT, DEF_UDPSERV_PORT);
+
+    /* UDP server select() timeout in microseconds
+    */
+    if(opts->config[CONF_UDPSERV_SELECT_TIMEOUT] == NULL)
+        set_config_entry(opts, CONF_UDPSERV_SELECT_TIMEOUT,
+            DEF_UDPSERV_SELECT_TIMEOUT);
+
     /* Syslog identity.
     */
     if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
@@ -759,7 +935,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'h':
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                break;
 
             /* Look for configuration file arg.
             */
@@ -856,6 +1031,14 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
+            case 'A':
+#if AFL_FUZZING
+                opts->afl_fuzzing = 1;
+#else
+                log_msg(LOG_ERR, "[*] fwknopd not compiled with AFL fuzzing support");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
+                break;
             case 'a':
                 set_config_entry(opts, CONF_ACCESS_FILE, optarg);
                 break;
@@ -883,8 +1066,23 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'D':
                 opts->dump_config = 1;
                 break;
+            case DUMP_SERVER_ERR_CODES:
+                dump_server_errors();
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+            case EXIT_AFTER_PARSE_CONFIG:
+                opts->exit_after_parse_config = 1;
+                opts->foreground = 1;
+                break;
             case 'f':
                 opts->foreground = 1;
+                break;
+            case FAULT_INJECTION_TAG:
+#if HAVE_LIBFIU
+                set_config_entry(opts, CONF_FAULT_INJECTION_TAG, optarg);
+#else
+                log_msg(LOG_ERR, "[*] fwknopd not compiled with libfiu support");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
                 break;
             case FW_LIST:
                 opts->fw_list = 1;
@@ -911,6 +1109,12 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case 'i':
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);
+                break;
+            case FIREWD_DISABLE_CHECK_SUPPORT:
+                opts->firewd_disable_check_support = 1;
+                break;
+            case IPT_DISABLE_CHECK_SUPPORT:
+                opts->ipt_disable_check_support = 1;
                 break;
             case 'K':
                 opts->kill = 1;
@@ -942,6 +1146,12 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'S':
                 opts->status = 1;
                 break;
+            case 't':
+                opts->test = 1;
+                break;
+            case 'U':
+                opts->enable_udp_server = 1;
+                break;
             /* Verbosity level */
             case 'v':
                 opts->verbose++;
@@ -952,7 +1162,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'V':
                 fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-                break;
             default:
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -996,19 +1205,17 @@ usage(void)
             MY_NAME, MY_VERSION, MY_DESC);
     fprintf(stdout,
       "Usage: fwknopd [options]\n\n"
-      " -h, --help              - Print this usage message and exit.\n"
       " -a, --access-file       - Specify an alternate access.conf file.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
-      " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
-      "                           process and exit when this limit is reached.\n"
-      " -d, --digest-file       - Specify an alternate digest.cache file.\n"
-      " -D, --dump-config       - Dump the current fwknop configuration values.\n"
       " -f, --foreground        - Run fwknopd in the foreground (do not become\n"
       "                           a background daemon).\n"
       " -i, --interface         - Specify interface to listen for incoming SPA\n"
       "                           packets.\n"
+      " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
+      "                           process and exit when this limit is reached.\n"
+      " -d, --digest-file       - Specify an alternate digest.cache file.\n"
+      " -D, --dump-config       - Dump the current fwknop configuration values.\n"
       " -K, --kill              - Kill the currently running fwknopd.\n"
-      "     --gpg-home-dir      - Specify the GPG home directory.\n"
       " -l, --locale            - Provide a locale setting other than the system\n"
       "                           default.\n"
       " -O, --override-config   - Specify a file with configuration entries that will\n"
@@ -1021,16 +1228,40 @@ usage(void)
       "                         - Rotate the digest cache file by renaming it to\n"
       "                           '<name>-old', and starting a new one.\n"
       " -S, --status            - Display the status of any running fwknopd process.\n"
+      " -t, --test              - Test mode, process SPA packets but do not make any\n"
+      "                           firewall modifications.\n"
+      " -U, --udp-server        - Set UDP server mode.\n"
       " -v, --verbose           - Set verbose mode.\n"
       "     --syslog-enable     - Allow messages to be sent to syslog even if the\n"
       "                           foreground mode is set.\n"
       " -V, --version           - Print version number.\n"
+      " -A, --afl-fuzzing       - Run in American Fuzzy Lop (AFL) fuzzing mode\n"
+      "                           plaintext SPA packets are accepted via stdin.\n"
+      " -h, --help              - Print this usage message and exit.\n"
+      " --dump-serv-err-codes   - List all server error codes (only needed by the\n"
+      "                           test suite).\n"
+      " --exit-parse-config     - Parse config files and exit.\n"
+      " --fault-injection-tag   - Enable a fault injection tag (only needed by the\n"
+      "                           test suite).\n"
+      " --pcap-file             - Read potential SPA packets from an existing pcap\n"
+      "                           file.\n"
+      " --pcap-any-direction    - By default fwknopd processes packets that are\n"
+      "                           sent to the sniffing interface, but this option\n"
+      "                           enables processing of packets that originate from\n"
+      "                           an interface (such as in a forwarding situation).\n"
       "     --fw-list           - List all firewall rules that fwknop has created\n"
       "                           and then exit.\n"
       "     --fw-list-all       - List all firewall rules in the complete policy,\n"
       "                           including those that have nothing to do with\n"
       "                           fwknop.\n"
       "     --fw-flush          - Flush all firewall rules created by fwknop.\n"
+      "     --gpg-home-dir      - Specify the GPG home directory (this is normally\n"
+      "                           done in the access.conf file).\n"
+      "     --gpg-exe           - Specify the path to GPG (this is normally done in\n"
+      "                           the access.conf file).\n"
+      " --no-firewd-check-support\n"
+      "                         - Disable test for 'firewall-cmd ... -C' support.\n"
+      " --no-ipt-check-support  - Disable test for 'iptables -C' support.\n"
       "\n"
     );
 

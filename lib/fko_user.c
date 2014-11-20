@@ -43,6 +43,10 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
     char   *username = NULL;
     int     res = FKO_SUCCESS, is_user_heap_allocated=0;
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_username_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -78,6 +82,9 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
             {
                 if((username = getenv("USER")) == NULL)
                 {
+#if HAVE_LIBFIU
+                    fiu_return_on("fko_set_username_strdup1", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
                     username = strdup("NO_USER");
                     if(username == NULL)
                         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -96,6 +103,9 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
     {
         if(is_user_heap_allocated == 1)
             free(username);
+#if HAVE_LIBFIU
+        fiu_return_on("fko_set_username_valuser", FKO_ERROR_INVALID_DATA);
+#endif
         return res;
     }
 
@@ -104,6 +114,10 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
     */
     if(ctx->username != NULL)
         free(ctx->username);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_username_strdup2", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
 
     ctx->username = strdup(username);
 
@@ -123,6 +137,11 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
 int
 fko_get_username(fko_ctx_t ctx, char **username)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_username_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -130,6 +149,10 @@ fko_get_username(fko_ctx_t ctx, char **username)
 
     if(username == NULL)
         return(FKO_ERROR_INVALID_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_username_val", FKO_ERROR_INVALID_DATA);
+#endif
 
     *username = ctx->username;
 

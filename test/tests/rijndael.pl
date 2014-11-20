@@ -12,6 +12,17 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => '3 cycles (tcp/22 ssh)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'client_cycles_per_server_instance' => 3,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'short IP 1.1.1.1 (ssh)',
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a 1.1.1.1 -D $loopback_ip --get-key " .
@@ -33,6 +44,18 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'no_ip_check' => 1
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle legacy truncated key',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_long_key -M legacy",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'legacy_iv_long_key_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
@@ -89,9 +112,8 @@
         'category' => 'Rijndael',
         'subcategory' => 'client',
         'detail'   => "--last-cmd",
-        'function' => \&generic_exec,
-        'cmdline'  => "$fwknopCmd --last-cmd --save-args-file $tmp_args_file " .
-            "$verbose_str",
+        'function' => \&run_last_args,
+        'cmdline'  => "$fwknopCmd --last-cmd --save-args-file $tmp_args_file -v -v -v"
     },
 
     {
@@ -105,6 +127,17 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'SPA through HTTP proxy',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_args -H $resolve_url_with_port --test",
+        'no_ip_check' => 1,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
@@ -115,6 +148,76 @@
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP --resolve-url <def>',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$client_ip_resolve_args " .
+            "--resolve-url https://www.cipherdyne.org/cgi-bin/myip",
+        'no_ip_check' => 1,
+        'positive_output_matches' => [qr/wget/],
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP --resolve-http-only',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$client_ip_resolve_args --resolve-http-only",
+        'no_ip_check' => 1,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP resolve manual URL',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$client_ip_resolve_args --resolve-url $resolve_url",
+        'no_ip_check' => 1,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'client IP resolve URL with port',
+        'function' => \&spa_cycle,
+        'cmdline'  => "$client_ip_resolve_args --resolve-url $resolve_url_with_port",
+        'no_ip_check' => 1,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client',
+        'detail'   => 'client IP --resolve-http-only vs HTTPS',
+        'function' => \&generic_exec,
+        'cmdline'  => "$client_ip_resolve_args --resolve-http-only " .
+            "--resolve-url https://somedomain.com/myip",
+        'no_ip_check' => 1,
+        'positive_output_matches' => [qr/not.*supported/i],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client',
+        'detail'   => 'client IP resolve invalid port',
+        'function' => \&generic_exec,
+        'cmdline'  => "$client_ip_resolve_args --resolve-url http://somedomain.com:99999/myip",
+        'no_ip_check' => 1,
+        'positive_output_matches' => [qr/port.*invalid/i],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
     {
@@ -189,10 +292,10 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
-        'detail'   => 'iptables - no flush at init',
+        'detail'   => "$FW_TYPE - no flush at init",
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_init'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_no_flush_init"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/\'\schain exists/,
@@ -205,10 +308,10 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
-        'detail'   => 'iptables - no flush at exit',
+        'detail'   => "$FW_TYPE - no flush at exit",
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_exit'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_no_flush_exit"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/\'\schain exists/,
@@ -222,10 +325,10 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
-        'detail'   => 'iptables - no flush at init or exit',
+        'detail'   => "$FW_TYPE - no flush at init or exit",
         'function' => \&iptables_no_flush_init_exit,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_flush_init_or_exit'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_no_flush_init_or_exit"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/\'\schain exists/,
@@ -259,6 +362,7 @@
         ### check for the first stanza that does not allow tcp/80 - the
         ### second stanza allows this
         'server_positive_output_matches' => [qr/stanza #1\)\sOne\sor\smore\srequested\sprotocol\/ports\swas\sdenied/],
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
@@ -363,7 +467,7 @@
         'cmdline'  => "$default_client_args_no_get_key " .
             "--rc-file $cf{'rc_invalid_b64_key'} -n testssh",
         'positive_output_matches' => [qr/look\slike\sbase64\-encoded/],
-        'key_file' => $cf{'rc_invalide_b64_key'},
+        'key_file' => $cf{'rc_invalid_b64_key'},
     },
 
     {
@@ -529,6 +633,27 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server --udp-server / tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --udp-server",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server conf / tcp/22",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'udp_server'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
 
     {
         'category' => 'Rijndael',
@@ -598,6 +723,8 @@
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'no_src_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'server_receive_re' => qr/No\saccess\sdata\sfound/,
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
     {
@@ -608,7 +735,8 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'no_subnet_match'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'server_receive_re' => qr/No\saccess\sdata\sfound/,
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
     {
@@ -619,7 +747,8 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'no_multi_src'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [qr/No\saccess\sdata\sfound/],
+        'server_receive_re' => qr/No\saccess\sdata\sfound/,
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
     {
@@ -674,6 +803,7 @@
         'cmdline'  => $default_client_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'broken_keys_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
+        'weak_server_receive_check' => $YES,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
@@ -695,14 +825,14 @@
         'detail'   => "NAT to $internal_nat_host (tcp/22 ssh)",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'open_ports_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'open_ports_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
             qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
     },
     {
         'category' => 'Rijndael',
@@ -710,7 +840,7 @@
         'detail'   => "SNAT $internal_nat_host",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'snat'} -a $cf{'open_ports_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat"} -a $cf{'open_ports_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
@@ -718,7 +848,7 @@
         'no_ip_check' => 1,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'snat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_snat"},
     },
     {
         'category' => 'Rijndael',
@@ -726,7 +856,7 @@
         'detail'   => "SNAT MASQUERADE",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'snat_no_translate_ip'} -a $cf{'open_ports_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'open_ports_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
@@ -736,7 +866,7 @@
         'no_ip_check' => 1,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'snat_no_translate_ip'},
+        'server_conf' => $cf{"${fw_conf_prefix}_snat_no_translate_ip"},
     },
 
     {
@@ -745,14 +875,14 @@
         'detail'   => "NAT hostname->IP (tcp/22 ssh)",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N localhost:22",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'open_ports_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'open_ports_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
             qr/\*\/\sto\:127.0.0.1\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
     },
 
     {
@@ -762,14 +892,14 @@
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/80 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file $verbose_str -N $internal_nat_host:22",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
             qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
     },
 
     {
@@ -787,13 +917,13 @@
         'detail'   => "force NAT $force_nat_host (tcp/22 ssh)",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'force_nat_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'force_nat_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/\sto\:$force_nat_host\:22/i],
         'server_negative_output_matches' => [qr/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
     },
     {
         'category' => 'Rijndael',
@@ -801,14 +931,14 @@
         'detail'   => "local NAT $force_nat_host (tcp/22 ssh)",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --nat-local",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_local_nat"} -a $cf{'force_nat_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/\*\/\sto\:$force_nat_host\:22/i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
         'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'local_nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_local_nat"},
     },
     {
         'category' => 'Rijndael',
@@ -817,14 +947,14 @@
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a $fake_ip -D localhost --nat-local " .
             "--get-key $local_key_file --no-save-args $verbose_str",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'force_nat_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_local_nat"} -a $cf{'force_nat_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/\*\/\sto\:$force_nat_host\:22/i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
         'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'local_nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_local_nat"},
     },
 
     {
@@ -833,14 +963,14 @@
         'detail'   => "local NAT rand port to tcp/22",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --nat-local --nat-rand-port",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_local_nat"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr|\s\*\/\sto\:$loopback_ip\:22|i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
         'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'local_nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_local_nat"},
     },
     {
         'category' => 'Rijndael',
@@ -848,7 +978,7 @@
         'detail'   => "NAT rand port to tcp/22",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --nat-rand-port -N $internal_nat_host",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD.*dport\s22\s.*\sACCEPT/,
@@ -856,7 +986,7 @@
         ],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
     },
     {
         'category' => 'Rijndael',
@@ -864,7 +994,7 @@
         'detail'   => "NAT rand port to -N <host>:40001",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args --nat-rand-port -N $internal_nat_host:40001",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'nat'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD.*dport\s40001\s.*\sACCEPT/,
@@ -872,7 +1002,7 @@
         ],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
     },
 
 
@@ -883,14 +1013,14 @@
         'function' => \&spa_cycle,
         'cmdline'  => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file $verbose_str --nat-local --nat-port 80",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'local_nat'} -a $cf{'def_access'} " .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_local_nat"} -a $cf{'def_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr|\s\*\/\sto\:$loopback_ip\:22|i,
             qr/FWKNOP_INPUT.*dport\s22.*\sACCEPT/],
         'server_negative_output_matches' => [qr/\*\/\sto\:$internal_nat_host\:22/i],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
-        'server_conf' => $cf{'local_nat'},
+        'server_conf' => $cf{"${fw_conf_prefix}_local_nat"},
     },
     {
         'category' => 'Rijndael',
@@ -1079,7 +1209,7 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
-        'detail'   => 'iptables rules not duplicated',
+        'detail'   => "$FW_TYPE rules not duplicated",
         'function' => \&iptables_rules_not_duplicated,
         'cmdline'  => "$default_client_args --test",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",

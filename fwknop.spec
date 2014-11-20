@@ -13,7 +13,7 @@
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.6.0
+Version:	2.6.4
 Epoch:		1
 Release:	1%{?dist}
 Summary:	Firewall Knock Operator client.  An implementation of Single Packet Authorization.
@@ -24,37 +24,37 @@ URL:		http://www.cipherdyne.org/fwknop/
 Source0:	fwknop-%{version}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
-BuildRequires:	gpg, gpgme-devel, libpcap-devel, gdbm-devel, iptables
-Requires:	libfko >= 2.0.1, iptables
+BuildRequires:	gpg, gpgme-devel, libpcap-devel, iptables
+Requires:	libfko >= 2.0.3, iptables
 
 
 %package -n libfko
-Version:	2.0.1
-Release:	2
+Version:	2.0.3
+Release:	1
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	2.0.1
-Release:	2
+Version:	2.0.3
+Release:	1
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
-Requires:	libfko >= 2.0.1
+Requires:	libfko >= 2.0.3
 
 %package server
 Summary:	The Firewall Knock Operator server.  An implementation of Single Packet Authorization.
 Group:		System Environment/Daemons
-Requires:	libfko => 2.0.1, libpcap, gdbm, iptables
+Requires:	libfko => 2.0.3, libpcap, iptables
 
 
 %description
 Fwknop implements an authorization scheme known as Single Packet Authorization
-(SPA) for Linux systems running iptables.  This mechanism requires only a
-single encrypted and non-replayed packet to communicate various pieces of
-information including desired access through an iptables policy. The main
-application of this program is to use iptables in a default-drop stance to
-protect services such as SSH with an additional layer of security in order
+(SPA) for Linux systems running firewalld or iptables.  This mechanism requires
+only a single encrypted and non-replayed packet to communicate various pieces of
+information including desired access through a firewalld or iptables policy. The
+main application of this program is to use firewalld or iptables in a default-drop
+stance to protect services such as SSH with an additional layer of security in order
 to make the exploitation of vulnerabilities (both 0-day and unpatched code)
 much more difficult.
 
@@ -142,6 +142,24 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Sun Nov 16 2014 <mbr@cipherdyne.org> - 2.6.4
+- fwknop-2.6.4 release.
+
+* Mon Jul 28 2014 <mbr@cipherdyne.org> - 2.6.3
+- Removed gdbm and gdbm-devel dependencies since these are only
+  needed if a user compiles fwknopd with the --disable-file-cache
+  argument to the 'configure' script, and the RPM's are not built
+  with this.
+- Bumped libfko and libfko-devel version to 2.0.3.
+- fwknop-2.6.3 release.
+
+* Mon Apr 28 2014 <mbr@cipherdyne.org> - 2.6.2
+- Bumped libfko and libfko-devel version to 2.0.2.
+- fwknop-2.6.2 release.
+
+* Sat Apr 12 2014 <mbr@cipherdyne.org> - 2.6.1
+- fwknop-2.6.1 release.
+
 * Sun Jan 12 2014 <mbr@cipherdyne.org> - 2.6.0
 - Bumped libfko and libfko-devel version to 2.0.1.
 - fwknop-2.6.0 release.

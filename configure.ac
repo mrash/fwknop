@@ -11,7 +11,7 @@ AC_PREREQ(2.62)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
-m4_define(my_version,   [2.6.0])
+m4_define(my_version,   [2.6.4])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
@@ -130,10 +130,67 @@ AC_ARG_ENABLE([profile-coverage],
   [])
 
 if test "x$want_profile_coverage" = "xyes"; then
-    CFLAGS="-g"
     FKO_CHECK_COMPILER_ARG([-fprofile-arcs -ftest-coverage -fno-inline])
+    FKO_CHECK_COMPILER_ARG([-g])
     FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lgcov])
+    AC_DEFINE([CODE_COVERAGE], [1], [Define for code coverage support])
 fi
+
+dnl Decide whether or not to build binaries with fault injection support
+dnl provided by libfiu (see: http://blitiri.com.ar/p/libfiu/) for fault
+dnl testing
+dnl
+want_libfiu_support=no
+AC_ARG_ENABLE([libfiu-support],
+  [AS_HELP_STRING([--enable-libfiu-support],
+    [Build fwknop binaries with fault injection testing support @<:@default is to disable@:>@])],
+  [want_libfiu_support=$enableval],
+  [])
+
+if test "x$want_libfiu_support" = "xyes"; then
+    AC_DEFINE([HAVE_LIBFIU], [1], [Define for fault injection testing support])
+    FKO_CHECK_COMPILER_ARG([-DFIU_ENABLE])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lfiu])
+fi
+
+dnl Decide whether or not to compile in certain features that enable fuzzing
+dnl of fwknop code - this is for testing purposes only.
+dnl
+want_fuzzing_interfaces=no
+AC_ARG_ENABLE([fuzzing-interfaces],
+  [AS_HELP_STRING([--enable-fuzzing-interfaces],
+    [Build fwknop binaries with support for fuzzing interfaces @<:@default is to disable@:>@])],
+  [want_fuzzing_interfaces=$enableval],
+  [])
+
+if test "x$want_fuzzing_interfaces" = "xyes"; then
+    AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
+fi
+
+dnl Decide whether or not to compile in support for the 'American Fuzzy Lop'
+dnl fuzzer from Michal Zalewski - this is for testing purposes only
+dnl
+want_afl_fuzzing_support=no
+AC_ARG_ENABLE([afl-fuzzing],
+  [AS_HELP_STRING([--enable-afl-fuzzing],
+    [Build fwknop binaries with support for the American Fuzzy Lop fuzzer @<:@default is to disable@:>@])],
+  [want_afl_fuzzing_support=$enableval],
+  [])
+
+if test "x$want_afl_fuzzing_support" = "xyes"; then
+    AC_DEFINE([AFL_FUZZING], [1], [Define for AFL fuzzing support])
+    AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
+fi
+
+dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
+dnl
+want_udp_server=no
+AC_ARG_ENABLE([udp-server],
+  [AS_HELP_STRING([--enable-udp-server],
+    [Enable UDP server mode for no libpcap dependency @<:@default is to disable@:>@])],
+  [want_udp_server=$enableval],
+  [])
+AM_CONDITIONAL([UDP_SERVER], [test "$want_udp_server" = yes])
 
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
@@ -260,6 +317,19 @@ AC_FUNC_STAT
 
 AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen stat chmod chown strlcat strlcpy])
 
+dnl Decide whether or not to check for the execvpe() function
+dnl
+use_execvpe=yes
+AC_ARG_ENABLE([execvpe],
+  [AS_HELP_STRING([--disable-execvpe],
+    [Do not check for the execvpe() function for command execution @<:@default is on@:>@])],
+  [use_execvpe=$enableval],
+  [])
+
+if test "x$use_execvpe" = "xyes"; then
+    AC_CHECK_FUNCS([execvpe])
+fi
+
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
@@ -374,15 +444,40 @@ case "$host" in
 esac
 fi
 
+dnl Check for wget (used by the fwknop client for SSL external IP resolution)
+dnl
+AC_ARG_WITH([wget],
+  [AS_HELP_STRING([--with-wget=/path/to/wget],
+    [Specify path to the wget executable @<:@default=check path@:>@])],
+  [
+      AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+        [AC_MSG_ERROR([--with-wget requires an argument specifying a path to wget])],
+        [ WGET_EXE=$withval ]
+      )
+  ],
+  [
+      AC_PATH_PROG(WGET_EXE, [wget], [], [$APP_PATH])
+  ]
+)
+AS_IF([test "x$WGET_EXE" != x],
+  [
+    AC_DEFINE_UNQUOTED([WGET_EXE], ["$WGET_EXE"], [Path to wget executable])
+    wget_exe=$WGET_EXE
+  ], [ wget_exe="(not found)"]
+)
+
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
+
+  AS_IF([test "$want_udp_server" = no], [
     # Looking for libpcap
     #
     AC_CHECK_LIB([pcap],[pcap_open_live],
-      [ AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]) ],
+      [ AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap]) ],
       [ AC_MSG_ERROR([fwknopd needs libpcap])]
     )
+  ])
 
   AS_IF([test "$want_digest_cache" = yes], [
     use_ndbm=no
@@ -422,6 +517,24 @@ AS_IF([test "$want_server" = yes], [
 
   AM_CONDITIONAL([USE_NDBM], [test x$use_ndbm = xyes])
   AM_CONDITIONAL([CONFIG_FILE_CACHE], [test x$want_file_cache = xyes])
+
+dnl Check for firewalld
+dnl
+  AC_ARG_WITH([firewall-cmd],
+    [AS_HELP_STRING([--with-firewall-cmd=/path/to/firewall-cmd],
+      [Specify path to the firewall-cmd executable @<:@default=check path@:>@])],
+    [
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
+          [AC_MSG_ERROR([--with-firewall-cmd requires an argument specifying a path to firewall-cmd])],
+          [ FORCE_FIREWALLD_EXE=$withval ]
+        )
+      )
+    ],
+    [
+      AC_PATH_PROG(FIREWALLD_EXE, [firewall-cmd], [], [$APP_PATH])
+    ]
+  )
 
 dnl Check for iptables
 dnl
@@ -497,6 +610,9 @@ dnl
 
 dnl If a firewall was forced. set the appropriate _EXE var and clear the others.
 dnl
+  AS_IF([test "x$FORCE_FIREWALLD_EXE" != x], [
+    FIREWALLD_EXE="$FORCE_FIREWALLD_EXE"    
+  ],[
   AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
     IPTABLES_EXE="$FORCE_IPTABLES_EXE"    
   ],[
@@ -518,12 +634,19 @@ dnl
       ]
     ]
   ]
-  ))))
+  ]
+  )))))
 
 dnl Determine which firewall exe we use (if we have one).
-dnl If iptables was found or specified, it wins, then we fallback to ipfw,
-dnl then pf, and otherwise we try ipf.
+dnl If firewalld was found or specified, it wins, then we fallback to iptables,
+dnl then ipfw, pf, and otherwise we try ipf.
 dnl
+  AS_IF([test "x$FIREWALLD_EXE" != x], [
+      FW_DEF="FW_FIREWALLD"
+      FIREWALL_TYPE="firewalld" 
+      FIREWALL_EXE=$FIREWALLD_EXE
+      AC_DEFINE_UNQUOTED([FIREWALL_FIREWALLD], [1], [The firewall type: firewalld.])
+  ],[
   AS_IF([test "x$IPTABLES_EXE" != x], [
       FW_DEF="FW_IPTABLES"
       FIREWALL_TYPE="iptables" 
@@ -551,7 +674,8 @@ dnl
         ]
     ]
   ]
-  ))))
+  ]
+  )))))
 
   AC_DEFINE_UNQUOTED([FIREWALL_EXE], ["$FIREWALL_EXE"],
     [Path to firewall command executable (it should match the firewall type).])
@@ -592,6 +716,10 @@ if [test "$want_server" = "yes" ]; then
         firewall type:              $FIREWALL_TYPE
         firewall program path:      $FIREWALL_EXE
 "
+if [test "$want_udp_server" = "yes" ]; then
+  echo "    UDP server mode enabled, no libpcap dependency
+"
+    fi
 
     if [test "$want_digest_cache" = "no" ]; then
         echo "    *WARNING*

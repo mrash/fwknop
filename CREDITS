@@ -143,6 +143,7 @@ Ryman
       http://www.mail-archive.com/debian-bugs-rc@lists.debian.org/msg320402.html
 
 Blair Zajac
+    - MacPorts fwknop package maintainer for Mac OS X systems.
     - Contributed patches to handle endian issues on PPC systems.
     - Reported an issue where strndup() is not available on some PPC systems
       and the fix is to use the local lib/fko_util.c implementation similarly
@@ -174,3 +175,27 @@ Gerry Reno
     - Provided guidance on Android client issues along with testing candidate
       patches to update various things - this work is being tracked in the
       android4.4_support branch.
+    - Implemented support for firewalld in the fwknopd daemon running on RHEL 7
+      and CentOS 7 systems. This is a major addition to handle yet another
+      firewall architecture.
+
+Tim Heckman
+    - Homebrew fwknop package maintainer for Mac OS X systems.
+    - Suggested that fwknop support nftables when it is integrated into the
+      mainline Linux kernel.
+
+Barry Allard
+    - Reported bug in PF support on FreeBSD systems where ALTQ is not available
+      would cause new PF rules to not be added (github issue #121).
+    - Suggested the abiliy to specify the HTTP User-Agent when wget is used to
+      resolve the external IP via SSL (github issue #134).
+
+Bill Stubbs
+    - Submitted a patch to fix a bug where fwknopd could not handle Ethernet
+      frames that include the Frame Check Sequence (FCS) header. This header is
+      four bytes long, and is placed at the end of each Ethernet frame.
+      Normally the FCS header is not visible to libpcap, but some card/driver
+      combinations result in it being included. Bill noticed this on the
+      following platform:
+          BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
+          13:24:52 UTC 2014 armv7l GNU/Linux

@@ -56,45 +56,6 @@ static fko_protocol_t fko_protocol_array[] =
     { "http",   FKO_PROTO_HTTP      }
 };
 
-/* Generic hex dump function.
-*/
-void
-hex_dump(const unsigned char *data, const int size)
-{
-    int ln, i, j = 0;
-    char ascii_str[17] = {0};
-
-    for(i=0; i<size; i++)
-    {
-        if((i % 16) == 0)
-        {
-            printf(" %s\n  0x%.4x:  ", ascii_str, i);
-            memset(ascii_str, 0x0, 17);
-            j = 0;
-        }
-
-        printf("%.2x ", data[i]);
-
-        ascii_str[j++] = (data[i] < 0x20 || data[i] > 0x7e) ? '.' : data[i];
-
-        if(j == 8)
-            printf(" ");
-    }
-
-    /* Remainder...
-    */
-    ln = strlen(ascii_str);
-    if(ln > 0)
-    {
-        for(i=0; i < 16-ln; i++)
-            printf("   ");
-        if(ln < 8)
-            printf(" ");
-
-        printf(" %s\n\n", ascii_str);
-    }
-}
-
 int
 verify_file_perms_ownership(const char *file)
 {
@@ -312,6 +273,99 @@ proto_strtoint(const char *pr_str)
     }
 
     return proto_int;
+}
+
+static int
+add_argv(char **argv_new, int *argc_new,
+        const char *new_arg, fko_cli_options_t *opts)
+{
+    int buf_size = 0;
+
+    if(opts->verbose > 2)
+        log_msg(LOG_VERBOSITY_NORMAL, "[+] add_argv() + arg: %s", new_arg);
+
+    buf_size = strlen(new_arg) + 1;
+    argv_new[*argc_new] = calloc(1, buf_size);
+
+    if(argv_new[*argc_new] == NULL)
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "[*] Memory allocation error.");
+        return 0;
+    }
+    strlcpy(argv_new[*argc_new], new_arg, buf_size);
+
+    *argc_new += 1;
+
+    if(*argc_new >= MAX_CMDLINE_ARGS-1)
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "[*] max command line args exceeded.");
+        return 0;
+    }
+
+    argv_new[*argc_new] = NULL;
+
+    return 1;
+}
+
+int
+strtoargv(char *args_str, char **argv_new, int *argc_new,
+        fko_cli_options_t *opts)
+{
+    int       current_arg_ctr = 0, i;
+    char      arg_tmp[MAX_LINE_LEN] = {0};
+
+    for (i=0; i < (int)strlen(args_str); i++)
+    {
+        if (!isspace(args_str[i]))
+        {
+            arg_tmp[current_arg_ctr] = args_str[i];
+            current_arg_ctr++;
+        }
+        else
+        {
+            if(current_arg_ctr > 0)
+            {
+                arg_tmp[current_arg_ctr] = '\0';
+                if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
+                {
+                    free_argv(argv_new, argc_new);
+                    return 0;
+                }
+                current_arg_ctr = 0;
+            }
+        }
+    }
+
+    /* pick up the last argument in the string
+    */
+    if(current_arg_ctr > 0)
+    {
+        arg_tmp[current_arg_ctr] = '\0';
+        if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
+        {
+            free_argv(argv_new, argc_new);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void
+free_argv(char **argv_new, int *argc_new)
+{
+    int i;
+
+    if(argv_new == NULL || *argv_new == NULL)
+        return;
+
+    for (i=0; i < *argc_new; i++)
+    {
+        if(argv_new[i] == NULL)
+            break;
+        else
+            free(argv_new[i]);
+    }
+    return;
 }
 
 /***EOF***/

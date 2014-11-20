@@ -57,9 +57,10 @@ zero_cmd_buffers(void)
 int
 fw_dump_rules(const fko_srv_options_t * const opts)
 {
-    int     res, got_err = 0;
+    int     res, got_err = 0, pid_status = 0;
 
-    printf("Listing fwknopd pf rules...\n");
+    fprintf(stdout, "Listing fwknopd pf rules...\n");
+    fflush(stdout);
 
     zero_cmd_buffers();
 
@@ -70,8 +71,12 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         opts->fw_config->anchor
     );
 
-    printf("\nActive Rules in PF anchor '%s':\n", opts->fw_config->anchor);
-    res = system(cmd_buf);
+    fprintf(stdout, "\nActive Rules in PF anchor '%s':\n", opts->fw_config->anchor);
+    fflush(stdout);
+
+    /* exclude stderr because ALTQ may not be available
+    */
+    res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR, NO_TIMEOUT, &pid_status, opts);
 
     /* Expect full success on this */
     if(! EXTCMD_IS_SUCCESS(res))
@@ -89,7 +94,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 static int
 anchor_active(const fko_srv_options_t *opts)
 {
-    int    res = 0;
+    int    pid_status = 0;
     char   anchor_search_str[MAX_PF_ANCHOR_SEARCH_LEN] = {0};
 
     /* Build our anchor search string
@@ -103,27 +108,19 @@ anchor_active(const fko_srv_options_t *opts)
         opts->fw_config->fw_command
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
-
-    if(!EXTCMD_IS_SUCCESS(res))
-    {
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
-        return 0;
-    }
-
     /* Check to see if the anchor exists and is linked into the main policy
     */
+    if(search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT,
+            anchor_search_str, &pid_status, opts) > 0)
+        return 1;
 
-    if(strstr(cmd_out, anchor_search_str) == NULL)
-        return 0;
-
-    return 1;
+    return 0;
 }
 
 static void
 delete_all_anchor_rules(const fko_srv_options_t *opts)
 {
-    int res = 0;
+    int res = 0, pid_status = 0;
 
     zero_cmd_buffers();
 
@@ -132,7 +129,8 @@ delete_all_anchor_rules(const fko_srv_options_t *opts)
         fwc.anchor
     );
 
-    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+    res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
+                WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
 
     /* Expect full success on this */
     if(! EXTCMD_IS_SUCCESS(res))
@@ -197,12 +195,10 @@ process_spa_request(const fko_srv_options_t * const opts,
     char             new_rule[MAX_PF_NEW_RULE_LEN] = {0};
     char             write_cmd[CMD_BUFSIZE] = {0};
 
-    FILE            *pfctl_fd = NULL;
-
     acc_port_list_t *port_list = NULL;
     acc_port_list_t *ple;
 
-    int             res = 0;
+    int             res = 0, pid_status = 0;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -238,7 +234,8 @@ process_spa_request(const fko_srv_options_t * const opts,
 
             /* Cache the current anchor rule set
             */
-            res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+                        WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
 
             /* Build the new rule string
             */
@@ -263,15 +260,9 @@ process_spa_request(const fko_srv_options_t * const opts,
                     opts->fw_config->anchor
                 );
 
-                if ((pfctl_fd = popen(write_cmd, "w")) == NULL)
-                {
-                    log_msg(LOG_WARNING, "Could not execute command: %s",
-                        write_cmd);
-                    free_acc_port_list(port_list);
-                    return(-1);
-                }
+                res = run_extcmd_write(write_cmd, cmd_out, &pid_status, opts);
 
-                if (fwrite(cmd_out, strlen(cmd_out), 1, pfctl_fd) == 1)
+                if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Added Rule for %s, %s expires at %u",
                         spadat->use_src_ip,
@@ -288,9 +279,11 @@ process_spa_request(const fko_srv_options_t * const opts,
                         fwc.next_expire = exp_ts;
                 }
                 else
+                {
                     log_msg(LOG_WARNING, "Could not write rule to pf anchor");
-
-                pclose(pfctl_fd);
+                    free_acc_port_list(port_list);
+                    return(-1);
+                }
             }
             else
             {
@@ -345,9 +338,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char           *ndx, *tmp_mark, *tmp_ndx, *newline_tmp_ndx;
 
     time_t          now, rule_exp, min_exp=0;
-    int             i=0, res=0, anchor_ndx=0, is_delete=0;
-
-    FILE            *pfctl_fd = NULL;
+    int             i=0, res=0, anchor_ndx=0, is_delete=0, pid_status=0;
 
     /* If we have not yet reached our expected next expire
        time, continue.
@@ -370,8 +361,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         opts->fw_config->anchor
     );
 
-    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE, 0);
-
+    res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+                WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
     if(!EXTCMD_IS_SUCCESS(res))
     {
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
@@ -441,24 +432,19 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             }
 
             if(*tmp_ndx == '\n')
-            {
                 tmp_ndx++;
-            }
 
             /* may sure the rule begins with the string "pass", and make sure
              * it ends with a newline.  Bail if either test fails.
             */
             if (strlen(tmp_ndx) <= strlen("pass")
-                || strncmp(tmp_ndx, "pass", strlen("pass")) != 0)
-            {
+                    || strncmp(tmp_ndx, "pass", strlen("pass")) != 0)
                 break;
-            }
 
             newline_tmp_ndx = tmp_ndx;
+
             while (*newline_tmp_ndx != '\n' && *newline_tmp_ndx != '\0')
-            {
                 newline_tmp_ndx++;
-            }
 
             if (*newline_tmp_ndx != '\n')
                 break;
@@ -486,7 +472,6 @@ check_firewall_rules(const fko_srv_options_t * const opts)
          * string so we can continue to the next rule in the list.
         */
         ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
-
     }
 
     if (is_delete)
@@ -495,7 +480,6 @@ check_firewall_rules(const fko_srv_options_t * const opts)
          * has the rule(s) deleted.  If there isn't at least one "pass" rule,
          * then we just flush the anchor.
         */
-
         if (strlen(anchor_rules_copy) > strlen("pass")
             && strncmp(anchor_rules_copy, "pass", strlen("pass")) == 0)
         {
@@ -506,24 +490,18 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                 opts->fw_config->anchor
             );
 
-            if ((pfctl_fd = popen(write_cmd, "w")) == NULL)
+            res = run_extcmd_write(write_cmd, anchor_rules_copy, &pid_status, opts);
+            if(! EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_WARNING, "Could not execute command: %s",
-                    write_cmd);
+                        write_cmd);
                 return;
             }
-
-            if (fwrite(anchor_rules_copy, strlen(anchor_rules_copy), 1, pfctl_fd) != 1)
-            {
-                log_msg(LOG_WARNING, "Could not write rules to pf anchor");
-            }
-            pclose(pfctl_fd);
         }
         else
         {
             delete_all_anchor_rules(opts);
         }
-
     }
 
     /* Set the next pending expire time accordingly. 0 if there are no

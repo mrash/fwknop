@@ -1,4 +1,138 @@
-fwknop-2.6.1 (//2014):
+fwknop-2.6.4 (11/16/2014):
+    - [server] Added a UDP server mode so that SPA packets can be acquired via
+      UDP directly without having to use libpcap. This is an optional feature
+      since it opens a UDP port (and therefore requires the local firewall be
+      opened for communications to this port), but fwknopd is careful to never
+      send anything back to a client that sends data to this port. So, from the
+      perspective of an attacker or scanner, fwknopd remains invisible. This
+      feature is enabled in fwknopd either with a new command line argument
+      --udp-server or in the fwknopd.conf file with the ENABLE_UDP_SERVER
+      variable. When deployed in this mode, it is advisable to recompile fwknop
+      beforehand with './configure --enable-udp-server' so that fwknopd does
+      not link against libpcap.
+    - [server] Replaced all popen() and system() calls with execvpe() with no
+      usage of the environment. This is a defensive measure to not make use of
+      the shell for firewall command execution, and is supported on systems
+      where execvpe() is available.
+    - (Gerry Reno) Added support for firewalld to the fwknopd daemon on RHEL 7
+      and CentOS 7. This is implemented using the current firewalld '--direct
+      --passthrough' capability which accepts raw iptables commands. More
+      information on firewalld can be found here:
+
+      https://fedoraproject.org/wiki/FirewallD
+
+    - [server] Added support for the 'American Fuzzy Lop' (AFL) fuzzer from
+      Michal Zalewski. This requires that fwknop is compiled with the
+      '--enable-afl-fuzzing' argument to the configure script as this allows
+      encryption/digest short circuiting in a manner necessary for AFL to
+      function properly. The benefit of this strategy is that AFL can fuzz the
+      SPA packet decoding routines implemented by libfko. See the test/afl/
+      directory for some automation around AFL fuzzing.
+    - (Bill Stubbs) submitted a patch to fix a bug where fwknopd could not
+      handle Ethernet frames that include the Frame Check Sequence (FCS)
+      header. This header is four bytes long, and is placed at the end of each
+      Ethernet frame. Normally the FCS header is not visible to libpcap, but
+      some card/driver combinations result in it being included. Bill noticed
+      this on the following platform:
+
+          BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
+          13:24:52 UTC 2014 armv7l GNU/Linux
+
+    - [client] Bug fix to ensure that a User-Agent string can be specified
+      when the fwknop client uses wget via SSL to resolve the external IP
+      address. This closes issue #134 on github reported by Barry Allard. The
+      fwknop client now uses the wget '-U' option to specify the User-Agent
+      string with a default of "Fwknop/<version>". In addition, a new command
+      line argument "--use-wget-user-agent" to allow the default wget
+      User-Agent string to apply instead.
+    - [python module] When an HMAC key is passed to spa_data_final() then
+      default to HMAC SHA256 if no HMAC mode was specified.
+
+fwknop-2.6.3 (07/28/2014):
+    - [client] External IP resolution via '-R' (or '--resolve-ip-http') is now
+      done via SSL by default. The IP resolution URL is now
+      'https://www.cipherdyne.org/cgi-gin/myip', and a warning is generated
+      in '-R' mode whenever a non-HTTPS URL is specified (it is safer just to
+      use the default). The fwknop client leverages 'wget' for this operation
+      since that is cleaner than having fwknop link against an SSL library.
+    - Integrated the 'libfiu' fault injection library available from
+      http://blitiri.com.ar/p/libfiu/  This feature is disabled by default,
+      and requires the --enable-libfiu-support argument to the 'configure'
+      script in order to enable it. With fwknop compiled against libfiu, fault
+      injections are done at various locations within the fwknop sources and
+      the test suite verifies that the faults are properly handled at run time
+      via test/fko-wrapper/fko_fault_injection.c. In addition, the libfiu tool
+      'fiu-run' is used against the fwknop binaries to ensure they handle
+      faults that libfiu introduces into libc functions. For example, fiu-run
+      can force malloc() to fail even without huge memory pressure on the
+      local system, and the test suite ensures the fwknop binaries properly
+      handle this.
+    - [test suite] Integrated a new python fuzzer for fwknop SPA packets (see
+      test/spa_fuzzing.py). This greatly extends the ability of the test suite
+      to validate libfko operations since SPA fuzzing packets are sent through
+      libfko routines directly (indendepently of encryption and
+      authentication) with a special 'configure' option
+      --enable-fuzzing-interfaces. The python fuzzer generates over 300K SPA
+      packets, and when used by the test suite consumes about 400MB of disk.
+      For reference, to use both the libfiu fault injection feature mentioned
+      above and the python fuzzer, use the --enable-complete option to the
+      test suite.
+    - [test suite] With the libfiu fault injection support and the new python
+      fuzzer, automated testing of fwknop achieves 99.7% function coverage and
+      90.2% line coverage as determined by 'gcov'. The full report may be
+      viewed here: http://www.cipherdyne.org/fwknop/lcov-results/
+    - [server] Add a new GPG_FINGERPRINT_ID variable to the access.conf file
+      so that full GnuPG fingerprints can be required for incoming SPA packets
+      in addition to the appreviated GnuPG signatures listed in GPG_REMOTE_ID.
+      From the test suite, an example fingerprint is
+
+      GPG_FINGERPRINT_ID            00CC95F05BC146B6AC4038C9E36F443C6A3FAD56
+
+    - [server] When validating access.conf stanzas make sure that one of
+      GPG_REMOTE_ID or GPG_FINGERPRINT_ID is specified whenever GnuPG
+      signatures are to be verified for incoming SPA packets. Signature
+      verification is the default, and can only be disabled with
+      GPG_DISABLE_SIG but this is NOT recommended.
+    - [server] Bug fix for PF firewalls without ALTQ support on FreeBSD. With
+      this fix it doesn't matter whether ALTQ support is available or not.
+      Thanks to Barry Allard for discovering and reporting this issue.
+      Closes issue #121 on github.
+    - [server] Bug fix discovered with the libfiu fault injection tag
+      "fko_get_username_init" combined with valgrind analysis. This bug is
+      only triggered after a valid authenticated and decrypted SPA packet is
+      sniffed by fwknopd:
+
+        ==11181== Conditional jump or move depends on uninitialised value(s)
+        ==11181==    at 0x113B6D: incoming_spa (incoming_spa.c:707)
+        ==11181==    by 0x11559F: process_packet (process_packet.c:211)
+        ==11181==    by 0x5270857: ??? (in /usr/lib/x86_64-linux-gnu/libpcap.so.1.4.0)
+        ==11181==    by 0x114BCC: pcap_capture (pcap_capture.c:270)
+        ==11181==    by 0x10F32C: main (fwknopd.c:195)
+        ==11181==  Uninitialised value was created by a stack allocation
+        ==11181==    at 0x113476: incoming_spa (incoming_spa.c:294)
+
+    - [server] Bug fix to handle SPA packets over HTTP by making sure to honor
+      the ENABLE_SPA_OVER_HTTP fwknopd.conf variable and to properly account
+      for SPA packet lengths when delivered via HTTP.
+    - [server] Add --test mode to instruct fwknopd to acquire and process
+      SPA packets, but not manipulate firewall rules or execute commands that
+      are provided by SPA clients. This option is mostly useful for the fuzzing
+      tests in the test suite to ensure broad code coverage under adverse
+      conditions.
+
+fwknop-2.6.2 (04/28/2014):
+    - [libfko] fix double free bug in SPA parser discovered with the new
+      python SPA payload fuzzer (see the 'spa_encoding_fuzzing' branch which
+      is not merged into the master branch yet).  This bug could be triggered
+      in fwknopd with a malicious SPA payload, but only when GnuPG is used and
+      when an attacker is in possession of valid GnuPG keys listed in the
+      access.conf file. In other words, an arbitrary attacker cannot trigger
+      this bug. Further, when Rijndael is used for SPA packet encryption, this
+      bug cannot be triggered at all due to an length/format check towards the
+      end of _rijndael_decrypt(). This bug was introduced in the 2.6.1
+      development series, and no previous versions of fwknop are affected.
+
+fwknop-2.6.1 (04/12/2014):
     - Updated copyright and authorship information to include a standard
       header which references both the AUTHORS and CREDITS files.  The
       specific language in this header was created by the Debian legal team at
@@ -28,6 +162,9 @@ fwknop-2.6.1 (//2014):
 
     - [libfko] Better SPA packet dumping output to include GnuPG specifics
       whenever SPA packets are encrypted/authenticated via GnuPG.
+    - [server] Validate SPA packet GnuPG signatures with the libfko
+      fko_gpg_signature_id_match() function instead of server code doing this
+      independently.
     - [client+server] Add --gpg-exe command line argument and GPG_EXE config
       variable to ~/.fwknoprc and the access.conf file so that the path to
       GnuPG can be changed from the default /usr/bin/gpg path.
@@ -42,8 +179,9 @@ fwknop-2.6.1 (//2014):
       length field of the UDP header.
     - [test suite] Added valgrind suppressions for gpgme library function
       calls.
-    - [test suite] Added Rijndael+HMAC command execution test.
-    - [test suite] Added Rijndael+HMAC NAT rand port via client rc file test.
+    - [test suite] Added the ability to run the 'lcov' tool against fwknop
+      when compiled in --enable-profile-coverage mode.  This enabled lots of
+      new tests to be developed for better code coverage.
 
 fwknop-2.6.0 (01/12/2014):
     - (Radostan Riedel) Added an AppArmor policy for fwknopd that is known to

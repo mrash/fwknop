@@ -40,7 +40,9 @@
 #define EXPIRE_COMMENT_PREFIX "_exp_"
 #define TMP_COMMENT "__TMPCOMMENT__"
 
-#if FIREWALL_IPTABLES
+#if FIREWALL_FIREWALLD
+  #include "fw_util_firewalld.h"
+#elif FIREWALL_IPTABLES
   #include "fw_util_iptables.h"
 #elif FIREWALL_IPFW
   #include "fw_util_ipfw.h"

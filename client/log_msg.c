@@ -56,11 +56,11 @@ log_new(void)
  *
  * This function is not used at the moment since the module does not open file
  * which would require to be closed;
- */
 void
 log_free(void)
 {
 }
+ */
 
 /**
  * Set the verbosity level for the current context of the log module.

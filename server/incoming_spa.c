@@ -91,7 +91,7 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
      * starts with "GET /" and the user agent starts with "Fwknop", then
      * assume it is a SPA over HTTP request.
     */
-    if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "N", 1) == 0
+    if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "Y", 1) == 0
       && strncasecmp(ndx, "GET /", 5) == 0
       && strstr(ndx, "User-Agent: Fwknop") != NULL)
     {
@@ -104,6 +104,7 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
          * client), and reset the SPA message itself.
         */
         strlcpy((char *)spa_pkt->packet_data, ndx+5, pkt_data_len);
+        pkt_data_len -= 5;
 
         for(i=0; i<pkt_data_len; i++)
         {
@@ -119,6 +120,11 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
 
             ndx++;
         }
+
+        if(i < MIN_SPA_DATA_SIZE)
+            return(SPA_MSG_BAD_DATA);
+
+        spa_pkt->packet_data_len = pkt_data_len = i;
     }
 
     /* Require base64-encoded data
@@ -143,6 +149,7 @@ get_raw_digest(char **digest, char *pkt_data)
     fko_ctx_t    ctx = NULL;
     char        *tmp_digest = NULL;
     int          res = FKO_SUCCESS;
+    short        raw_digest_type = -1;
 
     /* initialize an FKO context with no decryption key just so
      * we can get the outer message digest
@@ -161,6 +168,27 @@ get_raw_digest(char **digest, char *pkt_data)
 
     res = fko_set_raw_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);
     if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error setting digest type for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        ctx = NULL;
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    res = fko_get_raw_spa_digest_type(ctx, &raw_digest_type);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "Error getting digest type for SPA data: %s",
+            fko_errstr(res));
+        fko_destroy(ctx);
+        ctx = NULL;
+        return(SPA_MSG_DIGEST_ERROR);
+    }
+
+    /* Make sure the digest type is what we expect
+    */
+    if(raw_digest_type != FKO_DEFAULT_DIGEST)
     {
         log_msg(LOG_WARNING, "Error setting digest type for SPA data: %s",
             fko_errstr(res));
@@ -269,10 +297,10 @@ incoming_spa(fko_srv_options_t *opts)
     */
     fko_ctx_t       ctx = NULL;
 
-    char            *spa_ip_demark, *gpg_id, *raw_digest = NULL;
+    char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;
     time_t          now_ts;
-    int             res, status, ts_diff, enc_type, stanza_num=0, rand_mode=0;
-    int             added_replay_digest = 0, pkt_data_len=0;
+    int             res, ts_diff, enc_type, stanza_num=0, pid_status=0;
+    int             added_replay_digest = 0, pkt_data_len=0, rand_mode=0;
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
     char            dump_buf[CTX_DUMP_BUFSIZE];
@@ -285,7 +313,10 @@ incoming_spa(fko_srv_options_t *opts)
 
     /* Loop through all access stanzas looking for a match
     */
-    acc_stanza_t    *acc = opts->acc_stanzas;
+    acc_stanza_t        *acc = opts->acc_stanzas;
+    acc_string_list_t   *gpg_id_ndx;
+    acc_string_list_t   *gpg_fpr_ndx;
+    unsigned char        is_gpg_match = 0;
 
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
@@ -369,7 +400,7 @@ incoming_spa(fko_srv_options_t *opts)
             if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
                 log_msg(LOG_WARNING,
                     "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                    spadat.pkt_source_ip, stanza_num, fko_errstr(res)
+                    spadat.pkt_source_ip, stanza_num
                 );
             ctx = NULL;
         }
@@ -533,8 +564,8 @@ incoming_spa(fko_srv_options_t *opts)
         if(attempted_decrypt == 0)
         {
             log_msg(LOG_ERR,
-                "(stanza #%d) No stanza encryption mode match for encryption type: %i.",
-                stanza_num, enc_type);
+                "[%s] (stanza #%d) No stanza encryption mode match for encryption type: %i.",
+                spadat.pkt_source_ip, stanza_num, enc_type);
             acc = acc->next;
             continue;
         }
@@ -556,7 +587,7 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Add this SPA packet into the replay detection cache
         */
-        if (added_replay_digest == 0
+        if (!opts->test && added_replay_digest == 0
                 && strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
         {
 
@@ -599,22 +630,93 @@ incoming_spa(fko_srv_options_t *opts)
                 continue;
             }
 
-            log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s'.",
-                spadat.pkt_source_ip, stanza_num, gpg_id);
-
-            if(acc->gpg_remote_id != NULL && !acc_check_gpg_remote_id(acc, gpg_id))
+            res = fko_get_gpg_signature_fpr(ctx, &gpg_fpr);
+            if(res != FKO_SUCCESS)
             {
                 log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not the GPG_REMOTE_ID list.",
-                    spadat.pkt_source_ip, stanza_num, gpg_id);
+                    "[%s] (stanza #%d) Error pulling the GPG fingerprint from the context: %s",
+                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
                 acc = acc->next;
                 continue;
+            }
+
+            log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s' (fingerprint '%s').",
+                spadat.pkt_source_ip, stanza_num, gpg_id, gpg_fpr);
+
+            /* prefer GnuPG fingerprint match if so configured
+            */
+            if(acc->gpg_remote_fpr != NULL)
+            {
+                is_gpg_match = 0;
+                for(gpg_fpr_ndx = acc->gpg_remote_fpr_list;
+                        gpg_fpr_ndx != NULL; gpg_fpr_ndx=gpg_fpr_ndx->next)
+                {
+                    res = fko_gpg_signature_fpr_match(ctx,
+                            gpg_fpr_ndx->str, &is_gpg_match);
+                    if(res != FKO_SUCCESS)
+                    {
+                        log_msg(LOG_WARNING,
+                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+                        acc = acc->next;
+                        continue;
+                    }
+                    if(is_gpg_match)
+                        break;
+                }
+                if(! is_gpg_match)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Incoming SPA packet signed by: %s, but that fingerprint is not in the GPG_FINGERPRINT_ID list.",
+                        spadat.pkt_source_ip, stanza_num, gpg_fpr);
+                    acc = acc->next;
+                    continue;
+                }
+            }
+
+            if(acc->gpg_remote_id != NULL)
+            {
+                is_gpg_match = 0;
+                for(gpg_id_ndx = acc->gpg_remote_id_list;
+                        gpg_id_ndx != NULL; gpg_id_ndx=gpg_id_ndx->next)
+                {
+                    res = fko_gpg_signature_id_match(ctx,
+                            gpg_id_ndx->str, &is_gpg_match);
+                    if(res != FKO_SUCCESS)
+                    {
+                        log_msg(LOG_WARNING,
+                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+                        acc = acc->next;
+                        continue;
+                    }
+                    if(is_gpg_match)
+                        break;
+                }
+
+                if(! is_gpg_match)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not in the GPG_REMOTE_ID list.",
+                        spadat.pkt_source_ip, stanza_num, gpg_id);
+                    acc = acc->next;
+                    continue;
+                }
             }
         }
 
         /* Populate our spa data struct for future reference.
         */
         res = get_spa_data_fields(ctx, &spadat);
+
+        if(res != FKO_SUCCESS)
+        {
+            log_msg(LOG_ERR, "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+
+            acc = acc->next;
+            continue;
+        }
 
         /* Figure out what our timeout will be. If it is specified in the SPA
          * data, then use that.  If not, try the FW_ACCESS_TIMEOUT from the
@@ -626,15 +728,6 @@ incoming_spa(fko_srv_options_t *opts)
             spadat.fw_access_timeout = acc->fw_access_timeout;
         else
             spadat.fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
-
-        if(res != FKO_SUCCESS)
-        {
-            log_msg(LOG_ERR, "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
-                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
-
-            acc = acc->next;
-            continue;
-        }
 
         /* Check packet age if so configured.
         */
@@ -672,17 +765,7 @@ incoming_spa(fko_srv_options_t *opts)
                 || (spa_ip_demark-spadat.spa_message) > MAX_IPV4_STR_LEN)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
-                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
-
-            if(ctx != NULL)
-            {
-                if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                    );
-                ctx = NULL;
-            }
+                spadat.pkt_source_ip, stanza_num);
             break;
         }
 
@@ -693,16 +776,6 @@ incoming_spa(fko_srv_options_t *opts)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
-
-            if(ctx != NULL)
-            {
-                if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                    );
-                ctx = NULL;
-            }
             break;
         }
 
@@ -719,7 +792,6 @@ incoming_spa(fko_srv_options_t *opts)
                     "[%s] (stanza #%d) Got 0.0.0.0 when valid source IP was required.",
                     spadat.pkt_source_ip, stanza_num
                 );
-
                 acc = acc->next;
                 continue;
             }
@@ -740,7 +812,6 @@ incoming_spa(fko_srv_options_t *opts)
                     "[%s] (stanza #%d) Username in SPA data (%s) does not match required username: %s",
                     spadat.pkt_source_ip, stanza_num, spadat.username, acc->require_username
                 );
-
                 acc = acc->next;
                 continue;
             }
@@ -753,14 +824,23 @@ incoming_spa(fko_srv_options_t *opts)
               || spadat.message_type == FKO_NAT_ACCESS_MSG
               || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
         {
-#if FIREWALL_IPTABLES
+#if FIREWALL_FIREWALLD
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1)!=0)
+            {
+                log_msg(LOG_WARNING,
+                    "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
+                    stanza_num, spadat.pkt_source_ip
+                );
+                acc = acc->next;
+                continue;
+            }
+#elif FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
             {
                 log_msg(LOG_WARNING,
                     "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
                     stanza_num, spadat.pkt_source_ip
                 );
-
                 acc = acc->next;
                 continue;
             }
@@ -769,7 +849,6 @@ incoming_spa(fko_srv_options_t *opts)
                 "(stanza #%d) SPA packet from %s requested unsupported NAT access",
                 stanza_num, spadat.pkt_source_ip
             );
-
             acc = acc->next;
             continue;
 #endif
@@ -785,7 +864,15 @@ incoming_spa(fko_srv_options_t *opts)
                     "[%s] (stanza #%d) SPA Command message are not allowed in the current configuration.",
                     spadat.pkt_source_ip, stanza_num
                 );
-
+                acc = acc->next;
+                continue;
+            }
+            else if(opts->test)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) --test mode enabled, skipping command execution.",
+                    spadat.pkt_source_ip, stanza_num
+                );
                 acc = acc->next;
                 continue;
             }
@@ -801,39 +888,34 @@ incoming_spa(fko_srv_options_t *opts)
                 */
                 if(acc->cmd_exec_user != NULL && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
                 {
-                    log_msg(LOG_INFO, "[%s] (stanza #%d) Setting effective user to %s (UID=%i) before running command.",
-                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
+                    log_msg(LOG_INFO,
+                            "[%s] (stanza #%d) setuid/setgid user/group to %s/%s (UID=%i,GID=%i) before running command.",
+                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user,
+                        acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
+                        acc->cmd_exec_uid, acc->cmd_exec_gid);
 
-                    res = run_extcmd_as(acc->cmd_exec_uid,
-                                        spadat.spa_message_remain, NULL, 0, 0);
+                    res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
+                            spadat.spa_message_remain, NULL, 0,
+                            WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
                 }
                 else /* Just run it as we are (root that is). */
-                    res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5);
+                    res = run_extcmd(spadat.spa_message_remain, NULL, 0,
+                            WANT_STDERR, 5, &pid_status, opts);
 
-                /* --DSS XXX: I have found that the status (and res for that
-                 *            matter) have been unreliable indicators of the
-                 *            actual exit status of some commands.  Not sure
-                 *            why yet.  For now, we will take what we get.
+                /* should only call WEXITSTATUS() if WIFEXITED() is true
                 */
-                status = WEXITSTATUS(res);
+                log_msg(LOG_INFO,
+                    "[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d",
+                    spadat.pkt_source_ip, stanza_num, res,
+                    WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);
 
-                if(opts->verbose > 1)
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) CMD_EXEC: command returned %i",
-                        spadat.pkt_source_ip, stanza_num, status);
-
-                if(status != 0)
-                    res = SPA_MSG_COMMAND_ERROR;
-
-                if(ctx != NULL)
+                if(WIFEXITED(pid_status))
                 {
-                    if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                            spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                        );
-                    ctx = NULL;
+                    if(WEXITSTATUS(pid_status) != 0)
+                        res = SPA_MSG_COMMAND_ERROR;
                 }
+                else
+                    res = SPA_MSG_COMMAND_ERROR;
 
                 /* we processed the command on a matching access stanza, so we
                  * don't look for anything else to do with this SPA packet
@@ -854,7 +936,6 @@ incoming_spa(fko_srv_options_t *opts)
                 "[%s] (stanza #%d) One or more requested protocol/ports was denied per access.conf.",
                 spadat.pkt_source_ip, stanza_num
             );
-
             acc = acc->next;
             continue;
         }
@@ -863,16 +944,20 @@ incoming_spa(fko_srv_options_t *opts)
          * access stanza loop (first valid access stanza stops us looking
          * for others).
         */
-        process_spa_request(opts, acc, &spadat);
-        if(ctx != NULL)
+        if(opts->test)  /* no firewall changes in --test mode */
         {
-            if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
-                    spadat.pkt_source_ip, stanza_num
-                );
-            ctx = NULL;
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) --test mode enabled, skipping firewall manipulation.",
+                spadat.pkt_source_ip, stanza_num
+            );
+            acc = acc->next;
+            continue;
         }
+        else
+        {
+            process_spa_request(opts, acc, &spadat);
+        }
+
         break;
     }
 
@@ -883,8 +968,8 @@ incoming_spa(fko_srv_options_t *opts)
     {
         if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)
             log_msg(LOG_WARNING,
-                "[%s] fko_destroy() could not zero out sensitive data buffer.",
-                spadat.pkt_source_ip
+                "[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.",
+                spadat.pkt_source_ip, stanza_num
             );
         ctx = NULL;
     }

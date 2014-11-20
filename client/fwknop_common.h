@@ -55,17 +55,14 @@
 #define TIME_OFFSET_HOURS       3600
 #define TIME_OFFSET_DAYS        86400
 
-/* For resolving the allow IP via HTTP and sending SPA packets over
- * HTTP -  http://www.whatismyip.com/automation/n09230945.asp
-    #define HTTP_RESOLVE_HOST          "www.whatismyip.com"
-    #define HTTP_RESOLVE_URL           "/automation/n09230945.asp"
-  * --DSS Note: The whatismyip.com site has some usage restrictions.
-  *             so we will make the default run on cipherdyne website
-  *             for now.
+/* For resolving allow IP - the default is to do this via HTTPS with
+ * wget to https://www.cipherdyne.org/cgi-bin/myip, and if the user
+ * permit it, to fall back to the same URL but via HTTP.
 */
 #define HTTP_RESOLVE_HOST           "www.cipherdyne.org"
 #define HTTP_BACKUP_RESOLVE_HOST    "www.cipherdyne.com"
 #define HTTP_RESOLVE_URL            "/cgi-bin/myip"
+#define WGET_RESOLVE_URL_SSL        "https://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL
 #define HTTP_MAX_REQUEST_LEN        2000
 #define HTTP_MAX_RESPONSE_LEN       2000
 #define HTTP_MAX_USER_AGENT_LEN     100
@@ -103,6 +100,9 @@ typedef struct fko_cli_options
     char gpg_signer_key[MAX_GPG_KEY_ID];
     char gpg_home_dir[MAX_PATH_LEN];
     char gpg_exe[MAX_PATH_LEN];
+#if HAVE_LIBFIU
+    char fault_injection_tag[MAX_FAULT_TAG_LEN];
+#endif
 
     /* Encryption keys read from a .fwknoprc stanza
     */
@@ -127,9 +127,12 @@ typedef struct fko_cli_options
 
     /* External IP resolution via HTTP
     */
-    int  resolve_ip_http;
+    int  resolve_ip_http_https;
+    int  resolve_http_only;
     char *resolve_url;
     char http_user_agent[HTTP_MAX_USER_AGENT_LEN];
+    unsigned char use_wget_user_agent;
+    char *wget_bin;
 
     /* HTTP proxy support
     */

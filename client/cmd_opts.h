@@ -47,9 +47,11 @@ enum {
     NO_SAVE_ARGS,
     SHOW_LAST_ARGS,
     RC_FILE_PATH,
+    RESOLVE_HTTP_ONLY,
     RESOLVE_URL,
     RAND_MODE_LEGACY,
     USE_HMAC,
+    USE_WGET_USER_AGENT,
     SPA_ICMP_TYPE,
     SPA_ICMP_CODE,
     KEY_LEN,
@@ -62,6 +64,8 @@ enum {
     KEY_HMAC,
     FD_SET_STDIN,
     FD_SET_ALT,
+    FAULT_INJECTION_TAG,
+
     /* Put GPG-related items below the following line */
     GPG_ENCRYPTION      = 0x200,
     GPG_RECIP_KEY,
@@ -76,7 +80,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:A:bB:C:D:E:f:gG:hH:kK:lm:M:n:N:p:P:Q:rRsS:Tu:U:vV"
+#define GETOPTS_OPTION_STRING "a:A:bB:C:D:E:f:gG:hH:kK:lm:M:n:N:p:P:Q:rRsS:Tu:U:vVw:"
 
 /* Our program command-line options...
 */
@@ -97,6 +101,7 @@ static struct option cmd_opts[] =
     {"encryption-mode",     1, NULL, ENCRYPTION_MODE},
     {"fd",                  1, NULL, FD_SET_ALT},
     {"fw-timeout",          1, NULL, 'f'},
+    {"fault-injection-tag", 1, NULL, FAULT_INJECTION_TAG },
     {"gpg-encryption",      0, NULL, 'g'},
     {"gpg-recipient-key",   1, NULL, GPG_RECIP_KEY },
     {"gpg-signer-key",      1, NULL, GPG_SIGNER_KEY },
@@ -133,6 +138,8 @@ static struct option cmd_opts[] =
     {"rand-port",           0, NULL, 'r'},
     {"rand-mode-legacy",    0, NULL, RAND_MODE_LEGACY},
     {"resolve-ip-http",     0, NULL, 'R'},
+    {"resolve-ip-https",    0, NULL, 'R'}, /* synonym, default is HTTPS */
+    {"resolve-http-only",   0, NULL, RESOLVE_HTTP_ONLY},
     {"resolve-url",         1, NULL, RESOLVE_URL},
     {"show-last",           0, NULL, SHOW_LAST_ARGS},
     {"source-ip",           0, NULL, 's'},
@@ -143,9 +150,11 @@ static struct option cmd_opts[] =
     {"time-offset-minus",   1, NULL, TIME_OFFSET_MINUS},
     {"user-agent",          1, NULL, 'u'},
     {"use-hmac",            0, NULL, USE_HMAC},
+    {"use-wget-user-agent", 0, NULL, USE_WGET_USER_AGENT},
     {"spoof-user",          1, NULL, 'U'},
     {"verbose",             0, NULL, 'v'},
     {"version",             0, NULL, 'V'},
+    {"wget-cmd",            1, NULL, 'w'},
     {0, 0, 0, 0}
 };
 

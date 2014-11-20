@@ -106,6 +106,9 @@ constant_runtime_cmp(const char *a, const char *b, int len)
 int
 is_valid_encoded_msg_len(const int len)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("is_valid_encoded_msg_len_val", 0);
+#endif
     if(len < MIN_SPA_ENCODED_MSG_SIZE || len >= MAX_SPA_ENCODED_MSG_SIZE)
         return(0);
 
@@ -333,6 +336,9 @@ hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size)
 int
 is_valid_pt_msg_len(const int len)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("is_valid_pt_msg_len_val", 0);
+#endif
     if(len < MIN_SPA_PLAINTEXT_MSG_SIZE || len >= MAX_SPA_PLAINTEXT_MSG_SIZE)
         return(0);
 
@@ -428,7 +434,7 @@ strtol_wrapper(const char * const str, const int min,
         if(exit_upon_err == EXIT_UPON_ERR)
         {
             perror("strtol");
-            fprintf(stderr, "[*] Value %d out of range %d - %d\n",
+            fprintf(stderr, "[*] Value %d out of range [(%d)-(%d)]\n",
                 val, min, max);
             exit(EXIT_FAILURE);
         }
@@ -439,7 +445,7 @@ strtol_wrapper(const char * const str, const int min,
         *err = FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN;
         if(exit_upon_err == EXIT_UPON_ERR)
         {
-            fprintf(stderr, "[*] Value %d out of range %d - %d\n",
+            fprintf(stderr, "[*] Value %d out of range [(%d)-(%d)]\n",
                 val, min, max);
             exit(EXIT_FAILURE);
         }
@@ -453,11 +459,18 @@ strtol_wrapper(const char * const str, const int min,
         *err = FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX;
         if(exit_upon_err == EXIT_UPON_ERR)
         {
-            fprintf(stderr, "[*] Value %d out of range %d - %d\n",
+            fprintf(stderr, "[*] Value %d out of range [(%d)-(%d)]\n",
                 val, min, max);
             exit(EXIT_FAILURE);
         }
     }
+
+#if HAVE_LIBFIU
+    fiu_return_on("strtol_wrapper_lt_min",
+            FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN);
+    fiu_return_on("strtol_wrapper_gt_max",
+            FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX);
+#endif
 
     return val;
 }
@@ -481,6 +494,10 @@ int zero_free(char *buf, int len)
 
     free(buf);
 
+#if HAVE_LIBFIU
+    fiu_return_on("zero_free_err", FKO_ERROR_ZERO_OUT_DATA);
+#endif
+
     return res;
 }
 
@@ -492,6 +509,10 @@ int
 zero_buf(char *buf, int len)
 {
     int i, res = FKO_SUCCESS;
+
+#if HAVE_LIBFIU
+    fiu_return_on("zero_buf_err", FKO_ERROR_ZERO_OUT_DATA);
+#endif
 
     if(buf == NULL || len == 0)
         return res;
@@ -638,6 +659,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
     char          *gpg_home_dir      = NULL;
     char          *gpg_exe           = NULL;
     int            gpg_sigsum        = -1;
+    int            gpg_sig_stat      = -1;
 #endif
     char       *spa_data         = NULL;
     char        digest_str[24]   = {0};
@@ -697,6 +719,8 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
                 gpg_sig_id = NULL;
             if(fko_get_gpg_signature_summary(ctx, &gpg_sigsum) != FKO_SUCCESS)
                 gpg_sigsum = -1;
+            if(fko_get_gpg_signature_status(ctx, &gpg_sig_stat) != FKO_SUCCESS)
+                gpg_sig_stat = -1;
             if(fko_get_gpg_signature_fpr(ctx, &gpg_sig_fpr) != FKO_SUCCESS)
                 gpg_sig_fpr = NULL;
         }
@@ -743,6 +767,7 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "     GPG sig ID: %s\n", gpg_sig_id == NULL ? NULL_STRING : gpg_sig_id);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "    GPG sig fpr: %s\n", gpg_sig_fpr == NULL ? NULL_STRING : gpg_sig_fpr);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "GPG sig summary: %d\n", gpg_sigsum);
+            cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, " GPG sig status: %d\n", gpg_sig_stat);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "   GPG home dir: %s\n", gpg_home_dir == NULL ? NULL_STRING : gpg_home_dir);
             cp += append_msg_to_buf(dump_buf+cp, dump_buf_len-cp, "        GPG exe: %s\n", gpg_exe == NULL ? GPG_EXE : gpg_exe);
         }

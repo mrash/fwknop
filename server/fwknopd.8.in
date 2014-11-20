@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12/14/2013
+.\"      Date: 11/15/2014
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "12/14/2013" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "11/15/2014" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -102,9 +102,41 @@ will use the compile\-time default location (typically
 Dump the configuration values that
 \fBfwknopd\fR
 derives from the
-\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq (or override files) and
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+(or override files) and
 \fI@sysconfdir@/fwknop/access\&.conf\fR
 on stderr\&.
+.RE
+.PP
+\fB\-\-dump\-serv\-err\-codes\fR
+.RS 4
+Dump all possible
+\fBfwknopd\fR
+error codes to stdout and exit\&. This option is rarely needed in practice, and was added to assist with test coverage\&.
+.RE
+.PP
+\fB\-\-fault\-injection\-tag\fR=\fI<tag>\fR
+.RS 4
+This option is only used for fault injection testing when
+\fBfwknop\fR
+is compiled to support the libfiu library (see:
+\fIhttp://blitiri\&.com\&.ar/p/libfiu/\fR)\&. Under normal circumstances this option is not used, and any packaged version of fwknop will not have code compiled in so this capability is not enabled at run time\&. It is documented here for completeness\&. version of fwknop will not have code compiled in to enable this capability at run time\&. It is documented here for completeness\&.
+.RE
+.PP
+\fB\-A, \-\-afl\-fuzzing\fR
+.RS 4
+Instruct
+\fBfwknopd\fR
+to acquire SPA packets directly from stdin in support of fuzzing operations from the
+\fIAmerican Fuzzy Lop\fR
+(AFL) fuzzer written by Michal Zalewski\&. This requires that
+\fBfwknop\fR
+is compiled with the
+\fI\-\-enable\-afl\-fuzzing\fR
+argument to the
+\fBconfigure\fR
+script as this allows encryption/digest short circuiting in a manner necessary for AFL to function properly\&. The benefit of this strategy is that AFL can fuzz the SPA packet decoding routines implemented by
+\fBlibfko\fR\&.
 .RE
 .PP
 \fB\-\-fw\-list\-all\fR
@@ -131,15 +163,31 @@ process\&. This provides a quick and easy way to stop
 without having to look in the process table\&.
 .RE
 .PP
+\fB\-\-exit\-parse\-config\fR
+.RS 4
+Parse config files (\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR,
+\fI@sysconfdir@/fwknop/access\&.conf\fR, the digest cache file, etc\&.) and exit\&. This provides a way to test whether the config files are properly structured without having to start processing network traffic\&.
+.RE
+.PP
 \fB\-l, \-\-locale\fR=\fI<locale>\fR
 .RS 4
 Set/override the system default locale setting\&.
 .RE
 .PP
+\fB\-\-no\-ipt\-check\-support\fR
+.RS 4
+Disable the usage of the iptables
+\fI\-C\fR
+option\&. This is not normally needed, and is only useful on older Linux distributions where iptables does not have
+\fI\-C\fR
+support\&.
+.RE
+.PP
 \fB\-O, \-\-override\-config\fR=\fI<file>\fR
 .RS 4
 Override config variable values that are normally read from the
-\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file with values from the specified file\&. Multiple override config files can be given as a comma\-separated list\&.
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+file with values from the specified file\&. Multiple override config files can be given as a comma\-separated list\&.
 .RE
 .PP
 \fB\-p, \-\-pid\-file\fR=\fI<pid\-file>\fR
@@ -156,7 +204,8 @@ will use the compile\-time default location (typically \*(Aq@localstatedir@/run/
 Specify a Berkeley packet filter statement on the
 \fBfwknopd\fR
 command line\&. This overrides the value of the PCAP_FILTER variable taken from the
-\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file\&.
+\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
+file\&.
 .RE
 .PP
 \fB\-\-pcap\-file\fR=\fI<pcap\-file>\fR
@@ -210,6 +259,22 @@ processes that may or not be running\&. If there is an existing fwknopd process 
 Allow messages to be sent to syslog even if the foreground mode is set\&.
 .RE
 .PP
+\fB\-t, \-\-test\fR
+.RS 4
+Run
+\fBfwknopd\fR
+in test mode\&. This instructs
+\fBfwknopd\fR
+to acquire and process SPA packets, but not manipulate firewall rules or execute commands that are provided by SPA clients\&. This option is mostly useful for the fuzzing tests in the test suite to ensure broad code coverage under adverse conditions\&.
+.RE
+.PP
+\fB\-U, \-\-udp\-server\fR
+.RS 4
+Run
+\fBfwknopd\fR
+in UDP server mode so that SPA packets are acquired via a UDP socket directly without having to use libpcap\&. See the discussion of the \(lqENABLE_UDP_SERVER\(rq configuration variable below for more information\&.
+.RE
+.PP
 \fB\-v, \-\-verbose\fR
 .RS 4
 Run
@@ -228,12 +293,12 @@ Display version information and exit\&.
 .RE
 .SH "FWKNOPD CONFIG AND ACCESS VARIABLES"
 .sp
-\fBfwknopd\fR references the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file for configuration variables that define its operational parameters (what network interface and port to sniff, what features to enable/disable, etc\&.)\&. The \fIfwknopd\&.conf\fR file does not define any access control directives\&.
+\fBfwknopd\fR references the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR file for configuration variables that define its operational parameters (what network interface and port to sniff, what features to enable/disable, etc\&.)\&. The \fIfwknopd\&.conf\fR file does not define any access control directives\&.
 .sp
 The access control directives are contained in the \fI@sysconfdir@/fwknop/access\&.conf\fR file\&. Access control directives define encryption keys and level of access that is granted to an fwknop client that has generated the appropriate encrypted SPA message\&.
 .SS "FWKNOPD\&.CONF VARIABLES"
 .sp
-This section list the more prominent configuration variables used by \fBfwknopd\fR\&. It is not a complete list\&. There are directives for the type of firewall used by \fBfwknopd\fR (i\&.e\&. \fIiptables\fR, \fIipfw\fR, or \fIpf\fR)\&. You will want to make sure to check these to make sure they have appropriate values\&. See the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR\*(Aq file for the full list and corresponding details\&.
+This section list the more prominent configuration variables used by \fBfwknopd\fR\&. It is not a complete list\&. There are directives for the type of firewall used by \fBfwknopd\fR (i\&.e\&. \fIiptables\fR, \fIipfw\fR, or \fIpf\fR)\&. You will want to make sure to check these to make sure they have appropriate values\&. See the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR file for the full list and corresponding details\&.
 .PP
 \fBPCAP_INTF\fR \fI<interface>\fR
 .RS 4
@@ -276,16 +341,6 @@ will not use the client time stamp at all\&.
 Defines the maximum age (in seconds) that an SPA packet will be accepted\&. This requires that the client system is in relatively close time synchronization with the
 \fBfwknopd\fR
 server system (NTP is good)\&. The default age is 120 seconds (two minutes)\&.
-.RE
-.PP
-\fBACCESS_EXPIRE\fR \fI<MM/DD/YYYY>\fR
-.RS 4
-Defines an expiration date for the access stanza in MM/DD/YYYY format\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
-.RE
-.PP
-\fBACCESS_EXPIRE_EPOCH\fR \fI<seconds>\fR
-.RS 4
-Defines an expiration date for the access stanza as the epoch time, and is useful if a more accurate expiration time needs to be given than the day resolution offered by the ACCESS_EXPIRE variable above\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
 .RE
 .PP
 \fBENABLE_DIGEST_PERSISTENCE\fR \fI<Y/N>\fR
@@ -357,7 +412,7 @@ is stopped or otherwise exits cleanly\&. The default is \(lqY\(rq\&.
 .PP
 \fBGPG_HOME_DIR\fR \fI<path>\fR
 .RS 4
-If GPG keys are used instead of a Rijndael symmetric key, this is the default GPG keys directory\&. Note that each access block in
+If GPG keys are used instead of a Rijndael symmetric key, this is the default GPG keys directory\&. Note that each access stanza in
 \fI@sysconfdir@/fwknop/access\&.conf\fR
 can specify its own GPG directory to override this default\&. If not set here or in an
 \fIaccess\&.conf\fR
@@ -366,6 +421,13 @@ stanza, then the
 directory of the user running
 \fBfwknopd\fR
 (most likely root)\&.
+.RE
+.PP
+\fBGPG_EXE\fR \fI<path>\fR
+.RS 4
+Specify the path to GPG, and defaults to
+\fI/usr/bin/gpg\fR
+if not set\&.
 .RE
 .PP
 \fBLOCALE\fR \fI<locale>\fR
@@ -414,6 +476,28 @@ Controls whether fwknopd is permitted to sniff SPA packets regardless of whether
 \fBTCPSERV_PORT\fR \fI<port>\fR
 .RS 4
 Set the port number that the \(lqdummy\(rq TCP server listens on\&. This server is only spawned when \(lqENABLE_TCP_SERVER\(rq is set to \(lqY\(rq\&.
+.RE
+.PP
+\fBENABLE_UDP_SERVER\fR \fI<Y/N>\fR
+.RS 4
+Enable the
+\fBfwknopd\fR
+UDP server\&. This instructs
+\fBfwknopd\fR
+to acquire SPA packets via a UDP socket directly without having to use libpcap\&. When this mode is enabled,
+\fBfwknop\fR
+should be compiled with
+\fB\-\-enable\-udp\-server\fR
+(passed to the
+\fBconfigure\fR
+script) so that libpcap can be removed as a dependency\&. As one would expect, when the UDP server is used, no incoming packets are ever acknowledged by
+\fBfwknopd\fR
+and therefore collecting SPA packets in this mode is a good alternative to sniffing the wire directly\&.
+.RE
+.PP
+\fBUDPSERV_PORT\fR \fI<port>\fR
+.RS 4
+Set the port number that the UDP server listens on\&. This server is only spawned when \(lqENABLE_UDP_SERVER\(rq is set to \(lqY\(rq\&.
 .RE
 .PP
 \fBSYSLOG_IDENTITY\fR \fI<identity>\fR
@@ -505,6 +589,16 @@ Specify the digest algorithm for incoming SPA packet authentication\&. Must be o
 defaults to using SHA256 if the access stanza requires an HMAC\&.
 .RE
 .PP
+\fBACCESS_EXPIRE\fR \fI<MM/DD/YYYY>\fR
+.RS 4
+Defines an expiration date for the access stanza in MM/DD/YYYY format\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
+.RE
+.PP
+\fBACCESS_EXPIRE_EPOCH\fR \fI<seconds>\fR
+.RS 4
+Defines an expiration date for the access stanza as the epoch time, and is useful if a more accurate expiration time needs to be given than the day resolution offered by the ACCESS_EXPIRE variable above\&. All SPA packets that match an expired stanza will be ignored\&. This parameter is optional\&.
+.RE
+.PP
 \fBENABLE_CMD_EXEC\fR \fI<Y/N>\fR
 .RS 4
 This instructs
@@ -539,6 +633,11 @@ has to be used to automatically resolve the external address (if the client behi
 argument\&.
 .RE
 .PP
+\fBREQUIRE_SOURCE_ADDRESS\fR \fI<Y/N>\fR
+.RS 4
+Synonym for \(lqREQUIRE_SOURCE_ADDRESS\(rq\&.
+.RE
+.PP
 \fBFORCE_NAT\fR \fI<IP> <PORT>\fR
 .RS 4
 For any valid SPA packet, force the requested connection to be NAT\(cqd through to the specified (usually internal) IP and port value\&. This is useful if there are multiple internal systems running a service such as SSHD, and you want to give transparent access to only one internal system for each stanza in the access\&.conf file\&. This way, multiple external users can each directly access only one internal system per SPA key\&.
@@ -554,21 +653,6 @@ file except that it is per access stanza and overrides any value set with \(lqSN
 \fBFORCE_MASQUERADE\fR \fI<Y/N>\fR
 .RS 4
 This is similar to the \(lqFORCE_SNAT\(rq variable, except that it is not necessary to also specify an IP address for SNAT rules because the MASQUERADE target is used instead\&.
-.RE
-.PP
-\fBGPG_HOME_DIR\fR \fI<path>\fR
-.RS 4
-Define the path to the GnuPG directory to be used by the
-\fBfwknopd\fR
-server\&. If this keyword is not specified within
-\fI@sysconfdir@/fwknop/access\&.conf\fR
-then
-\fBfwknopd\fR
-will default to using the
-\fI/root/\&.gnupg\fR
-directory for the server key(s) for incoming SPA packets handled by the matching
-\fIaccess\&.conf\fR
-stanza\&.
 .RE
 .PP
 \fBGPG_DECRYPT_ID\fR \fI<keyID>\fR
@@ -602,6 +686,12 @@ to leverage a GnuPG key pair that does not have an associated password\&. While 
 .RS 4
 With this setting set to
 \fIY\fR, fwknopd check all GPG\-encrypted SPA messages for a signature (signed by the sender\(cqs key)\&. If the incoming message is not signed, the decryption process will fail\&. If not set, the default is
+\fIY\fR\&.
+.RE
+.PP
+\fBGPG_DISABLE_SIG\fR \fI<Y/N>\fR
+.RS 4
+Disable signature verification for incoming SPA messages\&. This is not a recommended setting, and the default is
 \fIN\fR\&.
 .RE
 .PP
@@ -615,8 +705,40 @@ Setting this will allow fwknopd to accept incoming GPG\-encrypted packets that a
 .RS 4
 Define a list of gpg key ID\(cqs that are required to have signed any incoming SPA message that has been encrypted with the
 \fBfwknopd\fR
-server key\&. This ensures that the verification of the remote user is accomplished via a strong cryptographic mechanism\&. This setting only applies if the \(lqGPG_REQUIRE_SIG\(rq is set to
-\fIY\fR\&. Separate multiple entries with a comma\&.
+server key\&. This ensures that the verification of the remote user is accomplished via a strong cryptographic mechanism\&. Signature verification is enabled by default, and can only be disabled if \(lqGPG_DISABLE_SIG\(rq is set to
+\fIY\fR
+(not a recommended setting)\&. Separate multiple entries with a comma\&.
+.RE
+.PP
+\fBGPG_FINGERPRINT_ID\fR \fI<keyID,\&...,keyID>\fR
+.RS 4
+Specify a set of full\-length GnuPG key fingerprints instead of the shorter key identifiers set with the \(lqGPG_REMOTE_ID\(rq variable\&. Here is an example fingerprint for one of the fwknop test suite keys:
+\fI00CC95F05BC146B6AC4038C9E36F443C6A3FAD56\fR\&.
+.RE
+.PP
+\fBGPG_HOME_DIR\fR \fI<path>\fR
+.RS 4
+Define the path to the GnuPG directory to be used by the
+\fBfwknopd\fR
+server\&. If this keyword is not specified within
+\fI@sysconfdir@/fwknop/access\&.conf\fR
+then
+\fBfwknopd\fR
+will default to using the
+\fI/root/\&.gnupg\fR
+directory for the server key(s) for incoming SPA packets handled by the matching
+\fIaccess\&.conf\fR
+stanza\&.
+.RE
+.PP
+\fBGPG_EXE\fR \fI<path>\fR
+.RS 4
+Define the path to the GnuPG executable\&. If this keyword is not specified within
+\fI@sysconfdir@/fwknop/access\&.conf\fR
+then
+\fBfwknopd\fR
+will default to using
+\fI/usr/bin/gpg\fR\&.
 .RE
 .SH "FILES"
 .PP
@@ -633,7 +755,7 @@ Defines all knock sequences and access control directives\&.
 .sp
 \fBfwknopd\fR requires \fIlibfko\fR which is normally included with both source and binary distributions, and is a dedicated library developed by the fwknop project\&.
 .sp
-For packet sniffing, \fBfwknopd\fR currently requires libpcap, but future versions still remove this as a dependency\&.
+For packet sniffing, \fBfwknopd\fR currently requires libpcap, but future versions will (optionally) remove this as a dependency\&.
 .sp
 For GPG functionality, GnuPG must also be correctly installed and configured along with the libgpgme library\&.
 .sp

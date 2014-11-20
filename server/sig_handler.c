@@ -148,4 +148,28 @@ set_sig_handlers(void)
     return(err);
 }
 
+int
+sig_do_stop(void)
+{
+    /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
+    */
+    if(got_signal != 0)
+    {
+        if(got_sigint || got_sigterm || got_sighup)
+        {
+            return 1;
+        }
+        else if(got_sigusr1 || got_sigusr2)
+        {
+            /* Not doing anything with these yet.
+            */
+            got_sigusr1 = got_sigusr2 = 0;
+            got_signal = 0;
+        }
+        else
+            got_signal = 0;
+    }
+    return 0;
+}
+
 /***EOF***/

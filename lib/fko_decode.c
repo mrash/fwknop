@@ -75,6 +75,10 @@ last_field(char *str)
 static int
 verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
 {
+#if AFL_FUZZING
+    return FKO_SUCCESS;
+#endif
+
     switch(ctx->digest_type)
     {
         case FKO_DIGEST_MD5:
@@ -113,6 +117,12 @@ verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
 static int
 is_valid_digest_len(int t_size, fko_ctx_t ctx)
 {
+#if AFL_FUZZING
+    ctx->digest_type = FKO_DIGEST_SHA256;
+    ctx->digest_len  = t_size;
+    return FKO_SUCCESS;
+#endif
+
     switch(t_size)
     {
         case MD5_B64_LEN:
@@ -455,20 +465,15 @@ static int
 parse_rand_val(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 {
     if((*t_size = strcspn(*ndx, ":")) < FKO_RAND_VAL_SIZE)
-    {
-        free(tbuf);
         return(FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING);
-    }
 
     if(ctx->rand_val != NULL)
         free(ctx->rand_val);
 
     ctx->rand_val = calloc(1, FKO_RAND_VAL_B64_SIZE+1);
     if(ctx->rand_val == NULL)
-    {
-        free(tbuf);
         return(FKO_ERROR_MEMORY_ALLOCATION);
-    }
+
     ctx->rand_val = strncpy(ctx->rand_val, *ndx, *t_size);
 
     *ndx += *t_size + 1;

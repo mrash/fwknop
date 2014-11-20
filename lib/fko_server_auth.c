@@ -42,6 +42,9 @@ fko_set_spa_server_auth(fko_ctx_t ctx, const char * const msg)
     */
     //return(FKO_ERROR_UNSUPPORTED_FEATURE);
 
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_server_auth_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
 
     /* Context must be initialized.
     */
@@ -87,6 +90,11 @@ fko_set_spa_server_auth(fko_ctx_t ctx, const char * const msg)
 int
 fko_get_spa_server_auth(fko_ctx_t ctx, char **server_auth)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_server_auth_init", FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -94,6 +102,10 @@ fko_get_spa_server_auth(fko_ctx_t ctx, char **server_auth)
 
     if(server_auth == NULL)
         return(FKO_ERROR_INVALID_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_server_auth_val", FKO_ERROR_INVALID_DATA);
+#endif
 
     *server_auth = ctx->server_auth;
 

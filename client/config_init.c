@@ -113,6 +113,7 @@ enum
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_KEY_HMAC,
     FWKNOP_CLI_ARG_USE_HMAC,
+    FWKNOP_CLI_ARG_USE_WGET_USER_AGENT,
     FWKNOP_CLI_ARG_KEY_FILE,
     FWKNOP_CLI_ARG_HMAC_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
@@ -124,6 +125,10 @@ enum
     FWKNOP_CLI_ARG_VERBOSE,
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTP,
     FWKNOP_CLI_ARG_RAND_MODE_LEGACY,
+    FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS,
+    FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY,
+    FWKNOP_CLI_ARG_WGET_CMD,
+    FWKNOP_CLI_ARG_NO_SAVE_ARGS,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
@@ -158,6 +163,7 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "HMAC_KEY_BASE64",       FWKNOP_CLI_ARG_KEY_HMAC_BASE64       },
     { "HMAC_KEY",              FWKNOP_CLI_ARG_KEY_HMAC              },
     { "USE_HMAC",              FWKNOP_CLI_ARG_USE_HMAC              },
+    { "USE_WGET_USER_AGENT",   FWKNOP_CLI_ARG_USE_WGET_USER_AGENT   },
     { "KEY_FILE",              FWKNOP_CLI_ARG_KEY_FILE              },
     { "HMAC_KEY_FILE",         FWKNOP_CLI_ARG_HMAC_KEY_FILE         },
     { "NAT_ACCESS",            FWKNOP_CLI_ARG_NAT_ACCESS            },
@@ -167,7 +173,11 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "NAT_RAND_PORT",         FWKNOP_CLI_ARG_NAT_RAND_PORT         },
     { "NAT_PORT",              FWKNOP_CLI_ARG_NAT_PORT              },
     { "VERBOSE",               FWKNOP_CLI_ARG_VERBOSE               },
-    { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       }
+    { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       },
+    { "RESOLVE_IP_HTTPS",      FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS      },
+    { "RESOLVE_HTTP_ONLY",     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY     },
+    { "WGET_CMD",              FWKNOP_CLI_ARG_WGET_CMD              },
+    { "NO_SAVE_ARGS",          FWKNOP_CLI_ARG_NO_SAVE_ARGS          }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -575,7 +585,7 @@ is_rc_param(const char *line, rc_file_param_t *param)
  * 
  * @param rcfile full path to the rcfile to parse
  */
-static void
+static int
 dump_configured_stanzas_from_rcfile(const char* rcfile)
 {
     FILE   *rc;
@@ -588,7 +598,7 @@ dump_configured_stanzas_from_rcfile(const char* rcfile)
         log_msg(LOG_VERBOSITY_WARNING, "Unable to open rc file: %s: %s",
             rcfile, strerror(errno));
 
-        return;
+        return EXIT_FAILURE;
     }
 
     log_msg(LOG_VERBOSITY_NORMAL, "The following stanzas are configured in %s :", rcfile);
@@ -617,6 +627,8 @@ dump_configured_stanzas_from_rcfile(const char* rcfile)
     }
 
     fclose(rc);
+
+    return EXIT_SUCCESS;
 }
 
 /* Assign path to fwknop rc file
@@ -726,13 +738,12 @@ keys_status(fko_cli_options_t *options)
 /* Parse any time offset from the command line
 */
 static int
-parse_time_offset(const char *offset_str)
+parse_time_offset(const char *offset_str, int *offset)
 {
     int i, j;
-    int offset      = 0;
     int offset_type = TIME_OFFSET_SECONDS;
     int os_len      = strlen(offset_str);
-    int is_err;
+    int is_err = 0;
 
     char offset_digits[MAX_TIME_STR_LEN] = {0};
 
@@ -743,8 +754,7 @@ parse_time_offset(const char *offset_str)
             j++;
             if(j >= MAX_TIME_STR_LEN)
             {
-                log_msg(LOG_VERBOSITY_ERROR, "Invalid time offset: %s", offset_str);
-                exit(EXIT_FAILURE);
+                return 0;
             }
         } else if (offset_str[i] == 'm' || offset_str[i] == 'M') {
             offset_type = TIME_OFFSET_MINUTES;
@@ -760,19 +770,17 @@ parse_time_offset(const char *offset_str)
 
     offset_digits[j] = '\0';
 
-    if (j < 1) {
-        log_msg(LOG_VERBOSITY_ERROR, "Invalid time offset: %s", offset_str);
-        exit(EXIT_FAILURE);
-    }
+    if (j < 1)
+        return 0;
 
-    offset = strtol_wrapper(offset_digits, 0, (2 << 15),
-            EXIT_UPON_ERR, &is_err);
+    *offset = strtol_wrapper(offset_digits, 0, (2 << 15),
+            NO_EXIT_UPON_ERR, &is_err);
 
-    /* Apply the offset_type value
+    /* Apply the offset_type multiplier
     */
-    offset *= offset_type;
+    *offset *= offset_type;
 
-    return offset;
+    return is_err == 0 ? 1 : 0;
 }
 
 static int
@@ -856,6 +864,7 @@ create_fwknoprc(const char *rcfile)
         "#GPG_EXE             /path/to/gpg\n"
         "#GPG_SIGNER          <signer ID>\n"
         "#GPG_RECIPIENT       <recipient ID>\n"
+        "#NO_SAVE_ARGS        N\n"
         "\n"
         "# User-provided named stanzas:\n"
         "\n"
@@ -950,14 +959,14 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
     {
         /* In case this was set previously
         */
-        options->resolve_ip_http = 0;
+        options->resolve_ip_http_https = 0;
 
         /* use source, resolve, or an actual IP
         */
         if(strcasecmp(val, "source") == 0)
             strlcpy(options->allow_ip_str, "0.0.0.0", sizeof(options->allow_ip_str));
         else if(strcasecmp(val, "resolve") == 0)
-            options->resolve_ip_http = 1;
+            options->resolve_ip_http_https = 1;
         else /* Assume IP address and validate */
         {
             strlcpy(options->allow_ip_str, val, sizeof(options->allow_ip_str));
@@ -971,10 +980,16 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if(val[0] == '-')
         {
             val++;
-            options->time_offset_minus = parse_time_offset(val);
+            if(! parse_time_offset(val, &options->time_offset_minus))
+                parse_error = -1;
         }
         else
-            options->time_offset_plus = parse_time_offset(val);
+            if (! parse_time_offset(val, &options->time_offset_plus))
+                parse_error = -1;
+
+        if(parse_error == -1)
+            log_msg(LOG_VERBOSITY_WARNING,
+                    "TIME_OFFSET argument '%s' invalid.", val);
     }
     /* symmetric encryption mode */
     else if (var->pos == FWKNOP_CLI_ARG_ENCRYPTION_MODE)
@@ -1136,6 +1151,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if (is_yes_str(val))
             options->use_hmac = 1;
     }
+    /* --use-wget-user-agent */
+    else if (var->pos == FWKNOP_CLI_ARG_USE_WGET_USER_AGENT)
+    {
+        if (is_yes_str(val))
+            options->use_wget_user_agent = 1;
+    }
     /* Key file */
     else if (var->pos == FWKNOP_CLI_ARG_KEY_FILE)
     {
@@ -1170,6 +1191,20 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
             exit(EXIT_FAILURE);
         }
         strlcpy(options->resolve_url, val, tmpint);
+    }
+    /* wget command */
+    else if (var->pos == FWKNOP_CLI_ARG_WGET_CMD)
+    {
+        if(options->wget_bin != NULL)
+            free(options->wget_bin);
+        tmpint = strlen(val)+1;
+        options->wget_bin = calloc(1, tmpint);
+        if(options->wget_bin == NULL)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,"Memory allocation error for wget command path.");
+            exit(EXIT_FAILURE);
+        }
+        strlcpy(options->wget_bin, val, tmpint);
     }
     /* NAT Local ? */
     else if (var->pos == FWKNOP_CLI_ARG_NAT_LOCAL)
@@ -1211,11 +1246,35 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if (parse_error == 0)
             log_set_verbosity(LOG_DEFAULT_VERBOSITY + options->verbose);
     }
-    /* RESOLVE_IP_HTTP ? */
+    /* RESOLVE_IP_HTTPS ? */
+    else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS)
+    {
+        if (is_yes_str(val))
+            options->resolve_ip_http_https = 1;
+        else;
+    }
+    /* RESOLVE_IP_HTTP ? This actually results in HTTPS resolution by default
+     * unless --resolve-http-only is also given
+    */
     else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_IP_HTTP)
     {
         if (is_yes_str(val))
-            options->resolve_ip_http = 1;
+            options->resolve_ip_http_https = 1;
+        else;
+    }
+    /* RESOLVE_HTTP_ONLY ?  Force HTTP instead of HTTPS IP resolution.
+    */
+    else if (var->pos == FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY)
+    {
+        if (is_yes_str(val))
+            options->resolve_http_only = 1;
+        else;
+    }
+    /* avoid saving .fwknop.run by default */
+    else if (var->pos == FWKNOP_CLI_ARG_NO_SAVE_ARGS)
+    {
+        if (is_yes_str(val))
+            options->no_save_args = 1;
         else;
     }
     /* The variable is not a configuration variable */
@@ -1344,6 +1403,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_USE_HMAC :
             bool_to_yesno(options->use_hmac, val, sizeof(val));
             break;
+        case FWKNOP_CLI_ARG_USE_WGET_USER_AGENT :
+            bool_to_yesno(options->use_wget_user_agent, val, sizeof(val));
+            break;
         case FWKNOP_CLI_ARG_NAT_ACCESS :
             strlcpy(val, options->nat_access_str, sizeof(val));
             break;
@@ -1370,8 +1432,21 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             else
                 snprintf(val, sizeof(val)-1, "%d", options->verbose);
             break;
+        case FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS:
+            bool_to_yesno(options->resolve_ip_http_https, val, sizeof(val));
+            break;
         case FWKNOP_CLI_ARG_RESOLVE_IP_HTTP:
-            bool_to_yesno(options->resolve_ip_http, val, sizeof(val));
+            bool_to_yesno(options->resolve_ip_http_https, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY:
+            bool_to_yesno(options->resolve_http_only, val, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_WGET_CMD :
+            if (options->wget_bin != NULL)
+                strlcpy(val, options->wget_bin, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_NO_SAVE_ARGS :
+            bool_to_yesno(options->no_save_args, val, sizeof(val));
             break;
         default:
             log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
@@ -1482,7 +1557,10 @@ process_rc_section(char *section_name, fko_cli_options_t *options)
 
         /* We have not found a valid parameter */
         else if (is_rc_param(line, &param) == 0)
-            continue;
+        {
+            do_exit = 1;  /* We don't allow improperly formatted lines */
+            break;
+        }
 
         /* We have a valid parameter */
         else
@@ -1572,6 +1650,12 @@ update_rc(fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
     {
         line[MAX_LINE_LEN-1] = '\0';
 
+        /* Get past comments and empty lines (note: we only look at the
+         * first character.
+        */
+        if(IS_EMPTY_LINE(line[0]))
+            continue;
+
         /* If we find a section... */
         if(is_rc_section(line, strlen(line), curr_stanza, sizeof(curr_stanza)) == 1)
         {
@@ -1619,13 +1703,18 @@ update_rc(fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
                 else
                     continue;
             }
-
-            /* discard all other lines */
             else
-                continue;
+            {
+                /* is_rc_param() returns false only when there is an
+                 * improperly formatted line - bail
+                */
+                fclose(rc);
+                fclose(rc_update);
+                return;
+            }
         }
 
-        /* We re not processing any important variables from our stanza and no new
+        /* We're not processing any important variables from our stanza and no new
          * stanza */
         else;
 
@@ -1707,7 +1796,7 @@ validate_options(fko_cli_options_t *options)
         strlcpy(options->use_rc_stanza, options->spa_server_str, sizeof(options->use_rc_stanza));
     }
 
-    /* Gotta have a Destination unless we are just testing or getting the
+    /* Must have a destination unless we are just testing or getting the
      * the version, and must use one of [-s|-R|-a].
     */
     if(!options->test
@@ -1724,9 +1813,9 @@ validate_options(fko_cli_options_t *options)
         }
 
         if (options->resolve_url != NULL)
-            options->resolve_ip_http = 1;
+            options->resolve_ip_http_https = 1;
 
-        if (!options->resolve_ip_http)
+        if (!options->resolve_ip_http_https)
         {
             if(options->allow_ip_str[0] == 0x0)
             {
@@ -1740,13 +1829,21 @@ validate_options(fko_cli_options_t *options)
                 log_msg(LOG_VERBOSITY_WARNING,
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
             }
+        }
+    }
 
-            if(! is_valid_ipv4_addr(options->allow_ip_str))
-            {
-                log_msg(LOG_VERBOSITY_ERROR,
-                    "Invalid allow IP specified for SPA access");
-                exit(EXIT_FAILURE);
-            }
+    /* Make sure -a overrides IP resolution
+    */
+    if(options->allow_ip_str[0] != 0x0
+            && strncasecmp(options->allow_ip_str, "resolve", strlen("resolve")) != 0)
+    {
+        options->resolve_ip_http_https = 0;
+
+        if(! is_valid_ipv4_addr(options->allow_ip_str))
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                "Invalid allow IP specified for SPA access");
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1762,15 +1859,21 @@ validate_options(fko_cli_options_t *options)
                 && options->spa_proto != FKO_PROTO_ICMP)
         {
             log_msg(LOG_VERBOSITY_ERROR,
-                    "Must set -Q <udpraw|tcpraw|icmp> with a spoofed source IP");
+                    "Must set -P <udpraw|tcpraw|icmp> with a spoofed source IP");
             exit(EXIT_FAILURE);
         }
     }
 
-    if(options->resolve_ip_http || options->spa_proto == FKO_PROTO_HTTP)
+    if(options->resolve_ip_http_https || options->spa_proto == FKO_PROTO_HTTP)
         if (options->http_user_agent[0] == '\0')
             snprintf(options->http_user_agent, HTTP_MAX_USER_AGENT_LEN,
                 "%s%s", "Fwknop/", MY_VERSION);
+
+#if AFL_FUZZING
+    /* Don't issue IP resolution requests in AFL fuzzing mode
+    */
+    options->resolve_ip_http_https = 0;
+#endif
 
     if(options->http_proxy[0] != 0x0 && options->spa_proto != FKO_PROTO_HTTP)
     {
@@ -1846,7 +1949,7 @@ set_defaults(fko_cli_options_t *options)
 void
 config_init(fko_cli_options_t *options, int argc, char **argv)
 {
-    int                 cmd_arg, index, is_err;
+    int                 cmd_arg, index, is_err, rlen=0;
     fko_var_bitmask_t   var_bitmask;
     char                rcfile[MAX_PATH_LEN] = {0};
 
@@ -1900,8 +2003,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     if (options->stanza_list == 1)
     {
         set_rc_file(rcfile, options);
-        dump_configured_stanzas_from_rcfile(rcfile);
-        exit(EXIT_SUCCESS);
+        exit(dump_configured_stanzas_from_rcfile(rcfile));
     }
 
     /* First process the .fwknoprc file.
@@ -1955,6 +2057,15 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 }
                 add_var_to_bitmask(FWKNOP_CLI_ARG_FW_TIMEOUT, &var_bitmask);
                 break;
+            case FAULT_INJECTION_TAG:
+#if HAVE_LIBFIU
+                strlcpy(options->fault_injection_tag, optarg, sizeof(options->fault_injection_tag));
+#else
+                log_msg(LOG_VERBOSITY_ERROR,
+                    "fwknop not compiled with fault injection support.", optarg);
+                exit(EXIT_FAILURE);
+#endif
+                break;
             case 'g':
             case GPG_ENCRYPTION:
                 options->use_gpg = 1;
@@ -1970,9 +2081,6 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->use_hmac = 1;
                 add_var_to_bitmask(FWKNOP_CLI_ARG_HMAC_KEY_FILE, &var_bitmask);
                 break;
-            case 'h':
-                usage();
-                exit(EXIT_SUCCESS);
             case 'H':
                 options->spa_proto = FKO_PROTO_HTTP;
                 strlcpy(options->http_proxy, optarg, sizeof(options->http_proxy));
@@ -2107,6 +2215,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case NO_SAVE_ARGS:
                 options->no_save_args = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_NO_SAVE_ARGS, &var_bitmask);
                 break;
             case 'n':
                 /* We already handled this earlier, so we do nothing here
@@ -2141,8 +2250,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RAND_PORT, &var_bitmask);
                 break;
             case 'R':
-                options->resolve_ip_http = 1;
-                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTP, &var_bitmask);
+                options->resolve_ip_http_https = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS, &var_bitmask);
+                break;
+            case RESOLVE_HTTP_ONLY:
+                options->resolve_http_only = 1;
+                options->resolve_ip_http_https = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY, &var_bitmask);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS, &var_bitmask);
                 break;
             case RAND_MODE_LEGACY:
                 options->rand_mode_legacy = 1;
@@ -2151,14 +2266,28 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case RESOLVE_URL:
                 if(options->resolve_url != NULL)
                     free(options->resolve_url);
-                options->resolve_url = calloc(1, strlen(optarg)+1);
+                rlen = strlen(optarg) + 1;
+                options->resolve_url = calloc(1, rlen);
                 if(options->resolve_url == NULL)
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "Memory allocation error for resolve URL.");
                     exit(EXIT_FAILURE);
                 }
-                strlcpy(options->resolve_url, optarg, strlen(optarg)+1);
+                strlcpy(options->resolve_url, optarg, rlen);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_URL, &var_bitmask);
+                break;
+            case 'w':
+                if(options->wget_bin != NULL)
+                    free(options->wget_bin);
+                rlen = strlen(optarg) + 1;
+                options->wget_bin = calloc(1, rlen);
+                if(options->wget_bin == NULL)
+                {
+                    log_msg(LOG_VERBOSITY_ERROR, "Memory allocation error for resolve URL.");
+                    exit(EXIT_FAILURE);
+                }
+                strlcpy(options->wget_bin, optarg, rlen);
+                add_var_to_bitmask(FWKNOP_CLI_ARG_WGET_CMD, &var_bitmask);
                 break;
             case SHOW_LAST_ARGS:
                 options->show_last_command = 1;
@@ -2243,16 +2372,30 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 add_var_to_bitmask(FWKNOP_CLI_ARG_NAT_PORT, &var_bitmask);
                 break;
             case TIME_OFFSET_PLUS:
-                options->time_offset_plus = parse_time_offset(optarg);
+                if (! parse_time_offset(optarg, &options->time_offset_plus))
+                {
+                    log_msg(LOG_VERBOSITY_WARNING,
+                        "Invalid time offset: '%s'", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 add_var_to_bitmask(FWKNOP_CLI_ARG_TIME_OFFSET, &var_bitmask);
                 break;
             case TIME_OFFSET_MINUS:
-                options->time_offset_minus = parse_time_offset(optarg);
+                if (! parse_time_offset(optarg, &options->time_offset_minus))
+                {
+                    log_msg(LOG_VERBOSITY_WARNING,
+                        "Invalid time offset: '%s'", optarg);
+                    exit(EXIT_FAILURE);
+                }
                 add_var_to_bitmask(FWKNOP_CLI_ARG_TIME_OFFSET, &var_bitmask);
                 break;
             case USE_HMAC:
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 options->use_hmac = 1;
+                break;
+            case USE_WGET_USER_AGENT:
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_WGET_USER_AGENT, &var_bitmask);
+                options->use_wget_user_agent = 1;
                 break;
             case FORCE_SAVE_RC_STANZA:
                 options->force_save_rc_stanza = 1;
@@ -2317,7 +2460,7 @@ usage(void)
       "                             '$HOME/.fwknoprc' file to provide some of all\n"
       "                             of the configuration parameters.\n"
       "                             If more arguments are set through the command\n"
-      "                             line, the configuration is updated accordingly\n"
+      "                             line, the configuration is updated accordingly.\n"
       " -A, --access                Provide a list of ports/protocols to open\n"
       "                             on the server (e.g. 'tcp/22').\n"
       " -a, --allow-ip              Specify IP address to allow within the SPA\n"
@@ -2346,16 +2489,27 @@ usage(void)
       "                             fwknopd server can ignore such requests).\n"
       " -S, --source-port           Set the source port for outgoing SPA packet.\n"
       " -Q, --spoof-source          Set the source IP for outgoing SPA packet.\n"
-      " -R, --resolve-ip-http       Resolve the external network IP by\n"
+      " -R, --resolve-ip-https      Resolve the external network IP by\n"
       "                             connecting to a URL such as the default of:\n"
-      "                             http://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL "\n"
-      "                             This can be overridden with the --resolve-url\n"
-      "                             option.\n"
+      "                             https://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL "\n"
+      "                             with wget in --secure-protocol mode (SSL).\n"
+      "                             The URL can be overridden with the\n"
+      "                             --resolve-url option.\n"
+      "     --resolve-http-only     Force external IP resolution via HTTP instead\n"
+      "                             HTTPS (via the URL mentioned above). This is\n"
+      "                             not recommended since it would open fwknop\n"
+      "                             to potential MITM attacks if the IP resolution\n"
+      "                             HTTP connection is altered en-route by a third\n"
+      "                             party.\n"
       "     --resolve-url           Override the default URL used for resolving\n"
       "                             the source IP address.\n"
       " -u, --user-agent            Set the HTTP User-Agent for resolving the\n"
       "                             external IP via -R, or for sending SPA\n"
-      "                             packets over HTTP.\n"
+      "                             packets over HTTP. The default is\n"
+      "                             Fwknop/<version> if this option is not used.\n"
+      "     --use-wget-user-agent   Use the default wget User-Agent string instead\n"
+      "                             of Fwknop/<version>.\n"
+      " -w, --wget-cmd              Manually set the path to wget in -R mode.\n"
       " -H, --http-proxy            Specify an HTTP proxy host through which the\n"
       "                             SPA packet will be sent.  The port can also be\n"
       "                             specified here by following the host/ip with\n"
@@ -2372,9 +2526,9 @@ usage(void)
       " -K, --key-gen-file          Write generated Rijndael + HMAC keys to a\n"
       "                             file\n"
       "     --key-rijndael          Specify the Rijndael key. Since the password is\n"
-      "                             visible to utilities (like 'ps' under Unix) this\n"
-      "                             form should only be used where security is not\n"
-      "                             important.\n"
+      "                             visible to utilities (like 'ps' under Unix)\n"
+      "                             this form should only be used where security is\n"
+      "                             not important.\n"
       "     --key-base64-rijndael   Specify the base64 encoded Rijndael key. Since\n"
       "                             the password is visible to utilities (like 'ps'\n"
       "                             under Unix) this form should only be used where\n"

@@ -33,15 +33,6 @@
 #include "log_msg.h"
 #include "utils.h"
 
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/select.h>
-*/
 #include <errno.h>
 #include <signal.h>
 
@@ -83,27 +74,164 @@ alarm_handler(int sig)
 }
 */
 
-/* Run en external command returning exit status, and optionally filling
+/* Run an external command returning exit status, and optionally filling
  * provided  buffer with STDOUT output up to the size provided.
  *
  * Note: XXX: We are not using the timeout parameter at present. We still need
  *       to implement a reliable timeout mechanism.
 */
 static int
-_run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
+_run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
+        const size_t so_buf_sz, const int want_stderr, const int timeout,
+        const char *substr_search, int *pid_status,
+        const fko_srv_options_t * const opts)
 {
-    FILE   *ipt;
-    int     retval = 0;
     char    so_read_buf[IO_READ_BUF_LEN] = {0};
-    pid_t   pid;
-    int     res;
+    pid_t   pid=0;
+    FILE   *output;
+    int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+    int     line_ctr = 0, found_str = 0;
 
-    if(so_buf == NULL)
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+    int     argc_new=0;
+
+#if HAVE_EXECVPE
+    int     pipe_fd[2];
+#endif
+
+    *pid_status = 0;
+
+    /* Even without execvpe() we examine the command for basic validity
+     * in term of number of args
+    */
+    memset(argv_new, 0x0, sizeof(argv_new));
+
+    if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
     {
+        log_msg(LOG_ERR,
+                "run_extcmd(): Error converting cmd str to argv via strtoargv()");
+        return EXTCMD_ARGV_ERROR;
+    }
 
-        /* Since we do not have to capture output, we will fork here (which we
-         * would have to do anyway if we are running as another user as well).
+#if !HAVE_EXECVPE
+    /* if we are not using execvpe() then free up argv_new unconditionally
+     * since was used only for validation
+    */
+    free_argv(argv_new, &argc_new);
+#endif
+
+#if HAVE_EXECVPE
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd() (with execvpe()): running CMD: %s", cmd);
+
+    if(so_buf != NULL || substr_search != NULL)
+    {
+        if(pipe(pipe_fd) < 0)
+        {
+            log_msg(LOG_ERR, "run_extcmd(): pipe() failed: %s", strerror(errno));
+            free_argv(argv_new, &argc_new);
+            return EXTCMD_PIPE_ERROR;
+        }
+    }
+
+    pid = fork();
+    if (pid == 0)
+    {
+        if(chdir("/") != 0)
+            exit(EXTCMD_CHDIR_ERROR);
+
+        if(so_buf != NULL || substr_search != NULL)
+        {
+            close(pipe_fd[0]);
+            dup2(pipe_fd[1], STDOUT_FILENO);
+            if(want_stderr)
+                dup2(pipe_fd[1], STDERR_FILENO);
+            else
+                close(STDERR_FILENO);
+        }
+
+        /* Take care of gid/uid settings before running the command.
         */
+        if(gid > 0)
+            if(setgid(gid) < 0)
+                exit(EXTCMD_SETGID_ERROR);
+
+        if(uid > 0)
+            if(setuid(uid) < 0)
+                exit(EXTCMD_SETUID_ERROR);
+
+        /* don't use env
+        */
+        execvpe(argv_new[0], argv_new, (char * const *)NULL);
+    }
+    else if(pid == -1)
+    {
+        log_msg(LOG_ERR, "run_extcmd(): fork() failed: %s", strerror(errno));
+        free_argv(argv_new, &argc_new);
+        return EXTCMD_FORK_ERROR;
+    }
+
+    /* Only the parent process makes it here
+    */
+    if(so_buf != NULL || substr_search != NULL)
+    {
+        close(pipe_fd[1]);
+        if ((output = fdopen(pipe_fd[0], "r")) != NULL)
+        {
+            if(so_buf != NULL)
+                memset(so_buf, 0x0, so_buf_sz);
+
+            while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
+            {
+                line_ctr++;
+
+                if(so_buf != NULL)
+                {
+                    strlcat(so_buf, so_read_buf, so_buf_sz);
+
+                    if(strlen(so_buf) >= so_buf_sz-1)
+                        break;
+                }
+                else /* we are looking for a substring */
+                {
+                    /* Get past comments and empty lines (note: we only look at the
+                     * first character).
+                     */
+                    if(IS_EMPTY_LINE(so_read_buf[0]))
+                        continue;
+
+                    if(strstr(so_read_buf, substr_search) != NULL)
+                    {
+                        found_str = 1;
+                        break;
+                    }
+                }
+            }
+            fclose(output);
+        }
+        else
+        {
+            log_msg(LOG_ERR,
+                    "run_extcmd(): could not fdopen() pipe output file descriptor.");
+            free_argv(argv_new, &argc_new);
+            return EXTCMD_OPEN_ERROR;
+        }
+    }
+
+    free_argv(argv_new, &argc_new);
+
+    waitpid(pid, pid_status, 0);
+
+#else
+
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd() (without execvpe()): running CMD: %s", cmd);
+
+    if(so_buf == NULL && substr_search == NULL)
+    {
+        /* Since we do not have to capture output, we will fork here (which we
+         * * would have to do anyway if we are running as another user as well).
+         * */
         pid = fork();
         if(pid == -1)
         {
@@ -113,51 +241,101 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         else if (pid == 0)
         {
             /* We are the child */
-            /* If user is not null, then we setuid to that user before running the
-            * command.
-            */
-            if(user_uid > 0)
-            {
-                if(setuid(user_uid) < 0)
-                {
-                    exit(EXTCMD_SETUID_ERROR);
-                }
-            }
-            res = system(cmd);
-            exit(WEXITSTATUS(res));
-        }
 
+            if(chdir("/") != 0)
+                exit(EXTCMD_CHDIR_ERROR);
+
+            /* Take care of gid/uid settings before running the command.
+            */
+            if(gid > 0)
+                if(setgid(gid) < 0)
+                    exit(EXTCMD_SETGID_ERROR);
+
+            if(uid > 0)
+                if(setuid(uid) < 0)
+                    exit(EXTCMD_SETUID_ERROR);
+
+            *pid_status = system(cmd);
+            exit(*pid_status);
+        }
         /* Retval is forced to 0 as we don't care about the exit status of
-         * the child (for now)>
+         * the child (for now)
         */
-        retval = 0;
+        retval = EXTCMD_SUCCESS_ALL_OUTPUT;
     }
     else
     {
         /* Looking for output use popen and fill the buffer to its limit.
-        */
-        ipt = popen(cmd, "r");
-
-        if(ipt == NULL)
+         */
+        output = popen(cmd, "r");
+        if(output == NULL)
         {
-            log_msg(LOG_ERR, "Got popen error %i:  %s", errno, strerror(errno));
-            retval = -1;
+            log_msg(LOG_ERR, "Got popen error %i: %s", errno, strerror(errno));
+            retval = EXTCMD_OPEN_ERROR;
         }
         else
         {
-            memset(so_buf, 0x0, so_buf_sz);
+            if(so_buf != NULL)
+                memset(so_buf, 0x0, so_buf_sz);
 
-            while((fgets(so_read_buf, IO_READ_BUF_LEN, ipt)) != NULL)
+            while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
             {
-                strlcat(so_buf, so_read_buf, so_buf_sz);
+                line_ctr++;
+                if(so_buf != NULL)
+                {
+                    strlcat(so_buf, so_read_buf, so_buf_sz);
+                    if(strlen(so_buf) >= so_buf_sz-1)
+                        break;
+                }
+                else /* we are looking for a substring */
+                {
+                    /* Get past comments and empty lines (note: we only look at the
+                     * first character).
+                     */
+                    if(IS_EMPTY_LINE(so_read_buf[0]))
+                        continue;
 
-                if(strlen(so_buf) >= so_buf_sz-1)
-                    break;
+                    if(strstr(so_read_buf, substr_search) != NULL)
+                    {
+                        found_str = 1;
+                        break;
+                    }
+                }
             }
-
-            pclose(ipt);
+            pclose(output);
         }
     }
+
+#endif
+
+    if(substr_search != NULL)
+    {
+        /* The semantics of the return value changes in search mode to the line
+         * number where the substring match was found, or zero if it wasn't found
+        */
+        if(found_str)
+            retval = line_ctr;
+        else
+            retval = 0;
+    }
+    else
+    {
+        if(WIFEXITED(*pid_status))
+        {
+            /* Even if the child exited with an error condition, if we make it here
+             * then the child exited normally as far as the OS is concerned (i.e. didn't
+             * crash or get hit with a signal)
+            */
+            retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+        }
+        else
+            retval = EXTCMD_EXECUTION_ERROR;
+    }
+
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO,
+            "run_extcmd(): returning %d, pid_status: %d",
+            retval, WIFEXITED(*pid_status) ? WEXITSTATUS(*pid_status) : *pid_status);
 
     return(retval);
 }
@@ -198,9 +376,9 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
         /* If user is not null, then we setuid to that user before running the
          * command.
         */
-        if(user_uid > 0)
+        if(uid > 0)
         {
-            if(setuid(user_uid) < 0)
+            if(setuid(uid) < 0)
             {
                 exit(EXTCMD_SETUID_ERROR);
             }
@@ -373,19 +551,143 @@ _run_extcmd(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_s
 }
 #endif
 
-/* Run an external command.  This is wrapper around _run_extcmd()
-*/
-int
-run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
+int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
+        const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, cmd, so_buf, so_buf_sz, timeout);
+    int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+    int     argc_new=0;
+
+#if HAVE_EXECVPE
+    int     pipe_fd[2];
+    pid_t   pid=0;
+#else
+    FILE       *fd = NULL;
+#endif
+
+    *pid_status = 0;
+
+    /* Even without execvpe() we examine the command for basic validity
+     * in term of number of args
+    */
+    memset(argv_new, 0x0, sizeof(argv_new));
+
+    if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
+    {
+        log_msg(LOG_ERR,
+                "run_extcmd_write(): Error converting cmd str to argv via strtoargv()");
+        return EXTCMD_ARGV_ERROR;
+    }
+
+#if !HAVE_EXECVPE
+    /* if we are not using execvpe() then free up argv_new unconditionally
+     * since was used only for validation
+    */
+    free_argv(argv_new, &argc_new);
+#endif
+
+#if HAVE_EXECVPE
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd_write() (with execvpe()): running CMD: %s | %s",
+                cmd_write, cmd);
+
+    if(pipe(pipe_fd) < 0)
+    {
+        log_msg(LOG_ERR, "run_extcmd_write(): pipe() failed: %s", strerror(errno));
+        free_argv(argv_new, &argc_new);
+        return EXTCMD_PIPE_ERROR;
+    }
+
+    pid = fork();
+    if (pid == 0)
+    {
+        if(chdir("/") != 0)
+            exit(EXTCMD_CHDIR_ERROR);
+
+        close(pipe_fd[1]);
+        dup2(pipe_fd[0], STDIN_FILENO);
+
+        /* don't use env
+        */
+        execvpe(argv_new[0], argv_new, (char * const *)NULL);
+    }
+    else if(pid == -1)
+    {
+        log_msg(LOG_ERR, "run_extcmd_write(): fork() failed: %s", strerror(errno));
+        free_argv(argv_new, &argc_new);
+        return EXTCMD_FORK_ERROR;
+    }
+
+    close(pipe_fd[0]);
+    if(write(pipe_fd[1], cmd_write, strlen(cmd_write)) < 0)
+        retval = EXTCMD_WRITE_ERROR;
+    close(pipe_fd[1]);
+
+    free_argv(argv_new, &argc_new);
+
+    waitpid(pid, pid_status, 0);
+
+#else
+    if(opts->verbose > 1)
+        log_msg(LOG_INFO, "run_extcmd_write() (without execvpe()): running CMD: %s | %s",
+                cmd_write, cmd);
+
+    if ((fd = popen(cmd, "w")) == NULL)
+    {
+        log_msg(LOG_ERR, "Got popen error %i: %s", errno, strerror(errno));
+        retval = EXTCMD_OPEN_ERROR;
+    }
+    else
+    {
+        if (fwrite(cmd_write, strlen(cmd_write), 1, fd) != 1)
+        {
+            log_msg(LOG_ERR, "Could not write to cmd stdin");
+            retval = -1;
+        }
+        pclose(fd);
+    }
+
+#endif
+    return retval;
 }
 
-/* Run an external command as the specified user.  This is wrapper around _run_extcmd()
+/* _run_extcmd() wrapper, run an external command.
 */
 int
-run_extcmd_as(uid_t user_uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout)
+run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
+        const int want_stderr, const int timeout, int *pid_status,
+        const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(user_uid, cmd, so_buf, so_buf_sz, timeout);
+    return _run_extcmd(0, 0, cmd, so_buf, so_buf_sz, want_stderr,
+            timeout, NULL, pid_status, opts);
 }
 
+/* _run_extcmd() wrapper, run an external command as the specified user.
+*/
+int
+run_extcmd_as(uid_t uid, gid_t gid, const char *cmd,char *so_buf,
+        const size_t so_buf_sz, const int want_stderr, const int timeout,
+        int *pid_status, const fko_srv_options_t * const opts)
+{
+    return _run_extcmd(uid, gid, cmd, so_buf, so_buf_sz,
+            want_stderr, timeout, NULL, pid_status, opts);
+}
+
+/* _run_extcmd() wrapper, search command output for a substring.
+*/
+int
+search_extcmd(const char *cmd, const int want_stderr, const int timeout,
+        const char *substr_search, int *pid_status,
+        const fko_srv_options_t * const opts)
+{
+    return _run_extcmd(0, 0, cmd, NULL, 0, want_stderr, timeout,
+            substr_search, pid_status, opts);
+}
+
+/* _run_extcmd_write() wrapper, run a command which is expecting input via stdin
+*/
+int run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
+        const fko_srv_options_t * const opts)
+{
+    return _run_extcmd_write(cmd, cmd_write, pid_status, opts);
+}

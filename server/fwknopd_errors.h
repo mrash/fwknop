@@ -70,6 +70,7 @@ enum {
 /* Function prototypes
 */
 const char* get_errstr(const int err_code);
+void dump_server_errors(void);
 
 #endif /* FWKNOPD_ERRORS_H */
 

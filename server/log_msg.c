@@ -63,8 +63,8 @@ free_logging(void)
 */
 void
 init_logging(fko_srv_options_t *opts) {
-    char                   *my_name = NULL;
-    int                     is_syslog = 0;
+    char       *my_name = NULL;
+    int         is_syslog = 0;
 
     /* In case this is a re-init.
     */
@@ -140,17 +140,15 @@ init_logging(fko_srv_options_t *opts) {
             syslog_fac = LOG_LOCAL6;
         else if(!strcasecmp(opts->config[CONF_SYSLOG_FACILITY], "LOG_LOCAL7"))
             syslog_fac = LOG_LOCAL7;
+        else
+        {
+            fprintf(stderr, "Invalid SYSLOG_FACILITY setting '%s'\n",
+                    opts->config[CONF_SYSLOG_FACILITY]);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
     }
 
     verbosity = LOG_DEFAULT_VERBOSITY + opts->verbose;
-}
-
-/* Set the log facility value.
-*/
-void
-set_log_facility(int fac)
-{
-    syslog_fac = fac;
 }
 
 /* Syslog message function.  It uses default set at intialization, and also

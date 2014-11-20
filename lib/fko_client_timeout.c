@@ -43,7 +43,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
-    /* Gotta have a valid string.
+    /* The timeout should not be negative
     */
     if(timeout < 0)
         return(FKO_ERROR_INVALID_DATA_CLIENT_TIMEOUT_NEGATIVE);
@@ -74,7 +74,7 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
                 break;
         }
     }
-    else  /* Timeout is 0, which means no timeout. */
+    else  /* Timeout is 0, which means ignore it. */
     {
         switch(ctx->message_type)
         {
@@ -103,6 +103,12 @@ fko_set_spa_client_timeout(fko_ctx_t ctx, const int timeout)
 int
 fko_get_spa_client_timeout(fko_ctx_t ctx, int *timeout)
 {
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_client_timeout_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
@@ -110,6 +116,11 @@ fko_get_spa_client_timeout(fko_ctx_t ctx, int *timeout)
 
     if(timeout == NULL)
         return(FKO_ERROR_INVALID_DATA);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_get_spa_client_timeout_val",
+            FKO_ERROR_INVALID_DATA);
+#endif
 
     *timeout = ctx->client_timeout;
 

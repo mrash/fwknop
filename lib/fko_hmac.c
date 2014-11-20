@@ -187,10 +187,20 @@ fko_get_spa_hmac(fko_ctx_t ctx, char **hmac_data)
 int
 fko_set_spa_hmac_type(fko_ctx_t ctx, const short hmac_type)
 {
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_hmac_type_init",
+            FKO_ERROR_CTX_NOT_INITIALIZED);
+#endif
+
     /* Must be initialized
     */
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
+
+#if HAVE_LIBFIU
+    fiu_return_on("fko_set_spa_hmac_type_val",
+            FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL);
+#endif
 
     if(hmac_type < 0 || hmac_type >= FKO_LAST_HMAC_MODE)
         return(FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL);
@@ -290,10 +300,14 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     if(ctx->msg_hmac != NULL)
         free(ctx->msg_hmac);
 
-    ctx->msg_hmac     = strdup(hmac_base64);
-    ctx->msg_hmac_len = strnlen(ctx->msg_hmac, hmac_digest_str_len);
+    ctx->msg_hmac = strdup(hmac_base64);
 
     free(hmac_base64);
+
+    if(ctx->msg_hmac == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    ctx->msg_hmac_len = strnlen(ctx->msg_hmac, hmac_digest_str_len);
 
     switch(ctx->msg_hmac_len)
     {

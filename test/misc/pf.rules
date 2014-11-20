@@ -1,0 +1,6 @@
+anchor "fwknop" all
+pass in quick proto tcp from any to any port = ssh flags S/SA keep state
+block drop in quick on ! lo0 proto tcp from any to any port = 1337
+pass all flags S/SA keep state
+block drop in log on ! lo0 proto tcp from any to any port 1100:1500
+block drop in log on ! lo0 proto tcp from any to any port 6000:6010

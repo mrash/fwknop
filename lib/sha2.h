@@ -147,40 +147,28 @@ typedef SHA512_CTX SHA384_CTX;
 void SHA256_Init(SHA256_CTX *);
 void SHA256_Update(SHA256_CTX*, const uint8_t*, size_t);
 void SHA256_Final(uint8_t[SHA256_DIGEST_LEN], SHA256_CTX*);
-char* SHA256_End(SHA256_CTX*, char[SHA256_DIGEST_STR_LEN]);
-char* SHA256_Data(const uint8_t*, size_t, char[SHA256_DIGEST_STR_LEN]);
 
 void SHA384_Init(SHA384_CTX*);
 void SHA384_Update(SHA384_CTX*, const uint8_t*, size_t);
 void SHA384_Final(uint8_t[SHA384_DIGEST_LEN], SHA384_CTX*);
-char* SHA384_End(SHA384_CTX*, char[SHA384_DIGEST_STR_LEN]);
-char* SHA384_Data(const uint8_t*, size_t, char[SHA384_DIGEST_STR_LEN]);
 
 void SHA512_Init(SHA512_CTX*);
 void SHA512_Update(SHA512_CTX*, const uint8_t*, size_t);
 void SHA512_Final(uint8_t[SHA512_DIGEST_LEN], SHA512_CTX*);
-char* SHA512_End(SHA512_CTX*, char[SHA512_DIGEST_STR_LEN]);
-char* SHA512_Data(const uint8_t*, size_t, char[SHA512_DIGEST_STR_LEN]);
 
 #else /* SHA2_USE_INTTYPES_H */
 
 void SHA256_Init(SHA256_CTX *);
 void SHA256_Update(SHA256_CTX*, const u_int8_t*, size_t);
 void SHA256_Final(u_int8_t[SHA256_DIGEST_LEN], SHA256_CTX*);
-char* SHA256_End(SHA256_CTX*, char[SHA256_DIGEST_STR_LEN]);
-char* SHA256_Data(const u_int8_t*, size_t, char[SHA256_DIGEST_STR_LEN]);
 
 void SHA384_Init(SHA384_CTX*);
 void SHA384_Update(SHA384_CTX*, const u_int8_t*, size_t);
 void SHA384_Final(u_int8_t[SHA384_DIGEST_LEN], SHA384_CTX*);
-char* SHA384_End(SHA384_CTX*, char[SHA384_DIGEST_STR_LEN]);
-char* SHA384_Data(const u_int8_t*, size_t, char[SHA384_DIGEST_STR_LEN]);
 
 void SHA512_Init(SHA512_CTX*);
 void SHA512_Update(SHA512_CTX*, const u_int8_t*, size_t);
 void SHA512_Final(u_int8_t[SHA512_DIGEST_LEN], SHA512_CTX*);
-char* SHA512_End(SHA512_CTX*, char[SHA512_DIGEST_STR_LEN]);
-char* SHA512_Data(const u_int8_t*, size_t, char[SHA512_DIGEST_STR_LEN]);
 
 #endif /* SHA2_USE_INTTYPES_H */
 
@@ -189,20 +177,14 @@ char* SHA512_Data(const u_int8_t*, size_t, char[SHA512_DIGEST_STR_LEN]);
 void SHA256_Init();
 void SHA256_Update();
 void SHA256_Final();
-char* SHA256_End();
-char* SHA256_Data();
 
 void SHA384_Init();
 void SHA384_Update();
 void SHA384_Final();
-char* SHA384_End();
-char* SHA384_Data();
 
 void SHA512_Init();
 void SHA512_Update();
 void SHA512_Final();
-char* SHA512_End();
-char* SHA512_Data();
 
 #endif /* NOPROTO */
 

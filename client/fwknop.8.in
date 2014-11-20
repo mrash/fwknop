@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 01/02/2014
+.\"      Date: 11/15/2014
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "01/02/2014" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "11/15/2014" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -101,7 +101,7 @@ daemon/service when it decrypts and parses the authentication packet\&.
 .RS 4
 One of these options (see below) is required to tell the remote
 \fBfwknopd\fR
-daemon what IP should be allowed through the local firewall\&. It is recommend to use the
+daemon what IP should be allowed through the firewall\&. It is recommend to use the
 \fB\-R\fR
 or
 \fB\-a\fR
@@ -117,8 +117,8 @@ file\&. Note that the most secure option is
 \fB\-a\fR
 so that
 \fBfwknop\fR
-does not have to issue an HTTP request to
-\fIhttp://www\&.cipherdyne\&.org/cgi\-bin/myip\fR
+does not have to issue any HTTPS request to
+\fIhttps://www\&.cipherdyne\&.org/cgi\-bin/myip\fR
 in order to resolve the externally routable IP address\&. Using
 \fB\-a\fR
 requires that the user already knows what the external IP is for the network where fwknop is running\&.
@@ -299,6 +299,14 @@ Append the generated packet data to the file specified with the
 option\&.
 .RE
 .PP
+\fB\-\-fault\-injection\-tag\fR=\fI<tag>\fR
+.RS 4
+This option is only used for fault injection testing when
+\fBfwknop\fR
+is compiled to support the libfiu library (see:
+\fIhttp://blitiri\&.com\&.ar/p/libfiu/\fR)\&. Under normal circumstances this option is not used, and any packaged version of fwknop will not have code compiled in so this capability is not enabled at run time\&. It is documented here for completeness\&.
+.RE
+.PP
 \fB\-v, \-\-verbose\fR
 .RS 4
 Run the
@@ -337,7 +345,8 @@ option\&. Another related option is
 \fB\-R\fR
 (see below) which instructs the
 \fBfwknop\fR
-client to automatically resolve the externally routable IP address the local system is connected to by querying a website that returns the actual IP address it sees from the calling system\&.
+client to automatically resolve the externally routable IP address the local system is connected to by querying
+\fIhttps://www\&.cipherdyne\&.org/cgi\-bin/myip\fR\&. This returns the actual IP address it sees from the calling system\&.
 .RE
 .PP
 \fB\-g, \-\-gpg\-encryption\fR
@@ -478,28 +487,56 @@ variable that is configured to accept such packets\&. For example, the
 variable could be set to: \(lq+udp dst portrange 10000\-65535+\(rq\&.
 .RE
 .PP
-\fB\-R, \-\-resolve\-ip\-http\fR
+\fB\-R, \-\-resolve\-ip\-https\fR
 .RS 4
 This is an important option, and instructs the
 \fBfwknop\fR
-client and the
+client to issue an HTTPS request to a script running on
+\fIcipherdyne\&.org\fR
+that returns the client\(cqs IP address (as seen by the web server)\&. In some cases, this is needed to determine the IP address that should be allowed through the firewall policy at the remote
 \fBfwknopd\fR
-daemon/service to query a web server that returns the caller\(cqs IP address (as seen by the web server)\&. In some cases, this is needed to determine the IP address that should be allowed through the iptables policy at the remote fwknopd server side\&. This is useful if the
+server side\&. This option is useful if the
 \fBfwknop\fR
-client is being used on a system that is behind an obscure NAT address\&. Presently,
+client is being used on a system that is behind an obscure NAT address, and the external Internet facing IP is not known to the user\&. The full resolution URL is:
+\fIhttps://www\&.cipherdyne\&.org/cgi\-bin/myip\fR, and is accessed by
 \fBfwknop\fR
-uses the URL:
-\fIhttp://www\&.cipherdyne\&.org/cgi\-bin/myip\fR
-to resolve the caller IP\&. Note that it is generally more secure to use the
+via
+\fIwget\fR
+in
+\fB\-\-secure\-protocol\fR
+mode\&. Note that it is generally more secure to use the
 \fB\-a\fR
 option if the externally routable IP address for the client is already known to the user since this elminates the need for
 \fBfwknop\fR
-to issue an HTTP request\&.
+to issue any sort of HTTPS request\&.
 .RE
 .PP
 \fB\-\-resolve\-url\fR \fI<url>\fR
 .RS 4
 Override the default URL used for resolving the source IP address\&. For best results, the URL specified here should point to a web service that provides just an IP address in the body of the HTTP response\&.
+.RE
+.PP
+\fB\-\-resolve\-http\-only\fR
+.RS 4
+This option forces the
+\fBfwknop\fR
+client to resolve the external IP via HTTP instead of HTTPS\&. There are some circumstances where this might be necessary such as when
+\fIwget\fR
+is not available (or hasn\(cqt been compiled with SSL support), but generally this is not recommeded since it opens the possibility of a MITM attack through manipulation of the IP resolution HTTP response\&. Either specify the IP manually with
+\fB\-a\fR, or use
+\fB\-R\fR
+and omit this option\&.
+.RE
+.PP
+\fB\-w, \-\-wget\-cmd\fR=\fI<wget full path>\fR
+.RS 4
+Manually set the full path to the
+\fIwget\fR
+command\&. Normally the
+\fIconfigure\fR
+script finds the
+\fIwget\fR
+command, but this option can be used to specify the path if it is located in a non\-standard place\&.
 .RE
 .PP
 \fB\-s, \-\-source\-ip\fR
@@ -598,6 +635,22 @@ option (see above), but subtracts the specified time offset instead of adding it
 .RS 4
 Set the HTTP User\-Agent for resolving the external IP via
 \fB\-R\fR, or for sending SPA packets over HTTP\&.
+.RE
+.PP
+\fB\-\-use\-wget\-user\-agent\fR
+.RS 4
+By default when the
+\fBfwknop\fR
+client resolves the external IP with
+\fBwget\fR
+via SSL, it sets the User\-Agent to \(lqFwknop/<version>\(rq unless it was already manually specified with the
+\fB\-\-user\-agent\fR
+option mentioned above\&. However, the
+\fB\-\-user\-wget\-user\-agent\fR
+option lets the default
+\fBwget\fR
+User\-Agent string apply without influence from
+\fBfwknop\fR\&.
 .RE
 .PP
 \fB\-U, \-\-spoof\-user\fR=\fI<user>\fR
@@ -785,9 +838,44 @@ Set the source port to use for sending the SPA packet (\fI\-S, \-\-source\-port\
 Set the firewall rule timeout value (\fI\-f, \-\-fw\-timeout\fR)\&.
 .RE
 .PP
+\fBRESOLVE_IP_HTTPS\fR \fI<Y/N>\fR
+.RS 4
+Set to
+\fIY\fR
+to automatically resolve the externally routable IP associated with the
+\fBfwknop\fR
+client\&. This is done over SSL via
+\fIwget\fR
+in
+\fI\-\-secure\-protocol\fR
+mode against the IP resolution service available at
+\fIhttps://www\&.cipherdyne\&.org/cgi\-bin/myip\fR\&.
+.RE
+.PP
+\fBRESOLVE_HTTP_ONLY\fR \fI<Y/N>\fR
+.RS 4
+When the
+\fBfwknop\fR
+client is instructed to resolve the external client IP, this option can be used to force an
+\fIHTTP\fR
+connection instead of an
+\fIHTTPS\fR
+connection when set to
+\fIY\fR\&. This option is useful when
+\fIwget\fR
+is not installed on the local OS, or when it is not compiled against an SSL library\&.
+.RE
+.PP
 \fBRESOLVE_URL\fR \fI<url>\fR
 .RS 4
-Set to a URL that will be used for resolving the source IP address (\-\-resolve\-url)\&.
+Set to a URL that will be used for resolving the source IP address (\fI\-\-resolve\-url\fR)\&.
+.RE
+.PP
+\fBWGET_CMD\fR \fI<wget full path>\fR
+.RS 4
+Set the full path to the
+\fIwget\fR
+command (used for client IP resolution)\&.
 .RE
 .PP
 \fBTIME_OFFSET\fR \fI<time>\fR
@@ -863,6 +951,12 @@ Specify the GPG home directory (\fI\-\-gpg\-home\-dir\fR)\&. Defaults to
 \fI~/\&.gnupg\fR\&.
 .RE
 .PP
+\fBGPG_EXE\fR \fI<path>\fR
+.RS 4
+Specify the path to GPG (\fI\-\-gpg\-exe\fR)\&. Defaults to
+\fI/usr/bin/gpg\fR\&.
+.RE
+.PP
 \fBSPOOF_USER\fR \fI<user>\fR
 .RS 4
 Set the username in the SPA data to the specified value (\fI\-U, \-\-spoof\-user\fR)\&.
@@ -886,6 +980,15 @@ Load an encryption key/password from a file (\fI\-G, \-\-get\-key\fR)\&.
 \fBHTTP_USER_AGENT\fR \fI<agent string>\fR
 .RS 4
 Set the HTTP User\-Agent for resolving the external IP via \-R, or for sending SPA packets over HTTP (\fI\-u, \-\-user\-agent\fR)\&.
+.RE
+.PP
+\fBUSE_WGET_USER_AGENT\fR \fI<Y/N>\fR
+.RS 4
+Allow default
+\fBwget\fR
+User\-Agent string to be used when resolving the external IP instead of a User\-Agent supplied by the
+\fBfwknop\fR
+client\&.
 .RE
 .PP
 \fBNAT_ACCESS\fR \fI<internalIP:forwardPort>\fR
@@ -947,7 +1050,7 @@ With the access request arguments and encryption and HMAC keys generated and sav
     HMAC_KEY_BASE64             DLeLf93a3yBT2vhEpM+dWlirGta5GU+jdyG5uXp4461HgOtbqMem4gX0Bp2PJGzYZlbbcavcOM00UPm+0GqkXA==
     USE_HMAC                    Y
     VERBOSE                     Y
-    RESOLVE_IP_HTTP             Y
+    RESOLVE_IP_HTTPS            Y
 .fi
 .if n \{\
 .RE
@@ -1043,7 +1146,7 @@ Simultaneous access to multiple services is also supported, and here is an examp
 .RE
 .\}
 .sp
-There are many cases where an \fBfwknop\fR client is deployed on a network behind a NAT device and the externally routable IP is not known to the user\&. In this case, use the IP resolution service available at \fIhttp://www\&.cipherdyne\&.org/cgi\-bin/myip\fR via the \fB\-R\fR command line switch in order to derive the external client IP address\&. This is a safer method of acquiring the client IP address than using the \fB\-s\fR option mentioned earlier in this manual page because the source IP is put within the encrypted packet instead of having the \fBfwknopd\fR daemon grant the requested access from whatever IP address the SPA packet originates (i\&.e\&. using \fB\-s\fR opens the possibility of a MITM attack):
+There are many cases where an \fBfwknop\fR client is deployed on a network behind a NAT device and the externally routable IP is not known to the user\&. In this case, use the IP resolution service available at \fIhttps://www\&.cipherdyne\&.org/cgi\-bin/myip\fR via the \fB\-R\fR command line switch in order to derive the external client IP address\&. This is a safer method of acquiring the client IP address than using the \fB\-s\fR option mentioned earlier in this manual page because the source IP is put within the encrypted packet instead of having the \fBfwknopd\fR daemon grant the requested access from whatever IP address the SPA packet originates (i\&.e\&. using \fB\-s\fR opens the possibility of a MITM attack):
 .sp
 .if n \{\
 .RS 4
@@ -1128,7 +1231,7 @@ For GPG functionality, GnuPG must also be correctly installed and configured alo
 To take advantage of all of the authentication and access management features of the \fBfwknopd\fR daemon/service a functioning \fIiptables\fR, \fIipfw\fR, or \fIpf\fR firewall is required on the underlying operating system\&.
 .SH "DIAGNOSTICS"
 .sp
-The most comprehensive way to gain diagnostic information on \fBfwknop\fR is to run the test suite \fItest\-fwknop\&.pl\fR script located in the \fItest/\fR directory in the fwknop sources\&. The test suite sends fwknop through a large number of run time tests, has \fIvalgrind\fR support, validates both SPA encryption and HMAC results against OpenSSL, and even has its own built in fuzzer for SPA communications\&. For more basic diagnostic information, \fBfwknop\fR can be executed with the \fB\-T\fR (or \fB\-\-test\fR) command line option\&. This will have \fBfwknop\fR simply create and print the SPA packet information, then run it through a decrypt/decode cycle and print it again\&. In addition, the \fB\-\-verbose\fR command line switch is useful to see various SPA packet specifics printed to stdout\&.
+The most comprehensive way to gain diagnostic information on \fBfwknop\fR is to run the test suite \fItest\-fwknop\&.pl\fR script located in the \fItest/\fR directory in the fwknop sources\&. The test suite sends fwknop through a large number of run time tests, has \fIvalgrind\fR support, validates both SPA encryption and HMAC results against OpenSSL, and even has its own built in fuzzer for SPA communications (and fwknop in version 2\&.6\&.4 supports the \fIAmerican Fuzzy Lop\fR (AFL) from Michal Zalewski as well)\&. For more basic diagnostic information, \fBfwknop\fR can be executed with the \fB\-T\fR (or \fB\-\-test\fR) command line option\&. This will have \fBfwknop\fR simply create and print the SPA packet information, then run it through a decrypt/decode cycle and print it again\&. In addition, the \fB\-\-verbose\fR command line switch is useful to see various SPA packet specifics printed to stdout\&.
 .SH "SEE ALSO"
 .sp
 fwknopd(8), iptables(8), pf(4), pfctl(8), ipfw(8), gpg(1), libfko documentation\&.

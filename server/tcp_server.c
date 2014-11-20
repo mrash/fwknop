@@ -54,9 +54,11 @@
 int
 run_tcp_server(fko_srv_options_t *opts)
 {
+#if !CODE_COVERAGE
     pid_t               pid, ppid;
+#endif
     int                 s_sock, c_sock, sfd_flags, clen, selval;
-    int                 reuse_addr = 1, is_err;
+    int                 reuse_addr = 1, is_err, rv=1;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
@@ -65,14 +67,15 @@ run_tcp_server(fko_srv_options_t *opts)
     unsigned short      port;
 
     port = strtol_wrapper(opts->config[CONF_TCPSERV_PORT],
-            0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+            1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] Invalid max TCPSERV_PORT value.");
-        exit(EXIT_FAILURE);
+        return -1;
     }
     log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.", port);
 
+#if !CODE_COVERAGE
     /* Fork off a child process to run the command and provide its outputs.
     */
     pid = fork();
@@ -86,8 +89,8 @@ run_tcp_server(fko_srv_options_t *opts)
         return(pid);
     }
 
-    /* Get our parent PID so we can periodically check for it. We want to 
-     * know when it goes away so we can to.
+    /* Get our parent PID so we can periodically check for it. We want to
+     * know when it goes away so we can too.
     */
     ppid = getppid();
 
@@ -96,6 +99,7 @@ run_tcp_server(fko_srv_options_t *opts)
      * suffers a sudden death that doesn't take us out too.
     */
     close(opts->lock_fd);
+#endif
 
     /* Now, let's make a TCP server
     */
@@ -103,7 +107,7 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: socket() failed: %s",
             strerror(errno));
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     /* So that we can re-bind to it without TIME_WAIT problems
@@ -112,7 +116,8 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: setsockopt error: %s",
             strerror(errno));
-        exit(EXIT_FAILURE);
+        close(s_sock);
+        return -1;
     }
 
     /* Make our main socket non-blocking so we don't have to be stuck on
@@ -122,17 +127,21 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: fcntl F_GETFL error: %s",
             strerror(errno));
-        exit(EXIT_FAILURE);
+        close(s_sock);
+        return -1;
     }
 
+#if !CODE_COVERAGE
     sfd_flags |= O_NONBLOCK;
 
     if(fcntl(s_sock, F_SETFL, sfd_flags) < 0)
     {
         log_msg(LOG_ERR, "run_tcp_server: fcntl F_SETFL error setting O_NONBLOCK: %s",
             strerror(errno));
-        exit(EXIT_FAILURE);
+        close(s_sock);
+        return -1;
     }
+#endif
 
     /* Construct local address structure */
     memset(&saddr, 0, sizeof(saddr));
@@ -145,7 +154,8 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: bind() failed: %s",
             strerror(errno));
-        exit(EXIT_FAILURE);
+        close(s_sock);
+        return -1;
     }
 
     /* Mark the socket so it will listen for incoming connections
@@ -155,19 +165,21 @@ run_tcp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "run_tcp_server: listen() failed: %s",
             strerror(errno));
-        exit(EXIT_FAILURE);
+        close(s_sock);
+        return -1;
     }
 
-    clen = sizeof(caddr);
+    FD_ZERO(&sfd_set);
 
     /* Now loop and accept and drop connections after the first packet or a
      * short timeout.
     */
     while(1)
     {
+        clen = sizeof(caddr);
+
         /* Initialize and setup the socket for select.
         */
-        FD_ZERO(&sfd_set);
         FD_SET(s_sock, &sfd_set);
 
         /* Set our select timeout to 200 ms.
@@ -183,19 +195,27 @@ run_tcp_server(fko_srv_options_t *opts)
             */
             log_msg(LOG_ERR, "run_tcp_server: select error socket: %s",
                 strerror(errno));
-            exit(EXIT_FAILURE);
+            rv = -1;
+            break;
         }
 
+#if !CODE_COVERAGE
         if(selval == 0)
         {
             /* Timeout - So we check to make sure our parent is still there by simply
              *           using kill(ppid, 0) and checking the return value.
             */
             if(kill(ppid, 0) != 0 && errno == ESRCH)
-                exit(EXIT_FAILURE);
-
+            {
+                rv = -1;
+                break;
+            }
             continue;
         }
+#endif
+
+        if(! FD_ISSET(s_sock, &sfd_set))
+            continue;
 
         /* Wait for a client to connect
         */
@@ -203,7 +223,8 @@ run_tcp_server(fko_srv_options_t *opts)
         {
             log_msg(LOG_ERR, "run_tcp_server: accept() failed: %s",
                 strerror(errno));
-            exit(EXIT_FAILURE); /* Should this be fatal? */
+            rv = -1;
+            break;
         }
 
         if(opts->verbose)
@@ -222,7 +243,14 @@ run_tcp_server(fko_srv_options_t *opts)
         usleep(1000000);
         shutdown(c_sock, SHUT_RDWR);
         close(c_sock);
-    }
+
+#if CODE_COVERAGE
+        break;
+#endif
+    } /* infinite while loop */
+
+    close(s_sock);
+    return rv;
 }
 
 /***EOF***/

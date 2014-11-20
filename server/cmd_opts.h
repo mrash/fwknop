@@ -57,6 +57,9 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "ENABLE_SPA_OVER_HTTP",
     "ENABLE_TCP_SERVER",
     "TCPSERV_PORT",
+    "ENABLE_UDP_SERVER",
+    "UDPSERV_PORT",
+    "UDPSERV_SELECT_TIMEOUT",
     "LOCALE",
     "SYSLOG_IDENTITY",
     "SYSLOG_FACILITY",
@@ -66,7 +69,22 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"EXTERNAL_CMD_ALARM",
     //"ENABLE_EXT_CMD_PREFIX",
     //"EXT_CMD_PREFIX",
-#if FIREWALL_IPTABLES
+#if FIREWALL_FIREWALLD
+    "ENABLE_FIREWD_FORWARDING",
+    "ENABLE_FIREWD_LOCAL_NAT",
+    "ENABLE_FIREWD_SNAT",
+    "SNAT_TRANSLATE_IP",
+    "ENABLE_FIREWD_OUTPUT",
+    "FLUSH_FIREWD_AT_INIT",
+    "FLUSH_FIREWD_AT_EXIT",
+    "FIREWD_INPUT_ACCESS",
+    "FIREWD_OUTPUT_ACCESS",
+    "FIREWD_FORWARD_ACCESS",
+    "FIREWD_DNAT_ACCESS",
+    "FIREWD_SNAT_ACCESS",
+    "FIREWD_MASQUERADE_ACCESS",
+    "ENABLE_FIREWD_COMMENT_CHECK",
+#elif FIREWALL_IPTABLES
     "ENABLE_IPT_FORWARDING",
     "ENABLE_IPT_LOCAL_NAT",
     "ENABLE_IPT_SNAT",
@@ -108,7 +126,8 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "GPG_HOME_DIR",
     "GPG_EXE",
     "FIREWALL_EXE",
-    "VERBOSE"
+    "VERBOSE",
+    "FAULT_INJECTION_TAG"
 };
 
 
@@ -120,47 +139,60 @@ enum {
     FW_FLUSH,
     GPG_HOME_DIR,
     GPG_EXE_PATH,
+    FIREWD_DISABLE_CHECK_SUPPORT,
+    IPT_DISABLE_CHECK_SUPPORT,
     PCAP_FILE,
     ENABLE_PCAP_ANY_DIRECTION,
     ROTATE_DIGEST_CACHE,
     SYSLOG_ENABLE,
+    DUMP_SERVER_ERR_CODES,
+    EXIT_AFTER_PARSE_CONFIG,
+    FAULT_INJECTION_TAG,
     NOOP /* Just to be a marker for the end */
 };
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:c:C:d:Dfhi:Kl:O:p:P:RSvV"
+#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:RStUvV"
 
 /* Our program command-line options...
 */
 static struct option cmd_opts[] =
 {
-    {"access-file",         1, NULL, 'a'},
-    {"config-file",         1, NULL, 'c'},
-    {"packet-limit",        1, NULL, 'C'},
-    {"digest-file",         1, NULL, 'd'},
-    {"dump-config",         0, NULL, 'D'},
-    {"syslog-enable",       0, NULL,  SYSLOG_ENABLE },
-    {"foreground",          0, NULL, 'f'},
-    {"help",                0, NULL, 'h'},
-    {"interface",           1, NULL, 'i'},
-    {"kill",                0, NULL, 'K'},
-    {"fw-flush",            0, NULL, FW_FLUSH },
-    {"fw-list",             0, NULL, FW_LIST },
-    {"fw-list-all",         0, NULL, FW_LIST_ALL },
-    {"gpg-home-dir",        1, NULL, GPG_HOME_DIR },
-    {"gpg-exe",             1, NULL, GPG_EXE_PATH },
-    {"locale",              1, NULL, 'l' },
-    {"rotate-digest-cache", 0, NULL, ROTATE_DIGEST_CACHE },
-    {"override-config",     1, NULL, 'O' },
-    {"pcap-file",           1, NULL, PCAP_FILE },
-    {"pcap-filter",         1, NULL, 'P'},
-    {"pcap-any-direction",  0, NULL, ENABLE_PCAP_ANY_DIRECTION },
-    {"pid-file",            1, NULL, 'p'},
-    {"restart",             0, NULL, 'R'},
-    {"status",              0, NULL, 'S'},
-    {"verbose",             0, NULL, 'v'},
-    {"version",             0, NULL, 'V'},
+    {"access-file",          1, NULL, 'a'},
+    {"afl-fuzzing",          0, NULL, 'A'},
+    {"config-file",          1, NULL, 'c'},
+    {"packet-limit",         1, NULL, 'C'},
+    {"digest-file",          1, NULL, 'd'},
+    {"dump-config",          0, NULL, 'D'},
+    {"dump-serv-err-codes",  0, NULL, DUMP_SERVER_ERR_CODES },
+    {"exit-parse-config",    0, NULL, EXIT_AFTER_PARSE_CONFIG },
+    {"syslog-enable",        0, NULL, SYSLOG_ENABLE },
+    {"foreground",           0, NULL, 'f'},
+    {"fault-injection-tag",  1, NULL, FAULT_INJECTION_TAG},
+    {"help",                 0, NULL, 'h'},
+    {"interface",            1, NULL, 'i'},
+    {"kill",                 0, NULL, 'K'},
+    {"fw-flush",             0, NULL, FW_FLUSH },
+    {"fw-list",              0, NULL, FW_LIST },
+    {"fw-list-all",          0, NULL, FW_LIST_ALL },
+    {"gpg-home-dir",         1, NULL, GPG_HOME_DIR },
+    {"gpg-exe",              1, NULL, GPG_EXE_PATH },
+    {"no-firewd-check-support", 0, NULL, FIREWD_DISABLE_CHECK_SUPPORT },
+    {"no-ipt-check-support", 0, NULL, IPT_DISABLE_CHECK_SUPPORT },
+    {"locale",               1, NULL, 'l' },
+    {"rotate-digest-cache",  0, NULL, ROTATE_DIGEST_CACHE },
+    {"override-config",      1, NULL, 'O' },
+    {"pcap-file",            1, NULL, PCAP_FILE },
+    {"pcap-filter",          1, NULL, 'P'},
+    {"pcap-any-direction",   0, NULL, ENABLE_PCAP_ANY_DIRECTION },
+    {"pid-file",             1, NULL, 'p'},
+    {"restart",              0, NULL, 'R'},
+    {"status",               0, NULL, 'S'},
+    {"test",                 0, NULL, 't'},
+    {"udp-server",           0, NULL, 'U'},
+    {"verbose",              0, NULL, 'v'},
+    {"version",              0, NULL, 'V'},
     {0, 0, 0, 0}
 };
 

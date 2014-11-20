@@ -33,11 +33,19 @@
 
 #define IO_READ_BUF_LEN     256
 #define EXTCMD_DEF_TIMEOUT  15
+#define NO_TIMEOUT          0
+#define WANT_STDERR         1
+#define NO_STDERR           0
 
 /* The various return status states in which an external command result
  * may end up in.
 */
 enum {
+    EXTCMD_WRITE_ERROR              =   -9,
+    EXTCMD_CHDIR_ERROR              =   -8,
+    EXTCMD_OPEN_ERROR               =   -7,
+    EXTCMD_ARGV_ERROR               =   -6,
+    EXTCMD_SETGID_ERROR             =   -5,
     EXTCMD_SETUID_ERROR             =   -4,
     EXTCMD_SELECT_ERROR             =   -3,
     EXTCMD_PIPE_ERROR               =   -2,
@@ -71,9 +79,17 @@ enum {
 
 /* Function prototypes
 */
-int run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout);
-int run_extcmd_as(uid_t uid, const char *cmd, char *so_buf, const size_t so_buf_sz, const int timeout);
-
+int run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
+        const int want_stderr, const int timeout, int *pid_status,
+        const fko_srv_options_t * const opts);
+int run_extcmd_as(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
+        const size_t so_buf_sz, const int want_stderr, const int timeout,
+        int *pid_status, const fko_srv_options_t * const opts);
+int search_extcmd(const char *cmd, const int want_stderr,
+        const int timeout, const char *substr_search,
+        int *pid_status, const fko_srv_options_t * const opts);
+int run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
+        const fko_srv_options_t * const opts);
 #endif /* EXTCMD_H */
 
 /***EOF***/
