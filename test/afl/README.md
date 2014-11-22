@@ -17,13 +17,22 @@ The fwknop project supports various fuzzing strategies, and one of the most
 important is usage of the 'American Fuzzy Lop' (AFL) fuzzer written by Michal
 Zalewski (see: [http://lcamtuf.coredump.cx/afl/]). Because AFL is not designed to
 handle encryption schemes (see the README included in the AFL sources for more
-information on this), a special --enable-afl-fuzzing command line switch is
+information on this), a special *--enable-afl-fuzzing* command line switch is
 available in the fwknop autoconf configure script. This argument allows
 encryption and base64 encoding to be bypassed when feeding SPA packet data to
-fwknopd via stdin. It is this feature that enables AFL fuzzing. One exception
-to this is made when using AFL to fuzz the fwknoprc file that is leveraged by
-the fwknop client - in this case, fwknop should not be compiled with
---enable-afl-fuzzing (use the compile/afl-compile-no-enable-arg.sh script).
+fwknopd via stdin. It is this feature that enables AFL fuzzing, and is analogous
+to the *libpng-nocrc.patch* patch included in the AFL sources. The corresponding
+commit that enables this functionality in fwknop is aaa44656bcfcb705d80768a7b9aa0d45a0e55e21
+(see: [https://github.com/mrash/fwknop/commit/aaa44656bcfcb705d80768a7b9aa0d45a0e55e21])
+
+One exception to the need for compiling fwknop wtih *--enable-afl-fuzzing* is
+when using AFL to fuzz the fwknoprc file that is leveraged by the fwknop client.
+In this case, fwknop should not be compiled with
+*--enable-afl-fuzzing* (use the *compile/afl-compile-no-enable-arg.sh* script)
+since the fwknoprc file parsing routines are fuzzed instead of the SPA packet
+encoding/decoding cycles.
+
+## AFL Wrappers
 
 The top level directory contains enabling scripts in order to make it easy to
 fuzz fwknop with AFL. It is assumed that AFL is installed and in your path. The
@@ -41,6 +50,11 @@ files are in this directory are organized as follows:
     3. server fwknopd.conf parsing (*./fuzzing-wrappers/server-conf.sh*)
     4. client fwknoprc file parsing. (*./fuzzing-wrappers/client-rc.sh*)
 
+ * *fuzzing-wrappers/helpers/*
+
+  Directory for helper scripts that are used by the fuzzing wrappers to ensure
+  that fwknop is compiled properly for AFL support and is ready for fuzzing cycles.
+
  * *test-cases/*
 
   Directory for ALF test cases used by the wrapper scripts.
@@ -53,9 +67,41 @@ files are in this directory are organized as follows:
 
   Results directory that is made underneath an AFL fuzzing cycle.
 
+## Complete Example
+
+To fuzz the SPA packet encoding/decoding routines, the *fuzzing-wrappers/spa-pkts.sh*
+script will kick things off. This assumes that fwknop has been compiled with AFL
+support with the *compile/afl-compile.sh* script:
+
+    $ ./fuzzing-wrappers/spa-pkts.sh
+    ...
+    + LD_LIBRARY_PATH=../../lib/.libs afl-fuzz -t 1000 -i test-cases/spa-pkts -o fuzzing-output/spa-pkts.out ../../server/.libs/fwknopd -c ../conf/default_fwknopd.conf -a ../conf/default_access.conf -A -f -t
+    afl-fuzz 0.64b (Nov 22 2014 13:04:11) by <lcamtuf@google.com>
+    [+] You have 1 CPU cores and 2 runnable tasks (utilization: 200%).
+    [*] Checking core_pattern...
+    [*] Setting up output directories...
+    [+] Output directory exists but deemed OK to reuse.
+    [*] Deleting old session data...
+    [+] Output dir cleanup successful.
+    [*] Scanning 'test-cases/spa-pkts'...
+    [*] Creating hard links for all input files...
+    [*] Validating target binary...
+    [*] Attempting dry run with 'id:000000,orig:spa.start'...
+    [*] Spinning up the fork server...
+    [+] All right - fork server is up.
+    ...
+
+Then the familiar AFL status screen is displayed:
+
+![alt text][AFL-status-screen]
+
+[AFL-status-screen]: https://github.com/mrash/fwknop/raw/master/test/afl/AFL_status_screen.png "AFL Fuzzing SPA Packets"
+
+## SPA Packet Helper Script
+
 Here is an example of what fwknopd produces when compiled for AFL support when
-a dummy SPA packet is provided in non-encoded/encrypted form via fwknopd's
-stdin:
+a dummy SPA packet is provided in non-encoded/encrypted from via fwknopd's
+stdin. This uses the *fwknopd-stdin-test.sh* helper script:
 
     $ ./fuzzing-wrappers/helpers/fwknopd-stdin-test.sh
     + SPA_PKT=1716411011200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
