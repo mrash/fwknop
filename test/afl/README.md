@@ -31,15 +31,20 @@ files are in this directory are organized as follows:
 
  * *fuzzing-wrappers/*
 
-  Directory that contains wrapper scripts for running AFL against fwknop. All interaction with AFL should be done with these scripts, and they should be executed from the test/afl/ directory, e.g. "./fuzzing-wrappers/client-rc.sh"
+  Directory that contains wrapper scripts for running AFL against fwknop. All
+  interaction with AFL should be done with these scripts, and they should be executed
+  from the test/afl/ directory, e.g. "./fuzzing-wrappers/client-rc.sh".
 
- * *test-cases/*
-
-  Directory for ALF test cases used by the wrapper scripts. There are four areas in fwknop that are fuzzed:
+  There are four areas in fwknop that are fuzzed:
     1. SPA packet encoding/decoding
     2. server access.conf parsing
     3. server fwknopd.conf parsing
     4. client fwknoprc file parsing.
+
+
+ * *test-cases/*
+
+  Directory for ALF test cases used by the wrapper scripts.
 
  * *compile/*
 
