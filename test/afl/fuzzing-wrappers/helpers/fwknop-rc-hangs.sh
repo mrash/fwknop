@@ -1,8 +1,11 @@
 #!/bin/sh -x
 
-for f in `find fuzzing-output/client-rc.out/hangs -name 'id*'`
+HANG_DIR="fuzzing-output/client-rc.out/hangs"
+HELPER_SH="fuzzing-wrappers/helpers/fwknop-rc-test.sh"
+
+for f in `find $HANG_DIR -name 'id*'`
 do
-    ./fuzzing-wrappers/helpers/fwknop-rc-test.sh $f
+    ./$HELPER_SH $f
 done
 
 exit
