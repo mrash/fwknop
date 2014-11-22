@@ -8,3 +8,5 @@ then
 fi
 
 LD_LIBRARY_PATH=../../lib/.libs ../../client/.libs/fwknop --rc-file $RC_FILE -T -a 1.1.1.1 -n testhost.com
+
+exit $?

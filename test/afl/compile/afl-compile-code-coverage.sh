@@ -6,4 +6,4 @@ cd afl
 
 ./afl-compile.sh --enable-profile-coverage
 
-exit
+exit $?

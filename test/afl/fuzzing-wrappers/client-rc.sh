@@ -15,8 +15,9 @@ TS=`date +"%m%d%y%H%M%S"`
 mkdir $OUT_DIR
 
 ### make sure the client can handle the rc file
-./fuzzing-wrappers/helpers/fwknop-rc-test.sh || exit
+./fuzzing-wrappers/helpers/fwknop-rc-test.sh || \
+    { echo "[*] Client rc file fuzzing requires compilation with ./compile/afl-compile-no-enable-args.sh"; exit 1; }
 
 LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -t 1000 -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/fwknoprc $CLIENT --rc-file $OUT_DIR/fwknoprc -T -a 1.1.1.1 -n testhost.com
 
-exit
+exit $?

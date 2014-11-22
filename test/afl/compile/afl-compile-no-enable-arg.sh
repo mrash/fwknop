@@ -7,4 +7,4 @@ CC=afl-gcc ./extras/apparmor/configure_args.sh $@
 make clean
 make
 cd test/afl
-exit
+exit $?

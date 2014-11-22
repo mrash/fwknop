@@ -8,4 +8,4 @@ do
     ./$HELPER_SH $f
 done
 
-exit
+exit $?
