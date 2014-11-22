@@ -36,11 +36,10 @@ files are in this directory are organized as follows:
   from the test/afl/ directory, e.g. "./fuzzing-wrappers/client-rc.sh".
 
   There are four areas in fwknop that are fuzzed:
-    1. SPA packet encoding/decoding
-    2. server access.conf parsing
-    3. server fwknopd.conf parsing
-    4. client fwknoprc file parsing.
-
+    1. SPA packet encoding/decoding (*./fuzzing-wrappers/spa-pkts.sh*)
+    2. server access.conf parsing (*./fuzzing-wrappers/server-access.sh*)
+    3. server fwknopd.conf parsing (*./fuzzing-wrappers/server-conf.sh*)
+    4. client fwknoprc file parsing. (*./fuzzing-wrappers/client-rc.sh*)
 
  * *test-cases/*
 
