@@ -1,19 +1,21 @@
 
--- Quick Start --
+# Fuzzing fwknop With American Fuzzy Lop (AFL)
+
+## Quick Start
 
 To get going with AFL fuzzing against fwknop:
 
-$ ./compile/afl-compile.sh
-$ ./fuzzing-wrappers/spa-pkts.sh
+    $ ./compile/afl-compile.sh
+    $ ./fuzzing-wrappers/spa-pkts.sh
 
-Output will be placed in fuzzing-output/server-conf.out/
+Fuzzing results will be placed in fuzzing-output/server-conf.out/. For more
+information, read on.
 
-
--- More Information --
+## Introduction
 
 The fwknop project supports various fuzzing strategies, and one of the most
 important is usage of the 'American Fuzzy Lop' (AFL) fuzzer written by Michal
-Zalewski (see: http://lcamtuf.coredump.cx/afl/). Because AFL is not designed to
+Zalewski (see: [http://lcamtuf.coredump.cx/afl/]). Because AFL is not designed to
 handle encryption schemes (see the README included in the AFL sources for more
 information on this), a special --enable-afl-fuzzing command line switch is
 available in the fwknop autoconf configure script. This argument allows
@@ -47,29 +49,29 @@ Here is an example of what fwknopd produces when compiled for AFL support when
 a dummy SPA packet is provided in non-encoded/encrypted form via fwknopd's
 stdin:
 
-$ ./fuzzing-wrappers/helpers/fwknopd-stdin-test.sh
-+ SPA_PKT=1716411011200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
-+ LD_LIBRARY_PATH=../../lib/.libs ../../server/.libs/fwknopd -c ../conf/default_fwknopd.conf -a ../conf/default_access.conf -A -f -t
-+ echo -n 1716411011200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
-Warning: REQUIRE_SOURCE_ADDRESS not enabled for access stanza source: 'ANY'
-SPA Field Values:
-=================
-   Random Value: 1716411011200157
-       Username: root
-      Timestamp: 1397329899
-    FKO Version: 2.0.1
-   Message Type: 1 (Access msg)
- Message String: 127.0.0.2,tcp/22
-     Nat Access: <NULL>
-    Server Auth: <NULL>
- Client Timeout: 0
-    Digest Type: 3 (SHA256)
-      HMAC Type: 0 (None)
-Encryption Type: 1 (Rijndael)
-Encryption Mode: 2 (CBC)
-   Encoded Data: 1716411011200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22
-SPA Data Digest: AAAAA
-           HMAC: <NULL>
- Final SPA Data: 200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
+    $ ./fuzzing-wrappers/helpers/fwknopd-stdin-test.sh
+    + SPA_PKT=1716411011200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
+    + LD_LIBRARY_PATH=../../lib/.libs ../../server/.libs/fwknopd -c ../conf/default_fwknopd.conf -a ../conf/default_access.conf -A -f -t
+    + echo -n 1716411011200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
+    Warning: REQUIRE_SOURCE_ADDRESS not enabled for access stanza source: 'ANY'
+    SPA Field Values:
+    =================
+       Random Value: 1716411011200157
+           Username: root
+          Timestamp: 1397329899
+        FKO Version: 2.0.1
+       Message Type: 1 (Access msg)
+     Message String: 127.0.0.2,tcp/22
+         Nat Access: <NULL>
+        Server Auth: <NULL>
+     Client Timeout: 0
+        Digest Type: 3 (SHA256)
+          HMAC Type: 0 (None)
+    Encryption Type: 1 (Rijndael)
+    Encryption Mode: 2 (CBC)
+       Encoded Data: 1716411011200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22
+    SPA Data Digest: AAAAA
+               HMAC: <NULL>
+     Final SPA Data: 200157:root:1397329899:2.0.1:1:127.0.0.2,tcp/22:AAAAA
 
-SPA packet decode: Success
+    SPA packet decode: Success
