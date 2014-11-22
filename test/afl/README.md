@@ -36,10 +36,10 @@ files are in this directory are organized as follows:
  * *test-cases/*
 
   Directory for ALF test cases used by the wrapper scripts. There are four areas in fwknop that are fuzzed:
-  ..1. SPA packet encoding/decoding
-  ..2. server access.conf parsing
-  ..3. server fwknopd.conf parsing
-  ..4. client fwknoprc file parsing.
+    1. SPA packet encoding/decoding
+    2. server access.conf parsing
+    3. server fwknopd.conf parsing
+    4. client fwknoprc file parsing.
 
  * *compile/*
 
