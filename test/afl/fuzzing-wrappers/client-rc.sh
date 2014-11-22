@@ -15,7 +15,7 @@ TS=`date +"%m%d%y%H%M%S"`
 mkdir $OUT_DIR
 
 ### make sure the client can handle the rc file
-./fuzzing-wrappers/fwknop-rc-test.sh || exit
+./fuzzing-wrappers/helpers/fwknop-rc-test.sh || exit
 
 LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -t 1000 -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/fwknoprc $CLIENT --rc-file $OUT_DIR/fwknoprc -T -a 1.1.1.1 -n testhost.com
 
