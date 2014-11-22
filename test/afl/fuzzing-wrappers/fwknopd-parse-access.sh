@@ -1,3 +1,10 @@
 #!/bin/sh -x
 
-LD_LIBRARY_PATH=../../lib/.libs ../../server/.libs/fwknopd -c ../conf/default_fwknopd.conf -a ../conf/default_access.conf -A -f -t --exit-parse-config -D
+ACCESS_FILE="../conf/default_access.conf"
+
+if [ $@ ]
+then
+    ACCESS_FILE=$@
+fi
+
+LD_LIBRARY_PATH=../../lib/.libs ../../server/.libs/fwknopd -c ../conf/default_fwknopd.conf -a $ACCESS_FILE -A -f -t --exit-parse-config -D
