@@ -29,21 +29,25 @@ The top level directory contains enabling scripts in order to make it easy to
 fuzz fwknop with AFL. It is assumed that AFL is installed and in your path. The
 files are in this directory are organized as follows:
 
- * *fuzzing-wrappers/*  - Directory that contains wrapper scripts for running AFL
-                     against fwknop. All interaction with AFL should be done
-                     with these scripts, and they should be executed from the
-                     test/afl/ directory, e.g. "./fuzzing-wrappers/client-rc.sh"
+ * *fuzzing-wrappers/*
 
- * *test-cases/*       - Directory for ALF test cases used by the wrapper scripts.
-                     There are four areas in fwknop that are fuzzed: SPA packet
-                     encoding/decoding, server access.conf and fwknopd.conf
-                     parsing, and client fwknoprc file parsing.
+ ...Directory that contains wrapper scripts for running AFL against fwknop. All interaction with AFL should be done with these scripts, and they should be executed from the test/afl/ directory, e.g. "./fuzzing-wrappers/client-rc.sh"
 
- * *compile/*          - Directory for compilation scripts to ensure fwknop is
-                     compiled underneath afl-gcc.
+ * *test-cases/*
 
- * *fuzzing-output/*    - Results directory that is made underneath an AFL fuzzing
-                     cycle.
+ ...Directory for ALF test cases used by the wrapper scripts. There are four areas in fwknop that are fuzzed:
+ ..1. SPA packet encoding/decoding
+ ..2. server access.conf parsing
+ ..3. server fwknopd.conf parsing
+ ..4. client fwknoprc file parsing.
+
+ * *compile/*
+
+ ...Directory for compilation scripts to ensure fwknop is compiled underneath afl-gcc.
+
+ * *fuzzing-output/*
+
+ ...Results directory that is made underneath an AFL fuzzing cycle.
 
 Here is an example of what fwknopd produces when compiled for AFL support when
 a dummy SPA packet is provided in non-encoded/encrypted form via fwknopd's
