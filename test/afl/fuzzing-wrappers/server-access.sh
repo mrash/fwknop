@@ -1,22 +1,29 @@
 #!/bin/sh -x
 
-TOP_DIR="fuzzing-output"
+#
+# Fuzz the fwknopd access.conf file
+#
+
+. ./fuzzing-wrappers/fcns
+
 FDIR="server-access.out"
 ARCHIVE_DIR="$TOP_DIR/archive"
 OUT_DIR="$TOP_DIR/$FDIR"
 IN_DIR="test-cases/server-access"
 
-SERVER="../../server/.libs/fwknopd"
-LIB_DIR="../../lib/.libs"
+### build up our afl-fuzz text banner
+TSTR="fwknopd,access.conf"
+GIT_STR=''
+git_banner GIT_STR
+BANNER="$TSTR$GIT_STR"
 
-[ ! -d $ARCHIVE_DIR ] && mkdir -p $ARCHIVE_DIR
-TS=`date +"%m%d%y%H%M%S"`
-[ -d $OUT_DIR ] && mv $OUT_DIR "$ARCHIVE_DIR/$FDIR-$TS"
-mkdir $OUT_DIR
+### set up directories
+dir_init $ARCHIVE_DIR $FDIR $OUT_DIR
 
 ### make sure that parsing the access.conf file works
 ./fuzzing-wrappers/helpers/fwknopd-parse-access.sh || exit $?
 
-LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T "fwknopd access.conf" -t 1000 -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/afl_access.conf $SERVER -c ../conf/ipt_snat_fwknopd.conf -a $OUT_DIR/afl_access.conf -A -f -t --exit-parse-config -D
+### run afl-fuzz
+LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T $BANNER -t 1000 -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/afl_access.conf $SERVER -c ../conf/ipt_snat_fwknopd.conf -a $OUT_DIR/afl_access.conf -A -f -t --exit-parse-config -D
 
 exit $?
