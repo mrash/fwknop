@@ -5,6 +5,7 @@
 
 To get going with AFL fuzzing against fwknop:
 
+    $ cd fwknop.git/test/afl/
     $ ./compile/afl-compile.sh
     $ ./fuzzing-wrappers/spa-pkts.sh
 
@@ -42,7 +43,7 @@ files are in this directory are organized as follows:
 
   Directory that contains wrapper scripts for running AFL against fwknop. All
   interaction with AFL should be done with these scripts, and they should be executed
-  from the test/afl/ directory, e.g. "./fuzzing-wrappers/client-rc.sh".
+  from the test/afl/ directory, e.g. *./fuzzing-wrappers/client-rc.sh*.
 
   There are four areas in fwknop that are fuzzed:
     1. SPA packet encoding/decoding (*./fuzzing-wrappers/spa-pkts.sh*)
@@ -57,7 +58,7 @@ files are in this directory are organized as follows:
 
  * *test-cases/*
 
-  Directory for ALF test cases used by the wrapper scripts.
+  Directory for AFL test cases used by the wrapper scripts.
 
  * *compile/*
 
