@@ -31,7 +31,6 @@
 */
 #include "fwknop_common.h"
 #include "utils.h"
-#include <sys/wait.h>
 
 #include <errno.h>
 
@@ -43,6 +42,7 @@
     #include <sys/socket.h>
   #endif
   #include <netdb.h>
+  #include <sys/wait.h>
 #endif
 
 struct url

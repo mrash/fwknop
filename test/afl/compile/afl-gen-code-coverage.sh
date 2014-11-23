@@ -10,4 +10,4 @@ cd afl
 
 echo "[+] Code coverage available in the $RESULTS_DIR/ directory"
 
-exit
+exit $?
