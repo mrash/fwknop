@@ -17,6 +17,6 @@ mkdir $OUT_DIR
 ### make sure that a basic SPA packet to stdin in fwknopd -A mode works
 ./fuzzing-wrappers/helpers/fwknopd-stdin-test.sh || exit $?
 
-LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -t 1000 -i $IN_DIR -o $OUT_DIR $SERVER -c ../conf/default_fwknopd.conf -a ../conf/default_access.conf -A -f -t
+LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T "fwknopd SPA packets" -t 1000 -i $IN_DIR -o $OUT_DIR $SERVER -c ../conf/default_fwknopd.conf -a ../conf/default_access.conf -A -f -t
 
 exit $?
