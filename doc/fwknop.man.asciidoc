@@ -1081,7 +1081,7 @@ CONTRIBUTORS
 This ``C'' version of fwknop was derived from the original Perl-based version
 on which many people who are active in the open source community have
 contributed. See the CREDITS file in the fwknop sources, or visit
-'http://www.cipherdyne.org/fwknop/docs/contributors.html' to view the online
+'https://github.com/mrash/fwknop/blob/master/CREDITS' to view the online
 list of contributors. A few contributors deserve to be singled out including:
 Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger,
 Fernando Arnaboldi, and Erik Gomez.
