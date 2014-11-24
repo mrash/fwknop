@@ -6,10 +6,9 @@
 
 . ./fuzzing-wrappers/fcns
 
-TOP_DIR="fuzzing-output"
 FDIR="server-conf.out"
-ARCHIVE_DIR="$TOP_DIR/archive"
 OUT_DIR="$TOP_DIR/$FDIR"
+PREV_OUT_DIR=''
 IN_DIR="test-cases/server-conf"
 
 ### build up our afl-fuzz text banner
@@ -19,7 +18,13 @@ git_banner GIT_STR
 BANNER="$TSTR$GIT_STR"
 
 ### set up directories
-dir_init $ARCHIVE_DIR $FDIR $OUT_DIR
+dir_init $ARCHIVE_DIR $FDIR $OUT_DIR PREV_OUT_DIR
+
+### support resuming from a previous run
+if [ $@ ] && [ "$1" = "resume" ]
+then
+    IN_DIR=$PREV_OUT_DIR
+fi
 
 ### make sure that parsing the fwknopd.conf file works
 ./fuzzing-wrappers/helpers/fwknopd-parse-conf.sh || exit $?
