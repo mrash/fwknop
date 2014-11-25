@@ -30,6 +30,12 @@ then
 fi
 
 ### run afl-fuzz
-LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T $BANNER -t 1000 -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/afl_access.conf $SERVER -c ../conf/ipt_snat_fwknopd.conf -a $OUT_DIR/afl_access.conf -A -f -t --exit-parse-config -D
+LD_LIBRARY_PATH=$LIB_DIR afl-fuzz \
+    -T $BANNER -t 1000 -i $IN_DIR \
+    -o $OUT_DIR -f $OUT_DIR/afl_access.conf $SERVER \
+    -c ../conf/ipt_snat_fwknopd.conf \
+    -a $OUT_DIR/afl_access.conf \
+    -O ../conf/override_no_digest_tracking_fwknopd.conf \
+    -A -f -t --exit-parse-config -D
 
 exit $?

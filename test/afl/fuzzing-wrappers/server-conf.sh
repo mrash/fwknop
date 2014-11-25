@@ -29,6 +29,11 @@ fi
 ### make sure that parsing the fwknopd.conf file works
 ./fuzzing-wrappers/helpers/fwknopd-parse-conf.sh || exit $?
 
-LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T $BANNER -t 1000 -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/afl_fwknopd.conf $SERVER -c $OUT_DIR/afl_fwknopd.conf -a $OUT_DIR/afl_access.conf -A -f -t --exit-parse-config -D
+LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T $BANNER -t 1000 -i $IN_DIR \
+    -o $OUT_DIR -f $OUT_DIR/afl_fwknopd.conf $SERVER \
+    -c $OUT_DIR/afl_fwknopd.conf \
+    -a $OUT_DIR/afl_access.conf \
+    -O ../conf/override_no_digest_tracking_fwknopd.conf \
+    -A -f -t --exit-parse-config
 
 exit $?
