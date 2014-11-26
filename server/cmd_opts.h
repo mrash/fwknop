@@ -153,7 +153,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:RStUvV"
+#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:Rr:StUvV"
 
 /* Our program command-line options...
 */
@@ -187,6 +187,7 @@ static struct option cmd_opts[] =
     {"pcap-filter",          1, NULL, 'P'},
     {"pcap-any-direction",   0, NULL, ENABLE_PCAP_ANY_DIRECTION },
     {"pid-file",             1, NULL, 'p'},
+    {"run-dir",              1, NULL, 'r'},
     {"restart",              0, NULL, 'R'},
     {"status",               0, NULL, 'S'},
     {"test",                 0, NULL, 't'},

@@ -167,6 +167,10 @@ COMMAND-LINE OPTIONS
     starting a new one. The digest cache file is typically found in
     '@localstatedir@/run/fwknop/digest.cache'.
 
+*-r, --run-dir*='<path>'::
+    Specify the directory where *fwknopd* writes run time state files. The
+    default is '@localstatedir@/run'.
+
 *-S, --status*::
     Display the status of any *fwknopd* processes that may or not be
     running. If there is an existing fwknopd process then 0 is returned for the
@@ -331,6 +335,23 @@ See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and correspond
     Note that fwknopd still only gets its data via pcap, so the filter
     defined by PCAP_FILTER needs to be updated to include this TCP port.
 
+*TCPSERV_PORT* '<port>'::
+    Set the port number that the ``dummy'' TCP server listens on. This server
+    is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
+
+*ENABLE_UDP_SERVER* '<Y/N>'::
+    Enable the *fwknopd* UDP server. This instructs *fwknopd* to acquire SPA
+    packets via a UDP socket directly without having to use libpcap. When this
+    mode is enabled, *fwknop* should be compiled with *--enable-udp-server*
+    (passed to the *configure* script) so that libpcap can be removed as a
+    dependency. As one would expect, when the UDP server is used, no incoming
+    packets are ever acknowledged by *fwknopd* and therefore collecting SPA
+    packets in this mode is a good alternative to sniffing the wire directly.
+
+*UDPSERV_PORT* '<port>'::
+    Set the port number that the UDP server listens on. This server
+    is only spawned when ``ENABLE_UDP_SERVER'' is set to ``Y''.
+
 *PCAP_DISPATCH_COUNT* '<count>'::
     Sets the number of packets that are processed when the *pcap_dispatch()*
     call is made. The default is zero, since this allows *fwknopd* to process
@@ -356,23 +377,6 @@ See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and correspond
     packets that are received on the sniffing interface (note that this is
     independent of promiscuous mode).
 
-*TCPSERV_PORT* '<port>'::
-    Set the port number that the ``dummy'' TCP server listens on. This server
-    is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
-
-*ENABLE_UDP_SERVER* '<Y/N>'::
-    Enable the *fwknopd* UDP server. This instructs *fwknopd* to acquire SPA
-    packets via a UDP socket directly without having to use libpcap. When this
-    mode is enabled, *fwknop* should be compiled with *--enable-udp-server*
-    (passed to the *configure* script) so that libpcap can be removed as a
-    dependency. As one would expect, when the UDP server is used, no incoming
-    packets are ever acknowledged by *fwknopd* and therefore collecting SPA
-    packets in this mode is a good alternative to sniffing the wire directly.
-
-*UDPSERV_PORT* '<port>'::
-    Set the port number that the UDP server listens on. This server
-    is only spawned when ``ENABLE_UDP_SERVER'' is set to ``Y''.
-
 *SYSLOG_IDENTITY* '<identity>'::
     Override syslog identity on message logged by *fwknopd*. The defaults
     are usually ok.
@@ -381,6 +385,9 @@ See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and correspond
     Override syslog facility. The ``SYSLOG_FACILITY'' variable can be set to
     one of ``LOG_LOCAL{0-7}'' or ``LOG_DAEMON'' (the default).
 
+*FWKNOP_RUN_DIR* '<path>'::
+    Specify the directory where *fwknopd* writes run time state files. The
+    default is '@localstatedir@/run'.
 
 ACCESS.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~

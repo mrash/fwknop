@@ -359,7 +359,6 @@ validate_options(fko_srv_options_t *opts)
         if(tmp_path[strlen(tmp_path)-1] != '/')
             strlcat(tmp_path, "/", sizeof(tmp_path));
 
-
 #if USE_FILE_CACHE
         strlcat(tmp_path, DEF_DIGEST_CACHE_FILENAME, sizeof(tmp_path));
         set_config_entry(opts, CONF_DIGEST_FILE, tmp_path);
@@ -1143,6 +1142,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'R':
                 opts->restart = 1;
                 break;
+            case 'r':
+                set_config_entry(opts, CONF_FWKNOP_RUN_DIR, optarg);
+                break;
             case 'S':
                 opts->status = 1;
                 break;
@@ -1225,6 +1227,7 @@ usage(void)
       "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
       "     --rotate-digest-cache\n"
+      " -r, --run-dir           - Set path to local state run directory.\n"
       "                         - Rotate the digest cache file by renaming it to\n"
       "                           '<name>-old', and starting a new one.\n"
       " -S, --status            - Display the status of any running fwknopd process.\n"
