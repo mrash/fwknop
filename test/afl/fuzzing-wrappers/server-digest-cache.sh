@@ -36,6 +36,6 @@ LD_LIBRARY_PATH=$LIB_DIR afl-fuzz \
     -c ../conf/ipt_snat_fwknopd.conf \
     -a ../conf/default_access.conf \
     -d $OUT_DIR/afl_digest_cache.conf \
-    -f -t --exit-parse-config -r `pwd`/run
+    -f -t --exit-parse-config -v -v -v -r `pwd`/run
 
 exit $?

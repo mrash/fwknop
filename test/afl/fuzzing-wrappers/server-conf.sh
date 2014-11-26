@@ -34,6 +34,6 @@ LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T $BANNER -t 1000 -i $IN_DIR \
     -c $OUT_DIR/afl_fwknopd.conf \
     -a $OUT_DIR/afl_access.conf \
     -O ../conf/override_no_digest_tracking_fwknopd.conf \
-    -A -f -t --exit-parse-config
+    -f -t --exit-parse-config -v -v -v -r `pwd`/run
 
 exit $?
