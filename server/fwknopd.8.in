@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 11/15/2014
+.\"      Date: 11/26/2014
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "11/15/2014" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "11/26/2014" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -247,6 +247,14 @@ Rotate the digest cache file by renaming it to \(lq<name>\-old\(rq, and starting
 \fI@localstatedir@/run/fwknop/digest\&.cache\fR\&.
 .RE
 .PP
+\fB\-r, \-\-run\-dir\fR=\fI<path>\fR
+.RS 4
+Specify the directory where
+\fBfwknopd\fR
+writes run time state files\&. The default is
+\fI@localstatedir@/run\fR\&.
+.RE
+.PP
 \fB\-S, \-\-status\fR
 .RS 4
 Display the status of any
@@ -450,29 +458,6 @@ mode)\&. Note that when this is enabled, the \(lqPCAP_FILTER\(rq variable would 
 Enable the fwknopd TCP server\&. This is a "dummy" TCP server that will accept TCP connection requests on the specified TCPSERV_PORT\&. If set to "Y", fwknopd will fork off a child process to listen for, and accept incoming TCP request\&. This server only accepts the request\&. It does not otherwise communicate\&. This is only to allow the incoming SPA over TCP packet which is detected via PCAP\&. The connection is closed after 1 second regardless\&. Note that fwknopd still only gets its data via pcap, so the filter defined by PCAP_FILTER needs to be updated to include this TCP port\&.
 .RE
 .PP
-\fBPCAP_DISPATCH_COUNT\fR \fI<count>\fR
-.RS 4
-Sets the number of packets that are processed when the
-\fBpcap_dispatch()\fR
-call is made\&. The default is zero, since this allows
-\fBfwknopd\fR
-to process as many packets as possible in the corresponding callback where the SPA handling routine is called for packets that pass a set of prerequisite checks\&. However, if
-\fBfwknopd\fR
-is running on a platform with an old version of libpcap, it may be necessary to change this value to a positive non\-zero integer\&. More information can be found in the
-\fBpcap_dispatch(3)\fR
-man page\&.
-.RE
-.PP
-\fBPCAP_LOOP_SLEEP\fR \fI<microseconds>\fR
-.RS 4
-Sets the number of microseconds to passed as an argument to usleep() in the pcap loop\&. The default is 10000, or 1/10th of a second\&.
-.RE
-.PP
-\fBENABLE_PCAP_ANY_DIRECTION\fR \fI<Y/N>\fR
-.RS 4
-Controls whether fwknopd is permitted to sniff SPA packets regardless of whether they are received on the sniffing interface or sent from the sniffing interface\&. In the later case, this can be useful to have fwknopd sniff SPA packets that are forwarded through a system and destined for a different network\&. If the sniffing interface is the egress interface for such packets, then this variable will need to be set to "Y" in order for fwknopd to see them\&. The default is "N" so that fwknopd only looks for SPA packets that are received on the sniffing interface (note that this is independent of promiscuous mode)\&.
-.RE
-.PP
 \fBTCPSERV_PORT\fR \fI<port>\fR
 .RS 4
 Set the port number that the \(lqdummy\(rq TCP server listens on\&. This server is only spawned when \(lqENABLE_TCP_SERVER\(rq is set to \(lqY\(rq\&.
@@ -500,6 +485,29 @@ and therefore collecting SPA packets in this mode is a good alternative to sniff
 Set the port number that the UDP server listens on\&. This server is only spawned when \(lqENABLE_UDP_SERVER\(rq is set to \(lqY\(rq\&.
 .RE
 .PP
+\fBPCAP_DISPATCH_COUNT\fR \fI<count>\fR
+.RS 4
+Sets the number of packets that are processed when the
+\fBpcap_dispatch()\fR
+call is made\&. The default is zero, since this allows
+\fBfwknopd\fR
+to process as many packets as possible in the corresponding callback where the SPA handling routine is called for packets that pass a set of prerequisite checks\&. However, if
+\fBfwknopd\fR
+is running on a platform with an old version of libpcap, it may be necessary to change this value to a positive non\-zero integer\&. More information can be found in the
+\fBpcap_dispatch(3)\fR
+man page\&.
+.RE
+.PP
+\fBPCAP_LOOP_SLEEP\fR \fI<microseconds>\fR
+.RS 4
+Sets the number of microseconds to passed as an argument to usleep() in the pcap loop\&. The default is 10000, or 1/10th of a second\&.
+.RE
+.PP
+\fBENABLE_PCAP_ANY_DIRECTION\fR \fI<Y/N>\fR
+.RS 4
+Controls whether fwknopd is permitted to sniff SPA packets regardless of whether they are received on the sniffing interface or sent from the sniffing interface\&. In the later case, this can be useful to have fwknopd sniff SPA packets that are forwarded through a system and destined for a different network\&. If the sniffing interface is the egress interface for such packets, then this variable will need to be set to "Y" in order for fwknopd to see them\&. The default is "N" so that fwknopd only looks for SPA packets that are received on the sniffing interface (note that this is independent of promiscuous mode)\&.
+.RE
+.PP
 \fBSYSLOG_IDENTITY\fR \fI<identity>\fR
 .RS 4
 Override syslog identity on message logged by
@@ -509,6 +517,14 @@ Override syslog identity on message logged by
 \fBSYSLOG_FACILITY\fR \fI<facility>\fR
 .RS 4
 Override syslog facility\&. The \(lqSYSLOG_FACILITY\(rq variable can be set to
+.RE
+.PP
+\fBFWKNOP_RUN_DIR\fR \fI<path>\fR
+.RS 4
+Specify the directory where
+\fBfwknopd\fR
+writes run time state files\&. The default is
+\fI@localstatedir@/run\fR\&.
 .RE
 .SS "ACCESS\&.CONF VARIABLES"
 .sp
@@ -789,7 +805,7 @@ Additional commentary on Single Packet Authorization can be found via Michael Ra
 Damien Stuart <dstuart@dstuart\&.org>, Michael Rash <mbr@cipherdyne\&.org>
 .SH "CONTRIBUTORS"
 .sp
-This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttp://www\&.cipherdyne\&.org/fwknop/docs/contributors\&.html\fR to view the online list of contributors\&. A few contributors deserve to be singled out including: Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger, Fernando Arnaboldi, and Erik Gomez\&.
+This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttps://github\&.com/mrash/fwknop/blob/master/CREDITS\fR to view the online list of contributors\&. A few contributors deserve to be singled out including: Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger, Fernando Arnaboldi, and Erik Gomez\&.
 .sp
 The phrase \(lqSingle Packet Authorization\(rq was coined by MadHat and Simple Nomad at the BlackHat Briefings of 2005\&.
 .SH "BUGS"
