@@ -96,7 +96,7 @@ Then the familiar AFL status screen is displayed:
 
 ![alt text][AFL-status-screen]
 
-[AFL-status-screen]: https://github.com/mrash/fwknop/raw/master/test/afl/AFL_status_screen.png "AFL Fuzzing SPA Packets"
+[AFL-status-screen]: https://github.com/mrash/fwknop/raw/master/test/afl/doc/AFL_status_screen.png "AFL Fuzzing SPA Packets"
 
 ## SPA Packet Helper Script
 
