@@ -306,12 +306,12 @@ replay_file_cache_init(fko_srv_options_t *opts)
         src_ip[0] = '\0';
         dst_ip[0] = '\0';
 
-        if(sscanf(line_buf, "%s %hhu %s %hu %s %hu %ld",
-            digest_elm->cache_info.digest,
+        if(sscanf(line_buf, "%64s %hhu %16s %hu %16s %hu %ld",
+            digest_elm->cache_info.digest,  /* %64s, buffer size is MAX_DIGEST_SIZE+1 */
             &(digest_elm->cache_info.proto),
-            src_ip,
+            src_ip,  /* %16s, buffer size is INET_ADDRSTRLEN+1 */
             &(digest_elm->cache_info.src_port),
-            dst_ip,
+            dst_ip,  /* %16s, buffer size is INET_ADDRSTRLEN+1 */
             &(digest_elm->cache_info.dst_port),
             &time_tmp) != 7)
         {

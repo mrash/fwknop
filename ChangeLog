@@ -1,3 +1,12 @@
+fwknop-2.6.5 (11//2014):
+    - [server] Bug fix to ensure that proper bounds are enforced when
+      importing digest cache files from previous fwknopd executions. This bug
+      was discovered through fuzzing with American Fuzzy Lop (AFL) as driven
+      by the test/afl/fuzzing-wrappers/server-digest-cache.sh wrapper.
+      Previous to this fix, fwknopd could be made to crash through a malicious
+      digest cache file (normally in /var/run/fwknop/digest.cache) upon
+      initial import.
+
 fwknop-2.6.4 (11/16/2014):
     - [server] Added a UDP server mode so that SPA packets can be acquired via
       UDP directly without having to use libpcap. This is an optional feature
