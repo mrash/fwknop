@@ -345,15 +345,33 @@ EXTRA_DIST = \
     test/misc/freebsd_rc.conf \
     test/misc/pf.rules \
     test/misc/pf.sh \
+    test/afl/compile/afl-compile-code-coverage.sh \
+    test/afl/compile/afl-compile-no-enable-arg.sh \
+    test/afl/compile/afl-compile.sh \
+    test/afl/compile/afl-gen-code-coverage.sh \
+    test/afl/doc/AFL_status_screen.png \
     test/afl/README \
-    test/afl/afl-compile.sh \
-    test/afl/afl-compile-code-coverage.sh \
-    test/afl/afl-gen-code-coverage.sh \
-    test/afl/afl-run.sh \
-    test/afl/fwknopd-stdin-test.sh \
-    test/afl/afl-fuzzing.in/spa.start \
-    test/afl/afl-fuzzing.in/spa2.start \
-    test/afl/afl-fuzzing.in/spa3.start \
+    test/afl/fuzzing-wrappers/client-rc.sh \
+    test/afl/fuzzing-wrappers/fcns \
+    test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknop-rc-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-digest-cache.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh \
+    test/afl/fuzzing-wrappers/server-access.sh \
+    test/afl/fuzzing-wrappers/server-conf.sh \
+    test/afl/fuzzing-wrappers/server-digest-cache.sh \
+    test/afl/fuzzing-wrappers/spa-pkts.sh \
+    test/afl/test-cases/client-rc/fwknoprc \
+    test/afl/test-cases/server-access/access.conf \
+    test/afl/test-cases/server-conf/fwknopd.conf \
+    test/afl/test-cases/spa-pkts/spa.start \
+    test/afl/test-cases/spa-pkts/spa2.start \
+    test/afl/test-cases/spa-pkts/spa3.start \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
