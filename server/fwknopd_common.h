@@ -110,6 +110,7 @@
 #define DEF_UDPSERV_SELECT_TIMEOUT      "500000" /* half a second (in microseconds) */
 #define DEF_SYSLOG_IDENTITY             MY_NAME
 #define DEF_SYSLOG_FACILITY             "LOG_DAEMON"
+#define DEF_ENABLE_DESTINATION_RULE     "N"
 
 #define DEF_FW_ACCESS_TIMEOUT           30
 
@@ -247,6 +248,7 @@ enum {
     //CONF_EXTERNAL_CMD_ALARM,
     //CONF_ENABLE_EXT_CMD_PREFIX,
     //CONF_EXT_CMD_PREFIX,
+    CONF_ENABLE_DESTINATION_RULE,
 #if FIREWALL_FIREWALLD
     CONF_ENABLE_FIREWD_FORWARDING,
     CONF_ENABLE_FIREWD_LOCAL_NAT,
@@ -345,6 +347,8 @@ typedef struct acc_stanza
 {
     char                *source;
     acc_int_list_t      *source_list;
+    char                *destination;
+    acc_int_list_t      *destination_list;
     char                *open_ports;
     acc_port_list_t     *oport_list;
     char                *restrict_ports;
@@ -446,6 +450,9 @@ typedef struct acc_stanza
       /* Flag for firewalld SNAT vs. MASQUERADE usage
       */
       unsigned char   use_masquerade;
+      /* Flag for setting destination field in rule
+      */
+      unsigned char   use_destination;
   };
 
 #elif FIREWALL_IPTABLES
@@ -493,6 +500,9 @@ typedef struct acc_stanza
       /* Flag for iptables SNAT vs. MASQUERADE usage
       */
       unsigned char   use_masquerade;
+      /* Flag for setting destination field in rule
+      */
+      unsigned char   use_destination;
   };
 
 #elif FIREWALL_IPFW
@@ -509,6 +519,7 @@ typedef struct acc_stanza
       time_t            next_expire;
       time_t            last_purge;
       char              fw_command[MAX_PATH_LEN];
+      unsigned char     use_destination;
   };
 
 #elif FIREWALL_PF
@@ -520,6 +531,7 @@ typedef struct acc_stanza
       time_t            next_expire;
       char              anchor[MAX_PF_ANCHOR_LEN];
       char              fw_command[MAX_PATH_LEN];
+      unsigned char     use_destination;
   };
 
 #elif FIREWALL_IPF
@@ -552,6 +564,7 @@ typedef struct spa_data
     char           *spa_message;
     char            spa_message_src_ip[MAX_IPV4_STR_LEN];
     char            pkt_source_ip[MAX_IPV4_STR_LEN];
+    char            pkt_destination_ip[MAX_IPV4_STR_LEN];
     char            spa_message_remain[1024]; /* --DSS FIXME: arbitrary bounds */
     char           *nat_access;
     char           *server_auth;

@@ -70,14 +70,15 @@ chop_newline(char *str)
 static int
 rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         const struct fw_chain * const fwc, const unsigned int proto,
-        const char * const ip, const unsigned int port,
-        const unsigned int exp_ts)
+        const char * const srcip, const char * const dstip, 
+        const unsigned int port, const unsigned int exp_ts)
 {
     int     rule_exists=0, rule_num=0, rtmp=0;
     char    cmd_buf[CMD_BUFSIZE]       = {0};
     char    target_search[CMD_BUFSIZE] = {0};
     char    proto_search[CMD_BUFSIZE]  = {0};
-    char    ip_search[CMD_BUFSIZE]     = {0};
+    char    srcip_search[CMD_BUFSIZE]  = {0};
+    char    dstip_search[CMD_BUFSIZE]  = {0};
     char    port_search[CMD_BUFSIZE]   = {0};
     char    exp_ts_search[CMD_BUFSIZE] = {0};
 
@@ -109,7 +110,11 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
 
     snprintf(port_search, CMD_BUFSIZE-1, ":%u ", port);
     snprintf(target_search, CMD_BUFSIZE-1, " %s ", fwc->target);
-    snprintf(ip_search, CMD_BUFSIZE-1, " %s ", ip);
+    snprintf(srcip_search, CMD_BUFSIZE-1, " %s ", srcip);
+    if (dstip != NULL)
+    {
+        snprintf(dstip_search, CMD_BUFSIZE-1, " %s ", dstip);
+    }
     snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
 
     /* search for each of the substrings, and require the returned
@@ -125,25 +130,28 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
                 NO_TIMEOUT, proto_search, &pid_status, opts);
         if(rtmp == rule_num)
             rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-                    NO_TIMEOUT, ip_search, &pid_status, opts);
+                    NO_TIMEOUT, srcip_search, &pid_status, opts);
             if(rtmp == rule_num)
-                rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-                        NO_TIMEOUT, target_search, &pid_status, opts);
+                rtmp = (dstip == NULL) ? rtmp : search_extcmd(cmd_buf, WANT_STDERR,
+                        NO_TIMEOUT, dstip_search, &pid_status, opts);
                 if(rtmp == rule_num)
                     rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-                            NO_TIMEOUT, port_search, &pid_status, opts);
+                            NO_TIMEOUT, target_search, &pid_status, opts);
                     if(rtmp == rule_num)
-                        rule_exists = 1;
+                        rtmp = search_extcmd(cmd_buf, WANT_STDERR,
+                                NO_TIMEOUT, port_search, &pid_status, opts);
+                        if(rtmp == rule_num)
+                            rule_exists = 1;
     }
 
     if(rule_exists)
         log_msg(LOG_DEBUG,
                 "rule_exists_no_chk_support() %s %u -> %s expires: %u rule (already exists",
-                proto_search, port, ip, exp_ts);
+                proto_search, port, srcip, exp_ts);
     else
         log_msg(LOG_DEBUG,
                 "rule_exists_no_chk_support() %s %u -> %s expires: %u rule does not exist",
-                proto_search, port, ip, exp_ts);
+                proto_search, port, srcip, exp_ts);
 
    return(rule_exists);
 }
@@ -185,15 +193,16 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
 static int
 rule_exists(const fko_srv_options_t * const opts,
         const struct fw_chain * const fwc, const char * const rule,
-        const unsigned int proto, const char * const ip,
-        const unsigned int port, const unsigned int exp_ts)
+        const unsigned int proto, const char * const srcip,
+        const char * const dstip, const unsigned int port, 
+        const unsigned int exp_ts)
 {
     int rule_exists = 0;
 
     if(have_ipt_chk_support == 1)
         rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule);
     else
-        rule_exists = rule_exists_no_chk_support(opts, fwc, proto, ip, port, exp_ts);
+        rule_exists = rule_exists_no_chk_support(opts, fwc, proto, srcip, (opts->fw_config->use_destination ? dstip : NULL), port, exp_ts);
 
     if(rule_exists == 1)
         log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s already exists",
@@ -859,6 +868,11 @@ fw_config_init(fko_srv_options_t * const opts)
             }
         }
     }
+    
+    if(strncasecmp(opts->config[CONF_ENABLE_DESTINATION_RULE], "Y", 1)==0)
+    {
+        fwc.use_destination = 1;
+    }
 
     /* Let us find it via our opts struct as well.
     */
@@ -1044,13 +1058,14 @@ process_spa_request(const fko_srv_options_t * const opts,
                 in_chain->table,
                 ple->proto,
                 spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
                 ple->port,
                 exp_ts,
                 in_chain->target
             );
 
             if(rule_exists(opts, in_chain, rule_buf,
-                        ple->proto, spadat->use_src_ip, ple->port, exp_ts) == 0)
+                        ple->proto, spadat->use_src_ip, spadat->pkt_destination_ip, ple->port, exp_ts) == 0)
             {
                 if(create_rule(opts, in_chain->to_chain, rule_buf))
                 {
@@ -1080,13 +1095,14 @@ process_spa_request(const fko_srv_options_t * const opts,
                     out_chain->table,
                     ple->proto,
                     spadat->use_src_ip,
+                    (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
                     ple->port,
                     exp_ts,
                     out_chain->target
                 );
 
                 if(rule_exists(opts, out_chain, rule_buf,
-                        ple->proto, spadat->use_src_ip, ple->port, exp_ts) == 0)
+                        ple->proto, spadat->use_src_ip, spadat->pkt_destination_ip, ple->port, exp_ts) == 0)
                 {
                     if(create_rule(opts, out_chain->to_chain, rule_buf))
                     {
@@ -1153,6 +1169,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 in_chain->table,
                 fst_proto,
                 spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
                 nat_port,
                 exp_ts,
                 in_chain->target
@@ -1168,7 +1185,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 add_jump_rule(opts, IPT_INPUT_ACCESS);
 
             if(rule_exists(opts, in_chain, rule_buf,
-                        fst_proto, spadat->use_src_ip, nat_port, exp_ts) == 0)
+                        fst_proto, spadat->use_src_ip, spadat->pkt_destination_ip, nat_port, exp_ts) == 0)
             {
                 if(create_rule(opts, in_chain->to_chain, rule_buf))
                 {
@@ -1211,7 +1228,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             );
 
             if(rule_exists(opts, fwd_chain, rule_buf, fst_proto,
-                    spadat->use_src_ip, nat_port, exp_ts) == 0)
+                    spadat->use_src_ip, nat_ip, nat_port, exp_ts) == 0)
             {
                 if(create_rule(opts, fwd_chain->to_chain, rule_buf))
                 {
@@ -1247,6 +1264,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 dnat_chain->table,
                 fst_proto,
                 spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
                 fst_port,
                 exp_ts,
                 dnat_chain->target,
@@ -1255,7 +1273,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             );
 
             if(rule_exists(opts, dnat_chain, rule_buf, fst_proto,
-                        spadat->use_src_ip, fst_port, exp_ts) == 0)
+                        spadat->use_src_ip, spadat->pkt_destination_ip, fst_port, exp_ts) == 0)
             {
                 if(create_rule(opts, dnat_chain->to_chain, rule_buf))
                 {
@@ -1335,7 +1353,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             );
 
             if(rule_exists(opts, snat_chain, rule_buf, fst_proto,
-                        spadat->use_src_ip, nat_port, exp_ts) == 0)
+                        spadat->use_src_ip, NULL, nat_port, exp_ts) == 0)
             {
                 if(create_rule(opts, snat_chain->to_chain, rule_buf))
                 {

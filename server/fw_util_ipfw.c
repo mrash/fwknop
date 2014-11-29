@@ -238,6 +238,11 @@ fw_config_init(fko_srv_options_t * const opts)
                 RCHK_MAX_IPFW_PURGE_INTERVAL);
         return 0;
     }
+    
+    if(strncasecmp(opts->config[CONF_ENABLE_DESTINATION_RULE], "Y", 1)==0)
+    {
+        fwc.use_destination = 1;
+    }
 
     /* Let us find it via our opts struct as well.
     */
@@ -532,6 +537,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 fwc.active_set_num,
                 ple->proto,
                 spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : IPFW_ANY_IP),
                 ple->port,
                 exp_ts
             );

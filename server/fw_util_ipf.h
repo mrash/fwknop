@@ -40,6 +40,7 @@
 #define IPF_ADD_SNAT_RULE_ARGS ""
 #define IPF_DEL_RULE_ARGS ""
 #define IPF_LIST_RULES_ARGS ""
+#define IPF_ANY_IP ""
 
 #endif /* FW_UTIL_IPF_H */
 

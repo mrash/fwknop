@@ -42,10 +42,10 @@
 /* firewalld command args
 */
 #define FIREWD_CHK_RULE_ARGS       "-C %s %s" /* the other macros add SH_REDIR if necessary */
-#define FIREWD_RULE_ARGS           "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
-#define FIREWD_OUT_RULE_ARGS       "-t %s -p %i -d %s --sport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
+#define FIREWD_RULE_ARGS           "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
+#define FIREWD_OUT_RULE_ARGS       "-t %s -p %i -d %s -s %s --sport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define FIREWD_FWD_RULE_ARGS       "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
-#define FIREWD_DNAT_RULE_ARGS      "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i" SH_REDIR
+#define FIREWD_DNAT_RULE_ARGS      "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i" SH_REDIR
 #define FIREWD_SNAT_RULE_ARGS      "-t %s -p %i -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s" SH_REDIR
 #define FIREWD_TMP_COMMENT_ARGS    "-t %s -I %s %i -s 127.0.0.2 -m comment --comment " TMP_COMMENT " -j %s" SH_REDIR
 #define FIREWD_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s 127.0.0.2 -p udp -j %s" SH_REDIR
@@ -60,6 +60,7 @@
 #define FIREWD_DEL_JUMP_RULE_ARGS  "-t %s -D %s -j %s" SH_REDIR  /* let firewalld work out the rule number */
 #define FIREWD_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n" SH_REDIR
 #define FIREWD_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers" SH_REDIR
+#define FIREWD_ANY_IP              "0.0.0.0/0"
 
 int validate_firewd_chain_conf(const char * const chain_str);
 
