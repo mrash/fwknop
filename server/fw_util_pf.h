@@ -32,7 +32,7 @@
 #define FW_UTIL_PF_H
 
 #define MAX_PF_ANCHOR_SEARCH_LEN    (MAX_PF_ANCHOR_LEN+11)   /* room for 'anchor "' string */
-#define MAX_PF_NEW_RULE_LEN         120
+#define MAX_PF_NEW_RULE_LEN         140
 
 #if HAVE_EXECVPE
   #define SH_REDIR "" /* the shell is not used when execvpe() is available */
@@ -42,7 +42,7 @@
 
 /* pf command args
 */
-#define PF_ADD_RULE_ARGS              "pass in quick proto %u from %s to any port %u keep state label " EXPIRE_COMMENT_PREFIX "%u"
+#define PF_ADD_RULE_ARGS              "pass in quick proto %u from %s to %s port %u keep state label " EXPIRE_COMMENT_PREFIX "%u"
 #define PF_WRITE_ANCHOR_RULES_ARGS    "-a %s -f -"
 #if HAVE_EXECVPE
   #define PF_LIST_ANCHOR_RULES_ARGS   "-a %s -s rules"
@@ -51,6 +51,7 @@
 #endif
 #define PF_ANCHOR_CHECK_ARGS          "-s Anchor" SH_REDIR  /* to check for fwknop anchor */
 #define PF_DEL_ALL_ANCHOR_RULES       "-a %s -F all" SH_REDIR
+#define PF_ANY_IP                     "any"
 
 #endif /* FW_UTIL_PF_H */
 

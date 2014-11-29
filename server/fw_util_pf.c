@@ -151,6 +151,11 @@ fw_config_init(fko_srv_options_t * const opts)
     /* Set the PF anchor name
     */
     strlcpy(fwc.anchor, opts->config[CONF_PF_ANCHOR_NAME], sizeof(fwc.anchor));
+    
+    if(strncasecmp(opts->config[CONF_ENABLE_DESTINATION_RULE], "Y", 1)==0)
+    {
+        fwc.use_destination = 1;
+    }
 
     /* Let us find it via our opts struct as well.
     */
@@ -243,6 +248,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             snprintf(new_rule, MAX_PF_NEW_RULE_LEN-1, PF_ADD_RULE_ARGS "\n",
                 ple->proto,
                 spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : PF_ANY_IP),
                 ple->port,
                 exp_ts
             );
