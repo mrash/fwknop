@@ -548,7 +548,7 @@ definition must start with the \(lqSOURCE\(rq keyword\&. Networks should be spec
 .PP
 \fBDESTINATION\fR \fI<IP,\&.\&.,IP/NET,\&.\&.,NET/ANY>\fR
 .RS 4
-This defines the destination address to which the SPA packet will be accepted\&. The string \(lqANY\(rq is also accepted if a valid SPA packet should be honored to any destination IP\&. Networks should be specified in CIDR notation (e\&.g\&. \(lq192\&.168\&.10\&.0/24\(rq), and individual IP addresses can be specified as well\&. Also, multiple IP\(cqs and/or networks can be defined as a comma separated list (e\&.g\&. \(lq192\&.168\&.10\&.0/24,10\&.1\&.1\&.123\(rq)
+This defines the destination address for which the SPA packet will be accepted\&. The string \(lqANY\(rq is also accepted if a valid SPA packet should be honored to any destination IP\&. Networks should be specified in CIDR notation (e\&.g\&. \(lq192\&.168\&.10\&.0/24\(rq), and individual IP addresses can be specified as well\&. Also, multiple IP\(cqs and/or networks can be defined as a comma separated list (e\&.g\&. \(lq192\&.168\&.10\&.0/24,10\&.1\&.1\&.123\(rq)
 .RE
 .PP
 \fBOPEN_PORTS\fR \fI<proto/port>,\&...,<proto/port>\fR
