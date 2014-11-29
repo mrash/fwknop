@@ -347,6 +347,9 @@ static void init_digest_cache(fko_srv_options_t *opts)
 {
     int     rp_cache_count;
 
+    if(opts->afl_fuzzing)
+        return;
+
     if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
     {
         rp_cache_count = replay_cache_init(opts);
