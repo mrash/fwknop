@@ -422,7 +422,7 @@ directive starts a new stanza.
     ``192.168.10.0/24,10.1.1.123'')
     
 *DESTINATION* '<IP,..,IP/NET,..,NET/ANY>'::
-    This defines the destination address  which the SPA packet will be
+    This defines the destination address for which the SPA packet will be
     accepted. The string ``ANY'' is also accepted if a valid SPA packet
     should be honored to any destination IP. 
     Networks should be specified in CIDR notation (e.g. ``192.168.10.0/24''),
