@@ -83,6 +83,19 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'client_cycles_per_server_instance' => 3,
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'complete cycle DESTINATION',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [qr/\b$fake_ip\s.*$loopback_ip\b/],
+    },
 
     {
         'category' => 'Rijndael+HMAC',
