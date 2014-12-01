@@ -316,6 +316,10 @@ EXTRA_DIST = \
     test/conf/firewd_snat_no_translate_ip_fwknopd.conf \
     test/conf/destination_rule_fwknopd.conf \
     test/conf/hmac_spa_destination_access.conf \
+    test/conf/hmac_spa_destination2_access.conf \
+    test/conf/hmac_spa_destination3_access.conf \
+    test/conf/hmac_spa_destination4_access.conf \
+    test/conf/hmac_spa_destination5_access.conf \
     test/conf/spa_replay.pcap \
     test/conf/fcs_spa.pcap \
     test/fko-wrapper/Makefile \
