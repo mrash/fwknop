@@ -6,7 +6,7 @@ fwknop-2.6.5 (11//2014):
       networks should be specified in CIDR notation (e.g. "192.168.10.0/24"),
       and individual IP addresses can be specified as well. Also, multiple IP's
       and/or networks can be defined as a comma separated list (e.g.
-      "192.168.10.0/24,10.1.1.123).
+      "192.168.10.0/24,10.1.1.123").
     - [server] Bug fix to ensure that proper bounds are enforced when
       importing digest cache files from previous fwknopd executions. This bug
       was discovered through fuzzing with American Fuzzy Lop (AFL) as driven

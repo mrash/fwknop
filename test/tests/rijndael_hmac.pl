@@ -133,6 +133,8 @@
             "-a $cf{'hmac_spa_destination4_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'client_pkt_tries' => 2,
+        'server_receive_re' => qr/SPA\spacket\s.*filtered\sby\sSOURCE.*DEST/,
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
     {
@@ -145,6 +147,8 @@
             "-a $cf{'hmac_spa_destination5_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'client_pkt_tries' => 2,
+        'server_receive_re' => qr/SPA\spacket\s.*filtered\sby\sSOURCE.*DEST/,
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
     {

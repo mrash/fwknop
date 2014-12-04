@@ -1752,19 +1752,19 @@ parse_access_file(fko_srv_options_t *opts)
 }
 
 int
-compare_addr_list(acc_int_list_t *source_list, const uint32_t ip)
+compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
 {
     int match = 0;
 
-    while(source_list)
+    while(ip_list)
     {
-        if((ip & source_list->mask) == (source_list->maddr & source_list->mask))
+        if((ip & ip_list->mask) == (ip_list->maddr & ip_list->mask))
         {
             match = 1;
             break;
         }
 
-        source_list = source_list->next;
+        ip_list = ip_list->next;
     }
 
     return(match);
