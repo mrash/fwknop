@@ -59,6 +59,7 @@ static void init_digest_cache(fko_srv_options_t *opts);
 static void set_locale(fko_srv_options_t *opts);
 static pid_t get_running_pid(const fko_srv_options_t *opts);
 #if AFL_FUZZING
+static void afl_enc_pkt_from_file(fko_srv_options_t *opts);
 static void afl_pkt_from_stdin(fko_srv_options_t *opts);
 #endif
 
@@ -187,7 +188,16 @@ main(int argc, char **argv)
 #if AFL_FUZZING
         /* SPA data from STDIN. */
         if(opts.afl_fuzzing)
-            afl_pkt_from_stdin(&opts);
+        {
+            if(opts.config[CONF_AFL_PKT_FILE] != 0x0)
+            {
+                afl_enc_pkt_from_file(&opts);
+            }
+            else
+            {
+                afl_pkt_from_stdin(&opts);
+            }
+        }
 #endif
 
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
@@ -290,6 +300,61 @@ static void set_locale(fko_srv_options_t *opts)
 }
 
 #if AFL_FUZZING
+static void afl_enc_pkt_from_file(fko_srv_options_t *opts)
+{
+    FILE                *fp = NULL;
+    fko_ctx_t           decrypt_ctx = NULL;
+    unsigned char       enc_spa_pkt[AFL_MAX_PKT_SIZE] = {0}, rc;
+    int                 res = 0, es = EXIT_SUCCESS, enc_msg_len;
+    char                dump_buf[AFL_DUMP_CTX_SIZE];
+
+    fp = fopen(opts->config[CONF_AFL_PKT_FILE], "rb");
+    if(fp != NULL)
+    {
+        enc_msg_len = 0;
+        while(fread(&rc, 1, 1, fp))
+        {
+            enc_spa_pkt[enc_msg_len] = rc;
+            enc_msg_len++;
+            if(enc_msg_len == AFL_MAX_PKT_SIZE-1)
+                break;
+        }
+        fclose(fp);
+
+        fko_new(&decrypt_ctx);
+
+        res = fko_afl_set_spa_data(decrypt_ctx, (const char *)enc_spa_pkt,
+                enc_msg_len);
+        if(res == FKO_SUCCESS)
+            res = fko_decrypt_spa_data(decrypt_ctx, "fwknoptest",
+                    strlen("fwknoptest"));
+        if(res == FKO_SUCCESS)
+            res = dump_ctx_to_buffer(decrypt_ctx, dump_buf, sizeof(dump_buf));
+        if(res == FKO_SUCCESS)
+            log_msg(LOG_INFO, "%s", dump_buf);
+        else
+            log_msg(LOG_ERR, "Error (%d): %s", res, fko_errstr(res));
+
+        fko_destroy(decrypt_ctx);
+
+        if(res == FKO_SUCCESS)
+        {
+            log_msg(LOG_INFO, "SPA packet decode: %s", fko_errstr(res));
+            es = EXIT_SUCCESS;
+        }
+        else
+        {
+            log_msg(LOG_ERR, "Could not decode SPA packet: %s", fko_errstr(res));
+            es = EXIT_FAILURE;
+        }
+    }
+    else
+        log_msg(LOG_ERR, "Could not acquire SPA packet from file: %s.",
+                opts->config[CONF_AFL_PKT_FILE]);
+
+    clean_exit(opts, NO_FW_CLEANUP, es);
+}
+
 static void afl_pkt_from_stdin(fko_srv_options_t *opts)
 {
     FILE                *fp = NULL;

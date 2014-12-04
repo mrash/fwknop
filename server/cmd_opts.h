@@ -127,6 +127,9 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "GPG_EXE",
     "FIREWALL_EXE",
     "VERBOSE",
+#if AFL_FUZZING
+    "AFL_PKT_FILE",
+#endif
     "FAULT_INJECTION_TAG"
 };
 
@@ -137,6 +140,7 @@ enum {
     FW_LIST         = 0x200,
     FW_LIST_ALL,
     FW_FLUSH,
+    AFL_PKT_FILE,
     GPG_HOME_DIR,
     GPG_EXE_PATH,
     FIREWD_DISABLE_CHECK_SUPPORT,
@@ -161,6 +165,7 @@ static struct option cmd_opts[] =
 {
     {"access-file",          1, NULL, 'a'},
     {"afl-fuzzing",          0, NULL, 'A'},
+    {"afl-pkt-file",         1, NULL, AFL_PKT_FILE },
     {"config-file",          1, NULL, 'c'},
     {"packet-limit",         1, NULL, 'C'},
     {"digest-file",          1, NULL, 'd'},

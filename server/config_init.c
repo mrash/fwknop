@@ -1038,6 +1038,15 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 #endif
                 break;
+            case AFL_PKT_FILE:
+#if AFL_FUZZING
+                opts->afl_fuzzing = 1;
+                set_config_entry(opts, CONF_AFL_PKT_FILE, optarg);
+#else
+                log_msg(LOG_ERR, "[*] fwknopd not compiled with AFL fuzzing support");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
+                break;
             case 'a':
                 set_config_entry(opts, CONF_ACCESS_FILE, optarg);
                 break;

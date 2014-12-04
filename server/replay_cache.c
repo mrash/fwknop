@@ -677,10 +677,16 @@ add_replay_dbm_cache(fko_srv_options_t *opts, char *digest)
 void
 free_replay_list(fko_srv_options_t *opts)
 {
+    struct digest_cache_list *digest_list_ptr = NULL, *digest_tmp = NULL;
+
 #ifdef NO_DIGEST_CACHE
     return;
 #endif
-    struct digest_cache_list *digest_list_ptr = NULL, *digest_tmp = NULL;
+
+#if AFL_FUZZING
+    if(opts->afl_fuzzing)
+        return;
+#endif
 
     if (opts->digest_cache == NULL)
         return;

@@ -331,6 +331,11 @@ add_salted_str(fko_ctx_t ctx)
 {
     char           *tbuf;
 
+#if AFL_FUZZING
+    ctx->added_salted_str = 1;
+    return(FKO_SUCCESS);
+#endif
+
     /* We only add the base64 encoded salt to data that is already base64
      * encoded
     */

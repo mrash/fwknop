@@ -356,6 +356,10 @@ DLL_API int fko_set_raw_spa_digest(fko_ctx_t ctx);
 DLL_API int fko_set_spa_encryption_type(fko_ctx_t ctx, const short encrypt_type);
 DLL_API int fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode);
 DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg);
+#if AFL_FUZZING
+DLL_API int fko_afl_set_spa_data(fko_ctx_t ctx, const char * const enc_msg,
+        const int enc_msg_len);
+#endif
 DLL_API int fko_set_spa_hmac_type(fko_ctx_t ctx, const short hmac_type);
 
 /* Data processing and misc utility functions

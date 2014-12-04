@@ -362,16 +362,19 @@ EXTRA_DIST = \
     test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh \
     test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh \
     test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-enc-pkt-file.sh \
     test/afl/fuzzing-wrappers/server-access.sh \
     test/afl/fuzzing-wrappers/server-conf.sh \
     test/afl/fuzzing-wrappers/server-digest-cache.sh \
     test/afl/fuzzing-wrappers/spa-pkts.sh \
+    test/afl/fuzzing-wrappers/server-enc-pkts.sh \
     test/afl/test-cases/client-rc/fwknoprc \
     test/afl/test-cases/server-access/access.conf \
     test/afl/test-cases/server-conf/fwknopd.conf \
     test/afl/test-cases/spa-pkts/spa.start \
     test/afl/test-cases/spa-pkts/spa2.start \
     test/afl/test-cases/spa-pkts/spa3.start \
+    test/afl/test-cases/enc-pkts/spa.enc \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
