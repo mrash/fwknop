@@ -229,7 +229,7 @@ add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *
  * comparisons of incoming source IPs against this mask.
 */
 static int
-add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
+add_int_ent(acc_int_list_t **ilist, const char *ip)
 {
     char                *ndx;
     char                ip_str[MAX_IPV4_STR_LEN] = {0};
@@ -247,7 +247,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding stanza source_list entry"
         );
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     /* Convert the IP data into the appropriate IP + (optional) mask
@@ -370,13 +370,13 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
     /* If this is not the first entry, we walk our pointer to the
      * end of the list.
     */
-    if(acc->source_list == NULL)
+    if(*ilist == NULL)
     {
-        acc->source_list = new_sle;
+        *ilist = new_sle;
     }
     else
     {
-        tmp_sle = acc->source_list;
+        tmp_sle = *ilist;
 
         do {
             last_sle = tmp_sle;
@@ -391,13 +391,13 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
 /* Expand the access SOURCE string to a list of masks.
 */
 static int
-expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
+expand_acc_int_list(acc_int_list_t **ilist, char *ip)
 {
     char           *ndx, *start;
     char            buf[ACCESS_BUF_LEN] = {0};
     int             res = 1;
 
-    start = acc->source;
+    start = ip;
 
     for(ndx = start; *ndx; ndx++)
     {
@@ -413,7 +413,7 @@ expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
 
             strlcpy(buf, start, (ndx-start)+1);
 
-            res = add_source_mask(opts, acc, buf);
+            res = add_int_ent(ilist, buf);
             if(res == 0)
                 return res;
 
@@ -431,7 +431,7 @@ expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
 
     strlcpy(buf, start, (ndx-start)+1);
 
-    res = add_source_mask(opts, acc, buf);
+    res = add_int_ent(ilist, buf);
 
     return res;
 }
@@ -504,7 +504,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
     if((new_plist = calloc(1, sizeof(acc_port_list_t))) == NULL)
     {
         log_msg(LOG_ERR,
-            "[*] Fatal memory allocation error adding stanza source_list entry"
+            "[*] Fatal memory allocation error adding stanza port_list entry"
         );
         exit(EXIT_FAILURE);
     }
@@ -677,7 +677,7 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
 /* Free the acc source_list
 */
 static void
-free_acc_source_list(acc_int_list_t *sle)
+free_acc_int_list(acc_int_list_t *sle)
 {
     acc_int_list_t    *last_sle;
 
@@ -747,7 +747,13 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->source != NULL)
     {
         free(acc->source);
-        free_acc_source_list(acc->source_list);
+        free_acc_int_list(acc->source_list);
+    }
+    
+    if(acc->destination != NULL)
+    {
+        free(acc->destination);
+        free_acc_int_list(acc->destination_list);
     }
 
     if(acc->open_ports != NULL)
@@ -839,10 +845,19 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
     {
         /* Expand the source string to 32-bit integer IP + masks for each entry.
         */
-        if(expand_acc_source(opts, acc) == 0)
+        if(expand_acc_int_list(&(acc->source_list), acc->source) == 0)
         {
             log_msg(LOG_ERR, "[*] Fatal invalid SOURCE in access stanza");
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+        
+        if(acc->destination != NULL && strlen(acc->destination))
+        {
+            if(expand_acc_int_list(&(acc->destination_list), acc->destination) == 0)
+            {
+                log_msg(LOG_ERR, "[*] Fatal invalid DESTINATION in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
 
         /* Now expand the open_ports string.
@@ -1290,6 +1305,14 @@ parse_access_file(fko_srv_options_t *opts)
             */
             continue;
         }
+        else if(CONF_VAR_IS(var, "DESTINATION"))
+        {
+            if(add_acc_string(&(curr_acc->destination), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
         else if(CONF_VAR_IS(var, "OPEN_PORTS"))
         {
             if(add_acc_string(&(curr_acc->open_ports), val) != SUCCESS)
@@ -1729,19 +1752,19 @@ parse_access_file(fko_srv_options_t *opts)
 }
 
 int
-compare_addr_list(acc_int_list_t *source_list, const uint32_t ip)
+compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
 {
     int match = 0;
 
-    while(source_list)
+    while(ip_list)
     {
-        if((ip & source_list->mask) == (source_list->maddr & source_list->mask))
+        if((ip & ip_list->mask) == (ip_list->maddr & ip_list->mask))
         {
             match = 1;
             break;
         }
 
-        source_list = source_list->next;
+        ip_list = ip_list->next;
     }
 
     return(match);
@@ -1898,6 +1921,7 @@ dump_access_list(const fko_srv_options_t *opts)
         fprintf(stdout,
             "SOURCE (%i):  %s\n"
             "==============================================================\n"
+            "                DESTINATION:  %s\n"
             "                 OPEN_PORTS:  %s\n"
             "             RESTRICT_PORTS:  %s\n"
             "                        KEY:  %s\n"
@@ -1928,6 +1952,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "         GPG_FINGERPRINT_ID:  %s\n",
             ++i,
             acc->source,
+            (acc->destination == NULL) ? "<not set>" : acc->destination,
             (acc->open_ports == NULL) ? "<not set>" : acc->open_ports,
             (acc->restrict_ports == NULL) ? "<not set>" : acc->restrict_ports,
             (acc->key == NULL) ? "<not set>" : "<see the access.conf file>",

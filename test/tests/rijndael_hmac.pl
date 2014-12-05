@@ -83,7 +83,74 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'client_cycles_per_server_instance' => 3,
     },
-
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cycle DESTINATION accepted (1)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+            "-a $cf{'hmac_spa_destination_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [qr/\b$fake_ip\s.*$loopback_ip\b/],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cycle DESTINATION accepted (2)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+            "-a $cf{'hmac_spa_destination2_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cycle DESTINATION accepted (3)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+            "-a $cf{'hmac_spa_destination3_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cycle DESTINATION filtered (1)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+            "-a $cf{'hmac_spa_destination4_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'client_pkt_tries' => 2,
+        'server_receive_re' => qr/SPA\spacket\s.*filtered\sby\sSOURCE.*DEST/,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cycle DESTINATION filtered (2)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+            "-a $cf{'hmac_spa_destination5_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'client_pkt_tries' => 2,
+        'server_receive_re' => qr/SPA\spacket\s.*filtered\sby\sSOURCE.*DEST/,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',

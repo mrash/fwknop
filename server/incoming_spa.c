@@ -321,6 +321,9 @@ incoming_spa(fko_srv_options_t *opts)
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
 
+    inet_ntop(AF_INET, &(spa_pkt->packet_dst_ip),
+        spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+
     /* At this point, we want to validate and (if needed) preprocess the
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
      * try to eliminate obvious non-spa packets).
@@ -405,10 +408,14 @@ incoming_spa(fko_srv_options_t *opts)
             ctx = NULL;
         }
 
-        /* Check for a match for the SPA source IP and the access stanza
+        /* Check for a match for the SPA source and destination IP and the access stanza
         */
-        if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)))
+        if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
+           (acc->destination_list != NULL && ! compare_addr_list(acc->destination_list, ntohl(spa_pkt->packet_dst_ip))))
         {
+            log_msg(LOG_DEBUG,
+                    "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
+                    stanza_num, spadat.pkt_source_ip, spadat.pkt_destination_ip);
             acc = acc->next;
             continue;
         }

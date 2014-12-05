@@ -72,7 +72,11 @@ fw_config_init(fko_srv_options_t *opts)
     /* Set our firewall exe command path (iptables in most cases).
     */
     strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
-
+    
+    if(strncasecmp(opts->config[CONF_ENABLE_DESTINATION_RULE], "Y", 1)==0)
+    {
+        fwc.use_destination = 1;
+    }
 
     /* Let us find it via our opts struct as well.
     */

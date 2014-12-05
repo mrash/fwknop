@@ -199,3 +199,13 @@ Bill Stubbs
       following platform:
           BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
           13:24:52 UTC 2014 armv7l GNU/Linux
+
+Grant Pannell
+    - Submitted a patch to add a new access.conf variable "DESTINATION" in
+      order to define the destination address for which an SPA packet will be
+      accepted. The string "ANY" is also accepted if a valid SPA packet should
+      be honored to any destination IP. Similarly to the "SOURCE" variable,
+      networks should be specified in CIDR notation (e.g. "192.168.10.0/24"),
+      and individual IP addresses can be specified as well. Also, multiple IP's
+      and/or networks can be defined as a comma separated list (e.g.
+      "192.168.10.0/24,10.1.1.123").

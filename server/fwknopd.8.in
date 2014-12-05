@@ -526,6 +526,13 @@ Specify the directory where
 writes run time state files\&. The default is
 \fI@localstatedir@/run\fR\&.
 .RE
+.PP
+\fBENABLE_DESTINATION_RULE\fR \fI<Y/N>\fR
+.RS 4
+Controls whether
+\fBfwknopd\fR
+will set the destination field on the firewall rule to the destination address specified on the incoming SPA packet\&. This is useful for interfaces with multiple IP addresses hosting separate services\&. If \(lqENABLE_IPT_OUTPUT\(rq is set to \(lqY\(rq, the source field of the firewall rule is set\&. FORWARD and SNAT rules are not affected however, DNAT rules will also have their destination field set\&. The default is \(lqN\(rq, which sets the destination field to 0\&.0\&.0\&.0/0 (any)\&.
+.RE
 .SS "ACCESS\&.CONF VARIABLES"
 .sp
 This section describes the access control directives in the \fI@sysconfdir@/fwknop/access\&.conf\fR file\&. Theses directives define encryption keys and level of access that is granted to \fBfwknop\fR clients that have generated the appropriate encrypted message\&.
@@ -537,6 +544,11 @@ The \fIaccess\&.conf\fR variables described below provide the access directives 
 This defines the source address from which the SPA packet will be accepted\&. The string \(lqANY\(rq is also accepted if a valid SPA packet should be honored from any source IP\&. Every authorization stanza in
 \fI@sysconfdir@/fwknop/access\&.conf\fR
 definition must start with the \(lqSOURCE\(rq keyword\&. Networks should be specified in CIDR notation (e\&.g\&. \(lq192\&.168\&.10\&.0/24\(rq), and individual IP addresses can be specified as well\&. Also, multiple IP\(cqs and/or networks can be defined as a comma separated list (e\&.g\&. \(lq192\&.168\&.10\&.0/24,10\&.1\&.1\&.123\(rq)
+.RE
+.PP
+\fBDESTINATION\fR \fI<IP,\&.\&.,IP/NET,\&.\&.,NET/ANY>\fR
+.RS 4
+This defines the destination address for which the SPA packet will be accepted\&. The string \(lqANY\(rq is also accepted if a valid SPA packet should be honored to any destination IP\&. Networks should be specified in CIDR notation (e\&.g\&. \(lq192\&.168\&.10\&.0/24\(rq), and individual IP addresses can be specified as well\&. Also, multiple IP\(cqs and/or networks can be defined as a comma separated list (e\&.g\&. \(lq192\&.168\&.10\&.0/24,10\&.1\&.1\&.123\(rq)
 .RE
 .PP
 \fBOPEN_PORTS\fR \fI<proto/port>,\&...,<proto/port>\fR

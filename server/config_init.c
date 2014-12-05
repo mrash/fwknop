@@ -427,6 +427,12 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE] == NULL)
         set_config_entry(opts, CONF_ENABLE_DIGEST_PERSISTENCE,
             DEF_ENABLE_DIGEST_PERSISTENCE);
+            
+    /* Enable destination rule.
+    */
+    if(opts->config[CONF_ENABLE_DESTINATION_RULE] == NULL)
+        set_config_entry(opts, CONF_ENABLE_DESTINATION_RULE,
+            DEF_ENABLE_DESTINATION_RULE);
 
     /* Max sniff bytes.
     */
