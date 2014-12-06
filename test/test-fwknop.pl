@@ -2072,7 +2072,9 @@ sub write_server_conf_file() {
 
     open F, "> $file"
         or die "[*] Could not open $file $!";
+    &write_test_file("[+] write_server_conf_file(): $file\n", $curr_test_file);
     for my $line (@$lines_ar) {
+        &write_test_file("$line\n", $curr_test_file);
         print F $line, "\n";
     }
     close F;
@@ -2321,8 +2323,8 @@ sub _client_send_spa_packet() {
         my $is_hmac_type = 1;
         my $hmac_digest = '';
         my $hmac_mode = 'sha256';
-        open F, "< $cmd_out_tmp" or die $!;
-        while (<F>) {
+        open SPA, "< $cmd_out_tmp" or die $!;
+        while (<SPA>) {
             if (/^\s+Encoded\sData\:\s+(\S+)/) {
                 $encoded_msg = $1;
             } elsif (/Data\sDigest\:\s(\S+)/) {
@@ -2337,7 +2339,7 @@ sub _client_send_spa_packet() {
                 $hmac_mode = lc($1);
             }
         }
-        close F;
+        close SPA;
 
         $encoded_msg .= ":$digest";
 
@@ -2351,8 +2353,8 @@ sub _client_send_spa_packet() {
         my $hmac_key = '';
         my $b64_decode_key = 0;
         if ($test_hr->{'key_file'}) {
-            open F, "< $test_hr->{'key_file'}" or die $!;
-            while (<F>) {
+            open K, "< $test_hr->{'key_file'}" or die $!;
+            while (<K>) {
                 if (/^KEY_BASE64\:?\s+(\S+)/) {
                     $key = $1;
                     $b64_decode_key = 1;
@@ -2365,7 +2367,7 @@ sub _client_send_spa_packet() {
                     $hmac_key = $1;
                 }
             }
-            close F;
+            close K;
         }
         $key = $default_key unless $key;
 
@@ -2416,11 +2418,11 @@ sub rotate_digest_file() {
     my $rv = 1;
 
     unless (-e $default_digest_file) {
-        open F, "> $default_digest_file"
+        open DIGEST, "> $default_digest_file"
             or die "[*] Could not open $default_digest_file: $!";
-        print F "# <digest> <proto> <src_ip> "
+        print DIGEST "# <digest> <proto> <src_ip> "
             . "<src_port> <dst_ip> <dst_port> <time>\n";
-        close F;
+        close DIGEST;
     }
 
     $rv = &spa_cycle($test_hr);
@@ -2574,14 +2576,14 @@ sub python_fko_basic_exec() {
         $python_spa_packet = '';
 
         ### get the SPA packet data
-        open F, "< $curr_test_file" or die $!;
-        while (<F>) {
+        open GSPA, "< $curr_test_file" or die $!;
+        while (<GSPA>) {
             if (/SPA\spacket\sdata\:\s(\S+)/) {
                 $python_spa_packet = $1;
                 last;
             }
         }
-        close F;
+        close GSPA;
 
         unless ($python_spa_packet) {
             &write_test_file("[-] could not acquite SPA packet from python output\n",
@@ -4563,9 +4565,9 @@ sub digest_cache_structure() {
 
         ### the format should be:
         ### <digest> <proto> <src_ip> <src_port> <dst_ip> <dst_port> <time>
-        open F, "< $default_digest_file" or
+        open D1, "< $default_digest_file" or
             die "[*] could not open $default_digest_file: $!";
-        while (<F>) {
+        while (<D1>) {
             next if /^#/;
             next unless /\S/;
             unless (m|^\S+\s+\d+\s+$ip_re\s+\d+\s+$ip_re\s+\d+\s+\d+|) {
@@ -4575,7 +4577,7 @@ sub digest_cache_structure() {
                 last;
             }
         }
-        close F;
+        close D1;
     } elsif (&file_find_regex([qr/dbm/i], $MATCH_ALL, $cmd_out_tmp)) {
         &write_test_file("[+] DBM digest file format, " .
             "assuming this is valid.\n", $APPEND_RESULTS,
@@ -4667,8 +4669,8 @@ sub iptables_rules_not_duplicated_account_for_timestamps() {
     ### make sure there aren't two iptables rule with the same creation time
     my $time_stamp  = 0;
     my $time_stamp2 = 0;
-    open F, "< $server_cmd_tmp" or die $!;
-    while (<F>) {
+    open IPT, "< $server_cmd_tmp" or die $!;
+    while (<IPT>) {
         ### 1    ACCEPT    tcp  --  127.0.0.2    0.0.0.0/0   tcp dpt:22 /* _exp_1359688354 */
         if (m|^1\s+.*$fake_ip\s+.*_exp_(\d+)|) {
             $time_stamp = $1;
@@ -4684,7 +4686,7 @@ sub iptables_rules_not_duplicated_account_for_timestamps() {
             }
         }
     }
-    close F;
+    close IPT;
 
     if ($rv == 1) {
         if ($time_stamp and $time_stamp2 and $time_stamp2 > $time_stamp) {
@@ -5508,14 +5510,14 @@ sub get_spa_packet_from_file() {
     my $file = shift;
 
     my $spa_pkt = '';
-    open F, "< $file" or die "[*] Could not open file $file: $!";
-    while (<F>) {
+    open G2, "< $file" or die "[*] Could not open file $file: $!";
+    while (<G2>) {
         if (/Final\sSPA\sData\:\s(\S+)/) {
             $spa_pkt = $1;
             last;
         }
     }
-    close F;
+    close G2;
 
     return $spa_pkt;
 }
@@ -5524,9 +5526,9 @@ sub send_packets_from_file() {
 
     ### send 100 SPA packets at a time
     my @packets = ();
-    open F, "< $pkts_file" or die $!;
-    my @lines = <F>;
-    close F;
+    open S, "< $pkts_file" or die $!;
+    my @lines = <S>;
+    close S;
 
     my $pkt_ctr = 1;
     for (@lines) {
@@ -5557,10 +5559,10 @@ sub send_packets_from_file() {
 sub send_packets() {
     my ($pkts_ar, $max_tries) = @_;
 
-    open F, ">> $curr_test_file" or die $!;
-    print F "[+] send_packets(): Sending the following packets...\n";
-    print F Dumper $pkts_ar;
-    close F;
+    open S2, ">> $curr_test_file" or die $!;
+    print S2 "[+] send_packets(): Sending the following packets...\n";
+    print S2 Dumper $pkts_ar;
+    close S2;
 
     if (-e $server_cmd_tmp) {
 
@@ -5852,9 +5854,9 @@ sub openssl_hmac_verification() {
     &write_test_file("    Calculating HMAC over: '$enc_msg_without_hmac'\n",
         $curr_test_file);
 
-    open F, "> $data_tmp" or die $!;
-    print F $enc_msg_without_hmac;
-    close F;
+    open D3, "> $data_tmp" or die $!;
+    print D3 $enc_msg_without_hmac;
+    close D3;
 
     my $hex_hmac_key = '';
     for my $char (split //, $hmac_key) {
@@ -5881,9 +5883,9 @@ sub openssl_hmac_verification() {
     my $openssl_hmac_line = '';
     {
         local $/ = undef;
-        open F, "< $openssl_cmd_tmp" or die $!;
-        $openssl_hmac_line = <F>;
-        close F;
+        open HMAC1, "< $openssl_cmd_tmp" or die $!;
+        $openssl_hmac_line = <HMAC1>;
+        close HMAC1;
     }
 
     if ($base64_path) {
@@ -5946,13 +5948,13 @@ sub openssl_enc_verification() {
 
     $encrypted_msg =~ s|(.{76})|$1\n|g;
 
-    open F, "> $data_tmp" or die $!;
-    print F $encrypted_msg, "\n";
-    close F;
+    open D4, "> $data_tmp" or die $!;
+    print D4 $encrypted_msg, "\n";
+    close D4;
 
-    open F, "> $key_tmp" or die $!;
-    print F $key;
-    close F;
+    open D5, "> $key_tmp" or die $!;
+    print D5 $key;
+    close D5;
 
     $rv = &run_cmd("$openssl_path enc -d -a -aes-256-cbc " .
         "-pass file:$key_tmp -in $data_tmp",
@@ -5969,14 +5971,14 @@ sub openssl_enc_verification() {
             ### a valid access message
             my $decrypted_msg = '';
             my $decrypted_access_msg = '';
-            open F, "< $openssl_cmd_tmp" or die $!;
-            while (<F>) {
+            open D6, "< $openssl_cmd_tmp" or die $!;
+            while (<D6>) {
                 if (/^(?:\S+?\:){5}(\S+?)\:/) {
                     $decrypted_access_msg = $1;
                     $decrypted_msg = $_;
                 }
             }
-            close F;
+            close D6;
 
             if ($decrypted_msg) {
                 if ($encoded_msg and $encoded_msg eq $decrypted_msg) {
@@ -6007,14 +6009,14 @@ sub openssl_enc_verification() {
             my $decrypted_msg = '';
             my $decrypted_access_msg = '';
             my $decoded_msg = '';
-            open F, "< $openssl_cmd_tmp" or die $!;
-            while (<F>) {
+            open D7, "< $openssl_cmd_tmp" or die $!;
+            while (<D7>) {
                 if (/^(?:\S+?\:){5}(\S+?)\:/) {
                     $decrypted_access_msg = $1;
                     $decrypted_msg = $_;
                 }
             }
-            close F;
+            close D7;
 
             $decrypted_msg =~ s/\n//;
 
@@ -6201,16 +6203,16 @@ sub anonymize_results() {
 sub write_pid() {
     my $test_hr = shift;
 
-    open F, "> $default_pid_file" or die $!;
-    print F "1\n";
-    close F;
+    open PID, "> $default_pid_file" or die $!;
+    print PID "1\n";
+    close PID;
 
     &server_start($test_hr);
 
-    open F, "< $default_pid_file" or die $!;
-    my $pid = <F>;
+    open RPID, "< $default_pid_file" or die $!;
+    my $pid = <RPID>;
     chomp $pid;
-    close F;
+    close RPID;
 
     if ($pid != 1) {
         return 1;
@@ -6302,15 +6304,15 @@ sub popen_cmd() {
     my $cmd = $test_hr->{'cmdline'};
 
     if (-e $file) {
-        open F, ">> $file"
+        open AC, ">> $file"
             or die "[*] Could not open $file: $!";
-        print F localtime() . " CMD (popen): | $cmd > $cmd_out 2>&1\n";
-        close F;
+        print AC localtime() . " CMD (popen): | $cmd > $cmd_out 2>&1\n";
+        close AC;
     } else {
-        open F, "> $file"
+        open W, "> $file"
             or die "[*] Could not open $file: $!";
-        print F localtime() . " CMD (popen): | $cmd > $cmd_out 2>&1\n";
-        close F;
+        print W localtime() . " CMD (popen): | $cmd > $cmd_out 2>&1\n";
+        close W;
     }
 
     open CMD, "| $cmd > $cmd_out 2>&1" or die $!;
@@ -6321,15 +6323,15 @@ sub popen_cmd() {
     my @cmd_lines = <C>;
     close C;
 
-    open F, ">> $file" or die "[*] Could not open $file: $!";
+    open AC2, ">> $file" or die "[*] Could not open $file: $!";
     for (@cmd_lines) {
         if (/\n/) {
-            print F $_;
+            print AC2 $_;
         } else {
-            print F $_, "\n";
+            print AC2 $_, "\n";
         }
     }
-    close F;
+    close AC2;
 
     return 1;
 }
@@ -6340,15 +6342,15 @@ sub run_cmd() {
     unlink $cmd_out if -e $cmd_out;
 
     if (-e $file) {
-        open F, ">> $file"
+        open RC, ">> $file"
             or die "[*] Could not open $file: $!";
-        print F localtime() . " CMD: $cmd\n";
-        close F;
+        print RC localtime() . " CMD: $cmd\n";
+        close RC;
     } else {
-        open F, "> $file"
+        open RCA, "> $file"
             or die "[*] Could not open $file: $!";
-        print F localtime() . " CMD: $cmd\n";
-        close F;
+        print RCA localtime() . " CMD: $cmd\n";
+        close RCA;
     }
 
     ### copy original file descriptors (credit: Perl Cookbook)
@@ -6376,15 +6378,15 @@ sub run_cmd() {
     my @cmd_lines = <C>;
     close C;
 
-    open F, ">> $file" or die "[*] Could not open $file: $!";
+    open L, ">> $file" or die "[*] Could not open $file: $!";
     for (@cmd_lines) {
         if (/\n/) {
-            print F $_;
+            print L $_;
         } else {
-            print F $_, "\n";
+            print L $_, "\n";
         }
     }
-    close F;
+    close L;
 
     if ($rv == 0) {
         return 1;
@@ -6779,7 +6781,7 @@ sub os_fw_detect() {
             $fw_conf_prefix = 'firewd';
         }
     } else {
-        push @tests_to_exclude, qr/NAT/;
+        push @tests_to_exclude, qr/NAT\b/;
         push @tests_to_exclude, qr/MASQ/;
         push @tests_to_exclude, qr/iptables/;
         push @tests_to_exclude, qr/firewalld/;
@@ -7395,15 +7397,15 @@ sub write_test_file() {
     my ($msg, $file) = @_;
 
     if (-e $file) {
-        open F, ">> $file"
+        open WT, ">> $file"
             or die "[*] Could not open $file: $!";
-        print F $msg;
-        close F;
+        print WT $msg;
+        close WT;
     } else {
-        open F, "> $file"
+        open WT, "> $file"
             or die "[*] Could not open $file: $!";
-        print F $msg;
-        close F;
+        print WT $msg;
+        close WT;
     }
     return;
 }
