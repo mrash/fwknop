@@ -300,6 +300,7 @@ EXTRA_DIST = \
     test/conf/open_ports_access.conf \
     test/conf/override_fwknopd.conf \
     test/conf/override2_fwknopd.conf \
+    test/conf/override_no_digest_tracking_fwknopd.conf \
     test/conf/var_expansion_fwknopd.conf \
     test/conf/var_expansion_invalid_fwknopd.conf \
     test/conf/require_src_access.conf \
