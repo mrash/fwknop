@@ -609,6 +609,10 @@ our $client_save_rc_args_no_verbose = "$default_client_args_no_verbose " .
 our $client_save_rc_args_no_force = "$default_client_args_no_get_key " .
     "--rc-file $save_rc_file --save-rc-stanza --test";
 
+our $client_save_rc_args_no_test = "$lib_view_str $valgrind_str " .
+    "$fwknopCmd -A tcp/22 -D $loopback_ip --no-save-args " .
+    "--rc-file $save_rc_file --save-rc-stanza --force-stanza -v -v -v";
+
 our $server_rewrite_conf_files = "$lib_view_str $valgrind_str $fwknopdCmd " .
     "-c $rewrite_fwknopd_conf -a $rewrite_access_conf " .
     "-d $default_digest_file -p $default_pid_file $intf_str";
