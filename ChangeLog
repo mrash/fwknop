@@ -13,7 +13,9 @@ fwknop-2.6.5 (11//2014):
       by the test/afl/fuzzing-wrappers/server-digest-cache.sh wrapper.
       Previous to this fix, fwknopd could be made to crash through a malicious
       digest cache file (normally in /var/run/fwknop/digest.cache) upon
-      initial import.
+      initial import. This crash can only be triggered by a local user on the
+      system where fwknopd is deployed and who has write permissions to the
+      digest.cache file - usually only root has these permissions.
 
 fwknop-2.6.4 (11/16/2014):
     - [server] Added a UDP server mode so that SPA packets can be acquired via
