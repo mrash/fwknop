@@ -61,7 +61,7 @@ static void zero_buf_wrapper(char *buf, int len);
 static int is_hostname_str_with_port(const char *str,
         char *hostname, size_t hostname_bufsize, int *port);
 #if HAVE_LIBFIU
-static void enable_fault_injections(fko_cli_options_t * const opts);
+static int enable_fault_injections(fko_cli_options_t * const opts);
 #endif
 
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
@@ -171,7 +171,9 @@ main(int argc, char **argv)
 #if HAVE_LIBFIU
         /* Set any fault injection points early
         */
-        enable_fault_injections(&options);
+        if(! enable_fault_injections(&options))
+            clean_exit(ctx, &options, key, &key_len, hmac_key,
+                    &hmac_key_len, EXIT_FAILURE);
 #endif
 
     /* Handle previous execution arguments if required
@@ -477,7 +479,8 @@ main(int argc, char **argv)
         if (res == FKO_SUCCESS)
             log_msg(LOG_VERBOSITY_NORMAL, "%s", dump_buf);
         else
-            log_msg(LOG_VERBOSITY_WARNING, "Unable to dump FKO context: %s", fko_errstr(res));
+            log_msg(LOG_VERBOSITY_WARNING, "Unable to dump FKO context: %s",
+                    fko_errstr(res));
     }
 
     /* Save packet data payload if requested.
@@ -1298,15 +1301,29 @@ zero_buf_wrapper(char *buf, int len)
 }
 
 #if HAVE_LIBFIU
-static void
+static int
 enable_fault_injections(fko_cli_options_t * const opts)
 {
+    int rv = 1;
     if(opts->fault_injection_tag[0] != 0x0)
     {
-        fiu_init(0);
-        fiu_enable(opts->fault_injection_tag, 1, NULL, 0);
+        if(opts->verbose)
+            log_msg(LOG_VERBOSITY_NORMAL, "[+] Enable fault injection tag: %s",
+                    opts->fault_injection_tag);
+        if(fiu_init(0) != 0)
+        {
+            log_msg(LOG_VERBOSITY_WARNING, "[*] Unable to set fault injection tag: %s",
+                    opts->fault_injection_tag);
+            rv = 0;
+        }
+        if(fiu_enable(opts->fault_injection_tag, 1, NULL, 0) != 0)
+        {
+            log_msg(LOG_VERBOSITY_WARNING, "[*] Unable to set fault injection tag: %s",
+                    opts->fault_injection_tag);
+            rv = 0;
+        }
     }
-    return;
+    return rv;
 }
 #endif
 

@@ -994,10 +994,18 @@ enable_fault_injections(fko_srv_options_t * const opts)
 {
     if(opts->config[CONF_FAULT_INJECTION_TAG] != NULL)
     {
-        fiu_init(0);
+        if(opts->verbose)
+            log_msg(LOG_INFO, "Enable fault injection tag: %s",
+                    opts->config[CONF_FAULT_INJECTION_TAG]);
+        if(fiu_init(0) != 0)
+        {
+            fprintf(stderr, "[*] Could not enable fault injection tag: %s\n",
+                    opts->config[CONF_FAULT_INJECTION_TAG]);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
         if (fiu_enable(opts->config[CONF_FAULT_INJECTION_TAG], 1, NULL, 0) != 0)
         {
-            fprintf(stderr, "[*] Could not enable fault injection: %s\n",
+            fprintf(stderr, "[*] Could not enable fault injection tag: %s\n",
                     opts->config[CONF_FAULT_INJECTION_TAG]);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
