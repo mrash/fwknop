@@ -1056,7 +1056,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 in_chain->table,
                 ple->proto,
                 spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP)
+                (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
                 ple->port,
                 exp_ts,
                 in_chain->target
