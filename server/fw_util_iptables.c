@@ -73,7 +73,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         const char * const srcip, const char * const dstip, 
         const unsigned int port, const unsigned int exp_ts)
 {
-    int     rule_exists=0, rule_num=0, rtmp=0;
+    int     rule_exists=0;
     char    cmd_buf[CMD_BUFSIZE]       = {0};
     char    target_search[CMD_BUFSIZE] = {0};
     char    proto_search[CMD_BUFSIZE]  = {0};
@@ -117,36 +117,21 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     }
     snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
 
-    /* search for each of the substrings, and require the returned
-     * rule number to be the same across all searches to return true
+    /* search for each of the substrings - yes, matches from different
+     * rules may get triggered here, but the expiration time is the
+     * primary search method
     */
-    rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-            NO_TIMEOUT, exp_ts_search, &pid_status, opts);
-
-    if(rtmp > 0)
-    {
-        rule_num = rtmp;
-        rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-                NO_TIMEOUT, proto_search, &pid_status, opts);
-        if(rtmp == rule_num)
-            rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-                    NO_TIMEOUT, srcip_search, &pid_status, opts);
-            if(rtmp == rule_num)
-                rtmp = (dstip == NULL) ? rtmp : search_extcmd(cmd_buf, WANT_STDERR,
-                        NO_TIMEOUT, dstip_search, &pid_status, opts);
-                if(rtmp == rule_num)
-                    rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-                            NO_TIMEOUT, target_search, &pid_status, opts);
-                    if(rtmp == rule_num)
-                        rtmp = search_extcmd(cmd_buf, WANT_STDERR,
-                                NO_TIMEOUT, port_search, &pid_status, opts);
-                        if(rtmp == rule_num)
-                            rule_exists = 1;
-    }
+    if(search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, exp_ts_search, &pid_status, opts)
+            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, proto_search, &pid_status, opts)
+            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, srcip_search, &pid_status, opts)
+            && (dstip == NULL) ? 1 : search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, dstip_search, &pid_status, opts)
+            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, target_search, &pid_status, opts)
+            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, port_search, &pid_status, opts))
+        rule_exists = 1;
 
     if(rule_exists)
         log_msg(LOG_DEBUG,
-                "rule_exists_no_chk_support() %s %u -> %s expires: %u rule (already exists",
+                "rule_exists_no_chk_support() %s %u -> %s expires: %u rule already exists",
                 proto_search, port, srcip, exp_ts);
     else
         log_msg(LOG_DEBUG,

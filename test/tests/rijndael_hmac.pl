@@ -178,6 +178,47 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'client_cycles_per_server_instance' => 3,
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => '--ipt-no-check dupe rule',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "$intf_str --no-ipt-check-support --no-firewd-check-support",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $REQUIRE_NO_NEW_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'insert_duplicate_rule_while_running' => $YES,
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'rm rule mid-cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'rm_rule_mid_cycle' => $YES,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'dupe rule mid-cycle',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $REQUIRE_NO_NEW_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'insert_duplicate_rule_while_running' => $YES,
+    },
 
     {
         'category' => 'Rijndael+HMAC',

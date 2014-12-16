@@ -21,7 +21,8 @@ our $local_hmac_key_file = 'local_hmac_spa.key';
 my $output_dir      = 'output';
 our $conf_dir       = 'conf';
 my $run_dir         = 'run';
-our $run_tmp_dir    = 'runtmp';
+our $run_tmp_dir_top = 'runtmp';
+our $run_tmp_dir    = "$run_tmp_dir_top/subdir1/subdir2";
 my $cmd_out_tmp     = 'cmd.out';
 my $server_cmd_tmp  = 'server_cmd.out';
 my $openssl_cmd_tmp = 'openssl_cmd.out';
@@ -831,12 +832,14 @@ my %test_keys = (
     'server_conf_file'    => $OPTIONAL,
     'digest_cache_file'   => $OPTIONAL,
     'cmd_exec_file_owner' => $OPTIONAL,
+    'rm_rule_mid_cycle'   => $OPTIONAL,
     'server_receive_re'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
     'insert_rule_before_exec'    => $OPTIONAL,
     'insert_rule_while_running'  => $OPTIONAL,
+    'insert_duplicate_rule_while_running' => $OPTIONAL,
     'weak_server_receive_check'  => $OPTIONAL,
     'search_for_rule_after_exit' => $OPTIONAL,
     'rc_positive_output_matches' => $OPTIONAL,
@@ -5293,6 +5296,18 @@ sub client_server_interaction() {
             $cmd_out_tmp, $curr_test_file);
     }
 
+    if ($test_hr->{'insert_duplicate_rule_while_running'}) {
+        ### insert duplicate rules - guess that this is for SSH
+        for (my $i=0; $i < 4; $i++) {
+            my $time_prefix = '_exp_' . (time() + 2+$i); ### default timeout
+            &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
+                $curr_test_file);
+            &run_cmd("iptables -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+                "--dport 22 -m comment --comment $time_prefix -j ACCEPT",
+                $cmd_out_tmp, $curr_test_file);
+        }
+    }
+
     &iptables_rm_chains($test_hr)
         if $test_hr->{'iptables_rm_chains_after_server_start'};
 
@@ -5344,11 +5359,20 @@ sub client_server_interaction() {
         }
 
         if ($fw_rule_created) {
+            if ($test_hr->{'rm_rule_mid_cycle'}) {
+                &write_test_file("[+] Flushing firewall rules out from under fwknopd...\n",
+                    $curr_test_file);
+                &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
+                    "$default_server_conf_args --fw-flush $verbose_str",
+                    $cmd_out_tmp, $curr_test_file);
+            }
             sleep 3;  ### allow time for rule time out.
             if (&is_fw_rule_active($test_hr)) {
-                &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
-                    $curr_test_file);
-                $rv = 0;
+                if ($test_hr->{'fw_rule_removed'} ne $REQUIRE_NO_NEW_REMOVED) {
+                    &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
+                        $curr_test_file);
+                    $rv = 0;
+                }
             } else {
                 &write_test_file("[+] new fw rule timed out.\n", $curr_test_file);
                 $fw_rule_removed = 1;
@@ -6818,7 +6842,7 @@ sub preserve_previous_test_run_results() {
         mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
     }
 
-    for my $dir ($run_dir, $run_tmp_dir) {
+    for my $dir ($run_dir, $run_tmp_dir_top) {
         if (-d $dir) {
             rmtree $dir or die $!;
         }

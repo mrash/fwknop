@@ -18,6 +18,19 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'command execution not allowed',
+        'function' => \&spa_cycle,
+        'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
+            "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} ".
+            "$verbose_str",
+        'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'server_positive_output_matches' => [qr/Command messages are not allowed/]
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'command execution (args too long)',
         'function' => \&spa_cycle,
         'cmdline'  => qq|$fwknopCmd --server-cmd "ls -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a -a" | .
