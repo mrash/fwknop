@@ -859,7 +859,7 @@ incoming_spa(fko_srv_options_t *opts)
             if(!acc->enable_cmd_exec)
             {
                 log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) SPA Command message are not allowed in the current configuration.",
+                    "[%s] (stanza #%d) SPA Command messages are not allowed in the current configuration.",
                     spadat.pkt_source_ip, stanza_num
                 );
                 acc = acc->next;
