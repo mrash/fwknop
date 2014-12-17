@@ -1,1355 +1,861 @@
-commit 9860aebfab874e7a22c75d4b3ebd60940267c2f2 (HEAD, refs/heads/master)
+commit 27af305cf7213c57d9559f129f708fa51fe657aa (HEAD, refs/heads/master)
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 16 16:31:40 2014 -0500
+Date:   Tue Dec 16 21:31:36 2014 -0500
 
-    minor date update for the 2.6.4 release
+    minor date change for 2.6.5 release
 
- ChangeLog   | 2 +-
- fwknop.spec | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-commit a90bc544ba5851a341be6a2c2b14be0a28c428ca
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 16 15:47:07 2014 -0500
-
-    Revert "[test suite] minor path update for gcov"
-    
-    This reverts commit 978bc4e3e1eab4e2fd82eb88391024177685fd26.
-
- test/gen-coverage-report.sh | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-commit 978bc4e3e1eab4e2fd82eb88391024177685fd26
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 16 09:19:15 2014 -0500
-
-    [test suite] minor path update for gcov
-
- test/gen-coverage-report.sh | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-commit a72b69eee73f408b77bbd090f194f411f55a194a (refs/remotes/origin/master, refs/remotes/origin/HEAD)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 10:51:48 2014 -0500
-
-    manpage updates
-
- client/fwknop.8.in  |  6 +++---
- server/fwknopd.8.in | 62 +++++++++++++++++++++++++++++++++++++++++++++++------
- 2 files changed, 58 insertions(+), 10 deletions(-)
-
-commit 90bed88863397a21295f323aebdfa11719bae5a8
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 10:49:20 2014 -0500
-
-    changes since 2.6.3
-
- ChangeLog.git | 2124 +++++++++++++++++++++++----------------------------------
- 1 file changed, 857 insertions(+), 1267 deletions(-)
-
-commit d2880021ca6a42d7d0e040e6f0de840b55fb51a1
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 10:45:59 2014 -0500
-
-    [server] document --udp-server option
-
- doc/fwknopd.man.asciidoc |  7 ++++++-
- server/cmd_opts.h        |  2 +-
- server/config_init.c     | 13 ++++++++-----
- 3 files changed, 15 insertions(+), 7 deletions(-)
-
-commit 85f559a9fdad7af9df4c242c7bbf074b4f3b346c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 10:27:19 2014 -0500
-
-    2.6.4 release date
-
- ChangeLog   | 2 +-
- fwknop.spec | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
-
-commit 5df437660212f7a7c99bae142421e34a557e3836
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 00:36:33 2014 -0500
-
-    add new test suite files to Makefile.am
-
- Makefile.am | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-commit 49b09c490358cea202000bd5b098b272ba491152
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 00:22:14 2014 -0500
-
-    [test suite] update to use helper scripts for code coverage report generation
-
- test/afl/afl-compile-code-coverage.sh |  9 ++++++
- test/afl/afl-compile.sh               |  2 +-
- test/afl/afl-gen-code-coverage.sh     | 13 ++++++++
- test/gen-coverage-report.sh           | 29 +++++++++++++++++
- test/rm-coverage-files.sh             | 12 +++++++
- test/test-fwknop.pl                   | 61 +++++++++++++++--------------------
- 6 files changed, 90 insertions(+), 36 deletions(-)
-
-commit b9d5919cdd1bca0371fa06ac6e3fa0fc7cfbee25
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 00:16:38 2014 -0500
-
-    [test suite] AFL README update
-
- test/afl/README | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-commit 2e1d0761603515d32b8867def285e283790b43ce
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 00:16:17 2014 -0500
-
-    [server] minor status wording update
-
- server/fwknopd.c | 2 +-
+ ChangeLog | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit 665b65ef3efdb1d47ff71a4495195e8da03a1001
+commit ff3eaf84484c3f4e53392ebea8d6658840873586
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 15 00:15:55 2014 -0500
+Date:   Tue Dec 16 21:15:29 2014 -0500
 
-    doc updates to include material about AFL support
+    [test suite] minor update to exclude a couple of iptables tests on ipfw/PF firewalls
 
- ChangeLog                |  7 +++++++
- doc/fwknop.man.asciidoc  |  5 +++--
- doc/fwknopd.man.asciidoc | 19 ++++++++++++++-----
- 3 files changed, 24 insertions(+), 7 deletions(-)
+ test/test-fwknop.pl | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-commit aaa44656bcfcb705d80768a7b9aa0d45a0e55e21
+commit 7f1da8e62596d8c120e1484bab98e95d6f08ca04
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 13 20:55:04 2014 -0500
+Date:   Mon Dec 15 22:34:22 2014 -0500
 
-    [server] add support for American Fuzzy Lop (ALF) fuzzing
+    bumped version to 2.6.5
 
- Makefile.am                        |  1 +
- configure.ac                       | 15 +++++++
- lib/base64.c                       | 17 +++++++-
- lib/fko_decode.c                   | 10 +++++
- server/cmd_opts.h                  |  3 +-
- server/config_init.c               |  8 ++++
- server/fwknopd.c                   | 81 +++++++++++++++++++++++++++++++++++++-
- server/fwknopd_common.h            |  1 +
- test/afl/README                    | 50 +++++++++++++++++++++++
- test/afl/afl-compile.sh            |  8 ++++
- test/afl/afl-fuzzing.in/spa.start  |  1 +
- test/afl/afl-fuzzing.in/spa2.start |  1 +
- test/afl/afl-fuzzing.in/spa3.start |  1 +
- test/afl/afl-run.sh                | 16 ++++++++
- test/afl/fwknopd-stdin-test.sh     |  6 +++
- test/test-fwknop.pl                |  3 ++
- test/tests/afl_fuzzing.pl          | 13 ++++++
- 17 files changed, 231 insertions(+), 4 deletions(-)
+ ChangeLog      | 2 +-
+ VERSION        | 2 +-
+ configure.ac   | 2 +-
+ fwknop.spec    | 5 ++++-
+ win32/config.h | 2 +-
+ 5 files changed, 8 insertions(+), 5 deletions(-)
 
-commit fe288120b32e945b33b10b7b26675aa84744b3ae (refs/heads/execvpe)
+commit db8b5e4e485796908f385dcd1c2f7ebb8c742578
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 9 21:41:10 2014 -0500
+Date:   Mon Dec 15 20:57:46 2014 -0500
 
-    minor ChangeLog wording update
+    [test suite] added AFL plot results: plot-2.6.5.67f969f/
 
- ChangeLog | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ test/afl/results/plot-2.6.5.67f969f/exec_speed.png |  Bin 0 -> 20466 bytes
+ test/afl/results/plot-2.6.5.67f969f/high_freq.png  |  Bin 0 -> 22305 bytes
+ test/afl/results/plot-2.6.5.67f969f/index.html     |   10 +
+ .../afl/results/plot-2.6.5.67f969f/index.html.orig |   10 +
+ test/afl/results/plot-2.6.5.67f969f/low_freq.png   |  Bin 0 -> 11027 bytes
+ test/afl/results/plot-2.6.5.67f969f/plot_data      | 7337 ++++++++++++++++++++
+ 6 files changed, 7357 insertions(+)
 
-commit 1a76d5586fc37e36d555ac5181b2e4f886036eed
+commit a4eb640f9ca26dd6cf35e64a74c53fab6f774e97
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 9 21:36:36 2014 -0500
+Date:   Mon Dec 15 20:55:49 2014 -0500
 
-    [test suite] extend server receive criteria
+    [test suite] add AFL results file: server-access-2.6.5.67f969f
 
- test/test-fwknop.pl         | 22 ++++++++++++++++++----
- test/tests/rijndael.pl      | 10 ++++++++--
- test/tests/rijndael_hmac.pl |  1 +
- 3 files changed, 27 insertions(+), 6 deletions(-)
+ test/afl/results/server-access-2.6.5.67f969f | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-commit ba337108af9524d533ebd17c37b180a0e4daf8ed
+commit 9dc56d6bb7b28142e0173521db5a91bd25d41a00
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 8 21:44:49 2014 -0500
+Date:   Mon Dec 15 17:06:07 2014 -0800
 
-    [test suite] implement multi-cycle test sequences
+    [test suite / server] rule deletion/addition tests mid-cycle
 
- test/test-fwknop.pl          | 281 +++++++++++++++++++++++++++++--------------
- test/tests/configure_args.pl |  28 +++++
- test/tests/rijndael.pl       |  11 ++
- test/tests/rijndael_hmac.pl  |  42 +++++++
- 4 files changed, 269 insertions(+), 93 deletions(-)
+ server/fw_util_firewalld.c           | 37 ++++++++++----------------------
+ server/fw_util_iptables.c            | 39 +++++++++++-----------------------
+ test/test-fwknop.pl                  | 34 +++++++++++++++++++++++++-----
+ test/tests/rijndael_hmac.pl          | 41 ++++++++++++++++++++++++++++++++++++
+ test/tests/rijndael_hmac_cmd_exec.pl | 13 ++++++++++++
+ 5 files changed, 106 insertions(+), 58 deletions(-)
 
-commit 7022d79ca796219c0d4fa62984d4b967056618bd
+commit fd582487dba5e5655584f5c341a2754a5aae8d4d
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 6 20:24:50 2014 -0500
+Date:   Mon Dec 15 17:03:08 2014 -0800
 
-    [server] minor code cleanup
+    [server] minor typo fix
 
- server/fw_util_pf.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+ server/incoming_spa.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit a8879231c30c144293eed8bcfa80030734873f02
+commit 67f969f2c7ea5f8ce5f498ba99588467436351f2
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 6 20:24:33 2014 -0500
+Date:   Wed Dec 10 17:06:45 2014 -0800
 
-    [server] add run_extcmd_write() call in code coverage mode
+    [server] compilation bug fix for firewalld platforms in DESTINATION processing code
 
- server/extcmd.c           |  9 +++++++--
- server/fw_util_iptables.c | 11 +++++++++++
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ server/fw_util_firewalld.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit 0c59f6e50017db2ccd2d3103b35e6dfc1179242f
+commit 122ecf10d787cd9ae295dc7b029bfa37440fa9b8
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 6 20:23:40 2014 -0500
+Date:   Sun Dec 7 17:00:10 2014 -0500
 
-    add CODE_COVERAGE macro for ./configure --enable-profile-coverage
+    minor ChangeLog update
 
- configure.ac        |  1 +
- server/tcp_server.c | 10 +++++-----
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ ChangeLog | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-commit 46fd32a6f12264be58af09be0e4b3739e6361ca4
+commit c7e3be6bbd5486bd31257d23c074b5e23b428f4a
+Merge: 74f1146 a99bff9
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 6 20:22:05 2014 -0500
+Date:   Sun Dec 7 16:32:53 2014 -0500
 
-    [test suite] minor bug fix to add --no-firewd-check-support option for one test
+    Merge branch 'master' of https://github.com/mrash/fwknop
 
- test/tests/rijndael_hmac.pl | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-commit 4ca718f8da49face1131f4869ebea13e01ca28cc
+commit 74f114603ba149f67fbc51ad2995c78bae9bdadf
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Nov 6 20:21:05 2014 -0500
+Date:   Sun Dec 7 16:29:30 2014 -0500
 
-    [test suite] allow valgrind/crash search/profile coverage tests to run after --test-limit
+    check fiu_init() and fiu_enable() return values
 
- test/test-fwknop.pl | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ client/fwknop.c  | 31 ++++++++++++++++++++++++-------
+ server/fwknopd.c | 12 ++++++++++--
+ 2 files changed, 34 insertions(+), 9 deletions(-)
 
-commit 04f8b9669a6dca2c828a275c9c991beccd910092 (refs/remotes/origin/execvpe)
+commit a99bff9b639334208ce65920d9b995a52e0da2ac
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Nov 5 23:19:51 2014 -0500
+Date:   Sat Dec 6 19:58:33 2014 -0500
 
-    [server] check number of cmd args even when execvpe() is not available
+    [test suite] minor Makefile update for fko-wrapper
 
- server/extcmd.c | 56 ++++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 38 insertions(+), 18 deletions(-)
+ test/fko-wrapper/Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit e7942f48e0d95c98426990b11f6870af0b5e0e4a
+commit 54625819c959afc30ed0f2b1ca2fdd75e3c6bc41
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 4 22:44:59 2014 -0500
+Date:   Fri Dec 5 21:23:23 2014 -0500
 
-    [server] allow loop restart after select() sets EINTR (since we handle signals) - fixes cmd execution through UDP on FreeBSD
+    [test suite] get resolve tests passing (--test mode stopped resolutions)
 
- server/udp_server.c | 31 ++++++++++++++++++++++++-------
- 1 file changed, 24 insertions(+), 7 deletions(-)
+ test/test-fwknop.pl            |  4 ++++
+ test/tests/basic_operations.pl | 26 +++++++++++++-------------
+ 2 files changed, 17 insertions(+), 13 deletions(-)
 
-commit c5f038928143421906d2f54587ecefe94dfde8ff
+commit 01438a9c1621e013daed765c90033707569965d7
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Nov 4 22:43:04 2014 -0500
+Date:   Fri Dec 5 20:57:38 2014 -0500
 
-    [server] minor code restructure, use FD_ISSET() test on file descriptors
+    [test suite] make filehandles a bit more unique
 
- server/tcp_server.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+ test/test-fwknop.pl | 160 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 81 insertions(+), 79 deletions(-)
 
-commit 705c50741497e933521af2a9303751dab3e1b555
+commit a4d6c17512acb62296e6b64a86b9a418da7a1276
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Nov 3 19:57:50 2014 -0500
+Date:   Fri Dec 5 20:56:47 2014 -0500
 
-    [test suite] check for TCP/UDP server string in do_fwknopd_cmd()
+    [test suite] add DESTINATION formatting tests
 
- test/test-fwknop.pl | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ test/tests/basic_operations.pl | 155 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 155 insertions(+)
 
-commit fdc6e0db20cc940a09c02def3aebd5c2af0dcd54
+commit 28c7cfc8e5064a7756f0636da4d641845b10be5c
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Nov 2 15:30:56 2014 -0500
+Date:   Fri Dec 5 20:52:17 2014 -0500
 
-    [test suite] bug fix to specify LD_LIBRARY_PATH for configure --enable-udp-server recompile test
-
- test/test-fwknop.pl | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-commit 7a98eed75921b57bd1d9271d49bc18a22319acfe
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 1 20:44:35 2014 -0400
-
-    [test suite] add spa_fuzzing.py and a few minor helper files for FreeBSD/OpenBSD
-
- Makefile.am               |  4 ++++
- test/misc/freebsd_rc.conf | 12 ++++++++++++
- test/misc/pf.rules        |  6 ++++++
- test/misc/pf.sh           |  3 +++
- 4 files changed, 25 insertions(+)
-
-commit 3826bb5631743ab8cbea0fbd06bc90b4ea01d4b4
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 1 12:04:11 2014 -0400
-
-    ChangeLog updates, bump version to 2.6.4
-
- ChangeLog      | 28 +++++++++++++++++++++-------
- VERSION        |  2 +-
- configure.ac   |  2 +-
- fwknop.spec    |  5 ++++-
- win32/config.h |  2 +-
- 5 files changed, 28 insertions(+), 11 deletions(-)
-
-commit 50009115b3dba3f35bd93757c26d6239757b3a1d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Nov 1 12:03:49 2014 -0400
-
-    [server] bug fix to close write filehandle in _run_extcmd_write()
-
- server/extcmd.c | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 4880243902f22ce436053040922b4079f86dc77e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 28 21:56:19 2014 -0400
-
-    [test suite] added invalid_firewd_input_chain_* files
-
- test/conf/invalid_firewd_input_chain_2_fwknopd.conf | 1 +
- test/conf/invalid_firewd_input_chain_3_fwknopd.conf | 1 +
- test/conf/invalid_firewd_input_chain_4_fwknopd.conf | 1 +
- test/conf/invalid_firewd_input_chain_5_fwknopd.conf | 1 +
- test/conf/invalid_firewd_input_chain_6_fwknopd.conf | 1 +
- test/conf/invalid_firewd_input_chain_fwknopd.conf   | 1 +
- 6 files changed, 6 insertions(+)
-
-commit 387c1acdf777bff5397b36d2e368fad99bc04af6
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 28 21:29:34 2014 -0400
-
-    add fcs_spa.pcap to Makefile.am
+    added missed config file spotted by the test suite
 
  Makefile.am | 1 +
  1 file changed, 1 insertion(+)
 
-commit 34e38fe39eb930ae9a69d0a46b7312d95a4ec95e
+commit 76b1c6dd5029fb16143124376ec5aefd600511df
+Merge: 8988fe4 d6dee35
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 28 21:28:21 2014 -0400
+Date:   Thu Dec 4 20:07:05 2014 -0500
 
-    [server] first pass at eliminating popen() write calls with run_extcmd_write() (used for PF firewalls)
+    Merge branch 'spa_destination_ip'
 
- server/extcmd.c     | 100 ++++++++++++++++++++++++++++++++++++++++++++++++++--
- server/extcmd.h     |   4 ++-
- server/fw_util_pf.c |  34 ++++++------------
- server/fw_util_pf.h |   4 +--
- 4 files changed, 113 insertions(+), 29 deletions(-)
-
-commit b5fe62bfc74288b885188f7b5012cff0aa71c4c1
+commit d6dee352af535d8a8486fbf6e8facf4651d5cb13 (refs/heads/spa_destination_ip)
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 26 16:58:13 2014 -0400
+Date:   Wed Dec 3 20:57:06 2014 -0500
 
-    [test suite] command exec too many args tests
+    minor update to get DESTINATION filtering tests passing
 
- common/common.h                      |  2 +-
- test/tests/rijndael_hmac_cmd_exec.pl | 28 ++++++++++++++++++++++++++++
- 2 files changed, 29 insertions(+), 1 deletion(-)
+ ChangeLog                   | 2 +-
+ server/access.c             | 8 ++++----
+ server/incoming_spa.c       | 5 ++++-
+ test/tests/rijndael_hmac.pl | 4 ++++
+ 4 files changed, 13 insertions(+), 6 deletions(-)
 
-commit d2abbd87202719734b5258d58c2635e5883a94fa
+commit c5c263c02ff0bd1b68509b647176e381d3453ed2
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 25 22:29:49 2014 -0400
+Date:   Wed Dec 3 20:56:47 2014 -0500
 
-    [test suite] more code coverage tests
+    add Grant Pannell
 
- server/config_init.c           |  2 +-
- test/tests/basic_operations.pl | 40 ++++++++++++++++++++++++++++++++++++++++
- test/tests/rijndael_hmac.pl    |  3 ++-
- 3 files changed, 43 insertions(+), 2 deletions(-)
+ CREDITS | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-commit 17608dd01df6eee5446c0b0cfbde69a132d0d7a2
+commit 8988fe41b8e832ab8db6b186c1dcd9579fe80729
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 25 08:42:30 2014 -0400
+Date:   Wed Dec 3 20:26:24 2014 -0500
 
-    [test suite] additional code coverage
+    [test suite] add AFL wrappers for Rijndael decryption fuzzing
 
- server/fwknopd.c               | 16 ++++++++--------
- server/utils.c                 | 11 +++--------
- test/tests/basic_operations.pl | 26 ++++++++++++++++++++++++++
- 3 files changed, 37 insertions(+), 16 deletions(-)
+ .../helpers/fwknopd-enc-pkt-file.sh                |  5 +++
+ test/afl/fuzzing-wrappers/server-enc-pkts.sh       | 43 ++++++++++++++++++++++
+ test/afl/test-cases/enc-pkts/spa.enc               |  3 ++
+ 3 files changed, 51 insertions(+)
 
-commit 837f7780fe23d0486c4bfe32c1eacaf9a73fa43a
+commit 285ec0ddcb93fedb4e6102f378cdfda27b9e1dcf
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 25 08:42:14 2014 -0400
+Date:   Wed Dec 3 20:25:05 2014 -0500
 
-    [libfko] validate MAX_PORT integer value for SPA messages
+    [server] add AFL support for fuzzing SPA Rijndael decryption routine directly with --afl-pkt-file
 
- common/common.h   |  1 -
- lib/fko_limits.h  |  5 +++--
- lib/fko_message.c | 13 +++++++++++--
- 3 files changed, 14 insertions(+), 5 deletions(-)
+ Makefile.am             |  3 +++
+ lib/cipher_funcs.c      |  5 ++++
+ lib/fko.h               |  4 +++
+ lib/fko_encryption.c    |  7 +++++-
+ lib/fko_funcs.c         | 35 ++++++++++++++++++++++++++
+ server/cmd_opts.h       |  5 ++++
+ server/config_init.c    |  9 +++++++
+ server/fwknopd.c        | 67 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ server/fwknopd_common.h |  3 +++
+ server/replay_cache.c   |  8 +++++-
+ 10 files changed, 143 insertions(+), 3 deletions(-)
 
-commit 58d47cb3853c563677de00aca816a4a019ca81ea
+commit 53be8c4116debe69155968c81f14ce769ec7876d
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Oct 24 20:39:40 2014 -0400
+Date:   Wed Dec 3 20:20:56 2014 -0500
 
-    [test suite] additional code coverage for a few areas
+    [test suite] added afl/results/ directory to track AFL run results over time
+
+ test/afl/results/server-conf-2.6.5.aeac6a4         | 25 ++++++++++++++++++++++
+ test/afl/results/server-digest-cache-2.6.5.aeac6a4 | 25 ++++++++++++++++++++++
+ test/afl/results/server-enc-pkts-2.6.5.aeac6a4     | 25 ++++++++++++++++++++++
+ test/afl/results/spa-pkts-2.6.5.7a2763a            | 25 ++++++++++++++++++++++
+ 4 files changed, 100 insertions(+)
+
+commit 7a9a430f24e9690284c56691b5b03e5f2b6eec18
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 30 22:17:51 2014 -0500
+
+    [test suite] additional DESTINATION accept/filter tests
+
+ Makefile.am                                 |  4 +++
+ test/conf/hmac_spa_destination2_access.conf |  5 +++
+ test/conf/hmac_spa_destination3_access.conf |  5 +++
+ test/conf/hmac_spa_destination4_access.conf |  5 +++
+ test/conf/hmac_spa_destination5_access.conf |  5 +++
+ test/test-fwknop.pl                         |  4 +++
+ test/tests/rijndael_hmac.pl                 | 56 +++++++++++++++++++++++++++--
+ 7 files changed, 81 insertions(+), 3 deletions(-)
+
+commit cf84f016a38c0d630f7d3d832075111a10cbc420
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 30 21:37:42 2014 -0500
+
+    [test suite] add complete cycle DESTINATION test
+
+ Makefile.am                                |  1 +
+ test/conf/hmac_spa_destination_access.conf |  5 +++++
+ test/test-fwknop.pl                        |  2 ++
+ test/tests/rijndael_hmac.pl                | 13 +++++++++++++
+ 4 files changed, 21 insertions(+)
+
+commit e1694c732c302522741e9c515f1eb3e39cfefc54
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 30 21:36:46 2014 -0500
+
+    update ChangeLog to include Grant's patch
+
+ ChangeLog | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+commit 42d103d100af7839a74816c9bd1d6aafdff6ea78
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sun Nov 30 17:02:27 2014 -0500
+
+    [test suite] minor test update for DESTINATION access.conf stanza
+
+ test/tests/basic_operations.pl | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+commit aeac6a40639f33905bbb2ee84ed8a9e80887a768
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 29 22:20:44 2014 -0500
+
+    [test suite] add server-digest-cache/ directory for AFL fuzzing
+
+ test/afl/test-cases/server-digest-cache/digest.cache | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+commit af6087c48d8457f1fbb8cd82bc8dec482155d45f (refs/remotes/DigitalDJ/master)
+Author: Grant Pannell <grant@pannell.net.au>
+Date:   Sat Nov 29 15:14:31 2014 +1030
+
+    Keep the documentation consistent
+
+ server/access.conf  | 2 +-
+ server/fwknopd.8.in | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit d0849d6cc9d641d580a9f39811d160db5e910f98
+Author: Grant Pannell <grant@pannell.net.au>
+Date:   Sat Nov 29 15:10:38 2014 +1030
+
+    Fix type on man asciidoc
+
+ doc/fwknopd.man.asciidoc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 624872ef4889cb43f5ecb42b74d9722bd6e9a4a8
+Author: Grant Pannell <grant@pannell.net.au>
+Date:   Sat Nov 29 15:05:06 2014 +1030
+
+    Add DESTINATION access.conf directive and ENABLE_DESTINATION_RULE fwknopd.conf directive
 
  Makefile.am                             |  1 +
- server/access.c                         | 13 ++-----------
- test/conf/gpg_no_sig_no_fpr_access.conf |  8 ++++++++
- test/test-fwknop.pl                     |  1 +
- test/tests/basic_operations.pl          | 29 ++++++++++++++++++++++++++++-
- 5 files changed, 40 insertions(+), 12 deletions(-)
+ doc/fwknopd.man.asciidoc                | 18 ++++++++++
+ server/access.c                         | 51 +++++++++++++++++++++--------
+ server/access.conf                      | 13 ++++++++
+ server/cmd_opts.h                       |  1 +
+ server/config_init.c                    |  6 ++++
+ server/fw_util_firewalld.c              | 58 +++++++++++++++++++++------------
+ server/fw_util_firewalld.h              |  7 ++--
+ server/fw_util_ipf.c                    |  6 +++-
+ server/fw_util_ipf.h                    |  1 +
+ server/fw_util_ipfw.c                   |  6 ++++
+ server/fw_util_ipfw.h                   |  3 +-
+ server/fw_util_iptables.c               | 58 +++++++++++++++++++++------------
+ server/fw_util_iptables.h               |  7 ++--
+ server/fw_util_pf.c                     |  6 ++++
+ server/fw_util_pf.h                     |  5 +--
+ server/fwknopd.8.in                     | 12 +++++++
+ server/fwknopd.conf                     | 10 ++++++
+ server/fwknopd_common.h                 | 13 ++++++++
+ server/incoming_spa.c                   |  8 +++--
+ test/conf/destination_rule_fwknopd.conf |  1 +
+ test/tests/basic_operations.pl          | 16 +++++++++
+ 22 files changed, 242 insertions(+), 65 deletions(-)
 
-commit 7b70ed08d261dc9db9e026b215a72da2cbd58089
+commit 7a2763a133c8fd37e5b88a65259fd7bec4c56b2e
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 23 23:05:21 2014 -0400
+Date:   Fri Nov 28 19:18:38 2014 -0500
 
-    [server] ensure to break out of while loop and close() UDP socket before returning
+    [server] minor fix to add AFL_FUZZING macro
 
- server/udp_server.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
-
-commit 30402516950446eb0ebd14723bb00c9611d8a5c1
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 23 20:03:34 2014 -0400
-
-    [test suite] default to recompiling fwknop in code coverage profiling mode
-
- test/test-fwknop.pl | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-commit cbb3b0d4137316455a03336340c4168a7dcf3f76
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 23 19:55:30 2014 -0400
-
-    [test suite] add branch coverage stats in code coverage mode
-
- test/test-fwknop.pl | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-commit a2ce50e9e5999e890da7ce6ed57806e271f770dd
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 23 08:45:21 2014 -0400
-
-    [python module] default to HMAC SHA256 when an HMAC key is used but no HMAC mode was specified
-
- ChangeLog          | 19 +++++++++++--------
- python/fko.py      | 23 ++++++++++++++---------
- python/fkomodule.c |  9 ++++-----
- test/fko-python.py |  4 ++++
- 4 files changed, 33 insertions(+), 22 deletions(-)
-
-commit d7be3f43ac27d52da6af59ca758c2deb1805bee0
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 23 08:40:21 2014 -0400
-
-    [test suite] firewall prefix typo bug fix
-
- test/test-fwknop.pl | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 22161af075f9d3cda1c6ec8b79273951b30c5cc5
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Oct 23 08:39:42 2014 -0400
-
-    [test suite] add ipt_local_nat_fwknopd.conf
-
- test/conf/ipt_local_nat_fwknopd.conf | 2 ++
+ server/fwknopd.c | 2 ++
  1 file changed, 2 insertions(+)
 
-commit b8f1cf6c6c1c935df4260e30ab555458ce686b62 (refs/remotes/ubuntu13/execvpe)
+commit 01e294aed3f32058c28e7f489184b29f9486126b
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 21 22:49:03 2014 -0400
+Date:   Fri Nov 28 19:13:35 2014 -0500
 
-    make sure test suite conf files are included in Makefile.am
+    [test suite] use -A mode for AFL fuzzing, make sure fwknopd does not init digest cache in -A mode
 
- Makefile.am                      | 16 +++++++++++++---
- test/conf/local_nat_fwknopd.conf |  2 --
- test/test-fwknop.pl              |  2 +-
- 3 files changed, 14 insertions(+), 6 deletions(-)
+ server/fwknopd.c                                        | 3 +++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh | 2 +-
+ test/afl/fuzzing-wrappers/server-access.sh              | 2 +-
+ test/afl/fuzzing-wrappers/server-conf.sh                | 6 +++---
+ 4 files changed, 8 insertions(+), 5 deletions(-)
 
-commit 56a6b7dee5476eedb481bac2aefc765ba54ed3a0
+commit 0556dfc0d8c64bb411f5c4ffe75baf4d9eaa1438
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 21 22:43:21 2014 -0400
+Date:   Wed Nov 26 16:40:16 2014 -0500
 
-    give firewalld its own namespace (can track firewalld changes independently of iptables)
+    [test suite] minor AFL status screen path update
 
- Makefile.am                                        |  18 +-
- test/conf/custom_input_chain_fwknopd.conf          |   2 -
- test/conf/custom_nat_chain_fwknopd.conf            |   5 -
- test/conf/firewd_custom_input_chain_fwknopd.conf   |   2 +
- test/conf/firewd_custom_nat_chain_fwknopd.conf     |   5 +
- test/conf/firewd_local_nat_fwknopd.conf            |   2 +
- test/conf/firewd_nat_fwknopd.conf                  |   1 +
- test/conf/firewd_no_flush_exit_fwknopd.conf        |   1 +
- test/conf/firewd_no_flush_init_fwknopd.conf        |   1 +
- .../conf/firewd_no_flush_init_or_exit_fwknopd.conf |   2 +
- test/conf/firewd_output_chain_fwknopd.conf         |   2 +
- test/conf/firewd_snat_fwknopd.conf                 |   3 +
- test/conf/firewd_snat_no_translate_ip_fwknopd.conf |   2 +
- test/conf/ipt_custom_input_chain_fwknopd.conf      |   2 +
- test/conf/ipt_custom_nat_chain_fwknopd.conf        |   5 +
- test/conf/ipt_nat_fwknopd.conf                     |   1 +
- test/conf/ipt_no_flush_exit_fwknopd.conf           |   1 +
- test/conf/ipt_no_flush_init_fwknopd.conf           |   1 +
- test/conf/ipt_no_flush_init_or_exit_fwknopd.conf   |   2 +
- test/conf/ipt_snat_fwknopd.conf                    |   3 +
- test/conf/ipt_snat_no_translate_ip_fwknopd.conf    |   2 +
- test/conf/nat_fwknopd.conf                         |   1 -
- test/conf/no_flush_exit_fwknopd.conf               |   1 -
- test/conf/no_flush_init_fwknopd.conf               |   1 -
- test/conf/no_flush_init_or_exit_fwknopd.conf       |   2 -
- test/conf/snat_fwknopd.conf                        |   3 -
- test/conf/snat_no_translate_ip_fwknopd.conf        |   2 -
- test/test-fwknop.pl                                | 400 +++++++++++----------
- test/tests/basic_operations.pl                     |  18 +-
- test/tests/gpg.pl                                  |  12 +-
- test/tests/gpg_no_pw.pl                            |  12 +-
- test/tests/rijndael.pl                             |  62 ++--
- test/tests/rijndael_hmac.pl                        | 108 +++---
- 33 files changed, 360 insertions(+), 325 deletions(-)
-
-commit 6945e23bc93d9580ccbcda1e770d6f818d2c7b0d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 20 22:23:46 2014 -0400
-
-    [test suite] UDP server command execution tests, run configure arg recompile tests after gcov profiling stuff
-
- Makefile.am                          |   1 +
- test/test-fwknop.pl                  | 216 +++++++++++++++++++++--------------
- test/tests/configure_args.pl         |  71 +++++++++++-
- test/tests/rijndael_cmd_exec.pl      |  12 ++
- test/tests/rijndael_hmac.pl          |   3 +-
- test/tests/rijndael_hmac_cmd_exec.pl |  12 ++
- 6 files changed, 225 insertions(+), 90 deletions(-)
-
-commit 15f73c7f9e1dd99d3a54a5e6428909b4873ad1b4
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 19 22:58:35 2014 -0400
-
-    [test suite] added configure args test with UDP server test for fwknopd not linking against libpcap
-
- Makefile.am                  |  1 +
- test/test-fwknop.pl          | 56 ++++++++++++++++++++++++++++++++++++++++++++
- test/tests/configure_args.pl |  9 +++++++
- 3 files changed, 66 insertions(+)
-
-commit 0af8faa0b37b08533fa1aa678f0e9e2f15cc6b11
-Merge: 00b229b 2b04639
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 13 20:25:14 2014 -0400
-
-    Merge branch 'udp_listener' into execvpe
-
-commit 00b229b8341b860324a46acd0b8bc603f59990fe
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 13 19:54:30 2014 -0400
-
-    [test suite] detect firewalld vs. iptables for server rewrite conf tests
-
- test/test-fwknop.pl            | 11 +++++-
- test/tests/basic_operations.pl | 86 +++++++++++++++++++++---------------------
- 2 files changed, 53 insertions(+), 44 deletions(-)
-
-commit c70e1c72a060eb846654d20bcdc1ddd30ba7f8fd
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 12 21:57:04 2014 -0400
-
-    [server] update firewalld code to use run_extcmd() instead of popen() and system() - allows execvpe() to be used
-
- server/fw_util_firewalld.c | 165 +++++++++++++++++++++++----------------------
- server/fw_util_firewalld.h |  44 ++++++------
- server/fw_util_iptables.c  |   6 +-
- 3 files changed, 112 insertions(+), 103 deletions(-)
-
-commit d9fb29318e3ee64e207bbd0771393c3de78b9d02
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 12 21:29:44 2014 -0400
-
-    [test suite] add --exit-parse-config to fwknopd basic tests where possible
-
- test/tests/basic_operations.pl | 27 +++++++++++++--------------
- 1 file changed, 13 insertions(+), 14 deletions(-)
-
-commit c481f7f6b3ed3723904c3838ac63e9fced62618d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 12 13:16:30 2014 -0400
-
-    add --disable-execvpe arg to configure script (looks for execvpe() support by default)
-
- configure.ac | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
-commit 62ee780d65d12de41bafa1f7226b1808d7cb04af
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Oct 10 08:20:01 2014 -0400
-
-    [server] make pid_status a static var at the top of each fw_util_*.c file
-
- server/fw_util_ipfw.c     | 16 +++++++++-------
- server/fw_util_iptables.c | 28 +++++++++++++++-------------
- server/fw_util_iptables.h |  2 +-
- 3 files changed, 25 insertions(+), 21 deletions(-)
-
-commit e54b15ceaff86d2da4ccac69691da1562a4e2640
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Oct 10 08:16:31 2014 -0400
-
-    [test suite] fix up Rijndael cmd exec test
-
- test/tests/rijndael_cmd_exec.pl | 2 +-
+ test/afl/README.md | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit a6007918a8b4a71707c58ed9f468613a409ae740
+commit 6149ec0a8cde68e9e55b7b2a5ce079a5d6b390e9
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Oct 10 08:15:44 2014 -0400
+Date:   Wed Nov 26 16:38:53 2014 -0500
 
-    added setuid/setgid cmd exec test files
+    [test suite] another minor path reorg
 
- Makefile.am | 2 ++
- 1 file changed, 2 insertions(+)
+ test/afl/README        |   2 +-
+ test/afl/README.md     | 132 +++++++++++++++++++++++++++++++++++++++++++++++++
+ test/afl/doc/README.md | 132 -------------------------------------------------
+ 3 files changed, 133 insertions(+), 133 deletions(-)
 
-commit 2b5088eb76f5a7af06d68e94c66885e73e81974d
+commit 00f45add289687a8a4b5be6a1c511409e87ccf45
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Oct 8 23:10:09 2014 -0400
+Date:   Wed Nov 26 16:35:17 2014 -0500
 
-    [test suite] added use terminal test, fix up Rijndael CMD tests
+    update Makefile.am for latest AFL paths
 
- test/conf/cmd_giduid_access.conf |  6 ++++++
- test/conf/cmd_setuid_access.conf |  5 +++++
- test/test-fwknop.pl              | 14 ++++++++++++++
- test/tests/rijndael.pl           |  3 +--
- test/tests/rijndael_cmd_exec.pl  | 27 +++++++++++++++++++++++++++
- 5 files changed, 53 insertions(+), 2 deletions(-)
+ Makefile.am | 34 ++++++++++++++++++++++++++--------
+ 1 file changed, 26 insertions(+), 8 deletions(-)
 
-commit 6dd599f3de138dfcd3fea39b32241b6df06a245d
+commit a900257c865ac313ae34979e1d3faa91e9212394
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 7 23:23:05 2014 -0400
+Date:   Wed Nov 26 16:26:19 2014 -0500
 
-    [server] update ipfw and pf firewall interace code to latest run_extcmd() API
+    [test suite] add AFL README
 
- server/fw_util_ipfw.c | 34 +++++++++++++++++++++-------------
- server/fw_util_pf.c   | 40 ++++++++++++++++++----------------------
- server/fw_util_pf.h   | 18 ++++++++++++++----
- 3 files changed, 53 insertions(+), 39 deletions(-)
+ test/afl/README | 1 +
+ 1 file changed, 1 insertion(+)
 
-commit 06f3db1de8bebf4a3fb2e5982b7beb0e57a788b5
+commit 4e796fc865aa5230eeff4752cc9e6b8b4038b79d
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 7 21:42:36 2014 -0400
+Date:   Wed Nov 26 16:25:53 2014 -0500
 
-    [server] restore shell stderr redirect when execvpe() is not available
+    [test suite] minor AFL path update
 
- server/fw_util_iptables.h | 42 ++++++++++++++++++++++++------------------
- 1 file changed, 24 insertions(+), 18 deletions(-)
+ test/afl/AFL_status_screen.png     | Bin 232415 -> 0 bytes
+ test/afl/README                    |   1 -
+ test/afl/README.md                 | 132 -------------------------------------
+ test/afl/doc/AFL_status_screen.png | Bin 0 -> 232415 bytes
+ test/afl/doc/README.md             | 132 +++++++++++++++++++++++++++++++++++++
+ 5 files changed, 132 insertions(+), 133 deletions(-)
 
-commit 1905baa0e8d7ac16f6dd77aa548c72ba30d2a8de
+commit 2e4ce021afe2710628521173bd9cf5d7c989ce5e
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 7 21:37:29 2014 -0400
+Date:   Wed Nov 26 09:30:10 2014 -0500
 
-    [server] minor macro usage update
+    [test suite] AFL wrapper update to not require -A for fuzzing access.conf and fwknopd.conf
 
- server/fw_util_iptables.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh | 2 +-
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh   | 2 +-
+ test/afl/fuzzing-wrappers/server-access.sh                | 2 +-
+ test/afl/fuzzing-wrappers/server-conf.sh                  | 2 +-
+ test/afl/fuzzing-wrappers/server-digest-cache.sh          | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-commit b7785a930460014bb0c3b9b2ee4e160040cbe67a
+commit 7938e6fbbff386572e4d060513c82308f81a6d85
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Oct 7 21:01:17 2014 -0400
+Date:   Wed Nov 26 08:46:24 2014 -0500
 
-    [server] extend run_extcmd() to allow the caller to specify whether to collect stderr
+    [server] manpage update
 
- server/extcmd.c           | 49 ++++++++++++++--------------------
- server/extcmd.h           | 13 ++++++---
- server/fw_util_iptables.c | 68 ++++++++++++++++++++++++++++++-----------------
- server/fw_util_pf.c       |  4 +--
- server/incoming_spa.c     |  6 +++--
- 5 files changed, 79 insertions(+), 61 deletions(-)
+ server/fwknopd.8.in | 68 +++++++++++++++++++++++++++++++++--------------------
+ 1 file changed, 42 insertions(+), 26 deletions(-)
 
-commit ed9e1ac236c3c48507916754c1c3dff89d2e05b8
+commit aa94fcb8cfa854e0cc68b279db2060fcb8bf54f0
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 6 22:10:40 2014 -0400
+Date:   Tue Nov 25 22:08:54 2014 -0500
 
-    added setgid() call for command execution along with CMD_EXEC_GROUP access.conf var
+    [test suite] add AFL wrapper for fuzzing digest cache file format
 
- Makefile.am                           |  1 +
- server/access.c                       | 45 ++++++++++++++++++++++++----
- server/extcmd.c                       | 56 ++++++++++++++++++++++++-----------
- server/extcmd.h                       |  8 +++--
- server/fwknopd_common.h               |  2 ++
- server/incoming_spa.c                 | 13 ++++----
- test/conf/hmac_cmd_giduid_access.conf |  7 +++++
- test/test-fwknop.pl                   |  7 +++--
- test/tests/basic_operations.pl        | 17 +++++++++++
- test/tests/rijndael_hmac_cmd_exec.pl  | 13 ++++++++
- 10 files changed, 136 insertions(+), 33 deletions(-)
+ .../helpers/fwknopd-digest-cache.sh                | 16 +++++++++
+ test/afl/fuzzing-wrappers/server-digest-cache.sh   | 41 ++++++++++++++++++++++
+ 2 files changed, 57 insertions(+)
 
-commit e6d162215f30b0ba18fb620a616459fc1966e4cc
+commit a64542c7a44ce9740043b98692bc9a2c365a4964
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 6 22:04:20 2014 -0400
+Date:   Tue Nov 25 22:06:56 2014 -0500
 
-    [test suite] added command execution setuid() 'nobody' test
+    [server] add --run-dir command line arg
 
- Makefile.am                           |  1 +
- test/conf/hmac_cmd_setuid_access.conf |  6 ++++++
- test/test-fwknop.pl                   | 16 ++++++++++++++++
- test/tests/rijndael_hmac_cmd_exec.pl  | 16 +++++++++++++++-
- 4 files changed, 38 insertions(+), 1 deletion(-)
+ doc/fwknopd.man.asciidoc | 41 ++++++++++++++++++++++++-----------------
+ server/cmd_opts.h        |  3 ++-
+ server/config_init.c     |  5 ++++-
+ 3 files changed, 30 insertions(+), 19 deletions(-)
 
-commit fedc691e21e5ad5c55336995d5509eb08533cb34
+commit 82cf8b1c9cc9c3256bfbd97cbd3a40353851dc02
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 6 21:10:02 2014 -0400
+Date:   Tue Nov 25 22:05:15 2014 -0500
 
-    [test suite] added generate_core.sh script and --enable-cores-pattern arg for the test suite
+    [server] Enforce proper bounds checking on digest cache file import
+    
+    Bug fix to ensure that proper bounds are enforced when importing digest
+    cache files from previous fwknopd executions. This bug
+    was discovered through fuzzing with American Fuzzy Lop (AFL) as driven
+    by the test/afl/fuzzing-wrappers/server-digest-cache.sh wrapper.
+    Previous to this fix, fwknopd could be made to crash through a malicious
+    digest cache file (normally in /var/run/fwknop/digest.cache) upon
+    initial import.
 
- Makefile.am            |  1 +
- test/generate_cores.sh | 13 +++++++++++++
- test/test-fwknop.pl    |  6 ++++++
- 3 files changed, 20 insertions(+)
+ ChangeLog             | 9 +++++++++
+ server/replay_cache.c | 8 ++++----
+ 2 files changed, 13 insertions(+), 4 deletions(-)
 
-commit 248c4b301e329919c1c02e9b59f71346378e3de3
+commit 8872e50818cc3d847015b5c4344c76991752283d
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Mon Oct 6 20:04:00 2014 -0400
+Date:   Tue Nov 25 15:04:30 2014 -0500
 
-    added configure detection of execvpe() - doesn't exist on Mac OS X yet
+    [test suite] use digest tracking override for ALF fwknopd fuzzing
 
- client/http_resolve_host.c | 26 +++++++++++++-
- client/utils.c             |  1 -
- configure.ac               |  2 +-
- server/extcmd.c            | 90 ++++++++++++++++++++++++++++++++++++++++++++--
- server/fw_util_ipfw.c      | 45 ++++++++++++-----------
- 5 files changed, 139 insertions(+), 25 deletions(-)
+ server/fwknopd.c                                          | 5 -----
+ test/afl/fuzzing-wrappers/client-rc.sh                    | 4 +++-
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh | 6 +++++-
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh   | 6 +++++-
+ test/afl/fuzzing-wrappers/server-access.sh                | 8 +++++++-
+ test/afl/fuzzing-wrappers/server-conf.sh                  | 7 ++++++-
+ test/afl/fuzzing-wrappers/spa-pkts.sh                     | 5 ++++-
+ test/conf/override_no_digest_tracking_fwknopd.conf        | 1 +
+ 8 files changed, 31 insertions(+), 11 deletions(-)
 
-commit 652b8cb80eda66c30b89b5111b700f72e8e17e7b
+commit 00ffe198e865699be24ed420485818a8cd431d8d
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Oct 5 20:21:05 2014 -0400
+Date:   Sun Nov 23 22:39:25 2014 -0500
 
-    [server] have run_extcmd() collect process exit status for calling function (in addition to return value)
+    [test suite] support AFL resume operations
 
- server/extcmd.c           | 39 +++++++++++++++---------
- server/extcmd.h           |  7 +++--
- server/fw_util_iptables.c | 75 ++++++++++++++++++++++++-----------------------
- server/incoming_spa.c     | 28 +++++++++---------
- 4 files changed, 81 insertions(+), 68 deletions(-)
+ test/afl/fuzzing-wrappers/client-rc.sh     | 11 ++++++++---
+ test/afl/fuzzing-wrappers/fcns             |  3 ++-
+ test/afl/fuzzing-wrappers/server-access.sh | 10 ++++++++--
+ test/afl/fuzzing-wrappers/server-conf.sh   | 11 ++++++++---
+ test/afl/fuzzing-wrappers/spa-pkts.sh      | 10 ++++++++--
+ 5 files changed, 34 insertions(+), 11 deletions(-)
 
-commit a47ddfcb1ec97f1c5263d3568e32535bddae2523
+commit 28abc276fe0daae16d3e3fe642ab9946fc858108
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 4 21:14:49 2014 -0400
+Date:   Sun Nov 23 21:01:44 2014 -0500
 
-    [server] added WIFEXITED(status) check for external commands run via execvpe()
+    [test suite] AFL update spa-pkts.sh to use new shared bash functions
 
- server/extcmd.c | 20 +++++++++++++++-----
- server/extcmd.h |  2 ++
- 2 files changed, 17 insertions(+), 5 deletions(-)
+ test/afl/fuzzing-wrappers/spa-pkts.sh | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-commit 841d732c0750aabbdea8fd7234bd7123b83bf858
+commit 39419f43cb3076c2d292c7d81af8bc114c3e92ea
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 4 19:56:26 2014 -0400
+Date:   Sun Nov 23 16:53:29 2014 -0500
 
-    [server] removed remaining popen() call for iptables firewalls
+    [test suite] started on shared functions for AFL wrappers
 
- server/fw_util_iptables.c | 66 +++++++++++++++++++----------------------------
- 1 file changed, 27 insertions(+), 39 deletions(-)
+ test/afl/fuzzing-wrappers/client-rc.sh     | 21 ++++++++++++++-------
+ test/afl/fuzzing-wrappers/fcns             | 21 +++++++++++++++++++++
+ test/afl/fuzzing-wrappers/server-access.sh | 23 +++++++++++++++--------
+ test/afl/fuzzing-wrappers/server-conf.sh   | 21 ++++++++++++++-------
+ 4 files changed, 64 insertions(+), 22 deletions(-)
 
-commit 50952b4a6ec3b1cd6e8aeeebce8e95896f0d111a
-Merge: 87f3bbd 4623212
+commit c50c13b6d3ad4dd26e1837f92bfb5668333d2fbc
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 4 19:36:04 2014 -0400
+Date:   Sun Nov 23 09:27:06 2014 -0500
 
-    Merge branch 'master' of https://github.com/mrash/fwknop into execvpe
+    minor README formatting updates
 
-commit 87f3bbdd23ebb3af30a39df3011a5d01af352676
+ README.md | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
+
+commit 426bde83c5cc243b0e3977bac401667b364c0865
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 4 16:40:44 2014 -0400
+Date:   Sat Nov 22 23:06:52 2014 -0500
 
-    [server] hex_dump() '%' bug fix, minor verbose criteria update
+    [test suite] set banner for each AFL wrapper
 
- server/extcmd.c | 11 +++++++----
- server/utils.c  | 15 ++++++++-------
- 2 files changed, 15 insertions(+), 11 deletions(-)
+ test/afl/fuzzing-wrappers/client-rc.sh     | 2 +-
+ test/afl/fuzzing-wrappers/server-access.sh | 2 +-
+ test/afl/fuzzing-wrappers/server-conf.sh   | 2 +-
+ test/afl/fuzzing-wrappers/spa-pkts.sh      | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-commit 46232122c35ed981fdf95f0f6289f08d8e794581
-Merge: 836370d e9655db
+commit 0e93020671a202fbf922bd199cca9aa53598e61a
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 4 10:38:08 2014 -0400
+Date:   Sat Nov 22 23:06:20 2014 -0500
+
+    [test suite] minor AFL README update
+
+ test/afl/README.md | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+commit 290aaebd76e04bbe43e2a5177f64aa6b29ef1175
+Merge: 9037b3e ec4647c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 20:49:21 2014 -0500
 
     Merge branch 'master' of https://github.com/mrash/fwknop
 
-commit 836370d034a308ee2de8c34754528e5c1d9d95f2
+commit 9037b3e7e097f149288b5935b0b0c5f22a7ee4fc
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 4 10:32:52 2014 -0400
+Date:   Sat Nov 22 20:49:09 2014 -0500
 
-    [client] minor tab->spaces fix
+    minor manpage update to reference github link for contirbutors
 
- client/config_init.c | 2 +-
+ doc/fwknop.man.asciidoc  | 2 +-
+ doc/fwknopd.man.asciidoc | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+commit ec4647cdf0b8c7fa37d18324c41baa159624f17e
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 16:52:15 2014 -0500
+
+    [test suite] path bug fix
+
+ test/afl/compile/afl-compile-code-coverage.sh | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-commit d71f38697199d932e4d1c156642b9f99a047c62b
+commit f4a8c0ace1a1f88f8b203bc029089afb47bf0773
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Oct 4 10:31:15 2014 -0400
+Date:   Sat Nov 22 16:05:02 2014 -0500
 
-    [server] add search_extcmd() to replace all popen() calls with the execvpe() no env strategy
+    [test suite] more AFL README updates
 
- server/extcmd.c           | 152 +++++++++++++++++++++-------------------------
- server/extcmd.h           |   2 +
- server/fw_util_iptables.c |  52 +++++++---------
- 3 files changed, 92 insertions(+), 114 deletions(-)
+ test/afl/README.md | 60 +++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 53 insertions(+), 7 deletions(-)
 
-commit e271442aa995188a21815e2b3573325c1bcb263a
+commit e7da008d34134de85f2d7202e20b330d9bd4448e
 Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Fri Oct 3 21:58:51 2014 -0400
+Date:   Sat Nov 22 16:03:51 2014 -0500
 
-    [server] first cut at converting iptables commands to use execvpe()
+    [test suite] more AFL README updates
 
- client/fwknop.c            |   1 -
- client/fwknop_common.h     |   4 --
- client/http_resolve_host.c |   6 +--
- client/utils.c             |  65 +++++++++++++--------------
- client/utils.h             |   1 -
- common/common.h            |   4 ++
- server/extcmd.c            | 107 ++++++++++++++++++++++++++++++++++++++-------
- server/extcmd.h            |   6 ++-
- server/fw_util_iptables.c  |  39 +++++++++--------
- server/fw_util_iptables.h  |  38 ++++++++--------
- server/incoming_spa.c      |   6 +--
- server/utils.c             |  93 +++++++++++++++++++++++++++++++++++++++
- server/utils.h             |   9 ++--
- 13 files changed, 275 insertions(+), 104 deletions(-)
-
-commit 7aa34a92f1ad1b98998770bb422a9d7a16797a9f
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Sep 30 22:33:44 2014 -0400
-
-    [client] add strtoargv() to easily get an argv array for passing to execvpe()
-
- client/fwknop.c            | 27 ++++++--------------------
- client/http_resolve_host.c | 48 +++++++++-------------------------------------
- client/utils.c             | 43 +++++++++++++++++++++++++++++++++++++++++
- client/utils.h             |  1 +
- 4 files changed, 59 insertions(+), 60 deletions(-)
-
-commit bf3319e0bac513168aeaef084bbeae944d59bd30
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Sep 30 22:19:17 2014 -0400
-
-    [test suite] minor addition of spaces for --last tests
-
- test/test-fwknop.pl | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-commit 0d6917fa4e123e37a3630536538d4dd29068a33f
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Sep 30 22:09:10 2014 -0400
-
-    minor hex_dump() update to use a consistent macro definition for ascii str length
-
- server/utils.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
-
-commit 2247dfeab848db3a0b3b8d18457eae6300b51e8d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Sep 30 21:59:01 2014 -0400
-
-    use execvpe() with NULL env for wget calls
-
- client/fwknop.c            |  40 ++++-----------
- client/fwknop_common.h     |   5 +-
- client/http_resolve_host.c | 121 +++++++++++++++++++++++++++++++++++----------
- client/utils.c             |  50 +++++++++++++++++++
- client/utils.h             |   2 +
- 5 files changed, 160 insertions(+), 58 deletions(-)
-
-commit b1358d564deb39c0adc59e17dab3c2443ea52c9c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Sep 30 21:34:58 2014 -0400
-
-    minor client --help update
-
- client/config_init.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-commit e9655db0b42633bb27ba766a1ae1dd4535fdb91b
-Merge: 9bdcd67 899729b
-Author: Michael Rash <michael.rash@gmail.com>
-Date:   Fri Oct 3 00:08:45 2014 -0400
-
-    Merge pull request #135 from tombriden/multi_ports
-    
-    android: allow definition of multiple tcp/udp ports
-
-commit 9bdcd6746a1c2ac33f324bb23cd1235a4d81e014
-Merge: 50434c5 dc30f16
-Author: Michael Rash <michael.rash@gmail.com>
-Date:   Fri Oct 3 00:03:06 2014 -0400
-
-    Merge pull request #137 from schuellerf/master
-    
-    Support for "--no-save-args" in .fwknoprc
-
-commit dc30f162c7d6e438f1eb82f757adb58dbfc7a8cd
-Author: Florian Schüller <schuellerf@gmx.net>
-Date:   Wed Oct 1 14:12:57 2014 +0200
-
-    Add "NO_SAVE_ARGS" to initial config file
-
- client/config_init.c | 1 +
- 1 file changed, 1 insertion(+)
-
-commit 981d1f7077137a13de256b12d738e18860def88e
-Author: Florian Schüller <schuellerf@gmx.net>
-Date:   Wed Oct 1 14:12:10 2014 +0200
-
-    Support for "--no-save-args" in .fwknoprc
-
- client/config_init.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
-commit 85ff6b25e145a938e618c4cf40739e89fa3082e0
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Sep 30 21:12:43 2014 -0400
-
-    updated --last-cmd tests to write the previous args first
-
- test/test-fwknop.pl         | 11 +++++++++++
- test/tests/rijndael.pl      |  2 +-
- test/tests/rijndael_hmac.pl |  2 +-
- 3 files changed, 13 insertions(+), 2 deletions(-)
-
-commit 2b046392b7e05ac20387bbcf539530a6559da50b (refs/remotes/origin/udp_listener)
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 22:44:12 2014 -0400
-
-    minor unused var removal
-
- configure.ac | 2 --
- 1 file changed, 2 deletions(-)
-
-commit ddbba5bc90f105269a18d353e1e1b14bdff69299
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 22:40:50 2014 -0400
-
-    autoconf update to ensure libpcap is not linked against in --enable-udp-server mode
-
- configure.ac            | 27 +++++++++++----------------
- server/Makefile.am      |  2 +-
- server/config_init.c    |  8 ++++++++
- server/fwknopd.c        |  5 ++++-
- server/fwknopd_common.h |  8 ++++++--
- server/pcap_capture.c   |  5 +++--
- server/process_packet.h |  2 +-
- 7 files changed, 34 insertions(+), 23 deletions(-)
-
-commit 52d34a70a21d4e6d019d3a94bb84448051f87c29
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 22:32:20 2014 -0400
-
-    fwknopd man page updates, added UDPSERV_SELECT_TIMEOUT config option
-
- configure.ac             |  4 ++--
- doc/fwknopd.man.asciidoc | 29 +++++++++++++++++++++--------
- server/cmd_opts.h        |  1 +
- server/config_init.c     |  8 ++++++++
- server/fwknopd_common.h  |  3 +++
- server/udp_server.c      | 12 ++++++++++--
- 6 files changed, 45 insertions(+), 12 deletions(-)
-
-commit 52c9d51d7d02e1caa0e02ea992fffcc435ae5845
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 22:06:34 2014 -0400
-
-    consolidate signal handling a bit, UDP server msg size updates
-
- server/pcap_capture.c | 20 +++-----------------
- server/sig_handler.c  | 24 ++++++++++++++++++++++++
- server/sig_handler.h  |  1 +
- server/udp_server.c   | 49 +++++++++++++++++--------------------------------
- 4 files changed, 45 insertions(+), 49 deletions(-)
-
-commit e2c2ad141e87b6b799525c3f91b80a294bc117f2
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 22:06:06 2014 -0400
-
-    TCP/UDP server port validation tests
-
- test/tests/basic_operations.pl | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
-commit ad3b23091720be83c9f8ccb742cf10ea07fe7cf6
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 21:21:25 2014 -0400
-
-    minor client cmd line bug fix for UDP server HMAC test
-
- test/tests/rijndael_hmac.pl | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-commit 360905ec5624edb927f708561acfb9f76e6c9423
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 21:19:19 2014 -0400
-
-    implement --packet-limit for UDP server mode
-
- server/udp_server.c            | 43 ++++++++++++++++++++++++++++++------------
- test/tests/basic_operations.pl |  8 ++++++++
- 2 files changed, 39 insertions(+), 12 deletions(-)
-
-commit a5dd273189a89071f25cae9954ae11a840e2e488
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 20:48:57 2014 -0400
-
-    replay attack detection test for UDP server mode
-
- test/tests/rijndael_replay_attacks.pl | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-commit 5db3a12763b1322cc466379e14a362f67ff4d15c
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 20:30:09 2014 -0400
-
-    add signal handling code to UDP server mode
-
- server/fwknopd.c      | 17 +++++++++++------
- server/pcap_capture.c |  1 -
- server/udp_server.c   | 31 ++++++++++++++++++++++++++++++-
- 3 files changed, 41 insertions(+), 8 deletions(-)
-
-commit aa2492bba237529e6a2b7dc3a4530e2995750a69
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 16:51:38 2014 -0400
-
-    Added UDP server HMAC cycle tests
-
- test/tests/rijndael_hmac.pl | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-commit 0af7f72500c6bb404af3fefa5b572403ec2593e5
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 16:49:12 2014 -0400
-
-    enforce MAX_SPA_PACKET_LEN restriction for incoming datagrams for UDP listener mode
-
- server/udp_server.c | 32 +++++++-------------------------
- 1 file changed, 7 insertions(+), 25 deletions(-)
-
-commit dc9e8da702c61c36f04072f2dd6cb5d8f99f8f5d
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 14:54:40 2014 -0400
-
-    started on UDP server tests for Rijndael mode
-
- test/conf/udp_server_fwknopd.conf |  2 ++
- test/test-fwknop.pl               |  1 +
- test/tests/rijndael.pl            | 21 +++++++++++++++++++++
- 3 files changed, 24 insertions(+)
-
-commit f2a3562f712d511825967b5d3633cbf92abd9fad
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 11:49:24 2014 -0400
-
-    removed
-
- server/udp_server.c.orig | 117 -----------------------------------------------
- 1 file changed, 117 deletions(-)
-
-commit 1fd0e7e96012d9bdce0a2a3912bff3498fff3637
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 11:49:04 2014 -0400
-
-    first cut at UDP server mode
-
- configure.ac             |  24 ++++++
- server/Makefile.am       |  13 ++-
- server/cmd_opts.h        |   3 +
- server/config_init.c     |  15 ++++
- server/fwknopd.c         |  22 ++++-
- server/fwknopd_common.h  |   6 ++
- server/pcap_capture.c    |   5 ++
- server/process_packet.h  |   2 +
- server/udp_server.c      | 211 +++++++++++++++++++++++++++++++++++++++++++++++
- server/udp_server.c.orig | 117 ++++++++++++++++++++++++++
- server/udp_server.h      |  40 +++++++++
- 11 files changed, 451 insertions(+), 7 deletions(-)
-
-commit c07afac8833e0c46048a1ae34a8a96f19fa6a59e
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sun Sep 28 09:29:30 2014 -0400
-
-    calculate sizeof caddr for each client connection
-
- server/tcp_server.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-commit 50434c5c4c9fe274430c560f83200061e545add2
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Sat Sep 27 23:23:12 2014 -0400
-
-    Use the fwknop User-Agent for wget SSL external IP resolutions
-    
-    Bug fix to ensure that a User-Agent string can be specified when the
-    fwknop client uses wget via SSL to resolve the external IP address. This
-    closes issue #134 on github reported by Barry Allard. The fwknop now
-    uses the wget '-U' option to specify the User-Agent string with a
-    default of "Fwknop/<version>". In addition, a new command line argument
-    "--use-wget-user-agent" to allow the default wget User-Agent string to
-    apply instead.
-
- CREDITS                               |  2 ++
- ChangeLog                             |  9 ++++++++-
- client/cmd_opts.h                     |  2 ++
- client/config_init.c                  | 15 +++++++++++++++
- client/fwknop.8.in                    | 29 +++++++++++++++++++++++++++--
- client/fwknop_common.h                |  3 ++-
- client/http_resolve_host.c            | 13 +++++++++++++
- doc/fwknop.man.asciidoc               | 11 +++++++++++
- test/conf/fwknoprc_hmac_https_resolve |  1 +
- test/tests/basic_operations.pl        | 13 +++++++++++++
- test/tests/rijndael_hmac.pl           | 14 +++++++++++++-
- 11 files changed, 107 insertions(+), 5 deletions(-)
-
-commit 899729b498de672dccf14c461bc60fee588d0c09
-Author: Tom Briden <tom@decompile.me.uk>
-Date:   Sat Sep 27 11:14:10 2014 +0100
-
-    android: allow definition of multiple tcp/udp ports
-
- android/project/res/layout/main.xml                | 19 +++---
- .../src/com/max2idea/android/fwknop/Fwknop.java    | 76 ++++++++++++----------
- 2 files changed, 52 insertions(+), 43 deletions(-)
-
-commit aae72a947026d96a43fe854079e92b9a31ad8b36
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Sep 3 23:28:51 2014 -0400
-
-    firewalld support from Gerry Reno
-
- CREDITS   | 3 +++
- ChangeLog | 7 +++++++
- 2 files changed, 10 insertions(+)
-
-commit f7f97d3f3004ed553d418c95f9cefa6675bea338
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Wed Sep 3 23:15:34 2014 -0400
-
-    [server] firewalld reports 'success' as a string upon command success in contrast to iptables
-
- server/fw_util_firewalld.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
-
-commit 4fe549c4512ddd21d86bdcea52041baa48aa1dda
-Author: Gerry Reno <greno@verizon.net>
-Date:   Sun Aug 31 21:13:42 2014 -0400
-
-    added feature: firewalld
-
- README.md | 4 ++++
- 1 file changed, 4 insertions(+)
-
-commit 2da57da0cb3ec3fac6ec0f5de628d7c3eb2ea0cf
-Author: Gerry Reno <greno@verizon.net>
-Date:   Sun Aug 31 16:13:46 2014 -0400
-
-    more changes for firewalld
-
- server/fw_util_firewalld.c |  8 +++++++-
- server/fw_util_firewalld.h | 38 +++++++++++++++++++-------------------
- 2 files changed, 26 insertions(+), 20 deletions(-)
-
-commit ac82b1ced2b976d8010d73cc2786503b14a73641
-Author: Gerry Reno <greno@verizon.net>
-Date:   Sun Aug 31 13:51:08 2014 -0400
-
-    more changes for firewalld
-
- .gitignore                 |  25 ++++---
- server/Makefile.am         |   1 +
- server/access.c            |  30 ++++++++-
- server/cmd_opts.h          |  19 +++++-
- server/config_init.c       | 150 ++++++++++++++++++++++++++++++++++++++++-
- server/fw_util_firewalld.c | 162 ++++++++++++++++++++++-----------------------
- server/fw_util_firewalld.h |   2 +-
- server/fwknopd.conf        | 110 ++++++++++++++++++++++++++++++
- server/fwknopd_common.h    |  91 +++++++++++++++++++++++--
- server/incoming_spa.c      |  12 +++-
- 10 files changed, 501 insertions(+), 101 deletions(-)
-
-commit d47ebb602a8f42b42031ecfadfaf29f37a6c6829
-Author: Gerry Reno <greno@verizon.net>
-Date:   Sun Aug 31 02:23:39 2014 -0400
-
-    more changes for firewalld
-
- .gitignore                 | 29 +++++++++++++++++++++++++++++
- server/access.c            |  6 +++---
- server/cmd_opts.h          |  2 +-
- server/config_init.c       |  6 ++++--
- server/fw_util.h           |  4 +++-
- server/fw_util_firewalld.h |  2 +-
- server/fwknopd_common.h    |  8 ++++----
- server/incoming_spa.c      |  2 +-
- 8 files changed, 46 insertions(+), 13 deletions(-)
-
-commit 25d252c11aea89a5ba5f46868847c72851a62a95
-Author: Gerry Reno <greno@verizon.net>
-Date:   Sun Aug 31 00:29:17 2014 -0400
-
-    more changes for firewalld
-
- README.md                  |  9 ++++++---
- configure.ac               | 39 ++++++++++++++++++++++++++++++++++-----
- fwknop.spec                | 10 +++++-----
- server/fw_util_firewalld.h | 38 +++++++++++++++++++-------------------
- 4 files changed, 64 insertions(+), 32 deletions(-)
-
-commit e54383b518fad5e0a31ae0f752d3c3c7ec70f16c
-Author: Gerry Reno <greno@verizon.net>
-Date:   Sun Aug 31 00:06:37 2014 -0400
-
-    first cut at firewalld
-
- server/fw_util_firewalld.c | 1583 ++++++++++++++++++++++++++++++++++++++++++++
- server/fw_util_firewalld.h |   62 ++
- 2 files changed, 1645 insertions(+)
-
-commit ea64f15ae7b73a3986807dd76bf9076756b691e8
-Author: Gerry Reno <greno@verizon.net>
-Date:   Sat Aug 30 19:09:02 2014 -0400
-
-    added .gitignore
-
- .gitignore | 43 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
-
-commit 73186e511ae226f4e5e1dae5638567ecea788fbc
-Author: Damien Stuart <dstuart@dstuart.org>
-Date:   Sat Aug 30 16:18:46 2014 -0400
-
-    Added WIN32 definitions for popen (_popen) and pclose (_pclose) to accommodate the call to wget on Windows-based systems.
-
- common/common.h | 2 ++
- win32/config.h  | 2 +-
- 2 files changed, 3 insertions(+), 1 deletion(-)
-
-commit 8cec7eaeee14f2674a2acf095eff38735091147b
-Merge: eb0e8eb 4aacf32
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 26 23:23:31 2014 -0400
-
-    Merge branch 'master' of ssh://github.com/mrash/fwknop
-
-commit 4aacf32f3b015e43316d76c40fe12bbcb0a9c838
-Merge: 00a057a 813e4e0
-Author: Michael Rash <michael.rash@gmail.com>
-Date:   Tue Aug 26 23:22:15 2014 -0400
-
-    Merge pull request #127 from g-reno/android-keypreserve
-    
-    restore keys from prefs when app is launched
-
-commit eb0e8eb6a1946c2e89ff66399e186d54535bf013
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Tue Aug 26 23:21:14 2014 -0400
-
-    fwknopd man page updates for access.conf vars
-
- client/config_init.c     |  9 +++++----
- doc/fwknopd.man.asciidoc | 44 +++++++++++++++++++++++++++++---------------
- server/fwknopd.8.in      | 48 +++++++++++++++++++++++++++++++++---------------
- 3 files changed, 67 insertions(+), 34 deletions(-)
-
-commit 00a057a09da1a7dded8aa6de6479adcc51787202
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 21 21:15:09 2014 -0400
-
-    ChangeLog update for FCS bug fix
-
- CREDITS   | 10 ++++++++++
- ChangeLog | 11 +++++++++++
- 2 files changed, 21 insertions(+)
-
-commit dfcfb2e47b37183c14bd8ab37ec0e8c2a718c186
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 21 21:08:27 2014 -0400
-
-    minor code restructure for Ethernet FCS header processing
-
- server/process_packet.c | 14 +++-----------
- server/process_packet.h |  1 +
- 2 files changed, 4 insertions(+), 11 deletions(-)
-
-commit e04f3fef21c997f2359034d32c1bd9c23d363ebe
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 21 21:07:52 2014 -0400
-
-    added Ethernet FCS header test with pcap contributed by Bill Stubs
-
- test/test-fwknop.pl         |  1 +
- test/tests/rijndael_hmac.pl | 13 +++++++++++++
- 2 files changed, 14 insertions(+)
-
-commit ba9078d990258ad47b564579be4891bd2ace7413
-Merge: e4eb984 2c0606f
-Author: Michael Rash <mbr@cipherdyne.org>
-Date:   Thu Aug 21 20:44:48 2014 -0400
-
-    Merge branch 'beaglebone_libpcap_workaround' of https://github.com/stubbsw/fwknop into stubbsw-beaglebone_libpcap_workaround
-
-commit 813e4e05756ff6fea3ea4b4baeb1af93aeb33e34
-Author: Gerry Reno <greno@verizon.net>
-Date:   Thu Aug 21 18:16:00 2014 -0400
-
-    restore keys from prefs when app is launched
-
- android/project/src/com/max2idea/android/fwknop/Fwknop.java | 3 +++
- 1 file changed, 3 insertions(+)
-
-commit 2c0606f2b84c28ea7b53c2f3d7bcec46705fbcf5
-Author: stubbsw <stubbsw@users.noreply.github.com>
-Date:   Thu Aug 21 07:04:55 2014 -0400
-
-    pcap of  spa with Ethernet FCS
-    
-    Captured with:
-    tcpdump -i eth0 -l -nn -s 0 -w fcs_spa.pcap udp port 62201
-    
-    Generated remotely with:
-    LD_LIBRARY_PATH=./lib/.libs ./client/.libs/fwknop -A tcp/22 -a 127.0.0.2
-    -D 192.168.18.11 --no-save-args --verbose --verbose --rc-file
-    ./test/conf/fwknoprc_default_hmac_base64_key
-
- test/conf/fcs_spa.pcap | Bin 0 -> 311 bytes
+ test/afl/AFL_status_screen.png | Bin 0 -> 232415 bytes
  1 file changed, 0 insertions(+), 0 deletions(-)
 
-commit e4eb984869f41f04bd2fd9f50a4e2803a1a29fb0
-Merge: 36489b5 19f31c3
-Author: Michael Rash <michael.rash@gmail.com>
-Date:   Wed Aug 20 23:20:40 2014 -0400
+commit 18760d4d64969b49174ca6e83ed6b81f2449ef4c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 15:10:00 2014 -0500
 
-    Merge pull request #125 from stubbsw/beaglebone_libpcap_workaround
-    
-    workaround libpcap 4 extra bytes
+    [test suite] AFL README add all four fuzzing wrappers
 
-commit 19f31c3e2300226f8414b2d050315190168cf6d9
-Author: stubbsw <stubbsw@users.noreply.github.com>
-Date:   Tue Aug 19 06:54:18 2014 -0400
+ test/afl/README.md | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-    update to indicate Ethernet FCS support vs. bug
+commit dd0571ad56c121fc0abef3c792818a7460062254
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 15:03:12 2014 -0500
 
- server/process_packet.c | 26 +++++++++++---------------
- 1 file changed, 11 insertions(+), 15 deletions(-)
+    [test suite] AFL README formatting update
 
-commit b98579ab8f23b436b54fa0a0a3371ec71362f827
-Author: stubbsw <stubbsw@users.noreply.github.com>
-Date:   Sun Aug 17 11:50:56 2014 -0400
+ test/afl/README.md | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-    workaround libpcap 4 extra bytes
-    
-    Workaround for libpcap returning a length that is 4 bytes longer than
-    the
-    packet on the wire. Observed on:
-    
-    Linux beaglebone 3.8.13-bone50 #1 SMP Tue May 13 13:24:52 UTC 2014
-    armv7l GNU/Linux
-    ldd fwknopd
-    libfko.so.2 => /usr/local/lib/libfko.so.2 (0xb6f62000)
-    libpcap.so.0.8 => /usr/lib/arm-linux-gnueabihf/libpcap.so.0.8
-    (0xb6f20000)
-    libc.so.6 => /lib/arm-linux-gnueabihf/libc.so.6 (0xb6e3b000)
-    /lib/ld-linux-armhf.so.3 (0xb6f94000)
-    libgcc_s.so.1 => /lib/arm-linux-gnueabihf/libgcc_s.so.1 (0xb6e17000)
-    
-    Calculate the new pkt_end from the length in the ip header.
+commit 8d38980915aba3d4d6d8d77f2e291aaff20124ea
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 13:55:05 2014 -0500
 
- server/process_packet.c | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+    [test suite] AFL README formatting update
+
+ test/afl/README.md | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit f53c15fbda4a5737c087ee16692fe8291515b020
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 13:53:54 2014 -0500
+
+    [test suite] AFL README formatting update
+
+ test/afl/README.md | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+commit 9dbe7f5bd6ad911b3ba8be329ce212dc4cf68dbf
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 13:52:42 2014 -0500
+
+    [test suite] AFL README formatting update
+
+ test/afl/README.md | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
+
+commit 0b58e3af57c4dbc231aa7d0a9ca2195eb57fe5fc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 13:43:56 2014 -0500
+
+    [test suite] AFL README.md files list
+
+ test/afl/README.md | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+commit a15d76a3ea3e995a68232fe2f9b3f97c32fec0e0
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 13:40:52 2014 -0500
+
+    [test suite] AFL README -> README.md
+
+ test/afl/README    | 78 +-----------------------------------------------------
+ test/afl/README.md | 77 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 78 insertions(+), 77 deletions(-)
+
+commit 38977b5f2fd8def73a29850ac07baf9d16f8366d
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 13:39:24 2014 -0500
+
+    [test suite] use exit status in wrapper scripts
+
+ test/afl/compile/afl-compile-code-coverage.sh                   | 2 +-
+ test/afl/compile/afl-compile-no-enable-arg.sh                   | 2 +-
+ test/afl/compile/afl-compile.sh                                 | 2 +-
+ test/afl/compile/afl-gen-code-coverage.sh                       | 2 +-
+ test/afl/fuzzing-wrappers/client-rc.sh                          | 5 +++--
+ test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh            | 2 +-
+ test/afl/fuzzing-wrappers/helpers/fwknop-rc-test.sh             | 2 ++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh | 2 +-
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh       | 2 ++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh   | 2 +-
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh         | 2 ++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh        | 2 +-
+ test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh         | 2 ++
+ test/afl/fuzzing-wrappers/server-access.sh                      | 4 ++--
+ test/afl/fuzzing-wrappers/server-conf.sh                        | 4 ++--
+ test/afl/fuzzing-wrappers/spa-pkts.sh                           | 4 ++--
+ 16 files changed, 25 insertions(+), 16 deletions(-)
+
+commit ca64e3aa4e8fe831d47a81d3deb11ce9df2f0541
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 13:38:46 2014 -0500
+
+    [test suite] start on AFL README in .md format
+
+ test/afl/README | 66 +++++++++++++++++++++++++++++----------------------------
+ 1 file changed, 34 insertions(+), 32 deletions(-)
+
+commit f8d3cc51f046128d803a0198c637a4dedf698fc6
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Sat Nov 22 09:11:39 2014 -0500
+
+    [test suite] stronger access.conf test case for AFL fuzzing
+
+ .../helpers/fwknopd-parse-access.sh                |  2 +-
+ test/afl/fuzzing-wrappers/server-access.sh         |  2 +-
+ test/afl/test-cases/server-access/access.conf      | 24 ++++++++++++----------
+ 3 files changed, 15 insertions(+), 13 deletions(-)
+
+commit 0e5606fb263d89518d7ba90fcaa5d62767fc63f4
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Nov 21 22:18:17 2014 -0500
+
+    [test suite] AFL fuzzing README update
+
+ test/afl/README | 59 ++++++++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 37 insertions(+), 22 deletions(-)
+
+commit 63a2ae92d4335468218d2444f0a4c22fa2b475d3
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Nov 21 22:16:02 2014 -0500
+
+    [test suite] added *hang.sh helper scripts for AFL results analysis
+
+ test/afl/afl-compile-code-coverage.sh                       |  9 ---------
+ test/afl/afl-compile.sh                                     |  8 --------
+ test/afl/afl-gen-code-coverage.sh                           | 13 -------------
+ test/afl/compile/afl-compile-code-coverage.sh               |  9 +++++++++
+ test/afl/compile/afl-compile-no-enable-arg.sh               | 10 ++++++++++
+ test/afl/compile/afl-compile.sh                             |  8 ++++++++
+ test/afl/compile/afl-gen-code-coverage.sh                   | 13 +++++++++++++
+ test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh        |  7 +++++--
+ .../fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh  | 11 +++++++++++
+ .../fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh    | 11 +++++++++++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh    | 11 +++++++++++
+ 11 files changed, 78 insertions(+), 32 deletions(-)
+
+commit 46a6b5a1e59357aae504ce9424b46c88675fb5dc
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Nov 21 21:42:32 2014 -0500
+
+    [test suite] moved helper scripts to fuzzing-wrappers/helpers/
+
+ test/afl/fuzzing-wrappers/client-rc.sh                    |  2 +-
+ test/afl/fuzzing-wrappers/fwknop-rc-test.sh               | 10 ----------
+ test/afl/fuzzing-wrappers/fwknopd-parse-access.sh         | 10 ----------
+ test/afl/fuzzing-wrappers/fwknopd-parse-conf.sh           | 10 ----------
+ test/afl/fuzzing-wrappers/fwknopd-stdin-test.sh           |  5 -----
+ test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh      |  8 ++++++++
+ test/afl/fuzzing-wrappers/helpers/fwknop-rc-test.sh       | 10 ++++++++++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh | 10 ++++++++++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh   | 10 ++++++++++
+ test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh   |  5 +++++
+ test/afl/fuzzing-wrappers/server-access.sh                |  2 +-
+ test/afl/fuzzing-wrappers/server-conf.sh                  |  2 +-
+ test/afl/fuzzing-wrappers/spa-pkts.sh                     |  2 +-
+ 13 files changed, 47 insertions(+), 39 deletions(-)
+
+commit 5041533c65569e001c219178015a9c991946fef8
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Nov 21 21:32:05 2014 -0500
+
+    [test suite] update AFL helper scripts to accept file path from the command line
+
+ test/afl/fuzzing-wrappers/fwknop-rc-test.sh       | 9 ++++++++-
+ test/afl/fuzzing-wrappers/fwknopd-parse-access.sh | 9 ++++++++-
+ test/afl/fuzzing-wrappers/fwknopd-parse-conf.sh   | 9 ++++++++-
+ 3 files changed, 24 insertions(+), 3 deletions(-)
+
+commit c1a1a4d3aaf563917c7ee3dafaac1f1b124a0b8b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Fri Nov 21 21:22:20 2014 -0500
+
+    [test suite] minor comment removal
+
+ test/afl/fuzzing-wrappers/fwknopd-stdin-test.sh | 1 -
+ 1 file changed, 1 deletion(-)
+
+commit 9e671217e1620b9aefbc55d6147f1e3d6b6abfa0
+Author: Damien Stuart <dstuart@dstuart.org>
+Date:   Wed Nov 19 22:01:04 2014 -0500
+
+    Move #include <sys/wait.h> directive so it is not seen in the windows build
+
+ client/http_resolve_host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 492a7e523b8b162a4a2879df809c8f23f6bff9ad
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Nov 19 20:19:14 2014 -0500
+
+    [test suite] AFL wrapper enhancements (fwknopd conf file fuzzing, use -t 1000 for all fuzzing cycles)
+
+ test/afl/fuzzing-wrappers/client-rc.sh          |  2 +-
+ test/afl/fuzzing-wrappers/fwknopd-parse-conf.sh |  3 +++
+ test/afl/fuzzing-wrappers/server-access.sh      |  2 +-
+ test/afl/fuzzing-wrappers/server-conf.sh        | 22 ++++++++++++++++++++++
+ test/afl/fuzzing-wrappers/spa-pkts.sh           |  2 +-
+ test/afl/test-cases/server-conf/fwknopd.conf    | 22 +++++++++++-----------
+ 6 files changed, 39 insertions(+), 14 deletions(-)
+
+commit 31fcef08a5228c5af3060b546895503467deab70
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 18 23:10:56 2014 -0500
+
+    [test suite] add multiple stanzas for the fwknoprc AFL test
+
+ test/afl/fuzzing-wrappers/client-rc.sh      |  2 +-
+ test/afl/fuzzing-wrappers/fwknop-rc-test.sh |  2 +-
+ test/afl/test-cases/client-rc/fwknoprc      | 11 +++++++++--
+ 3 files changed, 11 insertions(+), 4 deletions(-)
+
+commit ece855b66a87d98276dd8b82d15cecd6643b617b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 18 23:10:19 2014 -0500
+
+    [client] bug fix to ensure -a overrides IP resolution
+
+ client/config_init.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
+
+commit 22289a3f58278d13a36249efc18809da92fb4309
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 18 20:16:12 2014 -0500
+
+    [client] disable IP resolution in AFL_FUZZING mode
+
+ client/config_init.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+commit c7bb83b1b33e43c915fef970fef3e05b263d2007
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Nov 18 20:15:13 2014 -0500
+
+    [test suite] additional AFL support for client fwknoprc file and server fwknopd.conf file
+
+ test/afl/fuzzing-wrappers/client-rc.sh       | 22 +++++++++++++
+ test/afl/fuzzing-wrappers/fwknop-rc-test.sh  |  3 ++
+ test/afl/fuzzing-wrappers/server-access.sh   |  2 +-
+ test/afl/fuzzing-wrappers/spa-pkts.sh        |  2 +-
+ test/afl/test-cases/client-rc/fwknoprc       | 40 +++++++++++++++++++++++
+ test/afl/test-cases/server-conf/fwknopd.conf | 47 ++++++++++++++++++++++++++++
+ 6 files changed, 114 insertions(+), 2 deletions(-)
+
+commit d107359e952bd0b959dcfa7d1001511b161dcb0f
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Nov 17 20:00:38 2014 -0500
+
+    [test suite] removed files added by mistake
+
+ test/afl/fuzzing-wrappers/.server-access.sh.swp | Bin 12288 -> 0 bytes
+ test/afl/fuzzing-wrappers/.spa-pkts.sh.swp      | Bin 12288 -> 0 bytes
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+
+commit 3c7859cb9d7c24b40ed7ca1de4a98ce119832e8b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Nov 17 19:58:47 2014 -0500
+
+    [test suite] start on AFL fuzzing for conf files in addition to SPA pkts
+
+ test/afl/afl-fuzzing.in/spa.start                 |   1 -
+ test/afl/afl-fuzzing.in/spa2.start                |   1 -
+ test/afl/afl-fuzzing.in/spa3.start                |   1 -
+ test/afl/afl-run.sh                               |  16 --------
+ test/afl/fuzzing-wrappers/.server-access.sh.swp   | Bin 0 -> 12288 bytes
+ test/afl/fuzzing-wrappers/.spa-pkts.sh.swp        | Bin 0 -> 12288 bytes
+ test/afl/fuzzing-wrappers/fwknopd-parse-access.sh |   3 ++
+ test/afl/fuzzing-wrappers/fwknopd-stdin-test.sh   |   6 +++
+ test/afl/fuzzing-wrappers/server-access.sh        |  22 +++++++++++
+ test/afl/fuzzing-wrappers/spa-pkts.sh             |  22 +++++++++++
+ test/afl/fwknopd-stdin-test.sh                    |   6 ---
+ test/afl/test-cases/server-access/access.conf     |  45 ++++++++++++++++++++++
+ test/afl/test-cases/spa-pkts/spa.start            |   1 +
+ test/afl/test-cases/spa-pkts/spa2.start           |   1 +
+ test/afl/test-cases/spa-pkts/spa3.start           |   1 +
+ 15 files changed, 101 insertions(+), 25 deletions(-)
