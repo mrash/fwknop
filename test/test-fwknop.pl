@@ -6748,7 +6748,7 @@ sub init() {
     }
 
     ### unless we are in client only mode, see if the target firewall
-    ### if PF - FreeBSD can be either ipfw or PF for example
+    ### is PF - FreeBSD can be either ipfw or PF for example
     if (-e $fwknopdCmd) {
         my $fw = '';
         my $cmd = "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} -D";
@@ -6813,6 +6813,8 @@ sub os_fw_detect() {
         push @tests_to_exclude, qr/MASQ/;
         push @tests_to_exclude, qr/iptables/;
         push @tests_to_exclude, qr/firewalld/;
+        push @tests_to_exclude, qr|dupe rule|; ### not handled yet on non-iptables firewalls
+        push @tests_to_exclude, qr|ipt\-no|;
     }
     unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
         push @tests_to_exclude, qr|active/expire sets|;
