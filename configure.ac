@@ -11,7 +11,7 @@ AC_PREREQ(2.62)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
-m4_define(my_version,   [2.6.3])
+m4_define(my_version,   [2.6.5])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
@@ -133,6 +133,7 @@ if test "x$want_profile_coverage" = "xyes"; then
     FKO_CHECK_COMPILER_ARG([-fprofile-arcs -ftest-coverage -fno-inline])
     FKO_CHECK_COMPILER_ARG([-g])
     FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lgcov])
+    AC_DEFINE([CODE_COVERAGE], [1], [Define for code coverage support])
 fi
 
 dnl Decide whether or not to build binaries with fault injection support
@@ -182,6 +183,31 @@ AC_ARG_ENABLE([fuzzing-interfaces],
 if test "x$want_fuzzing_interfaces" = "xyes"; then
     AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
 fi
+
+dnl Decide whether or not to compile in support for the 'American Fuzzy Lop'
+dnl fuzzer from Michal Zalewski - this is for testing purposes only
+dnl
+want_afl_fuzzing_support=no
+AC_ARG_ENABLE([afl-fuzzing],
+  [AS_HELP_STRING([--enable-afl-fuzzing],
+    [Build fwknop binaries with support for the American Fuzzy Lop fuzzer @<:@default is to disable@:>@])],
+  [want_afl_fuzzing_support=$enableval],
+  [])
+
+if test "x$want_afl_fuzzing_support" = "xyes"; then
+    AC_DEFINE([AFL_FUZZING], [1], [Define for AFL fuzzing support])
+    AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
+fi
+
+dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
+dnl
+want_udp_server=no
+AC_ARG_ENABLE([udp-server],
+  [AS_HELP_STRING([--enable-udp-server],
+    [Enable UDP server mode for no libpcap dependency @<:@default is to disable@:>@])],
+  [want_udp_server=$enableval],
+  [])
+AM_CONDITIONAL([UDP_SERVER], [test "$want_udp_server" = yes])
 
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
@@ -307,6 +333,19 @@ AC_FUNC_REALLOC
 AC_FUNC_STAT
 
 AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen stat chmod chown strlcat strlcpy])
+
+dnl Decide whether or not to check for the execvpe() function
+dnl
+use_execvpe=yes
+AC_ARG_ENABLE([execvpe],
+  [AS_HELP_STRING([--disable-execvpe],
+    [Do not check for the execvpe() function for command execution @<:@default is on@:>@])],
+  [use_execvpe=$enableval],
+  [])
+
+if test "x$use_execvpe" = "xyes"; then
+    AC_CHECK_FUNCS([execvpe])
+fi
 
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
@@ -447,12 +486,15 @@ AS_IF([test "x$WGET_EXE" != x],
 dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
+
+  AS_IF([test "$want_udp_server" = no], [
     # Looking for libpcap
     #
     AC_CHECK_LIB([pcap],[pcap_open_live],
-      [ AC_DEFINE([HAVE_LIBPCAP], [1], [Define if you have libpcap]) ],
+      [ AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap]) ],
       [ AC_MSG_ERROR([fwknopd needs libpcap])]
     )
+  ])
 
   AS_IF([test "$want_digest_cache" = yes], [
     use_ndbm=no
@@ -692,6 +734,10 @@ if [test "$want_server" = "yes" ]; then
         firewall type:              $FIREWALL_TYPE
         firewall program path:      $FIREWALL_EXE
 "
+if [test "$want_udp_server" = "yes" ]; then
+  echo "    UDP server mode enabled, no libpcap dependency
+"
+    fi
 
     if [test "$want_digest_cache" = "no" ]; then
         echo "    *WARNING*

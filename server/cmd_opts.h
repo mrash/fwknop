@@ -57,6 +57,9 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "ENABLE_SPA_OVER_HTTP",
     "ENABLE_TCP_SERVER",
     "TCPSERV_PORT",
+    "ENABLE_UDP_SERVER",
+    "UDPSERV_PORT",
+    "UDPSERV_SELECT_TIMEOUT",
     "LOCALE",
     "SYSLOG_IDENTITY",
     "SYSLOG_FACILITY",
@@ -66,6 +69,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"EXTERNAL_CMD_ALARM",
     //"ENABLE_EXT_CMD_PREFIX",
     //"EXT_CMD_PREFIX",
+    "ENABLE_DESTINATION_RULE",
 #if FIREWALL_FIREWALLD
     "ENABLE_FIREWD_FORWARDING",
     "ENABLE_FIREWD_LOCAL_NAT",
@@ -124,6 +128,9 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "GPG_EXE",
     "FIREWALL_EXE",
     "VERBOSE",
+#if AFL_FUZZING
+    "AFL_PKT_FILE",
+#endif
     "FAULT_INJECTION_TAG"
 };
 
@@ -134,6 +141,7 @@ enum {
     FW_LIST         = 0x200,
     FW_LIST_ALL,
     FW_FLUSH,
+    AFL_PKT_FILE,
     GPG_HOME_DIR,
     GPG_EXE_PATH,
     FIREWD_DISABLE_CHECK_SUPPORT,
@@ -150,13 +158,15 @@ enum {
 
 /* Our getopt_long options string.
 */
-#define GETOPTS_OPTION_STRING "a:c:C:d:Dfhi:Kl:O:p:P:RStvV"
+#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:Rr:StUvV"
 
 /* Our program command-line options...
 */
 static struct option cmd_opts[] =
 {
     {"access-file",          1, NULL, 'a'},
+    {"afl-fuzzing",          0, NULL, 'A'},
+    {"afl-pkt-file",         1, NULL, AFL_PKT_FILE },
     {"config-file",          1, NULL, 'c'},
     {"packet-limit",         1, NULL, 'C'},
     {"digest-file",          1, NULL, 'd'},
@@ -183,9 +193,11 @@ static struct option cmd_opts[] =
     {"pcap-filter",          1, NULL, 'P'},
     {"pcap-any-direction",   0, NULL, ENABLE_PCAP_ANY_DIRECTION },
     {"pid-file",             1, NULL, 'p'},
+    {"run-dir",              1, NULL, 'r'},
     {"restart",              0, NULL, 'R'},
     {"status",               0, NULL, 'S'},
     {"test",                 0, NULL, 't'},
+    {"udp-server",           0, NULL, 'U'},
     {"verbose",              0, NULL, 'v'},
     {"version",              0, NULL, 'V'},
     {0, 0, 0, 0}

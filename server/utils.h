@@ -56,9 +56,12 @@
 
 /* Prototypes
 */
-void hex_dump(const unsigned char *data, const int size);
+void  hex_dump(const unsigned char *data, const int size);
 char* dump_ctx(fko_ctx_t ctx);
-int is_valid_dir(const char *path);
-int verify_file_perms_ownership(const char *file);
+int   is_valid_dir(const char *path);
+int   verify_file_perms_ownership(const char *file);
+int   strtoargv(const char * const args_str, char **argv_new, int *argc_new,
+        const fko_srv_options_t * const opts);
+void  free_argv(char **argv_new, int *argc_new);
 
 #endif  /* UTILS_H */

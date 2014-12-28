@@ -151,6 +151,10 @@ validate_int_var_ranges(fko_srv_options_t *opts)
         1, RCHK_MAX_SNIFF_BYTES);
     range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
         1, RCHK_MAX_TCPSERV_PORT);
+    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
+        1, RCHK_MAX_UDPSERV_PORT);
+    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
+        1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
 
 #if FIREWALL_IPFW
     range_check(opts, "IPFW_START_RULE_NUM", opts->config[CONF_IPFW_START_RULE_NUM],
@@ -355,7 +359,6 @@ validate_options(fko_srv_options_t *opts)
         if(tmp_path[strlen(tmp_path)-1] != '/')
             strlcat(tmp_path, "/", sizeof(tmp_path));
 
-
 #if USE_FILE_CACHE
         strlcat(tmp_path, DEF_DIGEST_CACHE_FILENAME, sizeof(tmp_path));
         set_config_entry(opts, CONF_DIGEST_FILE, tmp_path);
@@ -424,6 +427,12 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE] == NULL)
         set_config_entry(opts, CONF_ENABLE_DIGEST_PERSISTENCE,
             DEF_ENABLE_DIGEST_PERSISTENCE);
+            
+    /* Enable destination rule.
+    */
+    if(opts->config[CONF_ENABLE_DESTINATION_RULE] == NULL)
+        set_config_entry(opts, CONF_ENABLE_DESTINATION_RULE,
+            DEF_ENABLE_DESTINATION_RULE);
 
     /* Max sniff bytes.
     */
@@ -808,6 +817,30 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_TCPSERV_PORT] == NULL)
         set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
 
+    /* Enable UDP server.
+    */
+    if(opts->config[CONF_ENABLE_UDP_SERVER] == NULL)
+    {
+        if((strncasecmp(DEF_ENABLE_UDP_SERVER, "Y", 1) == 0) &&
+                !opts->enable_udp_server)
+        {
+            log_msg(LOG_ERR, "pcap capture not compiled in, forcing UDP server mode");
+            opts->enable_udp_server = 1;
+        }
+        set_config_entry(opts, CONF_ENABLE_UDP_SERVER, DEF_ENABLE_UDP_SERVER);
+    }
+
+    /* UDP Server port.
+    */
+    if(opts->config[CONF_UDPSERV_PORT] == NULL)
+        set_config_entry(opts, CONF_UDPSERV_PORT, DEF_UDPSERV_PORT);
+
+    /* UDP server select() timeout in microseconds
+    */
+    if(opts->config[CONF_UDPSERV_SELECT_TIMEOUT] == NULL)
+        set_config_entry(opts, CONF_UDPSERV_SELECT_TIMEOUT,
+            DEF_UDPSERV_SELECT_TIMEOUT);
+
     /* Syslog identity.
     */
     if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
@@ -1003,6 +1036,23 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
         switch(cmd_arg) {
+            case 'A':
+#if AFL_FUZZING
+                opts->afl_fuzzing = 1;
+#else
+                log_msg(LOG_ERR, "[*] fwknopd not compiled with AFL fuzzing support");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
+                break;
+            case AFL_PKT_FILE:
+#if AFL_FUZZING
+                opts->afl_fuzzing = 1;
+                set_config_entry(opts, CONF_AFL_PKT_FILE, optarg);
+#else
+                log_msg(LOG_ERR, "[*] fwknopd not compiled with AFL fuzzing support");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+#endif
+                break;
             case 'a':
                 set_config_entry(opts, CONF_ACCESS_FILE, optarg);
                 break;
@@ -1107,11 +1157,17 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'R':
                 opts->restart = 1;
                 break;
+            case 'r':
+                set_config_entry(opts, CONF_FWKNOP_RUN_DIR, optarg);
+                break;
             case 'S':
                 opts->status = 1;
                 break;
             case 't':
                 opts->test = 1;
+                break;
+            case 'U':
+                opts->enable_udp_server = 1;
                 break;
             /* Verbosity level */
             case 'v':
@@ -1166,17 +1222,16 @@ usage(void)
             MY_NAME, MY_VERSION, MY_DESC);
     fprintf(stdout,
       "Usage: fwknopd [options]\n\n"
-      " -h, --help              - Print this usage message and exit.\n"
       " -a, --access-file       - Specify an alternate access.conf file.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
-      " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
-      "                           process and exit when this limit is reached.\n"
-      " -d, --digest-file       - Specify an alternate digest.cache file.\n"
-      " -D, --dump-config       - Dump the current fwknop configuration values.\n"
       " -f, --foreground        - Run fwknopd in the foreground (do not become\n"
       "                           a background daemon).\n"
       " -i, --interface         - Specify interface to listen for incoming SPA\n"
       "                           packets.\n"
+      " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
+      "                           process and exit when this limit is reached.\n"
+      " -d, --digest-file       - Specify an alternate digest.cache file.\n"
+      " -D, --dump-config       - Dump the current fwknop configuration values.\n"
       " -K, --kill              - Kill the currently running fwknopd.\n"
       " -l, --locale            - Provide a locale setting other than the system\n"
       "                           default.\n"
@@ -1187,15 +1242,20 @@ usage(void)
       "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
       "     --rotate-digest-cache\n"
+      " -r, --run-dir           - Set path to local state run directory.\n"
       "                         - Rotate the digest cache file by renaming it to\n"
       "                           '<name>-old', and starting a new one.\n"
       " -S, --status            - Display the status of any running fwknopd process.\n"
       " -t, --test              - Test mode, process SPA packets but do not make any\n"
       "                           firewall modifications.\n"
+      " -U, --udp-server        - Set UDP server mode.\n"
       " -v, --verbose           - Set verbose mode.\n"
       "     --syslog-enable     - Allow messages to be sent to syslog even if the\n"
       "                           foreground mode is set.\n"
       " -V, --version           - Print version number.\n"
+      " -A, --afl-fuzzing       - Run in American Fuzzy Lop (AFL) fuzzing mode\n"
+      "                           plaintext SPA packets are accepted via stdin.\n"
+      " -h, --help              - Print this usage message and exit.\n"
       " --dump-serv-err-codes   - List all server error codes (only needed by the\n"
       "                           test suite).\n"
       " --exit-parse-config     - Parse config files and exit.\n"

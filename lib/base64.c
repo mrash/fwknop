@@ -36,6 +36,7 @@
 #include "base64.h"
 #include "fko_common.h"
 
+#if !AFL_FUZZING
 static unsigned char map2[] =
 {
     0x3e, 0xff, 0xff, 0xff, 0x3f, 0x34, 0x35, 0x36,
@@ -49,13 +50,24 @@ static unsigned char map2[] =
     0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b,
     0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33
 };
+#endif
 
 int
 b64_decode(const char *in, unsigned char *out)
 {
-    int i, v;
+    int i;
     unsigned char *dst = out;
+#if ! AFL_FUZZING
+    int v;
+#endif
 
+#if AFL_FUZZING
+    /* short circuit base64 decoding in AFL fuzzing mode - just copy
+     * data as-is.
+    */
+    for (i = 0; in[i]; i++)
+        *dst++ = in[i];
+#else
     v = 0;
     for (i = 0; in[i] && in[i] != '='; i++) {
         unsigned int index= in[i]-43;
@@ -68,6 +80,7 @@ b64_decode(const char *in, unsigned char *out)
         if (i & 3)
             *dst++ = v >> (6 - 2 * (i & 3));
     }
+#endif
 
     *dst = '\0';
 

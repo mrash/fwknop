@@ -1,0 +1,22 @@
+
+TOP_DIR="fuzzing-output"
+ARCHIVE_DIR="$TOP_DIR/archive"
+SERVER="../../server/.libs/fwknopd"
+CLIENT="../../client/.libs/fwknop"
+LIB_DIR="../../lib/.libs"
+
+git_banner() {
+    if [ -d '../../.git' ] && [ `which git` ]
+    then
+        C=`git log --abbrev-commit | head -n 1 | awk '{print $2}'`
+        eval "$1=,$C"
+    fi
+}
+
+dir_init() {
+    [ ! -d $1 ] && mkdir -p $1
+    TS=`date +"%m%d%y%H%M%S"`
+    eval "$4=$1/$2-$TS"
+    [ -d $3 ] && mv $3 "$1/$2-$TS"
+    mkdir $3
+}

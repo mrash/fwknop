@@ -72,7 +72,7 @@ COMMAND-LINE OPTIONS
 
 *-D, --dump-config*::
     Dump the configuration values that *fwknopd* derives from the
-    '@sysconfdir@/fwknop/fwknopd.conf'' (or override files) and '@sysconfdir@/fwknop/access.conf' on stderr.
+    '@sysconfdir@/fwknop/fwknopd.conf' (or override files) and '@sysconfdir@/fwknop/access.conf' on stderr.
 
 *--dump-serv-err-codes*::
     Dump all possible *fwknopd* error codes to stdout and exit. This option is
@@ -86,6 +86,15 @@ COMMAND-LINE OPTIONS
     enabled at run time. It is documented here for completeness.
     version of fwknop will not have code compiled in to enable this capability
     at run time. It is documented here for completeness.
+
+*-A, --afl-fuzzing*::
+    Instruct *fwknopd* to acquire SPA packets directly from stdin in support of
+    fuzzing operations from the 'American Fuzzy Lop' (AFL) fuzzer written by Michal
+    Zalewski. This requires that *fwknop* is compiled with the '--enable-afl-fuzzing'
+    argument to the *configure* script as this allows encryption/digest short
+    circuiting in a manner necessary for AFL to function properly. The benefit of
+    this strategy is that AFL can fuzz the SPA packet decoding routines implemented
+    by *libfko*.
 
 *--fw-list-all*::
     List all firewall rules including those that have nothing to do with
@@ -116,7 +125,7 @@ COMMAND-LINE OPTIONS
 
 *-O, --override-config*='<file>'::
     Override config variable values that are normally read from the
-    '@sysconfdir@/fwknop/fwknopd.conf'' file with values from the specified file. Multiple
+    '@sysconfdir@/fwknop/fwknopd.conf' file with values from the specified file. Multiple
     override config files can be given as a comma-separated list.
 
 *-p, --pid-file*='<pid-file>'::
@@ -127,7 +136,7 @@ COMMAND-LINE OPTIONS
 *-P, --pcap-filter*='<filter>'::
     Specify a Berkeley packet filter statement on the *fwknopd* command
     line. This overrides the value of the PCAP_FILTER variable taken
-    from the '@sysconfdir@/fwknop/fwknopd.conf'' file.
+    from the '@sysconfdir@/fwknop/fwknopd.conf' file.
 
 *--pcap-file*='<pcap-file>'::
     This option instructs *fwknopd* to read packet data from a pcap file
@@ -158,6 +167,10 @@ COMMAND-LINE OPTIONS
     starting a new one. The digest cache file is typically found in
     '@localstatedir@/run/fwknop/digest.cache'.
 
+*-r, --run-dir*='<path>'::
+    Specify the directory where *fwknopd* writes run time state files. The
+    default is '@localstatedir@/run'.
+
 *-S, --status*::
     Display the status of any *fwknopd* processes that may or not be
     running. If there is an existing fwknopd process then 0 is returned for the
@@ -171,6 +184,11 @@ COMMAND-LINE OPTIONS
     SPA packets, but not manipulate firewall rules or execute commands that are
     provided by SPA clients. This option is mostly useful for the fuzzing tests
     in the test suite to ensure broad code coverage under adverse conditions.
+
+*-U, --udp-server*::
+    Run *fwknopd* in UDP server mode so that SPA packets are acquired via a
+    UDP socket directly without having to use libpcap. See the discussion of
+    the ``ENABLE_UDP_SERVER'' configuration variable below for more information.
 
 *-v, --verbose*::
     Run *fwknopd* in verbose mode. This can option can be specified
@@ -186,7 +204,7 @@ COMMAND-LINE OPTIONS
 
 FWKNOPD CONFIG AND ACCESS VARIABLES
 -----------------------------------
-*fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf'' file for configuration variables
+*fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf' file for configuration variables
 that define its operational parameters (what network interface and port
 to sniff, what features to enable/disable, etc.). The 'fwknopd.conf' file
 does not define any access control directives.
@@ -202,7 +220,7 @@ This section list the more prominent configuration variables used by
 *fwknopd*. It is not a complete list. There are directives for the type
 of firewall used by *fwknopd* (i.e. _iptables_, _ipfw_, or _pf_). You will
 want to make sure to check these to make sure they have appropriate values.
-See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and corresponding details.
+See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and corresponding details.
 
 *PCAP_INTF* '<interface>'::
     Specify the ethernet interface on which *fwknopd* will sniff packets.
@@ -308,14 +326,31 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
 
 *ENABLE_TCP_SERVER* '<Y/N>'::
     Enable the fwknopd TCP server. This is a "dummy" TCP server that will
-     accept TCP connection requests on the specified TCPSERV_PORT.
-     If set to "Y", fwknopd will fork off a child process to listen for, and
-     accept incoming TCP request. This server only accepts the
-     request. It does not otherwise communicate. This is only to allow the
-     incoming SPA over TCP packet which is detected via PCAP. The connection
-     is closed after 1 second regardless.
-     Note that fwknopd still only gets its data via pcap, so the filter
-     defined by PCAP_FILTER needs to be updated to include this TCP port.
+    accept TCP connection requests on the specified TCPSERV_PORT.
+    If set to "Y", fwknopd will fork off a child process to listen for, and
+    accept incoming TCP request. This server only accepts the
+    request. It does not otherwise communicate. This is only to allow the
+    incoming SPA over TCP packet which is detected via PCAP. The connection
+    is closed after 1 second regardless.
+    Note that fwknopd still only gets its data via pcap, so the filter
+    defined by PCAP_FILTER needs to be updated to include this TCP port.
+
+*TCPSERV_PORT* '<port>'::
+    Set the port number that the ``dummy'' TCP server listens on. This server
+    is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
+
+*ENABLE_UDP_SERVER* '<Y/N>'::
+    Enable the *fwknopd* UDP server. This instructs *fwknopd* to acquire SPA
+    packets via a UDP socket directly without having to use libpcap. When this
+    mode is enabled, *fwknop* should be compiled with *--enable-udp-server*
+    (passed to the *configure* script) so that libpcap can be removed as a
+    dependency. As one would expect, when the UDP server is used, no incoming
+    packets are ever acknowledged by *fwknopd* and therefore collecting SPA
+    packets in this mode is a good alternative to sniffing the wire directly.
+
+*UDPSERV_PORT* '<port>'::
+    Set the port number that the UDP server listens on. This server
+    is only spawned when ``ENABLE_UDP_SERVER'' is set to ``Y''.
 
 *PCAP_DISPATCH_COUNT* '<count>'::
     Sets the number of packets that are processed when the *pcap_dispatch()*
@@ -342,10 +377,6 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
     packets that are received on the sniffing interface (note that this is
     independent of promiscuous mode).
 
-*TCPSERV_PORT* '<port>'::
-    Set the port number that the ``dummy'' TCP server listens on. This server
-    is only spawned when ``ENABLE_TCP_SERVER'' is set to ``Y''.
-
 *SYSLOG_IDENTITY* '<identity>'::
     Override syslog identity on message logged by *fwknopd*. The defaults
     are usually ok.
@@ -353,7 +384,19 @@ See the '@sysconfdir@/fwknop/fwknopd.conf'' file for the full list and correspon
 *SYSLOG_FACILITY* '<facility>'::
     Override syslog facility. The ``SYSLOG_FACILITY'' variable can be set to
     one of ``LOG_LOCAL{0-7}'' or ``LOG_DAEMON'' (the default).
+    
+*ENABLE_DESTINATION_RULE* '<Y/N>'::
+    Controls whether *fwknopd* will set the destination field on the firewall
+    rule to the destination address specified on the incoming SPA packet. 
+    This is useful for interfaces with multiple IP addresses hosting separate
+    services. If ``ENABLE_IPT_OUTPUT'' is set to ``Y'', the source field of 
+    the firewall rule is set. FORWARD and SNAT rules are not affected however, 
+    DNAT rules will also have their destination field set. The default is 
+    ``N'', which sets the destination field to 0.0.0.0/0 (any).
 
+*FWKNOP_RUN_DIR* '<path>'::
+    Specify the directory where *fwknopd* writes run time state files. The
+    default is '@localstatedir@/run'.
 
 ACCESS.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~
@@ -373,6 +416,15 @@ directive starts a new stanza.
     accepted. The string ``ANY'' is also accepted if a valid SPA packet
     should be honored from any source IP. Every authorization stanza in
     '@sysconfdir@/fwknop/access.conf' definition must start with the ``SOURCE'' keyword.
+    Networks should be specified in CIDR notation (e.g. ``192.168.10.0/24''),
+    and individual IP addresses can be specified as well. Also, multiple
+    IP's and/or networks can be defined as a comma separated list (e.g.
+    ``192.168.10.0/24,10.1.1.123'')
+    
+*DESTINATION* '<IP,..,IP/NET,..,NET/ANY>'::
+    This defines the destination address for which the SPA packet will be
+    accepted. The string ``ANY'' is also accepted if a valid SPA packet
+    should be honored to any destination IP. 
     Networks should be specified in CIDR notation (e.g. ``192.168.10.0/24''),
     and individual IP addresses can be specified as well. Also, multiple
     IP's and/or networks can be defined as a comma separated list (e.g.
@@ -642,7 +694,7 @@ CONTRIBUTORS
 This ``C'' version of fwknop was derived from the original Perl-based version
 on which many people who are active in the open source community have
 contributed. See the CREDITS file in the fwknop sources, or visit
-'http://www.cipherdyne.org/fwknop/docs/contributors.html' to view the online
+'https://github.com/mrash/fwknop/blob/master/CREDITS' to view the online
 list of contributors. A few contributors deserve to be singled out including:
 Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger,
 Fernando Arnaboldi, and Erik Gomez.

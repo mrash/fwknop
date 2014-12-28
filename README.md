@@ -57,6 +57,8 @@ for Rijndael encryption is generated via the standard PBKDF1 key derivation
 algorithm, and CBC mode is set. If the GnuPG method is chosen, then the
 encryption keys are derived from GnuPG key rings.
 
+## Tutorial
+
 A comprehensive tutorial on fwknop can be found here:
 
 [http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html](http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html)
@@ -91,8 +93,8 @@ following link to ensure a smooth transition to fwknop-2.5:
 This distribution uses GNU autoconf for setting up the build. Please see
 the `INSTALL` file for the general basics on using autoconf.
 
-    There are some "configure" options that are specific to fwknop. They are
-    (extracted from ./configure --help):
+There are some "configure" options that are specific to fwknop. They are
+(extracted from *./configure --help*):
 
       --disable-client        Do not build the fwknop client component. The
                               default is to build the client.
@@ -128,17 +130,17 @@ the `INSTALL` file for the general basics on using autoconf.
 For those of you who are currently using the Perl version and plan to
 migrate to this version, there are some things to be aware of:
 
-    - Not all of the features and functionality of the Perl-based
-      fwknop were ported to this implementation. We felt it important
-      to keep the C version as lean and lightweight as possible. Most
-      of the omitted feature/functions (like email alerts) can be
-      accomplished through other means (i.e. use an external script
-      to monitor log files and alert based on appropriate log messages).
+ * Not all of the features and functionality of the Perl-based
+ fwknop were ported to this implementation. We felt it important
+ to keep the C version as lean and lightweight as possible. Most
+ of the omitted feature/functions (like email alerts) can be
+ accomplished through other means (i.e. use an external script
+ to monitor log files and alert based on appropriate log messages).
 
-    - There are some differences in the fwknop configuration and access
-      file directives and values. Some of these are fairly subtle. You
-      should pay careful attention to the documentation and comments in
-      those files.
+ * There are some differences in the fwknop configuration and access
+ file directives and values. Some of these are fairly subtle. You
+ should pay careful attention to the documentation and comments in
+ those files.
 
 
 ## For fwknop developers

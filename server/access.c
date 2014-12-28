@@ -234,7 +234,7 @@ add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *
  * comparisons of incoming source IPs against this mask.
 */
 static int
-add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
+add_int_ent(acc_int_list_t **ilist, const char *ip)
 {
     char                *ndx;
     char                ip_str[MAX_IPV4_STR_LEN] = {0};
@@ -252,7 +252,7 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding stanza source_list entry"
         );
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 
     /* Convert the IP data into the appropriate IP + (optional) mask
@@ -375,13 +375,13 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
     /* If this is not the first entry, we walk our pointer to the
      * end of the list.
     */
-    if(acc->source_list == NULL)
+    if(*ilist == NULL)
     {
-        acc->source_list = new_sle;
+        *ilist = new_sle;
     }
     else
     {
-        tmp_sle = acc->source_list;
+        tmp_sle = *ilist;
 
         do {
             last_sle = tmp_sle;
@@ -396,13 +396,13 @@ add_source_mask(fko_srv_options_t *opts, acc_stanza_t *acc, const char *ip)
 /* Expand the access SOURCE string to a list of masks.
 */
 static int
-expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
+expand_acc_int_list(acc_int_list_t **ilist, char *ip)
 {
     char           *ndx, *start;
     char            buf[ACCESS_BUF_LEN] = {0};
     int             res = 1;
 
-    start = acc->source;
+    start = ip;
 
     for(ndx = start; *ndx; ndx++)
     {
@@ -418,7 +418,7 @@ expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
 
             strlcpy(buf, start, (ndx-start)+1);
 
-            res = add_source_mask(opts, acc, buf);
+            res = add_int_ent(ilist, buf);
             if(res == 0)
                 return res;
 
@@ -436,7 +436,7 @@ expand_acc_source(fko_srv_options_t *opts, acc_stanza_t *acc)
 
     strlcpy(buf, start, (ndx-start)+1);
 
-    res = add_source_mask(opts, acc, buf);
+    res = add_int_ent(ilist, buf);
 
     return res;
 }
@@ -509,7 +509,7 @@ add_port_list_ent(acc_port_list_t **plist, char *port_str)
     if((new_plist = calloc(1, sizeof(acc_port_list_t))) == NULL)
     {
         log_msg(LOG_ERR,
-            "[*] Fatal memory allocation error adding stanza source_list entry"
+            "[*] Fatal memory allocation error adding stanza port_list entry"
         );
         exit(EXIT_FAILURE);
     }
@@ -682,7 +682,7 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
 /* Free the acc source_list
 */
 static void
-free_acc_source_list(acc_int_list_t *sle)
+free_acc_int_list(acc_int_list_t *sle)
 {
     acc_int_list_t    *last_sle;
 
@@ -752,7 +752,13 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->source != NULL)
     {
         free(acc->source);
-        free_acc_source_list(acc->source_list);
+        free_acc_int_list(acc->source_list);
+    }
+    
+    if(acc->destination != NULL)
+    {
+        free(acc->destination);
+        free_acc_int_list(acc->destination_list);
     }
 
     if(acc->open_ports != NULL)
@@ -800,6 +806,9 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->cmd_exec_user != NULL)
         free(acc->cmd_exec_user);
 
+    if(acc->cmd_exec_group != NULL)
+        free(acc->cmd_exec_group);
+
     if(acc->require_username != NULL)
         free(acc->require_username);
 
@@ -841,10 +850,19 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
     {
         /* Expand the source string to 32-bit integer IP + masks for each entry.
         */
-        if(expand_acc_source(opts, acc) == 0)
+        if(expand_acc_int_list(&(acc->source_list), acc->source) == 0)
         {
             log_msg(LOG_ERR, "[*] Fatal invalid SOURCE in access stanza");
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+        
+        if(acc->destination != NULL && strlen(acc->destination))
+        {
+            if(expand_acc_int_list(&(acc->destination_list), acc->destination) == 0)
+            {
+                log_msg(LOG_ERR, "[*] Fatal invalid DESTINATION in access stanza");
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
 
         /* Now expand the open_ports string.
@@ -1059,7 +1077,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 /* Perform some sanity checks on an acc stanza data.
 */
 static int
-acc_data_is_valid(acc_stanza_t * const acc)
+acc_data_is_valid(struct passwd *user_pw, acc_stanza_t * const acc)
 {
     if(acc == NULL)
     {
@@ -1121,19 +1139,10 @@ acc_data_is_valid(acc_stanza_t * const acc)
         }
     }
 
-    if(acc->force_snat == 1 && acc->force_nat == 0)
+    if((acc->force_snat == 1 || acc->force_masquerade == 1) && acc->force_nat == 0)
     {
         log_msg(LOG_ERR,
-                "[*] FORCE_SNAT implies FORCE_NAT must also be used for access stanza source: '%s'",
-                acc->source
-        );
-        return(0);
-    }
-
-    if(acc->force_masquerade == 1 && acc->force_nat == 0)
-    {
-        log_msg(LOG_ERR,
-                "[*] FORCE_MASQUERADE implies FORCE_NAT must also be used for access stanza source: '%s'",
+                "[*] FORCE_SNAT/FORCE_MASQUERADE implies FORCE_NAT must also be used for access stanza source: '%s'",
                 acc->source
         );
         return(0);
@@ -1145,6 +1154,16 @@ acc_data_is_valid(acc_stanza_t * const acc)
             "Warning: REQUIRE_SOURCE_ADDRESS not enabled for access stanza source: '%s'",
             acc->source
         );
+    }
+
+    if(user_pw != NULL && acc->cmd_exec_uid != 0 && acc->cmd_exec_gid == 0)
+    {
+        log_msg(LOG_INFO,
+            "Setting gid to group associated with CMD_EXEC_USER '%s' for setgid() execution in stanza source: '%s'",
+            acc->cmd_exec_user,
+            acc->source
+        );
+        acc->cmd_exec_gid = user_pw->pw_gid;
     }
 
     return(1);
@@ -1164,7 +1183,8 @@ parse_access_file(fko_srv_options_t *opts)
     char            var[MAX_LINE_LEN] = {0};
     char            val[MAX_LINE_LEN] = {0};
 
-    struct passwd  *pw;
+    struct passwd  *pw = NULL;
+    struct passwd  *user_pw = NULL;
     struct stat     st;
 
     acc_stanza_t   *curr_acc = NULL;
@@ -1263,7 +1283,7 @@ parse_access_file(fko_srv_options_t *opts)
              * stanza for the minimum required data.
             */
             if(curr_acc != NULL) {
-                if(!acc_data_is_valid(curr_acc))
+                if(!acc_data_is_valid(user_pw, curr_acc))
                 {
                     log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
                         opts->config[CONF_ACCESS_FILE]);
@@ -1289,6 +1309,14 @@ parse_access_file(fko_srv_options_t *opts)
             /* The stanza must start with the "SOURCE" variable
             */
             continue;
+        }
+        else if(CONF_VAR_IS(var, "DESTINATION"))
+        {
+            if(add_acc_string(&(curr_acc->destination), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
         }
         else if(CONF_VAR_IS(var, "OPEN_PORTS"))
         {
@@ -1451,7 +1479,7 @@ parse_access_file(fko_srv_options_t *opts)
             }
 
             errno = 0;
-            pw = getpwnam(val);
+            user_pw = pw = getpwnam(val);
 
             if(pw == NULL)
             {
@@ -1462,6 +1490,27 @@ parse_access_file(fko_srv_options_t *opts)
             }
 
             curr_acc->cmd_exec_uid = pw->pw_uid;
+        }
+        else if(CONF_VAR_IS(var, "CMD_EXEC_GROUP"))
+        {
+            if(add_acc_string(&(curr_acc->cmd_exec_group), val) != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+
+            errno = 0;
+            pw = getpwnam(val);
+
+            if(pw == NULL)
+            {
+                log_msg(LOG_ERR, "[*] Unable to determine GID for CMD_EXEC_GROUP: %s.",
+                    errno ? strerror(errno) : "Not a group on this system");
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+
+            curr_acc->cmd_exec_gid = pw->pw_gid;
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
         {
@@ -1688,7 +1737,7 @@ parse_access_file(fko_srv_options_t *opts)
 
     /* Sanity check the last stanza
     */
-    if(!acc_data_is_valid(curr_acc))
+    if(!acc_data_is_valid(user_pw, curr_acc))
     {
         log_msg(LOG_ERR,
             "[*] Data error in access file: '%s'",
@@ -1708,19 +1757,19 @@ parse_access_file(fko_srv_options_t *opts)
 }
 
 int
-compare_addr_list(acc_int_list_t *source_list, const uint32_t ip)
+compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
 {
     int match = 0;
 
-    while(source_list)
+    while(ip_list)
     {
-        if((ip & source_list->mask) == (source_list->maddr & source_list->mask))
+        if((ip & ip_list->mask) == (ip_list->maddr & ip_list->mask))
         {
             match = 1;
             break;
         }
 
-        source_list = source_list->next;
+        ip_list = ip_list->next;
     }
 
     return(match);
@@ -1877,6 +1926,7 @@ dump_access_list(const fko_srv_options_t *opts)
         fprintf(stdout,
             "SOURCE (%i):  %s\n"
             "==============================================================\n"
+            "                DESTINATION:  %s\n"
             "                 OPEN_PORTS:  %s\n"
             "             RESTRICT_PORTS:  %s\n"
             "                        KEY:  %s\n"
@@ -1907,6 +1957,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "         GPG_FINGERPRINT_ID:  %s\n",
             ++i,
             acc->source,
+            (acc->destination == NULL) ? "<not set>" : acc->destination,
             (acc->open_ports == NULL) ? "<not set>" : acc->open_ports,
             (acc->restrict_ports == NULL) ? "<not set>" : acc->restrict_ports,
             (acc->key == NULL) ? "<not set>" : "<see the access.conf file>",

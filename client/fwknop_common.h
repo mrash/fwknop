@@ -63,7 +63,6 @@
 #define HTTP_BACKUP_RESOLVE_HOST    "www.cipherdyne.com"
 #define HTTP_RESOLVE_URL            "/cgi-bin/myip"
 #define WGET_RESOLVE_URL_SSL        "https://" HTTP_RESOLVE_HOST HTTP_RESOLVE_URL
-#define WGET_RESOLVE_ARGS           " --secure-protocol=auto --quiet -O - "
 #define HTTP_MAX_REQUEST_LEN        2000
 #define HTTP_MAX_RESPONSE_LEN       2000
 #define HTTP_MAX_USER_AGENT_LEN     100
@@ -131,6 +130,7 @@ typedef struct fko_cli_options
     int  resolve_http_only;
     char *resolve_url;
     char http_user_agent[HTTP_MAX_USER_AGENT_LEN];
+    unsigned char use_wget_user_agent;
     char *wget_bin;
 
     /* HTTP proxy support

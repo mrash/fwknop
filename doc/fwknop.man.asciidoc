@@ -515,6 +515,13 @@ SPA OPTIONS
     Set the HTTP User-Agent for resolving the external IP via *-R*, or for
     sending SPA packets over HTTP.
 
+*--use-wget-user-agent*::
+    By default when the *fwknop* client resolves the external IP with *wget*
+    via SSL, it sets the User-Agent to ``Fwknop/<version>'' unless it was
+    already manually specified with the *--user-agent* option mentioned above.
+    However, the *--user-wget-user-agent* option lets the default *wget*
+    User-Agent string apply without influence from *fwknop*.
+
 *-U, --spoof-user*='<user>'::
     Specify the username that is included within SPA packet. This allows
     the *fwknop* client to satisfy any non-root *REQUIRE_USERNAME* keyword
@@ -751,6 +758,10 @@ description and its matching command-line option(s):
 *HTTP_USER_AGENT* '<agent string>'::
     Set the HTTP User-Agent for resolving the external IP via -R, or for
     sending SPA packets over HTTP ('-u, --user-agent').
+
+*USE_WGET_USER_AGENT* '<Y/N>'::
+    Allow default *wget* User-Agent string to be used when resolving the
+    external IP instead of a User-Agent supplied by the *fwknop* client.
 
 *NAT_ACCESS* '<internalIP:forwardPort>'::
     Gain NAT access to an internal service protected by the fwknop server
@@ -1027,8 +1038,9 @@ The most comprehensive way to gain diagnostic information on *fwknop* is to run
 the test suite 'test-fwknop.pl' script located in the 'test/' directory in the fwknop
 sources. The test suite sends fwknop through a large number of run time
 tests, has 'valgrind' support, validates both SPA encryption and HMAC results
-against OpenSSL, and even has its own built in fuzzer for SPA communications.
-For more basic diagnostic information, *fwknop* can be executed with the *-T*
+against OpenSSL, and even has its own built in fuzzer for SPA communications (and
+fwknop in version 2.6.4 supports the 'American Fuzzy Lop' (AFL) from Michal Zalewski
+as well).  For more basic diagnostic information, *fwknop* can be executed with the *-T*
 (or *--test*) command line option. This will have *fwknop* simply create and
 print the SPA packet information, then run it through a decrypt/decode cycle
 and print it again. In addition, the *--verbose* command line switch is useful
@@ -1069,7 +1081,7 @@ CONTRIBUTORS
 This ``C'' version of fwknop was derived from the original Perl-based version
 on which many people who are active in the open source community have
 contributed. See the CREDITS file in the fwknop sources, or visit
-'http://www.cipherdyne.org/fwknop/docs/contributors.html' to view the online
+'https://github.com/mrash/fwknop/blob/master/CREDITS' to view the online
 list of contributors. A few contributors deserve to be singled out including:
 Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger,
 Fernando Arnaboldi, and Erik Gomez.

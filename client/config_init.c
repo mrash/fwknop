@@ -117,6 +117,7 @@ enum
     FWKNOP_CLI_ARG_KEY_HMAC_BASE64,
     FWKNOP_CLI_ARG_KEY_HMAC,
     FWKNOP_CLI_ARG_USE_HMAC,
+    FWKNOP_CLI_ARG_USE_WGET_USER_AGENT,
     FWKNOP_CLI_ARG_KEY_FILE,
     FWKNOP_CLI_ARG_HMAC_KEY_FILE,
     FWKNOP_CLI_ARG_NAT_ACCESS,
@@ -130,6 +131,7 @@ enum
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS,
     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY,
     FWKNOP_CLI_ARG_WGET_CMD,
+    FWKNOP_CLI_ARG_NO_SAVE_ARGS,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
 
@@ -163,6 +165,7 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "HMAC_KEY_BASE64",       FWKNOP_CLI_ARG_KEY_HMAC_BASE64       },
     { "HMAC_KEY",              FWKNOP_CLI_ARG_KEY_HMAC              },
     { "USE_HMAC",              FWKNOP_CLI_ARG_USE_HMAC              },
+    { "USE_WGET_USER_AGENT",   FWKNOP_CLI_ARG_USE_WGET_USER_AGENT   },
     { "KEY_FILE",              FWKNOP_CLI_ARG_KEY_FILE              },
     { "HMAC_KEY_FILE",         FWKNOP_CLI_ARG_HMAC_KEY_FILE         },
     { "NAT_ACCESS",            FWKNOP_CLI_ARG_NAT_ACCESS            },
@@ -175,7 +178,8 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "RESOLVE_IP_HTTP",       FWKNOP_CLI_ARG_RESOLVE_IP_HTTP       },
     { "RESOLVE_IP_HTTPS",      FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS      },
     { "RESOLVE_HTTP_ONLY",     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY     },
-    { "WGET_CMD",              FWKNOP_CLI_ARG_WGET_CMD              }
+    { "WGET_CMD",              FWKNOP_CLI_ARG_WGET_CMD              },
+    { "NO_SAVE_ARGS",          FWKNOP_CLI_ARG_NO_SAVE_ARGS          }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -862,6 +866,7 @@ create_fwknoprc(const char *rcfile)
         "#GPG_EXE             /path/to/gpg\n"
         "#GPG_SIGNER          <signer ID>\n"
         "#GPG_RECIPIENT       <recipient ID>\n"
+        "#NO_SAVE_ARGS        N\n"
         "\n"
         "# User-provided named stanzas:\n"
         "\n"
@@ -1148,6 +1153,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if (is_yes_str(val))
             options->use_hmac = 1;
     }
+    /* --use-wget-user-agent */
+    else if (var->pos == FWKNOP_CLI_ARG_USE_WGET_USER_AGENT)
+    {
+        if (is_yes_str(val))
+            options->use_wget_user_agent = 1;
+    }
     /* Key file */
     else if (var->pos == FWKNOP_CLI_ARG_KEY_FILE)
     {
@@ -1259,6 +1270,13 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
     {
         if (is_yes_str(val))
             options->resolve_http_only = 1;
+        else;
+    }
+    /* avoid saving .fwknop.run by default */
+    else if (var->pos == FWKNOP_CLI_ARG_NO_SAVE_ARGS)
+    {
+        if (is_yes_str(val))
+            options->no_save_args = 1;
         else;
     }
     /* The variable is not a configuration variable */
@@ -1384,6 +1402,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_USE_HMAC :
             bool_to_yesno(options->use_hmac, val, sizeof(val));
             break;
+        case FWKNOP_CLI_ARG_USE_WGET_USER_AGENT :
+            bool_to_yesno(options->use_wget_user_agent, val, sizeof(val));
+            break;
         case FWKNOP_CLI_ARG_NAT_ACCESS :
             strlcpy(val, options->nat_access_str, sizeof(val));
             break;
@@ -1422,6 +1443,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_WGET_CMD :
             if (options->wget_bin != NULL)
                 strlcpy(val, options->wget_bin, sizeof(val));
+            break;
+        case FWKNOP_CLI_ARG_NO_SAVE_ARGS :
+            bool_to_yesno(options->no_save_args, val, sizeof(val));
             break;
         default:
             log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
@@ -1771,7 +1795,7 @@ validate_options(fko_cli_options_t *options)
         strlcpy(options->use_rc_stanza, options->spa_server_str, sizeof(options->use_rc_stanza));
     }
 
-    /* Gotta have a Destination unless we are just testing or getting the
+    /* Must have a destination unless we are just testing or getting the
      * the version, and must use one of [-s|-R|-a].
     */
     if(!options->test
@@ -1804,13 +1828,21 @@ validate_options(fko_cli_options_t *options)
                 log_msg(LOG_VERBOSITY_WARNING,
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
             }
+        }
+    }
 
-            if(! is_valid_ipv4_addr(options->allow_ip_str))
-            {
-                log_msg(LOG_VERBOSITY_ERROR,
-                    "Invalid allow IP specified for SPA access");
-                exit(EXIT_FAILURE);
-            }
+    /* Make sure -a overrides IP resolution
+    */
+    if(options->allow_ip_str[0] != 0x0
+            && strncasecmp(options->allow_ip_str, "resolve", strlen("resolve")) != 0)
+    {
+        options->resolve_ip_http_https = 0;
+
+        if(! is_valid_ipv4_addr(options->allow_ip_str))
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                "Invalid allow IP specified for SPA access");
+            exit(EXIT_FAILURE);
         }
     }
 
@@ -1835,6 +1867,12 @@ validate_options(fko_cli_options_t *options)
         if (options->http_user_agent[0] == '\0')
             snprintf(options->http_user_agent, HTTP_MAX_USER_AGENT_LEN,
                 "%s%s", "Fwknop/", MY_VERSION);
+
+#if AFL_FUZZING
+    /* Don't issue IP resolution requests in AFL fuzzing mode
+    */
+    options->resolve_ip_http_https = 0;
+#endif
 
     if(options->http_proxy[0] != 0x0 && options->spa_proto != FKO_PROTO_HTTP)
     {
@@ -2176,6 +2214,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case NO_SAVE_ARGS:
                 options->no_save_args = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_NO_SAVE_ARGS, &var_bitmask);
                 break;
             case 'n':
                 /* We already handled this earlier, so we do nothing here
@@ -2349,6 +2388,10 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_HMAC, &var_bitmask);
                 options->use_hmac = 1;
                 break;
+            case USE_WGET_USER_AGENT:
+                add_var_to_bitmask(FWKNOP_CLI_ARG_USE_WGET_USER_AGENT, &var_bitmask);
+                options->use_wget_user_agent = 1;
+                break;
             case FORCE_SAVE_RC_STANZA:
                 options->force_save_rc_stanza = 1;
                 break;
@@ -2457,7 +2500,10 @@ usage(void)
       "                             the source IP address.\n"
       " -u, --user-agent            Set the HTTP User-Agent for resolving the\n"
       "                             external IP via -R, or for sending SPA\n"
-      "                             packets over HTTP.\n"
+      "                             packets over HTTP. The default is\n"
+      "                             Fwknop/<version> if this option is not used.\n"
+      "     --use-wget-user-agent   Use the default wget User-Agent string instead\n"
+      "                             of Fwknop/<version>.\n"
       " -w, --wget-cmd              Manually set the path to wget in -R mode.\n"
       " -H, --http-proxy            Specify an HTTP proxy host through which the\n"
       "                             SPA packet will be sent.  The port can also be\n"

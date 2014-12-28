@@ -29,4 +29,13 @@
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
         'server_positive_output_matches' => [qr/Args\scontain\sinvalid\sdata/],
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => 'UDP server replay detection',
+        'function' => \&replay_detection,
+        'cmdline'  => $default_client_args,
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str --udp-server",
+        'server_positive_output_matches' => [qr/Replay\sdetected\sfrom\ssource\sIP/],
+    },
 );

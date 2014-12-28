@@ -164,7 +164,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
 {
     unsigned char  *ndx;
     unsigned char  *cipher;
-    int             cipher_len, pt_len, i, err = 0, res = FKO_SUCCESS;
+    int             cipher_len=0, pt_len, i, err = 0, res = FKO_SUCCESS;
     int             zero_free_rv = FKO_SUCCESS;
 
     if(key_len < 0 || key_len > RIJNDAEL_MAX_KEYSIZE)
@@ -187,6 +187,10 @@ _rijndael_decrypt(fko_ctx_t ctx,
     if(cipher == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
+#if AFL_FUZZING
+    cipher_len = ctx->encrypted_msg_len;
+    memcpy(cipher, ctx->encrypted_msg, ctx->encrypted_msg_len);
+#else
     if((cipher_len = b64_decode(ctx->encrypted_msg, cipher)) < 0)
     {
         if(zero_free((char *)cipher, ctx->encrypted_msg_len) == FKO_SUCCESS)
@@ -194,6 +198,7 @@ _rijndael_decrypt(fko_ctx_t ctx,
         else
             return(FKO_ERROR_ZERO_OUT_DATA);
     }
+#endif
 
     /* Since we're using AES, make sure the incoming data is a multiple of
      * the blocksize

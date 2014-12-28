@@ -75,6 +75,10 @@ last_field(char *str)
 static int
 verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
 {
+#if AFL_FUZZING
+    return FKO_SUCCESS;
+#endif
+
     switch(ctx->digest_type)
     {
         case FKO_DIGEST_MD5:
@@ -113,6 +117,12 @@ verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
 static int
 is_valid_digest_len(int t_size, fko_ctx_t ctx)
 {
+#if AFL_FUZZING
+    ctx->digest_type = FKO_DIGEST_SHA256;
+    ctx->digest_len  = t_size;
+    return FKO_SUCCESS;
+#endif
+
     switch(t_size)
     {
         case MD5_B64_LEN:

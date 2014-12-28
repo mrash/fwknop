@@ -299,7 +299,7 @@ incoming_spa(fko_srv_options_t *opts)
 
     char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;
     time_t          now_ts;
-    int             res, status, ts_diff, enc_type, stanza_num=0;
+    int             res, ts_diff, enc_type, stanza_num=0, pid_status=0;
     int             added_replay_digest = 0, pkt_data_len=0;
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
@@ -320,6 +320,9 @@ incoming_spa(fko_srv_options_t *opts)
 
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+
+    inet_ntop(AF_INET, &(spa_pkt->packet_dst_ip),
+        spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
 
     /* At this point, we want to validate and (if needed) preprocess the
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
@@ -405,10 +408,14 @@ incoming_spa(fko_srv_options_t *opts)
             ctx = NULL;
         }
 
-        /* Check for a match for the SPA source IP and the access stanza
+        /* Check for a match for the SPA source and destination IP and the access stanza
         */
-        if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)))
+        if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
+           (acc->destination_list != NULL && ! compare_addr_list(acc->destination_list, ntohl(spa_pkt->packet_dst_ip))))
         {
+            log_msg(LOG_DEBUG,
+                    "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
+                    stanza_num, spadat.pkt_source_ip, spadat.pkt_destination_ip);
             acc = acc->next;
             continue;
         }
@@ -852,7 +859,7 @@ incoming_spa(fko_srv_options_t *opts)
             if(!acc->enable_cmd_exec)
             {
                 log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) SPA Command message are not allowed in the current configuration.",
+                    "[%s] (stanza #%d) SPA Command messages are not allowed in the current configuration.",
                     spadat.pkt_source_ip, stanza_num
                 );
                 acc = acc->next;
@@ -879,28 +886,33 @@ incoming_spa(fko_srv_options_t *opts)
                 */
                 if(acc->cmd_exec_user != NULL && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
                 {
-                    log_msg(LOG_INFO, "[%s] (stanza #%d) Setting effective user to %s (UID=%i) before running command.",
-                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user, acc->cmd_exec_uid);
+                    log_msg(LOG_INFO,
+                            "[%s] (stanza #%d) setuid/setgid user/group to %s/%s (UID=%i,GID=%i) before running command.",
+                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user,
+                        acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
+                        acc->cmd_exec_uid, acc->cmd_exec_gid);
 
-                    res = run_extcmd_as(acc->cmd_exec_uid,
-                                        spadat.spa_message_remain, NULL, 0, 0);
+                    res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
+                            spadat.spa_message_remain, NULL, 0,
+                            WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
                 }
                 else /* Just run it as we are (root that is). */
-                    res = run_extcmd(spadat.spa_message_remain, NULL, 0, 5);
+                    res = run_extcmd(spadat.spa_message_remain, NULL, 0,
+                            WANT_STDERR, 5, &pid_status, opts);
 
-                /* --DSS XXX: I have found that the status (and res for that
-                 *            matter) have been unreliable indicators of the
-                 *            actual exit status of some commands.  Not sure
-                 *            why yet.  For now, we will take what we get.
+                /* should only call WEXITSTATUS() if WIFEXITED() is true
                 */
-                status = WEXITSTATUS(res);
+                log_msg(LOG_INFO,
+                    "[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d",
+                    spadat.pkt_source_ip, stanza_num, res,
+                    WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);
 
-                if(opts->verbose > 1)
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) CMD_EXEC: command returned %i",
-                        spadat.pkt_source_ip, stanza_num, status);
-
-                if(status != 0)
+                if(WIFEXITED(pid_status))
+                {
+                    if(WEXITSTATUS(pid_status) != 0)
+                        res = SPA_MSG_COMMAND_ERROR;
+                }
+                else
                     res = SPA_MSG_COMMAND_ERROR;
 
                 /* we processed the command on a matching access stanza, so we

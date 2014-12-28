@@ -597,4 +597,39 @@ fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg)
     return(FKO_SUCCESS);
 }
 
+#if AFL_FUZZING
+/* provide a way to set the encrypted data directly without base64 encoding.
+ * This allows direct AFL fuzzing against decryption routines.
+*/
+int
+fko_afl_set_spa_data(fko_ctx_t ctx, const char * const enc_msg, const int enc_msg_len)
+{
+    /* Must be initialized
+    */
+    if(!CTX_INITIALIZED(ctx))
+        return FKO_ERROR_CTX_NOT_INITIALIZED;
+
+    if(enc_msg == NULL)
+        return(FKO_ERROR_INVALID_DATA_FUNCS_SET_MSGLEN_VALIDFAIL);
+
+    if(! is_valid_encoded_msg_len(enc_msg_len))
+        return(FKO_ERROR_INVALID_DATA_FUNCS_SET_MSGLEN_VALIDFAIL);
+
+    if(ctx->encrypted_msg != NULL)
+        free(ctx->encrypted_msg);
+
+    /* Copy the raw encrypted data into the context
+    */
+    ctx->encrypted_msg = calloc(1, enc_msg_len);
+    if(ctx->encrypted_msg == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    memcpy(ctx->encrypted_msg, enc_msg, enc_msg_len);
+
+    ctx->encrypted_msg_len = enc_msg_len;
+
+    return(FKO_SUCCESS);
+}
+#endif
+
 /***EOF***/

@@ -31,14 +31,17 @@
 #include "fwknopd.h"
 #include "access.h"
 #include "config_init.h"
-#include "process_packet.h"
-#include "pcap_capture.h"
 #include "log_msg.h"
 #include "utils.h"
 #include "fw_util.h"
 #include "sig_handler.h"
 #include "replay_cache.h"
 #include "tcp_server.h"
+#include "udp_server.h"
+
+#if USE_LIBPCAP
+  #include "pcap_capture.h"
+#endif
 
 /* Prototypes
 */
@@ -55,9 +58,18 @@ static void setup_pid(fko_srv_options_t *opts);
 static void init_digest_cache(fko_srv_options_t *opts);
 static void set_locale(fko_srv_options_t *opts);
 static pid_t get_running_pid(const fko_srv_options_t *opts);
+#if AFL_FUZZING
+static void afl_enc_pkt_from_file(fko_srv_options_t *opts);
+static void afl_pkt_from_stdin(fko_srv_options_t *opts);
+#endif
 
 #if HAVE_LIBFIU
 static void enable_fault_injections(fko_srv_options_t * const opts);
+#endif
+
+#if AFL_FUZZING
+#define AFL_MAX_PKT_SIZE  1024
+#define AFL_DUMP_CTX_SIZE 4096
 #endif
 
 int
@@ -111,12 +123,13 @@ main(int argc, char **argv)
         /* Make sure we have a valid run dir and path leading to digest file
          * in case it configured to be somewhere other than the run dir.
         */
-        if(! check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0))
+        if(!opts.afl_fuzzing
+                && ! check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0))
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
         /* Initialize the firewall rules handler based on the fwknopd.conf
          * file, but (for iptables firewalls) don't flush any rules or create
-         * any chains yet.  This allows us to dump the current firewall rules
+         * any chains yet. This allows us to dump the current firewall rules
          * via fw_rules_dump() in --fw-list mode before changing around any rules
          * of an existing fwknopd process.
         */
@@ -172,13 +185,46 @@ main(int argc, char **argv)
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
+#if AFL_FUZZING
+        /* SPA data from STDIN. */
+        if(opts.afl_fuzzing)
+        {
+            if(opts.config[CONF_AFL_PKT_FILE] != 0x0)
+            {
+                afl_enc_pkt_from_file(&opts);
+            }
+            else
+            {
+                afl_pkt_from_stdin(&opts);
+            }
+        }
+#endif
+
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
         */
         if(!opts.test && (fw_initialize(&opts) != 1))
             clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
-        /* If the TCP server option was set, fire it up here.
+        /* If we are to acquire SPA data via a UDP socket, start it up here.
+        */
+        if(opts.enable_udp_server ||
+                strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "Y", 1) == 0)
+        {
+            if(run_udp_server(&opts) < 0)
+            {
+                log_msg(LOG_ERR, "Fatal run_udp_server() error");
+                clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        /* If the TCP server option was set, fire it up here. Note that in
+         * this mode, fwknopd still acquires SPA packets via libpcap. If you
+         * want to use UDP only without the libpcap dependency, see the FIXME...
         */
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
@@ -189,9 +235,12 @@ main(int argc, char **argv)
             }
         }
 
+#if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
-        pcap_capture(&opts);
+        if(strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
+            pcap_capture(&opts);
+#endif
 
         /* Deal with any signals that we've received and break out
          * of the loop for any terminating signals
@@ -212,7 +261,7 @@ main(int argc, char **argv)
         kill(opts.tcp_server_pid, SIGTERM);
 
         /* --DSS XXX: This seems to be necessary if the tcp server
-         *            was restarted by this program.  We need to
+         *            was restarted by this program. We need to
          *            investigate and fix this. For now, this works
          *            (it is kludgy, but does no harm afaik).
         */
@@ -250,9 +299,123 @@ static void set_locale(fko_srv_options_t *opts)
     return;
 }
 
+#if AFL_FUZZING
+static void afl_enc_pkt_from_file(fko_srv_options_t *opts)
+{
+    FILE                *fp = NULL;
+    fko_ctx_t           decrypt_ctx = NULL;
+    unsigned char       enc_spa_pkt[AFL_MAX_PKT_SIZE] = {0}, rc;
+    int                 res = 0, es = EXIT_SUCCESS, enc_msg_len;
+    char                dump_buf[AFL_DUMP_CTX_SIZE];
+
+    fp = fopen(opts->config[CONF_AFL_PKT_FILE], "rb");
+    if(fp != NULL)
+    {
+        enc_msg_len = 0;
+        while(fread(&rc, 1, 1, fp))
+        {
+            enc_spa_pkt[enc_msg_len] = rc;
+            enc_msg_len++;
+            if(enc_msg_len == AFL_MAX_PKT_SIZE-1)
+                break;
+        }
+        fclose(fp);
+
+        fko_new(&decrypt_ctx);
+
+        res = fko_afl_set_spa_data(decrypt_ctx, (const char *)enc_spa_pkt,
+                enc_msg_len);
+        if(res == FKO_SUCCESS)
+            res = fko_decrypt_spa_data(decrypt_ctx, "fwknoptest",
+                    strlen("fwknoptest"));
+        if(res == FKO_SUCCESS)
+            res = dump_ctx_to_buffer(decrypt_ctx, dump_buf, sizeof(dump_buf));
+        if(res == FKO_SUCCESS)
+            log_msg(LOG_INFO, "%s", dump_buf);
+        else
+            log_msg(LOG_ERR, "Error (%d): %s", res, fko_errstr(res));
+
+        fko_destroy(decrypt_ctx);
+
+        if(res == FKO_SUCCESS)
+        {
+            log_msg(LOG_INFO, "SPA packet decode: %s", fko_errstr(res));
+            es = EXIT_SUCCESS;
+        }
+        else
+        {
+            log_msg(LOG_ERR, "Could not decode SPA packet: %s", fko_errstr(res));
+            es = EXIT_FAILURE;
+        }
+    }
+    else
+        log_msg(LOG_ERR, "Could not acquire SPA packet from file: %s.",
+                opts->config[CONF_AFL_PKT_FILE]);
+
+    clean_exit(opts, NO_FW_CLEANUP, es);
+}
+
+static void afl_pkt_from_stdin(fko_srv_options_t *opts)
+{
+    FILE                *fp = NULL;
+    fko_ctx_t           decode_ctx = NULL;
+    unsigned char       spa_pkt[AFL_MAX_PKT_SIZE] = {0};
+    int                 res = 0, es = EXIT_SUCCESS;
+    char                dump_buf[AFL_DUMP_CTX_SIZE];
+
+    fp = fdopen(STDIN_FILENO, "r");
+    if(fp != NULL)
+    {
+        if(fgets((char *)spa_pkt, AFL_MAX_PKT_SIZE, fp) == NULL)
+        {
+            fclose(fp);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+
+        fclose(fp);
+
+        fko_new(&decode_ctx);
+
+        res = fko_set_encoded_data(decode_ctx, (char *) spa_pkt,
+                strlen((char *)spa_pkt), 0, FKO_DIGEST_SHA256);
+
+        if(res == FKO_SUCCESS)
+            res = fko_set_spa_data(decode_ctx, (const char *) spa_pkt);
+        if(res == FKO_SUCCESS)
+            res = fko_decode_spa_data(decode_ctx);
+        if(res == FKO_SUCCESS)
+            res = dump_ctx_to_buffer(decode_ctx, dump_buf, sizeof(dump_buf));
+        if(res == FKO_SUCCESS)
+            log_msg(LOG_INFO, "%s", dump_buf);
+
+        fko_destroy(decode_ctx);
+
+        if(res == FKO_SUCCESS)
+        {
+            log_msg(LOG_INFO, "SPA packet decode: %s", fko_errstr(res));
+            es = EXIT_SUCCESS;
+        }
+        else
+        {
+            log_msg(LOG_ERR, "Could not decode SPA packet: %s", fko_errstr(res));
+            es = EXIT_FAILURE;
+        }
+    }
+    else
+        log_msg(LOG_ERR, "Could not acquire SPA packet from stdin.");
+
+    clean_exit(opts, NO_FW_CLEANUP, es);
+}
+#endif
+
 static void init_digest_cache(fko_srv_options_t *opts)
 {
     int     rp_cache_count;
+
+#if AFL_FUZZING
+    if(opts->afl_fuzzing)
+        return;
+#endif
 
     if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
     {
@@ -287,8 +450,13 @@ static void setup_pid(fko_srv_options_t *opts)
 {
     pid_t    old_pid;
 
+#if AFL_FUZZING
+    if(opts->afl_fuzzing)
+        return;
+#endif
+
     /* If we are a new process (just being started), proceed with normal
-     * start-up.  Otherwise, we are here as a result of a signal sent to an
+     * start-up. Otherwise, we are here as a result of a signal sent to an
      * existing process and we want to restart.
     */
     if(get_running_pid(opts) != getpid())
@@ -379,7 +547,7 @@ static int handle_signals(fko_srv_options_t *opts)
 
         if(got_sighup)
         {
-            log_msg(LOG_WARNING, "Got SIGHUP.  Re-reading configs.");
+            log_msg(LOG_WARNING, "Got SIGHUP. Re-reading configs.");
             free_configs(opts);
             kill(opts->tcp_server_pid, SIGTERM);
             usleep(1000000);
@@ -388,12 +556,12 @@ static int handle_signals(fko_srv_options_t *opts)
         }
         else if(got_sigint)
         {
-            log_msg(LOG_WARNING, "Got SIGINT.  Exiting...");
+            log_msg(LOG_WARNING, "Got SIGINT. Exiting...");
             got_sigint = 0;
         }
         else if(got_sigterm)
         {
-            log_msg(LOG_WARNING, "Got SIGTERM.  Exiting...");
+            log_msg(LOG_WARNING, "Got SIGTERM. Exiting...");
             got_sigterm = 0;
         }
         else
@@ -406,13 +574,13 @@ static int handle_signals(fko_srv_options_t *opts)
         && opts->packet_ctr >= opts->packet_ctr_limit)
     {
         log_msg(LOG_INFO,
-            "Packet count limit (%d) reached.  Exiting...",
+            "Packet count limit (%d) reached. Exiting...",
             opts->packet_ctr_limit);
     }
     else    /* got_signal was not set (should be if we are here) */
     {
         log_msg(LOG_WARNING,
-            "Capture ended without signal.  Exiting...");
+            "Capture ended without signal. Exiting...");
     }
     return rv;
 }
@@ -482,7 +650,7 @@ static int stop_fwknopd(fko_srv_options_t * const opts)
     return EXIT_FAILURE;
 }
 
-/* Ensure the specified directory exists.  If not, create it or die.
+/* Ensure the specified directory exists. If not, create it or die.
 */
 static int
 check_dir_path(const char * const filepath, const char * const fp_desc, const unsigned char use_basename)
@@ -514,7 +682,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
         strlcpy(tmp_path, filepath, sizeof(tmp_path));
 
     /* At this point, we should make the path is more than just the
-     * PATH_SEP.  If it is not, silently return.
+     * PATH_SEP. If it is not, silently return.
     */
     if(strlen(tmp_path) < 2)
         return 1;
@@ -527,7 +695,7 @@ check_dir_path(const char * const filepath, const char * const fp_desc, const un
         if(errno == ENOENT)
         {
             log_msg(LOG_WARNING,
-                "%s directory: %s does not exist.  Attempting to create it.",
+                "%s directory: %s does not exist. Attempting to create it.",
                 fp_desc, tmp_path
             );
 
@@ -595,7 +763,7 @@ make_dir_path(const char * const run_dir)
 
             /* Stat this part of the path to see if it is a valid directory.
              * If it does not exist, attempt to create it. If it does, and
-             * it is a directory, go on.  Otherwise, any other error cause it
+             * it is a directory, go on. Otherwise, any other error cause it
              * to bail.
             */
             if(stat(tmp_path, &st) != 0)
@@ -726,7 +894,7 @@ write_pid_file(fko_srv_options_t *opts)
         return -1;
     }
 
-    /* Attempt to lock the PID file.  If we get an EWOULDBLOCK
+    /* Attempt to lock the PID file. If we get an EWOULDBLOCK
      * error, another instance already has the lock. So we grab
      * the pid from the existing lock file, complain and bail.
     */
@@ -826,10 +994,18 @@ enable_fault_injections(fko_srv_options_t * const opts)
 {
     if(opts->config[CONF_FAULT_INJECTION_TAG] != NULL)
     {
-        fiu_init(0);
+        if(opts->verbose)
+            log_msg(LOG_INFO, "Enable fault injection tag: %s",
+                    opts->config[CONF_FAULT_INJECTION_TAG]);
+        if(fiu_init(0) != 0)
+        {
+            fprintf(stderr, "[*] Could not enable fault injection tag: %s\n",
+                    opts->config[CONF_FAULT_INJECTION_TAG]);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
         if (fiu_enable(opts->config[CONF_FAULT_INJECTION_TAG], 1, NULL, 0) != 0)
         {
-            fprintf(stderr, "[*] Could not enable fault injection: %s\n",
+            fprintf(stderr, "[*] Could not enable fault injection tag: %s\n",
                     opts->config[CONF_FAULT_INJECTION_TAG]);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }

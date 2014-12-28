@@ -41,7 +41,7 @@
   #include <sys/stat.h>
 #endif
 
-#if HAVE_LIBPCAP
+#if USE_LIBPCAP
   #include <pcap.h>
 #endif
 
@@ -101,8 +101,16 @@
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
 #define DEF_TCPSERV_PORT                "62201"
+#if USE_LIBPCAP
+  #define DEF_ENABLE_UDP_SERVER           "N"
+#else
+  #define DEF_ENABLE_UDP_SERVER           "Y"
+#endif
+#define DEF_UDPSERV_PORT                "62201"
+#define DEF_UDPSERV_SELECT_TIMEOUT      "500000" /* half a second (in microseconds) */
 #define DEF_SYSLOG_IDENTITY             MY_NAME
 #define DEF_SYSLOG_FACILITY             "LOG_DAEMON"
+#define DEF_ENABLE_DESTINATION_RULE     "N"
 
 #define DEF_FW_ACCESS_TIMEOUT           30
 
@@ -112,6 +120,8 @@
 #define RCHK_MAX_SPA_PACKET_AGE         100000  /* seconds, can disable */
 #define RCHK_MAX_SNIFF_BYTES            (2 << 14)
 #define RCHK_MAX_TCPSERV_PORT           ((2 << 16) - 1)
+#define RCHK_MAX_UDPSERV_PORT           ((2 << 16) - 1)
+#define RCHK_MAX_UDPSERV_SELECT_TIMEOUT (2 << 22)
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
 #define RCHK_MAX_FW_TIMEOUT             (2 << 22)
 
@@ -225,6 +235,9 @@ enum {
     CONF_ENABLE_SPA_OVER_HTTP,
     CONF_ENABLE_TCP_SERVER,
     CONF_TCPSERV_PORT,
+    CONF_ENABLE_UDP_SERVER,
+    CONF_UDPSERV_PORT,
+    CONF_UDPSERV_SELECT_TIMEOUT,
     CONF_LOCALE,
     CONF_SYSLOG_IDENTITY,
     CONF_SYSLOG_FACILITY,
@@ -235,6 +248,7 @@ enum {
     //CONF_EXTERNAL_CMD_ALARM,
     //CONF_ENABLE_EXT_CMD_PREFIX,
     //CONF_EXT_CMD_PREFIX,
+    CONF_ENABLE_DESTINATION_RULE,
 #if FIREWALL_FIREWALLD
     CONF_ENABLE_FIREWD_FORWARDING,
     CONF_ENABLE_FIREWD_LOCAL_NAT,
@@ -293,6 +307,9 @@ enum {
     CONF_GPG_EXE,
     CONF_FIREWALL_EXE,
     CONF_VERBOSE,
+#if AFL_FUZZING
+    CONF_AFL_PKT_FILE,
+#endif
     CONF_FAULT_INJECTION_TAG,
 
     NUMBER_OF_CONFIG_ENTRIES  /* Marks the end and number of entries */
@@ -333,6 +350,8 @@ typedef struct acc_stanza
 {
     char                *source;
     acc_int_list_t      *source_list;
+    char                *destination;
+    acc_int_list_t      *destination_list;
     char                *open_ports;
     acc_port_list_t     *oport_list;
     char                *restrict_ports;
@@ -348,7 +367,9 @@ typedef struct acc_stanza
     int                  fw_access_timeout;
     unsigned char        enable_cmd_exec;
     char                *cmd_exec_user;
+    char                *cmd_exec_group;
     uid_t                cmd_exec_uid;
+    gid_t                cmd_exec_gid;
     char                *require_username;
     unsigned char        require_source_address;
     char                *gpg_home_dir;
@@ -432,6 +453,9 @@ typedef struct acc_stanza
       /* Flag for firewalld SNAT vs. MASQUERADE usage
       */
       unsigned char   use_masquerade;
+      /* Flag for setting destination field in rule
+      */
+      unsigned char   use_destination;
   };
 
 #elif FIREWALL_IPTABLES
@@ -479,6 +503,9 @@ typedef struct acc_stanza
       /* Flag for iptables SNAT vs. MASQUERADE usage
       */
       unsigned char   use_masquerade;
+      /* Flag for setting destination field in rule
+      */
+      unsigned char   use_destination;
   };
 
 #elif FIREWALL_IPFW
@@ -495,6 +522,7 @@ typedef struct acc_stanza
       time_t            next_expire;
       time_t            last_purge;
       char              fw_command[MAX_PATH_LEN];
+      unsigned char     use_destination;
   };
 
 #elif FIREWALL_PF
@@ -506,6 +534,7 @@ typedef struct acc_stanza
       time_t            next_expire;
       char              anchor[MAX_PF_ANCHOR_LEN];
       char              fw_command[MAX_PATH_LEN];
+      unsigned char     use_destination;
   };
 
 #elif FIREWALL_IPF
@@ -538,6 +567,7 @@ typedef struct spa_data
     char           *spa_message;
     char            spa_message_src_ip[MAX_IPV4_STR_LEN];
     char            pkt_source_ip[MAX_IPV4_STR_LEN];
+    char            pkt_destination_ip[MAX_IPV4_STR_LEN];
     char            spa_message_remain[1024]; /* --DSS FIXME: arbitrary bounds */
     char           *nat_access;
     char           *server_auth;
@@ -563,8 +593,10 @@ typedef struct fko_srv_options
     unsigned char   fw_list_all;        /* List all current firewall rules */
     unsigned char   fw_flush;           /* Flush current firewall rules */
     unsigned char   test;               /* Test mode flag */
+    unsigned char   afl_fuzzing;        /* SPA pkts from stdin for AFL fuzzing */
     unsigned char   verbose;            /* Verbose mode flag */
     unsigned char   exit_after_parse_config; /* Parse config and exit */
+    unsigned char   enable_udp_server;  /* Enable UDP server mode */
 
     unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
     unsigned char   ipt_disable_check_support; /* Don't use iptables -C */

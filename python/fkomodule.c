@@ -1282,14 +1282,13 @@ base64_encode(PyObject *self, PyObject *args)
     unsigned char *in;
     int in_len;
     char *out;
-    int res;
 
     /* --DSS Note the order of args is different than the libfko call.
              We need to do this for the following parse call. */
     if(!PyArg_ParseTuple(args, "s#s", &in, &in_len, &out))
         return NULL;
 
-    res = fko_base64_encode(in, out, in_len);
+    fko_base64_encode(in, out, in_len);
 
     return Py_BuildValue("s", out);
 }
@@ -1357,13 +1356,13 @@ static PyObject *
 get_spa_hmac(PyObject *self, PyObject *args)
 {
     fko_ctx_t ctx;
-    char *enc_data;
+    char *hmac_data;
     int res;
 
     if(!PyArg_ParseTuple(args, "k", &ctx))
         return NULL;
 
-    res = fko_get_spa_hmac(ctx, &enc_data);
+    res = fko_get_spa_hmac(ctx, &hmac_data);
 
     if(res != FKO_SUCCESS)
     {
@@ -1371,7 +1370,7 @@ get_spa_hmac(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    return Py_BuildValue("s", enc_data);
+    return Py_BuildValue("s", hmac_data);
 }
 
 /*****************************************************************************

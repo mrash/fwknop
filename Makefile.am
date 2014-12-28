@@ -140,12 +140,16 @@ EXTRA_DIST = \
     test/conf/base64_key_access.conf \
     test/conf/cfb_mode_access.conf \
     test/conf/cmd_access.conf \
+    test/conf/cmd_setuid_access.conf \
+    test/conf/cmd_giduid_access.conf \
     test/conf/ctr_mode_access.conf \
     test/conf/default_access.conf \
     test/conf/default_fwknopd.conf \
     test/conf/portrange_fwknopd.conf \
-    test/conf/custom_input_chain_fwknopd.conf \
-    test/conf/custom_nat_chain_fwknopd.conf \
+    test/conf/ipt_custom_input_chain_fwknopd.conf \
+    test/conf/firewd_custom_input_chain_fwknopd.conf \
+    test/conf/ipt_custom_nat_chain_fwknopd.conf \
+    test/conf/firewd_custom_nat_chain_fwknopd.conf \
     test/conf/gpg_invalid_exe_access.conf \
     test/conf/disable_aging_fwknopd.conf \
     test/conf/disable_aging_nat_fwknopd.conf \
@@ -169,6 +173,7 @@ EXTRA_DIST = \
     test/conf/gpg_no_pw_fpr_access.conf \
     test/conf/gpg_no_pw_bad_fpr_access.conf \
     test/conf/gpg_no_pw_no_fpr_access.conf \
+    test/conf/gpg_no_sig_no_fpr_access.conf \
     test/conf/gpg_no_sig_verify_access.conf \
     test/conf/gpg_invalid_sig_id_access.conf \
     test/conf/fwknoprc_gpg_invalid_exe \
@@ -183,11 +188,16 @@ EXTRA_DIST = \
     test/conf/gpg_hmac_sha512_access.conf \
     test/conf/fwknoprc_hmac_sha512_base64_key \
     test/conf/gpg_no_pw_hmac_sha512_access.conf \
-    test/conf/no_flush_init_fwknopd.conf \
-    test/conf/no_flush_exit_fwknopd.conf \
-    test/conf/no_flush_init_or_exit_fwknopd.conf \
+    test/conf/ipt_no_flush_init_fwknopd.conf \
+    test/conf/ipt_no_flush_exit_fwknopd.conf \
+    test/conf/ipt_no_flush_init_or_exit_fwknopd.conf \
+    test/conf/firewd_no_flush_init_fwknopd.conf \
+    test/conf/firewd_no_flush_exit_fwknopd.conf \
+    test/conf/firewd_no_flush_init_or_exit_fwknopd.conf \
     test/conf/hmac_access.conf \
     test/conf/hmac_cmd_access.conf \
+    test/conf/hmac_cmd_setuid_access.conf \
+    test/conf/hmac_cmd_giduid_access.conf \
     test/conf/hmac_get_key_access.conf \
     test/conf/hmac_no_b64_access.conf \
     test/conf/hmac_equal_keys_access.conf \
@@ -258,19 +268,27 @@ EXTRA_DIST = \
     test/conf/invalid_expire_access.conf \
     test/conf/invalid_source_access.conf \
     test/conf/ipt_output_chain_fwknopd.conf \
+    test/conf/firewd_output_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_2_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_3_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_4_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_5_fwknopd.conf \
     test/conf/invalid_ipt_input_chain_6_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_2_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_3_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_4_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_5_fwknopd.conf \
+    test/conf/invalid_firewd_input_chain_6_fwknopd.conf \
     test/conf/invalid_run_dir_path_fwknopd.conf \
     test/conf/ipfw_active_expire_equal_fwknopd.conf \
     test/conf/ip_source_match_access.conf \
     test/conf/legacy_iv_access.conf \
     test/conf/legacy_iv_long_key_access.conf \
     test/conf/legacy_iv_long_key2_access.conf \
-    test/conf/local_nat_fwknopd.conf \
+    test/conf/ipt_local_nat_fwknopd.conf \
+    test/conf/firewd_local_nat_fwknopd.conf \
     test/conf/mismatch_open_ports_access.conf \
     test/conf/mismatch_user_access.conf \
     test/conf/multi_gpg_access.conf \
@@ -278,7 +296,8 @@ EXTRA_DIST = \
     test/conf/multi_source_match_access.conf \
     test/conf/multi_stanzas_access.conf \
     test/conf/multi_stanzas_with_broken_keys.conf \
-    test/conf/nat_fwknopd.conf \
+    test/conf/ipt_nat_fwknopd.conf \
+    test/conf/firewd_nat_fwknopd.conf \
     test/conf/no_multi_source_match_access.conf \
     test/conf/no_source_match_access.conf \
     test/conf/no_subnet_source_match_access.conf \
@@ -286,6 +305,7 @@ EXTRA_DIST = \
     test/conf/open_ports_access.conf \
     test/conf/override_fwknopd.conf \
     test/conf/override2_fwknopd.conf \
+    test/conf/override_no_digest_tracking_fwknopd.conf \
     test/conf/var_expansion_fwknopd.conf \
     test/conf/var_expansion_invalid_fwknopd.conf \
     test/conf/require_src_access.conf \
@@ -293,16 +313,27 @@ EXTRA_DIST = \
     test/conf/subnet_source_match_access.conf \
     test/conf/tcp_pcap_filter_fwknopd.conf \
     test/conf/tcp_server_fwknopd.conf \
+    test/conf/udp_server_fwknopd.conf \
     test/conf/spa_over_http_fwknopd.conf \
     test/conf/spa_over_http.pcap \
-    test/conf/snat_fwknopd.conf \
-    test/conf/snat_no_translate_ip_fwknopd.conf \
+    test/conf/ipt_snat_fwknopd.conf \
+    test/conf/firewd_snat_fwknopd.conf \
+    test/conf/ipt_snat_no_translate_ip_fwknopd.conf \
+    test/conf/firewd_snat_no_translate_ip_fwknopd.conf \
+    test/conf/destination_rule_fwknopd.conf \
+    test/conf/hmac_spa_destination_access.conf \
+    test/conf/hmac_spa_destination2_access.conf \
+    test/conf/hmac_spa_destination3_access.conf \
+    test/conf/hmac_spa_destination4_access.conf \
+    test/conf/hmac_spa_destination5_access.conf \
     test/conf/spa_replay.pcap \
+    test/conf/fcs_spa.pcap \
     test/fko-wrapper/Makefile \
     test/fko-wrapper/fko_wrapper.c \
     test/fko-wrapper/fko_basic.c \
     test/fko-wrapper/run.sh \
     test/fko-wrapper/run_valgrind.sh \
+    test/spa_fuzzing.py \
     test/fuzzing/patches/enable_perl_fko_bogus_packets.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte_eq.patch \
     test/fuzzing/patches/encoding_append_b64_modified_byte.patch \
@@ -323,9 +354,43 @@ EXTRA_DIST = \
     test/fuzzing/patches/invalid_long_proto_define_rijndael_trigger.patch \
     test/fuzzing/patches/long_ip.patch \
     test/fuzzing/patches/non_b64_user_char.patch \
+    test/misc/freebsd_rc.conf \
+    test/misc/pf.rules \
+    test/misc/pf.sh \
+    test/afl/compile/afl-compile-code-coverage.sh \
+    test/afl/compile/afl-compile-no-enable-arg.sh \
+    test/afl/compile/afl-compile.sh \
+    test/afl/compile/afl-gen-code-coverage.sh \
+    test/afl/doc/AFL_status_screen.png \
+    test/afl/README \
+    test/afl/fuzzing-wrappers/client-rc.sh \
+    test/afl/fuzzing-wrappers/fcns \
+    test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknop-rc-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-digest-cache.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-enc-pkt-file.sh \
+    test/afl/fuzzing-wrappers/server-access.sh \
+    test/afl/fuzzing-wrappers/server-conf.sh \
+    test/afl/fuzzing-wrappers/server-digest-cache.sh \
+    test/afl/fuzzing-wrappers/spa-pkts.sh \
+    test/afl/fuzzing-wrappers/server-enc-pkts.sh \
+    test/afl/test-cases/client-rc/fwknoprc \
+    test/afl/test-cases/server-access/access.conf \
+    test/afl/test-cases/server-conf/fwknopd.conf \
+    test/afl/test-cases/spa-pkts/spa.start \
+    test/afl/test-cases/spa-pkts/spa2.start \
+    test/afl/test-cases/spa-pkts/spa3.start \
+    test/afl/test-cases/enc-pkts/spa.enc \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
+    test/tests/configure_args.pl \
     test/tests/basic_operations.pl \
     test/tests/rijndael_hmac.pl \
     test/tests/rijndael_hmac_fuzzing.pl \
@@ -333,6 +398,7 @@ EXTRA_DIST = \
     test/tests/rijndael_backwards_compatibility.pl \
     test/tests/os_compatibility.pl \
     test/tests/fault_injection.pl \
+    test/tests/afl_fuzzing.pl \
     test/tests/gpg_hmac.pl \
     test/tests/gpg_no_pw.pl \
     test/tests/gpg_no_pw_hmac.pl \
@@ -351,9 +417,13 @@ EXTRA_DIST = \
     test/long_spa.key \
     test/invalid.args \
     test/test-fwknop.pl \
+    test/generate_cores.sh \
     test/fko-python.py \
     test/run-test-suite.sh \
     test/valgrind_suppressions \
+    test/configure_max_coverage.sh \
+    test/rm-coverage-files.sh \
+    test/gen-coverage-report.sh \
     test/configure_max_coverage.sh \
     test/README \
     VERSION \

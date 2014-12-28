@@ -145,7 +145,6 @@ enum {
 #define FKO_DEFAULT_PORT    62201
 #define DEFAULT_NAT_PORT    55000
 #define MIN_HIGH_PORT       10000  /* sensible minimum for SPA dest port */
-#define MAX_PORT            65535
 #define MAX_SERVER_STR_LEN  50
 #define MAX_ICMP_TYPE       40
 #define MAX_ICMP_CODE       15
@@ -155,6 +154,10 @@ enum {
 #define MAX_PATH_LEN        1024
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
+
+/* Command line argument / argv handling
+*/
+#define MAX_CMDLINE_ARGS            30                  /*!< should be way more than enough */
 
 #if HAVE_LIBFIU
   #define MAX_FAULT_TAG_LEN 128

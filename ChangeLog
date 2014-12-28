@@ -1,11 +1,52 @@
-fwknop-2.6.4 (09//2014):
+fwknop-2.6.5 (12/16/2014):
+    - [server] (Grant Pannell) Added a new access.conf variable "DESTINATION"
+      to define the destination address for which an SPA packet will be
+      accepted. The string "ANY" is also accepted if a valid SPA packet should
+      be honored to any destination IP. Similarly to the "SOURCE" variable,
+      networks should be specified in CIDR notation (e.g. "192.168.10.0/24"),
+      and individual IP addresses can be specified as well. Also, multiple IP's
+      and/or networks can be defined as a comma separated list (e.g.
+      "192.168.10.0/24,10.1.1.123").
+    - [server] Bug fix to ensure that proper bounds are enforced when
+      importing digest cache files from previous fwknopd executions. This bug
+      was discovered through fuzzing with American Fuzzy Lop (AFL) as driven
+      by the test/afl/fuzzing-wrappers/server-digest-cache.sh wrapper.
+      Previous to this fix, fwknopd could be made to crash through a malicious
+      digest cache file (normally in /var/run/fwknop/digest.cache) upon
+      initial import. This crash can only be triggered by a local user on the
+      system where fwknopd is deployed and who has write permissions to the
+      digest.cache file - usually only root has these permissions.
+
+fwknop-2.6.4 (11/16/2014):
+    - [server] Added a UDP server mode so that SPA packets can be acquired via
+      UDP directly without having to use libpcap. This is an optional feature
+      since it opens a UDP port (and therefore requires the local firewall be
+      opened for communications to this port), but fwknopd is careful to never
+      send anything back to a client that sends data to this port. So, from the
+      perspective of an attacker or scanner, fwknopd remains invisible. This
+      feature is enabled in fwknopd either with a new command line argument
+      --udp-server or in the fwknopd.conf file with the ENABLE_UDP_SERVER
+      variable. When deployed in this mode, it is advisable to recompile fwknop
+      beforehand with './configure --enable-udp-server' so that fwknopd does
+      not link against libpcap.
+    - [server] Replaced all popen() and system() calls with execvpe() with no
+      usage of the environment. This is a defensive measure to not make use of
+      the shell for firewall command execution, and is supported on systems
+      where execvpe() is available.
     - (Gerry Reno) Added support for firewalld to the fwknopd daemon on RHEL 7
-      CentOS 7. This is implemented using the current firewalld '--direct
+      and CentOS 7. This is implemented using the current firewalld '--direct
       --passthrough' capability which accepts raw iptables commands. More
       information on firewalld can be found here:
 
       https://fedoraproject.org/wiki/FirewallD
 
+    - [server] Added support for the 'American Fuzzy Lop' (AFL) fuzzer from
+      Michal Zalewski. This requires that fwknop is compiled with the
+      '--enable-afl-fuzzing' argument to the configure script as this allows
+      encryption/digest short circuiting in a manner necessary for AFL to
+      function properly. The benefit of this strategy is that AFL can fuzz the
+      SPA packet decoding routines implemented by libfko. See the test/afl/
+      directory for some automation around AFL fuzzing.
     - (Bill Stubbs) submitted a patch to fix a bug where fwknopd could not
       handle Ethernet frames that include the Frame Check Sequence (FCS)
       header. This header is four bytes long, and is placed at the end of each
@@ -15,6 +56,16 @@ fwknop-2.6.4 (09//2014):
 
           BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
           13:24:52 UTC 2014 armv7l GNU/Linux
+
+    - [client] Bug fix to ensure that a User-Agent string can be specified
+      when the fwknop client uses wget via SSL to resolve the external IP
+      address. This closes issue #134 on github reported by Barry Allard. The
+      fwknop client now uses the wget '-U' option to specify the User-Agent
+      string with a default of "Fwknop/<version>". In addition, a new command
+      line argument "--use-wget-user-agent" to allow the default wget
+      User-Agent string to apply instead.
+    - [python module] When an HMAC key is passed to spa_data_final() then
+      default to HMAC SHA256 if no HMAC mode was specified.
 
 fwknop-2.6.3 (07/28/2014):
     - [client] External IP resolution via '-R' (or '--resolve-ip-http') is now
