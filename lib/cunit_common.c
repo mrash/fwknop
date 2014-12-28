@@ -35,12 +35,12 @@ int register_ts(c_unit_test_suite_t *ts)
    /* add the tests to the suite */
    for (ix_utest=0 ; ix_utest<ts->nb_c_unit_test ; ix_utest++)
    {
-	 c_unit_test_t* utest = &(ts->test_array[ix_utest]);
-	 if (NULL == CU_add_test(pSuite, utest->description, utest->func))
-	 {
-	   CU_cleanup_registry();
-       return CU_get_error();
-	 }
+       c_unit_test_t* utest = &(ts->test_array[ix_utest]);
+       if (NULL == CU_add_test(pSuite, utest->description, utest->func))
+       {
+           CU_cleanup_registry();
+           return CU_get_error();
+       }
    }
 
    return 0;

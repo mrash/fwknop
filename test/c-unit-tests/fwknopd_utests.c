@@ -11,7 +11,7 @@
  */
 static void register_test_suites(void)
 {
-	register_ts_access();
+    register_ts_access();
 }
 
 /* The main() function for setting up and running the tests.
@@ -20,16 +20,16 @@ static void register_test_suites(void)
  */
 int main()
 {
-   /* initialize the CUnit test registry */
-   if (CUE_SUCCESS != CU_initialize_registry())
-      return CU_get_error();
+    /* initialize the CUnit test registry */
+    if (CUE_SUCCESS != CU_initialize_registry())
+        return CU_get_error();
 
     /* Register test suites from fko files */
     register_test_suites();
 
-   /* Run all tests using the CUnit Basic interface */
-   CU_basic_set_mode(CU_BRM_VERBOSE);
-   CU_basic_run_tests();
-   CU_cleanup_registry();
-   return CU_get_error();
+    /* Run all tests using the CUnit Basic interface */
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+    return CU_get_error();
 }
