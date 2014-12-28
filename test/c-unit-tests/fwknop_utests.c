@@ -28,8 +28,8 @@ int main()
     register_test_suites();
 
     /* RUN ALL TESTS USING THE CUNIT BASIC INTERFACE */
-    CU_BASIC_SET_MODE(CU_BRM_VERBOSE);
-    CU_BASIC_RUN_TESTS();
-    CU_CLEANUP_REGISTRY();
-    RETURN CU_GET_ERROR();
+    CU_basic_set_mode(CU_BRM_VERBOSE);
+    CU_basic_run_tests();
+    CU_cleanup_registry();
+    return CU_get_error();
 }
