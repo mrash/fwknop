@@ -1,4 +1,4 @@
-##Build
+# Build
 ~~~
 $ ./autogen.sh
 $ ./configure --enable-c-unit-tests --prefix=/usr --sysconfdir=/etc --enable-profile-coverage
@@ -12,8 +12,9 @@ $ ./test-fwknop.pl --enable-profile-coverage-check --loopback lo
 The HAVE_C_UNIT_TESTS constant is used in source files to define c-unit test code. 
 Source code is built against libcunit.
 
-##Run test suites
+# Run test suites
 Once the build is complete, two test programs allow the user to run the tests suites:
+
  * fwknopd_utests: program to run fwknopd c unit test suites
  * fwknop_utests: program to run fwknop c unit test suites
 
@@ -53,16 +54,19 @@ Run Summary:    Type  Total    Ran Passed Failed Inactive
 Elapsed time =    0.000 seconds
 ~~~
 
-##Manage C unit tests
+# Manage C unit tests
 C unit tests are implemented in source files directly and registered in a test suite.
 All test suites are then added to fwknopd or fwknop test programs
 
 In order to add new tests, the user must follow the below steps:
+
  * Declare the tests suite
+ * Declare an initialization function
+ * Declare a cleanup function
  * Create one or more unit tests
  * Create a function to register new tests
 
-###Declare the tests suite
+## Declare the tests suite
 
 In access.c file:
 
@@ -73,17 +77,51 @@ In access.c file:
 ~~~
 
 In the above example, we create a test suite using the DECLARE_TEST_SUITE macro:
+ 
  * the test suite is named "access".
  * the test suite description is "Access test suite" and is displayed on the console 
    when the test program is executed
 
-###Create unit tests
+## Declare an initialization function
+
+To declare an init function to execute before runnning the test suite to initiize the context use the DECLARE_TEST_SUITE_INIT macro as follow:
+
+    DECLARE_TEST_SUITE_INIT(filename)
+
+~~~
+DECLARE_TEST_SUITE_INIT(access)
+{
+    log_set_verbosity(LOG_VERBOSITY_ERROR);
+    return 0;
+}
+~~~
+
+In the above example, the log message verbosity is decreeased to error to only display error messages since debug messages are useless.
+
+## Declare a cleanup function
+
+To declare a cleanup function to execute at the end of the test suite to cleanup the context use the DECLARE_TEST_SUITE_CLEANUP macro as follow:
+
+    DECLARE_TEST_SUITE_CLEANUP(filename)
+
+~~~
+DECLARE_TEST_SUITE_CLEANUP(access)
+{
+    return 0;
+}
+~~~
+
+In the above example, the cleanup function returns 0 and does strictly nothing. There is no need to declare such function and
+thus could be replaced by a NULL pointer at test suite initialization
+
+## Create unit tests
 
 In access.c file:
 
+~~~
 #ifdef HAVE_C_UNIT_TESTS
 
-~~~
+
 DECLARE_UTEST(compare_port_list, "check compare_port_list function")
 {
     acc_port_list_t *in1_pl = NULL;
@@ -108,11 +146,12 @@ DECLARE_UTEST(compare_port_list, "check compare_port_list function")
 ~~~
 
 In the above example, we create a c-unit test using the DECLARE_UTEST macro:
+
  * the unit test is named "compare_port_list". This id must be unique
  * the unit test description is "check compare_port_list function" and is displayed on the console 
    when the test program is executed
 
-###Create a function to register new tests
+## Create a function to register new tests
 
 In access.c file:
 
@@ -121,13 +160,15 @@ In access.c file:
 
 int register_ts_access(void)
 {
-    ts_init(&TEST_SUITE(access), TEST_SUITE_DESCR(access), NULL, NULL);
+    ts_init(&TEST_SUITE(access), TEST_SUITE_DESCR(access), TEST_SUITE_INIT(access), TEST_SUITE_CLEANUP(access));
     ts_add_utest(&TEST_SUITE(access), UTEST_FCT(compare_port_list), UTEST_DESCR(compare_port_list));
 
     return register_ts(&TEST_SUITE(access));
 }
 #endif /* HAVE_C_UNIT_TESTS */
 ~~~
+
+If no init or cleanup function is defined, they have to be replaced by a NULL pointer at test suite initialization.
 
 In access.h file:
 
@@ -147,4 +188,4 @@ static void register_test_suites(void)
 
 The register_ts_access function create the new test suite and add unit test to it.
 
-###Check gcov coverage
+## Check gcov coverage

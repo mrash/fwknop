@@ -7,7 +7,7 @@ libfko_source_files = \
     fko_message.h fko_nat_access.c fko_rand_value.c fko_server_auth.c \
     fko.h fko_limits.h fko_timestamp.c fko_hmac.c hmac.c hmac.h \
     fko_user.c fko_user.h md5.c md5.h rijndael.c rijndael.h sha1.c \
-    sha1.h sha2.c sha2.h fko_context.h fko_state.h fko_context.h \
+    sha1.h sha2.c sha2.h fko_context.h fko_state.h \
     gpgme_funcs.c gpgme_funcs.h strlcpy.c strlcat.c fko_util.c fko_util.h \
 	cunit_common.c cunit_common.h
 

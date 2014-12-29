@@ -36,6 +36,10 @@
 
 #define FIELD_PARSERS 9
 
+#ifdef HAVE_C_UNIT_TESTS
+DECLARE_TEST_SUITE(fko_decode, "FKO decode test suite");
+#endif
+
 static int
 num_fields(char *str)
 {
@@ -589,5 +593,24 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
     return(FKO_SUCCESS);
 }
+
+#ifdef HAVE_C_UNIT_TESTS
+
+DECLARE_UTEST(num_fields, "Count the number of SPA fields in a SPA packet")
+{
+    CU_ASSERT(num_fields("abcdef") == 0);
+    CU_ASSERT(num_fields("abcdef:gh") == 1);
+
+}
+
+int register_ts_fko_decode(void)
+{
+    ts_init(&TEST_SUITE(fko_decode), TEST_SUITE_DESCR(fko_decode), NULL, NULL);
+    ts_add_utest(&TEST_SUITE(fko_decode), UTEST_FCT(num_fields), UTEST_DESCR(num_fields));
+
+    return register_ts(&TEST_SUITE(fko_decode));
+}
+
+#endif /* HAVE_C_UNIT_TESTS */
 
 /***EOF***/
