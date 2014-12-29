@@ -1,3 +1,5 @@
+#ifdef HAVE_C_UNIT_TESTS
+
 #include "cunit_common.h"
 #include "stdlib.h"
 #include "stdio.h"
@@ -45,3 +47,5 @@ int register_ts(c_unit_test_suite_t *ts)
 
    return 0;
 }
+
+#endif /* HAVE_C_UNIT_TESTS */
