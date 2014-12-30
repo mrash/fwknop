@@ -664,6 +664,20 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
     return res;
 }
 
+static void
+mk_chain(const fko_srv_options_t * const opts, const int chain_num)
+{
+    /* Make sure the required chain and jump rule exist
+    */
+    if(chain_exists(opts, chain_num) == 0)
+        create_chain(opts, chain_num);
+
+    if (jump_rule_exists(opts, chain_num) == 0)
+        add_jump_rule(opts, chain_num);
+
+    return;
+}
+
 /* Create the fwknop custom chains (at least those that are configured).
 */
 static int
@@ -1018,20 +1032,10 @@ process_spa_request(const fko_srv_options_t * const opts,
         /* Check to make sure that the jump rules exist for each
          * required chain
         */
-        if(chain_exists(opts, IPT_INPUT_ACCESS) == 0)
-            create_chain(opts, IPT_INPUT_ACCESS);
-
-        if(jump_rule_exists(opts, IPT_INPUT_ACCESS) == 0)
-            add_jump_rule(opts, IPT_INPUT_ACCESS);
+        mk_chain(opts, IPT_INPUT_ACCESS);
 
         if(strlen(out_chain->to_chain))
-        {
-            if(chain_exists(opts, IPT_OUTPUT_ACCESS) == 0)
-                create_chain(opts, IPT_OUTPUT_ACCESS);
-
-            if(jump_rule_exists(opts, IPT_OUTPUT_ACCESS) == 0)
-                add_jump_rule(opts, IPT_OUTPUT_ACCESS);
-        }
+            mk_chain(opts, IPT_OUTPUT_ACCESS);
 
         /* Create an access command for each proto/port for the source ip.
         */
@@ -1163,11 +1167,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             /* Check to make sure that the jump rules exist for each
              * required chain
             */
-            if(chain_exists(opts, IPT_INPUT_ACCESS) == 0)
-                create_chain(opts, IPT_INPUT_ACCESS);
-
-            if(jump_rule_exists(opts, IPT_INPUT_ACCESS) == 0)
-                add_jump_rule(opts, IPT_INPUT_ACCESS);
+            mk_chain(opts, IPT_INPUT_ACCESS);
 
             if(rule_exists(opts, in_chain, rule_buf,
                         fst_proto, spadat->use_src_ip, spadat->pkt_destination_ip, nat_port, exp_ts) == 0)
@@ -1194,11 +1194,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             /* Make our FORWARD and NAT rules, and make sure the
              * required chain and jump rule exists
             */
-            if(chain_exists(opts, IPT_FORWARD_ACCESS) == 0)
-                create_chain(opts, IPT_FORWARD_ACCESS);
-
-            if (jump_rule_exists(opts, IPT_FORWARD_ACCESS) == 0)
-                add_jump_rule(opts, IPT_FORWARD_ACCESS);
+            mk_chain(opts, IPT_FORWARD_ACCESS);
 
             memset(rule_buf, 0, CMD_BUFSIZE);
 
@@ -1237,11 +1233,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         {
             /* Make sure the required chain and jump rule exist
             */
-            if(chain_exists(opts, IPT_DNAT_ACCESS) == 0)
-                create_chain(opts, IPT_DNAT_ACCESS);
-
-            if (jump_rule_exists(opts, IPT_DNAT_ACCESS) == 0)
-                add_jump_rule(opts, IPT_DNAT_ACCESS);
+            mk_chain(opts, IPT_DNAT_ACCESS);
 
             memset(rule_buf, 0, CMD_BUFSIZE);
 
@@ -1319,11 +1311,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_chain_num = IPT_MASQUERADE_ACCESS;
             }
 
-            if(chain_exists(opts, snat_chain_num) == 0)
-                create_chain(opts, snat_chain_num);
-
-            if(jump_rule_exists(opts, snat_chain_num) == 0)
-                add_jump_rule(opts, snat_chain_num);
+            mk_chain(opts, snat_chain_num);
 
             memset(rule_buf, 0, CMD_BUFSIZE);
 
