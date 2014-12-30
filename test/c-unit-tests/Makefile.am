@@ -70,8 +70,9 @@ fko_utests_SOURCES  = fko_utests.c \
 			../../lib/strlcpy.c \
 			../../lib/strlcat.c \
 			../../lib/fko_util.c \
-			../../lib/cunit_common.c
+			../../lib/cunit_common.c \
+			../../lib/gpgme_funcs.c
     
-fko_utests_CPPFLAGS = -I ../../lib -I ../../common
+fko_utests_CPPFLAGS = -I ../../lib -I ../../common $(GPGME_CFLAGS)
 
-fko_utests_LDFLAGS  = -lcunit
+fko_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)

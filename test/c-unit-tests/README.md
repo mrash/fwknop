@@ -1,4 +1,20 @@
 # Build
+
+C unit library is used to perform c unit testing. Source code associated to those tests
+must be started with
+
+~~~
+#ifdef HAVE_C_UNIT_TESTS
+~~~
+
+and closed with:
+
+~~~
+#endif /* HAVE_C_UNIT_TESTS */
+~~~
+In order to build the test suite use the following commands with the **--enable-c-unit-tests**
+switch
+
 ~~~
 $ ./autogen.sh
 $ ./configure --enable-c-unit-tests --prefix=/usr --sysconfdir=/etc --enable-profile-coverage
@@ -6,23 +22,18 @@ $ make
 ~~~
 
 ~~~
-$ ./test-fwknop.pl --enable-profile-coverage-check --loopback lo
+$ ./test-fwknop.pl --enable-profile-coverage-check --loopback lo --client-only-mode
 ~~~
 
-The HAVE_C_UNIT_TESTS constant is used in source files to define c-unit test code. 
-Source code is built against libcunit.
-
 # Run test suites
-Once the build is complete, two test programs allow the user to run the tests suites:
+Once the build is complete, three test programs allow the user to run the tests suites:
 
  * fwknopd_utests: program to run fwknopd c unit test suites
  * fwknop_utests: program to run fwknop c unit test suites
+ * fko_utests: program to run fko c unit test suites
 
 ~~~
 $ test/c-unit-tests/fwknopd_utests
-
-     CUnit - A unit testing framework for C - Version 2.1-2
-     http://cunit.sourceforge.net/
 
 Suite: Access test suite
   Test: check compare_port_list function ...FAILED
@@ -39,9 +50,6 @@ Elapsed time =    0.000 seconds
 ~~~
 $ test/c-unit-tests/fwknop_utests
 
-     CUnit - A unit testing framework for C - Version 2.1-2
-     http://cunit.sourceforge.net/
-
 Suite: Config init test suite
   Test: Check critcial vars ...passed
   Test: Check var_bitmask functions ...passed
@@ -54,21 +62,36 @@ Run Summary:    Type  Total    Ran Passed Failed Inactive
 Elapsed time =    0.000 seconds
 ~~~
 
+~~~
+$ test/c-unit-tests/fko_utests
+
+Suite: FKO decode test suite
+  Test: Count the number of SPA fields in a SPA packet ...passed
+  Test: Count the number of bytes to the last : ...passed
+
+Run Summary:    Type  Total    Ran Passed Failed Inactive
+              suites      1      1    n/a      0        0
+               tests      2      2      2      0        0
+             asserts     19     19     19      0      n/a
+
+Elapsed time =    0.000 seconds
+~~~
+
 # Manage C unit tests
-C unit tests are implemented in source files directly and registered in a test suite.
-All test suites are then added to fwknopd or fwknop test programs
+C unit tests are implemented in source files and registered in a test suite.
+All test suites are then added to fwknopd, fwknop or fko test programs
 
 In order to add new tests, the user must follow the below steps:
 
- * Declare the tests suite
+ * Declare a test suite
  * Declare an initialization function
- * Declare a cleanup function
+ * Declare a clean up function
  * Create one or more unit tests
  * Create a function to register new tests
+ 
+## Declare a test suite
 
-## Declare the tests suite
-
-In access.c file:
+In *source* file:
 
 ~~~
  #ifdef HAVE_C_UNIT_TESTS
@@ -76,7 +99,7 @@ In access.c file:
  #endif
 ~~~
 
-In the above example, we create a test suite using the DECLARE_TEST_SUITE macro:
+In the above example, we create a test suite using the **DECLARE_TEST_SUITE** macro:
  
  * the test suite is named "access".
  * the test suite description is "Access test suite" and is displayed on the console 
@@ -84,9 +107,10 @@ In the above example, we create a test suite using the DECLARE_TEST_SUITE macro:
 
 ## Declare an initialization function
 
-To declare an init function to execute before runnning the test suite to initiize the context use the DECLARE_TEST_SUITE_INIT macro as follow:
+Before running the test suite, an init function can be used to initialize the test suite context.
+To declare such a function use the **DECLARE_TEST_SUITE_INIT** macro.
 
-    DECLARE_TEST_SUITE_INIT(filename)
+In *source* file:
 
 ~~~
 DECLARE_TEST_SUITE_INIT(access)
@@ -96,13 +120,17 @@ DECLARE_TEST_SUITE_INIT(access)
 }
 ~~~
 
-In the above example, the log message verbosity is decreeased to error to only display error messages since debug messages are useless.
+In the above example, the log message verbosity is decreased to error level to only display error
+messages since debug messages are too verbose.
 
-## Declare a cleanup function
+In some cases, there is no need for such a function and thus this declaration is not mandatory.
 
-To declare a cleanup function to execute at the end of the test suite to cleanup the context use the DECLARE_TEST_SUITE_CLEANUP macro as follow:
+## Declare a clean-up function
 
-    DECLARE_TEST_SUITE_CLEANUP(filename)
+In order to clean up the context at the end of the test suite, it is possible to declare a clean up
+function with the **DECLARE_TEST_SUITE_CLEANUP** macro
+
+In *source* file:
 
 ~~~
 DECLARE_TEST_SUITE_CLEANUP(access)
@@ -111,16 +139,16 @@ DECLARE_TEST_SUITE_CLEANUP(access)
 }
 ~~~
 
-In the above example, the cleanup function returns 0 and does strictly nothing. There is no need to declare such function and
-thus could be replaced by a NULL pointer at test suite initialization
+In the above example, the clean up function returns 0 and does strictly nothing. 
+
+In some cases, there is no need for such function and thus this declaration is not mandatory.
 
 ## Create unit tests
 
-In access.c file:
+In *source* file:
 
 ~~~
 #ifdef HAVE_C_UNIT_TESTS
-
 
 DECLARE_UTEST(compare_port_list, "check compare_port_list function")
 {
@@ -134,26 +162,29 @@ DECLARE_UTEST(compare_port_list, "check compare_port_list function")
     add_port_list_ent(&in1_pl, "udp/6002");
     add_port_list_ent(&in2_pl, "udp/6002, udp/6003");
     add_port_list_ent(&acc_pl, "udp/6002, udp/6003");
-    CU_ASSERT(compare_port_list(in1_pl, acc_pl, 1) == 1);       /* Only one match is needed from access port list - 1 */
-    CU_ASSERT(compare_port_list(in2_pl, acc_pl, 1) == 1);       /* Only match is needed from access port list - 2 */
-    CU_ASSERT(compare_port_list(in1_pl, acc_pl, 0) == 1);       /* All ports must match access port list - 1 */
-    CU_ASSERT(compare_port_list(in2_pl, acc_pl, 0) == 1);       /* All ports must match access port list - 2 */
-    CU_ASSERT(compare_port_list(acc_pl, in1_pl, 0) == 0);       /* All ports must match in1 port list - 1 */
-    CU_ASSERT(compare_port_list(acc_pl, in2_pl, 0) == 1);       /* All ports must match in2 port list - 2 */
+    CU_ASSERT(compare_port_list(in1_pl, acc_pl, 1) == 1);
+    CU_ASSERT(compare_port_list(in2_pl, acc_pl, 1) == 1);
+    CU_ASSERT(compare_port_list(in1_pl, acc_pl, 0) == 1);
+    CU_ASSERT(compare_port_list(in2_pl, acc_pl, 0) == 1);
+    CU_ASSERT(compare_port_list(acc_pl, in1_pl, 0) == 0);
+    CU_ASSERT(compare_port_list(acc_pl, in2_pl, 0) == 1);
 }
 
 #endif /* HAVE_C_UNIT_TESTS */
 ~~~
 
-In the above example, we create a c-unit test using the DECLARE_UTEST macro:
+In the above example, we create a c-unit test using the **DECLARE_UTEST** macro:
 
- * the unit test is named "compare_port_list". This id must be unique
- * the unit test description is "check compare_port_list function" and is displayed on the console 
+ * The unit test is named "compare_port_list" ; This id must be unique
+ * The unit test description is "check compare_port_list function" and is displayed on the console 
    when the test program is executed
 
 ## Create a function to register new tests
 
-In access.c file:
+We have previously declared unit tests, but they have to be registered to a test suite
+to be executed.
+
+In *source* file:
 
 ~~~
 #ifdef HAVE_C_UNIT_TESTS
@@ -165,19 +196,25 @@ int register_ts_access(void)
 
     return register_ts(&TEST_SUITE(access));
 }
+
 #endif /* HAVE_C_UNIT_TESTS */
 ~~~
 
-If no init or cleanup function is defined, they have to be replaced by a NULL pointer at test suite initialization.
+If no init or cleanup function is defined, they have to be replaced by a NULL pointer
+at test suite initialization : **ts_init**
 
-In access.h file:
+Each unit test must be added using **ts_add_utest** function.
+
+In *header* file, add the register function prototype as follows:
 
 ~~~
 #ifdef HAVE_C_UNIT_TESTS
 int register_ts_access(void);
 #endif
 ~~~
-In fwknopd_utests.c file:
+
+In the unit test program, add the test suite to the current list of existing
+test suite.
 
 ~~~
 static void register_test_suites(void)
@@ -185,7 +222,5 @@ static void register_test_suites(void)
         register_ts_access();
 }
 ~~~
-
-The register_ts_access function create the new test suite and add unit test to it.
 
 ## Check gcov coverage

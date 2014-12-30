@@ -36,6 +36,9 @@
 
 #define FIELD_PARSERS 9
 
+/* Char used to separate SPA fields in an SPA packet */
+#define SPA_FIELD_SEPARATOR    ":"
+
 #ifdef HAVE_C_UNIT_TESTS
 DECLARE_TEST_SUITE(fko_decode, "FKO decode test suite");
 #endif
@@ -598,15 +601,57 @@ fko_decode_spa_data(fko_ctx_t ctx)
 
 DECLARE_UTEST(num_fields, "Count the number of SPA fields in a SPA packet")
 {
-    CU_ASSERT(num_fields("abcdef") == 0);
-    CU_ASSERT(num_fields("abcdef:gh") == 1);
+    int ix_field=0;
+    char spa_packet[(MAX_SPA_FIELDS+1)*3];
 
+    /* Zeroing the spa packet */
+    memset(spa_packet, 0, sizeof(spa_packet));
+    
+    /* Check we are able to count the number of SPA fields */
+    for(ix_field=0 ; ix_field<=MAX_SPA_FIELDS+2 ; ix_field++)
+    {
+        strcat(spa_packet, "x");
+        CU_ASSERT(num_fields(spa_packet) == ix_field);
+        strcat(spa_packet, SPA_FIELD_SEPARATOR);
+    }
+
+    /* Check for possible overflow */
+    strcat(spa_packet, "x");
+    CU_ASSERT(num_fields(spa_packet) == MAX_SPA_FIELDS + 2);
+    strcat(spa_packet, "x");
+    strcat(spa_packet, SPA_FIELD_SEPARATOR);
+    CU_ASSERT(num_fields(spa_packet) == MAX_SPA_FIELDS + 2);
+}
+
+DECLARE_UTEST(last_field, "Count the number of bytes to the last :")
+{
+    int ix_field;
+    char spa_packet[(MAX_SPA_FIELDS+1)*3];
+
+    /* Zeroing the spa packet */
+    memset(spa_packet, 0, sizeof(spa_packet));
+    
+    /* Check for a valid count when the number of field is less than MAX_SPA_FIELDS  */
+    CU_ASSERT(last_field("a:") == 2);
+    CU_ASSERT(last_field("ab:abc:") == 7);
+    CU_ASSERT(last_field("abc:abcd:") == 9);
+    CU_ASSERT(last_field("abc:abcd:abc") == 9);
+
+
+    /*  */
+    for(ix_field=0 ; ix_field<=MAX_SPA_FIELDS+2 ; ix_field++)
+    {
+        strcat(spa_packet, "x");
+        strcat(spa_packet, SPA_FIELD_SEPARATOR);
+    }
+    CU_ASSERT(last_field(spa_packet) == ((MAX_SPA_FIELDS+2)*2));
 }
 
 int register_ts_fko_decode(void)
 {
     ts_init(&TEST_SUITE(fko_decode), TEST_SUITE_DESCR(fko_decode), NULL, NULL);
     ts_add_utest(&TEST_SUITE(fko_decode), UTEST_FCT(num_fields), UTEST_DESCR(num_fields));
+    ts_add_utest(&TEST_SUITE(fko_decode), UTEST_FCT(last_field), UTEST_DESCR(last_field));
 
     return register_ts(&TEST_SUITE(fko_decode));
 }
