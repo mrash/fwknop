@@ -995,8 +995,7 @@ ipt_rule(const fko_srv_options_t * const opts,
         );
     }
 
-    /* Check to make sure that the jump rules exist for each
-     * required chain
+    /* Check to make sure that the chain and jump rule exists
     */
     mk_chain(opts, chain->type);
 
@@ -1086,14 +1085,6 @@ process_spa_request(const fko_srv_options_t * const opts,
     if((spadat->message_type == FKO_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG) && !acc->force_nat)
     {
-
-        /* Check to make sure that the jump rules exist for each
-         * required chain
-        */
-        mk_chain(opts, IPT_INPUT_ACCESS);
-
-        if(strlen(out_chain->to_chain))
-            mk_chain(opts, IPT_OUTPUT_ACCESS);
 
         /* Create an access command for each proto/port for the source ip.
         */
