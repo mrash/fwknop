@@ -7343,12 +7343,12 @@ sub file_find_regex() {
         return 0 if $tries == 5;
     }
 
-    open F, "< $file" or
+    open RE, "< $file" or
         (&write_test_file("[-] Could not open $file: $!\n", $curr_test_file) and return 0);
-    while (<F>) {
+    while (<RE>) {
         push @file_lines, $_;
     }
-    close F;
+    close RE;
 
     for my $re (@$re_ar) {
         my $matched = 0;
