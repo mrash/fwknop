@@ -8,11 +8,16 @@ if WANT_SERVER
   SERVER_DIR = server
 endif
 
+if WANT_C_UNIT_TESTS
+    C_UNIT_TESTS_DIR = test/c-unit-tests
+endif
+
 SUBDIRS = \
     lib \
     common \
     $(CLIENT_DIR) \
     $(SERVER_DIR) \
+    $(C_UNIT_TESTS_DIR) \
     doc
 
 EXTRA_DIST = \

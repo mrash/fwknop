@@ -42,6 +42,12 @@
   #include <fiu-control.h>
 #endif
 
+/* Include cunit header if c unit testing support is enabled. */
+#ifdef HAVE_C_UNIT_TESTS
+    #include "CUnit/Basic.h"
+    #include "cunit_common.h"
+#endif
+
 #include <stdio.h>
 
 #if HAVE_SYS_TYPES_H

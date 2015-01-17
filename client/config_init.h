@@ -43,6 +43,10 @@
 void config_init(fko_cli_options_t *options, int argc, char **argv);
 void usage(void);
 
+#ifdef HAVE_C_UNIT_TESTS
+int register_ts_config_init(void);
+#endif
+
 #endif /* CONFIG_INIT_H */
 
 /***EOF***/

@@ -12,7 +12,8 @@ fwknopd_SOURCES   = fwknopd.c fwknopd.h config_init.c config_init.h \
                     fw_util_iptables.c fw_util_iptables.h \
                     fw_util_ipfw.c fw_util_ipfw.h \
                     fw_util_pf.c fw_util_pf.h cmd_opts.h \
-                    extcmd.c extcmd.h
+                    extcmd.c extcmd.h \
+                    common.h
 
 fwknopd_LDADD     = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
 

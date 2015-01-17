@@ -40,11 +40,16 @@
 #include "access.h"
 #include "utils.h"
 #include "log_msg.h"
+#include "common.h"
 
 #define FATAL_ERR -1
 
 #ifndef SUCCESS
   #define SUCCESS    1
+#endif
+
+#ifdef HAVE_C_UNIT_TESTS
+DECLARE_TEST_SUITE(access, "Access test suite");
 #endif
 
 /* Add an access string entry
@@ -2004,5 +2009,35 @@ dump_access_list(const fko_srv_options_t *opts)
     fprintf(stdout, "\n");
     fflush(stdout);
 }
+#ifdef HAVE_C_UNIT_TESTS
+
+DECLARE_UTEST(compare_port_list, "check compare_port_list function")
+{
+    acc_port_list_t *in1_pl = NULL;
+    acc_port_list_t *in2_pl = NULL;
+    acc_port_list_t *acc_pl = NULL;
+
+    /* Match any test */	
+    free_acc_port_list(in1_pl);
+    free_acc_port_list(acc_pl);
+    add_port_list_ent(&in1_pl, "udp/6002");
+    add_port_list_ent(&in2_pl, "udp/6002, udp/6003");
+    add_port_list_ent(&acc_pl, "udp/6002, udp/6003");
+    CU_ASSERT(compare_port_list(in1_pl, acc_pl, 1) == 1);	/* Only one match is needed from access port list - 1 */
+    CU_ASSERT(compare_port_list(in2_pl, acc_pl, 1) == 1);	/* Only match is needed from access port list - 2 */
+    CU_ASSERT(compare_port_list(in1_pl, acc_pl, 0) == 1);	/* All ports must match access port list - 1 */
+    CU_ASSERT(compare_port_list(in2_pl, acc_pl, 0) == 1);	/* All ports must match access port list - 2 */
+    CU_ASSERT(compare_port_list(acc_pl, in1_pl, 0) == 0);	/* All ports must match in1 port list - 1 */
+    CU_ASSERT(compare_port_list(acc_pl, in2_pl, 0) == 1);	/* All ports must match in2 port list - 2 */
+}
+
+int register_ts_access(void)
+{
+    ts_init(&TEST_SUITE(access), TEST_SUITE_DESCR(access), NULL, NULL);
+    ts_add_utest(&TEST_SUITE(access), UTEST_FCT(compare_port_list), UTEST_DESCR(compare_port_list));
+
+    return register_ts(&TEST_SUITE(access));
+}
+#endif /* HAVE_C_UNIT_TESTS */
 
 /***EOF***/
