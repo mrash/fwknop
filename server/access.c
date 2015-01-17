@@ -1134,10 +1134,11 @@ acc_data_is_valid(struct passwd *user_pw, acc_stanza_t * const acc)
         }
     }
 
-    if((acc->force_snat == 1 || acc->force_masquerade == 1) && acc->force_nat == 0)
+    if((acc->force_snat == 1 || acc->force_masquerade == 1)
+            && acc->force_nat == 0 && acc->disable_dnat == 0)
     {
         log_msg(LOG_ERR,
-                "[*] FORCE_SNAT/FORCE_MASQUERADE implies FORCE_NAT must also be used for access stanza source: '%s'",
+                "[*] FORCE_SNAT/FORCE_MASQUERADE implies FORCE_NAT or DISABLE_DNAT must also be used for stanza source: '%s'",
                 acc->source
         );
         return(0);
@@ -1707,6 +1708,14 @@ parse_access_file(fko_srv_options_t *opts)
             add_acc_bool(&(curr_acc->force_masquerade), val);
             add_acc_bool(&(curr_acc->force_snat), val);
         }
+        else if(CONF_VAR_IS(var, "DISABLE_DNAT"))
+        {
+            add_acc_bool(&(curr_acc->disable_dnat), val);
+        }
+        else if(CONF_VAR_IS(var, "FORWARD_ALL"))
+        {
+            add_acc_bool(&(curr_acc->forward_all), val);
+        }
         else
         {
             log_msg(LOG_ERR,
@@ -1941,6 +1950,8 @@ dump_access_list(const fko_srv_options_t *opts)
             "           FORCE_NAT (port):  %d\n"
             "            FORCE_SNAT (ip):  %s\n"
             "           FORCE_MASQUERADE:  %s\n"
+            "               DISABLE_DNAT:  %s\n"
+            "                FORWARD_ALL:  %s\n"
             "              ACCESS_EXPIRE:  %s"  /* asctime() adds a newline */
             "               GPG_HOME_DIR:  %s\n"
             "                    GPG_EXE:  %s\n"
@@ -1972,6 +1983,8 @@ dump_access_list(const fko_srv_options_t *opts)
             acc->force_nat ? acc->force_nat_port : 0,
             acc->force_snat ? acc->force_snat_ip : "<not set>",
             acc->force_masquerade ? "Yes" : "No",
+            acc->disable_dnat ? "Yes" : "No",
+            acc->forward_all ? "Yes" : "No",
             (acc->access_expire_time > 0) ? asctime(localtime(&acc->access_expire_time)) : "<not set>\n",
             (acc->gpg_home_dir == NULL) ? "<not set>" : acc->gpg_home_dir,
             (acc->gpg_exe == NULL) ? "<not set>" : acc->gpg_exe,
