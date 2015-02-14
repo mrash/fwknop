@@ -16,10 +16,6 @@ fwknopd_SOURCES   = fwknopd.c fwknopd.h config_init.c config_init.h \
 
 fwknopd_LDADD     = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
 
-#if WANT_C_UNIT_TESTS
-#    fwknopd_LDADD +=  $(top_builddir)/common/libcunit_common.a
-#endif
-
 if !UDP_SERVER
     fwknopd_LDADD += -lpcap
 endif
