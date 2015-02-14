@@ -3,7 +3,6 @@
 #include "cunit_common.h"
 #include "stdlib.h"
 #include "stdio.h"
-#include "CUnit/Basic.h"
 
 void ts_init(c_unit_test_suite_t* ts, const char* description, int (*init)(void), int (*cleanup)(void))
 {

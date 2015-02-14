@@ -9,6 +9,10 @@ fwknop_CPPFLAGS     = -I $(top_srcdir)/lib -I $(top_srcdir)/common
 
 fwknop_LDADD        = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
 
+#if WANT_C_UNIT_TESTS
+#    fwknop_LDADD    +=  $(top_builddir)/common/libcunit_common.a
+#endif
+
 dist_man_MANS       = fwknop.8
 
 EXTRA_DIST          = fwknop.8.in

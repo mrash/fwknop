@@ -40,7 +40,6 @@
 #include "access.h"
 #include "utils.h"
 #include "log_msg.h"
-#include "common.h"
 
 #define FATAL_ERR -1
 
@@ -49,7 +48,8 @@
 #endif
 
 #ifdef HAVE_C_UNIT_TESTS
-DECLARE_TEST_SUITE(access, "Access test suite");
+  #include "cunit_common.h"
+  DECLARE_TEST_SUITE(access, "Access test suite");
 #endif
 
 /* Add an access string entry

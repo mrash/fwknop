@@ -53,7 +53,8 @@
 #define LF_CHAR                     0x0A                                /*!< Hexadecimal value associated to the LF char */
 
 #ifdef HAVE_C_UNIT_TESTS
-DECLARE_TEST_SUITE(config_init, "Config init test suite");
+  #include "cunit_common.h"
+  DECLARE_TEST_SUITE(config_init, "Config init test suite");
 #endif
 
 /**
