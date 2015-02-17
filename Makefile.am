@@ -13,8 +13,8 @@ if WANT_C_UNIT_TESTS
 endif
 
 SUBDIRS = \
-    lib \
     common \
+    lib \
     $(CLIENT_DIR) \
     $(SERVER_DIR) \
     $(C_UNIT_TESTS_DIR) \
