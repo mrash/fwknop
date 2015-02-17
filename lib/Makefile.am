@@ -12,10 +12,11 @@ libfko_source_files = \
 
 
 if WANT_C_UNIT_TESTS
-  libfko_la_LIBADD = $(top_builddir)/common/cunit_common.o
-  noinst_PROGRAMS = fko_utests
-  fko_utests_SOURCES = fko_utests.c
-  fko_utests_CPPFLAGS = -I ../lib -I ../common $(GPGME_CFLAGS)
+  libfko_la_LIBADD    = $(top_builddir)/common/cunit_common.o
+  noinst_PROGRAMS     = fko_utests
+  fko_utests_SOURCES  = fko_utests.c $(libfko_source_files)
+  fko_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS)
+  fko_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
   fko_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
 endif
 
