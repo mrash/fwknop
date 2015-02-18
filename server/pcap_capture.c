@@ -29,6 +29,7 @@
  *****************************************************************************
 */
 
+#if USE_LIBPCAP
 
 #include <pcap.h>
 
@@ -44,8 +45,6 @@
 #if HAVE_SYS_WAIT_H
   #include <sys/wait.h>
 #endif
-
-#if USE_LIBPCAP
 
 /* The pcap capture routine.
 */

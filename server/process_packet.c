@@ -31,6 +31,9 @@
  *
  *****************************************************************************
 */
+
+#if USE_LIBPCAP
+
 #include <pcap.h>
 
 #include "fwknopd_common.h"
@@ -227,5 +230,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     return;
 }
+
+#endif /* USE_LIBPCAP */
 
 /***EOF***/
