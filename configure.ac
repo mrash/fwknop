@@ -630,27 +630,31 @@ dnl
   AS_IF([test "x$FORCE_FIREWALLD_EXE" != x], [
     FIREWALLD_EXE="$FORCE_FIREWALLD_EXE"    
   ],[
-  AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
-    IPTABLES_EXE="$FORCE_IPTABLES_EXE"    
-  ],[
-    AS_IF([test "x$FORCE_IPFW_EXE" != x], [
-      IPFW_EXE="$FORCE_IPFW_EXE"    
-      IPTABLES_EXE=""    
+    AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
+      IPTABLES_EXE="$FORCE_IPTABLES_EXE"    
+      FIREWALLD_EXE=""    
     ],[
-      AS_IF([test "x$FORCE_PF_EXE" != x], [
-        PF_EXE="$FORCE_PF_EXE"    
-        IPFW_EXE=""    
+      AS_IF([test "x$FORCE_IPFW_EXE" != x], [
+        IPFW_EXE="$FORCE_IPFW_EXE"    
         IPTABLES_EXE=""    
+        FIREWALLD_EXE=""    
       ],[
-        AS_IF([test "x$FORCE_IPF_EXE" != x], [
-          IPF_EXE="$FORCE_IPF_EXE"    
-          PF_EXE=""    
+        AS_IF([test "x$FORCE_PF_EXE" != x], [
+          PF_EXE="$FORCE_PF_EXE"    
           IPFW_EXE=""    
           IPTABLES_EXE=""    
+          FIREWALLD_EXE=""    
+        ],[
+          AS_IF([test "x$FORCE_IPF_EXE" != x], [
+            IPF_EXE="$FORCE_IPF_EXE"    
+            PF_EXE=""    
+            IPFW_EXE=""    
+            IPTABLES_EXE=""    
+            FIREWALLD_EXE=""    
+          ]
         ]
       ]
     ]
-  ]
   ]
   )))))
 
@@ -664,33 +668,33 @@ dnl
       FIREWALL_EXE=$FIREWALLD_EXE
       AC_DEFINE_UNQUOTED([FIREWALL_FIREWALLD], [1], [The firewall type: firewalld.])
   ],[
-  AS_IF([test "x$IPTABLES_EXE" != x], [
-      FW_DEF="FW_IPTABLES"
-      FIREWALL_TYPE="iptables" 
-      FIREWALL_EXE=$IPTABLES_EXE
-      AC_DEFINE_UNQUOTED([FIREWALL_IPTABLES], [1], [The firewall type: iptables.])
-  ],[
-    AS_IF([test "x$IPFW_EXE" != x], [
-        FW_DEF="FW_IPFW"
-        FIREWALL_TYPE="ipfw" 
-        FIREWALL_EXE=$IPFW_EXE
-        AC_DEFINE_UNQUOTED([FIREWALL_IPFW], [1], [The firewall type: ipfw.])
+    AS_IF([test "x$IPTABLES_EXE" != x], [
+        FW_DEF="FW_IPTABLES"
+        FIREWALL_TYPE="iptables" 
+        FIREWALL_EXE=$IPTABLES_EXE
+        AC_DEFINE_UNQUOTED([FIREWALL_IPTABLES], [1], [The firewall type: iptables.])
     ],[
-        AS_IF([test "x$PF_EXE" != x], [
-            FW_DEF="FW_PF"
-            FIREWALL_TYPE="pf"
-            FIREWALL_EXE=$PF_EXE
-            AC_DEFINE_UNQUOTED([FIREWALL_PF], [1], [The firewall type: pf.])
-        ],[
-            AS_IF([test "x$IPF_EXE" != x], [
-              AC_MSG_ERROR([Sorry - ipf was specified or the only one found, however, it is not supported yet.])
-              FIREWALL_TYPE="ipf" 
-              FIREWALL_EXE=$IPF_EXE
-              AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
-          ], [AC_MSG_ERROR([No firewall program was found or specified.]) ]
-        ]
+      AS_IF([test "x$IPFW_EXE" != x], [
+          FW_DEF="FW_IPFW"
+          FIREWALL_TYPE="ipfw" 
+          FIREWALL_EXE=$IPFW_EXE
+          AC_DEFINE_UNQUOTED([FIREWALL_IPFW], [1], [The firewall type: ipfw.])
+      ],[
+          AS_IF([test "x$PF_EXE" != x], [
+              FW_DEF="FW_PF"
+              FIREWALL_TYPE="pf"
+              FIREWALL_EXE=$PF_EXE
+              AC_DEFINE_UNQUOTED([FIREWALL_PF], [1], [The firewall type: pf.])
+          ],[
+              AS_IF([test "x$IPF_EXE" != x], [
+                AC_MSG_ERROR([Sorry - ipf was specified or the only one found, however, it is not supported yet.])
+                FIREWALL_TYPE="ipf" 
+                FIREWALL_EXE=$IPF_EXE
+                AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
+            ], [AC_MSG_ERROR([No firewall program was found or specified.]) ]
+          ]
+      ]
     ]
-  ]
   ]
   )))))
 
