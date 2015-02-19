@@ -29,8 +29,9 @@
  *****************************************************************************
 */
 
-
-#include <pcap.h>
+#if USE_LIBPCAP
+  #include <pcap.h>
+#endif
 
 #include "fwknopd_common.h"
 #include "pcap_capture.h"

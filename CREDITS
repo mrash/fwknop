@@ -209,3 +209,7 @@ Grant Pannell
       and individual IP addresses can be specified as well. Also, multiple IP's
       and/or networks can be defined as a comma separated list (e.g.
       "192.168.10.0/24,10.1.1.123").
+
+Alexander Kozhevnikov
+    - Reported a bug when fwknop is compiled with --enable-udp-server where
+      the server was including pcap.h
