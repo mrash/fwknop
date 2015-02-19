@@ -30,8 +30,8 @@
 */
 
 #if USE_LIBPCAP
-
-#include <pcap.h>
+  #include <pcap.h>
+#endif
 
 #include "fwknopd_common.h"
 #include "pcap_capture.h"
@@ -45,6 +45,8 @@
 #if HAVE_SYS_WAIT_H
   #include <sys/wait.h>
 #endif
+
+#if USE_LIBPCAP
 
 /* The pcap capture routine.
 */

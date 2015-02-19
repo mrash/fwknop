@@ -33,8 +33,8 @@
 */
 
 #if USE_LIBPCAP
-
-#include <pcap.h>
+  #include <pcap.h>
+#endif
 
 #include "fwknopd_common.h"
 #include "netinet_common.h"
@@ -42,6 +42,8 @@
 #include "incoming_spa.h"
 #include "utils.h"
 #include "log_msg.h"
+
+#if USE_LIBPCAP
 
 void
 process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
