@@ -1111,7 +1111,6 @@ process_spa_request(const fko_srv_options_t * const opts,
                     (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
                     ple->proto, ple->port, out_chain, exp_ts, now, "OUTPUT",
                     spadat->spa_message_remain);
-
             }
             ple = ple->next;
         }

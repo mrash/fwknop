@@ -962,6 +962,64 @@ create_rule(const fko_srv_options_t * const opts,
     return res;
 }
 
+static void
+firewd_rule(const fko_srv_options_t * const opts,
+        const char * const complete_rule_buf,
+        const char * const fw_rule_macro,
+        const char * const srcip, const char * const dstip,
+        const unsigned int proto, const unsigned int port,
+        struct fw_chain * const chain,
+        const unsigned int exp_ts, const time_t now,
+        const char * const msg, const char * const access_msg)
+{
+    char rule_buf[CMD_BUFSIZE] = {0};
+
+    if(complete_rule_buf != NULL && complete_rule_buf[0] != 0x0)
+    {
+        strlcpy(rule_buf, complete_rule_buf, CMD_BUFSIZE-1);
+    }
+    else
+    {
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, fw_rule_macro,
+            chain->table,
+            proto,
+            srcip,
+            dstip,
+            port,
+            exp_ts,
+            chain->target
+        );
+    }
+
+    /* Check to make sure that the chain and jump rule exists
+    */
+    mk_chain(opts, chain->type);
+
+    if(rule_exists(opts, chain, rule_buf,
+                proto, srcip, dstip, port, exp_ts) == 0)
+    {
+        if(create_rule(opts, chain->to_chain, rule_buf))
+        {
+            log_msg(LOG_INFO, "Added %s rule to %s for %s -> %s %s, expires at %u",
+                msg, chain->to_chain, srcip, (dstip == NULL) ? FIREWD_ANY_IP : dstip,
+                access_msg, exp_ts
+            );
+
+            chain->active_rules++;
+
+            /* Reset the next expected expire time for this chain if it
+            * is warranted.
+            */
+            if(chain->next_expire < now || exp_ts < chain->next_expire)
+                chain->next_expire = exp_ts;
+        }
+    }
+
+    return;
+}
+
 /****************************************************************************/
 
 /* Rule Processing - Create an access request...
@@ -989,7 +1047,7 @@ process_spa_request(const fko_srv_options_t * const opts,
     struct fw_chain * const dnat_chain = &(opts->fw_config->chain[FIREWD_DNAT_ACCESS]);
     struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
-    int             res = 0, is_err, snat_chain_num = 0;
+    int             res = 0, is_err;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -1039,73 +1097,20 @@ process_spa_request(const fko_srv_options_t * const opts,
         */
         while(ple != NULL)
         {
-            memset(rule_buf, 0, CMD_BUFSIZE);
-
-            snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_RULE_ARGS,
-                in_chain->table,
-                ple->proto,
-                spadat->use_src_ip,
+            firewd_rule(opts, NULL, FIREWD_RULE_ARGS, spadat->use_src_ip,
                 (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
-                ple->port,
-                exp_ts,
-                in_chain->target
-            );
-
-            if(rule_exists(opts, in_chain, rule_buf,
-                        ple->proto, spadat->use_src_ip, spadat->pkt_destination_ip, ple->port, exp_ts) == 0)
-            {
-                if(create_rule(opts, in_chain->to_chain, rule_buf))
-                {
-                    log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
-                        in_chain->to_chain, spadat->use_src_ip,
-                        spadat->spa_message_remain, exp_ts
-                    );
-
-                    in_chain->active_rules++;
-
-                    /* Reset the next expected expire time for this chain if it
-                    * is warranted.
-                    */
-                    if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
-                        in_chain->next_expire = exp_ts;
-                }
-            }
+                ple->proto, ple->port, in_chain, exp_ts, now, "access",
+                spadat->spa_message_remain);
 
             /* If we have to make an corresponding OUTPUT rule if out_chain target
             * is not NULL.
             */
             if(strlen(out_chain->to_chain))
             {
-                memset(rule_buf, 0, CMD_BUFSIZE);
-
-                snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_OUT_RULE_ARGS,
-                    out_chain->table,
-                    ple->proto,
-                    spadat->use_src_ip,
+                firewd_rule(opts, NULL, FIREWD_OUT_RULE_ARGS, spadat->use_src_ip,
                     (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
-                    ple->port,
-                    exp_ts,
-                    out_chain->target
-                );
-
-                if(rule_exists(opts, out_chain, rule_buf,
-                        ple->proto, spadat->use_src_ip, spadat->pkt_destination_ip, ple->port, exp_ts) == 0)
-                {
-                    if(create_rule(opts, out_chain->to_chain, rule_buf))
-                    {
-                        log_msg(LOG_INFO, "Added Rule in %s for %s, %s expires at %u",
-                            out_chain->to_chain, spadat->use_src_ip,
-                            spadat->spa_message_remain, exp_ts
-                        );
-
-                        out_chain->active_rules++;
-
-                        /* Reset the next expected expire time for this chain if it
-                        * is warranted.  */
-                        if(out_chain->next_expire < now || exp_ts < out_chain->next_expire)
-                            out_chain->next_expire = exp_ts;
-                    }
-                }
+                    ple->proto, ple->port, out_chain, exp_ts, now, "OUTPUT",
+                    spadat->spa_message_remain);
             }
             ple = ple->next;
         }
@@ -1150,89 +1155,42 @@ process_spa_request(const fko_srv_options_t * const opts,
 
         if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG)
         {
-            memset(rule_buf, 0, CMD_BUFSIZE);
-
-            snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_RULE_ARGS,
-                in_chain->table,
-                fst_proto,
-                spadat->use_src_ip,
+            firewd_rule(opts, NULL, FIREWD_RULE_ARGS, spadat->use_src_ip,
                 (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
-                nat_port,
-                exp_ts,
-                in_chain->target
-            );
-
-            /* Check to make sure that the jump rules exist for each
-             * required chain
-            */
-            mk_chain(opts, FIREWD_INPUT_ACCESS);
-
-            if(rule_exists(opts, in_chain, rule_buf,
-                        fst_proto, spadat->use_src_ip, spadat->pkt_destination_ip, nat_port, exp_ts) == 0)
-            {
-                if(create_rule(opts, in_chain->to_chain, rule_buf))
-                {
-                    log_msg(LOG_INFO, "Added Rule to %s for %s, %s expires at %u",
-                        in_chain->to_chain, spadat->use_src_ip,
-                        spadat->spa_message_remain, exp_ts
-                    );
-
-                    in_chain->active_rules++;
-
-                    /* Reset the next expected expire time for this chain if it
-                    * is warranted.
-                    */
-                    if(in_chain->next_expire < now || exp_ts < in_chain->next_expire)
-                        in_chain->next_expire = exp_ts;
-                }
-            }
+                fst_proto, nat_port, in_chain, exp_ts, now, "local NAT",
+                spadat->spa_message_remain);
         }
         else if(strlen(fwd_chain->to_chain))
         {
-            /* Make our FORWARD and NAT rules, and make sure the
-             * required chain and jump rule exists
-            */
-            mk_chain(opts, FIREWD_FORWARD_ACCESS);
-
-            memset(rule_buf, 0, CMD_BUFSIZE);
-
-            snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_FWD_RULE_ARGS,
-                fwd_chain->table,
-                fst_proto,
-                spadat->use_src_ip,
-                nat_ip,
-                nat_port,
-                exp_ts,
-                fwd_chain->target
-            );
-
-            if(rule_exists(opts, fwd_chain, rule_buf, fst_proto,
-                    spadat->use_src_ip, nat_ip, nat_port, exp_ts) == 0)
+            if(acc->forward_all)
             {
-                if(create_rule(opts, fwd_chain->to_chain, rule_buf))
-                {
-                    log_msg(LOG_INFO, "Added FORWARD Rule to %s for %s, %s expires at %u",
-                        fwd_chain->to_chain, spadat->use_src_ip,
-                        spadat->spa_message_remain, exp_ts
-                    );
+                memset(rule_buf, 0, CMD_BUFSIZE);
 
-                    fwd_chain->active_rules++;
+                snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_FWD_ALL_RULE_ARGS,
+                    fwd_chain->table,
+                    spadat->use_src_ip,
+                    exp_ts,
+                    fwd_chain->target
+                );
 
-                    /* Reset the next expected expire time for this chain if it
-                    * is warranted.
-                    */
-                    if(fwd_chain->next_expire < now || exp_ts < fwd_chain->next_expire)
-                        fwd_chain->next_expire = exp_ts;
-                }
+                /* Make a global ACCEPT rule for all ports/protocols
+                */
+                firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+                    NULL, ANY_PROTO, ANY_PORT, fwd_chain, exp_ts, now,
+                    "FORWARD ALL", "*/*");
+            }
+            else
+            {
+                /* Make our FORWARD and NAT rules
+                */
+                firewd_rule(opts, NULL, FIREWD_FWD_RULE_ARGS, spadat->use_src_ip,
+                    nat_ip, fst_proto, nat_port, fwd_chain, exp_ts, now,
+                    "FORWARD", spadat->spa_message_remain);
             }
         }
 
         if(strlen(dnat_chain->to_chain))
         {
-            /* Make sure the required chain and jump rule exist
-            */
-            mk_chain(opts, FIREWD_DNAT_ACCESS);
-
             memset(rule_buf, 0, CMD_BUFSIZE);
 
             snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_DNAT_RULE_ARGS,
@@ -1247,25 +1205,10 @@ process_spa_request(const fko_srv_options_t * const opts,
                 nat_port
             );
 
-            if(rule_exists(opts, dnat_chain, rule_buf, fst_proto,
-                        spadat->use_src_ip, spadat->pkt_destination_ip, fst_port, exp_ts) == 0)
-            {
-                if(create_rule(opts, dnat_chain->to_chain, rule_buf))
-                {
-                    log_msg(LOG_INFO, "Added DNAT Rule to %s for %s, %s expires at %u",
-                        dnat_chain->to_chain, spadat->use_src_ip,
-                        spadat->spa_message_remain, exp_ts
-                    );
-
-                    dnat_chain->active_rules++;
-
-                    /* Reset the next expected expire time for this chain if it
-                    * is warranted.
-                    */
-                    if(dnat_chain->next_expire < now || exp_ts < dnat_chain->next_expire)
-                        dnat_chain->next_expire = exp_ts;
-                }
-            }
+            firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
+                fst_proto, fst_port, dnat_chain, exp_ts, now, "DNAT",
+                spadat->spa_message_remain);
         }
 
         /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
@@ -1280,7 +1223,6 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-source %s:%i", acc->force_snat_ip, fst_port);
-                snat_chain_num = FIREWD_SNAT_ACCESS;
             }
             else if(acc->force_snat && acc->force_masquerade)
             {
@@ -1288,7 +1230,6 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-ports %i", fst_port);
-                snat_chain_num = FIREWD_MASQUERADE_ACCESS;
             }
             else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
                 && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
@@ -1298,7 +1239,6 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
                     fst_port);
-                snat_chain_num = FIREWD_SNAT_ACCESS;
             }
             else
             {
@@ -1306,10 +1246,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
                 snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                     "--to-ports %i", fst_port);
-                snat_chain_num = FIREWD_MASQUERADE_ACCESS;
             }
-
-            mk_chain(opts, snat_chain_num);
 
             memset(rule_buf, 0, CMD_BUFSIZE);
 
@@ -1323,25 +1260,9 @@ process_spa_request(const fko_srv_options_t * const opts,
                 snat_target
             );
 
-            if(rule_exists(opts, snat_chain, rule_buf, fst_proto,
-                        spadat->use_src_ip, NULL, nat_port, exp_ts) == 0)
-            {
-                if(create_rule(opts, snat_chain->to_chain, rule_buf))
-                {
-                    log_msg(LOG_INFO, "Added SNAT Rule to %s for %s, %s expires at %u",
-                        snat_chain->to_chain, spadat->use_src_ip,
-                        spadat->spa_message_remain, exp_ts
-                    );
-
-                    snat_chain->active_rules++;
-
-                    /* Reset the next expected expire time for this chain if it
-                    * is warranted.
-                    */
-                    if(snat_chain->next_expire < now || exp_ts < snat_chain->next_expire)
-                            snat_chain->next_expire = exp_ts;
-                }
-            }
+            firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+                    NULL, fst_proto, nat_port, snat_chain, exp_ts, now, "SNAT",
+                    spadat->spa_message_remain);
         }
     }
 
