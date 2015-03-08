@@ -39,6 +39,7 @@
 
 #define EXPIRE_COMMENT_PREFIX "_exp_"
 #define TMP_COMMENT "__TMPCOMMENT__"
+#define DUMMY_IP "127.0.0.2"
 
 #if FIREWALL_FIREWALLD
   #include "fw_util_firewalld.h"
