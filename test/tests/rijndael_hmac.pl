@@ -603,6 +603,22 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => "$FW_TYPE multi port re search (1)",
+        'function' => \&spa_cycle,
+        'cmdline' => "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --rc-file " .
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/^1\s+ACCEPT\s+tcp.*dpt:60001/,
+            qr/^2\s+ACCEPT\s+udp.*dpt:60001/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'random SPA port (tcp/22)',
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_hmac_args -r",

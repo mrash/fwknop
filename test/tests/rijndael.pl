@@ -1146,11 +1146,38 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => "$FW_TYPE multi port re search (1)",
+        'function' => \&spa_cycle,
+        'cmdline' => "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file $verbose_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/^1\s+ACCEPT\s+tcp.*dpt:60001/,
+            qr/^2\s+ACCEPT\s+udp.*dpt:60001/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/22,udp/53,tcp/1234)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "$FW_TYPE multi port re search (2)",
+        'function' => \&spa_cycle,
+        'cmdline' => "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file $verbose_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/^1\s+ACCEPT\s+tcp.*dpt:22\s/,
+            qr/^2\s+ACCEPT\s+udp.*dpt:53\s/, qr/^3\s+ACCEPT\s+tcp.*dpt:1234\s/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
