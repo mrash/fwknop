@@ -6,7 +6,6 @@
 ### config files
 CONF_DIR=../conf
 IN_DIR=$CONF_DIR
-OUT_DIR=${IN_DIR}.cmin
 OUT_DIR="test-cases/server-access.cmin"
 FUZZ_FILE=access_tmp.conf
 

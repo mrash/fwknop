@@ -1,0 +1,12 @@
+
+Normally the test corpus in the test/afl/test-cases/ directory is sufficient
+for effective AFL fuzzing rounds. However, if you want to test with an expanded
+set of files that have gone through afl-cmin, then you can leverage the scripts
+in this directory. This uses the complete set of main test suite config files
+in the test/conf/ directory as the input corpus for afl-cmin. The work flow
+would be (for the server-access.sh fuzzing wrapper for example):
+
+$ cd fwknop.git/test/afl/
+$ ./compile/afl-compile.sh
+$ ./fuzzing-wrappers/helpers/afl-cmin/server-access-cmin.sh
+$ ./fuzzing-wrappers/server-access.sh
