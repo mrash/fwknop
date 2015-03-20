@@ -1,8 +1,0 @@
-[default]
-KEY	testkey
-
-[stanza_1]
-KEY	testkey_1
-
-[stanza_2]
-KEY	testkey_2

@@ -9,7 +9,7 @@
 FDIR="server-conf.out"
 OUT_DIR="$TOP_DIR/$FDIR"
 PREV_OUT_DIR=''
-IN_DIR="test-cases/server-conf.cmin"
+IN_DIR="test-cases/server-conf"
 FUZZ_FILE=$OUT_DIR/afl_fwknopd.conf
 
 ### build up our afl-fuzz text banner
