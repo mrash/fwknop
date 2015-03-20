@@ -9,7 +9,7 @@
 FDIR="spa-pkts.out"
 OUT_DIR="$TOP_DIR/$FDIR"
 PREV_OUT_DIR=''
-IN_DIR="test-cases/spa-pkts"
+IN_DIR="test-cases/spa-pkts.cmin"
 
 ### build up our afl-fuzz text banner
 TSTR="fwknopd,SPA,encode/decode"
