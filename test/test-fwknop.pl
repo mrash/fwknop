@@ -217,6 +217,7 @@ my $enable_profile_coverage_check = 0;
 my $disable_profile_coverage_init = 0;
 my $profile_rm_prev_sh = 'rm-coverage-files.sh';
 my $profile_gen_report_sh = 'gen-coverage-report.sh';
+my $profile_init_sh = 'init-lcov.sh';
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -6740,6 +6741,7 @@ sub init() {
                     print "[-] Warning: -fprofile-args -ftest-coverage not ",
                         "found, use ./configure --enable-profile-coverage?\n";
                 }
+                &run_cmd($profile_init_sh, $cmd_out_tmp, $curr_test_file);
             }
             push @tests_to_exclude, qr/distcheck/;
         }
