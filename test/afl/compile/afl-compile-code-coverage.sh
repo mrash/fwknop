@@ -1,9 +1,16 @@
 #!/bin/sh -x
+#
+# Recompile fwknop with AFL code enabled, but without using afl-gcc. The
+# purpose of this is to allow the generated fuzzing corpus under an AFL
+# fuzzing run to be sent back through the fwknop code to see which
+# functions/lines were executed by AFL. This can be used to help tune the
+# original test case inputs.
+#
 
-cd ..
-./rm-coverage-files.sh
-cd afl
-
-./compile/afl-compile.sh --enable-profile-coverage
+cd ../../
+./extras/apparmor/configure_args.sh --enable-afl-fuzzing --enable-profile-coverage $@
+make clean
+make
+cd test/afl
 
 exit $?
