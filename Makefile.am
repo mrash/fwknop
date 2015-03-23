@@ -362,27 +362,27 @@ EXTRA_DIST = \
     test/afl/compile/afl-compile.sh \
     test/afl/doc/AFL_status_screen.png \
     test/afl/README.md \
-    test/afl/fuzzing-wrappers/client-rc.sh
-    test/afl/fuzzing-wrappers/helpers/fwknop-rc-test.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-enc-pkt-file.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-digest-cache.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh
-    test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh
-    test/afl/fuzzing-wrappers/helpers/afl-cmin/server-conf-cmin.sh
-    test/afl/fuzzing-wrappers/helpers/afl-cmin/README
-    test/afl/fuzzing-wrappers/helpers/afl-cmin/spa-pkts-cmin.sh
-    test/afl/fuzzing-wrappers/helpers/afl-cmin/server-access-cmin.sh
-    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh
-    test/afl/fuzzing-wrappers/server-digest-cache.sh
-    test/afl/fuzzing-wrappers/spa-pkts.sh
-    test/afl/fuzzing-wrappers/server-access.sh
-    test/afl/fuzzing-wrappers/server-enc-pkts.sh
-    test/afl/fuzzing-wrappers/fcns
-    test/afl/fuzzing-wrappers/server-conf.sh
+    test/afl/fuzzing-wrappers/client-rc.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknop-rc-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-enc-pkt-file.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-digest-cache.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/server-conf-cmin.sh \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/README \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/spa-pkts-cmin.sh \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/server-access-cmin.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh \
+    test/afl/fuzzing-wrappers/server-digest-cache.sh \
+    test/afl/fuzzing-wrappers/spa-pkts.sh \
+    test/afl/fuzzing-wrappers/server-access.sh \
+    test/afl/fuzzing-wrappers/server-enc-pkts.sh \
+    test/afl/fuzzing-wrappers/fcns \
+    test/afl/fuzzing-wrappers/server-conf.sh \
     test/afl/test-cases/client-rc/fwknoprc \
     test/afl/test-cases/server-digest-cache/digest.cache \
     test/afl/test-cases/spa-pkts.cmin/spa1_sha384.start \
@@ -400,7 +400,7 @@ EXTRA_DIST = \
     test/afl/test-cases/spa-pkts/spa1_sha512.start \
     test/afl/test-cases/spa-pkts/spa3_md5.start \
     test/afl/test-cases/spa-pkts/spa1_md5.start \
-    test/afl/test-cases/spa-pkts/spa2_sha256.star \t
+    test/afl/test-cases/spa-pkts/spa2_sha256.start \
     test/afl/test-cases/spa-pkts/spa2_sha512.start \
     test/afl/test-cases/spa-pkts/spa2_sha384.start \
     test/afl/test-cases/spa-pkts/spa2_md5.start \
