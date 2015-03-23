@@ -9,4 +9,5 @@ would be (for the server-access.sh fuzzing wrapper for example):
 $ cd fwknop.git/test/afl/
 $ ./compile/afl-compile.sh
 $ ./fuzzing-wrappers/helpers/afl-cmin/server-access-cmin.sh
+<edit the script below to use the new test-cases/server-access.cmin directory>
 $ ./fuzzing-wrappers/server-access.sh
