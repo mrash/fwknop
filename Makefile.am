@@ -424,6 +424,8 @@ EXTRA_DIST = \
     test/configure_max_coverage.sh \
     test/rm-coverage-files.sh \
     test/gen-coverage-report.sh \
+    test/init-lcov.sh \
+    test/lcov.env \
     test/configure_max_coverage.sh \
     test/README \
     VERSION \
