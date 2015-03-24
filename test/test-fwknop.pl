@@ -6548,6 +6548,10 @@ sub init() {
     unlink $init_file if -e $init_file;
     unlink $logfile   if -e $logfile;
 
+    ### always restore the gpg directories before tests are
+    ### executed
+    &restore_gpg_dirs();
+
     if ($test_include) {
         for my $re (split /\s*,\s*/, $test_include) {
             push @tests_to_include, qr/$re/;

@@ -122,18 +122,6 @@ EXTRA_DIST = \
     python/fkomodule.c \
     python/fko.py \
     test/conf/gpg_dirs_orig.tar.gz \
-    test/conf/client-gpg/pubring.gpg \
-    test/conf/client-gpg/secring.gpg \
-    test/conf/client-gpg/trustdb.gpg \
-    test/conf/client-gpg-no-pw/pubring.gpg \
-    test/conf/client-gpg-no-pw/secring.gpg \
-    test/conf/client-gpg-no-pw/trustdb.gpg \
-    test/conf/server-gpg/pubring.gpg \
-    test/conf/server-gpg/secring.gpg \
-    test/conf/server-gpg/trustdb.gpg \
-    test/conf/server-gpg-no-pw/pubring.gpg \
-    test/conf/server-gpg-no-pw/secring.gpg \
-    test/conf/server-gpg-no-pw/trustdb.gpg \
     test/conf/hmac_android_access.conf \
     test/conf/android_access.conf \
     test/conf/android_legacy_iv_access.conf \
