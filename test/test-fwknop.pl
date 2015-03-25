@@ -34,6 +34,7 @@ my $username        = '';
 my $gpg_dirs_tar = 'gpg_dirs.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
+our $gpg_client_4096_bit_key_no_pw = "$conf_dir/client-gpg-large-no-pw";
 our $replay_pcap_file     = "$conf_dir/spa_replay.pcap";
 our $multi_pkts_pcap_file = "$conf_dir/multi_pkts.pcap";
 our $fcs_pcap_file        = "$conf_dir/fcs_spa.pcap";
@@ -57,6 +58,8 @@ our $fwknopdCmd = '../server/.libs/fwknopd';
 
 our $gpg_server_key = '361BBAD4';
 our $gpg_client_key = '6A3FAD56';
+our $gpg_server_key2 = 'EF5AF06A';
+our $gpg_client_large_key = '31415ADE';
 
 our $loopback_ip       = '127.0.0.1';
 our $fake_ip           = '127.0.0.2';
@@ -445,6 +448,7 @@ our %cf = (
     'gpg_no_pw_hmac_sha512_access' => "$conf_dir/gpg_no_pw_hmac_sha512_access.conf",
     'gpg_no_sig_verify_access'     => "$conf_dir/gpg_no_sig_verify_access.conf",
     'gpg_invalid_sig_id_access'    => "$conf_dir/gpg_invalid_sig_id_access.conf",
+    'gpg_large_signing_key_access' => "$conf_dir/gpg_large_signing_key_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'udp_server'                   => "$conf_dir/udp_server_fwknopd.conf",
     'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
@@ -669,6 +673,12 @@ our $default_client_gpg_args_no_pw = "$default_client_args_no_get_key " .
     "--gpg-recipient-key $gpg_server_key " .
     "--gpg-signer-key $gpg_client_key " .
     "--gpg-home-dir $gpg_client_home_dir_no_pw";
+
+our $client_gpg_large_key_args_no_pw = "$default_client_args_no_get_key " .
+    "--gpg-no-signing-pw " .
+    "--gpg-recipient-key $gpg_server_key2 " .
+    "--gpg-signer-key $gpg_client_large_key " .
+    "--gpg-home-dir $gpg_client_4096_bit_key_no_pw";
 
 our $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
     "-d $default_digest_file -p $default_pid_file";
