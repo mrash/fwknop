@@ -7475,10 +7475,8 @@ sub usage() {
     --enable-profile-coverage          - Generate profile coverage stats with an
                                          emphasis on finding functions that the
                                          test suite does not call.
-    --profile-coverage-preserve        - In --enable-profile-coverage mode,
-                                         preserve previous coverage files.
-    --profile-coverage-init            - Remove old .gcno, .gcda, and .gcov files
-                                         and recompile fwknop.
+    --disable-profile-coverage-init    - Do not remove old .gcno, .gcda, and
+                                         .gcov files or recompile fwknop.
     --enable-recompile                 - Recompile fwknop sources and look for
                                          compilation warnings.
     --enable-configure-args-checks     - Run the autoconf configure script with
