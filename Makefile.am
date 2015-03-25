@@ -121,7 +121,7 @@ EXTRA_DIST = \
     python/setup.py \
     python/fkomodule.c \
     python/fko.py \
-    test/conf/gpg_dirs_orig.tar.gz \
+    test/conf/gpg_dirs.tar.gz \
     test/conf/hmac_android_access.conf \
     test/conf/android_access.conf \
     test/conf/android_legacy_iv_access.conf \

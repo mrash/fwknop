@@ -31,7 +31,7 @@ my $key_tmp         = 'key.tmp';
 my $enc_save_tmp    = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
 my $username        = '';
-my $gpg_dir_orig_tar = 'gpg_dirs_orig.tar.gz';
+my $gpg_dirs_tar = 'gpg_dirs.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $replay_pcap_file     = "$conf_dir/spa_replay.pcap";
@@ -6876,8 +6876,8 @@ sub restore_gpg_dirs() {
 
     chdir $conf_dir or die $!;
 
-    if (-e $gpg_dir_orig_tar) {
-        system "tar xfz $gpg_dir_orig_tar > /dev/null";
+    if (-e $gpg_dirs_tar) {
+        system "tar xfz $gpg_dirs_tar > /dev/null";
     }
 
     chdir $curr_pwd or die $!;
