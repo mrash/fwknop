@@ -35,6 +35,7 @@ my $gpg_dirs_tar = 'gpg_dirs.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $gpg_client_4096_bit_key_no_pw = "$conf_dir/client-gpg-large-no-pw";
+our $gpg_client_subkey_no_pw = "$conf_dir/client-gpg-subkeys-no-pw";
 our $replay_pcap_file     = "$conf_dir/spa_replay.pcap";
 our $multi_pkts_pcap_file = "$conf_dir/multi_pkts.pcap";
 our $fcs_pcap_file        = "$conf_dir/fcs_spa.pcap";
@@ -61,6 +62,17 @@ our $gpg_client_key = '6A3FAD56';
 our $gpg_server_key2 = 'EF5AF06A';
 our $gpg_client_large_key = '31415ADE';
 
+#gpg --homedir ./client-gpg-subkeys-no-pw/ --list-keys
+#./client-gpg-subkeys-no-pw//pubring.gpg
+#---------------------------------------
+#pub   4096R/31415ADE 2015-03-23
+#uid                  fwknop project (client multi subkeys, TESTING ONLY)
+#sub   4096R/82E1000B 2015-03-23
+#sub   2048R/8377E3D8 2015-03-25
+#sub   2048R/9CF38326 2015-03-25
+
+our $gpg_client_subkey = '9CF38326'; ### last subkey in the keyring as shown above,
+                                     ### and GPG_REMOTE_ID must match in access.conf
 our $loopback_ip       = '127.0.0.1';
 our $fake_ip           = '127.0.0.2';
 our $spoof_ip          = '1.2.3.4';
@@ -449,6 +461,7 @@ our %cf = (
     'gpg_no_sig_verify_access'     => "$conf_dir/gpg_no_sig_verify_access.conf",
     'gpg_invalid_sig_id_access'    => "$conf_dir/gpg_invalid_sig_id_access.conf",
     'gpg_large_signing_key_access' => "$conf_dir/gpg_large_signing_key_access.conf",
+    'gpg_subkey_access'            => "$conf_dir/gpg_subkey_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'udp_server'                   => "$conf_dir/udp_server_fwknopd.conf",
     'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
@@ -679,6 +692,12 @@ our $client_gpg_large_key_args_no_pw = "$default_client_args_no_get_key " .
     "--gpg-recipient-key $gpg_server_key2 " .
     "--gpg-signer-key $gpg_client_large_key " .
     "--gpg-home-dir $gpg_client_4096_bit_key_no_pw";
+
+our $client_gpg_subkey_args_no_pw = "$default_client_args_no_get_key " .
+    "--gpg-no-signing-pw " .
+    "--gpg-recipient-key $gpg_server_key2 " .
+    "--gpg-signer-key $gpg_client_subkey " .
+    "--gpg-home-dir $gpg_client_subkey_no_pw";
 
 our $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
     "-d $default_digest_file -p $default_pid_file";
