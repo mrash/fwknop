@@ -107,7 +107,7 @@ my_passphrase_cb(
 
 /* Verify gpg signatures in a verify_result set.
 */
-int
+static int
 process_sigs(fko_ctx_t fko_ctx, gpgme_verify_result_t vres)
 {
     unsigned int        sig_cnt = 0;
