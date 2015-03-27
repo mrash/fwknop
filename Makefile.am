@@ -165,6 +165,7 @@ EXTRA_DIST = \
     test/conf/gpg_no_sig_verify_access.conf \
     test/conf/gpg_invalid_sig_id_access.conf \
     test/conf/gpg_large_signing_key_access.conf \
+    test/conf/gpg_subkey_access.conf \
     test/conf/fwknoprc_gpg_invalid_exe \
     test/conf/fwknoprc_hmac_defaults \
     test/conf/fwknoprc_hmac_time_offset_mins \
