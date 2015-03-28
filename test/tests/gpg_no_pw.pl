@@ -57,6 +57,28 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => '4096 enc key, 2048 signing subkey',
+        'function' => \&spa_cycle,
+        'cmdline'  => $client_gpg_server_4096_args_no_pw,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} " .
+            "-a $cf{'gpg_server_large_key_access'} $intf_str " .
+            "-d $default_digest_file -p $default_pid_file",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'GPG (no pw)',
+        'subcategory' => 'client+server',
+        'detail'   => '4096 enc key, 4096 signing subkey',
+        'function' => \&spa_cycle,
+        'cmdline'  => $client_and_server_gpg_4096_args_no_pw,
+        'positive_output_matches' => [qr/FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_RESULT_MSGLEN_VALIDFAIL/],
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+    },
 
     {
         'category' => 'GPG (no pw)',

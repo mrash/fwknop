@@ -61,6 +61,7 @@ our $gpg_server_key = '361BBAD4';
 our $gpg_client_key = '6A3FAD56';
 our $gpg_server_key2 = 'EF5AF06A';
 our $gpg_client_large_key = '31415ADE';
+our $gpg_server_large_key = '40051F51';
 
 #gpg --homedir ./client-gpg-subkeys-no-pw/ --list-keys
 #./client-gpg-subkeys-no-pw//pubring.gpg
@@ -462,6 +463,7 @@ our %cf = (
     'gpg_invalid_sig_id_access'    => "$conf_dir/gpg_invalid_sig_id_access.conf",
     'gpg_large_signing_key_access' => "$conf_dir/gpg_large_signing_key_access.conf",
     'gpg_subkey_access'            => "$conf_dir/gpg_subkey_access.conf",
+    'gpg_server_large_key_access'  => "$conf_dir/gpg_server_large_key_access.conf",
     'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'udp_server'                   => "$conf_dir/udp_server_fwknopd.conf",
     'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
@@ -698,6 +700,18 @@ our $client_gpg_subkey_args_no_pw = "$default_client_args_no_get_key " .
     "--gpg-recipient-key $gpg_server_key2 " .
     "--gpg-signer-key $gpg_client_subkey " .
     "--gpg-home-dir $gpg_client_subkey_no_pw";
+
+our $client_gpg_server_4096_args_no_pw = "$default_client_args_no_get_key " .
+    "--gpg-no-signing-pw " .
+    "--gpg-recipient-key $gpg_server_large_key " .
+    "--gpg-signer-key $gpg_client_subkey " .
+    "--gpg-home-dir $gpg_client_subkey_no_pw";
+
+our $client_and_server_gpg_4096_args_no_pw = "$default_client_args_no_get_key " .
+    "--gpg-no-signing-pw " .
+    "--gpg-recipient-key $gpg_server_large_key " .
+    "--gpg-signer-key $gpg_client_large_key " .
+    "--gpg-home-dir $gpg_client_4096_bit_key_no_pw";
 
 our $default_server_conf_args = "-c $cf{'def'} -a $cf{'def_access'} " .
     "-d $default_digest_file -p $default_pid_file";
