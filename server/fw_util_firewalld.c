@@ -88,6 +88,17 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         fwc->to_chain
     );
 
+#if CODE_COVERAGE
+    int pid_status = 0;
+    /* If we're maximizing code coverage, then exercise the run_extcmd_write()
+     * function which is normally only used for the PF firewall. This is to
+     * maximize code coverage in conjunction with the test suite, and is never
+     * compiled in for a production release of fwknop.
+    */
+    if(run_extcmd_write("/bin/grep -v test", "/bin/echo test", &pid_status, opts) != 0)
+        log_msg(LOG_WARNING, "Code coverage: Could not execute command");
+#endif
+
     if(proto == IPPROTO_TCP)
         snprintf(proto_search, CMD_BUFSIZE-1, " tcp ");
     else if(proto == IPPROTO_UDP)
