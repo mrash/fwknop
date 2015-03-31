@@ -1,0 +1,26 @@
+
+            american fuzzy lop 1.58b (fwknopd,digest.cache,c4ffd4b)
+
+┌─ process timing ─────────────────────────────────────┬─ overall results ─────┐
+│        run time : 0 days, 2 hrs, 28 min, 11 sec      │  cycles done : 48     │
+│   last new path : 0 days, 1 hrs, 9 min, 43 sec       │  total paths : 73     │
+│ last uniq crash : none seen yet                      │ uniq crashes : 0      │
+│  last uniq hang : none seen yet                      │   uniq hangs : 0      │
+├─ cycle progress ────────────────────┬─ map coverage ─┴───────────────────────┤
+│  now processing : 40 (54.79%)       │    map density : 777 (1.19%)           │
+│ paths timed out : 0 (0.00%)         │ count coverage : 1.20 bits/tuple       │
+├─ stage progress ────────────────────┼─ findings in depth ────────────────────┤
+│  now trying : splice 10             │ favored paths : 6 (8.22%)              │
+│ stage execs : 105/500 (21.00%)      │  new edges on : 10 (13.70%)            │
+│ total execs : 21.0M                 │ total crashes : 0 (0 unique)           │
+│  exec speed : 2838/sec              │   total hangs : 0 (0 unique)           │
+├─ fuzzing strategy yields ───────────┴───────────────┬─ path geometry ────────┤
+│   bit flips : 7/467k, 2/467k, 2/467k                │    levels : 5          │
+│  byte flips : 0/58.5k, 0/58.4k, 1/58.3k             │   pending : 0          │
+│ arithmetics : 0/3.22M, 0/834k, 0/197k               │  pend fav : 0          │
+│  known ints : 1/313k, 0/2.08M, 0/2.87M              │ own finds : 72         │
+│  dictionary : 0/0, 0/0, 0/67.2k                     │  imported : n/a        │
+│       havoc : 42/3.63M, 17/6.22M                    │  variable : 0          │
+│        trim : 40.63%/28.8k, 0.00%                   ├────────────────────────┘
+└─────────────────────────────────────────────────────┘             [cpu:124%]
+
