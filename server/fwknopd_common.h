@@ -449,9 +449,6 @@ typedef struct acc_stanza
       struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
       char            fw_command[MAX_PATH_LEN];
 
-      /* Flag for firewalld SNAT vs. MASQUERADE usage
-      */
-      unsigned char   use_masquerade;
       /* Flag for setting destination field in rule
       */
       unsigned char   use_destination;

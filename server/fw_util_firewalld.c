@@ -481,7 +481,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         fprintf(stdout, "Listing all firewalld rules in applicable tables...\n");
         fflush(stdout);
 
-        for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
         {
 
             if(fwc.chain[i].target[0] == '\0')
@@ -515,7 +515,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         fprintf(stdout, "Listing rules in fwknopd firewalld chains...\n");
         fflush(stdout);
 
-        for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
         {
 
             if(fwc.chain[i].target[0] == '\0')
@@ -559,7 +559,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 {
     int     i, res, cmd_ctr = 0;
 
-    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+    for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
@@ -687,7 +687,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
 {
     int     i, got_err = 0;
 
-    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+    for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
@@ -810,7 +810,6 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 int
 fw_config_init(fko_srv_options_t * const opts)
 {
-
     memset(&fwc, 0x0, sizeof(struct fw_config));
 
     /* Set our firewall exe command path (firewall-cmd or iptables in most cases).
@@ -835,7 +834,7 @@ fw_config_init(fko_srv_options_t * const opts)
     if(set_fw_chain_conf(FIREWD_INPUT_ACCESS, opts->config[CONF_FIREWD_INPUT_ACCESS]) != 1)
         return 0;
 
-    /* The FWKNOP_OUTPUT_ACCESS requires ENABLE_FIREWD_OUTPUT_ACCESS be Y
+    /* The FWKNOP_OUTPUT_ACCESS requires ENABLE_FIREWD_OUTPUT_ACCESS == Y
     */
     if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_OUTPUT], "Y", 1)==0)
         if(set_fw_chain_conf(FIREWD_OUTPUT_ACCESS, opts->config[CONF_FIREWD_OUTPUT_ACCESS]) != 1)
@@ -851,32 +850,20 @@ fw_config_init(fko_srv_options_t * const opts)
         if(set_fw_chain_conf(FIREWD_DNAT_ACCESS, opts->config[CONF_FIREWD_DNAT_ACCESS]) != 1)
             return 0;
 
-        /* SNAT (whichever mode) requires ENABLE_FIREWD_SNAT = Y
+        /* Requires ENABLE_FIREWD_SNAT = Y
         */
         if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_SNAT], "Y", 1)==0)
         {
-            if(opts->config[CONF_SNAT_TRANSLATE_IP] == NULL
-                    || ! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
-            {
-                fwc.use_masquerade = 1;
-                if(set_fw_chain_conf(FIREWD_MASQUERADE_ACCESS, opts->config[CONF_FIREWD_MASQUERADE_ACCESS]) != 1)
-                    return 0;
-            }
-            else
-            {
-                if(is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
-                {
-                    if(set_fw_chain_conf(FIREWD_SNAT_ACCESS, opts->config[CONF_FIREWD_SNAT_ACCESS]) != 1)
-                        return 0;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
+            if(set_fw_chain_conf(FIREWD_MASQUERADE_ACCESS,
+                        opts->config[CONF_FIREWD_MASQUERADE_ACCESS]) != 1)
+                return 0;
+
+            if(set_fw_chain_conf(FIREWD_SNAT_ACCESS,
+                        opts->config[CONF_FIREWD_SNAT_ACCESS]) != 1)
+                return 0;
         }
     }
-    
+
     if(strncasecmp(opts->config[CONF_ENABLE_DESTINATION_RULE], "Y", 1)==0)
     {
         fwc.use_destination = 1;
@@ -1031,6 +1018,228 @@ firewd_rule(const fko_srv_options_t * const opts,
     return;
 }
 
+static void forward_access_rule(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc,
+        struct fw_chain * const fwd_chain,
+        const char * const nat_ip,
+        const unsigned int nat_port,
+        const unsigned int fst_proto,
+        const unsigned int fst_port,
+        spa_data_t * const spadat,
+        const unsigned int exp_ts,
+        const time_t now)
+{
+    char   rule_buf[CMD_BUFSIZE] = {0};
+
+    log_msg(LOG_DEBUG,
+            "forward_access_rule() forward_all: %d, nat_ip: %s, nat_port: %d",
+            acc->forward_all, nat_ip, nat_port);
+
+    if(acc->forward_all)
+    {
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_FWD_ALL_RULE_ARGS,
+            fwd_chain->table,
+            spadat->use_src_ip,
+            exp_ts,
+            fwd_chain->target
+        );
+
+        /* Make a global ACCEPT rule for all ports/protocols
+        */
+        firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            NULL, ANY_PROTO, ANY_PORT, fwd_chain, exp_ts, now,
+            "FORWARD ALL", "*/*");
+    }
+    else
+    {
+        /* Make the FORWARD access rule
+        */
+        firewd_rule(opts, NULL, FIREWD_FWD_RULE_ARGS, spadat->use_src_ip,
+            nat_ip, fst_proto, nat_port, fwd_chain, exp_ts, now,
+            "FORWARD", spadat->spa_message_remain);
+
+    }
+    return;
+}
+
+static void dnat_rule(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc,
+        struct fw_chain * const dnat_chain,
+        const char * const nat_ip,
+        const unsigned int nat_port,
+        const unsigned int fst_proto,
+        const unsigned int fst_port,
+        spa_data_t * const spadat,
+        const unsigned int exp_ts,
+        const time_t now)
+{
+    char   rule_buf[CMD_BUFSIZE] = {0};
+
+    log_msg(LOG_DEBUG, "dnat_rule() forward_all: %d, nat_ip: %s, nat_port: %d",
+            acc->forward_all, nat_ip, nat_port);
+
+    if(acc->forward_all)
+    {
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_DNAT_ALL_RULE_ARGS,
+            dnat_chain->table,
+            spadat->use_src_ip,
+            (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
+            exp_ts,
+            dnat_chain->target,
+            nat_ip
+        );
+
+        /* Make a global DNAT rule for all ports/protocols
+        */
+        firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            NULL, ANY_PROTO, ANY_PORT, dnat_chain, exp_ts, now,
+            "DNAT ALL", "*/*");
+    }
+    else
+    {
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_DNAT_RULE_ARGS,
+            dnat_chain->table,
+            fst_proto,
+            spadat->use_src_ip,
+            (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
+            fst_port,
+            exp_ts,
+            dnat_chain->target,
+            nat_ip,
+            nat_port
+        );
+
+        firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
+            fst_proto, fst_port, dnat_chain, exp_ts, now, "DNAT",
+            spadat->spa_message_remain);
+    }
+    return;
+}
+
+static void snat_rule(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc,
+        const char * const nat_ip,
+        const unsigned int nat_port,
+        const unsigned int fst_proto,
+        const unsigned int fst_port,
+        spa_data_t * const spadat,
+        const unsigned int exp_ts,
+        const time_t now)
+{
+    char     rule_buf[CMD_BUFSIZE] = {0};
+    char     snat_target[SNAT_TARGET_BUFSIZE] = {0};
+    struct   fw_chain *snat_chain = NULL;
+
+    log_msg(LOG_DEBUG, "snat_rule() forward_all: %d, nat_ip: %s, nat_port: %d",
+            acc->forward_all, nat_ip, nat_port);
+
+    if(acc->forward_all)
+    {
+        /* Add SNAT or MASQUERADE rules.
+        */
+        if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s", acc->force_snat_ip);
+        }
+        else if(acc->force_snat && acc->force_masquerade)
+        {
+            /* Using MASQUERADE */
+            snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1, " ");
+        }
+        else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s", opts->config[CONF_SNAT_TRANSLATE_IP]);
+        }
+        else
+        {
+            /* Using MASQUERADE */
+            snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1, " ");
+        }
+
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_SNAT_ALL_RULE_ARGS,
+            snat_chain->table,
+            spadat->use_src_ip,
+            exp_ts,
+            snat_chain->target,
+            snat_target
+        );
+
+        firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            NULL, ANY_PROTO, ANY_PORT, snat_chain, exp_ts, now,
+            "SNAT ALL", "*/*");
+    }
+    else
+    {
+        /* Add SNAT or MASQUERADE rules.
+        */
+        if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s:%i", acc->force_snat_ip, fst_port);
+        }
+        else if(acc->force_snat && acc->force_masquerade)
+        {
+            /* Using MASQUERADE */
+            snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-ports %i", fst_port);
+        }
+        else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
+                fst_port);
+        }
+        else
+        {
+            /* Using MASQUERADE */
+            snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-ports %i", fst_port);
+        }
+
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_SNAT_RULE_ARGS,
+            snat_chain->table,
+            fst_proto,
+            nat_ip,
+            nat_port,
+            exp_ts,
+            snat_chain->target,
+            snat_target
+        );
+
+        firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+                NULL, fst_proto, nat_port, snat_chain, exp_ts, now, "SNAT",
+                spadat->spa_message_remain);
+    }
+    return;
+}
+
 /****************************************************************************/
 
 /* Rule Processing - Create an access request...
@@ -1039,16 +1248,8 @@ int
 process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
-    char             nat_ip[MAX_IPV4_STR_LEN] = {0};
-    char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
-    char             rule_buf[CMD_BUFSIZE] = {0};
-    char            *ndx;
-
-    unsigned int     nat_port = 0;
-
-    acc_port_list_t *port_list = NULL;
-    acc_port_list_t *ple = NULL;
-
+    char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    unsigned int    nat_port = 0;
     unsigned int    fst_proto;
     unsigned int    fst_port;
 
@@ -1056,8 +1257,11 @@ process_spa_request(const fko_srv_options_t * const opts,
     struct fw_chain * const out_chain  = &(opts->fw_config->chain[FIREWD_OUTPUT_ACCESS]);
     struct fw_chain * const fwd_chain  = &(opts->fw_config->chain[FIREWD_FORWARD_ACCESS]);
     struct fw_chain * const dnat_chain = &(opts->fw_config->chain[FIREWD_DNAT_ACCESS]);
-    struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
+    acc_port_list_t *port_list = NULL;
+    acc_port_list_t *ple = NULL;
+
+    char            *ndx = NULL;
     int             res = 0, is_err;
     time_t          now;
     unsigned int    exp_ts;
@@ -1089,78 +1293,58 @@ process_spa_request(const fko_srv_options_t * const opts,
     time(&now);
     exp_ts = now + spadat->fw_access_timeout;
 
-    /* For straight access requests, we currently support multiple proto/port
-     * request.
+    /* If the access stanza mandates a NAT operation, deal with
+     * that first regardless of what the SPA packet requested.
     */
-    if((spadat->message_type == FKO_ACCESS_MSG
-      || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG) && !acc->force_nat)
+    if(acc->force_nat)
     {
+        strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
+        nat_port = acc->force_nat_port;
 
-        /* Check to make sure that the jump rules exist for each
-         * required chain
+        /* FORWARD access rule
         */
-        mk_chain(opts, FIREWD_INPUT_ACCESS);
+        if(strlen(fwd_chain->to_chain))
+            forward_access_rule(opts, acc, fwd_chain, nat_ip,
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
-        if(strlen(out_chain->to_chain))
-            mk_chain(opts, FIREWD_OUTPUT_ACCESS);
-
-        /* Create an access command for each proto/port for the source ip.
+        /* DNAT rule
         */
-        while(ple != NULL)
-        {
-            firewd_rule(opts, NULL, FIREWD_RULE_ARGS, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
-                ple->proto, ple->port, in_chain, exp_ts, now, "access",
-                spadat->spa_message_remain);
+        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
+            dnat_rule(opts, acc, dnat_chain, nat_ip,
+                nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
-            /* If we have to make an corresponding OUTPUT rule if out_chain target
-            * is not NULL.
-            */
-            if(strlen(out_chain->to_chain))
-            {
-                firewd_rule(opts, NULL, FIREWD_OUT_RULE_ARGS, spadat->use_src_ip,
-                    (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
-                    ple->proto, ple->port, out_chain, exp_ts, now, "OUTPUT",
-                    spadat->spa_message_remain);
-            }
-            ple = ple->next;
-        }
-    }
-    /* NAT requests... */
+        /* SNAT rule if required - we only allow this for FORCE_NAT
+         * access stanzas for now until a new SPA packet type is added.
+        */
+        if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_FIREWD_SNAT], "Y", 1) == 0)
+            snat_rule(opts, acc, nat_ip, nat_port,
+                    fst_proto, fst_port, spadat, exp_ts, now);
+
+    } /* deal with SPA packets that themselves request a NAT operation */
     else if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_NAT_ACCESS_MSG
-      || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
-      || acc->force_nat)
+      || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
     {
-        /* Parse out the NAT IP and Port components.
-        */
-        if(acc->force_nat)
+        ndx = strchr(spadat->nat_access, ',');
+        if(ndx != NULL)
         {
-            strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
-            nat_port = acc->force_nat_port;
-        }
-        else
-        {
-            ndx = strchr(spadat->nat_access, ',');
-            if(ndx != NULL)
+            strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
+            if (! is_valid_ipv4_addr(nat_ip))
             {
-                strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
-                if (! is_valid_ipv4_addr(nat_ip))
-                {
-                    log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
-                    free_acc_port_list(port_list);
-                    return res;
-                }
+                log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
+                free_acc_port_list(port_list);
+                return res;
+            }
 
-                nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
-                if(is_err != FKO_SUCCESS)
-                {
-                    log_msg(LOG_INFO, "Invalid NAT port in SPA message");
-                    free_acc_port_list(port_list);
-                    res = is_err;
-                    return res;
-                }
+            nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT,
+                    NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                log_msg(LOG_INFO, "Invalid NAT port in SPA message");
+                free_acc_port_list(port_list);
+                res = is_err;
+                return res;
             }
         }
 
@@ -1173,107 +1357,41 @@ process_spa_request(const fko_srv_options_t * const opts,
         }
         else if(strlen(fwd_chain->to_chain))
         {
-            if(acc->forward_all)
-            {
-                memset(rule_buf, 0, CMD_BUFSIZE);
-
-                snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_FWD_ALL_RULE_ARGS,
-                    fwd_chain->table,
-                    spadat->use_src_ip,
-                    exp_ts,
-                    fwd_chain->target
-                );
-
-                /* Make a global ACCEPT rule for all ports/protocols
-                */
-                firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-                    NULL, ANY_PROTO, ANY_PORT, fwd_chain, exp_ts, now,
-                    "FORWARD ALL", "*/*");
-            }
-            else
-            {
-                /* Make our FORWARD and NAT rules
-                */
-                firewd_rule(opts, NULL, FIREWD_FWD_RULE_ARGS, spadat->use_src_ip,
-                    nat_ip, fst_proto, nat_port, fwd_chain, exp_ts, now,
-                    "FORWARD", spadat->spa_message_remain);
-            }
-        }
-
-        if(strlen(dnat_chain->to_chain))
-        {
-            memset(rule_buf, 0, CMD_BUFSIZE);
-
-            snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_DNAT_RULE_ARGS,
-                dnat_chain->table,
-                fst_proto,
-                spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
-                fst_port,
-                exp_ts,
-                dnat_chain->target,
-                nat_ip,
-                nat_port
-            );
-
-            firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
-                fst_proto, fst_port, dnat_chain, exp_ts, now, "DNAT",
-                spadat->spa_message_remain);
-        }
-
-        /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
-        */
-        if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_FIREWD_SNAT], "Y", 1) == 0)
-        {
-            /* Add SNAT or MASQUERADE rules.
+            /* FORWARD access rule
             */
-            if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
-            {
-                /* Using static SNAT */
-                snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-source %s:%i", acc->force_snat_ip, fst_port);
-            }
-            else if(acc->force_snat && acc->force_masquerade)
-            {
-                /* Using MASQUERADE */
-                snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-ports %i", fst_port);
-            }
-            else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-                && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
-            {
-                /* Using static SNAT */
-                snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
-                    fst_port);
-            }
-            else
-            {
-                /* Using MASQUERADE */
-                snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-ports %i", fst_port);
-            }
+            forward_access_rule(opts, acc, fwd_chain, nat_ip,
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
+        }
 
-            memset(rule_buf, 0, CMD_BUFSIZE);
+        /* DNAT rule
+        */
+        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
+            dnat_rule(opts, acc, dnat_chain, nat_ip,
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
-            snprintf(rule_buf, CMD_BUFSIZE-1, FIREWD_SNAT_RULE_ARGS,
-                snat_chain->table,
-                fst_proto,
-                nat_ip,
-                nat_port,
-                exp_ts,
-                snat_chain->target,
-                snat_target
-            );
+    }
+    else /* Non-NAT request - this is the typical case. */
+    {
+        /* Create an access command for each proto/port for the source ip.
+        */
+        while(ple != NULL)
+        {
+            firewd_rule(opts, NULL, FIREWD_RULE_ARGS, spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
+                ple->proto, ple->port, in_chain, exp_ts, now, "access",
+                spadat->spa_message_remain);
 
-            firewd_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-                    NULL, fst_proto, nat_port, snat_chain, exp_ts, now, "SNAT",
+            /* We need to make a corresponding OUTPUT rule if out_chain target
+             * is not NULL.
+            */
+            if(strlen(out_chain->to_chain))
+            {
+                firewd_rule(opts, NULL, FIREWD_OUT_RULE_ARGS, spadat->use_src_ip,
+                    (fwc.use_destination ? spadat->pkt_destination_ip : FIREWD_ANY_IP),
+                    ple->proto, ple->port, out_chain, exp_ts, now, "OUTPUT",
                     spadat->spa_message_remain);
+            }
+            ple = ple->next;
         }
     }
 
