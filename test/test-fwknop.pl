@@ -90,6 +90,7 @@ our $invalid_key_file3 = 'invalid2.key';
 our $FW_TYPE   = 'iptables'; ### default to iptables
 our $FW_PREFIX = 'IPT';
 our $fw_conf_prefix = 'ipt';
+my $prefer_iptables = 0;
 
 our $spoof_user = 'testuser';
 
@@ -325,6 +326,7 @@ exit 1 unless GetOptions(
     'fuzzing-pkts-append' => \$fuzzing_pkts_append,
     'fuzzing-test-tag=s'  => \$fuzzing_test_tag,
     'fuzzing-class=s'     => \$fuzzing_class,
+    'prefer-iptables' => \$prefer_iptables,
     'enable-recompile-check' => \$enable_recompilation_warnings_check,
     'enable-configure-args-checks' => \$enable_configure_args_checks,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
@@ -6854,10 +6856,12 @@ sub os_fw_detect() {
     close UNAME;
 
     if ($platform eq $LINUX) {
-        if (&find_command('firewalld')) {
-            $FW_TYPE   = 'firewalld';
-            $FW_PREFIX = 'FIREWD';
-            $fw_conf_prefix = 'firewd';
+        unless ($prefer_iptables) {
+            if (&find_command('firewalld')) {
+                $FW_TYPE   = 'firewalld';
+                $FW_PREFIX = 'FIREWD';
+                $fw_conf_prefix = 'firewd';
+            }
         }
     } else {
         push @tests_to_exclude, qr/NAT\b/;
