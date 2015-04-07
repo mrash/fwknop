@@ -1383,7 +1383,6 @@
         'subcategory' => 'client+server',
         'detail'   => "force NAT $force_nat_host (tcp/22)",
         'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             $cf{'rc_hmac_b64_key'},
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'hmac_force_nat_access'} / .
@@ -1400,7 +1399,6 @@
         'subcategory' => 'client+server',
         'detail'   => "force SNAT $force_snat_host (tcp/22)",
         'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             $cf{'rc_hmac_b64_key'},
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat"} -a $cf{'hmac_force_snat_access'} / .
@@ -1419,7 +1417,6 @@
         'subcategory' => 'client+server',
         'detail'   => "force SNAT $force_snat_host (ipt flush)",
         'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             $cf{'rc_hmac_b64_key'},
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat"} -a $cf{'hmac_force_snat_access'} / .
@@ -1437,9 +1434,28 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => "FORWARD_ALL",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            $cf{'rc_hmac_b64_key'},
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'hmac_forward_all_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/\sSNAT\s.*all.*\sto:$force_nat_host2/],
+        'server_negative_output_matches' => [qr/DNAT\s.*\*\/\sto\:/,
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+            qr/\*\/\sto\:$force_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{"${fw_conf_prefix}_snat_no_translate_ip"},
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => "force MASQ $force_snat_host (tcp/22)",
         'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             $cf{'rc_hmac_b64_key'},
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'hmac_force_masq_access'} / .
@@ -1456,9 +1472,28 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => "force MASQ no DNAT",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            $cf{'rc_hmac_b64_key'},
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'hmac_force_masq_no_dnat_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/MASQUERADE\s.*\s$force_nat_host2\s.*\smasq\sports\:\s22/],
+        'server_negative_output_matches' => [qr/DNAT\s.*\*\/\sto\:/,
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+            qr/\*\/\sto\:$force_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{"${fw_conf_prefix}_snat_no_translate_ip"},
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => "force MASQ $force_snat_host (ipt flush)",
         'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             $cf{'rc_hmac_b64_key'},
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'hmac_force_masq_access'} / .
@@ -1478,7 +1513,6 @@
         'subcategory' => 'client+server',
         'detail'   => "force NAT ($FW_TYPE flush)",
         'function' => \&spa_cycle,
-        'cmdline'  => $default_client_args,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             $cf{'rc_hmac_b64_key'},
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'hmac_force_nat_access'} / .

@@ -754,7 +754,7 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->source);
         free_acc_int_list(acc->source_list);
     }
-    
+
     if(acc->destination != NULL)
     {
         free(acc->destination);
@@ -1140,10 +1140,10 @@ acc_data_is_valid(struct passwd *user_pw, acc_stanza_t * const acc)
     }
 
     if((acc->force_snat == 1 || acc->force_masquerade == 1)
-            && acc->force_nat == 0 && acc->disable_dnat == 0)
+            && acc->force_nat == 0)
     {
         log_msg(LOG_ERR,
-                "[*] FORCE_SNAT/FORCE_MASQUERADE implies FORCE_NAT or DISABLE_DNAT must also be used for stanza source: '%s'",
+                "[*] FORCE_SNAT/FORCE_MASQUERADE implies FORCE_NAT must also be used for stanza source: '%s'",
                 acc->source
         );
         return(0);

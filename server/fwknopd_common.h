@@ -395,8 +395,8 @@ typedef struct acc_stanza
     char                *force_nat_ip;
     char                *force_nat_proto;
     unsigned int         force_nat_port;
-    unsigned char        disable_dnat;
     unsigned char        forward_all;
+    unsigned char        disable_dnat;
     unsigned char        force_snat;
     char                *force_snat_ip;
     unsigned char        force_masquerade;
@@ -499,9 +499,6 @@ typedef struct acc_stanza
       struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
       char            fw_command[MAX_PATH_LEN];
 
-      /* Flag for iptables SNAT vs. MASQUERADE usage
-      */
-      unsigned char   use_masquerade;
       /* Flag for setting destination field in rule
       */
       unsigned char   use_destination;
