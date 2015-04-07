@@ -418,6 +418,7 @@ our %cf = (
     'future_exp_access'            => "$conf_dir/future_expired_stanza_access.conf",
     'exp_epoch_access'             => "$conf_dir/expired_epoch_stanza_access.conf",
     'invalid_exp_access'           => "$conf_dir/invalid_expire_access.conf",
+    'require_force_nat_access'     => "$conf_dir/require_force_nat_access.conf",
     "${fw_conf_prefix}_output_chain"         => "$conf_dir/${fw_conf_prefix}_output_chain_fwknopd.conf",
     "invalid_${fw_conf_prefix}_input_chain"  => "$conf_dir/invalid_${fw_conf_prefix}_input_chain_fwknopd.conf",
     "invalid_${fw_conf_prefix}_input_chain2" => "$conf_dir/invalid_${fw_conf_prefix}_input_chain_2_fwknopd.conf",
