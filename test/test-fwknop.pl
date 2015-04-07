@@ -1645,7 +1645,7 @@ sub config_recompile() {
         chdir 'test' or die $!;
         ### we're recompiling, so remove any existing profile coverage
         ### files since they will be invalidated by the recompile
-        &run_cmd("./test/$profile_rm_prev_sh", $cmd_out_tmp, $curr_test_file);
+        &run_cmd($profile_rm_prev_sh, $cmd_out_tmp, $curr_test_file);
         chdir '..' or die $!;
     }
 
