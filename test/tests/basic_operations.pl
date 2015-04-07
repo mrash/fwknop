@@ -3072,6 +3072,16 @@
         ],
         'positive_output_matches' => [qr/Invalid\sIPv4/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'FORCE_SNAT -> FORCE_NAT/DISABLE_DNAT',
+        'function' => \&generic_exec,
+        'cmdline' =>  "$fwknopdCmd -c $cf{'ipt_nat'} -a $cf{'require_force_nat_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
+        'positive_output_matches' => [qr/requires either FORCE_NAT or DISABLE_DNAT/i],
+        'exec_err' => $YES,
+    },
 
     {
         'category' => 'basic operations',

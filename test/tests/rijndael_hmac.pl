@@ -1450,16 +1450,6 @@
         'server_conf' => $cf{"${fw_conf_prefix}_snat_no_translate_ip"},
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
-    {
-        'category' => 'Rijndael+HMAC',
-        'subcategory' => 'server',
-        'detail'   => 'FORCE_SNAT requires FORCE_NAT',
-        'function' => \&generic_exec,
-        'cmdline' =>  "$fwknopdCmd -c $cf{'ipt_nat'} -a $cf{'require_force_nat_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'positive_output_matches' => [qr/implies FORCE_NAT must also be used/i],
-        'exec_err' => $YES,
-    },
 
     {
         'category' => 'Rijndael+HMAC',

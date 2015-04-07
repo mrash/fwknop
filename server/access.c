@@ -1077,7 +1077,7 @@ set_acc_defaults(fko_srv_options_t *opts)
 /* Perform some sanity checks on an acc stanza data.
 */
 static int
-acc_data_is_valid(struct passwd *user_pw, acc_stanza_t * const acc)
+acc_data_is_valid(fko_srv_options_t *opts, struct passwd *user_pw, acc_stanza_t * const acc)
 {
     if(acc == NULL)
     {
@@ -1142,11 +1142,18 @@ acc_data_is_valid(struct passwd *user_pw, acc_stanza_t * const acc)
     if((acc->force_snat == 1 || acc->force_masquerade == 1)
             && acc->force_nat == 0)
     {
-        log_msg(LOG_ERR,
-                "[*] FORCE_SNAT/FORCE_MASQUERADE implies FORCE_NAT must also be used for stanza source: '%s'",
-                acc->source
-        );
-        return(0);
+        if(acc->disable_dnat == 1)
+        {
+            add_acc_force_nat(opts, acc, "0.0.0.0 0");
+        }
+        else
+        {
+            log_msg(LOG_ERR,
+                    "[*] FORCE_SNAT/FORCE_MASQUERADE requires either FORCE_NAT or DISABLE_DNAT: '%s'",
+                    acc->source
+            );
+            return(0);
+        }
     }
 
     if(acc->require_source_address == 0)
@@ -1284,7 +1291,7 @@ parse_access_file(fko_srv_options_t *opts)
              * stanza for the minimum required data.
             */
             if(curr_acc != NULL) {
-                if(!acc_data_is_valid(user_pw, curr_acc))
+                if(!acc_data_is_valid(opts, user_pw, curr_acc))
                 {
                     log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
                         opts->config[CONF_ACCESS_FILE]);
@@ -1746,7 +1753,7 @@ parse_access_file(fko_srv_options_t *opts)
 
     /* Sanity check the last stanza
     */
-    if(!acc_data_is_valid(user_pw, curr_acc))
+    if(!acc_data_is_valid(opts, user_pw, curr_acc))
     {
         log_msg(LOG_ERR,
             "[*] Data error in access file: '%s'",

@@ -1293,35 +1293,9 @@ process_spa_request(const fko_srv_options_t * const opts,
     time(&now);
     exp_ts = now + spadat->fw_access_timeout;
 
-    /* If the access stanza mandates a NAT operation, deal with
-     * that first regardless of what the SPA packet requested.
+    /* deal with SPA packets that themselves request a NAT operation
     */
-    if(acc->force_nat)
-    {
-        strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
-        nat_port = acc->force_nat_port;
-
-        /* FORWARD access rule
-        */
-        if(strlen(fwd_chain->to_chain))
-            forward_access_rule(opts, acc, fwd_chain, nat_ip,
-                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
-
-        /* DNAT rule
-        */
-        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
-            dnat_rule(opts, acc, dnat_chain, nat_ip,
-                nat_port, fst_proto, fst_port, spadat, exp_ts, now);
-
-        /* SNAT rule if required - we only allow this for FORCE_NAT
-         * access stanzas for now until a new SPA packet type is added.
-        */
-        if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_FIREWD_SNAT], "Y", 1) == 0)
-            snat_rule(opts, acc, nat_ip, nat_port,
-                    fst_proto, fst_port, spadat, exp_ts, now);
-
-    } /* deal with SPA packets that themselves request a NAT operation */
-    else if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+    if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
@@ -1369,6 +1343,33 @@ process_spa_request(const fko_srv_options_t * const opts,
             dnat_rule(opts, acc, dnat_chain, nat_ip,
                     nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
+        if(acc->force_snat)
+            snat_rule(opts, acc, nat_ip, nat_port,
+                    fst_proto, fst_port, spadat, exp_ts, now);
+    }
+    else if(acc->force_nat) /* handle force NAT scenarios */
+    {
+        strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
+        nat_port = acc->force_nat_port;
+
+        /* FORWARD access rule
+        */
+        if(strlen(fwd_chain->to_chain))
+            forward_access_rule(opts, acc, fwd_chain, nat_ip,
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
+
+        /* DNAT rule
+        */
+        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
+            dnat_rule(opts, acc, dnat_chain, nat_ip,
+                nat_port, fst_proto, fst_port, spadat, exp_ts, now);
+
+        /* SNAT rule if required - we only allow this for FORCE_NAT
+         * access stanzas for now until a new SPA packet type is added.
+        */
+        if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_FIREWD_SNAT], "Y", 1) == 0)
+            snat_rule(opts, acc, nat_ip, nat_port,
+                    fst_proto, fst_port, spadat, exp_ts, now);
     }
     else /* Non-NAT request - this is the typical case. */
     {
