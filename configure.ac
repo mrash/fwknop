@@ -170,6 +170,19 @@ fi
 
 AM_CONDITIONAL([WANT_C_UNIT_TESTS], [test "$want_c_unit_tests" = yes])
 
+dnl Decide whether or not to enable address sanitizer support
+dnl
+want_asan_support=no
+AC_ARG_ENABLE([asan-support],
+  [AS_HELP_STRING([--enable-asan-support],
+    [Build fwknop binaries with address sanitizer support @<:@default is to disable@:>@])],
+  [want_asan_support=$enableval],
+  [])
+
+if test "x$want_asan_support" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-fsanitize=address -fno-omit-frame-pointer])
+fi
+
 dnl Decide whether or not to compile in certain features that enable fuzzing
 dnl of fwknop code - this is for testing purposes only.
 dnl

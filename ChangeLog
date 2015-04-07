@@ -8,6 +8,9 @@ fwknop-2.6.6 (02//2015):
     - [test suite] Handle versions of lcov that don't have the --rc argument
       which is normally used to force the creation branch coverage stats when
       code coverage reports are created.
+    - [build] Add --enable-asan-support to autoconf configure script to enable
+      Google's Address Sanitizer (ASan) support. This feature is used during
+      the testing phase for new fwknop releases.
 
 fwknop-2.6.5 (12/16/2014):
     - [server] (Grant Pannell) Added a new access.conf variable "DESTINATION"
