@@ -216,6 +216,8 @@ EXTRA_DIST = \
     test/conf/hmac_force_snat_access.conf \
     test/conf/hmac_force_masq_access.conf \
     test/conf/hmac_no_b64_cygwin_access.conf \
+    test/conf/hmac_forward_all_access.conf \
+    test/conf/hmac_force_masq_no_dnat_access.conf \
     test/conf/multi_pkts.pcap \
     test/conf/fwknoprc_default_hmac_base64_key \
     test/conf/fwknoprc_hmac_nat_rand_base64_key \
@@ -257,6 +259,7 @@ EXTRA_DIST = \
     test/conf/fwknoprc_stanza_list \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
+    test/conf/require_force_nat_access.conf \
     test/conf/invalid_source_access.conf \
     test/conf/ipt_output_chain_fwknopd.conf \
     test/conf/firewd_output_chain_fwknopd.conf \
