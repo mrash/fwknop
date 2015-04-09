@@ -3680,6 +3680,25 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => "$FW_TYPE FORCE_SNAT and 0.0.0.0 0",
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE         any',
+            'KEY            testtest',
+            'FORCE_SNAT     1.2.3.4',
+            'DISABLE_DNAT   Y'
+        ],
+        'server_conf_file' => [
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
+        ],
+        'positive_output_matches' => [qr/FORCE_NAT.*0\.0\.0\.0/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => "$FW_TYPE FORCE_MASQUERADE + NAT",
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,
@@ -3692,7 +3711,7 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
-        'positive_output_matches' => [qr/must\salso\sbe\sused/],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or DISABLE_DNAT/],
     },
 
     {
