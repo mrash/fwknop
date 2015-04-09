@@ -346,7 +346,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
 static int
 add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0;
+    int res = 0, rv = 0;
 
     zero_cmd_buffers();
 
@@ -365,13 +365,16 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
         cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
+    {
         log_msg(LOG_INFO, "Added jump rule from chain: %s to chain: %s",
             fwc.chain[chain_num].from_chain,
             fwc.chain[chain_num].to_chain);
+        rv = 1;
+    }
     else
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
-    return res;
+    return rv;
 }
 
 static int
@@ -642,7 +645,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 static int
 create_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0;
+    int res = 0, rv = 0;
 
     zero_cmd_buffers();
 
@@ -662,10 +665,12 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
         cmd_buf, res, err_buf);
 
     /* Expect full success on this */
-    if(! EXTCMD_IS_SUCCESS(res))
+    if(EXTCMD_IS_SUCCESS(res))
+        rv = 1;
+    else
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
-    return res;
+    return rv;
 }
 
 static void
@@ -699,14 +704,14 @@ create_fw_chains(const fko_srv_options_t * const opts)
 
             /* Create the chain
             */
-            if(! EXTCMD_IS_SUCCESS(create_chain(opts, i)))
+            if(! create_chain(opts, i))
                 got_err++;
 
             /* Then create the jump rule to that chain if it
              * doesn't already exist (which is possible)
             */
             if(jump_rule_exists(opts, i) == 0)
-                if(! EXTCMD_IS_SUCCESS(add_jump_rule(opts, i)))
+                if(! add_jump_rule(opts, i))
                     got_err++;
         }
     }
