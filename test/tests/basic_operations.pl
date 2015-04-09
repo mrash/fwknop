@@ -3675,7 +3675,7 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
-        'positive_output_matches' => [qr/must\salso\sbe\sused/],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or DISABLE_DNAT/],
     },
     {
         'category' => 'basic operations',
