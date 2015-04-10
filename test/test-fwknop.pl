@@ -1631,6 +1631,14 @@ sub look_for_crashes() {
                 $curr_test_file);
             $rv = 0;
         }
+
+        if (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
+                    qr/SUMMARY\s:\sAddressSanitizer/],
+                $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
+            &write_test_file("[-] AddressSanitizer crash found in: $f\n",
+                $curr_test_file);
+            $rv = 0;
+        }
     }
 
     $do_crash_check = 0;
