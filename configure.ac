@@ -183,6 +183,19 @@ if test "x$want_asan_support" = "xyes"; then
     FKO_CHECK_COMPILER_ARG([-fsanitize=address -fno-omit-frame-pointer])
 fi
 
+dnl Decide whether or not force 32-bit mode
+dnl
+want_32bit_mode=no
+AC_ARG_ENABLE([32bit-mode],
+  [AS_HELP_STRING([--enable-32bit-mode],
+    [Build 32-bit fwknop binaries @<:@default is to disable@:>@])],
+  [want_32bit_mode=$enableval],
+  [])
+
+if test "x$want_32bit_mode" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-m32])
+fi
+
 dnl Decide whether or not to compile in certain features that enable fuzzing
 dnl of fwknop code - this is for testing purposes only.
 dnl
