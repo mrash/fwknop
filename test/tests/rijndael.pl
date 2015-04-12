@@ -856,7 +856,8 @@
         'detail'   => "SNAT MASQUERADE",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
-        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'open_ports_access'} / .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} / .
+            qq/-a $cf{'open_ports_force_masq_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
