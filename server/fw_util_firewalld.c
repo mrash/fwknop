@@ -299,9 +299,6 @@ comment_match_exists(const fko_srv_options_t * const opts)
     log_msg(LOG_DEBUG, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
             cmd_buf, res, err_buf);
 
-    if(strncmp(err_buf, "success", strlen("success")) != 0)
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
-
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_LIST_RULES_ARGS,
@@ -313,6 +310,9 @@ comment_match_exists(const fko_srv_options_t * const opts)
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
             WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
     chop_newline(cmd_out);
+
+    if(!EXTCMD_IS_SUCCESS(res))
+        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
 
     ndx = strstr(cmd_out, TMP_COMMENT);
     if(ndx == NULL)
@@ -342,7 +342,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
 static int
 add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0, rv = 0;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -360,17 +360,14 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
     log_msg(LOG_DEBUG, "add_jump_rule() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
-    if(strncmp(err_buf, "success", strlen("success")) == 0)
-    {
+    if(EXTCMD_IS_SUCCESS(res))
         log_msg(LOG_INFO, "Added jump rule from chain: %s to chain: %s",
             fwc.chain[chain_num].from_chain,
             fwc.chain[chain_num].to_chain);
-        rv = 1;
-    }
     else
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
-    return rv;
+    return res;
 }
 
 static int
@@ -393,7 +390,7 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
     log_msg(LOG_DEBUG, "chain_exists() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
-    if(strncmp(err_buf, "success", strlen("success")) == 0)
+    if(EXTCMD_IS_SUCCESS(res))
         log_msg(LOG_DEBUG, "'%s' table '%s' chain exists",
             fwc.chain[chain_num].table,
             fwc.chain[chain_num].to_chain);
@@ -506,7 +503,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
                 cmd_buf, res);
 
             /* Expect full success on this */
-            if(!EXTCMD_IS_SUCCESS(res))
+            if(! EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
                 got_err++;
@@ -544,7 +541,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
                 cmd_buf, res);
 
             /* Expect full success on this */
-            if(!EXTCMD_IS_SUCCESS(res))
+            if(! EXTCMD_IS_SUCCESS(res))
             {
                 log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
                 got_err++;
@@ -590,7 +587,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
                 cmd_buf, res, err_buf);
 
             /* Expect full success on this */
-            if(strncmp(err_buf, "success", strlen("success")) != 0)
+            if(! EXTCMD_IS_SUCCESS(res))
                 log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
             cmd_ctr++;
@@ -614,7 +611,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
             cmd_buf, res, err_buf);
 
         /* Expect full success on this */
-        if(strncmp(err_buf, "success", strlen("success")) != 0)
+        if(! EXTCMD_IS_SUCCESS(res))
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
         zero_cmd_buffers();
@@ -633,7 +630,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
             cmd_buf, res, err_buf);
 
         /* Expect full success on this */
-        if(strncmp(err_buf, "success", strlen("success")) != 0)
+        if(! EXTCMD_IS_SUCCESS(res))
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
     }
@@ -643,7 +640,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 static int
 create_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0, rv = 0;
+    int res = 0;
 
     zero_cmd_buffers();
 
@@ -663,12 +660,10 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
         cmd_buf, res, err_buf);
 
     /* Expect full success on this */
-    if(strncmp(err_buf, "success", strlen("success")) != 0)
+    if(! EXTCMD_IS_SUCCESS(res))
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
-    else
-        rv = 1;
 
-    return rv;
+    return res;
 }
 
 static void
@@ -702,14 +697,14 @@ create_fw_chains(const fko_srv_options_t * const opts)
 
             /* Create the chain
             */
-            if(! create_chain(opts, i))
+            if(! EXTCMD_IS_SUCCESS(create_chain(opts, i)))
                 got_err++;
 
             /* Then create the jump rule to that chain if it
              * doesn't already exist (which is possible)
             */
             if(jump_rule_exists(opts, i) == 0)
-                if(! add_jump_rule(opts, i))
+                if(! EXTCMD_IS_SUCCESS(add_jump_rule(opts, i)))
                     got_err++;
         }
     }
@@ -954,7 +949,7 @@ create_rule(const fko_srv_options_t * const opts,
     log_msg(LOG_DEBUG, "create_rule() CMD: '%s' (res: %d, err: %s)",
         cmd_buf, res, err_buf);
 
-    if(strncmp(err_buf, "success", strlen("success")) == 0)
+    if(EXTCMD_IS_SUCCESS(res))
     {
         log_msg(LOG_DEBUG, "create_rule() Rule: '%s' added to %s", fw_rule, fw_chain);
         res = 1;
@@ -1452,8 +1447,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                 WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
         chop_newline(cmd_out);
 
-        log_msg(LOG_DEBUG,
-            "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
+        log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
             cmd_buf, res, cmd_out);
 
         if(!EXTCMD_IS_SUCCESS(res))
@@ -1565,7 +1559,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                 log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
                     cmd_buf, res, err_buf);
 
-                if(strncmp(err_buf, "success", strlen("success")) == 0)
+                if(EXTCMD_IS_SUCCESS(res))
                 {
                     log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u",
                         rule_num_str, ch[i].to_chain, rule_exp
