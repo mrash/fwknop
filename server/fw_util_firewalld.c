@@ -1339,7 +1339,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
         /* DNAT rule
         */
-        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
+        if(strlen(dnat_chain->to_chain))
             dnat_rule(opts, acc, dnat_chain, nat_ip,
                     nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
