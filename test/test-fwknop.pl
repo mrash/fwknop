@@ -475,6 +475,7 @@ our %cf = (
     'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
     'icmp_pcap_filter'             => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
     'open_ports_access'            => "$conf_dir/open_ports_access.conf",
+    'open_ports_force_masq_access' => "$conf_dir/open_ports_force_masq_access.conf",
     'hmac_open_ports_access'       => "$conf_dir/hmac_sha256_open_ports_access.conf",
     'multi_gpg_access'             => "$conf_dir/multi_gpg_access.conf",
     'multi_gpg_no_pw_access'       => "$conf_dir/multi_gpg_no_pw_access.conf",
