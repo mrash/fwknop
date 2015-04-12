@@ -297,6 +297,7 @@ EXTRA_DIST = \
     test/conf/no_subnet_source_match_access.conf \
     test/conf/ofb_mode_access.conf \
     test/conf/open_ports_access.conf \
+    test/conf/open_ports_force_masq_access.conf \
     test/conf/override_fwknopd.conf \
     test/conf/override2_fwknopd.conf \
     test/conf/override_no_digest_tracking_fwknopd.conf \
