@@ -676,15 +676,19 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
 static void
 mk_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
+    int err = 0;
+
     /* Make sure the required chain and jump rule exist
     */
-    if(chain_exists(opts, chain_num) == 0)
-        create_chain(opts, chain_num);
+    if(! chain_exists(opts, chain_num))
+        if(! create_chain(opts, chain_num))
+            err++;
 
-    if (jump_rule_exists(opts, chain_num) == 0)
-        add_jump_rule(opts, chain_num);
+    if (! jump_rule_exists(opts, chain_num))
+        if(! add_jump_rule(opts, chain_num))
+            err++;
 
-    return;
+    return err;
 }
 
 /* Create the fwknop custom chains (at least those that are configured).
@@ -699,21 +703,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
         if(fwc.chain[i].target[0] == '\0')
             continue;
 
-        if(chain_exists(opts, i) == 0)
-        {
-
-            /* Create the chain
-            */
-            if(! create_chain(opts, i))
-                got_err++;
-
-            /* Then create the jump rule to that chain if it
-             * doesn't already exist (which is possible)
-            */
-            if(jump_rule_exists(opts, i) == 0)
-                if(! add_jump_rule(opts, i))
-                    got_err++;
-        }
+        got_err += mk_chain(opts, i);
     }
 
     return(got_err);

@@ -682,7 +682,7 @@ mk_chain(const fko_srv_options_t * const opts, const int chain_num)
     /* Make sure the required chain and jump rule exist
     */
     if(! chain_exists(opts, chain_num))
-        if (! create_chain(opts, chain_num))
+        if(! create_chain(opts, chain_num))
             err++;
 
     if (jump_rule_exists(opts, chain_num))
