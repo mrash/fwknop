@@ -31,7 +31,9 @@
 #ifndef FW_UTIL_FIREWALLD_H
 #define FW_UTIL_FIREWALLD_H
 
-#define SNAT_TARGET_BUFSIZE         64
+#define SNAT_TARGET_BUFSIZE   64
+
+#define FIREWD_CMD_FAIL_STR   "COMMAND_FAILED" /* returned by firewall-cmd */
 
 #if HAVE_EXECVPE
   #define SH_REDIR "" /* the shell is not used when execvpe() is available */
