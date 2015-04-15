@@ -98,6 +98,7 @@ public class Fwknop extends Activity {
     private EditText mPasswd;
     private EditText mHmac;
     private EditText mDestip;
+    private EditText mDestport;
     private EditText mTCPAccessPorts;
     private EditText mUDPAccessPorts;
     private EditText mFwTimeout;
@@ -107,6 +108,7 @@ public class Fwknop extends Activity {
     private String passwd_str;
     private String hmac_str;
     private String destip_str;
+    private String destport_str;
     private String fw_timeout_str;
     private CheckBox mCheck;
     private String externalIP = "";
@@ -344,6 +346,14 @@ public class Fwknop extends Activity {
             return;
         }
 
+        if (this.mDestport != null && !this.mDestport.getText().toString().trim().equals("")) {
+            this.destport_str = mDestport.getText().toString();
+            edit.putString("destport_str", mDestport.getText().toString());
+        } else {
+            this.UIAlert("Input error", "Please enter a valid Server port", this);
+            return;
+        }
+
         if (this.mFwTimeout != null) {
             int fw_timeout;
             try {
@@ -380,6 +390,9 @@ public class Fwknop extends Activity {
 
         this.mDestip = (EditText) findViewById(R.id.destIP);
         this.mDestip.setText(prefs.getString("destip_str", ""));
+
+        this.mDestport = (EditText) findViewById(R.id.destPort);
+        this.mDestport.setText(prefs.getString("destport_str", "62201"));
 
         this.mFwTimeout = (EditText) findViewById(R.id.fwTimeout);
         this.mFwTimeout.setText(prefs.getString("fw_timeout_str", "60"));
