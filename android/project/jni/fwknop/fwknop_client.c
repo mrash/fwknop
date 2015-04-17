@@ -68,6 +68,10 @@ jstring Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket(JNIEnv* env,
     jstring jdestip = (*env)->GetObjectField(env, thiz, fid);
     const char *destip_str = (*env)->GetStringUTFChars(env, jdestip, 0);
 
+    fid = (*env)->GetFieldID(env, c, "destport_str", "Ljava/lang/String;");
+    jstring jdestport = (*env)->GetObjectField(env, thiz, fid);
+    const char *destport_str = (*env)->GetStringUTFChars(env, jdestport, 0);
+
     fid = (*env)->GetFieldID(env, c, "passwd_str", "Ljava/lang/String;");
     jstring jpasswd = (*env)->GetObjectField(env, thiz, fid);
     const char *passwd_str = (*env)->GetStringUTFChars(env, jpasswd, 0);
@@ -94,6 +98,10 @@ jstring Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket(JNIEnv* env,
         sprintf(res_msg, "Error: Invalid or missing destination IP");
         goto cleanup2;
     }
+    if(destport_str == NULL) {
+        sprintf(res_msg, "Error: Invalid or missing destination port");
+        goto cleanup2;
+    }
     if(passwd_str == NULL) {
         sprintf(res_msg, "Error: Invalid or missing password");
         goto cleanup2;
@@ -112,7 +120,7 @@ jstring Java_com_max2idea_android_fwknop_Fwknop_sendSPAPacket(JNIEnv* env,
     /* Set our spa server info
     */
     opts.spa_server_str = (char*)destip_str;
-    opts.spa_dst_port   = FKO_DEFAULT_PORT; /* Until we make this settable. */
+    opts.spa_dst_port   = atoi(destport_str);
 
     /* Intialize the context
     */

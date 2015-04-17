@@ -88,6 +88,27 @@
             android:textSize="20dip"
             />
     </LinearLayout>
+    <LinearLayout android:id="@+id/destPortl"
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        >
+        <TextView
+            android:id="@+id/destPortStr"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Server UDP Port: "
+            android:textSize="20dip"
+            />
+        <EditText
+            android:id="@+id/destPort"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="62201"
+            android:singleLine="true"
+            android:textSize="20dip"
+            />
+    </LinearLayout>
     <LinearLayout android:id="@+id/fwTimeoutl"
                   android:orientation="horizontal"
                   android:layout_width="fill_parent"
