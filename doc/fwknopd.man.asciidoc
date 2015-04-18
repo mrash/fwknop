@@ -283,7 +283,10 @@ See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and correspond
     built with the MASQUERADE target (since then the internal IP does not
     have to be defined here in the '@sysconfdir@/fwknop/fwknopd.conf' file),
     but if you want *fwknopd* to use the SNAT target, you must also define an
-    IP address with the ``SNAT_TRANSLATE_IP'' variable.
+    IP address with the ``SNAT_TRANSLATE_IP'' variable. Note that this
+    variable is generally deprecated in favor of the ``FORCE_SNAT'' variable
+    in the '@sysconfdir@/fwknop/access.conf' file which enables per-stanza
+    control over the SNAT IP.
 
 *ENABLE_IPT_OUTPUT* '<Y/N>'::
     Add ACCEPT rules to the FWKNOP_OUTPUT chain. This is usually only useful
@@ -545,6 +548,19 @@ directive starts a new stanza.
     This is similar to the ``FORCE_SNAT'' variable, except that it is not
     necessary to also specify an IP address for SNAT rules because the
     MASQUERADE target is used instead.
+
+*FORWARD_ALL* '<Y/N>'::
+    In NAT scenarios, control whether all traffic is forwarded through the
+    *fwknopd* system as opposed to just forwarding connections to specific
+    services as requested by the *fwknop* client.
+
+*DISABLE_DNAT* '<Y/N>'::
+    Control whether DNAT rules are created in FORCE_NAT scenarios. This is
+    mainly used in conjunction with the FORWARD_ALL variable to allow
+    *fwknopd* to act essentially as an SPA gateway. I.e., the *fwknop* client
+    is used to gain access via SPA to the broader Internet after being granted
+    an IP via DHCP, but prior to sending the SPA packet all traffic is blocked
+    by default to the Internet.
 
 *GPG_DECRYPT_ID* '<keyID>'::
     Define a GnuPG key ID to use for decrypting SPA messages that
