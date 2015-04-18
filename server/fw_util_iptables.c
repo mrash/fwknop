@@ -673,7 +673,7 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
     return rv;
 }
 
-static void
+static int
 mk_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
     int err = 0;
@@ -1343,7 +1343,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
         /* DNAT rule
         */
-        if(strlen(dnat_chain->to_chain) && !acc->disable_nat)
+        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
             dnat_rule(opts, acc, dnat_chain, nat_ip,
                     nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
