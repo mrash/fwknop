@@ -91,6 +91,7 @@ our $FW_TYPE   = 'iptables'; ### default to iptables
 our $FW_PREFIX = 'IPT';
 our $fw_conf_prefix = 'ipt';
 my $prefer_iptables = 0;
+my $fw_bin = '';
 
 our $spoof_user = 'testuser';
 
@@ -6866,8 +6867,11 @@ sub os_fw_detect() {
     close UNAME;
 
     if ($platform eq $LINUX) {
-        unless ($prefer_iptables) {
-            if (&find_command('firewalld')) {
+        if ($prefer_iptables) {
+            $fw_bin = &find_command('iptables');
+        } else {
+            $fw_bin = &find_command('firewall-cmd');
+            if ($fw_bin) {
                 $FW_TYPE   = 'firewalld';
                 $FW_PREFIX = 'FIREWD';
                 $fw_conf_prefix = 'firewd';
@@ -7250,6 +7254,8 @@ sub parse_valgrind_flagged_functions() {
 sub is_fw_rule_active() {
     my $test_hr = shift;
 
+    my $rv = 1;
+
     my $conf_args = $default_server_conf_args;
 
     if ($test_hr->{'server_conf'}) {
@@ -7258,16 +7264,42 @@ sub is_fw_rule_active() {
     }
 
     if ($test_hr->{'no_ip_check'}) {
-        return 1 if &run_cmd("$lib_view_str $fwknopdCmd " .
-                qq{$conf_args --fw-list | grep -v "# DISABLED" |grep _exp_},
+        &run_cmd("$lib_view_str $fwknopdCmd " .
+                qq{$conf_args --fw-list | grep -v "# DISABLED" },
                 $cmd_out_tmp, $curr_test_file);
+        unless (&file_find_regex([qr/_exp_/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+            $rv = 0;
+        }
     } else {
-        return 1 if &run_cmd("$lib_view_str $fwknopdCmd " .
-                qq{$conf_args --fw-list | grep -v "# DISABLED" |grep $fake_ip |grep _exp_},
+        &run_cmd("$lib_view_str $fwknopdCmd " .
+                qq{$conf_args --fw-list | grep -v "# DISABLED" },
                 $cmd_out_tmp, $curr_test_file);
+        unless (&file_find_regex([qr/\s$fake_ip\s.*_exp_/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+            $rv = 0;
+        }
     }
 
-    return 0;
+    if ($fw_bin and $FW_TYPE eq 'firewalld' or $FW_TYPE eq 'iptables') {
+        ### make sure there is at least one jump rule
+        ###    79  5304 FWKNOP_INPUT  all  --  *      *       0.0.0.0/0            0.0.0.0/0
+        if ($FW_TYPE eq 'firewalld') {
+            unless (&run_cmd("$fw_bin --direct --passthrough ipv4 -t filter " .
+                    "-nL -v | grep -v Chain | grep FWKNOP_ ", $cmd_out_tmp, $curr_test_file)) {
+                &write_test_file("[-] No jump rule found.\n", $curr_test_file);
+                $rv = 0;
+            }
+        } else {
+            unless (&run_cmd("$fw_bin -t filter " .
+                    "-nL -v | grep -v Chain | grep FWKNOP_ ", $cmd_out_tmp, $curr_test_file)) {
+                &write_test_file("[-] No jump rule found.\n", $curr_test_file);
+                $rv = 0;
+            }
+        }
+    }
+
+    return $rv;
 }
 
 sub is_fwknopd_running() {
