@@ -34,6 +34,7 @@
 #define SNAT_TARGET_BUFSIZE   64
 
 #define FIREWD_CMD_FAIL_STR   "COMMAND_FAILED" /* returned by firewall-cmd */
+#define FIREWD_CMD_PREFIX     "--direct --passthrough ipv4"
 
 #if HAVE_EXECVPE
   #define SH_REDIR "" /* the shell is not used when execvpe() is available */

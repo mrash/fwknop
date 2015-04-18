@@ -844,6 +844,9 @@ fw_config_init(fko_srv_options_t * const opts)
         */
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1)==0)
         {
+            /* Support both SNAT and MASQUERADE - this will be controlled
+             * via the access.conf configuration for individual rules
+            */
             if(set_fw_chain_conf(IPT_MASQUERADE_ACCESS,
                         opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
                 return 0;
@@ -1290,27 +1293,36 @@ process_spa_request(const fko_srv_options_t * const opts,
     if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_NAT_ACCESS_MSG
-      || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+      || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
+      || acc->force_nat)
     {
-        ndx = strchr(spadat->nat_access, ',');
-        if(ndx != NULL)
+        if(acc->force_nat)
         {
-            strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
-            if (! is_valid_ipv4_addr(nat_ip))
+            strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
+            nat_port = acc->force_nat_port;
+        }
+        else
+        {
+            ndx = strchr(spadat->nat_access, ',');
+            if(ndx != NULL)
             {
-                log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
-                free_acc_port_list(port_list);
-                return res;
-            }
+                strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
+                if (! is_valid_ipv4_addr(nat_ip))
+                {
+                    log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
+                    free_acc_port_list(port_list);
+                    return res;
+                }
 
-            nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT,
-                    NO_EXIT_UPON_ERR, &is_err);
-            if(is_err != FKO_SUCCESS)
-            {
-                log_msg(LOG_INFO, "Invalid NAT port in SPA message");
-                free_acc_port_list(port_list);
-                res = is_err;
-                return res;
+                nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT,
+                        NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    log_msg(LOG_INFO, "Invalid NAT port in SPA message");
+                    free_acc_port_list(port_list);
+                    res = is_err;
+                    return res;
+                }
             }
         }
 
@@ -1331,33 +1343,11 @@ process_spa_request(const fko_srv_options_t * const opts,
 
         /* DNAT rule
         */
-        if(strlen(dnat_chain->to_chain))
+        if(strlen(dnat_chain->to_chain) && !acc->disable_nat)
             dnat_rule(opts, acc, dnat_chain, nat_ip,
                     nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
-        if(acc->force_snat)
-            snat_rule(opts, acc, nat_ip, nat_port,
-                    fst_proto, fst_port, spadat, exp_ts, now);
-    }
-    else if(acc->force_nat) /* handle force NAT scenarios */
-    {
-        strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
-        nat_port = acc->force_nat_port;
-
-        /* FORWARD access rule
-        */
-        if(strlen(fwd_chain->to_chain))
-            forward_access_rule(opts, acc, fwd_chain, nat_ip,
-                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
-
-        /* DNAT rule
-        */
-        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
-            dnat_rule(opts, acc, dnat_chain, nat_ip,
-                nat_port, fst_proto, fst_port, spadat, exp_ts, now);
-
-        /* SNAT rule if required - we only allow this for FORCE_NAT
-         * access stanzas for now until a new SPA packet type is added.
+        /* SNAT rule
         */
         if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
             snat_rule(opts, acc, nat_ip, nat_port,
