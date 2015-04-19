@@ -12,6 +12,9 @@ fwknop-2.6.6 (04//2015):
     - [server] Bug fix when compiled with --enable-udp-server to not include
       pcap.h, which is likely not installed whenever libpcap is also not
       installed. This bug was reported by Alexander Kozhevnikov.
+    - [android] (Dan Brooks) Contributed a patch for the Android client app to
+      add the definition of custom server udp port. This is similiar to the
+      --server-port argument offered by the main fwknop client.
     - [test suite] Set AFL_HARDEN=1 to AFL fuzzing wrapper scripts. This
       enables simple memory bug detection in AFL at the cost of a small
       performance hit.
@@ -21,6 +24,8 @@ fwknop-2.6.6 (04//2015):
     - [build] Add --enable-asan-support to autoconf configure script to enable
       Google's Address Sanitizer (ASan) support. This feature is used during
       the testing phase for new fwknop releases.
+    - [test suite] (Franck Joncourt) Added libfko unit tests with the CUnit
+      framework.
 
 fwknop-2.6.5 (12/16/2014):
     - [server] (Grant Pannell) Added a new access.conf variable "DESTINATION"

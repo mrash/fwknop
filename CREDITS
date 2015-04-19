@@ -55,6 +55,7 @@ Franck Joncourt
     - Added log module support for the client.
     - Added the ability to read a passphrase from STDIN and also from a file
       descriptor via --fd (closes #74).
+    - Added libfko unit tests via the CUnit framework.
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode
@@ -213,3 +214,8 @@ Grant Pannell
 Alexander Kozhevnikov
     - Reported a bug when fwknop is compiled with --enable-udp-server where
       the server was including pcap.h
+
+Dan Brooks
+    - Contributed a patch for the Android client app to add the definition of
+      custom server udp port. This is similiar to the --server-port argument
+      offered by the main fwknop client.
