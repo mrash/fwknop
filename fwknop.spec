@@ -8,7 +8,7 @@
 %define _libdir /usr/lib
 %endif
 %define _sysconfdir /etc
-%define _localstatedir /var
+%define _localstatedir /var/run
 %define _infodir /usr/share/info
 %define _mandir /usr/share/man
 

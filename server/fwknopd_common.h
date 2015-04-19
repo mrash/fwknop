@@ -70,7 +70,7 @@
   /* Our default run directory is based on LOCALSTATEDIR as set by the
    * configure script. This is where we put the PID and digest cache files.
   */
-  #define DEF_RUN_DIR       SYSRUNDIR"/run/"PACKAGE_NAME
+  #define DEF_RUN_DIR       SYSRUNDIR"/"PACKAGE_NAME
 #endif
 
 /* More Conf defaults
