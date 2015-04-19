@@ -3075,12 +3075,30 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'FORCE_SNAT -> FORCE_NAT/DISABLE_DNAT',
+        'detail'   => 'FORCE_SNAT -> FORCE_NAT/FORWARD_ALL',
         'function' => \&generic_exec,
         'cmdline' =>  qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'require_force_nat_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
-        'positive_output_matches' => [qr/requires either FORCE_NAT or DISABLE_DNAT/i],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/i],
         'exec_err' => $YES,
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'FORCE_MASQUERADE -> FORCE_NAT/FORWARD_ALL',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                  any',
+            'KEY                     testtest',
+            'FORCE_MASQUERADE        Y'
+        ],
+        'server_conf_file' => [
+            "ENABLE_${FW_PREFIX}_FORWARDING       Y;",
+            "ENABLE_${FW_PREFIX}_SNAT             Y;"
+        ],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/i],
     },
 
     {
@@ -3675,7 +3693,7 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
-        'positive_output_matches' => [qr/requires either FORCE_NAT or DISABLE_DNAT/],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/],
     },
     {
         'category' => 'basic operations',
@@ -3688,7 +3706,7 @@
             'SOURCE         any',
             'KEY            testtest',
             'FORCE_SNAT     1.2.3.4',
-            'DISABLE_DNAT   Y'
+            'FORWARD_ALL    Y'
         ],
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      Y"
@@ -3711,7 +3729,7 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
-        'positive_output_matches' => [qr/requires either FORCE_NAT or DISABLE_DNAT/],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/],
     },
 
     {

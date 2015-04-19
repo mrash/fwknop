@@ -860,9 +860,8 @@
             qq/-a $cf{'open_ports_force_masq_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
-            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/\*\/\sto\:$internal_nat_host\:22/i,
-            qr/MASQUERADE\s.*to\-ports/,
+            qr/FWKNOP_FORWARD\s.*0.0.0.0\s/,
+            qr/MASQUERADE\s.*all/,
         ],
         'no_ip_check' => 1,
         'fw_rule_created' => $NEW_RULE_REQUIRED,

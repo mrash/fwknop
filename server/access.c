@@ -1142,14 +1142,14 @@ acc_data_is_valid(fko_srv_options_t *opts, struct passwd *user_pw, acc_stanza_t 
     if((acc->force_snat == 1 || acc->force_masquerade == 1)
             && acc->force_nat == 0)
     {
-        if(acc->disable_dnat == 1)
+        if(acc->forward_all == 1)
         {
             add_acc_force_nat(opts, acc, "0.0.0.0 0");
         }
         else
         {
             log_msg(LOG_ERR,
-                    "[*] FORCE_SNAT/FORCE_MASQUERADE requires either FORCE_NAT or DISABLE_DNAT: '%s'",
+                    "[*] FORCE_SNAT/FORCE_MASQUERADE requires either FORCE_NAT or FORWARD_ALL: '%s'",
                     acc->source
             );
             return(0);
