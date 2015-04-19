@@ -2028,6 +2028,9 @@ sub server_start_stop_cycle() {
 
     my $rv = 1;
 
+    &write_test_file("[+] TEST: " . &get_msg($test_hr) . "\n",
+        $server_test_file);
+
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -S",
             $cmd_out_tmp, $curr_test_file);
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
@@ -7156,6 +7159,10 @@ sub parse_valgrind_flagged_functions() {
                 chomp $test_title;
                 $is_prove_output = 1 if $test_title =~ /Test\:\:Valgrind/;
                 last if $test_title =~ /valgrind\soutput/;
+
+                ### exclude the start/stop test since it involves signals
+                ### that force leaks
+                last if $test_title =~ /start restart stop/;
             }
         }
         close F;
