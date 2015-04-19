@@ -1139,6 +1139,7 @@ acc_data_is_valid(fko_srv_options_t *opts, struct passwd *user_pw, acc_stanza_t 
         }
     }
 
+#if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
     if((acc->force_snat == 1 || acc->force_masquerade == 1)
             && acc->force_nat == 0)
     {
@@ -1155,6 +1156,7 @@ acc_data_is_valid(fko_srv_options_t *opts, struct passwd *user_pw, acc_stanza_t 
             return(0);
         }
     }
+#endif
 
     if(acc->require_source_address == 0)
     {
