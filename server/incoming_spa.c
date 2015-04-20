@@ -733,7 +733,7 @@ incoming_spa(fko_srv_options_t *opts)
         {
             time(&now_ts);
 
-            ts_diff = abs(now_ts - spadat.timestamp);
+            ts_diff = labs(now_ts - spadat.timestamp);
 
             if(ts_diff > conf_pkt_age)
             {
