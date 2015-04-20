@@ -6883,6 +6883,9 @@ sub os_fw_detect() {
     } else {
         push @tests_to_exclude, qr/NAT\b/;
         push @tests_to_exclude, qr/MASQ/;
+        push @tests_to_exclude, qr/INPUT/;
+        push @tests_to_exclude, qr/FORWARD/;
+        push @tests_to_exclude, qr/IPT_/;
         push @tests_to_exclude, qr/iptables/;
         push @tests_to_exclude, qr/firewalld/;
         push @tests_to_exclude, qr|dupe rule|; ### not handled yet on non-iptables firewalls

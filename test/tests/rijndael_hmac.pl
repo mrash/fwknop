@@ -379,7 +379,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => "$FW_TYPE custom input chain",
+        'detail'   => "$FW_TYPE custom INPUT chain",
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_custom_input_chain"} -a $cf{'hmac_access'} / .
