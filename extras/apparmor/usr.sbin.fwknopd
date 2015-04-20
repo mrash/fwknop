@@ -1,6 +1,6 @@
 # Last Modified: Sun Aug 18 22:54:57 2013
 # Assumes fwknopd was built with:
-#    './configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var'
+#    './configure --prefix=/usr --sysconfdir=/etc --localstatedir=/run'
 #include <tunables/global>
 
 /usr/sbin/fwknopd {

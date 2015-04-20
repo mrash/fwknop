@@ -7,7 +7,7 @@
 #
 
 if [ -x ./configure ]; then
-    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var $@
+    ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/run $@
 else
     echo "[*] Execute from the fwknop top level sources directory"
 fi
