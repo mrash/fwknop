@@ -6887,6 +6887,19 @@ sub os_fw_detect() {
         push @tests_to_exclude, qr/firewalld/;
         push @tests_to_exclude, qr|dupe rule|; ### not handled yet on non-iptables firewalls
         push @tests_to_exclude, qr|ipt\-no|;
+        $fw_bin = &find_command('pfctl');
+        if ($fw_bin) {
+            $FW_TYPE = 'pf';
+            $FW_PREFIX = 'PF';
+            $fw_conf_prefix = 'pf';
+        } else {
+            $fw_bin = &find_command('ipfw');
+            if ($fw_bin) {
+                $FW_TYPE = 'ipfw';
+                $FW_PREFIX = 'IPFW';
+                $fw_conf_prefix = 'ipfw';
+            }
+        }
     }
     unless ($platform eq $FREEBSD or $platform eq $MACOSX) {
         push @tests_to_exclude, qr|active/expire sets|;
