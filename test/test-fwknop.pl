@@ -6890,14 +6890,10 @@ sub os_fw_detect() {
         $fw_bin = &find_command('pfctl');
         if ($fw_bin) {
             $FW_TYPE = 'pf';
-            $FW_PREFIX = 'PF';
-            $fw_conf_prefix = 'pf';
         } else {
             $fw_bin = &find_command('ipfw');
             if ($fw_bin) {
                 $FW_TYPE = 'ipfw';
-                $FW_PREFIX = 'IPFW';
-                $fw_conf_prefix = 'ipfw';
             }
         }
     }
