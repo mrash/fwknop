@@ -1,4 +1,4 @@
-fwknop-2.6.6 (04//2015):
+fwknop-2.6.6 (04/21/2015):
     - [server] Add the ability for fwknopd to function as an generic SPA
       gateway. This allows scenarios such as the fwknopd system providing DHCP
       addresses to client systems, but those systems would be blocking by
