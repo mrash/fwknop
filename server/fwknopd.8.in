@@ -94,7 +94,7 @@ Specify the location of the
 file\&. If this option is not given,
 \fIfwknopd\fR
 will use the compile\-time default location (typically
-\fI@localstatedir@/run/fwknop/digest\&.cache\fR)\&.
+\fI@localstatedir@/fwknop/digest\&.cache\fR)\&.
 .RE
 .PP
 \fB\-D, \-\-dump\-config\fR
@@ -196,7 +196,7 @@ Specify the location of the
 \fIfwknopd\&.pid\fR
 file\&. If this option is not given,
 \fIfwknopd\fR
-will use the compile\-time default location (typically \*(Aq@localstatedir@/run/fwknop/fwknopd\&.pid)\&.
+will use the compile\-time default location (typically \*(Aq@localstatedir@/fwknop/fwknopd\&.pid)\&.
 .RE
 .PP
 \fB\-P, \-\-pcap\-filter\fR=\fI<filter>\fR
@@ -244,7 +244,7 @@ files\&. This will also force a flush of the current \(lqFWKNOP\(rq iptables cha
 \fB\-\-rotate\-digest\-cache\fR
 .RS 4
 Rotate the digest cache file by renaming it to \(lq<name>\-old\(rq, and starting a new one\&. The digest cache file is typically found in
-\fI@localstatedir@/run/fwknop/digest\&.cache\fR\&.
+\fI@localstatedir@/fwknop/digest\&.cache\fR\&.
 .RE
 .PP
 \fB\-r, \-\-run\-dir\fR=\fI<path>\fR
@@ -252,7 +252,7 @@ Rotate the digest cache file by renaming it to \(lq<name>\-old\(rq, and starting
 Specify the directory where
 \fBfwknopd\fR
 writes run time state files\&. The default is
-\fI@localstatedir@/run\fR\&.
+\fI@localstatedir@\fR\&.
 .RE
 .PP
 \fB\-S, \-\-status\fR
@@ -524,7 +524,7 @@ Override syslog facility\&. The \(lqSYSLOG_FACILITY\(rq variable can be set to
 Specify the directory where
 \fBfwknopd\fR
 writes run time state files\&. The default is
-\fI@localstatedir@/run\fR\&.
+\fI@localstatedir@\fR\&.
 .RE
 .PP
 \fBENABLE_DESTINATION_RULE\fR \fI<Y/N>\fR

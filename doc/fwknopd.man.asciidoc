@@ -68,7 +68,7 @@ COMMAND-LINE OPTIONS
 *-d, --digest-file*='<digest-file>'::
     Specify the location of the 'digest.cache' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
-    '@localstatedir@/run/fwknop/digest.cache').
+    '@localstatedir@/fwknop/digest.cache').
 
 *-D, --dump-config*::
     Dump the configuration values that *fwknopd* derives from the
@@ -131,7 +131,7 @@ COMMAND-LINE OPTIONS
 *-p, --pid-file*='<pid-file>'::
     Specify the location of the 'fwknopd.pid' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
-    '@localstatedir@/run/fwknop/fwknopd.pid).
+    '@localstatedir@/fwknop/fwknopd.pid).
 
 *-P, --pcap-filter*='<filter>'::
     Specify a Berkeley packet filter statement on the *fwknopd* command
@@ -165,11 +165,11 @@ COMMAND-LINE OPTIONS
 *--rotate-digest-cache*::
     Rotate the digest cache file by renaming it to ``<name>-old'', and
     starting a new one. The digest cache file is typically found in
-    '@localstatedir@/run/fwknop/digest.cache'.
+    '@localstatedir@/fwknop/digest.cache'.
 
 *-r, --run-dir*='<path>'::
     Specify the directory where *fwknopd* writes run time state files. The
-    default is '@localstatedir@/run'.
+    default is '@localstatedir@'.
 
 *-S, --status*::
     Display the status of any *fwknopd* processes that may or not be
@@ -399,7 +399,7 @@ See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and correspond
 
 *FWKNOP_RUN_DIR* '<path>'::
     Specify the directory where *fwknopd* writes run time state files. The
-    default is '@localstatedir@/run'.
+    default is '@localstatedir@'.
 
 ACCESS.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~
