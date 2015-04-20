@@ -1242,6 +1242,8 @@ usage(void)
       "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
       "     --rotate-digest-cache\n"
+      "                         - Rotate the digest cache file by renaming the file\n"
+      "                           to the same path with the -old suffix.\n"
       " -r, --run-dir           - Set path to local state run directory.\n"
       "                         - Rotate the digest cache file by renaming it to\n"
       "                           '<name>-old', and starting a new one.\n"
