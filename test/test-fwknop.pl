@@ -1558,16 +1558,13 @@ sub valgrind_results() {
 
     my $rv = 1;
 
-    unless (&file_find_regex(
-        [qr/no\sleaks\sare\spossible/],
-            $MATCH_ALL, $APPEND_RESULTS, $file)) {
-        $rv = 0 unless &file_find_regex(
-            [qr/definitely\slost\:\s0\sbytes/],
-            $MATCH_ALL, $APPEND_RESULTS, $file);
-        $rv = 0 unless &file_find_regex(
-            [qr/indirectly\slost\:\s0\sbytes/],
-            $MATCH_ALL, $APPEND_RESULTS, $file);
-    }
+    $rv = 0 if &file_find_regex(
+        [qr/definitely\slost\:\s[1-9]\d+\sbytes/],
+        $MATCH_ALL, $APPEND_RESULTS, $file);
+    $rv = 0 if &file_find_regex(
+        [qr/indirectly\slost\:\s[1-9]\d+\sbytes/],
+        $MATCH_ALL, $APPEND_RESULTS, $file);
+
     return $rv;
 }
 
@@ -6886,6 +6883,8 @@ sub os_fw_detect() {
         push @tests_to_exclude, qr/INPUT/;
         push @tests_to_exclude, qr/FORWARD/;
         push @tests_to_exclude, qr/IPT_/;
+        push @tests_to_exclude, qr/\bchain\b/;
+        push @tests_to_exclude, qr/\bjump\b/;
         push @tests_to_exclude, qr/iptables/;
         push @tests_to_exclude, qr/firewalld/;
         push @tests_to_exclude, qr|dupe rule|; ### not handled yet on non-iptables firewalls
