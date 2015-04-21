@@ -89,7 +89,7 @@
         'detail'   => 'cycle DESTINATION accepted (1)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destination'} " .
             "-a $cf{'hmac_spa_destination_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -103,7 +103,7 @@
         'detail'   => 'cycle DESTINATION accepted (2)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destination'} " .
             "-a $cf{'hmac_spa_destination2_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -116,7 +116,7 @@
         'detail'   => 'cycle DESTINATION accepted (3)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destination'} " .
             "-a $cf{'hmac_spa_destination3_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -129,7 +129,7 @@
         'detail'   => 'cycle DESTINATION filtered (1)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destination'} " .
             "-a $cf{'hmac_spa_destination4_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -143,7 +143,7 @@
         'detail'   => 'cycle DESTINATION filtered (2)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destnation'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_destination'} " .
             "-a $cf{'hmac_spa_destination5_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
@@ -1448,6 +1448,45 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{"${fw_conf_prefix}_snat_no_translate_ip"},
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "FORWARD_ALL snat translate IP",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            $cf{'rc_hmac_b64_key'},
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_translate_ip"} -a $cf{'hmac_force_nat_forward_all_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/\sSNAT\s.*all.*\sto:$force_nat_host2/],
+        'server_negative_output_matches' => [qr/DNAT\s.*\*\/\sto\:/,
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+            qr/\*\/\sto\:$force_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{"${fw_conf_prefix}_snat_translate_ip"},
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "FORWARD_ALL + DNAT",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            $cf{'rc_hmac_b64_key'},
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_spa_dst_snat"} -a $cf{'hmac_forward_all_and_dna_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/DNAT\s.*\*\/\sto\:/,
+            qr/\sSNAT\s.*all.*\sto:$force_nat_host2/],
+        'server_negative_output_matches' => [
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+            qr/\*\/\sto\:$force_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{"${fw_conf_prefix}_spa_dst_snat"},
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
 

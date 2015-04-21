@@ -215,8 +215,10 @@ EXTRA_DIST = \
     test/conf/hmac_force_nat_access.conf \
     test/conf/hmac_force_snat_access.conf \
     test/conf/hmac_force_masq_access.conf \
+    test/conf/hmac_force_nat_forward_all_access.conf \
     test/conf/hmac_no_b64_cygwin_access.conf \
     test/conf/hmac_forward_all_access.conf \
+    test/conf/hmac_forward_all_and_dnat_access.conf \
     test/conf/hmac_force_masq_no_dnat_access.conf \
     test/conf/multi_pkts.pcap \
     test/conf/fwknoprc_default_hmac_base64_key \
@@ -315,7 +317,11 @@ EXTRA_DIST = \
     test/conf/firewd_snat_fwknopd.conf \
     test/conf/ipt_snat_no_translate_ip_fwknopd.conf \
     test/conf/firewd_snat_no_translate_ip_fwknopd.conf \
+    test/conf/ipt_snat_translate_ip_fwknopd.conf \
+    test/conf/firewd_snat_translate_ip_fwknopd.conf \
     test/conf/destination_rule_fwknopd.conf \
+    test/conf/firewd_spa_dst_snat_fwknopd.conf \
+    test/conf/ipt_spa_dst_snat_fwknopd.conf \
     test/conf/hmac_spa_destination_access.conf \
     test/conf/hmac_spa_destination2_access.conf \
     test/conf/hmac_spa_destination3_access.conf \
