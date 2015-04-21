@@ -23,7 +23,9 @@ fwknop-2.6.6 (04/21/2015):
       when code coverage reports are created.
     - [build] Add --enable-asan-support to autoconf configure script to enable
       Google's Address Sanitizer (ASan) support. This feature is used during
-      the testing phase for new fwknop releases.
+      the testing phase for new fwknop releases. Running fwknop under the
+      complete test suite (and also under AFL) with ASan support compiled in
+      did not turn up any new bugs.
     - [test suite] (Franck Joncourt) Added libfko unit tests with the CUnit
       framework.
 

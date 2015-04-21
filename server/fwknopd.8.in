@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 11/26/2014
+.\"      Date: 04/20/2015
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "11/26/2014" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "04/20/2015" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -391,7 +391,9 @@ Specify the IP address for SNAT\&. This functionality is only enabled when \(lqE
 \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR
 file), but if you want
 \fBfwknopd\fR
-to use the SNAT target, you must also define an IP address with the \(lqSNAT_TRANSLATE_IP\(rq variable\&.
+to use the SNAT target, you must also define an IP address with the \(lqSNAT_TRANSLATE_IP\(rq variable\&. Note that this variable is generally deprecated in favor of the \(lqFORCE_SNAT\(rq variable in the
+\fI@sysconfdir@/fwknop/access\&.conf\fR
+file which enables per\-stanza control over the SNAT IP\&.
 .RE
 .PP
 \fBENABLE_IPT_OUTPUT\fR \fI<Y/N>\fR
@@ -519,19 +521,19 @@ Override syslog identity on message logged by
 Override syslog facility\&. The \(lqSYSLOG_FACILITY\(rq variable can be set to
 .RE
 .PP
+\fBENABLE_DESTINATION_RULE\fR \fI<Y/N>\fR
+.RS 4
+Controls whether
+\fBfwknopd\fR
+will set the destination field on the firewall rule to the destination address specified on the incoming SPA packet\&. This is useful for interfaces with multiple IP addresses hosting separate services\&. If \(lqENABLE_IPT_OUTPUT\(rq is set to \(lqY\(rq, the source field of the firewall rule is set\&. FORWARD and SNAT rules are not affected however, DNAT rules will also have their destination field set\&. The default is \(lqN\(rq, which sets the destination field to 0\&.0\&.0\&.0/0 (any)\&.
+.RE
+.PP
 \fBFWKNOP_RUN_DIR\fR \fI<path>\fR
 .RS 4
 Specify the directory where
 \fBfwknopd\fR
 writes run time state files\&. The default is
 \fI@localstatedir@\fR\&.
-.RE
-.PP
-\fBENABLE_DESTINATION_RULE\fR \fI<Y/N>\fR
-.RS 4
-Controls whether
-\fBfwknopd\fR
-will set the destination field on the firewall rule to the destination address specified on the incoming SPA packet\&. This is useful for interfaces with multiple IP addresses hosting separate services\&. If \(lqENABLE_IPT_OUTPUT\(rq is set to \(lqY\(rq, the source field of the firewall rule is set\&. FORWARD and SNAT rules are not affected however, DNAT rules will also have their destination field set\&. The default is \(lqN\(rq, which sets the destination field to 0\&.0\&.0\&.0/0 (any)\&.
 .RE
 .SS "ACCESS\&.CONF VARIABLES"
 .sp
@@ -681,6 +683,24 @@ file except that it is per access stanza and overrides any value set with \(lqSN
 \fBFORCE_MASQUERADE\fR \fI<Y/N>\fR
 .RS 4
 This is similar to the \(lqFORCE_SNAT\(rq variable, except that it is not necessary to also specify an IP address for SNAT rules because the MASQUERADE target is used instead\&.
+.RE
+.PP
+\fBFORWARD_ALL\fR \fI<Y/N>\fR
+.RS 4
+In NAT scenarios, control whether all traffic is forwarded through the
+\fBfwknopd\fR
+system as opposed to just forwarding connections to specific services as requested by the
+\fBfwknop\fR
+client\&.
+.RE
+.PP
+\fBDISABLE_DNAT\fR \fI<Y/N>\fR
+.RS 4
+Control whether DNAT rules are created in FORCE_NAT scenarios\&. This is mainly used in conjunction with the FORWARD_ALL variable to allow
+\fBfwknopd\fR
+to act essentially as an SPA gateway\&. I\&.e\&., the
+\fBfwknop\fR
+client is used to gain access via SPA to the broader Internet after being granted an IP via DHCP, but prior to sending the SPA packet all traffic is blocked by default to the Internet\&.
 .RE
 .PP
 \fBGPG_DECRYPT_ID\fR \fI<keyID>\fR
