@@ -489,7 +489,6 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 
         for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
         {
-
             if(fwc.chain[i].target[0] == '\0')
                 continue;
 
@@ -523,7 +522,6 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 
         for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
         {
-
             if(fwc.chain[i].target[0] == '\0')
                 continue;
 
