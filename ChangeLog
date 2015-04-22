@@ -1,4 +1,4 @@
-fwknop-2.6.6 (04/21/2015):
+fwknop-2.6.6 (04/23/2015):
     - [server] Add the ability for fwknopd to function as an generic SPA
       gateway. This allows scenarios such as the fwknopd system providing DHCP
       addresses to client systems, but those systems would be blocking by
@@ -8,16 +8,14 @@ fwknop-2.6.6 (04/21/2015):
       FORWARD_ALL (allow all traffic to be forwarded instead of specfic
       services requested within an SPA packet). So far, this feature is only
       supported on systems running iptables or firewalld. The idea was
-      contributed by github user "spartan1833" via issue 131.
+      contributed by "spartan1833" to the fwknop mailing list, and this became
+      issue 131 on github.
     - [server] Bug fix when compiled with --enable-udp-server to not include
       pcap.h, which is likely not installed whenever libpcap is also not
       installed. This bug was reported by Alexander Kozhevnikov.
     - [android] (Dan Brooks) Contributed a patch for the Android client app to
       add the definition of custom server udp port. This is similiar to the
       --server-port argument offered by the main fwknop client.
-    - [test suite] Set AFL_HARDEN=1 to AFL fuzzing wrapper scripts. This
-      enables simple memory bug detection in AFL at the cost of a small
-      performance hit.
     - [test suite] Handle versions of lcov that don't have the --rc argument
       which is normally used to force the creation of branch coverage stats
       when code coverage reports are created.
@@ -28,6 +26,9 @@ fwknop-2.6.6 (04/21/2015):
       did not turn up any new bugs.
     - [test suite] (Franck Joncourt) Added libfko unit tests with the CUnit
       framework.
+    - [test suite] Set AFL_HARDEN=1 to AFL fuzzing wrapper scripts. This
+      enables simple memory bug detection in AFL at the cost of a small
+      performance hit.
 
 fwknop-2.6.5 (12/16/2014):
     - [server] (Grant Pannell) Added a new access.conf variable "DESTINATION"
