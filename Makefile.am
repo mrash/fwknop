@@ -218,6 +218,7 @@ EXTRA_DIST = \
     test/conf/hmac_force_nat_forward_all_access.conf \
     test/conf/hmac_no_b64_cygwin_access.conf \
     test/conf/hmac_forward_all_access.conf \
+    test/conf/hmac_forward_all_masq_access.conf \
     test/conf/hmac_forward_all_and_dnat_access.conf \
     test/conf/hmac_force_masq_no_dnat_access.conf \
     test/conf/multi_pkts.pcap \

@@ -437,6 +437,7 @@ our %cf = (
     'hmac_force_masq_access'       => "$conf_dir/hmac_force_masq_access.conf",
     'hmac_force_masq_no_dnat_access' => "$conf_dir/hmac_force_masq_no_dnat_access.conf",
     'hmac_forward_all_access'      => "$conf_dir/hmac_forward_all_access.conf",
+    'hmac_forward_all_masq_access' => "$conf_dir/hmac_forward_all_masq_access.conf",
     'hmac_forward_all_and_dna_access' => "$conf_dir/hmac_forward_all_and_dnat_access.conf",
     'cmd_access'                   => "$conf_dir/cmd_access.conf",
     'cmd_setuid_access'            => "$conf_dir/cmd_setuid_access.conf",
@@ -6879,6 +6880,8 @@ sub os_fw_detect() {
                 $FW_TYPE   = 'firewalld';
                 $FW_PREFIX = 'FIREWD';
                 $fw_conf_prefix = 'firewd';
+            } else {
+                $fw_bin = &find_command('iptables');
             }
         }
     } else {

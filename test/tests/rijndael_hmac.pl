@@ -1453,7 +1453,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => "FORWARD_ALL snat translate IP",
+        'detail'   => "FORWARD_ALL SNAT translate IP",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
             $cf{'rc_hmac_b64_key'},
@@ -1467,6 +1467,25 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{"${fw_conf_prefix}_snat_translate_ip"},
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "FORWARD_ALL MASQUERADE",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            $cf{'rc_hmac_b64_key'},
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'hmac_forward_all_masq_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/\sMASQUERADE\s.*all/],
+        'server_negative_output_matches' => [
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+            qr/\*\/\sto\:$force_nat_host\:22/i],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'server_conf' => $cf{"${fw_conf_prefix}_snat_no_translate_ip"},
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
 

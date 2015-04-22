@@ -95,8 +95,8 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
      * maximize code coverage in conjunction with the test suite, and is never
      * compiled in for a production release of fwknop.
     */
-    if(run_extcmd_write("/bin/grep -v test", "/bin/echo test", &pid_status, opts) != 0)
-        log_msg(LOG_WARNING, "Code coverage: Could not execute command");
+    if(run_extcmd_write("/bin/grep -v test", "/bin/echo test", &pid_status, opts) == 0)
+        log_msg(LOG_WARNING, "[ignore] Code coverage: Executed command");
 #endif
 
     if(proto == IPPROTO_TCP)
@@ -1136,11 +1136,18 @@ static void snat_rule(const fko_srv_options_t * const opts,
     char     snat_target[SNAT_TARGET_BUFSIZE] = {0};
     struct   fw_chain *snat_chain = NULL;
 
-    log_msg(LOG_DEBUG, "snat_rule() forward_all: %d, nat_ip: %s, nat_port: %d",
-            acc->forward_all, nat_ip, nat_port);
+    log_msg(LOG_DEBUG,
+            "snat_rule() forward_all: %d, nat_ip: %s, nat_port: %d, force_snat: %d, force_snat_ip: %s, force_masq: %d",
+            acc->forward_all, nat_ip, nat_port, acc->force_snat,
+            (acc->force_snat_ip == NULL) ? "(NONE)" : acc->force_snat_ip,
+            acc->force_masquerade);
 
     if(acc->forward_all)
     {
+        /* Default to MASQUERADE */
+        snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
+        snprintf(snat_target, SNAT_TARGET_BUFSIZE-1, " ");
+
         /* Add SNAT or MASQUERADE rules.
         */
         if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
@@ -1150,12 +1157,6 @@ static void snat_rule(const fko_srv_options_t * const opts,
             snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                 "--to-source %s", acc->force_snat_ip);
         }
-        else if(acc->force_snat && acc->force_masquerade)
-        {
-            /* Using MASQUERADE */
-            snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
-            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1, " ");
-        }
         else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
             && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
         {
@@ -1163,12 +1164,6 @@ static void snat_rule(const fko_srv_options_t * const opts,
             snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
             snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
                 "--to-source %s", opts->config[CONF_SNAT_TRANSLATE_IP]);
-        }
-        else
-        {
-            /* Using MASQUERADE */
-            snat_chain = &(opts->fw_config->chain[FIREWD_MASQUERADE_ACCESS]);
-            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1, " ");
         }
 
         memset(rule_buf, 0, CMD_BUFSIZE);
