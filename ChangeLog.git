@@ -1,4 +1,89 @@
-commit 95bf4dcb8703ce7637519294df979b94e781f163 (HEAD, tag: refs/tags/2.6.6, refs/remotes/origin/master, refs/remotes/origin/HEAD, refs/heads/master)
+commit 707c59d12793fbf7805767ef868f4166c831c90b (HEAD, refs/heads/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Apr 22 19:09:46 2015 -0700
+
+    minor 2.6.6 release date update
+
+ fwknop.spec | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit e209acc196fa673037642512d9571485b592face
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Apr 22 01:10:00 2015 -0700
+
+    minor ChangeLog update
+
+ ChangeLog | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+commit 17d1071aa8265030c7944ce932bf984b9920ec2b
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Apr 22 01:00:57 2015 -0700
+
+    [server / test suite] cleaner SNAT MASQUERADE support
+
+ Makefile.am                 |  1 +
+ server/fw_util_firewalld.c  | 27 +++++++++++----------------
+ server/fw_util_iptables.c   | 27 +++++++++++----------------
+ test/test-fwknop.pl         |  3 +++
+ test/tests/rijndael_hmac.pl | 21 ++++++++++++++++++++-
+ 5 files changed, 46 insertions(+), 33 deletions(-)
+
+commit 6bdfa95067d3f9e1374273edfa5db857e10ca47c
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Apr 22 00:58:35 2015 -0700
+
+    [server / test suite] cleaner SNAT MASQUERADE support
+
+ test/conf/hmac_forward_all_masq_access.conf | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+commit 176afecd9fd325a0479826d877887997ece97fc0 (refs/remotes/origin/master, refs/remotes/origin/HEAD)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Apr 21 21:09:20 2015 -0400
+
+    [server] minor spacing fix
+
+ server/fw_util_firewalld.c | 2 --
+ server/fw_util_iptables.c  | 2 --
+ 2 files changed, 4 deletions(-)
+
+commit d961165a5ba38261fbdba275c45820c261455bd2
+Merge: 3512f7f 6467b92
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Apr 21 19:28:05 2015 -0400
+
+    Merge branch 'master' of ssh://fedora21/home/mbr/git/fwknop
+
+commit 6467b922d53949ffa0cf49af1e0632e0b4b55534
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Tue Apr 21 03:30:32 2015 -0700
+
+    [test suite] additional FORWARD_ALL tests
+
+ Makefile.am                                      |  6 +++
+ test/conf/firewd_snat_translate_ip_fwknopd.conf  |  3 ++
+ test/conf/firewd_spa_dst_snat_fwknopd.conf       |  3 ++
+ test/conf/hmac_force_nat_forward_all_access.conf |  6 +++
+ test/conf/hmac_forward_all_and_dnat_access.conf  |  7 ++++
+ test/conf/ipt_snat_translate_ip_fwknopd.conf     |  3 ++
+ test/conf/ipt_spa_dst_snat_fwknopd.conf          |  3 ++
+ test/test-fwknop.pl                              |  6 ++-
+ test/tests/rijndael_hmac.pl                      | 49 +++++++++++++++++++++---
+ 9 files changed, 80 insertions(+), 6 deletions(-)
+
+commit 3512f7f417d61ccab669ab637038688ba44385a9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Apr 20 21:34:12 2015 -0400
+
+    doc updates
+
+ ChangeLog           |  4 +++-
+ client/fwknop.8.in  |  6 +++---
+ server/fwknopd.8.in | 40 ++++++++++++++++++++++++++++++----------
+ 3 files changed, 36 insertions(+), 14 deletions(-)
+
+commit 95bf4dcb8703ce7637519294df979b94e781f163
 Merge: bdc3751 f757b4e
 Author: Michael Rash <michael.rash@gmail.com>
 Date:   Mon Apr 20 21:28:10 2015 -0400
@@ -6,6 +91,15 @@ Date:   Mon Apr 20 21:28:10 2015 -0400
     Merge pull request #153 from Coacher/master
     
     extras: adjust 'localstatedir' value for the AppArmor profile
+
+commit 75d40049630c9239a17bfb17c01920e5c356a6d9
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Mon Apr 20 09:19:37 2015 -0700
+
+    changes since 2.6.5
+
+ ChangeLog.git | 1794 +++++++++++++++++++++++++++++++++++++++------------------
+ 1 file changed, 1233 insertions(+), 561 deletions(-)
 
 commit bdc3751a840d7cc0c5944b767cd11d4355d59137
 Author: Michael Rash <mbr@cipherdyne.org>
