@@ -64,4 +64,4 @@ fwknopd.8: $(top_srcdir)/server/fwknopd.8.in
 		< $(top_srcdir)/server/fwknopd.8.in > "$@"
 
 clean-local:
-	rm -f fwknopd.8
+	rm -f fwknopd.8 fwknopd_utests

@@ -26,3 +26,6 @@ libfko_la_LDFLAGS   		= -version-info 2:3:0 $(GPGME_LIBS) -export-symbols-regex 
 AM_CPPFLAGS         		= $(GPGME_CFLAGS) -I $(top_srcdir)/common
 
 include_HEADERS     		= fko.h
+
+clean-local:
+	rm -f fko_utests

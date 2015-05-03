@@ -8,6 +8,9 @@ BASE_SOURCE_FILES   = fwknop.h config_init.c config_init.h \
 fwknop_SOURCES      = fwknop.c $(BASE_SOURCE_FILES)
 
 if WANT_C_UNIT_TESTS
+
+  fwknopd_utestsdir = $(top_builddir)/tests/c-unit-tests
+
   noinst_PROGRAMS        = fwknop_utests
   fwknop_utests_SOURCES  = fwknop_utests.c $(BASE_SOURCE_FILES)
   fwknop_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS)
@@ -34,5 +37,5 @@ fwknop.8: $(top_srcdir)/client/fwknop.8.in
 		< $(top_srcdir)/client/fwknop.8.in > "$@"
 
 clean-local:
-	rm -f fwknop.8
+	rm -f fwknop.8 fwknop_utests
 
