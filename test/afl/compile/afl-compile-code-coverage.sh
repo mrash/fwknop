@@ -8,9 +8,18 @@
 #
 
 cd ../../
+
 ./extras/apparmor/configure_args.sh --enable-afl-fuzzing --enable-profile-coverage $@
+
+if [ $? -ne 0 ]
+then
+    echo "[*] autogen configure script failure, exiting"
+    exit 1
+fi
+
 make clean
 make
+
 cd test/afl
 
 exit $?
