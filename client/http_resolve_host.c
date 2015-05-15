@@ -45,6 +45,10 @@
   #include <sys/wait.h>
 #endif
 
+#if AFL_FUZZING
+  #define AFL_SET_RESOLVE_HOST "192.168.12.123" /* force to non-routable IP */
+#endif
+
 struct url
 {
     char    port[MAX_PORT_STR_LEN+1];
@@ -94,6 +98,19 @@ try_url(struct url *url, fko_cli_options_t *options)
     hints.ai_family   = AF_UNSPEC; /* Allow IPv4 or IPv6 */
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
+
+#if AFL_FUZZING
+    /* Make sure to not generate any resolution requests when compiled
+     * for AFL fuzzing cycles
+    */
+    strlcpy(options->allow_ip_str, AFL_SET_RESOLVE_HOST,
+            sizeof(options->allow_ip_str));
+    log_msg(LOG_VERBOSITY_INFO,
+                "\n[+] AFL fuzzing cycle, force IP resolution to: %s",
+                options->allow_ip_str);
+
+    return(1);
+#endif
 
     error = getaddrinfo(url->host, url->port, &hints, &result);
     if (error != 0)
@@ -380,6 +397,19 @@ resolve_ip_https(fko_cli_options_t *options)
         */
         strlcat(wget_ssl_cmd, WGET_RESOLVE_URL_SSL, sizeof(wget_ssl_cmd));
     }
+
+#if AFL_FUZZING
+    /* Make sure to not generate any resolution requests when compiled
+     * for AFL fuzzing cycles
+    */
+    strlcpy(options->allow_ip_str, AFL_SET_RESOLVE_HOST,
+            sizeof(options->allow_ip_str));
+    log_msg(LOG_VERBOSITY_INFO,
+                "\n[+] AFL fuzzing cycle, force IP resolution to: %s",
+                options->allow_ip_str);
+
+    return(1);
+#endif
 
 #if HAVE_EXECVPE
     if(strtoargv(wget_ssl_cmd, wget_argv, &wget_argc, options) != 1)
