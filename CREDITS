@@ -1,5 +1,6 @@
 Jonathan Bennett
     - Contributed OpenWRT support - see the extras/openwrt/ directory.
+    - Suggested the addition of the --key-gen option to fwknopd.
 
 Sebastien Jeanquier
     - Assisted with getting fwknop included in BackTrack Linux - the choice

@@ -199,7 +199,7 @@ static int critical_var_array[] =
 };
 
 /**
- * @brief Generate Rijndael + HMAC keys from /dev/random (base64 encoded) and exit.
+ * @brief Generate Rijndael + HMAC keys from /dev/urandom (base64 encoded).
  *
  * @param options FKO command line option structure
  */

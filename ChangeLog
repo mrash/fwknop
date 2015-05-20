@@ -1,3 +1,8 @@
+fwknop-2.6.7 (05//2015):
+    - Added --key-gen to fwknopd. This feature was suggested by Jonathan
+      Bennett, and will help with ease of use efforts. The first platform to
+      take advantage of this will likely be OpenWRT thanks to Jonathan.
+
 fwknop-2.6.6 (04/23/2015):
     - [server] Add the ability for fwknopd to function as an generic SPA
       gateway. This allows scenarios such as the fwknopd system providing DHCP

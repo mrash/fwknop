@@ -196,6 +196,11 @@ GENERAL OPTIONS
     keys are generally more secure than passphrases that are typed in from the
     command line.
 
+*--key-gen-file*='<file>'::
+    Write generated keys to the specified file. Note that the file is
+    overwritten if it already exists. If this option is not given, then
+    *--key-gen* writes the keys to stdout.
+
 *--key-len*='<length>'::
     Specify the number of bytes for a generated Rijndael key. The maximum size
     is currently 128 bytes.

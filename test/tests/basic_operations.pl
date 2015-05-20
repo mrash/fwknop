@@ -390,6 +390,14 @@
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args --key-gen -K " . 'A'x1030
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => '--key-gen file path (-K) too long',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$fwknopdCmd --key-gen --key-gen-file " . 'A'x1030
+    },
 
     {
         'category' => 'basic operations',

@@ -69,8 +69,6 @@
 #define MAX_HOSTNAME_LEN            70
 #define MAX_URL_HOST_LEN            256
 #define MAX_URL_PATH_LEN            1024
-#define MAX_KEY_LEN                 128
-#define MAX_B64_KEY_LEN             180
 
 /* fwknop client configuration parameters and values
 */
@@ -156,10 +154,10 @@ typedef struct fko_cli_options
     unsigned char   use_gpg;
     unsigned char   use_gpg_agent;
     unsigned char   gpg_no_signing_pw;
+    unsigned char   key_gen;
     int             time_offset_plus;
     int             time_offset_minus;
     int             fw_timeout;
-    int             key_gen;
 
     char            use_rc_stanza[MAX_LINE_LEN];
     unsigned char   got_named_stanza;

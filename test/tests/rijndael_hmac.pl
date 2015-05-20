@@ -58,6 +58,59 @@
         'exec_err' => $YES,
     },
 
+    ### --key-gen tests
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => '--key-gen',
+        'function' => \&generic_exec,
+        'cmdline'  => "$fwknopCmd --key-gen",
+        'positive_output_matches' => [qr/^KEY_BASE64\:?\s\S{10}/,
+            qw/HMAC_KEY_BASE64\:?\s\S{10}/],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'server',
+        'detail'   => '--key-gen',
+        'function' => \&generic_exec,
+        'cmdline'  => "$fwknopdCmd --key-gen",
+        'positive_output_matches' => [qr/^KEY_BASE64\:?\s\S{10}/,
+            qw/HMAC_KEY_BASE64\:?\s\S{10}/],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => "--key-gen $uniq_keys key uniqueness",
+        'function' => \&key_gen_uniqueness,
+        'cmdline'  => "$fwknopCmd --key-gen",   ### no valgrind string (too slow for 100 exec's)
+        'disable_valgrind' => $YES,
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'server',
+        'detail'   => "--key-gen $uniq_keys key uniqueness",
+        'function' => \&key_gen_uniqueness,
+        'cmdline'  => "$fwknopdCmd --key-gen",   ### no valgrind string (too slow for 100 exec's)
+        'disable_valgrind' => $YES,
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client',
+        'detail'   => '--key-gen to file',
+        'function' => \&generic_exec,
+        'cmdline'  => "$fwknopCmd --key-gen --key-gen-file $key_gen_file",
+        'positive_output_matches' => [qr/Wrote.*\skeys/],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'server',
+        'detail'   => '--key-gen to file',
+        'function' => \&generic_exec,
+        'cmdline'  => "$fwknopdCmd --key-gen --key-gen-file $key_gen_file",
+        'positive_output_matches' => [qr/Wrote.*\skeys/],
+    },
+
+    ### complete cycle tests
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',

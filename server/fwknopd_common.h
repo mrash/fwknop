@@ -585,10 +585,14 @@ typedef struct fko_srv_options
     unsigned char   fw_list;            /* List current firewall rules */
     unsigned char   fw_list_all;        /* List all current firewall rules */
     unsigned char   fw_flush;           /* Flush current firewall rules */
+    unsigned char   key_gen;            /* Generate keys and exit */
+    unsigned char   exit_after_parse_config; /* Parse config and exit */
+
+    /* Operational flags
+    */
     unsigned char   test;               /* Test mode flag */
     unsigned char   afl_fuzzing;        /* SPA pkts from stdin for AFL fuzzing */
     unsigned char   verbose;            /* Verbose mode flag */
-    unsigned char   exit_after_parse_config; /* Parse config and exit */
     unsigned char   enable_udp_server;  /* Enable UDP server mode */
 
     unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
@@ -604,6 +608,13 @@ typedef struct fko_srv_options
     int             data_link_offset;
     int             tcp_server_pid;
     int             lock_fd;
+
+    /* Values used in --key-gen mode only
+    */
+    char key_gen_file[MAX_PATH_LEN];
+    int  key_len;
+    int  hmac_key_len;
+    int  hmac_type;
 
 #if USE_FILE_CACHE
     struct digest_cache_list *digest_cache;   /* In-memory digest cache list */

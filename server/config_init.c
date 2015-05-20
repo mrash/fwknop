@@ -201,6 +201,60 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     return;
 }
 
+/**
+ * @brief Generate Rijndael + HMAC keys from /dev/urandom (base64 encoded).
+ *
+ * @param options FKO command line option structure
+ */
+static void
+generate_keys(fko_srv_options_t *options)
+{
+    char key_base64[MAX_B64_KEY_LEN+1];
+    char hmac_key_base64[MAX_B64_KEY_LEN+1];
+
+    FILE  *key_gen_file_ptr = NULL;
+    int res;
+
+    /* Zero out the key buffers */
+    memset(key_base64, 0x00, sizeof(key_base64));
+    memset(hmac_key_base64, 0x00, sizeof(hmac_key_base64));
+
+    /* Generate the key through libfko */
+    res = fko_key_gen(key_base64, FKO_DEFAULT_KEY_LEN,
+            hmac_key_base64, FKO_DEFAULT_HMAC_KEY_LEN,
+            FKO_DEFAULT_HMAC_MODE);
+
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "%s: fko_key_gen: Error %i - %s",
+            MY_NAME, res, fko_errstr(res));
+        clean_exit(options, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(options->key_gen_file[0] != '\0')
+    {
+        if ((key_gen_file_ptr = fopen(options->key_gen_file, "w")) == NULL)
+        {
+            log_msg(LOG_INFO, "Unable to create key gen file: %s: %s",
+                options->key_gen_file, strerror(errno));
+            clean_exit(options, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+        fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
+            key_base64, hmac_key_base64);
+        fclose(key_gen_file_ptr);
+        log_msg(LOG_INFO,
+                "[+] Wrote Rijndael and HMAC keys to: %s",
+            options->key_gen_file);
+    }
+    else
+    {
+        log_msg(LOG_INFO,
+                "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s",
+                key_base64, hmac_key_base64);
+    }
+    clean_exit(options, NO_FW_CLEANUP, EXIT_SUCCESS);
+}
+
 /* Parse the config file...
 */
 static void
@@ -427,7 +481,7 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE] == NULL)
         set_config_entry(opts, CONF_ENABLE_DIGEST_PERSISTENCE,
             DEF_ENABLE_DIGEST_PERSISTENCE);
-            
+
     /* Enable destination rule.
     */
     if(opts->config[CONF_ENABLE_DESTINATION_RULE] == NULL)
@@ -882,6 +936,20 @@ validate_options(fko_srv_options_t *opts)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
+    if(opts->key_gen)
+    {
+        /* Set defaults and validate for --key-gen mode
+        */
+        if(opts->key_len == 0)
+            opts->key_len = FKO_DEFAULT_KEY_LEN;
+
+        if(opts->hmac_key_len == 0)
+            opts->hmac_key_len = FKO_DEFAULT_HMAC_KEY_LEN;
+
+        if(opts->hmac_type == 0)
+            opts->hmac_type = FKO_DEFAULT_HMAC_MODE;
+    }
+
     return;
 }
 
@@ -1130,6 +1198,44 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case IPT_DISABLE_CHECK_SUPPORT:
                 opts->ipt_disable_check_support = 1;
                 break;
+            case 'k':
+                opts->key_gen = 1;
+                break;
+            case KEY_GEN_FILE:
+                opts->key_gen = 1;
+                strlcpy(opts->key_gen_file, optarg, sizeof(opts->key_gen_file));
+                break;
+            case KEY_LEN:  /* used in --key-gen mode only */
+                opts->key_len = strtol_wrapper(optarg, 1,
+                        MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    log_msg(LOG_ERR,
+                            "Invalid key length '%s', must be in [%d-%d]",
+                            optarg, 1, MAX_KEY_LEN);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
+            case HMAC_DIGEST_TYPE:  /* used in --key-gen mode only */
+                if((opts->hmac_type = hmac_digest_strtoint(optarg)) < 0)
+                {
+                    log_msg(LOG_ERR,
+                        "* Invalid hmac digest type: %s, use {md5,sha1,sha256,sha384,sha512}",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
+            case HMAC_KEY_LEN:  /* used in --key-gen mode only */
+                opts->hmac_key_len = strtol_wrapper(optarg, 1,
+                        MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    log_msg(LOG_ERR,
+                            "Invalid hmac key length '%s', must be in [%d-%d]",
+                            optarg, 1, MAX_KEY_LEN);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
             case 'K':
                 opts->kill = 1;
                 break;
@@ -1189,6 +1295,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
      * start fwknopd, we can validate them.
     */
     validate_options(opts);
+
+    if(opts->key_gen)
+        generate_keys(opts);
 
     return;
 }
