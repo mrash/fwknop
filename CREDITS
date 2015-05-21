@@ -1,6 +1,8 @@
 Jonathan Bennett
     - Contributed OpenWRT support - see the extras/openwrt/ directory.
     - Suggested the addition of the --key-gen option to fwknopd.
+    - Contributed the console-qr.sh script (in extras/console-qr/) to create
+      QR codes from fwknopd access.conf keys.
 
 Sebastien Jeanquier
     - Assisted with getting fwknop included in BackTrack Linux - the choice
