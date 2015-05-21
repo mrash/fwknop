@@ -71,6 +71,8 @@ EXTRA_DIST = \
     extras/fwknop-launcher/fwknop-launcher.conf \
     extras/apparmor/usr.sbin.fwknopd \
     extras/apparmor/configure_args.sh \
+    extras/ramdisk/ramdisk-create.sh \
+    extras/console-qr/console-qr.sh \
     fwknop.spec \
     iphone/main.m \
     iphone/Fwknop.xcodeproj \
