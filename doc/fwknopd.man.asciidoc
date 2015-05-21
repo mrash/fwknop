@@ -116,7 +116,7 @@ COMMAND-LINE OPTIONS
     network traffic.
 
 *-l, --locale*='<locale>'::
-   Set/override the system default locale setting.
+    Set/override the system default locale setting.
 
 *--no-ipt-check-support*::
     Disable the usage of the iptables '-C' option. This is not normally needed,
@@ -128,10 +128,31 @@ COMMAND-LINE OPTIONS
     '@sysconfdir@/fwknop/fwknopd.conf' file with values from the specified file. Multiple
     override config files can be given as a comma-separated list.
 
+*--key-gen*::
+    Have *fwknopd* generate both Rijndael and HMAC keys that can be used for
+    SPA packet encryption and authentication. These keys are derived from
+    /dev/urandom and then base64 encoded before being printed to stdout, and
+    are meant to be manually included in a stanza within the
+    '@sysconfdir@/fwknop/access.conf' file. Such keys are generally more secure
+    than passphrases.
+
+*--key-gen-file*='<file>'::
+    Write generated keys to the specified file. Note that the file is
+    overwritten if it already exists. If this option is not given, then
+    *--key-gen* writes the keys to stdout.
+
+*--key-len*='<length>'::
+    Specify the number of bytes for a generated Rijndael key. The maximum size
+    is currently 128 bytes.
+
+*--hmac-key-len*='<length>'::
+    Specify the number of bytes for a generated HMAC key. The maximum size is
+    currently 128 bytes.
+
 *-p, --pid-file*='<pid-file>'::
     Specify the location of the 'fwknopd.pid' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
-    '@localstatedir@/fwknop/fwknopd.pid).
+    '@localstatedir@/fwknop/fwknopd.pid').
 
 *-P, --pcap-filter*='<filter>'::
     Specify a Berkeley packet filter statement on the *fwknopd* command
@@ -220,7 +241,8 @@ This section list the more prominent configuration variables used by
 *fwknopd*. It is not a complete list. There are directives for the type
 of firewall used by *fwknopd* (i.e. _iptables_, _ipfw_, or _pf_). You will
 want to make sure to check these to make sure they have appropriate values.
-See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and corresponding details.
+See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and
+corresponding details.
 
 *PCAP_INTF* '<interface>'::
     Specify the ethernet interface on which *fwknopd* will sniff packets.

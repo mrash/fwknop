@@ -190,11 +190,11 @@ GENERAL OPTIONS
 
 *--key-gen*::
     Have *fwknop* generate both Rijndael and HMAC keys that can be used for SPA
-    packet encryption. These keys are derived from /dev/urandom and then base64
-    encoded before being printed to stdout, and are meant to be included within
-    the ``$HOME/.fwknoprc'' file (or the file referenced by *--get-key*). Such
-    keys are generally more secure than passphrases that are typed in from the
-    command line.
+    packet encryption and authentication. These keys are derived from
+    /dev/urandom and then base64 encoded before being printed to stdout, and
+    are meant to be included within the ``$HOME/.fwknoprc'' file (or the file
+    referenced by *--get-key*). Such keys are generally more secure than
+    passphrases that are typed in from the command line.
 
 *--key-gen-file*='<file>'::
     Write generated keys to the specified file. Note that the file is
