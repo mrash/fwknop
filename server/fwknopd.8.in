@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 04/20/2015
+.\"      Date: 05/22/2015
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "04/20/2015" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "05/22/2015" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -190,13 +190,40 @@ Override config variable values that are normally read from the
 file with values from the specified file\&. Multiple override config files can be given as a comma\-separated list\&.
 .RE
 .PP
+\fB\-\-key\-gen\fR
+.RS 4
+Have
+\fBfwknopd\fR
+generate both Rijndael and HMAC keys that can be used for SPA packet encryption and authentication\&. These keys are derived from /dev/urandom and then base64 encoded before being printed to stdout, and are meant to be manually included in a stanza within the
+\fI@sysconfdir@/fwknop/access\&.conf\fR
+file\&. Such keys are generally more secure than passphrases\&.
+.RE
+.PP
+\fB\-\-key\-gen\-file\fR=\fI<file>\fR
+.RS 4
+Write generated keys to the specified file\&. Note that the file is overwritten if it already exists\&. If this option is not given, then
+\fB\-\-key\-gen\fR
+writes the keys to stdout\&.
+.RE
+.PP
+\fB\-\-key\-len\fR=\fI<length>\fR
+.RS 4
+Specify the number of bytes for a generated Rijndael key\&. The maximum size is currently 128 bytes\&.
+.RE
+.PP
+\fB\-\-hmac\-key\-len\fR=\fI<length>\fR
+.RS 4
+Specify the number of bytes for a generated HMAC key\&. The maximum size is currently 128 bytes\&.
+.RE
+.PP
 \fB\-p, \-\-pid\-file\fR=\fI<pid\-file>\fR
 .RS 4
 Specify the location of the
 \fIfwknopd\&.pid\fR
 file\&. If this option is not given,
 \fIfwknopd\fR
-will use the compile\-time default location (typically \*(Aq@localstatedir@/fwknop/fwknopd\&.pid)\&.
+will use the compile\-time default location (typically
+\fI@localstatedir@/fwknop/fwknopd\&.pid\fR)\&.
 .RE
 .PP
 \fB\-P, \-\-pcap\-filter\fR=\fI<filter>\fR
