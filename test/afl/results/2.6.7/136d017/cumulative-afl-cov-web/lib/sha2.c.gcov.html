@@ -1,0 +1,1069 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - id:002084,src:002034,op:havoc,rep:2.lcov_info_final - lib/sha2.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">lib</a> - sha2.c<span style="font-size: 80%;"> (source / <a href="sha2.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">id:002084,src:002034,op:havoc,rep:2.lcov_info_final</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">94</td>
+            <td class="headerCovTableEntry">228</td>
+            <td class="headerCovTableEntryLo">41.2 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2015-05-25</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">12</td>
+            <td class="headerCovTableEntryLo">33.3 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">22</td>
+            <td class="headerCovTableEntry">76</td>
+            <td class="headerCovTableEntryLo">28.9 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  *****************************************************************************
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * File:    sha2.c
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Purpose: An implementation of the SHA 26/384/512 digests.
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  * AUTHOR: Aaron D. Gifford - http://www.aarongifford.com/
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * Copyright (c) 2000-2001, Aaron D. Gifford
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  * All rights reserved.
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  * Redistribution and use in source and binary forms, with or without
+<span class="lineNum">      15 </span>                :            :  * modification, are permitted provided that the following conditions
+<span class="lineNum">      16 </span>                :            :  * are met:
+<span class="lineNum">      17 </span>                :            :  * 1. Redistributions of source code must retain the above copyright
+<span class="lineNum">      18 </span>                :            :  *    notice, this list of conditions and the following disclaimer.
+<span class="lineNum">      19 </span>                :            :  * 2. Redistributions in binary form must reproduce the above copyright
+<span class="lineNum">      20 </span>                :            :  *    notice, this list of conditions and the following disclaimer in the
+<span class="lineNum">      21 </span>                :            :  *    documentation and/or other materials provided with the distribution.
+<span class="lineNum">      22 </span>                :            :  * 3. Neither the name of the copyright holder nor the names of contributors
+<span class="lineNum">      23 </span>                :            :  *    may be used to endorse or promote products derived from this software
+<span class="lineNum">      24 </span>                :            :  *    without specific prior written permission.
+<span class="lineNum">      25 </span>                :            :  * 
+<span class="lineNum">      26 </span>                :            :  * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTOR(S) ``AS IS'' AND
+<span class="lineNum">      27 </span>                :            :  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+<span class="lineNum">      28 </span>                :            :  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+<span class="lineNum">      29 </span>                :            :  * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTOR(S) BE LIABLE
+<span class="lineNum">      30 </span>                :            :  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+<span class="lineNum">      31 </span>                :            :  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+<span class="lineNum">      32 </span>                :            :  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+<span class="lineNum">      33 </span>                :            :  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+<span class="lineNum">      34 </span>                :            :  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+<span class="lineNum">      35 </span>                :            :  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+<span class="lineNum">      36 </span>                :            :  * SUCH DAMAGE.
+<span class="lineNum">      37 </span>                :            :  *
+<span class="lineNum">      38 </span>                :            :  *****************************************************************************
+<span class="lineNum">      39 </span>                :            : */
+<span class="lineNum">      40 </span>                :            : #include &lt;string.h&gt;       /* memcpy()/memset() or bcopy()/bzero() */
+<span class="lineNum">      41 </span>                :            : #include &lt;assert.h&gt;       /* assert() */
+<span class="lineNum">      42 </span>                :            : #include &quot;sha2.h&quot;
+<span class="lineNum">      43 </span>                :            : 
+<span class="lineNum">      44 </span>                :            : #if HAVE_SYS_BYTEORDER_H
+<span class="lineNum">      45 </span>                :            :   #include &lt;sys/byteorder.h&gt;
+<span class="lineNum">      46 </span>                :            : #endif
+<span class="lineNum">      47 </span>                :            : 
+<span class="lineNum">      48 </span>                :            : /*
+<span class="lineNum">      49 </span>                :            :  * ASSERT NOTE:
+<span class="lineNum">      50 </span>                :            :  * Some sanity checking code is included using assert().  On my FreeBSD
+<span class="lineNum">      51 </span>                :            :  * system, this additional code can be removed by compiling with NDEBUG
+<span class="lineNum">      52 </span>                :            :  * defined.  Check your own systems manpage on assert() to see how to
+<span class="lineNum">      53 </span>                :            :  * compile WITHOUT the sanity checking code on your system.
+<span class="lineNum">      54 </span>                :            :  *
+<span class="lineNum">      55 </span>                :            :  * UNROLLED TRANSFORM LOOP NOTE:
+<span class="lineNum">      56 </span>                :            :  * You can define SHA2_UNROLL_TRANSFORM to use the unrolled transform
+<span class="lineNum">      57 </span>                :            :  * loop version for the hash transform rounds (defined using macros
+<span class="lineNum">      58 </span>                :            :  * later in this file).  Either define on the command line, for example:
+<span class="lineNum">      59 </span>                :            :  *
+<span class="lineNum">      60 </span>                :            :  *   cc -DSHA2_UNROLL_TRANSFORM -o sha2 sha2.c sha2prog.c
+<span class="lineNum">      61 </span>                :            :  *
+<span class="lineNum">      62 </span>                :            :  * or define below:
+<span class="lineNum">      63 </span>                :            :  *
+<span class="lineNum">      64 </span>                :            :  *   #define SHA2_UNROLL_TRANSFORM
+<span class="lineNum">      65 </span>                :            :  *
+<span class="lineNum">      66 </span>                :            :  */
+<span class="lineNum">      67 </span>                :            : 
+<span class="lineNum">      68 </span>                :            : 
+<span class="lineNum">      69 </span>                :            : /*** SHA-256/384/512 Machine Architecture Definitions *****************/
+<span class="lineNum">      70 </span>                :            : /*
+<span class="lineNum">      71 </span>                :            :  * BYTE_ORDER NOTE:
+<span class="lineNum">      72 </span>                :            :  *
+<span class="lineNum">      73 </span>                :            :  * Please make sure that your system defines BYTE_ORDER.  If your
+<span class="lineNum">      74 </span>                :            :  * architecture is little-endian, make sure it also defines
+<span class="lineNum">      75 </span>                :            :  * LITTLE_ENDIAN and that the two (BYTE_ORDER and LITTLE_ENDIAN) are
+<span class="lineNum">      76 </span>                :            :  * equivilent.
+<span class="lineNum">      77 </span>                :            :  *
+<span class="lineNum">      78 </span>                :            :  * If your system does not define the above, then you can do so by
+<span class="lineNum">      79 </span>                :            :  * hand like this:
+<span class="lineNum">      80 </span>                :            :  *
+<span class="lineNum">      81 </span>                :            :  *   #define LITTLE_ENDIAN 1234
+<span class="lineNum">      82 </span>                :            :  *   #define BIG_ENDIAN    4321
+<span class="lineNum">      83 </span>                :            :  *
+<span class="lineNum">      84 </span>                :            :  * And for little-endian machines, add:
+<span class="lineNum">      85 </span>                :            :  *
+<span class="lineNum">      86 </span>                :            :  *   #define BYTE_ORDER LITTLE_ENDIAN 
+<span class="lineNum">      87 </span>                :            :  *
+<span class="lineNum">      88 </span>                :            :  * Or for big-endian machines:
+<span class="lineNum">      89 </span>                :            :  *
+<span class="lineNum">      90 </span>                :            :  *   #define BYTE_ORDER BIG_ENDIAN
+<span class="lineNum">      91 </span>                :            :  *
+<span class="lineNum">      92 </span>                :            :  * The FreeBSD machine this was written on defines BYTE_ORDER
+<span class="lineNum">      93 </span>                :            :  * appropriately by including &lt;sys/types.h&gt; (which in turn includes
+<span class="lineNum">      94 </span>                :            :  * &lt;machine/endian.h&gt; where the appropriate definitions are actually
+<span class="lineNum">      95 </span>                :            :  * made).
+<span class="lineNum">      96 </span>                :            :  */
+<span class="lineNum">      97 </span>                :            : 
+<span class="lineNum">      98 </span>                :            : #ifndef BYTE_ORDER
+<span class="lineNum">      99 </span>                :            :   #ifdef WIN32
+<span class="lineNum">     100 </span>                :            :     #define BYTE_ORDER BIG_ENDIAN
+<span class="lineNum">     101 </span>                :            :   #elif defined(_BIG_ENDIAN)
+<span class="lineNum">     102 </span>                :            :     #define BYTE_ORDER BIG_ENDIAN
+<span class="lineNum">     103 </span>                :            :   #elif defined(_LITTLE_ENDIAN)
+<span class="lineNum">     104 </span>                :            :     #define BYTE_ORDER LITTLE_ENDIAN
+<span class="lineNum">     105 </span>                :            :   #endif
+<span class="lineNum">     106 </span>                :            : #endif
+<span class="lineNum">     107 </span>                :            : 
+<span class="lineNum">     108 </span>                :            : #if !defined(BYTE_ORDER) || (BYTE_ORDER != LITTLE_ENDIAN &amp;&amp; BYTE_ORDER != BIG_ENDIAN)
+<span class="lineNum">     109 </span>                :            : #error Define BYTE_ORDER to be equal to either LITTLE_ENDIAN or BIG_ENDIAN
+<span class="lineNum">     110 </span>                :            : #endif
+<span class="lineNum">     111 </span>                :            : 
+<span class="lineNum">     112 </span>                :            : /*
+<span class="lineNum">     113 </span>                :            :  * Define the followingsha2_* types to types of the correct length on
+<span class="lineNum">     114 </span>                :            :  * the native archtecture.   Most BSD systems and Linux define u_intXX_t
+<span class="lineNum">     115 </span>                :            :  * types.  Machines with very recent ANSI C headers, can use the
+<span class="lineNum">     116 </span>                :            :  * uintXX_t definintions from inttypes.h by defining SHA2_USE_INTTYPES_H
+<span class="lineNum">     117 </span>                :            :  * during compile or in the sha.h header file.
+<span class="lineNum">     118 </span>                :            :  *
+<span class="lineNum">     119 </span>                :            :  * Machines that support neither u_intXX_t nor inttypes.h's uintXX_t
+<span class="lineNum">     120 </span>                :            :  * will need to define these three typedefs below (and the appropriate
+<span class="lineNum">     121 </span>                :            :  * ones in sha.h too) by hand according to their system architecture.
+<span class="lineNum">     122 </span>                :            :  *
+<span class="lineNum">     123 </span>                :            :  * Thank you, Jun-ichiro itojun Hagino, for suggesting using u_intXX_t
+<span class="lineNum">     124 </span>                :            :  * types and pointing out recent ANSI C support for uintXX_t in inttypes.h.
+<span class="lineNum">     125 </span>                :            :  */
+<span class="lineNum">     126 </span>                :            : #ifdef SHA2_USE_INTTYPES_H
+<span class="lineNum">     127 </span>                :            : 
+<span class="lineNum">     128 </span>                :            : typedef uint8_t  sha2_byte;     /* Exactly 1 byte */
+<span class="lineNum">     129 </span>                :            : typedef uint32_t sha2_word32;   /* Exactly 4 bytes */
+<span class="lineNum">     130 </span>                :            : typedef uint64_t sha2_word64;   /* Exactly 8 bytes */
+<span class="lineNum">     131 </span>                :            : 
+<span class="lineNum">     132 </span>                :            : #else /* SHA2_USE_INTTYPES_H */
+<span class="lineNum">     133 </span>                :            : 
+<span class="lineNum">     134 </span>                :            : typedef u_int8_t  sha2_byte;    /* Exactly 1 byte */
+<span class="lineNum">     135 </span>                :            : typedef u_int32_t sha2_word32;  /* Exactly 4 bytes */
+<span class="lineNum">     136 </span>                :            : typedef u_int64_t sha2_word64;  /* Exactly 8 bytes */
+<span class="lineNum">     137 </span>                :            : 
+<span class="lineNum">     138 </span>                :            : #endif /* SHA2_USE_INTTYPES_H */
+<span class="lineNum">     139 </span>                :            : 
+<span class="lineNum">     140 </span>                :            : 
+<span class="lineNum">     141 </span>                :            : /*** SHA-256/384/512 Various Length Definitions ***********************/
+<span class="lineNum">     142 </span>                :            : /* NOTE: Most of these are in sha2.h */
+<span class="lineNum">     143 </span>                :            : #define SHA256_SHORT_BLOCK_LEN  (SHA256_BLOCK_LEN - 8)
+<span class="lineNum">     144 </span>                :            : #define SHA384_SHORT_BLOCK_LEN  (SHA384_BLOCK_LEN - 16)
+<span class="lineNum">     145 </span>                :            : #define SHA512_SHORT_BLOCK_LEN  (SHA512_BLOCK_LEN - 16)
+<span class="lineNum">     146 </span>                :            : 
+<span class="lineNum">     147 </span>                :            : 
+<span class="lineNum">     148 </span>                :            : /*** ENDIAN REVERSAL MACROS *******************************************/
+<span class="lineNum">     149 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     150 </span>                :            : #define REVERSE32(w,x)  { \
+<span class="lineNum">     151 </span>                :            :         sha2_word32 tmp = (w); \
+<span class="lineNum">     152 </span>                :            :         tmp = (tmp &gt;&gt; 16) | (tmp &lt;&lt; 16); \
+<span class="lineNum">     153 </span>                :            :         (x) = ((tmp &amp; 0xff00ff00UL) &gt;&gt; 8) | ((tmp &amp; 0x00ff00ffUL) &lt;&lt; 8); \
+<span class="lineNum">     154 </span>                :            : }
+<span class="lineNum">     155 </span>                :            : #define REVERSE64(w,x)  { \
+<span class="lineNum">     156 </span>                :            :         sha2_word64 tmp = (w); \
+<span class="lineNum">     157 </span>                :            :         tmp = (tmp &gt;&gt; 32) | (tmp &lt;&lt; 32); \
+<span class="lineNum">     158 </span>                :            :         tmp = ((tmp &amp; 0xff00ff00ff00ff00ULL) &gt;&gt; 8) | \
+<span class="lineNum">     159 </span>                :            :               ((tmp &amp; 0x00ff00ff00ff00ffULL) &lt;&lt; 8); \
+<span class="lineNum">     160 </span>                :            :         (x) = ((tmp &amp; 0xffff0000ffff0000ULL) &gt;&gt; 16) | \
+<span class="lineNum">     161 </span>                :            :               ((tmp &amp; 0x0000ffff0000ffffULL) &lt;&lt; 16); \
+<span class="lineNum">     162 </span>                :            : }
+<span class="lineNum">     163 </span>                :            : #endif /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :            : /*
+<span class="lineNum">     166 </span>                :            :  * Macro for incrementally adding the unsigned 64-bit integer n to the
+<span class="lineNum">     167 </span>                :            :  * unsigned 128-bit integer (represented using a two-element array of
+<span class="lineNum">     168 </span>                :            :  * 64-bit words):
+<span class="lineNum">     169 </span>                :            :  */
+<span class="lineNum">     170 </span>                :            : #define ADDINC128(w,n)  { \
+<span class="lineNum">     171 </span>                :            :         (w)[0] += (sha2_word64)(n); \
+<span class="lineNum">     172 </span>                :            :         if ((w)[0] &lt; (n)) { \
+<span class="lineNum">     173 </span>                :            :                 (w)[1]++; \
+<span class="lineNum">     174 </span>                :            :         } \
+<span class="lineNum">     175 </span>                :            : }
+<span class="lineNum">     176 </span>                :            : 
+<span class="lineNum">     177 </span>                :            : /*
+<span class="lineNum">     178 </span>                :            :  * Macros for copying blocks of memory and for zeroing out ranges
+<span class="lineNum">     179 </span>                :            :  * of memory.  Using these macros makes it easy to switch from
+<span class="lineNum">     180 </span>                :            :  * using memset()/memcpy() and using bzero()/bcopy().
+<span class="lineNum">     181 </span>                :            :  *
+<span class="lineNum">     182 </span>                :            :  * Please define either SHA2_USE_MEMSET_MEMCPY or define
+<span class="lineNum">     183 </span>                :            :  * SHA2_USE_BZERO_BCOPY depending on which function set you
+<span class="lineNum">     184 </span>                :            :  * choose to use:
+<span class="lineNum">     185 </span>                :            :  */
+<span class="lineNum">     186 </span>                :            : #if !defined(SHA2_USE_MEMSET_MEMCPY) &amp;&amp; !defined(SHA2_USE_BZERO_BCOPY)
+<span class="lineNum">     187 </span>                :            : /* Default to memset()/memcpy() if no option is specified */
+<span class="lineNum">     188 </span>                :            : #define SHA2_USE_MEMSET_MEMCPY  1
+<span class="lineNum">     189 </span>                :            : #endif
+<span class="lineNum">     190 </span>                :            : #if defined(SHA2_USE_MEMSET_MEMCPY) &amp;&amp; defined(SHA2_USE_BZERO_BCOPY)
+<span class="lineNum">     191 </span>                :            : /* Abort with an error if BOTH options are defined */
+<span class="lineNum">     192 </span>                :            : #error Define either SHA2_USE_MEMSET_MEMCPY or SHA2_USE_BZERO_BCOPY, not both!
+<span class="lineNum">     193 </span>                :            : #endif
+<span class="lineNum">     194 </span>                :            : 
+<span class="lineNum">     195 </span>                :            : #ifdef SHA2_USE_MEMSET_MEMCPY
+<span class="lineNum">     196 </span>                :            : #define MEMSET_BZERO(p,l)       memset((p), 0, (l))
+<span class="lineNum">     197 </span>                :            : #define MEMCPY_BCOPY(d,s,l)     memcpy((d), (s), (l))
+<span class="lineNum">     198 </span>                :            : #endif
+<span class="lineNum">     199 </span>                :            : #ifdef SHA2_USE_BZERO_BCOPY
+<span class="lineNum">     200 </span>                :            : #define MEMSET_BZERO(p,l)       bzero((p), (l))
+<span class="lineNum">     201 </span>                :            : #define MEMCPY_BCOPY(d,s,l)     bcopy((s), (d), (l))
+<span class="lineNum">     202 </span>                :            : #endif
+<span class="lineNum">     203 </span>                :            : 
+<span class="lineNum">     204 </span>                :            : 
+<span class="lineNum">     205 </span>                :            : /*** THE SIX LOGICAL FUNCTIONS ****************************************/
+<span class="lineNum">     206 </span>                :            : /*
+<span class="lineNum">     207 </span>                :            :  * Bit shifting and rotation (used by the six SHA-XYZ logical functions:
+<span class="lineNum">     208 </span>                :            :  *
+<span class="lineNum">     209 </span>                :            :  *   NOTE:  The naming of R and S appears backwards here (R is a SHIFT and
+<span class="lineNum">     210 </span>                :            :  *   S is a ROTATION) because the SHA-256/384/512 description document
+<span class="lineNum">     211 </span>                :            :  *   (see http://csrc.nist.gov/cryptval/shs/sha256-384-512.pdf) uses this
+<span class="lineNum">     212 </span>                :            :  *   same &quot;backwards&quot; definition.
+<span class="lineNum">     213 </span>                :            :  */
+<span class="lineNum">     214 </span>                :            : /* Shift-right (used in SHA-256, SHA-384, and SHA-512): */
+<span class="lineNum">     215 </span>                :            : #define R(b,x)          ((x) &gt;&gt; (b))
+<span class="lineNum">     216 </span>                :            : /* 32-bit Rotate-right (used in SHA-256): */
+<span class="lineNum">     217 </span>                :            : #define S32(b,x)        (((x) &gt;&gt; (b)) | ((x) &lt;&lt; (32 - (b))))
+<span class="lineNum">     218 </span>                :            : /* 64-bit Rotate-right (used in SHA-384 and SHA-512): */
+<span class="lineNum">     219 </span>                :            : #define S64(b,x)        (((x) &gt;&gt; (b)) | ((x) &lt;&lt; (64 - (b))))
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :            : /* Two of six logical functions used in SHA-256, SHA-384, and SHA-512: */
+<span class="lineNum">     222 </span>                :            : #define Ch(x,y,z)       (((x) &amp; (y)) ^ ((~(x)) &amp; (z)))
+<span class="lineNum">     223 </span>                :            : #define Maj(x,y,z)      (((x) &amp; (y)) ^ ((x) &amp; (z)) ^ ((y) &amp; (z)))
+<span class="lineNum">     224 </span>                :            : 
+<span class="lineNum">     225 </span>                :            : /* Four of six logical functions used in SHA-256: */
+<span class="lineNum">     226 </span>                :            : #define Sigma0_256(x)   (S32(2,  (x)) ^ S32(13, (x)) ^ S32(22, (x)))
+<span class="lineNum">     227 </span>                :            : #define Sigma1_256(x)   (S32(6,  (x)) ^ S32(11, (x)) ^ S32(25, (x)))
+<span class="lineNum">     228 </span>                :            : #define sigma0_256(x)   (S32(7,  (x)) ^ S32(18, (x)) ^ R(3 ,   (x)))
+<span class="lineNum">     229 </span>                :            : #define sigma1_256(x)   (S32(17, (x)) ^ S32(19, (x)) ^ R(10,   (x)))
+<span class="lineNum">     230 </span>                :            : 
+<span class="lineNum">     231 </span>                :            : /* Four of six logical functions used in SHA-384 and SHA-512: */
+<span class="lineNum">     232 </span>                :            : #define Sigma0_512(x)   (S64(28, (x)) ^ S64(34, (x)) ^ S64(39, (x)))
+<span class="lineNum">     233 </span>                :            : #define Sigma1_512(x)   (S64(14, (x)) ^ S64(18, (x)) ^ S64(41, (x)))
+<span class="lineNum">     234 </span>                :            : #define sigma0_512(x)   (S64( 1, (x)) ^ S64( 8, (x)) ^ R( 7,   (x)))
+<span class="lineNum">     235 </span>                :            : #define sigma1_512(x)   (S64(19, (x)) ^ S64(61, (x)) ^ R( 6,   (x)))
+<span class="lineNum">     236 </span>                :            : 
+<span class="lineNum">     237 </span>                :            : /*** INTERNAL FUNCTION PROTOTYPES *************************************/
+<span class="lineNum">     238 </span>                :            : /* NOTE: These should not be accessed directly from outside this
+<span class="lineNum">     239 </span>                :            :  * library -- they are intended for private internal visibility/use
+<span class="lineNum">     240 </span>                :            :  * only.
+<span class="lineNum">     241 </span>                :            :  */
+<span class="lineNum">     242 </span>                :            : void SHA512_Last(SHA512_CTX*);
+<span class="lineNum">     243 </span>                :            : void SHA256_Transform(SHA256_CTX*, const sha2_word32*);
+<span class="lineNum">     244 </span>                :            : void SHA512_Transform(SHA512_CTX*, const sha2_word64*);
+<span class="lineNum">     245 </span>                :            : 
+<span class="lineNum">     246 </span>                :            : 
+<span class="lineNum">     247 </span>                :            : /*** SHA-XYZ INITIAL HASH VALUES AND CONSTANTS ************************/
+<span class="lineNum">     248 </span>                :            : /* Hash constant words K for SHA-256: */
+<span class="lineNum">     249 </span>                :            : const static sha2_word32 K256[64] = {
+<span class="lineNum">     250 </span>                :            :         0x428a2f98UL, 0x71374491UL, 0xb5c0fbcfUL, 0xe9b5dba5UL,
+<span class="lineNum">     251 </span>                :            :         0x3956c25bUL, 0x59f111f1UL, 0x923f82a4UL, 0xab1c5ed5UL,
+<span class="lineNum">     252 </span>                :            :         0xd807aa98UL, 0x12835b01UL, 0x243185beUL, 0x550c7dc3UL,
+<span class="lineNum">     253 </span>                :            :         0x72be5d74UL, 0x80deb1feUL, 0x9bdc06a7UL, 0xc19bf174UL,
+<span class="lineNum">     254 </span>                :            :         0xe49b69c1UL, 0xefbe4786UL, 0x0fc19dc6UL, 0x240ca1ccUL,
+<span class="lineNum">     255 </span>                :            :         0x2de92c6fUL, 0x4a7484aaUL, 0x5cb0a9dcUL, 0x76f988daUL,
+<span class="lineNum">     256 </span>                :            :         0x983e5152UL, 0xa831c66dUL, 0xb00327c8UL, 0xbf597fc7UL,
+<span class="lineNum">     257 </span>                :            :         0xc6e00bf3UL, 0xd5a79147UL, 0x06ca6351UL, 0x14292967UL,
+<span class="lineNum">     258 </span>                :            :         0x27b70a85UL, 0x2e1b2138UL, 0x4d2c6dfcUL, 0x53380d13UL,
+<span class="lineNum">     259 </span>                :            :         0x650a7354UL, 0x766a0abbUL, 0x81c2c92eUL, 0x92722c85UL,
+<span class="lineNum">     260 </span>                :            :         0xa2bfe8a1UL, 0xa81a664bUL, 0xc24b8b70UL, 0xc76c51a3UL,
+<span class="lineNum">     261 </span>                :            :         0xd192e819UL, 0xd6990624UL, 0xf40e3585UL, 0x106aa070UL,
+<span class="lineNum">     262 </span>                :            :         0x19a4c116UL, 0x1e376c08UL, 0x2748774cUL, 0x34b0bcb5UL,
+<span class="lineNum">     263 </span>                :            :         0x391c0cb3UL, 0x4ed8aa4aUL, 0x5b9cca4fUL, 0x682e6ff3UL,
+<span class="lineNum">     264 </span>                :            :         0x748f82eeUL, 0x78a5636fUL, 0x84c87814UL, 0x8cc70208UL,
+<span class="lineNum">     265 </span>                :            :         0x90befffaUL, 0xa4506cebUL, 0xbef9a3f7UL, 0xc67178f2UL
+<span class="lineNum">     266 </span>                :            : };
+<span class="lineNum">     267 </span>                :            : 
+<span class="lineNum">     268 </span>                :            : /* Initial hash value H for SHA-256: */
+<span class="lineNum">     269 </span>                :            : const static sha2_word32 sha256_initial_hash_value[8] = {
+<span class="lineNum">     270 </span>                :            :         0x6a09e667UL,
+<span class="lineNum">     271 </span>                :            :         0xbb67ae85UL,
+<span class="lineNum">     272 </span>                :            :         0x3c6ef372UL,
+<span class="lineNum">     273 </span>                :            :         0xa54ff53aUL,
+<span class="lineNum">     274 </span>                :            :         0x510e527fUL,
+<span class="lineNum">     275 </span>                :            :         0x9b05688cUL,
+<span class="lineNum">     276 </span>                :            :         0x1f83d9abUL,
+<span class="lineNum">     277 </span>                :            :         0x5be0cd19UL
+<span class="lineNum">     278 </span>                :            : };
+<span class="lineNum">     279 </span>                :            : 
+<span class="lineNum">     280 </span>                :            : /* Hash constant words K for SHA-384 and SHA-512: */
+<span class="lineNum">     281 </span>                :            : const static sha2_word64 K512[80] = {
+<span class="lineNum">     282 </span>                :            :         0x428a2f98d728ae22ULL, 0x7137449123ef65cdULL,
+<span class="lineNum">     283 </span>                :            :         0xb5c0fbcfec4d3b2fULL, 0xe9b5dba58189dbbcULL,
+<span class="lineNum">     284 </span>                :            :         0x3956c25bf348b538ULL, 0x59f111f1b605d019ULL,
+<span class="lineNum">     285 </span>                :            :         0x923f82a4af194f9bULL, 0xab1c5ed5da6d8118ULL,
+<span class="lineNum">     286 </span>                :            :         0xd807aa98a3030242ULL, 0x12835b0145706fbeULL,
+<span class="lineNum">     287 </span>                :            :         0x243185be4ee4b28cULL, 0x550c7dc3d5ffb4e2ULL,
+<span class="lineNum">     288 </span>                :            :         0x72be5d74f27b896fULL, 0x80deb1fe3b1696b1ULL,
+<span class="lineNum">     289 </span>                :            :         0x9bdc06a725c71235ULL, 0xc19bf174cf692694ULL,
+<span class="lineNum">     290 </span>                :            :         0xe49b69c19ef14ad2ULL, 0xefbe4786384f25e3ULL,
+<span class="lineNum">     291 </span>                :            :         0x0fc19dc68b8cd5b5ULL, 0x240ca1cc77ac9c65ULL,
+<span class="lineNum">     292 </span>                :            :         0x2de92c6f592b0275ULL, 0x4a7484aa6ea6e483ULL,
+<span class="lineNum">     293 </span>                :            :         0x5cb0a9dcbd41fbd4ULL, 0x76f988da831153b5ULL,
+<span class="lineNum">     294 </span>                :            :         0x983e5152ee66dfabULL, 0xa831c66d2db43210ULL,
+<span class="lineNum">     295 </span>                :            :         0xb00327c898fb213fULL, 0xbf597fc7beef0ee4ULL,
+<span class="lineNum">     296 </span>                :            :         0xc6e00bf33da88fc2ULL, 0xd5a79147930aa725ULL,
+<span class="lineNum">     297 </span>                :            :         0x06ca6351e003826fULL, 0x142929670a0e6e70ULL,
+<span class="lineNum">     298 </span>                :            :         0x27b70a8546d22ffcULL, 0x2e1b21385c26c926ULL,
+<span class="lineNum">     299 </span>                :            :         0x4d2c6dfc5ac42aedULL, 0x53380d139d95b3dfULL,
+<span class="lineNum">     300 </span>                :            :         0x650a73548baf63deULL, 0x766a0abb3c77b2a8ULL,
+<span class="lineNum">     301 </span>                :            :         0x81c2c92e47edaee6ULL, 0x92722c851482353bULL,
+<span class="lineNum">     302 </span>                :            :         0xa2bfe8a14cf10364ULL, 0xa81a664bbc423001ULL,
+<span class="lineNum">     303 </span>                :            :         0xc24b8b70d0f89791ULL, 0xc76c51a30654be30ULL,
+<span class="lineNum">     304 </span>                :            :         0xd192e819d6ef5218ULL, 0xd69906245565a910ULL,
+<span class="lineNum">     305 </span>                :            :         0xf40e35855771202aULL, 0x106aa07032bbd1b8ULL,
+<span class="lineNum">     306 </span>                :            :         0x19a4c116b8d2d0c8ULL, 0x1e376c085141ab53ULL,
+<span class="lineNum">     307 </span>                :            :         0x2748774cdf8eeb99ULL, 0x34b0bcb5e19b48a8ULL,
+<span class="lineNum">     308 </span>                :            :         0x391c0cb3c5c95a63ULL, 0x4ed8aa4ae3418acbULL,
+<span class="lineNum">     309 </span>                :            :         0x5b9cca4f7763e373ULL, 0x682e6ff3d6b2b8a3ULL,
+<span class="lineNum">     310 </span>                :            :         0x748f82ee5defb2fcULL, 0x78a5636f43172f60ULL,
+<span class="lineNum">     311 </span>                :            :         0x84c87814a1f0ab72ULL, 0x8cc702081a6439ecULL,
+<span class="lineNum">     312 </span>                :            :         0x90befffa23631e28ULL, 0xa4506cebde82bde9ULL,
+<span class="lineNum">     313 </span>                :            :         0xbef9a3f7b2c67915ULL, 0xc67178f2e372532bULL,
+<span class="lineNum">     314 </span>                :            :         0xca273eceea26619cULL, 0xd186b8c721c0c207ULL,
+<span class="lineNum">     315 </span>                :            :         0xeada7dd6cde0eb1eULL, 0xf57d4f7fee6ed178ULL,
+<span class="lineNum">     316 </span>                :            :         0x06f067aa72176fbaULL, 0x0a637dc5a2c898a6ULL,
+<span class="lineNum">     317 </span>                :            :         0x113f9804bef90daeULL, 0x1b710b35131c471bULL,
+<span class="lineNum">     318 </span>                :            :         0x28db77f523047d84ULL, 0x32caab7b40c72493ULL,
+<span class="lineNum">     319 </span>                :            :         0x3c9ebe0a15c9bebcULL, 0x431d67c49c100d4cULL,
+<span class="lineNum">     320 </span>                :            :         0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL,
+<span class="lineNum">     321 </span>                :            :         0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL
+<span class="lineNum">     322 </span>                :            : };
+<span class="lineNum">     323 </span>                :            : 
+<span class="lineNum">     324 </span>                :            : /* Initial hash value H for SHA-384 */
+<span class="lineNum">     325 </span>                :            : const static sha2_word64 sha384_initial_hash_value[8] = {
+<span class="lineNum">     326 </span>                :            :         0xcbbb9d5dc1059ed8ULL,
+<span class="lineNum">     327 </span>                :            :         0x629a292a367cd507ULL,
+<span class="lineNum">     328 </span>                :            :         0x9159015a3070dd17ULL,
+<span class="lineNum">     329 </span>                :            :         0x152fecd8f70e5939ULL,
+<span class="lineNum">     330 </span>                :            :         0x67332667ffc00b31ULL,
+<span class="lineNum">     331 </span>                :            :         0x8eb44a8768581511ULL,
+<span class="lineNum">     332 </span>                :            :         0xdb0c2e0d64f98fa7ULL,
+<span class="lineNum">     333 </span>                :            :         0x47b5481dbefa4fa4ULL
+<span class="lineNum">     334 </span>                :            : };
+<span class="lineNum">     335 </span>                :            : 
+<span class="lineNum">     336 </span>                :            : /* Initial hash value H for SHA-512 */
+<span class="lineNum">     337 </span>                :            : const static sha2_word64 sha512_initial_hash_value[8] = {
+<span class="lineNum">     338 </span>                :            :         0x6a09e667f3bcc908ULL,
+<span class="lineNum">     339 </span>                :            :         0xbb67ae8584caa73bULL,
+<span class="lineNum">     340 </span>                :            :         0x3c6ef372fe94f82bULL,
+<span class="lineNum">     341 </span>                :            :         0xa54ff53a5f1d36f1ULL,
+<span class="lineNum">     342 </span>                :            :         0x510e527fade682d1ULL,
+<span class="lineNum">     343 </span>                :            :         0x9b05688c2b3e6c1fULL,
+<span class="lineNum">     344 </span>                :            :         0x1f83d9abfb41bd6bULL,
+<span class="lineNum">     345 </span>                :            :         0x5be0cd19137e2179ULL
+<span class="lineNum">     346 </span>                :            : };
+<span class="lineNum">     347 </span>                :            : 
+<a name="348"><span class="lineNum">     348 </span>                :            : </a>
+<span class="lineNum">     349 </span>                :            : /*** SHA-256: *********************************************************/
+<span class="lineNum">     350 </span>                :<span class="lineCov">       1935 : void SHA256_Init(SHA256_CTX* context) {</span>
+<span class="lineNum">     351 </span>        [<span class="branchCov" title="Branch 0 was taken 1935 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">       1935 :         if (context == (SHA256_CTX*)0) {</span>
+<span class="lineNum">     352 </span>                :<span class="lineCov">       1935 :                 return;</span>
+<span class="lineNum">     353 </span>                :            :         }
+<span class="lineNum">     354 </span>                :<span class="lineCov">       1935 :         MEMCPY_BCOPY(context-&gt;state, sha256_initial_hash_value, SHA256_DIGEST_LEN);</span>
+<span class="lineNum">     355 </span>                :<span class="lineCov">       1935 :         MEMSET_BZERO(context-&gt;buffer, SHA256_BLOCK_LEN);</span>
+<span class="lineNum">     356 </span>                :<span class="lineCov">       1935 :         context-&gt;bitcount = 0;</span>
+<span class="lineNum">     357 </span>                :            : }
+<span class="lineNum">     358 </span>                :            : 
+<span class="lineNum">     359 </span>                :            : #ifdef SHA2_UNROLL_TRANSFORM
+<span class="lineNum">     360 </span>                :            : 
+<span class="lineNum">     361 </span>                :            : /* Unrolled SHA-256 round macros: */
+<span class="lineNum">     362 </span>                :            : 
+<span class="lineNum">     363 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     364 </span>                :            : 
+<span class="lineNum">     365 </span>                :            : #define ROUND256_0_TO_15(a,b,c,d,e,f,g,h)       \
+<span class="lineNum">     366 </span>                :            :         REVERSE32(*data++, W256[j]); \
+<span class="lineNum">     367 </span>                :            :         T1 = (h) + Sigma1_256(e) + Ch((e), (f), (g)) + \
+<span class="lineNum">     368 </span>                :            :              K256[j] + W256[j]; \
+<span class="lineNum">     369 </span>                :            :         (d) += T1; \
+<span class="lineNum">     370 </span>                :            :         (h) = T1 + Sigma0_256(a) + Maj((a), (b), (c)); \
+<span class="lineNum">     371 </span>                :            :         j++
+<span class="lineNum">     372 </span>                :            : 
+<span class="lineNum">     373 </span>                :            : 
+<span class="lineNum">     374 </span>                :            : #else /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     375 </span>                :            : 
+<span class="lineNum">     376 </span>                :            : #define ROUND256_0_TO_15(a,b,c,d,e,f,g,h)       \
+<span class="lineNum">     377 </span>                :            :         T1 = (h) + Sigma1_256(e) + Ch((e), (f), (g)) + \
+<span class="lineNum">     378 </span>                :            :              K256[j] + (W256[j] = *data++); \
+<span class="lineNum">     379 </span>                :            :         (d) += T1; \
+<span class="lineNum">     380 </span>                :            :         (h) = T1 + Sigma0_256(a) + Maj((a), (b), (c)); \
+<span class="lineNum">     381 </span>                :            :         j++
+<span class="lineNum">     382 </span>                :            : 
+<span class="lineNum">     383 </span>                :            : #endif /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     384 </span>                :            : 
+<span class="lineNum">     385 </span>                :            : #define ROUND256(a,b,c,d,e,f,g,h)       \
+<span class="lineNum">     386 </span>                :            :         s0 = W256[(j+1)&amp;0x0f]; \
+<span class="lineNum">     387 </span>                :            :         s0 = sigma0_256(s0); \
+<span class="lineNum">     388 </span>                :            :         s1 = W256[(j+14)&amp;0x0f]; \
+<span class="lineNum">     389 </span>                :            :         s1 = sigma1_256(s1); \
+<span class="lineNum">     390 </span>                :            :         T1 = (h) + Sigma1_256(e) + Ch((e), (f), (g)) + K256[j] + \
+<span class="lineNum">     391 </span>                :            :              (W256[j&amp;0x0f] += s1 + W256[(j+9)&amp;0x0f] + s0); \
+<span class="lineNum">     392 </span>                :            :         (d) += T1; \
+<span class="lineNum">     393 </span>                :            :         (h) = T1 + Sigma0_256(a) + Maj((a), (b), (c)); \
+<span class="lineNum">     394 </span>                :            :         j++
+<span class="lineNum">     395 </span>                :            : 
+<span class="lineNum">     396 </span>                :            : void SHA256_Transform(SHA256_CTX* context, const sha2_word32* data) {
+<span class="lineNum">     397 </span>                :            :         sha2_word32     a, b, c, d, e, f, g, h, s0, s1;
+<span class="lineNum">     398 </span>                :            :         sha2_word32     T1, *W256;
+<span class="lineNum">     399 </span>                :            :         int             j;
+<span class="lineNum">     400 </span>                :            : 
+<span class="lineNum">     401 </span>                :            :         W256 = (sha2_word32*)context-&gt;buffer;
+<span class="lineNum">     402 </span>                :            : 
+<span class="lineNum">     403 </span>                :            :         /* Initialize registers with the prev. intermediate value */
+<span class="lineNum">     404 </span>                :            :         a = context-&gt;state[0];
+<span class="lineNum">     405 </span>                :            :         b = context-&gt;state[1];
+<span class="lineNum">     406 </span>                :            :         c = context-&gt;state[2];
+<span class="lineNum">     407 </span>                :            :         d = context-&gt;state[3];
+<span class="lineNum">     408 </span>                :            :         e = context-&gt;state[4];
+<span class="lineNum">     409 </span>                :            :         f = context-&gt;state[5];
+<span class="lineNum">     410 </span>                :            :         g = context-&gt;state[6];
+<span class="lineNum">     411 </span>                :            :         h = context-&gt;state[7];
+<span class="lineNum">     412 </span>                :            : 
+<span class="lineNum">     413 </span>                :            :         j = 0;
+<span class="lineNum">     414 </span>                :            :         do {
+<span class="lineNum">     415 </span>                :            :                 /* Rounds 0 to 15 (unrolled): */
+<span class="lineNum">     416 </span>                :            :                 ROUND256_0_TO_15(a,b,c,d,e,f,g,h);
+<span class="lineNum">     417 </span>                :            :                 ROUND256_0_TO_15(h,a,b,c,d,e,f,g);
+<span class="lineNum">     418 </span>                :            :                 ROUND256_0_TO_15(g,h,a,b,c,d,e,f);
+<span class="lineNum">     419 </span>                :            :                 ROUND256_0_TO_15(f,g,h,a,b,c,d,e);
+<span class="lineNum">     420 </span>                :            :                 ROUND256_0_TO_15(e,f,g,h,a,b,c,d);
+<span class="lineNum">     421 </span>                :            :                 ROUND256_0_TO_15(d,e,f,g,h,a,b,c);
+<span class="lineNum">     422 </span>                :            :                 ROUND256_0_TO_15(c,d,e,f,g,h,a,b);
+<span class="lineNum">     423 </span>                :            :                 ROUND256_0_TO_15(b,c,d,e,f,g,h,a);
+<span class="lineNum">     424 </span>                :            :         } while (j &lt; 16);
+<span class="lineNum">     425 </span>                :            : 
+<span class="lineNum">     426 </span>                :            :         /* Now for the remaining rounds to 64: */
+<span class="lineNum">     427 </span>                :            :         do {
+<span class="lineNum">     428 </span>                :            :                 ROUND256(a,b,c,d,e,f,g,h);
+<span class="lineNum">     429 </span>                :            :                 ROUND256(h,a,b,c,d,e,f,g);
+<span class="lineNum">     430 </span>                :            :                 ROUND256(g,h,a,b,c,d,e,f);
+<span class="lineNum">     431 </span>                :            :                 ROUND256(f,g,h,a,b,c,d,e);
+<span class="lineNum">     432 </span>                :            :                 ROUND256(e,f,g,h,a,b,c,d);
+<span class="lineNum">     433 </span>                :            :                 ROUND256(d,e,f,g,h,a,b,c);
+<span class="lineNum">     434 </span>                :            :                 ROUND256(c,d,e,f,g,h,a,b);
+<span class="lineNum">     435 </span>                :            :                 ROUND256(b,c,d,e,f,g,h,a);
+<span class="lineNum">     436 </span>                :            :         } while (j &lt; 64);
+<span class="lineNum">     437 </span>                :            : 
+<span class="lineNum">     438 </span>                :            :         /* Compute the current intermediate hash value */
+<span class="lineNum">     439 </span>                :            :         context-&gt;state[0] += a;
+<span class="lineNum">     440 </span>                :            :         context-&gt;state[1] += b;
+<span class="lineNum">     441 </span>                :            :         context-&gt;state[2] += c;
+<span class="lineNum">     442 </span>                :            :         context-&gt;state[3] += d;
+<span class="lineNum">     443 </span>                :            :         context-&gt;state[4] += e;
+<span class="lineNum">     444 </span>                :            :         context-&gt;state[5] += f;
+<span class="lineNum">     445 </span>                :            :         context-&gt;state[6] += g;
+<span class="lineNum">     446 </span>                :            :         context-&gt;state[7] += h;
+<span class="lineNum">     447 </span>                :            : 
+<span class="lineNum">     448 </span>                :            :         /* Clean up */
+<span class="lineNum">     449 </span>                :            :         a = b = c = d = e = f = g = h = T1 = 0;
+<span class="lineNum">     450 </span>                :            : }
+<span class="lineNum">     451 </span>                :            : 
+<a name="452"><span class="lineNum">     452 </span>                :            : #else /* SHA2_UNROLL_TRANSFORM */</a>
+<span class="lineNum">     453 </span>                :            : 
+<span class="lineNum">     454 </span>                :<span class="lineCov">       5490 : void SHA256_Transform(SHA256_CTX* context, const sha2_word32* data) {</span>
+<span class="lineNum">     455 </span>                :            :         sha2_word32     a, b, c, d, e, f, g, h, s0, s1;
+<span class="lineNum">     456 </span>                :            :         sha2_word32     T1, T2, *W256;
+<span class="lineNum">     457 </span>                :            :         int             j;
+<span class="lineNum">     458 </span>                :            : 
+<span class="lineNum">     459 </span>                :<span class="lineCov">       5490 :         W256 = (sha2_word32*)context-&gt;buffer;</span>
+<span class="lineNum">     460 </span>                :            : 
+<span class="lineNum">     461 </span>                :            :         /* Initialize registers with the prev. intermediate value */
+<span class="lineNum">     462 </span>                :<span class="lineCov">       5490 :         a = context-&gt;state[0];</span>
+<span class="lineNum">     463 </span>                :<span class="lineCov">       5490 :         b = context-&gt;state[1];</span>
+<span class="lineNum">     464 </span>                :<span class="lineCov">       5490 :         c = context-&gt;state[2];</span>
+<span class="lineNum">     465 </span>                :<span class="lineCov">       5490 :         d = context-&gt;state[3];</span>
+<span class="lineNum">     466 </span>                :<span class="lineCov">       5490 :         e = context-&gt;state[4];</span>
+<span class="lineNum">     467 </span>                :<span class="lineCov">       5490 :         f = context-&gt;state[5];</span>
+<span class="lineNum">     468 </span>                :<span class="lineCov">       5490 :         g = context-&gt;state[6];</span>
+<span class="lineNum">     469 </span>                :<span class="lineCov">       5490 :         h = context-&gt;state[7];</span>
+<span class="lineNum">     470 </span>                :            : 
+<span class="lineNum">     471 </span>                :<span class="lineCov">       5490 :         j = 0;</span>
+<span class="lineNum">     472 </span>                :            :         do {
+<span class="lineNum">     473 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     474 </span>                :            :                 /* Copy data while converting to host byte order */
+<span class="lineNum">     475 </span>                :<span class="lineCov">      87840 :                 REVERSE32(*data++,W256[j]);</span>
+<span class="lineNum">     476 </span>                :            :                 /* Apply the SHA-256 compression function to update a..h */
+<span class="lineNum">     477 </span>                :<span class="lineCov">      87840 :                 T1 = h + Sigma1_256(e) + Ch(e, f, g) + K256[j] + W256[j];</span>
+<span class="lineNum">     478 </span>                :            : #else /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     479 </span>                :            :                 /* Apply the SHA-256 compression function to update a..h with copy */
+<span class="lineNum">     480 </span>                :            :                 T1 = h + Sigma1_256(e) + Ch(e, f, g) + K256[j] + (W256[j] = *data++);
+<span class="lineNum">     481 </span>                :            : #endif /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     482 </span>                :<span class="lineCov">      87840 :                 T2 = Sigma0_256(a) + Maj(a, b, c);</span>
+<span class="lineNum">     483 </span>                :<span class="lineCov">      87840 :                 h = g;</span>
+<span class="lineNum">     484 </span>                :<span class="lineCov">      87840 :                 g = f;</span>
+<span class="lineNum">     485 </span>                :<span class="lineCov">      87840 :                 f = e;</span>
+<span class="lineNum">     486 </span>                :<span class="lineCov">      87840 :                 e = d + T1;</span>
+<span class="lineNum">     487 </span>                :<span class="lineCov">      87840 :                 d = c;</span>
+<span class="lineNum">     488 </span>                :<span class="lineCov">      87840 :                 c = b;</span>
+<span class="lineNum">     489 </span>                :<span class="lineCov">      87840 :                 b = a;</span>
+<span class="lineNum">     490 </span>                :<span class="lineCov">      87840 :                 a = T1 + T2;</span>
+<span class="lineNum">     491 </span>                :            : 
+<span class="lineNum">     492 </span>                :<span class="lineCov">      87840 :                 j++;</span>
+<span class="lineNum">     493 </span>        [<span class="branchCov" title="Branch 0 was taken 82350 times"> + </span><span class="branchCov" title="Branch 1 was taken 5490 times"> + </span>]:<span class="lineCov">      87840 :         } while (j &lt; 16);</span>
+<span class="lineNum">     494 </span>                :            : 
+<span class="lineNum">     495 </span>                :            :         do {
+<span class="lineNum">     496 </span>                :            :                 /* Part of the message block expansion: */
+<span class="lineNum">     497 </span>                :<span class="lineCov">     263520 :                 s0 = W256[(j+1)&amp;0x0f];</span>
+<span class="lineNum">     498 </span>                :<span class="lineCov">     263520 :                 s0 = sigma0_256(s0);</span>
+<span class="lineNum">     499 </span>                :<span class="lineCov">     263520 :                 s1 = W256[(j+14)&amp;0x0f];     </span>
+<span class="lineNum">     500 </span>                :<span class="lineCov">     263520 :                 s1 = sigma1_256(s1);</span>
+<span class="lineNum">     501 </span>                :            : 
+<span class="lineNum">     502 </span>                :            :                 /* Apply the SHA-256 compression function to update a..h */
+<span class="lineNum">     503 </span>                :<span class="lineCov">     527040 :                 T1 = h + Sigma1_256(e) + Ch(e, f, g) + K256[j] + </span>
+<span class="lineNum">     504 </span>                :<span class="lineCov">     263520 :                      (W256[j&amp;0x0f] += s1 + W256[(j+9)&amp;0x0f] + s0);</span>
+<span class="lineNum">     505 </span>                :<span class="lineCov">     263520 :                 T2 = Sigma0_256(a) + Maj(a, b, c);</span>
+<span class="lineNum">     506 </span>                :<span class="lineCov">     263520 :                 h = g;</span>
+<span class="lineNum">     507 </span>                :<span class="lineCov">     263520 :                 g = f;</span>
+<span class="lineNum">     508 </span>                :<span class="lineCov">     263520 :                 f = e;</span>
+<span class="lineNum">     509 </span>                :<span class="lineCov">     263520 :                 e = d + T1;</span>
+<span class="lineNum">     510 </span>                :<span class="lineCov">     263520 :                 d = c;</span>
+<span class="lineNum">     511 </span>                :<span class="lineCov">     263520 :                 c = b;</span>
+<span class="lineNum">     512 </span>                :<span class="lineCov">     263520 :                 b = a;</span>
+<span class="lineNum">     513 </span>                :<span class="lineCov">     263520 :                 a = T1 + T2;</span>
+<span class="lineNum">     514 </span>                :            : 
+<span class="lineNum">     515 </span>                :<span class="lineCov">     263520 :                 j++;</span>
+<span class="lineNum">     516 </span>        [<span class="branchCov" title="Branch 0 was taken 258030 times"> + </span><span class="branchCov" title="Branch 1 was taken 5490 times"> + </span>]:<span class="lineCov">     263520 :         } while (j &lt; 64);</span>
+<span class="lineNum">     517 </span>                :            : 
+<span class="lineNum">     518 </span>                :            :         /* Compute the current intermediate hash value */
+<span class="lineNum">     519 </span>                :<span class="lineCov">       5490 :         context-&gt;state[0] += a;</span>
+<span class="lineNum">     520 </span>                :<span class="lineCov">       5490 :         context-&gt;state[1] += b;</span>
+<span class="lineNum">     521 </span>                :<span class="lineCov">       5490 :         context-&gt;state[2] += c;</span>
+<span class="lineNum">     522 </span>                :<span class="lineCov">       5490 :         context-&gt;state[3] += d;</span>
+<span class="lineNum">     523 </span>                :<span class="lineCov">       5490 :         context-&gt;state[4] += e;</span>
+<span class="lineNum">     524 </span>                :<span class="lineCov">       5490 :         context-&gt;state[5] += f;</span>
+<span class="lineNum">     525 </span>                :<span class="lineCov">       5490 :         context-&gt;state[6] += g;</span>
+<span class="lineNum">     526 </span>                :<span class="lineCov">       5490 :         context-&gt;state[7] += h;</span>
+<span class="lineNum">     527 </span>                :            : 
+<span class="lineNum">     528 </span>                :            :         /* Clean up */
+<span class="lineNum">     529 </span>                :<span class="lineCov">       5490 :         a = b = c = d = e = f = g = h = T1 = T2 = 0;</span>
+<span class="lineNum">     530 </span>                :<span class="lineCov">       5490 : }</span>
+<span class="lineNum">     531 </span>                :            : 
+<a name="532"><span class="lineNum">     532 </span>                :            : #endif /* SHA2_UNROLL_TRANSFORM */</a>
+<span class="lineNum">     533 </span>                :            : 
+<span class="lineNum">     534 </span>                :<span class="lineCov">       3023 : void SHA256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len) {</span>
+<span class="lineNum">     535 </span>                :            :         unsigned int    freespace, usedspace;
+<span class="lineNum">     536 </span>                :            : 
+<span class="lineNum">     537 </span>        [<span class="branchCov" title="Branch 0 was taken 3023 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">       3023 :         if (len == 0) {</span>
+<span class="lineNum">     538 </span>                :            :                 /* Calling with no data is valid - we do nothing */
+<span class="lineNum">     539 </span>                :            :                 return;
+<span class="lineNum">     540 </span>                :            :         }
+<span class="lineNum">     541 </span>                :            : 
+<span class="lineNum">     542 </span>                :            :         /* Sanity check: */
+<span class="lineNum">     543 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 3023 times"> + </span>]:<span class="lineCov">       3023 :         assert(context != (SHA256_CTX*)0 &amp;&amp; data != (sha2_byte*)0);</span>
+<span class="lineNum">     544 </span>                :            : 
+<span class="lineNum">     545 </span>                :<span class="lineCov">       3023 :         usedspace = (context-&gt;bitcount &gt;&gt; 3) % SHA256_BLOCK_LEN;</span>
+<span class="lineNum">     546 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 3023 times"> + </span>]:<span class="lineCov">       3023 :         if (usedspace &gt; 0) {</span>
+<span class="lineNum">     547 </span>                :            :                 /* Calculate how much free space is available in the buffer */
+<span class="lineNum">     548 </span>                :<span class="lineNoCov">          0 :                 freespace = SHA256_BLOCK_LEN - usedspace;</span>
+<span class="lineNum">     549 </span>                :            : 
+<span class="lineNum">     550 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if (len &gt;= freespace) {</span>
+<span class="lineNum">     551 </span>                :            :                         /* Fill the buffer completely and process it */
+<span class="lineNum">     552 </span>                :<span class="lineNoCov">          0 :                         MEMCPY_BCOPY(&amp;context-&gt;buffer[usedspace], data, freespace);</span>
+<span class="lineNum">     553 </span>                :<span class="lineNoCov">          0 :                         context-&gt;bitcount += freespace &lt;&lt; 3;</span>
+<span class="lineNum">     554 </span>                :<span class="lineNoCov">          0 :                         len -= freespace;</span>
+<span class="lineNum">     555 </span>                :<span class="lineNoCov">          0 :                         data += freespace;</span>
+<span class="lineNum">     556 </span>                :<span class="lineCov">       3023 :                         SHA256_Transform(context, (sha2_word32*)context-&gt;buffer);</span>
+<span class="lineNum">     557 </span>                :            :                 } else {
+<span class="lineNum">     558 </span>                :            :                         /* The buffer is not yet full */
+<span class="lineNum">     559 </span>                :<span class="lineNoCov">          0 :                         MEMCPY_BCOPY(&amp;context-&gt;buffer[usedspace], data, len);</span>
+<span class="lineNum">     560 </span>                :<span class="lineNoCov">          0 :                         context-&gt;bitcount += len &lt;&lt; 3;</span>
+<span class="lineNum">     561 </span>                :            :                         /* Clean up: */
+<span class="lineNum">     562 </span>                :<span class="lineNoCov">          0 :                         usedspace = freespace = 0;</span>
+<span class="lineNum">     563 </span>                :<span class="lineNoCov">          0 :                         return;</span>
+<span class="lineNum">     564 </span>                :            :                 }
+<span class="lineNum">     565 </span>                :            :         }
+<span class="lineNum">     566 </span>        [<span class="branchCov" title="Branch 0 was taken 3358 times"> + </span><span class="branchCov" title="Branch 1 was taken 3023 times"> + </span>]:<span class="lineCov">       6381 :         while (len &gt;= SHA256_BLOCK_LEN) {</span>
+<span class="lineNum">     567 </span>                :            :                 /* Process as many complete blocks as we can */
+<span class="lineNum">     568 </span>                :<span class="lineCov">       3358 :                 SHA256_Transform(context, (sha2_word32*)data);</span>
+<span class="lineNum">     569 </span>                :<span class="lineCov">       3358 :                 context-&gt;bitcount += SHA256_BLOCK_LEN &lt;&lt; 3;</span>
+<span class="lineNum">     570 </span>                :<span class="lineCov">       3358 :                 len -= SHA256_BLOCK_LEN;</span>
+<span class="lineNum">     571 </span>                :<span class="lineCov">       3358 :                 data += SHA256_BLOCK_LEN;</span>
+<span class="lineNum">     572 </span>                :            :         }
+<span class="lineNum">     573 </span>        [<span class="branchCov" title="Branch 0 was taken 1835 times"> + </span><span class="branchCov" title="Branch 1 was taken 1188 times"> + </span>]:<span class="lineCov">       3023 :         if (len &gt; 0) {</span>
+<span class="lineNum">     574 </span>                :            :                 /* There's left-overs, so save 'em */
+<span class="lineNum">     575 </span>                :<span class="lineCov">       1835 :                 MEMCPY_BCOPY(context-&gt;buffer, data, len);</span>
+<span class="lineNum">     576 </span>                :<span class="lineCov">       1835 :                 context-&gt;bitcount += len &lt;&lt; 3;</span>
+<span class="lineNum">     577 </span>                :            :         }
+<span class="lineNum">     578 </span>                :            :         /* Clean up: */
+<span class="lineNum">     579 </span>                :            :         usedspace = freespace = 0;
+<a name="580"><span class="lineNum">     580 </span>                :            : }</a>
+<span class="lineNum">     581 </span>                :            : 
+<span class="lineNum">     582 </span>                :<span class="lineCov">       1935 : void SHA256_Final(sha2_byte digest[], SHA256_CTX* context) {</span>
+<span class="lineNum">     583 </span>                :<span class="lineCov">       1935 :         sha2_word32     *d = (sha2_word32*)digest;</span>
+<span class="lineNum">     584 </span>                :            :         unsigned int    usedspace;
+<span class="lineNum">     585 </span>                :            : 
+<span class="lineNum">     586 </span>                :            :         /* Sanity check: */
+<span class="lineNum">     587 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 1935 times"> + </span>]:<span class="lineCov">       1935 :         assert(context != (SHA256_CTX*)0);</span>
+<span class="lineNum">     588 </span>                :            : 
+<span class="lineNum">     589 </span>                :            :         /* If no digest buffer is passed, we don't bother doing this: */
+<span class="lineNum">     590 </span>        [<span class="branchCov" title="Branch 0 was taken 1935 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">       1935 :         if (digest != (sha2_byte*)0) {</span>
+<span class="lineNum">     591 </span>                :<span class="lineCov">       1935 :                 usedspace = (context-&gt;bitcount &gt;&gt; 3) % SHA256_BLOCK_LEN;</span>
+<span class="lineNum">     592 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     593 </span>                :            :                 /* Convert FROM host byte order */
+<span class="lineNum">     594 </span>                :<span class="lineCov">       1935 :                 REVERSE64(context-&gt;bitcount,context-&gt;bitcount);</span>
+<span class="lineNum">     595 </span>                :            : #endif
+<span class="lineNum">     596 </span>        [<span class="branchCov" title="Branch 0 was taken 1835 times"> + </span><span class="branchCov" title="Branch 1 was taken 100 times"> + </span>]:<span class="lineCov">       1935 :                 if (usedspace &gt; 0) {</span>
+<span class="lineNum">     597 </span>                :            :                         /* Begin padding with a 1 bit: */
+<span class="lineNum">     598 </span>                :<span class="lineCov">       1835 :                         context-&gt;buffer[usedspace++] = 0x80;</span>
+<span class="lineNum">     599 </span>                :            : 
+<span class="lineNum">     600 </span>        [<span class="branchCov" title="Branch 0 was taken 1638 times"> + </span><span class="branchCov" title="Branch 1 was taken 197 times"> + </span>]:<span class="lineCov">       1835 :                         if (usedspace &lt;= SHA256_SHORT_BLOCK_LEN) {</span>
+<span class="lineNum">     601 </span>                :            :                                 /* Set-up for the last transform: */
+<span class="lineNum">     602 </span>                :<span class="lineCov">       1638 :                                 MEMSET_BZERO(&amp;context-&gt;buffer[usedspace], SHA256_SHORT_BLOCK_LEN - usedspace);</span>
+<span class="lineNum">     603 </span>                :            :                         } else {
+<span class="lineNum">     604 </span>        [<span class="branchCov" title="Branch 0 was taken 190 times"> + </span><span class="branchCov" title="Branch 1 was taken 7 times"> + </span>]:<span class="lineCov">        197 :                                 if (usedspace &lt; SHA256_BLOCK_LEN) {</span>
+<span class="lineNum">     605 </span>                :<span class="lineCov">        190 :                                         MEMSET_BZERO(&amp;context-&gt;buffer[usedspace], SHA256_BLOCK_LEN - usedspace);</span>
+<span class="lineNum">     606 </span>                :            :                                 }
+<span class="lineNum">     607 </span>                :            :                                 /* Do second-to-last transform: */
+<span class="lineNum">     608 </span>                :<span class="lineCov">        197 :                                 SHA256_Transform(context, (sha2_word32*)context-&gt;buffer);</span>
+<span class="lineNum">     609 </span>                :            : 
+<span class="lineNum">     610 </span>                :            :                                 /* And set-up for the last transform: */
+<span class="lineNum">     611 </span>                :<span class="lineCov">        197 :                                 MEMSET_BZERO(context-&gt;buffer, SHA256_SHORT_BLOCK_LEN);</span>
+<span class="lineNum">     612 </span>                :            :                         }
+<span class="lineNum">     613 </span>                :            :                 } else {
+<span class="lineNum">     614 </span>                :            :                         /* Set-up for the last transform: */
+<span class="lineNum">     615 </span>                :<span class="lineCov">        100 :                         MEMSET_BZERO(context-&gt;buffer, SHA256_SHORT_BLOCK_LEN);</span>
+<span class="lineNum">     616 </span>                :            : 
+<span class="lineNum">     617 </span>                :            :                         /* Begin padding with a 1 bit: */
+<span class="lineNum">     618 </span>                :<span class="lineCov">        100 :                         *context-&gt;buffer = 0x80;</span>
+<span class="lineNum">     619 </span>                :            :                 }
+<span class="lineNum">     620 </span>                :            :                 /* Set the bit count: */
+<span class="lineNum">     621 </span>                :<span class="lineCov">       1935 :                 memcpy(&amp;(context-&gt;buffer[SHA256_SHORT_BLOCK_LEN]), &amp;(context-&gt;bitcount), sizeof(sha2_word64));</span>
+<span class="lineNum">     622 </span>                :            : 
+<span class="lineNum">     623 </span>                :            :                 /* Final transform: */
+<span class="lineNum">     624 </span>                :<span class="lineCov">       1935 :                 SHA256_Transform(context, (sha2_word32*)context-&gt;buffer);</span>
+<span class="lineNum">     625 </span>                :            : 
+<span class="lineNum">     626 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     627 </span>                :            :                 {
+<span class="lineNum">     628 </span>                :            :                         /* Convert TO host byte order */
+<span class="lineNum">     629 </span>                :            :                         int     j;
+<span class="lineNum">     630 </span>        [<span class="branchCov" title="Branch 1 was taken 15480 times"> + </span><span class="branchCov" title="Branch 2 was taken 1935 times"> + </span>]:<span class="lineCov">      17415 :                         for (j = 0; j &lt; 8; j++) {</span>
+<span class="lineNum">     631 </span>                :<span class="lineCov">      15480 :                                 REVERSE32(context-&gt;state[j],context-&gt;state[j]);</span>
+<span class="lineNum">     632 </span>                :<span class="lineCov">      15480 :                                 *d++ = context-&gt;state[j];</span>
+<span class="lineNum">     633 </span>                :            :                         }
+<span class="lineNum">     634 </span>                :            :                 }
+<span class="lineNum">     635 </span>                :            : #else
+<span class="lineNum">     636 </span>                :            :                 MEMCPY_BCOPY(d, context-&gt;state, SHA256_DIGEST_LEN);
+<span class="lineNum">     637 </span>                :            : #endif
+<span class="lineNum">     638 </span>                :            :         }
+<span class="lineNum">     639 </span>                :            : 
+<span class="lineNum">     640 </span>                :            :         /* Clean up state data: */
+<span class="lineNum">     641 </span>                :            :         MEMSET_BZERO(context, sizeof(*context));
+<span class="lineNum">     642 </span>                :<span class="lineCov">       1935 :         usedspace = 0;</span>
+<span class="lineNum">     643 </span>                :<span class="lineCov">       1935 : }</span>
+<a name="644"><span class="lineNum">     644 </span>                :            : </a>
+<span class="lineNum">     645 </span>                :            : /*** SHA-512: *********************************************************/
+<span class="lineNum">     646 </span>                :<span class="lineNoCov">          0 : void SHA512_Init(SHA512_CTX* context) {</span>
+<span class="lineNum">     647 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (context == (SHA512_CTX*)0) {</span>
+<span class="lineNum">     648 </span>                :<span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     649 </span>                :            :         }
+<span class="lineNum">     650 </span>                :<span class="lineNoCov">          0 :         MEMCPY_BCOPY(context-&gt;state, sha512_initial_hash_value, SHA512_DIGEST_LEN);</span>
+<span class="lineNum">     651 </span>                :<span class="lineNoCov">          0 :         MEMSET_BZERO(context-&gt;buffer, SHA512_BLOCK_LEN);</span>
+<span class="lineNum">     652 </span>                :<span class="lineNoCov">          0 :         context-&gt;bitcount[0] = context-&gt;bitcount[1] =  0;</span>
+<span class="lineNum">     653 </span>                :            : }
+<span class="lineNum">     654 </span>                :            : 
+<span class="lineNum">     655 </span>                :            : #ifdef SHA2_UNROLL_TRANSFORM
+<span class="lineNum">     656 </span>                :            : 
+<span class="lineNum">     657 </span>                :            : /* Unrolled SHA-512 round macros: */
+<span class="lineNum">     658 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     659 </span>                :            : 
+<span class="lineNum">     660 </span>                :            : #define ROUND512_0_TO_15(a,b,c,d,e,f,g,h)       \
+<span class="lineNum">     661 </span>                :            :         REVERSE64(*data++, W512[j]); \
+<span class="lineNum">     662 </span>                :            :         T1 = (h) + Sigma1_512(e) + Ch((e), (f), (g)) + \
+<span class="lineNum">     663 </span>                :            :              K512[j] + W512[j]; \
+<span class="lineNum">     664 </span>                :            :         (d) += T1, \
+<span class="lineNum">     665 </span>                :            :         (h) = T1 + Sigma0_512(a) + Maj((a), (b), (c)), \
+<span class="lineNum">     666 </span>                :            :         j++
+<span class="lineNum">     667 </span>                :            : 
+<span class="lineNum">     668 </span>                :            : 
+<span class="lineNum">     669 </span>                :            : #else /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     670 </span>                :            : 
+<span class="lineNum">     671 </span>                :            : #define ROUND512_0_TO_15(a,b,c,d,e,f,g,h)       \
+<span class="lineNum">     672 </span>                :            :         T1 = (h) + Sigma1_512(e) + Ch((e), (f), (g)) + \
+<span class="lineNum">     673 </span>                :            :              K512[j] + (W512[j] = *data++); \
+<span class="lineNum">     674 </span>                :            :         (d) += T1; \
+<span class="lineNum">     675 </span>                :            :         (h) = T1 + Sigma0_512(a) + Maj((a), (b), (c)); \
+<span class="lineNum">     676 </span>                :            :         j++
+<span class="lineNum">     677 </span>                :            : 
+<span class="lineNum">     678 </span>                :            : #endif /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     679 </span>                :            : 
+<span class="lineNum">     680 </span>                :            : #define ROUND512(a,b,c,d,e,f,g,h)       \
+<span class="lineNum">     681 </span>                :            :         s0 = W512[(j+1)&amp;0x0f]; \
+<span class="lineNum">     682 </span>                :            :         s0 = sigma0_512(s0); \
+<span class="lineNum">     683 </span>                :            :         s1 = W512[(j+14)&amp;0x0f]; \
+<span class="lineNum">     684 </span>                :            :         s1 = sigma1_512(s1); \
+<span class="lineNum">     685 </span>                :            :         T1 = (h) + Sigma1_512(e) + Ch((e), (f), (g)) + K512[j] + \
+<span class="lineNum">     686 </span>                :            :              (W512[j&amp;0x0f] += s1 + W512[(j+9)&amp;0x0f] + s0); \
+<span class="lineNum">     687 </span>                :            :         (d) += T1; \
+<span class="lineNum">     688 </span>                :            :         (h) = T1 + Sigma0_512(a) + Maj((a), (b), (c)); \
+<span class="lineNum">     689 </span>                :            :         j++
+<span class="lineNum">     690 </span>                :            : 
+<span class="lineNum">     691 </span>                :            : void SHA512_Transform(SHA512_CTX* context, const sha2_word64* data) {
+<span class="lineNum">     692 </span>                :            :         sha2_word64     a, b, c, d, e, f, g, h, s0, s1;
+<span class="lineNum">     693 </span>                :            :         sha2_word64     T1, *W512 = (sha2_word64*)context-&gt;buffer;
+<span class="lineNum">     694 </span>                :            :         int             j;
+<span class="lineNum">     695 </span>                :            : 
+<span class="lineNum">     696 </span>                :            :         /* Initialize registers with the prev. intermediate value */
+<span class="lineNum">     697 </span>                :            :         a = context-&gt;state[0];
+<span class="lineNum">     698 </span>                :            :         b = context-&gt;state[1];
+<span class="lineNum">     699 </span>                :            :         c = context-&gt;state[2];
+<span class="lineNum">     700 </span>                :            :         d = context-&gt;state[3];
+<span class="lineNum">     701 </span>                :            :         e = context-&gt;state[4];
+<span class="lineNum">     702 </span>                :            :         f = context-&gt;state[5];
+<span class="lineNum">     703 </span>                :            :         g = context-&gt;state[6];
+<span class="lineNum">     704 </span>                :            :         h = context-&gt;state[7];
+<span class="lineNum">     705 </span>                :            : 
+<span class="lineNum">     706 </span>                :            :         j = 0;
+<span class="lineNum">     707 </span>                :            :         do {
+<span class="lineNum">     708 </span>                :            :                 ROUND512_0_TO_15(a,b,c,d,e,f,g,h);
+<span class="lineNum">     709 </span>                :            :                 ROUND512_0_TO_15(h,a,b,c,d,e,f,g);
+<span class="lineNum">     710 </span>                :            :                 ROUND512_0_TO_15(g,h,a,b,c,d,e,f);
+<span class="lineNum">     711 </span>                :            :                 ROUND512_0_TO_15(f,g,h,a,b,c,d,e);
+<span class="lineNum">     712 </span>                :            :                 ROUND512_0_TO_15(e,f,g,h,a,b,c,d);
+<span class="lineNum">     713 </span>                :            :                 ROUND512_0_TO_15(d,e,f,g,h,a,b,c);
+<span class="lineNum">     714 </span>                :            :                 ROUND512_0_TO_15(c,d,e,f,g,h,a,b);
+<span class="lineNum">     715 </span>                :            :                 ROUND512_0_TO_15(b,c,d,e,f,g,h,a);
+<span class="lineNum">     716 </span>                :            :         } while (j &lt; 16);
+<span class="lineNum">     717 </span>                :            : 
+<span class="lineNum">     718 </span>                :            :         /* Now for the remaining rounds up to 79: */
+<span class="lineNum">     719 </span>                :            :         do {
+<span class="lineNum">     720 </span>                :            :                 ROUND512(a,b,c,d,e,f,g,h);
+<span class="lineNum">     721 </span>                :            :                 ROUND512(h,a,b,c,d,e,f,g);
+<span class="lineNum">     722 </span>                :            :                 ROUND512(g,h,a,b,c,d,e,f);
+<span class="lineNum">     723 </span>                :            :                 ROUND512(f,g,h,a,b,c,d,e);
+<span class="lineNum">     724 </span>                :            :                 ROUND512(e,f,g,h,a,b,c,d);
+<span class="lineNum">     725 </span>                :            :                 ROUND512(d,e,f,g,h,a,b,c);
+<span class="lineNum">     726 </span>                :            :                 ROUND512(c,d,e,f,g,h,a,b);
+<span class="lineNum">     727 </span>                :            :                 ROUND512(b,c,d,e,f,g,h,a);
+<span class="lineNum">     728 </span>                :            :         } while (j &lt; 80);
+<span class="lineNum">     729 </span>                :            : 
+<span class="lineNum">     730 </span>                :            :         /* Compute the current intermediate hash value */
+<span class="lineNum">     731 </span>                :            :         context-&gt;state[0] += a;
+<span class="lineNum">     732 </span>                :            :         context-&gt;state[1] += b;
+<span class="lineNum">     733 </span>                :            :         context-&gt;state[2] += c;
+<span class="lineNum">     734 </span>                :            :         context-&gt;state[3] += d;
+<span class="lineNum">     735 </span>                :            :         context-&gt;state[4] += e;
+<span class="lineNum">     736 </span>                :            :         context-&gt;state[5] += f;
+<span class="lineNum">     737 </span>                :            :         context-&gt;state[6] += g;
+<span class="lineNum">     738 </span>                :            :         context-&gt;state[7] += h;
+<span class="lineNum">     739 </span>                :            : 
+<span class="lineNum">     740 </span>                :            :         /* Clean up */
+<span class="lineNum">     741 </span>                :            :         a = b = c = d = e = f = g = h = T1 = 0;
+<span class="lineNum">     742 </span>                :            : }
+<span class="lineNum">     743 </span>                :            : 
+<a name="744"><span class="lineNum">     744 </span>                :            : #else /* SHA2_UNROLL_TRANSFORM */</a>
+<span class="lineNum">     745 </span>                :            : 
+<span class="lineNum">     746 </span>                :<span class="lineNoCov">          0 : void SHA512_Transform(SHA512_CTX* context, const sha2_word64* data) {</span>
+<span class="lineNum">     747 </span>                :            :         sha2_word64     a, b, c, d, e, f, g, h, s0, s1;
+<span class="lineNum">     748 </span>                :<span class="lineNoCov">          0 :         sha2_word64     T1, T2, *W512 = (sha2_word64*)context-&gt;buffer;</span>
+<span class="lineNum">     749 </span>                :            :         int             j;
+<span class="lineNum">     750 </span>                :            : 
+<span class="lineNum">     751 </span>                :            :         /* Initialize registers with the prev. intermediate value */
+<span class="lineNum">     752 </span>                :<span class="lineNoCov">          0 :         a = context-&gt;state[0];</span>
+<span class="lineNum">     753 </span>                :<span class="lineNoCov">          0 :         b = context-&gt;state[1];</span>
+<span class="lineNum">     754 </span>                :<span class="lineNoCov">          0 :         c = context-&gt;state[2];</span>
+<span class="lineNum">     755 </span>                :<span class="lineNoCov">          0 :         d = context-&gt;state[3];</span>
+<span class="lineNum">     756 </span>                :<span class="lineNoCov">          0 :         e = context-&gt;state[4];</span>
+<span class="lineNum">     757 </span>                :<span class="lineNoCov">          0 :         f = context-&gt;state[5];</span>
+<span class="lineNum">     758 </span>                :<span class="lineNoCov">          0 :         g = context-&gt;state[6];</span>
+<span class="lineNum">     759 </span>                :<span class="lineNoCov">          0 :         h = context-&gt;state[7];</span>
+<span class="lineNum">     760 </span>                :            : 
+<span class="lineNum">     761 </span>                :<span class="lineNoCov">          0 :         j = 0;</span>
+<span class="lineNum">     762 </span>                :            :         do {
+<span class="lineNum">     763 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     764 </span>                :            :                 /* Convert TO host byte order */
+<span class="lineNum">     765 </span>                :<span class="lineNoCov">          0 :                 REVERSE64(*data++, W512[j]);</span>
+<span class="lineNum">     766 </span>                :            :                 /* Apply the SHA-512 compression function to update a..h */
+<span class="lineNum">     767 </span>                :<span class="lineNoCov">          0 :                 T1 = h + Sigma1_512(e) + Ch(e, f, g) + K512[j] + W512[j];</span>
+<span class="lineNum">     768 </span>                :            : #else /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     769 </span>                :            :                 /* Apply the SHA-512 compression function to update a..h with copy */
+<span class="lineNum">     770 </span>                :            :                 T1 = h + Sigma1_512(e) + Ch(e, f, g) + K512[j] + (W512[j] = *data++);
+<span class="lineNum">     771 </span>                :            : #endif /* BYTE_ORDER == LITTLE_ENDIAN */
+<span class="lineNum">     772 </span>                :<span class="lineNoCov">          0 :                 T2 = Sigma0_512(a) + Maj(a, b, c);</span>
+<span class="lineNum">     773 </span>                :<span class="lineNoCov">          0 :                 h = g;</span>
+<span class="lineNum">     774 </span>                :<span class="lineNoCov">          0 :                 g = f;</span>
+<span class="lineNum">     775 </span>                :<span class="lineNoCov">          0 :                 f = e;</span>
+<span class="lineNum">     776 </span>                :<span class="lineNoCov">          0 :                 e = d + T1;</span>
+<span class="lineNum">     777 </span>                :<span class="lineNoCov">          0 :                 d = c;</span>
+<span class="lineNum">     778 </span>                :<span class="lineNoCov">          0 :                 c = b;</span>
+<span class="lineNum">     779 </span>                :<span class="lineNoCov">          0 :                 b = a;</span>
+<span class="lineNum">     780 </span>                :<span class="lineNoCov">          0 :                 a = T1 + T2;</span>
+<span class="lineNum">     781 </span>                :            : 
+<span class="lineNum">     782 </span>                :<span class="lineNoCov">          0 :                 j++;</span>
+<span class="lineNum">     783 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         } while (j &lt; 16);</span>
+<span class="lineNum">     784 </span>                :            : 
+<span class="lineNum">     785 </span>                :            :         do {
+<span class="lineNum">     786 </span>                :            :                 /* Part of the message block expansion: */
+<span class="lineNum">     787 </span>                :<span class="lineNoCov">          0 :                 s0 = W512[(j+1)&amp;0x0f];</span>
+<span class="lineNum">     788 </span>                :<span class="lineNoCov">          0 :                 s0 = sigma0_512(s0);</span>
+<span class="lineNum">     789 </span>                :<span class="lineNoCov">          0 :                 s1 = W512[(j+14)&amp;0x0f];</span>
+<span class="lineNum">     790 </span>                :<span class="lineNoCov">          0 :                 s1 =  sigma1_512(s1);</span>
+<span class="lineNum">     791 </span>                :            : 
+<span class="lineNum">     792 </span>                :            :                 /* Apply the SHA-512 compression function to update a..h */
+<span class="lineNum">     793 </span>                :<span class="lineNoCov">          0 :                 T1 = h + Sigma1_512(e) + Ch(e, f, g) + K512[j] +</span>
+<span class="lineNum">     794 </span>                :<span class="lineNoCov">          0 :                      (W512[j&amp;0x0f] += s1 + W512[(j+9)&amp;0x0f] + s0);</span>
+<span class="lineNum">     795 </span>                :<span class="lineNoCov">          0 :                 T2 = Sigma0_512(a) + Maj(a, b, c);</span>
+<span class="lineNum">     796 </span>                :<span class="lineNoCov">          0 :                 h = g;</span>
+<span class="lineNum">     797 </span>                :<span class="lineNoCov">          0 :                 g = f;</span>
+<span class="lineNum">     798 </span>                :<span class="lineNoCov">          0 :                 f = e;</span>
+<span class="lineNum">     799 </span>                :<span class="lineNoCov">          0 :                 e = d + T1;</span>
+<span class="lineNum">     800 </span>                :<span class="lineNoCov">          0 :                 d = c;</span>
+<span class="lineNum">     801 </span>                :<span class="lineNoCov">          0 :                 c = b;</span>
+<span class="lineNum">     802 </span>                :<span class="lineNoCov">          0 :                 b = a;</span>
+<span class="lineNum">     803 </span>                :<span class="lineNoCov">          0 :                 a = T1 + T2;</span>
+<span class="lineNum">     804 </span>                :            : 
+<span class="lineNum">     805 </span>                :<span class="lineNoCov">          0 :                 j++;</span>
+<span class="lineNum">     806 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         } while (j &lt; 80);</span>
+<span class="lineNum">     807 </span>                :            : 
+<span class="lineNum">     808 </span>                :            :         /* Compute the current intermediate hash value */
+<span class="lineNum">     809 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[0] += a;</span>
+<span class="lineNum">     810 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[1] += b;</span>
+<span class="lineNum">     811 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[2] += c;</span>
+<span class="lineNum">     812 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[3] += d;</span>
+<span class="lineNum">     813 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[4] += e;</span>
+<span class="lineNum">     814 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[5] += f;</span>
+<span class="lineNum">     815 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[6] += g;</span>
+<span class="lineNum">     816 </span>                :<span class="lineNoCov">          0 :         context-&gt;state[7] += h;</span>
+<span class="lineNum">     817 </span>                :            : 
+<span class="lineNum">     818 </span>                :            :         /* Clean up */
+<span class="lineNum">     819 </span>                :<span class="lineNoCov">          0 :         a = b = c = d = e = f = g = h = T1 = T2 = 0;</span>
+<span class="lineNum">     820 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     821 </span>                :            : 
+<a name="822"><span class="lineNum">     822 </span>                :            : #endif /* SHA2_UNROLL_TRANSFORM */</a>
+<span class="lineNum">     823 </span>                :            : 
+<span class="lineNum">     824 </span>                :<span class="lineNoCov">          0 : void SHA512_Update(SHA512_CTX* context, const sha2_byte *data, size_t len) {</span>
+<span class="lineNum">     825 </span>                :            :         unsigned int    freespace, usedspace;
+<span class="lineNum">     826 </span>                :            : 
+<span class="lineNum">     827 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (len == 0) {</span>
+<span class="lineNum">     828 </span>                :            :                 /* Calling with no data is valid - we do nothing */
+<span class="lineNum">     829 </span>                :            :                 return;
+<span class="lineNum">     830 </span>                :            :         }
+<span class="lineNum">     831 </span>                :            : 
+<span class="lineNum">     832 </span>                :            :         /* Sanity check: */
+<span class="lineNum">     833 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         assert(context != (SHA512_CTX*)0 &amp;&amp; data != (sha2_byte*)0);</span>
+<span class="lineNum">     834 </span>                :            : 
+<span class="lineNum">     835 </span>                :<span class="lineNoCov">          0 :         usedspace = (context-&gt;bitcount[0] &gt;&gt; 3) % SHA512_BLOCK_LEN;</span>
+<span class="lineNum">     836 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (usedspace &gt; 0) {</span>
+<span class="lineNum">     837 </span>                :            :                 /* Calculate how much free space is available in the buffer */
+<span class="lineNum">     838 </span>                :<span class="lineNoCov">          0 :                 freespace = SHA512_BLOCK_LEN - usedspace;</span>
+<span class="lineNum">     839 </span>                :            : 
+<span class="lineNum">     840 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if (len &gt;= freespace) {</span>
+<span class="lineNum">     841 </span>                :            :                         /* Fill the buffer completely and process it */
+<span class="lineNum">     842 </span>                :<span class="lineNoCov">          0 :                         MEMCPY_BCOPY(&amp;context-&gt;buffer[usedspace], data, freespace);</span>
+<span class="lineNum">     843 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                         ADDINC128(context-&gt;bitcount, freespace &lt;&lt; 3);</span>
+<span class="lineNum">     844 </span>                :<span class="lineNoCov">          0 :                         len -= freespace;</span>
+<span class="lineNum">     845 </span>                :<span class="lineNoCov">          0 :                         data += freespace;</span>
+<span class="lineNum">     846 </span>                :<span class="lineNoCov">          0 :                         SHA512_Transform(context, (sha2_word64*)context-&gt;buffer);</span>
+<span class="lineNum">     847 </span>                :            :                 } else {
+<span class="lineNum">     848 </span>                :            :                         /* The buffer is not yet full */
+<span class="lineNum">     849 </span>                :<span class="lineNoCov">          0 :                         MEMCPY_BCOPY(&amp;context-&gt;buffer[usedspace], data, len);</span>
+<span class="lineNum">     850 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                         ADDINC128(context-&gt;bitcount, len &lt;&lt; 3);</span>
+<span class="lineNum">     851 </span>                :            :                         /* Clean up: */
+<span class="lineNum">     852 </span>                :            :                         usedspace = freespace = 0;
+<span class="lineNum">     853 </span>                :            :                         return;
+<span class="lineNum">     854 </span>                :            :                 }
+<span class="lineNum">     855 </span>                :            :         }
+<span class="lineNum">     856 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         while (len &gt;= SHA512_BLOCK_LEN) {</span>
+<span class="lineNum">     857 </span>                :            :                 /* Process as many complete blocks as we can */
+<span class="lineNum">     858 </span>                :<span class="lineNoCov">          0 :                 SHA512_Transform(context, (sha2_word64*)data);</span>
+<span class="lineNum">     859 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 ADDINC128(context-&gt;bitcount, SHA512_BLOCK_LEN &lt;&lt; 3);</span>
+<span class="lineNum">     860 </span>                :<span class="lineNoCov">          0 :                 len -= SHA512_BLOCK_LEN;</span>
+<span class="lineNum">     861 </span>                :<span class="lineNoCov">          0 :                 data += SHA512_BLOCK_LEN;</span>
+<span class="lineNum">     862 </span>                :            :         }
+<span class="lineNum">     863 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (len &gt; 0) {</span>
+<span class="lineNum">     864 </span>                :            :                 /* There's left-overs, so save 'em */
+<span class="lineNum">     865 </span>                :<span class="lineNoCov">          0 :                 MEMCPY_BCOPY(context-&gt;buffer, data, len);</span>
+<span class="lineNum">     866 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 ADDINC128(context-&gt;bitcount, len &lt;&lt; 3);</span>
+<span class="lineNum">     867 </span>                :            :         }
+<span class="lineNum">     868 </span>                :            :         /* Clean up: */
+<span class="lineNum">     869 </span>                :            :         usedspace = freespace = 0;
+<a name="870"><span class="lineNum">     870 </span>                :            : }</a>
+<span class="lineNum">     871 </span>                :            : 
+<span class="lineNum">     872 </span>                :<span class="lineNoCov">          0 : void SHA512_Last(SHA512_CTX* context) {</span>
+<span class="lineNum">     873 </span>                :            :         unsigned int    usedspace;
+<span class="lineNum">     874 </span>                :            : 
+<span class="lineNum">     875 </span>                :<span class="lineNoCov">          0 :         usedspace = (context-&gt;bitcount[0] &gt;&gt; 3) % SHA512_BLOCK_LEN;</span>
+<span class="lineNum">     876 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     877 </span>                :            :         /* Convert FROM host byte order */
+<span class="lineNum">     878 </span>                :<span class="lineNoCov">          0 :         REVERSE64(context-&gt;bitcount[0],context-&gt;bitcount[0]);</span>
+<span class="lineNum">     879 </span>                :<span class="lineNoCov">          0 :         REVERSE64(context-&gt;bitcount[1],context-&gt;bitcount[1]);</span>
+<span class="lineNum">     880 </span>                :            : #endif
+<span class="lineNum">     881 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (usedspace &gt; 0) {</span>
+<span class="lineNum">     882 </span>                :            :                 /* Begin padding with a 1 bit: */
+<span class="lineNum">     883 </span>                :<span class="lineNoCov">          0 :                 context-&gt;buffer[usedspace++] = 0x80;</span>
+<span class="lineNum">     884 </span>                :            : 
+<span class="lineNum">     885 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if (usedspace &lt;= SHA512_SHORT_BLOCK_LEN) {</span>
+<span class="lineNum">     886 </span>                :            :                         /* Set-up for the last transform: */
+<span class="lineNum">     887 </span>                :<span class="lineNoCov">          0 :                         MEMSET_BZERO(&amp;context-&gt;buffer[usedspace], SHA512_SHORT_BLOCK_LEN - usedspace);</span>
+<span class="lineNum">     888 </span>                :            :                 } else {
+<span class="lineNum">     889 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                         if (usedspace &lt; SHA512_BLOCK_LEN) {</span>
+<span class="lineNum">     890 </span>                :<span class="lineNoCov">          0 :                                 MEMSET_BZERO(&amp;context-&gt;buffer[usedspace], SHA512_BLOCK_LEN - usedspace);</span>
+<span class="lineNum">     891 </span>                :            :                         }
+<span class="lineNum">     892 </span>                :            :                         /* Do second-to-last transform: */
+<span class="lineNum">     893 </span>                :<span class="lineNoCov">          0 :                         SHA512_Transform(context, (sha2_word64*)context-&gt;buffer);</span>
+<span class="lineNum">     894 </span>                :            : 
+<span class="lineNum">     895 </span>                :            :                         /* And set-up for the last transform: */
+<span class="lineNum">     896 </span>                :<span class="lineNoCov">          0 :                         MEMSET_BZERO(context-&gt;buffer, SHA512_BLOCK_LEN - 2);</span>
+<span class="lineNum">     897 </span>                :            :                 }
+<span class="lineNum">     898 </span>                :            :         } else {
+<span class="lineNum">     899 </span>                :            :                 /* Prepare for final transform: */
+<span class="lineNum">     900 </span>                :<span class="lineNoCov">          0 :                 MEMSET_BZERO(context-&gt;buffer, SHA512_SHORT_BLOCK_LEN);</span>
+<span class="lineNum">     901 </span>                :            : 
+<span class="lineNum">     902 </span>                :            :                 /* Begin padding with a 1 bit: */
+<span class="lineNum">     903 </span>                :<span class="lineNoCov">          0 :                 *context-&gt;buffer = 0x80;</span>
+<span class="lineNum">     904 </span>                :            :         }
+<span class="lineNum">     905 </span>                :            :         /* Store the length of input data (in bits): */
+<span class="lineNum">     906 </span>                :<span class="lineNoCov">          0 :         memcpy(&amp;(context-&gt;buffer[SHA512_SHORT_BLOCK_LEN]),   &amp;(context-&gt;bitcount[1]), sizeof(sha2_word64));</span>
+<span class="lineNum">     907 </span>                :<span class="lineNoCov">          0 :         memcpy(&amp;(context-&gt;buffer[SHA512_SHORT_BLOCK_LEN+8]), &amp;(context-&gt;bitcount[0]), sizeof(sha2_word64));</span>
+<span class="lineNum">     908 </span>                :            : 
+<span class="lineNum">     909 </span>                :            :         /* Final transform: */
+<span class="lineNum">     910 </span>                :<span class="lineNoCov">          0 :         SHA512_Transform(context, (sha2_word64*)context-&gt;buffer);</span>
+<a name="911"><span class="lineNum">     911 </span>                :<span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     912 </span>                :            : 
+<span class="lineNum">     913 </span>                :<span class="lineNoCov">          0 : void SHA512_Final(sha2_byte digest[], SHA512_CTX* context) {</span>
+<span class="lineNum">     914 </span>                :<span class="lineNoCov">          0 :         sha2_word64     *d = (sha2_word64*)digest;</span>
+<span class="lineNum">     915 </span>                :            : 
+<span class="lineNum">     916 </span>                :            :         /* Sanity check: */
+<span class="lineNum">     917 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         assert(context != (SHA512_CTX*)0);</span>
+<span class="lineNum">     918 </span>                :            : 
+<span class="lineNum">     919 </span>                :            :         /* If no digest buffer is passed, we don't bother doing this: */
+<span class="lineNum">     920 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (digest != (sha2_byte*)0) {</span>
+<span class="lineNum">     921 </span>                :<span class="lineNoCov">          0 :                 SHA512_Last(context);</span>
+<span class="lineNum">     922 </span>                :            : 
+<span class="lineNum">     923 </span>                :            :                 /* Save the hash data for output: */
+<span class="lineNum">     924 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     925 </span>                :            :                 {
+<span class="lineNum">     926 </span>                :            :                         /* Convert TO host byte order */
+<span class="lineNum">     927 </span>                :            :                         int     j;
+<span class="lineNum">     928 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :                         for (j = 0; j &lt; 8; j++) {</span>
+<span class="lineNum">     929 </span>                :<span class="lineNoCov">          0 :                                 REVERSE64(context-&gt;state[j],context-&gt;state[j]);</span>
+<span class="lineNum">     930 </span>                :<span class="lineNoCov">          0 :                                 *d++ = context-&gt;state[j];</span>
+<span class="lineNum">     931 </span>                :            :                         }
+<span class="lineNum">     932 </span>                :            :                 }
+<span class="lineNum">     933 </span>                :            : #else
+<span class="lineNum">     934 </span>                :            :                 MEMCPY_BCOPY(d, context-&gt;state, SHA512_DIGEST_LEN);
+<span class="lineNum">     935 </span>                :            : #endif
+<span class="lineNum">     936 </span>                :            :         }
+<span class="lineNum">     937 </span>                :            : 
+<span class="lineNum">     938 </span>                :            :         /* Zero out state data */
+<span class="lineNum">     939 </span>                :            :         MEMSET_BZERO(context, sizeof(*context));
+<span class="lineNum">     940 </span>                :<span class="lineNoCov">          0 : }</span>
+<span class="lineNum">     941 </span>                :            : 
+<a name="942"><span class="lineNum">     942 </span>                :            : </a>
+<span class="lineNum">     943 </span>                :            : /*** SHA-384: *********************************************************/
+<span class="lineNum">     944 </span>                :<span class="lineNoCov">          0 : void SHA384_Init(SHA384_CTX* context) {</span>
+<span class="lineNum">     945 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (context == (SHA384_CTX*)0) {</span>
+<span class="lineNum">     946 </span>                :<span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     947 </span>                :            :         }
+<span class="lineNum">     948 </span>                :<span class="lineNoCov">          0 :         MEMCPY_BCOPY(context-&gt;state, sha384_initial_hash_value, SHA512_DIGEST_LEN);</span>
+<span class="lineNum">     949 </span>                :<span class="lineNoCov">          0 :         MEMSET_BZERO(context-&gt;buffer, SHA384_BLOCK_LEN);</span>
+<span class="lineNum">     950 </span>                :<span class="lineNoCov">          0 :         context-&gt;bitcount[0] = context-&gt;bitcount[1] = 0;</span>
+<a name="951"><span class="lineNum">     951 </span>                :            : }</a>
+<span class="lineNum">     952 </span>                :            : 
+<span class="lineNum">     953 </span>                :<span class="lineNoCov">          0 : void SHA384_Update(SHA384_CTX* context, const sha2_byte* data, size_t len) {</span>
+<span class="lineNum">     954 </span>                :<span class="lineNoCov">          0 :         SHA512_Update((SHA512_CTX*)context, data, len);</span>
+<a name="955"><span class="lineNum">     955 </span>                :<span class="lineNoCov">          0 : }</span></a>
+<span class="lineNum">     956 </span>                :            : 
+<span class="lineNum">     957 </span>                :<span class="lineNoCov">          0 : void SHA384_Final(sha2_byte digest[], SHA384_CTX* context) {</span>
+<span class="lineNum">     958 </span>                :<span class="lineNoCov">          0 :         sha2_word64     *d = (sha2_word64*)digest;</span>
+<span class="lineNum">     959 </span>                :            : 
+<span class="lineNum">     960 </span>                :            :         /* Sanity check: */
+<span class="lineNum">     961 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         assert(context != (SHA384_CTX*)0);</span>
+<span class="lineNum">     962 </span>                :            : 
+<span class="lineNum">     963 </span>                :            :         /* If no digest buffer is passed, we don't bother doing this: */
+<span class="lineNum">     964 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (digest != (sha2_byte*)0) {</span>
+<span class="lineNum">     965 </span>                :<span class="lineNoCov">          0 :                 SHA512_Last((SHA512_CTX*)context);</span>
+<span class="lineNum">     966 </span>                :            : 
+<span class="lineNum">     967 </span>                :            :                 /* Save the hash data for output: */
+<span class="lineNum">     968 </span>                :            : #if BYTE_ORDER == LITTLE_ENDIAN
+<span class="lineNum">     969 </span>                :            :                 {
+<span class="lineNum">     970 </span>                :            :                         /* Convert TO host byte order */
+<span class="lineNum">     971 </span>                :            :                         int     j;
+<span class="lineNum">     972 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :                         for (j = 0; j &lt; 6; j++) {</span>
+<span class="lineNum">     973 </span>                :<span class="lineNoCov">          0 :                                 REVERSE64(context-&gt;state[j],context-&gt;state[j]);</span>
+<span class="lineNum">     974 </span>                :<span class="lineNoCov">          0 :                                 *d++ = context-&gt;state[j];</span>
+<span class="lineNum">     975 </span>                :            :                         }
+<span class="lineNum">     976 </span>                :            :                 }
+<span class="lineNum">     977 </span>                :            : #else
+<span class="lineNum">     978 </span>                :            :                 MEMCPY_BCOPY(d, context-&gt;state, SHA384_DIGEST_LEN);
+<span class="lineNum">     979 </span>                :            : #endif
+<span class="lineNum">     980 </span>                :            :         }
+<span class="lineNum">     981 </span>                :            : 
+<span class="lineNum">     982 </span>                :            :         /* Zero out state data */
+<span class="lineNum">     983 </span>                :            :         MEMSET_BZERO(context, sizeof(*context));
+<span class="lineNum">     984 </span>                :<span class="lineNoCov">          0 : }</span>
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

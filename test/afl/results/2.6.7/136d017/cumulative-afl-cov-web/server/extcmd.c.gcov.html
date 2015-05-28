@@ -1,0 +1,779 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - id:002084,src:002034,op:havoc,rep:2.lcov_info_final - server/extcmd.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">server</a> - extcmd.c<span style="font-size: 80%;"> (source / <a href="extcmd.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">id:002084,src:002034,op:havoc,rep:2.lcov_info_final</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">100</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2015-05-25</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">6</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">72</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  *****************************************************************************
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * File:    extcmd.c
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Purpose: Routines for executing and processing external commands.
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+<span class="lineNum">       9 </span>                :            :  *  Copyright (C) 2009-2014 fwknop developers and contributors. For a full
+<span class="lineNum">      10 </span>                :            :  *  list of contributors, see the file 'CREDITS'.
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  *  License (GNU General Public License):
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  *  This program is free software; you can redistribute it and/or
+<span class="lineNum">      15 </span>                :            :  *  modify it under the terms of the GNU General Public License
+<span class="lineNum">      16 </span>                :            :  *  as published by the Free Software Foundation; either version 2
+<span class="lineNum">      17 </span>                :            :  *  of the License, or (at your option) any later version.
+<span class="lineNum">      18 </span>                :            :  *
+<span class="lineNum">      19 </span>                :            :  *  This program is distributed in the hope that it will be useful,
+<span class="lineNum">      20 </span>                :            :  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      21 </span>                :            :  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      22 </span>                :            :  *  GNU General Public License for more details.
+<span class="lineNum">      23 </span>                :            :  *
+<span class="lineNum">      24 </span>                :            :  *  You should have received a copy of the GNU General Public License
+<span class="lineNum">      25 </span>                :            :  *  along with this program; if not, write to the Free Software
+<span class="lineNum">      26 </span>                :            :  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+<span class="lineNum">      27 </span>                :            :  *  USA
+<span class="lineNum">      28 </span>                :            :  *
+<span class="lineNum">      29 </span>                :            :  *****************************************************************************
+<span class="lineNum">      30 </span>                :            : */
+<span class="lineNum">      31 </span>                :            : #include &quot;fwknopd_common.h&quot;
+<span class="lineNum">      32 </span>                :            : #include &quot;extcmd.h&quot;
+<span class="lineNum">      33 </span>                :            : #include &quot;log_msg.h&quot;
+<span class="lineNum">      34 </span>                :            : #include &quot;utils.h&quot;
+<span class="lineNum">      35 </span>                :            : 
+<span class="lineNum">      36 </span>                :            : #include &lt;errno.h&gt;
+<span class="lineNum">      37 </span>                :            : #include &lt;signal.h&gt;
+<span class="lineNum">      38 </span>                :            : 
+<span class="lineNum">      39 </span>                :            : #if HAVE_SYS_WAIT_H
+<span class="lineNum">      40 </span>                :            :   #include &lt;sys/wait.h&gt;
+<span class="lineNum">      41 </span>                :            : #endif
+<span class="lineNum">      42 </span>                :            : 
+<span class="lineNum">      43 </span>                :            : /*
+<span class="lineNum">      44 </span>                :            : static sig_atomic_t got_sigalrm; 
+<span class="lineNum">      45 </span>                :            : */
+<span class="lineNum">      46 </span>                :            : 
+<span class="lineNum">      47 </span>                :            : /* Takes a file descriptor and makes it non-blocking.
+<span class="lineNum">      48 </span>                :            : static int
+<span class="lineNum">      49 </span>                :            : set_nonblock(int fd)
+<span class="lineNum">      50 </span>                :            : {
+<span class="lineNum">      51 </span>                :            :     int val;
+<span class="lineNum">      52 </span>                :            : 
+<span class="lineNum">      53 </span>                :            :     if((val = fcntl(fd, F_GETFL, 0)) &lt; 0)
+<span class="lineNum">      54 </span>                :            :     {
+<span class="lineNum">      55 </span>                :            :         perror(&quot;fcntl F_GETFL error:&quot;);
+<span class="lineNum">      56 </span>                :            :         return(-1);
+<span class="lineNum">      57 </span>                :            :     }
+<span class="lineNum">      58 </span>                :            : 
+<span class="lineNum">      59 </span>                :            :     val |= O_NONBLOCK;
+<span class="lineNum">      60 </span>                :            : 
+<span class="lineNum">      61 </span>                :            :     if(fcntl(fd, F_SETFL, val) &lt; 0)
+<span class="lineNum">      62 </span>                :            :     {
+<span class="lineNum">      63 </span>                :            :         perror(&quot;fcntl F_SETFL error setting O_NONBLOCK&quot;);
+<span class="lineNum">      64 </span>                :            :         return(-1);
+<span class="lineNum">      65 </span>                :            :     }
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :            :     return(0);
+<span class="lineNum">      68 </span>                :            : }
+<span class="lineNum">      69 </span>                :            : 
+<span class="lineNum">      70 </span>                :            : static void 
+<span class="lineNum">      71 </span>                :            : alarm_handler(int sig)
+<span class="lineNum">      72 </span>                :            : {
+<span class="lineNum">      73 </span>                :            :     got_sigalrm = 1;
+<span class="lineNum">      74 </span>                :            : }
+<span class="lineNum">      75 </span>                :            : */
+<span class="lineNum">      76 </span>                :            : 
+<span class="lineNum">      77 </span>                :            : /* Run an external command returning exit status, and optionally filling
+<span class="lineNum">      78 </span>                :            :  * provided  buffer with STDOUT output up to the size provided.
+<span class="lineNum">      79 </span>                :            :  *
+<span class="lineNum">      80 </span>                :            :  * Note: XXX: We are not using the timeout parameter at present. We still need
+<span class="lineNum">      81 </span>                :            :  *       to implement a reliable timeout mechanism.
+<a name="82"><span class="lineNum">      82 </span>                :            : */</a>
+<span class="lineNum">      83 </span>                :            : static int
+<span class="lineNum">      84 </span>                :<span class="lineNoCov">          0 : _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,</span>
+<span class="lineNum">      85 </span>                :            :         const size_t so_buf_sz, const int want_stderr, const int timeout,
+<span class="lineNum">      86 </span>                :            :         const char *substr_search, int *pid_status,
+<span class="lineNum">      87 </span>                :            :         const fko_srv_options_t * const opts)
+<span class="lineNum">      88 </span>                :            : {
+<span class="lineNum">      89 </span>                :<span class="lineNoCov">          0 :     char    so_read_buf[IO_READ_BUF_LEN] = {0};</span>
+<span class="lineNum">      90 </span>                :<span class="lineNoCov">          0 :     pid_t   pid=0;</span>
+<span class="lineNum">      91 </span>                :            :     FILE   *output;
+<span class="lineNum">      92 </span>                :<span class="lineNoCov">          0 :     int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;</span>
+<span class="lineNum">      93 </span>                :<span class="lineNoCov">          0 :     int     line_ctr = 0, found_str = 0;</span>
+<span class="lineNum">      94 </span>                :            : 
+<span class="lineNum">      95 </span>                :            :     char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+<span class="lineNum">      96 </span>                :<span class="lineNoCov">          0 :     int     argc_new=0;</span>
+<span class="lineNum">      97 </span>                :            : 
+<span class="lineNum">      98 </span>                :            : #if HAVE_EXECVPE
+<span class="lineNum">      99 </span>                :            :     int     pipe_fd[2];
+<span class="lineNum">     100 </span>                :            : #endif
+<span class="lineNum">     101 </span>                :            : 
+<span class="lineNum">     102 </span>                :<span class="lineNoCov">          0 :     *pid_status = 0;</span>
+<span class="lineNum">     103 </span>                :            : 
+<span class="lineNum">     104 </span>                :            :     /* Even without execvpe() we examine the command for basic validity
+<span class="lineNum">     105 </span>                :            :      * in term of number of args
+<span class="lineNum">     106 </span>                :            :     */
+<span class="lineNum">     107 </span>                :            :     memset(argv_new, 0x0, sizeof(argv_new));
+<span class="lineNum">     108 </span>                :            : 
+<span class="lineNum">     109 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(strtoargv(cmd, argv_new, &amp;argc_new, opts) != 1)</span>
+<span class="lineNum">     110 </span>                :            :     {
+<span class="lineNum">     111 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_ERR,</span>
+<span class="lineNum">     112 </span>                :            :                 &quot;run_extcmd(): Error converting cmd str to argv via strtoargv()&quot;);
+<span class="lineNum">     113 </span>                :            :         return EXTCMD_ARGV_ERROR;
+<span class="lineNum">     114 </span>                :            :     }
+<span class="lineNum">     115 </span>                :            : 
+<span class="lineNum">     116 </span>                :            : #if !HAVE_EXECVPE
+<span class="lineNum">     117 </span>                :            :     /* if we are not using execvpe() then free up argv_new unconditionally
+<span class="lineNum">     118 </span>                :            :      * since was used only for validation
+<span class="lineNum">     119 </span>                :            :     */
+<span class="lineNum">     120 </span>                :            :     free_argv(argv_new, &amp;argc_new);
+<span class="lineNum">     121 </span>                :            : #endif
+<span class="lineNum">     122 </span>                :            : 
+<span class="lineNum">     123 </span>                :            : #if HAVE_EXECVPE
+<span class="lineNum">     124 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(opts-&gt;verbose &gt; 1)</span>
+<span class="lineNum">     125 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_INFO, &quot;run_extcmd() (with execvpe()): running CMD: %s&quot;, cmd);</span>
+<span class="lineNum">     126 </span>                :            : 
+<span class="lineNum">     127 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(so_buf != NULL || substr_search != NULL)</span>
+<span class="lineNum">     128 </span>                :            :     {
+<span class="lineNum">     129 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(pipe(pipe_fd) &lt; 0)</span>
+<span class="lineNum">     130 </span>                :            :         {
+<span class="lineNum">     131 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_ERR, &quot;run_extcmd(): pipe() failed: %s&quot;, strerror(errno));</span>
+<span class="lineNum">     132 </span>                :<span class="lineNoCov">          0 :             free_argv(argv_new, &amp;argc_new);</span>
+<span class="lineNum">     133 </span>                :            :             return EXTCMD_PIPE_ERROR;
+<span class="lineNum">     134 </span>                :            :         }
+<span class="lineNum">     135 </span>                :            :     }
+<span class="lineNum">     136 </span>                :            : 
+<span class="lineNum">     137 </span>                :<span class="lineNoCov">          0 :     pid = fork();</span>
+<span class="lineNum">     138 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if (pid == 0)</span>
+<span class="lineNum">     139 </span>                :            :     {
+<span class="lineNum">     140 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(chdir(&quot;/&quot;) != 0)</span>
+<span class="lineNum">     141 </span>                :<span class="lineNoCov">          0 :             exit(EXTCMD_CHDIR_ERROR);</span>
+<span class="lineNum">     142 </span>                :            : 
+<span class="lineNum">     143 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(so_buf != NULL || substr_search != NULL)</span>
+<span class="lineNum">     144 </span>                :            :         {
+<span class="lineNum">     145 </span>                :<span class="lineNoCov">          0 :             close(pipe_fd[0]);</span>
+<span class="lineNum">     146 </span>                :<span class="lineNoCov">          0 :             dup2(pipe_fd[1], STDOUT_FILENO);</span>
+<span class="lineNum">     147 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(want_stderr)</span>
+<span class="lineNum">     148 </span>                :<span class="lineNoCov">          0 :                 dup2(pipe_fd[1], STDERR_FILENO);</span>
+<span class="lineNum">     149 </span>                :            :             else
+<span class="lineNum">     150 </span>                :<span class="lineNoCov">          0 :                 close(STDERR_FILENO);</span>
+<span class="lineNum">     151 </span>                :            :         }
+<span class="lineNum">     152 </span>                :            : 
+<span class="lineNum">     153 </span>                :            :         /* Take care of gid/uid settings before running the command.
+<span class="lineNum">     154 </span>                :            :         */
+<span class="lineNum">     155 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(gid &gt; 0)</span>
+<span class="lineNum">     156 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(setgid(gid) &lt; 0)</span>
+<span class="lineNum">     157 </span>                :<span class="lineNoCov">          0 :                 exit(EXTCMD_SETGID_ERROR);</span>
+<span class="lineNum">     158 </span>                :            : 
+<span class="lineNum">     159 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(uid &gt; 0)</span>
+<span class="lineNum">     160 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(setuid(uid) &lt; 0)</span>
+<span class="lineNum">     161 </span>                :<span class="lineNoCov">          0 :                 exit(EXTCMD_SETUID_ERROR);</span>
+<span class="lineNum">     162 </span>                :            : 
+<span class="lineNum">     163 </span>                :            :         /* don't use env
+<span class="lineNum">     164 </span>                :            :         */
+<span class="lineNum">     165 </span>                :<span class="lineNoCov">          0 :         execvpe(argv_new[0], argv_new, (char * const *)NULL);</span>
+<span class="lineNum">     166 </span>                :            :     }
+<span class="lineNum">     167 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     else if(pid == -1)</span>
+<span class="lineNum">     168 </span>                :            :     {
+<span class="lineNum">     169 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_ERR, &quot;run_extcmd(): fork() failed: %s&quot;, strerror(errno));</span>
+<span class="lineNum">     170 </span>                :<span class="lineNoCov">          0 :         free_argv(argv_new, &amp;argc_new);</span>
+<span class="lineNum">     171 </span>                :            :         return EXTCMD_FORK_ERROR;
+<span class="lineNum">     172 </span>                :            :     }
+<span class="lineNum">     173 </span>                :            : 
+<span class="lineNum">     174 </span>                :            :     /* Only the parent process makes it here
+<span class="lineNum">     175 </span>                :            :     */
+<span class="lineNum">     176 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(so_buf != NULL || substr_search != NULL)</span>
+<span class="lineNum">     177 </span>                :            :     {
+<span class="lineNum">     178 </span>                :<span class="lineNoCov">          0 :         close(pipe_fd[1]);</span>
+<span class="lineNum">     179 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if ((output = fdopen(pipe_fd[0], &quot;r&quot;)) != NULL)</span>
+<span class="lineNum">     180 </span>                :            :         {
+<span class="lineNum">     181 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(so_buf != NULL)</span>
+<span class="lineNum">     182 </span>                :            :                 memset(so_buf, 0x0, so_buf_sz);
+<span class="lineNum">     183 </span>                :            : 
+<span class="lineNum">     184 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)</span>
+<span class="lineNum">     185 </span>                :            :             {
+<span class="lineNum">     186 </span>                :<span class="lineNoCov">          0 :                 line_ctr++;</span>
+<span class="lineNum">     187 </span>                :            : 
+<span class="lineNum">     188 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(so_buf != NULL)</span>
+<span class="lineNum">     189 </span>                :            :                 {
+<span class="lineNum">     190 </span>                :<span class="lineNoCov">          0 :                     strlcat(so_buf, so_read_buf, so_buf_sz);</span>
+<span class="lineNum">     191 </span>                :            : 
+<span class="lineNum">     192 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(strlen(so_buf) &gt;= so_buf_sz-1)</span>
+<span class="lineNum">     193 </span>                :            :                         break;
+<span class="lineNum">     194 </span>                :            :                 }
+<span class="lineNum">     195 </span>                :            :                 else /* we are looking for a substring */
+<span class="lineNum">     196 </span>                :            :                 {
+<span class="lineNum">     197 </span>                :            :                     /* Get past comments and empty lines (note: we only look at the
+<span class="lineNum">     198 </span>                :            :                      * first character).
+<span class="lineNum">     199 </span>                :            :                      */
+<span class="lineNum">     200 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(IS_EMPTY_LINE(so_read_buf[0]))</span>
+<span class="lineNum">         </span>[<span class="branchNoExec" title="Branch 4 was not executed"> # </span><span class="branchNoExec" title="Branch 5 was not executed"> # </span>][<span class="branchNoExec" title="Branch 6 was not executed"> # </span><span class="branchNoExec" title="Branch 7 was not executed"> # </span>]
+<span class="lineNum">     201 </span>                :<span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     202 </span>                :            : 
+<span class="lineNum">     203 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(strstr(so_read_buf, substr_search) != NULL)</span>
+<span class="lineNum">     204 </span>                :            :                     {
+<span class="lineNum">     205 </span>                :            :                         found_str = 1;
+<span class="lineNum">     206 </span>                :            :                         break;
+<span class="lineNum">     207 </span>                :            :                     }
+<span class="lineNum">     208 </span>                :            :                 }
+<span class="lineNum">     209 </span>                :            :             }
+<span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :             fclose(output);</span>
+<span class="lineNum">     211 </span>                :            :         }
+<span class="lineNum">     212 </span>                :            :         else
+<span class="lineNum">     213 </span>                :            :         {
+<span class="lineNum">     214 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_ERR,</span>
+<span class="lineNum">     215 </span>                :            :                     &quot;run_extcmd(): could not fdopen() pipe output file descriptor.&quot;);
+<span class="lineNum">     216 </span>                :<span class="lineNoCov">          0 :             free_argv(argv_new, &amp;argc_new);</span>
+<span class="lineNum">     217 </span>                :            :             return EXTCMD_OPEN_ERROR;
+<span class="lineNum">     218 </span>                :            :         }
+<span class="lineNum">     219 </span>                :            :     }
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :<span class="lineNoCov">          0 :     free_argv(argv_new, &amp;argc_new);</span>
+<span class="lineNum">     222 </span>                :            : 
+<span class="lineNum">     223 </span>                :<span class="lineNoCov">          0 :     waitpid(pid, pid_status, 0);</span>
+<span class="lineNum">     224 </span>                :            : 
+<span class="lineNum">     225 </span>                :            : #else
+<span class="lineNum">     226 </span>                :            : 
+<span class="lineNum">     227 </span>                :            :     if(opts-&gt;verbose &gt; 1)
+<span class="lineNum">     228 </span>                :            :         log_msg(LOG_INFO, &quot;run_extcmd() (without execvpe()): running CMD: %s&quot;, cmd);
+<span class="lineNum">     229 </span>                :            : 
+<span class="lineNum">     230 </span>                :            :     if(so_buf == NULL &amp;&amp; substr_search == NULL)
+<span class="lineNum">     231 </span>                :            :     {
+<span class="lineNum">     232 </span>                :            :         /* Since we do not have to capture output, we will fork here (which we
+<span class="lineNum">     233 </span>                :            :          * * would have to do anyway if we are running as another user as well).
+<span class="lineNum">     234 </span>                :            :          * */
+<span class="lineNum">     235 </span>                :            :         pid = fork();
+<span class="lineNum">     236 </span>                :            :         if(pid == -1)
+<span class="lineNum">     237 </span>                :            :         {
+<span class="lineNum">     238 </span>                :            :             log_msg(LOG_ERR, &quot;run_extcmd: fork failed: %s&quot;, strerror(errno));
+<span class="lineNum">     239 </span>                :            :             return(EXTCMD_FORK_ERROR);
+<span class="lineNum">     240 </span>                :            :         }
+<span class="lineNum">     241 </span>                :            :         else if (pid == 0)
+<span class="lineNum">     242 </span>                :            :         {
+<span class="lineNum">     243 </span>                :            :             /* We are the child */
+<span class="lineNum">     244 </span>                :            : 
+<span class="lineNum">     245 </span>                :            :             if(chdir(&quot;/&quot;) != 0)
+<span class="lineNum">     246 </span>                :            :                 exit(EXTCMD_CHDIR_ERROR);
+<span class="lineNum">     247 </span>                :            : 
+<span class="lineNum">     248 </span>                :            :             /* Take care of gid/uid settings before running the command.
+<span class="lineNum">     249 </span>                :            :             */
+<span class="lineNum">     250 </span>                :            :             if(gid &gt; 0)
+<span class="lineNum">     251 </span>                :            :                 if(setgid(gid) &lt; 0)
+<span class="lineNum">     252 </span>                :            :                     exit(EXTCMD_SETGID_ERROR);
+<span class="lineNum">     253 </span>                :            : 
+<span class="lineNum">     254 </span>                :            :             if(uid &gt; 0)
+<span class="lineNum">     255 </span>                :            :                 if(setuid(uid) &lt; 0)
+<span class="lineNum">     256 </span>                :            :                     exit(EXTCMD_SETUID_ERROR);
+<span class="lineNum">     257 </span>                :            : 
+<span class="lineNum">     258 </span>                :            :             *pid_status = system(cmd);
+<span class="lineNum">     259 </span>                :            :             exit(*pid_status);
+<span class="lineNum">     260 </span>                :            :         }
+<span class="lineNum">     261 </span>                :            :         /* Retval is forced to 0 as we don't care about the exit status of
+<span class="lineNum">     262 </span>                :            :          * the child (for now)
+<span class="lineNum">     263 </span>                :            :         */
+<span class="lineNum">     264 </span>                :            :         retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+<span class="lineNum">     265 </span>                :            :     }
+<span class="lineNum">     266 </span>                :            :     else
+<span class="lineNum">     267 </span>                :            :     {
+<span class="lineNum">     268 </span>                :            :         /* Looking for output use popen and fill the buffer to its limit.
+<span class="lineNum">     269 </span>                :            :          */
+<span class="lineNum">     270 </span>                :            :         output = popen(cmd, &quot;r&quot;);
+<span class="lineNum">     271 </span>                :            :         if(output == NULL)
+<span class="lineNum">     272 </span>                :            :         {
+<span class="lineNum">     273 </span>                :            :             log_msg(LOG_ERR, &quot;Got popen error %i: %s&quot;, errno, strerror(errno));
+<span class="lineNum">     274 </span>                :            :             retval = EXTCMD_OPEN_ERROR;
+<span class="lineNum">     275 </span>                :            :         }
+<span class="lineNum">     276 </span>                :            :         else
+<span class="lineNum">     277 </span>                :            :         {
+<span class="lineNum">     278 </span>                :            :             if(so_buf != NULL)
+<span class="lineNum">     279 </span>                :            :                 memset(so_buf, 0x0, so_buf_sz);
+<span class="lineNum">     280 </span>                :            : 
+<span class="lineNum">     281 </span>                :            :             while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
+<span class="lineNum">     282 </span>                :            :             {
+<span class="lineNum">     283 </span>                :            :                 line_ctr++;
+<span class="lineNum">     284 </span>                :            :                 if(so_buf != NULL)
+<span class="lineNum">     285 </span>                :            :                 {
+<span class="lineNum">     286 </span>                :            :                     strlcat(so_buf, so_read_buf, so_buf_sz);
+<span class="lineNum">     287 </span>                :            :                     if(strlen(so_buf) &gt;= so_buf_sz-1)
+<span class="lineNum">     288 </span>                :            :                         break;
+<span class="lineNum">     289 </span>                :            :                 }
+<span class="lineNum">     290 </span>                :            :                 else /* we are looking for a substring */
+<span class="lineNum">     291 </span>                :            :                 {
+<span class="lineNum">     292 </span>                :            :                     /* Get past comments and empty lines (note: we only look at the
+<span class="lineNum">     293 </span>                :            :                      * first character).
+<span class="lineNum">     294 </span>                :            :                      */
+<span class="lineNum">     295 </span>                :            :                     if(IS_EMPTY_LINE(so_read_buf[0]))
+<span class="lineNum">     296 </span>                :            :                         continue;
+<span class="lineNum">     297 </span>                :            : 
+<span class="lineNum">     298 </span>                :            :                     if(strstr(so_read_buf, substr_search) != NULL)
+<span class="lineNum">     299 </span>                :            :                     {
+<span class="lineNum">     300 </span>                :            :                         found_str = 1;
+<span class="lineNum">     301 </span>                :            :                         break;
+<span class="lineNum">     302 </span>                :            :                     }
+<span class="lineNum">     303 </span>                :            :                 }
+<span class="lineNum">     304 </span>                :            :             }
+<span class="lineNum">     305 </span>                :            :             pclose(output);
+<span class="lineNum">     306 </span>                :            :         }
+<span class="lineNum">     307 </span>                :            :     }
+<span class="lineNum">     308 </span>                :            : 
+<span class="lineNum">     309 </span>                :            : #endif
+<span class="lineNum">     310 </span>                :            : 
+<span class="lineNum">     311 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(substr_search != NULL)</span>
+<span class="lineNum">     312 </span>                :            :     {
+<span class="lineNum">     313 </span>                :            :         /* The semantics of the return value changes in search mode to the line
+<span class="lineNum">     314 </span>                :            :          * number where the substring match was found, or zero if it wasn't found
+<span class="lineNum">     315 </span>                :            :         */
+<span class="lineNum">     316 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(found_str)</span>
+<span class="lineNum">     317 </span>                :<span class="lineNoCov">          0 :             retval = line_ctr;</span>
+<span class="lineNum">     318 </span>                :            :         else
+<span class="lineNum">     319 </span>                :            :             retval = 0;
+<span class="lineNum">     320 </span>                :            :     }
+<span class="lineNum">     321 </span>                :            :     else
+<span class="lineNum">     322 </span>                :            :     {
+<span class="lineNum">     323 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(WIFEXITED(*pid_status))</span>
+<span class="lineNum">     324 </span>                :            :         {
+<span class="lineNum">     325 </span>                :            :             /* Even if the child exited with an error condition, if we make it here
+<span class="lineNum">     326 </span>                :            :              * then the child exited normally as far as the OS is concerned (i.e. didn't
+<span class="lineNum">     327 </span>                :            :              * crash or get hit with a signal)
+<span class="lineNum">     328 </span>                :            :             */
+<span class="lineNum">     329 </span>                :            :             retval = EXTCMD_SUCCESS_ALL_OUTPUT;
+<span class="lineNum">     330 </span>                :            :         }
+<span class="lineNum">     331 </span>                :            :         else
+<span class="lineNum">     332 </span>                :<span class="lineNoCov">          0 :             retval = EXTCMD_EXECUTION_ERROR;</span>
+<span class="lineNum">     333 </span>                :            :     }
+<span class="lineNum">     334 </span>                :            : 
+<span class="lineNum">     335 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(opts-&gt;verbose &gt; 1)</span>
+<span class="lineNum">     336 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         log_msg(LOG_INFO,</span>
+<span class="lineNum">     337 </span>                :            :             &quot;run_extcmd(): returning %d, pid_status: %d&quot;,
+<span class="lineNum">     338 </span>                :<span class="lineNoCov">          0 :             retval, WIFEXITED(*pid_status) ? WEXITSTATUS(*pid_status) : *pid_status);</span>
+<span class="lineNum">     339 </span>                :            : 
+<span class="lineNum">     340 </span>                :            :     return(retval);
+<span class="lineNum">     341 </span>                :            : }
+<span class="lineNum">     342 </span>                :            : 
+<span class="lineNum">     343 </span>                :            : 
+<span class="lineNum">     344 </span>                :            : #if 0 /* --DSS the original method that did not work on some systems */
+<span class="lineNum">     345 </span>                :            : 
+<span class="lineNum">     346 </span>                :            :     /* Create the pipes we will use for getting stdout and stderr
+<span class="lineNum">     347 </span>                :            :      * from the child process.
+<span class="lineNum">     348 </span>                :            :     */
+<span class="lineNum">     349 </span>                :            :     if(pipe(so) != 0)
+<span class="lineNum">     350 </span>                :            :         return(EXTCMD_PIPE_ERROR);
+<span class="lineNum">     351 </span>                :            : 
+<span class="lineNum">     352 </span>                :            :     if(pipe(se) != 0)
+<span class="lineNum">     353 </span>                :            :         return(EXTCMD_PIPE_ERROR);
+<span class="lineNum">     354 </span>                :            : 
+<span class="lineNum">     355 </span>                :            :     /* Fork off a child process to run the command and provide its outputs.
+<span class="lineNum">     356 </span>                :            :     */
+<span class="lineNum">     357 </span>                :            :     pid = fork();
+<span class="lineNum">     358 </span>                :            :     if(pid == -1)
+<span class="lineNum">     359 </span>                :            :     {
+<span class="lineNum">     360 </span>                :            :         return(EXTCMD_FORK_ERROR);
+<span class="lineNum">     361 </span>                :            :     }
+<span class="lineNum">     362 </span>                :            :     else if (pid == 0)
+<span class="lineNum">     363 </span>                :            :     {
+<span class="lineNum">     364 </span>                :            :         /* We are the child, so we dup stdout and stderr to our respective
+<span class="lineNum">     365 </span>                :            :          * write-end of the pipes, close stdin and the read-end of the pipes
+<span class="lineNum">     366 </span>                :            :          * (since we don't need them here).  Then use system() to run the
+<span class="lineNum">     367 </span>                :            :          * command and exit with the exit status of that command so we can
+<span class="lineNum">     368 </span>                :            :          * grab it from the waitpid call in the parent.
+<span class="lineNum">     369 </span>                :            :         */
+<span class="lineNum">     370 </span>                :            :         close(fileno(stdin));
+<span class="lineNum">     371 </span>                :            :         dup2(so[1], fileno(stdout));
+<span class="lineNum">     372 </span>                :            :         dup2(se[1], fileno(stderr));
+<span class="lineNum">     373 </span>                :            :         close(so[0]);
+<span class="lineNum">     374 </span>                :            :         close(se[0]);
+<span class="lineNum">     375 </span>                :            : 
+<span class="lineNum">     376 </span>                :            :         /* If user is not null, then we setuid to that user before running the
+<span class="lineNum">     377 </span>                :            :          * command.
+<span class="lineNum">     378 </span>                :            :         */
+<span class="lineNum">     379 </span>                :            :         if(uid &gt; 0)
+<span class="lineNum">     380 </span>                :            :         {
+<span class="lineNum">     381 </span>                :            :             if(setuid(uid) &lt; 0)
+<span class="lineNum">     382 </span>                :            :             {
+<span class="lineNum">     383 </span>                :            :                 exit(EXTCMD_SETUID_ERROR);
+<span class="lineNum">     384 </span>                :            :             }
+<span class="lineNum">     385 </span>                :            :         }
+<span class="lineNum">     386 </span>                :            : 
+<span class="lineNum">     387 </span>                :            :         /* --DSS XXX: Would it be more efficient to use one of the exec()
+<span class="lineNum">     388 </span>                :            :          *            calls (i.e. 'return(execvp(ext_cmd, &amp;argv[1]));')?
+<span class="lineNum">     389 </span>                :            :          *            For now, we use system() and exit with the external
+<span class="lineNum">     390 </span>                :            :          *            command exit status.
+<span class="lineNum">     391 </span>                :            :         */
+<span class="lineNum">     392 </span>                :            :         exit(WEXITSTATUS(system(cmd)));
+<span class="lineNum">     393 </span>                :            :     }
+<span class="lineNum">     394 </span>                :            : 
+<span class="lineNum">     395 </span>                :            :     /* Parent from here */
+<span class="lineNum">     396 </span>                :            : 
+<span class="lineNum">     397 </span>                :            :     /* Give the exit status an initial value of -1.
+<span class="lineNum">     398 </span>                :            :     */
+<span class="lineNum">     399 </span>                :            :     *status = -1;
+<span class="lineNum">     400 </span>                :            : 
+<span class="lineNum">     401 </span>                :            :     /* Close the write-end of the pipes (we are only reading).
+<span class="lineNum">     402 </span>                :            :     */
+<span class="lineNum">     403 </span>                :            :     close(so[1]);
+<span class="lineNum">     404 </span>                :            :     close(se[1]);
+<span class="lineNum">     405 </span>                :            : 
+<span class="lineNum">     406 </span>                :            :     /* Set our pipes to non-blocking
+<span class="lineNum">     407 </span>                :            :     */
+<span class="lineNum">     408 </span>                :            :     set_nonblock(so[0]);
+<span class="lineNum">     409 </span>                :            :     set_nonblock(se[0]);
+<span class="lineNum">     410 </span>                :            : 
+<span class="lineNum">     411 </span>                :            :     tv.tv_sec = EXTCMD_DEF_TIMEOUT;
+<span class="lineNum">     412 </span>                :            :     tv.tv_usec = 0;
+<span class="lineNum">     413 </span>                :            : 
+<span class="lineNum">     414 </span>                :            :     /* Initialize and setup our file descriptor sets for select.
+<span class="lineNum">     415 </span>                :            :     */
+<span class="lineNum">     416 </span>                :            :     FD_ZERO(&amp;rfds);
+<span class="lineNum">     417 </span>                :            :     FD_ZERO(&amp;efds);
+<span class="lineNum">     418 </span>                :            :     FD_SET(so[0], &amp;rfds);
+<span class="lineNum">     419 </span>                :            :     FD_SET(se[0], &amp;rfds);
+<span class="lineNum">     420 </span>                :            :     FD_SET(so[0], &amp;efds);
+<span class="lineNum">     421 </span>                :            :     FD_SET(se[0], &amp;efds);
+<span class="lineNum">     422 </span>                :            : 
+<span class="lineNum">     423 </span>                :            :     /* Start with fully clear buffers.
+<span class="lineNum">     424 </span>                :            :     */
+<span class="lineNum">     425 </span>                :            :     memset(so_buf, 0x0, so_buf_sz);
+<span class="lineNum">     426 </span>                :            :     memset(se_buf, 0x0, se_buf_sz);
+<span class="lineNum">     427 </span>                :            : 
+<span class="lineNum">     428 </span>                :            :     /* Read both stdout and stderr piped from the child until we get eof,
+<span class="lineNum">     429 </span>                :            :      * fill the buffers, or error out.
+<span class="lineNum">     430 </span>                :            :     */
+<span class="lineNum">     431 </span>                :            :     while(so_buf_remaining &gt; 0 || se_buf_remaining &gt; 0)
+<span class="lineNum">     432 </span>                :            :     {
+<span class="lineNum">     433 </span>                :            :         selval = select(8, &amp;rfds, NULL, &amp;efds, &amp;tv);
+<span class="lineNum">     434 </span>                :            : 
+<span class="lineNum">     435 </span>                :            :         if(selval == -1)
+<span class="lineNum">     436 </span>                :            :         {
+<span class="lineNum">     437 </span>                :            :             /* Select error - so kill the child and bail.
+<span class="lineNum">     438 </span>                :            :             */
+<span class="lineNum">     439 </span>                :            :             kill(pid, SIGTERM);
+<span class="lineNum">     440 </span>                :            :             retval |= EXTCMD_SELECT_ERROR;
+<span class="lineNum">     441 </span>                :            :             break;
+<span class="lineNum">     442 </span>                :            :         }
+<span class="lineNum">     443 </span>                :            : 
+<span class="lineNum">     444 </span>                :            :         if(selval == 0)
+<span class="lineNum">     445 </span>                :            :         {
+<span class="lineNum">     446 </span>                :            :             /* Timeout - so kill the child and bail
+<span class="lineNum">     447 </span>                :            :             */
+<span class="lineNum">     448 </span>                :            :             kill(pid, SIGTERM);
+<span class="lineNum">     449 </span>                :            :             retval |= EXTCMD_EXECUTION_TIMEOUT;
+<span class="lineNum">     450 </span>                :            :             break;
+<span class="lineNum">     451 </span>                :            :         }
+<span class="lineNum">     452 </span>                :            : 
+<span class="lineNum">     453 </span>                :            :         /* The stdout pipe...
+<span class="lineNum">     454 </span>                :            :         */
+<span class="lineNum">     455 </span>                :            :         bytes_read = read(so[0], so_read_buf, IO_READ_BUF_LEN);
+<span class="lineNum">     456 </span>                :            :         if(so_buf_remaining &gt; 0)
+<span class="lineNum">     457 </span>                :            :         {
+<span class="lineNum">     458 </span>                :            :             if(bytes_read &gt; 0)
+<span class="lineNum">     459 </span>                :            :             {
+<span class="lineNum">     460 </span>                :            :                 /* We have data, so process it...
+<span class="lineNum">     461 </span>                :            :                 */
+<span class="lineNum">     462 </span>                :            :                 if(bytes_read &gt; so_buf_remaining)
+<span class="lineNum">     463 </span>                :            :                 {
+<span class="lineNum">     464 </span>                :            :                     bytes_read = so_buf_remaining;
+<span class="lineNum">     465 </span>                :            :                     retval |= EXTCMD_SUCCESS_PARTIAL_STDOUT;
+<span class="lineNum">     466 </span>                :            :                 }
+<span class="lineNum">     467 </span>                :            : 
+<span class="lineNum">     468 </span>                :            :                 memcpy(so_buf, so_read_buf, bytes_read);
+<span class="lineNum">     469 </span>                :            :                 so_buf += bytes_read;
+<span class="lineNum">     470 </span>                :            :                 so_buf_remaining -= bytes_read;
+<span class="lineNum">     471 </span>                :            :             }
+<span class="lineNum">     472 </span>                :            :             else if(bytes_read &lt; 0)
+<span class="lineNum">     473 </span>                :            :             {
+<span class="lineNum">     474 </span>                :            :                 /* Anything other than EAGAIN or EWOULDBLOCK is conisdered
+<span class="lineNum">     475 </span>                :            :                  * error enough to bail.  We are done here so we force the
+<span class="lineNum">     476 </span>                :            :                  * buf_remaining value to 0.
+<span class="lineNum">     477 </span>                :            :                 */
+<span class="lineNum">     478 </span>                :            :                 if(errno != EAGAIN &amp;&amp; errno != EWOULDBLOCK)
+<span class="lineNum">     479 </span>                :            :                 {
+<span class="lineNum">     480 </span>                :            :                     retval |= EXTCMD_STDOUT_READ_ERROR;
+<span class="lineNum">     481 </span>                :            :                     so_buf_remaining = 0;
+<span class="lineNum">     482 </span>                :            :                 }
+<span class="lineNum">     483 </span>                :            :             }
+<span class="lineNum">     484 </span>                :            :             else
+<span class="lineNum">     485 </span>                :            :             {
+<span class="lineNum">     486 </span>                :            :                 /* Bytes read was 0 which indicate end of file. So we are
+<span class="lineNum">     487 </span>                :            :                  * done.
+<span class="lineNum">     488 </span>                :            :                 */
+<span class="lineNum">     489 </span>                :            :                 so_buf_remaining = 0;
+<span class="lineNum">     490 </span>                :            :             }
+<span class="lineNum">     491 </span>                :            :         }
+<span class="lineNum">     492 </span>                :            :         else
+<span class="lineNum">     493 </span>                :            :             break;
+<span class="lineNum">     494 </span>                :            : 
+<span class="lineNum">     495 </span>                :            :         /* The stderr pipe...
+<span class="lineNum">     496 </span>                :            :         */
+<span class="lineNum">     497 </span>                :            :         bytes_read = read(se[0], se_read_buf, IO_READ_BUF_LEN);
+<span class="lineNum">     498 </span>                :            :         if(se_buf_remaining &gt; 0)
+<span class="lineNum">     499 </span>                :            :         {
+<span class="lineNum">     500 </span>                :            :             if(bytes_read &gt; 0)
+<span class="lineNum">     501 </span>                :            :             {
+<span class="lineNum">     502 </span>                :            :                 /* We have data, so process it...
+<span class="lineNum">     503 </span>                :            :                 */
+<span class="lineNum">     504 </span>                :            :                 if(bytes_read &gt; se_buf_remaining)
+<span class="lineNum">     505 </span>                :            :                 {
+<span class="lineNum">     506 </span>                :            :                     bytes_read = se_buf_remaining;
+<span class="lineNum">     507 </span>                :            :                     retval |= EXTCMD_SUCCESS_PARTIAL_STDERR;
+<span class="lineNum">     508 </span>                :            :                 }
+<span class="lineNum">     509 </span>                :            : 
+<span class="lineNum">     510 </span>                :            :                 memcpy(se_buf, se_read_buf, bytes_read);
+<span class="lineNum">     511 </span>                :            :                 se_buf += bytes_read;
+<span class="lineNum">     512 </span>                :            :                 se_buf_remaining -= bytes_read;
+<span class="lineNum">     513 </span>                :            :             }
+<span class="lineNum">     514 </span>                :            :             else if(bytes_read &lt; 0)
+<span class="lineNum">     515 </span>                :            :             {
+<span class="lineNum">     516 </span>                :            :                 /* Anything other than EAGAIN or EWOULDBLOCK is conisdered
+<span class="lineNum">     517 </span>                :            :                  * error enough to bail.  We are done here so we force the
+<span class="lineNum">     518 </span>                :            :                  * buf_remaining value to 0.
+<span class="lineNum">     519 </span>                :            :                 */
+<span class="lineNum">     520 </span>                :            :                 if(errno != EAGAIN &amp;&amp; errno != EWOULDBLOCK)
+<span class="lineNum">     521 </span>                :            :                 {
+<span class="lineNum">     522 </span>                :            :                     retval |= EXTCMD_STDERR_READ_ERROR;
+<span class="lineNum">     523 </span>                :            :                     se_buf_remaining = 0;
+<span class="lineNum">     524 </span>                :            :                 }
+<span class="lineNum">     525 </span>                :            :             }
+<span class="lineNum">     526 </span>                :            :             else
+<span class="lineNum">     527 </span>                :            :             {
+<span class="lineNum">     528 </span>                :            :                 /* Bytes read was 0 which indicate end of file. So we are
+<span class="lineNum">     529 </span>                :            :                  * done.
+<span class="lineNum">     530 </span>                :            :                 */
+<span class="lineNum">     531 </span>                :            :                 se_buf_remaining = 0;
+<span class="lineNum">     532 </span>                :            :             }
+<span class="lineNum">     533 </span>                :            :         }
+<span class="lineNum">     534 </span>                :            :         else
+<span class="lineNum">     535 </span>                :            :             break;
+<span class="lineNum">     536 </span>                :            :     }
+<span class="lineNum">     537 </span>                :            : 
+<span class="lineNum">     538 </span>                :            :     close(so[0]);
+<span class="lineNum">     539 </span>                :            :     close(se[0]);
+<span class="lineNum">     540 </span>                :            : 
+<span class="lineNum">     541 </span>                :            :     /* Wait for the external command to finish and capture its exit status.
+<span class="lineNum">     542 </span>                :            :     */
+<span class="lineNum">     543 </span>                :            :     waitpid(pid, status, 0);
+<span class="lineNum">     544 </span>                :            : 
+<span class="lineNum">     545 </span>                :            :     if(*status != 0)
+<span class="lineNum">     546 </span>                :            :         retval != EXTCMD_EXECUTION_ERROR;
+<span class="lineNum">     547 </span>                :            : 
+<span class="lineNum">     548 </span>                :            :     /* Return the our status of this operation command.
+<span class="lineNum">     549 </span>                :            :     */
+<span class="lineNum">     550 </span>                :            :     return(retval);
+<span class="lineNum">     551 </span>                :            : }
+<a name="552"><span class="lineNum">     552 </span>                :            : #endif</a>
+<span class="lineNum">     553 </span>                :            : 
+<span class="lineNum">     554 </span>                :<span class="lineNoCov">          0 : int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,</span>
+<span class="lineNum">     555 </span>                :            :         const fko_srv_options_t * const opts)
+<span class="lineNum">     556 </span>                :            : {
+<span class="lineNum">     557 </span>                :<span class="lineNoCov">          0 :     int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;</span>
+<span class="lineNum">     558 </span>                :            :     char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+<span class="lineNum">     559 </span>                :<span class="lineNoCov">          0 :     int     argc_new=0;</span>
+<span class="lineNum">     560 </span>                :            : 
+<span class="lineNum">     561 </span>                :            : #if HAVE_EXECVPE
+<span class="lineNum">     562 </span>                :            :     int     pipe_fd[2];
+<span class="lineNum">     563 </span>                :<span class="lineNoCov">          0 :     pid_t   pid=0;</span>
+<span class="lineNum">     564 </span>                :            : #else
+<span class="lineNum">     565 </span>                :            :     FILE       *fd = NULL;
+<span class="lineNum">     566 </span>                :            : #endif
+<span class="lineNum">     567 </span>                :            : 
+<span class="lineNum">     568 </span>                :<span class="lineNoCov">          0 :     *pid_status = 0;</span>
+<span class="lineNum">     569 </span>                :            : 
+<span class="lineNum">     570 </span>                :            :     /* Even without execvpe() we examine the command for basic validity
+<span class="lineNum">     571 </span>                :            :      * in term of number of args
+<span class="lineNum">     572 </span>                :            :     */
+<span class="lineNum">     573 </span>                :            :     memset(argv_new, 0x0, sizeof(argv_new));
+<span class="lineNum">     574 </span>                :            : 
+<span class="lineNum">     575 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(strtoargv(cmd, argv_new, &amp;argc_new, opts) != 1)</span>
+<span class="lineNum">     576 </span>                :            :     {
+<span class="lineNum">     577 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_ERR,</span>
+<span class="lineNum">     578 </span>                :            :                 &quot;run_extcmd_write(): Error converting cmd str to argv via strtoargv()&quot;);
+<span class="lineNum">     579 </span>                :<span class="lineNoCov">          0 :         return EXTCMD_ARGV_ERROR;</span>
+<span class="lineNum">     580 </span>                :            :     }
+<span class="lineNum">     581 </span>                :            : 
+<span class="lineNum">     582 </span>                :            : #if !HAVE_EXECVPE
+<span class="lineNum">     583 </span>                :            :     /* if we are not using execvpe() then free up argv_new unconditionally
+<span class="lineNum">     584 </span>                :            :      * since was used only for validation
+<span class="lineNum">     585 </span>                :            :     */
+<span class="lineNum">     586 </span>                :            :     free_argv(argv_new, &amp;argc_new);
+<span class="lineNum">     587 </span>                :            : #endif
+<span class="lineNum">     588 </span>                :            : 
+<span class="lineNum">     589 </span>                :            : #if HAVE_EXECVPE
+<span class="lineNum">     590 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(opts-&gt;verbose &gt; 1)</span>
+<span class="lineNum">     591 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_INFO, &quot;run_extcmd_write() (with execvpe()): running CMD: %s | %s&quot;,</span>
+<span class="lineNum">     592 </span>                :            :                 cmd_write, cmd);
+<span class="lineNum">     593 </span>                :            : 
+<span class="lineNum">     594 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(pipe(pipe_fd) &lt; 0)</span>
+<span class="lineNum">     595 </span>                :            :     {
+<span class="lineNum">     596 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_ERR, &quot;run_extcmd_write(): pipe() failed: %s&quot;, strerror(errno));</span>
+<span class="lineNum">     597 </span>                :<span class="lineNoCov">          0 :         free_argv(argv_new, &amp;argc_new);</span>
+<span class="lineNum">     598 </span>                :<span class="lineNoCov">          0 :         return EXTCMD_PIPE_ERROR;</span>
+<span class="lineNum">     599 </span>                :            :     }
+<span class="lineNum">     600 </span>                :            : 
+<span class="lineNum">     601 </span>                :<span class="lineNoCov">          0 :     pid = fork();</span>
+<span class="lineNum">     602 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if (pid == 0)</span>
+<span class="lineNum">     603 </span>                :            :     {
+<span class="lineNum">     604 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(chdir(&quot;/&quot;) != 0)</span>
+<span class="lineNum">     605 </span>                :<span class="lineNoCov">          0 :             exit(EXTCMD_CHDIR_ERROR);</span>
+<span class="lineNum">     606 </span>                :            : 
+<span class="lineNum">     607 </span>                :<span class="lineNoCov">          0 :         close(pipe_fd[1]);</span>
+<span class="lineNum">     608 </span>                :<span class="lineNoCov">          0 :         dup2(pipe_fd[0], STDIN_FILENO);</span>
+<span class="lineNum">     609 </span>                :            : 
+<span class="lineNum">     610 </span>                :            :         /* don't use env
+<span class="lineNum">     611 </span>                :            :         */
+<span class="lineNum">     612 </span>                :<span class="lineNoCov">          0 :         execvpe(argv_new[0], argv_new, (char * const *)NULL);</span>
+<span class="lineNum">     613 </span>                :            :     }
+<span class="lineNum">     614 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     else if(pid == -1)</span>
+<span class="lineNum">     615 </span>                :            :     {
+<span class="lineNum">     616 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_ERR, &quot;run_extcmd_write(): fork() failed: %s&quot;, strerror(errno));</span>
+<span class="lineNum">     617 </span>                :<span class="lineNoCov">          0 :         free_argv(argv_new, &amp;argc_new);</span>
+<span class="lineNum">     618 </span>                :<span class="lineNoCov">          0 :         return EXTCMD_FORK_ERROR;</span>
+<span class="lineNum">     619 </span>                :            :     }
+<span class="lineNum">     620 </span>                :            : 
+<span class="lineNum">     621 </span>                :<span class="lineNoCov">          0 :     close(pipe_fd[0]);</span>
+<span class="lineNum">     622 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(write(pipe_fd[1], cmd_write, strlen(cmd_write)) &lt; 0)</span>
+<span class="lineNum">     623 </span>                :<span class="lineNoCov">          0 :         retval = EXTCMD_WRITE_ERROR;</span>
+<span class="lineNum">     624 </span>                :<span class="lineNoCov">          0 :     close(pipe_fd[1]);</span>
+<span class="lineNum">     625 </span>                :            : 
+<span class="lineNum">     626 </span>                :<span class="lineNoCov">          0 :     free_argv(argv_new, &amp;argc_new);</span>
+<span class="lineNum">     627 </span>                :            : 
+<span class="lineNum">     628 </span>                :<span class="lineNoCov">          0 :     waitpid(pid, pid_status, 0);</span>
+<span class="lineNum">     629 </span>                :            : 
+<span class="lineNum">     630 </span>                :            : #else
+<span class="lineNum">     631 </span>                :            :     if(opts-&gt;verbose &gt; 1)
+<span class="lineNum">     632 </span>                :            :         log_msg(LOG_INFO, &quot;run_extcmd_write() (without execvpe()): running CMD: %s | %s&quot;,
+<span class="lineNum">     633 </span>                :            :                 cmd_write, cmd);
+<span class="lineNum">     634 </span>                :            : 
+<span class="lineNum">     635 </span>                :            :     if ((fd = popen(cmd, &quot;w&quot;)) == NULL)
+<span class="lineNum">     636 </span>                :            :     {
+<span class="lineNum">     637 </span>                :            :         log_msg(LOG_ERR, &quot;Got popen error %i: %s&quot;, errno, strerror(errno));
+<span class="lineNum">     638 </span>                :            :         retval = EXTCMD_OPEN_ERROR;
+<span class="lineNum">     639 </span>                :            :     }
+<span class="lineNum">     640 </span>                :            :     else
+<span class="lineNum">     641 </span>                :            :     {
+<span class="lineNum">     642 </span>                :            :         if (fwrite(cmd_write, strlen(cmd_write), 1, fd) != 1)
+<span class="lineNum">     643 </span>                :            :         {
+<span class="lineNum">     644 </span>                :            :             log_msg(LOG_ERR, &quot;Could not write to cmd stdin&quot;);
+<span class="lineNum">     645 </span>                :            :             retval = -1;
+<span class="lineNum">     646 </span>                :            :         }
+<span class="lineNum">     647 </span>                :            :         pclose(fd);
+<span class="lineNum">     648 </span>                :            :     }
+<span class="lineNum">     649 </span>                :            : 
+<span class="lineNum">     650 </span>                :            : #endif
+<span class="lineNum">     651 </span>                :<span class="lineNoCov">          0 :     return retval;</span>
+<span class="lineNum">     652 </span>                :            : }
+<span class="lineNum">     653 </span>                :            : 
+<span class="lineNum">     654 </span>                :            : /* _run_extcmd() wrapper, run an external command.
+<a name="655"><span class="lineNum">     655 </span>                :            : */</a>
+<span class="lineNum">     656 </span>                :            : int
+<span class="lineNum">     657 </span>                :<span class="lineNoCov">          0 : run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,</span>
+<span class="lineNum">     658 </span>                :            :         const int want_stderr, const int timeout, int *pid_status,
+<span class="lineNum">     659 </span>                :            :         const fko_srv_options_t * const opts)
+<span class="lineNum">     660 </span>                :            : {
+<span class="lineNum">     661 </span>                :<span class="lineNoCov">          0 :     return _run_extcmd(0, 0, cmd, so_buf, so_buf_sz, want_stderr,</span>
+<span class="lineNum">     662 </span>                :            :             timeout, NULL, pid_status, opts);
+<span class="lineNum">     663 </span>                :            : }
+<span class="lineNum">     664 </span>                :            : 
+<span class="lineNum">     665 </span>                :            : /* _run_extcmd() wrapper, run an external command as the specified user.
+<a name="666"><span class="lineNum">     666 </span>                :            : */</a>
+<span class="lineNum">     667 </span>                :            : int
+<span class="lineNum">     668 </span>                :<span class="lineNoCov">          0 : run_extcmd_as(uid_t uid, gid_t gid, const char *cmd,char *so_buf,</span>
+<span class="lineNum">     669 </span>                :            :         const size_t so_buf_sz, const int want_stderr, const int timeout,
+<span class="lineNum">     670 </span>                :            :         int *pid_status, const fko_srv_options_t * const opts)
+<span class="lineNum">     671 </span>                :            : {
+<span class="lineNum">     672 </span>                :<span class="lineNoCov">          0 :     return _run_extcmd(uid, gid, cmd, so_buf, so_buf_sz,</span>
+<span class="lineNum">     673 </span>                :            :             want_stderr, timeout, NULL, pid_status, opts);
+<span class="lineNum">     674 </span>                :            : }
+<span class="lineNum">     675 </span>                :            : 
+<span class="lineNum">     676 </span>                :            : /* _run_extcmd() wrapper, search command output for a substring.
+<a name="677"><span class="lineNum">     677 </span>                :            : */</a>
+<span class="lineNum">     678 </span>                :            : int
+<span class="lineNum">     679 </span>                :<span class="lineNoCov">          0 : search_extcmd(const char *cmd, const int want_stderr, const int timeout,</span>
+<span class="lineNum">     680 </span>                :            :         const char *substr_search, int *pid_status,
+<span class="lineNum">     681 </span>                :            :         const fko_srv_options_t * const opts)
+<span class="lineNum">     682 </span>                :            : {
+<span class="lineNum">     683 </span>                :<span class="lineNoCov">          0 :     return _run_extcmd(0, 0, cmd, NULL, 0, want_stderr, timeout,</span>
+<span class="lineNum">     684 </span>                :            :             substr_search, pid_status, opts);
+<span class="lineNum">     685 </span>                :            : }
+<span class="lineNum">     686 </span>                :            : 
+<a name="687"><span class="lineNum">     687 </span>                :            : /* _run_extcmd_write() wrapper, run a command which is expecting input via stdin</a>
+<span class="lineNum">     688 </span>                :            : */
+<span class="lineNum">     689 </span>                :<span class="lineNoCov">          0 : int run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,</span>
+<span class="lineNum">     690 </span>                :            :         const fko_srv_options_t * const opts)
+<span class="lineNum">     691 </span>                :            : {
+<span class="lineNum">     692 </span>                :<span class="lineNoCov">          0 :     return _run_extcmd_write(cmd, cmd_write, pid_status, opts);</span>
+<span class="lineNum">     693 </span>                :            : }
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - id:002084,src:002034,op:havoc,rep:2.lcov_info_final - lib/md5.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">lib</a> - md5.c<span style="font-size: 80%;"> (source / <a href="md5.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">id:002084,src:002034,op:havoc,rep:2.lcov_info_final</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">107</td>
+            <td class="headerCovTableEntry">119</td>
+            <td class="headerCovTableEntryMed">89.9 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2015-05-25</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntry">4</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntry">10</td>
+            <td class="headerCovTableEntryLo">50.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  *****************************************************************************
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * File:    md5.c
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Purpose: Implementation of the MD5 message-digest algorithm for libfwknop.
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  * This code implements the MD5 message-digest algorithm.
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * The algorithm is due to Ron Rivest. This code was
+<span class="lineNum">      11 </span>                :            :  * written by Colin Plumb in 1993, no copyright is claimed.
+<span class="lineNum">      12 </span>                :            :  * This code is in the public domain; do with it what you wish.
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  * Equivalent code is available from RSA Data Security, Inc.
+<span class="lineNum">      15 </span>                :            :  * This code has been tested against that, and is equivalent,
+<span class="lineNum">      16 </span>                :            :  * except that you don't need to include two pages of legalese
+<span class="lineNum">      17 </span>                :            :  * with every copy.
+<span class="lineNum">      18 </span>                :            :  *
+<span class="lineNum">      19 </span>                :            :  * To compute the message digest of a chunk of bytes, declare an
+<span class="lineNum">      20 </span>                :            :  * MD5Context structure, pass it to MD5Init, call MD5Update as
+<span class="lineNum">      21 </span>                :            :  * needed on buffers full of bytes, and then call MD5Final, which
+<span class="lineNum">      22 </span>                :            :  * will fill a supplied 16-byte array with the digest.
+<span class="lineNum">      23 </span>                :            :  *
+<span class="lineNum">      24 </span>                :            :  * This program is distributed in the hope that it will be useful,
+<span class="lineNum">      25 </span>                :            :  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      26 </span>                :            :  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+<span class="lineNum">      27 </span>                :            :  *
+<span class="lineNum">      28 </span>                :            :  *****************************************************************************
+<span class="lineNum">      29 </span>                :            : */
+<span class="lineNum">      30 </span>                :            : #include &quot;md5.h&quot;
+<span class="lineNum">      31 </span>                :            : #include &quot;fko_common.h&quot;
+<span class="lineNum">      32 </span>                :            : 
+<span class="lineNum">      33 </span>                :            : #if BYTEORDER == 1234
+<span class="lineNum">      34 </span>                :            :   #define byteReverse(buf, len)    /* Nothing */
+<span class="lineNum">      35 </span>                :            : #elif BYTEORDER == 4321
+<span class="lineNum">      36 </span>                :            :   /* Note: this code is harmless on little-endian machines.
+<span class="lineNum">      37 </span>                :            :   */
+<span class="lineNum">      38 </span>                :            :   void byteReverse(unsigned char *buf, unsigned longs)
+<span class="lineNum">      39 </span>                :            :   {
+<span class="lineNum">      40 </span>                :            :       uint32_t t;
+<span class="lineNum">      41 </span>                :            :       do {
+<span class="lineNum">      42 </span>                :            :           t = (uint32_t) ((unsigned) buf[3] &lt;&lt; 8 | buf[2]) &lt;&lt; 16 |
+<span class="lineNum">      43 </span>                :            :               ((unsigned) buf[1] &lt;&lt; 8 | buf[0]);
+<span class="lineNum">      44 </span>                :            :           *(uint32_t *) buf = t;
+<span class="lineNum">      45 </span>                :            :           buf += 4;
+<span class="lineNum">      46 </span>                :            :       } while (--longs);
+<span class="lineNum">      47 </span>                :            :   }
+<span class="lineNum">      48 </span>                :            : #else
+<span class="lineNum">      49 </span>                :            :   #define byteReverse(buf, len)    /* Nothing */
+<span class="lineNum">      50 </span>                :            :   #ifndef WIN32
+<span class="lineNum">      51 </span>                :            :     #warning Undetermined or unsupported Byte Order... We will try LITTLE_ENDIAN
+<span class="lineNum">      52 </span>                :            :   #endif
+<span class="lineNum">      53 </span>                :            : #endif
+<span class="lineNum">      54 </span>                :            : 
+<span class="lineNum">      55 </span>                :            : /*
+<span class="lineNum">      56 </span>                :            :  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
+<span class="lineNum">      57 </span>                :            :  * initialization constants.
+<a name="58"><span class="lineNum">      58 </span>                :            :  */</a>
+<span class="lineNum">      59 </span>                :            : void
+<span class="lineNum">      60 </span>                :<span class="lineCov">       2409 : MD5Init(MD5Context *ctx)</span>
+<span class="lineNum">      61 </span>                :            : {
+<span class="lineNum">      62 </span>                :<span class="lineCov">       2409 :     ctx-&gt;buf[0] = 0x67452301;</span>
+<span class="lineNum">      63 </span>                :<span class="lineCov">       2409 :     ctx-&gt;buf[1] = 0xefcdab89;</span>
+<span class="lineNum">      64 </span>                :<span class="lineCov">       2409 :     ctx-&gt;buf[2] = 0x98badcfe;</span>
+<span class="lineNum">      65 </span>                :<span class="lineCov">       2409 :     ctx-&gt;buf[3] = 0x10325476;</span>
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :<span class="lineCov">       2409 :     ctx-&gt;bits[0] = 0;</span>
+<span class="lineNum">      68 </span>                :<span class="lineCov">       2409 :     ctx-&gt;bits[1] = 0;</span>
+<span class="lineNum">      69 </span>                :<span class="lineCov">       2409 : }</span>
+<span class="lineNum">      70 </span>                :            : 
+<span class="lineNum">      71 </span>                :            : /* Update context to reflect the concatenation of another buffer full
+<span class="lineNum">      72 </span>                :            :  * of bytes.
+<a name="73"><span class="lineNum">      73 </span>                :            :  */</a>
+<span class="lineNum">      74 </span>                :            : void
+<span class="lineNum">      75 </span>                :<span class="lineCov">       2409 : MD5Update(MD5Context *ctx, unsigned char *buf, unsigned len)</span>
+<span class="lineNum">      76 </span>                :            : {
+<span class="lineNum">      77 </span>                :            :     uint32_t t;
+<span class="lineNum">      78 </span>                :            : 
+<span class="lineNum">      79 </span>                :            :     /* Update bitcount
+<span class="lineNum">      80 </span>                :            :     */
+<span class="lineNum">      81 </span>                :<span class="lineCov">       2409 :     t = ctx-&gt;bits[0];</span>
+<span class="lineNum">      82 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 2409 times"> + </span>]:<span class="lineCov">       2409 :     if ((ctx-&gt;bits[0] = t + ((uint32_t) len &lt;&lt; 3)) &lt; t)</span>
+<span class="lineNum">      83 </span>                :<span class="lineNoCov">          0 :     ctx-&gt;bits[1]++;     /* Carry from low to high */</span>
+<span class="lineNum">      84 </span>                :<span class="lineCov">       2409 :     ctx-&gt;bits[1] += len &gt;&gt; 29;</span>
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>                :<span class="lineCov">       2409 :     t = (t &gt;&gt; 3) &amp; 0x3f;    /* Bytes already in shsInfo-&gt;data */</span>
+<span class="lineNum">      87 </span>                :            : 
+<span class="lineNum">      88 </span>                :            :     /* Handle any leading odd-sized chunks
+<span class="lineNum">      89 </span>                :            :     */
+<span class="lineNum">      90 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 2409 times"> + </span>]:<span class="lineCov">       2409 :     if (t) {</span>
+<span class="lineNum">      91 </span>                :<span class="lineNoCov">          0 :         unsigned char *p = (unsigned char *) ctx-&gt;in + t;</span>
+<span class="lineNum">      92 </span>                :            : 
+<span class="lineNum">      93 </span>                :<span class="lineNoCov">          0 :         t = 64 - t;</span>
+<span class="lineNum">      94 </span>                :            : 
+<span class="lineNum">      95 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (len &lt; t) {</span>
+<span class="lineNum">      96 </span>                :<span class="lineNoCov">          0 :             memcpy(p, buf, len);</span>
+<span class="lineNum">      97 </span>                :<span class="lineCov">       2409 :             return;</span>
+<span class="lineNum">      98 </span>                :            :         }
+<span class="lineNum">      99 </span>                :            : 
+<span class="lineNum">     100 </span>                :<span class="lineNoCov">          0 :         memcpy(p, buf, t);</span>
+<span class="lineNum">     101 </span>                :            :         byteReverse(ctx-&gt;in, 16);
+<span class="lineNum">     102 </span>                :<span class="lineNoCov">          0 :         MD5Transform(ctx-&gt;buf, (uint32_t *) ctx-&gt;in);</span>
+<span class="lineNum">     103 </span>                :<span class="lineNoCov">          0 :         buf += t;</span>
+<span class="lineNum">     104 </span>                :<span class="lineCov">       2409 :         len -= t;</span>
+<span class="lineNum">     105 </span>                :            :     }
+<span class="lineNum">     106 </span>                :            : 
+<span class="lineNum">     107 </span>                :            :     /* Process data in 64-byte chunks
+<span class="lineNum">     108 </span>                :            :     */
+<span class="lineNum">     109 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 2409 times"> + </span>]:<span class="lineCov">       2409 :     while (len &gt;= 64) {</span>
+<span class="lineNum">     110 </span>                :<span class="lineNoCov">          0 :         memcpy(ctx-&gt;in, buf, 64);</span>
+<span class="lineNum">     111 </span>                :            :         byteReverse(ctx-&gt;in, 16);
+<span class="lineNum">     112 </span>                :<span class="lineNoCov">          0 :         MD5Transform(ctx-&gt;buf, (uint32_t *) ctx-&gt;in);</span>
+<span class="lineNum">     113 </span>                :<span class="lineNoCov">          0 :         buf += 64;</span>
+<span class="lineNum">     114 </span>                :<span class="lineNoCov">          0 :         len -= 64;</span>
+<span class="lineNum">     115 </span>                :            :     }
+<span class="lineNum">     116 </span>                :            : 
+<span class="lineNum">     117 </span>                :            :     /* Handle any remaining bytes of data.
+<span class="lineNum">     118 </span>                :            :     */
+<span class="lineNum">     119 </span>                :<span class="lineCov">       2409 :     memcpy(ctx-&gt;in, buf, len);</span>
+<span class="lineNum">     120 </span>                :            : }
+<span class="lineNum">     121 </span>                :            : 
+<span class="lineNum">     122 </span>                :            : /* Final wrapup - pad to 64-byte boundary with the bit pattern 
+<span class="lineNum">     123 </span>                :            :  * 1 0* (64-bit count of bits processed, MSB-first)
+<a name="124"><span class="lineNum">     124 </span>                :            :  */</a>
+<span class="lineNum">     125 </span>                :            : void
+<span class="lineNum">     126 </span>                :<span class="lineCov">       2409 : MD5Final(unsigned char digest[16], MD5Context *ctx)</span>
+<span class="lineNum">     127 </span>                :            : {
+<span class="lineNum">     128 </span>                :            :     unsigned count;
+<span class="lineNum">     129 </span>                :            :     unsigned char *p;
+<span class="lineNum">     130 </span>                :            : 
+<span class="lineNum">     131 </span>                :            :     /* Compute number of bytes mod 64
+<span class="lineNum">     132 </span>                :            :     */
+<span class="lineNum">     133 </span>                :<span class="lineCov">       2409 :     count = (ctx-&gt;bits[0] &gt;&gt; 3) &amp; 0x3F;</span>
+<span class="lineNum">     134 </span>                :            : 
+<span class="lineNum">     135 </span>                :            :     /* Set the first char of padding to 0x80.  This is safe since there is
+<span class="lineNum">     136 </span>                :            :      * always at least one byte free
+<span class="lineNum">     137 </span>                :            :     */
+<span class="lineNum">     138 </span>                :<span class="lineCov">       2409 :     p = ctx-&gt;in + count;</span>
+<span class="lineNum">     139 </span>                :<span class="lineCov">       2409 :     *p++ = 0x80;</span>
+<span class="lineNum">     140 </span>                :            : 
+<span class="lineNum">     141 </span>                :            :     /* Bytes of padding needed to make 64 bytes
+<span class="lineNum">     142 </span>                :            :     */
+<span class="lineNum">     143 </span>                :<span class="lineCov">       2409 :     count = 64 - 1 - count;</span>
+<span class="lineNum">     144 </span>                :            : 
+<span class="lineNum">     145 </span>                :            :     /* Pad out to 56 mod 64
+<span class="lineNum">     146 </span>                :            :     */
+<span class="lineNum">     147 </span>        [<span class="branchCov" title="Branch 0 was taken 4 times"> + </span><span class="branchCov" title="Branch 1 was taken 2405 times"> + </span>]:<span class="lineCov">       2409 :     if (count &lt; 8) {</span>
+<span class="lineNum">     148 </span>                :            :         /* Two lots of padding:  Pad the first block to 64 bytes
+<span class="lineNum">     149 </span>                :            :         */
+<span class="lineNum">     150 </span>                :<span class="lineCov">          4 :         memset(p, 0, count);</span>
+<span class="lineNum">     151 </span>                :            :         byteReverse(ctx-&gt;in, 16);
+<span class="lineNum">     152 </span>                :<span class="lineCov">          4 :         MD5Transform(ctx-&gt;buf, (uint32_t *) ctx-&gt;in);</span>
+<span class="lineNum">     153 </span>                :            : 
+<span class="lineNum">     154 </span>                :            :         /* Now fill the next block with 56 bytes
+<span class="lineNum">     155 </span>                :            :         */
+<span class="lineNum">     156 </span>                :<span class="lineCov">          4 :         memset(ctx-&gt;in, 0, 56);</span>
+<span class="lineNum">     157 </span>                :            :     } else {
+<span class="lineNum">     158 </span>                :            :         /* Pad block to 56 bytes
+<span class="lineNum">     159 </span>                :            :         */
+<span class="lineNum">     160 </span>                :<span class="lineCov">       2405 :         memset(p, 0, count - 8);</span>
+<span class="lineNum">     161 </span>                :            :     }
+<span class="lineNum">     162 </span>                :            : 
+<span class="lineNum">     163 </span>                :            :     byteReverse(ctx-&gt;in, 14);
+<span class="lineNum">     164 </span>                :            : 
+<span class="lineNum">     165 </span>                :            :     /* Append length in bits and transform
+<span class="lineNum">     166 </span>                :            :     */
+<span class="lineNum">     167 </span>                :<span class="lineCov">       2409 :     memcpy(&amp;(ctx-&gt;in[56]), &amp;(ctx-&gt;bits[0]), sizeof(uint32_t));</span>
+<span class="lineNum">     168 </span>                :<span class="lineCov">       2409 :     memcpy(&amp;(ctx-&gt;in[60]), &amp;(ctx-&gt;bits[1]), sizeof(uint32_t));</span>
+<span class="lineNum">     169 </span>                :            : 
+<span class="lineNum">     170 </span>                :<span class="lineCov">       2409 :     MD5Transform(ctx-&gt;buf, (uint32_t *) ctx-&gt;in);</span>
+<span class="lineNum">     171 </span>                :            :     byteReverse((unsigned char *) ctx-&gt;buf, 4);
+<span class="lineNum">     172 </span>                :<span class="lineCov">       2409 :     memcpy(digest, ctx-&gt;buf, 16);</span>
+<span class="lineNum">     173 </span>                :            : 
+<span class="lineNum">     174 </span>                :            :     memset(ctx, 0, sizeof(*ctx));        /* In case it's sensitive */
+<span class="lineNum">     175 </span>                :<span class="lineCov">       2409 : }</span>
+<span class="lineNum">     176 </span>                :            : 
+<span class="lineNum">     177 </span>                :            : 
+<span class="lineNum">     178 </span>                :            : /* The four core functions
+<span class="lineNum">     179 </span>                :            : */
+<span class="lineNum">     180 </span>                :            : #define F1(x, y, z) (z ^ (x &amp; (y ^ z)))
+<span class="lineNum">     181 </span>                :            : #define F2(x, y, z) F1(z, x, y)
+<span class="lineNum">     182 </span>                :            : #define F3(x, y, z) (x ^ y ^ z)
+<span class="lineNum">     183 </span>                :            : #define F4(x, y, z) (y ^ (x | ~z))
+<span class="lineNum">     184 </span>                :            : 
+<span class="lineNum">     185 </span>                :            : /* This is the central step in the MD5 algorithm.
+<span class="lineNum">     186 </span>                :            : */
+<span class="lineNum">     187 </span>                :            : #define MD5STEP(f, w, x, y, z, data, s) \
+<span class="lineNum">     188 </span>                :            :     ( w += f(x, y, z) + data,  w = w&lt;&lt;s | w&gt;&gt;(32-s),  w += x )
+<span class="lineNum">     189 </span>                :            : 
+<span class="lineNum">     190 </span>                :            : /* The core of the MD5 algorithm, this alters an existing MD5 hash to
+<span class="lineNum">     191 </span>                :            :  * reflect the addition of 16 longwords of new data.  MD5Update blocks
+<span class="lineNum">     192 </span>                :            :  * the data and converts bytes into longwords for this routine.
+<a name="193"><span class="lineNum">     193 </span>                :            : */</a>
+<span class="lineNum">     194 </span>                :            : void
+<span class="lineNum">     195 </span>                :<span class="lineCov">       2413 : MD5Transform(uint32_t buf[4], uint32_t in[16])</span>
+<span class="lineNum">     196 </span>                :            : {
+<span class="lineNum">     197 </span>                :            :     register uint32_t a, b, c, d;
+<span class="lineNum">     198 </span>                :            : 
+<span class="lineNum">     199 </span>                :<span class="lineCov">       2413 :     a = buf[0];</span>
+<span class="lineNum">     200 </span>                :<span class="lineCov">       2413 :     b = buf[1];</span>
+<span class="lineNum">     201 </span>                :<span class="lineCov">       2413 :     c = buf[2];</span>
+<span class="lineNum">     202 </span>                :<span class="lineCov">       2413 :     d = buf[3];</span>
+<span class="lineNum">     203 </span>                :            : 
+<span class="lineNum">     204 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, a, b, c, d, in[0]  + 0xd76aa478, 7);</span>
+<span class="lineNum">     205 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, d, a, b, c, in[1]  + 0xe8c7b756, 12);</span>
+<span class="lineNum">     206 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, c, d, a, b, in[2]  + 0x242070db, 17);</span>
+<span class="lineNum">     207 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, b, c, d, a, in[3]  + 0xc1bdceee, 22);</span>
+<span class="lineNum">     208 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, a, b, c, d, in[4]  + 0xf57c0faf, 7);</span>
+<span class="lineNum">     209 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, d, a, b, c, in[5]  + 0x4787c62a, 12);</span>
+<span class="lineNum">     210 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, c, d, a, b, in[6]  + 0xa8304613, 17);</span>
+<span class="lineNum">     211 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, b, c, d, a, in[7]  + 0xfd469501, 22);</span>
+<span class="lineNum">     212 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, a, b, c, d, in[8]  + 0x698098d8, 7);</span>
+<span class="lineNum">     213 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, d, a, b, c, in[9]  + 0x8b44f7af, 12);</span>
+<span class="lineNum">     214 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, c, d, a, b, in[10] + 0xffff5bb1, 17);</span>
+<span class="lineNum">     215 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, b, c, d, a, in[11] + 0x895cd7be, 22);</span>
+<span class="lineNum">     216 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, a, b, c, d, in[12] + 0x6b901122, 7);</span>
+<span class="lineNum">     217 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, d, a, b, c, in[13] + 0xfd987193, 12);</span>
+<span class="lineNum">     218 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, c, d, a, b, in[14] + 0xa679438e, 17);</span>
+<span class="lineNum">     219 </span>                :<span class="lineCov">       2413 :     MD5STEP(F1, b, c, d, a, in[15] + 0x49b40821, 22);</span>
+<span class="lineNum">     220 </span>                :            : 
+<span class="lineNum">     221 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, a, b, c, d, in[1]  + 0xf61e2562, 5);</span>
+<span class="lineNum">     222 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, d, a, b, c, in[6]  + 0xc040b340, 9);</span>
+<span class="lineNum">     223 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, c, d, a, b, in[11] + 0x265e5a51, 14);</span>
+<span class="lineNum">     224 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, b, c, d, a, in[0]  + 0xe9b6c7aa, 20);</span>
+<span class="lineNum">     225 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, a, b, c, d, in[5]  + 0xd62f105d, 5);</span>
+<span class="lineNum">     226 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, d, a, b, c, in[10] + 0x02441453, 9);</span>
+<span class="lineNum">     227 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, c, d, a, b, in[15] + 0xd8a1e681, 14);</span>
+<span class="lineNum">     228 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, b, c, d, a, in[4]  + 0xe7d3fbc8, 20);</span>
+<span class="lineNum">     229 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, a, b, c, d, in[9]  + 0x21e1cde6, 5);</span>
+<span class="lineNum">     230 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, d, a, b, c, in[14] + 0xc33707d6, 9);</span>
+<span class="lineNum">     231 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, c, d, a, b, in[3]  + 0xf4d50d87, 14);</span>
+<span class="lineNum">     232 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, b, c, d, a, in[8]  + 0x455a14ed, 20);</span>
+<span class="lineNum">     233 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, a, b, c, d, in[13] + 0xa9e3e905, 5);</span>
+<span class="lineNum">     234 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, d, a, b, c, in[2]  + 0xfcefa3f8, 9);</span>
+<span class="lineNum">     235 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, c, d, a, b, in[7]  + 0x676f02d9, 14);</span>
+<span class="lineNum">     236 </span>                :<span class="lineCov">       2413 :     MD5STEP(F2, b, c, d, a, in[12] + 0x8d2a4c8a, 20);</span>
+<span class="lineNum">     237 </span>                :            : 
+<span class="lineNum">     238 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, a, b, c, d, in[5]  + 0xfffa3942, 4);</span>
+<span class="lineNum">     239 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, d, a, b, c, in[8]  + 0x8771f681, 11);</span>
+<span class="lineNum">     240 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, c, d, a, b, in[11] + 0x6d9d6122, 16);</span>
+<span class="lineNum">     241 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, b, c, d, a, in[14] + 0xfde5380c, 23);</span>
+<span class="lineNum">     242 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, a, b, c, d, in[1]  + 0xa4beea44, 4);</span>
+<span class="lineNum">     243 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, d, a, b, c, in[4]  + 0x4bdecfa9, 11);</span>
+<span class="lineNum">     244 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, c, d, a, b, in[7]  + 0xf6bb4b60, 16);</span>
+<span class="lineNum">     245 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, b, c, d, a, in[10] + 0xbebfbc70, 23);</span>
+<span class="lineNum">     246 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, a, b, c, d, in[13] + 0x289b7ec6, 4);</span>
+<span class="lineNum">     247 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, d, a, b, c, in[0]  + 0xeaa127fa, 11);</span>
+<span class="lineNum">     248 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, c, d, a, b, in[3]  + 0xd4ef3085, 16);</span>
+<span class="lineNum">     249 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, b, c, d, a, in[6]  + 0x04881d05, 23);</span>
+<span class="lineNum">     250 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, a, b, c, d, in[9]  + 0xd9d4d039, 4);</span>
+<span class="lineNum">     251 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, d, a, b, c, in[12] + 0xe6db99e5, 11);</span>
+<span class="lineNum">     252 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, c, d, a, b, in[15] + 0x1fa27cf8, 16);</span>
+<span class="lineNum">     253 </span>                :<span class="lineCov">       2413 :     MD5STEP(F3, b, c, d, a, in[2]  + 0xc4ac5665, 23);</span>
+<span class="lineNum">     254 </span>                :            : 
+<span class="lineNum">     255 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, a, b, c, d, in[0]  + 0xf4292244, 6);</span>
+<span class="lineNum">     256 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, d, a, b, c, in[7]  + 0x432aff97, 10);</span>
+<span class="lineNum">     257 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, c, d, a, b, in[14] + 0xab9423a7, 15);</span>
+<span class="lineNum">     258 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, b, c, d, a, in[5]  + 0xfc93a039, 21);</span>
+<span class="lineNum">     259 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, a, b, c, d, in[12] + 0x655b59c3, 6);</span>
+<span class="lineNum">     260 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, d, a, b, c, in[3]  + 0x8f0ccc92, 10);</span>
+<span class="lineNum">     261 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, c, d, a, b, in[10] + 0xffeff47d, 15);</span>
+<span class="lineNum">     262 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, b, c, d, a, in[1]  + 0x85845dd1, 21);</span>
+<span class="lineNum">     263 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, a, b, c, d, in[8]  + 0x6fa87e4f, 6);</span>
+<span class="lineNum">     264 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, d, a, b, c, in[15] + 0xfe2ce6e0, 10);</span>
+<span class="lineNum">     265 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, c, d, a, b, in[6]  + 0xa3014314, 15);</span>
+<span class="lineNum">     266 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, b, c, d, a, in[13] + 0x4e0811a1, 21);</span>
+<span class="lineNum">     267 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, a, b, c, d, in[4]  + 0xf7537e82, 6);</span>
+<span class="lineNum">     268 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, d, a, b, c, in[11] + 0xbd3af235, 10);</span>
+<span class="lineNum">     269 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, c, d, a, b, in[2]  + 0x2ad7d2bb, 15);</span>
+<span class="lineNum">     270 </span>                :<span class="lineCov">       2413 :     MD5STEP(F4, b, c, d, a, in[9]  + 0xeb86d391, 21);</span>
+<span class="lineNum">     271 </span>                :            : 
+<span class="lineNum">     272 </span>                :<span class="lineCov">       2413 :     buf[0] += a;</span>
+<span class="lineNum">     273 </span>                :<span class="lineCov">       2413 :     buf[1] += b;</span>
+<span class="lineNum">     274 </span>                :<span class="lineCov">       2413 :     buf[2] += c;</span>
+<span class="lineNum">     275 </span>                :<span class="lineCov">       2413 :     buf[3] += d;</span>
+<span class="lineNum">     276 </span>                :<span class="lineCov">       2413 : } </span>
+<span class="lineNum">     277 </span>                :            : 
+<span class="lineNum">     278 </span>                :            : /***EOF***/
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

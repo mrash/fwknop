@@ -1,0 +1,702 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - id:002084,src:002034,op:havoc,rep:2.lcov_info_final - lib/rijndael.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">lib</a> - rijndael.c<span style="font-size: 80%;"> (source / <a href="rijndael.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">id:002084,src:002034,op:havoc,rep:2.lcov_info_final</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">159</td>
+            <td class="headerCovTableEntry">166</td>
+            <td class="headerCovTableEntryHi">95.8 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2015-05-25</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntry">11</td>
+            <td class="headerCovTableEntryHi">100.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">103</td>
+            <td class="headerCovTableEntry">114</td>
+            <td class="headerCovTableEntryHi">90.4 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  *****************************************************************************
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * File:    rijndael.c
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Purpose: rijndael - An implementation of the Rijndael cipher.
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  * Copyright (C) 2000, 2001 Rafael R. Sevilla &lt;sevillar@team.ph.inter.net&gt;
+<span class="lineNum">       9 </span>                :            :  *
+<span class="lineNum">      10 </span>                :            :  * Currently maintained by brian d foy, &lt;bdfoy@cpan.org&gt;
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  *  License (GNU General Public License):
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  *  This program is free software; you can redistribute it and/or
+<span class="lineNum">      15 </span>                :            :  *  modify it under the terms of the GNU General Public License
+<span class="lineNum">      16 </span>                :            :  *  as published by the Free Software Foundation; either version 2
+<span class="lineNum">      17 </span>                :            :  *  of the License, or (at your option) any later version.
+<span class="lineNum">      18 </span>                :            :  *
+<span class="lineNum">      19 </span>                :            :  *  This program is distributed in the hope that it will be useful,
+<span class="lineNum">      20 </span>                :            :  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      21 </span>                :            :  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      22 </span>                :            :  *  GNU General Public License for more details.
+<span class="lineNum">      23 </span>                :            :  *
+<span class="lineNum">      24 </span>                :            :  *  You should have received a copy of the GNU General Public License
+<span class="lineNum">      25 </span>                :            :  *  along with this program; if not, write to the Free Software
+<span class="lineNum">      26 </span>                :            :  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+<span class="lineNum">      27 </span>                :            :  *  USA
+<span class="lineNum">      28 </span>                :            :  *
+<span class="lineNum">      29 </span>                :            :  *****************************************************************************
+<span class="lineNum">      30 </span>                :            : */
+<span class="lineNum">      31 </span>                :            : #include &quot;fko_common.h&quot;
+<span class="lineNum">      32 </span>                :            : #include &quot;rijndael.h&quot;
+<span class="lineNum">      33 </span>                :            : #include &lt;stdlib.h&gt;
+<span class="lineNum">      34 </span>                :            : #include &lt;string.h&gt;
+<span class="lineNum">      35 </span>                :            : #include &lt;stdio.h&gt;
+<span class="lineNum">      36 </span>                :            : 
+<span class="lineNum">      37 </span>                :            : /* These tables combine both the S-boxes and the mixcolumn transformation, so
+<span class="lineNum">      38 </span>                :            :    that we can perform a round's encryption or by means of four table lookups
+<span class="lineNum">      39 </span>                :            :    and four XOR's per column of state.  They were generated by the
+<span class="lineNum">      40 </span>                :            :    makertbls.pl script. */
+<span class="lineNum">      41 </span>                :            : uint32_t dtbl[] = {
+<span class="lineNum">      42 </span>                :            :     0xa56363c6, 0x847c7cf8, 0x997777ee, 0x8d7b7bf6,
+<span class="lineNum">      43 </span>                :            :     0x0df2f2ff, 0xbd6b6bd6, 0xb16f6fde, 0x54c5c591,
+<span class="lineNum">      44 </span>                :            :     0x50303060, 0x03010102, 0xa96767ce, 0x7d2b2b56,
+<span class="lineNum">      45 </span>                :            :     0x19fefee7, 0x62d7d7b5, 0xe6abab4d, 0x9a7676ec,
+<span class="lineNum">      46 </span>                :            :     0x45caca8f, 0x9d82821f, 0x40c9c989, 0x877d7dfa,
+<span class="lineNum">      47 </span>                :            :     0x15fafaef, 0xeb5959b2, 0xc947478e, 0x0bf0f0fb,
+<span class="lineNum">      48 </span>                :            :     0xecadad41, 0x67d4d4b3, 0xfda2a25f, 0xeaafaf45,
+<span class="lineNum">      49 </span>                :            :     0xbf9c9c23, 0xf7a4a453, 0x967272e4, 0x5bc0c09b,
+<span class="lineNum">      50 </span>                :            :     0xc2b7b775, 0x1cfdfde1, 0xae93933d, 0x6a26264c,
+<span class="lineNum">      51 </span>                :            :     0x5a36366c, 0x413f3f7e, 0x02f7f7f5, 0x4fcccc83,
+<span class="lineNum">      52 </span>                :            :     0x5c343468, 0xf4a5a551, 0x34e5e5d1, 0x08f1f1f9,
+<span class="lineNum">      53 </span>                :            :     0x937171e2, 0x73d8d8ab, 0x53313162, 0x3f15152a,
+<span class="lineNum">      54 </span>                :            :     0x0c040408, 0x52c7c795, 0x65232346, 0x5ec3c39d,
+<span class="lineNum">      55 </span>                :            :     0x28181830, 0xa1969637, 0x0f05050a, 0xb59a9a2f,
+<span class="lineNum">      56 </span>                :            :     0x0907070e, 0x36121224, 0x9b80801b, 0x3de2e2df,
+<span class="lineNum">      57 </span>                :            :     0x26ebebcd, 0x6927274e, 0xcdb2b27f, 0x9f7575ea,
+<span class="lineNum">      58 </span>                :            :     0x1b090912, 0x9e83831d, 0x742c2c58, 0x2e1a1a34,
+<span class="lineNum">      59 </span>                :            :     0x2d1b1b36, 0xb26e6edc, 0xee5a5ab4, 0xfba0a05b,
+<span class="lineNum">      60 </span>                :            :     0xf65252a4, 0x4d3b3b76, 0x61d6d6b7, 0xceb3b37d,
+<span class="lineNum">      61 </span>                :            :     0x7b292952, 0x3ee3e3dd, 0x712f2f5e, 0x97848413,
+<span class="lineNum">      62 </span>                :            :     0xf55353a6, 0x68d1d1b9, 0x00000000, 0x2cededc1,
+<span class="lineNum">      63 </span>                :            :     0x60202040, 0x1ffcfce3, 0xc8b1b179, 0xed5b5bb6,
+<span class="lineNum">      64 </span>                :            :     0xbe6a6ad4, 0x46cbcb8d, 0xd9bebe67, 0x4b393972,
+<span class="lineNum">      65 </span>                :            :     0xde4a4a94, 0xd44c4c98, 0xe85858b0, 0x4acfcf85,
+<span class="lineNum">      66 </span>                :            :     0x6bd0d0bb, 0x2aefefc5, 0xe5aaaa4f, 0x16fbfbed,
+<span class="lineNum">      67 </span>                :            :     0xc5434386, 0xd74d4d9a, 0x55333366, 0x94858511,
+<span class="lineNum">      68 </span>                :            :     0xcf45458a, 0x10f9f9e9, 0x06020204, 0x817f7ffe,
+<span class="lineNum">      69 </span>                :            :     0xf05050a0, 0x443c3c78, 0xba9f9f25, 0xe3a8a84b,
+<span class="lineNum">      70 </span>                :            :     0xf35151a2, 0xfea3a35d, 0xc0404080, 0x8a8f8f05,
+<span class="lineNum">      71 </span>                :            :     0xad92923f, 0xbc9d9d21, 0x48383870, 0x04f5f5f1,
+<span class="lineNum">      72 </span>                :            :     0xdfbcbc63, 0xc1b6b677, 0x75dadaaf, 0x63212142,
+<span class="lineNum">      73 </span>                :            :     0x30101020, 0x1affffe5, 0x0ef3f3fd, 0x6dd2d2bf,
+<span class="lineNum">      74 </span>                :            :     0x4ccdcd81, 0x140c0c18, 0x35131326, 0x2fececc3,
+<span class="lineNum">      75 </span>                :            :     0xe15f5fbe, 0xa2979735, 0xcc444488, 0x3917172e,
+<span class="lineNum">      76 </span>                :            :     0x57c4c493, 0xf2a7a755, 0x827e7efc, 0x473d3d7a,
+<span class="lineNum">      77 </span>                :            :     0xac6464c8, 0xe75d5dba, 0x2b191932, 0x957373e6,
+<span class="lineNum">      78 </span>                :            :     0xa06060c0, 0x98818119, 0xd14f4f9e, 0x7fdcdca3,
+<span class="lineNum">      79 </span>                :            :     0x66222244, 0x7e2a2a54, 0xab90903b, 0x8388880b,
+<span class="lineNum">      80 </span>                :            :     0xca46468c, 0x29eeeec7, 0xd3b8b86b, 0x3c141428,
+<span class="lineNum">      81 </span>                :            :     0x79dedea7, 0xe25e5ebc, 0x1d0b0b16, 0x76dbdbad,
+<span class="lineNum">      82 </span>                :            :     0x3be0e0db, 0x56323264, 0x4e3a3a74, 0x1e0a0a14,
+<span class="lineNum">      83 </span>                :            :     0xdb494992, 0x0a06060c, 0x6c242448, 0xe45c5cb8,
+<span class="lineNum">      84 </span>                :            :     0x5dc2c29f, 0x6ed3d3bd, 0xefacac43, 0xa66262c4,
+<span class="lineNum">      85 </span>                :            :     0xa8919139, 0xa4959531, 0x37e4e4d3, 0x8b7979f2,
+<span class="lineNum">      86 </span>                :            :     0x32e7e7d5, 0x43c8c88b, 0x5937376e, 0xb76d6dda,
+<span class="lineNum">      87 </span>                :            :     0x8c8d8d01, 0x64d5d5b1, 0xd24e4e9c, 0xe0a9a949,
+<span class="lineNum">      88 </span>                :            :     0xb46c6cd8, 0xfa5656ac, 0x07f4f4f3, 0x25eaeacf,
+<span class="lineNum">      89 </span>                :            :     0xaf6565ca, 0x8e7a7af4, 0xe9aeae47, 0x18080810,
+<span class="lineNum">      90 </span>                :            :     0xd5baba6f, 0x887878f0, 0x6f25254a, 0x722e2e5c,
+<span class="lineNum">      91 </span>                :            :     0x241c1c38, 0xf1a6a657, 0xc7b4b473, 0x51c6c697,
+<span class="lineNum">      92 </span>                :            :     0x23e8e8cb, 0x7cdddda1, 0x9c7474e8, 0x211f1f3e,
+<span class="lineNum">      93 </span>                :            :     0xdd4b4b96, 0xdcbdbd61, 0x868b8b0d, 0x858a8a0f,
+<span class="lineNum">      94 </span>                :            :     0x907070e0, 0x423e3e7c, 0xc4b5b571, 0xaa6666cc,
+<span class="lineNum">      95 </span>                :            :     0xd8484890, 0x05030306, 0x01f6f6f7, 0x120e0e1c,
+<span class="lineNum">      96 </span>                :            :     0xa36161c2, 0x5f35356a, 0xf95757ae, 0xd0b9b969,
+<span class="lineNum">      97 </span>                :            :     0x91868617, 0x58c1c199, 0x271d1d3a, 0xb99e9e27,
+<span class="lineNum">      98 </span>                :            :     0x38e1e1d9, 0x13f8f8eb, 0xb398982b, 0x33111122,
+<span class="lineNum">      99 </span>                :            :     0xbb6969d2, 0x70d9d9a9, 0x898e8e07, 0xa7949433,
+<span class="lineNum">     100 </span>                :            :     0xb69b9b2d, 0x221e1e3c, 0x92878715, 0x20e9e9c9,
+<span class="lineNum">     101 </span>                :            :     0x49cece87, 0xff5555aa, 0x78282850, 0x7adfdfa5,
+<span class="lineNum">     102 </span>                :            :     0x8f8c8c03, 0xf8a1a159, 0x80898909, 0x170d0d1a,
+<span class="lineNum">     103 </span>                :            :     0xdabfbf65, 0x31e6e6d7, 0xc6424284, 0xb86868d0,
+<span class="lineNum">     104 </span>                :            :     0xc3414182, 0xb0999929, 0x772d2d5a, 0x110f0f1e,
+<span class="lineNum">     105 </span>                :            :     0xcbb0b07b, 0xfc5454a8, 0xd6bbbb6d, 0x3a16162c,
+<span class="lineNum">     106 </span>                :            : };
+<span class="lineNum">     107 </span>                :            : 
+<span class="lineNum">     108 </span>                :            : uint32_t itbl[] = {
+<span class="lineNum">     109 </span>                :            :     0x50a7f451, 0x5365417e, 0xc3a4171a, 0x965e273a,
+<span class="lineNum">     110 </span>                :            :     0xcb6bab3b, 0xf1459d1f, 0xab58faac, 0x9303e34b,
+<span class="lineNum">     111 </span>                :            :     0x55fa3020, 0xf66d76ad, 0x9176cc88, 0x254c02f5,
+<span class="lineNum">     112 </span>                :            :     0xfcd7e54f, 0xd7cb2ac5, 0x80443526, 0x8fa362b5,
+<span class="lineNum">     113 </span>                :            :     0x495ab1de, 0x671bba25, 0x980eea45, 0xe1c0fe5d,
+<span class="lineNum">     114 </span>                :            :     0x02752fc3, 0x12f04c81, 0xa397468d, 0xc6f9d36b,
+<span class="lineNum">     115 </span>                :            :     0xe75f8f03, 0x959c9215, 0xeb7a6dbf, 0xda595295,
+<span class="lineNum">     116 </span>                :            :     0x2d83bed4, 0xd3217458, 0x2969e049, 0x44c8c98e,
+<span class="lineNum">     117 </span>                :            :     0x6a89c275, 0x78798ef4, 0x6b3e5899, 0xdd71b927,
+<span class="lineNum">     118 </span>                :            :     0xb64fe1be, 0x17ad88f0, 0x66ac20c9, 0xb43ace7d,
+<span class="lineNum">     119 </span>                :            :     0x184adf63, 0x82311ae5, 0x60335197, 0x457f5362,
+<span class="lineNum">     120 </span>                :            :     0xe07764b1, 0x84ae6bbb, 0x1ca081fe, 0x942b08f9,
+<span class="lineNum">     121 </span>                :            :     0x58684870, 0x19fd458f, 0x876cde94, 0xb7f87b52,
+<span class="lineNum">     122 </span>                :            :     0x23d373ab, 0xe2024b72, 0x578f1fe3, 0x2aab5566,
+<span class="lineNum">     123 </span>                :            :     0x0728ebb2, 0x03c2b52f, 0x9a7bc586, 0xa50837d3,
+<span class="lineNum">     124 </span>                :            :     0xf2872830, 0xb2a5bf23, 0xba6a0302, 0x5c8216ed,
+<span class="lineNum">     125 </span>                :            :     0x2b1ccf8a, 0x92b479a7, 0xf0f207f3, 0xa1e2694e,
+<span class="lineNum">     126 </span>                :            :     0xcdf4da65, 0xd5be0506, 0x1f6234d1, 0x8afea6c4,
+<span class="lineNum">     127 </span>                :            :     0x9d532e34, 0xa055f3a2, 0x32e18a05, 0x75ebf6a4,
+<span class="lineNum">     128 </span>                :            :     0x39ec830b, 0xaaef6040, 0x069f715e, 0x51106ebd,
+<span class="lineNum">     129 </span>                :            :     0xf98a213e, 0x3d06dd96, 0xae053edd, 0x46bde64d,
+<span class="lineNum">     130 </span>                :            :     0xb58d5491, 0x055dc471, 0x6fd40604, 0xff155060,
+<span class="lineNum">     131 </span>                :            :     0x24fb9819, 0x97e9bdd6, 0xcc434089, 0x779ed967,
+<span class="lineNum">     132 </span>                :            :     0xbd42e8b0, 0x888b8907, 0x385b19e7, 0xdbeec879,
+<span class="lineNum">     133 </span>                :            :     0x470a7ca1, 0xe90f427c, 0xc91e84f8, 0x00000000,
+<span class="lineNum">     134 </span>                :            :     0x83868009, 0x48ed2b32, 0xac70111e, 0x4e725a6c,
+<span class="lineNum">     135 </span>                :            :     0xfbff0efd, 0x5638850f, 0x1ed5ae3d, 0x27392d36,
+<span class="lineNum">     136 </span>                :            :     0x64d90f0a, 0x21a65c68, 0xd1545b9b, 0x3a2e3624,
+<span class="lineNum">     137 </span>                :            :     0xb1670a0c, 0x0fe75793, 0xd296eeb4, 0x9e919b1b,
+<span class="lineNum">     138 </span>                :            :     0x4fc5c080, 0xa220dc61, 0x694b775a, 0x161a121c,
+<span class="lineNum">     139 </span>                :            :     0x0aba93e2, 0xe52aa0c0, 0x43e0223c, 0x1d171b12,
+<span class="lineNum">     140 </span>                :            :     0x0b0d090e, 0xadc78bf2, 0xb9a8b62d, 0xc8a91e14,
+<span class="lineNum">     141 </span>                :            :     0x8519f157, 0x4c0775af, 0xbbdd99ee, 0xfd607fa3,
+<span class="lineNum">     142 </span>                :            :     0x9f2601f7, 0xbcf5725c, 0xc53b6644, 0x347efb5b,
+<span class="lineNum">     143 </span>                :            :     0x7629438b, 0xdcc623cb, 0x68fcedb6, 0x63f1e4b8,
+<span class="lineNum">     144 </span>                :            :     0xcadc31d7, 0x10856342, 0x40229713, 0x2011c684,
+<span class="lineNum">     145 </span>                :            :     0x7d244a85, 0xf83dbbd2, 0x1132f9ae, 0x6da129c7,
+<span class="lineNum">     146 </span>                :            :     0x4b2f9e1d, 0xf330b2dc, 0xec52860d, 0xd0e3c177,
+<span class="lineNum">     147 </span>                :            :     0x6c16b32b, 0x99b970a9, 0xfa489411, 0x2264e947,
+<span class="lineNum">     148 </span>                :            :     0xc48cfca8, 0x1a3ff0a0, 0xd82c7d56, 0xef903322,
+<span class="lineNum">     149 </span>                :            :     0xc74e4987, 0xc1d138d9, 0xfea2ca8c, 0x360bd498,
+<span class="lineNum">     150 </span>                :            :     0xcf81f5a6, 0x28de7aa5, 0x268eb7da, 0xa4bfad3f,
+<span class="lineNum">     151 </span>                :            :     0xe49d3a2c, 0x0d927850, 0x9bcc5f6a, 0x62467e54,
+<span class="lineNum">     152 </span>                :            :     0xc2138df6, 0xe8b8d890, 0x5ef7392e, 0xf5afc382,
+<span class="lineNum">     153 </span>                :            :     0xbe805d9f, 0x7c93d069, 0xa92dd56f, 0xb31225cf,
+<span class="lineNum">     154 </span>                :            :     0x3b99acc8, 0xa77d1810, 0x6e639ce8, 0x7bbb3bdb,
+<span class="lineNum">     155 </span>                :            :     0x097826cd, 0xf418596e, 0x01b79aec, 0xa89a4f83,
+<span class="lineNum">     156 </span>                :            :     0x656e95e6, 0x7ee6ffaa, 0x08cfbc21, 0xe6e815ef,
+<span class="lineNum">     157 </span>                :            :     0xd99be7ba, 0xce366f4a, 0xd4099fea, 0xd67cb029,
+<span class="lineNum">     158 </span>                :            :     0xafb2a431, 0x31233f2a, 0x3094a5c6, 0xc066a235,
+<span class="lineNum">     159 </span>                :            :     0x37bc4e74, 0xa6ca82fc, 0xb0d090e0, 0x15d8a733,
+<span class="lineNum">     160 </span>                :            :     0x4a9804f1, 0xf7daec41, 0x0e50cd7f, 0x2ff69117,
+<span class="lineNum">     161 </span>                :            :     0x8dd64d76, 0x4db0ef43, 0x544daacc, 0xdf0496e4,
+<span class="lineNum">     162 </span>                :            :     0xe3b5d19e, 0x1b886a4c, 0xb81f2cc1, 0x7f516546,
+<span class="lineNum">     163 </span>                :            :     0x04ea5e9d, 0x5d358c01, 0x737487fa, 0x2e410bfb,
+<span class="lineNum">     164 </span>                :            :     0x5a1d67b3, 0x52d2db92, 0x335610e9, 0x1347d66d,
+<span class="lineNum">     165 </span>                :            :     0x8c61d79a, 0x7a0ca137, 0x8e14f859, 0x893c13eb,
+<span class="lineNum">     166 </span>                :            :     0xee27a9ce, 0x35c961b7, 0xede51ce1, 0x3cb1477a,
+<span class="lineNum">     167 </span>                :            :     0x59dfd29c, 0x3f73f255, 0x79ce1418, 0xbf37c773,
+<span class="lineNum">     168 </span>                :            :     0xeacdf753, 0x5baafd5f, 0x146f3ddf, 0x86db4478,
+<span class="lineNum">     169 </span>                :            :     0x81f3afca, 0x3ec468b9, 0x2c342438, 0x5f40a3c2,
+<span class="lineNum">     170 </span>                :            :     0x72c31d16, 0x0c25e2bc, 0x8b493c28, 0x41950dff,
+<span class="lineNum">     171 </span>                :            :     0x7101a839, 0xdeb30c08, 0x9ce4b4d8, 0x90c15664,
+<span class="lineNum">     172 </span>                :            :     0x6184cb7b, 0x70b632d5, 0x745c6c48, 0x4257b8d0,
+<span class="lineNum">     173 </span>                :            : };
+<span class="lineNum">     174 </span>                :            : 
+<span class="lineNum">     175 </span>                :            : 
+<span class="lineNum">     176 </span>                :            : /* Needed only for the key schedule and for final rounds */
+<span class="lineNum">     177 </span>                :            : uint8_t sbox[256] = {
+<span class="lineNum">     178 </span>                :            :     99, 124, 119, 123, 242, 107, 111, 197,  48,   1, 103,  43, 254, 215, 171,
+<span class="lineNum">     179 </span>                :            :     118, 202, 130, 201, 125, 250,  89,  71, 240, 173, 212, 162, 175, 156, 164,
+<span class="lineNum">     180 </span>                :            :     114, 192, 183, 253, 147,  38,  54,  63, 247, 204,  52, 165, 229, 241, 113,
+<span class="lineNum">     181 </span>                :            :     216,  49,  21,  4, 199,  35, 195,  24, 150,   5, 154,   7,  18, 128, 226,
+<span class="lineNum">     182 </span>                :            :     235,  39, 178, 117,  9, 131,  44,  26,  27, 110,  90, 160,  82,  59, 214,
+<span class="lineNum">     183 </span>                :            :     179,  41, 227,  47, 132, 83, 209,   0, 237,  32, 252, 177,  91, 106, 203,
+<span class="lineNum">     184 </span>                :            :     190,  57,  74,  76,  88, 207, 208, 239, 170, 251,  67,  77,  51, 133,  69,
+<span class="lineNum">     185 </span>                :            :     249,   2, 127,  80,  60, 159, 168, 81, 163,  64, 143, 146, 157,  56, 245,
+<span class="lineNum">     186 </span>                :            :     188, 182, 218,  33,  16, 255, 243, 210, 205,  12,  19, 236,  95, 151,  68,
+<span class="lineNum">     187 </span>                :            :     23, 196, 167, 126,  61, 100,  93,  25, 115, 96, 129,  79, 220,  34,  42,
+<span class="lineNum">     188 </span>                :            :     144, 136,  70, 238, 184,  20, 222,  94,  11, 219, 224,  50,  58,  10,  73,
+<span class="lineNum">     189 </span>                :            :     6,  36,  92, 194, 211, 172,  98, 145, 149, 228, 121, 231, 200,  55, 109,
+<span class="lineNum">     190 </span>                :            :     141, 213,  78, 169, 108,  86, 244, 234, 101, 122, 174,   8, 186, 120,  37,
+<span class="lineNum">     191 </span>                :            :     46,  28, 166, 180, 198, 232, 221, 116,  31,  75, 189, 139, 138, 112,  62,
+<span class="lineNum">     192 </span>                :            :     181, 102,  72,   3, 246,  14,  97,  53,  87, 185, 134, 193,  29, 158, 225,
+<span class="lineNum">     193 </span>                :            :     248, 152,  17, 105, 217, 142, 148, 155,  30, 135, 233, 206,  85,  40, 223,
+<span class="lineNum">     194 </span>                :            :     140, 161, 137,  13, 191, 230,  66, 104,  65, 153,  45,  15, 176,  84, 187,
+<span class="lineNum">     195 </span>                :            :     22, 
+<span class="lineNum">     196 </span>                :            : };
+<span class="lineNum">     197 </span>                :            : 
+<span class="lineNum">     198 </span>                :            : uint8_t isbox[256] = {
+<span class="lineNum">     199 </span>                :            :     82,   9, 106, 213,  48,  54, 165,  56, 191,  64, 163, 158, 129, 243, 215,
+<span class="lineNum">     200 </span>                :            :     251, 124, 227,  57, 130, 155,  47, 255, 135,  52, 142,  67,  68, 196, 222,
+<span class="lineNum">     201 </span>                :            :     233, 203, 84, 123, 148,  50, 166, 194,  35,  61, 238,  76, 149,  11,  66,
+<span class="lineNum">     202 </span>                :            :     250, 195,  78,  8,  46, 161, 102,  40, 217,  36, 178, 118,  91, 162,  73,
+<span class="lineNum">     203 </span>                :            :     109, 139, 209,  37, 114, 248, 246, 100, 134, 104, 152,  22, 212, 164,  92,
+<span class="lineNum">     204 </span>                :            :     204,  93, 101, 182, 146, 108, 112,  72,  80, 253, 237, 185, 218,  94,  21,
+<span class="lineNum">     205 </span>                :            :     70,  87, 167, 141, 157, 132, 144, 216, 171,   0, 140, 188, 211,  10, 247,
+<span class="lineNum">     206 </span>                :            :     228,  88,   5, 184, 179,  69,   6, 208,  44,  30, 143, 202,  63,  15,   2,
+<span class="lineNum">     207 </span>                :            :     193, 175, 189,   3,   1,  19, 138, 107,  58, 145,  17,  65,  79, 103, 220,
+<span class="lineNum">     208 </span>                :            :     234, 151, 242, 207, 206, 240, 180, 230, 115, 150, 172, 116,  34, 231, 173,
+<span class="lineNum">     209 </span>                :            :     53, 133, 226, 249,  55, 232,  28, 117, 223, 110,  71, 241,  26, 113,  29,
+<span class="lineNum">     210 </span>                :            :     41, 197, 137, 111, 183,  98,  14, 170,  24, 190,  27, 252,  86,  62,  75,
+<span class="lineNum">     211 </span>                :            :     198, 210, 121,  32, 154, 219, 192, 254, 120, 205,  90, 244,  31, 221, 168,
+<span class="lineNum">     212 </span>                :            :     51, 136,   7, 199,  49, 177,  18,  16,  89,  39, 128, 236,  95,  96,  81,
+<span class="lineNum">     213 </span>                :            :     127, 169,  25, 181,  74,  13,  45, 229, 122, 159, 147, 201, 156, 239, 160,
+<span class="lineNum">     214 </span>                :            :     224,  59,  77, 174,  42, 245, 176, 200, 235, 187,  60, 131,  83, 153,  97,
+<span class="lineNum">     215 </span>                :            :     23,  43,   4, 126, 186, 119, 214,  38, 225, 105,  20,  99,  85,  33,  12,
+<span class="lineNum">     216 </span>                :            :     125, 
+<span class="lineNum">     217 </span>                :            : };
+<span class="lineNum">     218 </span>                :            : 
+<span class="lineNum">     219 </span>                :            : /* Used only by the key schedule */
+<span class="lineNum">     220 </span>                :            : uint8_t Logtable[256] = {
+<span class="lineNum">     221 </span>                :            :     0,   0,  25,   1,  50,   2,  26, 198,  75, 199,  27, 104,  51, 238, 223,  3,
+<span class="lineNum">     222 </span>                :            :     100,   4, 224,  14,  52, 141, 129, 239,  76, 113,   8, 200, 248, 105,  28,
+<span class="lineNum">     223 </span>                :            :     193, 125, 194,  29, 181, 249, 185,  39, 106,  77, 228, 166, 114, 154, 201,
+<span class="lineNum">     224 </span>                :            :     9, 120, 101,  47, 138,   5,  33,  15, 225,  36,  18, 240, 130,  69,  53,
+<span class="lineNum">     225 </span>                :            :     147, 218, 142, 150, 143, 219, 189,  54, 208, 206, 148,  19,  92, 210, 241,
+<span class="lineNum">     226 </span>                :            :     64,  70, 131,  56, 102, 221, 253,  48, 191,   6, 139,  98, 179,  37, 226,
+<span class="lineNum">     227 </span>                :            :     152,  34, 136, 145,  16, 126, 110,  72, 195, 163, 182,  30,  66,  58, 107,
+<span class="lineNum">     228 </span>                :            :     40,  84, 250, 133,  61, 186, 43, 121,  10,  21, 155, 159,  94, 202,  78,
+<span class="lineNum">     229 </span>                :            :     212, 172, 229, 243, 115, 167,  87, 175,  88, 168,  80, 244, 234, 214, 116,
+<span class="lineNum">     230 </span>                :            :     79, 174, 233, 213, 231, 230, 173, 232, 44, 215, 117, 122, 235,  22,  11,
+<span class="lineNum">     231 </span>                :            :     245,  89, 203,  95, 176, 156, 169,  81, 160, 127,  12, 246, 111,  23, 196,
+<span class="lineNum">     232 </span>                :            :     73, 236, 216,  67,  31,  45, 164, 118, 123, 183, 204, 187,  62,  90, 251,
+<span class="lineNum">     233 </span>                :            :     96, 177, 134,  59,  82, 161, 108, 170,  85,  41, 157, 151, 178, 135, 144,
+<span class="lineNum">     234 </span>                :            :     97, 190, 220, 252, 188, 149, 207, 205,  55,  63,  91, 209, 83,  57, 132,
+<span class="lineNum">     235 </span>                :            :     60,  65, 162, 109,  71,  20,  42, 158,  93,  86, 242, 211, 171, 68,  17,
+<span class="lineNum">     236 </span>                :            :     146, 217,  35,  32,  46, 137, 180, 124, 184,  38, 119, 153, 227, 165, 103,
+<span class="lineNum">     237 </span>                :            :     74, 237, 222, 197,  49, 254,  24,  13,  99, 140, 128, 192, 247, 112,   7,
+<span class="lineNum">     238 </span>                :            : };
+<span class="lineNum">     239 </span>                :            : 
+<span class="lineNum">     240 </span>                :            : uint8_t Alogtable[256] = {
+<span class="lineNum">     241 </span>                :            :     1,   3,   5,  15,  17,  51,  85, 255,  26,  46, 114, 150, 161, 248,  19,
+<span class="lineNum">     242 </span>                :            :     53, 95, 225,  56,  72, 216, 115, 149, 164, 247,   2,   6,  10,  30,  34,
+<span class="lineNum">     243 </span>                :            :     102, 170, 229,  52,  92, 228,  55,  89, 235,  38, 106, 190, 217, 112, 144,
+<span class="lineNum">     244 </span>                :            :     171, 230,  49,  83, 245,   4,  12,  20,  60,  68, 204,  79, 209, 104, 184,
+<span class="lineNum">     245 </span>                :            :     211, 110, 178, 205,  76, 212, 103, 169, 224,  59,  77, 215,  98, 166, 241,
+<span class="lineNum">     246 </span>                :            :     8,  24,  40, 120, 136, 131, 158, 185, 208, 107, 189, 220, 127, 129, 152,
+<span class="lineNum">     247 </span>                :            :     179, 206,  73, 219, 118, 154, 181, 196,  87, 249,  16,  48,  80, 240,  11,
+<span class="lineNum">     248 </span>                :            :     29,  39, 105, 187, 214,  97, 163, 254,  25,  43, 125, 135, 146, 173, 236,
+<span class="lineNum">     249 </span>                :            :     47, 113, 147, 174, 233,  32,  96, 160, 251,  22,  58,  78, 210, 109, 183,
+<span class="lineNum">     250 </span>                :            :     194,  93, 231,  50,  86, 250,  21,  63,  65, 195,  94, 226,  61,  71, 201,
+<span class="lineNum">     251 </span>                :            :     64, 192,  91, 237,  44, 116, 156, 191, 218, 117, 159, 186, 213, 100, 172,
+<span class="lineNum">     252 </span>                :            :     239,  42, 126, 130, 157, 188, 223, 122, 142, 137, 128, 155, 182, 193,  88,
+<span class="lineNum">     253 </span>                :            :     232,  35, 101, 175, 234,  37, 111, 177, 200,  67, 197,  84, 252,  31,  33,
+<span class="lineNum">     254 </span>                :            :     99, 165, 244,   7,   9,  27,  45, 119, 153, 176, 203,  70, 202,  69, 207,
+<span class="lineNum">     255 </span>                :            :     74, 222, 121, 139, 134, 145, 168, 227,  62,  66, 198,  81, 243,  14,  18,
+<span class="lineNum">     256 </span>                :            :     54,  90, 238,  41, 123, 141, 140, 143, 138, 133, 148, 167, 242,  13,  23,
+<span class="lineNum">     257 </span>                :            :     57,  75, 221, 124, 132, 151, 162, 253,  28,  36, 108, 180, 199,  82, 246, 1,
+<span class="lineNum">     258 </span>                :            : };
+<span class="lineNum">     259 </span>                :            : 
+<span class="lineNum">     260 </span>                :            : #define ROTBYTE(x) (((x) &gt;&gt; 8) | (((x) &amp; 0xff) &lt;&lt; 24))
+<span class="lineNum">     261 </span>                :            : #define ROTRBYTE(x) (((x) &lt;&lt; 8) | (((x) &gt;&gt; 24) &amp; 0xff))
+<span class="lineNum">     262 </span>                :            : #define SUBBYTE(x, box) (((box)[((x) &amp; 0xff)]) | \
+<span class="lineNum">     263 </span>                :            :         ((box)[(((x) &gt;&gt; 8) &amp; 0xff)] &lt;&lt; 8) | \
+<span class="lineNum">     264 </span>                :            :         ((box)[(((x) &gt;&gt; 16) &amp; 0xff)] &lt;&lt; 16) | \
+<span class="lineNum">     265 </span>                :            :         ((box)[(((x) &gt;&gt; 24) &amp; 0xff)] &lt;&lt; 24))
+<a name="266"><span class="lineNum">     266 </span>                :            : </a>
+<span class="lineNum">     267 </span>                :            : static uint8_t
+<span class="lineNum">     268 </span>                :<span class="lineCov">       5621 : xtime(uint8_t a)</span>
+<span class="lineNum">     269 </span>                :            : {
+<span class="lineNum">     270 </span>                :            :     uint8_t b;
+<span class="lineNum">     271 </span>                :            : 
+<span class="lineNum">     272 </span>        [<span class="branchCov" title="Branch 0 was taken 5621 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">       5621 :     b = (a &amp; 0x80) ? 0x1b : 0;</span>
+<span class="lineNum">     273 </span>                :<span class="lineCov">       5621 :     a&lt;&lt;=1;</span>
+<span class="lineNum">     274 </span>                :<span class="lineCov">       5621 :     a^=b;</span>
+<span class="lineNum">     275 </span>                :<span class="lineCov">       5621 :     return(a);</span>
+<span class="lineNum">     276 </span>                :            : }
+<a name="277"><span class="lineNum">     277 </span>                :            : </a>
+<span class="lineNum">     278 </span>                :            : static uint8_t
+<span class="lineNum">     279 </span>                :<span class="lineCov">     668096 : mul(uint8_t a, uint8_t b)</span>
+<span class="lineNum">     280 </span>                :            : {
+<span class="lineNum">     281 </span>        [<span class="branchCov" title="Branch 0 was taken 665900 times"> + </span><span class="branchCov" title="Branch 1 was taken 2196 times"> + </span>]:<span class="lineCov">     668096 :     if (a &amp;&amp; b) return Alogtable[(Logtable[a] + Logtable[b])%255];</span>
+<span class="lineNum">     282 </span>                :            :     else return 0;
+<span class="lineNum">     283 </span>                :            : }
+<a name="284"><span class="lineNum">     284 </span>                :            : </a>
+<span class="lineNum">     285 </span>                :            : static void
+<span class="lineNum">     286 </span>                :<span class="lineCov">      10439 : inv_mix_column(uint32_t *a, uint32_t *b)</span>
+<span class="lineNum">     287 </span>                :            : {
+<span class="lineNum">     288 </span>                :            :     uint8_t c[4][4];
+<span class="lineNum">     289 </span>                :            :     int i, j;
+<span class="lineNum">     290 </span>                :            : 
+<span class="lineNum">     291 </span>        [<span class="branchCov" title="Branch 0 was taken 41756 times"> + </span><span class="branchCov" title="Branch 1 was taken 10439 times"> + </span>]:<span class="lineCov">      52195 :     for(j = 0; j &lt; 4; j++) {</span>
+<span class="lineNum">     292 </span>        [<span class="branchCov" title="Branch 0 was taken 167024 times"> + </span><span class="branchCov" title="Branch 1 was taken 41756 times"> + </span>]:<span class="lineCov">     208780 :         for(i = 0; i &lt; 4; i++) {</span>
+<span class="lineNum">     293 </span>                :<span class="lineCov">     167024 :             c[j][i] = mul(0xe, (a[j] &gt;&gt; i*8) &amp; 0xff)</span>
+<span class="lineNum">     294 </span>                :<span class="lineCov">     167024 :                 ^ mul(0xb, (a[j] &gt;&gt; ((i+1)%4)*8) &amp; 0xff)</span>
+<span class="lineNum">     295 </span>                :<span class="lineCov">     167024 :                 ^ mul(0xd, (a[j] &gt;&gt; ((i+2)%4)*8) &amp; 0xff)</span>
+<span class="lineNum">     296 </span>                :<span class="lineCov">     167024 :                 ^ mul(0x9, (a[j] &gt;&gt; ((i+3)%4)*8) &amp; 0xff);</span>
+<span class="lineNum">     297 </span>                :            :         }
+<span class="lineNum">     298 </span>                :            :     }
+<span class="lineNum">     299 </span>        [<span class="branchCov" title="Branch 0 was taken 41756 times"> + </span><span class="branchCov" title="Branch 1 was taken 10439 times"> + </span>]:<span class="lineCov">      52195 :     for(i = 0; i &lt; 4; i++) {</span>
+<span class="lineNum">     300 </span>                :<span class="lineCov">      41756 :         b[i] = 0;</span>
+<span class="lineNum">     301 </span>        [<span class="branchCov" title="Branch 0 was taken 167024 times"> + </span><span class="branchCov" title="Branch 1 was taken 41756 times"> + </span>]:<span class="lineCov">     208780 :         for(j = 0; j &lt; 4; j++)</span>
+<span class="lineNum">     302 </span>                :<span class="lineCov">     167024 :             b[i] |= c[i][j] &lt;&lt; (j*8);</span>
+<span class="lineNum">     303 </span>                :            :     }
+<span class="lineNum">     304 </span>                :<span class="lineCov">      10439 : }</span>
+<a name="305"><span class="lineNum">     305 </span>                :            : </a>
+<span class="lineNum">     306 </span>                :            : void
+<span class="lineNum">     307 </span>                :<span class="lineCov">        803 : rijndael_setup(RIJNDAEL_context *ctx, const size_t keysize, const uint8_t *key)</span>
+<span class="lineNum">     308 </span>                :            : {
+<span class="lineNum">     309 </span>                :            :     int nk, nr, i, lastkey;
+<span class="lineNum">     310 </span>                :            :     uint32_t temp, rcon;
+<span class="lineNum">     311 </span>                :            : 
+<span class="lineNum">     312 </span>                :            :     /* Truncate keysizes to the valid key sizes provided by Rijndael */
+<span class="lineNum">     313 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 803 times"> + </span>]:<span class="lineCov">        803 :     if (keysize &gt;= RIJNDAEL_MAX_KEYSIZE) {</span>
+<span class="lineNum">     314 </span>                :            :         nk = 8;
+<span class="lineNum">     315 </span>                :            :         nr = 14;
+<span class="lineNum">     316 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     } else if (keysize &gt;= 24) {</span>
+<span class="lineNum">     317 </span>                :            :         nk = 6;
+<span class="lineNum">     318 </span>                :            :         nr = 12;
+<span class="lineNum">     319 </span>                :            :     } else {                    /* must be 16 or more */
+<span class="lineNum">     320 </span>                :<span class="lineNoCov">          0 :         nk = 4;</span>
+<span class="lineNum">     321 </span>                :<span class="lineNoCov">          0 :         nr = 10;</span>
+<span class="lineNum">     322 </span>                :            :     }
+<span class="lineNum">     323 </span>                :            : 
+<span class="lineNum">     324 </span>                :<span class="lineCov">        803 :     lastkey = (RIJNDAEL_BLOCKSIZE/4) * (nr + 1);</span>
+<span class="lineNum">     325 </span>                :<span class="lineCov">        803 :     ctx-&gt;nrounds = nr;</span>
+<span class="lineNum">     326 </span>                :<span class="lineCov">        803 :     rcon = 1;</span>
+<span class="lineNum">     327 </span>        [<span class="branchCov" title="Branch 0 was taken 6424 times"> + </span><span class="branchCov" title="Branch 1 was taken 803 times"> + </span>]:<span class="lineCov">       7227 :     for (i=0; i&lt;nk; i++) {</span>
+<span class="lineNum">     328 </span>                :<span class="lineCov">      12848 :         ctx-&gt;keys[i] = key[i*4] + (key[i*4+1]&lt;&lt;8) + (key[i*4+2]&lt;&lt;16) +</span>
+<span class="lineNum">     329 </span>                :<span class="lineCov">       6424 :             (key[i*4+3]&lt;&lt;24);</span>
+<span class="lineNum">     330 </span>                :            :     }
+<span class="lineNum">     331 </span>                :            : 
+<span class="lineNum">     332 </span>        [<span class="branchCov" title="Branch 0 was taken 41756 times"> + </span><span class="branchCov" title="Branch 1 was taken 803 times"> + </span>]:<span class="lineCov">      42559 :     for (i=nk; i&lt;lastkey; i++) {</span>
+<span class="lineNum">     333 </span>                :<span class="lineCov">      41756 :         temp = ctx-&gt;keys[i-1];</span>
+<span class="lineNum">     334 </span>        [<span class="branchCov" title="Branch 0 was taken 5621 times"> + </span><span class="branchCov" title="Branch 1 was taken 36135 times"> + </span>]:<span class="lineCov">      41756 :         if (i % nk == 0) {</span>
+<span class="lineNum">     335 </span>                :<span class="lineCov">       5621 :             temp = SUBBYTE(ROTBYTE(temp), sbox) ^ rcon;</span>
+<span class="lineNum">     336 </span>                :<span class="lineCov">       5621 :             rcon = (uint32_t)xtime((uint8_t)rcon&amp;0xff);</span>
+<span class="lineNum">     337 </span>[<span class="branchCov" title="Branch 0 was taken 36135 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>][<span class="branchCov" title="Branch 2 was taken 4818 times"> + </span><span class="branchCov" title="Branch 3 was taken 31317 times"> + </span>]:<span class="lineCov">      36135 :         } else if (nk &gt; 6 &amp;&amp; (i%nk) == 4) {</span>
+<span class="lineNum">     338 </span>                :<span class="lineCov">       4818 :             temp = SUBBYTE(temp, sbox);</span>
+<span class="lineNum">     339 </span>                :            :         }
+<span class="lineNum">     340 </span>                :<span class="lineCov">      41756 :         ctx-&gt;keys[i] = ctx-&gt;keys[i-nk] ^ temp;</span>
+<span class="lineNum">     341 </span>                :            :     }
+<span class="lineNum">     342 </span>                :            :     /* Generate the inverse keys */
+<span class="lineNum">     343 </span>        [<span class="branchCov" title="Branch 0 was taken 3212 times"> + </span><span class="branchCov" title="Branch 1 was taken 803 times"> + </span>]:<span class="lineCov">       4015 :     for (i=0; i&lt;4; i++) {</span>
+<span class="lineNum">     344 </span>                :<span class="lineCov">       3212 :         ctx-&gt;ikeys[i] = ctx-&gt;keys[i];</span>
+<span class="lineNum">     345 </span>                :<span class="lineCov">       3212 :         ctx-&gt;ikeys[lastkey-4 + i] = ctx-&gt;keys[lastkey-4 + i];</span>
+<span class="lineNum">     346 </span>                :            :     }
+<span class="lineNum">     347 </span>        [<span class="branchCov" title="Branch 0 was taken 10439 times"> + </span><span class="branchCov" title="Branch 1 was taken 803 times"> + </span>]:<span class="lineCov">      11242 :     for (i=4; i&lt;lastkey-4; i+=4)</span>
+<span class="lineNum">     348 </span>                :<span class="lineCov">      10439 :         inv_mix_column(&amp;(ctx-&gt;keys[i]), &amp;(ctx-&gt;ikeys[i]));</span>
+<span class="lineNum">     349 </span>                :<span class="lineCov">        803 : }</span>
+<span class="lineNum">     350 </span>                :            : 
+<a name="351"><span class="lineNum">     351 </span>                :            : /* Key addition that also packs every byte in the key to a word rep. */</a>
+<span class="lineNum">     352 </span>                :            : static void
+<span class="lineNum">     353 </span>                :<span class="lineCov">       6905 : key_addition_8to32(const uint8_t *txt, uint32_t *keys, uint32_t *out)</span>
+<span class="lineNum">     354 </span>                :            : {
+<span class="lineNum">     355 </span>                :            :     const uint8_t *ptr;
+<span class="lineNum">     356 </span>                :            :     int i, j;
+<span class="lineNum">     357 </span>                :            :     uint32_t val;
+<span class="lineNum">     358 </span>                :            : 
+<span class="lineNum">     359 </span>                :<span class="lineCov">       6905 :     ptr = txt;</span>
+<span class="lineNum">     360 </span>        [<span class="branchCov" title="Branch 0 was taken 27620 times"> + </span><span class="branchCov" title="Branch 1 was taken 6905 times"> + </span>]:<span class="lineCov">      34525 :     for (i=0; i&lt;4; i++) {</span>
+<span class="lineNum">     361 </span>                :            :         val = 0;
+<span class="lineNum">     362 </span>        [<span class="branchCov" title="Branch 0 was taken 110480 times"> + </span><span class="branchCov" title="Branch 1 was taken 27620 times"> + </span>]:<span class="lineCov">     138100 :         for (j=0; j&lt;4; j++)</span>
+<span class="lineNum">     363 </span>                :<span class="lineCov">     110480 :             val |= (*ptr++ &lt;&lt; 8*j);</span>
+<span class="lineNum">     364 </span>                :<span class="lineCov">      27620 :         out[i] = keys[i]^val;</span>
+<span class="lineNum">     365 </span>                :            :     }
+<span class="lineNum">     366 </span>                :<span class="lineCov">       6905 : }</span>
+<a name="367"><span class="lineNum">     367 </span>                :            : </a>
+<span class="lineNum">     368 </span>                :            : static void
+<span class="lineNum">     369 </span>                :<span class="lineCov">      89765 : key_addition32(const uint32_t *txt, uint32_t *keys, uint32_t *out)</span>
+<span class="lineNum">     370 </span>                :            : {
+<span class="lineNum">     371 </span>                :            :     int i;
+<span class="lineNum">     372 </span>                :            : 
+<span class="lineNum">     373 </span>        [<span class="branchCov" title="Branch 0 was taken 359060 times"> + </span><span class="branchCov" title="Branch 1 was taken 89765 times"> + </span>]:<span class="lineCov">     448825 :     for (i=0; i&lt;4; i++)</span>
+<span class="lineNum">     374 </span>                :<span class="lineCov">     359060 :         out[i] = keys[i] ^ txt[i];</span>
+<span class="lineNum">     375 </span>                :<span class="lineCov">      89765 : }</span>
+<a name="376"><span class="lineNum">     376 </span>                :            : </a>
+<span class="lineNum">     377 </span>                :            : static void
+<span class="lineNum">     378 </span>                :<span class="lineCov">       6905 : key_addition32to8(const uint32_t *txt, uint32_t *keys, uint8_t *out)</span>
+<span class="lineNum">     379 </span>                :            : {
+<span class="lineNum">     380 </span>                :            :     uint8_t *ptr;
+<span class="lineNum">     381 </span>                :            :     int i, j;
+<span class="lineNum">     382 </span>                :            :     uint32_t val;
+<span class="lineNum">     383 </span>                :            : 
+<span class="lineNum">     384 </span>                :<span class="lineCov">       6905 :     ptr = out;</span>
+<span class="lineNum">     385 </span>        [<span class="branchCov" title="Branch 0 was taken 27620 times"> + </span><span class="branchCov" title="Branch 1 was taken 6905 times"> + </span>]:<span class="lineCov">      34525 :     for (i=0; i&lt;4; i++) {</span>
+<span class="lineNum">     386 </span>                :<span class="lineCov">      27620 :         val = txt[i] ^ keys[i];</span>
+<span class="lineNum">     387 </span>        [<span class="branchCov" title="Branch 0 was taken 110480 times"> + </span><span class="branchCov" title="Branch 1 was taken 27620 times"> + </span>]:<span class="lineCov">     138100 :         for (j=0; j&lt;4; j++)</span>
+<span class="lineNum">     388 </span>                :<span class="lineCov">     110480 :             *ptr++ = (val &gt;&gt; 8*j) &amp; 0xff;</span>
+<span class="lineNum">     389 </span>                :            :     }
+<span class="lineNum">     390 </span>                :<span class="lineCov">       6905 : }</span>
+<span class="lineNum">     391 </span>                :            : 
+<span class="lineNum">     392 </span>                :            : static int idx[4][4] = {
+<span class="lineNum">     393 </span>                :            :     { 0, 1, 2, 3 },
+<span class="lineNum">     394 </span>                :            :     { 1, 2, 3, 0 },
+<span class="lineNum">     395 </span>                :            :     { 2, 3, 0, 1 },
+<span class="lineNum">     396 </span>                :            :     { 3, 0, 1, 2 } };
+<a name="397"><span class="lineNum">     397 </span>                :            : </a>
+<span class="lineNum">     398 </span>                :            : void
+<span class="lineNum">     399 </span>                :<span class="lineCov">       3827 : rijndael_encrypt(RIJNDAEL_context *ctx,</span>
+<span class="lineNum">     400 </span>                :            :         const uint8_t *plaintext,
+<span class="lineNum">     401 </span>                :            :         uint8_t *ciphertext)
+<span class="lineNum">     402 </span>                :            : {
+<span class="lineNum">     403 </span>                :            :     int r, j;
+<span class="lineNum">     404 </span>                :            :     uint32_t wtxt[4], t[4];             /* working ciphertext */
+<span class="lineNum">     405 </span>                :            :     uint32_t e;
+<span class="lineNum">     406 </span>                :            : 
+<span class="lineNum">     407 </span>                :<span class="lineCov">       3827 :     key_addition_8to32(plaintext, &amp;(ctx-&gt;keys[0]), wtxt);</span>
+<span class="lineNum">     408 </span>        [<span class="branchCov" title="Branch 1 was taken 49751 times"> + </span><span class="branchCov" title="Branch 2 was taken 3827 times"> + </span>]:<span class="lineCov">      53578 :     for (r=1; r&lt;ctx-&gt;nrounds; r++) {</span>
+<span class="lineNum">     409 </span>        [<span class="branchCov" title="Branch 0 was taken 199004 times"> + </span><span class="branchCov" title="Branch 1 was taken 49751 times"> + </span>]:<span class="lineCov">     248755 :         for (j=0; j&lt;4; j++) {</span>
+<span class="lineNum">     410 </span>                :<span class="lineCov">     398008 :             t[j] = dtbl[wtxt[j] &amp; 0xff] ^</span>
+<span class="lineNum">     411 </span>                :<span class="lineCov">     199004 :                 ROTRBYTE(dtbl[(wtxt[idx[1][j]] &gt;&gt; 8) &amp; 0xff]^</span>
+<span class="lineNum">     412 </span>                :            :                         ROTRBYTE(dtbl[(wtxt[idx[2][j]] &gt;&gt; 16) &amp; 0xff] ^
+<span class="lineNum">     413 </span>                :            :                             ROTRBYTE(dtbl[(wtxt[idx[3][j]] &gt;&gt; 24) &amp; 0xff])));
+<span class="lineNum">     414 </span>                :            :         }
+<span class="lineNum">     415 </span>                :<span class="lineCov">      49751 :         key_addition32(t, &amp;(ctx-&gt;keys[r*4]), wtxt);</span>
+<span class="lineNum">     416 </span>                :            :     }
+<span class="lineNum">     417 </span>                :            :     /* last round is special: there is no mixcolumn, so we can't use the big
+<span class="lineNum">     418 </span>                :            :        tables. */
+<span class="lineNum">     419 </span>        [<span class="branchCov" title="Branch 0 was taken 15308 times"> + </span><span class="branchCov" title="Branch 1 was taken 3827 times"> + </span>]:<span class="lineCov">      19135 :     for (j=0; j&lt;4; j++) {</span>
+<span class="lineNum">     420 </span>                :<span class="lineCov">      15308 :         e = wtxt[j] &amp; 0xff;</span>
+<span class="lineNum">     421 </span>                :<span class="lineCov">      15308 :         e |= (wtxt[idx[1][j]]) &amp; (0xff  &lt;&lt; 8 );</span>
+<span class="lineNum">     422 </span>                :<span class="lineCov">      15308 :         e |= (wtxt[idx[2][j]]) &amp; (0xff  &lt;&lt; 16);</span>
+<span class="lineNum">     423 </span>                :<span class="lineCov">      15308 :         e |= (wtxt[idx[3][j]]) &amp; (0xffU &lt;&lt; 24);</span>
+<span class="lineNum">     424 </span>                :<span class="lineCov">      15308 :         t[j] = e;</span>
+<span class="lineNum">     425 </span>                :            :     }
+<span class="lineNum">     426 </span>        [<span class="branchCov" title="Branch 0 was taken 15308 times"> + </span><span class="branchCov" title="Branch 1 was taken 3827 times"> + </span>]:<span class="lineCov">      19135 :     for (j=0; j&lt;4; j++)</span>
+<span class="lineNum">     427 </span>                :<span class="lineCov">      15308 :         t[j] = SUBBYTE(t[j], sbox);</span>
+<span class="lineNum">     428 </span>                :<span class="lineCov">       3827 :     key_addition32to8(t, &amp;(ctx-&gt;keys[4*ctx-&gt;nrounds]), ciphertext);</span>
+<span class="lineNum">     429 </span>                :<span class="lineCov">       3827 : }</span>
+<span class="lineNum">     430 </span>                :            : 
+<span class="lineNum">     431 </span>                :            : static int iidx[4][4] = {
+<span class="lineNum">     432 </span>                :            :     { 0, 1, 2, 3 },
+<span class="lineNum">     433 </span>                :            :     { 3, 0, 1, 2 },
+<span class="lineNum">     434 </span>                :            :     { 2, 3, 0, 1 },
+<span class="lineNum">     435 </span>                :            :     { 1, 2, 3, 0 } };
+<a name="436"><span class="lineNum">     436 </span>                :            : </a>
+<span class="lineNum">     437 </span>                :            : void
+<span class="lineNum">     438 </span>                :<span class="lineCov">       3078 : rijndael_decrypt(RIJNDAEL_context *ctx,</span>
+<span class="lineNum">     439 </span>                :            :         const uint8_t *ciphertext,
+<span class="lineNum">     440 </span>                :            :         uint8_t *plaintext)
+<span class="lineNum">     441 </span>                :            : {
+<span class="lineNum">     442 </span>                :            :     int r, j;
+<span class="lineNum">     443 </span>                :            :     uint32_t wtxt[4], t[4];             /* working ciphertext */
+<span class="lineNum">     444 </span>                :            :     uint32_t e;
+<span class="lineNum">     445 </span>                :            : 
+<span class="lineNum">     446 </span>                :<span class="lineCov">       3078 :     key_addition_8to32(ciphertext, &amp;(ctx-&gt;ikeys[4*ctx-&gt;nrounds]), wtxt);</span>
+<span class="lineNum">     447 </span>        [<span class="branchCov" title="Branch 0 was taken 40014 times"> + </span><span class="branchCov" title="Branch 1 was taken 3078 times"> + </span>]:<span class="lineCov">      43092 :     for (r=ctx-&gt;nrounds-1; r&gt; 0;  r--) {</span>
+<span class="lineNum">     448 </span>        [<span class="branchCov" title="Branch 0 was taken 160056 times"> + </span><span class="branchCov" title="Branch 1 was taken 40014 times"> + </span>]:<span class="lineCov">     200070 :         for (j=0; j&lt;4; j++) {</span>
+<span class="lineNum">     449 </span>                :<span class="lineCov">     320112 :             t[j] = itbl[wtxt[j] &amp; 0xff] ^</span>
+<span class="lineNum">     450 </span>                :<span class="lineCov">     160056 :                 ROTRBYTE(itbl[(wtxt[iidx[1][j]] &gt;&gt; 8) &amp; 0xff]^</span>
+<span class="lineNum">     451 </span>                :            :                         ROTRBYTE(itbl[(wtxt[iidx[2][j]] &gt;&gt; 16) &amp; 0xff] ^
+<span class="lineNum">     452 </span>                :            :                             ROTRBYTE(itbl[(wtxt[iidx[3][j]] &gt;&gt; 24) &amp; 0xff])));
+<span class="lineNum">     453 </span>                :            :         }
+<span class="lineNum">     454 </span>                :<span class="lineCov">      40014 :         key_addition32(t, &amp;(ctx-&gt;ikeys[r*4]), wtxt);</span>
+<span class="lineNum">     455 </span>                :            :     }
+<span class="lineNum">     456 </span>                :            :     /* last round is special: there is no mixcolumn, so we can't use the big
+<span class="lineNum">     457 </span>                :            :        tables. */
+<span class="lineNum">     458 </span>        [<span class="branchCov" title="Branch 0 was taken 12312 times"> + </span><span class="branchCov" title="Branch 1 was taken 3078 times"> + </span>]:<span class="lineCov">      15390 :     for (j=0; j&lt;4; j++) {</span>
+<span class="lineNum">     459 </span>                :<span class="lineCov">      12312 :         e = wtxt[j] &amp; 0xff;</span>
+<span class="lineNum">     460 </span>                :<span class="lineCov">      12312 :         e |= (wtxt[iidx[1][j]]) &amp; (0xff  &lt;&lt; 8);</span>
+<span class="lineNum">     461 </span>                :<span class="lineCov">      12312 :         e |= (wtxt[iidx[2][j]]) &amp; (0xff  &lt;&lt; 16);</span>
+<span class="lineNum">     462 </span>                :<span class="lineCov">      12312 :         e |= (wtxt[iidx[3][j]]) &amp; (0xffU &lt;&lt; 24);</span>
+<span class="lineNum">     463 </span>                :<span class="lineCov">      12312 :         t[j] = e;</span>
+<span class="lineNum">     464 </span>                :            :     }
+<span class="lineNum">     465 </span>        [<span class="branchCov" title="Branch 0 was taken 12312 times"> + </span><span class="branchCov" title="Branch 1 was taken 3078 times"> + </span>]:<span class="lineCov">      15390 :     for (j=0; j&lt;4; j++)</span>
+<span class="lineNum">     466 </span>                :<span class="lineCov">      12312 :         t[j] = SUBBYTE(t[j], isbox);</span>
+<span class="lineNum">     467 </span>                :<span class="lineCov">       3078 :     key_addition32to8(t, &amp;(ctx-&gt;ikeys[0]), plaintext);</span>
+<span class="lineNum">     468 </span>                :<span class="lineCov">       3078 : }</span>
+<a name="469"><span class="lineNum">     469 </span>                :            : </a>
+<span class="lineNum">     470 </span>                :            : void
+<span class="lineNum">     471 </span>                :<span class="lineCov">        416 : block_encrypt(RIJNDAEL_context *ctx, uint8_t *input, int inputlen,</span>
+<span class="lineNum">     472 </span>                :            :         uint8_t *output, uint8_t *iv)
+<span class="lineNum">     473 </span>                :            : {
+<span class="lineNum">     474 </span>                :            :     int i, j, nblocks, carry_flg;
+<span class="lineNum">     475 </span>                :            :     uint8_t block[RIJNDAEL_BLOCKSIZE], block2[RIJNDAEL_BLOCKSIZE];//, oldptxt;
+<span class="lineNum">     476 </span>                :            : 
+<span class="lineNum">     477 </span>                :<span class="lineCov">        416 :     nblocks = inputlen / RIJNDAEL_BLOCKSIZE;</span>
+<span class="lineNum">     478 </span>                :            : 
+<span class="lineNum">     479 </span>  [<span class="branchCov" title="Branch 0 was taken 18 times"> + </span><span class="branchCov" title="Branch 1 was taken 391 times"> + </span><span class="branchCov" title="Branch 2 was taken 1 time"> + </span><span class="branchCov" title="Branch 3 was taken 2 times"> + </span> :<span class="lineCov">        416 :     switch (ctx-&gt;mode) {</span>
+<span class="lineNum">         </span>         <span class="branchCov" title="Branch 4 was taken 4 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]
+<span class="lineNum">     480 </span>                :            :         case MODE_ECB:          /* electronic code book */
+<span class="lineNum">     481 </span>        [<span class="branchCov" title="Branch 0 was taken 250 times"> + </span><span class="branchCov" title="Branch 1 was taken 18 times"> + </span>]:<span class="lineCov">        268 :             for (i = 0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     482 </span>                :<span class="lineCov">        250 :                 rijndael_encrypt(ctx, &amp;input[RIJNDAEL_BLOCKSIZE*i],</span>
+<span class="lineNum">     483 </span>                :<span class="lineCov">        250 :                         &amp;output[RIJNDAEL_BLOCKSIZE*i]);</span>
+<span class="lineNum">     484 </span>                :            :             }
+<span class="lineNum">     485 </span>                :            :             break;
+<span class="lineNum">     486 </span>                :            :         case MODE_CBC:          /* Cipher block chaining */
+<span class="lineNum">     487 </span>                :            :             /* set initial value */
+<span class="lineNum">     488 </span>                :            :             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
+<span class="lineNum">     489 </span>        [<span class="branchCov" title="Branch 0 was taken 3452 times"> + </span><span class="branchCov" title="Branch 1 was taken 391 times"> + </span>]:<span class="lineCov">       3843 :             for (i=0; i&lt; nblocks; i++) {</span>
+<span class="lineNum">     490 </span>        [<span class="branchCov" title="Branch 0 was taken 55232 times"> + </span><span class="branchCov" title="Branch 1 was taken 3452 times"> + </span>]:<span class="lineCov">      58684 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++) </span>
+<span class="lineNum">     491 </span>                :<span class="lineCov">      55232 :                     block[j] ^= input[i*RIJNDAEL_BLOCKSIZE + j] &amp; 0xff;</span>
+<span class="lineNum">     492 </span>                :<span class="lineCov">       3452 :                 rijndael_encrypt(ctx, block, block);</span>
+<span class="lineNum">     493 </span>                :<span class="lineCov">       3452 :                 memcpy(&amp;output[RIJNDAEL_BLOCKSIZE*i], block, RIJNDAEL_BLOCKSIZE);</span>
+<span class="lineNum">     494 </span>                :            :             }
+<span class="lineNum">     495 </span>                :            :             break;
+<span class="lineNum">     496 </span>                :            :         case MODE_CFB:          /* 128-bit cipher feedback */
+<span class="lineNum">     497 </span>                :            :             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
+<span class="lineNum">     498 </span>        [<span class="branchCov" title="Branch 0 was taken 9 times"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">         10 :             for (i=0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     499 </span>                :<span class="lineCov">          9 :                 rijndael_encrypt(ctx, block, block);</span>
+<span class="lineNum">     500 </span>        [<span class="branchCov" title="Branch 1 was taken 144 times"> + </span><span class="branchCov" title="Branch 2 was taken 9 times"> + </span>]:<span class="lineCov">        153 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++)</span>
+<span class="lineNum">     501 </span>                :<span class="lineCov">        144 :                     block[j] ^= input[i*RIJNDAEL_BLOCKSIZE + j];</span>
+<span class="lineNum">     502 </span>                :<span class="lineCov">          9 :                 memcpy(&amp;output[RIJNDAEL_BLOCKSIZE*i], block, RIJNDAEL_BLOCKSIZE);</span>
+<span class="lineNum">     503 </span>                :            :             }
+<span class="lineNum">     504 </span>                :            :             break;
+<span class="lineNum">     505 </span>                :            :         case MODE_OFB:          /* 128-bit output feedback */
+<span class="lineNum">     506 </span>                :            :             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
+<span class="lineNum">     507 </span>        [<span class="branchCov" title="Branch 0 was taken 18 times"> + </span><span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">         20 :             for (i=0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     508 </span>                :<span class="lineCov">         18 :                 rijndael_encrypt(ctx, block, block);</span>
+<span class="lineNum">     509 </span>        [<span class="branchCov" title="Branch 1 was taken 288 times"> + </span><span class="branchCov" title="Branch 2 was taken 18 times"> + </span>]:<span class="lineCov">        306 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++) {</span>
+<span class="lineNum">     510 </span>                :<span class="lineCov">        576 :                     output[RIJNDAEL_BLOCKSIZE*i + j] = block[j] ^</span>
+<span class="lineNum">     511 </span>                :<span class="lineCov">        288 :                         input[RIJNDAEL_BLOCKSIZE*i + j];</span>
+<span class="lineNum">     512 </span>                :            :                 }
+<span class="lineNum">     513 </span>                :            :             }
+<span class="lineNum">     514 </span>                :            :             break;
+<span class="lineNum">     515 </span>                :            :         case MODE_CTR:          /* counter */
+<span class="lineNum">     516 </span>                :            :             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
+<span class="lineNum">     517 </span>        [<span class="branchCov" title="Branch 0 was taken 46 times"> + </span><span class="branchCov" title="Branch 1 was taken 4 times"> + </span>]:<span class="lineCov">         50 :             for (i=0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     518 </span>                :<span class="lineCov">         46 :                 rijndael_encrypt(ctx, block, block2);</span>
+<span class="lineNum">     519 </span>        [<span class="branchCov" title="Branch 1 was taken 736 times"> + </span><span class="branchCov" title="Branch 2 was taken 46 times"> + </span>]:<span class="lineCov">        782 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++) {</span>
+<span class="lineNum">     520 </span>                :<span class="lineCov">       1472 :                     output[RIJNDAEL_BLOCKSIZE*i + j] = block2[j] ^</span>
+<span class="lineNum">     521 </span>                :<span class="lineCov">        736 :                         input[RIJNDAEL_BLOCKSIZE*i + j];</span>
+<span class="lineNum">     522 </span>                :            :                 }
+<span class="lineNum">     523 </span>                :<span class="lineCov">         46 :                 block[RIJNDAEL_BLOCKSIZE-1]++;</span>
+<span class="lineNum">     524 </span>                :<span class="lineCov">         46 :                 carry_flg = block[RIJNDAEL_BLOCKSIZE-1] != 0 ? 0 : 1;</span>
+<span class="lineNum">     525 </span>        [<span class="branchCov" title="Branch 0 was taken 46 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         46 :                 for (j=RIJNDAEL_BLOCKSIZE-2; j&gt;=0; j--) {</span>
+<span class="lineNum">     526 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 46 times"> + </span>]:<span class="lineCov">         46 :                     if (carry_flg) {</span>
+<span class="lineNum">     527 </span>                :<span class="lineNoCov">          0 :                         block[j]++;</span>
+<span class="lineNum">     528 </span>                :<span class="lineNoCov">          0 :                         carry_flg = block[j] != 0 ? 0 : 1;</span>
+<span class="lineNum">     529 </span>                :            :                     } else
+<span class="lineNum">     530 </span>                :            :                         break;
+<span class="lineNum">     531 </span>                :            :                 }
+<span class="lineNum">     532 </span>                :            :             }
+<span class="lineNum">     533 </span>                :            :             break;
+<span class="lineNum">     534 </span>                :            :         default:
+<span class="lineNum">     535 </span>                :            :             break;
+<span class="lineNum">     536 </span>                :            :     }
+<span class="lineNum">     537 </span>                :<span class="lineCov">        416 : }</span>
+<a name="538"><span class="lineNum">     538 </span>                :            : </a>
+<span class="lineNum">     539 </span>                :            : void
+<span class="lineNum">     540 </span>                :<span class="lineCov">        387 : block_decrypt(RIJNDAEL_context *ctx, uint8_t *input, int inputlen,</span>
+<span class="lineNum">     541 </span>                :            :         uint8_t *output, uint8_t *iv)
+<span class="lineNum">     542 </span>                :            : {
+<span class="lineNum">     543 </span>                :            :     int i, j, nblocks, carry_flg;
+<span class="lineNum">     544 </span>                :            :     uint8_t block[RIJNDAEL_BLOCKSIZE], block2[RIJNDAEL_BLOCKSIZE];
+<span class="lineNum">     545 </span>                :            : 
+<span class="lineNum">     546 </span>                :<span class="lineCov">        387 :     nblocks = inputlen / RIJNDAEL_BLOCKSIZE;</span>
+<span class="lineNum">     547 </span>  [<span class="branchCov" title="Branch 0 was taken 13 times"> + </span><span class="branchCov" title="Branch 1 was taken 368 times"> + </span><span class="branchCov" title="Branch 2 was taken 1 time"> + </span><span class="branchCov" title="Branch 3 was taken 2 times"> + </span> :<span class="lineCov">        387 :     switch (ctx-&gt;mode) {</span>
+<span class="lineNum">         </span>         <span class="branchCov" title="Branch 4 was taken 3 times"> + </span><span class="branchNoCov" title="Branch 5 was not taken"> - </span>]
+<span class="lineNum">     548 </span>                :            :         case MODE_ECB:
+<span class="lineNum">     549 </span>        [<span class="branchCov" title="Branch 0 was taken 130 times"> + </span><span class="branchCov" title="Branch 1 was taken 13 times"> + </span>]:<span class="lineCov">        143 :             for (i = 0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     550 </span>                :<span class="lineCov">        130 :                 rijndael_decrypt(ctx, &amp;input[RIJNDAEL_BLOCKSIZE*i],</span>
+<span class="lineNum">     551 </span>                :<span class="lineCov">        130 :                         &amp;output[RIJNDAEL_BLOCKSIZE*i]);</span>
+<span class="lineNum">     552 </span>                :            :             }
+<span class="lineNum">     553 </span>                :            :             break;
+<span class="lineNum">     554 </span>                :            :         case MODE_CBC:
+<span class="lineNum">     555 </span>                :            :             /* first block */
+<span class="lineNum">     556 </span>                :<span class="lineCov">        368 :             rijndael_decrypt(ctx, input, block);</span>
+<span class="lineNum">     557 </span>                :            :             /* XOR the block with the IV to get the output */
+<span class="lineNum">     558 </span>        [<span class="branchCov" title="Branch 1 was taken 5888 times"> + </span><span class="branchCov" title="Branch 2 was taken 368 times"> + </span>]:<span class="lineCov">       6256 :             for (i=0; i&lt;RIJNDAEL_BLOCKSIZE; i++)</span>
+<span class="lineNum">     559 </span>                :<span class="lineCov">       5888 :                 output[i] = block[i] ^ iv[i];</span>
+<span class="lineNum">     560 </span>        [<span class="branchCov" title="Branch 0 was taken 2580 times"> + </span><span class="branchCov" title="Branch 1 was taken 368 times"> + </span>]:<span class="lineCov">       2948 :             for (i=1; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     561 </span>                :<span class="lineCov">       2580 :                 rijndael_decrypt(ctx, &amp;input[i*RIJNDAEL_BLOCKSIZE], block);</span>
+<span class="lineNum">     562 </span>        [<span class="branchCov" title="Branch 1 was taken 41280 times"> + </span><span class="branchCov" title="Branch 2 was taken 2580 times"> + </span>]:<span class="lineCov">      43860 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++) {</span>
+<span class="lineNum">     563 </span>                :<span class="lineCov">      82560 :                     output[i*RIJNDAEL_BLOCKSIZE + j] = block[j] ^</span>
+<span class="lineNum">     564 </span>                :<span class="lineCov">      41280 :                         input[(i-1)*RIJNDAEL_BLOCKSIZE + j];</span>
+<span class="lineNum">     565 </span>                :            :                 }
+<span class="lineNum">     566 </span>                :            :             }
+<span class="lineNum">     567 </span>                :            :             break;
+<span class="lineNum">     568 </span>                :            :         case MODE_CFB:          /* 128-bit cipher feedback */
+<span class="lineNum">     569 </span>                :            :             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
+<span class="lineNum">     570 </span>        [<span class="branchCov" title="Branch 0 was taken 9 times"> + </span><span class="branchCov" title="Branch 1 was taken 1 time"> + </span>]:<span class="lineCov">         10 :             for (i=0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     571 </span>                :<span class="lineCov">          9 :                 rijndael_encrypt(ctx, block, block); /* ENCRYPT is right! */</span>
+<span class="lineNum">     572 </span>        [<span class="branchCov" title="Branch 1 was taken 144 times"> + </span><span class="branchCov" title="Branch 2 was taken 9 times"> + </span>]:<span class="lineCov">        153 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++) {</span>
+<span class="lineNum">     573 </span>                :<span class="lineCov">        288 :                     output[RIJNDAEL_BLOCKSIZE*i + j] = block[j] ^</span>
+<span class="lineNum">     574 </span>                :<span class="lineCov">        144 :                         input[RIJNDAEL_BLOCKSIZE*i + j];</span>
+<span class="lineNum">     575 </span>                :            :                 }
+<span class="lineNum">     576 </span>                :<span class="lineCov">          9 :                 memcpy(block, &amp;input[RIJNDAEL_BLOCKSIZE*i], RIJNDAEL_BLOCKSIZE);</span>
+<span class="lineNum">     577 </span>                :            :             }
+<span class="lineNum">     578 </span>                :            :             break;
+<span class="lineNum">     579 </span>                :            :         case MODE_OFB:          /* 128-bit output feedback */
+<span class="lineNum">     580 </span>                :            :             /* this is exactly the same as encryption in OFB...in fact you can use
+<span class="lineNum">     581 </span>                :            :                the encryption in OFB mode to decrypt! */
+<span class="lineNum">     582 </span>                :            :             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
+<span class="lineNum">     583 </span>        [<span class="branchCov" title="Branch 0 was taken 18 times"> + </span><span class="branchCov" title="Branch 1 was taken 2 times"> + </span>]:<span class="lineCov">         20 :             for (i=0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     584 </span>                :<span class="lineCov">         18 :                 rijndael_encrypt(ctx, block, block);</span>
+<span class="lineNum">     585 </span>        [<span class="branchCov" title="Branch 1 was taken 288 times"> + </span><span class="branchCov" title="Branch 2 was taken 18 times"> + </span>]:<span class="lineCov">        306 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++) {</span>
+<span class="lineNum">     586 </span>                :<span class="lineCov">        576 :                     output[RIJNDAEL_BLOCKSIZE*i + j] = block[j] ^</span>
+<span class="lineNum">     587 </span>                :<span class="lineCov">        288 :                         input[RIJNDAEL_BLOCKSIZE*i + j];</span>
+<span class="lineNum">     588 </span>                :            :                 }
+<span class="lineNum">     589 </span>                :            :             }
+<span class="lineNum">     590 </span>                :            :             break;
+<span class="lineNum">     591 </span>                :            :         case MODE_CTR:          /* counter */
+<span class="lineNum">     592 </span>                :            :             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
+<span class="lineNum">     593 </span>        [<span class="branchCov" title="Branch 0 was taken 25 times"> + </span><span class="branchCov" title="Branch 1 was taken 3 times"> + </span>]:<span class="lineCov">         28 :             for (i=0; i&lt;nblocks; i++) {</span>
+<span class="lineNum">     594 </span>                :<span class="lineCov">         25 :                 rijndael_encrypt(ctx, block, block2);</span>
+<span class="lineNum">     595 </span>        [<span class="branchCov" title="Branch 1 was taken 400 times"> + </span><span class="branchCov" title="Branch 2 was taken 25 times"> + </span>]:<span class="lineCov">        425 :                 for (j=0; j&lt;RIJNDAEL_BLOCKSIZE; j++) {</span>
+<span class="lineNum">     596 </span>                :<span class="lineCov">        800 :                     output[RIJNDAEL_BLOCKSIZE*i + j] = block2[j] ^</span>
+<span class="lineNum">     597 </span>                :<span class="lineCov">        400 :                         input[RIJNDAEL_BLOCKSIZE*i + j];</span>
+<span class="lineNum">     598 </span>                :            :                 }
+<span class="lineNum">     599 </span>                :<span class="lineCov">         25 :                 block[RIJNDAEL_BLOCKSIZE-1]++;</span>
+<span class="lineNum">     600 </span>                :<span class="lineCov">         25 :                 carry_flg = block[RIJNDAEL_BLOCKSIZE-1] != 0 ? 0 : 1;</span>
+<span class="lineNum">     601 </span>        [<span class="branchCov" title="Branch 0 was taken 25 times"> + </span><span class="branchNoCov" title="Branch 1 was not taken"> - </span>]:<span class="lineCov">         25 :                 for (j=RIJNDAEL_BLOCKSIZE-2; j&gt;=0; j--) {</span>
+<span class="lineNum">     602 </span>        [<span class="branchNoCov" title="Branch 0 was not taken"> - </span><span class="branchCov" title="Branch 1 was taken 25 times"> + </span>]:<span class="lineCov">         25 :                     if (carry_flg) {</span>
+<span class="lineNum">     603 </span>                :<span class="lineNoCov">          0 :                         block[j]++;</span>
+<span class="lineNum">     604 </span>                :<span class="lineNoCov">          0 :                         carry_flg = block[j] != 0 ? 0 : 1;</span>
+<span class="lineNum">     605 </span>                :            :                     } else
+<span class="lineNum">     606 </span>                :            :                         break;
+<span class="lineNum">     607 </span>                :            :                 }
+<span class="lineNum">     608 </span>                :            :             }
+<span class="lineNum">     609 </span>                :            :             break;
+<span class="lineNum">     610 </span>                :            :         default:
+<span class="lineNum">     611 </span>                :            :             break;
+<span class="lineNum">     612 </span>                :            :     }
+<span class="lineNum">     613 </span>                :<span class="lineCov">        387 : }</span>
+<span class="lineNum">     614 </span>                :            : 
+<span class="lineNum">     615 </span>                :            : /***EOF***/
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>

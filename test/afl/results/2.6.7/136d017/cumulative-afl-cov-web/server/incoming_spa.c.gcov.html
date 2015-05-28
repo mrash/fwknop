@@ -1,0 +1,1063 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - id:002084,src:002034,op:havoc,rep:2.lcov_info_final - server/incoming_spa.c</title>
+  <link rel="stylesheet" type="text/css" href="../gcov.css">
+</head>
+
+<body>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="title">LCOV - code coverage report</td></tr>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+
+    <tr>
+      <td width="100%">
+        <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="35%" class="headerValue"><a href="../index.html">top level</a> - <a href="index.html">server</a> - incoming_spa.c<span style="font-size: 80%;"> (source / <a href="incoming_spa.c.func.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="15%"></td>
+            <td width="10%" class="headerCovTableHead">Hit</td>
+            <td width="10%" class="headerCovTableHead">Total</td>
+            <td width="15%" class="headerCovTableHead">Coverage</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">id:002084,src:002034,op:havoc,rep:2.lcov_info_final</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">344</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Date:</td>
+            <td class="headerValue">2015-05-25</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">5</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="headerItem">Branches:</td>
+            <td class="headerCovTableEntry">0</td>
+            <td class="headerCovTableEntry">230</td>
+            <td class="headerCovTableEntryLo">0.0 %</td>
+          </tr>
+          <tr><td><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+        </table>
+      </td>
+    </tr>
+
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+  </table>
+
+  <table cellpadding=0 cellspacing=0 border=0>
+    <tr>
+      <td><br></td>
+    </tr>
+    <tr>
+      <td>
+<pre class="sourceHeading">           Branch data     Line data    Source code</pre>
+<pre class="source">
+<a name="1"><span class="lineNum">       1 </span>                :            : /*</a>
+<span class="lineNum">       2 </span>                :            :  *****************************************************************************
+<span class="lineNum">       3 </span>                :            :  *
+<span class="lineNum">       4 </span>                :            :  * File:    incoming_spa.c
+<span class="lineNum">       5 </span>                :            :  *
+<span class="lineNum">       6 </span>                :            :  * Purpose: Process an incoming SPA data packet for fwknopd.
+<span class="lineNum">       7 </span>                :            :  *
+<span class="lineNum">       8 </span>                :            :  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+<span class="lineNum">       9 </span>                :            :  *  Copyright (C) 2009-2014 fwknop developers and contributors. For a full
+<span class="lineNum">      10 </span>                :            :  *  list of contributors, see the file 'CREDITS'.
+<span class="lineNum">      11 </span>                :            :  *
+<span class="lineNum">      12 </span>                :            :  *  License (GNU General Public License):
+<span class="lineNum">      13 </span>                :            :  *
+<span class="lineNum">      14 </span>                :            :  *  This program is free software; you can redistribute it and/or
+<span class="lineNum">      15 </span>                :            :  *  modify it under the terms of the GNU General Public License
+<span class="lineNum">      16 </span>                :            :  *  as published by the Free Software Foundation; either version 2
+<span class="lineNum">      17 </span>                :            :  *  of the License, or (at your option) any later version.
+<span class="lineNum">      18 </span>                :            :  *
+<span class="lineNum">      19 </span>                :            :  *  This program is distributed in the hope that it will be useful,
+<span class="lineNum">      20 </span>                :            :  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+<span class="lineNum">      21 </span>                :            :  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+<span class="lineNum">      22 </span>                :            :  *  GNU General Public License for more details.
+<span class="lineNum">      23 </span>                :            :  *
+<span class="lineNum">      24 </span>                :            :  *  You should have received a copy of the GNU General Public License
+<span class="lineNum">      25 </span>                :            :  *  along with this program; if not, write to the Free Software
+<span class="lineNum">      26 </span>                :            :  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
+<span class="lineNum">      27 </span>                :            :  *  USA
+<span class="lineNum">      28 </span>                :            :  *
+<span class="lineNum">      29 </span>                :            :  *****************************************************************************
+<span class="lineNum">      30 </span>                :            : */
+<span class="lineNum">      31 </span>                :            : #include &quot;fwknopd_common.h&quot;
+<span class="lineNum">      32 </span>                :            : #include &quot;netinet_common.h&quot;
+<span class="lineNum">      33 </span>                :            : 
+<span class="lineNum">      34 </span>                :            : #if HAVE_SYS_WAIT_H
+<span class="lineNum">      35 </span>                :            :   #include &lt;sys/wait.h&gt;
+<span class="lineNum">      36 </span>                :            : #endif
+<span class="lineNum">      37 </span>                :            : 
+<span class="lineNum">      38 </span>                :            : #include &quot;incoming_spa.h&quot;
+<span class="lineNum">      39 </span>                :            : #include &quot;access.h&quot;
+<span class="lineNum">      40 </span>                :            : #include &quot;extcmd.h&quot;
+<span class="lineNum">      41 </span>                :            : #include &quot;log_msg.h&quot;
+<span class="lineNum">      42 </span>                :            : #include &quot;utils.h&quot;
+<span class="lineNum">      43 </span>                :            : #include &quot;fw_util.h&quot;
+<span class="lineNum">      44 </span>                :            : #include &quot;fwknopd_errors.h&quot;
+<span class="lineNum">      45 </span>                :            : #include &quot;replay_cache.h&quot;
+<span class="lineNum">      46 </span>                :            : 
+<span class="lineNum">      47 </span>                :            : #define CTX_DUMP_BUFSIZE            4096                /*!&lt; Maximum size allocated to a FKO context dump */
+<span class="lineNum">      48 </span>                :            : 
+<span class="lineNum">      49 </span>                :            : /* Validate and in some cases preprocess/reformat the SPA data.  Return an
+<span class="lineNum">      50 </span>                :            :  * error code value if there is any indication the data is not valid spa data.
+<a name="51"><span class="lineNum">      51 </span>                :            : */</a>
+<span class="lineNum">      52 </span>                :            : static int
+<span class="lineNum">      53 </span>                :<span class="lineNoCov">          0 : preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)</span>
+<span class="lineNum">      54 </span>                :            : {
+<span class="lineNum">      55 </span>                :<span class="lineNoCov">          0 :     spa_pkt_info_t *spa_pkt = &amp;(opts-&gt;spa_pkt);</span>
+<span class="lineNum">      56 </span>                :            : 
+<span class="lineNum">      57 </span>                :<span class="lineNoCov">          0 :     char    *ndx = (char *)&amp;(spa_pkt-&gt;packet_data);</span>
+<span class="lineNum">      58 </span>                :<span class="lineNoCov">          0 :     int      pkt_data_len = spa_pkt-&gt;packet_data_len;</span>
+<span class="lineNum">      59 </span>                :            :     int      i;
+<span class="lineNum">      60 </span>                :            : 
+<span class="lineNum">      61 </span>                :            :     /* At this point, we can reset the packet data length to 0.  This is our
+<span class="lineNum">      62 </span>                :            :      * indicator to the rest of the program that we do not have a current
+<span class="lineNum">      63 </span>                :            :      * spa packet to process (after this one that is).
+<span class="lineNum">      64 </span>                :            :     */
+<span class="lineNum">      65 </span>                :<span class="lineNoCov">          0 :     spa_pkt-&gt;packet_data_len = 0;</span>
+<span class="lineNum">      66 </span>                :            : 
+<span class="lineNum">      67 </span>                :            :     /* These two checks are already done in process_packet(), but this is a
+<span class="lineNum">      68 </span>                :            :      * defensive measure to run them again here
+<span class="lineNum">      69 </span>                :            :     */
+<span class="lineNum">      70 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(pkt_data_len &lt; MIN_SPA_DATA_SIZE)</span>
+<span class="lineNum">      71 </span>                :            :         return(SPA_MSG_BAD_DATA);
+<span class="lineNum">      72 </span>                :            : 
+<span class="lineNum">      73 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(pkt_data_len &gt; MAX_SPA_PACKET_LEN)</span>
+<span class="lineNum">      74 </span>                :            :         return(SPA_MSG_BAD_DATA);
+<span class="lineNum">      75 </span>                :            : 
+<span class="lineNum">      76 </span>                :            :     /* Ignore any SPA packets that contain the Rijndael or GnuPG prefixes
+<span class="lineNum">      77 </span>                :            :      * since an attacker might have tacked them on to a previously seen
+<span class="lineNum">      78 </span>                :            :      * SPA packet in an attempt to get past the replay check.  And, we're
+<span class="lineNum">      79 </span>                :            :      * no worse off since a legitimate SPA packet that happens to include
+<span class="lineNum">      80 </span>                :            :      * a prefix after the outer one is stripped off won't decrypt properly
+<span class="lineNum">      81 </span>                :            :      * anyway because libfko would not add a new one.
+<span class="lineNum">      82 </span>                :            :     */
+<span class="lineNum">      83 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(constant_runtime_cmp(ndx, B64_RIJNDAEL_SALT, B64_RIJNDAEL_SALT_STR_LEN) == 0)</span>
+<span class="lineNum">      84 </span>                :            :         return(SPA_MSG_BAD_DATA);
+<span class="lineNum">      85 </span>                :            : 
+<span class="lineNum">      86 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(pkt_data_len &gt; MIN_GNUPG_MSG_SIZE</span>
+<span class="lineNum">      87 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :             &amp;&amp; constant_runtime_cmp(ndx, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) == 0)</span>
+<span class="lineNum">      88 </span>                :            :         return(SPA_MSG_BAD_DATA);
+<span class="lineNum">      89 </span>                :            : 
+<span class="lineNum">      90 </span>                :            :     /* Detect and parse out SPA data from an HTTP request. If the SPA data
+<span class="lineNum">      91 </span>                :            :      * starts with &quot;GET /&quot; and the user agent starts with &quot;Fwknop&quot;, then
+<span class="lineNum">      92 </span>                :            :      * assume it is a SPA over HTTP request.
+<span class="lineNum">      93 </span>                :            :     */
+<span class="lineNum">      94 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(strncasecmp(opts-&gt;config[CONF_ENABLE_SPA_OVER_HTTP], &quot;Y&quot;, 1) == 0</span>
+<span class="lineNum">      95 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :       &amp;&amp; strncasecmp(ndx, &quot;GET /&quot;, 5) == 0</span>
+<span class="lineNum">      96 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :       &amp;&amp; strstr(ndx, &quot;User-Agent: Fwknop&quot;) != NULL)</span>
+<span class="lineNum">      97 </span>                :            :     {
+<span class="lineNum">      98 </span>                :            :         /* This looks like an HTTP request, so let's see if we are
+<span class="lineNum">      99 </span>                :            :          * configured to accept such request and if so, find the SPA
+<span class="lineNum">     100 </span>                :            :          * data.
+<span class="lineNum">     101 </span>                :            :         */
+<span class="lineNum">     102 </span>                :            : 
+<span class="lineNum">     103 </span>                :            :         /* Now extract, adjust (convert characters translated by the fwknop
+<span class="lineNum">     104 </span>                :            :          * client), and reset the SPA message itself.
+<span class="lineNum">     105 </span>                :            :         */
+<span class="lineNum">     106 </span>                :<span class="lineNoCov">          0 :         strlcpy((char *)spa_pkt-&gt;packet_data, ndx+5, pkt_data_len);</span>
+<span class="lineNum">     107 </span>                :<span class="lineNoCov">          0 :         pkt_data_len -= 5;</span>
+<span class="lineNum">     108 </span>                :            : 
+<span class="lineNum">     109 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         for(i=0; i&lt;pkt_data_len; i++)</span>
+<span class="lineNum">     110 </span>                :            :         {
+<span class="lineNum">     111 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(isspace(*ndx)) /* The first space marks the end of the req */</span>
+<span class="lineNum">     112 </span>                :            :             {
+<span class="lineNum">     113 </span>                :<span class="lineNoCov">          0 :                 *ndx = '\0';</span>
+<span class="lineNum">     114 </span>                :            :                 break;
+<span class="lineNum">     115 </span>                :            :             }
+<span class="lineNum">     116 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             else if(*ndx == '-') /* Convert '-' to '+' */</span>
+<span class="lineNum">     117 </span>                :<span class="lineNoCov">          0 :                 *ndx = '+';</span>
+<span class="lineNum">     118 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             else if(*ndx == '_') /* Convert '_' to '/' */</span>
+<span class="lineNum">     119 </span>                :<span class="lineNoCov">          0 :                 *ndx = '/';</span>
+<span class="lineNum">     120 </span>                :            : 
+<span class="lineNum">     121 </span>                :<span class="lineNoCov">          0 :             ndx++;</span>
+<span class="lineNum">     122 </span>                :            :         }
+<span class="lineNum">     123 </span>                :            : 
+<span class="lineNum">     124 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(i &lt; MIN_SPA_DATA_SIZE)</span>
+<span class="lineNum">     125 </span>                :            :             return(SPA_MSG_BAD_DATA);
+<span class="lineNum">     126 </span>                :            : 
+<span class="lineNum">     127 </span>                :<span class="lineNoCov">          0 :         spa_pkt-&gt;packet_data_len = pkt_data_len = i;</span>
+<span class="lineNum">     128 </span>                :            :     }
+<span class="lineNum">     129 </span>                :            : 
+<span class="lineNum">     130 </span>                :            :     /* Require base64-encoded data
+<span class="lineNum">     131 </span>                :            :     */
+<span class="lineNum">     132 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(! is_base64(spa_pkt-&gt;packet_data, pkt_data_len))</span>
+<span class="lineNum">     133 </span>                :            :         return(SPA_MSG_NOT_SPA_DATA);
+<span class="lineNum">     134 </span>                :            : 
+<span class="lineNum">     135 </span>                :            : 
+<span class="lineNum">     136 </span>                :            :     /* --DSS:  Are there other checks we can do here ??? */
+<span class="lineNum">     137 </span>                :            : 
+<span class="lineNum">     138 </span>                :            :     /* If we made it here, we have no reason to assume this is not SPA data
+<span class="lineNum">     139 </span>                :            :      * (at least until we come up with more checks).
+<span class="lineNum">     140 </span>                :            :     */
+<span class="lineNum">     141 </span>                :            :     return(FKO_SUCCESS);
+<span class="lineNum">     142 </span>                :            : }
+<span class="lineNum">     143 </span>                :            : 
+<span class="lineNum">     144 </span>                :            : /* For replay attack detection
+<a name="145"><span class="lineNum">     145 </span>                :            : */</a>
+<span class="lineNum">     146 </span>                :            : static int
+<span class="lineNum">     147 </span>                :<span class="lineNoCov">          0 : get_raw_digest(char **digest, char *pkt_data)</span>
+<span class="lineNum">     148 </span>                :            : {
+<span class="lineNum">     149 </span>                :<span class="lineNoCov">          0 :     fko_ctx_t    ctx = NULL;</span>
+<span class="lineNum">     150 </span>                :<span class="lineNoCov">          0 :     char        *tmp_digest = NULL;</span>
+<span class="lineNum">     151 </span>                :<span class="lineNoCov">          0 :     int          res = FKO_SUCCESS;</span>
+<span class="lineNum">     152 </span>                :<span class="lineNoCov">          0 :     short        raw_digest_type = -1;</span>
+<span class="lineNum">     153 </span>                :            : 
+<span class="lineNum">     154 </span>                :            :     /* initialize an FKO context with no decryption key just so
+<span class="lineNum">     155 </span>                :            :      * we can get the outer message digest
+<span class="lineNum">     156 </span>                :            :     */
+<span class="lineNum">     157 </span>                :<span class="lineNoCov">          0 :     res = fko_new_with_data(&amp;ctx, (char *)pkt_data, NULL, 0,</span>
+<span class="lineNum">     158 </span>                :            :             FKO_DEFAULT_ENC_MODE, NULL, 0, 0);
+<span class="lineNum">     159 </span>                :            : 
+<span class="lineNum">     160 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     161 </span>                :            :     {
+<span class="lineNum">     162 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_WARNING, &quot;Error initializing FKO context from SPA data: %s&quot;,</span>
+<span class="lineNum">     163 </span>                :            :             fko_errstr(res));
+<span class="lineNum">     164 </span>                :<span class="lineNoCov">          0 :         fko_destroy(ctx);</span>
+<span class="lineNum">     165 </span>                :<span class="lineNoCov">          0 :         ctx = NULL;</span>
+<span class="lineNum">     166 </span>                :<span class="lineNoCov">          0 :         return(SPA_MSG_FKO_CTX_ERROR);</span>
+<span class="lineNum">     167 </span>                :            :     }
+<span class="lineNum">     168 </span>                :            : 
+<span class="lineNum">     169 </span>                :<span class="lineNoCov">          0 :     res = fko_set_raw_spa_digest_type(ctx, FKO_DEFAULT_DIGEST);</span>
+<span class="lineNum">     170 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     171 </span>                :            :     {
+<span class="lineNum">     172 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_WARNING, &quot;Error setting digest type for SPA data: %s&quot;,</span>
+<span class="lineNum">     173 </span>                :            :             fko_errstr(res));
+<span class="lineNum">     174 </span>                :<span class="lineNoCov">          0 :         fko_destroy(ctx);</span>
+<span class="lineNum">     175 </span>                :<span class="lineNoCov">          0 :         ctx = NULL;</span>
+<span class="lineNum">     176 </span>                :<span class="lineNoCov">          0 :         return(SPA_MSG_DIGEST_ERROR);</span>
+<span class="lineNum">     177 </span>                :            :     }
+<span class="lineNum">     178 </span>                :            : 
+<span class="lineNum">     179 </span>                :<span class="lineNoCov">          0 :     res = fko_get_raw_spa_digest_type(ctx, &amp;raw_digest_type);</span>
+<span class="lineNum">     180 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     181 </span>                :            :     {
+<span class="lineNum">     182 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_WARNING, &quot;Error getting digest type for SPA data: %s&quot;,</span>
+<span class="lineNum">     183 </span>                :            :             fko_errstr(res));
+<span class="lineNum">     184 </span>                :<span class="lineNoCov">          0 :         fko_destroy(ctx);</span>
+<span class="lineNum">     185 </span>                :<span class="lineNoCov">          0 :         ctx = NULL;</span>
+<span class="lineNum">     186 </span>                :<span class="lineNoCov">          0 :         return(SPA_MSG_DIGEST_ERROR);</span>
+<span class="lineNum">     187 </span>                :            :     }
+<span class="lineNum">     188 </span>                :            : 
+<span class="lineNum">     189 </span>                :            :     /* Make sure the digest type is what we expect
+<span class="lineNum">     190 </span>                :            :     */
+<span class="lineNum">     191 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(raw_digest_type != FKO_DEFAULT_DIGEST)</span>
+<span class="lineNum">     192 </span>                :            :     {
+<span class="lineNum">     193 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_WARNING, &quot;Error setting digest type for SPA data: %s&quot;,</span>
+<span class="lineNum">     194 </span>                :            :             fko_errstr(res));
+<span class="lineNum">     195 </span>                :<span class="lineNoCov">          0 :         fko_destroy(ctx);</span>
+<span class="lineNum">     196 </span>                :<span class="lineNoCov">          0 :         ctx = NULL;</span>
+<span class="lineNum">     197 </span>                :<span class="lineNoCov">          0 :         return(SPA_MSG_DIGEST_ERROR);</span>
+<span class="lineNum">     198 </span>                :            :     }
+<span class="lineNum">     199 </span>                :            : 
+<span class="lineNum">     200 </span>                :<span class="lineNoCov">          0 :     res = fko_set_raw_spa_digest(ctx);</span>
+<span class="lineNum">     201 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     202 </span>                :            :     {
+<span class="lineNum">     203 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_WARNING, &quot;Error setting digest for SPA data: %s&quot;,</span>
+<span class="lineNum">     204 </span>                :            :             fko_errstr(res));
+<span class="lineNum">     205 </span>                :<span class="lineNoCov">          0 :         fko_destroy(ctx);</span>
+<span class="lineNum">     206 </span>                :<span class="lineNoCov">          0 :         ctx = NULL;</span>
+<span class="lineNum">     207 </span>                :<span class="lineNoCov">          0 :         return(SPA_MSG_DIGEST_ERROR);</span>
+<span class="lineNum">     208 </span>                :            :     }
+<span class="lineNum">     209 </span>                :            : 
+<span class="lineNum">     210 </span>                :<span class="lineNoCov">          0 :     res = fko_get_raw_spa_digest(ctx, &amp;tmp_digest);</span>
+<span class="lineNum">     211 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     212 </span>                :            :     {
+<span class="lineNum">     213 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_WARNING, &quot;Error getting digest from SPA data: %s&quot;,</span>
+<span class="lineNum">     214 </span>                :            :             fko_errstr(res));
+<span class="lineNum">     215 </span>                :<span class="lineNoCov">          0 :         fko_destroy(ctx);</span>
+<span class="lineNum">     216 </span>                :<span class="lineNoCov">          0 :         ctx = NULL;</span>
+<span class="lineNum">     217 </span>                :<span class="lineNoCov">          0 :         return(SPA_MSG_DIGEST_ERROR);</span>
+<span class="lineNum">     218 </span>                :            :     }
+<span class="lineNum">     219 </span>                :            : 
+<span class="lineNum">     220 </span>                :<span class="lineNoCov">          0 :     *digest = strdup(tmp_digest);</span>
+<span class="lineNum">     221 </span>                :            : 
+<span class="lineNum">     222 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if (*digest == NULL)</span>
+<span class="lineNum">     223 </span>                :<span class="lineNoCov">          0 :         res = SPA_MSG_ERROR;  /* really a strdup() memory allocation problem */</span>
+<span class="lineNum">     224 </span>                :            : 
+<span class="lineNum">     225 </span>                :<span class="lineNoCov">          0 :     fko_destroy(ctx);</span>
+<span class="lineNum">     226 </span>                :<span class="lineNoCov">          0 :     ctx = NULL;</span>
+<span class="lineNum">     227 </span>                :            : 
+<span class="lineNum">     228 </span>                :<span class="lineNoCov">          0 :     return res;</span>
+<span class="lineNum">     229 </span>                :            : }
+<span class="lineNum">     230 </span>                :            : 
+<span class="lineNum">     231 </span>                :            : 
+<span class="lineNum">     232 </span>                :            : /* Popluate a spa_data struct from an initialized (and populated) FKO context.
+<a name="233"><span class="lineNum">     233 </span>                :            : */</a>
+<span class="lineNum">     234 </span>                :            : static int
+<span class="lineNum">     235 </span>                :<span class="lineNoCov">          0 : get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)</span>
+<span class="lineNum">     236 </span>                :            : {
+<span class="lineNum">     237 </span>                :<span class="lineNoCov">          0 :     int res = FKO_SUCCESS;</span>
+<span class="lineNum">     238 </span>                :            : 
+<span class="lineNum">     239 </span>                :<span class="lineNoCov">          0 :     res = fko_get_username(ctx, &amp;(spdat-&gt;username));</span>
+<span class="lineNum">     240 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     241 </span>                :            :         return(res);
+<span class="lineNum">     242 </span>                :            : 
+<span class="lineNum">     243 </span>                :<span class="lineNoCov">          0 :     res = fko_get_timestamp(ctx, &amp;(spdat-&gt;timestamp));</span>
+<span class="lineNum">     244 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     245 </span>                :            :         return(res);
+<span class="lineNum">     246 </span>                :            : 
+<span class="lineNum">     247 </span>                :<span class="lineNoCov">          0 :     res = fko_get_version(ctx, &amp;(spdat-&gt;version));</span>
+<span class="lineNum">     248 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     249 </span>                :            :         return(res);
+<span class="lineNum">     250 </span>                :            : 
+<span class="lineNum">     251 </span>                :<span class="lineNoCov">          0 :     res = fko_get_spa_message_type(ctx, &amp;(spdat-&gt;message_type));</span>
+<span class="lineNum">     252 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     253 </span>                :            :         return(res);
+<span class="lineNum">     254 </span>                :            : 
+<span class="lineNum">     255 </span>                :<span class="lineNoCov">          0 :     res = fko_get_spa_message(ctx, &amp;(spdat-&gt;spa_message));</span>
+<span class="lineNum">     256 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     257 </span>                :            :         return(res);
+<span class="lineNum">     258 </span>                :            : 
+<span class="lineNum">     259 </span>                :<span class="lineNoCov">          0 :     res = fko_get_spa_nat_access(ctx, &amp;(spdat-&gt;nat_access));</span>
+<span class="lineNum">     260 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     261 </span>                :            :         return(res);
+<span class="lineNum">     262 </span>                :            : 
+<span class="lineNum">     263 </span>                :<span class="lineNoCov">          0 :     res = fko_get_spa_server_auth(ctx, &amp;(spdat-&gt;server_auth));</span>
+<span class="lineNum">     264 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     265 </span>                :            :         return(res);
+<span class="lineNum">     266 </span>                :            : 
+<span class="lineNum">     267 </span>                :<span class="lineNoCov">          0 :     res = fko_get_spa_client_timeout(ctx, (int *)&amp;(spdat-&gt;client_timeout));</span>
+<span class="lineNum">     268 </span>                :            :     if(res != FKO_SUCCESS)
+<span class="lineNum">     269 </span>                :            :         return(res);
+<span class="lineNum">     270 </span>                :            : 
+<span class="lineNum">     271 </span>                :            :     return(res);
+<span class="lineNum">     272 </span>                :            : }
+<span class="lineNum">     273 </span>                :            : 
+<span class="lineNum">     274 </span>                :            : /* Check for access.conf stanza SOURCE match based on SPA packet
+<span class="lineNum">     275 </span>                :            :  * source IP
+<a name="276"><span class="lineNum">     276 </span>                :            : */</a>
+<span class="lineNum">     277 </span>                :            : static int
+<span class="lineNum">     278 </span>                :<span class="lineNoCov">          0 : is_src_match(acc_stanza_t *acc, const uint32_t ip)</span>
+<span class="lineNum">     279 </span>                :            : {
+<span class="lineNum">     280 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     while (acc)</span>
+<span class="lineNum">     281 </span>                :            :     {
+<span class="lineNum">     282 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(compare_addr_list(acc-&gt;source_list, ip))</span>
+<span class="lineNum">     283 </span>                :            :             return 1;
+<span class="lineNum">     284 </span>                :            : 
+<span class="lineNum">     285 </span>                :<span class="lineNoCov">          0 :         acc = acc-&gt;next;</span>
+<span class="lineNum">     286 </span>                :            :     }
+<span class="lineNum">     287 </span>                :            :     return 0;
+<span class="lineNum">     288 </span>                :            : }
+<span class="lineNum">     289 </span>                :            : 
+<span class="lineNum">     290 </span>                :            : /* Process the SPA packet data
+<a name="291"><span class="lineNum">     291 </span>                :            : */</a>
+<span class="lineNum">     292 </span>                :            : void
+<span class="lineNum">     293 </span>                :<span class="lineNoCov">          0 : incoming_spa(fko_srv_options_t *opts)</span>
+<span class="lineNum">     294 </span>                :            : {
+<span class="lineNum">     295 </span>                :            :     /* Always a good idea to initialize ctx to null if it will be used
+<span class="lineNum">     296 </span>                :            :      * repeatedly (especially when using fko_new_with_data()).
+<span class="lineNum">     297 </span>                :            :     */
+<span class="lineNum">     298 </span>                :<span class="lineNoCov">          0 :     fko_ctx_t       ctx = NULL;</span>
+<span class="lineNum">     299 </span>                :            : 
+<span class="lineNum">     300 </span>                :<span class="lineNoCov">          0 :     char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;</span>
+<span class="lineNum">     301 </span>                :            :     time_t          now_ts;
+<span class="lineNum">     302 </span>                :<span class="lineNoCov">          0 :     int             res, ts_diff, enc_type, stanza_num=0, pid_status=0;</span>
+<span class="lineNum">     303 </span>                :<span class="lineNoCov">          0 :     int             added_replay_digest = 0, pkt_data_len=0;</span>
+<span class="lineNum">     304 </span>                :<span class="lineNoCov">          0 :     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;</span>
+<span class="lineNum">     305 </span>                :<span class="lineNoCov">          0 :     int             conf_pkt_age = 0;</span>
+<span class="lineNum">     306 </span>                :            :     char            dump_buf[CTX_DUMP_BUFSIZE];
+<span class="lineNum">     307 </span>                :            : 
+<span class="lineNum">     308 </span>                :<span class="lineNoCov">          0 :     spa_pkt_info_t *spa_pkt = &amp;(opts-&gt;spa_pkt);</span>
+<span class="lineNum">     309 </span>                :            : 
+<span class="lineNum">     310 </span>                :            :     /* This will hold our pertinent SPA data.
+<span class="lineNum">     311 </span>                :            :     */
+<span class="lineNum">     312 </span>                :            :     spa_data_t spadat;
+<span class="lineNum">     313 </span>                :            : 
+<span class="lineNum">     314 </span>                :            :     /* Loop through all access stanzas looking for a match
+<span class="lineNum">     315 </span>                :            :     */
+<span class="lineNum">     316 </span>                :<span class="lineNoCov">          0 :     acc_stanza_t        *acc = opts-&gt;acc_stanzas;</span>
+<span class="lineNum">     317 </span>                :            :     acc_string_list_t   *gpg_id_ndx;
+<span class="lineNum">     318 </span>                :            :     acc_string_list_t   *gpg_fpr_ndx;
+<span class="lineNum">     319 </span>                :<span class="lineNoCov">          0 :     unsigned char        is_gpg_match = 0;</span>
+<span class="lineNum">     320 </span>                :            : 
+<span class="lineNum">     321 </span>                :<span class="lineNoCov">          0 :     inet_ntop(AF_INET, &amp;(spa_pkt-&gt;packet_src_ip),</span>
+<span class="lineNum">     322 </span>                :            :         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+<span class="lineNum">     323 </span>                :            : 
+<span class="lineNum">     324 </span>                :<span class="lineNoCov">          0 :     inet_ntop(AF_INET, &amp;(spa_pkt-&gt;packet_dst_ip),</span>
+<span class="lineNum">     325 </span>                :            :         spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+<span class="lineNum">     326 </span>                :            : 
+<span class="lineNum">     327 </span>                :            :     /* At this point, we want to validate and (if needed) preprocess the
+<span class="lineNum">     328 </span>                :            :      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
+<span class="lineNum">     329 </span>                :            :      * try to eliminate obvious non-spa packets).
+<span class="lineNum">     330 </span>                :            :     */
+<span class="lineNum">     331 </span>                :<span class="lineNoCov">          0 :     pkt_data_len = spa_pkt-&gt;packet_data_len;</span>
+<span class="lineNum">     332 </span>                :<span class="lineNoCov">          0 :     res = preprocess_spa_data(opts, spadat.pkt_source_ip);</span>
+<span class="lineNum">     333 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     334 </span>                :            :     {
+<span class="lineNum">     335 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_DEBUG, &quot;[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.&quot;,</span>
+<span class="lineNum">     336 </span>                :            :             spadat.pkt_source_ip, res, get_errstr(res));
+<span class="lineNum">     337 </span>                :<span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     338 </span>                :            :     }
+<span class="lineNum">     339 </span>                :            : 
+<span class="lineNum">     340 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(opts-&gt;foreground == 1 &amp;&amp; opts-&gt;verbose &gt; 2)</span>
+<span class="lineNum">     341 </span>                :            :     {
+<span class="lineNum">     342 </span>                :            :         printf(&quot;[+] candidate SPA packet payload:\n&quot;);
+<span class="lineNum">     343 </span>                :<span class="lineNoCov">          0 :         hex_dump(spa_pkt-&gt;packet_data, pkt_data_len);</span>
+<span class="lineNum">     344 </span>                :            :     }
+<span class="lineNum">     345 </span>                :            : 
+<span class="lineNum">     346 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(strncasecmp(opts-&gt;config[CONF_ENABLE_SPA_PACKET_AGING], &quot;Y&quot;, 1) == 0)</span>
+<span class="lineNum">     347 </span>                :            :     {
+<span class="lineNum">     348 </span>                :<span class="lineNoCov">          0 :         conf_pkt_age = strtol_wrapper(opts-&gt;config[CONF_MAX_SPA_PACKET_AGE],</span>
+<span class="lineNum">     349 </span>                :            :                 0, RCHK_MAX_SPA_PACKET_AGE, NO_EXIT_UPON_ERR, &amp;is_err);
+<span class="lineNum">     350 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(is_err != FKO_SUCCESS)</span>
+<span class="lineNum">     351 </span>                :            :         {
+<span class="lineNum">     352 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_ERR, &quot;[*] [%s] invalid MAX_SPA_PACKET_AGE&quot;, spadat.pkt_source_ip);</span>
+<span class="lineNum">     353 </span>                :<span class="lineNoCov">          0 :             return;</span>
+<span class="lineNum">     354 </span>                :            :         }
+<span class="lineNum">     355 </span>                :            :     }
+<span class="lineNum">     356 </span>                :            : 
+<span class="lineNum">     357 </span>        [<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if (is_src_match(opts-&gt;acc_stanzas, ntohl(spa_pkt-&gt;packet_src_ip)))</span>
+<span class="lineNum">     358 </span>                :            :     {
+<span class="lineNum">     359 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(strncasecmp(opts-&gt;config[CONF_ENABLE_DIGEST_PERSISTENCE], &quot;Y&quot;, 1) == 0)</span>
+<span class="lineNum">     360 </span>                :            :         {
+<span class="lineNum">     361 </span>                :            :             /* Check for a replay attack
+<span class="lineNum">     362 </span>                :            :             */
+<span class="lineNum">     363 </span>                :<span class="lineNoCov">          0 :             res = get_raw_digest(&amp;raw_digest, (char *)spa_pkt-&gt;packet_data);</span>
+<span class="lineNum">     364 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     365 </span>                :            :             {
+<span class="lineNum">     366 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if (raw_digest != NULL)</span>
+<span class="lineNum">     367 </span>                :<span class="lineNoCov">          0 :                     free(raw_digest);</span>
+<span class="lineNum">     368 </span>                :            :                 return;
+<span class="lineNum">     369 </span>                :            :             }
+<span class="lineNum">     370 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if (raw_digest == NULL)</span>
+<span class="lineNum">     371 </span>                :            :                 return;
+<span class="lineNum">     372 </span>                :            : 
+<span class="lineNum">     373 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if (is_replay(opts, raw_digest) != SPA_MSG_SUCCESS)</span>
+<span class="lineNum">     374 </span>                :            :             {
+<span class="lineNum">     375 </span>                :<span class="lineNoCov">          0 :                 free(raw_digest);</span>
+<span class="lineNum">     376 </span>                :<span class="lineNoCov">          0 :                 return;</span>
+<span class="lineNum">     377 </span>                :            :             }
+<span class="lineNum">     378 </span>                :            :         }
+<span class="lineNum">     379 </span>                :            :     }
+<span class="lineNum">     380 </span>                :            :     else
+<span class="lineNum">     381 </span>                :            :     {
+<span class="lineNum">     382 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_WARNING,</span>
+<span class="lineNum">     383 </span>                :            :             &quot;No access data found for source IP: %s&quot;, spadat.pkt_source_ip
+<span class="lineNum">     384 </span>                :            :         );
+<span class="lineNum">     385 </span>                :<span class="lineNoCov">          0 :         return;</span>
+<span class="lineNum">     386 </span>                :            :     }
+<span class="lineNum">     387 </span>                :            : 
+<span class="lineNum">     388 </span>                :            :     /* Now that we know there is a matching access.conf stanza and the
+<span class="lineNum">     389 </span>                :            :      * incoming SPA packet is not a replay, see if we should grant any
+<span class="lineNum">     390 </span>                :            :      * access
+<span class="lineNum">     391 </span>                :            :     */
+<span class="lineNum">     392 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     while(acc)</span>
+<span class="lineNum">     393 </span>                :            :     {
+<span class="lineNum">     394 </span>                :<span class="lineNoCov">          0 :         res = FKO_SUCCESS;</span>
+<span class="lineNum">     395 </span>                :<span class="lineNoCov">          0 :         cmd_exec_success  = 0;</span>
+<span class="lineNum">     396 </span>                :<span class="lineNoCov">          0 :         attempted_decrypt = 0;</span>
+<span class="lineNum">     397 </span>                :<span class="lineNoCov">          0 :         stanza_num++;</span>
+<span class="lineNum">     398 </span>                :            : 
+<span class="lineNum">     399 </span>                :            :         /* Start access loop with a clean FKO context
+<span class="lineNum">     400 </span>                :            :         */
+<span class="lineNum">     401 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(ctx != NULL)</span>
+<span class="lineNum">     402 </span>                :            :         {
+<span class="lineNum">     403 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)</span>
+<span class="lineNum">     404 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     405 </span>                :            :                     &quot;[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.&quot;,
+<span class="lineNum">     406 </span>                :            :                     spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     407 </span>                :            :                 );
+<span class="lineNum">     408 </span>                :<span class="lineNoCov">          0 :             ctx = NULL;</span>
+<span class="lineNum">     409 </span>                :            :         }
+<span class="lineNum">     410 </span>                :            : 
+<span class="lineNum">     411 </span>                :            :         /* Check for a match for the SPA source and destination IP and the access stanza
+<span class="lineNum">     412 </span>                :            :         */
+<span class="lineNum">     413 </span>[<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>][<span class="branchNoExec" title="Branch 4 was not executed"> # </span><span class="branchNoExec" title="Branch 5 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(! compare_addr_list(acc-&gt;source_list, ntohl(spa_pkt-&gt;packet_src_ip)) ||</span>
+<span class="lineNum">     414 </span>        [<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :            (acc-&gt;destination_list != NULL &amp;&amp; ! compare_addr_list(acc-&gt;destination_list, ntohl(spa_pkt-&gt;packet_dst_ip))))</span>
+<span class="lineNum">     415 </span>                :            :         {
+<span class="lineNum">     416 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_DEBUG,</span>
+<span class="lineNum">     417 </span>                :            :                     &quot;(stanza #%d) SPA packet (%s -&gt; %s) filtered by SOURCE and/or DESTINATION criteria&quot;,
+<span class="lineNum">     418 </span>                :            :                     stanza_num, spadat.pkt_source_ip, spadat.pkt_destination_ip);
+<span class="lineNum">     419 </span>                :<span class="lineNoCov">          0 :             acc = acc-&gt;next;</span>
+<span class="lineNum">     420 </span>                :<span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     421 </span>                :            :         }
+<span class="lineNum">     422 </span>                :            : 
+<span class="lineNum">     423 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_INFO, &quot;(stanza #%d) SPA Packet from IP: %s received with access source match&quot;,</span>
+<span class="lineNum">     424 </span>                :            :             stanza_num, spadat.pkt_source_ip);
+<span class="lineNum">     425 </span>                :            : 
+<span class="lineNum">     426 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_DEBUG, &quot;SPA Packet: '%s'&quot;, spa_pkt-&gt;packet_data);</span>
+<span class="lineNum">     427 </span>                :            : 
+<span class="lineNum">     428 </span>                :            :         /* Make sure this access stanza has not expired
+<span class="lineNum">     429 </span>                :            :         */
+<span class="lineNum">     430 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(acc-&gt;access_expire_time &gt; 0)</span>
+<span class="lineNum">     431 </span>                :            :         {
+<span class="lineNum">     432 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(acc-&gt;expired)</span>
+<span class="lineNum">     433 </span>                :            :             {
+<span class="lineNum">     434 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     435 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     436 </span>                :            :             }
+<span class="lineNum">     437 </span>                :            :             else
+<span class="lineNum">     438 </span>                :            :             {
+<span class="lineNum">     439 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(time(NULL) &gt; acc-&gt;access_expire_time)</span>
+<span class="lineNum">     440 </span>                :            :                 {
+<span class="lineNum">     441 </span>                :<span class="lineNoCov">          0 :                     log_msg(LOG_INFO, &quot;[%s] (stanza #%d) Access stanza has expired&quot;,</span>
+<span class="lineNum">     442 </span>                :            :                         spadat.pkt_source_ip, stanza_num);
+<span class="lineNum">     443 </span>                :<span class="lineNoCov">          0 :                     acc-&gt;expired = 1;</span>
+<span class="lineNum">     444 </span>                :<span class="lineNoCov">          0 :                     acc = acc-&gt;next;</span>
+<span class="lineNum">     445 </span>                :<span class="lineNoCov">          0 :                     continue;</span>
+<span class="lineNum">     446 </span>                :            :                 }
+<span class="lineNum">     447 </span>                :            :             }
+<span class="lineNum">     448 </span>                :            :         }
+<span class="lineNum">     449 </span>                :            : 
+<span class="lineNum">     450 </span>                :            :         /* Get encryption type and try its decoding routine first (if the key
+<span class="lineNum">     451 </span>                :            :          * for that type is set)
+<span class="lineNum">     452 </span>                :            :         */
+<span class="lineNum">     453 </span>                :<span class="lineNoCov">          0 :         enc_type = fko_encryption_type((char *)spa_pkt-&gt;packet_data);</span>
+<span class="lineNum">     454 </span>                :            : 
+<span class="lineNum">     455 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(acc-&gt;use_rijndael)</span>
+<span class="lineNum">     456 </span>                :            :         {
+<span class="lineNum">     457 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if (acc-&gt;key == NULL)</span>
+<span class="lineNum">     458 </span>                :            :             {
+<span class="lineNum">     459 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_ERR,</span>
+<span class="lineNum">     460 </span>                :            :                     &quot;[%s] (stanza #%d) No KEY for RIJNDAEL encrypted messages&quot;,
+<span class="lineNum">     461 </span>                :            :                     spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     462 </span>                :            :                 );
+<span class="lineNum">     463 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     464 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     465 </span>                :            :             }
+<span class="lineNum">     466 </span>                :            : 
+<span class="lineNum">     467 </span>                :            :             /* Command mode messages may be quite long
+<span class="lineNum">     468 </span>                :            :             */
+<span class="lineNum">     469 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(acc-&gt;enable_cmd_exec || enc_type == FKO_ENCRYPTION_RIJNDAEL)</span>
+<span class="lineNum">     470 </span>                :            :             {
+<span class="lineNum">     471 </span>                :<span class="lineNoCov">          0 :                 res = fko_new_with_data(&amp;ctx, (char *)spa_pkt-&gt;packet_data,</span>
+<span class="lineNum">     472 </span>                :<span class="lineNoCov">          0 :                     acc-&gt;key, acc-&gt;key_len, acc-&gt;encryption_mode, acc-&gt;hmac_key,</span>
+<span class="lineNum">     473 </span>                :            :                     acc-&gt;hmac_key_len, acc-&gt;hmac_type);
+<span class="lineNum">     474 </span>                :<span class="lineNoCov">          0 :                 attempted_decrypt = 1;</span>
+<span class="lineNum">     475 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(res == FKO_SUCCESS)</span>
+<span class="lineNum">     476 </span>                :<span class="lineNoCov">          0 :                     cmd_exec_success = 1;</span>
+<span class="lineNum">     477 </span>                :            :             }
+<span class="lineNum">     478 </span>                :            :         }
+<span class="lineNum">     479 </span>                :            : 
+<span class="lineNum">     480 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(acc-&gt;use_gpg &amp;&amp; enc_type == FKO_ENCRYPTION_GPG &amp;&amp; cmd_exec_success == 0)</span>
+<span class="lineNum">     481 </span>                :            :         {
+<span class="lineNum">     482 </span>                :            :             /* For GPG we create the new context without decrypting on the fly
+<span class="lineNum">     483 </span>                :            :              * so we can set some GPG parameters first.
+<span class="lineNum">     484 </span>                :            :             */
+<span class="lineNum">     485 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(acc-&gt;gpg_decrypt_pw != NULL || acc-&gt;gpg_allow_no_pw)</span>
+<span class="lineNum">     486 </span>                :            :             {
+<span class="lineNum">     487 </span>                :<span class="lineNoCov">          0 :                 res = fko_new_with_data(&amp;ctx, (char *)spa_pkt-&gt;packet_data, NULL,</span>
+<span class="lineNum">     488 </span>                :<span class="lineNoCov">          0 :                         0, FKO_ENC_MODE_ASYMMETRIC, acc-&gt;hmac_key,</span>
+<span class="lineNum">     489 </span>                :            :                         acc-&gt;hmac_key_len, acc-&gt;hmac_type);
+<span class="lineNum">     490 </span>                :            : 
+<span class="lineNum">     491 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     492 </span>                :            :                 {
+<span class="lineNum">     493 </span>                :<span class="lineNoCov">          0 :                     log_msg(LOG_WARNING,</span>
+<span class="lineNum">     494 </span>                :            :                         &quot;[%s] (stanza #%d) Error creating fko context (before decryption): %s&quot;,
+<span class="lineNum">     495 </span>                :            :                         spadat.pkt_source_ip, stanza_num, fko_errstr(res)
+<span class="lineNum">     496 </span>                :            :                     );
+<span class="lineNum">     497 </span>                :<span class="lineNoCov">          0 :                     acc = acc-&gt;next;</span>
+<span class="lineNum">     498 </span>                :<span class="lineNoCov">          0 :                     continue;</span>
+<span class="lineNum">     499 </span>                :            :                 }
+<span class="lineNum">     500 </span>                :            : 
+<span class="lineNum">     501 </span>                :            :                 /* Set whatever GPG parameters we have.
+<span class="lineNum">     502 </span>                :            :                 */
+<span class="lineNum">     503 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(acc-&gt;gpg_exe != NULL)</span>
+<span class="lineNum">     504 </span>                :            :                 {
+<span class="lineNum">     505 </span>                :<span class="lineNoCov">          0 :                     res = fko_set_gpg_exe(ctx, acc-&gt;gpg_exe);</span>
+<span class="lineNum">     506 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     507 </span>                :            :                     {
+<span class="lineNum">     508 </span>                :<span class="lineNoCov">          0 :                         log_msg(LOG_WARNING,</span>
+<span class="lineNum">     509 </span>                :            :                             &quot;[%s] (stanza #%d) Error setting GPG path %s: %s&quot;,
+<span class="lineNum">     510 </span>                :            :                             spadat.pkt_source_ip, stanza_num, acc-&gt;gpg_exe,
+<span class="lineNum">     511 </span>                :            :                             fko_errstr(res)
+<span class="lineNum">     512 </span>                :            :                         );
+<span class="lineNum">     513 </span>                :<span class="lineNoCov">          0 :                         acc = acc-&gt;next;</span>
+<span class="lineNum">     514 </span>                :<span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     515 </span>                :            :                     }
+<span class="lineNum">     516 </span>                :            :                 }
+<span class="lineNum">     517 </span>                :            : 
+<span class="lineNum">     518 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(acc-&gt;gpg_home_dir != NULL)</span>
+<span class="lineNum">     519 </span>                :            :                 {
+<span class="lineNum">     520 </span>                :<span class="lineNoCov">          0 :                     res = fko_set_gpg_home_dir(ctx, acc-&gt;gpg_home_dir);</span>
+<span class="lineNum">     521 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     522 </span>                :            :                     {
+<span class="lineNum">     523 </span>                :<span class="lineNoCov">          0 :                         log_msg(LOG_WARNING,</span>
+<span class="lineNum">     524 </span>                :            :                             &quot;[%s] (stanza #%d) Error setting GPG keyring path to %s: %s&quot;,
+<span class="lineNum">     525 </span>                :            :                             spadat.pkt_source_ip, stanza_num, acc-&gt;gpg_home_dir,
+<span class="lineNum">     526 </span>                :            :                             fko_errstr(res)
+<span class="lineNum">     527 </span>                :            :                         );
+<span class="lineNum">     528 </span>                :<span class="lineNoCov">          0 :                         acc = acc-&gt;next;</span>
+<span class="lineNum">     529 </span>                :<span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     530 </span>                :            :                     }
+<span class="lineNum">     531 </span>                :            :                 }
+<span class="lineNum">     532 </span>                :            : 
+<span class="lineNum">     533 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(acc-&gt;gpg_decrypt_id != NULL)</span>
+<span class="lineNum">     534 </span>                :<span class="lineNoCov">          0 :                     fko_set_gpg_recipient(ctx, acc-&gt;gpg_decrypt_id);</span>
+<span class="lineNum">     535 </span>                :            : 
+<span class="lineNum">     536 </span>                :            :                 /* If GPG_REQUIRE_SIG is set for this acc stanza, then set
+<span class="lineNum">     537 </span>                :            :                  * the FKO context accordingly and check the other GPG Sig-
+<span class="lineNum">     538 </span>                :            :                  * related parameters. This also applies when REMOTE_ID is
+<span class="lineNum">     539 </span>                :            :                  * set.
+<span class="lineNum">     540 </span>                :            :                 */
+<span class="lineNum">     541 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(acc-&gt;gpg_require_sig)</span>
+<span class="lineNum">     542 </span>                :            :                 {
+<span class="lineNum">     543 </span>                :<span class="lineNoCov">          0 :                     fko_set_gpg_signature_verify(ctx, 1);</span>
+<span class="lineNum">     544 </span>                :            : 
+<span class="lineNum">     545 </span>                :            :                     /* Set whether or not to ignore signature verification errors.
+<span class="lineNum">     546 </span>                :            :                     */
+<span class="lineNum">     547 </span>                :<span class="lineNoCov">          0 :                     fko_set_gpg_ignore_verify_error(ctx, acc-&gt;gpg_ignore_sig_error);</span>
+<span class="lineNum">     548 </span>                :            :                 }
+<span class="lineNum">     549 </span>                :            :                 else
+<span class="lineNum">     550 </span>                :            :                 {
+<span class="lineNum">     551 </span>                :<span class="lineNoCov">          0 :                     fko_set_gpg_signature_verify(ctx, 0);</span>
+<span class="lineNum">     552 </span>                :<span class="lineNoCov">          0 :                     fko_set_gpg_ignore_verify_error(ctx, 1);</span>
+<span class="lineNum">     553 </span>                :            :                 }
+<span class="lineNum">     554 </span>                :            : 
+<span class="lineNum">     555 </span>                :            :                 /* Now decrypt the data.
+<span class="lineNum">     556 </span>                :            :                 */
+<span class="lineNum">     557 </span>                :<span class="lineNoCov">          0 :                 res = fko_decrypt_spa_data(ctx, acc-&gt;gpg_decrypt_pw, 0);</span>
+<span class="lineNum">     558 </span>                :<span class="lineNoCov">          0 :                 attempted_decrypt = 1;</span>
+<span class="lineNum">     559 </span>                :            :             }
+<span class="lineNum">     560 </span>                :            :         }
+<span class="lineNum">     561 </span>                :            : 
+<span class="lineNum">     562 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(attempted_decrypt == 0)</span>
+<span class="lineNum">     563 </span>                :            :         {
+<span class="lineNum">     564 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_ERR,</span>
+<span class="lineNum">     565 </span>                :            :                 &quot;[%s] (stanza #%d) No stanza encryption mode match for encryption type: %i.&quot;,
+<span class="lineNum">     566 </span>                :            :                 spadat.pkt_source_ip, stanza_num, enc_type);
+<span class="lineNum">     567 </span>                :<span class="lineNoCov">          0 :             acc = acc-&gt;next;</span>
+<span class="lineNum">     568 </span>                :<span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     569 </span>                :            :         }
+<span class="lineNum">     570 </span>                :            : 
+<span class="lineNum">     571 </span>                :            :         /* Do we have a valid FKO context?  Did the SPA decrypt properly?
+<span class="lineNum">     572 </span>                :            :         */
+<span class="lineNum">     573 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     574 </span>                :            :         {
+<span class="lineNum">     575 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING, &quot;[%s] (stanza #%d) Error creating fko context: %s&quot;,</span>
+<span class="lineNum">     576 </span>                :            :                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+<span class="lineNum">     577 </span>                :            : 
+<span class="lineNum">     578 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(IS_GPG_ERROR(res))</span>
+<span class="lineNum">     579 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING, &quot;[%s] (stanza #%d) - GPG ERROR: %s&quot;,</span>
+<span class="lineNum">     580 </span>                :            :                     spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+<span class="lineNum">     581 </span>                :            : 
+<span class="lineNum">     582 </span>                :<span class="lineNoCov">          0 :             acc = acc-&gt;next;</span>
+<span class="lineNum">     583 </span>                :<span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     584 </span>                :            :         }
+<span class="lineNum">     585 </span>                :            : 
+<span class="lineNum">     586 </span>                :            :         /* Add this SPA packet into the replay detection cache
+<span class="lineNum">     587 </span>                :            :         */
+<span class="lineNum">     588 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (!opts-&gt;test &amp;&amp; added_replay_digest == 0</span>
+<span class="lineNum">     589 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 &amp;&amp; strncasecmp(opts-&gt;config[CONF_ENABLE_DIGEST_PERSISTENCE], &quot;Y&quot;, 1) == 0)</span>
+<span class="lineNum">     590 </span>                :            :         {
+<span class="lineNum">     591 </span>                :            : 
+<span class="lineNum">     592 </span>                :<span class="lineNoCov">          0 :             res = add_replay(opts, raw_digest);</span>
+<span class="lineNum">     593 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if (res != SPA_MSG_SUCCESS)</span>
+<span class="lineNum">     594 </span>                :            :             {
+<span class="lineNum">     595 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING, &quot;[%s] (stanza #%d) Could not add digest to replay cache&quot;,</span>
+<span class="lineNum">     596 </span>                :            :                     spadat.pkt_source_ip, stanza_num);
+<span class="lineNum">     597 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     598 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     599 </span>                :            :             }
+<span class="lineNum">     600 </span>                :            :             added_replay_digest = 1;
+<span class="lineNum">     601 </span>                :            :         }
+<span class="lineNum">     602 </span>                :            : 
+<span class="lineNum">     603 </span>                :            :         /* At this point, we assume the SPA data is valid.  Now we need to see
+<span class="lineNum">     604 </span>                :            :          * if it meets our access criteria.
+<span class="lineNum">     605 </span>                :            :         */
+<span class="lineNum">     606 </span>                :<span class="lineNoCov">          0 :         log_msg(LOG_DEBUG, &quot;[%s] (stanza #%d) SPA Decode (res=%i):&quot;,</span>
+<span class="lineNum">     607 </span>                :            :             spadat.pkt_source_ip, stanza_num, res);
+<span class="lineNum">     608 </span>                :            : 
+<span class="lineNum">     609 </span>                :<span class="lineNoCov">          0 :         res = dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));</span>
+<span class="lineNum">     610 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if (res == FKO_SUCCESS)</span>
+<span class="lineNum">     611 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_DEBUG, &quot;%s&quot;, dump_buf);</span>
+<span class="lineNum">     612 </span>                :            :         else
+<span class="lineNum">     613 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING, &quot;Unable to dump FKO context: %s&quot;, fko_errstr(res));</span>
+<span class="lineNum">     614 </span>                :            : 
+<span class="lineNum">     615 </span>                :            :         /* First, if this is a GPG message, and GPG_REMOTE_ID list is not empty,
+<span class="lineNum">     616 </span>                :            :          * then we need to make sure this incoming message is signer ID matches
+<span class="lineNum">     617 </span>                :            :          * an entry in the list.
+<span class="lineNum">     618 </span>                :            :         */
+<span class="lineNum">     619 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(enc_type == FKO_ENCRYPTION_GPG &amp;&amp; acc-&gt;gpg_require_sig)</span>
+<span class="lineNum">     620 </span>                :            :         {
+<span class="lineNum">     621 </span>                :<span class="lineNoCov">          0 :             res = fko_get_gpg_signature_id(ctx, &amp;gpg_id);</span>
+<span class="lineNum">     622 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     623 </span>                :            :             {
+<span class="lineNum">     624 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     625 </span>                :            :                     &quot;[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s&quot;,
+<span class="lineNum">     626 </span>                :            :                     spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+<span class="lineNum">     627 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     628 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     629 </span>                :            :             }
+<span class="lineNum">     630 </span>                :            : 
+<span class="lineNum">     631 </span>                :<span class="lineNoCov">          0 :             res = fko_get_gpg_signature_fpr(ctx, &amp;gpg_fpr);</span>
+<span class="lineNum">     632 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     633 </span>                :            :             {
+<span class="lineNum">     634 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     635 </span>                :            :                     &quot;[%s] (stanza #%d) Error pulling the GPG fingerprint from the context: %s&quot;,
+<span class="lineNum">     636 </span>                :            :                     spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+<span class="lineNum">     637 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     638 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     639 </span>                :            :             }
+<span class="lineNum">     640 </span>                :            : 
+<span class="lineNum">     641 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_INFO, &quot;[%s] (stanza #%d) Incoming SPA data signed by '%s' (fingerprint '%s').&quot;,</span>
+<span class="lineNum">     642 </span>                :            :                 spadat.pkt_source_ip, stanza_num, gpg_id, gpg_fpr);
+<span class="lineNum">     643 </span>                :            : 
+<span class="lineNum">     644 </span>                :            :             /* prefer GnuPG fingerprint match if so configured
+<span class="lineNum">     645 </span>                :            :             */
+<span class="lineNum">     646 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(acc-&gt;gpg_remote_fpr != NULL)</span>
+<span class="lineNum">     647 </span>                :            :             {
+<span class="lineNum">     648 </span>                :<span class="lineNoCov">          0 :                 is_gpg_match = 0;</span>
+<span class="lineNum">     649 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 for(gpg_fpr_ndx = acc-&gt;gpg_remote_fpr_list;</span>
+<span class="lineNum">     650 </span>                :<span class="lineNoCov">          0 :                         gpg_fpr_ndx != NULL; gpg_fpr_ndx=gpg_fpr_ndx-&gt;next)</span>
+<span class="lineNum">     651 </span>                :            :                 {
+<span class="lineNum">     652 </span>                :<span class="lineNoCov">          0 :                     res = fko_gpg_signature_fpr_match(ctx,</span>
+<span class="lineNum">     653 </span>                :<span class="lineNoCov">          0 :                             gpg_fpr_ndx-&gt;str, &amp;is_gpg_match);</span>
+<span class="lineNum">     654 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     655 </span>                :            :                     {
+<span class="lineNum">     656 </span>                :<span class="lineNoCov">          0 :                         log_msg(LOG_WARNING,</span>
+<span class="lineNum">     657 </span>                :            :                             &quot;[%s] (stanza #%d) Error in GPG signature comparision: %s&quot;,
+<span class="lineNum">     658 </span>                :            :                             spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+<span class="lineNum">     659 </span>                :<span class="lineNoCov">          0 :                         acc = acc-&gt;next;</span>
+<span class="lineNum">     660 </span>                :<span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     661 </span>                :            :                     }
+<span class="lineNum">     662 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(is_gpg_match)</span>
+<span class="lineNum">     663 </span>                :            :                         break;
+<span class="lineNum">     664 </span>                :            :                 }
+<span class="lineNum">     665 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(! is_gpg_match)</span>
+<span class="lineNum">     666 </span>                :            :                 {
+<span class="lineNum">     667 </span>                :<span class="lineNoCov">          0 :                     log_msg(LOG_WARNING,</span>
+<span class="lineNum">     668 </span>                :            :                         &quot;[%s] (stanza #%d) Incoming SPA packet signed by: %s, but that fingerprint is not in the GPG_FINGERPRINT_ID list.&quot;,
+<span class="lineNum">     669 </span>                :            :                         spadat.pkt_source_ip, stanza_num, gpg_fpr);
+<span class="lineNum">     670 </span>                :<span class="lineNoCov">          0 :                     acc = acc-&gt;next;</span>
+<span class="lineNum">     671 </span>                :<span class="lineNoCov">          0 :                     continue;</span>
+<span class="lineNum">     672 </span>                :            :                 }
+<span class="lineNum">     673 </span>                :            :             }
+<span class="lineNum">     674 </span>                :            : 
+<span class="lineNum">     675 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(acc-&gt;gpg_remote_id != NULL)</span>
+<span class="lineNum">     676 </span>                :            :             {
+<span class="lineNum">     677 </span>                :<span class="lineNoCov">          0 :                 is_gpg_match = 0;</span>
+<span class="lineNum">     678 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 for(gpg_id_ndx = acc-&gt;gpg_remote_id_list;</span>
+<span class="lineNum">     679 </span>                :<span class="lineNoCov">          0 :                         gpg_id_ndx != NULL; gpg_id_ndx=gpg_id_ndx-&gt;next)</span>
+<span class="lineNum">     680 </span>                :            :                 {
+<span class="lineNum">     681 </span>                :<span class="lineNoCov">          0 :                     res = fko_gpg_signature_id_match(ctx,</span>
+<span class="lineNum">     682 </span>                :<span class="lineNoCov">          0 :                             gpg_id_ndx-&gt;str, &amp;is_gpg_match);</span>
+<span class="lineNum">     683 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     684 </span>                :            :                     {
+<span class="lineNum">     685 </span>                :<span class="lineNoCov">          0 :                         log_msg(LOG_WARNING,</span>
+<span class="lineNum">     686 </span>                :            :                             &quot;[%s] (stanza #%d) Error in GPG signature comparision: %s&quot;,
+<span class="lineNum">     687 </span>                :            :                             spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
+<span class="lineNum">     688 </span>                :<span class="lineNoCov">          0 :                         acc = acc-&gt;next;</span>
+<span class="lineNum">     689 </span>                :<span class="lineNoCov">          0 :                         continue;</span>
+<span class="lineNum">     690 </span>                :            :                     }
+<span class="lineNum">     691 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     if(is_gpg_match)</span>
+<span class="lineNum">     692 </span>                :            :                         break;
+<span class="lineNum">     693 </span>                :            :                 }
+<span class="lineNum">     694 </span>                :            : 
+<span class="lineNum">     695 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(! is_gpg_match)</span>
+<span class="lineNum">     696 </span>                :            :                 {
+<span class="lineNum">     697 </span>                :<span class="lineNoCov">          0 :                     log_msg(LOG_WARNING,</span>
+<span class="lineNum">     698 </span>                :            :                         &quot;[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not in the GPG_REMOTE_ID list.&quot;,
+<span class="lineNum">     699 </span>                :            :                         spadat.pkt_source_ip, stanza_num, gpg_id);
+<span class="lineNum">     700 </span>                :<span class="lineNoCov">          0 :                     acc = acc-&gt;next;</span>
+<span class="lineNum">     701 </span>                :<span class="lineNoCov">          0 :                     continue;</span>
+<span class="lineNum">     702 </span>                :            :                 }
+<span class="lineNum">     703 </span>                :            :             }
+<span class="lineNum">     704 </span>                :            :         }
+<span class="lineNum">     705 </span>                :            : 
+<span class="lineNum">     706 </span>                :            :         /* Populate our spa data struct for future reference.
+<span class="lineNum">     707 </span>                :            :         */
+<span class="lineNum">     708 </span>                :<span class="lineNoCov">          0 :         res = get_spa_data_fields(ctx, &amp;spadat);</span>
+<span class="lineNum">     709 </span>                :            : 
+<span class="lineNum">     710 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(res != FKO_SUCCESS)</span>
+<span class="lineNum">     711 </span>                :            :         {
+<span class="lineNum">     712 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_ERR, &quot;[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s&quot;,</span>
+<span class="lineNum">     713 </span>                :            :                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+<span class="lineNum">     714 </span>                :            : 
+<span class="lineNum">     715 </span>                :<span class="lineNoCov">          0 :             acc = acc-&gt;next;</span>
+<span class="lineNum">     716 </span>                :<span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     717 </span>                :            :         }
+<span class="lineNum">     718 </span>                :            : 
+<span class="lineNum">     719 </span>                :            :         /* Figure out what our timeout will be. If it is specified in the SPA
+<span class="lineNum">     720 </span>                :            :          * data, then use that.  If not, try the FW_ACCESS_TIMEOUT from the
+<span class="lineNum">     721 </span>                :            :          * access.conf file (if there is one).  Otherwise use the default.
+<span class="lineNum">     722 </span>                :            :         */
+<span class="lineNum">     723 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(spadat.client_timeout &gt; 0)</span>
+<span class="lineNum">     724 </span>                :<span class="lineNoCov">          0 :             spadat.fw_access_timeout = spadat.client_timeout;</span>
+<span class="lineNum">     725 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         else if(acc-&gt;fw_access_timeout &gt; 0)</span>
+<span class="lineNum">     726 </span>                :<span class="lineNoCov">          0 :             spadat.fw_access_timeout = acc-&gt;fw_access_timeout;</span>
+<span class="lineNum">     727 </span>                :            :         else
+<span class="lineNum">     728 </span>                :<span class="lineNoCov">          0 :             spadat.fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;</span>
+<span class="lineNum">     729 </span>                :            : 
+<span class="lineNum">     730 </span>                :            :         /* Check packet age if so configured.
+<span class="lineNum">     731 </span>                :            :         */
+<span class="lineNum">     732 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(strncasecmp(opts-&gt;config[CONF_ENABLE_SPA_PACKET_AGING], &quot;Y&quot;, 1) == 0)</span>
+<span class="lineNum">     733 </span>                :            :         {
+<span class="lineNum">     734 </span>                :<span class="lineNoCov">          0 :             time(&amp;now_ts);</span>
+<span class="lineNum">     735 </span>                :            : 
+<span class="lineNum">     736 </span>                :<span class="lineNoCov">          0 :             ts_diff = labs(now_ts - spadat.timestamp);</span>
+<span class="lineNum">     737 </span>                :            : 
+<span class="lineNum">     738 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(ts_diff &gt; conf_pkt_age)</span>
+<span class="lineNum">     739 </span>                :            :             {
+<span class="lineNum">     740 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING, &quot;[%s] (stanza #%d) SPA data time difference is too great (%i seconds).&quot;,</span>
+<span class="lineNum">     741 </span>                :            :                     spadat.pkt_source_ip, stanza_num, ts_diff);
+<span class="lineNum">     742 </span>                :            : 
+<span class="lineNum">     743 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     744 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     745 </span>                :            :             }
+<span class="lineNum">     746 </span>                :            :         }
+<span class="lineNum">     747 </span>                :            : 
+<span class="lineNum">     748 </span>                :            :         /* At this point, we have enough to check the embedded (or packet source)
+<span class="lineNum">     749 </span>                :            :          * IP address against the defined access rights.  We start by splitting
+<span class="lineNum">     750 </span>                :            :          * the spa msg source IP from the remainder of the message.
+<span class="lineNum">     751 </span>                :            :         */
+<span class="lineNum">     752 </span>                :<span class="lineNoCov">          0 :         spa_ip_demark = strchr(spadat.spa_message, ',');</span>
+<span class="lineNum">     753 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(spa_ip_demark == NULL)</span>
+<span class="lineNum">     754 </span>                :            :         {
+<span class="lineNum">     755 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING, &quot;[%s] (stanza #%d) Error parsing SPA message string: %s&quot;,</span>
+<span class="lineNum">     756 </span>                :            :                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+<span class="lineNum">     757 </span>                :            : 
+<span class="lineNum">     758 </span>                :<span class="lineNoCov">          0 :             acc = acc-&gt;next;</span>
+<span class="lineNum">     759 </span>                :<span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     760 </span>                :            :         }
+<span class="lineNum">     761 </span>                :            : 
+<span class="lineNum">     762 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if((spa_ip_demark-spadat.spa_message) &lt; MIN_IPV4_STR_LEN-1</span>
+<span class="lineNum">     763 </span>                :<span class="lineNoCov">          0 :                 || (spa_ip_demark-spadat.spa_message) &gt; MAX_IPV4_STR_LEN)</span>
+<span class="lineNum">     764 </span>                :            :         {
+<span class="lineNum">     765 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING, &quot;[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet&quot;,</span>
+<span class="lineNum">     766 </span>                :            :                 spadat.pkt_source_ip, stanza_num);
+<span class="lineNum">     767 </span>                :<span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     768 </span>                :            :         }
+<span class="lineNum">     769 </span>                :            : 
+<span class="lineNum">     770 </span>                :<span class="lineNoCov">          0 :         strlcpy(spadat.spa_message_src_ip,</span>
+<span class="lineNum">     771 </span>                :<span class="lineNoCov">          0 :             spadat.spa_message, (spa_ip_demark-spadat.spa_message)+1);</span>
+<span class="lineNum">     772 </span>                :            : 
+<span class="lineNum">     773 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(! is_valid_ipv4_addr(spadat.spa_message_src_ip))</span>
+<span class="lineNum">     774 </span>                :            :         {
+<span class="lineNum">     775 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING, &quot;[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet&quot;,</span>
+<span class="lineNum">     776 </span>                :            :                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+<span class="lineNum">     777 </span>                :<span class="lineNoCov">          0 :             break;</span>
+<span class="lineNum">     778 </span>                :            :         }
+<span class="lineNum">     779 </span>                :            : 
+<span class="lineNum">     780 </span>                :<span class="lineNoCov">          0 :         strlcpy(spadat.spa_message_remain, spa_ip_demark+1, MAX_DECRYPTED_SPA_LEN);</span>
+<span class="lineNum">     781 </span>                :            : 
+<span class="lineNum">     782 </span>                :            :         /* If use source IP was requested (embedded IP of 0.0.0.0), make sure it
+<span class="lineNum">     783 </span>                :            :          * is allowed.
+<span class="lineNum">     784 </span>                :            :         */
+<span class="lineNum">     785 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(strcmp(spadat.spa_message_src_ip, &quot;0.0.0.0&quot;) == 0)</span>
+<span class="lineNum">     786 </span>                :            :         {
+<span class="lineNum">     787 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(acc-&gt;require_source_address)</span>
+<span class="lineNum">     788 </span>                :            :             {
+<span class="lineNum">     789 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     790 </span>                :            :                     &quot;[%s] (stanza #%d) Got 0.0.0.0 when valid source IP was required.&quot;,
+<span class="lineNum">     791 </span>                :            :                     spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     792 </span>                :            :                 );
+<span class="lineNum">     793 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     794 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     795 </span>                :            :             }
+<span class="lineNum">     796 </span>                :            : 
+<span class="lineNum">     797 </span>                :<span class="lineNoCov">          0 :             spadat.use_src_ip = spadat.pkt_source_ip;</span>
+<span class="lineNum">     798 </span>                :            :         }
+<span class="lineNum">     799 </span>                :            :         else
+<span class="lineNum">     800 </span>                :<span class="lineNoCov">          0 :             spadat.use_src_ip = spadat.spa_message_src_ip;</span>
+<span class="lineNum">     801 </span>                :            : 
+<span class="lineNum">     802 </span>                :            :         /* If REQUIRE_USERNAME is set, make sure the username in this SPA data
+<span class="lineNum">     803 </span>                :            :          * matches.
+<span class="lineNum">     804 </span>                :            :         */
+<span class="lineNum">     805 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(acc-&gt;require_username != NULL)</span>
+<span class="lineNum">     806 </span>                :            :         {
+<span class="lineNum">     807 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(strcmp(spadat.username, acc-&gt;require_username) != 0)</span>
+<span class="lineNum">     808 </span>                :            :             {
+<span class="lineNum">     809 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     810 </span>                :            :                     &quot;[%s] (stanza #%d) Username in SPA data (%s) does not match required username: %s&quot;,
+<span class="lineNum">     811 </span>                :            :                     spadat.pkt_source_ip, stanza_num, spadat.username, acc-&gt;require_username
+<span class="lineNum">     812 </span>                :            :                 );
+<span class="lineNum">     813 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     814 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     815 </span>                :            :             }
+<span class="lineNum">     816 </span>                :            :         }
+<span class="lineNum">     817 </span>                :            : 
+<span class="lineNum">     818 </span>                :            :         /* Take action based on SPA message type.
+<span class="lineNum">     819 </span>                :            :         */
+<span class="lineNum">     820 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(spadat.message_type == FKO_LOCAL_NAT_ACCESS_MSG</span>
+<span class="lineNum">     821 </span>                :            :               || spadat.message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
+<span class="lineNum">     822 </span>                :<span class="lineNoCov">          0 :               || spadat.message_type == FKO_NAT_ACCESS_MSG</span>
+<span class="lineNum">     823 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :               || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)</span>
+<span class="lineNum">     824 </span>                :            :         {
+<span class="lineNum">     825 </span>                :            : #if FIREWALL_FIREWALLD
+<span class="lineNum">     826 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(strncasecmp(opts-&gt;config[CONF_ENABLE_FIREWD_FORWARDING], &quot;Y&quot;, 1)!=0)</span>
+<span class="lineNum">     827 </span>                :            :             {
+<span class="lineNum">     828 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     829 </span>                :            :                     &quot;(stanza #%d) SPA packet from %s requested NAT access, but is not enabled&quot;,
+<span class="lineNum">     830 </span>                :            :                     stanza_num, spadat.pkt_source_ip
+<span class="lineNum">     831 </span>                :            :                 );
+<span class="lineNum">     832 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     833 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     834 </span>                :            :             }
+<span class="lineNum">     835 </span>                :            : #elif FIREWALL_IPTABLES
+<span class="lineNum">     836 </span>                :            :             if(strncasecmp(opts-&gt;config[CONF_ENABLE_IPT_FORWARDING], &quot;Y&quot;, 1)!=0)
+<span class="lineNum">     837 </span>                :            :             {
+<span class="lineNum">     838 </span>                :            :                 log_msg(LOG_WARNING,
+<span class="lineNum">     839 </span>                :            :                     &quot;(stanza #%d) SPA packet from %s requested NAT access, but is not enabled&quot;,
+<span class="lineNum">     840 </span>                :            :                     stanza_num, spadat.pkt_source_ip
+<span class="lineNum">     841 </span>                :            :                 );
+<span class="lineNum">     842 </span>                :            :                 acc = acc-&gt;next;
+<span class="lineNum">     843 </span>                :            :                 continue;
+<span class="lineNum">     844 </span>                :            :             }
+<span class="lineNum">     845 </span>                :            : #else
+<span class="lineNum">     846 </span>                :            :             log_msg(LOG_WARNING,
+<span class="lineNum">     847 </span>                :            :                 &quot;(stanza #%d) SPA packet from %s requested unsupported NAT access&quot;,
+<span class="lineNum">     848 </span>                :            :                 stanza_num, spadat.pkt_source_ip
+<span class="lineNum">     849 </span>                :            :             );
+<span class="lineNum">     850 </span>                :            :             acc = acc-&gt;next;
+<span class="lineNum">     851 </span>                :            :             continue;
+<span class="lineNum">     852 </span>                :            : #endif
+<span class="lineNum">     853 </span>                :            :         }
+<span class="lineNum">     854 </span>                :            : 
+<span class="lineNum">     855 </span>                :            :         /* Command messages.
+<span class="lineNum">     856 </span>                :            :         */
+<span class="lineNum">     857 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(spadat.message_type == FKO_COMMAND_MSG)</span>
+<span class="lineNum">     858 </span>                :            :         {
+<span class="lineNum">     859 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             if(!acc-&gt;enable_cmd_exec)</span>
+<span class="lineNum">     860 </span>                :            :             {
+<span class="lineNum">     861 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     862 </span>                :            :                     &quot;[%s] (stanza #%d) SPA Command messages are not allowed in the current configuration.&quot;,
+<span class="lineNum">     863 </span>                :            :                     spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     864 </span>                :            :                 );
+<span class="lineNum">     865 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     866 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     867 </span>                :            :             }
+<span class="lineNum">     868 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :             else if(opts-&gt;test)</span>
+<span class="lineNum">     869 </span>                :            :             {
+<span class="lineNum">     870 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_WARNING,</span>
+<span class="lineNum">     871 </span>                :            :                     &quot;[%s] (stanza #%d) --test mode enabled, skipping command execution.&quot;,
+<span class="lineNum">     872 </span>                :            :                     spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     873 </span>                :            :                 );
+<span class="lineNum">     874 </span>                :<span class="lineNoCov">          0 :                 acc = acc-&gt;next;</span>
+<span class="lineNum">     875 </span>                :<span class="lineNoCov">          0 :                 continue;</span>
+<span class="lineNum">     876 </span>                :            :             }
+<span class="lineNum">     877 </span>                :            :             else
+<span class="lineNum">     878 </span>                :            :             {
+<span class="lineNum">     879 </span>                :<span class="lineNoCov">          0 :                 log_msg(LOG_INFO,</span>
+<span class="lineNum">     880 </span>                :            :                     &quot;[%s] (stanza #%d) Processing SPA Command message: command='%s'.&quot;,
+<span class="lineNum">     881 </span>                :            :                     spadat.pkt_source_ip, stanza_num, spadat.spa_message_remain
+<span class="lineNum">     882 </span>                :            :                 );
+<span class="lineNum">     883 </span>                :            : 
+<span class="lineNum">     884 </span>                :            :                 /* Do we need to become another user? If so, we call
+<span class="lineNum">     885 </span>                :            :                  * run_extcmd_as and pass the cmd_exec_uid.
+<span class="lineNum">     886 </span>                :            :                 */
+<span class="lineNum">     887 </span>[<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>][<span class="branchNoExec" title="Branch 2 was not executed"> # </span><span class="branchNoExec" title="Branch 3 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 if(acc-&gt;cmd_exec_user != NULL &amp;&amp; strncasecmp(acc-&gt;cmd_exec_user, &quot;root&quot;, 4) != 0)</span>
+<span class="lineNum">     888 </span>                :            :                 {
+<span class="lineNum">     889 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                     log_msg(LOG_INFO,</span>
+<span class="lineNum">     890 </span>                :            :                             &quot;[%s] (stanza #%d) setuid/setgid user/group to %s/%s (UID=%i,GID=%i) before running command.&quot;,
+<span class="lineNum">     891 </span>                :            :                         spadat.pkt_source_ip, stanza_num, acc-&gt;cmd_exec_user,
+<span class="lineNum">     892 </span>                :<span class="lineNoCov">          0 :                         acc-&gt;cmd_exec_group == NULL ? acc-&gt;cmd_exec_user : acc-&gt;cmd_exec_group,</span>
+<span class="lineNum">     893 </span>                :            :                         acc-&gt;cmd_exec_uid, acc-&gt;cmd_exec_gid);
+<span class="lineNum">     894 </span>                :            : 
+<span class="lineNum">     895 </span>                :<span class="lineNoCov">          0 :                     res = run_extcmd_as(acc-&gt;cmd_exec_uid, acc-&gt;cmd_exec_gid,</span>
+<span class="lineNum">     896 </span>                :            :                             spadat.spa_message_remain, NULL, 0,
+<span class="lineNum">     897 </span>                :            :                             WANT_STDERR, NO_TIMEOUT, &amp;pid_status, opts);
+<span class="lineNum">     898 </span>                :            :                 }
+<span class="lineNum">     899 </span>                :            :                 else /* Just run it as we are (root that is). */
+<span class="lineNum">     900 </span>                :<span class="lineNoCov">          0 :                     res = run_extcmd(spadat.spa_message_remain, NULL, 0,</span>
+<span class="lineNum">     901 </span>                :            :                             WANT_STDERR, 5, &amp;pid_status, opts);
+<span class="lineNum">     902 </span>                :            : 
+<span class="lineNum">     903 </span>                :            :                 /* should only call WEXITSTATUS() if WIFEXITED() is true
+<span class="lineNum">     904 </span>                :            :                 */
+<span class="lineNum">     905 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :                 log_msg(LOG_INFO,</span>
+<span class="lineNum">     906 </span>                :            :                     &quot;[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d&quot;,
+<span class="lineNum">     907 </span>                :            :                     spadat.pkt_source_ip, stanza_num, res,
+<span class="lineNum">     908 </span>                :<span class="lineNoCov">          0 :                     WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);</span>
+<span class="lineNum">     909 </span>                :            : 
+<span class="lineNum">     910 </span>                :<span class="lineNoCov">          0 :                 if(WIFEXITED(pid_status))</span>
+<span class="lineNum">     911 </span>                :            :                 {
+<span class="lineNum">     912 </span>                :            :                     if(WEXITSTATUS(pid_status) != 0)
+<span class="lineNum">     913 </span>                :            :                         res = SPA_MSG_COMMAND_ERROR;
+<span class="lineNum">     914 </span>                :            :                 }
+<span class="lineNum">     915 </span>                :            :                 else
+<span class="lineNum">     916 </span>                :            :                     res = SPA_MSG_COMMAND_ERROR;
+<span class="lineNum">     917 </span>                :            : 
+<span class="lineNum">     918 </span>                :            :                 /* we processed the command on a matching access stanza, so we
+<span class="lineNum">     919 </span>                :            :                  * don't look for anything else to do with this SPA packet
+<span class="lineNum">     920 </span>                :            :                 */
+<span class="lineNum">     921 </span>                :            :                 break;
+<span class="lineNum">     922 </span>                :            :             }
+<span class="lineNum">     923 </span>                :            :         }
+<span class="lineNum">     924 </span>                :            : 
+<span class="lineNum">     925 </span>                :            :         /* From this point forward, we have some kind of access message. So
+<span class="lineNum">     926 </span>                :            :          * we first see if access is allowed by checking access against
+<span class="lineNum">     927 </span>                :            :          * restrict_ports and open_ports.
+<span class="lineNum">     928 </span>                :            :          *
+<span class="lineNum">     929 </span>                :            :          *  --DSS TODO: We should add BLACKLIST support here as well.
+<span class="lineNum">     930 </span>                :            :         */
+<span class="lineNum">     931 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(! acc_check_port_access(acc, spadat.spa_message_remain))</span>
+<span class="lineNum">     932 </span>                :            :         {
+<span class="lineNum">     933 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING,</span>
+<span class="lineNum">     934 </span>                :            :                 &quot;[%s] (stanza #%d) One or more requested protocol/ports was denied per access.conf.&quot;,
+<span class="lineNum">     935 </span>                :            :                 spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     936 </span>                :            :             );
+<span class="lineNum">     937 </span>                :<span class="lineNoCov">          0 :             acc = acc-&gt;next;</span>
+<span class="lineNum">     938 </span>                :<span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     939 </span>                :            :         }
+<span class="lineNum">     940 </span>                :            : 
+<span class="lineNum">     941 </span>                :            :         /* At this point, we process the SPA request and break out of the
+<span class="lineNum">     942 </span>                :            :          * access stanza loop (first valid access stanza stops us looking
+<span class="lineNum">     943 </span>                :            :          * for others).
+<span class="lineNum">     944 </span>                :            :         */
+<span class="lineNum">     945 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(opts-&gt;test)  /* no firewall changes in --test mode */</span>
+<span class="lineNum">     946 </span>                :            :         {
+<span class="lineNum">     947 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING,</span>
+<span class="lineNum">     948 </span>                :            :                 &quot;[%s] (stanza #%d) --test mode enabled, skipping firewall manipulation.&quot;,
+<span class="lineNum">     949 </span>                :            :                 spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     950 </span>                :            :             );
+<span class="lineNum">     951 </span>                :<span class="lineNoCov">          0 :             acc = acc-&gt;next;</span>
+<span class="lineNum">     952 </span>                :<span class="lineNoCov">          0 :             continue;</span>
+<span class="lineNum">     953 </span>                :            :         }
+<span class="lineNum">     954 </span>                :            :         else
+<span class="lineNum">     955 </span>                :            :         {
+<span class="lineNum">     956 </span>                :<span class="lineNoCov">          0 :             process_spa_request(opts, acc, &amp;spadat);</span>
+<span class="lineNum">     957 </span>                :            :         }
+<span class="lineNum">     958 </span>                :            : 
+<span class="lineNum">     959 </span>                :<span class="lineNoCov">          0 :         break;</span>
+<span class="lineNum">     960 </span>                :            :     }
+<span class="lineNum">     961 </span>                :            : 
+<span class="lineNum">     962 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if (raw_digest != NULL)</span>
+<span class="lineNum">     963 </span>                :<span class="lineNoCov">          0 :         free(raw_digest);</span>
+<span class="lineNum">     964 </span>                :            : 
+<span class="lineNum">     965 </span>        [<span class="branchNoExec" title="Branch 0 was not executed"> # </span><span class="branchNoExec" title="Branch 1 was not executed"> # </span>]:<span class="lineNoCov">          0 :     if(ctx != NULL)</span>
+<span class="lineNum">     966 </span>                :            :     {
+<span class="lineNum">     967 </span>        [<span class="branchNoExec" title="Branch 1 was not executed"> # </span><span class="branchNoExec" title="Branch 2 was not executed"> # </span>]:<span class="lineNoCov">          0 :         if(fko_destroy(ctx) == FKO_ERROR_ZERO_OUT_DATA)</span>
+<span class="lineNum">     968 </span>                :<span class="lineNoCov">          0 :             log_msg(LOG_WARNING,</span>
+<span class="lineNum">     969 </span>                :            :                 &quot;[%s] (stanza #%d) fko_destroy() could not zero out sensitive data buffer.&quot;,
+<span class="lineNum">     970 </span>                :            :                 spadat.pkt_source_ip, stanza_num
+<span class="lineNum">     971 </span>                :            :             );
+<span class="lineNum">     972 </span>                :<span class="lineNoCov">          0 :         ctx = NULL;</span>
+<span class="lineNum">     973 </span>                :            :     }
+<span class="lineNum">     974 </span>                :            : 
+<span class="lineNum">     975 </span>                :            :     return;
+<span class="lineNum">     976 </span>                :            : }
+<span class="lineNum">     977 </span>                :            : 
+<span class="lineNum">     978 </span>                :            : /***EOF***/
+</pre>
+      </td>
+    </tr>
+  </table>
+  <br>
+
+  <table width="100%" border=0 cellspacing=0 cellpadding=0>
+    <tr><td class="ruler"><img src="../glass.png" width=3 height=3 alt=""></td></tr>
+    <tr><td class="versionInfo">Generated by: <a href="http://ltp.sourceforge.net/coverage/lcov.php" target="_parent">LCOV version 1.10</a></td></tr>
+  </table>
+  <br>
+
+</body>
+</html>
