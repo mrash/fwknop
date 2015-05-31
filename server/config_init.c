@@ -989,33 +989,19 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     */
     optind = 0;
 
-    /* First, scan the command-line args for -h/--help or an alternate
-     * configuration file. If we find an alternate config file, use it,
-     * otherwise use the default. We also grab any override config files
-     * as well. In addition, we handle key generation here since this is
-     * independent of configuration parsing.
+    /* First, scan the command-line args to see if we are in key-generation
+     * mode. This is independent of config parsing and other operations, so
+     * it is done as the very first thing. Also handle printing of the fwknop
+     * version string since we don't need to parse a config for this.
     */
     while ((cmd_arg = getopt_long(argc, argv,
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
 
-        /* If help is wanted, give it and exit.
-        */
         switch(cmd_arg) {
-            case 'h':
-                usage();
+            case 'V':
+                fprintf(stdout, "fwknopd server %s, compiled for firewall bin: %s\n",
+                        MY_VERSION, FIREWALL_EXE);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-
-            /* Look for configuration file arg.
-            */
-            case 'c':
-                set_config_entry(opts, CONF_CONFIG_FILE, optarg);
-                got_conf_file++;
-
-                /* If we already have the config_override option, we are done.
-                */
-                if(got_override_config > 0)
-                    break;
-
             case 'k':
                 opts->key_gen = 1;
                 break;
@@ -1054,6 +1040,42 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
                 break;
+        }
+    }
+
+    if(opts->key_gen)
+        generate_keys(opts); /* this function exits */
+
+    /* Reset the options index so we can run through them again.
+    */
+    optind = 0;
+
+    /* Now, scan the command-line args for -h/--help or an alternate
+     * configuration file. If we find an alternate config file, use it,
+     * otherwise use the default. We also grab any override config files
+     * as well. In addition, we handle key generation here since this is
+     * independent of configuration parsing.
+    */
+    while ((cmd_arg = getopt_long(argc, argv,
+            GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
+
+        /* If help is wanted, give it and exit.
+        */
+        switch(cmd_arg) {
+            case 'h':
+                usage();
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+
+            /* Look for configuration file arg.
+            */
+            case 'c':
+                set_config_entry(opts, CONF_CONFIG_FILE, optarg);
+                got_conf_file++;
+
+                /* If we already have the config_override option, we are done.
+                */
+                if(got_override_config > 0)
+                    break;
 
             /* Look for override configuration file arg.
             */
@@ -1067,9 +1089,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                     break;
         }
     }
-
-    if(opts->key_gen)
-        generate_keys(opts);
 
     /* If no alternate configuration file was specified, we use the
      * default.
@@ -1282,9 +1301,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case SYSLOG_ENABLE:
                 opts->syslog_enable = 1;
                 break;
-            case 'V':
-                fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
             default:
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
