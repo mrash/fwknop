@@ -4,7 +4,9 @@
 # purpose of this is to allow the generated fuzzing corpus under an AFL
 # fuzzing run to be sent back through the fwknop code to see which
 # functions/lines were executed by AFL. This can be used to help tune the
-# original test case inputs.
+# original test case inputs. A main consumer of fwknop compiled in this way
+# is the afl-cov project (https://github.com/mrash/afl-cov/) which shows code
+# coverage achieved by test inputs.
 #
 
 cd ../../
