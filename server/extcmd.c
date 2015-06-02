@@ -99,6 +99,10 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
     int     pipe_fd[2];
 #endif
 
+#if AFL_FUZZING
+    return 0;
+#endif
+
     *pid_status = 0;
 
     /* Even without execvpe() we examine the command for basic validity
@@ -563,6 +567,10 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
     pid_t   pid=0;
 #else
     FILE       *fd = NULL;
+#endif
+
+#if AFL_FUZZING
+    return 0;
 #endif
 
     *pid_status = 0;
