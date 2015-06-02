@@ -5,6 +5,17 @@ SERVER="../../server/.libs/fwknopd"
 CLIENT="../../client/.libs/fwknop"
 LIB_DIR="../../lib/.libs"
 
+fw_type() {
+    ### default to iptables
+    FW="/iptables"
+    LD_LIBRARY_PATH=$LIB_DIR $SERVER --version | grep "firewall-cmd"
+    if [ "$?" = "0" ]
+    then
+        FW="/firewalld"
+    fi
+    eval "$2=$1$FW"
+}
+
 git_banner() {
     if [ -d '../../.git' ] && [ `which git` ]
     then

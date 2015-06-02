@@ -1,6 +1,13 @@
 #!/bin/sh -x
 
-FWKNOPD_CONF_FILE="test-cases/server-conf/fwknopd.conf"
+. ./fuzzing-wrappers/fcns
+
+IN_DIR_BASE="test-cases/server-conf"
+IN_DIR=''
+CONF_FILE="/fwknopd.conf"
+fw_type $IN_DIR_BASE IN_DIR
+
+FWKNOPD_CONF_FILE="$IN_DIR$CONF_FILE"
 
 if [ $@ ]
 then

@@ -9,7 +9,8 @@
 FDIR="server-conf.out"
 OUT_DIR="$TOP_DIR/$FDIR"
 PREV_OUT_DIR=''
-IN_DIR="test-cases/server-conf"
+IN_DIR_BASE="test-cases/server-conf"
+IN_DIR=''
 FUZZ_FILE=$OUT_DIR/afl_fwknopd.conf
 
 ### build up our afl-fuzz text banner
@@ -17,6 +18,9 @@ TSTR="fwknopd,fwknopd.conf"
 GIT_STR=''
 git_banner GIT_STR
 BANNER="$TSTR$GIT_STR"
+
+### point to the appropriate test cases (iptables vs. firewalld)
+fw_type $IN_DIR_BASE IN_DIR
 
 ### set up directories
 dir_init $ARCHIVE_DIR $FDIR $OUT_DIR PREV_OUT_DIR
