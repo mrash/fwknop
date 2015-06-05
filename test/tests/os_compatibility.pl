@@ -285,4 +285,35 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+
+    ### tests for Jonathan Bennett's Fwknop2 Android app
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'Android compatibility',
+        'detail'   => 'Fwknop2 (commit 81d4b2f6)',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+                '/Tq4' .
+                '6RmmFdCNJOFkesif' .
+                'TKvHZQ2tuSjsPq5f' .
+                'MZqGZVRnd3SFOIeI' .
+                'nw/AId6lRxbhvO1v' .
+                'jNNgJt492yR4gmVZ' .
+                '1LwMKx8zmLVeqV0J' .
+                '+wCWU4ZjNf2FKOlE' .
+                'jvEDFmLIPCqZqli3' .
+                'P4hwUjC+jn0Pkh23' .
+                'GV0uZMm8+Q2k8xVb' .
+                'oZXaWie2hJOUK+oa' .
+                'QxtFZWOUOCTG05oS' .
+                'ZWDQgJrc',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_android_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+
 );
