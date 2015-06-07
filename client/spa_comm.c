@@ -269,7 +269,7 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
     tcph->check     = 0;
     tcph->urg_ptr   = 0;
 
-    /* No we can compute our checksum.
+    /* Now we can compute our checksum.
     */
     iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
 
@@ -368,7 +368,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
     udph->check     = 0;
     udph->len       = htons(sd_len + sizeof(struct udphdr));
 
-    /* No we can compute our checksum.
+    /* Now we can compute our checksum.
     */
     iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
 
@@ -472,7 +472,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
         icmph->un.echo.sequence = htons(1);
     }
 
-    /* No we can compute our checksum.
+    /* Now we can compute our checksum.
     */
     iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
     icmph->checksum = chksum((unsigned short *)icmph, sizeof(struct icmphdr) + sd_len);
