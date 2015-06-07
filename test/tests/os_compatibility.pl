@@ -286,7 +286,8 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
 
-    ### tests for Jonathan Bennett's Fwknop2 Android app
+    ### tests for Jonathan Bennett's Fwknop2 Android app. All commit hashes
+    ### are from: https://github.com/oneru/Fwknop2
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'Android compatibility',
@@ -308,6 +309,33 @@
                 'oZXaWie2hJOUK+oa' .
                 'QxtFZWOUOCTG05oS' .
                 'ZWDQgJrc',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_android_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'Android compatibility',
+        'detail'   => 'Fwknop2 (Beta1)',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+                '8QlE' .
+                'OMGvx+FgQZ1Ipdrp' .
+                '9G++fRv/ljKwAduX' .
+                'Lj8d3rtPEHXlR+F/' .
+                '2rVTUgumPMVU8NYf' .
+                'VR0wJBHO6/9wbvbB' .
+                'ePlmwoSeVBXYT3N0' .
+                'jsuaH6YUG/9udyfc' .
+                'hQTYVXbtEnAxtScu' .
+                'dZP5eWXPthoL1Jl8' .
+                'HrEF78mVjjINU7pO' .
+                'B4jEP5Hd+1RWzgv+' .
+                'NH9sm2aUVzeB3Iux' .
+                'QnaMhunU',
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_android_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [qr/with expire time/],
