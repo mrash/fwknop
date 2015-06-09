@@ -362,7 +362,6 @@ EXTRA_DIST = \
     test/misc/pf.rules \
     test/misc/pf.sh \
     test/afl/compile/afl-compile-code-coverage.sh \
-    test/afl/compile/afl-compile-no-enable-arg.sh \
     test/afl/compile/afl-compile.sh \
     test/afl/doc/AFL_status_screen.png \
     test/afl/README.md \
