@@ -408,7 +408,8 @@ EXTRA_DIST = \
     test/afl/test-cases/spa-pkts/spa2_sha512.start \
     test/afl/test-cases/spa-pkts/spa2_sha384.start \
     test/afl/test-cases/spa-pkts/spa2_md5.start \
-    test/afl/test-cases/server-conf/fwknopd.conf \
+    test/afl/test-cases/server-conf/firewalld/fwknopd.conf \
+    test/afl/test-cases/server-conf/iptables/fwknopd.conf \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
