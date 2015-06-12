@@ -1653,6 +1653,8 @@ sub look_for_crashes() {
 sub config_recompile() {
     my $config_cmd = shift;
 
+    my $rv = 1;
+
     if ($enable_profile_coverage_check) {
         chdir 'test' or die $!;
         ### we're recompiling, so remove any existing profile coverage
@@ -1670,12 +1672,21 @@ sub config_recompile() {
     if ($sudo_path) {
         unless (&run_cmd("$sudo_path -u $username make",
                 $cmd_out_tmp, "test/$curr_test_file")) {
-            return 0 unless &run_cmd('make', $cmd_out_tmp,
+            $rv = 0 unless &run_cmd('make', $cmd_out_tmp,
                     "test/$curr_test_file");
         }
     } else {
-        return 0 unless &run_cmd('make', $cmd_out_tmp,
+        $rv = 0 unless &run_cmd('make', $cmd_out_tmp,
             "test/$curr_test_file");
+    }
+
+    unless ($rv) {
+        ### override the failure if makeinfo is missing since this
+        ### this doesn't affect run time operations
+        if (&file_find_regex([qr/makeinfo.*is\smissing/], $MATCH_ALL,
+                $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+            $rv = 1;
+        }
     }
 
     return 1;
@@ -1729,7 +1740,6 @@ sub configure_args_udp_server_no_libpcap() {
     unless (&config_recompile('./extras/apparmor/configure_args.sh --enable-udp-server')) {
         &write_test_file("[-] configure/recompile failure.\n",
             "test/$curr_test_file");
-        chdir $curr_pwd or die $!;
         $rv = 0;
     }
 
