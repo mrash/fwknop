@@ -31,7 +31,7 @@ fi
 
 ### run afl-fuzz
 LD_LIBRARY_PATH=$LIB_DIR afl-fuzz \
-    -T $BANNER -t 1000 -i $IN_DIR \
+    -m $MEM_LIMIT -T $BANNER -t $TIMEOUT -i $IN_DIR \
     -o $OUT_DIR -f $OUT_DIR/afl_digest_cache.conf $SERVER \
     -c ../conf/ipt_snat_fwknopd.conf \
     -a ../conf/default_access.conf \

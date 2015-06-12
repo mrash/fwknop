@@ -32,7 +32,7 @@ fi
 ./fuzzing-wrappers/helpers/fwknopd-enc-pkt-file.sh
 
 LD_LIBRARY_PATH=$LIB_DIR afl-fuzz \
-    -T $BANNER -t 1000 -i $IN_DIR \
+    -m $MEM_LIMIT -T $BANNER -t $TIMEOUT -i $IN_DIR \
     -o $OUT_DIR -f $OUT_DIR/afl_enc_pkt.data $SERVER \
     -c ../conf/default_fwknopd.conf \
     -a ../conf/default_access.conf \

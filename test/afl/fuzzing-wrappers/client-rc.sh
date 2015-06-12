@@ -20,6 +20,10 @@ BANNER="$TSTR$GIT_STR"
 ### set up directories
 dir_init $ARCHIVE_DIR $FDIR $OUT_DIR PREV_OUT_DIR
 
+### make sure the client rc file can be parsed (a failure
+### exit status is expected though)
+./fuzzing-wrappers/helpers/fwknop-rc-test.sh && exit $?
+
 ### support resuming from a previous run
 if [ $@ ] && [ "$1" = "resume" ]
 then
@@ -27,7 +31,9 @@ then
 fi
 
 LD_LIBRARY_PATH=$LIB_DIR afl-fuzz \
-    -T $BANNER -t 1000 -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/fwknoprc \
-    $CLIENT --rc-file $OUT_DIR/fwknoprc -T -a 1.1.1.1 -n testhost.com
+    -m $MEM_LIMIT -T $BANNER -t $TIMEOUT \
+    -i $IN_DIR -o $OUT_DIR -f $OUT_DIR/fwknoprc \
+    $CLIENT --rc-file $OUT_DIR/fwknoprc -T \
+    -a 1.1.1.1 -n testhost2.com
 
 exit $?

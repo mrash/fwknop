@@ -34,7 +34,8 @@ fi
 ### make sure that parsing the fwknopd.conf file works
 ./fuzzing-wrappers/helpers/fwknopd-parse-conf.sh || exit $?
 
-LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T $BANNER -t 1000 -i $IN_DIR \
+LD_LIBRARY_PATH=$LIB_DIR afl-fuzz \
+    -m $MEM_LIMIT -T $BANNER -t $TIMEOUT -i $IN_DIR \
     -o $OUT_DIR -f $FUZZ_FILE $SERVER \
     -O ../conf/override_no_digest_tracking_fwknopd.conf \
     -a ../conf/default_access.conf \
