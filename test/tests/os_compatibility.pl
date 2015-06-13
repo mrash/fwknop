@@ -342,6 +342,32 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'Android compatibility',
+        'detail'   => 'Fwknop2-v1.0-RC.2',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+                '8noA' .
+                'VjCwHjmqXgqngHY/' .
+                'JzHi3Bd9LB4E6eeC' .
+                '5dyVG7PmsOjmLITh' .
+                'LLNAj3JPbzBodUYS' .
+                'h/g5/rY88m/EtFhy' .
+                'eSACzRuRC+LVYuI2' .
+                'M/2LmCFKNpsq0jAm' .
+                'BuUv3K9j9j4czpwG' .
+                'FJZNseZpOc4oS8ch' .
+                'VKumQJF6b1AQ1w7H' .
+                'BVFuhp6gQEJifs7o' .
+                '03',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'def_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
 
 
 );
