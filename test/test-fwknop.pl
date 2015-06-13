@@ -2615,6 +2615,15 @@ sub python_fko_compile_install() {
     &run_cmd("$python_path setup.py install --prefix=../test/$python_fko_dir",
         $cmd_out_tmp, "../test/$curr_test_file");
 
+    if (&file_find_regex(
+            [qr/fatal\serror.*Python\.h/],
+            $MATCH_ALL, $APPEND_RESULTS, "../test/$curr_test_file")) {
+        ### python-devel is missing, disable all python tests
+        push @tests_to_exclude, qr/python/;
+        $rv = 0;
+    }
+
+
     chdir $curr_pwd or die $!;
 
     return $rv;
