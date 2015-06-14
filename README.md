@@ -132,11 +132,13 @@ The following is a complete list of features supported by the fwknop project:
    as the port over which the follow-on connection is made via the iptables NAT
    capabilities. The later applies to forwarded connections to internal services and
    to access granted to local sockets on the system running fwknopd.
- * Integration with Tor (see my DefCon 14 presentation). Note that because Tor uses
-   TCP for transport, sending SPA packets through the Tor network requires that each
-   SPA packet is sent over an established TCP connection, so technically this breaks
-   the "single" aspect of "Single Packet Authorization". However, Tor provides
-   anonymity benefits that can outweigh this consideration in some deployments.
+ * Integration with Tor (as described in this
+   [DefCon 14](http://www.cipherdyne.org/fwknop/docs/talks/dc14_fwknop_slides.pdf) presentation).
+   Note that because Tor uses TCP for transport, sending SPA packets through the Tor
+   network requires that each SPA packet is sent over an established TCP connection,
+   so technically this breaks the "single" aspect of "Single Packet Authorization".
+   However, Tor provides anonymity benefits that can outweigh this consideration in
+   some deployments.
  * Implements a versioned protocol for SPA communications, so it is easy to extend
    the protocol to offer new SPA message types and maintain backwards compatibility
    with older fwknop clients at the same time.
