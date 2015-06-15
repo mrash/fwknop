@@ -1620,6 +1620,11 @@ sub fko_wrapper_exec() {
         }
 
         $rv = 0 if &is_crash($curr_test_file);
+
+    } else {
+        ### could not compile, so disable remaining fault injection
+        ### "tag" tests
+        push @tests_to_exclude, qr/fault\sinjection.*\stag\s/;
     }
 
     return $rv;
