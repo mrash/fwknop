@@ -104,6 +104,7 @@ my $python_script    = 'fko-python.py';
 my $python_path      = '';
 our $cmd_exec_test_file = '/tmp/fwknoptest';
 my $default_key = 'fwknoptest';
+my $asan_dir = 'asan';
 
 my $tests_dir = 'tests';
 
@@ -123,6 +124,7 @@ my @test_files = (
     "$tests_dir/rijndael_hmac_fuzzing.pl",
     "$tests_dir/fault_injection.pl",
     "$tests_dir/afl_fuzzing.pl",
+    "$tests_dir/address_sanitizer.pl",
     "$tests_dir/os_compatibility.pl",
     "$tests_dir/perl_FKO_module.pl",
     "$tests_dir/python_fko.pl",
@@ -149,6 +151,7 @@ our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
 our @rijndael_hmac_fuzzing   = ();  ### from tests/rijndael_hmac_fuzzing.pl
 our @fault_injection         = ();  ### from tests/fault_injection.pl
 our @afl_fuzzing             = ();  ### from tests/alf_fuzzing.pl
+our @address_sanitizer       = ();  ### from tests/address_sanitizer.pl
 our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
 our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
 our @gpg                     = ();  ### from tests/gpg.pl
@@ -804,6 +807,7 @@ my @tests = (
     @rijndael_hmac,
     @rijndael_hmac_fuzzing,
     @fault_injection,
+    @address_sanitizer,
     @afl_fuzzing,
     @os_compatibility,
     @perl_FKO_module,
@@ -1335,6 +1339,47 @@ sub build_results_hash() {
     return;
 }
 
+sub asan_verification() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    chdir $asan_dir or die $!;
+
+    unless (&run_cmd('make clean', "../$cmd_out_tmp",
+            "../$curr_test_file")) {
+        chdir '..' or die $!;
+        return 0;
+    }
+
+    if ($sudo_path) {
+        unless (&run_cmd("$sudo_path -u $username make",
+                "../$cmd_out_tmp", "../$curr_test_file")) {
+            unless (&run_cmd('make', "../$cmd_out_tmp",
+                    "../$curr_test_file")) {
+                $rv = 0;
+            }
+        }
+    } else {
+        unless (&run_cmd('make', "../$cmd_out_tmp",
+                "../$curr_test_file")) {
+            $rv = 0;
+        }
+    }
+
+    if ($rv) {
+        &run_cmd('./a.out', "../$cmd_out_tmp", "../$curr_test_file");
+        unless (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
+                qr/SUMMARY\:\sAddressSanitizer/],
+                $MATCH_ALL, $NO_APPEND_RESULTS, "../$curr_test_file")) {
+            $rv = 0;
+        }
+    }
+
+    chdir '..' or die $!;
+    return $rv;
+}
+
 sub compile_warnings() {
 
     my $curr_pwd = cwd() or die $!;
@@ -1629,6 +1674,10 @@ sub look_for_crashes() {
         next if -d $f;
         next unless $f =~ /\.test$/;
 
+        ### only look for ASAN crashes in normal test files
+        next if &file_find_regex([qr/ASAN.*crash\sverification/i],
+                $MATCH_ALL, $NO_APPEND_RESULTS, $f);
+
         if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
                 $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
             &write_test_file("[-] crash message found in: $f\n",
@@ -1637,7 +1686,7 @@ sub look_for_crashes() {
         }
 
         if (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
-                    qr/SUMMARY\s:\sAddressSanitizer/],
+                    qr/SUMMARY\:\sAddressSanitizer/],
                 $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
             &write_test_file("[-] AddressSanitizer crash found in: $f\n",
                 $curr_test_file);
@@ -6811,6 +6860,12 @@ sub init() {
     $gcov_path = &find_command('gcov') unless $gcov_path;
     $lcov_path = &find_command('lcov') unless $lcov_path;
     $genhtml_path = &find_command('genhtml') unless $genhtml_path;
+
+    ### see if we're compiled with ASAN support
+    unless (&file_find_regex([qr/enable\-asan\-support/],
+            $MATCH_ALL, $APPEND_RESULTS, '../config.log')) {
+        push @tests_to_exclude, qr/ASAN/;
+    }
 
     if ($gcov_path) {
         if ($enable_profile_coverage_check
