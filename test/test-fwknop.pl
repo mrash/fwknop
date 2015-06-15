@@ -168,6 +168,8 @@ my $test_include = '';
 my @tests_to_include = ();
 my $test_exclude = '';
 my @tests_to_exclude = ();
+my %include_tracking = ();
+my %exclude_tracking = ();
 my $do_crash_check = 1;
 my %valgrind_flagged_fcns = ();
 my %valgrind_flagged_fcns_unique = ();
@@ -1003,6 +1005,29 @@ if ($total_elapsed_seconds > 60) {
     &logr("    Run time: $total_elapsed_seconds seconds\n");
 }
 
+if (@tests_to_include and keys %include_tracking) {
+    my $tot_included = 0;
+    for my $re (keys %include_tracking) {
+        $tot_included += keys %{$include_tracking{$re}};
+        for my $test (keys %{$include_tracking{$re}}) {
+            &write_test_file("$re: $test\n", "$output_dir/tests.included");
+        }
+    }
+    &logr("    Tests included (see $output_dir/tests.included): "
+        . $tot_included . "\n");
+}
+if (@tests_to_exclude and keys %exclude_tracking) {
+    my $tot_excluded = 0;
+    for my $re (keys %exclude_tracking) {
+        $tot_excluded += keys %{$exclude_tracking{$re}};
+        for my $test (keys %{$exclude_tracking{$re}}) {
+            &write_test_file("$re: $test\n", "$output_dir/tests.excluded");
+        }
+    }
+    &logr("    Tests excluded (see $output_dir/tests.excluded): "
+        . $tot_excluded . "\n");
+}
+
 &logr("\n");
 
 if ($enable_openssl_compatibility_tests) {
@@ -1182,6 +1207,7 @@ sub process_include_exclude() {
                     or ($enable_profile_coverage_check and $msg =~ /profile\scoverage/)
                     or ($msg =~ /segfault.*dump\smessages/)
             ) {
+                $include_tracking{$test}{$msg} = '';
                 $found = 1;
                 last;
             }
@@ -1192,6 +1218,7 @@ sub process_include_exclude() {
         my $found = 0;
         for my $test (@tests_to_exclude) {
             if ($msg =~ $test) {
+                $exclude_tracking{$test}{$msg} = '';
                 $found = 1;
                 last;
             }
