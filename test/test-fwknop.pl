@@ -1592,12 +1592,7 @@ sub fko_wrapper_exec() {
             }
         }
 
-        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
-                $MATCH_ANY, $NO_APPEND_RESULTS, $curr_test_file)) {
-            &write_test_file("[-] crash message found in: $curr_test_file\n",
-                $curr_test_file);
-            $rv = 0;
-        }
+        $rv = 0 if &is_crash($curr_test_file);
     }
 
     return $rv;
@@ -1678,24 +1673,31 @@ sub look_for_crashes() {
         next if &file_find_regex([qr/ASAN.*crash\sverification/i],
                 $MATCH_ALL, $NO_APPEND_RESULTS, $f);
 
-        if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
-                $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
-            &write_test_file("[-] crash message found in: $f\n",
-                $curr_test_file);
-            $rv = 0;
-        }
-
-        if (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
-                    qr/SUMMARY\:\sAddressSanitizer/],
-                $MATCH_ANY, $NO_APPEND_RESULTS, $f)) {
-            &write_test_file("[-] AddressSanitizer crash found in: $f\n",
-                $curr_test_file);
-            $rv = 0;
-        }
+        $rv = 0 if &is_crash($f);
     }
 
     $do_crash_check = 0;
 
+    return $rv;
+}
+
+sub is_crash() {
+    my $file = shift;
+    my $rv = 0;
+    if (&file_find_regex([qr/segmentation\sfault/i, qr/core\sdumped/i],
+            $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
+        &write_test_file("[-] crash message found in: $file\n",
+            $curr_test_file);
+        $rv = 1;
+    }
+
+    if (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
+                qr/SUMMARY\:\sAddressSanitizer/],
+            $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
+        &write_test_file("[-] AddressSanitizer crash found in: $file\n",
+            $curr_test_file);
+        $rv = 1;
+    }
     return $rv;
 }
 
