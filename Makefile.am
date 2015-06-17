@@ -362,6 +362,8 @@ EXTRA_DIST = \
     test/misc/freebsd_rc.conf \
     test/misc/pf.rules \
     test/misc/pf.sh \
+    test/asan/use-after-free.c \
+    test/asan/Makefile \
     test/afl/compile/afl-compile-code-coverage.sh \
     test/afl/compile/afl-compile.sh \
     test/afl/doc/AFL_status_screen.png \
