@@ -390,6 +390,7 @@ EXTRA_DIST = \
     test/afl/fuzzing-wrappers/fcns \
     test/afl/fuzzing-wrappers/server-conf.sh \
     test/afl/test-cases/client-rc/fwknoprc \
+    test/afl/test-cases/client-rc/fwknoprc2 \
     test/afl/test-cases/server-digest-cache/digest.cache \
     test/afl/test-cases/spa-pkts.cmin/spa1_sha384.start \
     test/afl/test-cases/spa-pkts.cmin/spa1_sha256.start \
