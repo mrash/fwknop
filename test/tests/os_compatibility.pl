@@ -368,6 +368,33 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
-
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'Android compatibility',
+        'detail'   => 'F-Droid Fwknop2 2015-06-16',
+        'function' => \&os_compatibility,
+        'no_ip_check' => 1,
+        'pkt' =>
+                '9OBA' .
+                'YI4pRmsVz1AXyO1M' .
+                'zkbx0RdUx6C+zHXM' .
+                '9aegQZFkYl0agWNI' .
+                'Wqh2kbIlbUvqq1NG' .
+                '47cp3AyccBG4+6SX' .
+                'Qpe4G9JvDgtcYc6D' .
+                'QaG1pT48zi+6BDvn' .
+                'V3K2eojdaPTIIdFR' .
+                'n75c278iCdxue/WW' .
+                '54iK1n07GtNSl8xy' .
+                'jTBiC4dlEfGpYbM7' .
+                'FIGmIciVZo3PZOxt' .
+                'apdF8Ml9SRwHwka/' .
+                'pCS+3hKnjbUOk',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a $cf{'hmac_android_fdroid_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/with expire time/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
 
 );
