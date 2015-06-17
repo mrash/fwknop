@@ -3,6 +3,8 @@ Jonathan Bennett
     - Suggested the addition of the --key-gen option to fwknopd.
     - Contributed the console-qr.sh script (in extras/console-qr/) to create
       QR codes from fwknopd access.conf keys.
+    - Wrote a new fwknop client for Android called "Fwknop2" - see:
+        https://f-droid.org/repository/browse/?fdid=org.cipherdyne.fwknop2
 
 Sebastien Jeanquier
     - Assisted with getting fwknop included in BackTrack Linux - the choice
