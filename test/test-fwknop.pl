@@ -184,6 +184,7 @@ my $anonymize_results = 0;
 my $orig_config_args = '';
 my $curr_test_file = 'init';
 my $init_file = $curr_test_file;
+my $config_log = '../config.log';
 my $tarfile = 'test_fwknop.tar.gz';
 our $key_gen_file = "$output_dir/key_gen";
 our $verbose_str  = "--verbose --verbose";
@@ -237,10 +238,9 @@ my $fko_obj = ();
 my $enable_recompilation_warnings_check = 0;
 my $enable_configure_args_checks = 0;
 my $enable_profile_coverage_check = 0;
-my $disable_profile_coverage_init = 0;
-my $profile_rm_prev_sh = 'rm-coverage-files.sh';
-my $profile_gen_report_sh = 'gen-coverage-report.sh';
-my $profile_init_sh = 'init-lcov.sh';
+my $enable_profile_coverage_init = 0;
+my $profile_gen_report_sh = './gen-coverage-report.sh';
+my $profile_init_sh = './init-lcov.sh';
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -337,7 +337,7 @@ exit 1 unless GetOptions(
     'enable-configure-args-checks' => \$enable_configure_args_checks,
     'enable-profile-coverage-check' => \$enable_profile_coverage_check,
     'enable-cores-pattern' => \$enable_cores_pattern_mode,
-    'disable-profile-coverage-init' => \$disable_profile_coverage_init,
+    'enable-profile-coverage-init' => \$enable_profile_coverage_init,
     'enable-ip-resolve' => \$enable_client_ip_resolve_test,
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
@@ -1459,7 +1459,7 @@ sub profile_coverage() {
         return 0;
     }
 
-    &run_cmd("./$profile_gen_report_sh", $cmd_out_tmp, $curr_test_file);
+    &run_cmd($profile_gen_report_sh, $cmd_out_tmp, $curr_test_file);
 
     if (-d $lcov_results_dir) {
         move $lcov_results_dir, "$output_dir/$lcov_results_dir";
@@ -1738,14 +1738,6 @@ sub config_recompile() {
     my $config_cmd = shift;
 
     my $rv = 1;
-
-    if ($enable_profile_coverage_check) {
-        chdir 'test' or die $!;
-        ### we're recompiling, so remove any existing profile coverage
-        ### files since they will be invalidated by the recompile
-        &run_cmd("./$profile_rm_prev_sh", $cmd_out_tmp, $curr_test_file);
-        chdir '..' or die $!;
-    }
 
     &run_cmd('make clean', $cmd_out_tmp, "test/$curr_test_file");
 
@@ -6731,9 +6723,8 @@ sub init() {
 
     ### cache the configure args that were used before running the
     ### test suite
-    my $config_log_file = '../config.log';
-    if (-e $config_log_file) {
-        open F, "< $config_log_file" or die $!;
+    if (-e $config_log) {
+        open F, "< $config_log" or die $!;
         while (<F>) {
             ###   $ ./configure --prefix=/usr --sysconfdir=/etc ...
             if (m/^\s+[\$#]\s+(\.\/configure.*)/) {
@@ -6898,23 +6889,21 @@ sub init() {
 
     ### see if we're compiled with ASAN support
     unless (&file_find_regex([qr/enable\-asan\-support/],
-            $MATCH_ALL, $APPEND_RESULTS, '../config.log')) {
+            $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
+        &write_test_file("[-] Can't find --enable-asan-support in $config_log\n",
+            $curr_test_file);
         push @tests_to_exclude, qr/ASAN/;
     }
 
     if ($gcov_path) {
         if ($enable_profile_coverage_check
                 and not $list_mode) {
-            unless ($disable_profile_coverage_init) {
-                print "[+] Recompiling fwknop and removing any previous coverage files...\n";
-                ### if we recompile then remove the .gcno files (which are
-                ### generated at compile time)
-                &compile_warnings();
-                if (&file_find_regex([qr/profile\-arcs.*test\-coverage/],
-                        $MATCH_ALL, $APPEND_RESULTS, $curr_test_file)) {
-                    print "[+] Found -fprofile-args -ftest-coverage\n";
+            if ($enable_profile_coverage_init) {
+                if (&file_find_regex([qr/\-enable\-profile\-coverage/],
+                        $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
+                    print "[+] Found --enable-profile-coverage\n";
                 } else {
-                    print "[-] Warning: -fprofile-args -ftest-coverage not ",
+                    print "[-] Warning: --enable-profile-coverage not ",
                         "found, use ./configure --enable-profile-coverage?\n";
                 }
                 &run_cmd($profile_init_sh, $cmd_out_tmp, $curr_test_file);
@@ -6926,7 +6915,7 @@ sub init() {
     }
 
     ### unless we are in client only mode, see if the target firewall
-    ### is PF - FreeBSD can be either ipfw or PF for example
+    ### is PF (since FreeBSD can be either ipfw or PF for example)
     if (-e $fwknopdCmd) {
         my $fw = '';
         my $cmd = "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} -D";
@@ -7700,8 +7689,7 @@ sub usage() {
     --enable-profile-coverage          - Generate profile coverage stats with an
                                          emphasis on finding functions that the
                                          test suite does not call.
-    --disable-profile-coverage-init    - Do not remove old .gcno, .gcda, and
-                                         .gcov files or recompile fwknop.
+    --enable-profile-coverage-init     - Reset .gcov coverage counters to zero.
     --enable-recompile                 - Recompile fwknop sources and look for
                                          compilation warnings.
     --enable-configure-args-checks     - Run the autoconf configure script with
