@@ -1,8 +1,13 @@
 #!/bin/sh -x
 
+. ./compile/fcns
+
+### set either afl-gcc or afl-clang (defaults to afl-gcc)
+set_afl_cc
+
 cd ../../
 
-CC=afl-gcc ./extras/apparmor/configure_args.sh --enable-afl-fuzzing $@
+CC=$AFL_CC ./extras/apparmor/configure_args.sh --enable-afl-fuzzing $@
 
 if [ $? -ne 0 ]
 then

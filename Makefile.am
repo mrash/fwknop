@@ -366,6 +366,7 @@ EXTRA_DIST = \
     test/asan/Makefile \
     test/afl/compile/afl-compile-code-coverage.sh \
     test/afl/compile/afl-compile.sh \
+    test/afl/compile/fcns \
     test/afl/doc/AFL_status_screen.png \
     test/afl/README.md \
     test/afl/fuzzing-wrappers/client-rc.sh \
