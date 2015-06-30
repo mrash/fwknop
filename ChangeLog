@@ -4,6 +4,9 @@ fwknop-2.6.7 (05//2015):
       take advantage of this will likely be OpenWRT thanks to Jonathan.
     - Added a script from Jonathan Bennett at extras/console-qr/console-qr.sh
       to generate QR codes from fwknopd access.conf keys.
+    - Added --with-firewalld to the autoconf configure script. This is a
+      synonym for --with-firewall-cmd to avoid confusion. Some package
+      maintainers use --with-firewalld to build fwknop.
 
 fwknop-2.6.6 (04/23/2015):
     - [server] Add the ability for fwknopd to function as an generic SPA
