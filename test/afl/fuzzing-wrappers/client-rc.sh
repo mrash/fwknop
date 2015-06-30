@@ -20,6 +20,22 @@ BANNER="$TSTR$GIT_STR"
 ### set up directories
 dir_init $ARCHIVE_DIR $FDIR $OUT_DIR PREV_OUT_DIR
 
+### see if we're going to enable code coverage with afl-cov
+if [ "$AFL_COV" != "" ]
+then
+    echo "[+] Enabling afl-cov coverage mode..."
+    if [ "$CODE_DIR" = "" ]
+    then
+        echo "[*] Must set CODE_DIR with path to gcov compiled code"
+        exit 1
+    fi
+
+    ### kick off afl-cov in --background mode
+    afl-cov -d $OUT_DIR --live --background --sleep 10 --coverage-cmd \
+        "LD_LIBRARY_PATH=$CODE_DIR/test/afl/$LIB_DIR $CODE_DIR/test/afl/$CLIENT --rc-file AFL_FILE -T -a 1.1.1.1 -n testhost2.com" \
+        --code-dir $CODE_DIR
+fi
+
 ### make sure the client rc file can be parsed (a failure
 ### exit status is expected though)
 ./fuzzing-wrappers/helpers/fwknop-rc-test.sh && exit $?
