@@ -72,6 +72,7 @@ EXTRA_DIST = \
     extras/apparmor/usr.sbin.fwknopd \
     extras/apparmor/configure_args.sh \
     extras/ramdisk/ramdisk-create.sh \
+    extras/ramdisk/ramdisk-create-osx.sh \
     extras/console-qr/console-qr.sh \
     fwknop.spec \
     iphone/main.m \
