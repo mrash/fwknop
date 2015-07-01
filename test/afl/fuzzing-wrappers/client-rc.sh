@@ -1,7 +1,12 @@
 #!/bin/sh -x
 
 #
-# Fuzz the fwknop client fwknoprc file
+# Fuzz the fwknop client fwknoprc file. This wrapper also has the ability to
+# kick of afl-cov to produce code coverage results at the same time. Note that
+# CODE_DIR points to the fwknop project code compiled with gcov profiling
+# support.
+#
+# $ AFL_COV=1 CODE_DIR=/path/to/code/fwknop.git ./fuzzing-wrappers/client-rc.sh
 #
 
 . ./fuzzing-wrappers/fcns
