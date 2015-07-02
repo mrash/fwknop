@@ -31,6 +31,7 @@
 
 #if USE_LIBPCAP
   #include <pcap.h>
+  #include <errno.h>
 #endif
 
 #include "fwknopd_common.h"
@@ -288,9 +289,19 @@ pcap_capture(fko_srv_options_t *opts)
         */
         else if(res == -1)
         {
-            log_msg(LOG_ERR, "[*] Error from pcap_dispatch: %s",
-                pcap_geterr(pcap)
-            );
+            if(errno == ENETDOWN)
+            {
+                log_msg(LOG_ERR, "[*] Fatal error from pcap_dispatch: %s",
+                    pcap_geterr(pcap)
+                );
+                clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+            }
+            else
+            {
+                log_msg(LOG_ERR, "[*] Error from pcap_dispatch: %s",
+                    pcap_geterr(pcap)
+                );
+            }
 
             if(pcap_errcnt++ > MAX_PCAP_ERRORS_BEFORE_BAIL)
             {
