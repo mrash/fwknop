@@ -76,29 +76,52 @@ hex_dump(const unsigned char *data, const int size)
     return;
 }
 
-/* Basic directory checks (stat() and whether the path is actually
- * a directory).
+/* Basic directory/binary checks (stat() and whether the path is actually
+ * a directory or an executable).
 */
-int
-is_valid_dir(const char *path)
+static int
+is_valid_path(const char *path, const int file_type)
 {
 #if HAVE_STAT
     struct stat st;
 
-    /* If we are unable to stat the given dir, then return with error.
+    /* If we are unable to stat the given path, then return with error.
     */
     if(stat(path, &st) != 0)
     {
-        log_msg(LOG_ERR, "[-] unable to stat() directory: %s: %s",
+        log_msg(LOG_ERR, "[-] unable to stat() path: %s: %s",
             path, strerror(errno));
         return(0);
     }
 
-    if(!S_ISDIR(st.st_mode))
+    if(file_type == IS_DIR)
+    {
+        if(!S_ISDIR(st.st_mode))
+            return(0);
+    }
+    else if(file_type == IS_EXE)
+    {
+        if(!S_ISREG(st.st_mode) || ! (st.st_mode & S_IXUSR))
+            return(0);
+    }
+    else
         return(0);
+
 #endif /* HAVE_STAT */
 
     return(1);
+}
+
+int
+is_valid_dir(const char *path)
+{
+    return is_valid_path(path, IS_DIR);
+}
+
+int
+is_valid_exe(const char *path)
+{
+    return is_valid_path(path, IS_EXE);
 }
 
 int

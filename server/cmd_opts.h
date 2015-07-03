@@ -126,6 +126,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
 #endif
     "GPG_HOME_DIR",
     "GPG_EXE",
+    "SUDO_EXE",
     "FIREWALL_EXE",
     "VERBOSE",
 #if AFL_FUZZING
@@ -148,6 +149,7 @@ enum {
     AFL_PKT_FILE,
     GPG_HOME_DIR,
     GPG_EXE_PATH,
+    SUDO_EXE_PATH,
     FIREWD_DISABLE_CHECK_SUPPORT,
     IPT_DISABLE_CHECK_SUPPORT,
     PCAP_FILE,
@@ -205,6 +207,7 @@ static struct option cmd_opts[] =
     {"run-dir",              1, NULL, 'r'},
     {"restart",              0, NULL, 'R'},
     {"status",               0, NULL, 'S'},
+    {"sudo-exe",             1, NULL, SUDO_EXE_PATH },
     {"test",                 0, NULL, 't'},
     {"udp-server",           0, NULL, 'U'},
     {"verbose",              0, NULL, 'v'},

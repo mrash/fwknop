@@ -98,6 +98,11 @@
 #else
   #define DEF_GPG_EXE                   "/usr/bin/gpg"
 #endif
+#ifdef  SUDO_EXE
+  #define DEF_SUDO_EXE                   SUDO_EXE
+#else
+  #define DEF_SUDO_EXE                   "/usr/bin/sudo"
+#endif
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
 #define DEF_TCPSERV_PORT                "62201"
@@ -305,6 +310,7 @@ enum {
 #endif
     CONF_GPG_HOME_DIR,
     CONF_GPG_EXE,
+    CONF_SUDO_EXE,
     CONF_FIREWALL_EXE,
     CONF_VERBOSE,
 #if AFL_FUZZING
@@ -366,6 +372,7 @@ typedef struct acc_stanza
     unsigned char        use_rijndael;
     int                  fw_access_timeout;
     unsigned char        enable_cmd_exec;
+    unsigned char        enable_cmd_sudo_exec;
     char                *cmd_exec_user;
     char                *cmd_exec_group;
     uid_t                cmd_exec_uid;

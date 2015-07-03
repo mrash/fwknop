@@ -54,11 +54,15 @@
     x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
 )
 
+#define IS_DIR 1
+#define IS_EXE 2
+
 /* Prototypes
 */
 void  hex_dump(const unsigned char *data, const int size);
 char* dump_ctx(fko_ctx_t ctx);
 int   is_valid_dir(const char *path);
+int   is_valid_exe(const char *path);
 int   verify_file_perms_ownership(const char *file);
 int   strtoargv(const char * const args_str, char **argv_new, int *argc_new,
         const fko_srv_options_t * const opts);

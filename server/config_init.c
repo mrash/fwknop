@@ -864,6 +864,11 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_GPG_EXE] == NULL)
         set_config_entry(opts, CONF_GPG_EXE, DEF_GPG_EXE);
 
+    /* sudo executable
+    */
+    if(opts->config[CONF_SUDO_EXE] == NULL)
+        set_config_entry(opts, CONF_SUDO_EXE, DEF_SUDO_EXE);
+
     /* Enable SPA over HTTP.
     */
     if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL)
@@ -1233,6 +1238,19 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case FW_FLUSH:
                 opts->fw_flush = 1;
                 break;
+            case GPG_EXE_PATH:
+                if (is_valid_exe(optarg))
+                {
+                    set_config_entry(opts, CONF_GPG_EXE, optarg);
+                }
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] gpg path '%s' could not stat()/does not exist?",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
             case GPG_HOME_DIR:
                 if (is_valid_dir(optarg))
                 {
@@ -1241,7 +1259,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] Directory '%s' could not stat()/does not exist?",
+                        "[*] gpg home directory '%s' could not stat()/does not exist?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }

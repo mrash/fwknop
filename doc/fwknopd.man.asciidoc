@@ -526,11 +526,30 @@ directive starts a new stanza.
     the *fwknopd* server as the user specified by the ``CMD_EXEC_USER'' or
     as the user that started *fwknopd* if that is not set.
 
+*CMD_EXEC_ALL_SUDO* '<Y/N>'::
+    *sudo* provides a powerful means of restricting the sets of commands that
+    users can execute via the ``sudoers'' file. By enabling this feature (and
+    in ``ENABLE_CMD_EXEC'' mode), all incoming commands from valid SPA packets
+    will be prefixed by ``/path/to/sudo -u <user>'' where the path to sudo is
+    set by the ``SUDO_EXE'' variable, and ``<user>'' is set by the
+    ``CMD_EXEC_USER'' variable (default is ``root'' if not set).
+
 *CMD_EXEC_USER* '<username>'::
-     This specifies the user that will execute commands contained within a SPA
-     packet. If not specified, fwknopd will execute it as the user it is
-     running as (most likely root). Setting this to a non-root user is highly
-     recommended.
+     This specifies the user (via setuid) that will execute commands contained
+     within a SPA packet. If not specified, fwknopd will execute it as the user
+     it is running as (most likely root). Setting this to a non-root user such
+     as ``nobody'' is highly recommended if elevated permissions are not
+     needed.
+
+*CMD_EXEC_GROUP* '<groupname>'::
+     This specifies the group (via setgid) that will execute commands contained
+     within a SPA packet. If not specified, fwknopd will execute it as the user
+     it is running as (most likely root). Setting this to a non-root user such
+     as ``nobody'' is highly recommended if elevated permissions are not
+     needed.
+
+*SUDO_EXE* '<path>'::
+    Define the path to the sudo binary. Default is ``/usr/bin/sudo''.
 
 *REQUIRE_USERNAME* '<username>'::
     Require a specific username from the client system as encoded in the SPA

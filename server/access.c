@@ -1480,6 +1480,10 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_bool(&(curr_acc->enable_cmd_exec), val);
         }
+        else if(CONF_VAR_IS(var, "ENABLE_CMD_SUDO_EXEC"))
+        {
+            add_acc_bool(&(curr_acc->enable_cmd_sudo_exec), val);
+        }
         else if(CONF_VAR_IS(var, "CMD_EXEC_USER"))
         {
             if(add_acc_string(&(curr_acc->cmd_exec_user), val) != SUCCESS)
@@ -1956,7 +1960,9 @@ dump_access_list(const fko_srv_options_t *opts)
             "           HMAC_DIGEST_TYPE:  %d\n"
             "          FW_ACCESS_TIMEOUT:  %i\n"
             "            ENABLE_CMD_EXEC:  %s\n"
+            "       ENABLE_CMD_SUDO_EXEC:  %s\n"
             "              CMD_EXEC_USER:  %s\n"
+            "             CMD_EXEC_GROUP:  %s\n"
             "           REQUIRE_USERNAME:  %s\n"
             "     REQUIRE_SOURCE_ADDRESS:  %s\n"
             "             FORCE_NAT (ip):  %s\n"
@@ -1989,7 +1995,9 @@ dump_access_list(const fko_srv_options_t *opts)
             acc->hmac_type,
             acc->fw_access_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
+            acc->enable_cmd_sudo_exec ? "Yes" : "No",
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
+            (acc->cmd_exec_group == NULL) ? "<not set>" : acc->cmd_exec_group,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
             acc->force_nat ? acc->force_nat_ip : "<not set>",
