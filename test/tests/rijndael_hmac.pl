@@ -271,6 +271,7 @@
         'fw_rule_removed' => $REQUIRE_NO_NEW_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'insert_duplicate_rule_while_running' => $YES,
+        'server_positive_output_matches' => [qr/rule_exists_no_chk_support.*rule already exists/],
     },
 
     {
