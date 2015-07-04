@@ -92,6 +92,7 @@ our $FW_PREFIX = 'IPT';
 our $fw_conf_prefix = 'ipt';
 my $prefer_iptables = 0;
 my $fw_bin = '';
+my $fw_bin_and_prefix = '';
 
 our $spoof_user = 'testuser';
 
@@ -5451,7 +5452,7 @@ sub client_server_interaction() {
     }
 
     if ($test_hr->{'insert_rule_while_running'}) {
-        &run_cmd("iptables -A FWKNOP_INPUT -p tcp -s $fake_ip --dport 1234 -j ACCEPT",
+        &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p tcp -s $fake_ip --dport 1234 -j ACCEPT",
             $cmd_out_tmp, $curr_test_file);
     }
 
@@ -5461,7 +5462,7 @@ sub client_server_interaction() {
             my $time_prefix = '_exp_' . (time() + 2+$i); ### default timeout
             &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
                 $curr_test_file);
-            &run_cmd("iptables -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+            &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
                 "--dport 22 -m comment --comment $time_prefix -j ACCEPT",
                 $cmd_out_tmp, $curr_test_file);
         }
@@ -6971,15 +6972,16 @@ sub os_fw_detect() {
 
     if ($platform eq $LINUX) {
         if ($prefer_iptables) {
-            $fw_bin = &find_command('iptables');
+            $fw_bin = $fw_bin_and_prefix = &find_command('iptables');
         } else {
             $fw_bin = &find_command('firewall-cmd');
             if ($fw_bin) {
                 $FW_TYPE   = 'firewalld';
                 $FW_PREFIX = 'FIREWD';
                 $fw_conf_prefix = 'firewd';
+                $fw_bin_and_prefix = "$fw_bin --direct --passthrough ipv4";
             } else {
-                $fw_bin = &find_command('iptables');
+                $fw_bin = $fw_bin_and_prefix = &find_command('iptables');
             }
         }
     } else {
@@ -7407,18 +7409,10 @@ sub is_fw_rule_active() {
     if ($fw_bin and $FW_TYPE eq 'firewalld' or $FW_TYPE eq 'iptables') {
         ### make sure there is at least one jump rule
         ###    79  5304 FWKNOP_INPUT  all  --  *      *       0.0.0.0/0            0.0.0.0/0
-        if ($FW_TYPE eq 'firewalld') {
-            unless (&run_cmd("$fw_bin --direct --passthrough ipv4 -t filter " .
-                    "-nL -v | grep -v Chain | grep FWKNOP_ ", $cmd_out_tmp, $curr_test_file)) {
-                &write_test_file("[-] No jump rule found.\n", $curr_test_file);
-                $rv = 0;
-            }
-        } else {
-            unless (&run_cmd("$fw_bin -t filter " .
-                    "-nL -v | grep -v Chain | grep FWKNOP_ ", $cmd_out_tmp, $curr_test_file)) {
-                &write_test_file("[-] No jump rule found.\n", $curr_test_file);
-                $rv = 0;
-            }
+        unless (&run_cmd("$fw_bin_and_prefix -t filter " .
+                "-nL -v | grep -v Chain | grep FWKNOP_ ", $cmd_out_tmp, $curr_test_file)) {
+            &write_test_file("[-] No jump rule found.\n", $curr_test_file);
+            $rv = 0;
         }
     }
 
