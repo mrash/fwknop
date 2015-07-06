@@ -409,6 +409,15 @@
     },
     {
         'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG invalid binary path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --gpg-exe /invalid/path"
+    },
+
+    {
+        'category' => 'basic operations',
         'subcategory' => 'client',
         'detail'   => 'HTTP proxy proto mismatch',
         'function' => \&generic_exec,
