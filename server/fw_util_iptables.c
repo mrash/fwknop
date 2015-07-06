@@ -75,6 +75,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
 {
     int     rule_exists=0;
     char    cmd_buf[CMD_BUFSIZE]       = {0};
+    char    ipt_line_buf[CMD_BUFSIZE]  = {0};
     char    target_search[CMD_BUFSIZE] = {0};
     char    proto_search[CMD_BUFSIZE]  = {0};
     char    srcip_search[CMD_BUFSIZE]  = {0};
@@ -108,7 +109,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     else
         snprintf(proto_search, CMD_BUFSIZE-1, " %u ", proto);
 
-    snprintf(port_search, CMD_BUFSIZE-1, ":%u ", port);
+    snprintf(port_search, CMD_BUFSIZE-1, "dpt:%u ", port);
     snprintf(target_search, CMD_BUFSIZE-1, " %s ", fwc->target);
     snprintf(srcip_search, CMD_BUFSIZE-1, " %s ", srcip);
     if (dstip != NULL)
@@ -117,20 +118,24 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     }
     snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
 
-    /* search for each of the substrings - yes, matches from different
-     * rules may get triggered here, but the expiration time is the
+    /* search for each of the substrings - the rule expiration time is the
      * primary search method
     */
-    if(search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, exp_ts_search, &pid_status, opts)
-            && (proto == ANY_PROTO) ? 1 :
-                search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, proto_search, &pid_status, opts)
-            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, srcip_search, &pid_status, opts)
-            && (dstip == NULL) ? 1 :
-                search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, dstip_search, &pid_status, opts)
-            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, target_search, &pid_status, opts)
-            && (port == ANY_PORT) ? 1 :
-                search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, port_search, &pid_status, opts))
+    if(search_extcmd_getline(cmd_buf, ipt_line_buf,
+                CMD_BUFSIZE, NO_TIMEOUT, exp_ts_search, &pid_status, opts)
+            /* we have an iptables policy rule that matches the
+             * expiration time, so make sure this rule matches the
+             * other fields too. If not, then it is for different
+             * access requested by a separate SPA packet.
+             */
+            && ((proto == ANY_PROTO) ? 1 : (strstr(ipt_line_buf, proto_search) != NULL))
+            && (strstr(ipt_line_buf, srcip_search) != NULL)
+            && ((dstip == NULL) ? 1 : (strstr(ipt_line_buf, dstip_search) != NULL))
+            && (strstr(ipt_line_buf, target_search) != NULL)
+            && ((port == ANY_PORT) ? 1 : (strstr(ipt_line_buf, port_search) != NULL)))
+    {
         rule_exists = 1;
+    }
 
     if(rule_exists)
         log_msg(LOG_DEBUG,

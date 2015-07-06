@@ -34,8 +34,11 @@
 #define IO_READ_BUF_LEN     256
 #define EXTCMD_DEF_TIMEOUT  15
 #define NO_TIMEOUT          0
-#define WANT_STDERR         1
+#define WANT_STDERR         0x01
+#define WANT_STDOUT_GETLINE 0x02
 #define NO_STDERR           0
+#define ROOT_UID            0
+#define ROOT_GID            0
 
 /* The various return status states in which an external command result
  * may end up in.
@@ -88,6 +91,9 @@ int run_extcmd_as(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 int search_extcmd(const char *cmd, const int want_stderr,
         const int timeout, const char *substr_search,
         int *pid_status, const fko_srv_options_t * const opts);
+int search_extcmd_getline(const char *cmd, char *so_buf, const size_t so_buf_sz,
+        const int timeout, const char *substr_search, int *pid_status,
+        const fko_srv_options_t * const opts);
 int run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
         const fko_srv_options_t * const opts);
 #endif /* EXTCMD_H */

@@ -904,6 +904,7 @@ my %test_keys = (
     'insert_rule_before_exec'    => $OPTIONAL,
     'insert_rule_while_running'  => $OPTIONAL,
     'insert_duplicate_rule_while_running' => $OPTIONAL,
+    'fw_dupe_rule_args'          => $OPTIONAL,
     'weak_server_receive_check'  => $OPTIONAL,
     'search_for_rule_after_exit' => $OPTIONAL,
     'rc_positive_output_matches' => $OPTIONAL,
@@ -5457,13 +5458,37 @@ sub client_server_interaction() {
     }
 
     if ($test_hr->{'insert_duplicate_rule_while_running'}) {
-        ### insert duplicate rules - guess that this is for SSH
-        for (my $i=0; $i < 4; $i++) {
-            my $time_prefix = '_exp_' . (time() + 2+$i); ### default timeout
-            &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
+        ### insert duplicate rules
+        my ($prv, $lib_path, $fwknopd_conf, $access_conf)
+                 = &parse_fwknopd_cmdline($test_hr);
+        if ($prv) {
+            &write_test_file("[+] Policy before inserting duplicate rules:\n",
                 $curr_test_file);
-            &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
-                "--dport 22 -m comment --comment $time_prefix -j ACCEPT",
+            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+                "$fwknopd_conf -a $access_conf --fw-list",
+                $cmd_out_tmp, $curr_test_file);
+            for (my $i=0; $i < 4; $i++) {
+                my $time_prefix = '_exp_' . (time() + 2+$i); ### default timeout
+                &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
+                    $curr_test_file);
+                if ($test_hr->{'fw_dupe_rule_args'}) {
+                    my $fw_args = $test_hr->{'fw_dupe_rule_args'};
+                    if ($fw_args =~ /EXP_TIME/) {
+                        $fw_args =~ s/EXP_TIME/$time_prefix/;
+                    }
+                    &run_cmd("$fw_bin_and_prefix $fw_args",
+                        $cmd_out_tmp, $curr_test_file);
+                } else {
+                    ### assume SSH
+                    &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+                        "--dport 22 -m comment --comment $time_prefix -j ACCEPT",
+                        $cmd_out_tmp, $curr_test_file);
+                }
+            }
+            &write_test_file("[+] Policy after inserting duplicate rules:\n",
+                $curr_test_file);
+            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+                "$fwknopd_conf -a $access_conf --fw-list",
                 $cmd_out_tmp, $curr_test_file);
         }
     }
@@ -5672,11 +5697,9 @@ sub iptables_rm_chains() {
     ### this deletes fwknop chains out from under the running fwknopd
     ### instance (tests whether it is able to recover with
     ### chain_exists(), etc.)
-    if ($test_hr->{'fwknopd_cmdline'}
-            =~ /LD_LIBRARY_PATH=(\S+)\s.*\s\-c\s(\S+)\s\-a\s(\S+)/) {
-        my $lib_path     = $1;
-        my $fwknopd_conf = $2;
-        my $access_conf  = $3;
+    my ($prv, $lib_path, $fwknopd_conf, $access_conf)
+             = &parse_fwknopd_cmdline($test_hr);
+    if ($prv) {
         &write_test_file("[+] fwknopd iptables policy before flush:\n",
             $curr_test_file);
         &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
@@ -5692,6 +5715,15 @@ sub iptables_rm_chains() {
             $cmd_out_tmp, $curr_test_file);
     }
     return;
+}
+
+sub parse_fwknopd_cmdline() {
+    my $test_hr = shift;
+    if ($test_hr->{'fwknopd_cmdline'}
+            =~ /LD_LIBRARY_PATH=(\S+)\s.*\s\-c\s(\S+)\s\-a\s(\S+)/) {
+        return 1, $1, $2, $3;
+    }
+    return 0, '', '', '';
 }
 
 sub get_spa_packet_from_file() {
