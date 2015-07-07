@@ -59,29 +59,29 @@ zero_cmd_buffers(void)
 
 static int pid_status = 0;
 
-static void
-chop_newline(char *str)
-{
-    if(str[0] != 0x0 && str[strlen(str)-1] == 0x0a)
-        str[strlen(str)-1] = 0x0;
-    return;
-}
-
 static int
 rule_exists_no_chk_support(const fko_srv_options_t * const opts,
-        const struct fw_chain * const fwc, const unsigned int proto,
-        const char * const srcip, const char * const dstip,
-        const unsigned int port, const unsigned int exp_ts)
+        const struct fw_chain * const fwc,
+        const unsigned int proto,
+        const char * const srcip,
+        const char * const dstip,
+        const unsigned int port,
+        const char * const natip,
+        const unsigned int nat_port,
+        const unsigned int exp_ts)
 {
     int     rule_exists=0;
-    char    cmd_buf[CMD_BUFSIZE]       = {0};
-    char    ipt_line_buf[CMD_BUFSIZE]  = {0};
-    char    target_search[CMD_BUFSIZE] = {0};
-    char    proto_search[CMD_BUFSIZE]  = {0};
-    char    srcip_search[CMD_BUFSIZE]  = {0};
-    char    dstip_search[CMD_BUFSIZE]  = {0};
-    char    port_search[CMD_BUFSIZE]   = {0};
-    char    exp_ts_search[CMD_BUFSIZE] = {0};
+    char    cmd_buf[CMD_BUFSIZE]         = {0};
+    char    ipt_line_buf[CMD_BUFSIZE]    = {0};
+    char    target_search[CMD_BUFSIZE]   = {0};
+    char    proto_search[CMD_BUFSIZE]    = {0};
+    char    srcip_search[CMD_BUFSIZE]    = {0};
+    char    dstip_search[CMD_BUFSIZE]    = {0};
+    char    natip_search[CMD_BUFSIZE]    = {0};
+    char    port_search[CMD_BUFSIZE]     = {0};
+    char    nat_port_search[CMD_BUFSIZE] = {0};
+    char    exp_ts_search[CMD_BUFSIZE]   = {0};
+    char    *ndx = NULL;
 
 #if CODE_COVERAGE
     int pid_status = 0;
@@ -110,31 +110,69 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         snprintf(proto_search, CMD_BUFSIZE-1, " %u ", proto);
 
     snprintf(port_search, CMD_BUFSIZE-1, "dpt:%u ", port);
+    snprintf(nat_port_search, CMD_BUFSIZE-1, ":%u", nat_port);
     snprintf(target_search, CMD_BUFSIZE-1, " %s ", fwc->target);
-    snprintf(srcip_search, CMD_BUFSIZE-1, " %s ", srcip);
+
+    if (srcip != NULL)
+        snprintf(srcip_search, CMD_BUFSIZE-1, " %s ", srcip);
+
     if (dstip != NULL)
-    {
         snprintf(dstip_search, CMD_BUFSIZE-1, " %s ", dstip);
-    }
+
+    if (natip != NULL)
+        snprintf(dstip_search, CMD_BUFSIZE-1, " to:%s", natip);
+
     snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
 
     /* search for each of the substrings - the rule expiration time is the
      * primary search method
     */
     if(search_extcmd_getline(cmd_buf, ipt_line_buf,
-                CMD_BUFSIZE, NO_TIMEOUT, exp_ts_search, &pid_status, opts)
-            /* we have an iptables policy rule that matches the
-             * expiration time, so make sure this rule matches the
-             * other fields too. If not, then it is for different
-             * access requested by a separate SPA packet.
-             */
-            && ((proto == ANY_PROTO) ? 1 : (strstr(ipt_line_buf, proto_search) != NULL))
-            && (strstr(ipt_line_buf, srcip_search) != NULL)
+                CMD_BUFSIZE, NO_TIMEOUT, exp_ts_search, &pid_status, opts))
+    {
+        chop_newline(ipt_line_buf);
+        /* we have an iptables policy rule that matches the
+         * expiration time, so make sure this rule matches the
+         * other fields too. If not, then it is for different
+         * access requested by a separate SPA packet.
+        */
+        if(((proto == ANY_PROTO) ? 1 : (strstr(ipt_line_buf, proto_search) != NULL))
+            && ((srcip == NULL) ? 1 : (strstr(ipt_line_buf, srcip_search) != NULL))
             && ((dstip == NULL) ? 1 : (strstr(ipt_line_buf, dstip_search) != NULL))
+            && ((natip == NULL) ? 1 : (strstr(ipt_line_buf, natip_search) != NULL))
             && (strstr(ipt_line_buf, target_search) != NULL)
             && ((port == ANY_PORT) ? 1 : (strstr(ipt_line_buf, port_search) != NULL)))
+        {
+            rule_exists = 1;
+        }
+    }
+
+    /* If there is a nat port, we have to qualify it as part
+     * of the 'to:<ip>:<port>' portion of the rule (at the end)
+    */
+    if(rule_exists && nat_port != NAT_ANY_PORT)
     {
-        rule_exists = 1;
+        ndx = strstr(ipt_line_buf, " to:");
+        /* Make sure there isn't a duplicate " to:" string (i.e. if someone
+         * was trying to be tricky with the iptables comment match).
+        */
+        if(ndx != NULL && (strstr((ndx+strlen(" to:")), " to:") == NULL))
+        {
+            ndx = strstr((ndx+strlen(" to:")), nat_port_search);
+            if (ndx == NULL)
+            {
+                rule_exists = 0;
+            }
+            else if((*(ndx+strlen(nat_port_search)) != '\0')
+                    && (*(ndx+strlen(nat_port_search)) != ' '))
+            {
+                rule_exists = 0;
+            }
+        }
+        else
+        {
+            rule_exists = 0;
+        }
     }
 
     if(rule_exists)
@@ -185,9 +223,14 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
 
 static int
 rule_exists(const fko_srv_options_t * const opts,
-        const struct fw_chain * const fwc, const char * const rule,
-        const unsigned int proto, const char * const srcip,
-        const char * const dstip, const unsigned int port,
+        const struct fw_chain * const fwc,
+        const char * const rule,
+        const unsigned int proto,
+        const char * const srcip,
+        const char * const dstip,
+        const unsigned int port,
+        const char * const nat_ip,
+        const unsigned int nat_port,
         const unsigned int exp_ts)
 {
     int rule_exists = 0;
@@ -196,7 +239,8 @@ rule_exists(const fko_srv_options_t * const opts,
         rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule);
     else
         rule_exists = rule_exists_no_chk_support(opts, fwc, proto, srcip,
-                (opts->fw_config->use_destination ? dstip : NULL), port, exp_ts);
+                (opts->fw_config->use_destination ? dstip : NULL), port,
+                nat_ip, nat_port, exp_ts);
 
     if(rule_exists == 1)
         log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s already exists",
@@ -435,7 +479,8 @@ jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int cha
 }
 
 static int
-jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts, const int chain_num)
+jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts,
+        const int chain_num)
 {
     int     exists = 0;
     char    cmd_buf[CMD_BUFSIZE]      = {0};
@@ -962,11 +1007,17 @@ static void
 ipt_rule(const fko_srv_options_t * const opts,
         const char * const complete_rule_buf,
         const char * const fw_rule_macro,
-        const char * const srcip, const char * const dstip,
-        const unsigned int proto, const unsigned int port,
+        const char * const srcip,
+        const char * const dstip,
+        const unsigned int proto,
+        const unsigned int port,
+        const char * const nat_ip,
+        const unsigned int nat_port,
         struct fw_chain * const chain,
-        const unsigned int exp_ts, const time_t now,
-        const char * const msg, const char * const access_msg)
+        const unsigned int exp_ts,
+        const time_t now,
+        const char * const msg,
+        const char * const access_msg)
 {
     char rule_buf[CMD_BUFSIZE] = {0};
 
@@ -989,12 +1040,12 @@ ipt_rule(const fko_srv_options_t * const opts,
         );
     }
 
-    /* Check to make sure that the chain and jump rule exists
+    /* Check to make sure that the chain and jump rule exist
     */
     mk_chain(opts, chain->type);
 
-    if(rule_exists(opts, chain, rule_buf,
-                proto, srcip, dstip, port, exp_ts) == 0)
+    if(rule_exists(opts, chain, rule_buf, proto, srcip,
+                dstip, port, nat_ip, nat_port, exp_ts) == 0)
     {
         if(create_rule(opts, chain->to_chain, rule_buf))
         {
@@ -1047,17 +1098,16 @@ static void forward_access_rule(const fko_srv_options_t * const opts,
         /* Make a global ACCEPT rule for all ports/protocols
         */
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-            NULL, ANY_PROTO, ANY_PORT, fwd_chain, exp_ts, now,
-            "FORWARD ALL", "*/*");
+            NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
+            fwd_chain, exp_ts, now, "FORWARD ALL", "*/*");
     }
     else
     {
         /* Make the FORWARD access rule
         */
         ipt_rule(opts, NULL, IPT_FWD_RULE_ARGS, spadat->use_src_ip,
-            nat_ip, fst_proto, nat_port, fwd_chain, exp_ts, now,
-            "FORWARD", spadat->spa_message_remain);
-
+            nat_ip, fst_proto, nat_port, NULL, NAT_ANY_PORT,
+            fwd_chain, exp_ts, now, "FORWARD", spadat->spa_message_remain);
     }
     return;
 }
@@ -1094,8 +1144,8 @@ static void dnat_rule(const fko_srv_options_t * const opts,
         /* Make a global DNAT rule for all ports/protocols
         */
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-            NULL, ANY_PROTO, ANY_PORT, dnat_chain, exp_ts, now,
-            "DNAT ALL", "*/*");
+            NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
+            dnat_chain, exp_ts, now, "DNAT ALL", "*/*");
     }
     else
     {
@@ -1115,8 +1165,8 @@ static void dnat_rule(const fko_srv_options_t * const opts,
 
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
             (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-            fst_proto, fst_port, dnat_chain, exp_ts, now, "DNAT",
-            spadat->spa_message_remain);
+            fst_proto, fst_port, nat_ip, nat_port, dnat_chain, exp_ts, now,
+            "DNAT", spadat->spa_message_remain);
     }
     return;
 }
@@ -1176,8 +1226,8 @@ static void snat_rule(const fko_srv_options_t * const opts,
         );
 
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-            NULL, ANY_PROTO, ANY_PORT, snat_chain, exp_ts, now,
-            "SNAT ALL", "*/*");
+            NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
+            snat_chain, exp_ts, now, "SNAT ALL", "*/*");
     }
     else
     {
@@ -1227,7 +1277,8 @@ static void snat_rule(const fko_srv_options_t * const opts,
         );
 
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-                NULL, fst_proto, nat_port, snat_chain, exp_ts, now, "SNAT",
+                NULL, fst_proto, nat_port, nat_ip, nat_port,
+                snat_chain, exp_ts, now, "SNAT",
                 spadat->spa_message_remain);
     }
     return;
@@ -1328,8 +1379,8 @@ process_spa_request(const fko_srv_options_t * const opts,
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
                 (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                fst_proto, nat_port, in_chain, exp_ts, now, "local NAT",
-                spadat->spa_message_remain);
+                fst_proto, nat_port, nat_ip, nat_port, in_chain, exp_ts,
+                now, "local NAT", spadat->spa_message_remain);
         }
         else if(strlen(fwd_chain->to_chain))
         {
@@ -1359,8 +1410,8 @@ process_spa_request(const fko_srv_options_t * const opts,
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
                 (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                ple->proto, ple->port, in_chain, exp_ts, now, "access",
-                spadat->spa_message_remain);
+                ple->proto, ple->port, NULL, NAT_ANY_PORT,
+                in_chain, exp_ts, now, "access", spadat->spa_message_remain);
 
             /* We need to make a corresponding OUTPUT rule if out_chain target
              * is not NULL.
@@ -1369,8 +1420,8 @@ process_spa_request(const fko_srv_options_t * const opts,
             {
                 ipt_rule(opts, NULL, IPT_OUT_RULE_ARGS, spadat->use_src_ip,
                     (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                    ple->proto, ple->port, out_chain, exp_ts, now, "OUTPUT",
-                    spadat->spa_message_remain);
+                    ple->proto, ple->port, NULL, NAT_ANY_PORT,
+                    out_chain, exp_ts, now, "OUTPUT", spadat->spa_message_remain);
             }
             ple = ple->next;
         }

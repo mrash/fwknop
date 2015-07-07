@@ -186,6 +186,14 @@ verify_file_perms_ownership(const char *file)
     return 1;
 }
 
+void
+chop_newline(char *str)
+{
+    if(str != NULL && str[0] != 0x0 && str[strlen(str)-1] == 0x0a)
+        str[strlen(str)-1] = 0x0;
+    return;
+}
+
 static int
 add_argv(char **argv_new, int *argc_new,
         const char *new_arg, const fko_srv_options_t * const opts)
