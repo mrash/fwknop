@@ -36,6 +36,7 @@
 #define NO_TIMEOUT          0
 #define WANT_STDERR         0x01
 #define WANT_STDOUT_GETLINE 0x02
+#define ALLOW_PARTIAL_LINES 0x04
 #define NO_STDERR           0
 #define ROOT_UID            0
 #define ROOT_GID            0

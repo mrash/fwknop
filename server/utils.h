@@ -65,6 +65,7 @@ int   is_valid_dir(const char *path);
 int   is_valid_exe(const char *path);
 int   verify_file_perms_ownership(const char *file);
 void  chop_newline(char *str);
+void  truncate_partial_line(char *str);
 int   strtoargv(const char * const args_str, char **argv_new, int *argc_new,
         const fko_srv_options_t * const opts);
 void  free_argv(char **argv_new, int *argc_new);

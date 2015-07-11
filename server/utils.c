@@ -194,6 +194,38 @@ chop_newline(char *str)
     return;
 }
 
+void
+truncate_partial_line(char *str)
+{
+    int i, have_newline=0;
+
+    if(str != NULL && str[0] != 0x0)
+    {
+        for (i=0; i < strlen(str); i++)
+        {
+            if(str[i] == 0x0a)
+            {
+                have_newline = 1;
+                break;
+            }
+        }
+
+        /* Don't zero out any data unless there is at least
+         * one newline
+        */
+        if(have_newline)
+        {
+            for (i=strlen(str)-1; i > 0; i--)
+            {
+                if(str[i] == 0x0a)
+                    break;
+                str[i] = 0x0;
+            }
+        }
+    }
+    return;
+}
+
 static int
 add_argv(char **argv_new, int *argc_new,
         const char *new_arg, const fko_srv_options_t * const opts)
