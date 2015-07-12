@@ -147,6 +147,7 @@ enum {
 #define MIN_HIGH_PORT       10000  /* sensible minimum for SPA dest port */
 #define ANY_PORT            0      /* used as a wildcard */
 #define ANY_PROTO           0      /* used as a wildcard */
+#define NAT_ANY_PORT        ANY_PORT
 #define MAX_SERVER_STR_LEN  50
 #define MAX_ICMP_TYPE       40
 #define MAX_ICMP_CODE       15
