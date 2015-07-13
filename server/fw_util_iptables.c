@@ -1443,6 +1443,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
     char             exp_str[12]     = {0};
     char             rule_num_str[6] = {0};
     char            *ndx, *rn_start, *rn_end, *tmp_mark;
+    char            ipt_output_buf[STANDARD_CMD_OUT_BUFSIZE] = {0};
 
     int             i, res, rn_offset, rule_num, is_err;
     time_t          now, rule_exp, min_exp = 0;
@@ -1462,6 +1463,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             continue;
 
         zero_cmd_buffers();
+        memset(ipt_output_buf, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 
         rn_offset = 0;
 
@@ -1474,22 +1476,23 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             ch[i].to_chain
         );
 
-        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+        res = run_extcmd(cmd_buf, ipt_output_buf, STANDARD_CMD_OUT_BUFSIZE,
                 WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
-        chop_newline(cmd_out);
+        chop_newline(ipt_output_buf);
 
-        log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
-            cmd_buf, res, cmd_out);
+        log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, ipt_output_buf: %s)",
+            cmd_buf, res, ipt_output_buf);
 
         if(!EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, ipt_output_buf);
             continue;
         }
 
-        log_msg(LOG_DEBUG, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
+        log_msg(LOG_DEBUG, "RES=%i, CMD_BUF: %s\nRULES LIST: %s",
+                res, cmd_buf, ipt_output_buf);
 
-        ndx = strstr(cmd_out, EXPIRE_COMMENT_PREFIX);
+        ndx = strstr(ipt_output_buf, EXPIRE_COMMENT_PREFIX);
         if(ndx == NULL)
         {
             /* we did not find an expected rule.
@@ -1523,7 +1526,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                 /* Backtrack and get the rule number and delete it.
                 */
                 rn_start = ndx;
-                while(--rn_start > cmd_out)
+                while(--rn_start > ipt_output_buf)
                 {
                     if(*rn_start == '\n')
                         break;
