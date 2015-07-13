@@ -1583,7 +1583,7 @@ check_firewall_rules(const fko_srv_options_t * const opts)
                     opts->fw_config->fw_command,
                     ch[i].table,
                     ch[i].to_chain,
-                    rule_num - rn_offset
+                    rule_num - rn_offset /* account for previously deleted rule */
                 );
 
                 res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
