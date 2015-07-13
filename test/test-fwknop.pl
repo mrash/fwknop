@@ -910,6 +910,7 @@ my %test_keys = (
     'rc_positive_output_matches' => $OPTIONAL,
     'rc_negative_output_matches' => $OPTIONAL,
     'mv_and_restore_replay_cache' => $OPTIONAL,
+    'relax_receive_cycle_num_check' => $OPTIONAL,
     'client_positive_output_matches' => $OPTIONAL,
     'client_negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
@@ -2441,8 +2442,13 @@ sub _client_send_spa_packet() {
 
             $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
                     $cmd_out_tmp, $curr_test_file);
-            $rv = 0 unless &file_find_num_matches(qr/Final\sSPA\sData/,
-                $NO_APPEND_RESULTS, $curr_test_file) == $cycle_ctr+1;
+            if ($test_hr->{'relax_receive_cycle_num_check'}) {
+                $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/],
+                    $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
+            } else {
+                $rv = 0 unless &file_find_num_matches(qr/Final\sSPA\sData/,
+                    $NO_APPEND_RESULTS, $curr_test_file) == $cycle_ctr+1;
+            }
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
             if ($test_hr->{'client_pkt_tries'} > 0) {

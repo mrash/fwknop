@@ -665,6 +665,33 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'multiple client invocations (1)',
+        'function' => \&spa_cycle,
+        'cmdline'  => "LD_LIBRARY_PATH=$lib_dir " .
+            "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip --rc-file " .
+            "$cf{'rc_hmac_b64_key'} $verbose_str " .
+            "&& LD_LIBRARY_PATH=$lib_dir " .
+            "$fwknopCmd -A tcp/23 -a $fake_ip -D $loopback_ip --rc-file " .
+            "$cf{'rc_hmac_b64_key'} $verbose_str " .
+            "&& LD_LIBRARY_PATH=$lib_dir " .
+            "$fwknopCmd -A tcp/24 -a $fake_ip -D $loopback_ip --rc-file " .
+            "$cf{'rc_hmac_b64_key'} $verbose_str",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/Removed\srule\s1/,
+            qr/Removed\srule\s2/,
+            qr/Removed\srule\s3/,
+        ],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'relax_receive_cycle_num_check' => $YES, ### multiple SPA packets involved
+        'weak_server_receive_check' => $YES,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/60001,udp/60001)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --rc-file " .
