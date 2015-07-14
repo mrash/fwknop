@@ -698,7 +698,7 @@
             ### insert a dummy rule that should be garbage collected
             qq|iptables -A FWKNOP_INPUT -p tcp --dport 22 -s $fake_ip | .
             qq|-m comment --comment "_exp_1234" -j ACCEPT | .
-            "&& LD_LIBRARY_PATH=$lib_dir $fwknopCmd -A tcp/22 -a $fake_ip " .
+            "&& LD_LIBRARY_PATH=$lib_dir $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
             "-D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} $verbose_str ",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
