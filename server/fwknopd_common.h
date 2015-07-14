@@ -91,6 +91,7 @@
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
 #define DEF_MAX_SPA_PACKET_AGE          "120"
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
+#define DEF_RULES_CHECK_CTR             10
 #define DEF_MAX_SNIFF_BYTES             "1500"
 #define DEF_GPG_HOME_DIR                "/root/.gnupg"
 #ifdef  GPG_EXE
@@ -645,6 +646,12 @@ typedef struct fko_srv_options
     /* Firewall config info.
     */
     struct fw_config *fw_config;
+
+    /* Rule checking counter - this is for garbage cleanup mode to remove
+     * any rules with an expired timer (even those that may have been
+     * added by a third-party program).
+    */
+    unsigned int check_rules_ctr;
 
     /* Set to 1 when messages have to go through syslog, 0 otherwise */
     unsigned char   syslog_enable;

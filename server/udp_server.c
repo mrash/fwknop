@@ -53,7 +53,7 @@ int
 run_udp_server(fko_srv_options_t *opts)
 {
     int                 s_sock, sfd_flags, selval, pkt_len;
-    int                 is_err, s_timeout, rv=1;
+    int                 is_err, s_timeout, rv=1, chk_rm_all=0;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
@@ -148,7 +148,16 @@ run_udp_server(fko_srv_options_t *opts)
         /* Check for any expired firewall rules and deal with them.
         */
         if(!opts->test)
-            check_firewall_rules(opts);
+        {
+            opts->check_rules_ctr++;
+            if(opts->check_rules_ctr % DEF_RULES_CHECK_CTR == 0)
+            {
+                chk_rm_all = 1;
+                opts->check_rules_ctr = 0;
+            }
+            check_firewall_rules(opts, chk_rm_all);
+            chk_rm_all = 0;
+        }
 
         /* Initialize and setup the socket for select.
         */
