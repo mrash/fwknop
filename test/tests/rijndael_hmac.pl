@@ -692,6 +692,28 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => "iptables garbage collect rule",
+        'function' => \&spa_cycle,
+        'cmdline'  =>
+            ### insert a dummy rule that should be garbage collected
+            qq|iptables -A FWKNOP_INPUT -p tcp --dport 22 -s $fake_ip | .
+            qq|-m comment --comment "_exp_1234" -j ACCEPT | .
+            "&& LD_LIBRARY_PATH=$lib_dir $fwknopCmd -A tcp/22 -a $fake_ip " .
+            "-D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} $verbose_str ",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/Removed\srule\s1/,
+            qr/Removed\srule.*expire time of 1234/,
+        ],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/60001,udp/60001)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --rc-file " .
