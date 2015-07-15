@@ -1720,10 +1720,12 @@
         'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_translate_ip"} -a $cf{'hmac_force_nat_forward_all_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
-            qr/\sSNAT\s.*all.*\sto:$force_nat_host2/],
-        'server_negative_output_matches' => [qr/DNAT\s.*\*\/\sto\:/,
+            qr/\sSNAT\s.*all.*\sto:$force_nat_host3/
+        ],
+        'server_negative_output_matches' => [
             qr/\*\/\sto\:$internal_nat_host\:22/i,
-            qr/\*\/\sto\:$force_nat_host\:22/i],
+            qr/\*\/\sto\:$force_nat_host\:22/i
+        ],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_conf' => $cf{"${fw_conf_prefix}_snat_translate_ip"},

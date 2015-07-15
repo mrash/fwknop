@@ -80,6 +80,7 @@ our $spoof_ip          = '1.2.3.4';
 our $internal_nat_host = '192.168.1.2';
 our $force_nat_host    = '192.168.1.123';
 our $force_nat_host2   = '123.4.4.4';
+our $force_nat_host3   = '8.1.2.3';
 our $force_snat_host   = '33.3.3.3';
 our $default_spa_port  = 62201;
 our $non_std_spa_port  = 12345;
