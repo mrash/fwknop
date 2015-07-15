@@ -214,6 +214,7 @@ my $valgrind_disable_suppressions = 0;
 my $valgrind_disable_child_silent = 0;
 my $valgrind_suppressions_file = cwd() . '/valgrind_suppressions';
 our $valgrind_str = '';
+my %cached_fw_policy  = ();
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
 my %prev_valgrind_file_titles = ();
@@ -5478,12 +5479,14 @@ sub client_server_interaction() {
                 &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
                     $curr_test_file);
                 if ($test_hr->{'fw_dupe_rule_args'}) {
-                    my $fw_args = $test_hr->{'fw_dupe_rule_args'};
-                    if ($fw_args =~ /EXP_TIME/) {
-                        $fw_args =~ s/EXP_TIME/$time_prefix/;
+                    for my $fw_args (@{$test_hr->{'fw_dupe_rule_args'}}) {
+                        my $cp = $fw_args;
+                        if ($cp =~ /EXP_TIME/) {
+                            $cp =~ s/EXP_TIME/$time_prefix/;
+                        }
+                        &run_cmd("$fw_bin_and_prefix $cp",
+                            $cmd_out_tmp, $curr_test_file);
                     }
-                    &run_cmd("$fw_bin_and_prefix $fw_args",
-                        $cmd_out_tmp, $curr_test_file);
                 } else {
                     ### assume SSH
                     &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
@@ -5496,6 +5499,7 @@ sub client_server_interaction() {
             &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
                 "$fwknopd_conf -a $access_conf --fw-list",
                 $cmd_out_tmp, $curr_test_file);
+            &cache_fw_policy($cmd_out_tmp);
         }
     }
 
@@ -5549,7 +5553,7 @@ sub client_server_interaction() {
             $fw_rule_removed = 0;
         }
 
-        if ($fw_rule_created) {
+        if ($fw_rule_created or $test_hr->{'insert_duplicate_rule_while_running'}) {
             if ($test_hr->{'rm_rule_mid_cycle'}) {
                 &write_test_file("[+] Flushing firewall rules out from under fwknopd...\n",
                     $curr_test_file);
@@ -6562,6 +6566,21 @@ sub popen_cmd() {
     return 1;
 }
 
+sub cache_fw_policy() {
+    my $file = shift;
+    open FWP, "< $file" or die "[*] Could not open $file: $!";
+    while (<FWP>) {
+        ### 3   ACCEPT   tcp  --  127.0.0.2...
+        ### Since we use the policy cache to detect duplicate rules,
+        ### don't allow the rule number itself to make each rule
+        ### unique by default
+        if (/^\d+\s+(.*)/) {
+            $cached_fw_policy{$1} = '';
+        }
+    }
+    close FWP;
+}
+
 sub run_cmd() {
     my ($cmd, $cmd_out, $file) = @_;
 
@@ -7438,9 +7457,30 @@ sub is_fw_rule_active() {
         &run_cmd("$lib_view_str $fwknopdCmd " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" },
                 $cmd_out_tmp, $curr_test_file);
-        unless (&file_find_regex([qr/\s$fake_ip\s.*_exp_/],
-                $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
-            $rv = 0;
+        if ($test_hr->{'insert_duplicate_rule_while_running'}) {
+            ### see if there is a new rule that wasn't in the
+            ### policy before the SPA packet was sent
+            my $new_fw_rule = 0;
+            open FWPOL, "< $cmd_out_tmp" or die $!;
+            while (<FWPOL>) {
+                my $line = $_;
+                if ($line =~ /^\d+\s+(.*)/) {
+                    if (not defined $cached_fw_policy{$1}) {
+                        &write_test_file(
+                            "[.] Found new rule not found in previously cached policy: $line\n",
+                            $curr_test_file);
+                        $new_fw_rule = 1;
+                        last;
+                    }
+                }
+            }
+            close FWPOL;
+            $rv = 0 unless $new_fw_rule;
+        } else {
+            unless (&file_find_regex([qr/\s$fake_ip\s.*_exp_/],
+                    $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+                $rv = 0;
+            }
         }
     }
 

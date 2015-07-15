@@ -207,7 +207,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => '--ipt-no-check-support',
+        'detail'   => '--no-ipt-check-support',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
@@ -220,7 +220,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => '3 cycles --ipt-no-check-support',
+        'detail'   => '3 cycles --no-ipt-check-support',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
@@ -234,38 +234,43 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => '--ipt-no-check dupe rule',
+        'detail'   => '--no-ipt-check dupe rule',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file " .
             "$intf_str --no-ipt-check-support --no-firewd-check-support",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $REQUIRE_NO_NEW_REMOVED,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'insert_duplicate_rule_while_running' => $YES,
-        'fw_dupe_rule_args' => "-A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
-                "--dport 22 -m comment --comment EXP_TIME -j ACCEPT",
-        'server_positive_output_matches' => [qr/rule_exists_no_chk_support.*rule already exists/],
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+            "--dport 22 -m comment --comment EXP_TIME -j ACCEPT"
+        ],
+        'server_positive_output_matches'
+                => [qr/rule_exists_no_chk_support.*tcp.*22.*already exists/],
     },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => '--ipt-no-check non-matching dupe rule',
+        'detail'   => '--no-ipt-check != dupe rule',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file " .
             "$intf_str --no-ipt-check-support --no-firewd-check-support",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $REQUIRE_NO_NEW_REMOVED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'insert_duplicate_rule_while_running' => $YES,
         ### port 1234 builds a non-matching rule, so it isn't actually
         ### a duplicate - require a negative server match
-        'fw_dupe_rule_args' => "-A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
-                "--dport 1234 -m comment --comment EXP_TIME -j ACCEPT",
-        'server_negative_output_matches' => [qr/rule_exists_no_chk_support.*rule already exists/],
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+            "--dport 1234 -m comment --comment EXP_TIME -j ACCEPT"
+        ],
+        'server_negative_output_matches'
+                => [qr/rule_exists_no_chk_support.*tcp.*22.*already exists/],
     },
 
     {
@@ -289,8 +294,7 @@
         'cmdline'  => $default_client_hmac_args,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $REQUIRE_NO_NEW_REMOVED,
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'insert_duplicate_rule_while_running' => $YES,
     },
@@ -298,7 +302,7 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
-        'detail'   => '--ipt-no-check-support udp/53',
+        'detail'   => '--no-ipt-check-support udp/53',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A udp/53 -a $fake_ip -D $loopback_ip --rc-file " .
             "$cf{'rc_hmac_b64_key'} $verbose_str",
@@ -1440,6 +1444,63 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => "NAT $internal_nat_host dupe detection",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_b64_key'} -N $internal_nat_host:22",
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'hmac_open_ports_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+            qr/rule_exists.*FWKNOP_PREROUTING already exists/,
+            qr/rule_exists.*FWKNOP_FORWARD already exists/,
+        ],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
+        'insert_duplicate_rule_while_running' => $YES,
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_PREROUTING -t nat -p 6 -s 127.0.0.2 -d 0.0.0.0/0 " .
+            "--dport 22 -m comment --comment EXP_TIME -j DNAT " .
+            "--to-destination 192.168.1.2:22",
+
+            "-A FWKNOP_FORWARD -p 6 -s 127.0.0.2 -d 192.168.1.2 " .
+                "--dport 22 -m comment --comment EXP_TIME -j ACCEPT"
+        ],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT $internal_nat_host != dupe detection",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_b64_key'} -N $internal_nat_host:22",
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} / .
+            qq/-a $cf{'hmac_open_ports_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+        ],
+        'server_negative_output_matches' => [
+            qr/rule_exists.*22.*already exists/
+        ],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
+        'insert_duplicate_rule_while_running' => $YES,
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_PREROUTING -t nat -p 6 -s 127.0.0.2 -d 0.0.0.0/0 " .
+            "--dport 22 -m comment --comment EXP_TIME -j DNAT " .
+            "--to-destination 192.168.1.2:1234"
+        ],
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => "NAT $internal_nat_host --no-ipt-check dupe",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
@@ -1448,17 +1509,50 @@
             "-d $default_digest_file -p $default_pid_file " .
             "$intf_str --no-ipt-check-support --no-firewd-check-support",
         'server_positive_output_matches' => [
+            qr/rule_exists.*FWKNOP_PREROUTING already exists/,
+            qr/rule_exists_no_chk_support.* expires\:\s.*already exists/
+        ],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"},
+        'insert_duplicate_rule_while_running' => $YES,
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_PREROUTING -t nat -p 6 -s 127.0.0.2 -d 0.0.0.0/0 " .
+            "--dport 22 -m comment --comment EXP_TIME -j DNAT " .
+            "--to-destination 192.168.1.2:22",
+
+            "-A FWKNOP_FORWARD -p 6 -s 127.0.0.2 -d 192.168.1.2 " .
+                "--dport 22 -m comment --comment EXP_TIME -j ACCEPT"
+        ],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT --no-ipt-check != dupe",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_b64_key'} -N $internal_nat_host:22",
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} / .
+            qq/-a $cf{'hmac_open_ports_access'} / .
+            "-d $default_digest_file -p $default_pid_file " .
+            "$intf_str --no-ipt-check-support --no-firewd-check-support",
+        'server_positive_output_matches' => [
             qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/\*\/\sto\:$internal_nat_host\:22/i],
+            qr/\*\/\sto\:$internal_nat_host\:22/i,
+        ],
+        'server_negative_output_matches' => [
+            qr/rule_exists_no_chk_support.* expires\:\s.*already exists/
+        ],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_conf' => $cf{"${fw_conf_prefix}_nat"},
         'insert_duplicate_rule_while_running' => $YES,
-        'fw_dupe_rule_args' => "-A FWKNOP_PREROUTING -t nat -p 6 -s 127.0.0.2 -d 0.0.0.0/0 " .
-                "--dport 22 -m comment --comment EXP_TIME -j DNAT " .
-                "--to-destination 192.168.1.2:22",
-        'server_positive_output_matches' => [qr/rule_exists_no_chk_support.*rule already exists/],
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_PREROUTING -t nat -p 6 -s 127.0.0.2 -d 0.0.0.0/0 " .
+            "--dport 22 -m comment --comment EXP_TIME -j DNAT " .
+            "--to-destination 192.168.1.2:2222"
+        ],
     },
 
     {

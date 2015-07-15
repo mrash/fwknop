@@ -202,18 +202,21 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
             WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
     chop_newline(err_buf);
 
-    log_msg(LOG_DEBUG, "rule_exists_chk_support() CMD: '%s' (res: %d, err: %s)",
-        cmd_buf, res, err_buf);
+    log_msg(LOG_DEBUG,
+            "rule_exists_chk_support() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
     {
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s does not exist",
+        log_msg(LOG_DEBUG,
+                "rule_exists_chk_support() Rule : '%s' in %s does not exist",
                 rule, chain);
     }
     else
     {
         rule_exists = 1;
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s already exists",
+        log_msg(LOG_DEBUG,
+                "rule_exists_chk_support() Rule : '%s' in %s already exists",
                 rule, chain);
     }
 
