@@ -415,6 +415,7 @@ EXTRA_DIST = \
     test/afl/test-cases/spa-pkts/spa2_md5.start \
     test/afl/test-cases/server-conf/firewalld/fwknopd.conf \
     test/afl/test-cases/server-conf/iptables/fwknopd.conf \
+    test/tests/address_sanitizer.pl \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
