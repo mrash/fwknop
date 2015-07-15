@@ -214,6 +214,7 @@ my $valgrind_disable_suppressions = 0;
 my $valgrind_disable_child_silent = 0;
 my $valgrind_suppressions_file = cwd() . '/valgrind_suppressions';
 our $valgrind_str = '';
+my $asan_mode = 0;
 my %cached_fw_policy  = ();
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
@@ -1566,6 +1567,8 @@ sub fko_wrapper_exec() {
     my $test_hr = shift;
 
     my $make_arg = $test_hr->{'wrapper_compile'};
+
+    $make_arg = 'asan' if $asan_mode;
 
     if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
         if ($enable_fuzzing_interfaces_tests) {
@@ -6946,8 +6949,10 @@ sub init() {
     $genhtml_path = &find_command('genhtml') unless $genhtml_path;
 
     ### see if we're compiled with ASAN support
-    unless (&file_find_regex([qr/enable\-asan\-support/],
+    if (&file_find_regex([qr/enable\-asan\-support/],
             $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
+        $asan_mode = 1;
+    } else {
         &write_test_file("[-] Can't find --enable-asan-support in $config_log\n",
             $curr_test_file);
         push @tests_to_exclude, qr/ASAN/;
