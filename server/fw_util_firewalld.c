@@ -71,7 +71,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         const unsigned int exp_ts)
 {
     int     rule_exists=0;
-    char    fw_line_buf[CMD_BUFSIZE]    = {0};
+    char    fw_line_buf[CMD_BUFSIZE]     = {0};
     char    target_search[CMD_BUFSIZE]   = {0};
     char    proto_search[CMD_BUFSIZE]    = {0};
     char    srcip_search[CMD_BUFSIZE]    = {0};
@@ -119,7 +119,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         snprintf(dstip_search, CMD_BUFSIZE-1, " %s ", dstip);
 
     if (natip != NULL)
-        snprintf(natip_search, CMD_BUFSIZE-1, " to:%s ", natip);
+        snprintf(natip_search, CMD_BUFSIZE-1, " to:%s", natip);
 
     snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
 
