@@ -64,7 +64,6 @@
 #define IPT_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n" SH_REDIR
 #define IPT_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers" SH_REDIR
 #define IPT_ANY_IP              "0.0.0.0/0"
-#define IPT_NAT_ANY_IP          IPT_ANY_IP
 
 int validate_ipt_chain_conf(const char * const chain_str);
 
