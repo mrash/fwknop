@@ -1,11 +1,20 @@
 fwknop-2.6.7 (05//2015):
-    - Added --key-gen to fwknopd. This feature was suggested by Jonathan
-      Bennett, and will help with ease of use efforts. The first platform to
-      take advantage of this will likely be OpenWRT thanks to Jonathan.
-    - Added a script from Jonathan Bennett at extras/console-qr/console-qr.sh
-      to generate QR codes from fwknopd access.conf keys.
-    - Added --with-firewalld to the autoconf configure script. This is a
-      synonym for --with-firewall-cmd to avoid confusion. Some package
+    - [server] Kevin Layer reported a bug to the fwknop mailing list that
+      simultaneous NAT access for two different access.conf stanza was not
+      functioning properly. After some diagnosis, this is a result of
+      rule_exists() not properly detecting and differentiating existing DNAT
+      rules from new ones with different port numbers when 'iptables -C'
+      support is not available. This was against iptables-1.4.7, and has been
+      fixed in this release of fwknop (tracked as issue #162).
+    - [server] Added --key-gen to fwknopd. This feature was suggested by
+      Jonathan Bennett, and will help with ease of use efforts. The first
+      platform to take advantage of this will likely be OpenWRT thanks to
+      Jonathan.
+    - [extras] Added a script from Jonathan Bennett at
+      extras/console-qr/console-qr.sh to generate QR codes from fwknopd
+      access.conf keys.
+    - [build] Added --with-firewalld to the autoconf configure script. This is
+      a synonym for --with-firewall-cmd to avoid confusion. Some package
       maintainers use --with-firewalld to build fwknop.
 
 fwknop-2.6.6 (04/23/2015):
