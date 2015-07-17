@@ -58,6 +58,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     unsigned char       *pkt_data;
     unsigned short      pkt_data_len;
     unsigned char       *pkt_end;
+    unsigned char       *fr_end;
 
     unsigned int        ip_hdr_words;
 
@@ -85,7 +86,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     /* Determine packet end.
     */
-    pkt_end = (unsigned char *) packet + packet_header->caplen;
+    fr_end = (unsigned char *) packet + packet_header->caplen;
 
     /* The ethernet header.
     */
@@ -128,7 +129,7 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     /* If IP header is past calculated packet end, bail.
     */
-    if ((unsigned char*)(iph_p + 1) > pkt_end)
+    if ((unsigned char*)(iph_p + 1) > fr_end)
         return;
 
     /* ip_hdr_words is the number of 32 bit words in the IP header. After
@@ -140,19 +141,14 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     if (ip_hdr_words < MIN_IPV4_WORDS)
         return;
 
-    /* Support for the cases where libpcap returns the Ethernet Frame Check
-     * Sequence (4 bytes at the end of the Ethernet frame) as part of the
-     * capture. libpcap returning the FCS is fairly rare. Default settings on
-     * the following system included an Ethernet FCS in the libpcap capture:
-     *     BeagleBone Black rev C running 3.8.13-bone50 #1 SMP Tue May 13
-     *     13:24:52 UTC 2014 armv7l GNU/Linux
-     *
-     * Calculate the new pkt_end from the length in the ip header.
+    /* Make sure to calculate the packet end based on the length in the
+     * IP header. This allows additional bytes that may be added to the
+     * frame (such as a 4-byte Ethernet Frame Check Sequence) to not
+     * interfere with SPA operations.
     */
-    if(((unsigned char*)iph_p)+ntohs(iph_p->tot_len) == pkt_end-FCS_HEADER_LEN) {
-        log_msg(LOG_DEBUG, "Adjusting packet end to account for FCS header on Ethernet frame");
-        pkt_end -= FCS_HEADER_LEN;
-    }
+    pkt_end = ((unsigned char*)iph_p)+ntohs(iph_p->tot_len);
+    if(pkt_end > fr_end)
+        return;
 
     /* Now, find the packet data payload (depending on IPPROTO).
     */
