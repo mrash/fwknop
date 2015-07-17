@@ -456,7 +456,8 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
         rv = 1;
     }
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_DEBUG,
+                "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
 
     return rv;
 }
@@ -506,9 +507,11 @@ jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         exists = 1;
 
     if(exists)
-        log_msg(LOG_DEBUG, "jump_rule_exists_no_chk_support() jump rule found");
+        log_msg(LOG_DEBUG,
+                "jump_rule_exists_no_chk_support() jump rule found");
     else
-        log_msg(LOG_DEBUG, "jump_rule_exists_no_chk_support() jump rule not found");
+        log_msg(LOG_DEBUG,
+                "jump_rule_exists_no_chk_support() jump rule not found");
 
    return(exists);
 }
@@ -994,7 +997,8 @@ create_rule(const fko_srv_options_t * const opts,
 
     zero_cmd_buffers();
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -A %s %s", opts->fw_config->fw_command, fw_chain, fw_rule);
+    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -A %s %s",
+            opts->fw_config->fw_command, fw_chain, fw_rule);
 
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
                 NO_TIMEOUT, &pid_status, opts);
