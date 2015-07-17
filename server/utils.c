@@ -194,6 +194,21 @@ chop_newline(char *str)
     return;
 }
 
+void chop_spaces(char *str)
+{
+    int i;
+    if (str != NULL && str[0] != 0x0)
+    {
+        for (i=strlen(str)-1; i > 0; i--)
+        {
+            if(str[i] != 0x20)
+                break;
+            str[i] = 0x0;
+        }
+    }
+    return;
+}
+
 void
 truncate_partial_line(char *str)
 {
@@ -224,6 +239,25 @@ truncate_partial_line(char *str)
         }
     }
     return;
+}
+
+/* Simple test to see if a string only contains digits
+*/
+int
+is_digits(const char * const str)
+{
+    int i;
+    printf("........EXP: %s\n", str);
+    if (str != NULL && str[0] != 0x0)
+    {
+        for (i=0; i<strlen(str); i++)
+        {
+            if(!isdigit(str[i]))
+                return 0;
+            i++;
+        }
+    }
+    return 1;
 }
 
 static int

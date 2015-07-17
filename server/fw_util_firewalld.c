@@ -1484,6 +1484,10 @@ rm_expired_rules(const fko_srv_options_t * const opts,
         tmp_mark = ndx;
 
         strlcpy(exp_str, ndx, sizeof(exp_str));
+        chop_spaces(exp_str);
+        if(!is_digits(exp_str))
+            break;
+
         rule_exp = (time_t)atoll(exp_str);
 
         if(rule_exp <= now)
