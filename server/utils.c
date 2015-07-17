@@ -247,7 +247,6 @@ int
 is_digits(const char * const str)
 {
     int i;
-    printf("........EXP: %s\n", str);
     if (str != NULL && str[0] != 0x0)
     {
         for (i=0; i<strlen(str); i++)
