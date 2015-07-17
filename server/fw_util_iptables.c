@@ -367,7 +367,8 @@ comment_match_exists(const fko_srv_options_t * const opts)
     chop_newline(cmd_out);
 
     if(!EXTCMD_IS_SUCCESS(res))
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
+        log_msg(LOG_ERR, "comment_match_exists() Error %i from cmd:'%s': %s",
+                res, cmd_buf, cmd_out);
 
     ndx = strstr(cmd_out, TMP_COMMENT);
     if(ndx == NULL)
@@ -423,7 +424,8 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
         rv = 1;
     }
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_ERR, "add_jump_rule() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
     return rv;
 }
@@ -453,7 +455,8 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
             fwc.chain[chain_num].table,
             fwc.chain[chain_num].to_chain);
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_ERR, "chain_exists() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
     return res;
 }
@@ -561,7 +564,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
             {
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
                 got_err++;
             }
         }
@@ -598,7 +602,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
             {
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
                 got_err++;
             }
         }
@@ -643,7 +648,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+                log_msg(LOG_ERR, "delete_all_chains() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
 
             cmd_ctr++;
         }
@@ -667,7 +673,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            log_msg(LOG_ERR, "delete_all_chains() Error %i from cmd:'%s': %s",
+                    res, cmd_buf, err_buf);
 
         zero_cmd_buffers();
 
@@ -686,7 +693,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            log_msg(LOG_ERR, "delete_all_chains() Error %i from cmd:'%s': %s",
+                    res, cmd_buf, err_buf);
     }
     return;
 }
@@ -717,7 +725,8 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
     if(EXTCMD_IS_SUCCESS(res))
         rv = 1;
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_ERR, "create_chain() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
     return rv;
 }
@@ -941,7 +950,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(create_fw_chains(opts) != 0)
     {
         log_msg(LOG_WARNING,
-                "Warning: Errors detected during fwknop custom chain creation");
+                "fw_initialize() Warning: Errors detected during fwknop custom chain creation");
         res = 0;
     }
 
@@ -999,7 +1008,8 @@ create_rule(const fko_srv_options_t * const opts,
         res = 1;
     }
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_ERR, "create_rule() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
     return res;
 }
@@ -1535,7 +1545,7 @@ rm_expired_rules(const fko_srv_options_t * const opts,
                     WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
             chop_newline(err_buf);
 
-            log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
+            log_msg(LOG_DEBUG, "rm_expired_rules() CMD: '%s' (res: %d, err: %s)",
                 cmd_buf, res, err_buf);
 
             if(EXTCMD_IS_SUCCESS(res))
@@ -1550,7 +1560,8 @@ rm_expired_rules(const fko_srv_options_t * const opts,
                     ch[cpos].active_rules--;
             }
             else
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+                log_msg(LOG_ERR, "rm_expired_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
 
         }
         else
@@ -1626,7 +1637,8 @@ check_firewall_rules(const fko_srv_options_t * const opts,
         if(!EXTCMD_IS_SUCCESS(res))
         {
             log_msg(LOG_ERR,
-                    "Error %i from cmd:'%s': %s", res, cmd_buf, ipt_output_buf);
+                    "check_firewall_rules() Error %i from cmd:'%s': %s",
+                    res, cmd_buf, ipt_output_buf);
             continue;
         }
 
