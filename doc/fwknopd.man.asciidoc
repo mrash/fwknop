@@ -277,6 +277,14 @@ corresponding details.
     previously save digests. It is a good idea to leave this feature on
     to reduce the possibility of being vulnerable to a replay attack.
 
+*RULES_CHECK_THRESHOLD* '<count>'::
+    Defines the number of times firewall rule expiration times must be checked
+    before a "deep" check is run. This allows *fwknopd* to remove rules that
+    contain a proper '_exp_<time>' even if a third party program added them
+    instead of *fwknopd*. The default value for this variable is 20, and this
+    typically results in this check being run every two seconds or so. To
+    disable this type of checking altogether, set this variable to zero.
+
 *ENABLE_IPT_FORWARDING* '<Y/N>'::
     Allow SPA clients to request access to services through an iptables
     firewall instead of just to it (i.e. access through the FWKNOP_FORWARD

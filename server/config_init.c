@@ -149,6 +149,8 @@ validate_int_var_ranges(fko_srv_options_t *opts)
         1, RCHK_MAX_SPA_PACKET_AGE);
     range_check(opts, "MAX_SNIFF_BYTES", opts->config[CONF_MAX_SNIFF_BYTES],
         1, RCHK_MAX_SNIFF_BYTES);
+    range_check(opts, "RULES_CHECK_THRESHOLD", opts->config[CONF_RULES_CHECK_THRESHOLD],
+        0, RCHK_MAX_RULES_CHECK_THRESHOLD);
     range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
         1, RCHK_MAX_TCPSERV_PORT);
     range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
@@ -484,12 +486,19 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_MAX_SPA_PACKET_AGE,
             DEF_MAX_SPA_PACKET_AGE);
 
-
     /* Enable digest persistence.
     */
     if(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE] == NULL)
         set_config_entry(opts, CONF_ENABLE_DIGEST_PERSISTENCE,
             DEF_ENABLE_DIGEST_PERSISTENCE);
+
+    /* Set firewall rule "deep" collection interval - this allows
+     * fwknopd to remove rules with proper _exp_<time> expiration
+     * times even when added by a different program.
+    */
+    if(opts->config[CONF_RULES_CHECK_THRESHOLD] == NULL)
+        set_config_entry(opts, CONF_RULES_CHECK_THRESHOLD,
+            DEF_RULES_CHECK_THRESHOLD);
 
     /* Enable destination rule.
     */

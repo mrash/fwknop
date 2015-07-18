@@ -91,7 +91,7 @@
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
 #define DEF_MAX_SPA_PACKET_AGE          "120"
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
-#define DEF_RULES_CHECK_CTR             10
+#define DEF_RULES_CHECK_THRESHOLD       "20"
 #define DEF_MAX_SNIFF_BYTES             "1500"
 #define DEF_GPG_HOME_DIR                "/root/.gnupg"
 #ifdef  GPG_EXE
@@ -130,6 +130,7 @@
 #define RCHK_MAX_UDPSERV_SELECT_TIMEOUT (2 << 22)
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
 #define RCHK_MAX_FW_TIMEOUT             (2 << 22)
+#define RCHK_MAX_RULES_CHECK_THRESHOLD  ((2 << 16) - 1)
 
 /* FirewallD-specific defines
 */
@@ -236,6 +237,7 @@ enum {
     CONF_ENABLE_SPA_PACKET_AGING,
     CONF_MAX_SPA_PACKET_AGE,
     CONF_ENABLE_DIGEST_PERSISTENCE,
+    CONF_RULES_CHECK_THRESHOLD,
     CONF_CMD_EXEC_TIMEOUT,
     //CONF_BLACKLIST,
     CONF_ENABLE_SPA_OVER_HTTP,
