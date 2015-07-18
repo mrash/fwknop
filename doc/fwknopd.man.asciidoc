@@ -335,6 +335,15 @@ corresponding details.
     Flush all existing rules in the fwknop chains when *fwknopd* is stopped
     or otherwise exits cleanly. The default is ``Y''.
 
+*EXIT_AT_INTF_DOWN* '<Y/N>'::
+    When *fwknopd* is sniffing an interface, if the interface is
+    administratively downed or unplugged, fwknopd will cleanly exit and an
+    assumption is made that any process monitoring infrastructure like systemd
+    or upstart will restart it. However, if fwknopd is not being monitored by
+    systemd, upstart, or anything else, this behavior can be disabled with the
+    ``EXIT_AT_INTF_DOWN'' variable. If disabled, fwknopd will try to recover
+    when a downed interface comes back up.
+
 *GPG_HOME_DIR* '<path>'::
     If GPG keys are used instead of a Rijndael symmetric key, this is
     the default GPG keys directory. Note that each access stanza in

@@ -62,6 +62,26 @@
         'detail'   => 'start restart stop cycle',
         'function' => \&server_start_stop_cycle,
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'exit upon down interface',
+        'function' => \&down_interface,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Fatal error from pcap_dispatch\b/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'no exit upon down interface',
+        'function' => \&down_interface,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_exit_down_intf'} " .
+            "-a $cf{'hmac_access'} -d $default_digest_file -p " .
+            "$default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Error from pcap_dispatch\b/],
+        'no_exit_intf_down' => $YES
+    },
 
     {
         'category' => 'basic operations',

@@ -10,6 +10,14 @@ fwknop-2.6.7 (05//2015):
       Jonathan Bennett, and will help with ease of use efforts. The first
       platform to take advantage of this will likely be OpenWRT thanks to
       Jonathan.
+    - [server] By default, fwknopd will now exit if the interface that it is
+      sniffing goes down (patch contributed by Github user 'sgh7'). If this
+      happens, it is expected that the native process monitoring feature in
+      things like systemd or upstart will restart fwknopd. However, if fwknopd
+      is not being monitored by systemd, upstart, or anything else, this
+      behavior can be disabled with the EXIT_AT_INTF_DOWN variable in the
+      fwknopd.conf file. If disabled, fwknopd will try to recover when a
+      downed interface comes back up.
     - [extras] Added a script from Jonathan Bennett at
       extras/console-qr/console-qr.sh to generate QR codes from fwknopd
       access.conf keys.

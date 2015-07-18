@@ -151,6 +151,7 @@ EXTRA_DIST = \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
     test/conf/force_nat_access.conf \
+    test/conf/no_exit_down_intf_fwknopd.conf \
     test/conf/future_expired_stanza_access.conf \
     test/conf/fuzzing_open_ports_access.conf \
     test/conf/fuzzing_restrict_ports_access.conf \

@@ -459,6 +459,13 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_PCAP_LOOP_SLEEP,
             DEF_PCAP_LOOP_SLEEP);
 
+    /* Control whether to exit if the interface where we're sniffing
+     * goes down.
+    */
+    if(opts->config[CONF_EXIT_AT_INTF_DOWN] == NULL)
+        set_config_entry(opts, CONF_EXIT_AT_INTF_DOWN,
+            DEF_EXIT_AT_INTF_DOWN);
+
     /* PCAP Filter.
     */
     if(opts->config[CONF_PCAP_FILTER] == NULL)

@@ -276,6 +276,7 @@ our $openssl_path = '';
 our $base64_path  = '';
 our $pinentry_fail = 0;
 our $perl_path = '';
+our $ifconfig_path = '';
 our $platform = '';
 our $help = 0;
 our $YES = 1;
@@ -463,6 +464,7 @@ our %cf = (
     'dual_key_access'              => "$conf_dir/dual_key_usage_access.conf",
     'dual_key_legacy_iv_access'    => "$conf_dir/dual_key_legacy_iv_access.conf",
     'hmac_dual_key_access'         => "$conf_dir/hmac_dual_key_usage_access.conf",
+    'no_exit_down_intf'            => "$conf_dir/no_exit_down_intf_fwknopd.conf",
     'gpg_access'                   => "$conf_dir/gpg_access.conf",
     'gpg_hmac_access'              => "$conf_dir/gpg_hmac_access.conf",
     'gpg_invalid_exe_access'       => "$conf_dir/gpg_invalid_exe_access.conf",
@@ -603,6 +605,7 @@ exit &diff_test_results() if $diff_mode;
 ### run an fwknop command under gdb from a previous test run
 exit &gdb_test_cmd() if $gdb_test_file;
 
+$ifconfig_path = &find_command('ifconfig') unless $ifconfig_path;
 &identify_loopback_intf() unless $list_mode or $client_only_mode;
 
 ### make sure everything looks as expected before continuing
@@ -901,6 +904,7 @@ my %test_keys = (
     'cmd_exec_file_owner' => $OPTIONAL,
     'rm_rule_mid_cycle'   => $OPTIONAL,
     'server_receive_re'   => $OPTIONAL,
+    'no_exit_intf_down'   => $OPTIONAL,
     'positive_output_matches' => $OPTIONAL,
     'negative_output_matches' => $OPTIONAL,
     'client_and_server_mode'  => $OPTIONAL_NUMERIC,
@@ -5438,6 +5442,27 @@ sub server_ignore_small_packets() {
     return $rv;
 }
 
+sub down_interface() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    &start_fwknopd($test_hr);
+
+    &run_cmd("$ifconfig_path lo down", $cmd_out_tmp, $curr_test_file);
+    sleep 1;
+    &run_cmd("$ifconfig_path lo up", $cmd_out_tmp, $curr_test_file);
+
+    if (&is_fwknopd_running()) {
+        $rv = 0 unless $test_hr->{'no_exit_intf_down'} eq $YES;
+        &stop_fwknopd();
+    }
+
+    $rv = 0 unless &process_output_matches($test_hr);
+
+    return $rv;
+}
+
 sub client_server_interaction() {
     my ($test_hr, $pkts_hr, $spa_client_flag) = @_;
 
@@ -6911,12 +6936,12 @@ sub init() {
         push @tests_to_exclude, qr/perl FKO module.*FUZZING/;
     }
 
-    $sudo_path    = &find_command('sudo') unless $sudo_path;
-    $killall_path = &find_command('killall') unless $killall_path;
-    $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
-    $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
-    $git_path     = &find_command('git') unless $git_path;
-    $perl_path    = &find_command('perl') unless $perl_path;
+    $sudo_path     = &find_command('sudo') unless $sudo_path;
+    $killall_path  = &find_command('killall') unless $killall_path;
+    $pgrep_path    = &find_command('pgrep') unless $pgrep_path;
+    $lib_view_cmd  = &find_command('ldd') unless $lib_view_cmd;
+    $git_path      = &find_command('git') unless $git_path;
+    $perl_path     = &find_command('perl') unless $perl_path;
 
     if ($sudo_path) {
         $username = (getpwuid((stat($test_suite_path))[4]))[0];
@@ -6948,6 +6973,10 @@ sub init() {
     $gcov_path = &find_command('gcov') unless $gcov_path;
     $lcov_path = &find_command('lcov') unless $lcov_path;
     $genhtml_path = &find_command('genhtml') unless $genhtml_path;
+
+    unless ($ifconfig_path) {
+        push @tests_to_exclude, qr/down interface/;
+    }
 
     ### see if we're compiled with ASAN support
     if (&file_find_regex([qr/enable\-asan\-support/],
@@ -7154,6 +7183,9 @@ sub openssl_hmac_style_check() {
 sub identify_loopback_intf() {
     return if $loopback_intf;
 
+    die "[*] ifconfig command not found, use --loopback <name>"
+        unless $ifconfig_path;
+
     ### Linux:
 
     ### lo    Link encap:Local Loopback
@@ -7177,7 +7209,7 @@ sub identify_loopback_intf() {
     my $intf = '';
     my $found_loopback_intf = 0;
 
-    my $cmd = 'ifconfig -a';
+    my $cmd = "$ifconfig_path -a";
     open C, "$cmd |" or die "[*] (use --loopback <name>) $cmd: $!";
     while (<C>) {
         if (/^(\S+?):?\s+.*loopback/i) {

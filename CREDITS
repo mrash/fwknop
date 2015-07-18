@@ -224,3 +224,9 @@ Dan Brooks
     - Contributed a patch for the Android client app to add the definition of
       custom server udp port. This is similiar to the --server-port argument
       offered by the main fwknop client.
+
+Github user 'sgh7':
+    - Contributed a patch to have fwknopd exit if the interface it is sniffing
+      on goes down. If this happens, it is expected that the native process
+      monitoring feature in things like systemd or upstart will restart
+      fwknopd.

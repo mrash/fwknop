@@ -299,7 +299,8 @@ pcap_capture(fko_srv_options_t *opts)
         */
         else if(res == -1)
         {
-            if(errno == ENETDOWN)
+            if((strncasecmp(opts->config[CONF_EXIT_AT_INTF_DOWN], "Y", 1) == 0)
+                    && errno == ENETDOWN)
             {
                 log_msg(LOG_ERR, "[*] Fatal error from pcap_dispatch: %s",
                     pcap_geterr(pcap)
