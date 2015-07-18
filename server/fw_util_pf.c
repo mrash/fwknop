@@ -407,7 +407,12 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         strlcpy(exp_str, ndx, sizeof(exp_str));
         chop_spaces(exp_str);
         if(!is_digits(exp_str))
-            break;
+        {
+            /* go to the next rule if it exists
+            */
+            ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
+            continue;
+        }
 
         rule_exp = (time_t)atoll(exp_str);
 

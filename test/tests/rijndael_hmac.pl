@@ -234,6 +234,42 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'invalid _exp_ prefix',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "$intf_str --no-ipt-check-support --no-firewd-check-support",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'insert_duplicate_rule_while_running' => $YES,
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+            "--dport 22 -m comment --comment _exp_NNN -j ACCEPT"
+        ],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'invalid _exp_ prefix (2)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'insert_duplicate_rule_while_running' => $YES,
+        'fw_dupe_rule_args' => [
+            "-A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+            "--dport 22 -m comment --comment _exp_NNN -j ACCEPT"
+        ],
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => '--no-ipt-check dupe rule',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,
