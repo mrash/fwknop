@@ -25,8 +25,14 @@
 #define DO_DIGEST        1
 #define RAW_DIGEST       2
 #define MAX_LINE_LEN     3000 /* really long for fuzzing tests */
-#define ENC_KEY          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* 32 bytes */
-#define HMAC_KEY         "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" /* 32 bytes */
+
+/* We use HMAC and encryption keys that are as long as the max
+ * sizes since we pass in bogus key lengths. That is, libfko
+ * functions cannot be expected to handle key lengths that are
+ * longer than the key buffers themselves.
+*/
+#define ENC_KEY          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* 32 bytes (RIJNDAEL_MAX_KEYSIZE) */
+#define HMAC_KEY         "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" /* 128 bytes (SHA512_BLOCK_LEN) */
 
 #define IS_EMPTY_LINE(x) ( \
     x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
@@ -744,4 +750,6 @@ display_ctx(fko_ctx_t ctx)
     printf(" Final SPA Data: %s\n", spa_data);
 
     spa_calls += 31;
+
+    return;
 }
