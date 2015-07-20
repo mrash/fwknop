@@ -1322,6 +1322,19 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'S':
                 opts->status = 1;
                 break;
+            case SUDO_EXE_PATH:
+                if (is_valid_exe(optarg))
+                {
+                    set_config_entry(opts, CONF_SUDO_EXE, optarg);
+                }
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] gpg path '%s' could not stat()/does not exist?",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
             case 't':
                 opts->test = 1;
                 break;

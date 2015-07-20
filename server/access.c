@@ -76,6 +76,58 @@ add_acc_string(char **var, const char *val)
     return SUCCESS;
 }
 
+/* Add an access user entry
+*/
+static int
+add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
+        const char *val, const char *var_name)
+{
+    struct passwd  *pw = NULL;
+
+    if(add_acc_string(user_var, val) != SUCCESS)
+        return FATAL_ERR;
+
+    errno = 0;
+    upw = pw = getpwnam(val);
+
+    if(pw == NULL)
+    {
+        log_msg(LOG_ERR, "[*] Unable to determine UID for %s: %s.",
+                var_name, errno ? strerror(errno) : "Not a user on this system");
+        return FATAL_ERR;
+    }
+
+    *uid_var = pw->pw_uid;
+
+    return SUCCESS;
+}
+
+/* Add an access group entry
+*/
+static int
+add_acc_group(char **group_var, gid_t *gid_var,
+        const char *val, const char *var_name)
+{
+    struct passwd  *pw = NULL;
+
+    if(add_acc_string(group_var, val) != SUCCESS)
+        return FATAL_ERR;
+
+    errno = 0;
+    pw = getpwnam(val);
+
+    if(pw == NULL)
+    {
+        log_msg(LOG_ERR, "[*] Unable to determine UID for %s: %s.",
+                var_name, errno ? strerror(errno) : "Not a group on this system");
+        return FATAL_ERR;
+    }
+
+    *gid_var = pw->pw_gid;
+
+    return SUCCESS;
+}
+
 /* Decode base64 encoded string into access entry
 */
 static int
@@ -803,6 +855,12 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->hmac_key_base64);
     }
 
+    if(acc->cmd_sudo_exec_user != NULL)
+        free(acc->cmd_sudo_exec_user);
+
+    if(acc->cmd_sudo_exec_group != NULL)
+        free(acc->cmd_sudo_exec_group);
+
     if(acc->cmd_exec_user != NULL)
         free(acc->cmd_exec_user);
 
@@ -1077,7 +1135,9 @@ set_acc_defaults(fko_srv_options_t *opts)
 /* Perform some sanity checks on an acc stanza data.
 */
 static int
-acc_data_is_valid(fko_srv_options_t *opts, struct passwd *user_pw, acc_stanza_t * const acc)
+acc_data_is_valid(fko_srv_options_t *opts,
+        struct passwd *user_pw, struct passwd *sudo_user_pw,
+        acc_stanza_t * const acc)
 {
     if(acc == NULL)
     {
@@ -1176,6 +1236,17 @@ acc_data_is_valid(fko_srv_options_t *opts, struct passwd *user_pw, acc_stanza_t 
         acc->cmd_exec_gid = user_pw->pw_gid;
     }
 
+    if(sudo_user_pw != NULL
+            && acc->cmd_sudo_exec_uid != 0 && acc->cmd_sudo_exec_gid == 0)
+    {
+        log_msg(LOG_INFO,
+            "Setting gid to group associated with CMD_SUDO_EXEC_USER '%s' in stanza source: '%s'",
+            acc->cmd_exec_user,
+            acc->source
+        );
+        acc->cmd_sudo_exec_gid = sudo_user_pw->pw_gid;
+    }
+
     return(1);
 }
 
@@ -1193,8 +1264,8 @@ parse_access_file(fko_srv_options_t *opts)
     char            var[MAX_LINE_LEN] = {0};
     char            val[MAX_LINE_LEN] = {0};
 
-    struct passwd  *pw = NULL;
     struct passwd  *user_pw = NULL;
+    struct passwd  *sudo_user_pw = NULL;
     struct stat     st;
 
     acc_stanza_t   *curr_acc = NULL;
@@ -1293,7 +1364,7 @@ parse_access_file(fko_srv_options_t *opts)
              * stanza for the minimum required data.
             */
             if(curr_acc != NULL) {
-                if(!acc_data_is_valid(opts, user_pw, curr_acc))
+                if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
                 {
                     log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
                         opts->config[CONF_ACCESS_FILE]);
@@ -1484,47 +1555,45 @@ parse_access_file(fko_srv_options_t *opts)
         {
             add_acc_bool(&(curr_acc->enable_cmd_sudo_exec), val);
         }
+        else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_USER"))
+        {
+            if(add_acc_user(&(curr_acc->cmd_sudo_exec_user),
+                        &(curr_acc->cmd_sudo_exec_uid), sudo_user_pw,
+                        val, "CMD_SUDO_EXEC_USER") != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+        else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_GROUP"))
+        {
+            if(add_acc_group(&(curr_acc->cmd_sudo_exec_group),
+                        &(curr_acc->cmd_sudo_exec_gid), val,
+                        "CMD_SUDO_EXEC_GROUP") != SUCCESS)
+            {
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
         else if(CONF_VAR_IS(var, "CMD_EXEC_USER"))
         {
-            if(add_acc_string(&(curr_acc->cmd_exec_user), val) != SUCCESS)
+            if(add_acc_user(&(curr_acc->cmd_exec_user),
+                        &(curr_acc->cmd_exec_uid), user_pw,
+                        val, "CMD_EXEC_USER") != SUCCESS)
             {
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-
-            errno = 0;
-            user_pw = pw = getpwnam(val);
-
-            if(pw == NULL)
-            {
-                log_msg(LOG_ERR, "[*] Unable to determine UID for CMD_EXEC_USER: %s.",
-                    errno ? strerror(errno) : "Not a user on this system");
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-
-            curr_acc->cmd_exec_uid = pw->pw_uid;
         }
         else if(CONF_VAR_IS(var, "CMD_EXEC_GROUP"))
         {
-            if(add_acc_string(&(curr_acc->cmd_exec_group), val) != SUCCESS)
+            if(add_acc_group(&(curr_acc->cmd_exec_group),
+                        &(curr_acc->cmd_exec_gid), val,
+                        "CMD_SUDO_EXEC_GROUP") != SUCCESS)
             {
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-
-            errno = 0;
-            pw = getpwnam(val);
-
-            if(pw == NULL)
-            {
-                log_msg(LOG_ERR, "[*] Unable to determine GID for CMD_EXEC_GROUP: %s.",
-                    errno ? strerror(errno) : "Not a group on this system");
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-
-            curr_acc->cmd_exec_gid = pw->pw_gid;
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
         {
@@ -1759,7 +1828,7 @@ parse_access_file(fko_srv_options_t *opts)
 
     /* Sanity check the last stanza
     */
-    if(!acc_data_is_valid(opts, user_pw, curr_acc))
+    if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
     {
         log_msg(LOG_ERR,
             "[*] Data error in access file: '%s'",
@@ -1961,6 +2030,8 @@ dump_access_list(const fko_srv_options_t *opts)
             "          FW_ACCESS_TIMEOUT:  %i\n"
             "            ENABLE_CMD_EXEC:  %s\n"
             "       ENABLE_CMD_SUDO_EXEC:  %s\n"
+            "         CMD_SUDO_EXEC_USER:  %s\n"
+            "        CMD_SUDO_EXEC_GROUP:  %s\n"
             "              CMD_EXEC_USER:  %s\n"
             "             CMD_EXEC_GROUP:  %s\n"
             "           REQUIRE_USERNAME:  %s\n"
@@ -1996,6 +2067,8 @@ dump_access_list(const fko_srv_options_t *opts)
             acc->fw_access_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
             acc->enable_cmd_sudo_exec ? "Yes" : "No",
+            (acc->cmd_sudo_exec_user == NULL) ? "<not set>" : acc->cmd_sudo_exec_user,
+            (acc->cmd_sudo_exec_group == NULL) ? "<not set>" : acc->cmd_sudo_exec_group,
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
             (acc->cmd_exec_group == NULL) ? "<not set>" : acc->cmd_exec_group,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,

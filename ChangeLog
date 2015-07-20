@@ -1,7 +1,14 @@
-fwknop-2.6.7 (05//2015):
+fwknop-2.6.7 (07//2015):
+    - [server] Added sudo support for command execution mode. This was
+      suggested by Github user 'freegigi' (issue #159) as a means to provide
+      command filtering using the powerful sudoers syntax. This feature is
+      implemented by prefixing any incoming command from a valid SPA packet
+      with the sudo command along with optional user and group requirements
+      as defined by the following new access.conf variables:
+      ENABLE_CMD_SUDO_EXEC, CMD_SUDO_EXEC_USER, and CMD_SUDO_EXEC_GROUP.
     - [server] Kevin Layer reported a bug to the fwknop mailing list that
       simultaneous NAT access for two different access.conf stanza was not
-      functioning properly. After some diagnosis, this is a result of
+      functioning properly. After some diagnosis, this was a result of
       rule_exists() not properly detecting and differentiating existing DNAT
       rules from new ones with different port numbers when 'iptables -C'
       support is not available. This was against iptables-1.4.7, and has been

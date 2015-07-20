@@ -304,6 +304,7 @@ incoming_spa(fko_srv_options_t *opts)
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
     char            dump_buf[CTX_DUMP_BUFSIZE];
+    char            cmd_buf[MAX_SPA_CMD_LEN] = {0};
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -881,24 +882,54 @@ incoming_spa(fko_srv_options_t *opts)
                     spadat.pkt_source_ip, stanza_num, spadat.spa_message_remain
                 );
 
-                /* Do we need to become another user? If so, we call
-                 * run_extcmd_as and pass the cmd_exec_uid.
-                */
-                if(acc->cmd_exec_user != NULL && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
+                memset(cmd_buf, 0x0, sizeof(cmd_buf));
+                if(acc->enable_cmd_sudo_exec)
+                {
+                    /* Run the command via sudo - this allows sudo filtering
+                     * to apply to the incoming command
+                    */
+                    strlcpy(cmd_buf, opts->config[CONF_SUDO_EXE],
+                            sizeof(cmd_buf));
+                    if(acc->cmd_sudo_exec_user != NULL
+                            && strncasecmp(acc->cmd_sudo_exec_user, "root", 4) != 0)
+                    {
+                        strlcat(cmd_buf, " -u ", sizeof(cmd_buf));
+                        strlcat(cmd_buf, acc->cmd_sudo_exec_user, sizeof(cmd_buf));
+                    }
+                    if(acc->cmd_exec_group != NULL
+                            && strncasecmp(acc->cmd_sudo_exec_group, "root", 4) != 0)
+                    {
+                        strlcat(cmd_buf, " -g ", sizeof(cmd_buf));
+                        strlcat(cmd_buf,
+                                acc->cmd_sudo_exec_group, sizeof(cmd_buf));
+                    }
+                    strlcat(cmd_buf, " ",  sizeof(cmd_buf));
+                    strlcat(cmd_buf, spadat.spa_message_remain, sizeof(cmd_buf));
+                }
+                else
+                    strlcpy(cmd_buf, spadat.spa_message_remain, sizeof(cmd_buf));
+
+                if(acc->cmd_exec_user != NULL
+                        && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
                 {
                     log_msg(LOG_INFO,
-                            "[%s] (stanza #%d) setuid/setgid user/group to %s/%s (UID=%i,GID=%i) before running command.",
-                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user,
+                            "[%s] (stanza #%d) Running command '%s' setuid/setgid user/group to %s/%s (UID=%i,GID=%i)",
+                        spadat.pkt_source_ip, stanza_num, cmd_buf, acc->cmd_exec_user,
                         acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
                         acc->cmd_exec_uid, acc->cmd_exec_gid);
 
                     res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
-                            spadat.spa_message_remain, NULL, 0,
-                            WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
+                            cmd_buf, NULL, 0, WANT_STDERR, NO_TIMEOUT,
+                            &pid_status, opts);
                 }
                 else /* Just run it as we are (root that is). */
-                    res = run_extcmd(spadat.spa_message_remain, NULL, 0,
-                            WANT_STDERR, 5, &pid_status, opts);
+                {
+                    log_msg(LOG_INFO,
+                            "[%s] (stanza #%d) Running command '%s'",
+                        spadat.pkt_source_ip, stanza_num, cmd_buf);
+                    res = run_extcmd(cmd_buf, NULL, 0, WANT_STDERR,
+                            5, &pid_status, opts);
+                }
 
                 /* should only call WEXITSTATUS() if WIFEXITED() is true
                 */

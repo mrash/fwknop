@@ -201,6 +201,9 @@ my $fuzzing_test_tag = '';
 my $fuzzing_class = 'bogus data';
 my %fuzzing_spa_packets = ();
 my $total_fuzzing_pkts = 0;
+our $sudo_access_conf = "$run_dir/sudo_access.conf";
+my $sudo_conf = '/etc/sudoers';
+my $sudo_conf_testing = '';
 my $server_test_file  = '';
 my $client_only_mode = 0;
 my $server_only_mode = 0;
@@ -267,6 +270,7 @@ our $valgrind_path = '';
 our $fiu_run_path = '';
 our $sudo_path = '';
 our $gcov_path = '';
+my  $touch_path = '';
 my  $lcov_path = '';
 my  $coverage_diff_path = 'coverage_diff.py';
 my  $genhtml_path = '';
@@ -875,6 +879,11 @@ my %test_keys = (
     'server_exec_err' => $OPTIONAL,
     'fw_rule_created' => $OPTIONAL,
     'fw_rule_removed' => $OPTIONAL,
+    'sudo_test'       => $OPTIONAL,
+    'sudo_conf'       => $OPTIONAL,
+    'sudo_exec_user'  => $OPTIONAL,
+    'sudo_exec_group' => $OPTIONAL,
+    'exec_user'       => $OPTIONAL,
     'server_conf'     => $OPTIONAL,
     'client_only'     => $OPTIONAL_NUMERIC,
     'server_only'     => $OPTIONAL_NUMERIC,
@@ -902,6 +911,7 @@ my %test_keys = (
     'server_conf_file'    => $OPTIONAL,
     'digest_cache_file'   => $OPTIONAL,
     'cmd_exec_file_owner' => $OPTIONAL,
+    'cmd_exec_file_not_created' => $OPTIONAL,
     'rm_rule_mid_cycle'   => $OPTIONAL,
     'server_receive_re'   => $OPTIONAL,
     'no_exit_intf_down'   => $OPTIONAL,
@@ -4672,28 +4682,103 @@ sub get_mod_paths() {
     return \@paths;
 }
 
+sub write_sudo_access_conf() {
+    my $test_hr = shift;
+    unlink $sudo_access_conf if -e $sudo_access_conf;
+
+    # mbr   localhost = NOPASSWD: /usr/bin/cat, /usr/bin/touch
+    # mbr   localhost = NOPASSWD: /usr/bin/cat, (root) /usr/bin/touch
+    # mbr   localhost = NOPASSWD: /usr/bin/cat, (mbr : mbr) /usr/bin/touch
+    if ($test_hr->{'sudo_conf'}) {
+        open ST, "> $sudo_conf_testing" or die $!;
+        $test_hr->{'sudo_conf'} =~ s/USER/$username/g;
+        if ($test_hr->{'sudo_conf'} =~ /TOUCH/) {
+            if ($touch_path) {
+                $test_hr->{'sudo_conf'} =~ s/TOUCH/$touch_path/;
+            } else {
+                $test_hr->{'sudo_conf'} =~ s|TOUCH|/bin/touch|;
+            }
+        }
+        print ST $test_hr->{'sudo_conf'}, "\n";
+        close ST;
+        &write_test_file(
+            "[+] Setting $sudo_conf_testing file to:\n$test_hr->{'sudo_conf'}\n",
+            $curr_test_file);
+    }
+
+    copy $cf{'hmac_cmd_access'}, $sudo_access_conf or die $!;
+
+    open CA, ">> $sudo_access_conf" or die $!;
+    print CA "ENABLE_CMD_SUDO_EXEC    Y\n";
+
+    if ($test_hr->{'exec_user'} eq $YES) {
+        print CA "CMD_EXEC_USER           $username\n";
+    }
+    if ($test_hr->{'sudo_exec_user'} eq $YES) {
+        print CA "CMD_SUDO_EXEC_USER           $username\n";
+    }
+    if ($test_hr->{'sudo_exec_group'} eq $YES) {
+        print CA "CMD_SUDO_EXEC_GROUP           $username\n";
+    }
+
+    close CA;
+
+    return;
+}
+
 sub spa_cmd_exec_cycle() {
     my $test_hr = shift;
 
     unlink $cmd_exec_test_file if -e $cmd_exec_test_file;
 
+    if ($test_hr->{'sudo_test'} eq $YES) {
+        ### we need to write the access.conf file based on sudo
+        ### requirements
+        &write_sudo_access_conf($test_hr);
+    }
+
+    if (-e $cmd_exec_test_file) {
+        &write_test_file("[-] $cmd_exec_test_file file exists before SPA cycle.\n",
+            $curr_test_file);
+    } else {
+        &write_test_file("[+] $cmd_exec_test_file does not exist before SPA cycle.\n",
+            $curr_test_file);
+    }
+
     my $rv = &spa_cycle($test_hr);
 
     if (-e $cmd_exec_test_file) {
+        &run_cmd("ls -l $cmd_exec_test_file", $cmd_out_tmp, $curr_test_file);
         if ($test_hr->{'cmd_exec_file_owner'}) {
+            $test_hr->{'cmd_exec_file_owner'} =~ s/USER/$username/;
             my $user = (getpwuid((stat($cmd_exec_test_file))[4]))[0];
-            if ($user and $user eq 'nobody') {
-                &write_test_file("[+] $cmd_exec_test_file is owned by user 'nobody'\n",
+            if ($user and $user eq $test_hr->{'cmd_exec_file_owner'}) {
+                &write_test_file("[+] $cmd_exec_test_file is owned by user: $user\n",
                     $curr_test_file);
-                &run_cmd("ls -l $cmd_exec_test_file", $cmd_out_tmp, $curr_test_file);
+                $rv = 1;
+            } else {
+                &write_test_file("[+] $cmd_exec_test_file is not " .
+                    "owned by user: $test_hr->{'cmd_exec_file_owner'}\n",
+                    $curr_test_file);
                 $rv = 1;
             }
         }
+        if ($test_hr->{'cmd_exec_file_not_created'}) {
+            &write_test_file("[-] $cmd_exec_test_file file exists, setting rv=0.\n",
+                $curr_test_file);
+            $rv = 0;
+        }
         unlink $cmd_exec_test_file;
     } else {
-        &write_test_file("[-] $cmd_exec_test_file file does not exist, setting rv=0.\n",
-            $curr_test_file);
-        $rv = 0;
+        if ($test_hr->{'cmd_exec_file_not_created'}) {
+            &write_test_file("[+] $cmd_exec_test_file file does not exist.\n",
+                $curr_test_file);
+            $rv = 1;
+        } else {
+            &write_test_file("[-] $cmd_exec_test_file file does not exist, setting rv=0.\n",
+                $curr_test_file);
+            $rv = 0;
+        }
     }
 
     return $rv;
@@ -6936,17 +7021,32 @@ sub init() {
         push @tests_to_exclude, qr/perl FKO module.*FUZZING/;
     }
 
-    $sudo_path     = &find_command('sudo') unless $sudo_path;
-    $killall_path  = &find_command('killall') unless $killall_path;
-    $pgrep_path    = &find_command('pgrep') unless $pgrep_path;
-    $lib_view_cmd  = &find_command('ldd') unless $lib_view_cmd;
-    $git_path      = &find_command('git') unless $git_path;
-    $perl_path     = &find_command('perl') unless $perl_path;
+    $sudo_path    = &find_command('sudo') unless $sudo_path;
+    $killall_path = &find_command('killall') unless $killall_path;
+    $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
+    $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
+    $git_path     = &find_command('git') unless $git_path;
+    $perl_path    = &find_command('perl') unless $perl_path;
+    $touch_path   = &find_command('touch') unless $touch_path;
 
     if ($sudo_path) {
         $username = (getpwuid((stat($test_suite_path))[4]))[0];
         die "[*] Could not determine $test_suite_path owner"
             unless $username;
+
+        ### see if sudo is configured to accept custom configs
+        if (-e $sudo_conf) {
+            open SR, "< $sudo_conf" or die $!;
+            while (<SR>) {
+                if (/^#includedir\s+(\/\S+)/) {
+                    $sudo_conf_testing = "$1/fwknop_testing";
+                    last;
+                }
+            }
+            close SR;
+        }
+    } else {
+        push @tests_to_exclude, qr/sudo/;
     }
 
     ### see if the 'nobody' user is on the system

@@ -378,6 +378,10 @@ typedef struct acc_stanza
     int                  fw_access_timeout;
     unsigned char        enable_cmd_exec;
     unsigned char        enable_cmd_sudo_exec;
+    char                *cmd_sudo_exec_user;
+    char                *cmd_sudo_exec_group;
+    uid_t                cmd_sudo_exec_uid;
+    gid_t                cmd_sudo_exec_gid;
     char                *cmd_exec_user;
     char                *cmd_exec_group;
     uid_t                cmd_exec_uid;

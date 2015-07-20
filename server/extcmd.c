@@ -111,7 +111,7 @@ copy_or_search(char *so_read_buf, char *so_buf, const size_t so_buf_sz,
 }
 
 /* Run an external command returning exit status, and optionally filling
- * provided  buffer with STDOUT output up to the size provided.
+ * provided buffer with STDOUT output up to the size provided.
  *
  * Note: XXX: We are not using the timeout parameter at present. We still need
  *       to implement a reliable timeout mechanism.
@@ -136,6 +136,8 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 #endif
 
 #if AFL_FUZZING
+    /* Don't allow command execution in AFL fuzzing mode
+    */
     return 0;
 #endif
 
