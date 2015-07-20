@@ -270,8 +270,8 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
 }
 
 static int
-check_stanza_expiration(acc_stanza_t *acc,
-        spa_data_t *spadat, int stanza_num)
+check_stanza_expiration(acc_stanza_t *acc, spa_data_t *spadat,
+        const int stanza_num)
 {
     if(acc->access_expire_time > 0)
     {
@@ -375,7 +375,7 @@ precheck_pkt(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt,
 
 static int
 src_dst_check(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
-        spa_data_t *spadat, int stanza_num)
+        spa_data_t *spadat, const int stanza_num)
 {
     if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
        (acc->destination_list != NULL
@@ -393,7 +393,7 @@ src_dst_check(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
 */
 static int
 process_cmd_msg(fko_srv_options_t *opts, acc_stanza_t *acc,
-        spa_data_t *spadat, int stanza_num, int *res)
+        spa_data_t *spadat, const int stanza_num, int *res)
 {
     int             pid_status=0;
     char            cmd_buf[MAX_SPA_CMD_LEN] = {0};
@@ -488,6 +488,178 @@ process_cmd_msg(fko_srv_options_t *opts, acc_stanza_t *acc,
     return 1;
 }
 
+static int
+handle_gpg_enc(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, fko_ctx_t *ctx, int *attempted_decrypt,
+        const int stanza_num, int *res)
+{
+    /* For GPG we create the new context without decrypting on the fly
+     * so we can set some GPG parameters first.
+    */
+    if(acc->gpg_decrypt_pw != NULL || acc->gpg_allow_no_pw)
+    {
+        *res = fko_new_with_data(ctx, (char *)spa_pkt->packet_data, NULL,
+                0, FKO_ENC_MODE_ASYMMETRIC, acc->hmac_key,
+                acc->hmac_key_len, acc->hmac_type);
+
+        if(*res != FKO_SUCCESS)
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Error creating fko context (before decryption): %s",
+                spadat->pkt_source_ip, stanza_num, fko_errstr(*res)
+            );
+            return 0;
+        }
+
+        /* Set whatever GPG parameters we have.
+        */
+        if(acc->gpg_exe != NULL)
+        {
+            *res = fko_set_gpg_exe(*ctx, acc->gpg_exe);
+            if(*res != FKO_SUCCESS)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Error setting GPG path %s: %s",
+                    spadat->pkt_source_ip, stanza_num, acc->gpg_exe,
+                    fko_errstr(*res)
+                );
+                return 0;
+            }
+        }
+
+        if(acc->gpg_home_dir != NULL)
+        {
+            *res = fko_set_gpg_home_dir(*ctx, acc->gpg_home_dir);
+            if(*res != FKO_SUCCESS)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
+                    spadat->pkt_source_ip, stanza_num, acc->gpg_home_dir,
+                    fko_errstr(*res)
+                );
+                return 0;
+            }
+        }
+
+        if(acc->gpg_decrypt_id != NULL)
+            fko_set_gpg_recipient(*ctx, acc->gpg_decrypt_id);
+
+        /* If GPG_REQUIRE_SIG is set for this acc stanza, then set
+         * the FKO context accordingly and check the other GPG Sig-
+         * related parameters. This also applies when REMOTE_ID is
+         * set.
+        */
+        if(acc->gpg_require_sig)
+        {
+            fko_set_gpg_signature_verify(*ctx, 1);
+
+            /* Set whether or not to ignore signature verification errors.
+            */
+            fko_set_gpg_ignore_verify_error(*ctx, acc->gpg_ignore_sig_error);
+        }
+        else
+        {
+            fko_set_gpg_signature_verify(*ctx, 0);
+            fko_set_gpg_ignore_verify_error(*ctx, 1);
+        }
+
+        /* Now decrypt the data.
+        */
+        *res = fko_decrypt_spa_data(*ctx, acc->gpg_decrypt_pw, 0);
+        *attempted_decrypt = 1;
+    }
+    return 1;
+}
+
+static int
+handle_gpg_sigs(acc_stanza_t *acc, spa_data_t *spadat,
+        fko_ctx_t *ctx, const int stanza_num, int *res)
+{
+    char                *gpg_id, *gpg_fpr;
+    acc_string_list_t   *gpg_id_ndx;
+    acc_string_list_t   *gpg_fpr_ndx;
+    unsigned char        is_gpg_match = 0;
+
+    *res = fko_get_gpg_signature_id(*ctx, &gpg_id);
+    if(*res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING,
+            "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
+            spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+        return 0;
+    }
+
+    *res = fko_get_gpg_signature_fpr(*ctx, &gpg_fpr);
+    if(*res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING,
+            "[%s] (stanza #%d) Error pulling the GPG fingerprint from the context: %s",
+            spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+        return 0;
+    }
+
+    log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s' (fingerprint '%s').",
+        spadat->pkt_source_ip, stanza_num, gpg_id, gpg_fpr);
+
+    /* prefer GnuPG fingerprint match if so configured
+    */
+    if(acc->gpg_remote_fpr != NULL)
+    {
+        is_gpg_match = 0;
+        for(gpg_fpr_ndx = acc->gpg_remote_fpr_list;
+                gpg_fpr_ndx != NULL; gpg_fpr_ndx=gpg_fpr_ndx->next)
+        {
+            *res = fko_gpg_signature_fpr_match(*ctx,
+                    gpg_fpr_ndx->str, &is_gpg_match);
+            if(*res != FKO_SUCCESS)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                    spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+                return 0;
+            }
+            if(is_gpg_match)
+                break;
+        }
+        if(! is_gpg_match)
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Incoming SPA packet signed by: %s, but that fingerprint is not in the GPG_FINGERPRINT_ID list.",
+                spadat->pkt_source_ip, stanza_num, gpg_fpr);
+            return 0;
+        }
+    }
+
+    if(acc->gpg_remote_id != NULL)
+    {
+        is_gpg_match = 0;
+        for(gpg_id_ndx = acc->gpg_remote_id_list;
+                gpg_id_ndx != NULL; gpg_id_ndx=gpg_id_ndx->next)
+        {
+            *res = fko_gpg_signature_id_match(*ctx,
+                    gpg_id_ndx->str, &is_gpg_match);
+            if(*res != FKO_SUCCESS)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                    spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+                return 0;
+            }
+            if(is_gpg_match)
+                break;
+        }
+
+        if(! is_gpg_match)
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not in the GPG_REMOTE_ID list.",
+                spadat->pkt_source_ip, stanza_num, gpg_id);
+            return 0;
+        }
+    }
+    return 1;
+}
+
 /* Process the SPA packet data
 */
 void
@@ -498,7 +670,7 @@ incoming_spa(fko_srv_options_t *opts)
     */
     fko_ctx_t       ctx = NULL;
 
-    char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;
+    char            *spa_ip_demark, *raw_digest = NULL;
     time_t          now_ts;
     int             res, ts_diff, enc_type, stanza_num=0;
     int             added_replay_digest = 0;
@@ -515,9 +687,6 @@ incoming_spa(fko_srv_options_t *opts)
     /* Loop through all access stanzas looking for a match
     */
     acc_stanza_t        *acc = opts->acc_stanzas;
-    acc_string_list_t   *gpg_id_ndx;
-    acc_string_list_t   *gpg_fpr_ndx;
-    unsigned char        is_gpg_match = 0;
 
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
@@ -619,83 +788,11 @@ incoming_spa(fko_srv_options_t *opts)
 
         if(acc->use_gpg && enc_type == FKO_ENCRYPTION_GPG && cmd_exec_success == 0)
         {
-            /* For GPG we create the new context without decrypting on the fly
-             * so we can set some GPG parameters first.
-            */
-            if(acc->gpg_decrypt_pw != NULL || acc->gpg_allow_no_pw)
+            if(! handle_gpg_enc(acc, spa_pkt, &spadat,
+                        &ctx, &attempted_decrypt, stanza_num, &res))
             {
-                res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
-                        0, FKO_ENC_MODE_ASYMMETRIC, acc->hmac_key,
-                        acc->hmac_key_len, acc->hmac_type);
-
-                if(res != FKO_SUCCESS)
-                {
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Error creating fko context (before decryption): %s",
-                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                    );
-                    acc = acc->next;
-                    continue;
-                }
-
-                /* Set whatever GPG parameters we have.
-                */
-                if(acc->gpg_exe != NULL)
-                {
-                    res = fko_set_gpg_exe(ctx, acc->gpg_exe);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error setting GPG path %s: %s",
-                            spadat.pkt_source_ip, stanza_num, acc->gpg_exe,
-                            fko_errstr(res)
-                        );
-                        acc = acc->next;
-                        continue;
-                    }
-                }
-
-                if(acc->gpg_home_dir != NULL)
-                {
-                    res = fko_set_gpg_home_dir(ctx, acc->gpg_home_dir);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
-                            spadat.pkt_source_ip, stanza_num, acc->gpg_home_dir,
-                            fko_errstr(res)
-                        );
-                        acc = acc->next;
-                        continue;
-                    }
-                }
-
-                if(acc->gpg_decrypt_id != NULL)
-                    fko_set_gpg_recipient(ctx, acc->gpg_decrypt_id);
-
-                /* If GPG_REQUIRE_SIG is set for this acc stanza, then set
-                 * the FKO context accordingly and check the other GPG Sig-
-                 * related parameters. This also applies when REMOTE_ID is
-                 * set.
-                */
-                if(acc->gpg_require_sig)
-                {
-                    fko_set_gpg_signature_verify(ctx, 1);
-
-                    /* Set whether or not to ignore signature verification errors.
-                    */
-                    fko_set_gpg_ignore_verify_error(ctx, acc->gpg_ignore_sig_error);
-                }
-                else
-                {
-                    fko_set_gpg_signature_verify(ctx, 0);
-                    fko_set_gpg_ignore_verify_error(ctx, 1);
-                }
-
-                /* Now decrypt the data.
-                */
-                res = fko_decrypt_spa_data(ctx, acc->gpg_decrypt_pw, 0);
-                attempted_decrypt = 1;
+                acc = acc->next;
+                continue;
             }
         }
 
@@ -740,8 +837,9 @@ incoming_spa(fko_srv_options_t *opts)
             added_replay_digest = 1;
         }
 
-        /* At this point, we assume the SPA data is valid.  Now we need to see
-         * if it meets our access criteria.
+        /* At this point the SPA data is authenticated via the HMAC (if used
+         * for now). Next we need to see if it meets our access criteria which
+         * the server imposes regardless of the content of the SPA packet.
         */
         log_msg(LOG_DEBUG, "[%s] (stanza #%d) SPA Decode (res=%i):",
             spadat.pkt_source_ip, stanza_num, res);
@@ -756,90 +854,13 @@ incoming_spa(fko_srv_options_t *opts)
          * then we need to make sure this incoming message is signer ID matches
          * an entry in the list.
         */
+
         if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_require_sig)
         {
-            res = fko_get_gpg_signature_id(ctx, &gpg_id);
-            if(res != FKO_SUCCESS)
+            if(! handle_gpg_sigs(acc, &spadat, &ctx, stanza_num, &res))
             {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
-                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
                 acc = acc->next;
                 continue;
-            }
-
-            res = fko_get_gpg_signature_fpr(ctx, &gpg_fpr);
-            if(res != FKO_SUCCESS)
-            {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Error pulling the GPG fingerprint from the context: %s",
-                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                acc = acc->next;
-                continue;
-            }
-
-            log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s' (fingerprint '%s').",
-                spadat.pkt_source_ip, stanza_num, gpg_id, gpg_fpr);
-
-            /* prefer GnuPG fingerprint match if so configured
-            */
-            if(acc->gpg_remote_fpr != NULL)
-            {
-                is_gpg_match = 0;
-                for(gpg_fpr_ndx = acc->gpg_remote_fpr_list;
-                        gpg_fpr_ndx != NULL; gpg_fpr_ndx=gpg_fpr_ndx->next)
-                {
-                    res = fko_gpg_signature_fpr_match(ctx,
-                            gpg_fpr_ndx->str, &is_gpg_match);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
-                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                        acc = acc->next;
-                        continue;
-                    }
-                    if(is_gpg_match)
-                        break;
-                }
-                if(! is_gpg_match)
-                {
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Incoming SPA packet signed by: %s, but that fingerprint is not in the GPG_FINGERPRINT_ID list.",
-                        spadat.pkt_source_ip, stanza_num, gpg_fpr);
-                    acc = acc->next;
-                    continue;
-                }
-            }
-
-            if(acc->gpg_remote_id != NULL)
-            {
-                is_gpg_match = 0;
-                for(gpg_id_ndx = acc->gpg_remote_id_list;
-                        gpg_id_ndx != NULL; gpg_id_ndx=gpg_id_ndx->next)
-                {
-                    res = fko_gpg_signature_id_match(ctx,
-                            gpg_id_ndx->str, &is_gpg_match);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
-                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                        acc = acc->next;
-                        continue;
-                    }
-                    if(is_gpg_match)
-                        break;
-                }
-
-                if(! is_gpg_match)
-                {
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not in the GPG_REMOTE_ID list.",
-                        spadat.pkt_source_ip, stanza_num, gpg_id);
-                    acc = acc->next;
-                    continue;
-                }
             }
         }
 
