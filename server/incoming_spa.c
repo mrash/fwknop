@@ -50,13 +50,13 @@
  * error code value if there is any indication the data is not valid spa data.
 */
 static int
-preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
+preprocess_spa_data(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt)
 {
-    spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
     char    *ndx = (char *)&(spa_pkt->packet_data);
-    int      pkt_data_len = spa_pkt->packet_data_len;
-    int      i;
+    int      i, pkt_data_len = 0;
+
+    pkt_data_len = spa_pkt->packet_data_len;
 
     /* At this point, we can reset the packet data length to 0.  This is our
      * indicator to the rest of the program that we do not have a current
@@ -133,10 +133,9 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
         return(SPA_MSG_NOT_SPA_DATA);
 
 
-    /* --DSS:  Are there other checks we can do here ??? */
-
-    /* If we made it here, we have no reason to assume this is not SPA data
-     * (at least until we come up with more checks).
+    /* If we made it here, we have no reason to assume this is not SPA data.
+     * The ultimate test will be whether the SPA data authenticates via an
+     * HMAC anyway.
     */
     return(FKO_SUCCESS);
 }
@@ -228,7 +227,6 @@ get_raw_digest(char **digest, char *pkt_data)
     return res;
 }
 
-
 /* Popluate a spa_data struct from an initialized (and populated) FKO context.
 */
 static int
@@ -271,6 +269,30 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
     return(res);
 }
 
+static int
+check_stanza_expiration(acc_stanza_t *acc,
+        spa_data_t *spadat, int stanza_num)
+{
+    if(acc->access_expire_time > 0)
+    {
+        if(acc->expired)
+        {
+            return 0;
+        }
+        else
+        {
+            if(time(NULL) > acc->access_expire_time)
+            {
+                log_msg(LOG_INFO, "[%s] (stanza #%d) Access stanza has expired",
+                    spadat->pkt_source_ip, stanza_num);
+                acc->expired = 1;
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
 /* Check for access.conf stanza SOURCE match based on SPA packet
  * source IP
 */
@@ -287,6 +309,185 @@ is_src_match(acc_stanza_t *acc, const uint32_t ip)
     return 0;
 }
 
+static int
+src_check(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, char **raw_digest)
+{
+    if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
+    {
+        if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+        {
+            /* Check for a replay attack
+            */
+            if(get_raw_digest(raw_digest, (char *)spa_pkt->packet_data) != FKO_SUCCESS)
+            {
+                if (*raw_digest != NULL)
+                    free(*raw_digest);
+                return 0;
+            }
+            if (*raw_digest == NULL)
+                return 0;
+
+            if (is_replay(opts, *raw_digest) != SPA_MSG_SUCCESS)
+            {
+                free(*raw_digest);
+                return 0;
+            }
+        }
+    }
+    else
+    {
+        log_msg(LOG_WARNING,
+            "No access data found for source IP: %s", spadat->pkt_source_ip
+        );
+        return 0;
+    }
+    return 1;
+}
+
+static int
+precheck_pkt(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, char **raw_digest)
+{
+    int res = 0, packet_data_len = 0;
+
+    packet_data_len = spa_pkt->packet_data_len;
+
+    res = preprocess_spa_data(opts, spa_pkt);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_DEBUG, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
+            spadat->pkt_source_ip, res, get_errstr(res));
+        return 0;
+    }
+
+    if(opts->foreground == 1 && opts->verbose > 2)
+    {
+        printf("[+] candidate SPA packet payload:\n");
+        hex_dump(spa_pkt->packet_data, packet_data_len);
+    }
+
+    if(! src_check(opts, spa_pkt, spadat, raw_digest))
+        return 0;
+
+    return 1;
+}
+
+static int
+src_dst_check(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, int stanza_num)
+{
+    if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
+       (acc->destination_list != NULL
+        && ! compare_addr_list(acc->destination_list, ntohl(spa_pkt->packet_dst_ip))))
+    {
+        log_msg(LOG_DEBUG,
+                "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
+                stanza_num, spadat->pkt_source_ip, spadat->pkt_destination_ip);
+        return 0;
+    }
+    return 1;
+}
+
+/* Process command messages
+*/
+static int
+process_cmd_msg(fko_srv_options_t *opts, acc_stanza_t *acc,
+        spa_data_t *spadat, int stanza_num, int *res)
+{
+    int             pid_status=0;
+    char            cmd_buf[MAX_SPA_CMD_LEN] = {0};
+
+    if(!acc->enable_cmd_exec)
+    {
+        log_msg(LOG_WARNING,
+            "[%s] (stanza #%d) SPA Command messages are not allowed in the current configuration.",
+            spadat->pkt_source_ip, stanza_num
+        );
+        return 0;
+    }
+    else if(opts->test)
+    {
+        log_msg(LOG_WARNING,
+            "[%s] (stanza #%d) --test mode enabled, skipping command execution.",
+            spadat->pkt_source_ip, stanza_num
+        );
+        return 0;
+    }
+    else
+    {
+        log_msg(LOG_INFO,
+            "[%s] (stanza #%d) Processing SPA Command message: command='%s'.",
+            spadat->pkt_source_ip, stanza_num, spadat->spa_message_remain
+        );
+
+        memset(cmd_buf, 0x0, sizeof(cmd_buf));
+        if(acc->enable_cmd_sudo_exec)
+        {
+            /* Run the command via sudo - this allows sudo filtering
+             * to apply to the incoming command
+            */
+            strlcpy(cmd_buf, opts->config[CONF_SUDO_EXE],
+                    sizeof(cmd_buf));
+            if(acc->cmd_sudo_exec_user != NULL
+                    && strncasecmp(acc->cmd_sudo_exec_user, "root", 4) != 0)
+            {
+                strlcat(cmd_buf, " -u ", sizeof(cmd_buf));
+                strlcat(cmd_buf, acc->cmd_sudo_exec_user, sizeof(cmd_buf));
+            }
+            if(acc->cmd_exec_group != NULL
+                    && strncasecmp(acc->cmd_sudo_exec_group, "root", 4) != 0)
+            {
+                strlcat(cmd_buf, " -g ", sizeof(cmd_buf));
+                strlcat(cmd_buf,
+                        acc->cmd_sudo_exec_group, sizeof(cmd_buf));
+            }
+            strlcat(cmd_buf, " ",  sizeof(cmd_buf));
+            strlcat(cmd_buf, spadat->spa_message_remain, sizeof(cmd_buf));
+        }
+        else
+            strlcpy(cmd_buf, spadat->spa_message_remain, sizeof(cmd_buf));
+
+        if(acc->cmd_exec_user != NULL
+                && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
+        {
+            log_msg(LOG_INFO,
+                    "[%s] (stanza #%d) Running command '%s' setuid/setgid user/group to %s/%s (UID=%i,GID=%i)",
+                spadat->pkt_source_ip, stanza_num, cmd_buf, acc->cmd_exec_user,
+                acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
+                acc->cmd_exec_uid, acc->cmd_exec_gid);
+
+            *res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
+                    cmd_buf, NULL, 0, WANT_STDERR, NO_TIMEOUT,
+                    &pid_status, opts);
+        }
+        else /* Just run it as we are (root that is). */
+        {
+            log_msg(LOG_INFO,
+                    "[%s] (stanza #%d) Running command '%s'",
+                spadat->pkt_source_ip, stanza_num, cmd_buf);
+            *res = run_extcmd(cmd_buf, NULL, 0, WANT_STDERR,
+                    5, &pid_status, opts);
+        }
+
+        /* should only call WEXITSTATUS() if WIFEXITED() is true
+        */
+        log_msg(LOG_INFO,
+            "[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d",
+            spadat->pkt_source_ip, stanza_num, *res,
+            WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);
+
+        if(WIFEXITED(pid_status))
+        {
+            if(WEXITSTATUS(pid_status) != 0)
+                *res = SPA_MSG_COMMAND_ERROR;
+        }
+        else
+            *res = SPA_MSG_COMMAND_ERROR;
+    }
+    return 1;
+}
+
 /* Process the SPA packet data
 */
 void
@@ -299,12 +500,11 @@ incoming_spa(fko_srv_options_t *opts)
 
     char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;
     time_t          now_ts;
-    int             res, ts_diff, enc_type, stanza_num=0, pid_status=0;
-    int             added_replay_digest = 0, pkt_data_len=0;
+    int             res, ts_diff, enc_type, stanza_num=0;
+    int             added_replay_digest = 0;
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
     char            dump_buf[CTX_DUMP_BUFSIZE];
-    char            cmd_buf[MAX_SPA_CMD_LEN] = {0};
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
@@ -329,20 +529,8 @@ incoming_spa(fko_srv_options_t *opts)
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
      * try to eliminate obvious non-spa packets).
     */
-    pkt_data_len = spa_pkt->packet_data_len;
-    res = preprocess_spa_data(opts, spadat.pkt_source_ip);
-    if(res != FKO_SUCCESS)
-    {
-        log_msg(LOG_DEBUG, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
-            spadat.pkt_source_ip, res, get_errstr(res));
+    if(!precheck_pkt(opts, spa_pkt, &spadat, &raw_digest))
         return;
-    }
-
-    if(opts->foreground == 1 && opts->verbose > 2)
-    {
-        printf("[+] candidate SPA packet payload:\n");
-        hex_dump(spa_pkt->packet_data, pkt_data_len);
-    }
 
     if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
     {
@@ -353,37 +541,6 @@ incoming_spa(fko_srv_options_t *opts)
             log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE", spadat.pkt_source_ip);
             return;
         }
-    }
-
-    if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
-    {
-        if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
-        {
-            /* Check for a replay attack
-            */
-            res = get_raw_digest(&raw_digest, (char *)spa_pkt->packet_data);
-            if(res != FKO_SUCCESS)
-            {
-                if (raw_digest != NULL)
-                    free(raw_digest);
-                return;
-            }
-            if (raw_digest == NULL)
-                return;
-
-            if (is_replay(opts, raw_digest) != SPA_MSG_SUCCESS)
-            {
-                free(raw_digest);
-                return;
-            }
-        }
-    }
-    else
-    {
-        log_msg(LOG_WARNING,
-            "No access data found for source IP: %s", spadat.pkt_source_ip
-        );
-        return;
     }
 
     /* Now that we know there is a matching access.conf stanza and the
@@ -411,12 +568,8 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Check for a match for the SPA source and destination IP and the access stanza
         */
-        if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
-           (acc->destination_list != NULL && ! compare_addr_list(acc->destination_list, ntohl(spa_pkt->packet_dst_ip))))
+        if(! src_dst_check(acc, spa_pkt, &spadat, stanza_num))
         {
-            log_msg(LOG_DEBUG,
-                    "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
-                    stanza_num, spadat.pkt_source_ip, spadat.pkt_destination_ip);
             acc = acc->next;
             continue;
         }
@@ -428,24 +581,10 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Make sure this access stanza has not expired
         */
-        if(acc->access_expire_time > 0)
+        if(! check_stanza_expiration(acc, &spadat, stanza_num))
         {
-            if(acc->expired)
-            {
-                acc = acc->next;
-                continue;
-            }
-            else
-            {
-                if(time(NULL) > acc->access_expire_time)
-                {
-                    log_msg(LOG_INFO, "[%s] (stanza #%d) Access stanza has expired",
-                        spadat.pkt_source_ip, stanza_num);
-                    acc->expired = 1;
-                    acc = acc->next;
-                    continue;
-                }
-            }
+            acc = acc->next;
+            continue;
         }
 
         /* Get encryption type and try its decoding routine first (if the key
@@ -857,100 +996,19 @@ incoming_spa(fko_srv_options_t *opts)
         */
         if(spadat.message_type == FKO_COMMAND_MSG)
         {
-            if(!acc->enable_cmd_exec)
+            if(process_cmd_msg(opts, acc, &spadat, stanza_num, &res))
             {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) SPA Command messages are not allowed in the current configuration.",
-                    spadat.pkt_source_ip, stanza_num
-                );
-                acc = acc->next;
-                continue;
-            }
-            else if(opts->test)
-            {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) --test mode enabled, skipping command execution.",
-                    spadat.pkt_source_ip, stanza_num
-                );
-                acc = acc->next;
-                continue;
-            }
-            else
-            {
-                log_msg(LOG_INFO,
-                    "[%s] (stanza #%d) Processing SPA Command message: command='%s'.",
-                    spadat.pkt_source_ip, stanza_num, spadat.spa_message_remain
-                );
-
-                memset(cmd_buf, 0x0, sizeof(cmd_buf));
-                if(acc->enable_cmd_sudo_exec)
-                {
-                    /* Run the command via sudo - this allows sudo filtering
-                     * to apply to the incoming command
-                    */
-                    strlcpy(cmd_buf, opts->config[CONF_SUDO_EXE],
-                            sizeof(cmd_buf));
-                    if(acc->cmd_sudo_exec_user != NULL
-                            && strncasecmp(acc->cmd_sudo_exec_user, "root", 4) != 0)
-                    {
-                        strlcat(cmd_buf, " -u ", sizeof(cmd_buf));
-                        strlcat(cmd_buf, acc->cmd_sudo_exec_user, sizeof(cmd_buf));
-                    }
-                    if(acc->cmd_exec_group != NULL
-                            && strncasecmp(acc->cmd_sudo_exec_group, "root", 4) != 0)
-                    {
-                        strlcat(cmd_buf, " -g ", sizeof(cmd_buf));
-                        strlcat(cmd_buf,
-                                acc->cmd_sudo_exec_group, sizeof(cmd_buf));
-                    }
-                    strlcat(cmd_buf, " ",  sizeof(cmd_buf));
-                    strlcat(cmd_buf, spadat.spa_message_remain, sizeof(cmd_buf));
-                }
-                else
-                    strlcpy(cmd_buf, spadat.spa_message_remain, sizeof(cmd_buf));
-
-                if(acc->cmd_exec_user != NULL
-                        && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
-                {
-                    log_msg(LOG_INFO,
-                            "[%s] (stanza #%d) Running command '%s' setuid/setgid user/group to %s/%s (UID=%i,GID=%i)",
-                        spadat.pkt_source_ip, stanza_num, cmd_buf, acc->cmd_exec_user,
-                        acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
-                        acc->cmd_exec_uid, acc->cmd_exec_gid);
-
-                    res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
-                            cmd_buf, NULL, 0, WANT_STDERR, NO_TIMEOUT,
-                            &pid_status, opts);
-                }
-                else /* Just run it as we are (root that is). */
-                {
-                    log_msg(LOG_INFO,
-                            "[%s] (stanza #%d) Running command '%s'",
-                        spadat.pkt_source_ip, stanza_num, cmd_buf);
-                    res = run_extcmd(cmd_buf, NULL, 0, WANT_STDERR,
-                            5, &pid_status, opts);
-                }
-
-                /* should only call WEXITSTATUS() if WIFEXITED() is true
-                */
-                log_msg(LOG_INFO,
-                    "[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d",
-                    spadat.pkt_source_ip, stanza_num, res,
-                    WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);
-
-                if(WIFEXITED(pid_status))
-                {
-                    if(WEXITSTATUS(pid_status) != 0)
-                        res = SPA_MSG_COMMAND_ERROR;
-                }
-                else
-                    res = SPA_MSG_COMMAND_ERROR;
-
                 /* we processed the command on a matching access stanza, so we
                  * don't look for anything else to do with this SPA packet
                 */
                 break;
             }
+            else
+            {
+                acc = acc->next;
+                continue;
+            }
+
         }
 
         /* From this point forward, we have some kind of access message. So
