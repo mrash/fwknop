@@ -131,13 +131,12 @@
         'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
             "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} " .
             $verbose_str,
-        'cmd_exec_file_owner' => 'nobody',
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'sudo_test' => $YES,
         'sudo_conf' => 'USER    localhost = NOPASSWD: /usr/bin/cat, (root) TOUCH',
         'sudo_exec_user' => $YES,
-        'cmd_exec_file_owner' => 'root',
+        'cmd_exec_file_owner' => 'USER',
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
     {
@@ -167,7 +166,6 @@
         'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
             "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} " .
             $verbose_str,
-        'cmd_exec_file_owner' => 'nobody',
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'sudo_test' => $YES,
@@ -185,7 +183,6 @@
         'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
             "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} " .
             $verbose_str,
-        'cmd_exec_file_owner' => 'nobody',
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'sudo_test' => $YES,
@@ -204,7 +201,6 @@
         'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
             "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} " .
             $verbose_str,
-        'cmd_exec_file_owner' => 'nobody',
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'sudo_test' => $YES,
@@ -223,7 +219,6 @@
         'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
             "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} " .
             $verbose_str,
-        'cmd_exec_file_owner' => 'nobody',
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'sudo_test' => $YES,
@@ -241,7 +236,6 @@
         'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
             "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} " .
             $verbose_str,
-        'cmd_exec_file_owner' => 'nobody',
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'sudo_test' => $YES,

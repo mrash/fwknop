@@ -4757,10 +4757,10 @@ sub spa_cmd_exec_cycle() {
                     $curr_test_file);
                 $rv = 1;
             } else {
-                &write_test_file("[+] $cmd_exec_test_file is not " .
+                &write_test_file("[-] $cmd_exec_test_file is not " .
                     "owned by user: $test_hr->{'cmd_exec_file_owner'}\n",
                     $curr_test_file);
-                $rv = 1;
+                $rv = 0;
             }
         }
         if ($test_hr->{'cmd_exec_file_not_created'}) {
