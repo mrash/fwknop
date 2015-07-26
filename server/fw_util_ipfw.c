@@ -601,7 +601,8 @@ process_spa_request(const fko_srv_options_t * const opts,
  * firewall rules.
 */
 void
-check_firewall_rules(const fko_srv_options_t * const opts)
+check_firewall_rules(const fko_srv_options_t * const opts,
+        const int chk_rm_all)
 {
     char            exp_str[12]     = {0};
     char            rule_num_str[6] = {0};

@@ -153,7 +153,8 @@ process_spa_request(const fko_srv_options_t *opts, const acc_stanza_t *acc, spa_
  * firewall rules.
 */
 void
-check_firewall_rules(const fko_srv_options_t *opts)
+check_firewall_rules(const fko_srv_options_t *opts,
+        const int chk_rm_all)
 {
 
     /* TODO: Implement me */

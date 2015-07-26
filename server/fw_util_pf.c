@@ -336,7 +336,8 @@ process_spa_request(const fko_srv_options_t * const opts,
  * firewall rules.
 */
 void
-check_firewall_rules(const fko_srv_options_t * const opts)
+check_firewall_rules(const fko_srv_options_t * const opts,
+        const int chk_rm_all)
 {
     char            exp_str[12] = {0};
     char            anchor_rules_copy[STANDARD_CMD_OUT_BUFSIZE] = {0};
