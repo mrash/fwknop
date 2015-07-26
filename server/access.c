@@ -118,7 +118,7 @@ add_acc_group(char **group_var, gid_t *gid_var,
 
     if(pw == NULL)
     {
-        log_msg(LOG_ERR, "[*] Unable to determine UID for %s: %s.",
+        log_msg(LOG_ERR, "[*] Unable to determine GID for %s: %s.",
                 var_name, errno ? strerror(errno) : "Not a group on this system");
         return FATAL_ERR;
     }
