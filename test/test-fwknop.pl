@@ -280,6 +280,7 @@ our $openssl_path = '';
 our $base64_path  = '';
 our $pinentry_fail = 0;
 our $perl_path = '';
+our $prove_path = '';
 our $ifconfig_path = '';
 our $platform = '';
 our $help = 0;
@@ -940,7 +941,7 @@ my %test_keys = (
 
 ### make sure no fwknopd instance is currently running
 die "[*] Please stop the running fwknopd instance."
-    if &is_fwknopd_running();
+    if &global_fwknopd_pgrep_check();
 
 ### now that we're ready to run, preserve any previous test
 ### suite output
@@ -2823,7 +2824,7 @@ sub perl_fko_module_compile_install() {
     &run_cmd("make clean", $cmd_out_tmp, "../../test/$curr_test_file")
         if -e 'Makefile' or -e 'Makefile.old';
 
-    &run_cmd("perl Makefile.PL PREFIX=../../test/$perl_mod_fko_dir " .
+    &run_cmd("$perl_path Makefile.PL PREFIX=../../test/$perl_mod_fko_dir " .
         "LIB=../../test/$perl_mod_fko_dir", $cmd_out_tmp,
         "../../test/$curr_test_file");
 
@@ -2901,7 +2902,7 @@ sub perl_fko_module_make_test_valgrind() {
 
     chdir '../perl/FKO' or die $!;
 
-    &run_cmd("prove --exec 'perl -Iblib/lib -Iblib/arch -M$cpan_valgrind_mod' t/*.t",
+    &run_cmd("$prove_path --exec 'perl -Iblib/lib -Iblib/arch -M$cpan_valgrind_mod' t/*.t",
         $cmd_out_tmp, "../../test/$curr_test_file");
 
     chdir $curr_pwd or die $!;
@@ -6987,7 +6988,7 @@ sub init() {
 
         ### check to see if the Test::Valgrind module is installed
         if ($enable_valgrind and $valgrind_path) {
-            unless (&run_cmd("perl -e 'use $cpan_valgrind_mod'",
+            unless (&run_cmd("$perl_path -e 'use $cpan_valgrind_mod'",
                     $cmd_out_tmp, $curr_test_file) and &find_command('prove')) {
                 push @tests_to_exclude, qr/$cpan_valgrind_mod/;
             }
@@ -7027,7 +7028,9 @@ sub init() {
     $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
     $git_path     = &find_command('git') unless $git_path;
     $perl_path    = &find_command('perl') unless $perl_path;
+    $prove_path   = &find_command('prove') unless $prove_path;
     $touch_path   = &find_command('touch') unless $touch_path;
+    $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
 
     if ($sudo_path) {
         $username = (getpwuid((stat($test_suite_path))[4]))[0];
@@ -7632,6 +7635,23 @@ sub is_fw_rule_active() {
         }
     }
 
+    return $rv;
+}
+
+sub global_fwknopd_pgrep_check() {
+    my $rv = 0;
+    if ($pgrep_path) {
+        open PGREP, "$pgrep_path fwknopd |" or die $!;
+        while (<PGREP>) {
+            if (/(\d+)/) {
+                print "[*] Found existing fwknopd pid: $1\n";
+                $rv = 1;
+            }
+        }
+        close PGREP;
+    } else {
+        $rv = &is_fwknopd_running();
+    }
     return $rv;
 }
 
