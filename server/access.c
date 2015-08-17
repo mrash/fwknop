@@ -90,7 +90,7 @@ add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
     errno = 0;
     upw = pw = getpwnam(val);
 
-    if(pw == NULL)
+    if(upw == NULL || pw == NULL)
     {
         log_msg(LOG_ERR, "[*] Unable to determine UID for %s: %s.",
                 var_name, errno ? strerror(errno) : "Not a user on this system");
