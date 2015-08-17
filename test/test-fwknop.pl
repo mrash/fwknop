@@ -7048,9 +7048,9 @@ sub init() {
             }
             close SR;
         }
-    } else {
-        push @tests_to_exclude, qr/sudo/;
     }
+
+    push @tests_to_exclude, qr/sudo/ unless $sudo_conf_testing;
 
     ### see if the 'nobody' user is on the system
     unless (getpwnam('nobody')) {
