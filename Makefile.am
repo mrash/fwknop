@@ -74,6 +74,7 @@ EXTRA_DIST = \
     extras/ramdisk/ramdisk-create.sh \
     extras/ramdisk/ramdisk-create-osx.sh \
     extras/console-qr/console-qr.sh \
+    extras/sanitizer/asan-build.sh \
     fwknop.spec \
     iphone/main.m \
     iphone/Fwknop.xcodeproj \
