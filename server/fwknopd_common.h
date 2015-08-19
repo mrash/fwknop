@@ -666,13 +666,12 @@ typedef struct fko_srv_options
 
 } fko_srv_options_t;
 
-extern fko_srv_options_t options;
-
 /* For cleaning up memory before exiting
 */
 #define FW_CLEANUP          1
 #define NO_FW_CLEANUP       0
-void clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int exit_status);
+void clean_exit(fko_srv_options_t *opts,
+        unsigned int fw_cleanup_flag, unsigned int exit_status);
 
 #endif /* FWKNOPD_COMMON_H */
 
