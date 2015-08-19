@@ -54,7 +54,7 @@ dump_transmit_options(const fko_cli_options_t *options)
 
 /* Function to generate a header checksum.
 */
-unsigned short
+static unsigned short
 chksum(unsigned short *buf, int nbytes)
 {
     unsigned int   sum;
