@@ -1176,7 +1176,7 @@ sub run_test() {
     if ($enable_valgrind and &is_valgrind_running()) {
         if ($killall_path and $pgrep_path) {
             for my $cmd ('memcheck', 'valgrind') {
-                system "$pgrep_path > /dev/null $cmd " .
+                system "$pgrep_path -f $cmd > /dev/null " .
                     "&& $killall_path -g -r $cmd > /dev/null 2>&1";
             }
         }
@@ -7030,7 +7030,6 @@ sub init() {
     $perl_path    = &find_command('perl') unless $perl_path;
     $prove_path   = &find_command('prove') unless $prove_path;
     $touch_path   = &find_command('touch') unless $touch_path;
-    $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
 
     if ($sudo_path) {
         $username = (getpwuid((stat($test_suite_path))[4]))[0];
