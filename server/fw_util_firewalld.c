@@ -89,7 +89,6 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     );
 
 #if CODE_COVERAGE
-    int pid_status = 0;
     /* If we're maximizing code coverage, then exercise the run_extcmd_write()
      * function which is normally only used for the PF firewall. This is to
      * maximize code coverage in conjunction with the test suite, and is never
