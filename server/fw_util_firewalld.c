@@ -1590,8 +1590,7 @@ rm_expired_rules(const fko_srv_options_t * const opts,
         {
             /* Track the minimum future rule expire time.
             */
-            if(rule_exp > now)
-                min_exp = (min_exp < rule_exp) ? min_exp : rule_exp;
+            min_exp = (min_exp < rule_exp) ? min_exp : rule_exp;
         }
 
         /* Push our tracking index forward beyond (just processed) _exp_
@@ -1599,6 +1598,15 @@ rm_expired_rules(const fko_srv_options_t * const opts,
         */
         ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
     }
+
+    /* Set the next pending expire time accordingly. 0 if there are no
+     * more rules, or whatever the next expected (min_exp) time will be.
+    */
+    if(ch[cpos].active_rules < 1)
+        ch[cpos].next_expire = 0;
+    else if(min_exp)
+        ch[cpos].next_expire = min_exp;
+
     return;
 }
 
@@ -1613,7 +1621,7 @@ check_firewall_rules(const fko_srv_options_t * const opts,
     char            fw_output_buf[STANDARD_CMD_OUT_BUFSIZE] = {0};
 
     int             i, res;
-    time_t          now, min_exp = 0;
+    time_t          now;
 
     struct fw_chain *ch = opts->fw_config->chain;
 
@@ -1682,15 +1690,8 @@ check_firewall_rules(const fko_srv_options_t * const opts,
         }
 
         rm_expired_rules(opts, fw_output_buf, ndx, ch, i, now);
-
-        /* Set the next pending expire time accordingly. 0 if there are no
-         * more rules, or whatever the next expected (min_exp) time will be.
-        */
-        if(ch[i].active_rules < 1)
-            ch[i].next_expire = 0;
-        else if(min_exp)
-            ch[i].next_expire = min_exp;
     }
+
     return;
 }
 
