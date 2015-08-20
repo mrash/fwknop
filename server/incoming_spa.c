@@ -832,7 +832,7 @@ add_replay_cache(fko_srv_options_t *opts, acc_stanza_t *acc,
         spa_data_t *spadat, char *raw_digest, int *added_replay_digest,
         const int stanza_num, int *res)
 {
-    if (!opts->test && added_replay_digest == 0
+    if (!opts->test && *added_replay_digest == 0
             && strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
     {
 
