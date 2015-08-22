@@ -202,7 +202,6 @@ my $fuzzing_class = 'bogus data';
 my %fuzzing_spa_packets = ();
 my $total_fuzzing_pkts = 0;
 our $sudo_access_conf = "$run_dir/sudo_access.conf";
-my $sudo_conf = '/etc/sudoers';
 my $sudo_conf_testing = '';
 my $server_test_file  = '';
 my $client_only_mode = 0;
@@ -7037,15 +7036,19 @@ sub init() {
             unless $username;
 
         ### see if sudo is configured to accept custom configs
-        if (-e $sudo_conf) {
+        SCONF: for my $sudo_conf ('/etc/sudoers', '/usr/local/etc/sudoers') {
+            next SCONF unless -e $sudo_conf;
             open SR, "< $sudo_conf" or die $!;
-            while (<SR>) {
+            LINES: while (<SR>) {
                 if (/^#includedir\s+(\/\S+)/) {
-                    $sudo_conf_testing = "$1/fwknop_testing";
-                    last;
+                    my $dir = $1;
+                    next LINES unless -d $dir;
+                    $sudo_conf_testing = "$dir/fwknop_testing";
+                    last LINES;
                 }
             }
             close SR;
+            last SCONF;
         }
     }
 
