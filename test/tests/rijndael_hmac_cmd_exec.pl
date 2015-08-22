@@ -156,7 +156,7 @@
         'sudo_exec_user' => $YES,
         'cmd_exec_file_not_created' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'server_positive_output_matches' => [qr/is not allowed to execute/]
+        'server_positive_output_matches' => [qr/is not allowed to/]
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -191,7 +191,7 @@
         'sudo_exec_user' => $YES,
         'cmd_exec_file_not_created' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'server_positive_output_matches' => [qr/is not allowed to execute/]
+        'server_positive_output_matches' => [qr/is not allowed to/]
     },
     {
         'category' => 'Rijndael+HMAC',
@@ -209,7 +209,7 @@
         'sudo_exec_user' => $YES,
         'cmd_exec_file_not_created' => $YES,
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'server_positive_output_matches' => [qr/is not allowed to execute/]
+        'server_positive_output_matches' => [qr/is not allowed to/]
     },
     {
         'category' => 'Rijndael+HMAC',
