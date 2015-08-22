@@ -640,6 +640,7 @@ check_firewall_rules(const fko_srv_options_t * const opts,
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
                 WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
+    chop_newline(cmd_out);
 
     log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d)",
         cmd_buf, res);
