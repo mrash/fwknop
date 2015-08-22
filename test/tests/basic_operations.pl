@@ -435,6 +435,22 @@
         'exec_err' => $YES,
         'cmdline' => "$fwknopdCmd $default_server_conf_args --gpg-exe /invalid/path"
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sudo invalid binary path (1)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --sudo-exe /invalid/path"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sudo invalid binary path (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --sudo-exe /etc/hosts"
+    },
 
     {
         'category' => 'basic operations',

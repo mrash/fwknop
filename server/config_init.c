@@ -1262,7 +1262,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] gpg path '%s' could not stat()/does not exist?",
+                        "[*] gpg path '%s' could not stat()/not executable?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
@@ -1330,7 +1330,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] gpg path '%s' could not stat()/does not exist?",
+                        "[*] sudo path '%s' could not stat()/not executable?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
@@ -1448,6 +1448,8 @@ usage(void)
       "                           done in the access.conf file).\n"
       "     --gpg-exe           - Specify the path to GPG (this is normally done in\n"
       "                           the access.conf file).\n"
+      "     --sudo-exe          - Specify the path to sudo (the default path is\n"
+      "                           /usr/bin/sudo).\n"
       " --no-firewd-check-support\n"
       "                         - Disable test for 'firewall-cmd ... -C' support.\n"
       " --no-ipt-check-support  - Disable test for 'iptables -C' support.\n"

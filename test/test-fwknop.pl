@@ -4735,6 +4735,11 @@ sub spa_cmd_exec_cycle() {
         ### we need to write the access.conf file based on sudo
         ### requirements
         &write_sudo_access_conf($test_hr);
+
+        ### make sure the path to sudo is set properly
+        if ($test_hr->{'fwknopd_cmdline'}) {
+            $test_hr->{'fwknopd_cmdline'} .= " --sudo-exe $sudo_path";
+        }
     }
 
     if (-e $cmd_exec_test_file) {
