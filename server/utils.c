@@ -187,10 +187,17 @@ verify_file_perms_ownership(const char *file)
 }
 
 void
+chop_char(char *str, const char chop)
+{
+    if(str != NULL && str[0] != 0x0 && str[strlen(str)-1] == chop)
+        str[strlen(str)-1] = 0x0;
+    return;
+}
+
+void
 chop_newline(char *str)
 {
-    if(str != NULL && str[0] != 0x0 && str[strlen(str)-1] == 0x0a)
-        str[strlen(str)-1] = 0x0;
+    chop_char(str, 0x0a);
     return;
 }
 
