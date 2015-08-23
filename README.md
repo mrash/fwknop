@@ -186,7 +186,7 @@ following link to ensure a smooth transition to fwknop-2.5 or later:
 
 ## Misc
  * Questions or comments about fwknop will be fielded on the
-[http://lists.sourceforge.net/lists/listinfo/fwknop-discuss](fwknop mailing list).
+[fwknop mailing list](http://lists.sourceforge.net/lists/listinfo/fwknop-discuss]).
  * For static analysis, fwknop uses the CLANG static analyzer and also the powerful
 Coverity Scan tool: ![](https://scan.coverity.com/projects/403/badge.svg)
 
