@@ -113,7 +113,7 @@ The following is a complete list of features supported by the fwknop project:
    interfere with any existing iptables policy that may already be loaded on the
    system.
  * Supports inbound NAT connections for authenticated SPA communications (iptables
-   firewalls only for now).This means that fwknop can be configured to create DNAT
+   firewalls only for now). This means fwknop can be configured to create DNAT
    rules so that you can reach a service (such as SSH) running on an internal system
    on an RFC 1918 IP address from the open Internet. SNAT rules are also supported
    which essentially turns fwknopd into a [SPA-authenticating gateway](https://www.cipherdyne.org/blog/2015/04/nat-and-single-packet-authorization.html)
@@ -180,10 +180,15 @@ and there are python bindings as well in the `python` directory).
 ## Upgrading
 If you are upgrading from an older version of fwknop (and this includes the
 original perl implementation as well), then you will want to read the
-following link to ensure a smooth transition to fwknop-2.5:
+following link to ensure a smooth transition to fwknop-2.5 or later:
 
 [http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html#backwards-compatibility](http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html#backwards-compatibility)
 
+## Misc
+ * Questions or comments about fwknop will be fielded on the
+[http://lists.sourceforge.net/lists/listinfo/fwknop-discuss](fwknop mailing list).
+ * For static analysis, fwknop uses the CLANG static analyzer and also the powerful
+Coverity Scan tool: ![](https://scan.coverity.com/projects/403/badge.svg)
 
 ## Building fwknop
 This distribution uses GNU autoconf for setting up the build. Please see
@@ -239,7 +244,7 @@ migrate to this version, there are some things to be aware of:
  those files.
 
 
-## For fwknop developers
+### For fwknop developers
 If you are pulling this distribution from git, you should run the
 `autogen.sh` script to generate the autoconf files. If you get errors about
 missing directories or files, try running `autogen.sh` again. After that
