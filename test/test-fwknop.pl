@@ -275,6 +275,7 @@ my  $coverage_diff_path = 'coverage_diff.py';
 my  $genhtml_path = '';
 our $killall_path = '';
 our $pgrep_path   = '';
+our $pkill_path   = '';
 our $openssl_path = '';
 our $base64_path  = '';
 our $pinentry_fail = 0;
@@ -1173,12 +1174,16 @@ sub run_test() {
     }
 
     if ($enable_valgrind and &is_valgrind_running()) {
-        if ($killall_path and $pgrep_path) {
+        if ($pkill_path) {
             for my $cmd ('memcheck', 'valgrind') {
-                system "$pgrep_path -f $cmd > /dev/null " .
-                    "&& $killall_path -g -r $cmd > /dev/null 2>&1";
+                system "$pkill_path -f $cmd";
+            }
+        } elsif ($killall_path) {
+            for my $cmd ('memcheck', 'valgrind') {
+                system "$killall_path -g -r $cmd > /dev/null 2>&1";
             }
         }
+
     }
 
     if ($enable_perl_module_fuzzing_spa_pkt_generation) {
@@ -6497,8 +6502,8 @@ sub specs() {
 }
 
 sub is_valgrind_running() {
-    return &run_cmd("ps axuww | grep LD_LIBRARY_PATH | " .
-        "grep valgrind |grep -v perl | grep -v grep",
+    return &run_cmd("ps axuww | grep valgrind " .
+        "| grep -v perl | grep -v grep",
         $cmd_out_tmp, $curr_test_file);
 }
 
@@ -7029,6 +7034,7 @@ sub init() {
     $sudo_path    = &find_command('sudo') unless $sudo_path;
     $killall_path = &find_command('killall') unless $killall_path;
     $pgrep_path   = &find_command('pgrep') unless $pgrep_path;
+    $pkill_path   = &find_command('pkill') unless $pkill_path;
     $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
     $git_path     = &find_command('git') unless $git_path;
     $perl_path    = &find_command('perl') unless $perl_path;
