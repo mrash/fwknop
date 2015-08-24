@@ -247,6 +247,8 @@ my $enable_profile_coverage_check = 0;
 my $enable_profile_coverage_init = 0;
 my $profile_gen_report_sh = './gen-coverage-report.sh';
 my $profile_init_sh = './init-lcov.sh';
+my $profile_rm_files_sh = './rm-coverage-files.sh';
+my $do_rm_coverage_files = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -6888,6 +6890,8 @@ sub init() {
     unlink $init_file if -e $init_file;
     unlink $logfile   if -e $logfile;
 
+    $do_rm_coverage_files = 1 unless @tests_to_include;
+
     ### always restore the gpg directories before tests are
     ### executed
     &restore_gpg_dirs();
@@ -7114,6 +7118,10 @@ sub init() {
                 } else {
                     print "[-] Warning: --enable-profile-coverage not ",
                         "found, use ./configure --enable-profile-coverage?\n";
+                }
+                if ($do_rm_coverage_files) {
+                    &run_cmd($profile_rm_files_sh, $cmd_out_tmp,
+                        $curr_test_file);
                 }
                 &run_cmd($profile_init_sh, $cmd_out_tmp, $curr_test_file);
             }
