@@ -248,7 +248,7 @@ my $enable_profile_coverage_init = 0;
 my $profile_gen_report_sh = './gen-coverage-report.sh';
 my $profile_init_sh = './init-lcov.sh';
 my $profile_rm_files_sh = './rm-coverage-files.sh';
-my $do_rm_coverage_files = 0;
+my $do_profile_init = 0;
 my $enable_make_distcheck = 0;
 my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
@@ -6890,7 +6890,7 @@ sub init() {
     unlink $init_file if -e $init_file;
     unlink $logfile   if -e $logfile;
 
-    $do_rm_coverage_files = 1 unless @tests_to_include;
+    $do_profile_init = 1 unless $test_include;
 
     ### always restore the gpg directories before tests are
     ### executed
@@ -6988,6 +6988,8 @@ sub init() {
         push @tests_to_exclude, qr/IP resolve/;
     }
 
+    $perl_path = &find_command('perl') unless $perl_path;
+
     if ($enable_perl_module_checks) {
         open F, "< $fuzzing_pkts_file" or die $!;
         while (<F>) {
@@ -7041,7 +7043,6 @@ sub init() {
     $pkill_path   = &find_command('pkill') unless $pkill_path;
     $lib_view_cmd = &find_command('ldd') unless $lib_view_cmd;
     $git_path     = &find_command('git') unless $git_path;
-    $perl_path    = &find_command('perl') unless $perl_path;
     $prove_path   = &find_command('prove') unless $prove_path;
     $touch_path   = &find_command('touch') unless $touch_path;
 
@@ -7111,7 +7112,7 @@ sub init() {
     if ($gcov_path) {
         if ($enable_profile_coverage_check
                 and not $list_mode) {
-            if ($enable_profile_coverage_init) {
+            if ($enable_profile_coverage_init or $do_profile_init) {
                 if (&file_find_regex([qr/\-enable\-profile\-coverage/],
                         $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
                     print "[+] Found --enable-profile-coverage\n";
@@ -7119,10 +7120,7 @@ sub init() {
                     print "[-] Warning: --enable-profile-coverage not ",
                         "found, use ./configure --enable-profile-coverage?\n";
                 }
-                if ($do_rm_coverage_files) {
-                    &run_cmd($profile_rm_files_sh, $cmd_out_tmp,
-                        $curr_test_file);
-                }
+                &run_cmd($profile_rm_files_sh, $cmd_out_tmp, $curr_test_file);
                 &run_cmd($profile_init_sh, $cmd_out_tmp, $curr_test_file);
             }
             push @tests_to_exclude, qr/distcheck/;
