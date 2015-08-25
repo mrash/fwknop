@@ -1,5 +1,6 @@
-fwknop-2.6.7 (07//2015):
-    - [server] Added sudo support for command execution mode. This was
+fwknop-2.6.7 (08/24/2015):
+    - [server] When command execution is enabled with ENABLE_CMD_EXEC for an
+      access.conf stanza, added support for running commands via sudo. This was
       suggested by Github user 'freegigi' (issue #159) as a means to provide
       command filtering using the powerful sudoers syntax. This feature is
       implemented by prefixing any incoming command from a valid SPA packet
