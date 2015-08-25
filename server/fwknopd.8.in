@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 05/22/2015
+.\"      Date: 08/24/2015
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "05/22/2015" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "08/24/2015" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -387,6 +387,16 @@ Track digest sums associated with previous SPA packets processed by
 will not check incoming SPA packet data against any previously save digests\&. It is a good idea to leave this feature on to reduce the possibility of being vulnerable to a replay attack\&.
 .RE
 .PP
+\fBRULES_CHECK_THRESHOLD\fR \fI<count>\fR
+.RS 4
+Defines the number of times firewall rule expiration times must be checked before a "deep" check is run\&. This allows
+\fBfwknopd\fR
+to remove rules that contain a proper
+\fI\fIexp\fR\fR\fI<time>\fR
+even if a third party program added them instead of
+\fBfwknopd\fR\&. The default value for this variable is 20, and this typically results in this check being run every two seconds or so\&. To disable this type of checking altogether, set this variable to zero\&.
+.RE
+.PP
 \fBENABLE_IPT_FORWARDING\fR \fI<Y/N>\fR
 .RS 4
 Allow SPA clients to request access to services through an iptables firewall instead of just to it (i\&.e\&. access through the FWKNOP_FORWARD chain instead of the INPUT chain)\&.
@@ -445,6 +455,13 @@ start time\&. The default is \(lqY\(rq\&.
 Flush all existing rules in the fwknop chains when
 \fBfwknopd\fR
 is stopped or otherwise exits cleanly\&. The default is \(lqY\(rq\&.
+.RE
+.PP
+\fBEXIT_AT_INTF_DOWN\fR \fI<Y/N>\fR
+.RS 4
+When
+\fBfwknopd\fR
+is sniffing an interface, if the interface is administratively downed or unplugged, fwknopd will cleanly exit and an assumption is made that any process monitoring infrastructure like systemd or upstart will restart it\&. However, if fwknopd is not being monitored by systemd, upstart, or anything else, this behavior can be disabled with the \(lqEXIT_AT_INTF_DOWN\(rq variable\&. If disabled, fwknopd will try to recover when a downed interface comes back up\&.
 .RE
 .PP
 \fBGPG_HOME_DIR\fR \fI<path>\fR
@@ -667,9 +684,35 @@ server as the user specified by the \(lqCMD_EXEC_USER\(rq or as the user that st
 if that is not set\&.
 .RE
 .PP
+\fBENABLE_CMD_SUDO_EXEC\fR \fI<Y/N>\fR
+.RS 4
+\fBsudo\fR
+provides a powerful means of restricting the sets of commands that users can execute via the \(lqsudoers\(rq file\&. By enabling this feature (and in \(lqENABLE_CMD_EXEC\(rq mode), all incoming commands from valid SPA packets will be prefixed by \(lq/path/to/sudo \-u <user> \-g <group>\(rq where the path to sudo is set by the \(lqSUDO_EXE\(rq variable, \(lq<user>\(rq is set by the \(lqCMD_SUDO_EXEC_USER\(rq variable (default is \(lqroot\(rq if not set), and \(lq<group>\(rq is set by \(lqCMD_SUDO_EXEC_GROUP\(rq (default is also \(lqroot\(rq if not set)\&.
+.RE
+.PP
 \fBCMD_EXEC_USER\fR \fI<username>\fR
 .RS 4
-This specifies the user that will execute commands contained within a SPA packet\&. If not specified, fwknopd will execute it as the user it is running as (most likely root)\&. Setting this to a non\-root user is highly recommended\&.
+Specify the user (via setuid) that will execute a command contained within a SPA packet\&. If this variable is not given, fwknopd will execute the command as the user it is running as (most likely root)\&. Setting this to a non\-root user such as \(lqnobody\(rq is highly recommended if elevated permissions are not needed\&.
+.RE
+.PP
+\fBCMD_SUDO_EXEC_USER\fR \fI<username>\fR
+.RS 4
+Specify the user (via \(lqsudo \-u <user>\(rq) that will execute a command contained within a SPA packet\&. If this variable is not given, fwknopd will assume the command should be executed as root\&.
+.RE
+.PP
+\fBCMD_EXEC_GROUP\fR \fI<groupname>\fR
+.RS 4
+Specify the group (via setgid) that will execute a command contained within a SPA packet\&. If this variable is not given, fwknopd will execute the command as the user it is running as (most likely root)\&. Setting this to a non\-root user such as \(lqnobody\(rq is highly recommended if elevated permissions are not needed\&.
+.RE
+.PP
+\fBCMD_SUDO_EXEC_GROUP\fR \fI<groupname>\fR
+.RS 4
+Specify the group (via \(lqsudo \-gu <group>\(rq) that will execute a command contained within a SPA packet\&. If this variable is not given, fwknopd will assume the command should be executed as root\&.
+.RE
+.PP
+\fBSUDO_EXE\fR \fI<path>\fR
+.RS 4
+Define the path to the sudo binary\&. Default is \(lq/usr/bin/sudo\(rq\&.
 .RE
 .PP
 \fBREQUIRE_USERNAME\fR \fI<username>\fR

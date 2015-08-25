@@ -547,23 +547,35 @@ directive starts a new stanza.
     *sudo* provides a powerful means of restricting the sets of commands that
     users can execute via the ``sudoers'' file. By enabling this feature (and
     in ``ENABLE_CMD_EXEC'' mode), all incoming commands from valid SPA packets
-    will be prefixed by ``/path/to/sudo -u <user>'' where the path to sudo is
-    set by the ``SUDO_EXE'' variable, and ``<user>'' is set by the
-    ``CMD_EXEC_USER'' variable (default is ``root'' if not set).
+    will be prefixed by ``/path/to/sudo -u <user> -g <group>'' where the path
+    to sudo is set by the ``SUDO_EXE'' variable, ``<user>'' is set by the
+    ``CMD_SUDO_EXEC_USER'' variable (default is ``root'' if not set), and
+    ``<group>'' is set by ``CMD_SUDO_EXEC_GROUP'' (default is also ``root'' if
+    not set).
 
 *CMD_EXEC_USER* '<username>'::
-     This specifies the user (via setuid) that will execute commands contained
-     within a SPA packet. If not specified, fwknopd will execute it as the user
-     it is running as (most likely root). Setting this to a non-root user such
-     as ``nobody'' is highly recommended if elevated permissions are not
-     needed.
+     Specify the user (via setuid) that will execute a command contained within
+     a SPA packet. If this variable is not given, fwknopd will execute the
+     command as the user it is running as (most likely root). Setting this to a
+     non-root user such as ``nobody'' is highly recommended if elevated
+     permissions are not needed.
+
+*CMD_SUDO_EXEC_USER* '<username>'::
+    Specify the user (via ``sudo -u <user>'') that will execute a command
+    contained within a SPA packet. If this variable is not given, fwknopd will
+    assume the command should be executed as root.
 
 *CMD_EXEC_GROUP* '<groupname>'::
-     This specifies the group (via setgid) that will execute commands contained
-     within a SPA packet. If not specified, fwknopd will execute it as the user
-     it is running as (most likely root). Setting this to a non-root user such
-     as ``nobody'' is highly recommended if elevated permissions are not
-     needed.
+     Specify the group (via setgid) that will execute a command contained within
+     a SPA packet. If this variable is not given, fwknopd will execute the
+     command as the user it is running as (most likely root). Setting this to a
+     non-root user such as ``nobody'' is highly recommended if elevated
+     permissions are not needed.
+
+*CMD_SUDO_EXEC_GROUP* '<groupname>'::
+    Specify the group (via ``sudo -gu <group>'') that will execute a command
+    contained within a SPA packet. If this variable is not given, fwknopd will
+    assume the command should be executed as root.
 
 *SUDO_EXE* '<path>'::
     Define the path to the sudo binary. Default is ``/usr/bin/sudo''.
