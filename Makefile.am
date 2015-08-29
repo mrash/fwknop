@@ -71,6 +71,10 @@ EXTRA_DIST = \
     extras/fwknop-launcher/fwknop-launcher.conf \
     extras/apparmor/usr.sbin.fwknopd \
     extras/apparmor/configure_args.sh \
+    extras/ramdisk/ramdisk-create.sh \
+    extras/ramdisk/ramdisk-create-osx.sh \
+    extras/console-qr/console-qr.sh \
+    extras/sanitizer/asan-build.sh \
     fwknop.spec \
     iphone/main.m \
     iphone/Fwknop.xcodeproj \
@@ -121,20 +125,9 @@ EXTRA_DIST = \
     python/setup.py \
     python/fkomodule.c \
     python/fko.py \
-    test/conf/gpg_dirs_orig.tar.gz \
-    test/conf/client-gpg/pubring.gpg \
-    test/conf/client-gpg/secring.gpg \
-    test/conf/client-gpg/trustdb.gpg \
-    test/conf/client-gpg-no-pw/pubring.gpg \
-    test/conf/client-gpg-no-pw/secring.gpg \
-    test/conf/client-gpg-no-pw/trustdb.gpg \
-    test/conf/server-gpg/pubring.gpg \
-    test/conf/server-gpg/secring.gpg \
-    test/conf/server-gpg/trustdb.gpg \
-    test/conf/server-gpg-no-pw/pubring.gpg \
-    test/conf/server-gpg-no-pw/secring.gpg \
-    test/conf/server-gpg-no-pw/trustdb.gpg \
+    test/conf/gpg_dirs.tar.gz \
     test/conf/hmac_android_access.conf \
+    test/conf/hmac_android_fdroid_access.conf \
     test/conf/android_access.conf \
     test/conf/android_legacy_iv_access.conf \
     test/conf/base64_key_access.conf \
@@ -159,6 +152,7 @@ EXTRA_DIST = \
     test/conf/expired_epoch_stanza_access.conf \
     test/conf/expired_stanza_access.conf \
     test/conf/force_nat_access.conf \
+    test/conf/no_exit_down_intf_fwknopd.conf \
     test/conf/future_expired_stanza_access.conf \
     test/conf/fuzzing_open_ports_access.conf \
     test/conf/fuzzing_restrict_ports_access.conf \
@@ -176,6 +170,9 @@ EXTRA_DIST = \
     test/conf/gpg_no_sig_no_fpr_access.conf \
     test/conf/gpg_no_sig_verify_access.conf \
     test/conf/gpg_invalid_sig_id_access.conf \
+    test/conf/gpg_large_signing_key_access.conf \
+    test/conf/gpg_subkey_access.conf \
+    test/conf/gpg_server_large_key_access.conf \
     test/conf/fwknoprc_gpg_invalid_exe \
     test/conf/fwknoprc_hmac_defaults \
     test/conf/fwknoprc_hmac_time_offset_mins \
@@ -224,7 +221,12 @@ EXTRA_DIST = \
     test/conf/hmac_force_nat_access.conf \
     test/conf/hmac_force_snat_access.conf \
     test/conf/hmac_force_masq_access.conf \
+    test/conf/hmac_force_nat_forward_all_access.conf \
     test/conf/hmac_no_b64_cygwin_access.conf \
+    test/conf/hmac_forward_all_access.conf \
+    test/conf/hmac_forward_all_masq_access.conf \
+    test/conf/hmac_forward_all_and_dnat_access.conf \
+    test/conf/hmac_force_masq_no_dnat_access.conf \
     test/conf/multi_pkts.pcap \
     test/conf/fwknoprc_default_hmac_base64_key \
     test/conf/fwknoprc_hmac_nat_rand_base64_key \
@@ -266,6 +268,7 @@ EXTRA_DIST = \
     test/conf/fwknoprc_stanza_list \
     test/conf/icmp_pcap_filter_fwknopd.conf \
     test/conf/invalid_expire_access.conf \
+    test/conf/require_force_nat_access.conf \
     test/conf/invalid_source_access.conf \
     test/conf/ipt_output_chain_fwknopd.conf \
     test/conf/firewd_output_chain_fwknopd.conf \
@@ -303,6 +306,7 @@ EXTRA_DIST = \
     test/conf/no_subnet_source_match_access.conf \
     test/conf/ofb_mode_access.conf \
     test/conf/open_ports_access.conf \
+    test/conf/open_ports_force_masq_access.conf \
     test/conf/override_fwknopd.conf \
     test/conf/override2_fwknopd.conf \
     test/conf/override_no_digest_tracking_fwknopd.conf \
@@ -320,7 +324,11 @@ EXTRA_DIST = \
     test/conf/firewd_snat_fwknopd.conf \
     test/conf/ipt_snat_no_translate_ip_fwknopd.conf \
     test/conf/firewd_snat_no_translate_ip_fwknopd.conf \
+    test/conf/ipt_snat_translate_ip_fwknopd.conf \
+    test/conf/firewd_snat_translate_ip_fwknopd.conf \
     test/conf/destination_rule_fwknopd.conf \
+    test/conf/firewd_spa_dst_snat_fwknopd.conf \
+    test/conf/ipt_spa_dst_snat_fwknopd.conf \
     test/conf/hmac_spa_destination_access.conf \
     test/conf/hmac_spa_destination2_access.conf \
     test/conf/hmac_spa_destination3_access.conf \
@@ -357,36 +365,59 @@ EXTRA_DIST = \
     test/misc/freebsd_rc.conf \
     test/misc/pf.rules \
     test/misc/pf.sh \
+    test/asan/use-after-free.c \
+    test/asan/Makefile \
     test/afl/compile/afl-compile-code-coverage.sh \
-    test/afl/compile/afl-compile-no-enable-arg.sh \
     test/afl/compile/afl-compile.sh \
-    test/afl/compile/afl-gen-code-coverage.sh \
+    test/afl/compile/fcns \
     test/afl/doc/AFL_status_screen.png \
-    test/afl/README \
+    test/afl/README.md \
     test/afl/fuzzing-wrappers/client-rc.sh \
-    test/afl/fuzzing-wrappers/fcns \
-    test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh \
     test/afl/fuzzing-wrappers/helpers/fwknop-rc-test.sh \
-    test/afl/fuzzing-wrappers/helpers/fwknopd-digest-cache.sh \
-    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh \
-    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh \
-    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh \
     test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf.sh \
-    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh \
-    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access.sh \
     test/afl/fuzzing-wrappers/helpers/fwknopd-enc-pkt-file.sh \
-    test/afl/fuzzing-wrappers/server-access.sh \
-    test/afl/fuzzing-wrappers/server-conf.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-digest-cache.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-test.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknop-rc-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-access-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-stdin-hangs.sh \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/server-conf-cmin.sh \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/README \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/spa-pkts-cmin.sh \
+    test/afl/fuzzing-wrappers/helpers/afl-cmin/server-access-cmin.sh \
+    test/afl/fuzzing-wrappers/helpers/fwknopd-parse-conf-hangs.sh \
     test/afl/fuzzing-wrappers/server-digest-cache.sh \
     test/afl/fuzzing-wrappers/spa-pkts.sh \
+    test/afl/fuzzing-wrappers/server-access.sh \
     test/afl/fuzzing-wrappers/server-enc-pkts.sh \
+    test/afl/fuzzing-wrappers/fcns \
+    test/afl/fuzzing-wrappers/server-conf.sh \
     test/afl/test-cases/client-rc/fwknoprc \
-    test/afl/test-cases/server-access/access.conf \
-    test/afl/test-cases/server-conf/fwknopd.conf \
-    test/afl/test-cases/spa-pkts/spa.start \
-    test/afl/test-cases/spa-pkts/spa2.start \
-    test/afl/test-cases/spa-pkts/spa3.start \
+    test/afl/test-cases/client-rc/fwknoprc2 \
+    test/afl/test-cases/server-digest-cache/digest.cache \
+    test/afl/test-cases/spa-pkts.cmin/spa1_sha384.start \
+    test/afl/test-cases/spa-pkts.cmin/spa1_sha256.start \
+    test/afl/test-cases/spa-pkts.cmin/spa1_md5.start \
+    test/afl/test-cases/spa-pkts.cmin/spa2_sha384.start \
+    test/afl/test-cases/spa-pkts.cmin/spa2_md5.start \
     test/afl/test-cases/enc-pkts/spa.enc \
+    test/afl/test-cases/server-access/access.conf \
+    test/afl/test-cases/spa-pkts/spa1_sha384.start \
+    test/afl/test-cases/spa-pkts/spa3_sha384.start \
+    test/afl/test-cases/spa-pkts/spa3_sha256.start \
+    test/afl/test-cases/spa-pkts/spa3_sha512.start \
+    test/afl/test-cases/spa-pkts/spa1_sha256.start \
+    test/afl/test-cases/spa-pkts/spa1_sha512.start \
+    test/afl/test-cases/spa-pkts/spa3_md5.start \
+    test/afl/test-cases/spa-pkts/spa1_md5.start \
+    test/afl/test-cases/spa-pkts/spa2_sha256.start \
+    test/afl/test-cases/spa-pkts/spa2_sha512.start \
+    test/afl/test-cases/spa-pkts/spa2_sha384.start \
+    test/afl/test-cases/spa-pkts/spa2_md5.start \
+    test/afl/test-cases/server-conf/firewalld/fwknopd.conf \
+    test/afl/test-cases/server-conf/iptables/fwknopd.conf \
+    test/tests/address_sanitizer.pl \
     test/tests/build_security.pl \
     test/tests/preliminaries.pl \
     test/tests/code_structure.pl \
@@ -422,8 +453,10 @@ EXTRA_DIST = \
     test/run-test-suite.sh \
     test/valgrind_suppressions \
     test/configure_max_coverage.sh \
-    test/rm-coverage-files.sh \
     test/gen-coverage-report.sh \
+    test/init-lcov.sh \
+    test/rm-coverage-files.sh \
+    test/lcov.env \
     test/configure_max_coverage.sh \
     test/README \
     VERSION \

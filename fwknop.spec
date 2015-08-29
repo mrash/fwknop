@@ -8,15 +8,15 @@
 %define _libdir /usr/lib
 %endif
 %define _sysconfdir /etc
-%define _localstatedir /var
+%define _localstatedir /var/run
 %define _infodir /usr/share/info
 %define _mandir /usr/share/man
 
 Name:		fwknop
-Version:	2.6.5
+Version:	2.6.7
 Epoch:		1
 Release:	1%{?dist}
-Summary:	Firewall Knock Operator client.  An implementation of Single Packet Authorization.
+Summary:	Firewall Knock Operator client. An implementation of Single Packet Authorization.
 
 Group:		Applications/Internet
 License:	GPL
@@ -43,14 +43,14 @@ Group:		Development/Libraries
 Requires:	libfko >= 2.0.3
 
 %package server
-Summary:	The Firewall Knock Operator server.  An implementation of Single Packet Authorization.
+Summary:	The Firewall Knock Operator server. An implementation of Single Packet Authorization.
 Group:		System Environment/Daemons
 Requires:	libfko => 2.0.3, libpcap, iptables
 
 
 %description
 Fwknop implements an authorization scheme known as Single Packet Authorization
-(SPA) for Linux systems running firewalld or iptables.  This mechanism requires
+(SPA) for Linux systems running firewalld or iptables. This mechanism requires
 only a single encrypted and non-replayed packet to communicate various pieces of
 information including desired access through a firewalld or iptables policy. The
 main application of this program is to use firewalld or iptables in a default-drop
@@ -142,6 +142,12 @@ fi
 %config(noreplace) %attr(0600,root,root) %{_sysconfdir}/fwknop/access.conf
 
 %changelog
+* Mon Aug 24 2015 <mbr@cipherdyne.org> - 2.6.7
+- fwknop-2.6.7 release.
+
+* Tue Apr 23 2015 <mbr@cipherdyne.org> - 2.6.6
+- fwknop-2.6.6 release.
+
 * Tue Dec 16 2014 <mbr@cipherdyne.org> - 2.6.5
 - fwknop-2.6.5 release.
 

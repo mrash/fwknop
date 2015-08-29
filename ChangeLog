@@ -1,7 +1,69 @@
-fwknop-2.6.6 (02//2015):
+fwknop-2.6.7 (08/24/2015):
+    - [server] When command execution is enabled with ENABLE_CMD_EXEC for an
+      access.conf stanza, added support for running commands via sudo. This was
+      suggested by Github user 'freegigi' (issue #159) as a means to provide
+      command filtering using the powerful sudoers syntax. This feature is
+      implemented by prefixing any incoming command from a valid SPA packet
+      with the sudo command along with optional user and group requirements
+      as defined by the following new access.conf variables:
+      ENABLE_CMD_SUDO_EXEC, CMD_SUDO_EXEC_USER, and CMD_SUDO_EXEC_GROUP.
+    - [server] Kevin Layer reported a bug to the fwknop mailing list that
+      simultaneous NAT access for two different access.conf stanza was not
+      functioning properly. After some diagnosis, this was a result of
+      rule_exists() not properly detecting and differentiating existing DNAT
+      rules from new ones with different port numbers when 'iptables -C'
+      support is not available. This was against iptables-1.4.7, and has been
+      fixed in this release of fwknop (tracked as issue #162).
+    - [server] Added --key-gen to fwknopd. This feature was suggested by
+      Jonathan Bennett, and will help with ease of use efforts. The first
+      platform to take advantage of this will likely be OpenWRT thanks to
+      Jonathan.
+    - [server] By default, fwknopd will now exit if the interface that it is
+      sniffing goes down (patch contributed by Github user 'sgh7'). If this
+      happens, it is expected that the native process monitoring feature in
+      things like systemd or upstart will restart fwknopd. However, if fwknopd
+      is not being monitored by systemd, upstart, or anything else, this
+      behavior can be disabled with the EXIT_AT_INTF_DOWN variable in the
+      fwknopd.conf file. If disabled, fwknopd will try to recover when a
+      downed interface comes back up.
+    - [extras] Added a script from Jonathan Bennett at
+      extras/console-qr/console-qr.sh to generate QR codes from fwknopd
+      access.conf keys.
+    - [build] Added --with-firewalld to the autoconf configure script. This is
+      a synonym for --with-firewall-cmd to avoid confusion. Some package
+      maintainers use --with-firewalld to build fwknop.
+
+fwknop-2.6.6 (04/23/2015):
+    - [server] Add the ability for fwknopd to function as an generic SPA
+      gateway. This allows scenarios such as the fwknopd system providing DHCP
+      addresses to client systems, but those systems would be blocking by
+      default from accessing the broader Internet until a valid SPA packet is
+      sent to the gateway. Two new access.conf variables support this feature:
+      DISABLE_DNAT (do not build any DNAT rules for forwarded connections) and
+      FORWARD_ALL (allow all traffic to be forwarded instead of specfic
+      services requested within an SPA packet). So far, this feature is only
+      supported on systems running iptables or firewalld. The idea was
+      contributed by "spartan1833" to the fwknop mailing list, and this became
+      issue 131 on github.
     - [server] Bug fix when compiled with --enable-udp-server to not include
       pcap.h, which is likely not installed whenever libpcap is also not
       installed. This bug was reported by Alexander Kozhevnikov.
+    - [android] (Dan Brooks) Contributed a patch for the Android client app to
+      add the definition of custom server udp port. This is similiar to the
+      --server-port argument offered by the main fwknop client.
+    - [test suite] Handle versions of lcov that don't have the --rc argument
+      which is normally used to force the creation of branch coverage stats
+      when code coverage reports are created.
+    - [build] Add --enable-asan-support to autoconf configure script to enable
+      Google's Address Sanitizer (ASan) support. This feature is used during
+      the testing phase for new fwknop releases. Running fwknop under the
+      complete test suite (and also under AFL) with ASan support compiled in
+      did not turn up any new bugs.
+    - [test suite] (Franck Joncourt) Added libfko unit tests with the CUnit
+      framework.
+    - [test suite] Set AFL_HARDEN=1 to AFL fuzzing wrapper scripts. This
+      enables simple memory bug detection in AFL at the cost of a small
+      performance hit.
 
 fwknop-2.6.5 (12/16/2014):
     - [server] (Grant Pannell) Added a new access.conf variable "DESTINATION"

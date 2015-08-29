@@ -134,8 +134,8 @@ rotate_digest_cache_file(fko_srv_options_t *opts)
         );
 #endif /* NO_DIGEST_CACHE */
 
-    if(new_file != NULL)
-        free(new_file);
+    free(new_file);
+    return;
 }
 
 static void

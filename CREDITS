@@ -1,5 +1,10 @@
 Jonathan Bennett
     - Contributed OpenWRT support - see the extras/openwrt/ directory.
+    - Suggested the addition of the --key-gen option to fwknopd.
+    - Contributed the console-qr.sh script (in extras/console-qr/) to create
+      QR codes from fwknopd access.conf keys.
+    - Wrote a new fwknop client for Android called "Fwknop2" - see:
+        https://f-droid.org/repository/browse/?fdid=org.cipherdyne.fwknop2
 
 Sebastien Jeanquier
     - Assisted with getting fwknop included in BackTrack Linux - the choice
@@ -55,6 +60,7 @@ Franck Joncourt
     - Added log module support for the client.
     - Added the ability to read a passphrase from STDIN and also from a file
       descriptor via --fd (closes #74).
+    - Added libfko unit tests via the CUnit framework.
 
 Jonathan Schulz
     - Submitted patches to change HTTP connection type to 'close' for -R mode
@@ -213,3 +219,14 @@ Grant Pannell
 Alexander Kozhevnikov
     - Reported a bug when fwknop is compiled with --enable-udp-server where
       the server was including pcap.h
+
+Dan Brooks
+    - Contributed a patch for the Android client app to add the definition of
+      custom server udp port. This is similiar to the --server-port argument
+      offered by the main fwknop client.
+
+Github user 'sgh7':
+    - Contributed a patch to have fwknopd exit if the interface it is sniffing
+      on goes down. If this happens, it is expected that the native process
+      monitoring feature in things like systemd or upstart will restart
+      fwknopd.

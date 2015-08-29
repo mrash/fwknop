@@ -64,6 +64,14 @@ static int is_hostname_str_with_port(const char *str,
 static int enable_fault_injections(fko_cli_options_t * const opts);
 #endif
 
+#if AFL_FUZZING
+  /* These are used in AFL fuzzing mode so the fuzzing cycle is not
+   * interrupted by trying to read from stdin
+  */
+  #define AFL_ENC_KEY               "aflenckey"
+  #define AFL_HMAC_KEY              "aflhmackey"
+#endif
+
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
 #define HOSTNAME_BUFSIZE            64                  /*!< Maximum size of a hostname string */
 #define CTX_DUMP_BUFSIZE            4096                /*!< Maximum size allocated to a FKO context dump */
@@ -1126,7 +1134,9 @@ static int
 get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len)
 {
+#if !AFL_FUZZING
     char   *key_tmp = NULL, *hmac_key_tmp = NULL;
+#endif
     int     use_hmac = 0, res = 0;
 
     memset(key, 0x0, MAX_KEY_LEN+1);
@@ -1173,6 +1183,9 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
                     "[+] GPG mode set, signing passphrase not required");
             else if(strlen(options->gpg_signer_key))
             {
+#if AFL_FUZZING
+                strlcpy(key, AFL_ENC_KEY, MAX_KEY_LEN+1);
+#else
                 key_tmp = getpasswd("Enter passphrase for signing: ", options->input_fd);
                 if(key_tmp == NULL)
                 {
@@ -1180,19 +1193,23 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
                     return 0;
                 }
                 strlcpy(key, key_tmp, MAX_KEY_LEN+1);
+#endif
                 *key_len = strlen(key);
             }
         }
         else
         {
+#if AFL_FUZZING
+            strlcpy(key, AFL_ENC_KEY, MAX_KEY_LEN+1);
+#else
             key_tmp = getpasswd("Enter encryption key: ", options->input_fd);
-
             if(key_tmp == NULL)
             {
                 log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
                 return 0;
             }
             strlcpy(key, key_tmp, MAX_KEY_LEN+1);
+#endif
             *key_len = strlen(key);
         }
     }
@@ -1232,15 +1249,17 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
         }
         else
         {
+#if AFL_FUZZING
+            strlcpy(hmac_key, AFL_HMAC_KEY, MAX_KEY_LEN+1);
+#else
             hmac_key_tmp = getpasswd("Enter HMAC key: ", options->input_fd);
-
             if(hmac_key_tmp == NULL)
             {
                 log_msg(LOG_VERBOSITY_ERROR, "[*] getpasswd() key error.");
                 return 0;
             }
-
             strlcpy(hmac_key, hmac_key_tmp, MAX_KEY_LEN+1);
+#endif
             *hmac_key_len = strlen(hmac_key);
             use_hmac = 1;
         }

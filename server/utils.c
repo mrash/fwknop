@@ -76,29 +76,52 @@ hex_dump(const unsigned char *data, const int size)
     return;
 }
 
-/* Basic directory checks (stat() and whether the path is actually
- * a directory).
+/* Basic directory/binary checks (stat() and whether the path is actually
+ * a directory or an executable).
 */
-int
-is_valid_dir(const char *path)
+static int
+is_valid_path(const char *path, const int file_type)
 {
 #if HAVE_STAT
     struct stat st;
 
-    /* If we are unable to stat the given dir, then return with error.
+    /* If we are unable to stat the given path, then return with error.
     */
     if(stat(path, &st) != 0)
     {
-        log_msg(LOG_ERR, "[-] unable to stat() directory: %s: %s",
+        log_msg(LOG_ERR, "[-] unable to stat() path: %s: %s",
             path, strerror(errno));
         return(0);
     }
 
-    if(!S_ISDIR(st.st_mode))
+    if(file_type == IS_DIR)
+    {
+        if(!S_ISDIR(st.st_mode))
+            return(0);
+    }
+    else if(file_type == IS_EXE)
+    {
+        if(!S_ISREG(st.st_mode) || ! (st.st_mode & S_IXUSR))
+            return(0);
+    }
+    else
         return(0);
+
 #endif /* HAVE_STAT */
 
     return(1);
+}
+
+int
+is_valid_dir(const char *path)
+{
+    return is_valid_path(path, IS_DIR);
+}
+
+int
+is_valid_exe(const char *path)
+{
+    return is_valid_path(path, IS_EXE);
 }
 
 int
@@ -160,6 +183,86 @@ verify_file_perms_ownership(const char *file)
 
 #endif
 
+    return 1;
+}
+
+void
+chop_char(char *str, const char chop)
+{
+    if(str != NULL && str[0] != 0x0 && str[strlen(str)-1] == chop)
+        str[strlen(str)-1] = 0x0;
+    return;
+}
+
+void
+chop_newline(char *str)
+{
+    chop_char(str, 0x0a);
+    return;
+}
+
+void chop_spaces(char *str)
+{
+    int i;
+    if (str != NULL && str[0] != 0x0)
+    {
+        for (i=strlen(str)-1; i > 0; i--)
+        {
+            if(str[i] != 0x20)
+                break;
+            str[i] = 0x0;
+        }
+    }
+    return;
+}
+
+void
+truncate_partial_line(char *str)
+{
+    int i, have_newline=0;
+
+    if(str != NULL && str[0] != 0x0)
+    {
+        for (i=0; i < strlen(str); i++)
+        {
+            if(str[i] == 0x0a)
+            {
+                have_newline = 1;
+                break;
+            }
+        }
+
+        /* Don't zero out any data unless there is at least
+         * one newline
+        */
+        if(have_newline)
+        {
+            for (i=strlen(str)-1; i > 0; i--)
+            {
+                if(str[i] == 0x0a)
+                    break;
+                str[i] = 0x0;
+            }
+        }
+    }
+    return;
+}
+
+/* Simple test to see if a string only contains digits
+*/
+int
+is_digits(const char * const str)
+{
+    int i;
+    if (str != NULL && str[0] != 0x0)
+    {
+        for (i=0; i<strlen(str); i++)
+        {
+            if(!isdigit(str[i]))
+                return 0;
+            i++;
+        }
+    }
     return 1;
 }
 

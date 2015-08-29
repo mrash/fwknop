@@ -11,7 +11,7 @@ AC_PREREQ(2.62)
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
-m4_define(my_version,   [2.6.5])
+m4_define(my_version,   [2.6.7])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
 AC_INIT(my_package, my_version, my_bug_email)
@@ -169,6 +169,32 @@ if test "x$want_c_unit_tests" = "xyes"; then
 fi
 
 AM_CONDITIONAL([WANT_C_UNIT_TESTS], [test "$want_c_unit_tests" = yes])
+
+dnl Decide whether or not to enable address sanitizer support
+dnl
+want_asan_support=no
+AC_ARG_ENABLE([asan-support],
+  [AS_HELP_STRING([--enable-asan-support],
+    [Build fwknop binaries with address sanitizer support @<:@default is to disable@:>@])],
+  [want_asan_support=$enableval],
+  [])
+
+if test "x$want_asan_support" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-fsanitize=address -fno-omit-frame-pointer])
+fi
+
+dnl Decide whether or not force 32-bit mode
+dnl
+want_32bit_mode=no
+AC_ARG_ENABLE([32bit-mode],
+  [AS_HELP_STRING([--enable-32bit-mode],
+    [Build 32-bit fwknop binaries @<:@default is to disable@:>@])],
+  [want_32bit_mode=$enableval],
+  [])
+
+if test "x$want_32bit_mode" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-m32])
+fi
 
 dnl Decide whether or not to compile in certain features that enable fuzzing
 dnl of fwknop code - this is for testing purposes only.
@@ -553,6 +579,22 @@ dnl
     ]
   )
 
+  AC_ARG_WITH([firewalld],
+    [AS_HELP_STRING([--with-firewalld=/path/to/firewall-cmd],
+      [Synonym for --with-firewall-cmd, specify path to the firewall-cmd executable @<:@default=check path@:>@])],
+    [
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
+          [AC_MSG_ERROR([--with-firewalld requires an argument specifying a path to firewall-cmd])],
+          [ FORCE_FIREWALLD_EXE=$withval ]
+        )
+      )
+    ],
+    [
+     AC_PATH_PROG(FIREWALLD_EXE, [firewalld], [], [$APP_PATH])
+    ]
+  )
+
 dnl Check for iptables
 dnl
   AC_ARG_WITH([iptables],
@@ -628,29 +670,29 @@ dnl
 dnl If a firewall was forced. set the appropriate _EXE var and clear the others.
 dnl
   AS_IF([test "x$FORCE_FIREWALLD_EXE" != x], [
-    FIREWALLD_EXE="$FORCE_FIREWALLD_EXE"    
+    FIREWALLD_EXE="$FORCE_FIREWALLD_EXE"
   ],[
     AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
-      IPTABLES_EXE="$FORCE_IPTABLES_EXE"    
-      FIREWALLD_EXE=""    
+      IPTABLES_EXE="$FORCE_IPTABLES_EXE"
+      FIREWALLD_EXE=""
     ],[
       AS_IF([test "x$FORCE_IPFW_EXE" != x], [
-        IPFW_EXE="$FORCE_IPFW_EXE"    
-        IPTABLES_EXE=""    
-        FIREWALLD_EXE=""    
+        IPFW_EXE="$FORCE_IPFW_EXE"
+        IPTABLES_EXE=""
+        FIREWALLD_EXE=""
       ],[
         AS_IF([test "x$FORCE_PF_EXE" != x], [
-          PF_EXE="$FORCE_PF_EXE"    
-          IPFW_EXE=""    
-          IPTABLES_EXE=""    
-          FIREWALLD_EXE=""    
+          PF_EXE="$FORCE_PF_EXE"
+          IPFW_EXE=""
+          IPTABLES_EXE=""
+          FIREWALLD_EXE=""
         ],[
           AS_IF([test "x$FORCE_IPF_EXE" != x], [
-            IPF_EXE="$FORCE_IPF_EXE"    
-            PF_EXE=""    
-            IPFW_EXE=""    
-            IPTABLES_EXE=""    
-            FIREWALLD_EXE=""    
+            IPF_EXE="$FORCE_IPF_EXE"
+            PF_EXE=""
+            IPFW_EXE=""
+            IPTABLES_EXE=""
+            FIREWALLD_EXE=""
           ]
         ]
       ]
@@ -664,19 +706,19 @@ dnl then ipfw, pf, and otherwise we try ipf.
 dnl
   AS_IF([test "x$FIREWALLD_EXE" != x], [
       FW_DEF="FW_FIREWALLD"
-      FIREWALL_TYPE="firewalld" 
+      FIREWALL_TYPE="firewalld"
       FIREWALL_EXE=$FIREWALLD_EXE
       AC_DEFINE_UNQUOTED([FIREWALL_FIREWALLD], [1], [The firewall type: firewalld.])
   ],[
     AS_IF([test "x$IPTABLES_EXE" != x], [
         FW_DEF="FW_IPTABLES"
-        FIREWALL_TYPE="iptables" 
+        FIREWALL_TYPE="iptables"
         FIREWALL_EXE=$IPTABLES_EXE
         AC_DEFINE_UNQUOTED([FIREWALL_IPTABLES], [1], [The firewall type: iptables.])
     ],[
       AS_IF([test "x$IPFW_EXE" != x], [
           FW_DEF="FW_IPFW"
-          FIREWALL_TYPE="ipfw" 
+          FIREWALL_TYPE="ipfw"
           FIREWALL_EXE=$IPFW_EXE
           AC_DEFINE_UNQUOTED([FIREWALL_IPFW], [1], [The firewall type: ipfw.])
       ],[
@@ -688,7 +730,7 @@ dnl
           ],[
               AS_IF([test "x$IPF_EXE" != x], [
                 AC_MSG_ERROR([Sorry - ipf was specified or the only one found, however, it is not supported yet.])
-                FIREWALL_TYPE="ipf" 
+                FIREWALL_TYPE="ipf"
                 FIREWALL_EXE=$IPF_EXE
                 AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
             ], [AC_MSG_ERROR([No firewall program was found or specified.]) ]

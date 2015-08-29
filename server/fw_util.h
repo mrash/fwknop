@@ -39,6 +39,7 @@
 
 #define EXPIRE_COMMENT_PREFIX "_exp_"
 #define TMP_COMMENT "__TMPCOMMENT__"
+#define DUMMY_IP "127.0.0.2"
 
 #if FIREWALL_FIREWALLD
   #include "fw_util_firewalld.h"
@@ -65,7 +66,8 @@
 int fw_config_init(fko_srv_options_t * const opts);
 int fw_initialize(const fko_srv_options_t * const opts);
 int fw_cleanup(const fko_srv_options_t * const opts);
-void check_firewall_rules(const fko_srv_options_t * const opts);
+void check_firewall_rules(const fko_srv_options_t * const opts,
+        const int chk_rm_all);
 int fw_dump_rules(const fko_srv_options_t * const opts);
 int process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat);

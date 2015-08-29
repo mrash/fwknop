@@ -74,15 +74,51 @@ alarm_handler(int sig)
 }
 */
 
+static void
+copy_or_search(char *so_read_buf, char *so_buf, const size_t so_buf_sz,
+        const char *substr_search, const int cflag, int *found_str,
+        int *do_break)
+{
+    if(so_buf != NULL)
+    {
+        if(cflag & WANT_STDOUT_GETLINE)
+        {
+            memset(so_buf, 0x0, so_buf_sz);
+            strlcpy(so_buf, so_read_buf, so_buf_sz);
+        }
+        else
+        {
+            strlcat(so_buf, so_read_buf, so_buf_sz);
+            if(strlen(so_buf) >= so_buf_sz-1)
+                *do_break = 1;
+        }
+    }
+
+    if(substr_search != NULL) /* we are looking for a substring */
+    {
+        /* Search the current line in so_read_buf instead of
+         * so_buf (which may contain a partial line at the
+         * end at this point).
+         */
+        if(!IS_EMPTY_LINE(so_read_buf[0])
+                && strstr(so_read_buf, substr_search) != NULL)
+        {
+            *found_str = 1;
+            *do_break = 1;
+        }
+    }
+    return;
+}
+
 /* Run an external command returning exit status, and optionally filling
- * provided  buffer with STDOUT output up to the size provided.
+ * provided buffer with STDOUT output up to the size provided.
  *
  * Note: XXX: We are not using the timeout parameter at present. We still need
  *       to implement a reliable timeout mechanism.
 */
 static int
 _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
-        const size_t so_buf_sz, const int want_stderr, const int timeout,
+        const size_t so_buf_sz, const int cflag, const int timeout,
         const char *substr_search, int *pid_status,
         const fko_srv_options_t * const opts)
 {
@@ -90,13 +126,19 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
     pid_t   pid=0;
     FILE   *output;
     int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;
-    int     line_ctr = 0, found_str = 0;
+    int     line_ctr = 0, found_str = 0, do_break = 0;
 
     char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
     int     argc_new=0;
 
 #if HAVE_EXECVPE
     int     pipe_fd[2];
+#endif
+
+#if AFL_FUZZING
+    /* Don't allow command execution in AFL fuzzing mode
+    */
+    return 0;
 #endif
 
     *pid_status = 0;
@@ -144,7 +186,7 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
         {
             close(pipe_fd[0]);
             dup2(pipe_fd[1], STDOUT_FILENO);
-            if(want_stderr)
+            if(cflag & WANT_STDERR)
                 dup2(pipe_fd[1], STDERR_FILENO);
             else
                 close(STDERR_FILENO);
@@ -185,29 +227,18 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
             {
                 line_ctr++;
 
-                if(so_buf != NULL)
-                {
-                    strlcat(so_buf, so_read_buf, so_buf_sz);
+                copy_or_search(so_read_buf, so_buf, so_buf_sz,
+                        substr_search, cflag, &found_str, &do_break);
 
-                    if(strlen(so_buf) >= so_buf_sz-1)
-                        break;
-                }
-                else /* we are looking for a substring */
-                {
-                    /* Get past comments and empty lines (note: we only look at the
-                     * first character).
-                     */
-                    if(IS_EMPTY_LINE(so_read_buf[0]))
-                        continue;
-
-                    if(strstr(so_read_buf, substr_search) != NULL)
-                    {
-                        found_str = 1;
-                        break;
-                    }
-                }
+                if(do_break)
+                    break;
             }
             fclose(output);
+
+            /* Make sure we only have complete lines
+            */
+            if(!(cflag & ALLOW_PARTIAL_LINES))
+                truncate_partial_line(so_buf);
         }
         else
         {
@@ -281,28 +312,19 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
             while((fgets(so_read_buf, IO_READ_BUF_LEN, output)) != NULL)
             {
                 line_ctr++;
-                if(so_buf != NULL)
-                {
-                    strlcat(so_buf, so_read_buf, so_buf_sz);
-                    if(strlen(so_buf) >= so_buf_sz-1)
-                        break;
-                }
-                else /* we are looking for a substring */
-                {
-                    /* Get past comments and empty lines (note: we only look at the
-                     * first character).
-                     */
-                    if(IS_EMPTY_LINE(so_read_buf[0]))
-                        continue;
 
-                    if(strstr(so_read_buf, substr_search) != NULL)
-                    {
-                        found_str = 1;
-                        break;
-                    }
-                }
+                copy_or_search(so_read_buf, so_buf, so_buf_sz,
+                        substr_search, cflag, &found_str, &do_break);
+
+                if(do_break)
+                    break;
             }
             pclose(output);
+
+            /* Make sure we only have complete lines
+            */
+            if(!(cflag & ALLOW_PARTIAL_LINES))
+                truncate_partial_line(so_buf);
         }
     }
 
@@ -565,6 +587,10 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
     FILE       *fd = NULL;
 #endif
 
+#if AFL_FUZZING
+    return 0;
+#endif
+
     *pid_status = 0;
 
     /* Even without execvpe() we examine the command for basic validity
@@ -658,8 +684,8 @@ run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
         const int want_stderr, const int timeout, int *pid_status,
         const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, 0, cmd, so_buf, so_buf_sz, want_stderr,
-            timeout, NULL, pid_status, opts);
+    return _run_extcmd(ROOT_UID, ROOT_GID, cmd, so_buf, so_buf_sz,
+            want_stderr, timeout, NULL, pid_status, opts);
 }
 
 /* _run_extcmd() wrapper, run an external command as the specified user.
@@ -680,8 +706,21 @@ search_extcmd(const char *cmd, const int want_stderr, const int timeout,
         const char *substr_search, int *pid_status,
         const fko_srv_options_t * const opts)
 {
-    return _run_extcmd(0, 0, cmd, NULL, 0, want_stderr, timeout,
-            substr_search, pid_status, opts);
+    return _run_extcmd(ROOT_UID, ROOT_GID, cmd, NULL, 0, want_stderr,
+            timeout, substr_search, pid_status, opts);
+}
+
+/* _run_extcmd() wrapper, search command output for a substring and return
+ * the matching line.
+*/
+int
+search_extcmd_getline(const char *cmd, char *so_buf, const size_t so_buf_sz,
+        const int timeout, const char *substr_search, int *pid_status,
+        const fko_srv_options_t * const opts)
+{
+    return _run_extcmd(ROOT_UID, ROOT_GID, cmd, so_buf, so_buf_sz,
+            WANT_STDERR | WANT_STDOUT_GETLINE, timeout, substr_search,
+            pid_status, opts);
 }
 
 /* _run_extcmd_write() wrapper, run a command which is expecting input via stdin

@@ -70,7 +70,7 @@
   /* Our default run directory is based on LOCALSTATEDIR as set by the
    * configure script. This is where we put the PID and digest cache files.
   */
-  #define DEF_RUN_DIR       SYSRUNDIR"/run/"PACKAGE_NAME
+  #define DEF_RUN_DIR       SYSRUNDIR"/"PACKAGE_NAME
 #endif
 
 /* More Conf defaults
@@ -88,15 +88,22 @@
 #define DEF_PCAP_DISPATCH_COUNT         "100"
 #define DEF_PCAP_LOOP_SLEEP             "100000" /* a tenth of a second (in microseconds) */
 #define DEF_ENABLE_PCAP_ANY_DIRECTION   "N"
+#define DEF_EXIT_AT_INTF_DOWN           "Y"
 #define DEF_ENABLE_SPA_PACKET_AGING     "Y"
 #define DEF_MAX_SPA_PACKET_AGE          "120"
 #define DEF_ENABLE_DIGEST_PERSISTENCE   "Y"
+#define DEF_RULES_CHECK_THRESHOLD       "20"
 #define DEF_MAX_SNIFF_BYTES             "1500"
 #define DEF_GPG_HOME_DIR                "/root/.gnupg"
 #ifdef  GPG_EXE
   #define DEF_GPG_EXE                   GPG_EXE
 #else
   #define DEF_GPG_EXE                   "/usr/bin/gpg"
+#endif
+#ifdef  SUDO_EXE
+  #define DEF_SUDO_EXE                   SUDO_EXE
+#else
+  #define DEF_SUDO_EXE                   "/usr/bin/sudo"
 #endif
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
@@ -124,6 +131,7 @@
 #define RCHK_MAX_UDPSERV_SELECT_TIMEOUT (2 << 22)
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
 #define RCHK_MAX_FW_TIMEOUT             (2 << 22)
+#define RCHK_MAX_RULES_CHECK_THRESHOLD  ((2 << 16) - 1)
 
 /* FirewallD-specific defines
 */
@@ -141,7 +149,7 @@
   #define DEF_FIREWD_FORWARD_ACCESS        "ACCEPT, filter, FORWARD, 1, FWKNOP_FORWARD, 1"
   #define DEF_FIREWD_DNAT_ACCESS           "DNAT, nat, PREROUTING, 1, FWKNOP_PREROUTING, 1"
   #define DEF_FIREWD_SNAT_ACCESS           "SNAT, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
-  #define DEF_FIREWD_MASQUERADE_ACCESS     "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+  #define DEF_FIREWD_MASQUERADE_ACCESS     "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_MASQUERADE, 1"
 
   #define RCHK_MAX_FIREWD_RULE_NUM         (2 << 15)
 
@@ -161,7 +169,7 @@
   #define DEF_IPT_FORWARD_ACCESS        "ACCEPT, filter, FORWARD, 1, FWKNOP_FORWARD, 1"
   #define DEF_IPT_DNAT_ACCESS           "DNAT, nat, PREROUTING, 1, FWKNOP_PREROUTING, 1"
   #define DEF_IPT_SNAT_ACCESS           "SNAT, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
-  #define DEF_IPT_MASQUERADE_ACCESS     "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_POSTROUTING, 1"
+  #define DEF_IPT_MASQUERADE_ACCESS     "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_MASQUERADE, 1"
 
   #define RCHK_MAX_IPT_RULE_NUM         (2 << 15)
 
@@ -226,10 +234,12 @@ enum {
     CONF_PCAP_DISPATCH_COUNT,
     CONF_PCAP_LOOP_SLEEP,
     CONF_ENABLE_PCAP_ANY_DIRECTION,
+    CONF_EXIT_AT_INTF_DOWN,
     CONF_MAX_SNIFF_BYTES,
     CONF_ENABLE_SPA_PACKET_AGING,
     CONF_MAX_SPA_PACKET_AGE,
     CONF_ENABLE_DIGEST_PERSISTENCE,
+    CONF_RULES_CHECK_THRESHOLD,
     CONF_CMD_EXEC_TIMEOUT,
     //CONF_BLACKLIST,
     CONF_ENABLE_SPA_OVER_HTTP,
@@ -305,6 +315,7 @@ enum {
 #endif
     CONF_GPG_HOME_DIR,
     CONF_GPG_EXE,
+    CONF_SUDO_EXE,
     CONF_FIREWALL_EXE,
     CONF_VERBOSE,
 #if AFL_FUZZING
@@ -366,6 +377,11 @@ typedef struct acc_stanza
     unsigned char        use_rijndael;
     int                  fw_access_timeout;
     unsigned char        enable_cmd_exec;
+    unsigned char        enable_cmd_sudo_exec;
+    char                *cmd_sudo_exec_user;
+    char                *cmd_sudo_exec_group;
+    uid_t                cmd_sudo_exec_uid;
+    gid_t                cmd_sudo_exec_gid;
     char                *cmd_exec_user;
     char                *cmd_exec_group;
     uid_t                cmd_exec_uid;
@@ -395,8 +411,8 @@ typedef struct acc_stanza
     char                *force_nat_ip;
     char                *force_nat_proto;
     unsigned int         force_nat_port;
-    unsigned char        disable_dnat;
     unsigned char        forward_all;
+    unsigned char        disable_dnat;
     unsigned char        force_snat;
     char                *force_snat_ip;
     unsigned char        force_masquerade;
@@ -449,9 +465,6 @@ typedef struct acc_stanza
       struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
       char            fw_command[MAX_PATH_LEN];
 
-      /* Flag for firewalld SNAT vs. MASQUERADE usage
-      */
-      unsigned char   use_masquerade;
       /* Flag for setting destination field in rule
       */
       unsigned char   use_destination;
@@ -499,9 +512,6 @@ typedef struct acc_stanza
       struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
       char            fw_command[MAX_PATH_LEN];
 
-      /* Flag for iptables SNAT vs. MASQUERADE usage
-      */
-      unsigned char   use_masquerade;
       /* Flag for setting destination field in rule
       */
       unsigned char   use_destination;
@@ -591,10 +601,14 @@ typedef struct fko_srv_options
     unsigned char   fw_list;            /* List current firewall rules */
     unsigned char   fw_list_all;        /* List all current firewall rules */
     unsigned char   fw_flush;           /* Flush current firewall rules */
+    unsigned char   key_gen;            /* Generate keys and exit */
+    unsigned char   exit_after_parse_config; /* Parse config and exit */
+
+    /* Operational flags
+    */
     unsigned char   test;               /* Test mode flag */
     unsigned char   afl_fuzzing;        /* SPA pkts from stdin for AFL fuzzing */
     unsigned char   verbose;            /* Verbose mode flag */
-    unsigned char   exit_after_parse_config; /* Parse config and exit */
     unsigned char   enable_udp_server;  /* Enable UDP server mode */
 
     unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
@@ -610,6 +624,13 @@ typedef struct fko_srv_options
     int             data_link_offset;
     int             tcp_server_pid;
     int             lock_fd;
+
+    /* Values used in --key-gen mode only
+    */
+    char key_gen_file[MAX_PATH_LEN];
+    int  key_len;
+    int  hmac_key_len;
+    int  hmac_type;
 
 #if USE_FILE_CACHE
     struct digest_cache_list *digest_cache;   /* In-memory digest cache list */
@@ -634,18 +655,23 @@ typedef struct fko_srv_options
     */
     struct fw_config *fw_config;
 
+    /* Rule checking counter - this is for garbage cleanup mode to remove
+     * any rules with an expired timer (even those that may have been
+     * added by a third-party program).
+    */
+    unsigned int check_rules_ctr;
+
     /* Set to 1 when messages have to go through syslog, 0 otherwise */
     unsigned char   syslog_enable;
 
 } fko_srv_options_t;
 
-extern fko_srv_options_t options;
-
 /* For cleaning up memory before exiting
 */
 #define FW_CLEANUP          1
 #define NO_FW_CLEANUP       0
-void clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int exit_status);
+void clean_exit(fko_srv_options_t *opts,
+        unsigned int fw_cleanup_flag, unsigned int exit_status);
 
 #endif /* FWKNOPD_COMMON_H */
 

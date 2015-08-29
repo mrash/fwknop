@@ -224,7 +224,11 @@ main(int argc, char **argv)
 
         /* If the TCP server option was set, fire it up here. Note that in
          * this mode, fwknopd still acquires SPA packets via libpcap. If you
-         * want to use UDP only without the libpcap dependency, see the FIXME...
+         * want to use UDP only without the libpcap dependency, then fwknop
+         * needs to be compiled with --enable-udp-server. Note that the UDP
+         * server can be run even when fwknopd links against libpcap as well,
+         * but there is no reason to link against it if SPA packets are
+         * always going to be acquired via a UDP socket.
         */
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
@@ -238,8 +242,11 @@ main(int argc, char **argv)
 #if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
-        if(strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
+        if(!opts.enable_udp_server
+                && strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
+        {
             pcap_capture(&opts);
+        }
 #endif
 
         /* Deal with any signals that we've received and break out

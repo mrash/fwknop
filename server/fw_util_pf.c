@@ -336,7 +336,8 @@ process_spa_request(const fko_srv_options_t * const opts,
  * firewall rules.
 */
 void
-check_firewall_rules(const fko_srv_options_t * const opts)
+check_firewall_rules(const fko_srv_options_t * const opts,
+        const int chk_rm_all)
 {
     char            exp_str[12] = {0};
     char            anchor_rules_copy[STANDARD_CMD_OUT_BUFSIZE] = {0};
@@ -369,6 +370,8 @@ check_firewall_rules(const fko_srv_options_t * const opts)
 
     res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
                 WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
+    chop_newline(cmd_out);
+
     if(!EXTCMD_IS_SUCCESS(res))
     {
         log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
@@ -405,6 +408,16 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         tmp_mark = ndx;
 
         strlcpy(exp_str, ndx, sizeof(exp_str));
+        chop_spaces(exp_str);
+        chop_char(exp_str, 0x22); /* there is a trailing quote */
+        if(!is_digits(exp_str))
+        {
+            /* go to the next rule if it exists
+            */
+            ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
+            continue;
+        }
+
         rule_exp = (time_t)atoll(exp_str);
 
         if(rule_exp <= now)

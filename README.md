@@ -57,11 +57,107 @@ for Rijndael encryption is generated via the standard PBKDF1 key derivation
 algorithm, and CBC mode is set. If the GnuPG method is chosen, then the
 encryption keys are derived from GnuPG key rings.
 
-## Tutorial
+## Use Cases
+People who use Single Packet Authorization (SPA) or its security-challenged cousin
+Port Knocking (PK) usually access SSHD running on the same system where the SPA/PK
+software is deployed. That is, a firewall running on a host has a default-drop
+policy against all incoming SSH connections so that SSHD cannot be scanned, but a
+SPA daemon reconfigures the firewall to temporarily grant access to a passively
+authenticated SPA client:
 
+![alt text][SPA-basic-access-SSHD]
+[SPA-basic-access-SSHD]: /doc/images/SPA_basic.png "Basic SPA usage to access SSHD"
+
+fwknop supports the above, but also goes much further and makes robust usage of NAT
+(for iptables/firewalld firewalls). After all, *important* firewalls are usually gateways
+between networks as opposed to just being deployed on standalone hosts.  NAT is commonly
+used on such firewalls (at least for IPv4 communications) to provide Internet access to
+internal networks that are on RFC 1918 address space, and also to allow external
+hosts access to services hosted on internal systems.
+
+Because fwknop integrates with NAT, SPA can be leveraged to access internal services
+*through* the firewall by users on the external Internet. Although this has plenty of
+applications on modern traditional networks, it also allows fwknop to support cloud
+computing environments such as Amazon's AWS:
+
+![alt text][SPA-Amazon-AWS-cloud]
+[SPA-Amazon-AWS-cloud]: /doc/images/SPA_AWS_network_setup.png "SPA usage on Amazon AWS cloud environments"
+
+## Tutorial
 A comprehensive tutorial on fwknop can be found here:
 
 [http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html](http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html)
+
+
+## Features
+The following is a complete list of features supported by the fwknop project:
+
+ * Implements Single Packet Authorization around iptables and firewalld firewalls
+   on Linux, ipfw firewalls on *BSD and Mac OS X, and PF on OpenBSD.
+ * The fwknop client runs on Linux, Mac OS X, *BSD, and Windows under Cygwin.
+   In addition, there is an [Android app](https://github.com/oneru/Fwknop2/releases)
+   to generate SPA packets.
+ * Supports both Rijndael and GnuPG methods for the encryption/decryption of
+   SPA packets.
+ * Supports HMAC authenticated encryption for both Rijndael and GnuPG. The order
+   of operation is encrypt-then-authenticate to avoid various cryptanalytic problems.
+ * Replay attacks are detected and thwarted by SHA-256 digest comparison of valid
+   incoming SPA packets. Other digest algorithms are also supported, but SHA-256 is
+   the default.
+ * SPA packets are passively sniffed from the wire via libpcap. The fwknopd server
+   can also acquire packet data from a file that is written to by a separate Ethernet
+   sniffer (such as with `tcpdump -w <file>`), from the iptables ULOG pcap writer, or
+   directly via a UDP socket in `--udp-server` mode.
+ * For iptables firewalls, ACCEPT rules added by fwknop are added and deleted (after
+   a configurable timeout) from custom iptables chains so that fwknop does not
+   interfere with any existing iptables policy that may already be loaded on the
+   system.
+ * Supports inbound NAT connections for authenticated SPA communications (iptables
+   firewalls only for now). This means fwknop can be configured to create DNAT
+   rules so that you can reach a service (such as SSH) running on an internal system
+   on an RFC 1918 IP address from the open Internet. SNAT rules are also supported
+   which essentially turns fwknopd into a [SPA-authenticating gateway](https://www.cipherdyne.org/blog/2015/04/nat-and-single-packet-authorization.html)
+   to access the Internet from an internal network.
+ * Multiple users are supported by the fwknop server, and each user can be assigned
+   their own symmetric or asymmetric encryption key via the /etc/fwknop/access.conf
+   file.
+ * Automatic resolution of external IP address via
+   [https://www.cipherdyne.org/cgi-bin/myip](https://www.cipherdyne.org/cgi-bin/myip)
+   (this is useful when the fwknop client is run from behind a NAT device). Because
+   the external IP address is encrypted within each SPA packet in this mode,
+   Man-in-the-Middle (MITM) attacks where an inline device intercepts an SPA packet
+   and only forwards it from a different IP in an effort to gain access are thwarted.
+ * [Port randomization](https://www.cipherdyne.org/blog/2008/06/single-packet-authorization-with-port-randomization.html)
+   is supported for the destination port of SPA packets as well
+   as the port over which the follow-on connection is made via the iptables NAT
+   capabilities. The later applies to forwarded connections to internal services and
+   to access granted to local sockets on the system running fwknopd.
+ * Integration with Tor (as described in this
+   [DefCon 14](http://www.cipherdyne.org/fwknop/docs/talks/dc14_fwknop_slides.pdf) presentation).
+   Note that because Tor uses TCP for transport, sending SPA packets through the Tor
+   network requires that each SPA packet is sent over an established TCP connection,
+   so technically this breaks the "single" aspect of "Single Packet Authorization".
+   However, Tor provides anonymity benefits that can outweigh this consideration in
+   some deployments.
+ * Implements a versioned protocol for SPA communications, so it is easy to extend
+   the protocol to offer new SPA message types and maintain backwards compatibility
+   with older fwknop clients at the same time.
+ * Supports the execution of shell commands on behalf of valid SPA packets.
+ * The fwknop server can be configured to place multiple restrictions on inbound SPA
+   packets beyond those enforced by encryption keys and replay attack detection.
+   Namely, packet age, source IP address, remote user, access to requested ports,
+   and more.
+ * Bundled with fwknop is a comprehensive test suite that issues a series of tests
+   designed to verify that both the client and server pieces of fwknop work properly.
+   These tests involve sniffing SPA packets over the local loopback interface,
+   building temporary firewall rules that are checked for the appropriate access based
+   on the testing config, and parsing output from both the fwknop client and fwknopd
+   server for expected markers for each test. Test suite output can easily be
+   anonymized for communication to third parties for analysis.
+ * fwknop was the first program to integrate port knocking with passive OS
+   fingerprinting. However, Single Packet Authorization offers many security benefits
+   beyond port knocking, so the port knocking mode of operation is generally
+   deprecated.
 
 
 ## License
@@ -84,10 +180,15 @@ and there are python bindings as well in the `python` directory).
 ## Upgrading
 If you are upgrading from an older version of fwknop (and this includes the
 original perl implementation as well), then you will want to read the
-following link to ensure a smooth transition to fwknop-2.5:
+following link to ensure a smooth transition to fwknop-2.5 or later:
 
 [http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html#backwards-compatibility](http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html#backwards-compatibility)
 
+## Misc
+ * Questions or comments about fwknop will be fielded on the
+[fwknop mailing list](http://lists.sourceforge.net/lists/listinfo/fwknop-discuss]).
+ * For static analysis, fwknop uses the CLANG static analyzer and also the powerful
+Coverity Scan tool: ![](https://scan.coverity.com/projects/403/badge.svg)
 
 ## Building fwknop
 This distribution uses GNU autoconf for setting up the build. Please see
@@ -143,7 +244,7 @@ migrate to this version, there are some things to be aware of:
  those files.
 
 
-## For fwknop developers
+### For fwknop developers
 If you are pulling this distribution from git, you should run the
 `autogen.sh` script to generate the autoconf files. If you get errors about
 missing directories or files, try running `autogen.sh` again. After that

@@ -59,38 +59,37 @@ zero_cmd_buffers(void)
 
 static int pid_status = 0;
 
-static void
-chop_newline(char *str)
-{
-    if(str[0] != 0x0 && str[strlen(str)-1] == 0x0a)
-        str[strlen(str)-1] = 0x0;
-    return;
-}
-
 static int
 rule_exists_no_chk_support(const fko_srv_options_t * const opts,
-        const struct fw_chain * const fwc, const unsigned int proto,
-        const char * const srcip, const char * const dstip,
-        const unsigned int port, const unsigned int exp_ts)
+        const struct fw_chain * const fwc,
+        const unsigned int proto,
+        const char * const srcip,
+        const char * const dstip,
+        const unsigned int port,
+        const char * const natip,
+        const unsigned int nat_port,
+        const unsigned int exp_ts)
 {
     int     rule_exists=0;
-    char    cmd_buf[CMD_BUFSIZE]       = {0};
-    char    target_search[CMD_BUFSIZE] = {0};
-    char    proto_search[CMD_BUFSIZE]  = {0};
-    char    srcip_search[CMD_BUFSIZE]  = {0};
-    char    dstip_search[CMD_BUFSIZE]  = {0};
-    char    port_search[CMD_BUFSIZE]   = {0};
-    char    exp_ts_search[CMD_BUFSIZE] = {0};
+    char    ipt_line_buf[CMD_BUFSIZE]    = {0};
+    char    target_search[CMD_BUFSIZE]   = {0};
+    char    proto_search[CMD_BUFSIZE]    = {0};
+    char    srcip_search[CMD_BUFSIZE]    = {0};
+    char    dstip_search[CMD_BUFSIZE]    = {0};
+    char    natip_search[CMD_BUFSIZE]    = {0};
+    char    port_search[CMD_BUFSIZE]     = {0};
+    char    nat_port_search[CMD_BUFSIZE] = {0};
+    char    exp_ts_search[CMD_BUFSIZE]   = {0};
+    char    *ndx = NULL;
 
 #if CODE_COVERAGE
-    int pid_status = 0;
     /* If we're maximizing code coverage, then exercise the run_extcmd_write()
      * function which is normally only used for the PF firewall. This is to
      * maximize code coverage in conjunction with the test suite, and is never
      * compiled in for a production release of fwknop.
     */
-    if(run_extcmd_write("/bin/grep -v test", "/bin/echo test", &pid_status, opts) != 0)
-        log_msg(LOG_WARNING, "Code coverage: Could not execute command");
+    if(run_extcmd_write("/bin/grep -v test", "/bin/echo test", &pid_status, opts) == 0)
+        log_msg(LOG_WARNING, "[ignore] Code coverage: Executed command");
 #endif
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
@@ -108,29 +107,71 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     else
         snprintf(proto_search, CMD_BUFSIZE-1, " %u ", proto);
 
-    snprintf(port_search, CMD_BUFSIZE-1, ":%u ", port);
+    snprintf(port_search, CMD_BUFSIZE-1, "dpt:%u ", port);
+    snprintf(nat_port_search, CMD_BUFSIZE-1, ":%u", nat_port);
     snprintf(target_search, CMD_BUFSIZE-1, " %s ", fwc->target);
-    snprintf(srcip_search, CMD_BUFSIZE-1, " %s ", srcip);
+
+    if (srcip != NULL)
+        snprintf(srcip_search, CMD_BUFSIZE-1, " %s ", srcip);
+
     if (dstip != NULL)
-    {
         snprintf(dstip_search, CMD_BUFSIZE-1, " %s ", dstip);
-    }
+
+    if (natip != NULL)
+        snprintf(dstip_search, CMD_BUFSIZE-1, " to:%s", natip);
+
     snprintf(exp_ts_search, CMD_BUFSIZE-1, "%u ", exp_ts);
 
-    /* search for each of the substrings - yes, matches from different
-     * rules may get triggered here, but the expiration time is the
+    /* search for each of the substrings - the rule expiration time is the
      * primary search method
     */
-    if(search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, exp_ts_search, &pid_status, opts)
-            && (proto == ANY_PROTO) ? 1 :
-                search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, proto_search, &pid_status, opts)
-            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, srcip_search, &pid_status, opts)
-            && (dstip == NULL) ? 1 :
-                search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, dstip_search, &pid_status, opts)
-            && search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, target_search, &pid_status, opts)
-            && (port == ANY_PORT) ? 1 :
-                search_extcmd(cmd_buf, WANT_STDERR, NO_TIMEOUT, port_search, &pid_status, opts))
-        rule_exists = 1;
+    if(search_extcmd_getline(cmd_buf, ipt_line_buf,
+                CMD_BUFSIZE, NO_TIMEOUT, exp_ts_search, &pid_status, opts))
+    {
+        chop_newline(ipt_line_buf);
+        /* we have an iptables policy rule that matches the
+         * expiration time, so make sure this rule matches the
+         * other fields too. If not, then it is for different
+         * access requested by a separate SPA packet.
+        */
+        if(((proto == ANY_PROTO) ? 1 : (strstr(ipt_line_buf, proto_search) != NULL))
+            && ((srcip == NULL) ? 1 : (strstr(ipt_line_buf, srcip_search) != NULL))
+            && ((dstip == NULL) ? 1 : (strstr(ipt_line_buf, dstip_search) != NULL))
+            && ((natip == NULL) ? 1 : (strstr(ipt_line_buf, natip_search) != NULL))
+            && (strstr(ipt_line_buf, target_search) != NULL)
+            && ((port == ANY_PORT) ? 1 : (strstr(ipt_line_buf, port_search) != NULL)))
+        {
+            rule_exists = 1;
+        }
+    }
+
+    /* If there is a nat port, we have to qualify it as part
+     * of the 'to:<ip>:<port>' portion of the rule (at the end)
+    */
+    if(rule_exists && nat_port != NAT_ANY_PORT)
+    {
+        ndx = strstr(ipt_line_buf, " to:");
+        /* Make sure there isn't a duplicate " to:" string (i.e. if someone
+         * was trying to be tricky with the iptables comment match).
+        */
+        if(ndx != NULL && (strstr((ndx+strlen(" to:")), " to:") == NULL))
+        {
+            ndx = strstr((ndx+strlen(" to:")), nat_port_search);
+            if (ndx == NULL)
+            {
+                rule_exists = 0;
+            }
+            else if((*(ndx+strlen(nat_port_search)) != '\0')
+                    && (*(ndx+strlen(nat_port_search)) != ' '))
+            {
+                rule_exists = 0;
+            }
+        }
+        else
+        {
+            rule_exists = 0;
+        }
+    }
 
     if(rule_exists)
         log_msg(LOG_DEBUG,
@@ -160,18 +201,21 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
             WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
     chop_newline(err_buf);
 
-    log_msg(LOG_DEBUG, "rule_exists_chk_support() CMD: '%s' (res: %d, err: %s)",
-        cmd_buf, res, err_buf);
+    log_msg(LOG_DEBUG,
+            "rule_exists_chk_support() CMD: '%s' (res: %d, err: %s)",
+            cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res) && strlen(err_buf))
     {
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s does not exist",
+        log_msg(LOG_DEBUG,
+                "rule_exists_chk_support() Rule : '%s' in %s does not exist",
                 rule, chain);
     }
     else
     {
         rule_exists = 1;
-        log_msg(LOG_DEBUG, "rule_exists_chk_support() Rule : '%s' in %s already exists",
+        log_msg(LOG_DEBUG,
+                "rule_exists_chk_support() Rule : '%s' in %s already exists",
                 rule, chain);
     }
 
@@ -180,9 +224,14 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
 
 static int
 rule_exists(const fko_srv_options_t * const opts,
-        const struct fw_chain * const fwc, const char * const rule,
-        const unsigned int proto, const char * const srcip,
-        const char * const dstip, const unsigned int port,
+        const struct fw_chain * const fwc,
+        const char * const rule,
+        const unsigned int proto,
+        const char * const srcip,
+        const char * const dstip,
+        const unsigned int port,
+        const char * const nat_ip,
+        const unsigned int nat_port,
         const unsigned int exp_ts)
 {
     int rule_exists = 0;
@@ -191,7 +240,8 @@ rule_exists(const fko_srv_options_t * const opts,
         rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule);
     else
         rule_exists = rule_exists_no_chk_support(opts, fwc, proto, srcip,
-                (opts->fw_config->use_destination ? dstip : NULL), port, exp_ts);
+                (opts->fw_config->use_destination ? dstip : NULL), port,
+                nat_ip, nat_port, exp_ts);
 
     if(rule_exists == 1)
         log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s already exists",
@@ -316,7 +366,8 @@ comment_match_exists(const fko_srv_options_t * const opts)
     chop_newline(cmd_out);
 
     if(!EXTCMD_IS_SUCCESS(res))
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
+        log_msg(LOG_ERR, "comment_match_exists() Error %i from cmd:'%s': %s",
+                res, cmd_buf, cmd_out);
 
     ndx = strstr(cmd_out, TMP_COMMENT);
     if(ndx == NULL)
@@ -346,7 +397,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
 static int
 add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0;
+    int res = 0, rv = 0;
 
     zero_cmd_buffers();
 
@@ -365,13 +416,17 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
         cmd_buf, res, err_buf);
 
     if(EXTCMD_IS_SUCCESS(res))
+    {
         log_msg(LOG_INFO, "Added jump rule from chain: %s to chain: %s",
             fwc.chain[chain_num].from_chain,
             fwc.chain[chain_num].to_chain);
+        rv = 1;
+    }
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_ERR, "add_jump_rule() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
-    return res;
+    return rv;
 }
 
 static int
@@ -399,7 +454,8 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
             fwc.chain[chain_num].table,
             fwc.chain[chain_num].to_chain);
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_ERR, "chain_exists() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
     return res;
 }
@@ -427,10 +483,10 @@ jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int cha
 }
 
 static int
-jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts, const int chain_num)
+jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts,
+        const int chain_num)
 {
     int     exists = 0;
-    char    cmd_buf[CMD_BUFSIZE]      = {0};
     char    chain_search[CMD_BUFSIZE] = {0};
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
@@ -484,9 +540,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         fprintf(stdout, "Listing all iptables rules in applicable tables...\n");
         fflush(stdout);
 
-        for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
         {
-
             if(fwc.chain[i].target[0] == '\0')
                 continue;
 
@@ -508,7 +563,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
             {
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
                 got_err++;
             }
         }
@@ -518,9 +574,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
         fprintf(stdout, "Listing rules in fwknopd iptables chains...\n");
         fflush(stdout);
 
-        for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
         {
-
             if(fwc.chain[i].target[0] == '\0')
                 continue;
 
@@ -546,7 +601,8 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
             {
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
                 got_err++;
             }
         }
@@ -562,7 +618,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 {
     int     i, res, cmd_ctr = 0;
 
-    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+    for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
@@ -591,7 +647,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
             /* Expect full success on this */
             if(! EXTCMD_IS_SUCCESS(res))
-                log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+                log_msg(LOG_ERR, "delete_all_chains() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
 
             cmd_ctr++;
         }
@@ -615,7 +672,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            log_msg(LOG_ERR, "delete_all_chains() Error %i from cmd:'%s': %s",
+                    res, cmd_buf, err_buf);
 
         zero_cmd_buffers();
 
@@ -634,7 +692,8 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
         /* Expect full success on this */
         if(! EXTCMD_IS_SUCCESS(res))
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            log_msg(LOG_ERR, "delete_all_chains() Error %i from cmd:'%s': %s",
+                    res, cmd_buf, err_buf);
     }
     return;
 }
@@ -642,7 +701,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 static int
 create_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
-    int res = 0;
+    int res = 0, rv = 0;
 
     zero_cmd_buffers();
 
@@ -662,24 +721,31 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
         cmd_buf, res, err_buf);
 
     /* Expect full success on this */
-    if(! EXTCMD_IS_SUCCESS(res))
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+    if(EXTCMD_IS_SUCCESS(res))
+        rv = 1;
+    else
+        log_msg(LOG_ERR, "create_chain() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
-    return res;
+    return rv;
 }
 
-static void
+static int
 mk_chain(const fko_srv_options_t * const opts, const int chain_num)
 {
+    int err = 0;
+
     /* Make sure the required chain and jump rule exist
     */
-    if(chain_exists(opts, chain_num) == 0)
-        create_chain(opts, chain_num);
+    if(! chain_exists(opts, chain_num))
+        if(! create_chain(opts, chain_num))
+            err++;
 
-    if (jump_rule_exists(opts, chain_num) == 0)
-        add_jump_rule(opts, chain_num);
+    if (! jump_rule_exists(opts, chain_num))
+        if(! add_jump_rule(opts, chain_num))
+            err++;
 
-    return;
+    return err;
 }
 
 /* Create the fwknop custom chains (at least those that are configured).
@@ -689,26 +755,12 @@ create_fw_chains(const fko_srv_options_t * const opts)
 {
     int     i, got_err = 0;
 
-    for(i=0; i<(NUM_FWKNOP_ACCESS_TYPES); i++)
+    for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
         if(fwc.chain[i].target[0] == '\0')
             continue;
 
-        if(chain_exists(opts, i) == 0)
-        {
-
-            /* Create the chain
-            */
-            if(! EXTCMD_IS_SUCCESS(create_chain(opts, i)))
-                got_err++;
-
-            /* Then create the jump rule to that chain if it
-             * doesn't already exist (which is possible)
-            */
-            if(jump_rule_exists(opts, i) == 0)
-                if(! EXTCMD_IS_SUCCESS(add_jump_rule(opts, i)))
-                    got_err++;
-        }
+        got_err += mk_chain(opts, i);
     }
 
     return(got_err);
@@ -812,7 +864,6 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 int
 fw_config_init(fko_srv_options_t * const opts)
 {
-
     memset(&fwc, 0x0, sizeof(struct fw_config));
 
     /* Set our firewall exe command path (iptables in most cases).
@@ -830,7 +881,7 @@ fw_config_init(fko_srv_options_t * const opts)
     if(set_fw_chain_conf(IPT_INPUT_ACCESS, opts->config[CONF_IPT_INPUT_ACCESS]) != 1)
         return 0;
 
-    /* The FWKNOP_OUTPUT_ACCESS requires ENABLE_IPT_OUTPUT_ACCESS be Y
+    /* The FWKNOP_OUTPUT_ACCESS requires ENABLE_IPT_OUTPUT_ACCESS == Y
     */
     if(strncasecmp(opts->config[CONF_ENABLE_IPT_OUTPUT], "Y", 1)==0)
         if(set_fw_chain_conf(IPT_OUTPUT_ACCESS, opts->config[CONF_IPT_OUTPUT_ACCESS]) != 1)
@@ -846,32 +897,23 @@ fw_config_init(fko_srv_options_t * const opts)
         if(set_fw_chain_conf(IPT_DNAT_ACCESS, opts->config[CONF_IPT_DNAT_ACCESS]) != 1)
             return 0;
 
-        /* SNAT (whichever mode) requires ENABLE_IPT_SNAT = Y
+        /* Requires ENABLE_IPT_SNAT = Y
         */
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1)==0)
         {
-            if(opts->config[CONF_SNAT_TRANSLATE_IP] == NULL
-                    || ! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
-            {
-                fwc.use_masquerade = 1;
-                if(set_fw_chain_conf(IPT_MASQUERADE_ACCESS, opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
-                    return 0;
-            }
-            else
-            {
-                if(is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
-                {
-                    if(set_fw_chain_conf(IPT_SNAT_ACCESS, opts->config[CONF_IPT_SNAT_ACCESS]) != 1)
-                        return 0;
-                }
-                else
-                {
-                    return 0;
-                }
-            }
+            /* Support both SNAT and MASQUERADE - this will be controlled
+             * via the access.conf configuration for individual rules
+            */
+            if(set_fw_chain_conf(IPT_MASQUERADE_ACCESS,
+                        opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
+                return 0;
+
+            if(set_fw_chain_conf(IPT_SNAT_ACCESS,
+                        opts->config[CONF_IPT_SNAT_ACCESS]) != 1)
+                return 0;
         }
     }
-    
+
     if(strncasecmp(opts->config[CONF_ENABLE_DESTINATION_RULE], "Y", 1)==0)
     {
         fwc.use_destination = 1;
@@ -907,7 +949,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(create_fw_chains(opts) != 0)
     {
         log_msg(LOG_WARNING,
-                "Warning: Errors detected during fwknop custom chain creation");
+                "fw_initialize() Warning: Errors detected during fwknop custom chain creation");
         res = 0;
     }
 
@@ -965,7 +1007,8 @@ create_rule(const fko_srv_options_t * const opts,
         res = 1;
     }
     else
-        log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+        log_msg(LOG_ERR, "create_rule() Error %i from cmd:'%s': %s",
+                res, cmd_buf, err_buf);
 
     return res;
 }
@@ -974,11 +1017,17 @@ static void
 ipt_rule(const fko_srv_options_t * const opts,
         const char * const complete_rule_buf,
         const char * const fw_rule_macro,
-        const char * const srcip, const char * const dstip,
-        const unsigned int proto, const unsigned int port,
+        const char * const srcip,
+        const char * const dstip,
+        const unsigned int proto,
+        const unsigned int port,
+        const char * const nat_ip,
+        const unsigned int nat_port,
         struct fw_chain * const chain,
-        const unsigned int exp_ts, const time_t now,
-        const char * const msg, const char * const access_msg)
+        const unsigned int exp_ts,
+        const time_t now,
+        const char * const msg,
+        const char * const access_msg)
 {
     char rule_buf[CMD_BUFSIZE] = {0};
 
@@ -1001,12 +1050,12 @@ ipt_rule(const fko_srv_options_t * const opts,
         );
     }
 
-    /* Check to make sure that the chain and jump rule exists
+    /* Check to make sure that the chain and jump rule exist
     */
     mk_chain(opts, chain->type);
 
-    if(rule_exists(opts, chain, rule_buf,
-                proto, srcip, dstip, port, exp_ts) == 0)
+    if(rule_exists(opts, chain, rule_buf, proto, srcip,
+                dstip, port, nat_ip, nat_port, exp_ts) == 0)
     {
         if(create_rule(opts, chain->to_chain, rule_buf))
         {
@@ -1028,6 +1077,223 @@ ipt_rule(const fko_srv_options_t * const opts,
     return;
 }
 
+static void forward_access_rule(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc,
+        struct fw_chain * const fwd_chain,
+        const char * const nat_ip,
+        const unsigned int nat_port,
+        const unsigned int fst_proto,
+        const unsigned int fst_port,
+        spa_data_t * const spadat,
+        const unsigned int exp_ts,
+        const time_t now)
+{
+    char   rule_buf[CMD_BUFSIZE] = {0};
+
+    log_msg(LOG_DEBUG,
+            "forward_access_rule() forward_all: %d, nat_ip: %s, nat_port: %d",
+            acc->forward_all, nat_ip, nat_port);
+
+    if(acc->forward_all)
+    {
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_FWD_ALL_RULE_ARGS,
+            fwd_chain->table,
+            spadat->use_src_ip,
+            exp_ts,
+            fwd_chain->target
+        );
+
+        /* Make a global ACCEPT rule for all ports/protocols
+        */
+        ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
+            fwd_chain, exp_ts, now, "FORWARD ALL", "*/*");
+    }
+    else
+    {
+        /* Make the FORWARD access rule
+        */
+        ipt_rule(opts, NULL, IPT_FWD_RULE_ARGS, spadat->use_src_ip,
+            nat_ip, fst_proto, nat_port, NULL, NAT_ANY_PORT,
+            fwd_chain, exp_ts, now, "FORWARD", spadat->spa_message_remain);
+    }
+    return;
+}
+
+static void dnat_rule(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc,
+        struct fw_chain * const dnat_chain,
+        const char * const nat_ip,
+        const unsigned int nat_port,
+        const unsigned int fst_proto,
+        const unsigned int fst_port,
+        spa_data_t * const spadat,
+        const unsigned int exp_ts,
+        const time_t now)
+{
+    char   rule_buf[CMD_BUFSIZE] = {0};
+
+    log_msg(LOG_DEBUG, "dnat_rule() forward_all: %d, nat_ip: %s, nat_port: %d",
+            acc->forward_all, nat_ip, nat_port);
+
+    if(acc->forward_all)
+    {
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_ALL_RULE_ARGS,
+            dnat_chain->table,
+            spadat->use_src_ip,
+            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            exp_ts,
+            dnat_chain->target,
+            nat_ip
+        );
+
+        /* Make a global DNAT rule for all ports/protocols
+        */
+        ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
+            dnat_chain, exp_ts, now, "DNAT ALL", "*/*");
+    }
+    else
+    {
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_RULE_ARGS,
+            dnat_chain->table,
+            fst_proto,
+            spadat->use_src_ip,
+            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            fst_port,
+            exp_ts,
+            dnat_chain->target,
+            nat_ip,
+            nat_port
+        );
+
+        ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            fst_proto, fst_port, nat_ip, nat_port, dnat_chain, exp_ts, now,
+            "DNAT", spadat->spa_message_remain);
+    }
+    return;
+}
+
+static void snat_rule(const fko_srv_options_t * const opts,
+        const acc_stanza_t * const acc,
+        const char * const nat_ip,
+        const unsigned int nat_port,
+        const unsigned int fst_proto,
+        const unsigned int fst_port,
+        spa_data_t * const spadat,
+        const unsigned int exp_ts,
+        const time_t now)
+{
+    char     rule_buf[CMD_BUFSIZE] = {0};
+    char     snat_target[SNAT_TARGET_BUFSIZE] = {0};
+    struct   fw_chain *snat_chain = NULL;
+
+    log_msg(LOG_DEBUG,
+            "snat_rule() forward_all: %d, nat_ip: %s, nat_port: %d, force_snat: %d, force_snat_ip: %s, force_masq: %d",
+            acc->forward_all, nat_ip, nat_port, acc->force_snat,
+            (acc->force_snat_ip == NULL) ? "(NONE)" : acc->force_snat_ip,
+            acc->force_masquerade);
+
+    if(acc->forward_all)
+    {
+        /* Default to MASQUERADE */
+        snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
+        snprintf(snat_target, SNAT_TARGET_BUFSIZE-1, " ");
+
+        /* Add SNAT or MASQUERADE rules.
+        */
+        if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s", acc->force_snat_ip);
+        }
+        else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s", opts->config[CONF_SNAT_TRANSLATE_IP]);
+        }
+
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_SNAT_ALL_RULE_ARGS,
+            snat_chain->table,
+            spadat->use_src_ip,
+            exp_ts,
+            snat_chain->target,
+            snat_target
+        );
+
+        ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
+            snat_chain, exp_ts, now, "SNAT ALL", "*/*");
+    }
+    else
+    {
+        /* Add SNAT or MASQUERADE rules.
+        */
+        if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s:%i", acc->force_snat_ip, fst_port);
+        }
+        else if(acc->force_snat && acc->force_masquerade)
+        {
+            /* Using MASQUERADE */
+            snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-ports %i", fst_port);
+        }
+        else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
+        {
+            /* Using static SNAT */
+            snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
+                fst_port);
+        }
+        else
+        {
+            /* Using MASQUERADE */
+            snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
+            snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
+                "--to-ports %i", fst_port);
+        }
+
+        memset(rule_buf, 0, CMD_BUFSIZE);
+
+        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_SNAT_RULE_ARGS,
+            snat_chain->table,
+            fst_proto,
+            nat_ip,
+            nat_port,
+            exp_ts,
+            snat_chain->target,
+            snat_target
+        );
+
+        ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+                NULL, fst_proto, nat_port, nat_ip, nat_port,
+                snat_chain, exp_ts, now, "SNAT",
+                spadat->spa_message_remain);
+    }
+    return;
+}
+
 /****************************************************************************/
 
 /* Rule Processing - Create an access request...
@@ -1036,16 +1302,8 @@ int
 process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
-    char             nat_ip[MAX_IPV4_STR_LEN] = {0};
-    char             snat_target[SNAT_TARGET_BUFSIZE] = {0};
-    char             rule_buf[CMD_BUFSIZE] = {0};
-    char            *ndx;
-
-    unsigned int     nat_port = 0;
-
-    acc_port_list_t *port_list = NULL;
-    acc_port_list_t *ple = NULL;
-
+    char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    unsigned int    nat_port = 0;
     unsigned int    fst_proto;
     unsigned int    fst_port;
 
@@ -1053,8 +1311,11 @@ process_spa_request(const fko_srv_options_t * const opts,
     struct fw_chain * const out_chain  = &(opts->fw_config->chain[IPT_OUTPUT_ACCESS]);
     struct fw_chain * const fwd_chain  = &(opts->fw_config->chain[IPT_FORWARD_ACCESS]);
     struct fw_chain * const dnat_chain = &(opts->fw_config->chain[IPT_DNAT_ACCESS]);
-    struct fw_chain *snat_chain; /* We assign this later (if we need to). */
 
+    acc_port_list_t *port_list = NULL;
+    acc_port_list_t *ple = NULL;
+
+    char            *ndx = NULL;
     int             res = 0, is_err;
     time_t          now;
     unsigned int    exp_ts;
@@ -1086,45 +1347,14 @@ process_spa_request(const fko_srv_options_t * const opts,
     time(&now);
     exp_ts = now + spadat->fw_access_timeout;
 
-    /* For straight access requests, we currently support multiple proto/port
-     * request.
+    /* deal with SPA packets that themselves request a NAT operation
     */
-    if((spadat->message_type == FKO_ACCESS_MSG
-      || spadat->message_type == FKO_CLIENT_TIMEOUT_ACCESS_MSG) && !acc->force_nat)
-    {
-
-        /* Create an access command for each proto/port for the source ip.
-        */
-        while(ple != NULL)
-        {
-            ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                ple->proto, ple->port, in_chain, exp_ts, now, "access",
-                spadat->spa_message_remain);
-
-            /* If we have to make an corresponding OUTPUT rule if out_chain target
-            * is not NULL.
-            */
-            if(strlen(out_chain->to_chain))
-            {
-                ipt_rule(opts, NULL, IPT_OUT_RULE_ARGS, spadat->use_src_ip,
-                    (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                    ple->proto, ple->port, out_chain, exp_ts, now, "OUTPUT",
-                    spadat->spa_message_remain);
-
-            }
-            ple = ple->next;
-        }
-    }
-    /* NAT requests... */
-    else if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+    if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
       || spadat->message_type == FKO_NAT_ACCESS_MSG
       || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG
       || acc->force_nat)
     {
-        /* Parse out the NAT IP and Port components.
-        */
         if(acc->force_nat)
         {
             strlcpy(nat_ip, acc->force_nat_ip, sizeof(nat_ip));
@@ -1159,113 +1389,51 @@ process_spa_request(const fko_srv_options_t * const opts,
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
                 (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                fst_proto, nat_port, in_chain, exp_ts, now, "local NAT",
-                spadat->spa_message_remain);
+                fst_proto, nat_port, nat_ip, nat_port, in_chain, exp_ts,
+                now, "local NAT", spadat->spa_message_remain);
         }
         else if(strlen(fwd_chain->to_chain))
         {
-            if(acc->forward_all)
-            {
-
-                memset(rule_buf, 0, CMD_BUFSIZE);
-
-                snprintf(rule_buf, CMD_BUFSIZE-1, IPT_FWD_ALL_RULE_ARGS,
-                    fwd_chain->table,
-                    spadat->use_src_ip,
-                    exp_ts,
-                    fwd_chain->target
-                );
-
-                /* Make a global ACCEPT rule for all ports/protocols
-                */
-                ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-                    NULL, ANY_PROTO, ANY_PORT, fwd_chain, exp_ts, now,
-                    "FORWARD ALL", "*/*");
-            }
-            else
-            {
-                /* Make our FORWARD and NAT access rules
-                */
-                ipt_rule(opts, NULL, IPT_FWD_RULE_ARGS, spadat->use_src_ip,
-                    nat_ip, fst_proto, nat_port, fwd_chain, exp_ts, now,
-                    "FORWARD", spadat->spa_message_remain);
-            }
+            /* FORWARD access rule
+            */
+            forward_access_rule(opts, acc, fwd_chain, nat_ip,
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
         }
 
-        if(!acc->disable_dnat && strlen(dnat_chain->to_chain))
-        {
-            memset(rule_buf, 0, CMD_BUFSIZE);
+        /* DNAT rule
+        */
+        if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
+            dnat_rule(opts, acc, dnat_chain, nat_ip,
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
 
-            snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_RULE_ARGS,
-                dnat_chain->table,
-                fst_proto,
-                spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                fst_port,
-                exp_ts,
-                dnat_chain->target,
-                nat_ip,
-                nat_port
-            );
-
-            ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
-                fst_proto, fst_port, dnat_chain, exp_ts, now, "DNAT",
-                spadat->spa_message_remain);
-        }
-
-        /* If SNAT (or MASQUERADE) is wanted, then we add those rules here as well.
+        /* SNAT rule
         */
         if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+            snat_rule(opts, acc, nat_ip, nat_port,
+                    fst_proto, fst_port, spadat, exp_ts, now);
+    }
+    else /* Non-NAT request - this is the typical case. */
+    {
+        /* Create an access command for each proto/port for the source ip.
+        */
+        while(ple != NULL)
         {
-            /* Add SNAT or MASQUERADE rules.
+            ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
+                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                ple->proto, ple->port, NULL, NAT_ANY_PORT,
+                in_chain, exp_ts, now, "access", spadat->spa_message_remain);
+
+            /* We need to make a corresponding OUTPUT rule if out_chain target
+             * is not NULL.
             */
-            if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip))
+            if(strlen(out_chain->to_chain))
             {
-                /* Using static SNAT */
-                snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-source %s:%i", acc->force_snat_ip, fst_port);
+                ipt_rule(opts, NULL, IPT_OUT_RULE_ARGS, spadat->use_src_ip,
+                    (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                    ple->proto, ple->port, NULL, NAT_ANY_PORT,
+                    out_chain, exp_ts, now, "OUTPUT", spadat->spa_message_remain);
             }
-            else if(acc->force_snat && acc->force_masquerade)
-            {
-                /* Using MASQUERADE */
-                snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-ports %i", fst_port);
-            }
-            else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-                && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP]))
-            {
-                /* Using static SNAT */
-                snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
-                    fst_port);
-            }
-            else
-            {
-                /* Using MASQUERADE */
-                snat_chain = &(opts->fw_config->chain[IPT_MASQUERADE_ACCESS]);
-                snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                    "--to-ports %i", fst_port);
-            }
-
-            memset(rule_buf, 0, CMD_BUFSIZE);
-
-            snprintf(rule_buf, CMD_BUFSIZE-1, IPT_SNAT_RULE_ARGS,
-                snat_chain->table,
-                fst_proto,
-                nat_ip,
-                nat_port,
-                exp_ts,
-                snat_chain->target,
-                snat_target
-            );
-
-            ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-                    NULL, fst_proto, nat_port, snat_chain, exp_ts, now, "SNAT",
-                    spadat->spa_message_remain);
+            ple = ple->next;
         }
     }
 
@@ -1276,18 +1444,170 @@ process_spa_request(const fko_srv_options_t * const opts,
     return(res);
 }
 
+static void
+rm_expired_rules(const fko_srv_options_t * const opts,
+        const char * const ipt_output_buf,
+        char *ndx, struct fw_chain *ch, int cpos, time_t now)
+{
+    char        exp_str[12]     = {0};
+    char        rule_num_str[6] = {0};
+    char        *rn_start, *rn_end, *tmp_mark;
+
+    int         res, is_err, rn_offset=0, rule_num;
+    time_t      rule_exp, min_exp = 0;
+
+    /* walk the list and process rules as needed.
+    */
+    while (ndx != NULL) {
+        /* Jump forward and extract the timestamp
+        */
+        ndx += strlen(EXPIRE_COMMENT_PREFIX);
+
+        /* remember this spot for when we look for the next
+         * rule.
+        */
+        tmp_mark = ndx;
+
+        strlcpy(exp_str, ndx, sizeof(exp_str));
+        chop_spaces(exp_str);
+        if(!is_digits(exp_str))
+        {
+            /* go to the next rule if it exists
+            */
+            ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
+            continue;
+        }
+
+        rule_exp = (time_t)atoll(exp_str);
+
+        if(rule_exp <= now)
+        {
+            /* Backtrack and get the rule number and delete it.
+            */
+            rn_start = ndx;
+            while(--rn_start > ipt_output_buf)
+            {
+                if(*rn_start == '\n')
+                    break;
+            }
+
+            if(*rn_start != '\n')
+            {
+                /* This should not happen. But if it does, complain,
+                 * decrement the active rule value, and go on.
+                */
+                log_msg(LOG_ERR,
+                    "Rule parse error while finding rule line start in chain %i",
+                    cpos);
+
+                if (ch[cpos].active_rules > 0)
+                    ch[cpos].active_rules--;
+
+                break;
+            }
+            rn_start++;
+
+            rn_end = strchr(rn_start, ' ');
+            if(rn_end == NULL)
+            {
+                /* This should not happen. But if it does, complain,
+                 * decrement the active rule value, and go on.
+                */
+                log_msg(LOG_ERR,
+                    "Rule parse error while finding rule number in chain %i",
+                    cpos);
+
+                if (ch[cpos].active_rules > 0)
+                    ch[cpos].active_rules--;
+
+                break;
+            }
+
+            strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
+
+            rule_num = strtol_wrapper(rule_num_str, rn_offset, RCHK_MAX_IPT_RULE_NUM,
+                    NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                log_msg(LOG_ERR,
+                    "Rule parse error while finding rule number in chain %i",
+                    cpos);
+
+                if (ch[cpos].active_rules > 0)
+                    ch[cpos].active_rules--;
+
+                break;
+            }
+
+            zero_cmd_buffers();
+
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
+                opts->fw_config->fw_command,
+                ch[cpos].table,
+                ch[cpos].to_chain,
+                rule_num - rn_offset /* account for position of previously
+                                        deleted rule with rn_offset */
+            );
+
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
+                    WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
+            chop_newline(err_buf);
+
+            log_msg(LOG_DEBUG, "rm_expired_rules() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+            if(EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u",
+                    rule_num_str, ch[cpos].to_chain, rule_exp
+                );
+
+                rn_offset++;
+
+                if (ch[cpos].active_rules > 0)
+                    ch[cpos].active_rules--;
+            }
+            else
+                log_msg(LOG_ERR, "rm_expired_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
+
+        }
+        else
+        {
+            /* Track the minimum future rule expire time.
+            */
+            min_exp = (min_exp < rule_exp) ? min_exp : rule_exp;
+        }
+
+        /* Push our tracking index forward beyond (just processed) _exp_
+         * string so we can continue to the next rule in the list.
+        */
+        ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
+    }
+
+    /* Set the next pending expire time accordingly. 0 if there are no
+     * more rules, or whatever the next expected (min_exp) time will be.
+    */
+    if(ch[cpos].active_rules < 1)
+        ch[cpos].next_expire = 0;
+    else if(min_exp)
+        ch[cpos].next_expire = min_exp;
+
+    return;
+}
+
 /* Iterate over the configure firewall access chains and purge expired
  * firewall rules.
 */
 void
-check_firewall_rules(const fko_srv_options_t * const opts)
+check_firewall_rules(const fko_srv_options_t * const opts,
+        const int chk_rm_all)
 {
-    char             exp_str[12]     = {0};
-    char             rule_num_str[6] = {0};
-    char            *ndx, *rn_start, *rn_end, *tmp_mark;
+    char            *ndx;
+    char            ipt_output_buf[STANDARD_CMD_OUT_BUFSIZE] = {0};
 
-    int             i, res, rn_offset, rule_num, is_err;
-    time_t          now, rule_exp, min_exp = 0;
+    int             i, res;
+    time_t          now;
 
     struct fw_chain *ch = opts->fw_config->chain;
 
@@ -1300,15 +1620,21 @@ check_firewall_rules(const fko_srv_options_t * const opts)
         /* If there are no active rules or we have not yet
          * reached our expected next expire time, continue.
         */
-        if(ch[i].active_rules == 0 || ch[i].next_expire > now)
+        if(!chk_rm_all && (ch[i].active_rules == 0 || ch[i].next_expire > now))
+            continue;
+
+        if(ch[i].table[0] == '\0' || ch[i].to_chain[i] == '\0')
             continue;
 
         zero_cmd_buffers();
+        memset(ipt_output_buf, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 
-        rn_offset = 0;
-
-        /* There should be a rule to delete.  Get the current list of
-         * rules for this chain and delete the ones that are expired.
+        /* Get the current list of rules for this chain and delete
+         * any that have expired. Note that chk_rm_all puts us in
+         * garbage collection mode, and allows any rules that have
+         * been manually added (potentially by a program separate
+         * from fwknopd) to take advantage of fwknopd's timeout
+         * mechanism.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
             opts->fw_config->fw_command,
@@ -1316,27 +1642,31 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             ch[i].to_chain
         );
 
-        res = run_extcmd(cmd_buf, cmd_out, STANDARD_CMD_OUT_BUFSIZE,
+        res = run_extcmd(cmd_buf, ipt_output_buf, STANDARD_CMD_OUT_BUFSIZE,
                 WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
-        chop_newline(cmd_out);
+        chop_newline(ipt_output_buf);
 
-        log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, cmd_out: %s)",
-            cmd_buf, res, cmd_out);
+        log_msg(LOG_DEBUG,
+            "check_firewall_rules() CMD: '%s' (res: %d, ipt_output_buf: %s)",
+            cmd_buf, res, ipt_output_buf);
 
         if(!EXTCMD_IS_SUCCESS(res))
         {
-            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, cmd_out);
+            log_msg(LOG_ERR,
+                    "check_firewall_rules() Error %i from cmd:'%s': %s",
+                    res, cmd_buf, ipt_output_buf);
             continue;
         }
 
-        log_msg(LOG_DEBUG, "RES=%i, CMD_BUF: %s\nRULES LIST: %s", res, cmd_buf, cmd_out);
+        log_msg(LOG_DEBUG, "RES=%i, CMD_BUF: %s\nRULES LIST: %s",
+                res, cmd_buf, ipt_output_buf);
 
-        ndx = strstr(cmd_out, EXPIRE_COMMENT_PREFIX);
+        ndx = strstr(ipt_output_buf, EXPIRE_COMMENT_PREFIX);
         if(ndx == NULL)
         {
-            /* we did not find an expected rule.
+            /* we did not find a candidate rule to expire
             */
-            log_msg(LOG_ERR,
+            log_msg(LOG_DEBUG,
                 "Did not find expire comment in rules list %i", i);
 
             if (ch[i].active_rules > 0)
@@ -1345,130 +1675,10 @@ check_firewall_rules(const fko_srv_options_t * const opts)
             continue;
         }
 
-        /* walk the list and process rules as needed.
-        */
-        while (ndx != NULL) {
-            /* Jump forward and extract the timestamp
-            */
-            ndx += strlen(EXPIRE_COMMENT_PREFIX);
-
-            /* remember this spot for when we look for the next
-             * rule.
-            */
-            tmp_mark = ndx;
-
-            strlcpy(exp_str, ndx, sizeof(exp_str));
-            rule_exp = (time_t)atoll(exp_str);
-
-            if(rule_exp <= now)
-            {
-                /* Backtrack and get the rule number and delete it.
-                */
-                rn_start = ndx;
-                while(--rn_start > cmd_out)
-                {
-                    if(*rn_start == '\n')
-                        break;
-                }
-
-                if(*rn_start != '\n')
-                {
-                    /* This should not happen. But if it does, complain,
-                     * decrement the active rule value, and go on.
-                    */
-                    log_msg(LOG_ERR,
-                        "Rule parse error while finding rule line start in chain %i", i);
-
-                    if (ch[i].active_rules > 0)
-                        ch[i].active_rules--;
-
-                    break;
-                }
-                rn_start++;
-
-                rn_end = strchr(rn_start, ' ');
-                if(rn_end == NULL)
-                {
-                    /* This should not happen. But if it does, complain,
-                     * decrement the active rule value, and go on.
-                    */
-                    log_msg(LOG_ERR,
-                        "Rule parse error while finding rule number in chain %i", i);
-
-                    if (ch[i].active_rules > 0)
-                        ch[i].active_rules--;
-
-                    break;
-                }
-
-                strlcpy(rule_num_str, rn_start, (rn_end - rn_start)+1);
-
-                rule_num = strtol_wrapper(rule_num_str, rn_offset, RCHK_MAX_IPT_RULE_NUM,
-                        NO_EXIT_UPON_ERR, &is_err);
-                if(is_err != FKO_SUCCESS)
-                {
-                    log_msg(LOG_ERR,
-                        "Rule parse error while finding rule number in chain %i", i);
-
-                    if (ch[i].active_rules > 0)
-                        ch[i].active_rules--;
-
-                    break;
-                }
-
-                zero_cmd_buffers();
-
-                snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
-                    opts->fw_config->fw_command,
-                    ch[i].table,
-                    ch[i].to_chain,
-                    rule_num - rn_offset
-                );
-
-                res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
-                        WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
-                chop_newline(err_buf);
-
-                log_msg(LOG_DEBUG, "check_firewall_rules() CMD: '%s' (res: %d, err: %s)",
-                    cmd_buf, res, err_buf);
-
-                if(EXTCMD_IS_SUCCESS(res))
-                {
-                    log_msg(LOG_INFO, "Removed rule %s from %s with expire time of %u",
-                        rule_num_str, ch[i].to_chain, rule_exp
-                    );
-
-                    rn_offset++;
-
-                    if (ch[i].active_rules > 0)
-                        ch[i].active_rules--;
-                }
-                else
-                    log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
-
-            }
-            else
-            {
-                /* Track the minimum future rule expire time.
-                */
-                if(rule_exp > now)
-                    min_exp = (min_exp < rule_exp) ? min_exp : rule_exp;
-            }
-
-            /* Push our tracking index forward beyond (just processed) _exp_
-             * string so we can continue to the next rule in the list.
-            */
-            ndx = strstr(tmp_mark, EXPIRE_COMMENT_PREFIX);
-        }
-
-        /* Set the next pending expire time accordingly. 0 if there are no
-         * more rules, or whatever the next expected (min_exp) time will be.
-        */
-        if(ch[i].active_rules < 1)
-            ch[i].next_expire = 0;
-        else if(min_exp)
-            ch[i].next_expire = min_exp;
+        rm_expired_rules(opts, ipt_output_buf, ndx, ch, i, now);
     }
+
+    return;
 }
 
 int

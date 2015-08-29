@@ -9,7 +9,7 @@
 FDIR="spa-pkts.out"
 OUT_DIR="$TOP_DIR/$FDIR"
 PREV_OUT_DIR=''
-IN_DIR="test-cases/spa-pkts"
+IN_DIR="test-cases/spa-pkts.cmin"
 
 ### build up our afl-fuzz text banner
 TSTR="fwknopd,SPA,encode/decode"
@@ -29,7 +29,8 @@ fi
 ### make sure that a basic SPA packet to stdin in fwknopd -A mode works
 ./fuzzing-wrappers/helpers/fwknopd-stdin-test.sh || exit $?
 
-LD_LIBRARY_PATH=$LIB_DIR afl-fuzz -T $BANNER -t 1000 \
+LD_LIBRARY_PATH=$LIB_DIR afl-fuzz \
+    -m $MEM_LIMIT -T $BANNER -t $TIMEOUT \
     -i $IN_DIR -o $OUT_DIR $SERVER \
     -c ../conf/default_fwknopd.conf \
     -a ../conf/default_access.conf -A -f -t

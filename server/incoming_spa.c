@@ -50,13 +50,13 @@
  * error code value if there is any indication the data is not valid spa data.
 */
 static int
-preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
+preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt)
 {
-    spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
 
     char    *ndx = (char *)&(spa_pkt->packet_data);
-    int      pkt_data_len = spa_pkt->packet_data_len;
-    int      i;
+    int      i, pkt_data_len = 0;
+
+    pkt_data_len = spa_pkt->packet_data_len;
 
     /* At this point, we can reset the packet data length to 0.  This is our
      * indicator to the rest of the program that we do not have a current
@@ -133,10 +133,9 @@ preprocess_spa_data(fko_srv_options_t *opts, const char *src_ip)
         return(SPA_MSG_NOT_SPA_DATA);
 
 
-    /* --DSS:  Are there other checks we can do here ??? */
-
-    /* If we made it here, we have no reason to assume this is not SPA data
-     * (at least until we come up with more checks).
+    /* If we made it here, we have no reason to assume this is not SPA data.
+     * The ultimate test will be whether the SPA data authenticates via an
+     * HMAC anyway.
     */
     return(FKO_SUCCESS);
 }
@@ -228,7 +227,6 @@ get_raw_digest(char **digest, char *pkt_data)
     return res;
 }
 
-
 /* Popluate a spa_data struct from an initialized (and populated) FKO context.
 */
 static int
@@ -271,6 +269,53 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
     return(res);
 }
 
+static int
+check_pkt_age(const fko_srv_options_t *opts, spa_data_t *spadat,
+        const int stanza_num, const int conf_pkt_age)
+{
+    int         ts_diff;
+    time_t      now_ts;
+
+    if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
+    {
+        time(&now_ts);
+
+        ts_diff = labs(now_ts - spadat->timestamp);
+
+        if(ts_diff > conf_pkt_age)
+        {
+            log_msg(LOG_WARNING, "[%s] (stanza #%d) SPA data time difference is too great (%i seconds).",
+                spadat->pkt_source_ip, stanza_num, ts_diff);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int
+check_stanza_expiration(acc_stanza_t *acc, spa_data_t *spadat,
+        const int stanza_num)
+{
+    if(acc->access_expire_time > 0)
+    {
+        if(acc->expired)
+        {
+            return 0;
+        }
+        else
+        {
+            if(time(NULL) > acc->access_expire_time)
+            {
+                log_msg(LOG_INFO, "[%s] (stanza #%d) Access stanza has expired",
+                    spadat->pkt_source_ip, stanza_num);
+                acc->expired = 1;
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
 /* Check for access.conf stanza SOURCE match based on SPA packet
  * source IP
 */
@@ -287,6 +332,549 @@ is_src_match(acc_stanza_t *acc, const uint32_t ip)
     return 0;
 }
 
+static int
+src_check(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, char **raw_digest)
+{
+    if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
+    {
+        if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+        {
+            /* Check for a replay attack
+            */
+            if(get_raw_digest(raw_digest, (char *)spa_pkt->packet_data) != FKO_SUCCESS)
+            {
+                if (*raw_digest != NULL)
+                    free(*raw_digest);
+                return 0;
+            }
+            if (*raw_digest == NULL)
+                return 0;
+
+            if (is_replay(opts, *raw_digest) != SPA_MSG_SUCCESS)
+            {
+                free(*raw_digest);
+                return 0;
+            }
+        }
+    }
+    else
+    {
+        log_msg(LOG_WARNING,
+            "No access data found for source IP: %s", spadat->pkt_source_ip
+        );
+        return 0;
+    }
+    return 1;
+}
+
+static int
+precheck_pkt(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, char **raw_digest)
+{
+    int res = 0, packet_data_len = 0;
+
+    packet_data_len = spa_pkt->packet_data_len;
+
+    res = preprocess_spa_data(opts, spa_pkt);
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_DEBUG, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
+            spadat->pkt_source_ip, res, get_errstr(res));
+        return 0;
+    }
+
+    if(opts->foreground == 1 && opts->verbose > 2)
+    {
+        printf("[+] candidate SPA packet payload:\n");
+        hex_dump(spa_pkt->packet_data, packet_data_len);
+    }
+
+    if(! src_check(opts, spa_pkt, spadat, raw_digest))
+        return 0;
+
+    return 1;
+}
+
+static int
+src_dst_check(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, const int stanza_num)
+{
+    if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
+       (acc->destination_list != NULL
+        && ! compare_addr_list(acc->destination_list, ntohl(spa_pkt->packet_dst_ip))))
+    {
+        log_msg(LOG_DEBUG,
+                "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
+                stanza_num, spadat->pkt_source_ip, spadat->pkt_destination_ip);
+        return 0;
+    }
+    return 1;
+}
+
+/* Process command messages
+*/
+static int
+process_cmd_msg(fko_srv_options_t *opts, acc_stanza_t *acc,
+        spa_data_t *spadat, const int stanza_num, int *res)
+{
+    int             pid_status=0;
+    char            cmd_buf[MAX_SPA_CMD_LEN] = {0};
+
+    if(!acc->enable_cmd_exec)
+    {
+        log_msg(LOG_WARNING,
+            "[%s] (stanza #%d) SPA Command messages are not allowed in the current configuration.",
+            spadat->pkt_source_ip, stanza_num
+        );
+        return 0;
+    }
+    else if(opts->test)
+    {
+        log_msg(LOG_WARNING,
+            "[%s] (stanza #%d) --test mode enabled, skipping command execution.",
+            spadat->pkt_source_ip, stanza_num
+        );
+        return 0;
+    }
+    else
+    {
+        log_msg(LOG_INFO,
+            "[%s] (stanza #%d) Processing SPA Command message: command='%s'.",
+            spadat->pkt_source_ip, stanza_num, spadat->spa_message_remain
+        );
+
+        memset(cmd_buf, 0x0, sizeof(cmd_buf));
+        if(acc->enable_cmd_sudo_exec)
+        {
+            /* Run the command via sudo - this allows sudo filtering
+             * to apply to the incoming command
+            */
+            strlcpy(cmd_buf, opts->config[CONF_SUDO_EXE],
+                    sizeof(cmd_buf));
+            if(acc->cmd_sudo_exec_user != NULL
+                    && strncasecmp(acc->cmd_sudo_exec_user, "root", 4) != 0)
+            {
+                strlcat(cmd_buf, " -u ", sizeof(cmd_buf));
+                strlcat(cmd_buf, acc->cmd_sudo_exec_user, sizeof(cmd_buf));
+            }
+            if(acc->cmd_exec_group != NULL
+                    && strncasecmp(acc->cmd_sudo_exec_group, "root", 4) != 0)
+            {
+                strlcat(cmd_buf, " -g ", sizeof(cmd_buf));
+                strlcat(cmd_buf,
+                        acc->cmd_sudo_exec_group, sizeof(cmd_buf));
+            }
+            strlcat(cmd_buf, " ",  sizeof(cmd_buf));
+            strlcat(cmd_buf, spadat->spa_message_remain, sizeof(cmd_buf));
+        }
+        else
+            strlcpy(cmd_buf, spadat->spa_message_remain, sizeof(cmd_buf));
+
+        if(acc->cmd_exec_user != NULL
+                && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
+        {
+            log_msg(LOG_INFO,
+                    "[%s] (stanza #%d) Running command '%s' setuid/setgid user/group to %s/%s (UID=%i,GID=%i)",
+                spadat->pkt_source_ip, stanza_num, cmd_buf, acc->cmd_exec_user,
+                acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
+                acc->cmd_exec_uid, acc->cmd_exec_gid);
+
+            *res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
+                    cmd_buf, NULL, 0, WANT_STDERR, NO_TIMEOUT,
+                    &pid_status, opts);
+        }
+        else /* Just run it as we are (root that is). */
+        {
+            log_msg(LOG_INFO,
+                    "[%s] (stanza #%d) Running command '%s'",
+                spadat->pkt_source_ip, stanza_num, cmd_buf);
+            *res = run_extcmd(cmd_buf, NULL, 0, WANT_STDERR,
+                    5, &pid_status, opts);
+        }
+
+        /* should only call WEXITSTATUS() if WIFEXITED() is true
+        */
+        log_msg(LOG_INFO,
+            "[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d",
+            spadat->pkt_source_ip, stanza_num, *res,
+            WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);
+
+        if(WIFEXITED(pid_status))
+        {
+            if(WEXITSTATUS(pid_status) != 0)
+                *res = SPA_MSG_COMMAND_ERROR;
+        }
+        else
+            *res = SPA_MSG_COMMAND_ERROR;
+    }
+    return 1;
+}
+
+static int
+check_mode_ctx(spa_data_t *spadat, fko_ctx_t *ctx, int attempted_decrypt,
+        const int enc_type, const int stanza_num, const int res)
+{
+    if(attempted_decrypt == 0)
+    {
+        log_msg(LOG_ERR,
+            "[%s] (stanza #%d) No stanza encryption mode match for encryption type: %i.",
+            spadat->pkt_source_ip, stanza_num, enc_type);
+        return 0;
+    }
+
+    /* Do we have a valid FKO context?  Did the SPA decrypt properly?
+    */
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_WARNING, "[%s] (stanza #%d) Error creating fko context: %s",
+            spadat->pkt_source_ip, stanza_num, fko_errstr(res));
+
+        if(IS_GPG_ERROR(res))
+            log_msg(LOG_WARNING, "[%s] (stanza #%d) - GPG ERROR: %s",
+                spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+        return 0;
+    }
+
+    return 1;
+}
+
+static int
+handle_rijndael_enc(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, fko_ctx_t *ctx, int *attempted_decrypt,
+        int *cmd_exec_success, const int enc_type, const int stanza_num,
+        int *res)
+{
+    if(acc->use_rijndael)
+    {
+        if(acc->key == NULL)
+        {
+            log_msg(LOG_ERR,
+                "[%s] (stanza #%d) No KEY for RIJNDAEL encrypted messages",
+                spadat->pkt_source_ip, stanza_num
+            );
+            return 0;
+        }
+
+        /* Command mode messages may be quite long
+        */
+        if(acc->enable_cmd_exec || enc_type == FKO_ENCRYPTION_RIJNDAEL)
+        {
+            *res = fko_new_with_data(ctx, (char *)spa_pkt->packet_data,
+                acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
+                acc->hmac_key_len, acc->hmac_type);
+            *attempted_decrypt = 1;
+            if(*res == FKO_SUCCESS)
+                *cmd_exec_success = 1;
+        }
+    }
+    return 1;
+}
+
+static int
+handle_gpg_enc(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, fko_ctx_t *ctx, int *attempted_decrypt,
+        const int cmd_exec_success, const int enc_type,
+        const int stanza_num, int *res)
+{
+    if(acc->use_gpg && enc_type == FKO_ENCRYPTION_GPG && cmd_exec_success == 0)
+    {
+        /* For GPG we create the new context without decrypting on the fly
+         * so we can set some GPG parameters first.
+        */
+        if(acc->gpg_decrypt_pw != NULL || acc->gpg_allow_no_pw)
+        {
+            *res = fko_new_with_data(ctx, (char *)spa_pkt->packet_data, NULL,
+                    0, FKO_ENC_MODE_ASYMMETRIC, acc->hmac_key,
+                    acc->hmac_key_len, acc->hmac_type);
+
+            if(*res != FKO_SUCCESS)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Error creating fko context (before decryption): %s",
+                    spadat->pkt_source_ip, stanza_num, fko_errstr(*res)
+                );
+                return 0;
+            }
+
+            /* Set whatever GPG parameters we have.
+            */
+            if(acc->gpg_exe != NULL)
+            {
+                *res = fko_set_gpg_exe(*ctx, acc->gpg_exe);
+                if(*res != FKO_SUCCESS)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Error setting GPG path %s: %s",
+                        spadat->pkt_source_ip, stanza_num, acc->gpg_exe,
+                        fko_errstr(*res)
+                    );
+                    return 0;
+                }
+            }
+
+            if(acc->gpg_home_dir != NULL)
+            {
+                *res = fko_set_gpg_home_dir(*ctx, acc->gpg_home_dir);
+                if(*res != FKO_SUCCESS)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
+                        spadat->pkt_source_ip, stanza_num, acc->gpg_home_dir,
+                        fko_errstr(*res)
+                    );
+                    return 0;
+                }
+            }
+
+            if(acc->gpg_decrypt_id != NULL)
+                fko_set_gpg_recipient(*ctx, acc->gpg_decrypt_id);
+
+            /* If GPG_REQUIRE_SIG is set for this acc stanza, then set
+             * the FKO context accordingly and check the other GPG Sig-
+             * related parameters. This also applies when REMOTE_ID is
+             * set.
+            */
+            if(acc->gpg_require_sig)
+            {
+                fko_set_gpg_signature_verify(*ctx, 1);
+
+                /* Set whether or not to ignore signature verification errors.
+                */
+                fko_set_gpg_ignore_verify_error(*ctx, acc->gpg_ignore_sig_error);
+            }
+            else
+            {
+                fko_set_gpg_signature_verify(*ctx, 0);
+                fko_set_gpg_ignore_verify_error(*ctx, 1);
+            }
+
+            /* Now decrypt the data.
+            */
+            *res = fko_decrypt_spa_data(*ctx, acc->gpg_decrypt_pw, 0);
+            *attempted_decrypt = 1;
+        }
+    }
+    return 1;
+}
+
+static int
+handle_gpg_sigs(acc_stanza_t *acc, spa_data_t *spadat,
+        fko_ctx_t *ctx, const int enc_type, const int stanza_num, int *res)
+{
+    char                *gpg_id, *gpg_fpr;
+    acc_string_list_t   *gpg_id_ndx;
+    acc_string_list_t   *gpg_fpr_ndx;
+    unsigned char        is_gpg_match = 0;
+
+    if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_require_sig)
+    {
+        *res = fko_get_gpg_signature_id(*ctx, &gpg_id);
+        if(*res != FKO_SUCCESS)
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
+                spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+            return 0;
+        }
+
+        *res = fko_get_gpg_signature_fpr(*ctx, &gpg_fpr);
+        if(*res != FKO_SUCCESS)
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Error pulling the GPG fingerprint from the context: %s",
+                spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+            return 0;
+        }
+
+        log_msg(LOG_INFO,
+                "[%s] (stanza #%d) Incoming SPA data signed by '%s' (fingerprint '%s').",
+                spadat->pkt_source_ip, stanza_num, gpg_id, gpg_fpr);
+
+        /* prefer GnuPG fingerprint match if so configured
+        */
+        if(acc->gpg_remote_fpr != NULL)
+        {
+            is_gpg_match = 0;
+            for(gpg_fpr_ndx = acc->gpg_remote_fpr_list;
+                    gpg_fpr_ndx != NULL; gpg_fpr_ndx=gpg_fpr_ndx->next)
+            {
+                *res = fko_gpg_signature_fpr_match(*ctx,
+                        gpg_fpr_ndx->str, &is_gpg_match);
+                if(*res != FKO_SUCCESS)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                        spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+                    return 0;
+                }
+                if(is_gpg_match)
+                    break;
+            }
+            if(! is_gpg_match)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Incoming SPA packet signed by: %s, but that fingerprint is not in the GPG_FINGERPRINT_ID list.",
+                    spadat->pkt_source_ip, stanza_num, gpg_fpr);
+                return 0;
+            }
+        }
+
+        if(acc->gpg_remote_id != NULL)
+        {
+            is_gpg_match = 0;
+            for(gpg_id_ndx = acc->gpg_remote_id_list;
+                    gpg_id_ndx != NULL; gpg_id_ndx=gpg_id_ndx->next)
+            {
+                *res = fko_gpg_signature_id_match(*ctx,
+                        gpg_id_ndx->str, &is_gpg_match);
+                if(*res != FKO_SUCCESS)
+                {
+                    log_msg(LOG_WARNING,
+                        "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                        spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
+                    return 0;
+                }
+                if(is_gpg_match)
+                    break;
+            }
+
+            if(! is_gpg_match)
+            {
+                log_msg(LOG_WARNING,
+                    "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not in the GPG_REMOTE_ID list.",
+                    spadat->pkt_source_ip, stanza_num, gpg_id);
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+static int
+check_src_access(acc_stanza_t *acc, spa_data_t *spadat, const int stanza_num)
+{
+    if(strcmp(spadat->spa_message_src_ip, "0.0.0.0") == 0)
+    {
+        if(acc->require_source_address)
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Got 0.0.0.0 when valid source IP was required.",
+                spadat->pkt_source_ip, stanza_num
+            );
+            return 0;
+        }
+        spadat->use_src_ip = spadat->pkt_source_ip;
+    }
+    else
+        spadat->use_src_ip = spadat->spa_message_src_ip;
+
+    return 1;
+}
+
+static int
+check_username(acc_stanza_t *acc, spa_data_t *spadat, const int stanza_num)
+{
+    if(acc->require_username != NULL)
+    {
+        if(strcmp(spadat->username, acc->require_username) != 0)
+        {
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Username in SPA data (%s) does not match required username: %s",
+                spadat->pkt_source_ip, stanza_num, spadat->username, acc->require_username
+            );
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int
+check_nat_access_types(fko_srv_options_t *opts, acc_stanza_t *acc,
+        spa_data_t *spadat, const int stanza_num)
+{
+    if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+    {
+#if FIREWALL_FIREWALLD
+        if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1)!=0)
+        {
+            log_msg(LOG_WARNING,
+                "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
+                stanza_num, spadat->pkt_source_ip
+            );
+            return 0;
+        }
+#elif FIREWALL_IPTABLES
+        if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
+        {
+            log_msg(LOG_WARNING,
+                "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
+                stanza_num, spadat->pkt_source_ip
+            );
+            return 0;
+        }
+#else
+        log_msg(LOG_WARNING,
+            "(stanza #%d) SPA packet from %s requested unsupported NAT access",
+            stanza_num, spadat->pkt_source_ip
+        );
+        return 0;
+#endif
+    }
+    return 1;
+}
+
+static int
+add_replay_cache(fko_srv_options_t *opts, acc_stanza_t *acc,
+        spa_data_t *spadat, char *raw_digest, int *added_replay_digest,
+        const int stanza_num, int *res)
+{
+    if (!opts->test && *added_replay_digest == 0
+            && strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+    {
+
+        *res = add_replay(opts, raw_digest);
+        if (*res != SPA_MSG_SUCCESS)
+        {
+            log_msg(LOG_WARNING, "[%s] (stanza #%d) Could not add digest to replay cache",
+                spadat->pkt_source_ip, stanza_num);
+            return 0;
+        }
+        *added_replay_digest = 1;
+    }
+
+    return 1;
+}
+
+static void
+set_timeout(acc_stanza_t *acc, spa_data_t *spadat)
+{
+    if(spadat->client_timeout > 0)
+        spadat->fw_access_timeout = spadat->client_timeout;
+    else if(acc->fw_access_timeout > 0)
+        spadat->fw_access_timeout = acc->fw_access_timeout;
+    else
+        spadat->fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
+    return;
+}
+
+static int
+check_port_proto(acc_stanza_t *acc, spa_data_t *spadat, const int stanza_num)
+{
+    if(! acc_check_port_access(acc, spadat->spa_message_remain))
+    {
+        log_msg(LOG_WARNING,
+            "[%s] (stanza #%d) One or more requested protocol/ports was denied per access.conf.",
+            spadat->pkt_source_ip, stanza_num
+        );
+        return 0;
+    }
+    return 1;
+}
+
 /* Process the SPA packet data
 */
 void
@@ -297,10 +885,9 @@ incoming_spa(fko_srv_options_t *opts)
     */
     fko_ctx_t       ctx = NULL;
 
-    char            *spa_ip_demark, *gpg_id, *gpg_fpr, *raw_digest = NULL;
-    time_t          now_ts;
-    int             res, ts_diff, enc_type, stanza_num=0, pid_status=0;
-    int             added_replay_digest = 0, pkt_data_len=0;
+    char            *spa_ip_demark, *raw_digest = NULL;
+    int             res, enc_type, stanza_num=0;
+    int             added_replay_digest = 0;
     int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
     int             conf_pkt_age = 0;
     char            dump_buf[CTX_DUMP_BUFSIZE];
@@ -314,9 +901,6 @@ incoming_spa(fko_srv_options_t *opts)
     /* Loop through all access stanzas looking for a match
     */
     acc_stanza_t        *acc = opts->acc_stanzas;
-    acc_string_list_t   *gpg_id_ndx;
-    acc_string_list_t   *gpg_fpr_ndx;
-    unsigned char        is_gpg_match = 0;
 
     inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
@@ -328,20 +912,8 @@ incoming_spa(fko_srv_options_t *opts)
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
      * try to eliminate obvious non-spa packets).
     */
-    pkt_data_len = spa_pkt->packet_data_len;
-    res = preprocess_spa_data(opts, spadat.pkt_source_ip);
-    if(res != FKO_SUCCESS)
-    {
-        log_msg(LOG_DEBUG, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
-            spadat.pkt_source_ip, res, get_errstr(res));
+    if(!precheck_pkt(opts, spa_pkt, &spadat, &raw_digest))
         return;
-    }
-
-    if(opts->foreground == 1 && opts->verbose > 2)
-    {
-        printf("[+] candidate SPA packet payload:\n");
-        hex_dump(spa_pkt->packet_data, pkt_data_len);
-    }
 
     if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
     {
@@ -352,37 +924,6 @@ incoming_spa(fko_srv_options_t *opts)
             log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE", spadat.pkt_source_ip);
             return;
         }
-    }
-
-    if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
-    {
-        if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
-        {
-            /* Check for a replay attack
-            */
-            res = get_raw_digest(&raw_digest, (char *)spa_pkt->packet_data);
-            if(res != FKO_SUCCESS)
-            {
-                if (raw_digest != NULL)
-                    free(raw_digest);
-                return;
-            }
-            if (raw_digest == NULL)
-                return;
-
-            if (is_replay(opts, raw_digest) != SPA_MSG_SUCCESS)
-            {
-                free(raw_digest);
-                return;
-            }
-        }
-    }
-    else
-    {
-        log_msg(LOG_WARNING,
-            "No access data found for source IP: %s", spadat.pkt_source_ip
-        );
-        return;
     }
 
     /* Now that we know there is a matching access.conf stanza and the
@@ -410,12 +951,8 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Check for a match for the SPA source and destination IP and the access stanza
         */
-        if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
-           (acc->destination_list != NULL && ! compare_addr_list(acc->destination_list, ntohl(spa_pkt->packet_dst_ip))))
+        if(! src_dst_check(acc, spa_pkt, &spadat, stanza_num))
         {
-            log_msg(LOG_DEBUG,
-                    "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
-                    stanza_num, spadat.pkt_source_ip, spadat.pkt_destination_ip);
             acc = acc->next;
             continue;
         }
@@ -427,24 +964,10 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Make sure this access stanza has not expired
         */
-        if(acc->access_expire_time > 0)
+        if(! check_stanza_expiration(acc, &spadat, stanza_num))
         {
-            if(acc->expired)
-            {
-                acc = acc->next;
-                continue;
-            }
-            else
-            {
-                if(time(NULL) > acc->access_expire_time)
-                {
-                    log_msg(LOG_INFO, "[%s] (stanza #%d) Access stanza has expired",
-                        spadat.pkt_source_ip, stanza_num);
-                    acc->expired = 1;
-                    acc = acc->next;
-                    continue;
-                }
-            }
+            acc = acc->next;
+            continue;
         }
 
         /* Get encryption type and try its decoding routine first (if the key
@@ -452,156 +975,40 @@ incoming_spa(fko_srv_options_t *opts)
         */
         enc_type = fko_encryption_type((char *)spa_pkt->packet_data);
 
-        if(acc->use_rijndael)
+        if(! handle_rijndael_enc(acc, spa_pkt, &spadat, &ctx,
+                    &attempted_decrypt, &cmd_exec_success, enc_type,
+                    stanza_num, &res))
         {
-            if (acc->key == NULL)
-            {
-                log_msg(LOG_ERR,
-                    "[%s] (stanza #%d) No KEY for RIJNDAEL encrypted messages",
-                    spadat.pkt_source_ip, stanza_num
-                );
-                acc = acc->next;
-                continue;
-            }
-
-            /* Command mode messages may be quite long
-            */
-            if(acc->enable_cmd_exec || enc_type == FKO_ENCRYPTION_RIJNDAEL)
-            {
-                res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data,
-                    acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
-                    acc->hmac_key_len, acc->hmac_type);
-                attempted_decrypt = 1;
-                if(res == FKO_SUCCESS)
-                    cmd_exec_success = 1;
-            }
-        }
-
-        if(acc->use_gpg && enc_type == FKO_ENCRYPTION_GPG && cmd_exec_success == 0)
-        {
-            /* For GPG we create the new context without decrypting on the fly
-             * so we can set some GPG parameters first.
-            */
-            if(acc->gpg_decrypt_pw != NULL || acc->gpg_allow_no_pw)
-            {
-                res = fko_new_with_data(&ctx, (char *)spa_pkt->packet_data, NULL,
-                        0, FKO_ENC_MODE_ASYMMETRIC, acc->hmac_key,
-                        acc->hmac_key_len, acc->hmac_type);
-
-                if(res != FKO_SUCCESS)
-                {
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Error creating fko context (before decryption): %s",
-                        spadat.pkt_source_ip, stanza_num, fko_errstr(res)
-                    );
-                    acc = acc->next;
-                    continue;
-                }
-
-                /* Set whatever GPG parameters we have.
-                */
-                if(acc->gpg_exe != NULL)
-                {
-                    res = fko_set_gpg_exe(ctx, acc->gpg_exe);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error setting GPG path %s: %s",
-                            spadat.pkt_source_ip, stanza_num, acc->gpg_exe,
-                            fko_errstr(res)
-                        );
-                        acc = acc->next;
-                        continue;
-                    }
-                }
-
-                if(acc->gpg_home_dir != NULL)
-                {
-                    res = fko_set_gpg_home_dir(ctx, acc->gpg_home_dir);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error setting GPG keyring path to %s: %s",
-                            spadat.pkt_source_ip, stanza_num, acc->gpg_home_dir,
-                            fko_errstr(res)
-                        );
-                        acc = acc->next;
-                        continue;
-                    }
-                }
-
-                if(acc->gpg_decrypt_id != NULL)
-                    fko_set_gpg_recipient(ctx, acc->gpg_decrypt_id);
-
-                /* If GPG_REQUIRE_SIG is set for this acc stanza, then set
-                 * the FKO context accordingly and check the other GPG Sig-
-                 * related parameters. This also applies when REMOTE_ID is
-                 * set.
-                */
-                if(acc->gpg_require_sig)
-                {
-                    fko_set_gpg_signature_verify(ctx, 1);
-
-                    /* Set whether or not to ignore signature verification errors.
-                    */
-                    fko_set_gpg_ignore_verify_error(ctx, acc->gpg_ignore_sig_error);
-                }
-                else
-                {
-                    fko_set_gpg_signature_verify(ctx, 0);
-                    fko_set_gpg_ignore_verify_error(ctx, 1);
-                }
-
-                /* Now decrypt the data.
-                */
-                res = fko_decrypt_spa_data(ctx, acc->gpg_decrypt_pw, 0);
-                attempted_decrypt = 1;
-            }
-        }
-
-        if(attempted_decrypt == 0)
-        {
-            log_msg(LOG_ERR,
-                "[%s] (stanza #%d) No stanza encryption mode match for encryption type: %i.",
-                spadat.pkt_source_ip, stanza_num, enc_type);
             acc = acc->next;
             continue;
         }
 
-        /* Do we have a valid FKO context?  Did the SPA decrypt properly?
-        */
-        if(res != FKO_SUCCESS)
+        if(! handle_gpg_enc(acc, spa_pkt, &spadat, &ctx, &attempted_decrypt,
+                    cmd_exec_success, enc_type, stanza_num, &res))
         {
-            log_msg(LOG_WARNING, "[%s] (stanza #%d) Error creating fko context: %s",
-                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+            acc = acc->next;
+            continue;
+        }
 
-            if(IS_GPG_ERROR(res))
-                log_msg(LOG_WARNING, "[%s] (stanza #%d) - GPG ERROR: %s",
-                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-
+        if(! check_mode_ctx(&spadat, &ctx, attempted_decrypt,
+                    enc_type, stanza_num, res))
+        {
             acc = acc->next;
             continue;
         }
 
         /* Add this SPA packet into the replay detection cache
         */
-        if (!opts->test && added_replay_digest == 0
-                && strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
+        if(! add_replay_cache(opts, acc, &spadat, raw_digest,
+                    &added_replay_digest, stanza_num, &res))
         {
-
-            res = add_replay(opts, raw_digest);
-            if (res != SPA_MSG_SUCCESS)
-            {
-                log_msg(LOG_WARNING, "[%s] (stanza #%d) Could not add digest to replay cache",
-                    spadat.pkt_source_ip, stanza_num);
-                acc = acc->next;
-                continue;
-            }
-            added_replay_digest = 1;
+            acc = acc->next;
+            continue;
         }
 
-        /* At this point, we assume the SPA data is valid.  Now we need to see
-         * if it meets our access criteria.
+        /* At this point the SPA data is authenticated via the HMAC (if used
+         * for now). Next we need to see if it meets our access criteria which
+         * the server imposes regardless of the content of the SPA packet.
         */
         log_msg(LOG_DEBUG, "[%s] (stanza #%d) SPA Decode (res=%i):",
             spadat.pkt_source_ip, stanza_num, res);
@@ -616,91 +1023,11 @@ incoming_spa(fko_srv_options_t *opts)
          * then we need to make sure this incoming message is signer ID matches
          * an entry in the list.
         */
-        if(enc_type == FKO_ENCRYPTION_GPG && acc->gpg_require_sig)
+
+        if(! handle_gpg_sigs(acc, &spadat, &ctx, enc_type, stanza_num, &res))
         {
-            res = fko_get_gpg_signature_id(ctx, &gpg_id);
-            if(res != FKO_SUCCESS)
-            {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Error pulling the GPG signature ID from the context: %s",
-                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                acc = acc->next;
-                continue;
-            }
-
-            res = fko_get_gpg_signature_fpr(ctx, &gpg_fpr);
-            if(res != FKO_SUCCESS)
-            {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Error pulling the GPG fingerprint from the context: %s",
-                    spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                acc = acc->next;
-                continue;
-            }
-
-            log_msg(LOG_INFO, "[%s] (stanza #%d) Incoming SPA data signed by '%s' (fingerprint '%s').",
-                spadat.pkt_source_ip, stanza_num, gpg_id, gpg_fpr);
-
-            /* prefer GnuPG fingerprint match if so configured
-            */
-            if(acc->gpg_remote_fpr != NULL)
-            {
-                is_gpg_match = 0;
-                for(gpg_fpr_ndx = acc->gpg_remote_fpr_list;
-                        gpg_fpr_ndx != NULL; gpg_fpr_ndx=gpg_fpr_ndx->next)
-                {
-                    res = fko_gpg_signature_fpr_match(ctx,
-                            gpg_fpr_ndx->str, &is_gpg_match);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
-                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                        acc = acc->next;
-                        continue;
-                    }
-                    if(is_gpg_match)
-                        break;
-                }
-                if(! is_gpg_match)
-                {
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Incoming SPA packet signed by: %s, but that fingerprint is not in the GPG_FINGERPRINT_ID list.",
-                        spadat.pkt_source_ip, stanza_num, gpg_fpr);
-                    acc = acc->next;
-                    continue;
-                }
-            }
-
-            if(acc->gpg_remote_id != NULL)
-            {
-                is_gpg_match = 0;
-                for(gpg_id_ndx = acc->gpg_remote_id_list;
-                        gpg_id_ndx != NULL; gpg_id_ndx=gpg_id_ndx->next)
-                {
-                    res = fko_gpg_signature_id_match(ctx,
-                            gpg_id_ndx->str, &is_gpg_match);
-                    if(res != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_WARNING,
-                            "[%s] (stanza #%d) Error in GPG signature comparision: %s",
-                            spadat.pkt_source_ip, stanza_num, fko_gpg_errstr(ctx));
-                        acc = acc->next;
-                        continue;
-                    }
-                    if(is_gpg_match)
-                        break;
-                }
-
-                if(! is_gpg_match)
-                {
-                    log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Incoming SPA packet signed by ID: %s, but that ID is not in the GPG_REMOTE_ID list.",
-                        spadat.pkt_source_ip, stanza_num, gpg_id);
-                    acc = acc->next;
-                    continue;
-                }
-            }
+            acc = acc->next;
+            continue;
         }
 
         /* Populate our spa data struct for future reference.
@@ -720,29 +1047,14 @@ incoming_spa(fko_srv_options_t *opts)
          * data, then use that.  If not, try the FW_ACCESS_TIMEOUT from the
          * access.conf file (if there is one).  Otherwise use the default.
         */
-        if(spadat.client_timeout > 0)
-            spadat.fw_access_timeout = spadat.client_timeout;
-        else if(acc->fw_access_timeout > 0)
-            spadat.fw_access_timeout = acc->fw_access_timeout;
-        else
-            spadat.fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
+        set_timeout(acc, &spadat);
 
         /* Check packet age if so configured.
         */
-        if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
+        if(! check_pkt_age(opts, &spadat, stanza_num, conf_pkt_age))
         {
-            time(&now_ts);
-
-            ts_diff = abs(now_ts - spadat.timestamp);
-
-            if(ts_diff > conf_pkt_age)
-            {
-                log_msg(LOG_WARNING, "[%s] (stanza #%d) SPA data time difference is too great (%i seconds).",
-                    spadat.pkt_source_ip, stanza_num, ts_diff);
-
-                acc = acc->next;
-                continue;
-            }
+            acc = acc->next;
+            continue;
         }
 
         /* At this point, we have enough to check the embedded (or packet source)
@@ -782,143 +1094,44 @@ incoming_spa(fko_srv_options_t *opts)
         /* If use source IP was requested (embedded IP of 0.0.0.0), make sure it
          * is allowed.
         */
-        if(strcmp(spadat.spa_message_src_ip, "0.0.0.0") == 0)
+        if(! check_src_access(acc, &spadat, stanza_num))
         {
-            if(acc->require_source_address)
-            {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Got 0.0.0.0 when valid source IP was required.",
-                    spadat.pkt_source_ip, stanza_num
-                );
-                acc = acc->next;
-                continue;
-            }
-
-            spadat.use_src_ip = spadat.pkt_source_ip;
+            acc = acc->next;
+            continue;
         }
-        else
-            spadat.use_src_ip = spadat.spa_message_src_ip;
 
         /* If REQUIRE_USERNAME is set, make sure the username in this SPA data
          * matches.
         */
-        if(acc->require_username != NULL)
+        if(! check_username(acc, &spadat, stanza_num))
         {
-            if(strcmp(spadat.username, acc->require_username) != 0)
-            {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) Username in SPA data (%s) does not match required username: %s",
-                    spadat.pkt_source_ip, stanza_num, spadat.username, acc->require_username
-                );
-                acc = acc->next;
-                continue;
-            }
+            acc = acc->next;
+            continue;
         }
 
         /* Take action based on SPA message type.
         */
-        if(spadat.message_type == FKO_LOCAL_NAT_ACCESS_MSG
-              || spadat.message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
-              || spadat.message_type == FKO_NAT_ACCESS_MSG
-              || spadat.message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
+        if(! check_nat_access_types(opts, acc, &spadat, stanza_num))
         {
-#if FIREWALL_FIREWALLD
-            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1)!=0)
-            {
-                log_msg(LOG_WARNING,
-                    "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
-                    stanza_num, spadat.pkt_source_ip
-                );
-                acc = acc->next;
-                continue;
-            }
-#elif FIREWALL_IPTABLES
-            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
-            {
-                log_msg(LOG_WARNING,
-                    "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
-                    stanza_num, spadat.pkt_source_ip
-                );
-                acc = acc->next;
-                continue;
-            }
-#else
-            log_msg(LOG_WARNING,
-                "(stanza #%d) SPA packet from %s requested unsupported NAT access",
-                stanza_num, spadat.pkt_source_ip
-            );
             acc = acc->next;
             continue;
-#endif
         }
 
         /* Command messages.
         */
         if(spadat.message_type == FKO_COMMAND_MSG)
         {
-            if(!acc->enable_cmd_exec)
+            if(process_cmd_msg(opts, acc, &spadat, stanza_num, &res))
             {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) SPA Command messages are not allowed in the current configuration.",
-                    spadat.pkt_source_ip, stanza_num
-                );
-                acc = acc->next;
-                continue;
-            }
-            else if(opts->test)
-            {
-                log_msg(LOG_WARNING,
-                    "[%s] (stanza #%d) --test mode enabled, skipping command execution.",
-                    spadat.pkt_source_ip, stanza_num
-                );
-                acc = acc->next;
-                continue;
-            }
-            else
-            {
-                log_msg(LOG_INFO,
-                    "[%s] (stanza #%d) Processing SPA Command message: command='%s'.",
-                    spadat.pkt_source_ip, stanza_num, spadat.spa_message_remain
-                );
-
-                /* Do we need to become another user? If so, we call
-                 * run_extcmd_as and pass the cmd_exec_uid.
-                */
-                if(acc->cmd_exec_user != NULL && strncasecmp(acc->cmd_exec_user, "root", 4) != 0)
-                {
-                    log_msg(LOG_INFO,
-                            "[%s] (stanza #%d) setuid/setgid user/group to %s/%s (UID=%i,GID=%i) before running command.",
-                        spadat.pkt_source_ip, stanza_num, acc->cmd_exec_user,
-                        acc->cmd_exec_group == NULL ? acc->cmd_exec_user : acc->cmd_exec_group,
-                        acc->cmd_exec_uid, acc->cmd_exec_gid);
-
-                    res = run_extcmd_as(acc->cmd_exec_uid, acc->cmd_exec_gid,
-                            spadat.spa_message_remain, NULL, 0,
-                            WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
-                }
-                else /* Just run it as we are (root that is). */
-                    res = run_extcmd(spadat.spa_message_remain, NULL, 0,
-                            WANT_STDERR, 5, &pid_status, opts);
-
-                /* should only call WEXITSTATUS() if WIFEXITED() is true
-                */
-                log_msg(LOG_INFO,
-                    "[%s] (stanza #%d) CMD_EXEC: command returned %i, pid_status: %d",
-                    spadat.pkt_source_ip, stanza_num, res,
-                    WIFEXITED(pid_status) ? WEXITSTATUS(pid_status) : pid_status);
-
-                if(WIFEXITED(pid_status))
-                {
-                    if(WEXITSTATUS(pid_status) != 0)
-                        res = SPA_MSG_COMMAND_ERROR;
-                }
-                else
-                    res = SPA_MSG_COMMAND_ERROR;
-
                 /* we processed the command on a matching access stanza, so we
                  * don't look for anything else to do with this SPA packet
                 */
                 break;
+            }
+            else
+            {
+                acc = acc->next;
+                continue;
             }
         }
 
@@ -928,12 +1141,8 @@ incoming_spa(fko_srv_options_t *opts)
          *
          *  --DSS TODO: We should add BLACKLIST support here as well.
         */
-        if(! acc_check_port_access(acc, spadat.spa_message_remain))
+        if(! check_port_proto(acc, &spadat, stanza_num))
         {
-            log_msg(LOG_WARNING,
-                "[%s] (stanza #%d) One or more requested protocol/ports was denied per access.conf.",
-                spadat.pkt_source_ip, stanza_num
-            );
             acc = acc->next;
             continue;
         }
@@ -956,6 +1165,9 @@ incoming_spa(fko_srv_options_t *opts)
             process_spa_request(opts, acc, &spadat);
         }
 
+        /* If we made it here, then the SPA packet was processed according
+         * to a matching access.conf stanza, so we're done with this packet.
+        */
         break;
     }
 

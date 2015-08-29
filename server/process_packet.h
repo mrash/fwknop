@@ -33,7 +33,6 @@
 
 #define IPV4_VER_MASK   0x15
 #define MIN_IPV4_WORDS  0x05
-#define FCS_HEADER_LEN  0x04
 
 /* For items not defined by this system
 */
@@ -47,7 +46,8 @@
 /* Prototypes
 */
 #if USE_LIBPCAP
-void process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header, const unsigned char *packet);
+void process_packet(unsigned char *args,
+        const struct pcap_pkthdr *packet_header, const unsigned char *packet);
 #endif
 
 #endif  /* PROCESS_PACKET_H */

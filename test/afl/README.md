@@ -26,13 +26,6 @@ to the *libpng-nocrc.patch* patch included in the AFL sources. The corresponding
 commit that enables this functionality in fwknop is aaa44656bcfcb705d80768a7b9aa0d45a0e55e21
 (see: [https://github.com/mrash/fwknop/commit/aaa44656bcfcb705d80768a7b9aa0d45a0e55e21])
 
-One exception to the need for compiling fwknop wtih *--enable-afl-fuzzing* is
-when using AFL to fuzz the fwknoprc file that is leveraged by the fwknop client.
-In this case, fwknop should not be compiled with
-*--enable-afl-fuzzing* (use the *compile/afl-compile-no-enable-arg.sh* script)
-since the fwknoprc file parsing routines are fuzzed instead of the SPA packet
-encoding/decoding cycles.
-
 ## AFL Wrappers
 
 The top level directory contains enabling scripts in order to make it easy to

@@ -31,7 +31,10 @@
 #ifndef FW_UTIL_FIREWALLD_H
 #define FW_UTIL_FIREWALLD_H
 
-#define SNAT_TARGET_BUFSIZE         64
+#define SNAT_TARGET_BUFSIZE   64
+
+#define FIREWD_CMD_FAIL_STR   "COMMAND_FAILED" /* returned by firewall-cmd */
+#define FIREWD_CMD_PREFIX     "--direct --passthrough ipv4"
 
 #if HAVE_EXECVPE
   #define SH_REDIR "" /* the shell is not used when execvpe() is available */
@@ -45,11 +48,14 @@
 #define FIREWD_RULE_ARGS           "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define FIREWD_OUT_RULE_ARGS       "-t %s -p %i -d %s -s %s --sport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define FIREWD_FWD_RULE_ARGS       "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
+#define FIREWD_FWD_ALL_RULE_ARGS   "-t %s -s %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define FIREWD_DNAT_RULE_ARGS      "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i" SH_REDIR
+#define FIREWD_DNAT_ALL_RULE_ARGS  "-t %s -s %s -d %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s" SH_REDIR
 #define FIREWD_SNAT_RULE_ARGS      "-t %s -p %i -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s" SH_REDIR
-#define FIREWD_TMP_COMMENT_ARGS    "-t %s -I %s %i -s 127.0.0.2 -m comment --comment " TMP_COMMENT " -j %s" SH_REDIR
-#define FIREWD_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s 127.0.0.2 -p udp -j %s" SH_REDIR
-#define FIREWD_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s 127.0.0.2 -p udp -j %s" SH_REDIR
+#define FIREWD_SNAT_ALL_RULE_ARGS     "-t %s -s %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s" SH_REDIR
+#define FIREWD_TMP_COMMENT_ARGS    "-t %s -I %s %i -s " DUMMY_IP " -m comment --comment " TMP_COMMENT " -j %s" SH_REDIR
+#define FIREWD_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s " DUMMY_IP " -p udp -j %s" SH_REDIR
+#define FIREWD_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s " DUMMY_IP " -p udp -j %s" SH_REDIR
 #define FIREWD_DEL_RULE_ARGS       "-t %s -D %s %i" SH_REDIR
 #define FIREWD_NEW_CHAIN_ARGS      "-t %s -N %s" SH_REDIR
 #define FIREWD_FLUSH_CHAIN_ARGS    "-t %s -F %s" SH_REDIR

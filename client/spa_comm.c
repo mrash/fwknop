@@ -54,7 +54,7 @@ dump_transmit_options(const fko_cli_options_t *options)
 
 /* Function to generate a header checksum.
 */
-unsigned short
+static unsigned short
 chksum(unsigned short *buf, int nbytes)
 {
     unsigned int   sum;
@@ -118,6 +118,14 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
     }
 
     snprintf(port_str, MAX_PORT_STR_LEN+1, "%d", options->spa_dst_port);
+
+#if AFL_FUZZING
+    /* Make sure to never send SPA packets under AFL fuzzing cycles
+    */
+    log_msg(LOG_VERBOSITY_NORMAL,
+        "AFL fuzzing enabled, SPA packet not actually sent.");
+    return res;
+#endif
 
     error = getaddrinfo(options->spa_server_str, port_str, &hints, &result);
 
@@ -261,7 +269,7 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
     tcph->check     = 0;
     tcph->urg_ptr   = 0;
 
-    /* No we can compute our checksum.
+    /* Now we can compute our checksum.
     */
     iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
 
@@ -360,7 +368,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
     udph->check     = 0;
     udph->len       = htons(sd_len + sizeof(struct udphdr));
 
-    /* No we can compute our checksum.
+    /* Now we can compute our checksum.
     */
     iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
 
@@ -464,7 +472,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
         icmph->un.echo.sequence = htons(1);
     }
 
-    /* No we can compute our checksum.
+    /* Now we can compute our checksum.
     */
     iph->check = chksum((unsigned short *)pkt_data, iph->tot_len);
     icmph->checksum = chksum((unsigned short *)icmph, sizeof(struct icmphdr) + sd_len);
@@ -590,6 +598,9 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
         return 0;
     }
 
+    /* In AFL fuzzing mode, the following function will not send
+     * the SPA packet.
+    */
     return send_spa_packet_tcp_or_udp(http_buf, strlen(http_buf), options);
 }
 
@@ -683,6 +694,14 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         /* Set destination address. We use the default protocol to resolve
          * the ip address */
         hints.ai_family = AF_INET;
+
+#if AFL_FUZZING
+        /* Make sure to never send SPA packets under AFL fuzzing cycles
+        */
+        log_msg(LOG_VERBOSITY_NORMAL,
+            "AFL fuzzing enabled, SPA packet not actually sent.");
+        return res;
+#endif
 
         if (resolve_dest_adr(options->spa_server_str, &hints, ip_str, sizeof(ip_str)) != 0)
         {

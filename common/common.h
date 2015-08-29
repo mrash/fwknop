@@ -147,6 +147,7 @@ enum {
 #define MIN_HIGH_PORT       10000  /* sensible minimum for SPA dest port */
 #define ANY_PORT            0      /* used as a wildcard */
 #define ANY_PROTO           0      /* used as a wildcard */
+#define NAT_ANY_PORT        ANY_PORT
 #define MAX_SERVER_STR_LEN  50
 #define MAX_ICMP_TYPE       40
 #define MAX_ICMP_CODE       15
@@ -156,6 +157,9 @@ enum {
 #define MAX_PATH_LEN        1024
 #define MAX_GPG_KEY_ID      128
 #define MAX_USERNAME_LEN    30
+
+#define MAX_KEY_LEN                 128
+#define MAX_B64_KEY_LEN             180
 
 /* Command line argument / argv handling
 */

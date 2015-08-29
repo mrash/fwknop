@@ -53,7 +53,8 @@ int
 run_udp_server(fko_srv_options_t *opts)
 {
     int                 s_sock, sfd_flags, selval, pkt_len;
-    int                 is_err, s_timeout, rv=1;
+    int                 is_err, s_timeout, rv=1, chk_rm_all=0;
+    int                 rules_chk_threshold;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
@@ -75,6 +76,13 @@ run_udp_server(fko_srv_options_t *opts)
     {
         log_msg(LOG_ERR, "[*] Invalid max UDPSERV_SELECT_TIMEOUT value.");
         return -1;
+    }
+    rules_chk_threshold = strtol_wrapper(opts->config[CONF_RULES_CHECK_THRESHOLD],
+            0, RCHK_MAX_RULES_CHECK_THRESHOLD, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid RULES_CHECK_THRESHOLD");
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
     log_msg(LOG_INFO, "Kicking off UDP server to listen on port %i.", port);
@@ -148,7 +156,19 @@ run_udp_server(fko_srv_options_t *opts)
         /* Check for any expired firewall rules and deal with them.
         */
         if(!opts->test)
-            check_firewall_rules(opts);
+        {
+            if(rules_chk_threshold > 0)
+            {
+                opts->check_rules_ctr++;
+                if ((opts->check_rules_ctr % rules_chk_threshold) == 0)
+                {
+                    chk_rm_all = 1;
+                    opts->check_rules_ctr = 0;
+                }
+            }
+            check_firewall_rules(opts, chk_rm_all);
+            chk_rm_all = 0;
+        }
 
         /* Initialize and setup the socket for select.
         */

@@ -421,33 +421,6 @@
         'key_file' => $cf{'rc_named_key'},
     },
 
-    ### --key-gen tests
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => '--key-gen',
-        'function' => \&generic_exec,
-        'cmdline'  => "$fwknopCmd --key-gen",
-        'positive_output_matches' => [qr/^KEY_BASE64\:?\s\S{10}/,
-            qw/HMAC_KEY_BASE64\:?\s\S{10}/],
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => "--key-gen $uniq_keys key uniqueness",
-        'function' => \&key_gen_uniqueness,
-        'cmdline'  => "$fwknopCmd --key-gen",   ### no valgrind string (too slow for 100 client exec's)
-        'disable_valgrind' => $YES,
-    },
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client',
-        'detail'   => '--key-gen to file',
-        'function' => \&generic_exec,
-        'cmdline'  => "$fwknopCmd --key-gen --key-gen-file $key_gen_file",
-        'positive_output_matches' => [qr/Wrote.*\skeys/],
-    },
-
     ### rc file tests
     {
         'category' => 'Rijndael',
@@ -856,12 +829,12 @@
         'detail'   => "SNAT MASQUERADE",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args -N $internal_nat_host:22",
-        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} -a $cf{'open_ports_access'} / .
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_snat_no_translate_ip"} / .
+            qq/-a $cf{'open_ports_force_masq_access'} / .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'server_positive_output_matches' => [
-            qr/FWKNOP_FORWARD\s.*dport\s22\s/,
-            qr/\*\/\sto\:$internal_nat_host\:22/i,
-            qr/MASQUERADE\s.*to\-ports/,
+            qr/FWKNOP_FORWARD\s.*0.0.0.0\s/,
+            qr/MASQUERADE\s.*all/,
         ],
         'no_ip_check' => 1,
         'fw_rule_created' => $NEW_RULE_REQUIRED,
@@ -1146,11 +1119,38 @@
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
+        'detail'   => "$FW_TYPE multi port re search (1)",
+        'function' => \&spa_cycle,
+        'cmdline' => "$fwknopCmd -A tcp/60001,udp/60001 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file $verbose_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/^1\s+ACCEPT\s+tcp.*dpt:60001/,
+            qr/^2\s+ACCEPT\s+udp.*dpt:60001/],
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
         'detail'   => 'multi port (tcp/22,udp/53,tcp/1234)',
         'function' => \&spa_cycle,
         'cmdline' => "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
             "$local_key_file $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+    },
+    {
+        'category' => 'Rijndael',
+        'subcategory' => 'client+server',
+        'detail'   => "$FW_TYPE multi port re search (2)",
+        'function' => \&spa_cycle,
+        'cmdline' => "$fwknopCmd -A tcp/22,udp/53,tcp/1234 -a $fake_ip -D $loopback_ip --get-key " .
+            "$local_key_file $verbose_str",
+        'fwknopd_cmdline' => "$fwknopdCmd $default_server_conf_args $intf_str",
+        'server_positive_output_matches' => [qr/^1\s+ACCEPT\s+tcp.*dpt:22\s/,
+            qr/^2\s+ACCEPT\s+udp.*dpt:53\s/, qr/^3\s+ACCEPT\s+tcp.*dpt:1234\s/],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },

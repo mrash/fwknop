@@ -1,0 +1,11 @@
+
+AFL_CC=afl-gcc
+
+set_afl_cc() {
+    $AFL_CC /dev/null 2>&1 | grep -q -i "On Apple systems.*wrapper for clang"
+    if [ $? -eq 0 ]
+    then
+        ### Need to switch to afl-clang
+        AFL_CC=afl-clang
+    fi
+}

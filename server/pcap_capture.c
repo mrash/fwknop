@@ -31,6 +31,7 @@
 
 #if USE_LIBPCAP
   #include <pcap.h>
+  #include <errno.h>
 #endif
 
 #include "fwknopd_common.h"
@@ -64,9 +65,11 @@ pcap_capture(fko_srv_options_t *opts)
     int                 pcap_file_mode = 0;
     int                 status;
     int                 useconds;
+    int                 rules_chk_threshold;
     int                 pcap_dispatch_count;
     int                 max_sniff_bytes;
     int                 is_err;
+    int                 chk_rm_all = 0;
     pid_t               child_pid;
 
 #if FIREWALL_IPFW
@@ -77,7 +80,7 @@ pcap_capture(fko_srv_options_t *opts)
             0, RCHK_MAX_PCAP_LOOP_SLEEP, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
-        log_msg(LOG_ERR, "[*] invalid PCAP_LOOP_SLEEP_value");
+        log_msg(LOG_ERR, "[*] invalid PCAP_LOOP_SLEEP value");
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -86,6 +89,14 @@ pcap_capture(fko_srv_options_t *opts)
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] invalid MAX_SNIFF_BYTES");
+        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    rules_chk_threshold = strtol_wrapper(opts->config[CONF_RULES_CHECK_THRESHOLD],
+            0, RCHK_MAX_RULES_CHECK_THRESHOLD, NO_EXIT_UPON_ERR, &is_err);
+    if(is_err != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "[*] invalid RULES_CHECK_THRESHOLD");
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
@@ -288,9 +299,20 @@ pcap_capture(fko_srv_options_t *opts)
         */
         else if(res == -1)
         {
-            log_msg(LOG_ERR, "[*] Error from pcap_dispatch: %s",
-                pcap_geterr(pcap)
-            );
+            if((strncasecmp(opts->config[CONF_EXIT_AT_INTF_DOWN], "Y", 1) == 0)
+                    && errno == ENETDOWN)
+            {
+                log_msg(LOG_ERR, "[*] Fatal error from pcap_dispatch: %s",
+                    pcap_geterr(pcap)
+                );
+                clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
+            }
+            else
+            {
+                log_msg(LOG_ERR, "[*] Error from pcap_dispatch: %s",
+                    pcap_geterr(pcap)
+                );
+            }
 
             if(pcap_errcnt++ > MAX_PCAP_ERRORS_BEFORE_BAIL)
             {
@@ -312,7 +334,19 @@ pcap_capture(fko_srv_options_t *opts)
         /* Check for any expired firewall rules and deal with them.
         */
         if(!opts->test)
-            check_firewall_rules(opts);
+        {
+            if(rules_chk_threshold > 0)
+            {
+                opts->check_rules_ctr++;
+                if ((opts->check_rules_ctr % rules_chk_threshold) == 0)
+                {
+                    chk_rm_all = 1;
+                    opts->check_rules_ctr = 0;
+                }
+            }
+            check_firewall_rules(opts, chk_rm_all);
+            chk_rm_all = 0;
+        }
 
 #if FIREWALL_IPFW
         /* Purge expired rules that no longer have any corresponding

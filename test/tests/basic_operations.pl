@@ -62,6 +62,26 @@
         'detail'   => 'start restart stop cycle',
         'function' => \&server_start_stop_cycle,
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'exit upon down interface',
+        'function' => \&down_interface,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Fatal error from pcap_dispatch\b/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'no exit upon down interface',
+        'function' => \&down_interface,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'no_exit_down_intf'} " .
+            "-a $cf{'hmac_access'} -d $default_digest_file -p " .
+            "$default_pid_file $intf_str",
+        'server_positive_output_matches' => [qr/Error from pcap_dispatch\b/],
+        'no_exit_intf_down' => $YES
+    },
 
     {
         'category' => 'basic operations',
@@ -390,6 +410,14 @@
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args --key-gen -K " . 'A'x1030
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => '--key-gen file path (-K) too long',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$fwknopdCmd --key-gen --key-gen-file " . 'A'x1030
+    },
 
     {
         'category' => 'basic operations',
@@ -399,6 +427,31 @@
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args_no_get_key --gpg-encryption",
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'GPG invalid binary path',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --gpg-exe /invalid/path"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sudo invalid binary path (1)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --sudo-exe /invalid/path"
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sudo invalid binary path (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopdCmd $default_server_conf_args --sudo-exe /etc/hosts"
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client',
@@ -3072,6 +3125,34 @@
         ],
         'positive_output_matches' => [qr/Invalid\sIPv4/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'FORCE_SNAT -> FORCE_NAT/FORWARD_ALL',
+        'function' => \&generic_exec,
+        'cmdline' =>  qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'require_force_nat_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str --exit-parse-config",
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/i],
+        'exec_err' => $YES,
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'FORCE_MASQUERADE -> FORCE_NAT/FORWARD_ALL',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                  any',
+            'KEY                     testtest',
+            'FORCE_MASQUERADE        Y'
+        ],
+        'server_conf_file' => [
+            "ENABLE_${FW_PREFIX}_FORWARDING       Y;",
+            "ENABLE_${FW_PREFIX}_SNAT             Y;"
+        ],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/i],
+    },
 
     {
         'category' => 'basic operations',
@@ -3665,8 +3746,27 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
-        'positive_output_matches' => [qr/must\salso\sbe\sused/],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => "$FW_TYPE FORCE_SNAT and 0.0.0.0 0",
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE         any',
+            'KEY            testtest',
+            'FORCE_SNAT     1.2.3.4',
+            'FORWARD_ALL    Y'
+        ],
+        'server_conf_file' => [
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
+        ],
+        'positive_output_matches' => [qr/FORCE_NAT.*0\.0\.0\.0/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
@@ -3682,7 +3782,7 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
-        'positive_output_matches' => [qr/must\salso\sbe\sused/],
+        'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/],
     },
 
     {

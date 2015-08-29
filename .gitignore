@@ -39,7 +39,7 @@ install_manifest.txt
 *.o
 *.lo
 
-#project generated files
+# project generated files
 autom4te.cache/
 *.m4
 client/.deps/
@@ -69,6 +69,9 @@ server/fwknopd
 server/fwknopd.8
 server/Makefile.in
 stamp-h1
+
+# For anyone running on a Mac
+.DS_Store
 
 android/project/libs
 android/project/obj

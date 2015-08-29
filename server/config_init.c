@@ -149,6 +149,8 @@ validate_int_var_ranges(fko_srv_options_t *opts)
         1, RCHK_MAX_SPA_PACKET_AGE);
     range_check(opts, "MAX_SNIFF_BYTES", opts->config[CONF_MAX_SNIFF_BYTES],
         1, RCHK_MAX_SNIFF_BYTES);
+    range_check(opts, "RULES_CHECK_THRESHOLD", opts->config[CONF_RULES_CHECK_THRESHOLD],
+        0, RCHK_MAX_RULES_CHECK_THRESHOLD);
     range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
         1, RCHK_MAX_TCPSERV_PORT);
     range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
@@ -199,6 +201,69 @@ validate_int_var_ranges(fko_srv_options_t *opts)
 #endif /* FIREWALL type */
 
     return;
+}
+
+/**
+ * @brief Generate Rijndael + HMAC keys from /dev/urandom (base64 encoded).
+ *
+ * @param options FKO command line option structure
+ */
+static void
+generate_keys(fko_srv_options_t *options)
+{
+    char key_base64[MAX_B64_KEY_LEN+1];
+    char hmac_key_base64[MAX_B64_KEY_LEN+1];
+
+    FILE  *key_gen_file_ptr = NULL;
+    int res;
+
+    /* Set defaults and validate for --key-gen mode
+    */
+    if(options->key_len == 0)
+        options->key_len = FKO_DEFAULT_KEY_LEN;
+
+    if(options->hmac_key_len == 0)
+        options->hmac_key_len = FKO_DEFAULT_HMAC_KEY_LEN;
+
+    if(options->hmac_type == 0)
+        options->hmac_type = FKO_DEFAULT_HMAC_MODE;
+
+    /* Zero out the key buffers */
+    memset(key_base64, 0x00, sizeof(key_base64));
+    memset(hmac_key_base64, 0x00, sizeof(hmac_key_base64));
+
+    /* Generate the key through libfko */
+    res = fko_key_gen(key_base64, options->key_len,
+            hmac_key_base64, options->hmac_key_len,
+            options->hmac_type);
+
+    if(res != FKO_SUCCESS)
+    {
+        log_msg(LOG_ERR, "%s: fko_key_gen: Error %i - %s",
+            MY_NAME, res, fko_errstr(res));
+        clean_exit(options, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(options->key_gen_file[0] != '\0')
+    {
+        if ((key_gen_file_ptr = fopen(options->key_gen_file, "w")) == NULL)
+        {
+            log_msg(LOG_ERR, "Unable to create key gen file: %s: %s",
+                options->key_gen_file, strerror(errno));
+            clean_exit(options, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+        fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
+            key_base64, hmac_key_base64);
+        fclose(key_gen_file_ptr);
+        fprintf(stdout, "[+] Wrote Rijndael and HMAC keys to: %s",
+            options->key_gen_file);
+    }
+    else
+    {
+        fprintf(stdout, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
+                key_base64, hmac_key_base64);
+    }
+    clean_exit(options, NO_FW_CLEANUP, EXIT_SUCCESS);
 }
 
 /* Parse the config file...
@@ -394,6 +459,13 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_PCAP_LOOP_SLEEP,
             DEF_PCAP_LOOP_SLEEP);
 
+    /* Control whether to exit if the interface where we're sniffing
+     * goes down.
+    */
+    if(opts->config[CONF_EXIT_AT_INTF_DOWN] == NULL)
+        set_config_entry(opts, CONF_EXIT_AT_INTF_DOWN,
+            DEF_EXIT_AT_INTF_DOWN);
+
     /* PCAP Filter.
     */
     if(opts->config[CONF_PCAP_FILTER] == NULL)
@@ -421,13 +493,20 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_MAX_SPA_PACKET_AGE,
             DEF_MAX_SPA_PACKET_AGE);
 
-
     /* Enable digest persistence.
     */
     if(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE] == NULL)
         set_config_entry(opts, CONF_ENABLE_DIGEST_PERSISTENCE,
             DEF_ENABLE_DIGEST_PERSISTENCE);
-            
+
+    /* Set firewall rule "deep" collection interval - this allows
+     * fwknopd to remove rules with proper _exp_<time> expiration
+     * times even when added by a different program.
+    */
+    if(opts->config[CONF_RULES_CHECK_THRESHOLD] == NULL)
+        set_config_entry(opts, CONF_RULES_CHECK_THRESHOLD,
+            DEF_RULES_CHECK_THRESHOLD);
+
     /* Enable destination rule.
     */
     if(opts->config[CONF_ENABLE_DESTINATION_RULE] == NULL)
@@ -801,6 +880,11 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_GPG_EXE] == NULL)
         set_config_entry(opts, CONF_GPG_EXE, DEF_GPG_EXE);
 
+    /* sudo executable
+    */
+    if(opts->config[CONF_SUDO_EXE] == NULL)
+        set_config_entry(opts, CONF_SUDO_EXE, DEF_SUDO_EXE);
+
     /* Enable SPA over HTTP.
     */
     if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL)
@@ -926,10 +1010,72 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     */
     optind = 0;
 
-    /* First, scan the command-line args for -h/--help or an alternate
+    /* First, scan the command-line args to see if we are in key-generation
+     * mode. This is independent of config parsing and other operations, so
+     * it is done as the very first thing. Also handle printing of the fwknop
+     * version string since we don't need to parse a config for this.
+    */
+    while ((cmd_arg = getopt_long(argc, argv,
+            GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
+
+        switch(cmd_arg) {
+            case 'V':
+                fprintf(stdout, "fwknopd server %s, compiled for firewall bin: %s\n",
+                        MY_VERSION, FIREWALL_EXE);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+            case 'k':
+                opts->key_gen = 1;
+                break;
+            case KEY_GEN_FILE:
+                opts->key_gen = 1;
+                strlcpy(opts->key_gen_file, optarg, sizeof(opts->key_gen_file));
+                break;
+            case KEY_LEN:  /* used in --key-gen mode only */
+                opts->key_len = strtol_wrapper(optarg, 1,
+                        MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    log_msg(LOG_ERR,
+                            "Invalid key length '%s', must be in [%d-%d]",
+                            optarg, 1, MAX_KEY_LEN);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
+            case HMAC_DIGEST_TYPE:  /* used in --key-gen mode only */
+                if((opts->hmac_type = hmac_digest_strtoint(optarg)) < 0)
+                {
+                    log_msg(LOG_ERR,
+                        "* Invalid hmac digest type: %s, use {md5,sha1,sha256,sha384,sha512}",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
+            case HMAC_KEY_LEN:  /* used in --key-gen mode only */
+                opts->hmac_key_len = strtol_wrapper(optarg, 1,
+                        MAX_KEY_LEN, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
+                {
+                    log_msg(LOG_ERR,
+                            "Invalid hmac key length '%s', must be in [%d-%d]",
+                            optarg, 1, MAX_KEY_LEN);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
+        }
+    }
+
+    if(opts->key_gen)
+        generate_keys(opts); /* this function exits */
+
+    /* Reset the options index so we can run through them again.
+    */
+    optind = 0;
+
+    /* Now, scan the command-line args for -h/--help or an alternate
      * configuration file. If we find an alternate config file, use it,
-     * otherwise use the default.  We also grab any override config files
-     * as well.
+     * otherwise use the default. We also grab any override config files
+     * as well. In addition, we handle key generation here since this is
+     * independent of configuration parsing.
     */
     while ((cmd_arg = getopt_long(argc, argv,
             GETOPTS_OPTION_STRING, cmd_opts, &index)) != -1) {
@@ -1108,6 +1254,19 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case FW_FLUSH:
                 opts->fw_flush = 1;
                 break;
+            case GPG_EXE_PATH:
+                if (is_valid_exe(optarg))
+                {
+                    set_config_entry(opts, CONF_GPG_EXE, optarg);
+                }
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] gpg path '%s' could not stat()/not executable?",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
             case GPG_HOME_DIR:
                 if (is_valid_dir(optarg))
                 {
@@ -1116,7 +1275,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] Directory '%s' could not stat()/does not exist?",
+                        "[*] gpg home directory '%s' could not stat()/does not exist?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
@@ -1163,6 +1322,19 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'S':
                 opts->status = 1;
                 break;
+            case SUDO_EXE_PATH:
+                if (is_valid_exe(optarg))
+                {
+                    set_config_entry(opts, CONF_SUDO_EXE, optarg);
+                }
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] sudo path '%s' could not stat()/not executable?",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
             case 't':
                 opts->test = 1;
                 break;
@@ -1176,9 +1348,6 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case SYSLOG_ENABLE:
                 opts->syslog_enable = 1;
                 break;
-            case 'V':
-                fprintf(stdout, "fwknopd server %s\n", MY_VERSION);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_SUCCESS);
             default:
                 usage();
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1242,6 +1411,8 @@ usage(void)
       "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
       " -R, --restart           - Force the currently running fwknopd to restart.\n"
       "     --rotate-digest-cache\n"
+      "                         - Rotate the digest cache file by renaming the file\n"
+      "                           to the same path with the -old suffix.\n"
       " -r, --run-dir           - Set path to local state run directory.\n"
       "                         - Rotate the digest cache file by renaming it to\n"
       "                           '<name>-old', and starting a new one.\n"
@@ -1253,8 +1424,8 @@ usage(void)
       "     --syslog-enable     - Allow messages to be sent to syslog even if the\n"
       "                           foreground mode is set.\n"
       " -V, --version           - Print version number.\n"
-      " -A, --afl-fuzzing       - Run in American Fuzzy Lop (AFL) fuzzing mode\n"
-      "                           plaintext SPA packets are accepted via stdin.\n"
+      " -A, --afl-fuzzing       - Run in American Fuzzy Lop (AFL) fuzzing mode so\n"
+      "                           that plaintext SPA packets are accepted via stdin.\n"
       " -h, --help              - Print this usage message and exit.\n"
       " --dump-serv-err-codes   - List all server error codes (only needed by the\n"
       "                           test suite).\n"
@@ -1277,6 +1448,8 @@ usage(void)
       "                           done in the access.conf file).\n"
       "     --gpg-exe           - Specify the path to GPG (this is normally done in\n"
       "                           the access.conf file).\n"
+      "     --sudo-exe          - Specify the path to sudo (the default path is\n"
+      "                           /usr/bin/sudo).\n"
       " --no-firewd-check-support\n"
       "                         - Disable test for 'firewall-cmd ... -C' support.\n"
       " --no-ipt-check-support  - Disable test for 'iptables -C' support.\n"

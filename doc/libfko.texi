@@ -550,7 +550,7 @@ parsing, and data extraction.
 For building a new fko @acronym{SPA} message, you will use the @code{fko_new}
 function:
 
-@deftypefun int fko_new (@w{fko_ctx_t @var{*ctx}})
+@deftypefun int fko_new (fko_ctx_t @var{*ctx})
 The function @code{fko_new} sets up and initializes a new @code{fko_ctx_t}
 object, pre-populates default values and returns a handle for it in @var{ctx}.
 The function returns the error code @code{FKO_SUCCESS} if the context was
@@ -577,7 +577,8 @@ if(rc != FKO_SUCCESS)
 For a context that will be used for receiving and parsing an existing
 @acronym{SPA} message, you will use the @code{fko_new_with_data} function:
 
-@deftypefun int fko_new_with_data (@w{fko_ctx_t @var{*ctx}, const char @var{*data}, const char @var{*key}, const char @var{key_len}, int @var{encryption_mode}, const char @var{hmac_key}, const int @var{hmac_type}})
+@deftypefun int fko_new_with_data @
+  (fko_ctx_t @var{*ctx}, const char @var{*data}, const char @var{*key}, const char @var{key_len}, int @var{encryption_mode}, const char @var{hmac_key}, const int @var{hmac_type})
 
 The function @code{fko_new_with_data} sets up and initializes a new
 @code{fko_ctx_t} context, but instead of initializing default values, it
@@ -698,7 +699,7 @@ the memory and resources it was using.  This is especially important in
 programs that process @acronym{SPA} data repeatedly (i.e. in a loop).
 Failure to destroy the context can cause memory leaks in your program.
 
-@deftypefun void fko_destroy (@w{fko_ctx_t @var{ctx}})
+@deftypefun void fko_destroy (fko_ctx_t @var{ctx})
 The function @code{fko_destroy} destroys the context with the handle
 @var{ctx} and releases all associated resources.
 @end deftypefun
@@ -845,7 +846,7 @@ return an integer representing the return status of the function. When
 succesfull, they will return @code{FKO_SUCCESS}.  Otherwise, an error
 code value is returned.
 
-@deftypefun int fko_set_spa_digest_type (@w{fko_ctx_t @var{ctx}, short @var{digest_type}});
+@deftypefun int fko_set_spa_digest_type (fko_ctx_t @var{ctx}, short @var{digest_type});
 Set the message digest type.  Valid values can be found in @ref{Digests}
 of this manual. If a value other than the those that are supported is given,
 the function will return @code{FKO_ERROR_INVALID_DATA}.
@@ -855,7 +856,7 @@ For example:
 @end example
 @end deftypefun
 
-@deftypefun int fko_set_spa_hmac_type (@w{fko_ctx_t @var{ctx}, short @var{hmac_type}});
+@deftypefun int fko_set_spa_hmac_type (fko_ctx_t @var{ctx}, short @var{hmac_type});
 Set the message hmac type.  Valid values can be found in @ref{HMAC Digests}
 of this manual. If a value other than the those that are supported is given,
 the function will return @code{FKO_ERROR_INVALID_DATA}.
@@ -865,7 +866,7 @@ For example:
 @end example
 @end deftypefun
 
-@deftypefun int fko_set_spa_encryption_type (@w{fko_ctx_t @var{ctx}, short @var{encrypt_type}});
+@deftypefun int fko_set_spa_encryption_type (fko_ctx_t @var{ctx}, short @var{encrypt_type});
 Set the encrytion algorithm to use when ecrypting the final @acronym{SPA}
 data. Valid values can be found in @ref{Encryption Algorithms} of this
 manual.
@@ -875,7 +876,7 @@ For example:
 @end example
 @end deftypefun
 
-@deftypefun int fko_set_rand_value (@w{fko_ctx_t @var{ctx}, const char @var{*val}});
+@deftypefun int fko_set_rand_value (fko_ctx_t @var{ctx}, const char @var{*val});
 Set the random value portion of the spa data to the given value (@var{val}).
 The given value must be a pointer to a 16-character decimal numeric string
 or NULL.  If the value is NULL, the function generate a new random value.
@@ -883,7 +884,7 @@ If a string value is provided, it must be a 16-character decimal string.
 Otherwise, the function will return @code{FKO_ERROR_INVALID_DATA}.
 @end deftypefun
 
-@deftypefun int fko_set_username (@w{fko_ctx_t @var{ctx}, const char @var{*username}});
+@deftypefun int fko_set_username (fko_ctx_t @var{ctx}, const char @var{*username});
 Set the username field of the @acronym{SPA} data. If @var{username} is NULL,
 libfko will first look for the environment variable @env{SPOOF_USER}
 and use its value if found.  Otherwise, it will try to determine the username
@@ -892,12 +893,12 @@ then fallback to the environment variables @env{LOGNAME} or @env{USER}. If
 none of those work, the function will return @code{FKO_ERROR_USERNAME_UNKNOWN}.
 @end deftypefun
 
-@deftypefun int fko_set_timestamp (@w{fko_ctx_t @var{ctx}, int @var{offset}});
+@deftypefun int fko_set_timestamp (fko_ctx_t @var{ctx}, int @var{offset});
 Sets the timestamp value of the SPA data to the current time plus the offset
 value.
 @end deftypefun
 
-@deftypefun int fko_set_spa_message_type (@w{fko_ctx_t @var{ctx}, short @var{msg_type}});
+@deftypefun int fko_set_spa_message_type (fko_ctx_t @var{ctx}, short @var{msg_type});
 Sets the message type for the SPA data. The choices for the
 @code{spa_message_type} are listed in @ref{SPA Messages}.
 For example:
@@ -906,25 +907,25 @@ For example:
 @end example
 @end deftypefun
 
-@deftypefun int fko_set_spa_message (@w{fko_ctx_t @var{ctx}, const char @var{*msg_string}});
+@deftypefun int fko_set_spa_message (fko_ctx_t @var{ctx}, const char @var{*msg_string});
 Set the SPA message string to the given value. If this string does not
 conform to the required @code{spa_nat_access} format, the function will
 return @code{FKO_ERROR_INVALID_DATA}.
 @end deftypefun
 
-@deftypefun int fko_set_spa_nat_access (@w{fko_ctx_t @var{ctx}, const char @var{*nat_access}});
+@deftypefun int fko_set_spa_nat_access (fko_ctx_t @var{ctx}, const char @var{*nat_access});
 Set the optional SPA nat access string to the given value. If this string
 does not conform to the required @code{spa_nat_access} format, the function
 will return
 @code{FKO_ERROR_INVALID_DATA}.
 @end deftypefun
 
-@deftypefun int fko_set_spa_server_auth (@w{fko_ctx_t @var{ctx}, const char @var{*server_auth}});
+@deftypefun int fko_set_spa_server_auth (fko_ctx_t @var{ctx}, const char @var{*server_auth});
 Set the optional (very seldom used) SPA server auth feature to the given
 value.  This parameter may become deprecated.
 @end deftypefun
 
-@deftypefun int fko_set_spa_client_timeout (@w{fko_ctx_t @var{ctx}, int @var{timeout}});
+@deftypefun int fko_set_spa_client_timeout (fko_ctx_t @var{ctx}, int @var{timeout});
 Sets the SPA client timeout value.  If the timeout is set to a value greater
 than 0, it is assumed the @code{spa_message_type} setting should be one of
 the ``TIMEOUT'' variants.  This function will change the @code{message_type}
@@ -932,7 +933,7 @@ to the appropriate setting if necessary.  However, it is recommended you set
 the correct @code{message_type} ahead of time.
 @end deftypefun
 
-@deftypefun int fko_set_spa_digest (@w{fko_ctx_t @var{ctx}});
+@deftypefun int fko_set_spa_digest (fko_ctx_t @var{ctx});
 Initiates a calculation (or recalculation) of the message digest hash for the
 current @acronym{SPA} data. If the required data fields are not set this
 function will return @code{FKO_ERROR_MISSING_ENCODED_DATA}.
@@ -941,7 +942,7 @@ as it will be called automatically by other functions during normal
 processing (most notably @code{fko_spa_data_final}).
 @end deftypefun
 
-@deftypefun int fko_set_spa_hmac (@w{fko_ctx_t @var{ctx}, const char @var{*hmac_key}, const int @var{hmac_key_len}});
+@deftypefun int fko_set_spa_hmac (fko_ctx_t @var{ctx}, const char @var{*hmac_key}, const int @var{hmac_key_len});
 Initiates a calculation (or recalculation) of the message HMAC for the
 current @acronym{SPA} data.
 @strong{Note}: It should not be necessary to call this function directly
@@ -949,7 +950,7 @@ as it will be called automatically by other functions during normal
 processing (most notably @code{fko_spa_data_final}).
 @end deftypefun
 
-@deftypefun int fko_set_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*enc_data}});
+@deftypefun int fko_set_spa_data (fko_ctx_t @var{ctx}, char @var{*enc_data});
 This function is used to place encrypted @acronym{SPA} data into a newly
 created empty context (i.e. with @code{fko_new}). In most cases, you would
 use @code{fko_new_with_data} so you wouldn't have to take the extra step to
@@ -960,37 +961,37 @@ use this function.  However, some may find a reason to do it in this way.
 @noindent
 @emph{GPG-specific functions:}
 
-@deftypefun int fko_set_gpg_recipient (@w{fko_ctx_t @var{ctx}, const char @var{recipient}});
+@deftypefun int fko_set_gpg_recipient (fko_ctx_t @var{ctx}, const char @var{recipient});
 Sets the @acronym{GPG} key for the recipient.  This would be the recipient's
 public key used to encyrpt the @acronym{SPA} data.  You can use the user name 
 ("recip@@the.dest.com") or the key ID ("5EXXXXCC").  At present, multiple
 recipients are not supported.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_signer (@w{fko_ctx_t @var{ctx}, const char @var{signer}});
+@deftypefun int fko_set_gpg_signer (fko_ctx_t @var{ctx}, const char @var{signer});
 Sets the @acronym{GPG} key for signing the data.  This would be the sender's
 key used to sign the @acronym{SPA} data. You can use the user name or key ID.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_home_dir (@w{fko_ctx_t @var{ctx}, const char @var{home_dir}});
+@deftypefun int fko_set_gpg_home_dir (fko_ctx_t @var{ctx}, const char @var{home_dir});
 Sets the @acronym{GPG} home directory for the current gpgme context.  This
 allows for using alternate keyrings, gpg configurations, etc.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_signature_verify (@w{fko_ctx_t @var{ctx}, unsigned char @var{verify}});
+@deftypefun int fko_set_gpg_signature_verify (fko_ctx_t @var{ctx}, unsigned char @var{verify});
 Sets the verify @acronym{GPG} signature flag.  When set to a true value, the
 @acronym{GPG} signature is extracted and checked for validity during the
 decryption/decoding phase.  When set to false, no attempt is made to access
 or check the signature.  This flag is set to true by default.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_ignore_verify_error (@w{fko_ctx_t @var{ctx}, unsigned char @var{ignore}});
+@deftypefun int fko_set_gpg_ignore_verify_error (fko_ctx_t @var{ctx}, unsigned char @var{ignore});
 Sets the ignore signature verify error flag.  When set to a true value. Any
 signature verification errors are ignored (but still captured) and the
 decoding process will continue.  The default value of this flag is false.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_exe (@w{fko_ctx_t @var{ctx}, const char @var{gpg_exe}});
+@deftypefun int fko_set_gpg_exe (fko_ctx_t @var{ctx}, const char @var{gpg_exe});
 Sets the path to the @acronym{GPG} executable that @emph{gpgme} will use.
 By default, @emph{libfko} forces @emph{gpgme} to use @command{gpg} in case
 @emph{gpgme} was compiled to use @command{gpg2} as its default engine.  You
@@ -1013,32 +1014,32 @@ an FKO error code. The value of the respective field or parmeter that is
 being retrieved will placed into the variables whose addresses are passed
 to the function.
 
-@deftypefun int fko_get_spa_data (@w{fko_ctx_t @var{ctx}, char @var{**spa_data}});
+@deftypefun int fko_get_spa_data (fko_ctx_t @var{ctx}, char @var{**spa_data});
 Assigns the pointer to the string holding the final encrypted
 @acronym{SPA} data to the address @var{spa_data} is pointing to.  This is the
 data that would be packaged into a packet and sent to an fwknop server.
 The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_rand_value (@w{fko_ctx_t @var{ctx}, char @var{**rand_val}});
+@deftypefun int fko_get_rand_value (fko_ctx_t @var{ctx}, char @var{**rand_val});
 Assigns the pointer to the string holding the random 16-character decimal
 number (@code{rand_val}) associated with the current context to the address
 @var{rand_val} is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_username (@w{fko_ctx_t @var{ctx}, char @var{**username}});
+@deftypefun int fko_get_username (fko_ctx_t @var{ctx}, char @var{**username});
 Assigns the pointer to the string holding the username associated with the
 current context to the address @var{rand_val} is pointing to.  The return value
 is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_timestamp (@w{fko_ctx_t @var{ctx}, time_t @var{*timestamp}});
+@deftypefun int fko_get_timestamp (fko_ctx_t @var{ctx}, time_t @var{*timestamp});
 Sets the value of the @var{timestamp} variable to the timestamp value
 associated with the current context.  The return value is an FKO error
 status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_message_type (@w{fko_ctx_t @var{ctx}, short @var{*msg_type}});
+@deftypefun int fko_get_spa_message_type (fko_ctx_t @var{ctx}, short @var{*msg_type});
 Sets the value of the @var{msg_type} variable to the @acronym{SPA} message
 type value associated with the current context.  This value can be checked
 against the list of valid message_types listed in @ref{SPA Messages} of this
@@ -1062,64 +1063,64 @@ manual.  For example:
 The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_message (@w{fko_ctx_t @var{ctx}, char @var{**spa_msg}});
+@deftypefun int fko_get_spa_message (fko_ctx_t @var{ctx}, char @var{**spa_msg});
 Assigns the pointer to the string holding the the fko @acronym{SPA} request
 message associated with the current context to the address @var{spa_msg} is
 pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_nat_access (@w{fko_ctx_t @var{ctx}, char @var{**nat_access}});
+@deftypefun int fko_get_spa_nat_access (fko_ctx_t @var{ctx}, char @var{**nat_access});
 Assigns the pointer to the string holding the the fko @acronym{SPA} nat access
 message associated with the current context to the address @var{nat_access} is
 pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_server_auth (@w{fko_ctx_t @var{ctx}, char @var{**server_auth}});
+@deftypefun int fko_get_spa_server_auth (fko_ctx_t @var{ctx}, char @var{**server_auth});
 Assigns the pointer to the string holding the the fko @acronym{SPA} server
 auth message associated with the current context to the address
 @var{server_auth} is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_client_timeout (@w{fko_ctx_t @var{ctx}, int @var{*client_timeout}});
+@deftypefun int fko_get_spa_client_timeout (fko_ctx_t @var{ctx}, int @var{*client_timeout});
 Sets the value of the @var{client_timeout} variable to the client_timeout
 value associated with the current context. The return value is an FKO error
 status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_digest_type (@w{fko_ctx_t @var{ctx}, short @var{*digest_type}});
+@deftypefun int fko_get_spa_digest_type (fko_ctx_t @var{ctx}, short @var{*digest_type});
 Sets the value of the @var{digest_type} variable to the digest type value
 associated with the current context. This value can be checked against the
 list of valid digest_types listed in @ref{Digests} of this manual.  The
 return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_hmac_type (@w{fko_ctx_t @var{ctx}, short @var{*hmac_type}});
+@deftypefun int fko_get_spa_hmac_type (fko_ctx_t @var{ctx}, short @var{*hmac_type});
 Sets the value of the @var{hmac_type} variable to the HMAC type value
 associated with the current context. This value can be checked against the
 list of valid hmac_types listed in @ref{HMAC Digests} of this manual.  The
 return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_digest (@w{fko_ctx_t @var{ctx}, char @var{**spa_digest}});
+@deftypefun int fko_get_spa_digest (fko_ctx_t @var{ctx}, char @var{**spa_digest});
 Assigns the pointer to the string holding the the fko @acronym{SPA} digest
 value associated with the current context to the address @var{spa_digest}
 is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_hmac (@w{fko_ctx_t @var{ctx}, char @var{**spa_hmac}});
+@deftypefun int fko_get_spa_hmac (fko_ctx_t @var{ctx}, char @var{**spa_hmac});
 Assigns the pointer to the string holding the the fko @acronym{SPA} HMAC
 value associated with the current context to the address @var{spa_hmac}
 is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_spa_encryption_type (@w{fko_ctx_t @var{ctx}, short @var{*enc_type}});
+@deftypefun int fko_get_spa_encryption_type (fko_ctx_t @var{ctx}, short @var{*enc_type});
 Sets the value of the @var{enc_type} variable to the encryption type value
 associated with the current context. This value can be checked against the
 list of valid digest_types listed in @ref{Encryption Algorithms} of this
 manual.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_encoded_data (@w{fko_ctx_t @var{ctx}, char @var{**enc_msg}});
+@deftypefun int fko_get_encoded_data (fko_ctx_t @var{ctx}, char @var{**enc_msg});
 Assigns the pointer to the string holding the the encoded @acronym{SPA} data
 (before encryption) associated with the current context to the address
 @var{enc_msg} is pointing to.  This is intermediate data that would not
@@ -1127,7 +1128,7 @@ normally be of use unless debugging the library. The return value is an
 FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_version (@w{fko_ctx_t @var{ctx}, char @var{**fko_version}});
+@deftypefun int fko_get_version (fko_ctx_t @var{ctx}, char @var{**fko_version});
 Assigns the pointer to the string holding the the @acronym{SPA} version
 value associated with the current context to the address @var{fko_version}
 is pointing to.  This is a static value for @acronym{SPA} data that is being
@@ -1140,61 +1141,61 @@ value is an FKO error status.
 @noindent
 @emph{GPG-specific functions:}
 
-@deftypefun int fko_get_gpg_recipient (@w{fko_ctx_t @var{ctx}, char @var{**recipient}});
+@deftypefun int fko_get_gpg_recipient (fko_ctx_t @var{ctx}, char @var{**recipient});
 Assigns the pointer to the string holding the the @acronym{GPG} recipient ID
 associated with the current context to the address @var{recipient} is pointing
 to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signer (@w{fko_ctx_t @var{ctx}, char @var{**signer}});
+@deftypefun int fko_get_gpg_signer (fko_ctx_t @var{ctx}, char @var{**signer});
 Assigns the pointer to the string holding the the @acronym{GPG} signer ID
 associated with the current context to the address @var{signer} is pointing
 to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_home_dir (@w{fko_ctx_t @var{ctx}, char @var{**gpg_dir}});
+@deftypefun int fko_get_gpg_home_dir (fko_ctx_t @var{ctx}, char @var{**gpg_dir});
 Assigns the pointer to the string holding the the @acronym{GPG} home directory
 associated with the current context to the address @var{gpg_dir} is pointing
 to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signature_verify (@w{fko_ctx_t @var{ctx}, unsigned char @var{*val}});
+@deftypefun int fko_get_gpg_signature_verify (fko_ctx_t @var{ctx}, unsigned char @var{*val});
 Sets the value of the @var{val} variable to the current gpg_signature_verify
 flag value associated with the current context. The return value is an FKO
 error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_ignore_verify_error (@w{fko_ctx_t @var{ctx}, unsigned char @var{*val}});
+@deftypefun int fko_get_gpg_ignore_verify_error (fko_ctx_t @var{ctx}, unsigned char @var{*val});
 Sets the value of the @var{val} variable to the current ignore_verify_error
 flag value associated with the current context. The return value is an FKO
 error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signature_id (@w{fko_ctx_t @var{ctx}, char @var{**sig_id}});
+@deftypefun int fko_get_gpg_signature_id (fko_ctx_t @var{ctx}, char @var{**sig_id});
 Assigns the pointer to the string holding the the @acronym{GPG} signature ID
 associated with the current context to the address @var{sig_id} is pointing
 to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signature_fpr (@w{fko_ctx_t @var{ctx}, char @var{**sig_fpr}});
+@deftypefun int fko_get_gpg_signature_fpr (fko_ctx_t @var{ctx}, char @var{**sig_fpr});
 Assigns the pointer to the string holding the the @acronym{GPG} signature
 fingerprint associated with the current context to the address @var{sig_fpr}
 is pointing to.  The return value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signature_summary (@w{fko_ctx_t @var{ctx}, int @var{*sig_sum}});
+@deftypefun int fko_get_gpg_signature_summary (fko_ctx_t @var{ctx}, int @var{*sig_sum});
 Sets the value of the @var{sig_sum} variable to the @acronym{GPG} signature
 summary value associated with the current context. The return value is an FKO
 error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_signature_status (@w{fko_ctx_t @var{ctx}, int @var{*sig_stat}});
+@deftypefun int fko_get_gpg_signature_status (fko_ctx_t @var{ctx}, int @var{*sig_stat});
 Sets the value of the @var{sig_stat} variable to the @acronym{GPG} signature
 error status value associated with the current context. The return value is an
 FKO error status.
 @end deftypefun
 
-@deftypefun int fko_get_gpg_exe (@w{fko_ctx_t @var{ctx}, char @var{**gpg_exe}});
+@deftypefun int fko_get_gpg_exe (fko_ctx_t @var{ctx}, char @var{**gpg_exe});
 Assigns the pointer to the string holding the the @acronym{GPG} executable path
 associated with the current context to the address @var{gpg_exe} is pointing
 to.  The return value is an FKO error status.
@@ -1219,14 +1220,14 @@ All of these functions return an integer representing the return status of
 the function. When succesfull, they will return @code{FKO_SUCCESS}.
 Otherwise, an error code value is returned.
 
-@deftypefun int fko_spa_data_final (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}, int @var{ken_len}, char @var{*hmac_key}, int @var{hmac_key_len}});
+@deftypefun int fko_spa_data_final (fko_ctx_t @var{ctx}, char @var{*enc_key}, int @var{ken_len}, char @var{*hmac_key}, int @var{hmac_key_len});
 This function is the final step in creating a complete encrypted
 @acronym{SPA} data string suitable for transmission to an fwknop server.
 It does require all of the requisite @acronym{SPA} data fields be set,
 otherwise it will fail with an appropriate error code.
 @end deftypefun
 
-@deftypefun int fko_decrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*dec_key}, int @var{key_len}});
+@deftypefun int fko_decrypt_spa_data (fko_ctx_t @var{ctx}, char @var{*dec_key}, int @var{key_len});
 When given the correct @var{key} (password), this function decrypts, decodes,
 and parses the encrypted @acronym{SPA} data that was supplied to the context
 via the @code{fko_new_with_data} function that was also called without the
@@ -1235,20 +1236,20 @@ via the @code{fko_new_with_data} function that was also called without the
 fields in the context for later retrieval.
 @end deftypefun
 
-@deftypefun int fko_encrypt_spa_data (@w{fko_ctx_t @var{ctx}, char @var{*enc_key}, int @var{key_len}});
+@deftypefun int fko_encrypt_spa_data (fko_ctx_t @var{ctx}, char @var{*enc_key}, int @var{key_len});
 Encrypts the intermediate encoded @acronym{SPA} data stored in the context.
 This function will call @code{fko_encode} if necessary.  It is normally not
 called directly as it is called from @code{fko_spa_data_final}.
 @end deftypefun
 
-@deftypefun int fko_decode_spa_data (@w{fko_ctx_t @var{ctx}});
+@deftypefun int fko_decode_spa_data (fko_ctx_t @var{ctx});
 This function performs the decoding, parsing, validation of the @acronym{SPA} 
 data that was just decrypted. It is normally not called directly as it is
 called from @code{fko_decrypt_spa_data} (which is in turn called from
 @code{fko_new_with_data} if a password is supplied to it).
 @end deftypefun
 
-@deftypefun int fko_encode_spa_data (@w{fko_ctx_t @var{ctx}});
+@deftypefun int fko_encode_spa_data (fko_ctx_t @var{ctx});
 Performs the base64 encoding of those @acronym{SPA} data fields that
 need to be encoded, performs some data validation, and calls
 @code{fkp_set_spa_digest} to recompute the @acronym{SPA} message
@@ -1261,14 +1262,14 @@ called from @code{fko_encrypt_spa_data} (which is in turn called from
 @noindent
 @emph{GPG-specific utility functions:}
 
-@deftypefun int fko_gpg_signature_id_match (@w{fko_ctx_t @var{ctx}, const char @var{*id}, unsigned char @var{*id_match}});
+@deftypefun int fko_gpg_signature_id_match (fko_ctx_t @var{ctx}, const char @var{*id}, unsigned char @var{*id_match});
 Sets the value of the @var{id_match} variable to true (1) if the value of
 @var{id} matches the ID of the @acronym{GPG} signature associated with the
 current context. Otherwise, @var{id_match} is set to false (0). The return
 value is an FKO error status.
 @end deftypefun
 
-@deftypefun int fko_gpg_signature_fpr_match (@w{fko_ctx_t @var{ctx}, const char @var{*fpr}, unsigned char @var{*fpr_match}});
+@deftypefun int fko_gpg_signature_fpr_match (fko_ctx_t @var{ctx}, const char @var{*fpr}, unsigned char @var{*fpr_match});
 Sets the value of the @var{fpr_match} variable to true (1) if the value of
 @var{fpr} matches the fingerprint of the @acronym{GPG} signature associated
 with the current context. Otherwise, @var{fpr_match} is set to false (0).
@@ -1286,7 +1287,7 @@ success (0), or one of the non-zero values thar corresponds to a number
 of possible errors.  libfko provides a function to get a descriptive string
 for the given error code.
 
-@deftypefun {const char *} fko_errstr (@w{int @var{err_code}})
+@deftypefun {const char *} fko_errstr (int @var{err_code})
 The function @code{fko_errstr} returns a pointer to a statically
 allocated string containing the descripton of the error.
 @end deftypefun
@@ -1304,9 +1305,173 @@ FKO Context is not initialized
 @item FKO_ERROR_MEMORY_ALLOCATION
 Unable to allocate memory
 @item FKO_ERROR_FILESYSTEM_OPERATION
-Read/write bytes mismiatch
+Read/write bytes mismatch
 @item FKO_ERROR_INVALID_DATA
 Args contain invalid data
+@item FKO_ERROR_INVALID_DATA_CLIENT_TIMEOUT_NEGATIVE
+Invalid data: negative timeout value
+@item FKO_ERROR_INVALID_DATA_DECODE_MSGLEN_VALIDFAIL
+Invalid data: invalid message length
+@item FKO_ERROR_INVALID_DATA_DECODE_NON_ASCII
+Invalid data: contains non-ascii characters
+@item FKO_ERROR_INVALID_DATA_DECODE_LT_MIN_FIELDS
+Invalid data: insufficient number of data fields
+@item FKO_ERROR_INVALID_DATA_DECODE_GT_MAX_FIELDS
+Invalid data: too many data fields
+@item FKO_ERROR_INVALID_DATA_DECODE_WRONG_NUM_FIELDS
+Invalid data: invalid number of fields
+@item FKO_ERROR_INVALID_DATA_DECODE_ENC_MSG_LEN_MT_T_SIZE
+Invalid data: decode: encoded message - digest size is not valid
+@item FKO_ERROR_INVALID_DATA_DECODE_RAND_MISSING
+Invalid data: decode: missing random data
+@item FKO_ERROR_INVALID_DATA_DECODE_USERNAME_MISSING
+Invalid data: decode: missing username
+@item FKO_ERROR_INVALID_DATA_DECODE_USERNAME_TOOBIG
+Invalid data: decode: username to large
+@item FKO_ERROR_INVALID_DATA_DECODE_USERNAME_DECODEFAIL
+Invalid data: decode: failed to decode username
+@item FKO_ERROR_INVALID_DATA_DECODE_USERNAME_VALIDFAIL
+Invalid data: decode: invalid username
+@item FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_MISSING
+Invalid data: decode: missing timestamp
+@item FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_TOOBIG
+Invalid data: decode: timestamp too large
+@item FKO_ERROR_INVALID_DATA_DECODE_TIMESTAMP_DECODEFAIL
+Invalid data: decode: failed to decode timestamp
+@item FKO_ERROR_INVALID_DATA_DECODE_VERSION_MISSING
+Invalid data: decode: missing version data
+@item FKO_ERROR_INVALID_DATA_DECODE_VERSION_TOOBIG
+Invalid data: decode: version data is too large
+@item FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_MISSING
+Invalid data: decode: missing message type
+@item FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_TOOBIG
+Invalid data: decode: message type is too large
+@item FKO_ERROR_INVALID_DATA_DECODE_MSGTYPE_DECODEFAIL
+Invalid data: decode: failed to decode message type
+@item FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_MISSING
+Invalid data: decode: missing message data
+@item FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_TOOBIG
+Invalid data: decode: message data is too large
+@item FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_DECODEFAIL
+Invalid data: decode: failed to decode message data
+@item FKO_ERROR_INVALID_DATA_DECODE_MESSAGE_VALIDFAIL
+Invalid data: decode: invalid message data
+@item FKO_ERROR_INVALID_DATA_DECODE_ACCESS_VALIDFAIL
+Invalid data: decode: invliad access data
+@item FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_MISSING
+Invalid data: decode: missing NAT access data
+@item FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_TOOBIG
+Invalid data: decode: NAT access data is too large
+@item FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_DECODEFAIL
+Invalid data: decode: failed to decode NAT access data
+@item FKO_ERROR_INVALID_DATA_DECODE_NATACCESS_VALIDFAIL
+Invalid data: decode: invalid NAT access
+@item FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_MISSING
+Invalid data: decode: missing server auth
+@item FKO_ERROR_INVALID_DATA_DECODE_SRVAUTH_DECODEFAIL
+Invalid data: decode: server auth decode fail
+@item FKO_ERROR_INVALID_DATA_DECODE_SPA_EXTRA_TOOBIG
+Invalid data: decode: SPA extra too large
+@item FKO_ERROR_INVALID_DATA_DECODE_EXTRA_TOOBIG
+Invalid data: decode: extra too large
+@item FKO_ERROR_INVALID_DATA_DECODE_EXTRA_DECODEFAIL
+Invalid data: decode: extra decode failed
+@item FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_MISSING
+Invalid data: decode: missing timeout
+@item FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_TOOBIG
+Invalid data: decode timeout value is too large
+@item FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_VALIDFAIL
+Invalid data: decode invalid timeout
+@item FKO_ERROR_INVALID_DATA_DECODE_TIMEOUT_DECODEFAIL
+Invalid data: decode: timeout decode failed
+@item FKO_ERROR_INVALID_DATA_ENCODE_MESSAGE_TOOBIG
+Invalid data: encode: message is too large
+@item FKO_ERROR_INVALID_DATA_ENCODE_MSGLEN_VALIDFAIL
+Invalid data: encode: invalid message length
+@item FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_VALIDFAIL
+Invalid data: encode: invalid digest
+@item FKO_ERROR_INVALID_DATA_ENCODE_DIGEST_TOOBIG
+Invalid data: encode: digest is too large
+@item FKO_ERROR_INVALID_DATA_ENCODE_NOTBASE64
+Invalid data: encoded data is not Base64
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_MSGLEN_VALIDFAIL
+Invalid data: encrypt: invalid message length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_DIGESTLEN_VALIDFAIL
+Invalid data: encrypt: invalid digest length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_PTLEN_VALIDFAIL
+Invalid data: encrypt: invalid plaintext length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_RESULT_MSGLEN_VALIDFAIL
+Invalid data: encrypt: invalid encrypt result message length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_DECODEFAIL
+Invalid data: encrypt: decode cipher length failed
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_CIPHERLEN_VALIDFAIL
+Invalid data: encrypt: invalid cipher length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MESSAGE_MISSING
+Invalid data: encrypt: missing decrypted message
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MSGLEN_VALIDFAIL
+Invalid data: encrypt: invalid decrypted message length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_VALIDFAIL
+Invalid data: encrypt: invalid encryption type
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_MODE_VALIDFAIL
+Invalid data: encrypt: invalid encryption mode
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_TYPE_UNKNOWN
+Invalid data: encrypt: unknown encryption type
+@item FKO_ERROR_INVALID_DATA_FUNCS_NEW_ENCMSG_MISSING
+Invalid data: missing encoded message
+@item FKO_ERROR_INVALID_DATA_FUNCS_NEW_MSGLEN_VALIDFAIL
+Invalid data: invalid message length from new
+@item FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEYLEN_VALIDFAIL
+Invalid data: invalid key length from gen_keylen
+@item FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMACLEN_VALIDFAIL
+Invalid data: gen_hmaclen failure
+@item FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEY_ENCODEFAIL
+Invalid data: gen_key: encode failure
+@item FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMAC_ENCODEFAIL
+Invalid data: gen_hmac: encode failure
+@item FKO_ERROR_INVALID_DATA_FUNCS_SET_MSGLEN_VALIDFAIL
+Invalid data: set_spa_data: invalid message length
+@item FKO_ERROR_INVALID_DATA_HMAC_MSGLEN_VALIDFAIL
+Invalid data: invalid HMAC msglen
+@item FKO_ERROR_INVALID_DATA_HMAC_ENCMSGLEN_VALIDFAIL
+Invalid data: invalid length for encrypted message
+@item FKO_ERROR_INVALID_DATA_HMAC_COMPAREFAIL
+Invalid data: HMAC comparison failed
+@item FKO_ERROR_INVALID_DATA_HMAC_TYPE_VALIDFAIL
+Invalid data: invalid HMAC type
+@item FKO_ERROR_INVALID_DATA_HMAC_LEN_VALIDFAIL
+Invalid data: invalid HMAC length
+@item FKO_ERROR_INVALID_DATA_MESSAGE_PORT_MISSING
+Invalid data: missing port
+@item FKO_ERROR_INVALID_DATA_MESSAGE_TYPE_VALIDFAIL
+Invalid data: invalid message type
+@item FKO_ERROR_INVALID_DATA_MESSAGE_EMPTY
+Invalid data: empty data message
+@item FKO_ERROR_INVALID_DATA_MESSAGE_CMD_MISSING
+Invalid data: missing command message
+@item FKO_ERROR_INVALID_DATA_MESSAGE_ACCESS_MISSING
+Invalid data: missing access message
+@item FKO_ERROR_INVALID_DATA_MESSAGE_NAT_MISSING
+Invalid data: missing NAT data
+@item FKO_ERROR_INVALID_DATA_MESSAGE_PORTPROTO_MISSING
+Invalid data: missing proto/port data
+@item FKO_ERROR_INVALID_DATA_NAT_EMPTY
+Invalid data: empty NAT value
+@item FKO_ERROR_INVALID_DATA_RAND_LEN_VALIDFAIL
+Invalid data: invalid random data length
+@item FKO_ERROR_INVALID_DATA_SRVAUTH_MISSING
+Invalid data: server auth missing
+@item FKO_ERROR_INVALID_DATA_TIMESTAMP_VALIDFAIL
+Invalid data: invalid timestamp value
+@item FKO_ERROR_INVALID_DATA_USER_MISSING
+Invalid data: missing user data
+@item FKO_ERROR_INVALID_DATA_USER_FIRSTCHAR_VALIDFAIL
+Invalid data: user first char not valid
+@item FKO_ERROR_INVALID_DATA_USER_REMCHAR_VALIDFAIL
+Invalid data: user remchar not valid 
+@item FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN
+Invalid data: util conversion to long less than minimum 
+@item FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX
+Invalid data: util conversion to long greater than maximum
 @item FKO_ERROR_DATA_TOO_LARGE
 Value or Size of the data exceeded the max allowed
 @item FKO_ERROR_INVALID_KEY_LEN
@@ -1343,6 +1508,8 @@ Invalid HMAC key length
 Unsupported HMAC mode (default: SHA256)
 @item FKO_ERROR_UNSUPPORTED_FEATURE
 Unsupported or unimplemented feature or function
+@item FKO_ERROR_ZERO_OUT_DATA
+Could not zero out sensitive data
 @item FKO_ERROR_UNKNOWN
 Unknown/Unclassified error
 @end table
@@ -1406,6 +1573,20 @@ Missing GPG signature
 Bad GPG signature
 @item FKO_ERROR_GPGME_SIGNATURE_VERIFY_DISABLED
 Trying to check signature with verification disabled
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MESSAGE_VALIDFAIL
+Invalid data: encrypt: invalid GPG-encrypt message
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_DIGEST_VALIDFAIL
+Invalid data: encrypt: invalid GPG digest
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_MSGLEN_VALIDFAIL
+Invalid data: encrypt: invalid GPG message length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_RESULT_MSGLEN_VALIDFAIL
+Invalid data: encrypt: invalid GPG result message length
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_CIPHER_DECODEFAIL
+Invalid data: encrypt: GPG cipher failed
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSG_NULL
+Invalid data: encrypt: GPG-encoded message is NULL
+@item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSGLEN_VALIDFAIL
+Invalid data: encrypt: invalid GPG-encrypted message length 
 @end table
 @end deftypevar
 
@@ -1416,7 +1597,7 @@ using the following function:
 
 @cindex gpg-specific functions
 
-@deftypefun {const char *} fko_gpg_errstr (@w{int @var{err_code}})
+@deftypefun {const char *} fko_gpg_errstr (int @var{err_code})
 The function @code{fko_errstr} returns a pointer to a statically
 allocated string containing the descripton of the @acronym{GPGME} error.
 @end deftypefun
