@@ -26,18 +26,19 @@ $ ./test-fwknop.pl --enable-profile-coverage-check --loopback lo --client-only-m
 ~~~
 
 # Run test suites
-Once the build is complete, three test programs allow the user to run the tests suites:
+Once the build is complete, the three test programs (each in their respective directories)
+allow the user to run the tests suites:
 
- * fwknopd_utests: program to run fwknopd c unit test suites
- * fwknop_utests: program to run fwknop c unit test suites
- * fko_utests: program to run fko c unit test suites
+ * fwknopd_utests: program to run fwknopd c unit test suites (located in the server directory)
+ * fwknop_utests: program to run fwknop c unit test suites (located in the client directory)
+ * fko_utests: program to run fko c unit test suites (located in the lib directory)
 
 ~~~
-$ test/c-unit-tests/fwknopd_utests
+$ ./server/fwknopd_utests
 
 Suite: Access test suite
   Test: check compare_port_list function ...FAILED
-    1. ../../server/access.c:2017  - compare_port_list(acc_pl, in1_pl, 0) == 0
+    1. access.c:2120  - compare_port_list(acc_pl, in1_pl, 0) == 0
 
 Run Summary:    Type  Total    Ran Passed Failed Inactive
               suites      1      1    n/a      0        0
@@ -48,7 +49,7 @@ Elapsed time =    0.000 seconds
 ~~~
 
 ~~~
-$ test/c-unit-tests/fwknop_utests
+$ ./client/fwknop_utests
 
 Suite: Config init test suite
   Test: Check critcial vars ...passed
@@ -63,7 +64,7 @@ Elapsed time =    0.000 seconds
 ~~~
 
 ~~~
-$ test/c-unit-tests/fko_utests
+$ ./lib/fko_utests
 
 Suite: FKO decode test suite
   Test: Count the number of SPA fields in a SPA packet ...passed

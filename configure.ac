@@ -756,7 +756,6 @@ AC_CONFIG_FILES([Makefile
                  client/Makefile
                  server/Makefile
                  common/Makefile
-                 test/c-unit-tests/Makefile
                  doc/Makefile])
 
 AC_OUTPUT

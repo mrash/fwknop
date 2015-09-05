@@ -8,16 +8,11 @@ if WANT_SERVER
   SERVER_DIR = server
 endif
 
-if WANT_C_UNIT_TESTS
-    C_UNIT_TESTS_DIR = test/c-unit-tests
-endif
-
 SUBDIRS = \
     common \
     lib \
     $(CLIENT_DIR) \
     $(SERVER_DIR) \
-    $(C_UNIT_TESTS_DIR) \
     doc
 
 EXTRA_DIST = \
@@ -459,6 +454,7 @@ EXTRA_DIST = \
     test/lcov.env \
     test/configure_max_coverage.sh \
     test/README \
+    test/c-unit-tests/README.md \
     VERSION \
     win32/config.h \
     win32/fwknop-client.vcproj \
