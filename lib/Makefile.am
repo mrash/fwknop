@@ -28,4 +28,4 @@ AM_CPPFLAGS         		= $(GPGME_CFLAGS) -I $(top_srcdir)/common
 include_HEADERS     		= fko.h
 
 clean-local:
-	rm -f fko_utests
+	rm -f fko_utests *.gcno *.gcda

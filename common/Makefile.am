@@ -13,3 +13,6 @@ libfko_util_a_SOURCES    	= $(libfko_util_source_files)
 AM_CPPFLAGS         		= $(GPGME_CFLAGS) -I $(top_srcdir)/common -I $(top_srcdir)/lib
 
 EXTRA_DIST = common.h netinet_common.h cunit_common.h cunit_common.c
+
+clean-local:
+	rm -f *.gcno *.gcda

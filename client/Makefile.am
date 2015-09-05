@@ -37,5 +37,5 @@ fwknop.8: $(top_srcdir)/client/fwknop.8.in
 		< $(top_srcdir)/client/fwknop.8.in > "$@"
 
 clean-local:
-	rm -f fwknop.8 fwknop_utests
+	rm -f fwknop.8 fwknop_utests *.gcno *.gcda
 
