@@ -124,6 +124,7 @@ enum
     FWKNOP_CLI_ARG_NAT_ACCESS,
     FWKNOP_CLI_ARG_HTTP_USER_AGENT,
     FWKNOP_CLI_ARG_RESOLVE_URL,
+    FWKNOP_CLI_ARG_SERVER_RESOLVE_IPV4,
     FWKNOP_CLI_ARG_NAT_LOCAL,
     FWKNOP_CLI_ARG_NAT_RAND_PORT,
     FWKNOP_CLI_ARG_NAT_PORT,
@@ -172,6 +173,7 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "NAT_ACCESS",            FWKNOP_CLI_ARG_NAT_ACCESS            },
     { "HTTP_USER_AGENT",       FWKNOP_CLI_ARG_HTTP_USER_AGENT       },
     { "RESOLVE_URL",           FWKNOP_CLI_ARG_RESOLVE_URL           },
+    { "SERVER_RESOLVE_IPV4",   FWKNOP_CLI_ARG_SERVER_RESOLVE_IPV4   },
     { "NAT_LOCAL",             FWKNOP_CLI_ARG_NAT_LOCAL             },
     { "NAT_RAND_PORT",         FWKNOP_CLI_ARG_NAT_RAND_PORT         },
     { "NAT_PORT",              FWKNOP_CLI_ARG_NAT_PORT              },
@@ -1195,6 +1197,14 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         }
         strlcpy(options->resolve_url, val, tmpint);
     }
+    /* Resolve the SPA server (via DNS) - accept IPv4 addresses only ? */
+    else if (var->pos == FWKNOP_CLI_ARG_SERVER_RESOLVE_IPV4)
+    {
+        if (is_yes_str(val))
+        {
+            options->spa_server_resolve_ipv4 = 1;
+        }
+    }
     /* wget command */
     else if (var->pos == FWKNOP_CLI_ARG_WGET_CMD)
     {
@@ -1416,6 +1426,9 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             if (options->resolve_url != NULL)
                 strlcpy(val, options->resolve_url, sizeof(val));
             else;
+            break;
+        case FWKNOP_CLI_ARG_SERVER_RESOLVE_IPV4:
+            bool_to_yesno(options->spa_server_resolve_ipv4, val, sizeof(val));
             break;
         case FWKNOP_CLI_ARG_NAT_LOCAL :
             bool_to_yesno(options->nat_local, val, sizeof(val));
@@ -2266,6 +2279,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 strlcpy(options->resolve_url, optarg, rlen);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_RESOLVE_URL, &var_bitmask);
                 break;
+            case SERVER_RESOLVE_IPV4:
+                options->spa_server_resolve_ipv4 = 1;
+                break;
             case 'w':
                 if(options->wget_bin != NULL)
                     free(options->wget_bin);
@@ -2563,6 +2579,8 @@ usage(void)
       "                             $HOME/fwknop.run file\n"
       "     --rc-file               Specify path to the fwknop rc file (default\n"
       "                             is $HOME/.fwknoprc)\n"
+      "     --server-resolve-ipv4   Force IPv4 address resolution from DNS for\n"
+      "                             SPA server when using a hostname.\n"
       "     --save-rc-stanza        Save command line arguments to the\n"
       "                             $HOME/.fwknoprc stanza specified with the\n"
       "                             -n option.\n"

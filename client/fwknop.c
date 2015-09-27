@@ -899,7 +899,8 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
          * family to either AF_INET or AF_INET6 */
         hints.ai_family = AF_INET;
 
-        if (resolve_dest_adr(hostname, &hints, dst_ip_str, sizeof(dst_ip_str)) != 0)
+        if (resolve_dst_addr(hostname, &hints,
+                    dst_ip_str, sizeof(dst_ip_str), options) != 0)
         {
             log_msg(LOG_VERBOSITY_ERROR, "[*] Unable to resolve %s as an ip address",
                     hostname);

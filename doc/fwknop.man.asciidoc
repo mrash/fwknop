@@ -462,6 +462,11 @@ SPA OPTIONS
 *-S, --source-port*='<port>'::
     Set the source port for outgoing SPA packet.
 
+*--server-resolve-ipv4*::
+    This option forces the *fwknop* client to only accept an IPv4 address from
+    DNS when a hostname is used for the SPA server. This is necessary in some
+    cases where DNS may return both IPv6 and IPv4 addresses.
+
 *-f, --fw-timeout*='<seconds>'::
     Specify the length of time (seconds) that the remote firewall rule that
     grants access to a service is to remain active. The default maintained by

@@ -136,6 +136,17 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
     }
 
     for (rp = result; rp != NULL; rp = rp->ai_next) {
+        /* Apply --server-resolve-ipv4 criteria
+        */
+        if(options->spa_server_resolve_ipv4)
+        {
+            if(rp->ai_family != AF_INET)
+            {
+                log_msg(LOG_VERBOSITY_DEBUG, "Non-IPv4 resolution");
+                continue;
+            }
+        }
+
         sock = socket(rp->ai_family, rp->ai_socktype,
                 rp->ai_protocol);
         if (sock < 0)
@@ -703,7 +714,8 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         return res;
 #endif
 
-        if (resolve_dest_adr(options->spa_server_str, &hints, ip_str, sizeof(ip_str)) != 0)
+        if (resolve_dst_addr(options->spa_server_str,
+                    &hints, ip_str, sizeof(ip_str), options) != 0)
         {
             log_msg(LOG_VERBOSITY_ERROR, "[*] Unable to resolve %s as an ip address",
                     options->spa_server_str);

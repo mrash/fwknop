@@ -49,6 +49,7 @@ enum {
     RC_FILE_PATH,
     RESOLVE_HTTP_ONLY,
     RESOLVE_URL,
+    SERVER_RESOLVE_IPV4,
     USE_HMAC,
     USE_WGET_USER_AGENT,
     SPA_ICMP_TYPE,
@@ -139,6 +140,7 @@ static struct option cmd_opts[] =
     {"resolve-ip-https",    0, NULL, 'R'}, /* synonym, default is HTTPS */
     {"resolve-http-only",   0, NULL, RESOLVE_HTTP_ONLY},
     {"resolve-url",         1, NULL, RESOLVE_URL},
+    {"server-resolve-ipv4", 0, NULL, SERVER_RESOLVE_IPV4},
     {"show-last",           0, NULL, SHOW_LAST_ARGS},
     {"source-ip",           0, NULL, 's'},
     {"source-port",         1, NULL, 'S'},
