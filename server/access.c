@@ -1589,7 +1589,7 @@ parse_access_file(fko_srv_options_t *opts)
         {
             if(add_acc_group(&(curr_acc->cmd_exec_group),
                         &(curr_acc->cmd_exec_gid), val,
-                        "CMD_SUDO_EXEC_GROUP") != SUCCESS)
+                        "CMD_EXEC_GROUP") != SUCCESS)
             {
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
