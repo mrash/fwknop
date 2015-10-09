@@ -54,13 +54,16 @@
 
 /* Add an access string entry
 */
-static int
-add_acc_string(char **var, const char *val)
+static void
+add_acc_string(char **var, const char *val, FILE *file_ptr,
+        fko_srv_options_t *opts)
 {
     if(var == NULL)
     {
         log_msg(LOG_ERR, "[*] add_acc_string() called with NULL variable");
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     if(*var != NULL)
@@ -71,21 +74,23 @@ add_acc_string(char **var, const char *val)
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding access list entry: %s", *var
         );
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
-    return SUCCESS;
+    return;
 }
 
 /* Add an access user entry
 */
-static int
+static void
 add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
-        const char *val, const char *var_name)
+        const char *val, const char *var_name, FILE *file_ptr,
+        fko_srv_options_t *opts)
 {
     struct passwd  *pw = NULL;
 
-    if(add_acc_string(user_var, val) != SUCCESS)
-        return FATAL_ERR;
+    add_acc_string(user_var, val, file_ptr, opts);
 
     errno = 0;
     upw = pw = getpwnam(val);
@@ -94,24 +99,25 @@ add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
     {
         log_msg(LOG_ERR, "[*] Unable to determine UID for %s: %s.",
                 var_name, errno ? strerror(errno) : "Not a user on this system");
-        return FATAL_ERR;
+        fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     *uid_var = pw->pw_uid;
 
-    return SUCCESS;
+    return;
 }
 
 /* Add an access group entry
 */
-static int
+static void
 add_acc_group(char **group_var, gid_t *gid_var,
-        const char *val, const char *var_name)
+        const char *val, const char *var_name, FILE *file_ptr,
+        fko_srv_options_t *opts)
 {
     struct passwd  *pw = NULL;
 
-    if(add_acc_string(group_var, val) != SUCCESS)
-        return FATAL_ERR;
+    add_acc_string(group_var, val, file_ptr, opts);
 
     errno = 0;
     pw = getpwnam(val);
@@ -120,25 +126,29 @@ add_acc_group(char **group_var, gid_t *gid_var,
     {
         log_msg(LOG_ERR, "[*] Unable to determine GID for %s: %s.",
                 var_name, errno ? strerror(errno) : "Not a group on this system");
-        return FATAL_ERR;
+        fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     *gid_var = pw->pw_gid;
 
-    return SUCCESS;
+    return;
 }
 
 /* Decode base64 encoded string into access entry
 */
-static int
-add_acc_b64_string(char **var, int *len, const char *val)
+static void
+add_acc_b64_string(char **var, int *len, const char *val, FILE *file_ptr,
+        fko_srv_options_t *opts)
 {
     if((*var = strdup(val)) == NULL)
     {
         log_msg(LOG_ERR,
             "[*] Fatal memory allocation error adding access list entry: %s", *var
         );
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
     memset(*var, 0x0, strlen(val));
     *len = fko_base64_decode(val, (unsigned char *) *var);
@@ -148,9 +158,11 @@ add_acc_b64_string(char **var, int *len, const char *val)
         log_msg(LOG_ERR,
             "[*] base64 decoding returned error for: %s", *var
         );
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
-    return SUCCESS;
+    return;
 }
 
 /* Add an access bool entry (unsigned char of 1 or 0)
@@ -198,8 +210,9 @@ add_acc_expire_time(fko_srv_options_t *opts, time_t *access_expire_time, const c
 
 /* Add expiration time via epoch seconds defined in access.conf
 */
-static int
-add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, const char *val)
+static void
+add_acc_expire_time_epoch(fko_srv_options_t *opts,
+        time_t *access_expire_time, const char *val, FILE *file_ptr)
 {
     char *endptr;
     unsigned long expire_time = 0;
@@ -214,17 +227,19 @@ add_acc_expire_time_epoch(fko_srv_options_t *opts, time_t *access_expire_time, c
             "[*] Fatal: invalid epoch seconds value '%s' for access stanza expiration time",
             val
         );
-        return FATAL_ERR;
+        fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     *access_expire_time = (time_t) expire_time;
 
-    return 1;
+    return;
 }
 
 #if defined(FIREWALL_FIREWALLD) || defined(FIREWALL_IPTABLES)
-static int
-add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
+static void
+add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc,
+        const char *val, FILE *file_ptr)
 {
     char      ip_str[MAX_IPV4_STR_LEN] = {0};
 
@@ -234,30 +249,38 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *v
             "[*] Fatal: invalid FORCE_NAT arg '%s', need <IP> <PORT>",
             val
         );
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     if (curr_acc->force_nat_port > MAX_PORT)
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT port '%d'", curr_acc->force_nat_port);
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     if(! is_valid_ipv4_addr(ip_str))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     curr_acc->force_nat = 1;
 
-    return add_acc_string(&(curr_acc->force_nat_ip), ip_str);
+    add_acc_string(&(curr_acc->force_nat_ip), ip_str, file_ptr, opts);
+    return;
 }
 
-static int
-add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *val)
+static void
+add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc,
+        const char *val, FILE *file_ptr)
 {
     char      ip_str[MAX_IPV4_STR_LEN] = {0};
 
@@ -265,19 +288,24 @@ add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc, const char *
     {
         log_msg(LOG_ERR,
                 "[*] Fatal: invalid FORCE_SNAT arg '%s', need <IP>", val);
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     if(! is_valid_ipv4_addr(ip_str))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_SNAT IP '%s'", ip_str);
-        return FATAL_ERR;
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
     curr_acc->force_snat = 1;
 
-    return add_acc_string(&(curr_acc->force_snat_ip), ip_str);
+    add_acc_string(&(curr_acc->force_snat_ip), ip_str, file_ptr, opts);
+    return;
 }
 
 #endif
@@ -913,7 +941,7 @@ expand_acc_ent_lists(fko_srv_options_t *opts)
             log_msg(LOG_ERR, "[*] Fatal invalid SOURCE in access stanza");
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
-        
+
         if(acc->destination != NULL && strlen(acc->destination))
         {
             if(expand_acc_int_list(&(acc->destination_list), acc->destination) == 0)
@@ -1069,8 +1097,8 @@ set_acc_defaults(fko_srv_options_t *opts)
         if(acc->gpg_decrypt_pw != NULL)
         {
             if(acc->gpg_home_dir == NULL)
-                if(add_acc_string(&(acc->gpg_home_dir), opts->config[CONF_GPG_HOME_DIR]) != SUCCESS)
-                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                add_acc_string(&(acc->gpg_home_dir),
+                        opts->config[CONF_GPG_HOME_DIR], NULL, opts);
 
             if(! acc->gpg_require_sig)
             {
@@ -1205,7 +1233,7 @@ acc_data_is_valid(fko_srv_options_t *opts,
     {
         if(acc->forward_all == 1)
         {
-            add_acc_force_nat(opts, acc, "0.0.0.0 0");
+            add_acc_force_nat(opts, acc, "0.0.0.0 0", NULL);
         }
         else
         {
@@ -1376,13 +1404,7 @@ parse_access_file(fko_srv_options_t *opts)
             /* Start new stanza.
             */
             curr_acc = acc_stanza_add(opts);
-
-            if(add_acc_string(&(curr_acc->source), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-
+            add_acc_string(&(curr_acc->source), val, file_ptr, opts);
             got_source++;
         }
         else if (curr_acc == NULL)
@@ -1392,29 +1414,11 @@ parse_access_file(fko_srv_options_t *opts)
             continue;
         }
         else if(CONF_VAR_IS(var, "DESTINATION"))
-        {
-            if(add_acc_string(&(curr_acc->destination), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->destination), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "OPEN_PORTS"))
-        {
-            if(add_acc_string(&(curr_acc->open_ports), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->open_ports), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "RESTRICT_PORTS"))
-        {
-            if(add_acc_string(&(curr_acc->restrict_ports), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->restrict_ports), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "KEY"))
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
@@ -1425,11 +1429,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_string(&(curr_acc->key), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_string(&(curr_acc->key), val, file_ptr, opts);
             curr_acc->key_len = strlen(curr_acc->key);
             add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
@@ -1451,17 +1451,9 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_string(&(curr_acc->key_base64), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-            if(add_acc_b64_string(&(curr_acc->key),
-                    &(curr_acc->key_len), curr_acc->key_base64) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_string(&(curr_acc->key_base64), val, file_ptr, opts);
+            add_acc_b64_string(&(curr_acc->key), &(curr_acc->key_len),
+                    curr_acc->key_base64, file_ptr, opts);
             add_acc_bool(&(curr_acc->use_rijndael), "Y");
         }
         /* HMAC digest type */
@@ -1495,17 +1487,9 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_string(&(curr_acc->hmac_key_base64), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-            if(add_acc_b64_string(&(curr_acc->hmac_key),
-                    &(curr_acc->hmac_key_len), curr_acc->hmac_key_base64) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_string(&(curr_acc->hmac_key_base64), val, file_ptr, opts);
+            add_acc_b64_string(&(curr_acc->hmac_key), &(curr_acc->hmac_key_len),
+                    curr_acc->hmac_key_base64, file_ptr, opts);
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY"))
         {
@@ -1517,11 +1501,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_string(&(curr_acc->hmac_key), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_string(&(curr_acc->hmac_key), val, file_ptr, opts);
             curr_acc->hmac_key_len = strlen(curr_acc->hmac_key);
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
@@ -1556,70 +1536,32 @@ parse_access_file(fko_srv_options_t *opts)
             add_acc_bool(&(curr_acc->enable_cmd_sudo_exec), val);
         }
         else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_USER"))
-        {
-            if(add_acc_user(&(curr_acc->cmd_sudo_exec_user),
+            add_acc_user(&(curr_acc->cmd_sudo_exec_user),
                         &(curr_acc->cmd_sudo_exec_uid), sudo_user_pw,
-                        val, "CMD_SUDO_EXEC_USER") != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+                        val, "CMD_SUDO_EXEC_USER", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_GROUP"))
-        {
-            if(add_acc_group(&(curr_acc->cmd_sudo_exec_group),
+            add_acc_group(&(curr_acc->cmd_sudo_exec_group),
                         &(curr_acc->cmd_sudo_exec_gid), val,
-                        "CMD_SUDO_EXEC_GROUP") != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+                        "CMD_SUDO_EXEC_GROUP", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_EXEC_USER"))
-        {
-            if(add_acc_user(&(curr_acc->cmd_exec_user),
+            add_acc_user(&(curr_acc->cmd_exec_user),
                         &(curr_acc->cmd_exec_uid), user_pw,
-                        val, "CMD_EXEC_USER") != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+                        val, "CMD_EXEC_USER", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_EXEC_GROUP"))
-        {
-            if(add_acc_group(&(curr_acc->cmd_exec_group),
+            add_acc_group(&(curr_acc->cmd_exec_group),
                         &(curr_acc->cmd_exec_gid), val,
-                        "CMD_EXEC_GROUP") != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+                        "CMD_EXEC_GROUP", file_ptr, opts);
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
-        {
-            if(add_acc_string(&(curr_acc->require_username), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->require_username), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "REQUIRE_SOURCE_ADDRESS"))
-        {
             add_acc_bool(&(curr_acc->require_source_address), val);
-        }
         else if(CONF_VAR_IS(var, "REQUIRE_SOURCE"))  /* synonym for REQUIRE_SOURCE_ADDRESS */
-        {
             add_acc_bool(&(curr_acc->require_source_address), val);
-        }
         else if(CONF_VAR_IS(var, "GPG_HOME_DIR"))
         {
             if (is_valid_dir(val))
             {
-                if(add_acc_string(&(curr_acc->gpg_home_dir), val) != SUCCESS)
-                {
-                    fclose(file_ptr);
-                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-                }
+                add_acc_string(&(curr_acc->gpg_home_dir), val, file_ptr, opts);
             }
             else
             {
@@ -1631,21 +1573,9 @@ parse_access_file(fko_srv_options_t *opts)
             }
         }
         else if(CONF_VAR_IS(var, "GPG_EXE"))
-        {
-            if(add_acc_string(&(curr_acc->gpg_exe), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->gpg_exe), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_ID"))
-        {
-            if(add_acc_string(&(curr_acc->gpg_decrypt_id), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->gpg_decrypt_id), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "GPG_DECRYPT_PW"))
         {
             if(strcasecmp(val, "__CHANGEME__") == 0)
@@ -1656,11 +1586,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_string(&(curr_acc->gpg_decrypt_pw), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_string(&(curr_acc->gpg_decrypt_pw), val, file_ptr, opts);
             add_acc_bool(&(curr_acc->use_gpg), "Y");
         }
         else if(CONF_VAR_IS(var, "GPG_ALLOW_NO_PW"))
@@ -1669,11 +1595,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(curr_acc->gpg_allow_no_pw == 1)
             {
                 add_acc_bool(&(curr_acc->use_gpg), "Y");
-                if(add_acc_string(&(curr_acc->gpg_decrypt_pw), "") != SUCCESS)
-                {
-                    fclose(file_ptr);
-                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-                }
+                add_acc_string(&(curr_acc->gpg_decrypt_pw), "", file_ptr, opts);
             }
         }
         else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
@@ -1689,21 +1611,9 @@ parse_access_file(fko_srv_options_t *opts)
             add_acc_bool(&(curr_acc->gpg_ignore_sig_error), val);
         }
         else if(CONF_VAR_IS(var, "GPG_REMOTE_ID"))
-        {
-            if(add_acc_string(&(curr_acc->gpg_remote_id), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->gpg_remote_id), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "GPG_FINGERPRINT_ID"))
-        {
-            if(add_acc_string(&(curr_acc->gpg_remote_fpr), val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_string(&(curr_acc->gpg_remote_fpr), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE"))
         {
             if (add_acc_expire_time(opts, &(curr_acc->access_expire_time), val) != 1)
@@ -1713,13 +1623,8 @@ parse_access_file(fko_srv_options_t *opts)
             }
         }
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE_EPOCH"))
-        {
-            if (add_acc_expire_time_epoch(opts, &(curr_acc->access_expire_time), val) != 1)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
+            add_acc_expire_time_epoch(opts,
+                    &(curr_acc->access_expire_time), val, file_ptr);
         else if(CONF_VAR_IS(var, "FORCE_NAT"))
         {
 #if FIREWALL_FIREWALLD
@@ -1730,11 +1635,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_force_nat(opts, curr_acc, val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_force_nat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
@@ -1743,11 +1644,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_force_nat(opts, curr_acc, val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_force_nat(opts, curr_acc, val, file_ptr);
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_NAT not supported.");
@@ -1765,11 +1662,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_force_snat(opts, curr_acc, val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_force_snat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
             if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
             {
@@ -1778,11 +1671,7 @@ parse_access_file(fko_srv_options_t *opts)
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
-            if(add_acc_force_snat(opts, curr_acc, val) != SUCCESS)
-            {
-                fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-            }
+            add_acc_force_snat(opts, curr_acc, val, file_ptr);
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_SNAT not supported.");
