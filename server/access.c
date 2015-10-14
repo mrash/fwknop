@@ -40,6 +40,7 @@
 #include "access.h"
 #include "utils.h"
 #include "log_msg.h"
+#include "cmd_cycle.h"
 
 #define FATAL_ERR -1
 
@@ -1281,6 +1282,54 @@ acc_data_is_valid(fko_srv_options_t *opts,
         acc->cmd_sudo_exec_gid = sudo_user_pw->pw_gid;
     }
 
+    if(acc->cmd_cycle_open != NULL)
+    {
+        if(acc->cmd_cycle_close == NULL)
+        {
+            log_msg(LOG_ERR,
+                "[*] Cannot set CMD_CYCLE_OPEN without also setting CMD_CYCLE_CLOSE: '%s'",
+                acc->source
+            );
+            return(0);
+        }
+        if(acc->cmd_cycle_timer == 0)
+        {
+            log_msg(LOG_ERR,
+                "[*] Must set the CMD_CYCLE_TIMER for command cycle functionality: '%s'",
+                acc->source
+            );
+            return(0);
+        }
+        if(strlen(acc->cmd_cycle_open) >= CMD_CYCLE_BUFSIZE)
+        {
+            log_msg(LOG_ERR,
+                "[*] CMD_CYCLE_OPEN command is too long: '%s'",
+                acc->source
+            );
+            return(0);
+        }
+    }
+
+    if(acc->cmd_cycle_close != NULL)
+    {
+        if(acc->cmd_cycle_open == NULL)
+        {
+            log_msg(LOG_ERR,
+                "[*] Cannot set CMD_CYCLE_CLOSE without also setting CMD_CYCLE_OPEN: '%s'",
+                acc->source
+            );
+            return(0);
+        }
+        if(strlen(acc->cmd_cycle_close) >= CMD_CYCLE_BUFSIZE)
+        {
+            log_msg(LOG_ERR,
+                "[*] CMD_CYCLE_CLOSE command is too long: '%s'",
+                acc->source
+            );
+            return(0);
+        }
+    }
+
     return(1);
 }
 
@@ -1563,12 +1612,14 @@ parse_access_file(fko_srv_options_t *opts)
             add_acc_string(&(curr_acc->cmd_cycle_close), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_CYCLE_TIMER"))
         {
-            curr_acc->cmd_cycle_timer = strtol_wrapper(val, 0,
-                    RCHK_MAX_CMD_CYCLE_TIMER, NO_EXIT_UPON_ERR, &is_err);
+            curr_acc->cmd_cycle_timer = strtol_wrapper(val,
+                    RCHK_MIN_CMD_CYCLE_TIMER, RCHK_MAX_CMD_CYCLE_TIMER,
+                    NO_EXIT_UPON_ERR, &is_err);
             if(is_err != FKO_SUCCESS)
             {
                 log_msg(LOG_ERR,
-                    "[*] CMD_CYCLE_TIMER value not in range.");
+                    "[*] CMD_CYCLE_TIMER value not in range [1,%d].",
+                    RCHK_MAX_CMD_CYCLE_TIMER);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }

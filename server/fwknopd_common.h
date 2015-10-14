@@ -132,6 +132,7 @@
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
 #define RCHK_MAX_FW_TIMEOUT             (2 << 22) /* seconds */
 #define RCHK_MAX_CMD_CYCLE_TIMER        (2 << 22) /* seconds */
+#define RCHK_MIN_CMD_CYCLE_TIMER        1
 #define RCHK_MAX_RULES_CHECK_THRESHOLD  ((2 << 16) - 1)
 
 /* FirewallD-specific defines
@@ -431,6 +432,7 @@ typedef struct cmd_cycle_list
     char                    src_ip[MAX_IPV4_STR_LEN];
     char                   *close_cmd;
     time_t                  expire;
+    int                     stanza_num;
     struct cmd_cycle_list  *next;
 } cmd_cycle_list_t;
 

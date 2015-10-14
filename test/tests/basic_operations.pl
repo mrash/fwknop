@@ -2722,6 +2722,117 @@
         'positive_output_matches' => [qr/not in the range/],
     },
 
+    ### command cycle tests
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'no CMD_CYCLE_CLOSE',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE             any',
+            'KEY                testtest',
+            'CMD_CYCLE_OPEN     /some/cmd -args',
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/also setting CMD_CYCLE_CLOSE/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'no CMD_CYCLE_OPEN',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE             any',
+            'KEY                testtest',
+            'CMD_CYCLE_CLOSE    /some/cmd -args',
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/also setting CMD_CYCLE_OPEN/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'no CMD_CYCLE_TIMER',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE             any',
+            'KEY                testtest',
+            'CMD_CYCLE_OPEN     /some/cmd -args',
+            'CMD_CYCLE_CLOSE    /some/othercmd -args',
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Must set.*CMD_CYCLE_TIMER/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'CMD_CYCLE_OPEN too long',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE             any',
+            'KEY                testtest',
+            'CMD_CYCLE_OPEN     ' . 'A'x500,
+            'CMD_CYCLE_CLOSE    /some/othercmd -args',
+            'CMD_CYCLE_TIMER    30',
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/CMD_CYCLE_OPEN.*too long/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'CMD_CYCLE_CLOSE too long',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE             any',
+            'KEY                testtest',
+            'CMD_CYCLE_CLOSE     ' . 'A'x500,
+            'CMD_CYCLE_OPEN     /some/othercmd -args',
+            'CMD_CYCLE_TIMER    30',
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/CMD_CYCLE_CLOSE.*too long/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'CMD_CYCLE_TIMER invalid',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE             any',
+            'KEY                testtest',
+            'CMD_CYCLE_OPEN     /some/cmd -args',
+            'CMD_CYCLE_CLOSE    /some/othercmd -args',
+            'CMD_CYCLE_TIMER    300000000',
+        ],
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/CMD_CYCLE_TIMER.*not in range/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
