@@ -377,6 +377,7 @@ clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int e
 #endif
 
     free_logging();
+    free_cmd_cycle_list(opts);
     free_configs(opts);
     exit(exit_status);
 }

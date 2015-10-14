@@ -898,6 +898,12 @@ free_acc_stanza_data(acc_stanza_t *acc)
     if(acc->require_username != NULL)
         free(acc->require_username);
 
+    if(acc->cmd_cycle_open != NULL)
+        free(acc->cmd_cycle_open);
+
+    if(acc->cmd_cycle_close != NULL)
+        free(acc->cmd_cycle_close);
+
     if(acc->gpg_home_dir != NULL)
         free(acc->gpg_home_dir);
 
@@ -1551,6 +1557,22 @@ parse_access_file(fko_srv_options_t *opts)
             add_acc_group(&(curr_acc->cmd_exec_group),
                         &(curr_acc->cmd_exec_gid), val,
                         "CMD_EXEC_GROUP", file_ptr, opts);
+        else if(CONF_VAR_IS(var, "CMD_CYCLE_OPEN"))
+            add_acc_string(&(curr_acc->cmd_cycle_open), val, file_ptr, opts);
+        else if(CONF_VAR_IS(var, "CMD_CYCLE_CLOSE"))
+            add_acc_string(&(curr_acc->cmd_cycle_close), val, file_ptr, opts);
+        else if(CONF_VAR_IS(var, "CMD_CYCLE_TIMER"))
+        {
+            curr_acc->cmd_cycle_timer = strtol_wrapper(val, 0,
+                    RCHK_MAX_CMD_CYCLE_TIMER, NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                log_msg(LOG_ERR,
+                    "[*] CMD_CYCLE_TIMER value not in range.");
+                fclose(file_ptr);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
             add_acc_string(&(curr_acc->require_username), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "REQUIRE_SOURCE_ADDRESS"))
@@ -1923,6 +1945,9 @@ dump_access_list(const fko_srv_options_t *opts)
             "        CMD_SUDO_EXEC_GROUP:  %s\n"
             "              CMD_EXEC_USER:  %s\n"
             "             CMD_EXEC_GROUP:  %s\n"
+            "             CMD_CYCLE_OPEN:  %s\n"
+            "            CMD_CYCLE_CLOSE:  %s\n"
+            "            CMD_CYCLE_TIMER:  %i\n"
             "           REQUIRE_USERNAME:  %s\n"
             "     REQUIRE_SOURCE_ADDRESS:  %s\n"
             "             FORCE_NAT (ip):  %s\n"
@@ -1960,6 +1985,9 @@ dump_access_list(const fko_srv_options_t *opts)
             (acc->cmd_sudo_exec_group == NULL) ? "<not set>" : acc->cmd_sudo_exec_group,
             (acc->cmd_exec_user == NULL) ? "<not set>" : acc->cmd_exec_user,
             (acc->cmd_exec_group == NULL) ? "<not set>" : acc->cmd_exec_group,
+            (acc->cmd_cycle_open == NULL) ? "<not set>" : acc->cmd_cycle_open,
+            (acc->cmd_cycle_close == NULL) ? "<not set>" : acc->cmd_cycle_close,
+            acc->cmd_cycle_timer,
             (acc->require_username == NULL) ? "<not set>" : acc->require_username,
             acc->require_source_address ? "Yes" : "No",
             acc->force_nat ? acc->force_nat_ip : "<not set>",

@@ -119,6 +119,7 @@ my @test_files = (
     "$tests_dir/rijndael.pl",
     "$tests_dir/rijndael_cmd_exec.pl",
     "$tests_dir/rijndael_hmac_cmd_exec.pl",
+    "$tests_dir/rijndael_hmac_cmd_open_close.pl",
     "$tests_dir/rijndael_replay_attacks.pl",
     "$tests_dir/rijndael_fuzzing.pl",
     "$tests_dir/rijndael_backwards_compatibility.pl",
@@ -137,30 +138,31 @@ my @test_files = (
 );
 #================== end config ===================
 
-our @build_security_client   = ();  ### imported from tests/build_security.pl
-our @build_security_server   = ();
-our @build_security_libfko   = ();
-our @preliminaries           = ();  ### from tests/preliminaries.pl
-our @code_structure_errstr   = ();  ### from tests/code_structure.pl (may include Coccinelle matches eventually)
-our @configure_args          = ();  ### from tests/configure_args.pl
-our @basic_operations        = ();  ### from tests/basic_operations.pl
-our @rijndael                = ();  ### from tests/rijndael.pl
-our @rijndael_cmd_exec       = ();  ### from tests/rijndael_cmd_exec.pl
-our @rijndael_hmac_cmd_exec  = ();  ### from tests/rijndael_hmac_cmd_exec.pl
-our @rijndael_replay_attacks = ();  ### from tests/rijndael_replay_attacks.pl
-our @rijndael_hmac           = ();  ### from tests/rijndael_hmac.pl
-our @rijndael_fuzzing        = ();  ### from tests/rijndael_fuzzing.pl
-our @rijndael_hmac_fuzzing   = ();  ### from tests/rijndael_hmac_fuzzing.pl
-our @fault_injection         = ();  ### from tests/fault_injection.pl
-our @afl_fuzzing             = ();  ### from tests/alf_fuzzing.pl
-our @address_sanitizer       = ();  ### from tests/address_sanitizer.pl
-our @gpg_no_pw               = ();  ### from tests/gpg_now_pw.pl
-our @gpg_no_pw_hmac          = ();  ### from tests/gpg_now_pw_hmac.pl
-our @gpg                     = ();  ### from tests/gpg.pl
-our @gpg_hmac                = ();  ### from tests/gpg_hmac.pl
-our @perl_FKO_module         = ();  ### from tests/perl_FKO_module.pl
-our @python_fko              = ();  ### from tests/python_fko.pl
-our @os_compatibility        = ();  ### from tests/os_compatibility.pl
+our @build_security_client        = ();  ### imported from tests/build_security.pl
+our @build_security_server        = ();
+our @build_security_libfko        = ();
+our @preliminaries                = ();  ### from tests/preliminaries.pl
+our @code_structure_errstr        = ();  ### from tests/code_structure.pl (may include Coccinelle matches eventually)
+our @configure_args               = ();  ### from tests/configure_args.pl
+our @basic_operations             = ();  ### from tests/basic_operations.pl
+our @rijndael                     = ();  ### from tests/rijndael.pl
+our @rijndael_cmd_exec            = ();  ### from tests/rijndael_cmd_exec.pl
+our @rijndael_hmac_cmd_exec       = ();  ### from tests/rijndael_hmac_cmd_exec.pl
+our @rijndael_hmac_cmd_open_close = ();  ### from tests/rijndael_hmac_cmd_open_close.pl
+our @rijndael_replay_attacks      = ();  ### from tests/rijndael_replay_attacks.pl
+our @rijndael_hmac                = ();  ### from tests/rijndael_hmac.pl
+our @rijndael_fuzzing             = ();  ### from tests/rijndael_fuzzing.pl
+our @rijndael_hmac_fuzzing        = ();  ### from tests/rijndael_hmac_fuzzing.pl
+our @fault_injection              = ();  ### from tests/fault_injection.pl
+our @afl_fuzzing                  = ();  ### from tests/alf_fuzzing.pl
+our @address_sanitizer            = ();  ### from tests/address_sanitizer.pl
+our @gpg_no_pw                    = ();  ### from tests/gpg_now_pw.pl
+our @gpg_no_pw_hmac               = ();  ### from tests/gpg_now_pw_hmac.pl
+our @gpg                          = ();  ### from tests/gpg.pl
+our @gpg_hmac                     = ();  ### from tests/gpg_hmac.pl
+our @perl_FKO_module              = ();  ### from tests/perl_FKO_module.pl
+our @python_fko                   = ();  ### from tests/python_fko.pl
+our @os_compatibility             = ();  ### from tests/os_compatibility.pl
 our @rijndael_backwards_compatibility = ();  ### from tests/rijndael_backwards_compatibility.pl
 
 my $passed = 0;
@@ -427,6 +429,7 @@ our %cf = (
     'hmac_simple_keys_access'      => "$conf_dir/hmac_simple_keys_access.conf",
     'hmac_invalid_type_access'     => "$conf_dir/hmac_invalid_type_access.conf",
     'hmac_cygwin_access'           => "$conf_dir/hmac_no_b64_cygwin_access.conf",
+    'hmac_cmd_open_close_cycle_access' => "$conf_dir/hmac_cmd_open_close_cycle_access.conf",
     'spa_destination'              => "$conf_dir/destination_rule_fwknopd.conf",
     "${fw_conf_prefix}_spa_dst_snat" => "$conf_dir/${fw_conf_prefix}_spa_dst_snat_fwknopd.conf",
     'hmac_spa_destination_access'  => "$conf_dir/hmac_spa_destination_access.conf",
@@ -818,6 +821,7 @@ my @tests = (
     @rijndael,
     @rijndael_cmd_exec,
     @rijndael_hmac_cmd_exec,
+    @rijndael_hmac_cmd_open_close,
     @rijndael_replay_attacks,
     @rijndael_backwards_compatibility,
     @rijndael_fuzzing,

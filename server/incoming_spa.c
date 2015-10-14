@@ -38,6 +38,7 @@
 #include "incoming_spa.h"
 #include "access.h"
 #include "extcmd.h"
+#include "cmd_cycle.h"
 #include "log_msg.h"
 #include "utils.h"
 #include "fw_util.h"
@@ -1119,7 +1120,17 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Command messages.
         */
-        if(spadat.message_type == FKO_COMMAND_MSG)
+        if(acc->cmd_cycle_open != NULL)
+        {
+            if(cmd_cycle_open(opts, acc, &spadat, stanza_num, &res))
+                break; /* successfully processed a matching access stanza */
+            else
+            {
+                acc = acc->next;
+                continue;
+            }
+        }
+        else if(spadat.message_type == FKO_COMMAND_MSG)
         {
             if(process_cmd_msg(opts, acc, &spadat, stanza_num, &res))
             {

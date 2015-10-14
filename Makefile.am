@@ -190,6 +190,7 @@ EXTRA_DIST = \
     test/conf/hmac_cmd_access.conf \
     test/conf/hmac_cmd_setuid_access.conf \
     test/conf/hmac_cmd_giduid_access.conf \
+    test/conf/hmac_cmd_open_close_cycle_access.conf \
     test/conf/hmac_get_key_access.conf \
     test/conf/hmac_no_b64_access.conf \
     test/conf/hmac_equal_keys_access.conf \

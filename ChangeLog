@@ -1,3 +1,6 @@
+fwknop-2.6.8 (11//2015):
+    - [server] open/close functionality...
+
 fwknop-2.6.7 (08/24/2015):
     - [server] When command execution is enabled with ENABLE_CMD_EXEC for an
       access.conf stanza, added support for running commands via sudo. This was

@@ -130,7 +130,8 @@
 #define RCHK_MAX_UDPSERV_PORT           ((2 << 16) - 1)
 #define RCHK_MAX_UDPSERV_SELECT_TIMEOUT (2 << 22)
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
-#define RCHK_MAX_FW_TIMEOUT             (2 << 22)
+#define RCHK_MAX_FW_TIMEOUT             (2 << 22) /* seconds */
+#define RCHK_MAX_CMD_CYCLE_TIMER        (2 << 22) /* seconds */
 #define RCHK_MAX_RULES_CHECK_THRESHOLD  ((2 << 16) - 1)
 
 /* FirewallD-specific defines
@@ -384,6 +385,9 @@ typedef struct acc_stanza
     gid_t                cmd_sudo_exec_gid;
     char                *cmd_exec_user;
     char                *cmd_exec_group;
+    char                *cmd_cycle_open;
+    char                *cmd_cycle_close;
+    int                  cmd_cycle_timer;
     uid_t                cmd_exec_uid;
     gid_t                cmd_exec_gid;
     char                *require_username;
@@ -420,6 +424,15 @@ typedef struct acc_stanza
     struct acc_stanza   *next;
 } acc_stanza_t;
 
+/* A simple linked list of strings for command open/close cycles
+*/
+typedef struct cmd_cycle_list
+{
+    char                    src_ip[MAX_IPV4_STR_LEN];
+    char                   *close_cmd;
+    time_t                  expire;
+    struct cmd_cycle_list  *next;
+} cmd_cycle_list_t;
 
 /* Firewall-related data and types. */
 
@@ -660,6 +673,11 @@ typedef struct fko_srv_options
      * added by a third-party program).
     */
     unsigned int check_rules_ctr;
+
+    /* Track external command execution cycles (track source IP, access.conf
+     * stanza number, and instantiation time).
+    */
+    cmd_cycle_list_t *cmd_cycle_list;
 
     /* Set to 1 when messages have to go through syslog, 0 otherwise */
     unsigned char   syslog_enable;
