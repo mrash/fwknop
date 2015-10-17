@@ -958,7 +958,8 @@ incoming_spa(fko_srv_options_t *opts)
             continue;
         }
 
-        log_msg(LOG_INFO, "(stanza #%d) SPA Packet from IP: %s received with access source match",
+        log_msg(LOG_INFO,
+            "(stanza #%d) SPA Packet from IP: %s received with access source match",
             stanza_num, spadat.pkt_source_ip);
 
         log_msg(LOG_DEBUG, "SPA Packet: '%s'", spa_pkt->packet_data);
@@ -1037,7 +1038,8 @@ incoming_spa(fko_srv_options_t *opts)
 
         if(res != FKO_SUCCESS)
         {
-            log_msg(LOG_ERR, "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
+            log_msg(LOG_ERR,
+                "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             acc = acc->next;
@@ -1065,7 +1067,8 @@ incoming_spa(fko_srv_options_t *opts)
         spa_ip_demark = strchr(spadat.spa_message, ',');
         if(spa_ip_demark == NULL)
         {
-            log_msg(LOG_WARNING, "[%s] (stanza #%d) Error parsing SPA message string: %s",
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Error parsing SPA message string: %s",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             acc = acc->next;
@@ -1075,7 +1078,8 @@ incoming_spa(fko_srv_options_t *opts)
         if((spa_ip_demark-spadat.spa_message) < MIN_IPV4_STR_LEN-1
                 || (spa_ip_demark-spadat.spa_message) > MAX_IPV4_STR_LEN)
         {
-            log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
                 spadat.pkt_source_ip, stanza_num);
             break;
         }
@@ -1085,7 +1089,8 @@ incoming_spa(fko_srv_options_t *opts)
 
         if(! is_valid_ipv4_addr(spadat.spa_message_src_ip))
         {
-            log_msg(LOG_WARNING, "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
+            log_msg(LOG_WARNING,
+                "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
             break;
         }
