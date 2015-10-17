@@ -31,6 +31,7 @@
 #include "replay_cache.h"
 #include "config_init.h"
 #include "fw_util.h"
+#include "cmd_cycle.h"
 
 #include <stdarg.h>
 

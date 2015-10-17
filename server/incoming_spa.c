@@ -1178,7 +1178,20 @@ incoming_spa(fko_srv_options_t *opts)
         }
         else
         {
-            process_spa_request(opts, acc, &spadat);
+            if(acc->cmd_cycle_open != NULL)
+            {
+                if(cmd_cycle_open(opts, acc, &spadat, stanza_num, &res))
+                    break; /* successfully processed a matching access stanza */
+                else
+                {
+                    acc = acc->next;
+                    continue;
+                }
+            }
+            else
+            {
+                process_spa_request(opts, acc, &spadat);
+            }
         }
 
         /* If we made it here, then the SPA packet was processed according
