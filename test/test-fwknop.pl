@@ -917,6 +917,8 @@ my %test_keys = (
     'server_access_file'  => $OPTIONAL,
     'server_conf_file'    => $OPTIONAL,
     'digest_cache_file'   => $OPTIONAL,
+    'cmd_cycle_open_file'  => $OPTIONAL,
+    'cmd_cycle_close_file' => $OPTIONAL,
     'cmd_exec_file_owner' => $OPTIONAL,
     'cmd_exec_file_not_created' => $OPTIONAL,
     'rm_rule_mid_cycle'   => $OPTIONAL,
@@ -4735,6 +4737,26 @@ sub write_sudo_access_conf() {
     close CA;
 
     return;
+}
+
+sub spa_cmd_open_close_exec_cycle() {
+    my $test_hr = shift;
+    for my $file ($test_hr->{'cmd_cycle_open_file'},
+            $test_hr->{'cmd_cycle_close_file'}) {
+        unlink $file if -e $file;
+    }
+    my $rv = &spa_cycle($test_hr);
+
+    for my $file ($test_hr->{'cmd_cycle_open_file'},
+            $test_hr->{'cmd_cycle_close_file'}) {
+        unless (-e $file) {
+            &write_test_file("[-] $file does not exist after SPA cycle.\n",
+                $curr_test_file);
+            $rv = 0;
+        }
+    }
+
+    return $rv;
 }
 
 sub spa_cmd_exec_cycle() {
