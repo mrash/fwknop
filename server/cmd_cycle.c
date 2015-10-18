@@ -139,7 +139,8 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str)
             }
             continue;
         }
-        cmd_buf[buf_idx++] = cmd_cycle_str[i];
+        if(cmd_cycle_str[i] != '\0')
+            cmd_buf[buf_idx++] = cmd_cycle_str[i];
         if(buf_idx == CMD_CYCLE_BUFSIZE)
         {
             free_acc_port_list(port_list);
@@ -194,8 +195,9 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
     {
         /* Now the corresponding close command is now in cmd_buf
         */
-        cmd_close_len = strnlen(cmd_buf, CMD_CYCLE_BUFSIZE-1);
-        log_msg(LOG_INFO, "[%s] (stanza #%d) Running CMD_CYCLE_CLOSE command in %d seconds: %s",
+        cmd_close_len = strnlen(cmd_buf, CMD_CYCLE_BUFSIZE-1)+1;
+        log_msg(LOG_INFO,
+                "[%s] (stanza #%d) Running CMD_CYCLE_CLOSE command in %d seconds: %s",
                 spadat->pkt_source_ip, stanza_num, acc->cmd_cycle_timer, cmd_buf);
     }
     else
@@ -279,8 +281,12 @@ cmd_cycle_open(fko_srv_options_t *opts, acc_stanza_t *acc,
 static void
 free_cycle_list_node(cmd_cycle_list_t *list_node)
 {
-    free(list_node->close_cmd);
-    free(list_node);
+    if(list_node != NULL)
+    {
+        if(list_node->close_cmd != NULL)
+            free(list_node->close_cmd);
+        free(list_node);
+    }
     return;
 }
 
@@ -290,6 +296,7 @@ void
 cmd_cycle_close(fko_srv_options_t *opts)
 {
     cmd_cycle_list_t   *curr=NULL, *prev=NULL;
+    int                 do_delete=1;
     time_t              now;
 
     time(&now);
@@ -300,33 +307,40 @@ cmd_cycle_close(fko_srv_options_t *opts)
     }
     else
     {
-        for(curr = opts->cmd_cycle_list;
-                curr != NULL;
-                prev = curr, curr=curr->next)
+        while(do_delete)
         {
-            if(curr->expire <= now)
+            do_delete = 0;
+
+            /* Keep going through the command list for as long as
+             * there are commands to be executed (and expired).
+            */
+            for(curr = opts->cmd_cycle_list;
+                    curr != NULL;
+                    prev = curr, curr=curr->next)
             {
-                log_msg(LOG_INFO,
-                        "[%s] (stanza #%d) Timer expired, running CMD_CYCLE_CLOSE command: %s",
-                        curr->src_ip, curr->stanza_num,
-                        curr->close_cmd);
-
-                zero_cmd_buffers();
-
-                /* Run the close command
-                */
-                run_extcmd(curr->close_cmd, err_buf, CMD_CYCLE_BUFSIZE,
-                        WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
-
-                if(prev == NULL)
+                if(curr->expire <= now)
                 {
-                    opts->cmd_cycle_list = curr->next;
+                    log_msg(LOG_INFO,
+                            "[%s] (stanza #%d) Timer expired, running CMD_CYCLE_CLOSE command: %s",
+                            curr->src_ip, curr->stanza_num,
+                            curr->close_cmd);
+
+                    zero_cmd_buffers();
+
+                    /* Run the close command
+                    */
+                    run_extcmd(curr->close_cmd, err_buf, CMD_CYCLE_BUFSIZE,
+                            WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
+
+                    if(prev == NULL)
+                        opts->cmd_cycle_list = curr->next;
+                    else
+                        prev->next = curr->next;
+
+                    free_cycle_list_node(curr);
+                    do_delete = 1;
+                    break;
                 }
-                else
-                {
-                    prev->next = curr->next;
-                }
-                free_cycle_list_node(curr);
             }
         }
     }
