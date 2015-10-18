@@ -430,6 +430,8 @@ our %cf = (
     'hmac_invalid_type_access'     => "$conf_dir/hmac_invalid_type_access.conf",
     'hmac_cygwin_access'           => "$conf_dir/hmac_no_b64_cygwin_access.conf",
     'hmac_cmd_open_close_cycle_access' => "$conf_dir/hmac_cmd_open_close_cycle_access.conf",
+    'hmac_cmd_open_close_cycle_access2' => "$conf_dir/hmac_cmd_open_close_cycle_access2.conf",
+    'hmac_cmd_open_close_cycle_access3' => "$conf_dir/hmac_cmd_open_close_cycle_access3.conf",
     'spa_destination'              => "$conf_dir/destination_rule_fwknopd.conf",
     "${fw_conf_prefix}_spa_dst_snat" => "$conf_dir/${fw_conf_prefix}_spa_dst_snat_fwknopd.conf",
     'hmac_spa_destination_access'  => "$conf_dir/hmac_spa_destination_access.conf",
@@ -4754,6 +4756,7 @@ sub spa_cmd_open_close_exec_cycle() {
                 $curr_test_file);
             $rv = 0;
         }
+        unlink $file if -e $file;
     }
 
     return $rv;
