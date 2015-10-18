@@ -276,17 +276,23 @@ cmd_cycle_open(fko_srv_options_t *opts, acc_stanza_t *acc,
      return FKO_SUCCESS;
 }
 
+static void
+free_cycle_list_node(cmd_cycle_list_t *list_node)
+{
+    free(list_node->close_cmd);
+    free(list_node);
+    return;
+}
+
 /* Run all close commands based on the expiration timer
 */
 void
 cmd_cycle_close(fko_srv_options_t *opts)
 {
-    cmd_cycle_list_t   *tmp_clist = NULL;
+    cmd_cycle_list_t   *curr=NULL, *prev=NULL;
     time_t              now;
 
     time(&now);
-
-    log_msg(LOG_INFO, "cmd_cycle_close() function");
 
     if(opts->cmd_cycle_list == NULL)
     {
@@ -294,17 +300,35 @@ cmd_cycle_close(fko_srv_options_t *opts)
     }
     else
     {
-        tmp_clist = opts->cmd_cycle_list;
-        do {
-            if(tmp_clist->expire <= now)
+        for(curr = opts->cmd_cycle_list;
+                curr != NULL;
+                prev = curr, curr=curr->next)
+        {
+            if(curr->expire <= now)
             {
                 log_msg(LOG_INFO,
                         "[%s] (stanza #%d) Timer expired, running CMD_CYCLE_CLOSE command: %s",
-                        tmp_clist->src_ip, tmp_clist->stanza_num,
-                        tmp_clist->close_cmd);
-                // FIXME: must remove this element from the list
+                        curr->src_ip, curr->stanza_num,
+                        curr->close_cmd);
+
+                zero_cmd_buffers();
+
+                /* Run the close command
+                */
+                run_extcmd(curr->close_cmd, err_buf, CMD_CYCLE_BUFSIZE,
+                        WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
+
+                if(prev == NULL)
+                {
+                    opts->cmd_cycle_list = curr->next;
+                }
+                else
+                {
+                    prev->next = curr->next;
+                }
+                free_cycle_list_node(curr);
             }
-        } while((tmp_clist = tmp_clist->next));
+        }
     }
 
     return;
@@ -320,8 +344,7 @@ free_cmd_cycle_list(fko_srv_options_t *opts)
     while(clist != NULL)
     {
         tmp_clist = clist->next;
-        free(clist->close_cmd);
-        free(clist);
+        free_cycle_list_node(clist);
         clist = tmp_clist;
     }
     return;
