@@ -33,6 +33,7 @@
 #include "incoming_spa.h"
 #include "log_msg.h"
 #include "fw_util.h"
+#include "cmd_cycle.h"
 #include "utils.h"
 #include <errno.h>
 
@@ -168,6 +169,10 @@ run_udp_server(fko_srv_options_t *opts)
             }
             check_firewall_rules(opts, chk_rm_all);
             chk_rm_all = 0;
+
+            /* See if any CMD_CYCLE_CLOSE commands need to be executed.
+            */
+            cmd_cycle_close(opts);
         }
 
         /* Initialize and setup the socket for select.
