@@ -433,6 +433,7 @@ our %cf = (
     'hmac_cmd_open_close_cycle_access2' => "$conf_dir/hmac_cmd_open_close_cycle_access2.conf",
     'hmac_cmd_open_close_cycle_access3' => "$conf_dir/hmac_cmd_open_close_cycle_access3.conf",
     'hmac_cmd_open_close_cycle_access4' => "$conf_dir/hmac_cmd_open_close_cycle_access4.conf",
+    'hmac_cmd_open_close_cycle_access5' => "$conf_dir/hmac_cmd_open_close_cycle_access5.conf",
     'spa_destination'              => "$conf_dir/destination_rule_fwknopd.conf",
     "${fw_conf_prefix}_spa_dst_snat" => "$conf_dir/${fw_conf_prefix}_spa_dst_snat_fwknopd.conf",
     'hmac_spa_destination_access'  => "$conf_dir/hmac_spa_destination_access.conf",
