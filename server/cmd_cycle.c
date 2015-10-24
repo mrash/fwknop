@@ -226,7 +226,7 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
     }
     else
     {
-        tmp_clist = new_clist;
+        tmp_clist = opts->cmd_cycle_list;
 
         do {
             last_clist = tmp_clist;
