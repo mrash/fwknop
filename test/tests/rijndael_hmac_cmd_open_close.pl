@@ -100,6 +100,7 @@
         'relax_receive_cycle_num_check' => $YES, ### multiple SPA packets involved
         'weak_server_receive_check' => $YES,
         'key_file' => $cf{'rc_hmac_b64_key'},
+        'sleep_cycles' => 6,
         'server_positive_output_matches' => [qr/Timer expired/],
     },
 

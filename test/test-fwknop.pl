@@ -906,6 +906,7 @@ my %test_keys = (
     'get_key'         => $OPTIONAL,
     'get_hmac_key'    => $OPTIONAL,
     'set_legacy_iv'   => $OPTIONAL,
+    'sleep_cycles'    => $OPTIONAL_NUMERIC,
     'write_rc_file'   => $OPTIONAL,
     'save_rc_stanza'  => $OPTIONAL,
     'client_pkt_tries' => $OPTIONAL_NUMERIC,
@@ -5702,12 +5703,21 @@ sub client_server_interaction() {
             &write_test_file("[.] new fw rule does not exist.\n",
                 $curr_test_file);
             $ctr++;
-            last if $ctr == 3;
+            if ($test_hr->{'sleep_cycles'}) {
+                last if $ctr == $test_hr->{'sleep_cycles'};
+            } else {
+                last if $ctr == 3;
+            }
             sleep 1;
         }
-        if ($ctr == 3) {
+        if ($test_hr->{'sleep_cycles'} and ($ctr == $test_hr->{'sleep_cycles'})) {
             $fw_rule_created = 0;
             $fw_rule_removed = 0;
+        } else {
+            if ($ctr == 3) {
+                $fw_rule_created = 0;
+                $fw_rule_removed = 0;
+            }
         }
 
         if ($fw_rule_created or $test_hr->{'insert_duplicate_rule_while_running'}) {
