@@ -434,6 +434,7 @@ our %cf = (
     'hmac_cmd_open_close_cycle_access3' => "$conf_dir/hmac_cmd_open_close_cycle_access3.conf",
     'hmac_cmd_open_close_cycle_access4' => "$conf_dir/hmac_cmd_open_close_cycle_access4.conf",
     'hmac_cmd_open_close_cycle_access5' => "$conf_dir/hmac_cmd_open_close_cycle_access5.conf",
+    'hmac_cmd_open_close_multi_cycle_access' => "$conf_dir/hmac_cmd_open_close_multi_cycle_access.conf",
     'spa_destination'              => "$conf_dir/destination_rule_fwknopd.conf",
     "${fw_conf_prefix}_spa_dst_snat" => "$conf_dir/${fw_conf_prefix}_spa_dst_snat_fwknopd.conf",
     'hmac_spa_destination_access'  => "$conf_dir/hmac_spa_destination_access.conf",
@@ -572,6 +573,7 @@ our %cf = (
     'rc_hmac_sha512_short_key'     => "$conf_dir/fwknoprc_hmac_sha512_short_key",
     'rc_hmac_sha512_long_key'      => "$conf_dir/fwknoprc_hmac_sha512_long_key",
     'rc_stanza_list'               => "$conf_dir/fwknoprc_stanza_list",
+    'rc_cmd_open_close_multi_cycle' => "$conf_dir/fwknoprc_hmac_multi_base64_key",
     'base64_key_access'            => "$conf_dir/base64_key_access.conf",
     "${fw_conf_prefix}_custom_input_chain" => "$conf_dir/${fw_conf_prefix}_custom_input_chain_fwknopd.conf",
     "${fw_conf_prefix}_custom_nat_chain"   => "$conf_dir/${fw_conf_prefix}_custom_nat_chain_fwknopd.conf",
@@ -882,6 +884,7 @@ my %test_keys = (
     'detail'          => $REQUIRED,
     'function'        => $REQUIRED,
     'binary'          => $OPTIONAL,
+    'multi_cmds'      => $OPTIONAL,
     'cmdline'         => $OPTIONAL,
     'fwknopd_cmdline' => $OPTIONAL,
     'fatal'           => $OPTIONAL_NUMERIC,
@@ -1771,6 +1774,16 @@ sub is_crash() {
             $curr_test_file);
         $rv = 1;
     }
+
+    ### ASan and valgrind don't appear to be compatible, and and ASan
+    ### will throw an error when the two are mixed
+    if (&file_find_regex([qr/Shadow memory range interleaves/],
+            $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
+        &write_test_file("[-] AddressSanitizer not compatible with valgrind: $file\n",
+            $curr_test_file);
+        $rv = 1;
+    }
+
     return $rv;
 }
 
@@ -2426,6 +2439,51 @@ sub validate_fko_decode() {
     return 1;
 }
 
+sub insert_dupe_rule() {
+    my $test_hr = shift;
+
+    ### insert duplicate rules
+    my ($prv, $lib_path, $fwknopd_conf, $access_conf)
+             = &parse_fwknopd_cmdline($test_hr);
+
+    return unless $prv;
+
+    &write_test_file("[+] Policy before inserting duplicate rules:\n",
+        $curr_test_file);
+    &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+        "$fwknopd_conf -a $access_conf --fw-list",
+        $cmd_out_tmp, $curr_test_file);
+    for (my $i=0; $i < 4; $i++) {
+        my $time_prefix = '_exp_' . (time() + 2+$i); ### default timeout
+        &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
+            $curr_test_file);
+        if ($test_hr->{'fw_dupe_rule_args'}) {
+            for my $fw_args (@{$test_hr->{'fw_dupe_rule_args'}}) {
+                my $cp = $fw_args;
+                if ($cp =~ /EXP_TIME/) {
+                    $cp =~ s/EXP_TIME/$time_prefix/;
+                }
+                &run_cmd("$fw_bin_and_prefix $cp",
+                    $cmd_out_tmp, $curr_test_file);
+            }
+        } else {
+            ### assume SSH
+            &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
+                "--dport 22 -m comment --comment $time_prefix -j ACCEPT",
+                $cmd_out_tmp, $curr_test_file);
+        }
+    }
+    &write_test_file("[+] Policy after inserting duplicate rules:\n",
+        $curr_test_file);
+    &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
+        "$fwknopd_conf -a $access_conf --fw-list",
+        $cmd_out_tmp, $curr_test_file);
+
+    &cache_fw_policy($cmd_out_tmp);
+
+    return;
+}
+
 sub client_send_spa_packet() {
     my $test_hr = shift;
     my $client_cycles = 1;
@@ -2477,8 +2535,17 @@ sub _client_send_spa_packet() {
                 "packet, try: $tries\n",
                 $curr_test_file);
 
-            $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
-                    $cmd_out_tmp, $curr_test_file);
+            ### run the client
+            if ($test_hr->{'multi_cmds'}) {
+                for my $cmd (@{$test_hr->{'multi_cmds'}}) {
+                    $rv = 0 unless &run_cmd($cmd,
+                            $cmd_out_tmp, $curr_test_file);
+                }
+            } else {
+                $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
+                        $cmd_out_tmp, $curr_test_file);
+            }
+
             if ($test_hr->{'relax_receive_cycle_num_check'}) {
                 $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/],
                     $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
@@ -2500,8 +2567,16 @@ sub _client_send_spa_packet() {
             "server tmp file $server_cmd_tmp does not exist.\n",
             $curr_test_file);
 
-        $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
-                $cmd_out_tmp, $curr_test_file);
+        ### run the client
+        if ($test_hr->{'multi_cmds'}) {
+            for my $cmd (@{$test_hr->{'multi_cmds'}}) {
+                $rv = 0 unless &run_cmd($cmd,
+                        $cmd_out_tmp, $curr_test_file);
+            }
+        } else {
+            $rv = 0 unless &run_cmd($test_hr->{'cmdline'},
+                    $cmd_out_tmp, $curr_test_file);
+        }
         $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/i],
             $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
     }
@@ -4746,22 +4821,45 @@ sub write_sudo_access_conf() {
 
 sub spa_cmd_open_close_exec_cycle() {
     my $test_hr = shift;
-    for my $file ($test_hr->{'cmd_cycle_open_file'},
-            $test_hr->{'cmd_cycle_close_file'}) {
+    for my $file (@{$test_hr->{'cmd_cycle_open_file'}}) {
         unlink $file if -e $file;
     }
+    for my $file (@{$test_hr->{'cmd_cycle_close_file'}}) {
+        unlink $file if -e $file;
+    }
+
     my $rv = &spa_cycle($test_hr);
 
-    for my $file ($test_hr->{'cmd_cycle_open_file'},
-            $test_hr->{'cmd_cycle_close_file'}) {
-        unless (-e $file) {
-            &write_test_file("[-] $file does not exist after SPA cycle.\n",
+    unless (&file_check_and_remove('cycle open file',
+            $test_hr->{'cmd_cycle_open_file'})) {
+        $rv = 0;
+    }
+
+    unless (&file_check_and_remove('cycle close file',
+            $test_hr->{'cmd_cycle_close_file'})) {
+        $rv = 0;
+    }
+
+    return $rv;
+}
+
+sub file_check_and_remove() {
+    my ($log_str, $files_ar) = @_;
+    my $rv = 1;
+
+    for my $file (@$files_ar) {
+        if (-e $file) {
+            &write_test_file(
+                "[+] $log_str $file exists after SPA cycle.\n",
+                $curr_test_file);
+            unlink $file;
+        } else {
+            &write_test_file(
+                "[-] $log_str $file does not exist after SPA cycle.\n",
                 $curr_test_file);
             $rv = 0;
         }
-        unlink $file if -e $file;
     }
-
     return $rv;
 }
 
@@ -5618,47 +5716,13 @@ sub client_server_interaction() {
     }
 
     if ($test_hr->{'insert_rule_while_running'}) {
-        &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p tcp -s $fake_ip --dport 1234 -j ACCEPT",
-            $cmd_out_tmp, $curr_test_file);
+        ### we're assuming iptables/firewalld here
+        &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p tcp -s $fake_ip " .
+            "--dport 1234 -j ACCEPT", $cmd_out_tmp, $curr_test_file);
     }
 
     if ($test_hr->{'insert_duplicate_rule_while_running'}) {
-        ### insert duplicate rules
-        my ($prv, $lib_path, $fwknopd_conf, $access_conf)
-                 = &parse_fwknopd_cmdline($test_hr);
-        if ($prv) {
-            &write_test_file("[+] Policy before inserting duplicate rules:\n",
-                $curr_test_file);
-            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
-                "$fwknopd_conf -a $access_conf --fw-list",
-                $cmd_out_tmp, $curr_test_file);
-            for (my $i=0; $i < 4; $i++) {
-                my $time_prefix = '_exp_' . (time() + 2+$i); ### default timeout
-                &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
-                    $curr_test_file);
-                if ($test_hr->{'fw_dupe_rule_args'}) {
-                    for my $fw_args (@{$test_hr->{'fw_dupe_rule_args'}}) {
-                        my $cp = $fw_args;
-                        if ($cp =~ /EXP_TIME/) {
-                            $cp =~ s/EXP_TIME/$time_prefix/;
-                        }
-                        &run_cmd("$fw_bin_and_prefix $cp",
-                            $cmd_out_tmp, $curr_test_file);
-                    }
-                } else {
-                    ### assume SSH
-                    &run_cmd("$fw_bin_and_prefix -A FWKNOP_INPUT -p 6 -s $fake_ip -d 0.0.0.0/0 " .
-                        "--dport 22 -m comment --comment $time_prefix -j ACCEPT",
-                        $cmd_out_tmp, $curr_test_file);
-                }
-            }
-            &write_test_file("[+] Policy after inserting duplicate rules:\n",
-                $curr_test_file);
-            &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
-                "$fwknopd_conf -a $access_conf --fw-list",
-                $cmd_out_tmp, $curr_test_file);
-            &cache_fw_policy($cmd_out_tmp);
-        }
+        &insert_dupe_rule($test_hr);
     }
 
     &iptables_rm_chains($test_hr)
@@ -5670,6 +5734,9 @@ sub client_server_interaction() {
 
     for (my $cycle_ctr=0; $cycle_ctr < $client_cycles; $cycle_ctr++) {
 
+        $fw_rule_created = 1;
+        $fw_rule_removed = 0;
+
         if ($client_cycles > 1) {
             &write_test_file("[+] Start client cycle: " . ($cycle_ctr+1) . "\n",
                 $curr_test_file);
@@ -5678,7 +5745,8 @@ sub client_server_interaction() {
         ### send the SPA packet(s) to the server either manually using IO::Socket or
         ### with the fwknopd client
         if ($spa_client_flag == $USE_CLIENT) {
-            unless (&_client_send_spa_packet($test_hr, $cycle_ctr, $SERVER_RECEIVE_CHECK)) {
+            unless (&_client_send_spa_packet($test_hr,
+                        $cycle_ctr, $SERVER_RECEIVE_CHECK)) {
                 if ($enable_openssl_compatibility_tests) {
                     &write_test_file(
                         "[-] fwknop client execution and/or OpenSSL error.\n",
@@ -5698,59 +5766,8 @@ sub client_server_interaction() {
         }
 
         ### check to see if the SPA packet resulted in a new fw access rule
-        my $ctr = 0;
-        while (not &is_fw_rule_active($test_hr)) {
-            &write_test_file("[.] new fw rule does not exist.\n",
-                $curr_test_file);
-            $ctr++;
-            if ($test_hr->{'sleep_cycles'}) {
-                last if $ctr == $test_hr->{'sleep_cycles'};
-            } else {
-                last if $ctr == 3;
-            }
-            sleep 1;
-        }
-        if ($test_hr->{'sleep_cycles'} and ($ctr == $test_hr->{'sleep_cycles'})) {
-            $fw_rule_created = 0;
-            $fw_rule_removed = 0;
-        } else {
-            if ($ctr == 3) {
-                $fw_rule_created = 0;
-                $fw_rule_removed = 0;
-            }
-        }
-
-        if ($fw_rule_created or $test_hr->{'insert_duplicate_rule_while_running'}) {
-            if ($test_hr->{'rm_rule_mid_cycle'}) {
-                &write_test_file("[+] Flushing firewall rules out from under fwknopd...\n",
-                    $curr_test_file);
-                &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
-                    "$default_server_conf_args --fw-flush $verbose_str",
-                    $cmd_out_tmp, $curr_test_file);
-            }
-            sleep 3;  ### allow time for rule time out.
-            if (&is_fw_rule_active($test_hr)) {
-                if ($test_hr->{'fw_rule_removed'} ne $REQUIRE_NO_NEW_REMOVED) {
-                    &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
-                        $curr_test_file);
-                    $rv = 0;
-                }
-            } else {
-                &write_test_file("[+] new fw rule timed out.\n", $curr_test_file);
-                $fw_rule_removed = 1;
-            }
-        }
-
-        $rv = 0 unless &fw_rule_criteria($fw_rule_created,
-                $fw_rule_removed, $test_hr);
-
-        if ($cycle_ctr < $client_cycles - 1) {
-            ### set up for the next cycle (same defaults as at the top of
-            ### this function)
-            $server_was_stopped = 1;
-            $fw_rule_created = 1;
-            $fw_rule_removed = 0;
-        }
+        ($rv, $fw_rule_created, $fw_rule_removed)
+            = &fw_check($rv, $fw_rule_created, $fw_rule_removed, $test_hr);
     }
 
     if (&is_fwknopd_running()) {
@@ -5773,6 +5790,58 @@ sub client_server_interaction() {
         $curr_test_file);
 
     return ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed);
+}
+
+sub fw_check() {
+    my ($rv, $fw_rule_created, $fw_rule_removed, $test_hr) = @_;
+
+    my $ctr = 0;
+    while (not &is_fw_rule_active($test_hr)) {
+        &write_test_file("[.] new fw rule does not exist.\n",
+            $curr_test_file);
+        $ctr++;
+        if ($test_hr->{'sleep_cycles'}) {
+            last if $ctr == $test_hr->{'sleep_cycles'};
+        } else {
+            last if $ctr == 3;
+        }
+        sleep 1;
+    }
+    if ($test_hr->{'sleep_cycles'} and ($ctr == $test_hr->{'sleep_cycles'})) {
+        $fw_rule_created = 0;
+        $fw_rule_removed = 0;
+    } else {
+        if ($ctr == 3) {
+            $fw_rule_created = 0;
+            $fw_rule_removed = 0;
+        }
+    }
+
+    if ($fw_rule_created or $test_hr->{'insert_duplicate_rule_while_running'}) {
+        if ($test_hr->{'rm_rule_mid_cycle'}) {
+            &write_test_file("[+] Flushing firewall rules out from under fwknopd...\n",
+                $curr_test_file);
+            &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
+                "$default_server_conf_args --fw-flush $verbose_str",
+                $cmd_out_tmp, $curr_test_file);
+        }
+        sleep 3;  ### allow time for rule time out.
+        if (&is_fw_rule_active($test_hr)) {
+            if ($test_hr->{'fw_rule_removed'} ne $REQUIRE_NO_NEW_REMOVED) {
+                &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
+                    $curr_test_file);
+                $rv = 0;
+            }
+        } else {
+            &write_test_file("[+] new fw rule timed out.\n", $curr_test_file);
+            $fw_rule_removed = 1;
+        }
+    }
+
+    $rv = 0 unless &fw_rule_criteria($fw_rule_created,
+            $fw_rule_removed, $test_hr);
+
+    return $rv, $fw_rule_created, $fw_rule_removed;
 }
 
 sub fw_rule_criteria() {
@@ -5811,7 +5880,6 @@ sub fw_rule_criteria() {
             $rv = 0;
         }
     }
-
 
     return $rv;
 }
@@ -6859,11 +6927,22 @@ sub validate_test_hashes() {
     for my $test_hr (@tests) {
         my $msg = &get_msg($test_hr);
         if ($test_hr->{'key_file'}) {
-            unless ($test_hr->{'cmdline'} =~ /\s$test_hr->{'key_file'}\b/) {
-                die "[*] 'key_file' value: '$test_hr->{'key_file'}' not matched in " .
-                    "client command line '$test_hr->{'cmdline'}' for: $msg";
+            if ($test_hr->{'multi_cmds'}) {
+                my $found = 0;
+                for my $cmd (@{$test_hr->{'multi_cmds'}}) {
+                    if ($cmd =~ /\s$test_hr->{'key_file'}\b/) {
+                        $found = 1;
+                        last;
+                    }
+                }
+            } else {
+                unless ($test_hr->{'cmdline'} =~ /\s$test_hr->{'key_file'}\b/) {
+                    die "[*] 'key_file' value: '$test_hr->{'key_file'}' not matched in " .
+                        "client command line '$test_hr->{'cmdline'}' for: $msg";
+                }
             }
         }
+
         if ($test_hr->{'server_conf'}) {
             unless ($test_hr->{'fwknopd_cmdline'} =~ /\s$test_hr->{'server_conf'}\b/) {
                 die "[*] 'server_conf' value: '$test_hr->{'server_conf'}' not matched in " .

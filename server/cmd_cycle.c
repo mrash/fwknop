@@ -194,6 +194,7 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
     if(build_cmd(spadat, acc->cmd_cycle_close))
     {
         /* Now the corresponding close command is now in cmd_buf
+         * for later execution when the timer expires.
         */
         cmd_close_len = strnlen(cmd_buf, CMD_CYCLE_BUFSIZE-1)+1;
         log_msg(LOG_INFO,
