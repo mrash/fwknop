@@ -948,7 +948,9 @@ my %test_keys = (
     'client_positive_output_matches' => $OPTIONAL,
     'client_negative_output_matches' => $OPTIONAL,
     'server_positive_output_matches' => $OPTIONAL,
+    'server_positive_num_matches'    => $OPTIONAL,
     'server_negative_output_matches' => $OPTIONAL,
+    'server_negative_num_matches'    => $OPTIONAL,
     'client_cycles_per_server_instance' => $OPTIONAL_NUMERIC,
     'iptables_rm_chains_after_server_start' => $OPTIONAL,
 );
@@ -5919,6 +5921,20 @@ sub process_output_matches() {
                 "[-] server_positive_output_matches not met, setting rv=0\n",
                 $curr_test_file);
             $rv = 0;
+        }
+    }
+
+    if ($test_hr->{'server_positive_num_matches'}) {
+        for my $hr (@{$test_hr->{'server_positive_num_matches'}}) {
+            my $count = &file_find_num_matches($hr->{'re'},
+                    $APPEND_RESULTS, $server_test_file);
+            unless ($count == $hr->{'num'}) {
+                &write_test_file(
+                    "[-] server_positive_num_matches not met ($hr->{'re'} " .
+                    "match count = $count, expected $hr->{'num'}, " .
+                    "setting rv=0\n", $curr_test_file);
+                $rv = 0;
+            }
         }
     }
 

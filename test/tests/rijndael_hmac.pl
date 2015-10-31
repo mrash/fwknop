@@ -718,15 +718,15 @@
             "$cf{'rc_hmac_b64_key'} $verbose_str",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
-        'server_positive_output_matches' => [
-            qr/Removed\srule\s1/,
-            qr/Removed\srule\s2/,
-            qr/Removed\srule\s3/,
+        'server_positive_num_matches' => [
+            ### match 3 times (rule ordering may span multiple seconds)
+            { 're' => qr/Removed\srule/, 'num' => 3 }
         ],
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'relax_receive_cycle_num_check' => $YES, ### multiple SPA packets involved
         'weak_server_receive_check' => $YES,
+        'sleep_cycles' => 5,
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
     {
