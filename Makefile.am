@@ -179,6 +179,7 @@ EXTRA_DIST = \
     test/conf/fwknoprc_gpg_hmac_sha512_key \
     test/conf/gpg_hmac_sha512_access.conf \
     test/conf/fwknoprc_hmac_sha512_base64_key \
+    test/conf/fwknoprc_hmac_multi_base64_key \
     test/conf/gpg_no_pw_hmac_sha512_access.conf \
     test/conf/ipt_no_flush_init_fwknopd.conf \
     test/conf/ipt_no_flush_exit_fwknopd.conf \
@@ -195,6 +196,7 @@ EXTRA_DIST = \
     test/conf/hmac_cmd_open_close_cycle_access3.conf \
     test/conf/hmac_cmd_open_close_cycle_access4.conf \
     test/conf/hmac_cmd_open_close_cycle_access5.conf \
+    test/conf/hmac_cmd_open_close_multi_cycle_access.conf \
     test/conf/hmac_get_key_access.conf \
     test/conf/hmac_no_b64_access.conf \
     test/conf/hmac_equal_keys_access.conf \
@@ -440,6 +442,7 @@ EXTRA_DIST = \
     test/tests/rijndael_replay_attacks.pl \
     test/tests/rijndael.pl \
     test/tests/rijndael_cmd_exec.pl \
+    test/tests/rijndael_hmac_cmd_open_close.pl \
     test/hardening-check \
     test/local_spa.key \
     test/invalid.key \
