@@ -120,6 +120,10 @@ AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
 
+dnl Detect if we are on and Apple platform
+dnl
+AM_CONDITIONAL([APPLE_PLATFORM], [test `uname -s` = Darwin])
+
 dnl Decide whether or not to build binaries with profiling coverage support
 dnl
 want_profile_coverage=no
