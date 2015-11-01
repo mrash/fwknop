@@ -556,7 +556,8 @@ static int handle_signals(fko_srv_options_t *opts)
         {
             log_msg(LOG_WARNING, "Got SIGHUP. Re-reading configs.");
             free_configs(opts);
-            kill(opts->tcp_server_pid, SIGTERM);
+            if(opts->tcp_server_pid > 0)
+                kill(opts->tcp_server_pid, SIGTERM);
             usleep(1000000);
             got_sighup = 0;
             rv = 0;  /* this means fwknopd will not exit */

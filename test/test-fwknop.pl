@@ -320,6 +320,7 @@ my $NO_SERVER_RECEIVE_CHECK = 2;
 my $APPEND_RESULTS    = 1;
 my $NO_APPEND_RESULTS = 2;
 my %sigs = (
+    'SIGHUP'  => 1,
     'SIGINT'  => 2,
     'SIGUSR1' => 10,
     'SIGUSR2' => 12,
@@ -2190,8 +2191,8 @@ sub server_start_stop_cycle() {
         ### send additional signals for code coverage
         if (-e $default_pid_file) {
             sleep 1;
-            for my $sig ($sigs{'SIGINT'}, $sigs{'SIGUSR1'},
-                        $sigs{'SIGUSR2'}) {
+            for my $sig ($sigs{'SIGHUP'}, $sigs{'SIGINT'},
+                        $sigs{'SIGUSR1'}, $sigs{'SIGUSR2'}) {
                 &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -R",
                         $cmd_out_tmp, $curr_test_file);
                 sleep 1;
@@ -2210,7 +2211,8 @@ sub server_start_stop_cycle() {
             $cmd_out_tmp, $curr_test_file);
 
     ### now send the signals against a non-daemon fwknopd process
-    for my $sig ($sigs{'SIGINT'}, $sigs{'SIGUSR1'}, $sigs{'SIGUSR2'}) {
+    for my $sig ($sigs{'SIGHUP'}, $sigs{'SIGINT'},
+            $sigs{'SIGUSR1'}, $sigs{'SIGUSR2'}) {
 
         &do_fwknopd_cmd("$lib_view_str $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args -f");

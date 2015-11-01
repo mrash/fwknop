@@ -1,5 +1,7 @@
 fwknop-2.6.8 (11//2015):
     - [server] open/close functionality...
+    - [server] Bug fix to not send the TCP server a TERM signal even when it is
+      not running when fwknopd receives a HUP signal.
 
 fwknop-2.6.7 (08/24/2015):
     - [server] When command execution is enabled with ENABLE_CMD_EXEC for an
