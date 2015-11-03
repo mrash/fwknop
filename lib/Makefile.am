@@ -18,14 +18,18 @@ if WANT_C_UNIT_TESTS
   fko_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS)
   fko_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
   fko_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
+  libfko_la_LDFLAGS   = -version-info 2:3:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
+else
+  libfko_la_LDFLAGS   = -version-info 2:3:0 $(GPGME_LIBS) \
+                        -export-symbols-regex '^fko_' \
+                        -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive
 endif
 
-libfko_la_SOURCES   		= $(libfko_source_files)
-libfko_la_LDFLAGS   		= -version-info 2:3:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
+libfko_la_SOURCES     = $(libfko_source_files)
 
-AM_CPPFLAGS         		= $(GPGME_CFLAGS) -I $(top_srcdir)/common
+AM_CPPFLAGS           = $(GPGME_CFLAGS) -I $(top_srcdir)/common
 
-include_HEADERS     		= fko.h
+include_HEADERS       = fko.h
 
 clean-local:
 	rm -f fko_utests *.gcno *.gcda
