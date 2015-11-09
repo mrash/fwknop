@@ -320,11 +320,18 @@ my $NO_SERVER_RECEIVE_CHECK = 2;
 my $APPEND_RESULTS    = 1;
 my $NO_APPEND_RESULTS = 2;
 my %sigs = (
-    'SIGTSTP'  => 20,
     'SIGHUP'   => 1,
     'SIGINT'   => 2,
     'SIGUSR1'  => 10,
     'SIGUSR2'  => 12,
+    'SIGTSTP'  => 20,
+);
+my @sigs_ordered = (
+    'SIGHUP',
+    'SIGINT',
+    'SIGUSR1',
+    'SIGUSR2',
+    'SIGTSTP',
 );
 
 my $ip_re = qr|(?:[0-2]?\d{1,2}\.){3}[0-2]?\d{1,2}|;  ### IPv4
@@ -2183,37 +2190,49 @@ sub server_start_stop_cycle() {
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -R",
             $cmd_out_tmp, $curr_test_file);
 
-    ### start fwknopd as a daemon then restart then stop
-    $rv = 0 unless &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args " .
+    ### send additional signals for code coverage
+    for my $sig_name (@sigs_ordered) {
+        my $sig = $sigs{$sig_name};
+
+        &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args " .
             "-i $loopback_intf $verbose_str",
             $cmd_out_tmp, $curr_test_file);
 
-    if ($rv) {
-        ### send additional signals for code coverage
-        if (-e $default_pid_file) {
+        sleep 1;
+        open F, "< $default_pid_file" or
+            die "[*] Could not open $default_pid_file: $!";
+        my $pid = <F>;
+        close F;
+        chomp $pid;
+
+        if (kill 0, $pid) {
+            &write_test_file(
+                "[+] Sending daemonized fwknopd PID: $pid signal: $sig_name($sig)\n",
+                $curr_test_file);
+            kill $sig, $pid;
+
             sleep 1;
-            for my $sig ($sigs{'SIGTSTP'}, $sigs{'SIGHUP'}, $sigs{'SIGINT'},
-                        $sigs{'SIGUSR1'}, $sigs{'SIGUSR2'}) {
-                &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -R",
-                        $cmd_out_tmp, $curr_test_file);
-                sleep 1;
-                open F, "< $default_pid_file" or
-                    die "[*] Could not open $default_pid_file: $!";
-                my $pid = <F>;
-                close F;
-                chomp $pid;
-                kill $sig, $pid;
+
+            if (kill 0, $pid) {
+                &run_cmd(
+                    "$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
+                    $cmd_out_tmp, $curr_test_file);
             }
+        } else {
+            &write_test_file(
+                "[-] Daemonized fwknopd PID: $pid not running?\n",
+                $curr_test_file);
         }
     }
+
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -S",
             $cmd_out_tmp, $curr_test_file);
     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
             $cmd_out_tmp, $curr_test_file);
 
     ### now send the signals against a non-daemon fwknopd process
-    for my $sig ($sigs{'SIGTSTP'}, $sigs{'SIGHUP'}, $sigs{'SIGINT'},
-            $sigs{'SIGUSR1'}, $sigs{'SIGUSR2'}) {
+    for my $sig_name (@sigs_ordered) {
+        my $sig = $sigs{$sig_name};
 
         &do_fwknopd_cmd("$lib_view_str $valgrind_str " .
             "$fwknopdCmd $default_server_conf_args -f");
@@ -2223,11 +2242,24 @@ sub server_start_stop_cycle() {
         my $pid = <F>;
         close F;
         chomp $pid;
-        kill $sig, $pid;
 
-        sleep 1;
-        &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
-            $cmd_out_tmp, $curr_test_file);
+        if (kill 0, $pid) {
+            &write_test_file(
+                "[+] Sending foreground fwknopd PID: $pid signal: $sig_name($sig)\n",
+                $curr_test_file);
+            kill $sig, $pid;
+            sleep 1;
+
+            if (kill 0, $pid) {
+                &run_cmd(
+                    "$lib_view_str $valgrind_str $fwknopdCmd $default_server_conf_args -K",
+                    $cmd_out_tmp, $curr_test_file);
+            }
+        } else {
+            &write_test_file(
+                "[-] Foreground fwknopd PID: $pid not running?\n",
+                $curr_test_file);
+        }
     }
 
     return $rv;
