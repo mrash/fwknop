@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 08/24/2015
+.\"      Date: 11/10/2015
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "08/24/2015" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "11/10/2015" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -707,7 +707,24 @@ Specify the group (via setgid) that will execute a command contained within a SP
 .PP
 \fBCMD_SUDO_EXEC_GROUP\fR \fI<groupname>\fR
 .RS 4
-Specify the group (via \(lqsudo \-gu <group>\(rq) that will execute a command contained within a SPA packet\&. If this variable is not given, fwknopd will assume the command should be executed as root\&.
+Specify the group (via \(lqsudo \-g <group>\(rq) that will execute a command contained within a SPA packet\&. If this variable is not given, fwknopd will assume the command should be executed as root\&.
+.RE
+.PP
+\fBCMD_CYCLE_OPEN\fR \fI<command>\fR
+.RS 4
+Specify a command open/close cycle to be executed upon receipt of a valid SPA packet\&. This directive sets the initial command, and is meant to be used in conjunction with the \(lqCMD_CYCLE_CLOSE\(rq variable below\&. The main application of this feature is to allow
+\fBfwknopd\fR
+to interact with firewall or ACL\(cqs that are not natively supported, and facilitate the same access model as for the main supported firewalls such as iptables\&. That is, a command is executed to open the firewall or ACL, and then a corresponding close command is executed after a timer expires\&. Both the \(lqCMD_CYCLE_OPEN\(rq and \(lqCMD_CYCLE_CLOSE\(rq variables support special substitution strings to allow values to be taken from the SPA payload and used on the command line of the executed command\&. These strings begin with a \(lq$\(rq character, and include \(lq$IP\(rq (the allow IP decrypted from the SPA payload), \(lq$SRC\(rq (synonym for \(lq$IP\(rq) , \(lq$PKT_SRC\(rq (the source IP in the network layer header of the SPA packet), \(lq$DST\(rq (the destination IP), \(lq$PORT\(rq (the allow port), and \(lq$PROTO\(rq (the allow protocol)\&.
+.RE
+.PP
+\fBCMD_CYCLE_CLOSE\fR \fI<command>\fR
+.RS 4
+Specify the close command that corresponds to the open command set by the \(lqCMD_CYCLE_OPEN\(rq variable described above\&. The same string substitutions such as \(lq$IP\(rq, \(lq$PORT\(rq, and \(lq$PROTO\(rq are supported\&. In addition, the special value \(lqNONE\(rq can be set to allow no close command to be executed after the open command\&. This might be handy in certain situations where, say, indefinite access is desired and allowed\&.
+.RE
+.PP
+\fBCMD_CYCLE_TIMER\fR \fI<seconds>\fR
+.RS 4
+Set the number of seconds after which the close command set in \(lqCMD_CYCLE_CLOSE\(rq will be executed\&. This defines the open/close timer interval\&.
 .RE
 .PP
 \fBSUDO_EXE\fR \fI<path>\fR
