@@ -140,8 +140,10 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
             }
             else if (is_var("TIMEOUT", (cmd_cycle_str+i+1)))
             {
-                snprintf(timestamp_str, sizeof(timestamp_str), "%lli", (long long)spadat->timestamp +
-                         (spadat->client_timeout == 0 ? timer : spadat->client_timeout));
+                snprintf(timestamp_str, sizeof(timestamp_str), "%lli",
+                        (long long)spadat->timestamp +
+                        (spadat->client_timeout == 0 ? timer :
+                        spadat->client_timeout));
                 strlcat(cmd_buf, timestamp_str, CMD_CYCLE_BUFSIZE);
                 i += strlen("TIMEOUT");
                 buf_idx += strlen(timestamp_str);
@@ -197,7 +199,7 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
     time_t              now;
     int                 cmd_close_len = 0;
 
-   /* CMD_CYCLE_CLOSE: Build the close command, but don't execute it until
+    /* CMD_CYCLE_CLOSE: Build the close command, but don't execute it until
      * the expiration timer has passed.
     */
     if(build_cmd(spadat, acc->cmd_cycle_close, acc->cmd_cycle_timer))
@@ -208,7 +210,9 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
         cmd_close_len = strnlen(cmd_buf, CMD_CYCLE_BUFSIZE-1)+1;
         log_msg(LOG_INFO,
                 "[%s] (stanza #%d) Running CMD_CYCLE_CLOSE command in %d seconds: %s",
-                spadat->pkt_source_ip, stanza_num, (spadat->client_timeout == 0 ? acc->cmd_cycle_timer : spadat->client_timeout), cmd_buf);
+                spadat->pkt_source_ip, stanza_num,
+                (spadat->client_timeout == 0 ? acc->cmd_cycle_timer :
+                spadat->client_timeout), cmd_buf);
     }
     else
     {
@@ -253,7 +257,8 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
     /* Set the expiration timer
     */
     time(&now);
-    new_clist->expire = now + (spadat->client_timeout == 0 ? acc->cmd_cycle_timer : spadat->client_timeout);
+    new_clist->expire = now + (spadat->client_timeout == 0 ?
+            acc->cmd_cycle_timer : spadat->client_timeout);
 
     /* Set the close command
     */
@@ -282,8 +287,11 @@ cmd_cycle_open(fko_srv_options_t *opts, acc_stanza_t *acc,
     if(! cmd_open(opts, acc, spadat, stanza_num))
         return 0;
 
-    if(! add_cmd_close(opts, acc, spadat, stanza_num))
-        return 0;
+    /* Allow the string "NONE" to short-circuit close command execution.
+    */
+    if(strncmp(acc->cmd_cycle_close, "NONE", 4) != 0)
+        if(! add_cmd_close(opts, acc, spadat, stanza_num))
+            return 0;
 
      return FKO_SUCCESS;
 }

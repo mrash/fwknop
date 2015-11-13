@@ -1292,7 +1292,8 @@ acc_data_is_valid(fko_srv_options_t *opts,
             );
             return(0);
         }
-        if(acc->cmd_cycle_timer == 0)
+        if(acc->cmd_cycle_timer == 0
+                && strncmp(acc->cmd_cycle_close, "NONE", 4) != 0)
         {
             log_msg(LOG_ERR,
                 "[*] Must set the CMD_CYCLE_TIMER for command cycle functionality: '%s'",
