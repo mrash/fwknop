@@ -112,6 +112,7 @@ Vlad Glagolev
       suite.
     - Submitted an OpenBSD port for fwknop-2.0.3, and this has been checked in
       under extras/openbsd/.
+    - Added client timeouts for open/close command cycles for fwknop-2.6.8.
 
 Sean Greven
     - Created a port of fwknop for FreeBSD:

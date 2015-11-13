@@ -592,7 +592,8 @@ directive starts a new stanza.
     a ``$'' character, and include ``$IP'' (the allow IP decrypted from the
     SPA payload), ``$SRC'' (synonym for ``$IP'') , ``$PKT_SRC'' (the source IP
     in the network layer header of the SPA packet), ``$DST'' (the destination
-    IP), ``$PORT'' (the allow port), and ``$PROTO'' (the allow protocol).
+    IP), ``$PORT'' (the allow port), and ``$PROTO'' (the allow protocol),
+    ``$TIMEOUT'' (set the client timeout if specified).
 
 *CMD_CYCLE_CLOSE* '<command>'::
     Specify the close command that corresponds to the open command set by the

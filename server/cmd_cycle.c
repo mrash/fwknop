@@ -59,10 +59,11 @@ is_var(const char * const var, const char * const cmd_str)
 }
 
 static int
-build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str)
+build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
 {
     char             port_str[MAX_PORT_STR_LEN+1]   = {0};
     char             proto_str[MAX_PROTO_STR_LEN+1] = {0};
+    char             timestamp_str[20] = {0};
     acc_port_list_t *port_list = NULL;
     int              i=0, buf_idx=0;
 
@@ -137,6 +138,14 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str)
                 i += strlen("PROTO");
                 buf_idx += strlen(proto_str);
             }
+            else if (is_var("TIMEOUT", (cmd_cycle_str+i+1)))
+            {
+                snprintf(timestamp_str, sizeof(timestamp_str), "%lli", (long long)spadat->timestamp +
+                         (spadat->client_timeout == 0 ? timer : spadat->client_timeout));
+                strlcat(cmd_buf, timestamp_str, CMD_CYCLE_BUFSIZE);
+                i += strlen("TIMEOUT");
+                buf_idx += strlen(timestamp_str);
+            }
             continue;
         }
         if(cmd_cycle_str[i] != '\0')
@@ -159,7 +168,7 @@ cmd_open(fko_srv_options_t *opts, acc_stanza_t *acc,
     /* CMD_CYCLE_OPEN: Build the open command by taking care of variable
      * substitutions if necessary.
     */
-    if(build_cmd(spadat, acc->cmd_cycle_open))
+    if(build_cmd(spadat, acc->cmd_cycle_open, acc->cmd_cycle_timer))
     {
         log_msg(LOG_INFO, "[%s] (stanza #%d) Running CMD_CYCLE_OPEN command: %s",
                 spadat->pkt_source_ip, stanza_num, cmd_buf);
@@ -191,7 +200,7 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
    /* CMD_CYCLE_CLOSE: Build the close command, but don't execute it until
      * the expiration timer has passed.
     */
-    if(build_cmd(spadat, acc->cmd_cycle_close))
+    if(build_cmd(spadat, acc->cmd_cycle_close, acc->cmd_cycle_timer))
     {
         /* Now the corresponding close command is now in cmd_buf
          * for later execution when the timer expires.
@@ -199,7 +208,7 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
         cmd_close_len = strnlen(cmd_buf, CMD_CYCLE_BUFSIZE-1)+1;
         log_msg(LOG_INFO,
                 "[%s] (stanza #%d) Running CMD_CYCLE_CLOSE command in %d seconds: %s",
-                spadat->pkt_source_ip, stanza_num, acc->cmd_cycle_timer, cmd_buf);
+                spadat->pkt_source_ip, stanza_num, (spadat->client_timeout == 0 ? acc->cmd_cycle_timer : spadat->client_timeout), cmd_buf);
     }
     else
     {
@@ -244,7 +253,7 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
     /* Set the expiration timer
     */
     time(&now);
-    new_clist->expire = now + acc->cmd_cycle_timer;
+    new_clist->expire = now + (spadat->client_timeout == 0 ? acc->cmd_cycle_timer : spadat->client_timeout);
 
     /* Set the close command
     */
