@@ -1331,6 +1331,12 @@ acc_data_is_valid(fko_srv_options_t *opts,
         }
     }
 
+    /* For any non-command access stanza, we enable global firewall handling
+    */
+    if(!acc->enable_cmd_exec && !acc->enable_cmd_sudo_exec &&
+            acc->cmd_cycle_open == NULL)
+        opts->enable_fw = 1;
+
     return(1);
 }
 
@@ -1781,7 +1787,7 @@ parse_access_file(fko_srv_options_t *opts)
      * a valid KEY defined (valid meaning it has a value that is not
      * "__CHANGEME__".
     */
-    if (got_source == 0)
+    if(got_source == 0)
     {
         log_msg(LOG_ERR,
             "[*] Could not find valid SOURCE stanza in access file: '%s'",

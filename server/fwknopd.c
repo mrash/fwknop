@@ -203,7 +203,7 @@ main(int argc, char **argv)
         /* Prepare the firewall - i.e. flush any old rules and (for iptables)
          * create fwknop chains.
         */
-        if(!opts.test && (fw_initialize(&opts) != 1))
+        if(!opts.test && opts.enable_fw && (fw_initialize(&opts) != 1))
             clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
         /* If we are to acquire SPA data via a UDP socket, start it up here.

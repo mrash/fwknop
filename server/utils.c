@@ -370,7 +370,7 @@ clean_exit(fko_srv_options_t *opts, unsigned int fw_cleanup_flag, unsigned int e
     }
 #endif
 
-    if(!opts->test && (fw_cleanup_flag == FW_CLEANUP))
+    if(!opts->test && opts->enable_fw && (fw_cleanup_flag == FW_CLEANUP))
         fw_cleanup(opts);
 
 #if USE_FILE_CACHE

@@ -625,9 +625,11 @@ typedef struct fko_srv_options
     unsigned char   afl_fuzzing;        /* SPA pkts from stdin for AFL fuzzing */
     unsigned char   verbose;            /* Verbose mode flag */
     unsigned char   enable_udp_server;  /* Enable UDP server mode */
+    unsigned char   enable_fw;          /* Command modes by themselves don't
+                                           need firewall support. */
 
     unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
-    unsigned char   ipt_disable_check_support; /* Don't use iptables -C */
+    unsigned char   ipt_disable_check_support;    /* Don't use iptables -C */
 
     /* Flag for permitting SPA packets regardless of directionality test
      * w.r.t. the sniffing interface.  This can sometimes be useful for SPA

@@ -154,21 +154,24 @@ run_udp_server(fko_srv_options_t *opts)
             break;
         }
 
-        /* Check for any expired firewall rules and deal with them.
-        */
         if(!opts->test)
         {
-            if(rules_chk_threshold > 0)
+            /* Check for any expired firewall rules and deal with them.
+            */
+            if(opts->enable_fw)
             {
-                opts->check_rules_ctr++;
-                if ((opts->check_rules_ctr % rules_chk_threshold) == 0)
+                if(rules_chk_threshold > 0)
                 {
-                    chk_rm_all = 1;
-                    opts->check_rules_ctr = 0;
+                    opts->check_rules_ctr++;
+                    if ((opts->check_rules_ctr % rules_chk_threshold) == 0)
+                    {
+                        chk_rm_all = 1;
+                        opts->check_rules_ctr = 0;
+                    }
                 }
+                check_firewall_rules(opts, chk_rm_all);
+                chk_rm_all = 0;
             }
-            check_firewall_rules(opts, chk_rm_all);
-            chk_rm_all = 0;
 
             /* See if any CMD_CYCLE_CLOSE commands need to be executed.
             */
