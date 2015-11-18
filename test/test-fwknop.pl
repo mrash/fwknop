@@ -443,6 +443,7 @@ our %cf = (
     'hmac_cmd_open_close_cycle_access3' => "$conf_dir/hmac_cmd_open_close_cycle_access3.conf",
     'hmac_cmd_open_close_cycle_access4' => "$conf_dir/hmac_cmd_open_close_cycle_access4.conf",
     'hmac_cmd_open_close_cycle_access5' => "$conf_dir/hmac_cmd_open_close_cycle_access5.conf",
+    'hmac_cmd_open_close_cycle_access6' => "$conf_dir/hmac_cmd_open_close_cycle_access6.conf",
     'hmac_cmd_open_close_multi_cycle_access' => "$conf_dir/hmac_cmd_open_close_multi_cycle_access.conf",
     'spa_destination'              => "$conf_dir/destination_rule_fwknopd.conf",
     "${fw_conf_prefix}_spa_dst_snat" => "$conf_dir/${fw_conf_prefix}_spa_dst_snat_fwknopd.conf",
@@ -4862,6 +4863,7 @@ sub spa_cmd_open_close_exec_cycle() {
         unlink $file if -e $file;
     }
     for my $file (@{$test_hr->{'cmd_cycle_close_file'}}) {
+        next if $file eq 'NONE';
         unlink $file if -e $file;
     }
 
@@ -4872,9 +4874,11 @@ sub spa_cmd_open_close_exec_cycle() {
         $rv = 0;
     }
 
-    unless (&file_check_and_remove('cycle close file',
-            $test_hr->{'cmd_cycle_close_file'})) {
-        $rv = 0;
+    unless ($test_hr->{'cmd_cycle_close_file'} eq 'NONE') {
+        unless (&file_check_and_remove('cycle close file',
+                $test_hr->{'cmd_cycle_close_file'})) {
+            $rv = 0;
+        }
     }
 
     return $rv;
@@ -4885,6 +4889,7 @@ sub file_check_and_remove() {
     my $rv = 1;
 
     for my $file (@$files_ar) {
+        next if $file eq 'NONE';
         if (-e $file) {
             &write_test_file(
                 "[+] $log_str $file exists after SPA cycle.\n",
