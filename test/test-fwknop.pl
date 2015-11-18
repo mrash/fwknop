@@ -444,6 +444,8 @@ our %cf = (
     'hmac_cmd_open_close_cycle_access4' => "$conf_dir/hmac_cmd_open_close_cycle_access4.conf",
     'hmac_cmd_open_close_cycle_access5' => "$conf_dir/hmac_cmd_open_close_cycle_access5.conf",
     'hmac_cmd_open_close_cycle_access6' => "$conf_dir/hmac_cmd_open_close_cycle_access6.conf",
+    'hmac_cmd_open_close_cycle_access7' => "$conf_dir/hmac_cmd_open_close_cycle_access7.conf",
+    'hmac_cmd_open_close_cycle_access8' => "$conf_dir/hmac_cmd_open_close_cycle_access8.conf",
     'hmac_cmd_open_close_multi_cycle_access' => "$conf_dir/hmac_cmd_open_close_multi_cycle_access.conf",
     'spa_destination'              => "$conf_dir/destination_rule_fwknopd.conf",
     "${fw_conf_prefix}_spa_dst_snat" => "$conf_dir/${fw_conf_prefix}_spa_dst_snat_fwknopd.conf",
@@ -4859,25 +4861,34 @@ sub write_sudo_access_conf() {
 
 sub spa_cmd_open_close_exec_cycle() {
     my $test_hr = shift;
-    for my $file (@{$test_hr->{'cmd_cycle_open_file'}}) {
-        unlink $file if -e $file;
+
+    if ($test_hr->{'cmd_cycle_open_file'}) {
+        for my $file (@{$test_hr->{'cmd_cycle_open_file'}}) {
+            unlink $file if -e $file;
+        }
     }
-    for my $file (@{$test_hr->{'cmd_cycle_close_file'}}) {
-        next if $file eq 'NONE';
-        unlink $file if -e $file;
+    if ($test_hr->{'cmd_cycle_close_file'}) {
+        for my $file (@{$test_hr->{'cmd_cycle_close_file'}}) {
+            next if $file eq 'NONE';
+            unlink $file if -e $file;
+        }
     }
 
     my $rv = &spa_cycle($test_hr);
 
-    unless (&file_check_and_remove('cycle open file',
-            $test_hr->{'cmd_cycle_open_file'})) {
-        $rv = 0;
+    if ($test_hr->{'cmd_cycle_open_file'}) {
+        unless (&file_check_and_remove('cycle open file',
+                $test_hr->{'cmd_cycle_open_file'})) {
+            $rv = 0;
+        }
     }
 
-    unless ($test_hr->{'cmd_cycle_close_file'} eq 'NONE') {
-        unless (&file_check_and_remove('cycle close file',
-                $test_hr->{'cmd_cycle_close_file'})) {
-            $rv = 0;
+    if ($test_hr->{'cmd_cycle_close_file'}) {
+        unless ($test_hr->{'cmd_cycle_close_file'} eq 'NONE') {
+            unless (&file_check_and_remove('cycle close file',
+                    $test_hr->{'cmd_cycle_close_file'})) {
+                $rv = 0;
+            }
         }
     }
 

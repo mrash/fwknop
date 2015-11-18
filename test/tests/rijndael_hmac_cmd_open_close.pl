@@ -76,15 +76,31 @@
         'detail'   => 'cmd open/close cycle client timeout',
         'function' => \&spa_cmd_open_close_exec_cycle,
         'cmdline'  => "$default_client_hmac_args --fw-timeout 2",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_cmd_open_close_cycle_access'} " .
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_cmd_open_close_cycle_access7'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'cmd_cycle_open_file'  => ['/tmp/127.0.0.2'],
-        'cmd_cycle_close_file' => ['/tmp/2127.0.0.2'],
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_positive_output_matches' => [
             qr/Timer expired/,
             qr/Running.*CLOSE.*in 2 seconds/,
+            qr/CLOSE.*\s2\d{5}/,
+        ],
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cmd open/close cycle timeout (2)',
+        'function' => \&spa_cmd_open_close_exec_cycle,
+        'cmdline'  => "$default_client_hmac_args --fw-timeout 2",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_cmd_open_close_cycle_access8'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [
+            qr/Timer expired/,
+            qr/Running.*CLOSE.*in 2 seconds/,
+            qr/OPEN.*\s121/,
+            qr/CLOSE.*\s222/,
         ],
     },
     {
