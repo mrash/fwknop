@@ -1292,8 +1292,13 @@ acc_data_is_valid(fko_srv_options_t *opts,
             );
             return(0);
         }
-        if(acc->cmd_cycle_timer == 0
-                && strncmp(acc->cmd_cycle_close, "NONE", 4) != 0)
+
+        /* Allow the string "NONE" to short-circuit close command execution.
+        */
+        if(strncmp(acc->cmd_cycle_close, "NONE", 4) == 0)
+            acc->cmd_cycle_do_close = 0;
+
+        if(acc->cmd_cycle_timer == 0 && acc->cmd_cycle_do_close)
         {
             log_msg(LOG_ERR,
                 "[*] Must set the CMD_CYCLE_TIMER for command cycle functionality: '%s'",
@@ -1614,7 +1619,10 @@ parse_access_file(fko_srv_options_t *opts)
                         &(curr_acc->cmd_exec_gid), val,
                         "CMD_EXEC_GROUP", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_CYCLE_OPEN"))
+        {
             add_acc_string(&(curr_acc->cmd_cycle_open), val, file_ptr, opts);
+            curr_acc->cmd_cycle_do_close = 1; /* default, will be validated */
+        }
         else if(CONF_VAR_IS(var, "CMD_CYCLE_CLOSE"))
             add_acc_string(&(curr_acc->cmd_cycle_close), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_CYCLE_TIMER"))

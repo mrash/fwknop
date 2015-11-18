@@ -296,9 +296,7 @@ cmd_cycle_open(fko_srv_options_t *opts, acc_stanza_t *acc,
     if(! cmd_open(opts, acc, spadat, stanza_num))
         return 0;
 
-    /* Allow the string "NONE" to short-circuit close command execution.
-    */
-    if(strncmp(acc->cmd_cycle_close, "NONE", 4) != 0)
+    if(acc->cmd_cycle_do_close)
         if(! add_cmd_close(opts, acc, spadat, stanza_num))
             return 0;
 

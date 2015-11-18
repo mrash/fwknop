@@ -388,6 +388,7 @@ typedef struct acc_stanza
     char                *cmd_exec_group;
     char                *cmd_cycle_open;
     char                *cmd_cycle_close;
+    unsigned char        cmd_cycle_do_close;
     int                  cmd_cycle_timer;
     uid_t                cmd_exec_uid;
     gid_t                cmd_exec_gid;
