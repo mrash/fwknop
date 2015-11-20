@@ -64,6 +64,7 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
     char             port_str[MAX_PORT_STR_LEN+1]   = {0};
     char             proto_str[MAX_PROTO_STR_LEN+1] = {0};
     char             timestamp_str[20] = {0};
+    char             client_timeout_str[10] = {0};
     acc_port_list_t *port_list = NULL;
     int              i=0, buf_idx=0;
 
@@ -147,6 +148,14 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
                 strlcat(cmd_buf, timestamp_str, CMD_CYCLE_BUFSIZE);
                 i += strlen("TIMEOUT");
                 buf_idx += strlen(timestamp_str);
+            }
+            else if (is_var("CLIENT_TIMEOUT", (cmd_cycle_str+i+1)))
+            {
+                snprintf(client_timeout_str, sizeof(client_timeout_str), "%u",
+                         spadat->client_timeout);
+                strlcat(cmd_buf, client_timeout_str, CMD_CYCLE_BUFSIZE);
+                i += strlen("CLIENT_TIMEOUT");
+                buf_idx += strlen(client_timeout_str);
             }
             continue;
         }
