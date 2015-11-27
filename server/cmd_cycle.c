@@ -152,6 +152,7 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
             else if (is_var("CLIENT_TIMEOUT", (cmd_cycle_str+i+1)))
             {
                 snprintf(client_timeout_str, sizeof(client_timeout_str), "%u",
+                         spadat->client_timeout == 0 ? timer :
                          spadat->client_timeout);
                 strlcat(cmd_buf, client_timeout_str, CMD_CYCLE_BUFSIZE);
                 i += strlen("CLIENT_TIMEOUT");
