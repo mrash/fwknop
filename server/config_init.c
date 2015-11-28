@@ -1295,6 +1295,11 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'l':
                 set_config_entry(opts, CONF_LOCALE, optarg);
                 break;
+#if USE_LIBNETFILTER_QUEUE
+            case 'n':
+                opts->enable_nfq_capture = 1;
+                break;
+#endif
             case 'O':
                 /* This was handled earlier */
                 break;

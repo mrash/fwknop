@@ -695,6 +695,69 @@ delete_all_chains(const fko_srv_options_t * const opts)
             log_msg(LOG_ERR, "delete_all_chains() Error %i from cmd:'%s': %s",
                     res, cmd_buf, err_buf);
     }
+
+#if USE_LIBNETFILTER_QUEUE
+    if(opts->enable_nfq_capture)
+    {
+        zero_cmd_buffers();
+
+        /* Delete the rule to direct traffic to the NFQ chain.
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
+            fwc.fw_command,
+            NFQ_TABLE,
+            "INPUT",
+            1
+        );
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+        zero_cmd_buffers();
+
+        /* Flush the NFQ chain
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
+            fwc.fw_command,
+            NFQ_TABLE,
+            NFQ_CHAIN
+        );
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+
+        zero_cmd_buffers();
+
+        /* Create the NF_QUEUE chains and rules
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
+            fwc.fw_command,
+            NFQ_TABLE,
+            NFQ_CHAIN
+        );
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+    }
+#endif
     return;
 }
 
@@ -763,6 +826,80 @@ create_fw_chains(const fko_srv_options_t * const opts)
         got_err += mk_chain(opts, i);
     }
 
+#if USE_LIBNETFILTER_QUEUE
+    if(opts->enable_nfq_capture)
+    {
+        zero_cmd_buffers();
+
+        /* Create the NF_QUEUE chains and rules
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
+            fwc.fw_command,
+            NFQ_TABLE,
+            NFQ_CHAIN
+        );
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            got_err++;
+        }
+
+        zero_cmd_buffers();
+
+        /* Create the rule to direct traffic to the NFQ chain.
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
+            fwc.fw_command,
+            NFQ_TABLE,
+            "INPUT",
+            1,
+            NFQ_CHAIN
+        );
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            got_err++;
+        }
+
+        zero_cmd_buffers();
+
+        /* Create the rule to direct SPA packets to the queue.
+        */
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NFQ_ADD_ARGS,
+            fwc.fw_command,
+            NFQ_TABLE,
+            NFQ_CHAIN,
+            NFQ_PORT,
+            NFQ_QUEUE_NUM
+        );
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+
+        if (opts->verbose)
+            log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",
+                cmd_buf, res, err_buf);
+
+        /* Expect full success on this */
+        if(! EXTCMD_IS_SUCCESS(res))
+        {
+            log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
+            got_err++;
+        }
+    }
+#endif
     return(got_err);
 }
 

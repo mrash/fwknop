@@ -39,6 +39,9 @@
 #include "tcp_server.h"
 #include "udp_server.h"
 
+#if USE_LIBNETFILTER_QUEUE
+  #include "nfq_capture.h"
+#endif
 #if USE_LIBPCAP
   #include "pcap_capture.h"
 #endif
@@ -206,6 +209,16 @@ main(int argc, char **argv)
         if(!opts.test && opts.enable_fw && (fw_initialize(&opts) != 1))
             clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
+#if USE_LIBNETFILTER_QUEUE
+        /* If we are to acquire SPA data via a libnetfilter_queue, start it up here.
+        */
+        if(opts.enable_nfq_capture ||
+                strncasecmp(opts.config[CONF_ENABLE_NFQ_CAPTURE], "Y", 1) == 0)
+        {
+            nfq_capture(&opts);
+        }
+        else
+#endif
         /* If we are to acquire SPA data via a UDP socket, start it up here.
         */
         if(opts.enable_udp_server ||
@@ -242,10 +255,16 @@ main(int argc, char **argv)
 #if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
-        if(!opts.enable_udp_server
-                && strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
+        if(!opts.enable_udp_server && !opts.enable_nfq_server
+                && strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0
+                && strncasecmp(opts.config[CONF_ENABLE_NFQ_SERVER], "N", 1) == 0)
         {
             pcap_capture(&opts);
+        }
+        else
+        {
+            log_msg(LOG_ERR, "No available capture mode specified.  Aborting.");
+            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
         }
 #endif
 

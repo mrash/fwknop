@@ -68,6 +68,11 @@
 #define FIREWD_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers" SH_REDIR
 #define FIREWD_ANY_IP              "0.0.0.0/0"
 
+#if USE_LIBNETFILTER_QUEUE
+  #define FIREWD_NFQ_ADD_ARGS "-t %s -A %s -p udp -m udp --dport %i -j NFQUEUE --queue-num %i"
+  #define FIREWD_NFQ_DEL_ARGS "-t %s -D %s -p udp -m udp --dport %i -j NFQUEUE --queue-num %i"
+#endif
+
 int validate_firewd_chain_conf(const char * const chain_str);
 
 #endif /* FW_UTIL_FIREWALLD_H */

@@ -437,6 +437,13 @@ typedef struct cmd_cycle_list
     struct cmd_cycle_list  *next;
 } cmd_cycle_list_t;
 
+#if USE_LIBNETFILTER_QUEUE
+  #define NFQ_TABLE "mangle"
+  #define NFQ_CHAIN "FWKNOP_NFQ"
+  #define NFQ_QUEUE_NUM 1
+  #define NFQ_PORT 62201
+#endif
+
 /* Firewall-related data and types. */
 
 #if FIREWALL_FIREWALLD
