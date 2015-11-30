@@ -282,8 +282,8 @@ AC_ARG_ENABLE([pie],
   [])
 
 if test "x$use_pie" = "xyes"; then
-    FKO_CHECK_COMPILER_ARG([-fPIE])
-    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-pie])
+    FKO_CHECK_COMPILER_ARG([-fPIE -fPIC])
+    FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-pie -fPIC])
 fi
 
 dnl Decide whether or not to enable -D_FORTIFY_SOURCE support
