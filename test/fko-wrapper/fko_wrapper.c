@@ -460,8 +460,9 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
 
-    /* NULL tests */
+    /* (mostly) NULL tests */
     fko_set_rand_value(ctx, NULL);
+    fko_set_rand_value(ctx, "asdf1234");
     fko_set_rand_value(ctx, NULL);
     fko_set_username(ctx, NULL);
     fko_set_username(ctx, NULL);

@@ -1568,6 +1568,26 @@ sub fault_injection_tag() {
     my $fw_rule_created    = 0;
     my $fw_rule_removed    = 0;
 
+    my $tag_name = '';
+    if ($test_hr->{'cmdline'}) {
+        if ($test_hr->{'cmdline'} =~ /fault\-injection\-tag\s(S+)/) {
+            $tag_name = $1;
+        }
+    } elsif ($test_hr->{'fwknopd_cmdline'}) {
+        if ($test_hr->{'fwknopd_cmdline'} =~ /fault\-injection\-tag\s(S+)/) {
+            $tag_name = $1;
+        }
+    }
+
+    if ($tag_name) {
+        unless ($test_hr->{'detail'} =~ /\s$tag_name/) {
+            &write_test_file(
+                "[-] tag_name '$tag_name' not in test message.\n",
+                $curr_test_file);
+            return 0;
+        }
+    }
+
     if ($test_hr->{'pkt'}
             or ($test_hr->{'cmdline'} and $test_hr->{'fwknopd_cmdline'})) {
 

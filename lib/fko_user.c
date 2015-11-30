@@ -82,9 +82,6 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
             {
                 if((username = getenv("USER")) == NULL)
                 {
-#if HAVE_LIBFIU
-                    fiu_return_on("fko_set_username_strdup1", FKO_ERROR_MEMORY_ALLOCATION);
-#endif
                     username = strdup("NO_USER");
                     if(username == NULL)
                         return(FKO_ERROR_MEMORY_ALLOCATION);
@@ -116,7 +113,7 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
         free(ctx->username);
 
 #if HAVE_LIBFIU
-    fiu_return_on("fko_set_username_strdup2", FKO_ERROR_MEMORY_ALLOCATION);
+    fiu_return_on("fko_set_username_strdup", FKO_ERROR_MEMORY_ALLOCATION);
 #endif
 
     ctx->username = strdup(username);
