@@ -1348,7 +1348,7 @@ acc_data_is_valid(fko_srv_options_t *opts,
 /* Read and parse the access file, popluating the access data as we go.
 */
 void
-parse_access_file(fko_srv_options_t *opts)
+parse_access_file(fko_srv_options_t *opts, char *access_filename)
 {
     FILE           *file_ptr;
     char           *ndx;
@@ -1368,15 +1368,15 @@ parse_access_file(fko_srv_options_t *opts)
     /* First see if the access file exists.  If it doesn't, complain
      * and bail.
     */
-    if(stat(opts->config[CONF_ACCESS_FILE], &st) != 0)
+    if(stat(access_filename, &st) != 0)
     {
         log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
-            opts->config[CONF_ACCESS_FILE]);
+            access_filename);
 
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    if(verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]) != 1)
+    if(verify_file_perms_ownership(access_filename) != 1)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
 
     /* A note on security here: Coverity flags the following fopen() as a
@@ -1393,10 +1393,10 @@ parse_access_file(fko_srv_options_t *opts)
      * warning), and then there is no race at all before the fopen().  I.e.
      * forcing an attacker to do the race makes things harder for them.
     */
-    if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
+    if ((file_ptr = fopen(access_filename, "r")) == NULL)
     {
         log_msg(LOG_ERR, "[*] Could not open access file: %s",
-            opts->config[CONF_ACCESS_FILE]);
+            access_filename);
         perror(NULL);
 
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1420,11 +1420,12 @@ parse_access_file(fko_srv_options_t *opts)
         if(IS_EMPTY_LINE(access_line_buf[0]))
             continue;
 
+
         if(sscanf(access_line_buf, "%s %[^;\n\r]", var, val) != 2)
         {
             log_msg(LOG_ERR,
                 "[*] Invalid access file entry in %s at line %i.\n - '%s'",
-                opts->config[CONF_ACCESS_FILE], num_lines, access_line_buf
+                access_filename, num_lines, access_line_buf
             );
             fclose(file_ptr);
             clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
@@ -1445,7 +1446,7 @@ parse_access_file(fko_srv_options_t *opts)
         if (opts->verbose > 3)
             log_msg(LOG_DEBUG,
                 "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'",
-                opts->config[CONF_ACCESS_FILE], access_line_buf, var, val
+                access_filename, access_line_buf, var, val
             );
 
         /* Process the entry.
@@ -1453,6 +1454,17 @@ parse_access_file(fko_srv_options_t *opts)
          * NOTE: If a new access.conf parameter is created.  It also needs
          *       to be accounted for in the following if/if else construct.
         */
+
+
+
+        if(CONF_VAR_IS(var, "%include"))
+        {
+            parse_access_file(opts, val);
+            continue;
+
+        }
+
+
         if(CONF_VAR_IS(var, "SOURCE"))
         {
             /* If this is not the first stanza, sanity check the previous
@@ -1462,7 +1474,7 @@ parse_access_file(fko_srv_options_t *opts)
                 if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
                 {
                     log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
-                        opts->config[CONF_ACCESS_FILE]);
+                        access_filename);
                     fclose(file_ptr);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
@@ -1492,7 +1504,7 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'",
-                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    curr_acc->source, access_filename);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
@@ -1506,7 +1518,7 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
-                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    curr_acc->source, access_filename);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
@@ -1655,7 +1667,7 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'",
-                    val, curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    val, curr_acc->source, access_filename);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
@@ -1670,7 +1682,7 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'",
-                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    curr_acc->source, access_filename);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
             }
@@ -1784,42 +1796,63 @@ parse_access_file(fko_srv_options_t *opts)
         {
             log_msg(LOG_ERR,
                 "[*] Ignoring unknown access parameter: '%s' in %s",
-                var, opts->config[CONF_ACCESS_FILE]
+                var, access_filename
             );
         }
     }
 
     fclose(file_ptr);
 
-    /* Basic check to ensure that we got at least one SOURCE stanza with
-     * a valid KEY defined (valid meaning it has a value that is not
-     * "__CHANGEME__".
-    */
-    if(got_source == 0)
+
+    if(strcmp(opts->config[CONF_ACCESS_FILE], access_filename) == 0)
     {
-        log_msg(LOG_ERR,
-            "[*] Could not find valid SOURCE stanza in access file: '%s'",
-            opts->config[CONF_ACCESS_FILE]);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-    }
+        if(got_source > 0)
+        {
+            if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+            {
+                log_msg(LOG_ERR,
+                    "[*] Data error in access file: '%s'",
+                    access_filename);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+        else if (opts->acc_stanzas == NULL)
+        {
+            log_msg(LOG_ERR,
+                "[*] Could not find valid SOURCE stanza in access file: '%s'",
+                opts->config[CONF_ACCESS_FILE]);
+            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+                log_msg(LOG_ERR,
+                "[*] made it to file: '%s'",
+                opts->config[CONF_ACCESS_FILE]);
 
-    /* Sanity check the last stanza
-    */
-    if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+
+        /* Expand our the expandable fields into their respective data buckets.
+        */
+        expand_acc_ent_lists(opts);
+
+        /* Make sure default values are set where needed.
+        */
+        set_acc_defaults(opts);
+    }
+    else // this is an %included file
     {
-        log_msg(LOG_ERR,
-            "[*] Data error in access file: '%s'",
-            opts->config[CONF_ACCESS_FILE]);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        /* If this file had a stanza, check the last one.
+         *
+         *
+        */
+        if(got_source > 0)
+        {
+            if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+            {
+                log_msg(LOG_ERR,
+                    "[*] Data error in access file: '%s'",
+                    access_filename);
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
     }
-
-    /* Expand our the expandable fields into their respective data buckets.
-    */
-    expand_acc_ent_lists(opts);
-
-    /* Make sure default values are set where needed.
-    */
-    set_acc_defaults(opts);
 
     return;
 }

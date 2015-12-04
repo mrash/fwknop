@@ -40,7 +40,7 @@
 
 /* Function Prototypes
 */
-void parse_access_file(fko_srv_options_t *opts);
+void parse_access_file(fko_srv_options_t *opts, char *access_filename);
 int compare_addr_list(acc_int_list_t *source_list, const uint32_t ip);
 int acc_check_port_access(acc_stanza_t *acc, char *port_str);
 void dump_access_list(const fko_srv_options_t *opts);
