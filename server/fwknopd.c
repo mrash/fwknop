@@ -151,7 +151,10 @@ main(int argc, char **argv)
 
         /* Process the access.conf file.
         */
-        parse_access_file(&opts, opts.config[CONF_ACCESS_FILE], &depth);
+        if (parse_access_file(&opts, opts.config[CONF_ACCESS_FILE], &depth) != EXIT_SUCCESS)
+        {
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
 
         /* Show config (including access.conf vars) and exit dump config was
          * wanted.

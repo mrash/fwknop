@@ -1347,7 +1347,7 @@ acc_data_is_valid(fko_srv_options_t *opts,
 
 /* Read and parse the access file, popluating the access data as we go.
 */
-void
+int
 parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 {
     FILE           *file_ptr;
@@ -1377,11 +1377,11 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
             access_filename);
 
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     if(verify_file_perms_ownership(access_filename) != 1)
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return EXIT_FAILURE;
 
     /* A note on security here: Coverity flags the following fopen() as a
      * Time of check time of use (TOCTOU) bug with a low priority due to the
@@ -1403,7 +1403,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
             access_filename);
         perror(NULL);
 
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
     /* Initialize the access list.
@@ -1432,7 +1432,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 access_filename, num_lines, access_line_buf
             );
             fclose(file_ptr);
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         /* Remove any colon that may be on the end of the var
@@ -1465,12 +1465,18 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         {
             if ((*depth) < 3)
             {
-                parse_access_file(opts, val, depth);
+                if (parse_access_file(opts, val, depth) == EXIT_FAILURE)
+                {
+                    fclose(file_ptr);
+                    return EXIT_FAILURE;
+                }
             }
             else
             {
                 log_msg(LOG_ERR, "[*] Refusing to go deeper than 3 levels. Lost in Limbo: '%s'",
                         access_filename);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "SOURCE"))
@@ -1484,7 +1490,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
                         access_filename);
                     fclose(file_ptr);
-                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
             }
 
@@ -1514,7 +1520,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->key), val, file_ptr, opts);
             curr_acc->key_len = strlen(curr_acc->key);
@@ -1528,7 +1534,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
@@ -1536,7 +1542,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->key_base64), val, file_ptr, opts);
             add_acc_b64_string(&(curr_acc->key), &(curr_acc->key_len),
@@ -1553,7 +1559,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
@@ -1564,7 +1570,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
@@ -1572,7 +1578,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->hmac_key_base64), val, file_ptr, opts);
             add_acc_b64_string(&(curr_acc->hmac_key), &(curr_acc->hmac_key_len),
@@ -1586,7 +1592,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] HMAC_KEY value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->hmac_key), val, file_ptr, opts);
             curr_acc->hmac_key_len = strlen(curr_acc->hmac_key);
@@ -1600,7 +1606,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 log_msg(LOG_ERR,
                     "[*] FW_ACCESS_TIMEOUT value not in range.");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "ENCRYPTION_MODE"))
@@ -1611,7 +1617,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] Unrecognized ENCRYPTION_MODE '%s', use {CBC,CTR,legacy,Asymmetric}",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "ENABLE_CMD_EXEC"))
@@ -1656,7 +1662,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] CMD_CYCLE_TIMER value not in range [1,%d].",
                     RCHK_MAX_CMD_CYCLE_TIMER);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
@@ -1677,7 +1683,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'",
                     val, curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "GPG_EXE"))
@@ -1692,7 +1698,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                     "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val, file_ptr, opts);
             add_acc_bool(&(curr_acc->use_gpg), "Y");
@@ -1727,7 +1733,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
             if (add_acc_expire_time(opts, &(curr_acc->access_expire_time), val) != 1)
             {
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE_EPOCH"))
@@ -1741,7 +1747,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 log_msg(LOG_ERR,
                     "[*] FORCE_NAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_nat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
@@ -1750,14 +1756,14 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 log_msg(LOG_ERR,
                     "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_nat(opts, curr_acc, val, file_ptr);
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_NAT not supported.");
             fclose(file_ptr);
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            return EXIT_FAILURE;
 #endif
         }
         else if(CONF_VAR_IS(var, "FORCE_SNAT"))
@@ -1768,7 +1774,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 log_msg(LOG_ERR,
                     "[*] FORCE_SNAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_snat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
@@ -1777,14 +1783,14 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 log_msg(LOG_ERR,
                     "[*] FORCE_SNAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_snat(opts, curr_acc, val, file_ptr);
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_SNAT not supported.");
             fclose(file_ptr);
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            return EXIT_FAILURE;
 #endif
         }
         else if(CONF_VAR_IS(var, "FORCE_MASQUERADE"))
@@ -1821,7 +1827,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 log_msg(LOG_ERR,
                     "[*] Data error in access file: '%s'",
                     access_filename);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if (opts->acc_stanzas == NULL)
@@ -1829,12 +1835,8 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
             log_msg(LOG_ERR,
                 "[*] Could not find valid SOURCE stanza in access file: '%s'",
                 opts->config[CONF_ACCESS_FILE]);
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
-                log_msg(LOG_ERR,
-                "[*] made it to file: '%s'",
-                opts->config[CONF_ACCESS_FILE]);
-
 
         /* Expand our the expandable fields into their respective data buckets.
         */
@@ -1857,12 +1859,12 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 log_msg(LOG_ERR,
                     "[*] Data error in access file: '%s'",
                     access_filename);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
     }
 
-    return;
+    return EXIT_SUCCESS;
 }
 
 int
