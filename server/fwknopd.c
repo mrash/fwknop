@@ -76,6 +76,7 @@ int
 main(int argc, char **argv)
 {
     fko_srv_options_t   opts;
+    int depth = 0;
 
     while(1)
     {
@@ -150,7 +151,7 @@ main(int argc, char **argv)
 
         /* Process the access.conf file.
         */
-        parse_access_file(&opts, opts.config[CONF_ACCESS_FILE]);
+        parse_access_file(&opts, opts.config[CONF_ACCESS_FILE], &depth);
 
         /* Show config (including access.conf vars) and exit dump config was
          * wanted.

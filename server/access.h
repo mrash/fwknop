@@ -38,9 +38,13 @@
 */
 #define ACCESS_BUF_LEN  33
 
+/*We won't recurse more than 3 deep.  Access.conf can include a file that includes a file, but that's the limit.
+*/
+#define MAX_DEPTH 3
+
 /* Function Prototypes
 */
-void parse_access_file(fko_srv_options_t *opts, char *access_filename);
+void parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth);
 int compare_addr_list(acc_int_list_t *source_list, const uint32_t ip);
 int acc_check_port_access(acc_stanza_t *acc, char *port_str);
 void dump_access_list(const fko_srv_options_t *opts);

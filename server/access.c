@@ -1348,7 +1348,7 @@ acc_data_is_valid(fko_srv_options_t *opts,
 /* Read and parse the access file, popluating the access data as we go.
 */
 void
-parse_access_file(fko_srv_options_t *opts, char *access_filename)
+parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 {
     FILE           *file_ptr;
     char           *ndx;
@@ -1364,6 +1364,10 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename)
     struct stat     st;
 
     acc_stanza_t   *curr_acc = NULL;
+
+    /* This allows us to limit include depth, and also tracks when we've returned to the root access.conf file.
+    */
+    (*depth)++;
 
     /* First see if the access file exists.  If it doesn't, complain
      * and bail.
@@ -1459,13 +1463,17 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename)
 
         if(CONF_VAR_IS(var, "%include"))
         {
-            parse_access_file(opts, val);
-            continue;
-
+            if ((*depth) < 3)
+            {
+                parse_access_file(opts, val, depth);
+            }
+            else
+            {
+                log_msg(LOG_ERR, "[*] Refusing to go deeper than 3 levels. Lost in Limbo: '%s'",
+                        access_filename);
+            }
         }
-
-
-        if(CONF_VAR_IS(var, "SOURCE"))
+        else if(CONF_VAR_IS(var, "SOURCE"))
         {
             /* If this is not the first stanza, sanity check the previous
              * stanza for the minimum required data.
@@ -1802,9 +1810,9 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename)
     }
 
     fclose(file_ptr);
+    (*depth)--;
 
-
-    if(strcmp(opts->config[CONF_ACCESS_FILE], access_filename) == 0)
+    if(*depth == 0) //means we just closed the root access.conf
     {
         if(got_source > 0)
         {
