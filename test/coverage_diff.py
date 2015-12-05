@@ -12,8 +12,21 @@ def main():
 
     args = parse_cmdline()
 
-    old_zero_coverage = extract_zero_coverage(args.old_lcov_file)
-    new_zero_coverage = extract_zero_coverage(args.new_lcov_file)
+    ### the test suite writes final coverage info to this path
+    ### in the output directory.
+    final_lcov_file = "lcov_coverage_final.info"
+
+    old_lcov_file = args.old_lcov_file
+    new_lcov_file = args.new_lcov_file
+
+    if args.old_lcov_dir:
+        old_lcov_file = args.old_lcov_dir + "/" + final_lcov_file
+
+    if args.new_lcov_dir:
+        new_lcov_file = args.new_lcov_dir + "/" + final_lcov_file
+
+    old_zero_coverage = extract_zero_coverage(old_lcov_file)
+    new_zero_coverage = extract_zero_coverage(new_lcov_file)
 
     ### diff the two dictionaries
     for f in old_zero_coverage:
@@ -69,6 +82,10 @@ def parse_cmdline():
             help="old lcov file", default="output.last/lcov_coverage_final.info")
     parser.add_argument("-n", "--new-lcov-file", type=str, \
             help="new lcov file", default="output/lcov_coverage_final.info")
+    parser.add_argument("-O", "--old-lcov-dir", type=str, \
+            help="old lcov file", default="")
+    parser.add_argument("-N", "--new-lcov-dir", type=str, \
+            help="new lcov file", default="")
 
     args = parser.parse_args()
     return args
