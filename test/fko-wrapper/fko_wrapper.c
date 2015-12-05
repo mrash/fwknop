@@ -31,8 +31,14 @@
  * functions cannot be expected to handle key lengths that are
  * longer than the key buffers themselves.
 */
-#define ENC_KEY          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* 32 bytes (RIJNDAEL_MAX_KEYSIZE) */
-#define HMAC_KEY         "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" /* 128 bytes (SHA512_BLOCK_LEN) */
+#define ENC_KEY         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* 32 bytes (RIJNDAEL_MAX_KEYSIZE) */
+#define HMAC_KEY        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" /* 128 bytes (SHA512_BLOCK_LEN) */
+#define STR_64BYTES     "1234567890123456789012345678901234567890123456789012345678901234"
+#define STR_8BYTES      "12345678"
+#define SPA_MSG1        "1.1.1.1,tcp/22"
+#define SPA_MSG2        "123.123.123.123,tcp/22"
+#define SPA_NAT_MSG     "1.2.3.4,1234"
+#define SERVER_AUTH_MSG "passwd"
 
 #define IS_EMPTY_LINE(x) ( \
     x == '#' || x == '\n' || x == '\r' || x == ';' || x == '\0' \
@@ -215,6 +221,67 @@ spa_encoded_msg_fuzzing(void)
 }
 #endif
 
+static void ctx_set_null_vals(fko_ctx_t *ctx)
+{
+    fko_set_rand_value(*ctx, NULL);
+    fko_set_username(*ctx, NULL);
+    fko_set_spa_message(*ctx, NULL);
+    fko_set_spa_nat_access(*ctx, NULL);
+    fko_set_spa_server_auth(*ctx, NULL);
+    fko_set_spa_data(*ctx, NULL);
+    fko_set_timestamp(*ctx, 0);
+    fko_set_spa_message_type(*ctx, 0);
+    fko_set_spa_message(*ctx, NULL);
+    fko_set_spa_nat_access(*ctx, NULL);
+    fko_set_spa_server_auth(*ctx, NULL);
+    fko_set_spa_client_timeout(*ctx, 0);
+    fko_set_spa_digest_type(*ctx, 0);
+    fko_set_spa_digest(*ctx);
+    fko_set_spa_hmac_type(*ctx, 0);
+    fko_set_spa_encryption_mode(*ctx, 0);
+    fko_set_spa_data(*ctx, NULL);
+    fko_set_spa_hmac(*ctx, NULL, 0);
+    fko_set_raw_spa_digest_type(*ctx, 0);
+    fko_set_raw_spa_digest(*ctx);
+
+    spa_calls += 20;
+
+    return;
+}
+
+static void ctx_add_dupe_data(fko_ctx_t *ctx)
+{
+    fko_set_rand_value(*ctx, STR_8BYTES);
+    fko_set_rand_value(*ctx, STR_8BYTES);
+    fko_set_username(*ctx, STR_64BYTES);
+    fko_set_username(*ctx, STR_64BYTES);
+    fko_set_timestamp(*ctx, 12345);
+    fko_set_timestamp(*ctx, 12345);
+    fko_set_spa_message_type(*ctx, FKO_ACCESS_MSG);
+    fko_set_spa_message_type(*ctx, FKO_ACCESS_MSG);
+    fko_set_spa_message(*ctx, SPA_MSG1);
+    fko_set_spa_message(*ctx, SPA_MSG1);
+    fko_set_spa_nat_access(*ctx, SPA_NAT_MSG);
+    fko_set_spa_nat_access(*ctx, SPA_NAT_MSG);
+    fko_set_spa_server_auth(*ctx, SERVER_AUTH_MSG);
+    fko_set_spa_server_auth(*ctx, SERVER_AUTH_MSG);
+    fko_set_spa_client_timeout(*ctx, 30);
+    fko_set_spa_client_timeout(*ctx, 30);
+    fko_set_spa_digest_type(*ctx, FKO_DEFAULT_DIGEST);
+    fko_set_spa_digest_type(*ctx, FKO_DEFAULT_DIGEST);
+    fko_set_spa_hmac_type(*ctx, FKO_DEFAULT_HMAC_MODE);
+    fko_set_spa_hmac_type(*ctx, FKO_DEFAULT_HMAC_MODE);
+    fko_set_spa_encryption_mode(*ctx, FKO_ENC_MODE_CBC);
+    fko_set_spa_encryption_mode(*ctx, FKO_ENC_MODE_CBC);
+    fko_set_spa_data(*ctx, STR_8BYTES);
+    fko_set_spa_data(*ctx, STR_64BYTES);
+
+    spa_calls += 24;
+
+    return;
+}
+
+
 static void
 test_loop_compounded(void)
 {
@@ -240,12 +307,12 @@ test_loop_compounded(void)
             if (res != FKO_SUCCESS)
                 printf("fko_set_timestamp(): %s\n", fko_errstr(res));
 
-            fko_set_spa_message(ctx, "1.1.1.1,tcp/22");
-            res = fko_set_spa_message(ctx, "123.123.123.123,tcp/22");
+            fko_set_spa_message(ctx, SPA_MSG1);
+            res = fko_set_spa_message(ctx, SPA_MSG2);
             if (res != FKO_SUCCESS)
                 printf("fko_set_spa_message(): %s\n", fko_errstr(res));
 
-            res = fko_set_spa_nat_access(ctx, "1.2.3.4,1234");
+            res = fko_set_spa_nat_access(ctx, SPA_NAT_MSG);
             if (res != FKO_SUCCESS)
                 printf("fko_set_spa_nat_access(): %s\n", fko_errstr(res));
 
@@ -253,7 +320,7 @@ test_loop_compounded(void)
             if (res != FKO_SUCCESS)
                 printf("fko_set_username(): %s\n", fko_errstr(res));
 
-            res = fko_set_spa_server_auth(ctx, "passwd");
+            res = fko_set_spa_server_auth(ctx, SERVER_AUTH_MSG);
             if (res != FKO_SUCCESS)
                 printf("fko_set_spa_server_auth(): %s\n", fko_errstr(res));
 
@@ -460,21 +527,21 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
 
-    /* (mostly) NULL tests */
-    fko_set_rand_value(ctx, NULL);
-    fko_set_rand_value(ctx, "asdf1234");
-    fko_set_rand_value(ctx, NULL);
-    fko_set_username(ctx, NULL);
-    fko_set_username(ctx, NULL);
-    fko_set_spa_message(ctx, NULL);
-    fko_set_spa_message(ctx, NULL);
-    fko_set_spa_nat_access(ctx, NULL);
-    fko_set_spa_nat_access(ctx, NULL);
-    fko_set_spa_server_auth(ctx, NULL);
-    fko_set_spa_server_auth(ctx, NULL);
-    fko_set_spa_data(ctx, NULL);
-    fko_set_spa_data(ctx, NULL);
-    spa_calls += 12;
+    /* NULL tests
+    */
+    ctx_set_null_vals(&ctx);
+    ctx_set_null_vals(&ctx);
+
+    /* Now add data for code coverage - note data values
+     * are added twice in this function to exercise ctx
+     * member free() code.
+    */
+    ctx_add_dupe_data(&ctx);
+
+    /* set data values back to NULL
+    */
+    ctx_set_null_vals(&ctx);
+    ctx_set_null_vals(&ctx);
 
     for (i=0; i<FCN_CALLS; i++) {
         fko_destroy(ctx);
