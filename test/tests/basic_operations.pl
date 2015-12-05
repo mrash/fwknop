@@ -193,6 +193,20 @@
         'exec_err' => $YES,
         'cmdline' => "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '--spoof-user (long user)',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_hmac_args --spoof-user " . 'A'x80
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'env SPOOF_USER (long user)',
+        'function' => \&generic_exec,
+        'cmdline'  => "SPOOF_USER=" . 'A'x80 . ' ' . $default_client_hmac_args
+    },
 
     {
         'category' => 'basic operations',
@@ -1087,6 +1101,19 @@
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Args\scontain\sinvalid/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--spoof-user (long user)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default " .
+                "--spoof-user " . 'A'x80,
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Username\:\sAAAA/],
+        'rc_positive_output_matches' => [qr/SPOOF_USER.*AAAA/],
     },
 
     {

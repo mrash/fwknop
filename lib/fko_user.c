@@ -55,8 +55,16 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
     /* If spoof_user was not passed in, check for a SPOOF_USER enviroment
      * variable.  If it is set, use its value.
     */
-    if(spoof_user != NULL && strnlen(spoof_user, MAX_SPA_USERNAME_SIZE))
-        username = (char*)spoof_user;
+    if(spoof_user != NULL && spoof_user[0] != '\0')
+    {
+#if HAVE_LIBFIU
+        fiu_return_on("fko_set_username_strdup", FKO_ERROR_MEMORY_ALLOCATION);
+#endif
+        username = strdup(spoof_user);
+        if(username == NULL)
+            return(FKO_ERROR_MEMORY_ALLOCATION);
+        is_user_heap_allocated = 1;
+    }
     else
         username = getenv("SPOOF_USER");
 
@@ -111,10 +119,6 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
     */
     if(ctx->username != NULL)
         free(ctx->username);
-
-#if HAVE_LIBFIU
-    fiu_return_on("fko_set_username_strdup", FKO_ERROR_MEMORY_ALLOCATION);
-#endif
 
     ctx->username = strdup(username);
 
