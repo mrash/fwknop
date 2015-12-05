@@ -3702,6 +3702,7 @@
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     1.1.1.1',
+            'OPEN_PORTS   tcp/22, udp/53, tcp/12345, udp/123, icmp/1, tcp/23',
         ],
         'server_conf_file' => [
             '### comment line'
