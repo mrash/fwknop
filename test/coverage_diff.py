@@ -29,6 +29,7 @@ def main():
     new_zero_coverage = extract_zero_coverage(new_lcov_file)
 
     ### diff the two dictionaries
+    print "[+] New coverage:"
     for f in old_zero_coverage:
         printed_file = 0
         if f in new_zero_coverage:
@@ -39,6 +40,18 @@ def main():
                             print "[+] Coverage: " + f
                             printed_file = 1
                         print "[+] new '" + ctype + "' coverage: " + val
+
+    print "\n[-] Missing coverage from the previous run:"
+    for f in new_zero_coverage:
+        printed_file = 0
+        if f in old_zero_coverage:
+            for ctype in new_zero_coverage[f]:
+                for val in sorted(new_zero_coverage[f][ctype]):
+                    if val not in old_zero_coverage[f][ctype]:
+                        if not printed_file:
+                            print "[-] Coverage: " + f
+                            printed_file = 1
+                        print "[-] missing '" + ctype + "' coverage: " + val
 
 def extract_zero_coverage(lcov_file):
 
