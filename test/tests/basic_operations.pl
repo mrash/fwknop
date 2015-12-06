@@ -3772,7 +3772,7 @@
         'server_conf_file' => [
             '### comment line'
         ],
-        'positive_output_matches' => [qr/requires\s.*${FW_PREFIX}_FORWARDING/],
+        'positive_output_matches' => [qr/invalid FORCE_NAT arg/],
     },
     {
         'category' => 'basic operations',
@@ -3868,7 +3868,7 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      N"
         ],
-        'positive_output_matches' => [qr/requires.*enabled/],
+        'positive_output_matches' => [qr/invalid FORCE_SNAT IP/],
     },
     {
         'category' => 'basic operations',
