@@ -872,8 +872,6 @@ set_fw_chain_conf(const int type, const char * const conf_str)
 int
 fw_config_init(fko_srv_options_t * const opts)
 {
-    int         enabled_local_nat = 0;
-
     memset(&fwc, 0x0, sizeof(struct fw_config));
 
     /* Set our firewall exe command path (firewall-cmd or iptables in most cases).
@@ -904,24 +902,17 @@ fw_config_init(fko_srv_options_t * const opts)
         if(set_fw_chain_conf(FIREWD_OUTPUT_ACCESS, opts->config[CONF_FIREWD_OUTPUT_ACCESS]) != 1)
             return 0;
 
-    if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT], "Y", 1)==0)
-    {
-        if(set_fw_chain_conf(FIREWD_DNAT_ACCESS, opts->config[CONF_FIREWD_DNAT_ACCESS]))
-            enabled_local_nat = 1;
-        else
-            return 0;
-    }
-
-    /* The remaining access chains require ENABLE_FIREWD_FORWARDING = Y
+    /* The remaining access chains require ENABLE_FIREWD_FORWARDING
+     * or ENABLE_FIREWD_LOCAL_NAT
     */
-    if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1)==0)
+    if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1)==0
+            || strncasecmp(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT], "Y", 1)==0)
     {
         if(set_fw_chain_conf(FIREWD_FORWARD_ACCESS, opts->config[CONF_FIREWD_FORWARD_ACCESS]) != 1)
             return 0;
 
-        if (! enabled_local_nat)
-            if(set_fw_chain_conf(FIREWD_DNAT_ACCESS, opts->config[CONF_FIREWD_DNAT_ACCESS]) != 1)
-                return 0;
+        if(set_fw_chain_conf(FIREWD_DNAT_ACCESS, opts->config[CONF_FIREWD_DNAT_ACCESS]) != 1)
+            return 0;
 
         /* Requires ENABLE_FIREWD_SNAT = Y
         */
