@@ -77,7 +77,11 @@ int main(void) {
                     strlen("fko_set_username_valuser")) == 0)
             res = fko_set_username(ctx, "BADCHAR=");
 
-        if (res == FKO_SUCCESS)
+        if(strncmp(fiu_tags[i], "fko_set_username_strdup",
+                    strlen("fko_set_username_strdup")) == 0)
+            res = fko_set_username(ctx, "normaluser");
+
+        if(res == FKO_SUCCESS)
         {
             printf("[-] fko_new(): %s\n", fko_errstr(res));
             fail++;

@@ -2,6 +2,14 @@ fwknop-2.6.8 (11//2015):
     - [server] open/close functionality...
     - [server] Bug fix to not send the TCP server a TERM signal even when it is
       not running when fwknopd receives a HUP signal.
+    - [libfko] Bug fix for a crash that could be triggered in fko_set_username()
+      when a username that is 64 chars or longer is specified. This crash
+      cannot be triggered in fwknopd even if an SPA packet contains such a
+      username however due to additional protections in the SPA decoding
+      routines. Further, this bug does not apply to the main fwknop client
+      either because the maximal username size is truncated down below 64
+      bytes. Hence, this bug only applies to client-side software that is
+      directly using libfko calling the fko_set_username() function.
 
 fwknop-2.6.7 (08/24/2015):
     - [server] When command execution is enabled with ENABLE_CMD_EXEC for an

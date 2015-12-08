@@ -889,7 +889,9 @@ fw_config_init(fko_srv_options_t * const opts)
 
     /* The remaining access chains require ENABLE_IPT_FORWARDING = Y
     */
-    if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)==0)
+    if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)==0
+            || strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1)==0)
+
     {
         if(set_fw_chain_conf(IPT_FORWARD_ACCESS, opts->config[CONF_IPT_FORWARD_ACCESS]) != 1)
             return 0;
@@ -1385,7 +1387,8 @@ process_spa_request(const fko_srv_options_t * const opts,
             }
         }
 
-        if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG)
+        if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+                || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
                 (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),

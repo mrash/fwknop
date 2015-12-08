@@ -93,7 +93,8 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char * const msg)
             ctx->message_type = FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG;
     }
     else
-        if(ctx->message_type != FKO_LOCAL_NAT_ACCESS_MSG)
+        if(ctx->message_type != FKO_LOCAL_NAT_ACCESS_MSG
+                && ctx->message_type != FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
             ctx->message_type = FKO_NAT_ACCESS_MSG;
 
     return(FKO_SUCCESS);

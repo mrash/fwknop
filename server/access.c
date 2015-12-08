@@ -1742,19 +1742,21 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         else if(CONF_VAR_IS(var, "FORCE_NAT"))
         {
 #if FIREWALL_FIREWALLD
-            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_NAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_NAT requires either ENABLE_FIREWD_FORWARDING or ENABLE_FIREWD_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
                 return EXIT_FAILURE;
             }
             add_acc_force_nat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
-            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING ENABLE_IPT_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
                 return EXIT_FAILURE;
             }
@@ -1769,19 +1771,21 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         else if(CONF_VAR_IS(var, "FORCE_SNAT"))
         {
 #if FIREWALL_FIREWALLD
-            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_SNAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_SNAT requires either ENABLE_FIREWD_FORWARDING or ENABLE_FIREWD_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
                 return EXIT_FAILURE;
             }
             add_acc_force_snat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
-            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_SNAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_SNAT requires ENABLE_IPT_FORWARDING ENABLE_IPT_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
                 return EXIT_FAILURE;
             }
