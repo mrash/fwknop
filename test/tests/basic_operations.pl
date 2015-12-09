@@ -465,6 +465,40 @@
         'exec_err' => $YES,
         'cmdline' => "$fwknopdCmd $default_server_conf_args --sudo-exe /etc/hosts"
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'user/group parity',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'user_group_mismatch' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Setting gid/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sudo user/group parity',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'sudo_user_group_mismatch' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Setting gid/],
+    },
 
     {
         'category' => 'basic operations',
@@ -2350,6 +2384,23 @@
             'ENABLE_PCAP_PROMISC       Y'
         ],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid ACCESS_EXPIRE_EPOCH',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                  any',
+            'KEY                    testtest',
+            'ACCESS_EXPIRE_EPOCH    999999999999999999999999999999999999'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/invalid epoch seconds value/],
+    },
 
     ### test syslog config
     {
@@ -2971,6 +3022,7 @@
         ],
         'positive_output_matches' => [qr/not\sin\sthe\srange/],
     },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
