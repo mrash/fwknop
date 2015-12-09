@@ -139,6 +139,25 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => 'complete cycle, include (1)',
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'include1_hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $NEW_RULE_REQUIRED,
+        'fw_rule_removed' => $NEW_RULE_REMOVED,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [
+            qr/SOURCE\s.*9\.9\.9\.9/,
+            qr/SOURCE\s.*ANY/,
+            qr/SOURCE\s.*99\.9\.9\.9/,
+            qr/SOURCE\s.*123\.3\.3\.3/
+         ],
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => 'cycle DESTINATION accepted (1)',
         'function' => \&spa_cycle,
         'cmdline'  => $default_client_hmac_args,

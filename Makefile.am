@@ -153,6 +153,9 @@ EXTRA_DIST = \
     test/conf/fuzzing_restrict_ports_access.conf \
     test/conf/fuzzing_source_access.conf \
     test/conf/hmac_fuzzing_access.conf \
+    test/conf/include1_hmac_access.conf \
+    test/conf/include2_hmac_access.conf \
+    test/conf/include3_hmac_access.conf \
     test/conf/gpg_access.conf \
     test/conf/gpg_hmac_access.conf \
     test/conf/gpg_no_pw_access.conf \

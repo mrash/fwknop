@@ -1424,7 +1424,6 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         if(IS_EMPTY_LINE(access_line_buf[0]))
             continue;
 
-
         if(sscanf(access_line_buf, "%s %[^;\n\r]", var, val) != 2)
         {
             log_msg(LOG_ERR,
@@ -1465,6 +1464,8 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         {
             if ((*depth) < 3)
             {
+                log_msg(LOG_ERR, "[+] Processing include directive for file: '%s'",
+                        val);
                 if (parse_access_file(opts, val, depth) == EXIT_FAILURE)
                 {
                     fclose(file_ptr);
