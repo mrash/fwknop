@@ -1406,9 +1406,12 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         return EXIT_FAILURE;
     }
 
-    /* Initialize the access list.
+    /* Initialize the access list, but only if we are processing the root access.conf.
     */
-    acc_stanza_init(opts);
+    if (depth == 1)
+    {
+        acc_stanza_init(opts);
+    }
 
     /* Now walk through access file pulling the access entries into the
      * current stanza.
