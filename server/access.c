@@ -85,7 +85,7 @@ add_acc_string(char **var, const char *val, FILE *file_ptr,
 /* Add an access user entry
 */
 static void
-add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
+add_acc_user(char **user_var, uid_t *uid_var, struct passwd **upw,
         const char *val, const char *var_name, FILE *file_ptr,
         fko_srv_options_t *opts)
 {
@@ -94,9 +94,9 @@ add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
     add_acc_string(user_var, val, file_ptr, opts);
 
     errno = 0;
-    upw = pw = getpwnam(val);
+    *upw = pw = getpwnam(val);
 
-    if(upw == NULL || pw == NULL)
+    if(*upw == NULL || pw == NULL)
     {
         log_msg(LOG_ERR, "[*] Unable to determine UID for %s: %s.",
                 var_name, errno ? strerror(errno) : "Not a user on this system");
@@ -1276,7 +1276,7 @@ acc_data_is_valid(fko_srv_options_t *opts,
     {
         log_msg(LOG_INFO,
             "Setting gid to group associated with CMD_SUDO_EXEC_USER '%s' in stanza source: '%s'",
-            acc->cmd_exec_user,
+            acc->cmd_sudo_exec_user,
             acc->source
         );
         acc->cmd_sudo_exec_gid = sudo_user_pw->pw_gid;
@@ -1630,7 +1630,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         }
         else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_USER"))
             add_acc_user(&(curr_acc->cmd_sudo_exec_user),
-                        &(curr_acc->cmd_sudo_exec_uid), sudo_user_pw,
+                        &(curr_acc->cmd_sudo_exec_uid), &sudo_user_pw,
                         val, "CMD_SUDO_EXEC_USER", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_GROUP"))
             add_acc_group(&(curr_acc->cmd_sudo_exec_group),
@@ -1638,7 +1638,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                         "CMD_SUDO_EXEC_GROUP", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_EXEC_USER"))
             add_acc_user(&(curr_acc->cmd_exec_user),
-                        &(curr_acc->cmd_exec_uid), user_pw,
+                        &(curr_acc->cmd_exec_uid), &user_pw,
                         val, "CMD_EXEC_USER", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_EXEC_GROUP"))
             add_acc_group(&(curr_acc->cmd_exec_group),

@@ -941,6 +941,8 @@ my %test_keys = (
     'cmd_cycle_close_file' => $OPTIONAL,
     'cmd_exec_file_owner' => $OPTIONAL,
     'cmd_exec_file_not_created' => $OPTIONAL,
+    'user_group_mismatch'       => $OPTIONAL,
+    'sudo_user_group_mismatch'  => $OPTIONAL,
     'rm_rule_mid_cycle'   => $OPTIONAL,
     'server_receive_re'   => $OPTIONAL,
     'no_exit_intf_down'   => $OPTIONAL,
@@ -2294,15 +2296,30 @@ sub server_conf_files() {
     my $rv = 1;
 
     if ($test_hr->{'digest_cache_file'}) {
-        &write_server_conf_file($test_hr->{'digest_cache_file'}, $rewrite_digest_file);
+        &write_server_conf_file($test_hr->{'digest_cache_file'},
+            $rewrite_digest_file);
     }
 
     if ($test_hr->{'server_access_file'}) {
-        &write_server_conf_file($test_hr->{'server_access_file'}, $rewrite_access_conf);
+        if ($test_hr->{'sudo_user_group_mismatch'} eq $YES) {
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_SUDO_EXEC_USER      $username";
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_SUDO_EXEC_GROUP     root";
+        }
+        if ($test_hr->{'user_group_mismatch'} eq $YES) {
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_EXEC_USER      $username";
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_EXEC_GROUP     root";
+        }
+        &write_server_conf_file($test_hr->{'server_access_file'},
+            $rewrite_access_conf);
     }
 
     if ($test_hr->{'server_conf_file'}) {
-        &write_server_conf_file($test_hr->{'server_conf_file'}, $rewrite_fwknopd_conf);
+        &write_server_conf_file($test_hr->{'server_conf_file'},
+            $rewrite_fwknopd_conf);
     }
 
     $rv = 0 unless &run_cmd($test_hr->{'fwknopd_cmdline'},
@@ -3202,10 +3219,10 @@ sub perl_fko_module_user() {
         return 0;
     }
 
-    my $username = $fko_obj->username();
+    my $fko_username = $fko_obj->username();
 
-    if ($username) {
-        &write_test_file("[+] got username(): $username\n",
+    if ($fko_username) {
+        &write_test_file("[+] got username(): $fko_username\n",
             $curr_test_file);
     } else {
         &write_test_file("[-] could not get username()\n",
@@ -7276,6 +7293,7 @@ sub init() {
     }
 
     push @tests_to_exclude, qr/sudo/ unless $sudo_conf_testing;
+    push @tests_to_exclude, qr/user.*\sparity/ unless $username;
 
     ### see if the 'nobody' user is on the system
     unless (getpwnam('nobody')) {
