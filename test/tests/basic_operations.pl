@@ -1442,6 +1442,20 @@
         'positive_output_matches' => [qr/Message.*0.0.0.0/],
         'rc_positive_output_matches' => [qr/ALLOW_IP.*0.0.0.0/],
     },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--server-resolve-ipv4',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -R --server-resolve-ipv4",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1',
+                    'SERVER_RESOLVE_IPV4' => 'Y'}}],
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
@@ -1452,31 +1466,36 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
-        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/HTTP_USER_AGENT.*FwknopTestSuite\/2.6/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/,
+                qr/HTTP_USER_AGENT.*FwknopTestSuite\/2.6/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
         'detail'   => '-R resolve http (1)',
         'function' => \&client_rc_file,
-        'cmdline'  => "$client_save_rc_args_no_test -n default -R --resolve-url http://www.cipherdyne.org/cgi-bin/myip",
+        'cmdline'  => "$client_save_rc_args_no_test -n default -R " .
+                "--resolve-url http://www.cipherdyne.org/cgi-bin/myip",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
-        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*cipherdyne.org.*myip/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/,
+                qr/RESOLVE_URL.*cipherdyne.org.*myip/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
         'detail'   => '-R resolve http (2)',
         'function' => \&client_rc_file,
-        'cmdline'  => "$client_save_rc_args_no_test -n default -R --resolve-url www.cipherdyne.org/cgi-bin/myip",
+        'cmdline'  => "$client_save_rc_args_no_test -n default " .
+                "-R --resolve-url www.cipherdyne.org/cgi-bin/myip",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
-        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*\swww.cipherdyne.org.*myip/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/,
+                qr/RESOLVE_URL.*\swww.cipherdyne.org.*myip/],
     },
     {
         'category' => 'basic operations',
@@ -1692,6 +1711,24 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Parameter\serror/],
         'rc_positive_output_matches' => [qr/TIME_OFFSET.*123456789999/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'time offset invalid (3)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopCmd --test -A tcp/22 -s -D 127.0.0.2 --time-offset-plus 99999999999999999",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid time offset/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'time offset invalid (4)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopCmd --test -A tcp/22 -s -D 127.0.0.2 --time-offset-minus 99999999999999999",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid time offset/],
     },
 
     {
