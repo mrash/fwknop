@@ -1395,6 +1395,8 @@ usage(void)
     fprintf(stdout,
       "Usage: fwknopd [options]\n\n"
       " -a, --access-file       - Specify an alternate access.conf file.\n"
+      "     --access-folder     - Specify an access.conf folder.  All .conf\n"
+      "                           files in this folder will be processed.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -f, --foreground        - Run fwknopd in the foreground (do not become\n"
       "                           a background daemon).\n"
