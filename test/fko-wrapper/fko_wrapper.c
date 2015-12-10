@@ -33,8 +33,9 @@
 */
 #define ENC_KEY         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" /* 32 bytes (RIJNDAEL_MAX_KEYSIZE) */
 #define HMAC_KEY        "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB" /* 128 bytes (SHA512_BLOCK_LEN) */
-#define STR_64BYTES     "1234567890123456789012345678901234567890123456789012345678901234"
 #define STR_8BYTES      "12345678"
+#define STR_16BYTES     "1234567890123456"
+#define STR_64BYTES     "1234567890123456789012345678901234567890123456789012345678901234"
 #define SPA_MSG1        "1.1.1.1,tcp/22"
 #define SPA_MSG2        "123.123.123.123,tcp/22"
 #define SPA_NAT_MSG     "1.2.3.4,1234"
@@ -252,7 +253,8 @@ static void ctx_set_null_vals(fko_ctx_t *ctx)
 static void ctx_add_dupe_data(fko_ctx_t *ctx)
 {
     fko_set_rand_value(*ctx, STR_8BYTES);
-    fko_set_rand_value(*ctx, STR_8BYTES);
+    fko_set_rand_value(*ctx, STR_16BYTES);
+    fko_set_rand_value(*ctx, STR_16BYTES);
     fko_set_username(*ctx, STR_64BYTES);
     fko_set_username(*ctx, STR_64BYTES);
     fko_set_timestamp(*ctx, 12345);

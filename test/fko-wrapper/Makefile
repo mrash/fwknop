@@ -7,6 +7,10 @@ asan : fko_wrapper.c fko_basic.c
 	cc -Wall -fsanitize=address -fno-omit-frame-pointer -g -I../../lib fko_wrapper.c -o fko_wrapper -L../../lib/.libs -lfko
 	cc -Wall -fsanitize=address -fno-omit-frame-pointer -g -I../../lib fko_basic.c -o fko_basic -L../../lib/.libs -lfko
 
+ubsan : fko_wrapper.c fko_basic.c
+	cc -Wall -fsanitize=undefined -g -I../../lib fko_wrapper.c -o fko_wrapper -L../../lib/.libs -lfko
+	cc -Wall -fsanitize=undefined -fno-omit-frame-pointer -g -I../../lib fko_basic.c -o fko_basic -L../../lib/.libs -lfko
+
 fuzzing: fko_wrapper.c
 	cc -Wall -g -DFUZZING_INTERFACES -I../../lib fko_wrapper.c -o fko_wrapper -L../../lib/.libs -lfko
 

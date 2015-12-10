@@ -179,12 +179,25 @@ dnl
 want_asan_support=no
 AC_ARG_ENABLE([asan-support],
   [AS_HELP_STRING([--enable-asan-support],
-    [Build fwknop binaries with address sanitizer support @<:@default is to disable@:>@])],
+    [Build fwknop binaries with AddressSanitizer support @<:@default is to disable@:>@])],
   [want_asan_support=$enableval],
   [])
 
 if test "x$want_asan_support" = "xyes"; then
     FKO_CHECK_COMPILER_ARG([-fsanitize=address -fno-omit-frame-pointer])
+fi
+
+dnl Decide whether or not to enable MemorySanitizer support
+dnl
+want_ubsan_support=no
+AC_ARG_ENABLE([ubsan-support],
+  [AS_HELP_STRING([--enable-ubsan-support],
+    [Build fwknop binaries with UndefinedBehaviorSanitizer support @<:@default is to disable@:>@])],
+  [want_ubsan_support=$enableval],
+  [])
+
+if test "x$want_ubsan_support" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-fsanitize=undefined])
 fi
 
 dnl Decide whether or not force 32-bit mode

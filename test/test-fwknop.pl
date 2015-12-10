@@ -220,6 +220,7 @@ my $valgrind_disable_child_silent = 0;
 my $valgrind_suppressions_file = cwd() . '/valgrind_suppressions';
 our $valgrind_str = '';
 my $asan_mode = 0;
+my $ubsan_mode = 0;
 my %cached_fw_policy  = ();
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
@@ -1456,11 +1457,7 @@ sub asan_verification() {
 
     if ($rv) {
         &run_cmd('./a.out', "../$cmd_out_tmp", "../$curr_test_file");
-        unless (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
-                qr/SUMMARY\:\sAddressSanitizer/],
-                $MATCH_ALL, $NO_APPEND_RESULTS, "../$curr_test_file")) {
-            $rv = 0;
-        }
+        $rv = 0 unless &is_sanitizer_crash("../$curr_test_file");
     }
 
     chdir '..' or die $!;
@@ -1643,6 +1640,7 @@ sub fko_wrapper_exec() {
     my $make_arg = $test_hr->{'wrapper_compile'};
 
     $make_arg = 'asan' if $asan_mode;
+    $make_arg = 'ubsan' if $asan_mode;
 
     if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
         if ($enable_fuzzing_interfaces_tests) {
@@ -1795,6 +1793,22 @@ sub look_for_crashes() {
     return $rv;
 }
 
+sub is_sanitizer_crash() {
+    my $file = shift;
+
+    my $rv = 0;
+
+    if (&file_find_regex([qr/ERROR\:\s\w+Sanitizer/,
+                qr/SUMMARY\:\s\w+Sanitizer/],
+            $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
+        &write_test_file("[-] Sanitizer crash found in: $file\n",
+            $curr_test_file);
+        $rv = 1;
+    }
+
+    return $rv;
+}
+
 sub is_crash() {
     my $file = shift;
     my $rv = 0;
@@ -1805,19 +1819,14 @@ sub is_crash() {
         $rv = 1;
     }
 
-    if (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
-                qr/SUMMARY\:\sAddressSanitizer/],
-            $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
-        &write_test_file("[-] AddressSanitizer crash found in: $file\n",
-            $curr_test_file);
-        $rv = 1;
-    }
+    $rv = 1 if &is_sanitizer_crash($file);
 
     ### ASan and valgrind don't appear to be compatible, and and ASan
     ### will throw an error when the two are mixed
     if (&file_find_regex([qr/Shadow memory range interleaves/],
             $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
-        &write_test_file("[-] AddressSanitizer not compatible with valgrind: $file\n",
+        &write_test_file("[-] Sanitizer infrastructure not " .
+                "compatible with valgrind: $file\n",
             $curr_test_file);
         $rv = 1;
     }
@@ -7326,7 +7335,7 @@ sub init() {
         push @tests_to_exclude, qr/down interface/;
     }
 
-    ### see if we're compiled with ASAN support
+    ### see if we're compiled with AddressSanitizer support
     if (&file_find_regex([qr/enable\-asan\-support/],
             $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
         $asan_mode = 1;
@@ -7334,6 +7343,16 @@ sub init() {
         &write_test_file("[-] Can't find --enable-asan-support in $config_log\n",
             $curr_test_file);
         push @tests_to_exclude, qr/ASAN/;
+    }
+
+    ### see if we're compiled with UndefinedBehaviorSanitizer support
+    if (&file_find_regex([qr/enable\-ubsan\-support/],
+            $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
+        $asan_mode = 1;
+    } else {
+        &write_test_file("[-] Can't find --enable-ubsan-support in $config_log\n",
+            $curr_test_file);
+        push @tests_to_exclude, qr/UBSAN/;
     }
 
     if ($gcov_path) {
@@ -7922,6 +7941,8 @@ sub stop_fwknopd() {
     } else {
         &write_test_file("[-] stop_fwknopd() fwknopd is not running.\n",
             $curr_test_file);
+        ### make certain there is no running fwknopd process
+        system "$killall_path fwknopd 2> /dev/null" if $killall_path;
         return;
     }
 
@@ -7977,6 +7998,11 @@ sub stop_fwknopd() {
             sleep 1;
         }
     }
+
+    ### make certain fwknopd is stopped. Test suite interactions with fwknop
+    ### are complex, and having a running fwknopd process that may be been
+    ### "lost" can interfere with test results
+    system "$killall_path fwknopd 2> /dev/null" if $killall_path;
 
     return;
 }
