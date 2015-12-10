@@ -7920,6 +7920,8 @@ sub stop_fwknopd() {
     } else {
         &write_test_file("[-] stop_fwknopd() fwknopd is not running.\n",
             $curr_test_file);
+        ### make certain there is no running fwknopd process
+        system "$killall_path fwknopd 2> /dev/null" if $killall_path;
         return;
     }
 
@@ -7975,6 +7977,11 @@ sub stop_fwknopd() {
             sleep 1;
         }
     }
+
+    ### make certain fwknopd is stopped. Test suite interactions with fwknop
+    ### are complex, and having a running fwknopd process that may be been
+    ### "lost" can interfere with test results
+    system "$killall_path fwknopd 2> /dev/null" if $killall_path;
 
     return;
 }

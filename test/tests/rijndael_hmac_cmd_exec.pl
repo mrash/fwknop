@@ -119,6 +119,10 @@
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'sudo_test' => $YES,
+        ### write_sudo_access_conf() swaps out 'TOUCH' with the path to
+        ### the touch binary, which might change from system to system. Also
+        ### 'USER' is swapped out with the owner of the test suite files
+        ### (not necessarily root).
         'sudo_conf' => 'USER    localhost = NOPASSWD: /usr/bin/cat, TOUCH',
         'cmd_exec_file_owner' => 'root',
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
