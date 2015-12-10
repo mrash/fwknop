@@ -148,10 +148,16 @@ main(int argc, char **argv)
             fprintf(stdout, "Deleting any existing firewall rules...\n");
             clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
         }
-
-        /* Process the access.conf file.
+        if (opts.config[CONF_ACCESS_FOLDER] != NULL) //If we have an access folder, process it
+        {
+            if (parse_access_folder(&opts, opts.config[CONF_ACCESS_FOLDER], &depth) != EXIT_SUCCESS)
+            {
+                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+        /* Process the access.conf file, but only if no access.conf folder was specified.
         */
-        if (parse_access_file(&opts, opts.config[CONF_ACCESS_FILE], &depth) != EXIT_SUCCESS)
+        else if (parse_access_file(&opts, opts.config[CONF_ACCESS_FILE], &depth) != EXIT_SUCCESS)
         {
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }

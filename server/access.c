@@ -1356,6 +1356,13 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
     char            include_file[MAX_PATH_LEN] ={0};
     struct dirent  *dp;
 
+    (*depth)++;
+    if ((*depth) == 1)
+    {
+        acc_stanza_init(opts);
+    }
+
+
     if((ndx = strrchr(access_folder, '/')) != NULL)
     {
         if (strlen(ndx) == 1)

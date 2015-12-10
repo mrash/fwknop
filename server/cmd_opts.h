@@ -120,6 +120,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "FWKNOP_RUN_DIR",
     "FWKNOP_CONF_DIR",
     "ACCESS_FILE",
+    "ACCESS_FOLDER",
     "FWKNOP_PID_FILE",
 #if USE_FILE_CACHE
     "DIGEST_FILE",
@@ -161,6 +162,7 @@ enum {
     DUMP_SERVER_ERR_CODES,
     EXIT_AFTER_PARSE_CONFIG,
     FAULT_INJECTION_TAG,
+    ACCESS_FOLDER,
     NOOP /* Just to be a marker for the end */
 };
 
@@ -173,6 +175,7 @@ enum {
 static struct option cmd_opts[] =
 {
     {"access-file",          1, NULL, 'a'},
+    {"access-folder",        1, NULL, ACCESS_FOLDER},
     {"afl-fuzzing",          0, NULL, 'A'},
     {"afl-pkt-file",         1, NULL, AFL_PKT_FILE },
     {"config-file",          1, NULL, 'c'},

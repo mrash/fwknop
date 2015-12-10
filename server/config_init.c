@@ -1202,6 +1202,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'a':
                 set_config_entry(opts, CONF_ACCESS_FILE, optarg);
                 break;
+            case ACCESS_FOLDER:
+                set_config_entry(opts, CONF_ACCESS_FOLDER, optarg);
+                break;
             case 'c':
                 /* This was handled earlier */
                 break;
