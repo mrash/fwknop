@@ -41,6 +41,7 @@
 #include "utils.h"
 #include "log_msg.h"
 #include "cmd_cycle.h"
+#include <dirent.h>
 
 #define FATAL_ERR -1
 
@@ -1345,6 +1346,49 @@ acc_data_is_valid(fko_srv_options_t *opts,
     return(1);
 }
 
+int
+parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
+{
+    char            *ndx;
+    char            *extension;
+    DIR             *dir_ptr;
+
+    char            include_file[MAX_PATH_LEN] ={0};
+    struct dirent  *dp;
+
+    if((ndx = strrchr(access_folder, '/')) != NULL)
+    {
+        if (strlen(ndx) == 1)
+            *ndx = '\0';
+    }
+    dir_ptr = opendir(access_folder);
+    //grab the file names in the directory and loop through them
+    if (dir_ptr == NULL)
+    {
+        log_msg(LOG_ERR, "[*] Access folder: '%s' could not be opened.", access_folder);
+        return EXIT_FAILURE;
+    }
+    while ((dp = readdir(dir_ptr)) != NULL) {
+        printf("%s", dp->d_name);
+        extension = (strrchr(dp->d_name, '.')); // Capture just the extension
+        if (extension && !strcmp(extension, ".conf"))
+        {
+            if (strlen(access_folder) + 1 + strlen(dp->d_name) > MAX_PATH_LEN - 1) //Bail out rather than write past the end of include_file
+                return EXIT_FAILURE;
+            strcpy(include_file, access_folder); //construct the full path
+            strcat(include_file, "/");
+            strcat(include_file, dp->d_name);
+            if (parse_access_file(opts, include_file, depth) == EXIT_FAILURE)
+            {
+                closedir(dir_ptr);
+                return EXIT_FAILURE;
+            }
+        }
+    }
+    closedir (dir_ptr);
+return EXIT_SUCCESS;
+}
+
 /* Read and parse the access file, popluating the access data as we go.
 */
 int
@@ -1408,7 +1452,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 
     /* Initialize the access list, but only if we are processing the root access.conf.
     */
-    if (depth == 1)
+    if ((*depth) == 1)
     {
         acc_stanza_init(opts);
     }
@@ -1467,8 +1511,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         {
             if ((*depth) < 3)
             {
-                log_msg(LOG_ERR, "[+] Processing include directive for file: '%s'",
-                        val);
+                log_msg(LOG_DEBUG, "[+] Processing include directive for file: '%s'", val);
                 if (parse_access_file(opts, val, depth) == EXIT_FAILURE)
                 {
                     fclose(file_ptr);
@@ -1479,6 +1522,15 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
             {
                 log_msg(LOG_ERR, "[*] Refusing to go deeper than 3 levels. Lost in Limbo: '%s'",
                         access_filename);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+        }
+        else if(CONF_VAR_IS(var, "%include_folder"))
+        {
+            log_msg(LOG_DEBUG, "[+] Processing include_folder directive for: '%s'", val);
+            if (parse_access_folder(opts, val, depth) == EXIT_FAILURE)
+            {
                 fclose(file_ptr);
                 return EXIT_FAILURE;
             }
