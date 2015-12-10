@@ -157,6 +157,8 @@ EXTRA_DIST = \
     test/conf/include1_hmac_access.conf \
     test/conf/include2_hmac_access.conf \
     test/conf/include3_hmac_access.conf \
+    test/conf/include_r1_hmac_access.conf \
+    test/conf/include_r2_hmac_access.conf \
     test/conf/gpg_access.conf \
     test/conf/gpg_hmac_access.conf \
     test/conf/gpg_no_pw_access.conf \

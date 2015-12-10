@@ -468,6 +468,16 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'access.conf recursion limit',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$fwknopdCmd --exit-parse-config -a $cf{'include_r1_hmac_access'} " .
+                "-c $cf{'def'} -d $default_digest_file -p $default_pid_file",
+        'positive_output_matches' => [qr/Refusing to go deeper than/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'user/group parity',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
