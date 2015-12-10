@@ -1454,8 +1454,8 @@ sub asan_verification() {
 
     if ($rv) {
         &run_cmd('./a.out', "../$cmd_out_tmp", "../$curr_test_file");
-        unless (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
-                qr/SUMMARY\:\sAddressSanitizer/],
+        unless (&file_find_regex([qr/ERROR\:\s\w+Sanitizer/,
+                qr/SUMMARY\:\s\w+Sanitizer/],
                 $MATCH_ALL, $NO_APPEND_RESULTS, "../$curr_test_file")) {
             $rv = 0;
         }
