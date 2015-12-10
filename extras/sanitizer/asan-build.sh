@@ -1,7 +1,7 @@
 #!/bin/sh -x
 
 #
-# In some cases when enabling Google's Address Sanitizer, errors like the
+# In some cases when enabling Google's AddressSanitizer, errors like the
 # following can be generated. This script provides a workaround.
 #
 # fwknop-spa_comm.o: In function `send_spa_packet_http':
