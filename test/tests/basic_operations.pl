@@ -486,6 +486,23 @@
                 qq/-c $cf{"${fw_conf_prefix}_nat"} -d $default_digest_file -p $default_pid_file -v/,
         'positive_output_matches' => [qr/Configs parsed/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include missing file',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            '%include       /missing/file',
+            'SOURCE         any',
+            'KEY            testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/was not found/],
+    },
 
     {
         'category' => 'basic operations',
