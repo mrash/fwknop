@@ -465,6 +465,8 @@
         'exec_err' => $YES,
         'cmdline' => "$fwknopdCmd $default_server_conf_args --sudo-exe /etc/hosts"
     },
+
+    ### access.conf %include directive tests
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
@@ -475,6 +477,16 @@
                 "-c $cf{'def'} -d $default_digest_file -p $default_pid_file",
         'positive_output_matches' => [qr/Refusing to go deeper than/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf multi-include',
+        'function' => \&generic_exec,
+        'cmdline'  => "$fwknopdCmd --exit-parse-config -a $cf{'include_m1_hmac_access'} " .
+                qq/-c $cf{"${fw_conf_prefix}_nat"} -d $default_digest_file -p $default_pid_file -v/,
+        'positive_output_matches' => [qr/Configs parsed/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
