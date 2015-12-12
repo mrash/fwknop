@@ -1393,7 +1393,7 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
         }
     }
     closedir (dir_ptr);
-return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 /* Read and parse the access file, popluating the access data as we go.
@@ -1516,7 +1516,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 
         if(CONF_VAR_IS(var, "%include"))
         {
-            if ((*depth) < 3)
+            if ((*depth) < MAX_DEPTH)
             {
                 log_msg(LOG_DEBUG, "[+] Processing include directive for file: '%s'", val);
                 if (parse_access_file(opts, val, depth) == EXIT_FAILURE)

@@ -38,7 +38,8 @@
 */
 #define ACCESS_BUF_LEN  33
 
-/*We won't recurse more than 3 deep.  Access.conf can include a file that includes a file, but that's the limit.
+/* We won't recurse more than 3 deep.  Access.conf can include a file
+ * that includes a file, but that's the limit.
 */
 #define MAX_DEPTH 3
 
