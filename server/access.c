@@ -1353,7 +1353,7 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
     char            *extension;
     DIR             *dir_ptr;
 
-    char            include_file[MAX_PATH_LEN] ={0};
+    char            include_file[MAX_PATH_LEN] = {0};
     struct dirent  *dp;
 
     (*depth)++;
@@ -1381,10 +1381,13 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
         if (extension && !strcmp(extension, ".conf"))
         {
             if (strlen(access_folder) + 1 + strlen(dp->d_name) > MAX_PATH_LEN - 1) //Bail out rather than write past the end of include_file
+            {
+                closedir(dir_ptr);
                 return EXIT_FAILURE;
-            strcpy(include_file, access_folder); //construct the full path
-            strcat(include_file, "/");
-            strcat(include_file, dp->d_name);
+            }
+            strlcpy(include_file, access_folder, sizeof(include_file)); //construct the full path
+            strlcat(include_file, "/", sizeof(include_file));
+            strlcat(include_file, dp->d_name, sizeof(include_file));
             if (parse_access_file(opts, include_file, depth) == EXIT_FAILURE)
             {
                 closedir(dir_ptr);
@@ -1392,7 +1395,7 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
             }
         }
     }
-    closedir (dir_ptr);
+    closedir(dir_ptr);
     return EXIT_SUCCESS;
 }
 
@@ -1511,9 +1514,6 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
          * NOTE: If a new access.conf parameter is created.  It also needs
          *       to be accounted for in the following if/if else construct.
         */
-
-
-
         if(CONF_VAR_IS(var, "%include"))
         {
             if ((*depth) < MAX_DEPTH)
