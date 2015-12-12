@@ -172,6 +172,14 @@ main(int argc, char **argv)
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
+        /* Now is the right time to bail if we're just parsing the configs
+        */
+        if(opts.exit_after_parse_config)
+        {
+            log_msg(LOG_INFO, "Configs parsed, exiting.");
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+        }
+
         /* Acquire pid, become a daemon or run in the foreground, write pid
          * to pid file.
         */
@@ -188,12 +196,6 @@ main(int argc, char **argv)
          * if so configured.
         */
         init_digest_cache(&opts);
-
-        if(opts.exit_after_parse_config)
-        {
-            log_msg(LOG_INFO, "Configs parsed, exiting.");
-            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
-        }
 
 #if AFL_FUZZING
         /* SPA data from STDIN. */
