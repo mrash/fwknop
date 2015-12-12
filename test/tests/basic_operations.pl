@@ -503,6 +503,28 @@
         ],
         'positive_output_matches' => [qr/was not found/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include broken stanza',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE         1.1.1.1',
+            'KEY            testtest',
+            'SOURCE         2.2.2.2',
+            'KEY            testtest',
+            'SOURCE         3.3.3.3',
+            "%include       $cf{'def_access'}",
+            'SOURCE         4.4.4.4',
+            'KEY            testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/No keys found/],
+    },
 
     {
         'category' => 'basic operations',
