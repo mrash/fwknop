@@ -553,11 +553,42 @@
         ],
         'positive_output_matches' => [qr/No keys found/],
     },
-
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'access.conf include mixed stanza',
+        'detail'   => 'access.conf include mixed stanza (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+
+            'SOURCE             2.2.2.2',
+            'KEY                stanza2test',
+            'REQUIRE_USERNAME   user2',
+
+            'SOURCE             3.3.3.3',
+            'KEY                stanza3test',
+            'REQUIRE_USERNAME   user3',
+
+            'SOURCE             4.4.4.4',
+            'KEY                stanza4test',
+            'REQUIRE_USERNAME   user4',
+
+            "%include           $cf{'def_access'}", ### default access stanza becomes stanza #5
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/SOURCE.*5.*\sANY/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include mixed stanza (2)',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config",
         'exec_err' => $YES,
