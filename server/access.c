@@ -1362,13 +1362,13 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
         acc_stanza_init(opts);
     }
 
-
     if((ndx = strrchr(access_folder, '/')) != NULL)
     {
         if (strlen(ndx) == 1)
             *ndx = '\0';
     }
     dir_ptr = opendir(access_folder);
+
     //grab the file names in the directory and loop through them
     if (dir_ptr == NULL)
     {
@@ -1376,9 +1376,8 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
         return EXIT_FAILURE;
     }
     while ((dp = readdir(dir_ptr)) != NULL) {
-        printf("%s", dp->d_name);
         extension = (strrchr(dp->d_name, '.')); // Capture just the extension
-        if (extension && !strcmp(extension, ".conf"))
+        if (extension && !strncmp(extension, ".conf", 5))
         {
             if (strlen(access_folder) + 1 + strlen(dp->d_name) > MAX_PATH_LEN - 1) //Bail out rather than write past the end of include_file
             {

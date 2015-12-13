@@ -638,6 +638,7 @@
         'detail'   => 'access.conf include_folder one stanza',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
         'server_access_file' => [
 
             "%include_folder    $access_include_dir/no-access-files",
@@ -646,10 +647,46 @@
             'KEY                stanza1test',
             'REQUIRE_USERNAME   user1',
         ],
-        'exec_err' => $YES,
         'server_conf_file' => [
             '### comment'
         ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /dev/null (1)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config --access-folder /dev/null",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid access folder directory/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /dev/null (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            "%include_folder    /dev/null",
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder long dir',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config --access-folder " . 'A'x1030,
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/path is too long/],
     },
 
     {

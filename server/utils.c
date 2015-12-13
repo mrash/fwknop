@@ -83,17 +83,32 @@ hex_dump(const unsigned char *data, const int size)
 static int
 is_valid_path(const char *path, const int file_type)
 {
-#if HAVE_STAT
+    if(strnlen(path, MAX_PATH_LEN) == MAX_PATH_LEN)
+    {
+        log_msg(LOG_ERR, "[-] Provided path is too long");
+        return(0);
+    }
+
+#if HAVE_STAT || HAVE_LSTAT
     struct stat st;
 
     /* If we are unable to stat the given path, then return with error.
     */
+  #if HAVE_LSTAT /* prefer lstat() to stat() */
+    if(lstat(path, &st) != 0)
+    {
+        log_msg(LOG_ERR, "[-] unable to lstat() path: %s: %s",
+            path, strerror(errno));
+        return(0);
+    }
+  #else
     if(stat(path, &st) != 0)
     {
         log_msg(LOG_ERR, "[-] unable to stat() path: %s: %s",
             path, strerror(errno));
         return(0);
     }
+  #endif
 
     if(file_type == IS_DIR)
     {
@@ -105,10 +120,15 @@ is_valid_path(const char *path, const int file_type)
         if(!S_ISREG(st.st_mode) || ! (st.st_mode & S_IXUSR))
             return(0);
     }
+    else if(file_type == IS_FILE)
+    {
+        if(!S_ISREG(st.st_mode))
+            return(0);
+    }
     else
         return(0);
 
-#endif /* HAVE_STAT */
+#endif /* HAVE_STAT || HAVE_LSTAT */
 
     return(1);
 }
@@ -123,6 +143,12 @@ int
 is_valid_exe(const char *path)
 {
     return is_valid_path(path, IS_EXE);
+}
+
+int
+is_valid_file(const char *path)
+{
+    return is_valid_path(path, IS_FILE);
 }
 
 int

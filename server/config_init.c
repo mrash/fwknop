@@ -1200,10 +1200,25 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
 #endif
                 break;
             case 'a':
-                set_config_entry(opts, CONF_ACCESS_FILE, optarg);
+                if (is_valid_file(optarg))
+                    set_config_entry(opts, CONF_ACCESS_FILE, optarg);
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] Invalid access.conf file path '%s'", optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
                 break;
             case ACCESS_FOLDER:
-                set_config_entry(opts, CONF_ACCESS_FOLDER, optarg);
+                if (is_valid_dir(optarg))
+                    set_config_entry(opts, CONF_ACCESS_FOLDER, optarg);
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] Invalid access folder directory '%s' could not lstat(), does not exist, or too large?",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
                 break;
             case 'c':
                 /* This was handled earlier */
@@ -1259,26 +1274,22 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case GPG_EXE_PATH:
                 if (is_valid_exe(optarg))
-                {
                     set_config_entry(opts, CONF_GPG_EXE, optarg);
-                }
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] gpg path '%s' could not stat()/not executable?",
+                        "[*] gpg path '%s' could not lstat()/not executable?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
                 break;
             case GPG_HOME_DIR:
                 if (is_valid_dir(optarg))
-                {
                     set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);
-                }
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] gpg home directory '%s' could not stat()/does not exist?",
+                        "[*] gpg home directory '%s' could not lstat(), does not exist, or too large?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
@@ -1308,7 +1319,14 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 set_config_entry(opts, CONF_PCAP_FILTER, optarg);
                 break;
             case PCAP_FILE:
-                set_config_entry(opts, CONF_PCAP_FILE, optarg);
+                if (is_valid_file(optarg))
+                    set_config_entry(opts, CONF_PCAP_FILE, optarg);
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] Invalid pcap file path '%s'", optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
                 break;
             case ENABLE_PCAP_ANY_DIRECTION:
                 opts->pcap_any_direction = 1;
@@ -1327,9 +1345,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case SUDO_EXE_PATH:
                 if (is_valid_exe(optarg))
-                {
                     set_config_entry(opts, CONF_SUDO_EXE, optarg);
-                }
                 else
                 {
                     log_msg(LOG_ERR,
