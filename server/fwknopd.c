@@ -148,6 +148,7 @@ main(int argc, char **argv)
             fprintf(stdout, "Deleting any existing firewall rules...\n");
             clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
         }
+
         if (opts.config[CONF_ACCESS_FOLDER] != NULL) //If we have an access folder, process it
         {
             if (parse_access_folder(&opts, opts.config[CONF_ACCESS_FOLDER], &depth) != EXIT_SUCCESS)
@@ -159,6 +160,14 @@ main(int argc, char **argv)
         */
         else if (parse_access_file(&opts, opts.config[CONF_ACCESS_FILE], &depth) != EXIT_SUCCESS)
         {
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+
+        /* We must have at least one valid access stanza at this point
+        */
+        if(! valid_access_stanzas(opts.acc_stanzas))
+        {
+            log_msg(LOG_ERR, "Fatal, could not find any valid access.conf stanzas");
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
         }
 

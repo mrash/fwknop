@@ -590,8 +590,8 @@
         'subcategory' => 'server',
         'detail'   => 'access.conf include mixed stanza (2)',
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config",
-        'exec_err' => $YES,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $NO,
         'server_access_file' => [
 
             'SOURCE             1.1.1.1',
@@ -615,6 +615,41 @@
             '### comment'
         ],
         'positive_output_matches' => [qr/SOURCE.*4.*\sANY/],
+    },
+
+    ### %include_folder tests
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder no stanzas',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'server_access_file' => [
+            "%include_folder    $access_include_dir/no-access-files",
+        ],
+        'exec_err' => $YES,
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder one stanza',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'server_access_file' => [
+
+            "%include_folder    $access_include_dir/no-access-files",
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+        ],
+        'exec_err' => $YES,
+        'server_conf_file' => [
+            '### comment'
+        ],
     },
 
     {

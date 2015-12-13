@@ -31,7 +31,9 @@ my $key_tmp         = 'key.tmp';
 my $enc_save_tmp    = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
 my $username        = '';
+our $access_include_dir = "$conf_dir/access-include";
 my $gpg_dirs_tar = 'gpg_dirs.tar.gz';
+my $access_include_dirs_tar = 'access-include.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $gpg_client_4096_bit_key_no_pw = "$conf_dir/client-gpg-large-no-pw";
@@ -1054,7 +1056,8 @@ for my $test_hr (@tests) {
 
 unless ($list_mode) {
     &remove_permissions_warnings() unless $include_permissions_warnings;
-    &restore_gpg_dirs();
+    &restore_dir($gpg_dirs_tar);
+    &restore_dir($access_include_dirs_tar);
 }
 
 my $total_elapsed_seconds = time() - $start_time;
@@ -7131,9 +7134,10 @@ sub init() {
 
     $do_profile_init = 1 unless $test_include;
 
-    ### always restore the gpg directories before tests are
-    ### executed
-    &restore_gpg_dirs();
+    ### always restore the gpg and access %include directories before
+    ### tests are executed
+    &restore_dir($gpg_dirs_tar);
+    &restore_dir($access_include_dirs_tar);
 
     if ($test_include) {
         for my $re (split /\s*,\s*/, $test_include) {
@@ -7518,14 +7522,15 @@ sub preserve_previous_test_run_results() {
     return;
 }
 
-sub restore_gpg_dirs() {
+sub restore_dir() {
+    my $tarfile = shift;
 
     my $curr_pwd = cwd() or die $!;
 
     chdir $conf_dir or die $!;
 
     if (-e $gpg_dirs_tar) {
-        system "tar xfz $gpg_dirs_tar > /dev/null";
+        system "tar xfz $tarfile > /dev/null";
     }
 
     chdir $curr_pwd or die $!;

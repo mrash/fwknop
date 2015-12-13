@@ -1934,6 +1934,29 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
     return EXIT_SUCCESS;
 }
 
+int valid_access_stanzas(acc_stanza_t *acc)
+{
+    if(acc == NULL)
+        return 0;
+
+    /* This is a basic check to ensure at least one access stanza
+     * with the "source" variable populated, and this function is only
+     * called after all access.conf files are processed. This allows
+     * %include_folder processing to proceed against directories that
+     * have files that are not access.conf files. Additional stronger
+     * validations are done in acc_data_is_valid(), but this function
+     * is only called when a "SOURCE" variable has been parsed out of
+     * the file.
+    */
+    while(acc)
+    {
+        if(acc->source == NULL || acc->source[0] == '\0')
+            return 0;
+        acc = acc->next;
+    }
+    return 1;
+}
+
 int
 compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
 {
