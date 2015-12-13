@@ -1425,6 +1425,15 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
     /* First see if the access file exists.  If it doesn't, complain
      * and bail.
     */
+#if HAVE_LSTAT
+    if(lstat(access_filename, &st) != 0)
+    {
+        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
+            access_filename);
+
+        return EXIT_FAILURE;
+    }
+#elif HAVE_STAT
     if(stat(access_filename, &st) != 0)
     {
         log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
@@ -1432,6 +1441,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 
         return EXIT_FAILURE;
     }
+#endif
 
     if(verify_file_perms_ownership(access_filename) != 1)
         return EXIT_FAILURE;
