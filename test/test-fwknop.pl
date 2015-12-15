@@ -966,6 +966,8 @@ my %test_keys = (
     'insert_rule_while_running'  => $OPTIONAL,
     'insert_duplicate_rule_while_running' => $OPTIONAL,
     'fw_dupe_rule_args'          => $OPTIONAL,
+    'expect_server_stopped'      => $OPTIONAL,
+    'ignore_client_error'        => $OPTIONAL,
     'weak_server_receive_check'  => $OPTIONAL,
     'search_for_rule_after_exit' => $OPTIONAL,
     'rc_positive_output_matches' => $OPTIONAL,
@@ -5867,7 +5869,7 @@ sub client_server_interaction() {
                     &write_test_file("[-] fwknop client execution error.\n",
                         $curr_test_file);
                 }
-                $rv = 0;
+                $rv = 0 unless $test_hr->{'ignore_client_error'};
             }
         } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
             &send_packets($pkts_hr, $max_pkt_tries);
@@ -5891,9 +5893,14 @@ sub client_server_interaction() {
     }
 
     unless ($server_was_stopped) {
-        &write_test_file("[-] server_was_stopped=0, so setting rv=0.\n",
-            $curr_test_file);
-        $rv = 0;
+        if ($test_hr->{'expect_server_stopped'}) {
+            &write_test_file("[+] Expecting server to not be running.\n",
+                $curr_test_file);
+        } else {
+            &write_test_file("[-] server_was_stopped=0, so setting rv=0.\n",
+                $curr_test_file);
+            $rv = 0;
+        }
     }
 
     &write_test_file("[.] client_server_interaction() summary: rv: $rv, " .
