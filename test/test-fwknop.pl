@@ -186,6 +186,10 @@ my $list_mode = 0;
 my $diff_dir1 = '';
 my $diff_dir2 = '';
 my $loopback_intf = '';
+my $default_pkt_tries = 10;
+my $send_all_loop_once = 0;
+my $detect_server_loop_once = 0;
+my $default_server_tries = 10;
 my $anonymize_results = 0;
 my $orig_config_args = '';
 my $curr_test_file = 'init';
@@ -5805,7 +5809,7 @@ sub client_server_interaction() {
     my $server_was_stopped = 1;
     my $fw_rule_created = 1;
     my $fw_rule_removed = 0;
-    my $max_pkt_tries = 10;
+    my $max_pkt_tries = $default_pkt_tries;
 
     $max_pkt_tries = $test_hr->{'max_pkt_tries'}
         if $test_hr->{'max_pkt_tries'};
@@ -6168,9 +6172,18 @@ sub send_packets() {
             &send_all_pkts($pkts_ar);
 
             $tries++;
-            last if $tries == $max_tries;   ### should be plenty of time
+
+            if ($send_all_loop_once) {
+                last if $tries == $max_tries;
+            } else {
+                last if $tries == $max_tries * 10;
+            }
             sleep 1;
         }
+
+        $default_pkt_tries = $tries+5 if $tries > $default_pkt_tries;
+        $send_all_loop_once = 1;
+
     } else {
         &send_all_pkts($pkts_ar);
     }
@@ -6845,10 +6858,17 @@ sub do_fwknopd_cmd() {
                 "for 'main event loop' or 'Kicking off.*server', try: $tries\n",
                 $curr_test_file);
             $tries++;
-            last if $tries == 10;  ### shouldn't reasonably get here
+            if ($detect_server_loop_once) {
+                last if $tries == $default_server_tries;
+            } else {
+                last if $tries == $default_server_tries * 10;
+            }
             sleep 1;
         }
     }
+
+    $default_server_tries = $tries+5 if $tries > $default_server_tries;
+    $detect_server_loop_once = 1;
 
     return $pid;
 }
