@@ -3589,6 +3589,25 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'FORCE_NAT -> need forwarding mode',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                  any',
+            'KEY                     testtest',
+            'FORCE_NAT               Y'
+        ],
+        'server_conf_file' => [
+            "ENABLE_${FW_PREFIX}_FORWARDING       N;",
+            "ENABLE_${FW_PREFIX}_LOCAL_NAT        N;"
+        ],
+        'positive_output_matches' => [qr/requires either ENABLE_FIREWD_FORWARDING/i],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'FORCE_MASQUERADE -> FORCE_NAT/FORWARD_ALL',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
