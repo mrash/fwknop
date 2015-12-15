@@ -1349,7 +1349,6 @@ acc_data_is_valid(fko_srv_options_t *opts,
 int
 parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
 {
-    char            *ndx;
     char            *extension;
     DIR             *dir_ptr;
 
@@ -1362,11 +1361,8 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
         acc_stanza_init(opts);
     }
 
-    if((ndx = strrchr(access_folder, '/')) != NULL)
-    {
-        if (strlen(ndx) == 1)
-            *ndx = '\0';
-    }
+    /* access_folder is guaranteed to be NULL terminated
+    */
     dir_ptr = opendir(access_folder);
 
     //grab the file names in the directory and loop through them
