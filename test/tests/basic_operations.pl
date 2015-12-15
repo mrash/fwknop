@@ -688,6 +688,36 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/path is too long/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config " .
+            "--access-folder /",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/could not find any/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /a',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config " .
+            "--access-folder /a",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid access folder/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder NULL',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config " .
+            qq|--access-folder ""|,
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid access folder/],
+    },
 
     {
         'category' => 'basic operations',
