@@ -1647,7 +1647,7 @@ sub fko_wrapper_exec() {
     my $make_arg = $test_hr->{'wrapper_compile'};
 
     $make_arg = 'asan' if $asan_mode;
-    $make_arg = 'ubsan' if $asan_mode;
+    $make_arg = 'ubsan' if $ubsan_mode;
 
     if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
         if ($enable_fuzzing_interfaces_tests) {
