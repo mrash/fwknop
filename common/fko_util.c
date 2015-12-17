@@ -655,6 +655,90 @@ void chop_spaces(char *str)
     return;
 }
 
+static int
+add_argv(char **argv_new, int *argc_new, const char *new_arg)
+{
+    int buf_size = 0;
+
+    buf_size = strlen(new_arg) + 1;
+    argv_new[*argc_new] = calloc(1, buf_size);
+
+    if(argv_new[*argc_new] == NULL)
+        return 0;
+
+    strlcpy(argv_new[*argc_new], new_arg, buf_size);
+
+    *argc_new += 1;
+
+    if(*argc_new >= MAX_CMDLINE_ARGS-1)
+        return 0;
+
+    argv_new[*argc_new] = NULL;
+
+    return 1;
+}
+
+int
+strtoargv(const char * const args_str, char **argv_new, int *argc_new)
+{
+    int       current_arg_ctr = 0, i;
+    char      arg_tmp[MAX_ARGS_LINE_LEN] = {0};
+
+    for (i=0; i < (int)strlen(args_str); i++)
+    {
+        if (!isspace(args_str[i]))
+        {
+            arg_tmp[current_arg_ctr] = args_str[i];
+            current_arg_ctr++;
+        }
+        else
+        {
+            if(current_arg_ctr > 0)
+            {
+                arg_tmp[current_arg_ctr] = '\0';
+                if (add_argv(argv_new, argc_new, arg_tmp) != 1)
+                {
+                    free_argv(argv_new, argc_new);
+                    return 0;
+                }
+                current_arg_ctr = 0;
+            }
+        }
+    }
+
+    /* pick up the last argument in the string
+    */
+    if(current_arg_ctr > 0)
+    {
+        arg_tmp[current_arg_ctr] = '\0';
+        if (add_argv(argv_new, argc_new, arg_tmp) != 1)
+        {
+            free_argv(argv_new, argc_new);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void
+free_argv(char **argv_new, int *argc_new)
+{
+    int i;
+
+    if(argv_new == NULL || *argv_new == NULL)
+        return;
+
+    for (i=0; i < *argc_new; i++)
+    {
+        if(argv_new[i] == NULL)
+            break;
+        else
+            free(argv_new[i]);
+    }
+    return;
+}
+
+
 /**
  * @brief Dump a FKO context to a buffer
  *

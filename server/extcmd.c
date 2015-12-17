@@ -148,7 +148,7 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
     */
     memset(argv_new, 0x0, sizeof(argv_new));
 
-    if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
+    if(strtoargv(cmd, argv_new, &argc_new) != 1)
     {
         log_msg(LOG_ERR,
                 "run_extcmd(): Error converting cmd str to argv via strtoargv()");
@@ -598,7 +598,7 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
     */
     memset(argv_new, 0x0, sizeof(argv_new));
 
-    if(strtoargv(cmd, argv_new, &argc_new, opts) != 1)
+    if(strtoargv(cmd, argv_new, &argc_new) != 1)
     {
         log_msg(LOG_ERR,
                 "run_extcmd_write(): Error converting cmd str to argv via strtoargv()");
