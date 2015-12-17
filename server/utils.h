@@ -60,7 +60,6 @@
 
 /* Prototypes
 */
-void  hex_dump(const unsigned char *data, const int size);
 char* dump_ctx(fko_ctx_t ctx);
 int   is_valid_dir(const char *path);
 int   is_valid_exe(const char *path);

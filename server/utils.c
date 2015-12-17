@@ -33,50 +33,6 @@
 #include "fw_util.h"
 #include "cmd_cycle.h"
 
-#include <stdarg.h>
-
-#define ASCII_LEN 16
-
-/* Generic hex dump function.
-*/
-void
-hex_dump(const unsigned char *data, const int size)
-{
-    int ln=0, i=0, j=0;
-    char ascii_str[ASCII_LEN+1] = {0};
-
-    for(i=0; i<size; i++)
-    {
-        if((i % ASCII_LEN) == 0)
-        {
-            printf(" %s\n  0x%.4x:  ", ascii_str, i);
-            memset(ascii_str, 0x0, ASCII_LEN-1);
-            j = 0;
-        }
-
-        printf("%.2x ", data[i]);
-
-        ascii_str[j++] = (data[i] < 0x20 || data[i] > 0x7e) ? '.' : data[i];
-
-        if(j == 8)
-            printf(" ");
-    }
-
-    /* Remainder...
-    */
-    ln = strlen(ascii_str);
-    if(ln > 0)
-    {
-        for(i=0; i < ASCII_LEN-ln; i++)
-            printf("   ");
-        if(ln < 8)
-            printf(" ");
-
-        printf(" %s\n\n", ascii_str);
-    }
-    return;
-}
-
 /* Basic directory/binary checks (stat() and whether the path is actually
  * a directory or an executable).
 */

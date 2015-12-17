@@ -53,8 +53,6 @@
 
 /* Prototypes
 */
-void    hex_dump(const unsigned char *data, const int size);
-int     set_file_perms(const char *file);
 int     verify_file_perms_ownership(const char *file);
 int     resolve_dst_addr(const char *dns_str, struct addrinfo *hints,
             char *ip_str, size_t ip_bufsize, fko_cli_options_t *opts);
