@@ -668,6 +668,18 @@ typedef struct fko_srv_options
     */
     char           *config[NUMBER_OF_CONFIG_ENTRIES];
 
+    /* Data elements that are derived from configuration entries - avoids
+     * calling strtol_wrapper() after the config is parsed.
+    */
+    unsigned short tcpserv_port;
+    unsigned short udpserv_port;
+    int            udpserv_select_timeout;
+    int            rules_chk_threshold;
+    int            pcap_loop_sleep;
+    int            pcap_dispatch_count;
+    int            max_sniff_bytes;
+    int            max_spa_packet_age;
+
     acc_stanza_t   *acc_stanzas;       /* List of access stanzas */
 
     /* Firewall config info.

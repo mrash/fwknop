@@ -45,12 +45,12 @@
 /* Check to see if an integer variable has a value that is within a
  * specific range
 */
-static void
+static int
 range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
 {
-    int     is_err;
+    int     is_err, rv;
 
-    strtol_wrapper(val, low, high, NO_EXIT_UPON_ERR, &is_err);
+    rv = strtol_wrapper(val, low, high, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] var %s value '%s' not in the range %d-%d",
@@ -58,7 +58,7 @@ range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    return;
+    return rv;
 }
 
 /* Take an index and a string value. malloc the space for the value
@@ -143,20 +143,30 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     int     is_err = FKO_SUCCESS;
 #endif
 
-    range_check(opts, "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
-        1, RCHK_MAX_PCAP_LOOP_SLEEP);
-    range_check(opts, "MAX_SPA_PACKET_AGE", opts->config[CONF_MAX_SPA_PACKET_AGE],
-        1, RCHK_MAX_SPA_PACKET_AGE);
-    range_check(opts, "MAX_SNIFF_BYTES", opts->config[CONF_MAX_SNIFF_BYTES],
-        1, RCHK_MAX_SNIFF_BYTES);
-    range_check(opts, "RULES_CHECK_THRESHOLD", opts->config[CONF_RULES_CHECK_THRESHOLD],
-        0, RCHK_MAX_RULES_CHECK_THRESHOLD);
-    range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
-        1, RCHK_MAX_TCPSERV_PORT);
-    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
-        1, RCHK_MAX_UDPSERV_PORT);
-    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
-        1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
+    opts->pcap_loop_sleep = range_check(opts,
+            "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
+            1, RCHK_MAX_PCAP_LOOP_SLEEP);
+    opts->pcap_dispatch_count = range_check(opts,
+            "PCAP_DISPATCH_COUNT", opts->config[CONF_PCAP_DISPATCH_COUNT],
+            1, RCHK_MAX_PCAP_DISPATCH_COUNT);
+    opts->max_spa_packet_age = range_check(opts,
+            "MAX_SPA_PACKET_AGE", opts->config[CONF_MAX_SPA_PACKET_AGE],
+            1, RCHK_MAX_SPA_PACKET_AGE);
+    opts->max_sniff_bytes = range_check(opts,
+            "MAX_SNIFF_BYTES", opts->config[CONF_MAX_SNIFF_BYTES],
+            1, RCHK_MAX_SNIFF_BYTES);
+    opts->rules_chk_threshold = range_check(opts,
+            "RULES_CHECK_THRESHOLD", opts->config[CONF_RULES_CHECK_THRESHOLD],
+            0, RCHK_MAX_RULES_CHECK_THRESHOLD);
+    opts->tcpserv_port = range_check(opts,
+            "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
+            1, RCHK_MAX_TCPSERV_PORT);
+    opts->udpserv_port = range_check(opts,
+            "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
+            1, RCHK_MAX_UDPSERV_PORT);
+    opts->udpserv_select_timeout = range_check(opts,
+            "UDPSERV_SELECT_TIMEOUT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
+            1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
 
 #if FIREWALL_IPFW
     range_check(opts, "IPFW_START_RULE_NUM", opts->config[CONF_IPFW_START_RULE_NUM],

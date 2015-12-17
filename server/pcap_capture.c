@@ -65,41 +65,12 @@ pcap_capture(fko_srv_options_t *opts)
     int                 set_direction = 1;
     int                 pcap_file_mode = 0;
     int                 status;
-    int                 useconds;
-    int                 rules_chk_threshold;
-    int                 pcap_dispatch_count;
-    int                 max_sniff_bytes;
-    int                 is_err;
     int                 chk_rm_all = 0;
     pid_t               child_pid;
 
 #if FIREWALL_IPFW
     time_t              now;
 #endif
-
-    useconds = strtol_wrapper(opts->config[CONF_PCAP_LOOP_SLEEP],
-            0, RCHK_MAX_PCAP_LOOP_SLEEP, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] invalid PCAP_LOOP_SLEEP value");
-        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
-    }
-
-    max_sniff_bytes = strtol_wrapper(opts->config[CONF_MAX_SNIFF_BYTES],
-            0, RCHK_MAX_SNIFF_BYTES, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] invalid MAX_SNIFF_BYTES");
-        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
-    }
-
-    rules_chk_threshold = strtol_wrapper(opts->config[CONF_RULES_CHECK_THRESHOLD],
-            0, RCHK_MAX_RULES_CHECK_THRESHOLD, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] invalid RULES_CHECK_THRESHOLD");
-        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
-    }
 
     /* Set promiscuous mode if ENABLE_PCAP_PROMISC is set to 'Y'.
     */
@@ -129,7 +100,7 @@ pcap_capture(fko_srv_options_t *opts)
             opts->config[CONF_PCAP_INTF]);
 
         pcap = pcap_open_live(opts->config[CONF_PCAP_INTF],
-            max_sniff_bytes, promisc, 100, errstr
+            opts->max_sniff_bytes, promisc, 100, errstr
         );
 
         if(pcap == NULL)
@@ -213,14 +184,6 @@ pcap_capture(fko_srv_options_t *opts)
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
-    pcap_dispatch_count = strtol_wrapper(opts->config[CONF_PCAP_DISPATCH_COUNT],
-            0, RCHK_MAX_PCAP_DISPATCH_COUNT, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] invalid PCAP_DISPATCH_COUNT");
-        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
-    }
-
     /* Initialize our signal handlers. You can check the return value for
      * the number of signals that were *not* set.  Those that were not set
      * will be listed in the log/stderr output.
@@ -269,7 +232,7 @@ pcap_capture(fko_srv_options_t *opts)
             pending_break = 1;
         }
 
-        res = pcap_dispatch(pcap, pcap_dispatch_count,
+        res = pcap_dispatch(pcap, opts->pcap_dispatch_count,
             (pcap_handler)&process_packet, (unsigned char *)opts);
 
         /* Count processed packets
@@ -338,10 +301,10 @@ pcap_capture(fko_srv_options_t *opts)
             {
                 /* Check for any expired firewall rules and deal with them.
                 */
-                if(rules_chk_threshold > 0)
+                if(opts->rules_chk_threshold > 0)
                 {
                     opts->check_rules_ctr++;
-                    if ((opts->check_rules_ctr % rules_chk_threshold) == 0)
+                    if ((opts->check_rules_ctr % opts->rules_chk_threshold) == 0)
                     {
                         chk_rm_all = 1;
                         opts->check_rules_ctr = 0;
@@ -371,7 +334,7 @@ pcap_capture(fko_srv_options_t *opts)
         }
 #endif
 
-        usleep(useconds);
+        usleep(opts->pcap_loop_sleep);
     }
 
     pcap_close(pcap);

@@ -272,7 +272,7 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
 
 static int
 check_pkt_age(const fko_srv_options_t *opts, spa_data_t *spadat,
-        const int stanza_num, const int conf_pkt_age)
+        const int stanza_num)
 {
     int         ts_diff;
     time_t      now_ts;
@@ -283,7 +283,7 @@ check_pkt_age(const fko_srv_options_t *opts, spa_data_t *spadat,
 
         ts_diff = labs(now_ts - spadat->timestamp);
 
-        if(ts_diff > conf_pkt_age)
+        if(ts_diff > opts->max_spa_packet_age)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) SPA data time difference is too great (%i seconds).",
                 spadat->pkt_source_ip, stanza_num, ts_diff);
@@ -890,8 +890,7 @@ incoming_spa(fko_srv_options_t *opts)
     char            *spa_ip_demark, *raw_digest = NULL;
     int             res, enc_type, stanza_num=0;
     int             added_replay_digest = 0;
-    int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
-    int             conf_pkt_age = 0;
+    int             cmd_exec_success = 0, attempted_decrypt = 0;
     char            dump_buf[CTX_DUMP_BUFSIZE];
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
@@ -916,17 +915,6 @@ incoming_spa(fko_srv_options_t *opts)
     */
     if(!precheck_pkt(opts, spa_pkt, &spadat, &raw_digest))
         return;
-
-    if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
-    {
-        conf_pkt_age = strtol_wrapper(opts->config[CONF_MAX_SPA_PACKET_AGE],
-                0, RCHK_MAX_SPA_PACKET_AGE, NO_EXIT_UPON_ERR, &is_err);
-        if(is_err != FKO_SUCCESS)
-        {
-            log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE", spadat.pkt_source_ip);
-            return;
-        }
-    }
 
     /* Now that we know there is a matching access.conf stanza and the
      * incoming SPA packet is not a replay, see if we should grant any
@@ -1052,7 +1040,7 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Check packet age if so configured.
         */
-        if(! check_pkt_age(opts, &spadat, stanza_num, conf_pkt_age))
+        if(! check_pkt_age(opts, &spadat, stanza_num))
         {
             acc = acc->next;
             continue;

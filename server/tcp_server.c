@@ -58,22 +58,14 @@ run_tcp_server(fko_srv_options_t *opts)
     pid_t               pid, ppid;
 #endif
     int                 s_sock, c_sock, sfd_flags, clen, selval;
-    int                 reuse_addr = 1, is_err, rv=1;
+    int                 reuse_addr = 1, rv=1;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
     char                sipbuf[MAX_IPV4_STR_LEN] = {0};
 
-    unsigned short      port;
-
-    port = strtol_wrapper(opts->config[CONF_TCPSERV_PORT],
-            1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] Invalid max TCPSERV_PORT value.");
-        return -1;
-    }
-    log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.", port);
+    log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.",
+            opts->tcpserv_port);
 
 #if !CODE_COVERAGE
     /* Fork off a child process to run the command and provide its outputs.
@@ -147,7 +139,7 @@ run_tcp_server(fko_srv_options_t *opts)
     memset(&saddr, 0, sizeof(saddr));
     saddr.sin_family      = AF_INET;           /* Internet address family */
     saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-    saddr.sin_port        = htons(port);       /* Local port */
+    saddr.sin_port        = htons(opts->tcpserv_port);  /* Local port */
 
     /* Bind to the local address */
     if (bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)

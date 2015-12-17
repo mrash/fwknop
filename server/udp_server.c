@@ -54,39 +54,16 @@ int
 run_udp_server(fko_srv_options_t *opts)
 {
     int                 s_sock, sfd_flags, selval, pkt_len;
-    int                 is_err, s_timeout, rv=1, chk_rm_all=0;
-    int                 rules_chk_threshold;
+    int                 rv=1, chk_rm_all=0;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
     char                sipbuf[MAX_IPV4_STR_LEN] = {0};
     char                dgram_msg[MAX_SPA_PACKET_LEN+1] = {0};
-    unsigned short      port;
     socklen_t           clen;
 
-    port = strtol_wrapper(opts->config[CONF_UDPSERV_PORT],
-            1, MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] Invalid max UDPSERV_PORT value.");
-        return -1;
-    }
-    s_timeout = strtol_wrapper(opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
-            1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] Invalid max UDPSERV_SELECT_TIMEOUT value.");
-        return -1;
-    }
-    rules_chk_threshold = strtol_wrapper(opts->config[CONF_RULES_CHECK_THRESHOLD],
-            0, RCHK_MAX_RULES_CHECK_THRESHOLD, NO_EXIT_UPON_ERR, &is_err);
-    if(is_err != FKO_SUCCESS)
-    {
-        log_msg(LOG_ERR, "[*] invalid RULES_CHECK_THRESHOLD");
-        clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
-    }
-
-    log_msg(LOG_INFO, "Kicking off UDP server to listen on port %i.", port);
+    log_msg(LOG_INFO, "Kicking off UDP server to listen on port %i.",
+            opts->udpserv_port);
 
     /* Now, let's make a UDP server
     */
@@ -122,7 +99,7 @@ run_udp_server(fko_srv_options_t *opts)
     memset(&saddr, 0x0, sizeof(saddr));
     saddr.sin_family      = AF_INET;           /* Internet address family */
     saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-    saddr.sin_port        = htons(port);       /* Local port */
+    saddr.sin_port        = htons(opts->udpserv_port); /* Local port */
 
     /* Bind to the local address */
     if (bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
@@ -160,10 +137,10 @@ run_udp_server(fko_srv_options_t *opts)
             */
             if(opts->enable_fw)
             {
-                if(rules_chk_threshold > 0)
+                if(opts->rules_chk_threshold > 0)
                 {
                     opts->check_rules_ctr++;
-                    if ((opts->check_rules_ctr % rules_chk_threshold) == 0)
+                    if ((opts->check_rules_ctr % opts->rules_chk_threshold) == 0)
                     {
                         chk_rm_all = 1;
                         opts->check_rules_ctr = 0;
@@ -185,7 +162,7 @@ run_udp_server(fko_srv_options_t *opts)
         /* Set our select timeout to (500ms by default).
         */
         tv.tv_sec = 0;
-        tv.tv_usec = s_timeout;
+        tv.tv_usec = opts->udpserv_select_timeout;
 
         selval = select(s_sock+1, &sfd_set, NULL, NULL, &tv);
 
