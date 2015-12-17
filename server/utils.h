@@ -66,9 +66,6 @@ int   is_valid_dir(const char *path);
 int   is_valid_exe(const char *path);
 int   is_valid_file(const char *path);
 int   verify_file_perms_ownership(const char *file);
-void  chop_newline(char *str);
-void  chop_char(char *str, const char chop);
-void  chop_spaces(char *str);
 void  truncate_partial_line(char *str);
 int   is_digits(const char * const str);
 int   strtoargv(const char * const args_str, char **argv_new, int *argc_new,

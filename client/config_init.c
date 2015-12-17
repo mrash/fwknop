@@ -2348,6 +2348,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case GPG_HOME_DIR:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_home_dir, optarg, sizeof(options->gpg_home_dir));
+                chop_char(options->gpg_home_dir, PATH_SEP);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_HOMEDIR, &var_bitmask);
                 break;

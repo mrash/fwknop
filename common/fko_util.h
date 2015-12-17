@@ -54,6 +54,10 @@ int     zero_buf(char *buf, int len);
 const char * enc_type_inttostr(const int type);
 const char * msg_type_inttostr(const int type);
 
+void  chop_newline(char *str);
+void  chop_char(char *str, const char chop);
+void  chop_spaces(char *str);
+
 #if !HAVE_STRLCAT
 size_t  strlcat(char *dst, const char *src, size_t siz);
 #endif

@@ -214,36 +214,6 @@ verify_file_perms_ownership(const char *file)
 }
 
 void
-chop_char(char *str, const char chop)
-{
-    if(str != NULL && str[0] != 0x0 && str[strlen(str)-1] == chop)
-        str[strlen(str)-1] = 0x0;
-    return;
-}
-
-void
-chop_newline(char *str)
-{
-    chop_char(str, 0x0a);
-    return;
-}
-
-void chop_spaces(char *str)
-{
-    int i;
-    if (str != NULL && str[0] != 0x0)
-    {
-        for (i=strlen(str)-1; i > 0; i--)
-        {
-            if(str[i] != 0x20)
-                break;
-            str[i] = 0x0;
-        }
-    }
-    return;
-}
-
-void
 truncate_partial_line(char *str)
 {
     int i, have_newline=0;
