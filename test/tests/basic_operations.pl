@@ -621,7 +621,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'access.conf include_folder no stanzas',
+        'detail'   => 'access.conf include_folder no stanza (1)',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
         'server_access_file' => [
@@ -635,10 +635,23 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder no stanza (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'server_access_file' => [
+            "%include_folder    $access_include_dir/no-access-files/",
+        ],
+        'exec_err' => $YES,
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'access.conf include_folder one stanza',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
-        'exec_err' => $YES,
         'server_access_file' => [
 
             "%include_folder    $access_include_dir/no-access-files",
