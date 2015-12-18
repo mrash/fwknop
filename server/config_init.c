@@ -1210,6 +1210,8 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 }
                 break;
             case ACCESS_FOLDER:
+                if(strlen(optarg) > 1)
+                    chop_char(optarg, PATH_SEP);
                 if (is_valid_dir(optarg))
                     set_config_entry(opts, CONF_ACCESS_FOLDER, optarg);
                 else
@@ -1284,6 +1286,8 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 }
                 break;
             case GPG_HOME_DIR:
+                if(strlen(optarg) > 1)
+                    chop_char(optarg, PATH_SEP);
                 if (is_valid_dir(optarg))
                     set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);
                 else

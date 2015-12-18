@@ -771,18 +771,16 @@ static int
 make_dir_path(const char * const run_dir)
 {
     struct stat     st;
-    int             res = 0, len = 0;
+    int             res = 0;
     char            tmp_path[MAX_PATH_LEN];
     char            *ndx;
 
     strlcpy(tmp_path, run_dir, sizeof(tmp_path));
 
-    len = strlen(tmp_path);
-
     /* Strip any trailing dir sep char.
     */
-    if(tmp_path[len-1] == PATH_SEP)
-        tmp_path[len-1] = '\0';
+    if(strlen(tmp_path) > 1)
+        chop_char(tmp_path, PATH_SEP);
 
     for(ndx = tmp_path+1; *ndx; ndx++)
     {
