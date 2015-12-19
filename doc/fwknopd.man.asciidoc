@@ -115,10 +115,16 @@ COMMAND-LINE OPTIONS
     way to stop *fwknopd* without having to look in the process table.
 
 *--exit-parse-config*::
-    Parse config files ('@sysconfdir@/fwknop/fwknopd.conf', '@sysconfdir@/fwknop/access.conf',
-    the digest cache file, etc.) and exit. This provides a way to test whether
-    the config files are properly structured without having to start processing
-    network traffic.
+    Parse config files ('@sysconfdir@/fwknop/fwknopd.conf', and
+    '@sysconfdir@/fwknop/access.conf') and then exit. This provides a way to
+    test whether the config files are properly structured without having to
+    start processing network traffic.
+
+*--exit-parse-digest-cache*::
+    Parse the digest cache file '@localstatedir@/fwknop/digest.cache'
+    and exit. This validates the structure of the digest cache file without
+    having to start processing network traffic. Note that the standard
+    configuration files are also parsed in this mode.
 
 *-l, --locale*='<locale>'::
     Set/override the system default locale setting.

@@ -2673,7 +2673,7 @@
         'detail'   => 'digest cache validation',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
-            "-p $default_pid_file $intf_str --exit-parse-config " .
+            "-p $default_pid_file $intf_str --exit-parse-digest-cache " .
             "-d $rewrite_digest_file -v -v -v -v",
         'exec_err' => $YES,
         'digest_cache_file' => [

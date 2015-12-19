@@ -1262,6 +1262,10 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 opts->exit_after_parse_config = 1;
                 opts->foreground = 1;
                 break;
+            case EXIT_VALIDATE_DIGEST_CACHE:
+                opts->exit_parse_digest_cache = 1;
+                opts->foreground = 1;
+                break;
             case 'f':
                 opts->foreground = 1;
                 break;
@@ -1463,6 +1467,7 @@ usage(void)
       " --dump-serv-err-codes   - List all server error codes (only needed by the\n"
       "                           test suite).\n"
       " --exit-parse-config     - Parse config files and exit.\n"
+      " --exit-parse-digest-cache - Parse and validate digest cache  and exit.\n"
       " --fault-injection-tag   - Enable a fault injection tag (only needed by the\n"
       "                           test suite).\n"
       " --pcap-file             - Read potential SPA packets from an existing pcap\n"

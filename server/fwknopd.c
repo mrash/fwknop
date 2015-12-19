@@ -192,7 +192,8 @@ main(int argc, char **argv)
         /* Acquire pid, become a daemon or run in the foreground, write pid
          * to pid file.
         */
-        setup_pid(&opts);
+        if(! opts.exit_parse_digest_cache)
+            setup_pid(&opts);
 
         if(opts.verbose > 1 && opts.foreground)
         {
@@ -205,6 +206,12 @@ main(int argc, char **argv)
          * if so configured.
         */
         init_digest_cache(&opts);
+
+        if(opts.exit_parse_digest_cache)
+        {
+            log_msg(LOG_INFO, "Digest cache parsed, exiting.");
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+        }
 
 #if AFL_FUZZING
         /* SPA data from STDIN. */

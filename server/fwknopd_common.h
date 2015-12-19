@@ -620,6 +620,7 @@ typedef struct fko_srv_options
     unsigned char   fw_flush;           /* Flush current firewall rules */
     unsigned char   key_gen;            /* Generate keys and exit */
     unsigned char   exit_after_parse_config; /* Parse config and exit */
+    unsigned char   exit_parse_digest_cache; /* Parse digest cache and exit */
 
     /* Operational flags
     */
