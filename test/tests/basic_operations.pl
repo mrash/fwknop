@@ -2670,7 +2670,7 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'digest cache validation',
+        'detail'   => 'digest cache validation (1)',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
             "-p $default_pid_file $intf_str --exit-parse-digest-cache " .
@@ -2685,6 +2685,18 @@
             'YuoJRQDtKF7EdnA8JGCsVa5YsLu1az/oPeBTJ7J6Qws 17 127.0.0.1 36767 127.0.0.1 62201 1399089338'
         ],
         'positive_output_matches' => [qr/invalid\sdigest\sfile\sentry/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'digest cache validation (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
+            "-p $default_pid_file $intf_str --exit-parse-digest-cache " .
+            "-d $rewrite_digest_file -v -v -v -v",
+        'digest_cache_file' => [
+            'ybbYzHw4QMLd3rAlifxSAIedifnchUyuU0NW02hC6Zs 17 127.0.0.1 37246 127.0.0.1 62201 1399089310'],
+        'positive_output_matches' => [qr/Digest cache parsed/]
     },
 
     {
