@@ -134,7 +134,6 @@
         'subcategory' => 'client',
         'detail'   => 'previous args (1)',
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/max\scommand\sline\sargs/i],
         'exec_err' => $YES,
         'cmdline' => "$fwknopCmd -l --save-args-file invalid.args",
     },
