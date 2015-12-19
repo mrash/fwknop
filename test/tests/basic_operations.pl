@@ -3116,7 +3116,7 @@
         'server_conf_file' => [
             'PCAP_DISPATCH_COUNT        9999999999'
         ],
-        'positive_output_matches' => [qr/invalid\sPCAP_DISPATCH_COUNT/],
+        'positive_output_matches' => [qr/var PCAP_DISPATCH_COUNT value/],
     },
     {
         'category' => 'basic operations',
