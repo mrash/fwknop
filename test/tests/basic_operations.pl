@@ -3540,7 +3540,7 @@
         'server_conf_file' => [
             '### comment'
         ],
-        'positive_output_matches' => [qr/unable to stat/],
+        'positive_output_matches' => [qr/unable to l?stat/],
     },
 
     {
