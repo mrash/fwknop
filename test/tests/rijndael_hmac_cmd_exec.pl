@@ -53,7 +53,7 @@
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_cmd_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'server_positive_output_matches' => [qr/max command line args exceeded/]
+        'server_positive_output_matches' => [qr/Error converting cmd str to argv/]
     },
 
     {
@@ -79,7 +79,7 @@
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_cmd_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str --udp-server",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'server_positive_output_matches' => [qr/max command line args exceeded/]
+        'server_positive_output_matches' => [qr/Error converting cmd str to argv/]
     },
 
     {
