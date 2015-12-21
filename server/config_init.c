@@ -1020,6 +1020,10 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
     */
     optind = 0;
 
+    /* Enable access.conf parsing (in case this is a re-config)
+    */
+    enable_acc_stanzas_init();
+
     /* First, scan the command-line args to see if we are in key-generation
      * mode. This is independent of config parsing and other operations, so
      * it is done as the very first thing. Also handle printing of the fwknop

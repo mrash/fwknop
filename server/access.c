@@ -54,6 +54,14 @@
   DECLARE_TEST_SUITE(access, "Access test suite");
 #endif
 
+static int do_acc_stanza_init = 1;
+
+void enable_acc_stanzas_init(void)
+{
+    do_acc_stanza_init = 1;
+    return;
+}
+
 /* Add an access string entry
 */
 static void
@@ -1036,10 +1044,19 @@ free_acc_stanzas(fko_srv_options_t *opts)
 static void
 acc_stanza_init(fko_srv_options_t *opts)
 {
-    /* Free any resources first (in case of reconfig). Assume non-NULL
-     * entry needs to be freed.
-    */
-    free_acc_stanzas(opts);
+    if(do_acc_stanza_init)
+    {
+        log_msg(LOG_DEBUG, "Initialize access stanzas");
+
+        /* Free any resources first (in case of reconfig). Assume non-NULL
+         * entry needs to be freed.
+        */
+        free_acc_stanzas(opts);
+
+        /* Make sure to only initialize access stanzas once.
+        */
+        do_acc_stanza_init = 0;
+    }
 
     return;
 }
@@ -1355,12 +1372,6 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
     char            include_file[MAX_PATH_LEN] = {0};
     struct dirent  *dp;
 
-    (*depth)++;
-    if ((*depth) == 1)
-    {
-        acc_stanza_init(opts);
-    }
-
     if(strlen(access_folder) > 1)
         chop_char(access_folder, PATH_SEP);
 
@@ -1466,12 +1477,11 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         return EXIT_FAILURE;
     }
 
-    /* Initialize the access list, but only if we are processing the root access.conf.
+    log_msg(LOG_DEBUG, "Opened access file: %s", access_filename);
+
+    /* Initialize the access list
     */
-    if ((*depth) == 1)
-    {
-        acc_stanza_init(opts);
-    }
+    acc_stanza_init(opts);
 
     /* Now walk through access file pulling the access entries into the
      * current stanza.
@@ -1889,7 +1899,8 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
     }
 
     fclose(file_ptr);
-    (*depth)--;
+    if(*depth > 0)
+        (*depth)--;
 
     if(*depth == 0) //means we just closed the root access.conf
     {

@@ -2618,7 +2618,9 @@ sub _client_send_spa_packet() {
         for (;;) {
             $tries++;
 
+            ### default stanza regex match
             my $server_receive_re = qr/stanza\s.*\sSPA Packet from IP/;
+
             $server_receive_re = $test_hr->{'server_receive_re'}
                 if $test_hr->{'server_receive_re'};
 
