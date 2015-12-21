@@ -182,6 +182,10 @@ digest_strtoint(const char *dt_str)
         return(FKO_DIGEST_SHA384);
     else if(strcasecmp(dt_str, "sha512") == 0)
         return(FKO_DIGEST_SHA512);
+    else if(strcasecmp(dt_str, "sha3_256") == 0)
+        return(FKO_DIGEST_SHA3_512);
+    else if(strcasecmp(dt_str, "sha3_512") == 0)
+        return(FKO_DIGEST_SHA3_512);
     else
         return(-1);
 }
@@ -222,6 +226,12 @@ digest_inttostr(int digest, char* digest_str, size_t digest_size)
         case FKO_DIGEST_SHA512:
             strlcpy(digest_str, "SHA512", digest_size);
             break;
+        case FKO_DIGEST_SHA3_256:
+            strlcpy(digest_str, "SHA3_256", digest_size);
+            break;
+        case FKO_DIGEST_SHA3_512:
+            strlcpy(digest_str, "SHA3_512", digest_size);
+            break;
         default:
             strlcpy(digest_str, "Unknown", digest_size);
             digest_not_valid = -1;
@@ -244,6 +254,10 @@ hmac_digest_strtoint(const char *dt_str)
         return(FKO_HMAC_SHA384);
     else if(strcasecmp(dt_str, "sha512") == 0)
         return(FKO_HMAC_SHA512);
+    else if(strcasecmp(dt_str, "sha3_256") == 0)
+        return(FKO_HMAC_SHA3_256);
+    else if(strcasecmp(dt_str, "sha3_512") == 0)
+        return(FKO_HMAC_SHA3_512);
     else
         return(-1);
 }
@@ -321,6 +335,12 @@ hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size)
             break;
         case FKO_HMAC_SHA512:
             strlcpy(digest_str, "SHA512", digest_size);
+            break;
+        case FKO_HMAC_SHA3_256:
+            strlcpy(digest_str, "SHA3_256", digest_size);
+            break;
+        case FKO_HMAC_SHA3_512:
+            strlcpy(digest_str, "SHA3_512", digest_size);
             break;
         default:
             strlcpy(digest_str, "Unknown", digest_size);

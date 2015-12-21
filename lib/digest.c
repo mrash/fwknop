@@ -154,4 +154,39 @@ sha512_base64(char *out, unsigned char *in, size_t size)
     strip_b64_eq(out);
 }
 
+void
+sha3_256(unsigned char *out, unsigned char *in, size_t size)
+{
+    FIPS202_SHA3_256(in, size, out);
+}
+
+void
+sha3_256_base64(char *out, unsigned char *in, size_t size)
+{
+    uint8_t      md[SHA3_256_DIGEST_LEN];
+
+    FIPS202_SHA3_256(in, size, md);
+    b64_encode(md, out, SHA3_256_DIGEST_LEN);
+
+    strip_b64_eq(out);
+
+}
+void
+sha3_512(unsigned char *out, unsigned char *in, size_t size)
+{
+    FIPS202_SHA3_512(in, size, out);
+}
+
+void
+sha3_512_base64(char *out, unsigned char *in, size_t size)
+{
+    uint8_t      md[SHA3_512_DIGEST_LEN];
+
+    FIPS202_SHA3_512(in, size, md);
+    b64_encode(md, out, SHA3_512_DIGEST_LEN);
+
+    strip_b64_eq(out);
+
+}
+
 /***EOF***/

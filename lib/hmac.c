@@ -430,3 +430,87 @@ hmac_sha512(const char *msg, const unsigned int msg_len,
 
     return;
 }
+
+void
+hmac_sha3_256(const char *msg, const unsigned int msg_len,
+    unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
+{
+    unsigned char inner_hash[SHA3_256_DIGEST_LEN] = {0};
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char padded_hash[2 * MAX_DIGEST_BLOCK_LEN + 1] = {0};
+    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
+
+    if(SHA3_256_BLOCK_LEN < hmac_key_len)
+    {
+        /* Calculate the digest of the key
+        */
+        FIPS202_SHA3_256((unsigned char *)hmac_key, final_len, final_key);
+        final_len = SHA3_256_DIGEST_LEN;
+    }
+    else
+    {
+        memcpy(final_key, hmac_key, hmac_key_len);
+    }
+    pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+    //The first step is to hash the inner_pad + message
+    memcpy(padded_msg, block_inner_pad, SHA3_256_BLOCK_LEN);
+    memcpy(padded_msg + SHA3_256_BLOCK_LEN, msg, msg_len);
+
+    //Calculate the inner hash
+    FIPS202_SHA3_256(padded_msg, msg_len + SHA3_256_BLOCK_LEN, inner_hash);
+
+    //Then hash the outer pad + inner hash
+    memcpy(padded_hash, block_outer_pad, SHA3_256_BLOCK_LEN);
+    memcpy(padded_hash + SHA3_256_BLOCK_LEN, inner_hash, SHA3_256_DIGEST_LEN);
+
+    //the outer hash is the final hmac
+    FIPS202_SHA3_256(padded_hash, SHA3_256_BLOCK_LEN + SHA3_256_DIGEST_LEN, hmac);
+
+    free(padded_msg);
+}
+
+void
+hmac_sha3_512(const char *msg, const unsigned int msg_len,
+    unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
+{
+    unsigned char inner_hash[SHA3_512_DIGEST_LEN] = {0};
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char padded_hash[SHA3_512_BLOCK_LEN + SHA3_512_DIGEST_LEN + 1] = {0};
+    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    int final_len = hmac_key_len;
+
+    if(SHA3_512_BLOCK_LEN < hmac_key_len)
+    {
+        /* Calculate the digest of the key
+        */
+        FIPS202_SHA3_512((unsigned char *)hmac_key, final_len, final_key);
+        final_len = SHA3_512_DIGEST_LEN;
+    }
+    else
+    {
+        memcpy(final_key, hmac_key, hmac_key_len);
+    }
+    pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
+    //The first step is to hash the inner_pad + message
+    memcpy(padded_msg, block_inner_pad, SHA3_512_BLOCK_LEN);
+    memcpy(padded_msg + SHA3_512_BLOCK_LEN, msg, msg_len);
+
+    //Calculate the inner hash
+    FIPS202_SHA3_512(padded_msg, msg_len + SHA3_512_BLOCK_LEN, inner_hash);
+
+    //Then hash the outer pad + inner hash
+    memcpy(padded_hash, block_outer_pad, SHA3_512_BLOCK_LEN);
+    memcpy(padded_hash + SHA3_512_BLOCK_LEN, inner_hash, SHA3_512_DIGEST_LEN);
+
+    //the outer hash is the final hmac
+    FIPS202_SHA3_512(padded_hash, SHA3_512_BLOCK_LEN + SHA3_512_DIGEST_LEN, hmac);
+
+    free(padded_msg);
+}

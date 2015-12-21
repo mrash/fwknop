@@ -1120,7 +1120,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         if(tmpint < 0)
         {
             log_msg(LOG_VERBOSITY_WARNING,
-                    "HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}",
+                    "HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512,sha3_256,sha3_512}",
                     val);
             parse_error = -1;
         }
@@ -2157,7 +2157,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 if((options->hmac_type = hmac_digest_strtoint(optarg)) < 0)
                 {
                     log_msg(LOG_VERBOSITY_ERROR,
-                        "* Invalid hmac digest type: %s, use {md5,sha1,sha256,sha384,sha512}",
+                        "* Invalid hmac digest type: %s, use {md5,sha1,sha256,sha384,sha512,sha3_256,sha3_512}",
                         optarg);
                     exit(EXIT_FAILURE);
                 }
@@ -2208,7 +2208,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 if((options->digest_type = digest_strtoint(optarg)) < 0)
                 {
                     log_msg(LOG_VERBOSITY_ERROR,
-                        "* Invalid digest type: %s, use {md5,sha1,sha256,sha384,sha512}",
+                        "* Invalid digest type: %s, use {md5,sha1,sha256,sha384,sha512,sha3_256,sha3_512}",
                     optarg);
                     exit(EXIT_FAILURE);
                 }
