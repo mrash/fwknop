@@ -2,7 +2,7 @@
 
 make clean
 ./extras/apparmor/configure_args.sh
-export PATH=$PATH:/home/mbr/coverity/cov-analysis-linux64-7.7.0/bin
+export PATH=$PATH:/home/mbr/coverity/latest/bin
 cov-build --dir cov-int make
 tar cvfz fwknop.tgz cov-int
 
