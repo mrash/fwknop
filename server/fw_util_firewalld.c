@@ -709,7 +709,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
             /* Delete the rule to direct traffic to the NFQ chain.
             */
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_DEL_RULE_ARGS,
                 fwc.fw_command,
                 opts->config[CONF_NFQ_TABLE],
                 "INPUT",
@@ -730,7 +730,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
             /* Flush the NFQ chain
             */
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_FLUSH_CHAIN_ARGS,
                 fwc.fw_command,
                 opts->config[CONF_NFQ_TABLE],
                 opts->config[CONF_NFQ_CHAIN]
@@ -750,7 +750,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
             /* Delete the NF_QUEUE chains and rules
             */
-            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_DEL_CHAIN_ARGS,
                 fwc.fw_command,
                 opts->config[CONF_NFQ_TABLE],
                 opts->config[CONF_NFQ_CHAIN]
@@ -827,6 +827,9 @@ static int
 create_fw_chains(const fko_srv_options_t * const opts)
 {
     int     i, got_err = 0;
+#if USE_LIBNETFILTER_QUEUE
+    int     res = 0;
+#endif
 
     for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
     {
@@ -842,7 +845,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
 
         /* Create the NF_QUEUE chains and rules
         */
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_NEW_CHAIN_ARGS,
             fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             opts->config[CONF_NFQ_CHAIN]
@@ -865,7 +868,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
 
         /* Create the rule to direct traffic to the NFQ chain.
         */
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_ADD_JUMP_RULE_ARGS,
             fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             "INPUT",

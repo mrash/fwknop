@@ -905,13 +905,12 @@ validate_options(fko_srv_options_t *opts)
     /* Enable NFQ Capture
     */
     if(opts->config[CONF_ENABLE_NFQ_CAPTURE] == NULL)
-    {
-        if((strncasecmp(DEF_ENABLE_NFQ_CAPTURE, "Y", 1) == 0) &&
-                !opts->enable_nfq_capture)
-        {
-            opts->enable_nfq_capture = 1;
-        }
         set_config_entry(opts, CONF_ENABLE_NFQ_CAPTURE, DEF_ENABLE_NFQ_CAPTURE);
+
+    if((strncasecmp(opts->config[CONF_ENABLE_NFQ_CAPTURE], "Y", 1) == 0) &&
+            !opts->enable_nfq_capture)
+    {
+        opts->enable_nfq_capture = 1;
     }
 
     /* NFQ Interface
