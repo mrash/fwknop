@@ -786,8 +786,7 @@ make_dir_path(const char * const run_dir)
 
     /* Strip any trailing dir sep char.
     */
-    if(strlen(tmp_path) > 1)
-        chop_char(tmp_path, PATH_SEP);
+    chop_char(tmp_path, PATH_SEP);
 
     for(ndx = tmp_path+1; *ndx; ndx++)
     {
