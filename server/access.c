@@ -41,6 +41,7 @@
 #include "utils.h"
 #include "log_msg.h"
 #include "cmd_cycle.h"
+#include <dirent.h>
 
 #define FATAL_ERR -1
 
@@ -85,7 +86,7 @@ add_acc_string(char **var, const char *val, FILE *file_ptr,
 /* Add an access user entry
 */
 static void
-add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
+add_acc_user(char **user_var, uid_t *uid_var, struct passwd **upw,
         const char *val, const char *var_name, FILE *file_ptr,
         fko_srv_options_t *opts)
 {
@@ -94,9 +95,9 @@ add_acc_user(char **user_var, uid_t *uid_var, struct passwd *upw,
     add_acc_string(user_var, val, file_ptr, opts);
 
     errno = 0;
-    upw = pw = getpwnam(val);
+    *upw = pw = getpwnam(val);
 
-    if(upw == NULL || pw == NULL)
+    if(*upw == NULL || pw == NULL)
     {
         log_msg(LOG_ERR, "[*] Unable to determine UID for %s: %s.",
                 var_name, errno ? strerror(errno) : "Not a user on this system");
@@ -1276,7 +1277,7 @@ acc_data_is_valid(fko_srv_options_t *opts,
     {
         log_msg(LOG_INFO,
             "Setting gid to group associated with CMD_SUDO_EXEC_USER '%s' in stanza source: '%s'",
-            acc->cmd_exec_user,
+            acc->cmd_sudo_exec_user,
             acc->source
         );
         acc->cmd_sudo_exec_gid = sudo_user_pw->pw_gid;
@@ -1345,10 +1346,59 @@ acc_data_is_valid(fko_srv_options_t *opts,
     return(1);
 }
 
+int
+parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
+{
+    char            *extension;
+    DIR             *dir_ptr;
+
+    char            include_file[MAX_PATH_LEN] = {0};
+    struct dirent  *dp;
+
+    (*depth)++;
+    if ((*depth) == 1)
+    {
+        acc_stanza_init(opts);
+    }
+
+    if(strlen(access_folder) > 1)
+        chop_char(access_folder, PATH_SEP);
+
+    dir_ptr = opendir(access_folder);
+
+    //grab the file names in the directory and loop through them
+    if (dir_ptr == NULL)
+    {
+        log_msg(LOG_ERR, "[*] Access folder: '%s' could not be opened.", access_folder);
+        return EXIT_FAILURE;
+    }
+    while ((dp = readdir(dir_ptr)) != NULL) {
+        extension = (strrchr(dp->d_name, '.')); // Capture just the extension
+        if (extension && !strncmp(extension, ".conf", 5))
+        {
+            if (strlen(access_folder) + 1 + strlen(dp->d_name) > MAX_PATH_LEN - 1) //Bail out rather than write past the end of include_file
+            {
+                closedir(dir_ptr);
+                return EXIT_FAILURE;
+            }
+            strlcpy(include_file, access_folder, sizeof(include_file)); //construct the full path
+            strlcat(include_file, "/", sizeof(include_file));
+            strlcat(include_file, dp->d_name, sizeof(include_file));
+            if (parse_access_file(opts, include_file, depth) == EXIT_FAILURE)
+            {
+                closedir(dir_ptr);
+                return EXIT_FAILURE;
+            }
+        }
+    }
+    closedir(dir_ptr);
+    return EXIT_SUCCESS;
+}
+
 /* Read and parse the access file, popluating the access data as we go.
 */
-void
-parse_access_file(fko_srv_options_t *opts)
+int
+parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 {
     FILE           *file_ptr;
     char           *ndx;
@@ -1365,19 +1415,33 @@ parse_access_file(fko_srv_options_t *opts)
 
     acc_stanza_t   *curr_acc = NULL;
 
+    /* This allows us to limit include depth, and also tracks when we've returned to the root access.conf file.
+    */
+    (*depth)++;
+
     /* First see if the access file exists.  If it doesn't, complain
      * and bail.
     */
-    if(stat(opts->config[CONF_ACCESS_FILE], &st) != 0)
+#if HAVE_LSTAT
+    if(lstat(access_filename, &st) != 0)
     {
         log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
-            opts->config[CONF_ACCESS_FILE]);
+            access_filename);
 
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
+#elif HAVE_STAT
+    if(stat(access_filename, &st) != 0)
+    {
+        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
+            access_filename);
 
-    if(verify_file_perms_ownership(opts->config[CONF_ACCESS_FILE]) != 1)
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return EXIT_FAILURE;
+    }
+#endif
+
+    if(verify_file_perms_ownership(access_filename) != 1)
+        return EXIT_FAILURE;
 
     /* A note on security here: Coverity flags the following fopen() as a
      * Time of check time of use (TOCTOU) bug with a low priority due to the
@@ -1393,18 +1457,21 @@ parse_access_file(fko_srv_options_t *opts)
      * warning), and then there is no race at all before the fopen().  I.e.
      * forcing an attacker to do the race makes things harder for them.
     */
-    if ((file_ptr = fopen(opts->config[CONF_ACCESS_FILE], "r")) == NULL)
+    if ((file_ptr = fopen(access_filename, "r")) == NULL)
     {
         log_msg(LOG_ERR, "[*] Could not open access file: %s",
-            opts->config[CONF_ACCESS_FILE]);
+            access_filename);
         perror(NULL);
 
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 
-    /* Initialize the access list.
+    /* Initialize the access list, but only if we are processing the root access.conf.
     */
-    acc_stanza_init(opts);
+    if ((*depth) == 1)
+    {
+        acc_stanza_init(opts);
+    }
 
     /* Now walk through access file pulling the access entries into the
      * current stanza.
@@ -1424,10 +1491,10 @@ parse_access_file(fko_srv_options_t *opts)
         {
             log_msg(LOG_ERR,
                 "[*] Invalid access file entry in %s at line %i.\n - '%s'",
-                opts->config[CONF_ACCESS_FILE], num_lines, access_line_buf
+                access_filename, num_lines, access_line_buf
             );
             fclose(file_ptr);
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            return EXIT_FAILURE;
         }
 
         /* Remove any colon that may be on the end of the var
@@ -1445,7 +1512,7 @@ parse_access_file(fko_srv_options_t *opts)
         if (opts->verbose > 3)
             log_msg(LOG_DEBUG,
                 "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'",
-                opts->config[CONF_ACCESS_FILE], access_line_buf, var, val
+                access_filename, access_line_buf, var, val
             );
 
         /* Process the entry.
@@ -1453,7 +1520,35 @@ parse_access_file(fko_srv_options_t *opts)
          * NOTE: If a new access.conf parameter is created.  It also needs
          *       to be accounted for in the following if/if else construct.
         */
-        if(CONF_VAR_IS(var, "SOURCE"))
+        if(CONF_VAR_IS(var, "%include"))
+        {
+            if ((*depth) < MAX_DEPTH)
+            {
+                log_msg(LOG_DEBUG, "[+] Processing include directive for file: '%s'", val);
+                if (parse_access_file(opts, val, depth) == EXIT_FAILURE)
+                {
+                    fclose(file_ptr);
+                    return EXIT_FAILURE;
+                }
+            }
+            else
+            {
+                log_msg(LOG_ERR, "[*] Refusing to go deeper than 3 levels. Lost in Limbo: '%s'",
+                        access_filename);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+        }
+        else if(CONF_VAR_IS(var, "%include_folder"))
+        {
+            log_msg(LOG_DEBUG, "[+] Processing include_folder directive for: '%s'", val);
+            if (parse_access_folder(opts, val, depth) == EXIT_FAILURE)
+            {
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+        }
+        else if(CONF_VAR_IS(var, "SOURCE"))
         {
             /* If this is not the first stanza, sanity check the previous
              * stanza for the minimum required data.
@@ -1462,9 +1557,9 @@ parse_access_file(fko_srv_options_t *opts)
                 if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
                 {
                     log_msg(LOG_ERR, "[*] Data error in access file: '%s'",
-                        opts->config[CONF_ACCESS_FILE]);
+                        access_filename);
                     fclose(file_ptr);
-                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                    return EXIT_FAILURE;
                 }
             }
 
@@ -1492,9 +1587,9 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'",
-                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->key), val, file_ptr, opts);
             curr_acc->key_len = strlen(curr_acc->key);
@@ -1506,9 +1601,9 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
-                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
@@ -1516,7 +1611,7 @@ parse_access_file(fko_srv_options_t *opts)
                     "[*] KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->key_base64), val, file_ptr, opts);
             add_acc_b64_string(&(curr_acc->key), &(curr_acc->key_len),
@@ -1533,7 +1628,7 @@ parse_access_file(fko_srv_options_t *opts)
                     "[*] HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
@@ -1544,7 +1639,7 @@ parse_access_file(fko_srv_options_t *opts)
                     "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             if (! is_base64((unsigned char *) val, strlen(val)))
             {
@@ -1552,7 +1647,7 @@ parse_access_file(fko_srv_options_t *opts)
                     "[*] HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->hmac_key_base64), val, file_ptr, opts);
             add_acc_b64_string(&(curr_acc->hmac_key), &(curr_acc->hmac_key_len),
@@ -1566,7 +1661,7 @@ parse_access_file(fko_srv_options_t *opts)
                     "[*] HMAC_KEY value is not properly set in stanza source '%s' in access file: '%s'",
                     curr_acc->source, opts->config[CONF_ACCESS_FILE]);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->hmac_key), val, file_ptr, opts);
             curr_acc->hmac_key_len = strlen(curr_acc->hmac_key);
@@ -1580,7 +1675,7 @@ parse_access_file(fko_srv_options_t *opts)
                 log_msg(LOG_ERR,
                     "[*] FW_ACCESS_TIMEOUT value not in range.");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "ENCRYPTION_MODE"))
@@ -1591,7 +1686,7 @@ parse_access_file(fko_srv_options_t *opts)
                     "[*] Unrecognized ENCRYPTION_MODE '%s', use {CBC,CTR,legacy,Asymmetric}",
                     val);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "ENABLE_CMD_EXEC"))
@@ -1604,7 +1699,7 @@ parse_access_file(fko_srv_options_t *opts)
         }
         else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_USER"))
             add_acc_user(&(curr_acc->cmd_sudo_exec_user),
-                        &(curr_acc->cmd_sudo_exec_uid), sudo_user_pw,
+                        &(curr_acc->cmd_sudo_exec_uid), &sudo_user_pw,
                         val, "CMD_SUDO_EXEC_USER", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_SUDO_EXEC_GROUP"))
             add_acc_group(&(curr_acc->cmd_sudo_exec_group),
@@ -1612,7 +1707,7 @@ parse_access_file(fko_srv_options_t *opts)
                         "CMD_SUDO_EXEC_GROUP", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_EXEC_USER"))
             add_acc_user(&(curr_acc->cmd_exec_user),
-                        &(curr_acc->cmd_exec_uid), user_pw,
+                        &(curr_acc->cmd_exec_uid), &user_pw,
                         val, "CMD_EXEC_USER", file_ptr, opts);
         else if(CONF_VAR_IS(var, "CMD_EXEC_GROUP"))
             add_acc_group(&(curr_acc->cmd_exec_group),
@@ -1636,7 +1731,7 @@ parse_access_file(fko_srv_options_t *opts)
                     "[*] CMD_CYCLE_TIMER value not in range [1,%d].",
                     RCHK_MAX_CMD_CYCLE_TIMER);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "REQUIRE_USERNAME"))
@@ -1655,9 +1750,9 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] GPG_HOME_DIR directory '%s' stat()/existence problem in stanza source '%s' in access file: '%s'",
-                    val, curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    val, curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "GPG_EXE"))
@@ -1670,9 +1765,9 @@ parse_access_file(fko_srv_options_t *opts)
             {
                 log_msg(LOG_ERR,
                     "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'",
-                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                    curr_acc->source, access_filename);
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_string(&(curr_acc->gpg_decrypt_pw), val, file_ptr, opts);
             add_acc_bool(&(curr_acc->use_gpg), "Y");
@@ -1707,7 +1802,7 @@ parse_access_file(fko_srv_options_t *opts)
             if (add_acc_expire_time(opts, &(curr_acc->access_expire_time), val) != 1)
             {
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         else if(CONF_VAR_IS(var, "ACCESS_EXPIRE_EPOCH"))
@@ -1716,55 +1811,59 @@ parse_access_file(fko_srv_options_t *opts)
         else if(CONF_VAR_IS(var, "FORCE_NAT"))
         {
 #if FIREWALL_FIREWALLD
-            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_NAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_NAT requires either ENABLE_FIREWD_FORWARDING or ENABLE_FIREWD_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_nat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
-            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_NAT requires ENABLE_IPT_FORWARDING ENABLE_IPT_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_nat(opts, curr_acc, val, file_ptr);
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_NAT not supported.");
             fclose(file_ptr);
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            return EXIT_FAILURE;
 #endif
         }
         else if(CONF_VAR_IS(var, "FORCE_SNAT"))
         {
 #if FIREWALL_FIREWALLD
-            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_SNAT requires ENABLE_FIREWD_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_SNAT requires either ENABLE_FIREWD_FORWARDING or ENABLE_FIREWD_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_snat(opts, curr_acc, val, file_ptr);
 #elif FIREWALL_IPTABLES
-            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0 )
+            if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1) !=0
+                && (strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_SNAT requires ENABLE_IPT_FORWARDING to be enabled in fwknopd.conf");
+                    "[*] FORCE_SNAT requires ENABLE_IPT_FORWARDING ENABLE_IPT_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
-                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
             add_acc_force_snat(opts, curr_acc, val, file_ptr);
 #else
             log_msg(LOG_ERR,
                 "[*] FORCE_SNAT not supported.");
             fclose(file_ptr);
-            clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            return EXIT_FAILURE;
 #endif
         }
         else if(CONF_VAR_IS(var, "FORCE_MASQUERADE"))
@@ -1784,44 +1883,84 @@ parse_access_file(fko_srv_options_t *opts)
         {
             log_msg(LOG_ERR,
                 "[*] Ignoring unknown access parameter: '%s' in %s",
-                var, opts->config[CONF_ACCESS_FILE]
+                var, access_filename
             );
         }
     }
 
     fclose(file_ptr);
+    (*depth)--;
 
-    /* Basic check to ensure that we got at least one SOURCE stanza with
-     * a valid KEY defined (valid meaning it has a value that is not
-     * "__CHANGEME__".
-    */
-    if(got_source == 0)
+    if(*depth == 0) //means we just closed the root access.conf
     {
-        log_msg(LOG_ERR,
-            "[*] Could not find valid SOURCE stanza in access file: '%s'",
-            opts->config[CONF_ACCESS_FILE]);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        if(got_source > 0)
+        {
+            if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+            {
+                log_msg(LOG_ERR,
+                    "[*] Data error in access file: '%s'",
+                    access_filename);
+                return EXIT_FAILURE;
+            }
+        }
+        else if (opts->acc_stanzas == NULL)
+        {
+            log_msg(LOG_ERR,
+                "[*] Could not find valid SOURCE stanza in access file: '%s'",
+                opts->config[CONF_ACCESS_FILE]);
+            return EXIT_FAILURE;
+        }
+
+        /* Expand our the expandable fields into their respective data buckets.
+        */
+        expand_acc_ent_lists(opts);
+
+        /* Make sure default values are set where needed.
+        */
+        set_acc_defaults(opts);
+    }
+    else // this is an %included file
+    {
+        /* If this file had a stanza, check the last one.
+         *
+         *
+        */
+        if(got_source > 0)
+        {
+            if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+            {
+                log_msg(LOG_ERR,
+                    "[*] Data error in access file: '%s'",
+                    access_filename);
+                return EXIT_FAILURE;
+            }
+        }
     }
 
-    /* Sanity check the last stanza
+    return EXIT_SUCCESS;
+}
+
+int valid_access_stanzas(acc_stanza_t *acc)
+{
+    if(acc == NULL)
+        return 0;
+
+    /* This is a basic check to ensure at least one access stanza
+     * with the "source" variable populated, and this function is only
+     * called after all access.conf files are processed. This allows
+     * %include_folder processing to proceed against directories that
+     * have files that are not access.conf files. Additional stronger
+     * validations are done in acc_data_is_valid(), but this function
+     * is only called when a "SOURCE" variable has been parsed out of
+     * the file.
     */
-    if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+    while(acc)
     {
-        log_msg(LOG_ERR,
-            "[*] Data error in access file: '%s'",
-            opts->config[CONF_ACCESS_FILE]);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        if(acc->source == NULL || acc->source[0] == '\0')
+            return 0;
+        acc = acc->next;
     }
-
-    /* Expand our the expandable fields into their respective data buckets.
-    */
-    expand_acc_ent_lists(opts);
-
-    /* Make sure default values are set where needed.
-    */
-    set_acc_defaults(opts);
-
-    return;
+    return 1;
 }
 
 int

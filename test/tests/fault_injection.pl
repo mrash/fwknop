@@ -177,10 +177,10 @@
     {
         'category' => 'fault injection',
         'subcategory' => 'client',
-        'detail' => 'tag fko_set_username_strdup2',
+        'detail' => 'tag fko_set_username_strdup',
         'function' => \&fault_injection_tag,
-        'cmdline'  => "$default_client_hmac_args " .
-            "--fault-injection-tag fko_set_username_strdup2",
+        'cmdline'  => "$default_client_hmac_args --spoof-user $spoof_user " .
+            "--fault-injection-tag fko_set_username_strdup",
         'positive_output_matches' => [qr/Unable to allocate memory/]
     },
 

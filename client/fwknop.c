@@ -995,7 +995,7 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
 {
     FILE           *args_file_ptr = NULL;
     int             argc_new = 0, args_broken = 0;
-    char            args_str[MAX_LINE_LEN] = {0};
+    char            args_str[MAX_ARGS_LINE_LEN] = {0};
     char           *argv_new[MAX_CMDLINE_ARGS];  /* should be way more than enough */
 
     memset(argv_new, 0x0, sizeof(argv_new));
@@ -1014,7 +1014,7 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
         args_str[MAX_LINE_LEN-1] = '\0';
         if (options->verbose)
             log_msg(LOG_VERBOSITY_NORMAL, "Executing: %s", args_str);
-        if(strtoargv(args_str, argv_new, &argc_new, options) != 1)
+        if(strtoargv(args_str, argv_new, &argc_new) != 1)
         {
             args_broken = 1;
         }

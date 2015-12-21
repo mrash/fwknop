@@ -31,7 +31,9 @@ my $key_tmp         = 'key.tmp';
 my $enc_save_tmp    = 'openssl_save.enc';
 my $test_suite_path = 'test-fwknop.pl';
 my $username        = '';
+our $access_include_dir = "$conf_dir/access-include";
 my $gpg_dirs_tar = 'gpg_dirs.tar.gz';
+my $access_include_dirs_tar = 'access-include.tar.gz';
 our $gpg_client_home_dir = "$conf_dir/client-gpg";
 our $gpg_client_home_dir_no_pw = "$conf_dir/client-gpg-no-pw";
 our $gpg_client_4096_bit_key_no_pw = "$conf_dir/client-gpg-large-no-pw";
@@ -184,6 +186,10 @@ my $list_mode = 0;
 my $diff_dir1 = '';
 my $diff_dir2 = '';
 my $loopback_intf = '';
+my $default_pkt_tries = 10;
+my $send_all_loop_once = 0;
+my $detect_server_loop_once = 0;
+my $default_server_tries = 10;
 my $anonymize_results = 0;
 my $orig_config_args = '';
 my $curr_test_file = 'init';
@@ -220,6 +226,7 @@ my $valgrind_disable_child_silent = 0;
 my $valgrind_suppressions_file = cwd() . '/valgrind_suppressions';
 our $valgrind_str = '';
 my $asan_mode = 0;
+my $ubsan_mode = 0;
 my %cached_fw_policy  = ();
 my $cpan_valgrind_mod = 'Test::Valgrind';
 my %prev_valgrind_cov = ();
@@ -409,6 +416,12 @@ our %cf = (
     'def_access'                   => "$conf_dir/default_access.conf",
     'portrange_filter'             => "$conf_dir/portrange_fwknopd.conf",
     'hmac_access'                  => "$conf_dir/hmac_access.conf",
+    'include1_hmac_access'         => "$conf_dir/include1_hmac_access.conf",
+    'include2_hmac_access'         => "$conf_dir/include2_hmac_access.conf",
+    'include_r1_hmac_access'       => "$conf_dir/include_r1_hmac_access.conf",
+    'include_r2_hmac_access'       => "$conf_dir/include_r2_hmac_access.conf",
+    'include_m1_hmac_access'       => "$conf_dir/include_m1_hmac_access.conf",
+    'include_def_hmac_access'      => "$conf_dir/include_def_hmac_access.conf",
     'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
     'hmac_cmd_setuid_access'       => "$conf_dir/hmac_cmd_setuid_access.conf",
     'hmac_cmd_giduid_access'       => "$conf_dir/hmac_cmd_giduid_access.conf",
@@ -941,6 +954,8 @@ my %test_keys = (
     'cmd_cycle_close_file' => $OPTIONAL,
     'cmd_exec_file_owner' => $OPTIONAL,
     'cmd_exec_file_not_created' => $OPTIONAL,
+    'user_group_mismatch'       => $OPTIONAL,
+    'sudo_user_group_mismatch'  => $OPTIONAL,
     'rm_rule_mid_cycle'   => $OPTIONAL,
     'server_receive_re'   => $OPTIONAL,
     'no_exit_intf_down'   => $OPTIONAL,
@@ -951,6 +966,8 @@ my %test_keys = (
     'insert_rule_while_running'  => $OPTIONAL,
     'insert_duplicate_rule_while_running' => $OPTIONAL,
     'fw_dupe_rule_args'          => $OPTIONAL,
+    'expect_server_stopped'      => $OPTIONAL,
+    'ignore_client_error'        => $OPTIONAL,
     'weak_server_receive_check'  => $OPTIONAL,
     'search_for_rule_after_exit' => $OPTIONAL,
     'rc_positive_output_matches' => $OPTIONAL,
@@ -1045,7 +1062,8 @@ for my $test_hr (@tests) {
 
 unless ($list_mode) {
     &remove_permissions_warnings() unless $include_permissions_warnings;
-    &restore_gpg_dirs();
+    &restore_dir($gpg_dirs_tar);
+    &restore_dir($access_include_dirs_tar);
 }
 
 my $total_elapsed_seconds = time() - $start_time;
@@ -1452,11 +1470,7 @@ sub asan_verification() {
 
     if ($rv) {
         &run_cmd('./a.out', "../$cmd_out_tmp", "../$curr_test_file");
-        unless (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
-                qr/SUMMARY\:\sAddressSanitizer/],
-                $MATCH_ALL, $NO_APPEND_RESULTS, "../$curr_test_file")) {
-            $rv = 0;
-        }
+        $rv = 0 unless &is_sanitizer_crash("../$curr_test_file");
     }
 
     chdir '..' or die $!;
@@ -1568,6 +1582,26 @@ sub fault_injection_tag() {
     my $fw_rule_created    = 0;
     my $fw_rule_removed    = 0;
 
+    my $tag_name = '';
+    if ($test_hr->{'cmdline'}) {
+        if ($test_hr->{'cmdline'} =~ /fault\-injection\-tag\s(S+)/) {
+            $tag_name = $1;
+        }
+    } elsif ($test_hr->{'fwknopd_cmdline'}) {
+        if ($test_hr->{'fwknopd_cmdline'} =~ /fault\-injection\-tag\s(S+)/) {
+            $tag_name = $1;
+        }
+    }
+
+    if ($tag_name) {
+        unless ($test_hr->{'detail'} =~ /\s$tag_name/) {
+            &write_test_file(
+                "[-] tag_name '$tag_name' not in test message.\n",
+                $curr_test_file);
+            return 0;
+        }
+    }
+
     if ($test_hr->{'pkt'}
             or ($test_hr->{'cmdline'} and $test_hr->{'fwknopd_cmdline'})) {
 
@@ -1619,6 +1653,7 @@ sub fko_wrapper_exec() {
     my $make_arg = $test_hr->{'wrapper_compile'};
 
     $make_arg = 'asan' if $asan_mode;
+    $make_arg = 'ubsan' if $ubsan_mode;
 
     if ($test_hr->{'wrapper_binary'} =~ m|/fko_wrapper$|) {
         if ($enable_fuzzing_interfaces_tests) {
@@ -1771,6 +1806,22 @@ sub look_for_crashes() {
     return $rv;
 }
 
+sub is_sanitizer_crash() {
+    my $file = shift;
+
+    my $rv = 0;
+
+    if (&file_find_regex([qr/ERROR\:\s\w+Sanitizer/,
+                qr/SUMMARY\:\s\w+Sanitizer/],
+            $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
+        &write_test_file("[-] Sanitizer crash found in: $file\n",
+            $curr_test_file);
+        $rv = 1;
+    }
+
+    return $rv;
+}
+
 sub is_crash() {
     my $file = shift;
     my $rv = 0;
@@ -1781,19 +1832,14 @@ sub is_crash() {
         $rv = 1;
     }
 
-    if (&file_find_regex([qr/ERROR\:\sAddressSanitizer/,
-                qr/SUMMARY\:\sAddressSanitizer/],
-            $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
-        &write_test_file("[-] AddressSanitizer crash found in: $file\n",
-            $curr_test_file);
-        $rv = 1;
-    }
+    $rv = 1 if &is_sanitizer_crash($file);
 
     ### ASan and valgrind don't appear to be compatible, and and ASan
     ### will throw an error when the two are mixed
     if (&file_find_regex([qr/Shadow memory range interleaves/],
             $MATCH_ANY, $NO_APPEND_RESULTS, $file)) {
-        &write_test_file("[-] AddressSanitizer not compatible with valgrind: $file\n",
+        &write_test_file("[-] Sanitizer infrastructure not " .
+                "compatible with valgrind: $file\n",
             $curr_test_file);
         $rv = 1;
     }
@@ -2274,15 +2320,30 @@ sub server_conf_files() {
     my $rv = 1;
 
     if ($test_hr->{'digest_cache_file'}) {
-        &write_server_conf_file($test_hr->{'digest_cache_file'}, $rewrite_digest_file);
+        &write_server_conf_file($test_hr->{'digest_cache_file'},
+            $rewrite_digest_file);
     }
 
     if ($test_hr->{'server_access_file'}) {
-        &write_server_conf_file($test_hr->{'server_access_file'}, $rewrite_access_conf);
+        if ($test_hr->{'sudo_user_group_mismatch'} eq $YES) {
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_SUDO_EXEC_USER      $username";
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_SUDO_EXEC_GROUP     root";
+        }
+        if ($test_hr->{'user_group_mismatch'} eq $YES) {
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_EXEC_USER      $username";
+            push @{$test_hr->{'server_access_file'}},
+                "CMD_EXEC_GROUP     root";
+        }
+        &write_server_conf_file($test_hr->{'server_access_file'},
+            $rewrite_access_conf);
     }
 
     if ($test_hr->{'server_conf_file'}) {
-        &write_server_conf_file($test_hr->{'server_conf_file'}, $rewrite_fwknopd_conf);
+        &write_server_conf_file($test_hr->{'server_conf_file'},
+            $rewrite_fwknopd_conf);
     }
 
     $rv = 0 unless &run_cmd($test_hr->{'fwknopd_cmdline'},
@@ -3182,10 +3243,10 @@ sub perl_fko_module_user() {
         return 0;
     }
 
-    my $username = $fko_obj->username();
+    my $fko_username = $fko_obj->username();
 
-    if ($username) {
-        &write_test_file("[+] got username(): $username\n",
+    if ($fko_username) {
+        &write_test_file("[+] got username(): $fko_username\n",
             $curr_test_file);
     } else {
         &write_test_file("[-] could not get username()\n",
@@ -5750,7 +5811,7 @@ sub client_server_interaction() {
     my $server_was_stopped = 1;
     my $fw_rule_created = 1;
     my $fw_rule_removed = 0;
-    my $max_pkt_tries = 10;
+    my $max_pkt_tries = $default_pkt_tries;
 
     $max_pkt_tries = $test_hr->{'max_pkt_tries'}
         if $test_hr->{'max_pkt_tries'};
@@ -5808,7 +5869,7 @@ sub client_server_interaction() {
                     &write_test_file("[-] fwknop client execution error.\n",
                         $curr_test_file);
                 }
-                $rv = 0;
+                $rv = 0 unless $test_hr->{'ignore_client_error'};
             }
         } elsif ($spa_client_flag == $USE_PREDEF_PKTS) {
             &send_packets($pkts_hr, $max_pkt_tries);
@@ -5832,9 +5893,14 @@ sub client_server_interaction() {
     }
 
     unless ($server_was_stopped) {
-        &write_test_file("[-] server_was_stopped=0, so setting rv=0.\n",
-            $curr_test_file);
-        $rv = 0;
+        if ($test_hr->{'expect_server_stopped'}) {
+            &write_test_file("[+] Expecting server to not be running.\n",
+                $curr_test_file);
+        } else {
+            &write_test_file("[-] server_was_stopped=0, so setting rv=0.\n",
+                $curr_test_file);
+            $rv = 0;
+        }
     }
 
     &write_test_file("[.] client_server_interaction() summary: rv: $rv, " .
@@ -6113,9 +6179,18 @@ sub send_packets() {
             &send_all_pkts($pkts_ar);
 
             $tries++;
-            last if $tries == $max_tries;   ### should be plenty of time
+
+            if ($send_all_loop_once) {
+                last if $tries == $max_tries;
+            } else {
+                last if $tries == $max_tries * 10;
+            }
             sleep 1;
         }
+
+        $default_pkt_tries = $tries+5 if $tries > $default_pkt_tries;
+        $send_all_loop_once = 1;
+
     } else {
         &send_all_pkts($pkts_ar);
     }
@@ -6790,10 +6865,17 @@ sub do_fwknopd_cmd() {
                 "for 'main event loop' or 'Kicking off.*server', try: $tries\n",
                 $curr_test_file);
             $tries++;
-            last if $tries == 10;  ### shouldn't reasonably get here
+            if ($detect_server_loop_once) {
+                last if $tries == $default_server_tries;
+            } else {
+                last if $tries == $default_server_tries * 10;
+            }
             sleep 1;
         }
     }
+
+    $default_server_tries = $tries+5 if $tries > $default_server_tries;
+    $detect_server_loop_once = 1;
 
     return $pid;
 }
@@ -7079,9 +7161,10 @@ sub init() {
 
     $do_profile_init = 1 unless $test_include;
 
-    ### always restore the gpg directories before tests are
-    ### executed
-    &restore_gpg_dirs();
+    ### always restore the gpg and access %include directories before
+    ### tests are executed
+    &restore_dir($gpg_dirs_tar);
+    &restore_dir($access_include_dirs_tar);
 
     if ($test_include) {
         for my $re (split /\s*,\s*/, $test_include) {
@@ -7256,6 +7339,7 @@ sub init() {
     }
 
     push @tests_to_exclude, qr/sudo/ unless $sudo_conf_testing;
+    push @tests_to_exclude, qr/user.*\sparity/ unless $username;
 
     ### see if the 'nobody' user is on the system
     unless (getpwnam('nobody')) {
@@ -7286,7 +7370,7 @@ sub init() {
         push @tests_to_exclude, qr/down interface/;
     }
 
-    ### see if we're compiled with ASAN support
+    ### see if we're compiled with AddressSanitizer support
     if (&file_find_regex([qr/enable\-asan\-support/],
             $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
         $asan_mode = 1;
@@ -7294,6 +7378,16 @@ sub init() {
         &write_test_file("[-] Can't find --enable-asan-support in $config_log\n",
             $curr_test_file);
         push @tests_to_exclude, qr/ASAN/;
+    }
+
+    ### see if we're compiled with UndefinedBehaviorSanitizer support
+    if (&file_find_regex([qr/enable\-ubsan\-support/],
+            $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
+        $asan_mode = 1;
+    } else {
+        &write_test_file("[-] Can't find --enable-ubsan-support in $config_log\n",
+            $curr_test_file);
+        push @tests_to_exclude, qr/UBSAN/;
     }
 
     if ($gcov_path) {
@@ -7455,14 +7549,15 @@ sub preserve_previous_test_run_results() {
     return;
 }
 
-sub restore_gpg_dirs() {
+sub restore_dir() {
+    my $tarfile = shift;
 
     my $curr_pwd = cwd() or die $!;
 
     chdir $conf_dir or die $!;
 
     if (-e $gpg_dirs_tar) {
-        system "tar xfz $gpg_dirs_tar > /dev/null";
+        system "tar xfz $tarfile > /dev/null";
     }
 
     chdir $curr_pwd or die $!;
@@ -7882,6 +7977,8 @@ sub stop_fwknopd() {
     } else {
         &write_test_file("[-] stop_fwknopd() fwknopd is not running.\n",
             $curr_test_file);
+        ### make certain there is no running fwknopd process
+        system "$killall_path fwknopd 2> /dev/null" if $killall_path;
         return;
     }
 
@@ -7937,6 +8034,11 @@ sub stop_fwknopd() {
             sleep 1;
         }
     }
+
+    ### make certain fwknopd is stopped. Test suite interactions with fwknop
+    ### are complex, and having a running fwknopd process that may be been
+    ### "lost" can interfere with test results
+    system "$killall_path fwknopd 2> /dev/null" if $killall_path;
 
     return;
 }

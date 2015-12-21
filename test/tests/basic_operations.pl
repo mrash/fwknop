@@ -134,7 +134,6 @@
         'subcategory' => 'client',
         'detail'   => 'previous args (1)',
         'function' => \&generic_exec,
-        'positive_output_matches' => [qr/max\scommand\sline\sargs/i],
         'exec_err' => $YES,
         'cmdline' => "$fwknopCmd -l --save-args-file invalid.args",
     },
@@ -192,6 +191,20 @@
         'positive_output_matches' => [qr/Invalid\sSPA\saccess\smessage/i],
         'exec_err' => $YES,
         'cmdline' => "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => '--spoof-user (long user)',
+        'function' => \&generic_exec,
+        'cmdline'  => "$default_client_hmac_args --spoof-user " . 'A'x80
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'env SPOOF_USER (long user)',
+        'function' => \&generic_exec,
+        'cmdline'  => "SPOOF_USER=" . 'A'x80 . ' ' . $default_client_hmac_args
     },
 
     {
@@ -450,6 +463,355 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline' => "$fwknopdCmd $default_server_conf_args --sudo-exe /etc/hosts"
+    },
+
+    ### access.conf %include directive tests
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf recursion limit',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline'  => "$fwknopdCmd --exit-parse-config -a $cf{'include_r1_hmac_access'} " .
+                "-c $cf{'def'} -d $default_digest_file -p $default_pid_file",
+        'positive_output_matches' => [qr/Refusing to go deeper than/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf multi-include',
+        'function' => \&generic_exec,
+        'cmdline'  => "$fwknopdCmd --exit-parse-config -a $cf{'include_m1_hmac_access'} " .
+                qq/-c $cf{"${fw_conf_prefix}_nat"} -d $default_digest_file -p $default_pid_file -v/,
+        'positive_output_matches' => [qr/Configs parsed/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include missing file',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            '%include       /missing/file',
+            'SOURCE         any',
+            'KEY            testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/was not found/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include broken stanza (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE         1.1.1.1',
+            "%include       $cf{'def_access'}",
+
+            'SOURCE         4.4.4.4',
+            'KEY            testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/No keys found/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include broken stanza (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+
+            'SOURCE             2.2.2.2',
+            'KEY                stanza2test',
+            'REQUIRE_USERNAME   user2',
+
+            'SOURCE             3.3.3.3',
+            "%include           $cf{'def_access'}", ### default access stanza becomes stanza #4
+            'REQUIRE_USERNAME   user3',
+
+            'SOURCE             4.4.4.4',
+            'KEY                stanza4test',
+            'REQUIRE_USERNAME   user4',
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/No keys found/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include mixed stanza (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+
+            'SOURCE             2.2.2.2',
+            'KEY                stanza2test',
+            'REQUIRE_USERNAME   user2',
+
+            'SOURCE             3.3.3.3',
+            'KEY                stanza3test',
+            'REQUIRE_USERNAME   user3',
+
+            'SOURCE             4.4.4.4',
+            'KEY                stanza4test',
+            'REQUIRE_USERNAME   user4',
+
+            "%include           $cf{'def_access'}", ### default access stanza becomes stanza #5
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/SOURCE.*5.*\sANY/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include mixed stanza (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $NO,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+
+            'SOURCE             2.2.2.2',
+            'KEY                stanza2test',
+            'REQUIRE_USERNAME   user2',
+
+            'SOURCE             3.3.3.3',
+            "%include           $cf{'def_access'}", ### default access stanza becomes stanza #4
+            'KEY                stanza3test',
+            'REQUIRE_USERNAME   user3',
+
+            'SOURCE             4.4.4.4',
+            'KEY                stanza4test',
+            'REQUIRE_USERNAME   user4',
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/SOURCE.*4.*\sANY/],
+    },
+
+    ### %include_folder tests
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder no stanza (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'server_access_file' => [
+            "%include_folder    $access_include_dir/no-access-files",
+        ],
+        'exec_err' => $YES,
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder no stanza (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'server_access_file' => [
+            "%include_folder    $access_include_dir/no-access-files/",
+        ],
+        'exec_err' => $YES,
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder one stanza',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'server_access_file' => [
+
+            "%include_folder    $access_include_dir/no-access-files",
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /dev/null (1)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config --access-folder /dev/null",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid access folder directory/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /dev/null (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            "%include_folder    /dev/null",
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder long dir',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config --access-folder " . 'A'x1030,
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/path is too long/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder / (1)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config " .
+            "--access-folder /",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/could not find any/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder / (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            "%include_folder    /",
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /a',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config " .
+            "--access-folder /a",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid access folder/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /a/ (1)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config " .
+            "--access-folder /a/",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid access folder/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder /a/ (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            "%include_folder    /a/",
+
+            'SOURCE             1.1.1.1',
+            'KEY                stanza1test',
+            'REQUIRE_USERNAME   user1',
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf include_folder NULL',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopdCmd -c $cf{'def'} --exit-parse-config " .
+            qq|--access-folder ""|,
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid access folder/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'user/group parity',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'user_group_mismatch' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Setting gid/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'sudo user/group parity',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'sudo_user_group_mismatch' => $YES,
+        'server_access_file' => [
+            'SOURCE     any',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Setting gid/],
     },
 
     {
@@ -1088,6 +1450,19 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Args\scontain\sinvalid/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--spoof-user (long user)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default " .
+                "--spoof-user " . 'A'x80,
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1'}}],
+        'positive_output_matches' => [qr/Username\:\sAAAA/],
+        'rc_positive_output_matches' => [qr/SPOOF_USER.*AAAA/],
+    },
 
     {
         'category' => 'basic operations',
@@ -1381,6 +1756,20 @@
         'positive_output_matches' => [qr/Message.*0.0.0.0/],
         'rc_positive_output_matches' => [qr/ALLOW_IP.*0.0.0.0/],
     },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => '--server-resolve-ipv4',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+                "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
+                "--force-stanza --test -n default -R --server-resolve-ipv4",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
+                    'HMAC_DIGEST_TYPE' => 'SHA1',
+                    'SERVER_RESOLVE_IPV4' => 'Y'}}],
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
@@ -1391,31 +1780,36 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
-        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/HTTP_USER_AGENT.*FwknopTestSuite\/2.6/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/,
+                qr/HTTP_USER_AGENT.*FwknopTestSuite\/2.6/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
         'detail'   => '-R resolve http (1)',
         'function' => \&client_rc_file,
-        'cmdline'  => "$client_save_rc_args_no_test -n default -R --resolve-url http://www.cipherdyne.org/cgi-bin/myip",
+        'cmdline'  => "$client_save_rc_args_no_test -n default -R " .
+                "--resolve-url http://www.cipherdyne.org/cgi-bin/myip",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
-        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*cipherdyne.org.*myip/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/,
+                qr/RESOLVE_URL.*cipherdyne.org.*myip/],
     },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
         'detail'   => '-R resolve http (2)',
         'function' => \&client_rc_file,
-        'cmdline'  => "$client_save_rc_args_no_test -n default -R --resolve-url www.cipherdyne.org/cgi-bin/myip",
+        'cmdline'  => "$client_save_rc_args_no_test -n default " .
+                "-R --resolve-url www.cipherdyne.org/cgi-bin/myip",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1'}}],
         'positive_output_matches' => [qr/Resolved/],
-        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/, qr/RESOLVE_URL.*\swww.cipherdyne.org.*myip/],
+        'rc_positive_output_matches' => [qr/RESOLVE_IP_HTTP.*Y/,
+                qr/RESOLVE_URL.*\swww.cipherdyne.org.*myip/],
     },
     {
         'category' => 'basic operations',
@@ -1631,6 +2025,24 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Parameter\serror/],
         'rc_positive_output_matches' => [qr/TIME_OFFSET.*123456789999/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'time offset invalid (3)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopCmd --test -A tcp/22 -s -D 127.0.0.2 --time-offset-plus 99999999999999999",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid time offset/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'time offset invalid (4)',
+        'function' => \&generic_exec,
+        'cmdline' => "$fwknopCmd --test -A tcp/22 -s -D 127.0.0.2 --time-offset-minus 99999999999999999",
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Invalid time offset/],
     },
 
     {
@@ -2258,10 +2670,10 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'digest cache validation',
+        'detail'   => 'digest cache validation (1)',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
-            "-p $default_pid_file $intf_str --exit-parse-config " .
+            "-p $default_pid_file $intf_str --exit-parse-digest-cache " .
             "-d $rewrite_digest_file -v -v -v -v",
         'exec_err' => $YES,
         'digest_cache_file' => [
@@ -2273,6 +2685,18 @@
             'YuoJRQDtKF7EdnA8JGCsVa5YsLu1az/oPeBTJ7J6Qws 17 127.0.0.1 36767 127.0.0.1 62201 1399089338'
         ],
         'positive_output_matches' => [qr/invalid\sdigest\sfile\sentry/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'digest cache validation (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'def_access'} " .
+            "-p $default_pid_file $intf_str --exit-parse-digest-cache " .
+            "-d $rewrite_digest_file -v -v -v -v",
+        'digest_cache_file' => [
+            'ybbYzHw4QMLd3rAlifxSAIedifnchUyuU0NW02hC6Zs 17 127.0.0.1 37246 127.0.0.1 62201 1399089310'],
+        'positive_output_matches' => [qr/Digest cache parsed/]
     },
 
     {
@@ -2322,6 +2746,23 @@
         'server_conf_file' => [
             'ENABLE_PCAP_PROMISC       Y'
         ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'invalid ACCESS_EXPIRE_EPOCH',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                  any',
+            'KEY                    testtest',
+            'ACCESS_EXPIRE_EPOCH    999999999999999999999999999999999999'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/invalid epoch seconds value/],
     },
 
     ### test syslog config
@@ -2687,7 +3128,7 @@
         'server_conf_file' => [
             'PCAP_DISPATCH_COUNT        9999999999'
         ],
-        'positive_output_matches' => [qr/invalid\sPCAP_DISPATCH_COUNT/],
+        'positive_output_matches' => [qr/var PCAP_DISPATCH_COUNT value/],
     },
     {
         'category' => 'basic operations',
@@ -2944,6 +3385,7 @@
         ],
         'positive_output_matches' => [qr/not\sin\sthe\srange/],
     },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
@@ -3098,7 +3540,7 @@
         'server_conf_file' => [
             '### comment'
         ],
-        'positive_output_matches' => [qr/unable to stat/],
+        'positive_output_matches' => [qr/unable to l?stat/],
     },
 
     {
@@ -3246,6 +3688,25 @@
         'positive_output_matches' => [qr/requires either FORCE_NAT or FORWARD_ALL/i],
         'exec_err' => $YES,
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'FORCE_NAT -> need forwarding mode',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                  any',
+            'KEY                     testtest',
+            'FORCE_NAT               Y'
+        ],
+        'server_conf_file' => [
+            "ENABLE_${FW_PREFIX}_FORWARDING       N;",
+            "ENABLE_${FW_PREFIX}_LOCAL_NAT        N;"
+        ],
+        'positive_output_matches' => [qr/requires either ENABLE_FIREWD_FORWARDING/i],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
@@ -3675,6 +4136,7 @@
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE     1.1.1.1',
+            'OPEN_PORTS   tcp/22, udp/53, tcp/12345, udp/123, icmp/1, tcp/23',
         ],
         'server_conf_file' => [
             '### comment line'
@@ -3742,9 +4204,9 @@
             'FORCE_NAT a a'
         ],
         'server_conf_file' => [
-            '### comment line'
+            "ENABLE_${FW_PREFIX}_FORWARDING      Y"
         ],
-        'positive_output_matches' => [qr/requires\s.*${FW_PREFIX}_FORWARDING/],
+        'positive_output_matches' => [qr/invalid FORCE_NAT arg/],
     },
     {
         'category' => 'basic operations',
@@ -3840,7 +4302,7 @@
         'server_conf_file' => [
             "ENABLE_${FW_PREFIX}_FORWARDING      N"
         ],
-        'positive_output_matches' => [qr/requires.*enabled/],
+        'positive_output_matches' => [qr/FORCE_SNAT requires either/],
     },
     {
         'category' => 'basic operations',

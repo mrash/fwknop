@@ -33,67 +33,38 @@
 #include "fw_util.h"
 #include "cmd_cycle.h"
 
-#include <stdarg.h>
-
-#define ASCII_LEN 16
-
-/* Generic hex dump function.
-*/
-void
-hex_dump(const unsigned char *data, const int size)
-{
-    int ln=0, i=0, j=0;
-    char ascii_str[ASCII_LEN+1] = {0};
-
-    for(i=0; i<size; i++)
-    {
-        if((i % ASCII_LEN) == 0)
-        {
-            printf(" %s\n  0x%.4x:  ", ascii_str, i);
-            memset(ascii_str, 0x0, ASCII_LEN-1);
-            j = 0;
-        }
-
-        printf("%.2x ", data[i]);
-
-        ascii_str[j++] = (data[i] < 0x20 || data[i] > 0x7e) ? '.' : data[i];
-
-        if(j == 8)
-            printf(" ");
-    }
-
-    /* Remainder...
-    */
-    ln = strlen(ascii_str);
-    if(ln > 0)
-    {
-        for(i=0; i < ASCII_LEN-ln; i++)
-            printf("   ");
-        if(ln < 8)
-            printf(" ");
-
-        printf(" %s\n\n", ascii_str);
-    }
-    return;
-}
-
 /* Basic directory/binary checks (stat() and whether the path is actually
  * a directory or an executable).
 */
 static int
 is_valid_path(const char *path, const int file_type)
 {
-#if HAVE_STAT
+    if(strnlen(path, MAX_PATH_LEN) == MAX_PATH_LEN)
+    {
+        log_msg(LOG_ERR, "[-] Provided path is too long");
+        return(0);
+    }
+
+#if HAVE_STAT || HAVE_LSTAT
     struct stat st;
 
     /* If we are unable to stat the given path, then return with error.
     */
+  #if HAVE_LSTAT /* prefer lstat() to stat() */
+    if(lstat(path, &st) != 0)
+    {
+        log_msg(LOG_ERR, "[-] unable to lstat() path: %s: %s",
+            path, strerror(errno));
+        return(0);
+    }
+  #else
     if(stat(path, &st) != 0)
     {
         log_msg(LOG_ERR, "[-] unable to stat() path: %s: %s",
             path, strerror(errno));
         return(0);
     }
+  #endif
 
     if(file_type == IS_DIR)
     {
@@ -105,10 +76,15 @@ is_valid_path(const char *path, const int file_type)
         if(!S_ISREG(st.st_mode) || ! (st.st_mode & S_IXUSR))
             return(0);
     }
+    else if(file_type == IS_FILE)
+    {
+        if(!S_ISREG(st.st_mode))
+            return(0);
+    }
     else
         return(0);
 
-#endif /* HAVE_STAT */
+#endif /* HAVE_STAT || HAVE_LSTAT */
 
     return(1);
 }
@@ -123,6 +99,12 @@ int
 is_valid_exe(const char *path)
 {
     return is_valid_path(path, IS_EXE);
+}
+
+int
+is_valid_file(const char *path)
+{
+    return is_valid_path(path, IS_FILE);
 }
 
 int
@@ -188,36 +170,6 @@ verify_file_perms_ownership(const char *file)
 }
 
 void
-chop_char(char *str, const char chop)
-{
-    if(str != NULL && str[0] != 0x0 && str[strlen(str)-1] == chop)
-        str[strlen(str)-1] = 0x0;
-    return;
-}
-
-void
-chop_newline(char *str)
-{
-    chop_char(str, 0x0a);
-    return;
-}
-
-void chop_spaces(char *str)
-{
-    int i;
-    if (str != NULL && str[0] != 0x0)
-    {
-        for (i=strlen(str)-1; i > 0; i--)
-        {
-            if(str[i] != 0x20)
-                break;
-            str[i] = 0x0;
-        }
-    }
-    return;
-}
-
-void
 truncate_partial_line(char *str)
 {
     int i, have_newline=0;
@@ -265,99 +217,6 @@ is_digits(const char * const str)
         }
     }
     return 1;
-}
-
-static int
-add_argv(char **argv_new, int *argc_new,
-        const char *new_arg, const fko_srv_options_t * const opts)
-{
-    int buf_size = 0;
-
-    if(opts->verbose > 3)
-        log_msg(LOG_INFO, "[+] add_argv() + arg: %s", new_arg);
-
-    buf_size = strlen(new_arg) + 1;
-    argv_new[*argc_new] = calloc(1, buf_size);
-
-    if(argv_new[*argc_new] == NULL)
-    {
-        log_msg(LOG_INFO, "[*] Memory allocation error.");
-        return 0;
-    }
-    strlcpy(argv_new[*argc_new], new_arg, buf_size);
-
-    *argc_new += 1;
-
-    if(*argc_new >= MAX_CMDLINE_ARGS-1)
-    {
-        log_msg(LOG_ERR, "[*] max command line args exceeded.");
-        return 0;
-    }
-
-    argv_new[*argc_new] = NULL;
-
-    return 1;
-}
-
-int
-strtoargv(const char * const args_str, char **argv_new, int *argc_new,
-        const fko_srv_options_t * const opts)
-{
-    int       current_arg_ctr = 0, i;
-    char      arg_tmp[MAX_LINE_LEN] = {0};
-
-    for (i=0; i < (int)strlen(args_str); i++)
-    {
-        if (!isspace(args_str[i]))
-        {
-            arg_tmp[current_arg_ctr] = args_str[i];
-            current_arg_ctr++;
-        }
-        else
-        {
-            if(current_arg_ctr > 0)
-            {
-                arg_tmp[current_arg_ctr] = '\0';
-                if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
-                {
-                    free_argv(argv_new, argc_new);
-                    return 0;
-                }
-                current_arg_ctr = 0;
-            }
-        }
-    }
-
-    /* pick up the last argument in the string
-    */
-    if(current_arg_ctr > 0)
-    {
-        arg_tmp[current_arg_ctr] = '\0';
-        if (add_argv(argv_new, argc_new, arg_tmp, opts) != 1)
-        {
-            free_argv(argv_new, argc_new);
-            return 0;
-        }
-    }
-    return 1;
-}
-
-void
-free_argv(char **argv_new, int *argc_new)
-{
-    int i;
-
-    if(argv_new == NULL || *argv_new == NULL)
-        return;
-
-    for (i=0; i < *argc_new; i++)
-    {
-        if(argv_new[i] == NULL)
-            break;
-        else
-            free(argv_new[i]);
-    }
-    return;
 }
 
 void

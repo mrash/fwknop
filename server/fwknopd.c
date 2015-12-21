@@ -79,6 +79,7 @@ int
 main(int argc, char **argv)
 {
     fko_srv_options_t   opts;
+    int depth = 0;
 
     while(1)
     {
@@ -151,9 +152,27 @@ main(int argc, char **argv)
             clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
         }
 
-        /* Process the access.conf file.
+        if (opts.config[CONF_ACCESS_FOLDER] != NULL) //If we have an access folder, process it
+        {
+            if (parse_access_folder(&opts, opts.config[CONF_ACCESS_FOLDER], &depth) != EXIT_SUCCESS)
+            {
+                clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+        /* Process the access.conf file, but only if no access.conf folder was specified.
         */
-        parse_access_file(&opts);
+        else if (parse_access_file(&opts, opts.config[CONF_ACCESS_FILE], &depth) != EXIT_SUCCESS)
+        {
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
+
+        /* We must have at least one valid access stanza at this point
+        */
+        if(! valid_access_stanzas(opts.acc_stanzas))
+        {
+            log_msg(LOG_ERR, "Fatal, could not find any valid access.conf stanzas");
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
 
         /* Show config (including access.conf vars) and exit dump config was
          * wanted.
@@ -165,10 +184,19 @@ main(int argc, char **argv)
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
+        /* Now is the right time to bail if we're just parsing the configs
+        */
+        if(opts.exit_after_parse_config)
+        {
+            log_msg(LOG_INFO, "Configs parsed, exiting.");
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
+        }
+
         /* Acquire pid, become a daemon or run in the foreground, write pid
          * to pid file.
         */
-        setup_pid(&opts);
+        if(! opts.exit_parse_digest_cache)
+            setup_pid(&opts);
 
         if(opts.verbose > 1 && opts.foreground)
         {
@@ -182,9 +210,9 @@ main(int argc, char **argv)
         */
         init_digest_cache(&opts);
 
-        if(opts.exit_after_parse_config)
+        if(opts.exit_parse_digest_cache)
         {
-            log_msg(LOG_INFO, "Configs parsed, exiting.");
+            log_msg(LOG_INFO, "Digest cache parsed, exiting.");
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_SUCCESS);
         }
 
@@ -768,18 +796,16 @@ static int
 make_dir_path(const char * const run_dir)
 {
     struct stat     st;
-    int             res = 0, len = 0;
+    int             res = 0;
     char            tmp_path[MAX_PATH_LEN];
     char            *ndx;
 
     strlcpy(tmp_path, run_dir, sizeof(tmp_path));
 
-    len = strlen(tmp_path);
-
     /* Strip any trailing dir sep char.
     */
-    if(tmp_path[len-1] == PATH_SEP)
-        tmp_path[len-1] = '\0';
+    if(strlen(tmp_path) > 1)
+        chop_char(tmp_path, PATH_SEP);
 
     for(ndx = tmp_path+1; *ndx; ndx++)
     {

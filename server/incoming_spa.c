@@ -272,7 +272,7 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
 
 static int
 check_pkt_age(const fko_srv_options_t *opts, spa_data_t *spadat,
-        const int stanza_num, const int conf_pkt_age)
+        const int stanza_num)
 {
     int         ts_diff;
     time_t      now_ts;
@@ -283,7 +283,7 @@ check_pkt_age(const fko_srv_options_t *opts, spa_data_t *spadat,
 
         ts_diff = labs(now_ts - spadat->timestamp);
 
-        if(ts_diff > conf_pkt_age)
+        if(ts_diff > opts->max_spa_packet_age)
         {
             log_msg(LOG_WARNING, "[%s] (stanza #%d) SPA data time difference is too great (%i seconds).",
                 spadat->pkt_source_ip, stanza_num, ts_diff);
@@ -540,36 +540,22 @@ check_mode_ctx(spa_data_t *spadat, fko_ctx_t *ctx, int attempted_decrypt,
     return 1;
 }
 
-static int
+static void
 handle_rijndael_enc(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
         spa_data_t *spadat, fko_ctx_t *ctx, int *attempted_decrypt,
         int *cmd_exec_success, const int enc_type, const int stanza_num,
         int *res)
 {
-    if(acc->use_rijndael)
+    if(enc_type == FKO_ENCRYPTION_RIJNDAEL || acc->enable_cmd_exec)
     {
-        if(acc->key == NULL)
-        {
-            log_msg(LOG_ERR,
-                "[%s] (stanza #%d) No KEY for RIJNDAEL encrypted messages",
-                spadat->pkt_source_ip, stanza_num
-            );
-            return 0;
-        }
-
-        /* Command mode messages may be quite long
-        */
-        if(acc->enable_cmd_exec || enc_type == FKO_ENCRYPTION_RIJNDAEL)
-        {
-            *res = fko_new_with_data(ctx, (char *)spa_pkt->packet_data,
-                acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
-                acc->hmac_key_len, acc->hmac_type);
-            *attempted_decrypt = 1;
-            if(*res == FKO_SUCCESS)
-                *cmd_exec_success = 1;
-        }
+        *res = fko_new_with_data(ctx, (char *)spa_pkt->packet_data,
+            acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
+            acc->hmac_key_len, acc->hmac_type);
+        *attempted_decrypt = 1;
+        if(*res == FKO_SUCCESS)
+            *cmd_exec_success = 1;
     }
-    return 1;
+    return;
 }
 
 static int
@@ -794,37 +780,52 @@ static int
 check_nat_access_types(fko_srv_options_t *opts, acc_stanza_t *acc,
         spa_data_t *spadat, const int stanza_num)
 {
-    if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
-          || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
-          || spadat->message_type == FKO_NAT_ACCESS_MSG
+    int      unsupported=0, not_enabled=0;
+
+    if(spadat->message_type == FKO_NAT_ACCESS_MSG
           || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
     {
 #if FIREWALL_FIREWALLD
         if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_FORWARDING], "Y", 1)!=0)
-        {
-            log_msg(LOG_WARNING,
-                "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
-                stanza_num, spadat->pkt_source_ip
-            );
-            return 0;
-        }
+            not_enabled = 1;
 #elif FIREWALL_IPTABLES
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
-        {
-            log_msg(LOG_WARNING,
-                "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
-                stanza_num, spadat->pkt_source_ip
-            );
-            return 0;
-        }
+            not_enabled = 1;
 #else
+        unsupported = 1;
+#endif
+    }
+    else if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
+          || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
+    {
+#if FIREWALL_FIREWALLD
+        if(strncasecmp(opts->config[CONF_ENABLE_FIREWD_LOCAL_NAT], "Y", 1)!=0)
+            not_enabled = 1;
+#elif FIREWALL_IPTABLES
+        if(strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1)!=0)
+            not_enabled = 1;
+#else
+        unsupported = 1;
+#endif
+    }
+
+    if(not_enabled)
+    {
+        log_msg(LOG_WARNING,
+            "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
+            stanza_num, spadat->pkt_source_ip
+        );
+        return 0;
+    }
+    else if(unsupported)
+    {
         log_msg(LOG_WARNING,
             "(stanza #%d) SPA packet from %s requested unsupported NAT access",
             stanza_num, spadat->pkt_source_ip
         );
         return 0;
-#endif
     }
+
     return 1;
 }
 
@@ -889,8 +890,7 @@ incoming_spa(fko_srv_options_t *opts)
     char            *spa_ip_demark, *raw_digest = NULL;
     int             res, enc_type, stanza_num=0;
     int             added_replay_digest = 0;
-    int             is_err, cmd_exec_success = 0, attempted_decrypt = 0;
-    int             conf_pkt_age = 0;
+    int             cmd_exec_success = 0, attempted_decrypt = 0;
     char            dump_buf[CTX_DUMP_BUFSIZE];
 
     spa_pkt_info_t *spa_pkt = &(opts->spa_pkt);
@@ -915,17 +915,6 @@ incoming_spa(fko_srv_options_t *opts)
     */
     if(!precheck_pkt(opts, spa_pkt, &spadat, &raw_digest))
         return;
-
-    if(strncasecmp(opts->config[CONF_ENABLE_SPA_PACKET_AGING], "Y", 1) == 0)
-    {
-        conf_pkt_age = strtol_wrapper(opts->config[CONF_MAX_SPA_PACKET_AGE],
-                0, RCHK_MAX_SPA_PACKET_AGE, NO_EXIT_UPON_ERR, &is_err);
-        if(is_err != FKO_SUCCESS)
-        {
-            log_msg(LOG_ERR, "[*] [%s] invalid MAX_SPA_PACKET_AGE", spadat.pkt_source_ip);
-            return;
-        }
-    }
 
     /* Now that we know there is a matching access.conf stanza and the
      * incoming SPA packet is not a replay, see if we should grant any
@@ -977,13 +966,10 @@ incoming_spa(fko_srv_options_t *opts)
         */
         enc_type = fko_encryption_type((char *)spa_pkt->packet_data);
 
-        if(! handle_rijndael_enc(acc, spa_pkt, &spadat, &ctx,
-                    &attempted_decrypt, &cmd_exec_success, enc_type,
-                    stanza_num, &res))
-        {
-            acc = acc->next;
-            continue;
-        }
+        if(acc->use_rijndael)
+            handle_rijndael_enc(acc, spa_pkt, &spadat, &ctx,
+                        &attempted_decrypt, &cmd_exec_success, enc_type,
+                        stanza_num, &res);
 
         if(! handle_gpg_enc(acc, spa_pkt, &spadat, &ctx, &attempted_decrypt,
                     cmd_exec_success, enc_type, stanza_num, &res))
@@ -1054,7 +1040,7 @@ incoming_spa(fko_srv_options_t *opts)
 
         /* Check packet age if so configured.
         */
-        if(! check_pkt_age(opts, &spadat, stanza_num, conf_pkt_age))
+        if(! check_pkt_age(opts, &spadat, stanza_num))
         {
             acc = acc->next;
             continue;

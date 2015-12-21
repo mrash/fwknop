@@ -161,10 +161,6 @@ enum {
 #define MAX_KEY_LEN                 128
 #define MAX_B64_KEY_LEN             180
 
-/* Command line argument / argv handling
-*/
-#define MAX_CMDLINE_ARGS            30                  /*!< should be way more than enough */
-
 #if HAVE_LIBFIU
   #define MAX_FAULT_TAG_LEN 128
 #endif

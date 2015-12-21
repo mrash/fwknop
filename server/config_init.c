@@ -45,12 +45,12 @@
 /* Check to see if an integer variable has a value that is within a
  * specific range
 */
-static void
+static int
 range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
 {
-    int     is_err;
+    int     is_err, rv;
 
-    strtol_wrapper(val, low, high, NO_EXIT_UPON_ERR, &is_err);
+    rv = strtol_wrapper(val, low, high, NO_EXIT_UPON_ERR, &is_err);
     if(is_err != FKO_SUCCESS)
     {
         log_msg(LOG_ERR, "[*] var %s value '%s' not in the range %d-%d",
@@ -58,7 +58,7 @@ range_check(fko_srv_options_t *opts, char *var, char *val, int low, int high)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    return;
+    return rv;
 }
 
 /* Take an index and a string value. malloc the space for the value
@@ -143,20 +143,30 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     int     is_err = FKO_SUCCESS;
 #endif
 
-    range_check(opts, "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
-        1, RCHK_MAX_PCAP_LOOP_SLEEP);
-    range_check(opts, "MAX_SPA_PACKET_AGE", opts->config[CONF_MAX_SPA_PACKET_AGE],
-        1, RCHK_MAX_SPA_PACKET_AGE);
-    range_check(opts, "MAX_SNIFF_BYTES", opts->config[CONF_MAX_SNIFF_BYTES],
-        1, RCHK_MAX_SNIFF_BYTES);
-    range_check(opts, "RULES_CHECK_THRESHOLD", opts->config[CONF_RULES_CHECK_THRESHOLD],
-        0, RCHK_MAX_RULES_CHECK_THRESHOLD);
-    range_check(opts, "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
-        1, RCHK_MAX_TCPSERV_PORT);
-    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
-        1, RCHK_MAX_UDPSERV_PORT);
-    range_check(opts, "UDPSERV_PORT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
-        1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
+    opts->pcap_loop_sleep = range_check(opts,
+            "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
+            1, RCHK_MAX_PCAP_LOOP_SLEEP);
+    opts->pcap_dispatch_count = range_check(opts,
+            "PCAP_DISPATCH_COUNT", opts->config[CONF_PCAP_DISPATCH_COUNT],
+            1, RCHK_MAX_PCAP_DISPATCH_COUNT);
+    opts->max_spa_packet_age = range_check(opts,
+            "MAX_SPA_PACKET_AGE", opts->config[CONF_MAX_SPA_PACKET_AGE],
+            1, RCHK_MAX_SPA_PACKET_AGE);
+    opts->max_sniff_bytes = range_check(opts,
+            "MAX_SNIFF_BYTES", opts->config[CONF_MAX_SNIFF_BYTES],
+            1, RCHK_MAX_SNIFF_BYTES);
+    opts->rules_chk_threshold = range_check(opts,
+            "RULES_CHECK_THRESHOLD", opts->config[CONF_RULES_CHECK_THRESHOLD],
+            0, RCHK_MAX_RULES_CHECK_THRESHOLD);
+    opts->tcpserv_port = range_check(opts,
+            "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
+            1, RCHK_MAX_TCPSERV_PORT);
+    opts->udpserv_port = range_check(opts,
+            "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
+            1, RCHK_MAX_UDPSERV_PORT);
+    opts->udpserv_select_timeout = range_check(opts,
+            "UDPSERV_SELECT_TIMEOUT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
+            1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
 
 #if FIREWALL_IPFW
     range_check(opts, "IPFW_START_RULE_NUM", opts->config[CONF_IPFW_START_RULE_NUM],
@@ -1244,7 +1254,26 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
 #endif
                 break;
             case 'a':
-                set_config_entry(opts, CONF_ACCESS_FILE, optarg);
+                if (is_valid_file(optarg))
+                    set_config_entry(opts, CONF_ACCESS_FILE, optarg);
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] Invalid access.conf file path '%s'", optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
+                break;
+            case ACCESS_FOLDER:
+                chop_char(optarg, PATH_SEP);
+                if (is_valid_dir(optarg))
+                    set_config_entry(opts, CONF_ACCESS_FOLDER, optarg);
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] Invalid access folder directory '%s' could not lstat(), does not exist, or too large?",
+                        optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
                 break;
             case 'c':
                 /* This was handled earlier */
@@ -1277,6 +1306,10 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 opts->exit_after_parse_config = 1;
                 opts->foreground = 1;
                 break;
+            case EXIT_VALIDATE_DIGEST_CACHE:
+                opts->exit_parse_digest_cache = 1;
+                opts->foreground = 1;
+                break;
             case 'f':
                 opts->foreground = 1;
                 break;
@@ -1300,26 +1333,23 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case GPG_EXE_PATH:
                 if (is_valid_exe(optarg))
-                {
                     set_config_entry(opts, CONF_GPG_EXE, optarg);
-                }
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] gpg path '%s' could not stat()/not executable?",
+                        "[*] gpg path '%s' could not lstat()/not executable?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
                 break;
             case GPG_HOME_DIR:
+                chop_char(optarg, PATH_SEP);
                 if (is_valid_dir(optarg))
-                {
                     set_config_entry(opts, CONF_GPG_HOME_DIR, optarg);
-                }
                 else
                 {
                     log_msg(LOG_ERR,
-                        "[*] gpg home directory '%s' could not stat()/does not exist?",
+                        "[*] gpg home directory '%s' could not lstat(), does not exist, or too large?",
                         optarg);
                     clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
                 }
@@ -1354,7 +1384,14 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 set_config_entry(opts, CONF_PCAP_FILTER, optarg);
                 break;
             case PCAP_FILE:
-                set_config_entry(opts, CONF_PCAP_FILE, optarg);
+                if (is_valid_file(optarg))
+                    set_config_entry(opts, CONF_PCAP_FILE, optarg);
+                else
+                {
+                    log_msg(LOG_ERR,
+                        "[*] Invalid pcap file path '%s'", optarg);
+                    clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+                }
                 break;
             case ENABLE_PCAP_ANY_DIRECTION:
                 opts->pcap_any_direction = 1;
@@ -1373,9 +1410,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 break;
             case SUDO_EXE_PATH:
                 if (is_valid_exe(optarg))
-                {
                     set_config_entry(opts, CONF_SUDO_EXE, optarg);
-                }
                 else
                 {
                     log_msg(LOG_ERR,
@@ -1441,6 +1476,8 @@ usage(void)
     fprintf(stdout,
       "Usage: fwknopd [options]\n\n"
       " -a, --access-file       - Specify an alternate access.conf file.\n"
+      "     --access-folder     - Specify an access.conf folder.  All .conf\n"
+      "                           files in this folder will be processed.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -f, --foreground        - Run fwknopd in the foreground (do not become\n"
       "                           a background daemon).\n"
@@ -1483,6 +1520,7 @@ usage(void)
       " --dump-serv-err-codes   - List all server error codes (only needed by the\n"
       "                           test suite).\n"
       " --exit-parse-config     - Parse config files and exit.\n"
+      " --exit-parse-digest-cache - Parse and validate digest cache  and exit.\n"
       " --fault-injection-tag   - Enable a fault injection tag (only needed by the\n"
       "                           test suite).\n"
       " --pcap-file             - Read potential SPA packets from an existing pcap\n"

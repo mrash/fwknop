@@ -70,6 +70,7 @@ EXTRA_DIST = \
     extras/ramdisk/ramdisk-create-osx.sh \
     extras/console-qr/console-qr.sh \
     extras/sanitizer/asan-build.sh \
+    extras/sanitizer/ubsan-build.sh \
     fwknop.spec \
     iphone/main.m \
     iphone/Fwknop.xcodeproj \
@@ -121,6 +122,7 @@ EXTRA_DIST = \
     python/fkomodule.c \
     python/fko.py \
     test/conf/gpg_dirs.tar.gz \
+    test/conf/access-include.tar.gz \
     test/conf/hmac_android_access.conf \
     test/conf/hmac_android_fdroid_access.conf \
     test/conf/android_access.conf \
@@ -153,6 +155,13 @@ EXTRA_DIST = \
     test/conf/fuzzing_restrict_ports_access.conf \
     test/conf/fuzzing_source_access.conf \
     test/conf/hmac_fuzzing_access.conf \
+    test/conf/include1_hmac_access.conf \
+    test/conf/include2_hmac_access.conf \
+    test/conf/include3_hmac_access.conf \
+    test/conf/include_def_hmac_access.conf \
+    test/conf/include_m1_hmac_access.conf \
+    test/conf/include_r1_hmac_access.conf \
+    test/conf/include_r2_hmac_access.conf \
     test/conf/gpg_access.conf \
     test/conf/gpg_hmac_access.conf \
     test/conf/gpg_no_pw_access.conf \

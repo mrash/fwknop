@@ -152,7 +152,7 @@
   #define DEF_FLUSH_FIREWD_AT_INIT         "Y"
   #define DEF_FLUSH_FIREWD_AT_EXIT         "Y"
   #define DEF_ENABLE_FIREWD_FORWARDING     "N"
-  #define DEF_ENABLE_FIREWD_LOCAL_NAT      "Y"
+  #define DEF_ENABLE_FIREWD_LOCAL_NAT      "N"
   #define DEF_ENABLE_FIREWD_SNAT           "N"
   #define DEF_ENABLE_FIREWD_OUTPUT         "N"
   #define DEF_ENABLE_FIREWD_COMMENT_CHECK  "Y"
@@ -172,7 +172,7 @@
   #define DEF_FLUSH_IPT_AT_INIT         "Y"
   #define DEF_FLUSH_IPT_AT_EXIT         "Y"
   #define DEF_ENABLE_IPT_FORWARDING     "N"
-  #define DEF_ENABLE_IPT_LOCAL_NAT      "Y"
+  #define DEF_ENABLE_IPT_LOCAL_NAT      "N"
   #define DEF_ENABLE_IPT_SNAT           "N"
   #define DEF_ENABLE_IPT_OUTPUT         "N"
   #define DEF_ENABLE_IPT_COMMENT_CHECK  "Y"
@@ -328,6 +328,7 @@ enum {
     CONF_FWKNOP_RUN_DIR,
     CONF_FWKNOP_CONF_DIR,
     CONF_ACCESS_FILE,
+    CONF_ACCESS_FOLDER,
     CONF_FWKNOP_PID_FILE,
 #if USE_FILE_CACHE
     CONF_DIGEST_FILE,
@@ -638,6 +639,7 @@ typedef struct fko_srv_options
     unsigned char   fw_flush;           /* Flush current firewall rules */
     unsigned char   key_gen;            /* Generate keys and exit */
     unsigned char   exit_after_parse_config; /* Parse config and exit */
+    unsigned char   exit_parse_digest_cache; /* Parse digest cache and exit */
 
     /* Operational flags
     */
@@ -686,6 +688,18 @@ typedef struct fko_srv_options
      * indexed by their tag name.
     */
     char           *config[NUMBER_OF_CONFIG_ENTRIES];
+
+    /* Data elements that are derived from configuration entries - avoids
+     * calling strtol_wrapper() after the config is parsed.
+    */
+    unsigned short tcpserv_port;
+    unsigned short udpserv_port;
+    int            udpserv_select_timeout;
+    int            rules_chk_threshold;
+    int            pcap_loop_sleep;
+    int            pcap_dispatch_count;
+    int            max_sniff_bytes;
+    int            max_spa_packet_age;
 
     acc_stanza_t   *acc_stanzas;       /* List of access stanzas */
 

@@ -622,6 +622,164 @@ is_base64(const unsigned char * const buf, const unsigned short int len)
     return rv;
 }
 
+void
+chop_char(char *str, const char chop)
+{
+    if(str != NULL
+            && str[0] != 0x0
+            && strlen(str) > 1 /* don't truncate a single-char string */
+            && str[strlen(str)-1] == chop)
+        str[strlen(str)-1] = 0x0;
+    return;
+}
+
+void
+chop_newline(char *str)
+{
+    chop_char(str, 0x0a);
+    return;
+}
+
+void chop_spaces(char *str)
+{
+    int i;
+    if (str != NULL && str[0] != 0x0)
+    {
+        for (i=strlen(str)-1; i > 0; i--)
+        {
+            if(str[i] != 0x20)
+                break;
+            str[i] = 0x0;
+        }
+    }
+    return;
+}
+
+static int
+add_argv(char **argv_new, int *argc_new, const char *new_arg)
+{
+    int buf_size = 0;
+
+    buf_size = strlen(new_arg) + 1;
+    argv_new[*argc_new] = calloc(1, buf_size);
+
+    if(argv_new[*argc_new] == NULL)
+        return 0;
+
+    strlcpy(argv_new[*argc_new], new_arg, buf_size);
+
+    *argc_new += 1;
+
+    if(*argc_new >= MAX_CMDLINE_ARGS-1)
+        return 0;
+
+    argv_new[*argc_new] = NULL;
+
+    return 1;
+}
+
+int
+strtoargv(const char * const args_str, char **argv_new, int *argc_new)
+{
+    int       current_arg_ctr = 0, i;
+    char      arg_tmp[MAX_ARGS_LINE_LEN] = {0};
+
+    for (i=0; i < (int)strlen(args_str); i++)
+    {
+        if (!isspace(args_str[i]))
+        {
+            arg_tmp[current_arg_ctr] = args_str[i];
+            current_arg_ctr++;
+        }
+        else
+        {
+            if(current_arg_ctr > 0)
+            {
+                arg_tmp[current_arg_ctr] = '\0';
+                if (add_argv(argv_new, argc_new, arg_tmp) != 1)
+                {
+                    free_argv(argv_new, argc_new);
+                    return 0;
+                }
+                current_arg_ctr = 0;
+            }
+        }
+    }
+
+    /* pick up the last argument in the string
+    */
+    if(current_arg_ctr > 0)
+    {
+        arg_tmp[current_arg_ctr] = '\0';
+        if (add_argv(argv_new, argc_new, arg_tmp) != 1)
+        {
+            free_argv(argv_new, argc_new);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+void
+free_argv(char **argv_new, int *argc_new)
+{
+    int i;
+
+    if(argv_new == NULL || *argv_new == NULL)
+        return;
+
+    for (i=0; i < *argc_new; i++)
+    {
+        if(argv_new[i] == NULL)
+            break;
+        else
+            free(argv_new[i]);
+    }
+    return;
+}
+
+#define ASCII_LEN 16
+
+/* Generic hex dump function.
+*/
+void
+hex_dump(const unsigned char *data, const int size)
+{
+    int ln=0, i=0, j=0;
+    char ascii_str[ASCII_LEN+1] = {0};
+
+    for(i=0; i<size; i++)
+    {
+        if((i % ASCII_LEN) == 0)
+        {
+            printf(" %s\n  0x%.4x:  ", ascii_str, i);
+            memset(ascii_str, 0x0, ASCII_LEN-1);
+            j = 0;
+        }
+
+        printf("%.2x ", data[i]);
+
+        ascii_str[j++] = (data[i] < 0x20 || data[i] > 0x7e) ? '.' : data[i];
+
+        if(j == 8)
+            printf(" ");
+    }
+
+    /* Remainder...
+    */
+    ln = strlen(ascii_str);
+    if(ln > 0)
+    {
+        for(i=0; i < ASCII_LEN-ln; i++)
+            printf("   ");
+        if(ln < 8)
+            printf(" ");
+
+        printf(" %s\n\n", ascii_str);
+    }
+    return;
+}
+
 /**
  * @brief Dump a FKO context to a buffer
  *

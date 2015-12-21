@@ -70,6 +70,26 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_positive_output_matches' => [qr/Timer expired/],
     },
+        {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cmd open/close cycle server -C',
+        'function' => \&spa_cmd_open_close_exec_cycle,
+        'cmdline'  => "$default_client_hmac_args --fw-timeout 30 " .
+            " && $default_client_hmac_args --fw-timeout 30 " .
+            " && $default_client_hmac_args --fw-timeout 30 " .
+            " && $default_client_hmac_args --fw-timeout 30 ",
+        'fwknopd_cmdline' => "$fwknopdCmd -C 3 -c $cf{'def'} " .
+            "-a $cf{'hmac_cmd_open_close_cycle_access5'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'expect_server_stopped' => $YES,
+        'weak_server_receive_check' => $YES,
+        'ignore_client_error' => $YES,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_output_matches' => [qr/Incoming packet count limit/],
+    },
+
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',

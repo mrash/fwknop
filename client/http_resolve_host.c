@@ -412,7 +412,7 @@ resolve_ip_https(fko_cli_options_t *options)
 #endif
 
 #if HAVE_EXECVPE
-    if(strtoargv(wget_ssl_cmd, wget_argv, &wget_argc, options) != 1)
+    if(strtoargv(wget_ssl_cmd, wget_argv, &wget_argc) != 1)
     {
         log_msg(LOG_VERBOSITY_ERROR, "Error converting wget cmd str to argv");
         return(-1);

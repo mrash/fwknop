@@ -291,7 +291,8 @@ add_var_to_bitmask(short var_pos, fko_var_bitmask_t *bm)
 
     /* The index on the uint32_t bitmask is invalid */
     else
-        log_msg(LOG_VERBOSITY_WARNING, "add_var_to_bitmask() : Bad variable position %u", var_pos);
+        log_msg(LOG_VERBOSITY_WARNING,
+                "add_var_to_bitmask() : Bad variable position %u", var_pos);
 }
 
 /**
@@ -317,7 +318,8 @@ remove_var_from_bitmask(short var_pos, fko_var_bitmask_t *bm)
 
     /* The index on the uint32_t bitmask is invalid */
     else
-        log_msg(LOG_VERBOSITY_WARNING, "remove_from_bitmask() : Bad variable position %u", var_pos);
+        log_msg(LOG_VERBOSITY_WARNING,
+                "remove_from_bitmask() : Bad variable position %u", var_pos);
 }
 
 /**
@@ -1462,12 +1464,15 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             bool_to_yesno(options->no_save_args, val, sizeof(val));
             break;
         default:
-            log_msg(LOG_VERBOSITY_WARNING, "Warning from add_single_var_to_rc() : Bad variable position %u", var->pos);
+            log_msg(LOG_VERBOSITY_WARNING,
+                    "Warning from add_single_var_to_rc() : Bad variable position %u",
+                    var->pos);
             return;
     }
 
-    log_msg(LOG_VERBOSITY_DEBUG, "add_single_var_to_rc() : Updating param (%u) %s to %s",
-                var->pos, var->name, val);
+    log_msg(LOG_VERBOSITY_DEBUG,
+            "add_single_var_to_rc() : Updating param (%u) %s to %s",
+            var->pos, var->name, val);
 
     fprintf(fhandle, RC_PARAM_TEMPLATE, var->name, val);
 }
@@ -2343,6 +2348,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case GPG_HOME_DIR:
                 options->use_gpg = 1;
                 strlcpy(options->gpg_home_dir, optarg, sizeof(options->gpg_home_dir));
+                chop_char(options->gpg_home_dir, PATH_SEP);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_USE_GPG, &var_bitmask);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_GPG_HOMEDIR, &var_bitmask);
                 break;
