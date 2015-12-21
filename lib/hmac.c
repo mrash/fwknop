@@ -320,10 +320,16 @@ hmac_sha384_init(hmac_sha384_ctx *ctx, const char *key, const int key_len)
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
-    /* When we eventually support arbitrary key sizes, take the digest
-     * of the key with: sha384(final_key, init_key, final_len);
-    */
-    memcpy(final_key, key, final_len);
+    if(SHA384_BLOCK_LEN < key_len)
+    {
+        /* Calculate the digest of the key
+        */
+        sha384(final_key, (unsigned char *)key, final_len);
+    }
+    else
+    {
+        memcpy(final_key, key, key_len);
+    }
 
     pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
@@ -382,10 +388,17 @@ hmac_sha512_init(hmac_sha512_ctx *ctx, const char *key, const int key_len)
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
-    /* When we eventually support arbitrary key sizes, take the digest
-     * of the key with: sha512(final_key, init_key, final_len);
-    */
-    memcpy(final_key, key, final_len);
+    if(SHA512_BLOCK_LEN < key_len)
+    {
+        /* Calculate the digest of the key
+        */
+        sha512(final_key, (unsigned char *)key, final_len);
+        final_len = SHA512_DIGEST_LEN;
+    }
+    else
+    {
+        memcpy(final_key, key, key_len);
+    }
 
     pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
