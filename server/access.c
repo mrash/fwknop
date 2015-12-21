@@ -1372,8 +1372,7 @@ parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
     char            include_file[MAX_PATH_LEN] = {0};
     struct dirent  *dp;
 
-    if(strlen(access_folder) > 1)
-        chop_char(access_folder, PATH_SEP);
+    chop_char(access_folder, PATH_SEP);
 
     dir_ptr = opendir(access_folder);
 
