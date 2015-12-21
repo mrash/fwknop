@@ -901,6 +901,51 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_TCPSERV_PORT] == NULL)
         set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
 
+#if USE_LIBNETFILTER_QUEUE
+    /* Enable NFQ Capture
+    */
+    if(opts->config[CONF_ENABLE_NFQ_CAPTURE] == NULL)
+    {
+        if((strncasecmp(DEF_ENABLE_NFQ_CAPTURE, "Y", 1) == 0) &&
+                !opts->enable_nfq_capture)
+        {
+            opts->enable_nfq_capture = 1;
+        }
+        set_config_entry(opts, CONF_ENABLE_NFQ_CAPTURE, DEF_ENABLE_NFQ_CAPTURE);
+    }
+
+    /* NFQ Interface
+    */
+    if(opts->config[CONF_NFQ_INTERFACE] == NULL)
+        set_config_entry(opts, CONF_NFQ_INTERFACE, DEF_NFQ_INTERFACE);
+
+    /* NFQ port.
+    */
+    if(opts->config[CONF_NFQ_PORT] == NULL)
+        set_config_entry(opts, CONF_NFQ_PORT, DEF_NFQ_PORT);
+
+    /* NFQ Queue Number
+    */
+    if(opts->config[CONF_NFQ_QUEUE_NUMBER] == NULL)
+        set_config_entry(opts, CONF_NFQ_QUEUE_NUMBER,
+            DEF_NFQ_QUEUE_NUMBER);
+
+    /* NFQ Chain
+    */
+    if(opts->config[CONF_NFQ_CHAIN] == NULL)
+        set_config_entry(opts, CONF_NFQ_CHAIN, DEF_NFQ_CHAIN);
+
+    /* NFQ Table
+    */
+    if(opts->config[CONF_NFQ_TABLE] == NULL)
+        set_config_entry(opts, CONF_NFQ_TABLE, DEF_NFQ_TABLE);
+
+    /* NFQ loop delay
+    */
+    if(opts->config[CONF_NFQ_LOOP_SLEEP] == NULL)
+        set_config_entry(opts, CONF_NFQ_LOOP_SLEEP, DEF_CONF_NFQ_LOOP_SLEEP);
+#endif
+
     /* Enable UDP server.
     */
     if(opts->config[CONF_ENABLE_UDP_SERVER] == NULL)
@@ -1409,6 +1454,10 @@ usage(void)
       " -K, --kill              - Kill the currently running fwknopd.\n"
       " -l, --locale            - Provide a locale setting other than the system\n"
       "                           default.\n"
+#if USE_LIBNETFILTER_QUEUE
+      " -n, --nfq-capture       - Capture packets using libnetfilter_queue (falls\n"
+      "                           back to UDP server mode if not used).\n"
+#endif
       " -O, --override-config   - Specify a file with configuration entries that will\n"
       "                           overide those in fwknopd.conf\n"
       " -p, --pid-file          - Specify an alternate fwknopd.pid file.\n"

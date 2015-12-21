@@ -255,9 +255,8 @@ main(int argc, char **argv)
 #if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
-        if(!opts.enable_udp_server && !opts.enable_nfq_server
-                && strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0
-                && strncasecmp(opts.config[CONF_ENABLE_NFQ_SERVER], "N", 1) == 0)
+        if(!opts.enable_udp_server
+            && strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
         {
             pcap_capture(&opts);
         }

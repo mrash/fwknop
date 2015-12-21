@@ -711,11 +711,12 @@ delete_all_chains(const fko_srv_options_t * const opts)
             */
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
                 fwc.fw_command,
-                NFQ_TABLE,
+                opts->config[CONF_NFQ_TABLE],
                 "INPUT",
                 1
             );
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
+                NO_TIMEOUT, &pid_status, opts);
 
             if (opts->verbose)
                 log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
@@ -731,10 +732,11 @@ delete_all_chains(const fko_srv_options_t * const opts)
             */
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
                 fwc.fw_command,
-                NFQ_TABLE,
-                NFQ_CHAIN
+                opts->config[CONF_NFQ_TABLE],
+                opts->config[CONF_NFQ_CHAIN]
             );
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
+                NO_TIMEOUT, &pid_status, opts);
 
             if (opts->verbose)
                 log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
@@ -746,14 +748,15 @@ delete_all_chains(const fko_srv_options_t * const opts)
 
             zero_cmd_buffers();
 
-            /* Create the NF_QUEUE chains and rules
+            /* Delete the NF_QUEUE chains and rules
             */
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
                 fwc.fw_command,
-                NFQ_TABLE,
-                NFQ_CHAIN
+                opts->config[CONF_NFQ_TABLE],
+                opts->config[CONF_NFQ_CHAIN]
             );
-            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+            res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
+                NO_TIMEOUT, &pid_status, opts);
 
             if (opts->verbose)
                 log_msg(LOG_INFO, "delete_all_chains() CMD: '%s' (res: %d, err: %s)",
@@ -841,10 +844,11 @@ create_fw_chains(const fko_srv_options_t * const opts)
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
             fwc.fw_command,
-            NFQ_TABLE,
-            NFQ_CHAIN
+            opts->config[CONF_NFQ_TABLE],
+            opts->config[CONF_NFQ_CHAIN]
         );
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
+                         NO_TIMEOUT, &pid_status, opts);
 
         if (opts->verbose)
             log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",
@@ -863,12 +867,13 @@ create_fw_chains(const fko_srv_options_t * const opts)
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
             fwc.fw_command,
-            NFQ_TABLE,
+            opts->config[CONF_NFQ_TABLE],
             "INPUT",
             1,
-            NFQ_CHAIN
+            opts->config[CONF_NFQ_CHAIN]
         );
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
+                         NO_TIMEOUT, &pid_status, opts);
 
         if (opts->verbose)
             log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",
@@ -884,15 +889,32 @@ create_fw_chains(const fko_srv_options_t * const opts)
         zero_cmd_buffers();
 
         /* Create the rule to direct SPA packets to the queue.
+         * If an interface is specified use the "_WITH_IF" version
+         * of the command.
         */
-        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_NFQ_ADD_ARGS,
-            fwc.fw_command,
-            NFQ_TABLE,
-            NFQ_CHAIN,
-            NFQ_PORT,
-            NFQ_QUEUE_NUM
-        );
-        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, 0);
+        if(strlen(opts->config[CONF_NFQ_INTERFACE]) > 0)
+        {
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_NFQ_ADD_ARGS_WITH_IF,
+                fwc.fw_command,
+                opts->config[CONF_NFQ_TABLE],
+                opts->config[CONF_NFQ_CHAIN],
+                opts->config[CONF_NFQ_INTERFACE],
+                opts->config[CONF_NFQ_PORT],
+                opts->config[CONF_NFQ_QUEUE_NUMBER]
+            );
+        }
+        else
+        {
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " FIREWD_NFQ_ADD_ARGS,
+                fwc.fw_command,
+                opts->config[CONF_NFQ_TABLE],
+                opts->config[CONF_NFQ_CHAIN],
+                opts->config[CONF_NFQ_PORT],
+                opts->config[CONF_NFQ_QUEUE_NUMBER]
+            );
+        }
+        res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
+                         NO_TIMEOUT, &pid_status, opts);
 
         if (opts->verbose)
             log_msg(LOG_INFO, "create_fw_chains() CMD: '%s' (res: %d, err: %s)",

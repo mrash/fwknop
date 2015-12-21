@@ -113,6 +113,16 @@
 #else
   #define DEF_ENABLE_UDP_SERVER           "Y"
 #endif
+#if USE_LIBNETFILTER_QUEUE
+  #define DEF_ENABLE_NFQ_CAPTURE          "N"
+  #define DEF_NFQ_INTERFACE               ""
+  #define DEF_NFQ_PORT                    "62201"
+  #define DEF_NFQ_TABLE                   "mangle"
+  #define DEF_NFQ_CHAIN                   "FWKNOP_NFQ"
+  #define DEF_NFQ_QUEUE_NUMBER            "1"
+  #define DEF_CONF_NFQ_LOOP_SLEEP         "500000" /* half a second (in microseconds) */
+
+#endif
 #define DEF_UDPSERV_PORT                "62201"
 #define DEF_UDPSERV_SELECT_TIMEOUT      "500000" /* half a second (in microseconds) */
 #define DEF_SYSLOG_IDENTITY             MY_NAME
@@ -250,6 +260,15 @@ enum {
     CONF_ENABLE_UDP_SERVER,
     CONF_UDPSERV_PORT,
     CONF_UDPSERV_SELECT_TIMEOUT,
+#if USE_LIBNETFILTER_QUEUE
+    CONF_ENABLE_NFQ_CAPTURE,
+    CONF_NFQ_INTERFACE,
+    CONF_NFQ_PORT,
+    CONF_NFQ_TABLE,
+    CONF_NFQ_CHAIN,
+    CONF_NFQ_QUEUE_NUMBER,
+    CONF_NFQ_LOOP_SLEEP,
+#endif
     CONF_LOCALE,
     CONF_SYSLOG_IDENTITY,
     CONF_SYSLOG_FACILITY,
@@ -436,13 +455,6 @@ typedef struct cmd_cycle_list
     int                     stanza_num;
     struct cmd_cycle_list  *next;
 } cmd_cycle_list_t;
-
-#if USE_LIBNETFILTER_QUEUE
-  #define NFQ_TABLE "mangle"
-  #define NFQ_CHAIN "FWKNOP_NFQ"
-  #define NFQ_QUEUE_NUM 1
-  #define NFQ_PORT 62201
-#endif
 
 /* Firewall-related data and types. */
 
@@ -633,6 +645,7 @@ typedef struct fko_srv_options
     unsigned char   afl_fuzzing;        /* SPA pkts from stdin for AFL fuzzing */
     unsigned char   verbose;            /* Verbose mode flag */
     unsigned char   enable_udp_server;  /* Enable UDP server mode */
+    unsigned char   enable_nfq_capture; /* Enable Netfilter Queue capture mode */
     unsigned char   enable_fw;          /* Command modes by themselves don't
                                            need firewall support. */
 

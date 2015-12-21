@@ -30,7 +30,7 @@ if WANT_C_UNIT_TESTS
     fwknopd_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
 
 if NFQ_CAPTURE
-    fwknop_utests_LDFLAGS += -lnetfilter_queue
+    fwknopd_utests_LDFLAGS += -lnetfilter_queue
 else
 if !UDP_SERVER
     fwknopd_utests_LDFLAGS += -lpcap
@@ -40,7 +40,7 @@ endif
 endif
 
 if NFQ_CAPTURE
-    fwknop_LDADD += -lnetfilter_queue
+    fwknopd_LDADD += -lnetfilter_queue
 else
 if !UDP_SERVER
     fwknopd_LDADD += -lpcap

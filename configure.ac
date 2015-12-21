@@ -242,8 +242,8 @@ AM_CONDITIONAL([UDP_SERVER], [test "$want_udp_server" = yes])
 dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
 dnl
 want_nfq_capture=no
-AC_ARG_ENABLE([nfq-server],
-  [AS_HELP_STRING([--enable-nfq-server],
+AC_ARG_ENABLE([nfq-capture],
+  [AS_HELP_STRING([--enable-nfq-capture],
     [Enable NF_QUEUE server mode for no libpcap dependency @<:@default is to disable@:>@])],
   [want_nfq_capture=$enableval],
   [])

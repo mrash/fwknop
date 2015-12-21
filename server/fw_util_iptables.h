@@ -66,8 +66,8 @@
 #define IPT_ANY_IP              "0.0.0.0/0"
 
 #if USE_LIBNETFILTER_QUEUE
-  #define IPT_NFQ_ADD_ARGS "-t %s -A %s -p udp -m udp --dport %i -j NFQUEUE --queue-num %i"
-  #define IPT_NFQ_DEL_ARGS "-t %s -D %s -p udp -m udp --dport %i -j NFQUEUE --queue-num %i"
+  #define IPT_NFQ_ADD_ARGS "-t %s -A %s -p udp -m udp --dport %s -j NFQUEUE --queue-num %s"
+  #define IPT_NFQ_ADD_ARGS_WITH_IF "-t %s -A %s -i %s -p udp -m udp --dport %s -j NFQUEUE --queue-num %s"
 #endif
 
 int validate_ipt_chain_conf(const char * const chain_str);
