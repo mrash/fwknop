@@ -780,7 +780,7 @@ static int
 check_nat_access_types(fko_srv_options_t *opts, acc_stanza_t *acc,
         spa_data_t *spadat, const int stanza_num)
 {
-    int      unsupported=0, not_enabled=0;
+    int      not_enabled=0;
 
     if(spadat->message_type == FKO_NAT_ACCESS_MSG
           || spadat->message_type == FKO_CLIENT_TIMEOUT_NAT_ACCESS_MSG)
@@ -791,8 +791,6 @@ check_nat_access_types(fko_srv_options_t *opts, acc_stanza_t *acc,
 #elif FIREWALL_IPTABLES
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_FORWARDING], "Y", 1)!=0)
             not_enabled = 1;
-#else
-        unsupported = 1;
 #endif
     }
     else if(spadat->message_type == FKO_LOCAL_NAT_ACCESS_MSG
@@ -804,28 +802,17 @@ check_nat_access_types(fko_srv_options_t *opts, acc_stanza_t *acc,
 #elif FIREWALL_IPTABLES
         if(strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1)!=0)
             not_enabled = 1;
-#else
-        unsupported = 1;
 #endif
     }
 
     if(not_enabled)
     {
         log_msg(LOG_WARNING,
-            "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled",
+            "(stanza #%d) SPA packet from %s requested NAT access, but is not enabled/supported",
             stanza_num, spadat->pkt_source_ip
         );
         return 0;
     }
-    else if(unsupported)
-    {
-        log_msg(LOG_WARNING,
-            "(stanza #%d) SPA packet from %s requested unsupported NAT access",
-            stanza_num, spadat->pkt_source_ip
-        );
-        return 0;
-    }
-
     return 1;
 }
 
