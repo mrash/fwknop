@@ -49,6 +49,10 @@
   #endif
 #endif
 
+#ifdef HAVE_C_UNIT_TESTS
+DECLARE_TEST_SUITE(digest_test, "Cipher functions test suite");
+#endif
+
 /* Get random data.
 */
 void
@@ -414,4 +418,247 @@ add_gpg_prefix(fko_ctx_t ctx)
     return(FKO_SUCCESS);
 }
 
+#ifdef HAVE_C_UNIT_TESTS
+
+
+
+DECLARE_UTEST(test_aes_ecb_128, "aes ecb 128 test vectors") //http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors#aes-cbc-128
+{
+    RIJNDAEL_context    ctx;
+    unsigned char in[1024] = {0};
+    unsigned char out[1024] = {0};
+    unsigned char expected_out1[1024] = {0};
+    unsigned char expected_out2[1024] = {0};
+    unsigned char expected_out3[1024] = {0};
+    unsigned char expected_out4[1024] = {0};
+
+    memcpy(expected_out1, "\x3a\xd7\x7b\xb4\x0d\x7a\x36\x60\xa8\x9e\xca\xf3\x24\x66\xef\x97", 16);
+    memcpy(expected_out2, "\xf5\xd3\xd5\x85\x03\xb9\x69\x9d\xe7\x85\x89\x5a\x96\xfd\xba\xaf", 16);
+    memcpy(expected_out3, "\x43\xb1\xcd\x7f\x59\x8e\xce\x23\x88\x1b\x00\xe3\xed\x03\x06\x88", 16);
+    memcpy(expected_out4, "\x7b\x0c\x78\x5e\x27\xe8\xad\x3f\x82\x23\x20\x71\x04\x72\x5d\xd4", 16);
+    memcpy(ctx.key, "\x2b\x7e\x15\x16\x28\xae\xd2\xa6\xab\xf7\x15\x88\x09\xcf\x4f\x3c", 16);
+    rijndael_setup(&ctx, 16, ctx.key);
+
+    memcpy(in, "\x6b\xc1\xbe\xe2\x2e\x40\x9f\x96\xe9\x3d\x7e\x11\x73\x93\x17\x2a", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out1, 16) == 0);
+
+    memcpy(in, "\xae\x2d\x8a\x57\x1e\x03\xac\x9c\x9e\xb7\x6f\xac\x45\xaf\x8e\x51", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out2, 16) == 0);
+
+    memcpy(in, "\x30\xc8\x1c\x46\xa3\x5c\xe4\x11\xe5\xfb\xc1\x19\x1a\x0a\x52\xef", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out3, 16) == 0);
+
+    memcpy(in, "\xf6\x9f\x24\x45\xdf\x4f\x9b\x17\xad\x2b\x41\x7b\xe6\x6c\x37\x10", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out4, 16) == 0);
+
+}
+DECLARE_UTEST(test_aes_ecb_192, "aes ecb 192 test vectors") //http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors#aes-cbc-128
+{
+    RIJNDAEL_context    ctx;
+    unsigned char in[1024] = {0};
+    unsigned char out[1024] = {0};
+    unsigned char expected_out1[1024] = {0};
+    unsigned char expected_out2[1024] = {0};
+    unsigned char expected_out3[1024] = {0};
+    unsigned char expected_out4[1024] = {0};
+
+    memcpy(expected_out1, "\xbd\x33\x4f\x1d\x6e\x45\xf2\x5f\xf7\x12\xa2\x14\x57\x1f\xa5\xcc", 16);
+    memcpy(expected_out2, "\x97\x41\x04\x84\x6d\x0a\xd3\xad\x77\x34\xec\xb3\xec\xee\x4e\xef", 16);
+    memcpy(expected_out3, "\xef\x7a\xfd\x22\x70\xe2\xe6\x0a\xdc\xe0\xba\x2f\xac\xe6\x44\x4e", 16);
+    memcpy(expected_out4, "\x9a\x4b\x41\xba\x73\x8d\x6c\x72\xfb\x16\x69\x16\x03\xc1\x8e\x0e", 16);
+    memcpy(ctx.key, "\x8e\x73\xb0\xf7\xda\x0e\x64\x52\xc8\x10\xf3\x2b\x80\x90\x79\xe5\x62\xf8\xea\xd2\x52\x2c\x6b\x7b", 24);
+    rijndael_setup(&ctx, 24, ctx.key);
+
+    memcpy(in, "\x6b\xc1\xbe\xe2\x2e\x40\x9f\x96\xe9\x3d\x7e\x11\x73\x93\x17\x2a", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out1, 16) == 0);
+
+    memcpy(in, "\xae\x2d\x8a\x57\x1e\x03\xac\x9c\x9e\xb7\x6f\xac\x45\xaf\x8e\x51", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out2, 16) == 0);
+
+    memcpy(in, "\x30\xc8\x1c\x46\xa3\x5c\xe4\x11\xe5\xfb\xc1\x19\x1a\x0a\x52\xef", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out3, 16) == 0);
+
+    memcpy(in, "\xf6\x9f\x24\x45\xdf\x4f\x9b\x17\xad\x2b\x41\x7b\xe6\x6c\x37\x10", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out4, 16) == 0);
+
+}
+DECLARE_UTEST(test_aes_ecb_256, "aes ecb 256 test vectors") //http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors#aes-cbc-128
+{
+    RIJNDAEL_context    ctx;
+    unsigned char in[1024] = {0};
+    unsigned char out[1024] = {0};
+    unsigned char expected_out1[1024] = {0};
+    unsigned char expected_out2[1024] = {0};
+    unsigned char expected_out3[1024] = {0};
+    unsigned char expected_out4[1024] = {0};
+
+    memcpy(expected_out1, "\xf3\xee\xd1\xbd\xb5\xd2\xa0\x3c\x06\x4b\x5a\x7e\x3d\xb1\x81\xf8", 16);
+    memcpy(expected_out2, "\x59\x1c\xcb\x10\xd4\x10\xed\x26\xdc\x5b\xa7\x4a\x31\x36\x28\x70", 16);
+    memcpy(expected_out3, "\xb6\xed\x21\xb9\x9c\xa6\xf4\xf9\xf1\x53\xe7\xb1\xbe\xaf\xed\x1d", 16);
+    memcpy(expected_out4, "\x23\x30\x4b\x7a\x39\xf9\xf3\xff\x06\x7d\x8d\x8f\x9e\x24\xec\xc7", 16);
+    memcpy(ctx.key, "\x60\x3d\xeb\x10\x15\xca\x71\xbe\x2b\x73\xae\xf0\x85\x7d\x77\x81\x1f\x35\x2c\x07\x3b\x61\x08\xd7\x2d\x98\x10\xa3\x09\x14\xdf\xf4", 32);
+    rijndael_setup(&ctx, 32, ctx.key);
+
+    memcpy(in, "\x6b\xc1\xbe\xe2\x2e\x40\x9f\x96\xe9\x3d\x7e\x11\x73\x93\x17\x2a", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out1, 16) == 0);
+
+    memcpy(in, "\xae\x2d\x8a\x57\x1e\x03\xac\x9c\x9e\xb7\x6f\xac\x45\xaf\x8e\x51", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out2, 16) == 0);
+
+    memcpy(in, "\x30\xc8\x1c\x46\xa3\x5c\xe4\x11\xe5\xfb\xc1\x19\x1a\x0a\x52\xef", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out3, 16) == 0);
+
+    memcpy(in, "\xf6\x9f\x24\x45\xdf\x4f\x9b\x17\xad\x2b\x41\x7b\xe6\x6c\x37\x10", 16);
+    rijndael_encrypt(&ctx, in, out);
+    CU_ASSERT(memcmp(out, expected_out4, 16) == 0);
+
+}
+
+DECLARE_UTEST(test_aes_cbc_128, "aes cbc 128 test vectors") //http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors#aes-cbc-128
+{  //would like to test rij_encrypt against known test vectors, but the method of generating the key and iv make this impossible.
+    RIJNDAEL_context    ctx;
+    unsigned char in[1024] = {0};
+    unsigned char out[1024] = {0};
+    unsigned char expected_out1[1024] = {0};
+    unsigned char expected_out2[1024] = {0};
+    unsigned char expected_out3[1024] = {0};
+    unsigned char expected_out4[1024] = {0};
+
+    memcpy(ctx.key, "\x2b\x7e\x15\x16\x28\xae\xd2\xa6\xab\xf7\x15\x88\x09\xcf\x4f\x3c", 16);
+    memcpy(expected_out1, "\x76\x49\xab\xac\x81\x19\xb2\x46\xce\xe9\x8e\x9b\x12\xe9\x19\x7d", 16);
+    memcpy(expected_out2, "\x50\x86\xcb\x9b\x50\x72\x19\xee\x95\xdb\x11\x3a\x91\x76\x78\xb2", 16);
+    memcpy(expected_out3, "\x73\xbe\xd6\xb8\xe3\xc1\x74\x3b\x71\x16\xe6\x9e\x22\x22\x95\x16", 16);
+    memcpy(expected_out4, "\x3f\xf1\xca\xa1\x68\x1f\xac\x09\x12\x0e\xca\x30\x75\x86\xe1\xa7", 16);
+    ctx.mode = MODE_CBC;
+    rijndael_setup(&ctx, 16, ctx.key);
+
+    memcpy(ctx.iv, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F", 16);
+    memcpy(in, "\x6b\xc1\xbe\xe2\x2e\x40\x9f\x96\xe9\x3d\x7e\x11\x73\x93\x17\x2a", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out1, 16) == 0);
+
+    memcpy(ctx.iv, "\x76\x49\xAB\xAC\x81\x19\xB2\x46\xCE\xE9\x8E\x9B\x12\xE9\x19\x7D", 16);
+    memcpy(in, "\xae\x2d\x8a\x57\x1e\x03\xac\x9c\x9e\xb7\x6f\xac\x45\xaf\x8e\x51", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out2, 16) == 0);
+
+    memcpy(ctx.iv, "\x50\x86\xCB\x9B\x50\x72\x19\xEE\x95\xDB\x11\x3A\x91\x76\x78\xB2", 16);
+    memcpy(in, "\x30\xc8\x1c\x46\xa3\x5c\xe4\x11\xe5\xfb\xc1\x19\x1a\x0a\x52\xef", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out3, 16) == 0);
+
+    memcpy(ctx.iv, "\x73\xBE\xD6\xB8\xE3\xC1\x74\x3B\x71\x16\xE6\x9E\x22\x22\x95\x16", 16);
+    memcpy(in, "\xf6\x9f\x24\x45\xdf\x4f\x9b\x17\xad\x2b\x41\x7b\xe6\x6c\x37\x10", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out4, 16) == 0);
+
+
+}
+
+DECLARE_UTEST(test_aes_cbc_192, "aes cbc 192 test vectors") //http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors#aes-cbc-128
+{  //would like to test rij_encrypt against known test vectors, but the method of generating the key and iv make this impossible.
+    RIJNDAEL_context    ctx;
+    unsigned char in[1024] = {0};
+    unsigned char out[1024] = {0};
+    unsigned char expected_out1[1024] = {0};
+    unsigned char expected_out2[1024] = {0};
+    unsigned char expected_out3[1024] = {0};
+    unsigned char expected_out4[1024] = {0};
+
+    memcpy(ctx.key, "\x8e\x73\xb0\xf7\xda\x0e\x64\x52\xc8\x10\xf3\x2b\x80\x90\x79\xe5\x62\xf8\xea\xd2\x52\x2c\x6b\x7b", 24);
+    memcpy(expected_out1, "\x4f\x02\x1d\xb2\x43\xbc\x63\x3d\x71\x78\x18\x3a\x9f\xa0\x71\xe8", 16);
+    memcpy(expected_out2, "\xb4\xd9\xad\xa9\xad\x7d\xed\xf4\xe5\xe7\x38\x76\x3f\x69\x14\x5a", 16);
+    memcpy(expected_out3, "\x57\x1b\x24\x20\x12\xfb\x7a\xe0\x7f\xa9\xba\xac\x3d\xf1\x02\xe0", 16);
+    memcpy(expected_out4, "\x08\xb0\xe2\x79\x88\x59\x88\x81\xd9\x20\xa9\xe6\x4f\x56\x15\xcd", 16);
+    ctx.mode = MODE_CBC;
+    rijndael_setup(&ctx, 24, ctx.key);
+
+    memcpy(ctx.iv, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F", 16);
+    memcpy(in, "\x6b\xc1\xbe\xe2\x2e\x40\x9f\x96\xe9\x3d\x7e\x11\x73\x93\x17\x2a", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out1, 16) == 0);
+
+    memcpy(ctx.iv, out, 16);
+    memcpy(in, "\xae\x2d\x8a\x57\x1e\x03\xac\x9c\x9e\xb7\x6f\xac\x45\xaf\x8e\x51", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out2, 16) == 0);
+
+    memcpy(ctx.iv, out, 16);
+    memcpy(in, "\x30\xc8\x1c\x46\xa3\x5c\xe4\x11\xe5\xfb\xc1\x19\x1a\x0a\x52\xef", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out3, 16) == 0);
+
+    memcpy(ctx.iv, out, 16);
+    memcpy(in, "\xf6\x9f\x24\x45\xdf\x4f\x9b\x17\xad\x2b\x41\x7b\xe6\x6c\x37\x10", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out4, 16) == 0);
+
+
+}
+
+DECLARE_UTEST(test_aes_cbc_256, "aes cbc 256 test vectors") //http://www.inconteam.com/software-development/41-encryption/55-aes-test-vectors#aes-cbc-128
+{  //would like to test rij_encrypt against known test vectors, but the method of generating the key and iv make this impossible.
+    RIJNDAEL_context    ctx;
+    unsigned char in[1024] = {0};
+    unsigned char out[1024] = {0};
+    unsigned char expected_out1[1024] = {0};
+    unsigned char expected_out2[1024] = {0};
+    unsigned char expected_out3[1024] = {0};
+    unsigned char expected_out4[1024] = {0};
+
+    memcpy(ctx.key, "\x60\x3d\xeb\x10\x15\xca\x71\xbe\x2b\x73\xae\xf0\x85\x7d\x77\x81\x1f\x35\x2c\x07\x3b\x61\x08\xd7\x2d\x98\x10\xa3\x09\x14\xdf\xf4", 32);
+    memcpy(expected_out1, "\xf5\x8c\x4c\x04\xd6\xe5\xf1\xba\x77\x9e\xab\xfb\x5f\x7b\xfb\xd6", 16);
+    memcpy(expected_out2, "\x9c\xfc\x4e\x96\x7e\xdb\x80\x8d\x67\x9f\x77\x7b\xc6\x70\x2c\x7d", 16);
+    memcpy(expected_out3, "\x39\xf2\x33\x69\xa9\xd9\xba\xcf\xa5\x30\xe2\x63\x04\x23\x14\x61", 16);
+    memcpy(expected_out4, "\xb2\xeb\x05\xe2\xc3\x9b\xe9\xfc\xda\x6c\x19\x07\x8c\x6a\x9d\x1b", 16);
+    ctx.mode = MODE_CBC;
+    rijndael_setup(&ctx, 32, ctx.key);
+
+    memcpy(ctx.iv, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F", 16);
+    memcpy(in, "\x6b\xc1\xbe\xe2\x2e\x40\x9f\x96\xe9\x3d\x7e\x11\x73\x93\x17\x2a", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out1, 16) == 0);
+
+    memcpy(ctx.iv, out, 16);
+    memcpy(in, "\xae\x2d\x8a\x57\x1e\x03\xac\x9c\x9e\xb7\x6f\xac\x45\xaf\x8e\x51", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out2, 16) == 0);
+
+    memcpy(ctx.iv, out, 16);
+    memcpy(in, "\x30\xc8\x1c\x46\xa3\x5c\xe4\x11\xe5\xfb\xc1\x19\x1a\x0a\x52\xef", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out3, 16) == 0);
+
+    memcpy(ctx.iv, out, 16);
+    memcpy(in, "\xf6\x9f\x24\x45\xdf\x4f\x9b\x17\xad\x2b\x41\x7b\xe6\x6c\x37\x10", 16);
+    block_encrypt(&ctx, in, 16, out, ctx.iv);
+    CU_ASSERT(memcmp(out, expected_out4, 16) == 0);
+
+
+}
+
+int register_ts_aes_test(void)
+{
+    ts_init(&TEST_SUITE(digest_test), TEST_SUITE_DESCR(digest_test), NULL, NULL);
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_aes_ecb_128), UTEST_DESCR(test_aes_ecb_128));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_aes_ecb_192), UTEST_DESCR(test_aes_ecb_192));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_aes_ecb_256), UTEST_DESCR(test_aes_ecb_256));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_aes_cbc_128), UTEST_DESCR(test_aes_cbc_128));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_aes_cbc_192), UTEST_DESCR(test_aes_cbc_192));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_aes_cbc_256), UTEST_DESCR(test_aes_cbc_256));
+
+    return register_ts(&TEST_SUITE(digest_test));
+}
+#endif
 /***EOF***/

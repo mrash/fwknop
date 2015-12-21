@@ -4,13 +4,16 @@
 
 /**
  * Register test suites from FKO files.
- * 
+ *
  * The module should fetch functions according to used modules. All of them follow the same
  * naming convention.
  */
 static void register_test_suites(void)
 {
     register_ts_fko_decode();
+    register_ts_hmac_test();
+    register_ts_digest_test();
+    register_ts_aes_test();
 }
 
 /* The main() function for setting up and running the tests.

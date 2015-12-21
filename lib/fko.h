@@ -1398,6 +1398,10 @@ DLL_API int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char * const fpr,
 
 #ifdef HAVE_C_UNIT_TESTS
 int register_ts_fko_decode(void);
+int register_ts_hmac_test(void);
+int register_ts_digest_test(void);
+int register_ts_aes_test(void);
+
 #endif
 
 #endif /* FKO_H */
