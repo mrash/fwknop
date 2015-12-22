@@ -25,27 +25,27 @@ Source0:	fwknop-%{version}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
 
 BuildRequires:	gpg, gpgme-devel, libpcap-devel, iptables
-Requires:	libfko >= 2.0.3, iptables
+Requires:	libfko >= 2.0.4, iptables
 
 
 %package -n libfko
-Version:	2.0.3
+Version:	2.0.4
 Release:	1
 Summary:	The fwknop library
 Group:		Development/Libraries
 Requires:   gpg, gpgme
 
 %package -n libfko-devel
-Version:	2.0.3
+Version:	2.0.4
 Release:	1
 Summary:	The fwknop library header and API docs
 Group:		Development/Libraries
-Requires:	libfko >= 2.0.3
+Requires:	libfko >= 2.0.4
 
 %package server
 Summary:	The Firewall Knock Operator server. An implementation of Single Packet Authorization.
 Group:		System Environment/Daemons
-Requires:	libfko => 2.0.3, libpcap, iptables
+Requires:	libfko => 2.0.4, libpcap, iptables
 
 
 %description
@@ -144,6 +144,8 @@ fi
 %changelog
 * Wed Dec 23 2015 <mbr@cipherdyne.org> - 2.6.8
 - fwknop-2.6.8 release.
+- Bumped libfko version to 2.0.4 to account for fko_set_username() crash
+  fixed in 21149faf.
 
 * Mon Aug 24 2015 <mbr@cipherdyne.org> - 2.6.7
 - fwknop-2.6.7 release.
