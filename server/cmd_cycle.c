@@ -5,7 +5,7 @@
  *          access.conf stanzas (CMD_CYCLE_OPEN and CMD_CYCLE_CLOSE).
  *
  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
- *  Copyright (C) 2009-2014 fwknop developers and contributors. For a full
+ *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
  *  License (GNU General Public License):
