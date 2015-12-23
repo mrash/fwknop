@@ -1,15 +1,36 @@
 fwknop-2.6.8 (12/23/2015):
-    - [server] open/close functionality...
+    - [server] Added a major new feature that allows fwknopd to easily
+      integrate with third-party devices and software. This done through the
+      addition of a generic "command open" and "command close" capability, and
+      a set of variable substitutions are supported such as '$SRC', '$PORT',
+      and '$PROTO'. This feature is designed to allow the user to switch out
+      the default firewall - iptables, firewalld, ipfw, or PF - for something
+      complete different. For example, here is a write-up on using this feature
+      to integrate SPA operations with ipset:
+
+        https://cipherdyne.org/blog/2015/12/single-packet-authorization-and-third-party-devices.html
+
+    - [server] (Jonathan Bennett) Added new access.conf directives
+      '%include <file>' and '%include_folder <directory>'. This allows more
+      access stanzas to be defined in other locations in the filesystem, and
+      this can be adventageous in some scenarios by letting non-privledged
+      users define their own encryption and authentication keys for SPA
+      operations. This way, users do not need write access to the main
+      /etc/fwknop/access.conf file to change keys around or define new ones.
     - [server] Bug fix to not send the TCP server a TERM signal even when it is
       not running when fwknopd receives a HUP signal.
-    - [libfko] Bug fix for a crash that could be triggered in fko_set_username()
-      when a username that is 64 chars or longer is specified. This crash
-      cannot be triggered in fwknopd even if an SPA packet contains such a
-      username however due to additional protections in the SPA decoding
-      routines. Further, this bug does not apply to the main fwknop client
-      either because the maximal username size is truncated down below 64
-      bytes. Hence, this bug only applies to client-side software that is
-      directly using libfko calling the fko_set_username() function.
+    - [libfko] Bug fix for a crash that could be triggered in
+      fko_set_username() when a username that is 64 chars or longer is
+      specified. This crash cannot be triggered in fwknopd even if an SPA
+      packet contains such a username however due to additional protections in
+      the SPA decoding routines. Further, this bug does not apply to the main
+      fwknop client either because the maximal username size is truncated down
+      below 64 bytes. Hence, this bug only applies to client-side software that
+      is directly using libfko calling the fko_set_username() function.
+    - [test suite] Code coverage is now at 90.7% counted by lines. The complete
+      coverage report for the 2.6.8 release is available here:
+
+        https://www.cipherdyne.org/fwknop/lcov-results/
 
 fwknop-2.6.7 (08/24/2015):
     - [server] When command execution is enabled with ENABLE_CMD_EXEC for an
