@@ -1,4 +1,137 @@
-commit 9c54d774f6bc5cdda5ea44ff2328b6004eda3526 (HEAD -> refs/heads/master, refs/remotes/moria/master)
+commit a85b081f790fd9fec0613366f86c3530acbc8ddf (HEAD -> refs/heads/master, refs/remotes/moria/master)
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Dec 23 14:34:51 2015 -0500
+
+    copyright update
+
+ android/project/jni/config.h                 | 2 +-
+ android/project/jni/fwknop/fwknop_client.c   | 2 +-
+ android/project/jni/fwknop/fwknop_client.h   | 2 +-
+ android/project/jni/fwknop/send_spa_packet.c | 2 +-
+ android/project/jni/logutils.h               | 2 +-
+ client/cmd_opts.h                            | 2 +-
+ client/config_init.c                         | 2 +-
+ client/config_init.h                         | 2 +-
+ client/fwknop.c                              | 2 +-
+ client/fwknop.h                              | 2 +-
+ client/fwknop_common.h                       | 2 +-
+ client/getpasswd.c                           | 2 +-
+ client/getpasswd.h                           | 2 +-
+ client/http_resolve_host.c                   | 2 +-
+ client/log_msg.c                             | 2 +-
+ client/log_msg.h                             | 2 +-
+ client/spa_comm.c                            | 2 +-
+ client/spa_comm.h                            | 2 +-
+ client/utils.c                               | 2 +-
+ client/utils.h                               | 2 +-
+ common/common.h                              | 2 +-
+ common/fko_util.c                            | 2 +-
+ common/fko_util.h                            | 2 +-
+ common/netinet_common.h                      | 2 +-
+ iphone/Classes/fwknop/fwknop_client.c        | 2 +-
+ iphone/Classes/fwknop/fwknop_client.h        | 2 +-
+ iphone/Classes/fwknop/send_spa_packet.c      | 2 +-
+ lib/base64.c                                 | 2 +-
+ lib/base64.h                                 | 2 +-
+ lib/cipher_funcs.c                           | 2 +-
+ lib/cipher_funcs.h                           | 2 +-
+ lib/digest.c                                 | 2 +-
+ lib/digest.h                                 | 2 +-
+ lib/fko.h                                    | 2 +-
+ lib/fko_client_timeout.c                     | 2 +-
+ lib/fko_common.h                             | 2 +-
+ lib/fko_context.h                            | 2 +-
+ lib/fko_decode.c                             | 2 +-
+ lib/fko_digest.c                             | 2 +-
+ lib/fko_encode.c                             | 2 +-
+ lib/fko_encryption.c                         | 2 +-
+ lib/fko_error.c                              | 2 +-
+ lib/fko_funcs.c                              | 2 +-
+ lib/fko_hmac.c                               | 2 +-
+ lib/fko_limits.h                             | 2 +-
+ lib/fko_message.c                            | 2 +-
+ lib/fko_message.h                            | 2 +-
+ lib/fko_nat_access.c                         | 2 +-
+ lib/fko_rand_value.c                         | 2 +-
+ lib/fko_server_auth.c                        | 2 +-
+ lib/fko_state.h                              | 2 +-
+ lib/fko_timestamp.c                          | 2 +-
+ lib/fko_user.c                               | 2 +-
+ lib/fko_user.h                               | 2 +-
+ lib/gpgme_funcs.c                            | 2 +-
+ lib/gpgme_funcs.h                            | 2 +-
+ lib/hmac.c                                   | 2 +-
+ lib/hmac.h                                   | 2 +-
+ python/fkomodule.c                           | 2 +-
+ server/access.c                              | 2 +-
+ server/access.h                              | 2 +-
+ server/cmd_cycle.c                           | 2 +-
+ server/cmd_cycle.h                           | 2 +-
+ server/cmd_opts.h                            | 2 +-
+ server/config_init.c                         | 2 +-
+ server/config_init.h                         | 2 +-
+ server/extcmd.c                              | 2 +-
+ server/extcmd.h                              | 2 +-
+ server/fw_util.c                             | 2 +-
+ server/fw_util.h                             | 2 +-
+ server/fw_util_firewalld.c                   | 2 +-
+ server/fw_util_firewalld.h                   | 2 +-
+ server/fw_util_ipf.c                         | 2 +-
+ server/fw_util_ipf.h                         | 2 +-
+ server/fw_util_ipfw.c                        | 2 +-
+ server/fw_util_ipfw.h                        | 2 +-
+ server/fw_util_iptables.c                    | 2 +-
+ server/fw_util_iptables.h                    | 2 +-
+ server/fw_util_pf.c                          | 2 +-
+ server/fw_util_pf.h                          | 2 +-
+ server/fwknopd.c                             | 2 +-
+ server/fwknopd.h                             | 2 +-
+ server/fwknopd_common.h                      | 2 +-
+ server/fwknopd_errors.c                      | 2 +-
+ server/fwknopd_errors.h                      | 2 +-
+ server/incoming_spa.c                        | 2 +-
+ server/incoming_spa.h                        | 2 +-
+ server/log_msg.c                             | 2 +-
+ server/log_msg.h                             | 2 +-
+ server/pcap_capture.c                        | 2 +-
+ server/pcap_capture.h                        | 2 +-
+ server/process_packet.c                      | 2 +-
+ server/process_packet.h                      | 2 +-
+ server/replay_cache.c                        | 2 +-
+ server/replay_cache.h                        | 2 +-
+ server/sig_handler.c                         | 2 +-
+ server/sig_handler.h                         | 2 +-
+ server/tcp_server.c                          | 2 +-
+ server/tcp_server.h                          | 2 +-
+ server/udp_server.c                          | 2 +-
+ server/udp_server.h                          | 2 +-
+ server/utils.c                               | 2 +-
+ server/utils.h                               | 2 +-
+ win32/config.h                               | 2 +-
+ win32/getlogin.h                             | 2 +-
+ 105 files changed, 105 insertions(+), 105 deletions(-)
+
+commit 22024febec51402f439851ad889185953c65235a
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Dec 23 14:33:42 2015 -0500
+
+    try to describe Jonathan's contributions in a better fashion
+
+ AUTHORS | 4 ++--
+ CREDITS | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
+
+commit a0cac1bd1308b92adb46f5cebfb98369a8731bea
+Author: Michael Rash <mbr@cipherdyne.org>
+Date:   Wed Dec 23 14:23:01 2015 -0500
+
+    changes since 2.6.7
+
+ ChangeLog     |   39 +-
+ ChangeLog.git | 2166 +++++++++++++++++++++++----------------------------------
+ 2 files changed, 897 insertions(+), 1308 deletions(-)
+
+commit 9c54d774f6bc5cdda5ea44ff2328b6004eda3526
 Author: Michael Rash <mbr@cipherdyne.org>
 Date:   Wed Dec 23 11:47:17 2015 -0500
 
