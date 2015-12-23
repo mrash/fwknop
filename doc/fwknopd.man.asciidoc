@@ -27,12 +27,16 @@ The main application of this program is to conceal services such as 'SSH'
 with an additional layer of security in order to make the exploitation of
 vulnerabilities (both 0-day and unpatched code) much more difficult. In
 addition, services that are concealed in this fashion naturally cannot be
-scanned for with 'Nmap'.
+scanned for with 'Nmap' or 'Shodan'.
 
 The main configuration for *fwknopd* is maintained within two files:
 'fwknopd.conf' and 'access.conf'. The default location for these files
 is determined at package configuration (typically '@sysconfdir@/fwknop').
 The configuration variables within these files are described below.
+
+Additional information may be found in the tutorial 'Single Packet Authorization:
+A Comprehensive Guide to Strong Service Concealment with fwknop' available
+online here: 'http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html'.
 
 
 COMMAND-LINE OPTIONS
@@ -236,24 +240,23 @@ COMMAND-LINE OPTIONS
 
 FWKNOPD CONFIG AND ACCESS VARIABLES
 -----------------------------------
-*fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf' file for configuration variables
-that define its operational parameters (what network interface and port
+*fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf' file for configuration
+variables to define operational parameters (what network interface and port
 to sniff, what features to enable/disable, etc.). The 'fwknopd.conf' file
-does not define any access control directives.
+does not define any access control directives or set any encryption or authenitcation
+keys.
 
-The access control directives are contained in the '@sysconfdir@/fwknop/access.conf' file.
-Access control directives define encryption keys and level of access that
+The access control directives are contained in the '@sysconfdir@/fwknop/access.conf'
+file.  Access control directives define encryption keys and level of access that
 is granted to an fwknop client that has generated the appropriate encrypted
 SPA message.
 
 FWKNOPD.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~~
 This section list the more prominent configuration variables used by
-*fwknopd*. It is not a complete list. There are directives for the type
-of firewall used by *fwknopd* (i.e. _iptables_, _ipfw_, or _pf_). You will
-want to make sure to check these to make sure they have appropriate values.
-See the '@sysconfdir@/fwknop/fwknopd.conf' file for the full list and
-corresponding details.
+*fwknopd*. You will want to make sure to check these to make sure they have
+appropriate values, but sensible defaults are provided for most systems. See
+the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
 
 *PCAP_INTF* '<interface>'::
     Specify the ethernet interface on which *fwknopd* will sniff packets.
@@ -453,10 +456,11 @@ corresponding details.
 
 ACCESS.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~
-This section describes the access control directives in the '@sysconfdir@/fwknop/access.conf'
-file. Theses directives define encryption keys and level of access that
-is granted to *fwknop* clients that have generated the appropriate
-encrypted message.
+This section describes the access control directives in the
+'@sysconfdir@/fwknop/access.conf' file. Theses directives define encryption
+and authentication keys, and the level of access that is granted to *fwknop*
+clients that have generated an appropriate encrypted and authenticated
+SPA packet.
 
 The 'access.conf' variables described below provide the access directives
 for the SPA packets with a source (or embedded request) IP that matches an
@@ -468,11 +472,11 @@ directive starts a new stanza.
     This defines the source address from which the SPA packet will be
     accepted. The string ``ANY'' is also accepted if a valid SPA packet
     should be honored from any source IP. Every authorization stanza in
-    '@sysconfdir@/fwknop/access.conf' definition must start with the ``SOURCE'' keyword.
-    Networks should be specified in CIDR notation (e.g. ``192.168.10.0/24''),
-    and individual IP addresses can be specified as well. Also, multiple
-    IP's and/or networks can be defined as a comma separated list (e.g.
-    ``192.168.10.0/24,10.1.1.123'')
+    '@sysconfdir@/fwknop/access.conf' definition must start with the ``SOURCE''
+    keyword.  Networks should be specified in CIDR notation (e.g.
+    ``192.168.10.0/24''), and individual IP addresses can be specified as well.
+    Also, multiple IP's and/or networks can be defined as a comma separated
+    list (e.g.  ``192.168.10.0/24,10.1.1.123'')
     
 *DESTINATION* '<IP,..,IP/NET,..,NET/ANY>'::
     This defines the destination address for which the SPA packet will be
@@ -521,6 +525,19 @@ directive starts a new stanza.
     firewall after a valid knock sequence from a source IP address. If
     ``FW_ACCESS_TIMEOUT'' is not set then the default timeout of 30 seconds
     will automatically be set.
+
+*%include* '<file>'::
+    Have *fwknopd* import an additional 'access.conf' file. This allows more
+    access stanzas to be defined in other locations in the filesystem, and this
+    can be adventageous in some scenarios by letting non-privledged users define
+    their own encryption and authentication keys for SPA operations. This way,
+    users do not need write access to the main '@sysconfdir@/fwknop/access.conf'
+    file to change keys around or define new ones.
+
+*%include_folder* '<directory>'::
+    Similarly to the '%include' option above, the '%include_folder' directive
+    has *fwknopd* import all .conf files from the specified directory. There is
+    also command line support for this via the 'access-folder' option.
 
 *ENCRYPTION_MODE* '<mode>'::
     Specify the encryption mode when AES is used. The default is CBC mode,
