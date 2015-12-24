@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12/23/2015
+.\"      Date: 12/24/2015
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "12/23/2015" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "12/24/2015" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -40,7 +40,7 @@ The main application of this program is to conceal services such as \fISSH\fR wi
 .sp
 The main configuration for \fBfwknopd\fR is maintained within two files: \fIfwknopd\&.conf\fR and \fIaccess\&.conf\fR\&. The default location for these files is determined at package configuration (typically \fI@sysconfdir@/fwknop\fR)\&. The configuration variables within these files are described below\&.
 .sp
-Additional information may be found in the tutorial \fISingle Packet Authorization: A Comprehensive Guide to Strong Service Concealment with fwknop\fR available online here: \fIhttp://www\&.cipherdyne\&.org/fwknop/docs/fwknop\-tutorial\&.html\fR\&.
+Additional information may be found in the tutorial \(lqSingle Packet Authorization: A Comprehensive Guide to Strong Service Concealment with fwknop\(rq available online (see: \fIhttp://www\&.cipherdyne\&.org/fwknop/docs/fwknop\-tutorial\&.html\fR)\&.
 .SH "COMMAND-LINE OPTIONS"
 .PP
 \fB\-i, \-\-interface\fR=\fI<interface>\fR
@@ -344,7 +344,7 @@ Display version information and exit\&.
 .RE
 .SH "FWKNOPD CONFIG AND ACCESS VARIABLES"
 .sp
-\fBfwknopd\fR references the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR file for configuration variables to define operational parameters (what network interface and port to sniff, what features to enable/disable, etc\&.)\&. The \fIfwknopd\&.conf\fR file does not define any access control directives or set any encryption or authenitcation keys\&.
+\fBfwknopd\fR references the \fI@sysconfdir@/fwknop/fwknopd\&.conf\fR file for configuration variables to define operational parameters (what network interface and port to sniff, what features to enable/disable, etc\&.)\&. The \fIfwknopd\&.conf\fR file does not define any access control directives or set any encryption or authentication keys\&.
 .sp
 The access control directives are contained in the \fI@sysconfdir@/fwknop/access\&.conf\fR file\&. Access control directives define encryption keys and level of access that is granted to an fwknop client that has generated the appropriate encrypted SPA message\&.
 .SS "FWKNOPD\&.CONF VARIABLES"
@@ -664,7 +664,7 @@ Have
 \fBfwknopd\fR
 import an additional
 \fIaccess\&.conf\fR
-file\&. This allows more access stanzas to be defined in other locations in the filesystem, and this can be adventageous in some scenarios by letting non\-privledged users define their own encryption and authentication keys for SPA operations\&. This way, users do not need write access to the main
+file\&. This allows more access stanzas to be defined in other locations in the filesystem, and this can be advantageous in some scenarios by letting non\-privileged users define their own encryption and authentication keys for SPA operations\&. This way, users do not need write access to the main
 \fI@sysconfdir@/fwknop/access\&.conf\fR
 file to change keys around or define new ones\&.
 .RE
@@ -964,7 +964,7 @@ Additional commentary on Single Packet Authorization can be found via Michael Ra
 Damien Stuart <dstuart@dstuart\&.org>, Michael Rash <mbr@cipherdyne\&.org>
 .SH "CONTRIBUTORS"
 .sp
-This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttps://github\&.com/mrash/fwknop/blob/master/CREDITS\fR to view the online list of contributors\&. A few contributors deserve to be singled out including: Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger, Fernando Arnaboldi, and Erik Gomez\&.
+This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttps://github\&.com/mrash/fwknop/blob/master/CREDITS\fR to view the online list of contributors\&. A few contributors deserve to be singled out including: Jonathan Bennett, Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger, Fernando Arnaboldi, and Erik Gomez\&.
 .sp
 The phrase \(lqSingle Packet Authorization\(rq was coined by MadHat and Simple Nomad at the BlackHat Briefings of 2005\&.
 .SH "BUGS"

@@ -34,9 +34,9 @@ The main configuration for *fwknopd* is maintained within two files:
 is determined at package configuration (typically '@sysconfdir@/fwknop').
 The configuration variables within these files are described below.
 
-Additional information may be found in the tutorial 'Single Packet Authorization:
-A Comprehensive Guide to Strong Service Concealment with fwknop' available
-online here: 'http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html'.
+Additional information may be found in the tutorial ``Single Packet Authorization:
+A Comprehensive Guide to Strong Service Concealment with fwknop'' available
+online (see: 'http://www.cipherdyne.org/fwknop/docs/fwknop-tutorial.html').
 
 
 COMMAND-LINE OPTIONS
@@ -243,7 +243,7 @@ FWKNOPD CONFIG AND ACCESS VARIABLES
 *fwknopd* references the '@sysconfdir@/fwknop/fwknopd.conf' file for configuration
 variables to define operational parameters (what network interface and port
 to sniff, what features to enable/disable, etc.). The 'fwknopd.conf' file
-does not define any access control directives or set any encryption or authenitcation
+does not define any access control directives or set any encryption or authentication
 keys.
 
 The access control directives are contained in the '@sysconfdir@/fwknop/access.conf'
@@ -529,7 +529,7 @@ directive starts a new stanza.
 *%include* '<file>'::
     Have *fwknopd* import an additional 'access.conf' file. This allows more
     access stanzas to be defined in other locations in the filesystem, and this
-    can be adventageous in some scenarios by letting non-privledged users define
+    can be advantageous in some scenarios by letting non-privileged users define
     their own encryption and authentication keys for SPA operations. This way,
     users do not need write access to the main '@sysconfdir@/fwknop/access.conf'
     file to change keys around or define new ones.
@@ -841,8 +841,8 @@ on which many people who are active in the open source community have
 contributed. See the CREDITS file in the fwknop sources, or visit
 'https://github.com/mrash/fwknop/blob/master/CREDITS' to view the online
 list of contributors. A few contributors deserve to be singled out including:
-Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger,
-Fernando Arnaboldi, and Erik Gomez.
+Jonathan Bennett, Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven,
+Hank Leininger, Fernando Arnaboldi, and Erik Gomez.
 
 The phrase ``Single Packet Authorization'' was coined by MadHat and Simple
 Nomad at the BlackHat Briefings of 2005.
