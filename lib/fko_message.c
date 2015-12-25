@@ -311,9 +311,10 @@ validate_nat_access_msg(const char *msg)
         return(FKO_ERROR_INVALID_DATA_MESSAGE_NAT_MISSING);
 
     /* Should always have a valid allow IP regardless of message type
-    */
+    *
     if((res = have_allow_ip(msg)) != FKO_SUCCESS)
         return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
+    */
 
     /* Position ourselves beyond the allow IP and make sure we have
      * a single port value

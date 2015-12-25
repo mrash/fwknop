@@ -1305,6 +1305,8 @@ process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
     char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    char            nat_dst[64] = {0}; //not finding a MAX_HOSTNAME_LEN #define
+
     unsigned int    nat_port = 0;
     unsigned int    fst_proto;
     unsigned int    fst_port;
@@ -1367,12 +1369,23 @@ process_spa_request(const fko_srv_options_t * const opts,
             ndx = strchr(spadat->nat_access, ',');
             if(ndx != NULL)
             {
-                strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
-                if (! is_valid_ipv4_addr(nat_ip))
+                strlcpy(nat_dst, spadat->nat_access, (ndx-spadat->nat_access)+1);
+                if (! is_valid_ipv4_addr(nat_dst))
                 {
-                    log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
-                    free_acc_port_list(port_list);
-                    return res;
+                    if (ipv4_resolve(nat_dst, nat_ip) == 0)
+                    {
+                        log_msg(LOG_INFO, "Resolved NAT IP in SPA message");
+                    }
+                    else
+                    {
+                        log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
+                        free_acc_port_list(port_list);
+                        return res;
+                    }
+                }
+                else
+                {
+                    strlcpy(nat_ip, nat_dst, MAX_IPV4_STR_LEN);
                 }
 
                 nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT,

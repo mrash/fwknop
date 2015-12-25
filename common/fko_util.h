@@ -35,7 +35,6 @@
 
 #define MAX_CMDLINE_ARGS   30    /*!< should be way more than enough */
 #define MAX_ARGS_LINE_LEN  1024
-
 /* Function prototypes
 */
 int     is_valid_encoded_msg_len(const int len);
@@ -65,6 +64,8 @@ void  chop_spaces(char *str);
 int   strtoargv(const char * const args_str, char **argv_new, int *argc_new);
 void  free_argv(char **argv_new, int *argc_new);
 
+int     ipv4_resolve(const char *dns_str, char *ip_str);
+
 #if !HAVE_STRLCAT
 size_t  strlcat(char *dst, const char *src, size_t siz);
 #endif
@@ -78,6 +79,17 @@ char * strndup( const char * s, size_t len );
 #endif
 
 int     dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len);
+
+#include <sys/types.h>
+#ifdef WIN32
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+#else
+  #if HAVE_SYS_SOCKET_H
+    #include <sys/socket.h>
+  #endif
+  #include <netdb.h>
+#endif
 
 #endif /* FKO_UTIL_H */
 
