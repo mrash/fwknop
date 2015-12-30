@@ -51,10 +51,11 @@
  * error code value if there is any indication the data is not valid spa data.
 */
 static int
-preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt)
+preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt, spa_data_t *spadat)
 {
 
     char    *ndx = (char *)&(spa_pkt->packet_data);
+    char    *xff;
     int      i, pkt_data_len = 0;
 
     pkt_data_len = spa_pkt->packet_data_len;
@@ -88,6 +89,9 @@ preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt)
             && constant_runtime_cmp(ndx, B64_GPG_PREFIX, B64_GPG_PREFIX_STR_LEN) == 0)
         return(SPA_MSG_BAD_DATA);
 
+    /* Initialize X-Forwarded-For field */
+    spadat->pkt_source_xff_ip[0] = '\0';
+
     /* Detect and parse out SPA data from an HTTP request. If the SPA data
      * starts with "GET /" and the user agent starts with "Fwknop", then
      * assume it is a SPA over HTTP request.
@@ -100,6 +104,29 @@ preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt)
          * configured to accept such request and if so, find the SPA
          * data.
         */
+
+        /* Process X-Forwarded-For header */
+
+        xff = strcasestr(ndx, "X-Forwarded-For: ");
+
+        if (xff != NULL) {
+            xff += 17;
+
+            for (i = 0; *xff != '\0'; i++)
+                if (isspace(*xff))
+                   *xff = '\0';
+                else
+                   xff++;
+
+            xff -= i - 1;
+
+            if (!is_valid_ipv4_addr(xff))
+                log_msg(LOG_WARNING,
+                "Error parsing X-Forwarded-For header: value '%s' is not an IP address",
+                xff);
+            else
+                strlcpy(spadat->pkt_source_xff_ip, xff, i);
+        }
 
         /* Now extract, adjust (convert characters translated by the fwknop
          * client), and reset the SPA message itself.
@@ -377,7 +404,7 @@ precheck_pkt(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt,
 
     packet_data_len = spa_pkt->packet_data_len;
 
-    res = preprocess_spa_data(opts, spa_pkt);
+    res = preprocess_spa_data(opts, spa_pkt, spadat);
     if(res != FKO_SUCCESS)
     {
         log_msg(LOG_DEBUG, "[%s] preprocess_spa_data() returned error %i: '%s' for incoming packet.",
@@ -751,7 +778,11 @@ check_src_access(acc_stanza_t *acc, spa_data_t *spadat, const int stanza_num)
             );
             return 0;
         }
-        spadat->use_src_ip = spadat->pkt_source_ip;
+
+        if (spadat->pkt_source_xff_ip[0] != '\0')
+            spadat->use_src_ip = spadat->pkt_source_xff_ip;
+        else
+            spadat->use_src_ip = spadat->pkt_source_ip;
     }
     else
         spadat->use_src_ip = spadat->spa_message_src_ip;
