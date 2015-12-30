@@ -34,7 +34,18 @@
 #include "digest.h"
 
 #define MAX_DIGEST_BLOCK_LEN    SHA512_BLOCK_LEN
-
+/**
+ * \brief Generate MD5 based HMAC
+ *
+ * This function generates an HMAC verification hash, based on MD5
+ *
+ * \param msg Pointer to the message to be signed
+ * \param msg_len size of the message string
+ * \param hmac Pointer to the hmac buffer, where the final hmac will be stored
+ * \param hmac_key Pointer to the key to be used for generating the hmac
+ * \param hmac_key_len Size of the hmac key
+ *
+ */
 void hmac_md5(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 void hmac_sha1(const char *msg, const unsigned int msg_len,

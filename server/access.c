@@ -1362,7 +1362,11 @@ acc_data_is_valid(fko_srv_options_t *opts,
 
     return(1);
 }
-
+/**
+ * \brief Parses an access folder
+ *
+ * This function processes all the *.conf files in the specified directory.
+ */
 int
 parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
 {
