@@ -893,26 +893,19 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     /* Check if there is a hostname to resolve as an ip address in the NAT access buffer */
     if (is_hostname_str_with_port(nat_access_buf, hostname, sizeof(hostname), &port))
     {
-        /* Speed up the name resolution by forcing ipv4 (AF_INET).
-         * A NULL pointer could be used instead if there is no constraint.
-         * Maybe when ipv6 support will be enable the structure could initialize the
-         * family to either AF_INET or AF_INET6 */
-        hints.ai_family = AF_INET;
 
-        if (resolve_dst_addr(hostname, &hints,
-                    dst_ip_str, sizeof(dst_ip_str), options) != 0)
-        {
-            log_msg(LOG_VERBOSITY_ERROR, "[*] Unable to resolve %s as an ip address",
-                    hostname);
-            return FKO_ERROR_INVALID_DATA;
-        }
-
-        snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
-                dst_ip_str, port);
+        /* We now send the hostname, and resolve it server side */
+        snprintf(nat_access_buf, MAX_LINE_LEN, "%s",
+                options->nat_access_str);
     }
 
-    /* Nothing to resolve */
-    else;
+        /* assume just hostname */
+    else
+    {
+        snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
+            options->nat_access_str, access_port);
+
+    }
 
     if(options->nat_rand_port)
     {

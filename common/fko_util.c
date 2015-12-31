@@ -1014,6 +1014,7 @@ ipv4_resolve(const char *dns_str, char *ip_str)
     struct sockaddr_in *sai_remote; /* Remote host information as a sockaddr_in structure */
 #endif
 
+    memset(&hints, 0 , sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
@@ -1021,7 +1022,7 @@ ipv4_resolve(const char *dns_str, char *ip_str)
     /* Try to resolve the host name */
     error = getaddrinfo(dns_str, NULL, &hints, &result);
     if (error != 0)
-        fprintf(stderr, "resolve_dst_addr() : %s\n", gai_strerror(error));
+        fprintf(stderr, "ipv4_resolve() : %s\n", gai_strerror(error));
 
     else
     {
