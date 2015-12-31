@@ -35,6 +35,8 @@
 
 #define MAX_CMDLINE_ARGS   30    /*!< should be way more than enough */
 #define MAX_ARGS_LINE_LEN  1024
+#define MAX_HOSTNAME_LEN    64
+
 /* Function prototypes
 */
 int     is_valid_encoded_msg_len(const int len);
@@ -61,11 +63,18 @@ void  chop_newline(char *str);
 void  chop_char(char *str, const char chop);
 void  chop_spaces(char *str);
 
+/**
+ *
+ * \brief counts the occurences of a character
+ *
+ * \return returns the number of chars found
+ */
+int   count_characters(const char *str, const char match, int len);
+
 int   strtoargv(const char * const args_str, char **argv_new, int *argc_new);
 void  free_argv(char **argv_new, int *argc_new);
 
-int     ipv4_resolve(const char *dns_str, char *ip_str);
-
+int   ipv4_resolve(const char *dns_str, char *ip_str);
 #if !HAVE_STRLCAT
 size_t  strlcat(char *dst, const char *src, size_t siz);
 #endif

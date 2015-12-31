@@ -1305,7 +1305,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
     char            nat_ip[MAX_IPV4_STR_LEN] = {0};
-    char            nat_dst[64] = {0}; //not finding a MAX_HOSTNAME_LEN #define
+    char            nat_dst[MAX_HOSTNAME_LEN] = {0};
 
     unsigned int    nat_port = 0;
     unsigned int    fst_proto;

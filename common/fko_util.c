@@ -50,6 +50,11 @@
 
 #define NULL_STRING                 "<NULL>"                /*!< String which represents a NULL buffer */
 
+#ifdef HAVE_C_UNIT_TESTS
+#include "cunit_common.h"
+DECLARE_TEST_SUITE(utils_test, "Utility functions test suite");
+#endif
+
 /**
  * Structure to handle an encryption mode string string and its associated integer value
  */
@@ -1052,5 +1057,43 @@ ipv4_resolve(const char *dns_str, char *ip_str)
     return error;
 }
 
+int
+count_characters(const char *str, const char match, int len)
+{
+    int i, count = 0;
 
+    for (i=0; i < len; i++) {
+        if (str[i] == match)
+            count++;
+        if (str[i] == '\0')
+            return count;
+    }
+    return count;
+}
+
+#ifdef HAVE_C_UNIT_TESTS
+
+DECLARE_UTEST(test_count_characters, "test the count_characters function")
+{
+    char test_str[32];
+    strcpy(test_str, "abcd");
+    CU_ASSERT(count_characters(test_str, 'a', 4) == 1);
+    strcpy(test_str, "aacd");
+    CU_ASSERT(count_characters(test_str, 'a', 4) == 2);
+    strcpy(test_str, "a,b,c,d,");
+    CU_ASSERT(count_characters(test_str, ',', 4) == 2);
+    strcpy(test_str, "a,b,c,d,");
+    CU_ASSERT(count_characters(test_str, ',', 8) == 4);
+    strcpy(test_str, "aaaa");
+    CU_ASSERT(count_characters(test_str, 'a', 3) == 3);
+}
+
+int register_utils_test(void)
+{
+    ts_init(&TEST_SUITE(utils_test), TEST_SUITE_DESCR(utils_test), NULL, NULL);
+    ts_add_utest(&TEST_SUITE(utils_test), UTEST_FCT(test_count_characters), UTEST_DESCR(test_count_characters));
+
+    return register_ts(&TEST_SUITE(utils_test));
+}
+#endif
 /***EOF***/
