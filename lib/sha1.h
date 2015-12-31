@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/sha1.h
  *
- * File:    sha1.h
- *
- * Purpose: Header for sha1.c
- *
- * sha - An implementation of the NIST SHA1 Message Digest
+ * \brief Header for sha1.c
+ */
+
+/* sha - An implementation of the NIST SHA1 Message Digest
  *       algorithm.
  *
  * Copyright (C) 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>

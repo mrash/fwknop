@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/base64.c
  *
- * File:    base64.c
- *
- * Purpose: Implementation of the Base64 encode/decode algorithim.
- *
- * This code was derived from the base64.c part of FFmpeg written
+ * \brief Implementation of the Base64 encode/decode algorithim.
+ */
+
+/* This code was derived from the base64.c part of FFmpeg written
  * by Ryan Martell. (rdm4@martellventures.com).
  *
  * Copyright (C) Ryan Martell. (rdm4@martellventures.com)

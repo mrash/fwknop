@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/gpgme_funcs.c
  *
- * File:    gpgme_funcs.c
- *
- * Purpose: gpgme-related functions for GPG encryptions support in libfko.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief gpgme-related functions for GPG encryptions support in libfko.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

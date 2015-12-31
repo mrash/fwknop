@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/md5.h
  *
- * File:    md5.h
- *
- * Purpose: Header for the fwknop md5.c.
- *
- * MD5 Message Digest Algorithm (RFC1321).
+ * \brief Header for the fwknop md5.c.
+ */
+
+/* MD5 Message Digest Algorithm (RFC1321).
  *
  * Derived from cryptoapi implementation, originally based on the
  * public domain implementation written by Colin Plumb in 1993.

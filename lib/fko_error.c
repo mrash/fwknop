@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/fko_error.c
  *
- * File:    fko_error.c
- *
- * Purpose: Error handling functions for libfko
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Error handling functions for libfko
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

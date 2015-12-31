@@ -1,9 +1,10 @@
 /**
- * @file    digest.c
+ * \file    lib/digest.c
  *
- * @brief   Roll-up of the digests used by fwknop.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief   Roll-up of the digests used by fwknop.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/rijndael.c
  *
- * File:    rijndael.c
- *
- * Purpose: rijndael - An implementation of the Rijndael cipher.
- *
- * Copyright (C) 2000, 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
+ * \brief rijndael - An implementation of the Rijndael cipher.
+ */
+
+/* Copyright (C) 2000, 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
  *
  * Currently maintained by brian d foy, <bdfoy@cpan.org>
  *
