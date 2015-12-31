@@ -1319,6 +1319,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
     char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    char            nat_dst[MAX_HOSTNAME_LEN] = {0};
     unsigned int    nat_port = 0;
     unsigned int    fst_proto;
     unsigned int    fst_port;
@@ -1333,6 +1334,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
     char            *ndx = NULL;
     int             res = 0, is_err;
+    int             str_len;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -1379,14 +1381,38 @@ process_spa_request(const fko_srv_options_t * const opts,
         else
         {
             ndx = strchr(spadat->nat_access, ',');
-            if(ndx != NULL)
+            str_len = strcspn(spadat->nat_access, ",");
+            if((ndx != NULL) && (str_len <= MAX_HOSTNAME_LEN))
             {
-                strlcpy(nat_ip, spadat->nat_access, (ndx-spadat->nat_access)+1);
-                if (! is_valid_ipv4_addr(nat_ip))
+                strlcpy(nat_dst, spadat->nat_access, str_len+1);
+                if((! is_valid_ipv4_addr(nat_dst)))
                 {
-                    log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
-                    free_acc_port_list(port_list);
-                    return res;
+                    if(strncasecmp(opts->config[CONF_ENABLE_NAT_DNS], "Y", 1)==0)
+                    {
+                        if (ipv4_resolve(nat_dst, nat_ip) == 0)
+                        {
+                            log_msg(LOG_INFO, "Resolved NAT IP in SPA message");
+                        }
+                        else
+                        {
+                            log_msg(LOG_INFO, "Unable to resolve Hostname in NAT SPA message");
+                            free_acc_port_list(port_list);
+                            res = is_err;
+                            return res;
+                        }
+                    }
+                    else
+                    {
+                        log_msg(LOG_INFO, "Received Hostname in NAT SPA message, but hostname is disabled.");
+                        free_acc_port_list(port_list);
+                        res = is_err;
+                        return res;
+
+                    }
+                }
+                else
+                {
+                    strlcpy(nat_ip, nat_dst, MAX_IPV4_STR_LEN);
                 }
 
                 nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT,
@@ -1398,6 +1424,13 @@ process_spa_request(const fko_srv_options_t * const opts,
                     res = is_err;
                     return res;
                 }
+            }
+            else
+            {
+                log_msg(LOG_INFO, "Invalid NAT IP in SPA message");
+                free_acc_port_list(port_list);
+                res = is_err;
+                return res;
             }
         }
 

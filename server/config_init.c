@@ -880,6 +880,10 @@ validate_options(fko_srv_options_t *opts)
 
 #endif /* FIREWALL type */
 
+    /* NAT DNS enabled*/
+    if(opts->config[CONF_ENABLE_NAT_DNS] == NULL)
+        set_config_entry(opts, CONF_ENABLE_NAT_DNS, DEF_ENABLE_NAT_DNS);
+
     /* GPG Home dir.
     */
     if(opts->config[CONF_GPG_HOME_DIR] == NULL)

@@ -304,15 +304,27 @@ int
 validate_nat_access_msg(const char *msg)
 {
     const char   *ndx;
+    int     host_len;
     int     res         = FKO_SUCCESS;
     int     startlen    = strnlen(msg, MAX_SPA_MESSAGE_SIZE);
 
     if(startlen == MAX_SPA_MESSAGE_SIZE)
         return(FKO_ERROR_INVALID_DATA_MESSAGE_NAT_MISSING);
 
-    /* Should always have a valid allow IP regardless of message type
+    /* must have exactly one comma here
     */
-    if((res = have_allow_ip(msg)) != FKO_SUCCESS)
+    if(count_characters(msg, ',', startlen) != 1)
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
+
+    /* Must not be longer than the max hostname length
+    */
+    host_len = strcspn(msg, ",");
+    if(host_len > MAX_HOSTNAME_LEN)
+        return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
+
+    /* Check for some invalid characters
+    */
+    if(strcspn(msg, " /?\"\'\\") < host_len)
         return(FKO_ERROR_INVALID_SPA_NAT_ACCESS_MSG);
 
     /* Position ourselves beyond the allow IP and make sure we have

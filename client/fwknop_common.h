@@ -66,7 +66,6 @@
 #define HTTP_MAX_REQUEST_LEN        2000
 #define HTTP_MAX_RESPONSE_LEN       2000
 #define HTTP_MAX_USER_AGENT_LEN     100
-#define MAX_HOSTNAME_LEN            70
 #define MAX_URL_HOST_LEN            256
 #define MAX_URL_PATH_LEN            1024
 
