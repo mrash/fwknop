@@ -35,7 +35,7 @@
 
 #define MAX_CMDLINE_ARGS   30    /*!< should be way more than enough */
 #define MAX_ARGS_LINE_LEN  1024
-#define MAX_HOSTNAME_LEN    64
+#define MAX_HOSTNAME_LEN    70
 
 /* Function prototypes
 */

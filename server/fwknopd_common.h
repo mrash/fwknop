@@ -211,7 +211,6 @@
 #define MAX_PCAP_FILTER_LEN     1024
 #define MAX_IFNAME_LEN          128
 #define MAX_SPA_PACKET_LEN      1500 /* --DSS check this? */
-#define MAX_HOSTNAME_LEN        64
 #define MAX_DECRYPTED_SPA_LEN   1024
 
 /* The minimum possible valid SPA data size.

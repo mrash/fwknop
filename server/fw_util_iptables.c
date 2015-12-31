@@ -1321,6 +1321,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 
     char            *ndx = NULL;
     int             res = 0, is_err;
+    int             str_len;
     time_t          now;
     unsigned int    exp_ts;
 
@@ -1367,9 +1368,10 @@ process_spa_request(const fko_srv_options_t * const opts,
         else
         {
             ndx = strchr(spadat->nat_access, ',');
-            if(ndx != NULL)
+            str_len = strcspn(spadat->nat_access, ",");
+            if((ndx != NULL) && (str_len <= MAX_HOSTNAME_LEN))
             {
-                strlcpy(nat_dst, spadat->nat_access, (ndx-spadat->nat_access)+1);
+                strlcpy(nat_dst, spadat->nat_access, str_len+1);
                 if (! is_valid_ipv4_addr(nat_dst))
                 {
                     if (ipv4_resolve(nat_dst, nat_ip) == 0)
