@@ -193,6 +193,26 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
             *digest_len = SHA512_B64_LEN;
             break;
 
+        case FKO_DIGEST_SHA3_256:
+            md = calloc(1, MD_HEX_SIZE(SHA3_256_DIGEST_LEN)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            sha3_256_base64(md,
+                (unsigned char*)data, data_len);
+            *digest_len = SHA3_256_B64_LEN;
+            break;
+
+        case FKO_DIGEST_SHA3_512:
+            md = calloc(1, MD_HEX_SIZE(SHA3_512_DIGEST_LEN)+1);
+            if(md == NULL)
+                return(FKO_ERROR_MEMORY_ALLOCATION);
+
+            sha3_512_base64(md,
+                (unsigned char*)data, data_len);
+            *digest_len = SHA3_512_B64_LEN;
+            break;
+
         default:
             return(FKO_ERROR_INVALID_DIGEST_TYPE);
     }

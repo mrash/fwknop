@@ -87,6 +87,8 @@ typedef enum {
     FKO_DIGEST_SHA256, /**< SHA256 digest type*/
     FKO_DIGEST_SHA384, /**< SHA384 digest type*/
     FKO_DIGEST_SHA512, /**< SHA512 digest type*/
+    FKO_DIGEST_SHA3_256, /**< SHA3 256 digest type*/
+    FKO_DIGEST_SHA3_512, /**< SHA3 512 digest type*/
     FKO_LAST_DIGEST_TYPE /**< Always leave this as the last one */
 } fko_digest_type_t;
 
@@ -104,6 +106,8 @@ typedef enum {
     FKO_HMAC_SHA256, /**< SHA256 HMAC type*/
     FKO_HMAC_SHA384, /**< SHA384 HMAC type*/
     FKO_HMAC_SHA512, /**< SHA512 HMAC type*/
+    FKO_HMAC_SHA3_256, /**< SHA3 256 HMAC type */
+    FKO_HMAC_SHA3_512, /**< SHA3 512 HMAC type*/
     FKO_LAST_HMAC_MODE /**< Always leave this as the last one */
 } fko_hmac_type_t;
 
@@ -1394,6 +1398,10 @@ DLL_API int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char * const fpr,
 
 #ifdef HAVE_C_UNIT_TESTS
 int register_ts_fko_decode(void);
+int register_ts_hmac_test(void);
+int register_ts_digest_test(void);
+int register_ts_aes_test(void);
+
 #endif
 
 #endif /* FKO_H */
