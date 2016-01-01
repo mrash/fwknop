@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file client/fwknop.h
  *
- * File:    fwknop.h
- *
- * Purpose: Header file for fwknop client test program.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for fwknop client test program.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
