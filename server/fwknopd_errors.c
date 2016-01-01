@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/fwknopd_errors.c
  *
- * File:    errors.c
- *
- * Purpose: Error message functions for fwknopd
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Error message functions for fwknopd
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

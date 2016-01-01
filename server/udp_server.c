@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/udp_server.c
  *
- * File:    udp_server.c
- *
- * Purpose: Collect SPA packets via a UDP server.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Collect SPA packets via a UDP server.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

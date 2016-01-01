@@ -877,6 +877,7 @@ EXCLUDE_PATTERNS       = */perl/* \
                          */android/* \
                          */test/* \
                          */extras/* \
+                         */win32/* \
                          */python/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names

@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/tcp_server.h
  *
- * File:    tcp_server.h
- *
- * Purpose: Header file for tcp_server.c.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for tcp_server.c.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

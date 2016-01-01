@@ -1,11 +1,10 @@
-/*
- ******************************************************************************
+/**
+ * \file server/access.c
  *
- * File:    access.c
- *
- * Purpose: Access.conf file processing for fwknop server.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Access.conf file processing for fwknop server.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

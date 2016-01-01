@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/fw_util_ipfw.c
  *
- * File:    fw_util_ipfw.c
- *
- * Purpose: Fwknop routines for managing ipfw firewall rules.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Fwknop routines for managing ipfw firewall rules.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
