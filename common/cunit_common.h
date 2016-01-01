@@ -1,3 +1,9 @@
+/**
+ * \file common/cunit_common.h
+ *
+ * \brief header file for CUnit tests
+ */
+
 #ifndef CUNIT_COMMON_H
 #define CUNIT_COMMON_H
 

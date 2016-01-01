@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file common/fko_util.c
  *
- * File:    fko_util.c
- *
- * Purpose: Provide a set of common utility functions that fwknop can use.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Provide a set of common utility functions that fwknop can use.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

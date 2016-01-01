@@ -1,3 +1,9 @@
+/**
+ * \file common/cunit_common.c
+ *
+ * \brief CUnit test functions
+ */
+
 #ifdef HAVE_C_UNIT_TESTS
 
 #include "cunit_common.h"
