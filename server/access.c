@@ -1040,6 +1040,35 @@ free_acc_stanzas(fko_srv_options_t *opts)
     return;
 }
 
+void
+free_last_acc_stanza(fko_srv_options_t *opts)
+{
+    acc_stanza_t *tmp_root = opts->acc_stanzas;
+
+    //deal with edge cases first, like a null list
+    if (tmp_root == NULL)
+        return;
+
+    //check for only one element
+    if (tmp_root->next == NULL)
+    {
+        free_acc_stanza_data(tmp_root);
+        free(tmp_root);
+        opts->acc_stanzas = NULL;
+        return;
+    }
+
+    //more than one element uses the general case
+    while (tmp_root->next->next != NULL)
+    {
+        tmp_root = tmp_root->next;
+    }
+
+    free(tmp_root->next);
+    tmp_root->next = NULL;
+    return;
+}
+
 /* Wrapper for free_acc_stanzas(), we may put additional initialization
  * code here.
 */
@@ -1418,7 +1447,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 {
     FILE           *file_ptr;
     char           *ndx;
-    int             got_source = 0, is_err;
+    int             is_err;
     unsigned int    num_lines = 0;
 
     char            access_line_buf[MAX_LINE_LEN] = {0};
@@ -1582,7 +1611,6 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
             */
             curr_acc = acc_stanza_add(opts);
             add_acc_string(&(curr_acc->source), val, file_ptr, opts);
-            got_source++;
         }
         else if (curr_acc == NULL)
         {
@@ -1593,7 +1621,14 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         else if(CONF_VAR_IS(var, "%include_keys")) //Only valid options from this file are those defining keys.
         {
           // This directive is only valid within a SOURCE stanza
+            log_msg(LOG_DEBUG, "[+] Processing include_folder directive for: '%s'", val);
             include_keys_file(curr_acc, val, opts);
+            if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+            {
+                log_msg(LOG_DEBUG, "[*] Data error in included keyfile: '%s', skipping stanza.", val);
+                free_last_acc_stanza(opts);
+                curr_acc = NULL;
+            }
         }
         else if(CONF_VAR_IS(var, "DESTINATION"))
             add_acc_string(&(curr_acc->destination), val, file_ptr, opts);
@@ -1914,7 +1949,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 
     if(*depth == 0) //means we just closed the root access.conf
     {
-        if(got_source > 0)
+        if(curr_acc != NULL)
         {
             if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
             {
@@ -1946,7 +1981,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
          *
          *
         */
-        if(got_source > 0)
+        if(curr_acc != NULL)
         {
             if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
             {
@@ -2419,7 +2454,7 @@ DECLARE_UTEST(compare_port_list, "check compare_port_list function")
     acc_port_list_t *in2_pl = NULL;
     acc_port_list_t *acc_pl = NULL;
 
-    /* Match any test */	
+    /* Match any test */
     free_acc_port_list(in1_pl);
     free_acc_port_list(acc_pl);
     add_port_list_ent(&in1_pl, "udp/6002");
