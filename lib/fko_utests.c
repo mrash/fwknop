@@ -2,6 +2,7 @@
 
 #include "fko.h"
 
+#include "fko_util.h"
 /**
  * Register test suites from FKO files.
  *
@@ -14,6 +15,7 @@ static void register_test_suites(void)
     register_ts_hmac_test();
     register_ts_digest_test();
     register_ts_aes_test();
+    register_utils_test();
 }
 
 /* The main() function for setting up and running the tests.

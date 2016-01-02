@@ -50,6 +50,11 @@
 
 #define NULL_STRING                 "<NULL>"                /*!< String which represents a NULL buffer */
 
+#ifdef HAVE_C_UNIT_TESTS
+#include "cunit_common.h"
+DECLARE_TEST_SUITE(utils_test, "Utility functions test suite");
+#endif
+
 /**
  * Structure to handle an encryption mode string string and its associated integer value
  */
@@ -958,4 +963,138 @@ dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len)
     return (err);
 }
 
+/**
+ * @brief Grab the sin address from the sockaddr structure.
+ *
+ * This function returns the sin address as a sockaddr_in or sockaddr_in6
+ * structure according to the family set (ipv4 or ipv6) in the sockaddr
+ * structure.
+ *
+ * @param sa sockaddr strcuture
+ *
+ * @return the sin addr if the sa family is AF_INET or the sin6_addr otherwise.
+ */
+static void *
+get_in_addr(struct sockaddr *sa)
+{
+  if (sa->sa_family == AF_INET)
+  {
+    return &(((struct sockaddr_in*)sa)->sin_addr);
+  }
+
+  else
+  {
+    return &(((struct sockaddr_in6*)sa)->sin6_addr);
+  }
+}
+
+/**
+ * @brief  Resolve a domain name as an IP address.
+ *
+ * @param dns_str    Name of the host to resolve.
+ * @param hints      Hints to reduce the number of result from getaddrinfo()
+ * @param ip_str     String where to store the resolve ip address
+ * @param ip_bufsize Number of bytes available in the ip_str buffer
+ * @param opts       Client command line options
+ *
+ * @return 0 if successful, 1 if an error occured.
+ */
+int
+ipv4_resolve(const char *dns_str, char *ip_str)
+{
+    int                 error;      /* Function error return code */
+    size_t ip_bufsize = MAX_IPV4_STR_LEN;
+    struct addrinfo     hints;
+    struct addrinfo    *result;     /* Result of getaddrinfo() */
+    struct addrinfo    *rp;         /* Element of the linked list returned by getaddrinfo() */
+#if WIN32 && WINVER <= 0x0600
+        struct sockaddr_in *in;
+        char                       *win_ip;
+#else
+    struct sockaddr_in *sai_remote; /* Remote host information as a sockaddr_in structure */
+#endif
+
+    memset(&hints, 0 , sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+
+    /* Try to resolve the host name */
+    error = getaddrinfo(dns_str, NULL, &hints, &result);
+    if (error != 0)
+        fprintf(stderr, "ipv4_resolve() : %s\n", gai_strerror(error));
+
+    else
+    {
+        error = 1;
+
+        /* Go through the linked list of addrinfo structures */
+        for (rp = result; rp != NULL; rp = rp->ai_next)
+        {
+            memset(ip_str, 0, ip_bufsize);
+
+#if WIN32 && WINVER <= 0x0600
+                        /* On older Windows systems (anything before Vista?),
+                         * we use inet_ntoa for now.
+                        */
+                        in = (struct sockaddr_in*)(rp->ai_addr);
+                        win_ip = inet_ntoa(in->sin_addr);
+
+                        if (win_ip != NULL && (strlcpy(ip_str, win_ip, ip_bufsize) > 0))
+#else
+            sai_remote = (struct sockaddr_in *)get_in_addr((struct sockaddr *)(rp->ai_addr));
+            if (inet_ntop(rp->ai_family, sai_remote, ip_str, ip_bufsize) != NULL)
+#endif
+            {
+                error = 0;
+                break;
+            }
+        }
+
+        /* Free our result from getaddrinfo() */
+        freeaddrinfo(result);
+    }
+
+    return error;
+}
+
+int
+count_characters(const char *str, const char match, int len)
+{
+    int i, count = 0;
+
+    for (i=0; i < len; i++) {
+        if (str[i] == match)
+            count++;
+        if (str[i] == '\0')
+            return count;
+    }
+    return count;
+}
+
+#ifdef HAVE_C_UNIT_TESTS
+
+DECLARE_UTEST(test_count_characters, "test the count_characters function")
+{
+    char test_str[32];
+    strcpy(test_str, "abcd");
+    CU_ASSERT(count_characters(test_str, 'a', 4) == 1);
+    strcpy(test_str, "aacd");
+    CU_ASSERT(count_characters(test_str, 'a', 4) == 2);
+    strcpy(test_str, "a,b,c,d,");
+    CU_ASSERT(count_characters(test_str, ',', 4) == 2);
+    strcpy(test_str, "a,b,c,d,");
+    CU_ASSERT(count_characters(test_str, ',', 8) == 4);
+    strcpy(test_str, "aaaa");
+    CU_ASSERT(count_characters(test_str, 'a', 3) == 3);
+}
+
+int register_utils_test(void)
+{
+    ts_init(&TEST_SUITE(utils_test), TEST_SUITE_DESCR(utils_test), NULL, NULL);
+    ts_add_utest(&TEST_SUITE(utils_test), UTEST_FCT(test_count_characters), UTEST_DESCR(test_count_characters));
+
+    return register_ts(&TEST_SUITE(utils_test));
+}
+#endif
 /***EOF***/
