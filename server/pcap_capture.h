@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/pcap_capture.h
  *
- * File:    pcap_capture.h
- *
- * Purpose: Header file for pcap_capture.c.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for pcap_capture.c.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

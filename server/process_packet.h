@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/process_packet.h
  *
- * File:    process_packet.h
- *
- * Purpose: Header file for process_packet and other fwknopd code.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for process_packet and other fwknopd code.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

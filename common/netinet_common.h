@@ -1,13 +1,12 @@
-/*
- *****************************************************************************
+/**
+ * \file common/netinet_common.h
  *
- * File:    netinet_common.h
- *
- * Purpose: Header file for common network packet structures.  We roll our
+ * \brief Header file for common network packet structures.  We roll our
  *          own (actually copy) here in an effort to reduce the cross-
- *          platform "hoop-jumping" we would need to do). 
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ *          platform "hoop-jumping" we would need to do.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/base64.h
  *
- * File:    base64.h
- *
- * Purpose: Header for the fwknop base64.c
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header for the fwknop base64.c
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

@@ -1,14 +1,15 @@
-/*
- *****************************************************************************
+/**
+ * \file server/process_packet.c
  *
- * File:    process_packet.c
+ * \brief Packet parser/decoder for fwknopd server.
  *
- * Purpose: Packet parser/decoder for fwknopd server.  Takes the raw packet
+ *          Takes the raw packet
  *          data from libpcap and parses/extracts the packet data payload,
  *          then creates an FKO context with that data.  If the context
  *          creation is successful, it is queued for processing.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

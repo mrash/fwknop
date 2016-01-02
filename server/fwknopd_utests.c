@@ -1,3 +1,9 @@
+/**
+ * \file server/fwknopd_utests.c
+ *
+ * \brief CUnit tests for the server
+ */
+
 #include "CUnit/Basic.h"
 
 #include "fwknopd_common.h"
@@ -5,7 +11,7 @@
 
 /**
  * Register test suites from FKO files.
- * 
+ *
  * The module should fetch functions according to used modules. All of them follow the same
  * naming convention.
  */

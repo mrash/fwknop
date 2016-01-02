@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/fko_funcs.c
  *
- * File:    fko_funcs.c
- *
- * Purpose: General utility functions for libfko
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief General utility functions for libfko
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

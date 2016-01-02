@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/hmac.h
  *
- * File:    hmac.h
- *
- * Purpose: Provide HMAC support for SPA communications
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Provide HMAC support for SPA communications
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

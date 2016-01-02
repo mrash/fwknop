@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/pcap_capture.c
  *
- * File:    pcap_capture.c
- *
- * Purpose: The pcap capture routines for fwknopd.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief The pcap capture routines for fwknopd.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

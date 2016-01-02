@@ -1,5 +1,5 @@
 /**
- * \file fko.h
+ * \file lib/fko.h
  *
  * \brief Header for libfko
  */

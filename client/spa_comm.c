@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file client/spa_comm.c
  *
- * File:    spa_comm.c
- *
- * Purpose: Network-related functions for the fwknop client
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Network-related functions for the fwknop client
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

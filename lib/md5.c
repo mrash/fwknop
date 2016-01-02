@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/md5.c
  *
- * File:    md5.c
- *
- * Purpose: Implementation of the MD5 message-digest algorithm for libfwknop.
- *
- * This code implements the MD5 message-digest algorithm.
+ * \brief Implementation of the MD5 message-digest algorithm for libfwknop.
+ */
+
+/* This code implements the MD5 message-digest algorithm.
  *
  * The algorithm is due to Ron Rivest. This code was
  * written by Colin Plumb in 1993, no copyright is claimed.

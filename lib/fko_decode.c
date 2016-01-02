@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/fko_decode.c
  *
- * File:    fko_decode.c
- *
- * Purpose: Decode an FKO SPA message after decryption.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Decode an FKO SPA message after decryption.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

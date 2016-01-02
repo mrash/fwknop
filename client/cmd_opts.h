@@ -1,11 +1,10 @@
-/*
- ******************************************************************************
+/**
+ * \file client/cmd_opts.h
  *
- * File:    cmd_opts.h
- *
- * Purpose: Header file for fwknop command line options.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for fwknop command line options.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

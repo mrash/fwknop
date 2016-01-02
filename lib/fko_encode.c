@@ -1,13 +1,12 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/fko_encode.c
  *
- * File:    fko_encode.c
- *
- * Purpose: Encodes some pieces of the spa data then puts together all of
+ * \brief Encodes some pieces of the spa data then puts together all of
  *          the necessary pieces to gether to create the single encoded
  *          message string.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

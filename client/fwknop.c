@@ -1,9 +1,10 @@
 /**
- * @file    fwknop.c
+ * \file    client/fwknop.c
  *
- * @brief   The fwknop client.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief   The fwknop client.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

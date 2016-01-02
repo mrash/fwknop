@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/incoming_spa.c
  *
- * File:    incoming_spa.c
- *
- * Purpose: Process an incoming SPA data packet for fwknopd.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Process an incoming SPA data packet for fwknopd.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

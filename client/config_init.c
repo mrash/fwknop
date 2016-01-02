@@ -1,11 +1,10 @@
 /**
- ******************************************************************************
- *
- * \file    config_init.c
+ * \file    client/config_init.c
  *
  * \brief   Command-line and config file processing for fwknop client.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

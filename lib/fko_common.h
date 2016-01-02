@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/fko_common.h
  *
- * File:    fko_common.h
- *
- * Purpose: Common header for libfko source files.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Common header for libfko source files.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

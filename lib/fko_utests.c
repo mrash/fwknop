@@ -1,3 +1,9 @@
+/**
+ * \file lib/fko_utests.c
+ *
+ * \brief Main CUnit test function for libfko
+ */
+
 #include "CUnit/Basic.h"
 
 #include "fko.h"
