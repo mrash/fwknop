@@ -252,6 +252,16 @@ AC_ARG_ENABLE([udp-server],
   [])
 AM_CONDITIONAL([UDP_SERVER], [test "$want_udp_server" = yes])
 
+dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
+dnl
+want_nfq_capture=no
+AC_ARG_ENABLE([nfq-capture],
+  [AS_HELP_STRING([--enable-nfq-capture],
+    [Enable NF_QUEUE server mode for no libpcap dependency @<:@default is to disable@:>@])],
+  [want_nfq_capture=$enableval],
+  [])
+AM_CONDITIONAL([NFQ_CAPTURE], [test "$want_nfq_capture" = yes])
+
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
 use_wall=yes
@@ -530,12 +540,21 @@ dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
 dnl
 AS_IF([test "$want_server" = yes], [
 
-  AS_IF([test "$want_udp_server" = no], [
+  AS_IF([test "$want_udp_server" = no -a "$want_nfq_capture" = no], [
     # Looking for libpcap
     #
     AC_CHECK_LIB([pcap],[pcap_open_live],
       [ AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap]) ],
       [ AC_MSG_ERROR([fwknopd needs libpcap])]
+    )
+  ])
+
+  AS_IF([test "$want_nfq_capture" = yes], [
+    # Check for libnetfilter_queue
+    #
+    AC_CHECK_LIB([netfilter_queue],[nfq_open],
+      [ AC_DEFINE([USE_LIBNETFILTER_QUEUE], [1], [Define if you have libnetfilter_queue]) ],
+      [ AC_MSG_ERROR([fwknopd needs libnetfilter_queue])]
     )
   ])
 
@@ -798,6 +817,10 @@ if [test "$want_server" = "yes" ]; then
 "
 if [test "$want_udp_server" = "yes" ]; then
   echo "    UDP server mode enabled, no libpcap dependency
+"
+    fi
+if [test "$want_nfq_capture" = "yes" ]; then
+  echo "    Netfilter Queue server mode enabled, no libpcap dependency
 "
     fi
 

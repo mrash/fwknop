@@ -32,10 +32,6 @@
  *****************************************************************************
 */
 
-#if USE_LIBPCAP
-  #include <pcap.h>
-#endif
-
 #include "fwknopd_common.h"
 #include "netinet_common.h"
 #include "process_packet.h"
@@ -43,11 +39,10 @@
 #include "utils.h"
 #include "log_msg.h"
 
-#if USE_LIBPCAP
 
 void
-process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
-    const unsigned char *packet)
+process_packet(PROCESS_PKT_ARGS_TYPE *args, PACKET_HEADER_META,
+               const unsigned char *packet)
 {
     struct ether_header *eth_p;
     struct iphdr        *iph_p;
@@ -75,7 +70,24 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
 
     int                 offset = opts->data_link_offset;
 
+#if USE_LIBPCAP
     unsigned short      pkt_len = packet_header->len;
+
+    /* Gotta have a complete ethernet header.
+    */
+    if (packet_header->caplen < ETHER_HDR_LEN)
+        return;
+
+    /* Determine packet end.
+    */
+    fr_end = (unsigned char *) packet + packet_header->caplen;
+#else
+    /* This is coming from NFQ and we get the packet lentgh as an arg.
+    */
+    if (pkt_len < ETHER_HDR_LEN)
+        return;
+    fr_end = (unsigned char *) packet + pkt_len;
+#endif
 
     /* This is a hack to determine if we are using the linux cooked
      * interface.  We base it on the offset being 16 which is the
@@ -84,18 +96,9 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     */
     unsigned char       assume_cooked = (offset == 16 ? 1 : 0);
 
-    /* Determine packet end.
-    */
-    fr_end = (unsigned char *) packet + packet_header->caplen;
-
     /* The ethernet header.
     */
     eth_p = (struct ether_header*) packet;
-
-    /* Gotta have a complete ethernet header.
-    */
-    if (packet_header->caplen < ETHER_HDR_LEN)
-        return;
 
     eth_type = ntohs(*((unsigned short*)&eth_p->ether_type));
 
@@ -229,6 +232,5 @@ process_packet(unsigned char *args, const struct pcap_pkthdr *packet_header,
     return;
 }
 
-#endif /* USE_LIBPCAP */
 
 /***EOF***/
