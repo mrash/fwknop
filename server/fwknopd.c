@@ -1,9 +1,7 @@
-/*
- *****************************************************************************
+/**
+ * \file server/fwknopd.c
  *
- * File:    fwknopd.c
- *
- * Purpose: An implementation of an fwknop server.
+ * \brief An implementation of an fwknop server.
  *
  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full

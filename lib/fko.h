@@ -1,5 +1,5 @@
 /**
- * \file fko.h
+ * \file lib/fko.h
  *
  * \brief Header for libfko
  */
@@ -1401,7 +1401,7 @@ int register_ts_fko_decode(void);
 int register_ts_hmac_test(void);
 int register_ts_digest_test(void);
 int register_ts_aes_test(void);
-
+int register_utils_test(void);
 #endif
 
 #endif /* FKO_H */

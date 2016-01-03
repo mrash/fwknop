@@ -1,10 +1,10 @@
+/**
+ * \file lib/rijndael.h
+ *
+ * \brief rijndael - An implementation of the Rijndael cipher.
+ */
+
 /*
- *****************************************************************************
- *
- * File:    rigndael.c
- *
- * Purpose: rijndael - An implementation of the Rijndael cipher.
- *
  * Copyright (C) 2000, 2001 Rafael R. Sevilla <sevillar@team.ph.inter.net>
  *
  * Currently maintained by brian d foy, <bdfoy@cpan.org>
@@ -67,7 +67,10 @@ typedef struct {
   uint8_t salt[SALT_LEN];
 } RIJNDAEL_context;
 
-/* This basically performs Rijndael's key scheduling algorithm, as it's the
+/**
+ * \brief initialize a Rijndael context with key
+ *
+ * This basically performs Rijndael's key scheduling algorithm, as it's the
  * only initialization required anyhow.   The key size is specified in bytes,
  * but the only valid values are 16 (128 bits), 24 (192 bits), and 32 (256
  * bits).  If a value other than these three is specified, the key will be

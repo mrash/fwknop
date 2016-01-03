@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file client/utils.c
  *
- * File:    utils.c
- *
- * Purpose: General/Generic functions for the fwknop client.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief General/Generic functions for the fwknop client.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

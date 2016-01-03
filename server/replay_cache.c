@@ -1,15 +1,16 @@
-/*
- *****************************************************************************
+/**
+ * \file server/replay_cache.c
  *
- * File:    replay_cache.c
+ * \brief Cache packets for replay attack detection
  *
- * Purpose: Provides the functions to check for possible replay attacks
+ *          Provides the functions to check for possible replay attacks
  *          by using a cache of previously seen digests.  This cache is a
  *          simple file by default, but can be made to use a dbm solution
  *          (ndbm or gdbm in ndbm compatibility mode) file to store the digest
  *          of a previously received SPA packets.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

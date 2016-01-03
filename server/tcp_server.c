@@ -1,12 +1,11 @@
-/*
- *****************************************************************************
+/**
+ * \file server/tcp_server.c
  *
- * File:    tcp_server.c
- *
- * Purpose: Spawns off a dummy tcp server for fwknopd.  Its purpose is
+ * \brief Spawns off a dummy tcp server for fwknopd.  Its purpose is
  *          to accept a tcp connection, then drop it after the first packet.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

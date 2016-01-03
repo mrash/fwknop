@@ -1,11 +1,10 @@
-/*
- ******************************************************************************
+/**
+ * \file client/fwknop_common.h
  *
- * File:    fwknop_common.h
- *
- * Purpose: Header file for fwknop config_init.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for fwknop config_init.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
@@ -66,7 +65,6 @@
 #define HTTP_MAX_REQUEST_LEN        2000
 #define HTTP_MAX_RESPONSE_LEN       2000
 #define HTTP_MAX_USER_AGENT_LEN     100
-#define MAX_HOSTNAME_LEN            70
 #define MAX_URL_HOST_LEN            256
 #define MAX_URL_PATH_LEN            1024
 

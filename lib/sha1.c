@@ -1,12 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file lib/sha1.c
  *
- * File:    sha1.c
- *
- * Purpose: Implementation of the SHA1 message-digest algorithm for
- *          libfwknop.
- *
- * NIST Secure Hash Algorithm
+ * \brief Implementation of the SHA1 message-digest algorithm for libfwknop.
+ */
+
+/* NIST Secure Hash Algorithm
  *   Heavily modified by Uwe Hollerbach <uh@alumni.caltech edu>
  *   from Peter C. Gutmann's implementation as found in
  *   Applied Cryptography by Bruce Schneier
@@ -78,7 +76,7 @@ sha1_transform(SHA1_INFO *sha1_info)
     for (i = 0; i < 16; ++i) {
         T = *((uint32_t *) dp);
         dp += 4;
-        W[i] = 
+        W[i] =
             ((T << 24) & 0xff000000) |
             ((T <<  8) & 0x00ff0000) |
             ((T >>  8) & 0x0000ff00) | ((T >> 24) & 0x000000ff);

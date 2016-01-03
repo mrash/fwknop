@@ -1,12 +1,11 @@
-/*
- *****************************************************************************
+/**
+ * \file client/http_resolve_host.c
  *
- * File:    http_resolve_host.c
- *
- * Purpose: Routine for using an http request to obtain a client's IP
+ * \brief Routine for using an http request to obtain a client's IP
  *          address as seen from the outside world.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

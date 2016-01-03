@@ -1,11 +1,10 @@
 /**
- ******************************************************************************
+ * \file    client/config_init.h
  *
- * @file    config_init.h
- *
- * @brief   Header file for fwknop config_init.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief   Header file for fwknop config_init.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

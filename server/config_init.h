@@ -1,11 +1,10 @@
-/*
- ******************************************************************************
+/**
+ * \file server/config_init.h
  *
- * File:    config_init.h
- *
- * Purpose: Header file for fwknopd config_init.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for fwknopd config_init.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

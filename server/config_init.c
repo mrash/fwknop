@@ -1,11 +1,10 @@
-/*
- ******************************************************************************
+/**
+ * \file server/config_init.c
  *
- * File:    config_init.c
- *
- * Purpose: Command-line and config file processing for fwknop server.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Command-line and config file processing for fwknop server.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
@@ -879,6 +878,10 @@ validate_options(fko_srv_options_t *opts)
     /* --DSS Place-holder */
 
 #endif /* FIREWALL type */
+
+    /* NAT DNS enabled*/
+    if(opts->config[CONF_ENABLE_NAT_DNS] == NULL)
+        set_config_entry(opts, CONF_ENABLE_NAT_DNS, DEF_ENABLE_NAT_DNS);
 
     /* GPG Home dir.
     */

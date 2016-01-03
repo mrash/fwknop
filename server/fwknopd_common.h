@@ -1,11 +1,10 @@
-/*
- ******************************************************************************
+/**
+ * \file server/fwknopd_common.h
  *
- * File:    fwknopd_common.h
- *
- * Purpose: Header file for fwknopd source files.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for fwknopd source files.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
@@ -95,6 +94,7 @@
 #define DEF_RULES_CHECK_THRESHOLD       "20"
 #define DEF_MAX_SNIFF_BYTES             "1500"
 #define DEF_GPG_HOME_DIR                "/root/.gnupg"
+#define DEF_ENABLE_NAT_DNS              "Y"
 #ifdef  GPG_EXE
   #define DEF_GPG_EXE                   GPG_EXE
 #else
@@ -221,7 +221,6 @@
 #define MAX_PCAP_FILTER_LEN     1024
 #define MAX_IFNAME_LEN          128
 #define MAX_SPA_PACKET_LEN      1500 /* --DSS check this? */
-#define MAX_HOSTNAME_LEN        64
 #define MAX_DECRYPTED_SPA_LEN   1024
 
 /* The minimum possible valid SPA data size.
@@ -280,6 +279,7 @@ enum {
     //CONF_ENABLE_EXT_CMD_PREFIX,
     //CONF_EXT_CMD_PREFIX,
     CONF_ENABLE_DESTINATION_RULE,
+    CONF_ENABLE_NAT_DNS,
 #if FIREWALL_FIREWALLD
     CONF_ENABLE_FIREWD_FORWARDING,
     CONF_ENABLE_FIREWD_LOCAL_NAT,

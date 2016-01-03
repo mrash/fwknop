@@ -1,11 +1,10 @@
-/*
- *****************************************************************************
+/**
+ * \file server/extcmd.c
  *
- * File:    extcmd.c
- *
- * Purpose: Routines for executing and processing external commands.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Routines for executing and processing external commands.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

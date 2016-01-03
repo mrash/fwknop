@@ -1,6 +1,5 @@
 /**
- *
- * \file fko_context.h
+ * \file lib/fko_context.h
  *
  * \brief fko context definiton.
  */

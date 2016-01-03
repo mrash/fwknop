@@ -1,11 +1,11 @@
 /**
+ * \file server/cmd_cycle.h
  *
- * @file    cmd_cycle.h
- *
- * @brief: Function prototypes for managing command cycles as defined via
+ * \brief Function prototypes for managing command cycles as defined via
  *          access.conf stanzas (CMD_CYCLE_OPEN and CMD_CYCLE_CLOSE).
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *

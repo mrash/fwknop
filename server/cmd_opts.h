@@ -1,11 +1,10 @@
-/*
- ******************************************************************************
+/**
+ * \file server/cmd_opts.h
  *
- * File:    cmd_opts.h
- *
- * Purpose: Header file for fwknopd command line options.
- *
- *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
+ * \brief Header file for fwknopd command line options.
+ */
+
+/*  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2015 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.
  *
@@ -81,6 +80,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     //"ENABLE_EXT_CMD_PREFIX",
     //"EXT_CMD_PREFIX",
     "ENABLE_DESTINATION_RULE",
+    "ENABLE_NAT_DNS",
 #if FIREWALL_FIREWALLD
     "ENABLE_FIREWD_FORWARDING",
     "ENABLE_FIREWD_LOCAL_NAT",
