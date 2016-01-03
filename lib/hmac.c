@@ -33,6 +33,11 @@
 DECLARE_TEST_SUITE(hmac_test, "hmac functions test suite");
 #endif
 
+/**
+ * /brief populate the inner and outer pads
+ *
+ *
+ */
 static void
 pad_init(unsigned char *inner_pad, unsigned char *outer_pad,
         const unsigned char * const key, const int key_len)
@@ -56,8 +61,6 @@ pad_init(unsigned char *inner_pad, unsigned char *outer_pad,
     return;
 }
 
-/* Begin MD5 HMAC functions
-*/
 void
 hmac_md5(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
@@ -101,8 +104,6 @@ hmac_md5(const char *msg, const unsigned int msg_len,
     return;
 }
 
-/* Begin SHA1 HMAC functions
-*/
 void
 hmac_sha1(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
@@ -146,8 +147,6 @@ hmac_sha1(const char *msg, const unsigned int msg_len,
     return;
 }
 
-/* Begin SHA256 HMAC functions
-*/
 void
 hmac_sha256(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
@@ -191,8 +190,6 @@ hmac_sha256(const char *msg, const unsigned int msg_len,
     return;
 }
 
-/* Begin SHA384 HMAC functions
-*/
 void
 hmac_sha384(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
@@ -236,8 +233,6 @@ hmac_sha384(const char *msg, const unsigned int msg_len,
     return;
 }
 
-/* Begin SHA512 HMAC functions
-*/
 void
 hmac_sha512(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
