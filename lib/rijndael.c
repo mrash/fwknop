@@ -191,7 +191,7 @@ uint8_t sbox[256] = {
     181, 102,  72,   3, 246,  14,  97,  53,  87, 185, 134, 193,  29, 158, 225,
     248, 152,  17, 105, 217, 142, 148, 155,  30, 135, 233, 206,  85,  40, 223,
     140, 161, 137,  13, 191, 230,  66, 104,  65, 153,  45,  15, 176,  84, 187,
-    22, 
+    22,
 };
 
 uint8_t isbox[256] = {
@@ -212,7 +212,7 @@ uint8_t isbox[256] = {
     127, 169,  25, 181,  74,  13,  45, 229, 122, 159, 147, 201, 156, 239, 160,
     224,  59,  77, 174,  42, 245, 176, 200, 235, 187,  60, 131,  83, 153,  97,
     23,  43,   4, 126, 186, 119, 214,  38, 225, 105,  20,  99,  85,  33,  12,
-    125, 
+    125,
 };
 
 /* Used only by the key schedule */
@@ -486,7 +486,7 @@ block_encrypt(RIJNDAEL_context *ctx, uint8_t *input, int inputlen,
             /* set initial value */
             memcpy(block, iv, RIJNDAEL_BLOCKSIZE);
             for (i=0; i< nblocks; i++) {
-                for (j=0; j<RIJNDAEL_BLOCKSIZE; j++) 
+                for (j=0; j<RIJNDAEL_BLOCKSIZE; j++)
                     block[j] ^= input[i*RIJNDAEL_BLOCKSIZE + j] & 0xff;
                 rijndael_encrypt(ctx, block, block);
                 memcpy(&output[RIJNDAEL_BLOCKSIZE*i], block, RIJNDAEL_BLOCKSIZE);

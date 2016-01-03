@@ -101,7 +101,7 @@
   #define O_WRONLY		_O_WRONLY
   #define O_RDONLY		_O_RDONLY
   #define O_RDWR		_O_RDWR
-  #define O_CREAT		_O_CREAT 
+  #define O_CREAT		_O_CREAT
   #define O_EXCL		_O_EXCL
   #define S_IRUSR		_S_IREAD
   #define S_IWUSR		_S_IWRITE

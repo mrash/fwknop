@@ -566,7 +566,7 @@ char
         ns = calloc(1, len + 1);
         if(ns) {
             ns[len] = 0;
-            // strncpy to be pedantic about modification in multithreaded 
+            // strncpy to be pedantic about modification in multithreaded
             // applications
             return strncpy(ns, s, len);
         }

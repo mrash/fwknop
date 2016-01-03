@@ -584,12 +584,12 @@ is_rc_param(const char *line, rc_file_param_t *param)
 }
 
 /**
- * @brief Dump available stanzas from a fwknoprc file
+ * \brief Dump available stanzas from a fwknoprc file
  *
  * This function parses a rcfile and looks for configured stanzas.
  * They are all displayed except the default stanza.
- * 
- * @param rcfile full path to the rcfile to parse
+ *
+ * \param rcfile full path to the rcfile to parse
  */
 static int
 dump_configured_stanzas_from_rcfile(const char* rcfile)
@@ -2638,7 +2638,7 @@ DECLARE_UTEST(check_var_bitmask, "Check var_bitmask functions")
     CU_ASSERT(var_bitmask.dw[0] == 1);
     remove_var_from_bitmask(FWKNOP_CLI_FIRST_ARG, &var_bitmask);
     CU_ASSERT(bitmask_has_var(FWKNOP_CLI_FIRST_ARG, &var_bitmask) == 0);
-    CU_ASSERT(var_bitmask.dw[0] == 0);	
+    CU_ASSERT(var_bitmask.dw[0] == 0);
 
     add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask);
     CU_ASSERT(bitmask_has_var(FWKNOP_CLI_ARG_KEY_RIJNDAEL, &var_bitmask) == 1);
@@ -2654,7 +2654,7 @@ DECLARE_UTEST(check_var_bitmask, "Check var_bitmask functions")
     CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG+32, &var_bitmask) == 0);
 
     add_var_to_bitmask(FWKNOP_CLI_LAST_ARG+34, &var_bitmask);
-    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG+34, &var_bitmask) == 0);    
+    CU_ASSERT(bitmask_has_var(FWKNOP_CLI_LAST_ARG+34, &var_bitmask) == 0);
 }
 
 int register_ts_config_init(void)
@@ -2667,4 +2667,3 @@ int register_ts_config_init(void)
 }
 
 #endif /* HAVE_C_UNIT_TESTS */
-

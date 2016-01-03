@@ -440,14 +440,14 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
 *SYSLOG_FACILITY* '<facility>'::
     Override syslog facility. The ``SYSLOG_FACILITY'' variable can be set to
     one of ``LOG_LOCAL{0-7}'' or ``LOG_DAEMON'' (the default).
-    
+
 *ENABLE_DESTINATION_RULE* '<Y/N>'::
     Controls whether *fwknopd* will set the destination field on the firewall
-    rule to the destination address specified on the incoming SPA packet. 
+    rule to the destination address specified on the incoming SPA packet.
     This is useful for interfaces with multiple IP addresses hosting separate
-    services. If ``ENABLE_IPT_OUTPUT'' is set to ``Y'', the source field of 
-    the firewall rule is set. FORWARD and SNAT rules are not affected however, 
-    DNAT rules will also have their destination field set. The default is 
+    services. If ``ENABLE_IPT_OUTPUT'' is set to ``Y'', the source field of
+    the firewall rule is set. FORWARD and SNAT rules are not affected however,
+    DNAT rules will also have their destination field set. The default is
     ``N'', which sets the destination field to 0.0.0.0/0 (any).
 
 *FWKNOP_RUN_DIR* '<path>'::
@@ -477,11 +477,11 @@ directive starts a new stanza.
     ``192.168.10.0/24''), and individual IP addresses can be specified as well.
     Also, multiple IP's and/or networks can be defined as a comma separated
     list (e.g.  ``192.168.10.0/24,10.1.1.123'')
-    
+
 *DESTINATION* '<IP,..,IP/NET,..,NET/ANY>'::
     This defines the destination address for which the SPA packet will be
     accepted. The string ``ANY'' is also accepted if a valid SPA packet
-    should be honored to any destination IP. 
+    should be honored to any destination IP.
     Networks should be specified in CIDR notation (e.g. ``192.168.10.0/24''),
     and individual IP addresses can be specified as well. Also, multiple
     IP's and/or networks can be defined as a comma separated list (e.g.
