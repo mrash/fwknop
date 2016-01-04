@@ -51,6 +51,11 @@ static unsigned char map2[] =
 };
 #endif
 
+#ifdef HAVE_C_UNIT_TESTS
+#include "cunit_common.h"
+DECLARE_TEST_SUITE(base64_test, "Utility functions test suite");
+#endif
+
 int
 b64_decode(const char *in, unsigned char *out)
 {
@@ -135,4 +140,113 @@ strip_b64_eq(char *data)
         *ndx = '\0';
 }
 
+#ifdef HAVE_C_UNIT_TESTS
+DECLARE_UTEST(test_base64_encode, "test base64 encoding functions")
+{
+    char test_str[32] = {0};
+    char test_out[32] = {0};
+    char expected_out1[32] = {0};
+    char expected_out2[32] = {0};
+    char expected_out3[32] = {0};
+    char expected_out4[32] = {0};
+    char expected_out5[32] = {0};
+    char expected_out6[32] = {0};
+    char expected_out7[32] = {0};
+
+    strcpy(expected_out1, "");
+    strcpy(expected_out2, "Zg==");
+    strcpy(expected_out3, "Zm8=");
+    strcpy(expected_out4, "Zm9v");
+    strcpy(expected_out5, "Zm9vYg==");
+    strcpy(expected_out6, "Zm9vYmE=");
+    strcpy(expected_out7, "Zm9vYmFy");
+
+    strcpy(test_str, "");
+    b64_encode((unsigned char *)test_str, test_out, strlen(test_str));
+    CU_ASSERT(strcmp(test_out, expected_out1) == 0);
+
+    strcpy(test_str, "f");
+    b64_encode((unsigned char *)test_str, test_out, strlen(test_str));
+    CU_ASSERT(strcmp(test_out, expected_out2) == 0);
+
+    strcpy(test_str, "fo");
+    b64_encode((unsigned char *)test_str, test_out, strlen(test_str));
+    CU_ASSERT(strcmp(test_out, expected_out3) == 0);
+
+    strcpy(test_str, "foo");
+    b64_encode((unsigned char *)test_str, test_out, strlen(test_str));
+    CU_ASSERT(strcmp(test_out, expected_out4) == 0);
+
+    strcpy(test_str, "foob");
+    b64_encode((unsigned char *)test_str, test_out, strlen(test_str));
+    CU_ASSERT(strcmp(test_out, expected_out5) == 0);
+
+    strcpy(test_str, "fooba");
+    b64_encode((unsigned char *)test_str, test_out, strlen(test_str));
+    CU_ASSERT(strcmp(test_out, expected_out6) == 0);
+
+    strcpy(test_str, "foobar");
+    b64_encode((unsigned char *)test_str, test_out, strlen(test_str));
+    CU_ASSERT(strcmp(test_out, expected_out7) == 0);
+
+}
+
+DECLARE_UTEST(test_base64_decode, "test base64 decoding functions")
+{
+    char test_str[32] = {0};
+    char test_out[32] = {0};
+    char expected_out1[32] = {0};
+    char expected_out2[32] = {0};
+    char expected_out3[32] = {0};
+    char expected_out4[32] = {0};
+    char expected_out5[32] = {0};
+    char expected_out6[32] = {0};
+    char expected_out7[32] = {0};
+
+    strcpy(expected_out1, "");
+    strcpy(expected_out2, "f");
+    strcpy(expected_out3, "fo");
+    strcpy(expected_out4, "foo");
+    strcpy(expected_out5, "foob");
+    strcpy(expected_out6, "fooba");
+    strcpy(expected_out7, "foobar");
+
+    strcpy(test_str, "");
+    b64_decode(test_str, (unsigned char *)test_out);
+    CU_ASSERT(strcmp(test_out, expected_out1) == 0);
+
+    strcpy(test_str, "Zg==");
+    b64_decode(test_str, (unsigned char *)test_out);
+    CU_ASSERT(strcmp(test_out, expected_out2) == 0);
+
+    strcpy(test_str, "Zm8=");
+    b64_decode(test_str, (unsigned char *)test_out);
+    CU_ASSERT(strcmp(test_out, expected_out3) == 0);
+
+    strcpy(test_str, "Zm9v");
+    b64_decode(test_str, (unsigned char *)test_out);
+    CU_ASSERT(strcmp(test_out, expected_out4) == 0);
+
+    strcpy(test_str, "Zm9vYg==");
+    b64_decode(test_str, (unsigned char *)test_out);
+    CU_ASSERT(strcmp(test_out, expected_out5) == 0);
+
+    strcpy(test_str, "Zm9vYmE=");
+    b64_decode(test_str, (unsigned char *)test_out);
+    CU_ASSERT(strcmp(test_out, expected_out6) == 0);
+
+    strcpy(test_str, "Zm9vYmFy");
+    b64_decode(test_str, (unsigned char *)test_out);
+    CU_ASSERT(strcmp(test_out, expected_out7) == 0);
+}
+
+int register_base64_test(void)
+{
+    ts_init(&TEST_SUITE(base64_test), TEST_SUITE_DESCR(base64_test), NULL, NULL);
+    ts_add_utest(&TEST_SUITE(base64_test), UTEST_FCT(test_base64_encode), UTEST_DESCR(test_base64_encode));
+    ts_add_utest(&TEST_SUITE(base64_test), UTEST_FCT(test_base64_decode), UTEST_DESCR(test_base64_decode));
+
+    return register_ts(&TEST_SUITE(base64_test));
+}
+#endif
 /***EOF***/
